@@ -33,7 +33,7 @@ HTMLDetailsElement::GetFirstSummary() const
 }
 
 nsChangeHint
-HTMLDetailsElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLDetailsElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                            int32_t aModType) const
 {
   nsChangeHint hint =
@@ -45,7 +45,7 @@ HTMLDetailsElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 nsresult
-HTMLDetailsElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLDetailsElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                   const nsAttrValueOrString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::open) {

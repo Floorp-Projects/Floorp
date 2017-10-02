@@ -2603,7 +2603,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   const nsStyleFont *styleFont = mMappedFlows[0].mStartFrame->StyleFont();
   // We should only use a language for hyphenation if it was specified
   // explicitly.
-  nsIAtom* hyphenationLanguage =
+  nsAtom* hyphenationLanguage =
     styleFont->mExplicitLanguage ? styleFont->mLanguage.get() : nullptr;
   // We keep this pointed at the skip-chars data for the current mappedFlow.
   // This lets us cheaply check whether the flow has compressed initial
@@ -3090,7 +3090,7 @@ static bool IsChineseOrJapanese(const nsTextFrame* aFrame)
     return true;
   }
 
-  nsIAtom* language = aFrame->StyleFont()->mLanguage;
+  nsAtom* language = aFrame->StyleFont()->mLanguage;
   if (!language) {
     return false;
   }
@@ -5355,7 +5355,7 @@ LazyGetLineBaselineOffset(nsIFrame* aChildFrame, nsBlockFrame* aBlockFrame)
 
 static bool IsUnderlineRight(nsIFrame* aFrame)
 {
-  nsIAtom* langAtom = aFrame->StyleFont()->mLanguage;
+  nsAtom* langAtom = aFrame->StyleFont()->mLanguage;
   if (!langAtom) {
     return false;
   }

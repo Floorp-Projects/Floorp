@@ -160,7 +160,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                               nsIContent *aOriginalElement,
                                               nsAString& aTagPrefix,
                                               const nsAString& aTagNamespaceURI,
-                                              nsIAtom* aTagName,
+                                              nsAtom* aTagName,
                                               nsAString& aStr,
                                               uint32_t aSkipAttr,
                                               bool aAddNSAttr)
@@ -243,8 +243,8 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     const nsAttrName* name = info.mName;
 
     int32_t namespaceID = name->NamespaceID();
-    nsIAtom* attrName = name->LocalName();
-    nsIAtom* attrPrefix = name->GetPrefix();
+    nsAtom* attrName = name->LocalName();
+    nsAtom* attrPrefix = name->GetPrefix();
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attrName);
@@ -480,8 +480,8 @@ nsXHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
 }
 
 bool
-nsXHTMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
-                                          const nsIAtom* aElementName)
+nsXHTMLContentSerializer::IsShorthandAttr(const nsAtom* aAttrName,
+                                          const nsAtom* aElementName)
 {
   // checked
   if ((aAttrName == nsGkAtoms::checked) &&
@@ -578,7 +578,7 @@ nsXHTMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
 }
 
 bool
-nsXHTMLContentSerializer::LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aName)
+nsXHTMLContentSerializer::LineBreakBeforeOpen(int32_t aNamespaceID, nsAtom* aName)
 {
 
   if (aNamespaceID != kNameSpaceID_XHTML) {
@@ -600,7 +600,7 @@ nsXHTMLContentSerializer::LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aNa
 }
 
 bool
-nsXHTMLContentSerializer::LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName)
+nsXHTMLContentSerializer::LineBreakAfterOpen(int32_t aNamespaceID, nsAtom* aName)
 {
 
   if (aNamespaceID != kNameSpaceID_XHTML) {
@@ -631,7 +631,7 @@ nsXHTMLContentSerializer::LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aNam
 }
 
 bool
-nsXHTMLContentSerializer::LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName)
+nsXHTMLContentSerializer::LineBreakBeforeClose(int32_t aNamespaceID, nsAtom* aName)
 {
 
   if (aNamespaceID != kNameSpaceID_XHTML) {
@@ -653,7 +653,7 @@ nsXHTMLContentSerializer::LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aN
 }
 
 bool
-nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName)
+nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsAtom* aName)
 {
 
   if (aNamespaceID != kNameSpaceID_XHTML) {

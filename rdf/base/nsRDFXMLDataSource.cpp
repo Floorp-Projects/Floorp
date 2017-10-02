@@ -1060,7 +1060,7 @@ RDFXMLDataSourceImpl::EndLoad(void)
 }
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::AddNameSpace(nsIAtom* aPrefix, const nsString& aURI)
+RDFXMLDataSourceImpl::AddNameSpace(nsAtom* aPrefix, const nsString& aURI)
 {
     mNameSpaces.Put(aURI, aPrefix);
     return NS_OK;

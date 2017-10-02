@@ -20,7 +20,7 @@ class nsAttrValue;
 class nsPresContext;
 class nsDeviceContext;
 class nsIFrame;
-class nsIAtom;
+class nsAtom;
 class nsIWidget;
 
 // IID for the nsITheme interface
@@ -134,7 +134,7 @@ public:
    * null |aOldValue|) for content state changes.
    */
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint,
+                                nsAtom* aAttribute, bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue)=0;
 
   NS_IMETHOD ThemeChanged()=0;

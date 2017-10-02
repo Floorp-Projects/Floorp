@@ -5,7 +5,7 @@
 #ifndef nsHtml5TreeOpExecutor_h
 #define nsHtml5TreeOpExecutor_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsTraceRefcnt.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5SpeculativeLoad.h"

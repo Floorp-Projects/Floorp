@@ -123,10 +123,10 @@ public:
   using EditorBase::IsEditable;
   virtual nsresult RemoveAttributeOrEquivalent(
                      Element* aElement,
-                     nsIAtom* aAttribute,
+                     nsAtom* aAttribute,
                      bool aSuppressTransaction) override;
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsIAtom* aAttribute,
+                                            nsAtom* aAttribute,
                                             const nsAString& aValue,
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
@@ -229,23 +229,23 @@ public:
   }
   nsresult GetElementZIndex(Element* aElement, int32_t* aZindex);
 
-  nsresult SetInlineProperty(nsIAtom* aProperty,
+  nsresult SetInlineProperty(nsAtom* aProperty,
                              const nsAString& aAttribute,
                              const nsAString& aValue);
-  nsresult GetInlineProperty(nsIAtom* aProperty,
+  nsresult GetInlineProperty(nsAtom* aProperty,
                              const nsAString& aAttribute,
                              const nsAString& aValue,
                              bool* aFirst,
                              bool* aAny,
                              bool* aAll);
-  nsresult GetInlinePropertyWithAttrValue(nsIAtom* aProperty,
+  nsresult GetInlinePropertyWithAttrValue(nsAtom* aProperty,
                                           const nsAString& aAttr,
                                           const nsAString& aValue,
                                           bool* aFirst,
                                           bool* aAny,
                                           bool* aAll,
                                           nsAString& outValue);
-  nsresult RemoveInlineProperty(nsIAtom* aProperty,
+  nsresult RemoveInlineProperty(nsAtom* aProperty,
                                 const nsAString& aAttribute);
 protected:
   virtual ~HTMLEditor();
@@ -283,8 +283,8 @@ public:
   /**
    * returns true if aParentTag can contain a child of type aChildTag.
    */
-  virtual bool TagCanContainTag(nsIAtom& aParentTag,
-                                nsIAtom& aChildTag) override;
+  virtual bool TagCanContainTag(nsAtom& aParentTag,
+                                nsAtom& aChildTag) override;
 
   /**
    * Returns true if aNode is a container.
@@ -587,13 +587,13 @@ protected:
    * The nsIContent variant returns aIsSet instead of using an out parameter.
    */
   bool IsTextPropertySetByContent(nsINode* aNode,
-                                  nsIAtom* aProperty,
+                                  nsAtom* aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,
                                   nsAString* outValue = nullptr);
 
   void IsTextPropertySetByContent(nsIDOMNode* aNode,
-                                  nsIAtom* aProperty,
+                                  nsAtom* aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,
                                   bool& aIsSet,
@@ -666,7 +666,7 @@ protected:
                                       int32_t* outStartOffset,
                                       int32_t* outEndOffset,
                                       bool aTrustedInput);
-  nsresult ParseFragment(const nsAString& aStr, nsIAtom* aContextLocalName,
+  nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
                          nsIDocument* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
   void CreateListOfNodesToPaste(dom::DocumentFragment& aFragment,
@@ -735,29 +735,29 @@ protected:
   nsresult SetInlinePropertyOnTextNode(Text& aData,
                                        int32_t aStartOffset,
                                        int32_t aEndOffset,
-                                       nsIAtom& aProperty,
+                                       nsAtom& aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString& aValue);
   nsresult SetInlinePropertyOnNode(nsIContent& aNode,
-                                   nsIAtom& aProperty,
+                                   nsAtom& aProperty,
                                    const nsAString* aAttribute,
                                    const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange,
-                                nsIAtom* aProperty,
+                                nsAtom* aProperty,
                                 const nsAString* aAttribute);
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                                nsIAtom* aProperty,
+                                nsAtom* aProperty,
                                 const nsAString* aAttribute,
                                 nsIContent** aOutLeftNode = nullptr,
                                 nsIContent** aOutRightNode = nullptr);
   nsresult RemoveStyleInside(nsIContent& aNode,
-                             nsIAtom* aProperty,
+                             nsAtom* aProperty,
                              const nsAString* aAttribute,
                              const bool aChildrenOnly = false);
-  nsresult RemoveInlinePropertyImpl(nsIAtom* aProperty,
+  nsresult RemoveInlinePropertyImpl(nsAtom* aProperty,
                                     const nsAString* aAttribute);
 
   bool NodeIsProperty(nsINode& aNode);
@@ -801,7 +801,7 @@ protected:
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
 
-  nsresult GetInlinePropertyBase(nsIAtom& aProperty,
+  nsresult GetInlinePropertyBase(nsAtom& aProperty,
                                  const nsAString* aAttribute,
                                  const nsAString* aValue,
                                  bool* aFirst,
@@ -840,7 +840,7 @@ protected:
                                    bool aClearStyle = true);
 
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                      nsIAtom* aProperty, const nsAString* aAttribute);
+                      nsAtom* aProperty, const nsAString* aAttribute);
 
   void SetElementPosition(Element& aElement, int32_t aX, int32_t aY);
 
@@ -1061,11 +1061,11 @@ public:
 
 private:
   bool IsSimpleModifiableNode(nsIContent* aContent,
-                              nsIAtom* aProperty,
+                              nsAtom* aProperty,
                               const nsAString* aAttribute,
                               const nsAString* aValue);
   nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode,
-                                       nsIAtom& aProperty,
+                                       nsAtom& aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
@@ -1090,7 +1090,7 @@ private:
    *                              is to be added to the created anonymous
    *                              element
    */
-  ManualNACPtr CreateAnonymousElement(nsIAtom* aTag,
+  ManualNACPtr CreateAnonymousElement(nsAtom* aTag,
                                       nsIContent& aParentContent,
                                       const nsAString& aAnonClass,
                                       bool aIsCreatedHidden);

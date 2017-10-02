@@ -853,7 +853,7 @@ namespace
 } // namespace
 
 bool
-nsSMILTimedElement::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
+nsSMILTimedElement::SetAttr(nsAtom* aAttribute, const nsAString& aValue,
                             nsAttrValue& aResult,
                             Element* aContextNode,
                             nsresult* aParseResult)
@@ -894,7 +894,7 @@ nsSMILTimedElement::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
 }
 
 bool
-nsSMILTimedElement::UnsetAttr(nsIAtom* aAttribute)
+nsSMILTimedElement::UnsetAttr(nsAtom* aAttribute)
 {
   bool foundMatch = true;
 

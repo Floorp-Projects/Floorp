@@ -728,7 +728,7 @@ nsRangeFrame::DoUpdateRangeProgressFrame(nsIFrame* aRangeProgressFrame,
 
 nsresult
 nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
-                               nsIAtom* aAttribute,
+                               nsAtom* aAttribute,
                                int32_t  aModType)
 {
   NS_ASSERTION(mTrackDiv, "The track div must exist!");

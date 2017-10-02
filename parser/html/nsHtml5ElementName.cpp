@@ -27,7 +27,7 @@
 
 #define nsHtml5ElementName_cpp__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -55,8 +55,8 @@
 #include "nsHtml5ElementName.h"
 
 nsHtml5ElementName::nsHtml5ElementName(
-  nsIAtom* name,
-  nsIAtom* camelCaseName,
+  nsAtom* name,
+  nsAtom* camelCaseName,
   mozilla::dom::HTMLContentCreatorFunction htmlCreator,
   mozilla::dom::SVGContentCreatorFunction svgCreator,
   int32_t flags)

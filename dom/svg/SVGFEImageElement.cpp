@@ -111,7 +111,7 @@ SVGFEImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
 // nsIContent methods:
 
 NS_IMETHODIMP_(bool)
-SVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
+SVGFEImageElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sGraphicsMap
@@ -122,7 +122,7 @@ SVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 nsresult
-SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -267,7 +267,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
 bool
 SVGFEImageElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                             nsIAtom* aAttribute) const
+                                             nsAtom* aAttribute) const
 {
   // nsGkAtoms::href is deliberately omitted as the frame has special
   // handling to load the image

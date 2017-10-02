@@ -4289,7 +4289,7 @@ void
 PresShell::AttributeWillChange(nsIDocument* aDocument,
                                Element*     aElement,
                                int32_t      aNameSpaceID,
-                               nsIAtom*     aAttribute,
+                               nsAtom*     aAttribute,
                                int32_t      aModType,
                                const nsAttrValue* aNewValue)
 {
@@ -4312,7 +4312,7 @@ void
 PresShell::AttributeChanged(nsIDocument* aDocument,
                             Element*     aElement,
                             int32_t      aNameSpaceID,
-                            nsIAtom*     aAttribute,
+                            nsAtom*     aAttribute,
                             int32_t      aModType,
                             const nsAttrValue* aOldValue)
 {
@@ -9641,7 +9641,7 @@ FindTopFrame(nsIFrame* aRoot)
   if (aRoot) {
     nsIContent* content = aRoot->GetContent();
     if (content) {
-      nsIAtom* tag;
+      nsAtom* tag;
       content->GetTag(tag);
       if (nullptr != tag) {
         NS_RELEASE(tag);

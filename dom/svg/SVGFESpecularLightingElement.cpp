@@ -90,7 +90,7 @@ SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInst
 
 bool
 SVGFESpecularLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                        nsIAtom* aAttribute) const
+                                                        nsAtom* aAttribute) const
 {
   return SVGFESpecularLightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

@@ -8,7 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsILineIterator.h"
 #include "nsTArray.h"
 #include "nsTableFrame.h"

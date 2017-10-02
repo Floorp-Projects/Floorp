@@ -16,7 +16,7 @@
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
 
-class nsIAtom;
+class nsAtom;
 class nsITabParent;
 class nsITraceableChannel;
 
@@ -63,7 +63,7 @@ public:
   void UnregisterTraceableChannel(uint64_t aChannelId);
 
   already_AddRefed<nsITraceableChannel>
-  GetTraceableChannel(uint64_t aChannelId, nsIAtom* aAddonId,
+  GetTraceableChannel(uint64_t aChannelId, nsAtom* aAddonId,
                       dom::nsIContentParent* aContentParent);
 
 private:

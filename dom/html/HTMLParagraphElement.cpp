@@ -27,7 +27,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
 
 bool
 HTMLParagraphElement::ParseAttribute(int32_t aNamespaceID,
-                                     nsIAtom* aAttribute,
+                                     nsAtom* aAttribute,
                                      const nsAString& aValue,
                                      nsAttrValue& aResult)
 {
@@ -48,7 +48,7 @@ HTMLParagraphElement::MapAttributesIntoRule(const nsMappedAttributes* aAttribute
 }
 
 NS_IMETHODIMP_(bool)
-HTMLParagraphElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLParagraphElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sDivAlignAttributeMap,

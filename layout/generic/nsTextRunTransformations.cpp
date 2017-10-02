@@ -245,7 +245,7 @@ enum LanguageSpecificCasingBehavior {
 };
 
 static LanguageSpecificCasingBehavior
-GetCasingFor(const nsIAtom* aLang)
+GetCasingFor(const nsAtom* aLang)
 {
   if (!aLang) {
       return eLSCB_None;
@@ -268,11 +268,11 @@ GetCasingFor(const nsIAtom* aLang)
   }
 
   // Is there a region subtag we should ignore?
-  nsAtomString langStr(const_cast<nsIAtom*>(aLang));
+  nsAtomString langStr(const_cast<nsAtom*>(aLang));
   int index = langStr.FindChar('-');
   if (index > 0) {
     langStr.Truncate(index);
-    RefPtr<nsIAtom> truncatedLang = NS_Atomize(langStr);
+    RefPtr<nsAtom> truncatedLang = NS_Atomize(langStr);
     return GetCasingFor(truncatedLang);
   }
 
@@ -284,7 +284,7 @@ nsCaseTransformTextRunFactory::TransformString(
     const nsAString& aString,
     nsString& aConvertedString,
     bool aAllUppercase,
-    const nsIAtom* aLanguage,
+    const nsAtom* aLanguage,
     nsTArray<bool>& aCharsToMergeArray,
     nsTArray<bool>& aDeletedCharsArray,
     const nsTransformedTextRun* aTextRun,
@@ -310,7 +310,7 @@ nsCaseTransformTextRunFactory::TransformString(
 
   uint8_t style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE : 0;
   bool forceNonFullWidth = false;
-  const nsIAtom* lang = aLanguage;
+  const nsAtom* lang = aLanguage;
 
   LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
   mozilla::GreekCasing::State greekState;
@@ -334,7 +334,7 @@ nsCaseTransformTextRunFactory::TransformString(
         charStyle->mTextTransform;
       forceNonFullWidth = charStyle->mForceNonFullWidth;
 
-      nsIAtom* newLang = charStyle->mExplicitLanguage
+      nsAtom* newLang = charStyle->mExplicitLanguage
                          ? charStyle->mLanguage.get() : nullptr;
       if (lang != newLang) {
         lang = newLang;

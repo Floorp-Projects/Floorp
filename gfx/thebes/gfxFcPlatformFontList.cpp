@@ -1168,7 +1168,7 @@ PatternHasLang(const FcPattern *aPattern, const FcChar8 *aLang)
 }
 
 bool
-gfxFontconfigFontFamily::SupportsLangGroup(nsIAtom *aLangGroup) const
+gfxFontconfigFontFamily::SupportsLangGroup(nsAtom *aLangGroup) const
 {
     if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
         return true;
@@ -1388,7 +1388,7 @@ gfxFcPlatformFontList::InitFontListForPlatform()
 // FcFontList results in the list containing the localized names as dictated
 // by system defaults.
 static void
-GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsIAtom *aLangGroup)
+GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsAtom *aLangGroup)
 {
     aListOfFonts.Clear();
 
@@ -1438,7 +1438,7 @@ GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsIAtom *aLangGroup)
 }
 
 void
-gfxFcPlatformFontList::GetFontList(nsIAtom *aLangGroup,
+gfxFcPlatformFontList::GetFontList(nsAtom *aLangGroup,
                                    const nsACString& aGenericFamily,
                                    nsTArray<nsString>& aListOfFonts)
 {
@@ -1540,7 +1540,7 @@ gfxFcPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
 {
     nsAutoString familyName(aFamily);
     ToLowerCase(familyName);
-    nsIAtom* language = (aStyle ? aStyle->language.get() : nullptr);
+    nsAtom* language = (aStyle ? aStyle->language.get() : nullptr);
 
     // deprecated generic names are explicitly converted to standard generics
     bool isDeprecatedGeneric = false;
@@ -1729,7 +1729,7 @@ gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
 
 void
 gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
-                                       nsIAtom* aLanguage,
+                                       nsAtom* aLanguage,
                                        nsTArray<gfxFontFamily*>& aFamilyList)
 {
     bool usePrefFontList = false;
@@ -1751,7 +1751,7 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
     NS_ConvertASCIItoUTF16 genericToLookup(generic);
     if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
         aLanguage == nsGkAtoms::x_math) {
-        nsIAtom* langGroup = GetLangGroup(aLanguage);
+        nsAtom* langGroup = GetLangGroup(aLanguage);
         nsAutoString fontlistValue;
         Preferences::GetString(NamePref(generic, langGroup).get(),
                                fontlistValue);
@@ -1840,7 +1840,7 @@ gfxFcPlatformFontList::GetFTLibrary()
 
 gfxPlatformFontList::PrefFontList*
 gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
-                                           nsIAtom* aLanguage)
+                                           nsAtom* aLanguage)
 {
     // set up name
     NS_ConvertUTF16toUTF8 generic(aGeneric);

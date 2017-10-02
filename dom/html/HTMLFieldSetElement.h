@@ -35,7 +35,7 @@ public:
   // nsIContent
   virtual nsresult GetEventTargetParent(
                      EventChainPreVisitor& aVisitor) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
@@ -124,7 +124,7 @@ private:
 
   // This function is used to generate the nsContentList (listed form elements).
   static bool MatchListedElements(Element* aElement, int32_t aNamespaceID,
-                                  nsIAtom* aAtom, void* aData);
+                                  nsAtom* aAtom, void* aData);
 
   // listed form controls elements.
   RefPtr<nsContentList> mElements;

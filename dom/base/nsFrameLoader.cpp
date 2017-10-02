@@ -3648,7 +3648,7 @@ nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags)
 nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
                                 mozilla::dom::Element* aElement,
                                 int32_t      aNameSpaceID,
-                                nsIAtom*     aAttribute,
+                                nsAtom*     aAttribute,
                                 int32_t      aModType,
                                 const nsAttrValue* aOldValue)
 {

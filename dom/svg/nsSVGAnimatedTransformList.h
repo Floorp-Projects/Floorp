@@ -13,7 +13,7 @@
 #include "nsISMILAttr.h"
 #include "SVGTransformList.h"
 
-class nsIAtom;
+class nsAtom;
 class nsSMILValue;
 class nsSVGElement;
 
@@ -145,7 +145,7 @@ private:
 
   protected:
     static void ParseValue(const nsAString& aSpec,
-                           const nsIAtom* aTransformType,
+                           const nsAtom* aTransformType,
                            nsSMILValue& aResult);
     static int32_t ParseParameterList(const nsAString& aSpec, float* aVars,
                                       int32_t aNVars);

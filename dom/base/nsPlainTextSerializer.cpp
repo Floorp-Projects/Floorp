@@ -51,7 +51,7 @@ static const  int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
 static const  char16_t  kNBSP = 160;
 static const  char16_t kSPACE = ' ';
 
-static int32_t HeaderLevel(nsIAtom* aTag);
+static int32_t HeaderLevel(nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
 static int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n);
 
@@ -114,7 +114,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // initialize the tag stack to zero:
   // The stack only ever contains pointers to static atoms, so they don't
   // need refcounting.
-  mTagStack = new nsIAtom*[TagStackSize];
+  mTagStack = new nsAtom*[TagStackSize];
   mTagStackIndex = 0;
   mIgnoreAboveIndex = (uint32_t)kNotFound;
 
@@ -257,7 +257,7 @@ nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack)
 }
 
 bool
-nsPlainTextSerializer::ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag)
+nsPlainTextSerializer::ShouldReplaceContainerWithPlaceholder(nsAtom* aTag)
 {
   // If nsIDocumentEncoder::OutputNonTextContentAsPlaceholder is set,
   // non-textual container element should be serialized as placeholder
@@ -278,7 +278,7 @@ nsPlainTextSerializer::ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag)
 }
 
 bool
-nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsIAtom* aTag)
+nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag)
 {
   if (mWithRubyAnnotation) {
     return false;
@@ -402,7 +402,7 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
   mElement = aElement;
 
   nsresult rv;
-  nsIAtom* id = GetIdForContent(mElement);
+  nsAtom* id = GetIdForContent(mElement);
 
   bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
@@ -434,7 +434,7 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
   mElement = aElement;
 
   nsresult rv;
-  nsIAtom* id = GetIdForContent(mElement);
+  nsAtom* id = GetIdForContent(mElement);
 
   bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
@@ -474,7 +474,7 @@ nsPlainTextSerializer::AppendDocumentStart(nsIDocument *aDocument,
 }
 
 nsresult
-nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
+nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag)
 {
   // Check if we need output current node as placeholder character and ignore
   // child nodes.
@@ -827,7 +827,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
 }
 
 nsresult
-nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
+nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag)
 {
   if (ShouldReplaceContainerWithPlaceholder(mElement->NodeInfo()->NameAtom())) {
     mIgnoredChildNodeLevel--;
@@ -1113,7 +1113,7 @@ nsPlainTextSerializer::DoAddText(bool aIsLineBreak, const nsAString& aText)
 }
 
 nsresult
-nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
+nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag)
 {
   mPreformattedBlockBoundary = false;
 
@@ -1803,7 +1803,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
  * NS_ERROR_NOT_AVAILABLE, there was none such attribute specified.
  */
 nsresult
-nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
+nsPlainTextSerializer::GetAttributeValue(nsAtom* aName,
                                          nsString& aValueRet)
 {
   if (mElement) {
@@ -1831,14 +1831,14 @@ nsPlainTextSerializer::IsCurrentNodeConverted()
 
 
 // static
-nsIAtom*
+nsAtom*
 nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 {
   if (!aContent->IsHTMLElement()) {
     return nullptr;
   }
 
-  nsIAtom* localName = aContent->NodeInfo()->NameAtom();
+  nsAtom* localName = aContent->NodeInfo()->NameAtom();
   return localName->IsStaticAtom() ? localName : nullptr;
 }
 
@@ -1897,7 +1897,7 @@ nsPlainTextSerializer::IsInOL()
 /*
   @return 0 = no header, 1 = h1, ..., 6 = h6
 */
-int32_t HeaderLevel(nsIAtom* aTag)
+int32_t HeaderLevel(nsAtom* aTag)
 {
   if (aTag == nsGkAtoms::h1) {
     return 1;

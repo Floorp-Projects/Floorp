@@ -63,7 +63,7 @@ public:
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t  aModType) override;
 
   // nsIAnonymousContentCreator
@@ -85,7 +85,7 @@ public:
 
   // nsIFormControlFrame
   virtual void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
+  virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
 
   /**
    * This method attempts to localizes aValue and then sets the result as the
@@ -165,7 +165,7 @@ private:
   nsITextControlFrame* GetTextFieldFrame();
   nsresult MakeAnonymousElement(Element** aResult,
                                 nsTArray<ContentInfo>& aElements,
-                                nsIAtom* aTagName,
+                                nsAtom* aTagName,
                                 CSSPseudoElementType aPseudoType);
 
   class SyncDisabledStateEvent;

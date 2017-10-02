@@ -85,7 +85,7 @@ public:
   virtual void SetFocus(bool aOn = true, bool aRepaint = false) override;
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
+  virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
 
   // AccessKey Helper function
   static nsresult RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg);

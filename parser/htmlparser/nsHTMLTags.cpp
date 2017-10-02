@@ -24,7 +24,7 @@ const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
 #undef HTML_OTHER
 
 // static array of tag atoms
-nsIAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
+nsAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
 
 int32_t nsHTMLTags::gTableRefCount;
 PLHashTable* nsHTMLTags::gTagTable;
@@ -47,7 +47,7 @@ HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
   return nsCRT::strcmp(str1, str2) == 0;
 }
 
-// nsIAtom* -> id hash
+// nsAtom* -> id hash
 static PLHashNumber
 HTMLTagsHashCodeAtom(const void *key)
 {
@@ -204,7 +204,7 @@ nsHTMLTags::TestTagTable()
 {
      const char16_t *tag;
      nsHTMLTag id;
-     RefPtr<nsIAtom> atom;
+     RefPtr<nsAtom> atom;
 
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to

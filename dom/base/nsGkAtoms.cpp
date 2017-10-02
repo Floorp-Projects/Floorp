@@ -16,7 +16,7 @@
 using namespace mozilla;
 
 // define storage for all atoms
-#define GK_ATOM(name_, value_) nsIAtom* nsGkAtoms::name_;
+#define GK_ATOM(name_, value_) nsAtom* nsGkAtoms::name_;
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 

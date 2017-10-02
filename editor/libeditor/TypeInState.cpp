@@ -20,7 +20,7 @@
 #include "nsReadableUtils.h"
 #include "nsStringFwd.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIDOMDocument;
 
 namespace mozilla {
@@ -133,7 +133,7 @@ TypeInState::Reset()
 
 
 void
-TypeInState::SetProp(nsIAtom* aProp,
+TypeInState::SetProp(nsAtom* aProp,
                      const nsAString& aAttr,
                      const nsAString& aValue)
 {
@@ -170,7 +170,7 @@ TypeInState::ClearAllProps()
 }
 
 void
-TypeInState::ClearProp(nsIAtom* aProp,
+TypeInState::ClearProp(nsAtom* aProp,
                        const nsAString& aAttr)
 {
   // if it's already cleared we are done
@@ -239,7 +239,7 @@ TypeInState::TakeRelativeFontSize()
 void
 TypeInState::GetTypingState(bool& isSet,
                             bool& theSetting,
-                            nsIAtom* aProp)
+                            nsAtom* aProp)
 {
   GetTypingState(isSet, theSetting, aProp, EmptyString(), nullptr);
 }
@@ -247,7 +247,7 @@ TypeInState::GetTypingState(bool& isSet,
 void
 TypeInState::GetTypingState(bool& isSet,
                             bool& theSetting,
-                            nsIAtom* aProp,
+                            nsAtom* aProp,
                             const nsString& aAttr,
                             nsString* aValue)
 {
@@ -263,7 +263,7 @@ TypeInState::GetTypingState(bool& isSet,
 }
 
 void
-TypeInState::RemovePropFromSetList(nsIAtom* aProp,
+TypeInState::RemovePropFromSetList(nsAtom* aProp,
                                    const nsAString& aAttr)
 {
   int32_t index;
@@ -281,7 +281,7 @@ TypeInState::RemovePropFromSetList(nsIAtom* aProp,
 }
 
 void
-TypeInState::RemovePropFromClearedList(nsIAtom* aProp,
+TypeInState::RemovePropFromClearedList(nsAtom* aProp,
                                        const nsAString& aAttr)
 {
   int32_t index;
@@ -292,7 +292,7 @@ TypeInState::RemovePropFromClearedList(nsIAtom* aProp,
 }
 
 bool
-TypeInState::IsPropSet(nsIAtom* aProp,
+TypeInState::IsPropSet(nsAtom* aProp,
                        const nsAString& aAttr,
                        nsAString* outValue)
 {
@@ -301,7 +301,7 @@ TypeInState::IsPropSet(nsIAtom* aProp,
 }
 
 bool
-TypeInState::IsPropSet(nsIAtom* aProp,
+TypeInState::IsPropSet(nsAtom* aProp,
                        const nsAString& aAttr,
                        nsAString* outValue,
                        int32_t& outIndex)
@@ -323,7 +323,7 @@ TypeInState::IsPropSet(nsIAtom* aProp,
 
 
 bool
-TypeInState::IsPropCleared(nsIAtom* aProp,
+TypeInState::IsPropCleared(nsAtom* aProp,
                            const nsAString& aAttr)
 {
   int32_t i;
@@ -332,7 +332,7 @@ TypeInState::IsPropCleared(nsIAtom* aProp,
 
 
 bool
-TypeInState::IsPropCleared(nsIAtom* aProp,
+TypeInState::IsPropCleared(nsAtom* aProp,
                            const nsAString& aAttr,
                            int32_t& outIndex)
 {
@@ -348,7 +348,7 @@ TypeInState::IsPropCleared(nsIAtom* aProp,
 }
 
 bool
-TypeInState::FindPropInList(nsIAtom* aProp,
+TypeInState::FindPropInList(nsAtom* aProp,
                             const nsAString& aAttr,
                             nsAString* outValue,
                             nsTArray<PropItem*>& aList,
@@ -379,7 +379,7 @@ PropItem::PropItem()
   MOZ_COUNT_CTOR(PropItem);
 }
 
-PropItem::PropItem(nsIAtom* aTag,
+PropItem::PropItem(nsAtom* aTag,
                    const nsAString& aAttr,
                    const nsAString &aValue)
   : tag(aTag)

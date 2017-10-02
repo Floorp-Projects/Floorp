@@ -76,7 +76,7 @@ public:
   bool    mIsValid;
 };
 
-#define TS_ATOM(name_, value_) nsIAtom* nsTextServicesDocument::name_ = 0;
+#define TS_ATOM(name_, value_) nsAtom* nsTextServicesDocument::name_ = 0;
 #include "nsTSAtomList.h" // IWYU pragma: keep
 #undef TS_ATOM
 
@@ -2038,7 +2038,7 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
     return false;
   }
 
-  nsIAtom *atom = aContent->NodeInfo()->NameAtom();
+  nsAtom *atom = aContent->NodeInfo()->NameAtom();
 
   return (sAAtom       != atom &&
           sAddressAtom != atom &&

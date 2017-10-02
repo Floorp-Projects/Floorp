@@ -60,9 +60,9 @@ void Relations(nsTArray<RelationType>* aTypes,
 
 bool IsSearchbox() const;
 
-nsIAtom* LandmarkRole() const;
+nsAtom* LandmarkRole() const;
 
-nsIAtom* ARIARoleAtom() const;
+nsAtom* ARIARoleAtom() const;
 
 int32_t GetLevelInternal();
 void ScrollTo(uint32_t aScrollType);

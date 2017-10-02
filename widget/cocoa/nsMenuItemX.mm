@@ -283,7 +283,7 @@ void nsMenuItemX::SetKeyEquiv()
 //
 
 void
-nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
+nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsAtom *aAttribute)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 

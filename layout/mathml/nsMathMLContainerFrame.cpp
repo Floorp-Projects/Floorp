@@ -763,7 +763,7 @@ nsMathMLContainerFrame::RemoveFrame(ChildListID     aListID,
 
 nsresult
 nsMathMLContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                         nsIAtom*        aAttribute,
+                                         nsAtom*        aAttribute,
                                          int32_t         aModType)
 {
   // XXX Since they are numerous MathML attributes that affect layout, and
@@ -1536,7 +1536,7 @@ nsMathMLContainerFrame::ReportChildCountError()
 }
 
 nsresult
-nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
+nsMathMLContainerFrame::ReportInvalidChildError(nsAtom* aChildTag)
 {
   const char16_t* argv[] =
     { aChildTag->GetUTF16String(),

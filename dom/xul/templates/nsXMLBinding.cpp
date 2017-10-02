@@ -16,7 +16,7 @@ nsXMLBindingSet::~nsXMLBindingSet()
 {}
 
 void
-nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsAutoPtr<XPathExpression>&& aExpr)
+nsXMLBindingSet::AddBinding(nsAtom* aVar, nsAutoPtr<XPathExpression>&& aExpr)
 {
   nsAutoPtr<nsXMLBinding> newbinding(new nsXMLBinding(aVar, Move(aExpr)));
 
@@ -44,7 +44,7 @@ nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsAutoPtr<XPathExpression>&& aExpr)
 }
 
 int32_t
-nsXMLBindingSet::LookupTargetIndex(nsIAtom* aTargetVariable,
+nsXMLBindingSet::LookupTargetIndex(nsAtom* aTargetVariable,
                                    nsXMLBinding** aBinding)
 {
   int32_t idx = 0;

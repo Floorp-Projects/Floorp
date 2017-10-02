@@ -28,7 +28,7 @@
 #ifndef nsHtml5ElementName_h
 #define nsHtml5ElementName_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -77,16 +77,16 @@ public:
   static const int32_t OPTIONAL_END_TAG = (1 << 23);
 
 private:
-  nsIAtom* name;
-  nsIAtom* camelCaseName;
+  nsAtom* name;
+  nsAtom* camelCaseName;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
   mozilla::dom::SVGContentCreatorFunction svgCreator;
 
 public:
   int32_t flags;
-  inline nsIAtom* getName() { return name; }
+  inline nsAtom* getName() { return name; }
 
-  inline nsIAtom* getCamelCaseName() { return camelCaseName; }
+  inline nsAtom* getCamelCaseName() { return camelCaseName; }
 
   inline mozilla::dom::HTMLContentCreatorFunction getHtmlCreator()
   {
@@ -140,7 +140,7 @@ public:
     } else {
       nsHtml5ElementName* elementName =
         nsHtml5ElementName::ELEMENT_NAMES[index];
-      nsIAtom* name = elementName->name;
+      nsAtom* name = elementName->name;
       if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
         return nullptr;
       }
@@ -179,8 +179,8 @@ public:
       return len + first + second + third + fourth + fifth;
     }
 
-    nsHtml5ElementName(nsIAtom* name,
-                       nsIAtom* camelCaseName,
+    nsHtml5ElementName(nsAtom* name,
+                       nsAtom* camelCaseName,
                        mozilla::dom::HTMLContentCreatorFunction htmlCreator,
                        mozilla::dom::SVGContentCreatorFunction svgCreator,
                        int32_t flags);
@@ -188,7 +188,7 @@ public:
   public:
     nsHtml5ElementName();
     ~nsHtml5ElementName();
-    inline void setNameForNonInterned(nsIAtom* name, bool custom)
+    inline void setNameForNonInterned(nsAtom* name, bool custom)
     {
       this->name = name;
       this->camelCaseName = name;

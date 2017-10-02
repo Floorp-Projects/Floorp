@@ -28,7 +28,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLPreElement)
 
 bool
 HTMLPreElement::ParseAttribute(int32_t aNamespaceID,
-                               nsIAtom* aAttribute,
+                               nsAtom* aAttribute,
                                const nsAString& aValue,
                                nsAttrValue& aResult)
 {
@@ -58,7 +58,7 @@ HTMLPreElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLPreElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   if (!mNodeInfo->Equals(nsGkAtoms::pre)) {
     return nsGenericHTMLElement::IsAttributeMapped(aAttribute);

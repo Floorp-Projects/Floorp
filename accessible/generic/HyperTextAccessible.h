@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual nsIAtom* LandmarkRole() const override;
+  virtual nsAtom* LandmarkRole() const override;
   virtual int32_t GetLevelInternal() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() override;

@@ -125,7 +125,7 @@ nsXULContentUtils::GetCollation()
 nsresult
 nsXULContentUtils::FindChildByTag(nsIContent* aElement,
                                   int32_t aNameSpaceID,
-                                  nsIAtom* aTag,
+                                  nsAtom* aTag,
                                   nsIContent** aResult)
 {
     for (nsIContent* child = aElement->GetFirstChild();
@@ -216,7 +216,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
 }
 
 nsresult
-nsXULContentUtils::GetResource(int32_t aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)
+nsXULContentUtils::GetResource(int32_t aNameSpaceID, nsAtom* aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
     NS_PRECONDITION(aAttribute != nullptr, "null ptr");

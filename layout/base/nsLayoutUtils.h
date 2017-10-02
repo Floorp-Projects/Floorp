@@ -39,7 +39,7 @@
 class gfxContext;
 class nsPresContext;
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 class nsIScrollableFrame;
 class nsIDOMEvent;
 class nsRegion;
@@ -399,7 +399,7 @@ public:
    * @return whether aFrame is the generated aPseudoElement frame for aContent
    */
   static bool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
-                                      nsIAtom* aPseudoElement);
+                                      nsAtom* aPseudoElement);
 
 #ifdef DEBUG
   // TODO: remove, see bug 598468.
@@ -2875,7 +2875,7 @@ public:
    * returns true for those, and returns false for other origins like APZ
    * itself, or scroll position updates from the history restore code.
    */
-  static bool CanScrollOriginClobberApz(nsIAtom* aScrollOrigin);
+  static bool CanScrollOriginClobberApz(nsAtom* aScrollOrigin);
 
   static ScrollMetadata ComputeScrollMetadata(nsIFrame* aForFrame,
                                               nsIFrame* aScrollFrame,
@@ -3161,27 +3161,27 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
 class nsSetAttrRunnable : public mozilla::Runnable
 {
 public:
-  nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+  nsSetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName,
                     const nsAString& aValue);
-  nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+  nsSetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName,
                     int32_t aValue);
 
   NS_DECL_NSIRUNNABLE
 
   nsCOMPtr<nsIContent> mContent;
-  RefPtr<nsIAtom> mAttrName;
+  RefPtr<nsAtom> mAttrName;
   nsAutoString mValue;
 };
 
 class nsUnsetAttrRunnable : public mozilla::Runnable
 {
 public:
-  nsUnsetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName);
+  nsUnsetAttrRunnable(nsIContent* aContent, nsAtom* aAttrName);
 
   NS_DECL_NSIRUNNABLE
 
   nsCOMPtr<nsIContent> mContent;
-  RefPtr<nsIAtom> mAttrName;
+  RefPtr<nsAtom> mAttrName;
 };
 
 // This class allows you to easily set any pointer variable and ensure it's

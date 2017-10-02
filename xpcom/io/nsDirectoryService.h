@@ -10,7 +10,7 @@
 #include "nsIDirectoryService.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIFile.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
@@ -55,7 +55,7 @@ private:
 
 public:
 
-#define DIR_ATOM(name_, value_) static nsIAtom* name_;
+#define DIR_ATOM(name_, value_) static nsAtom* name_;
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
 

@@ -188,7 +188,7 @@ nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
 
 nsresult
 nsMeterFrame::AttributeChanged(int32_t  aNameSpaceID,
-                               nsIAtom* aAttribute,
+                               nsAtom* aAttribute,
                                int32_t  aModType)
 {
   NS_ASSERTION(mBarDiv, "Meter bar div must exist!");

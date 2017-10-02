@@ -10,7 +10,7 @@
 #ifndef nsMenuFrame_h__
 #define nsMenuFrame_h__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 
 #include "nsBoxFrame.h"
@@ -253,7 +253,7 @@ protected:
 
   // This method can destroy the frame
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t aModType) override;
   virtual ~nsMenuFrame() { }
 

@@ -177,7 +177,7 @@ var ignoreFunctions = {
 
     // Bug 1056410 - devirtualization prevents the standard nsISupports::Release heuristic from working
     "uint32 nsXPConnect::Release()" : true,
-    "uint32 nsIAtom::Release()" : true,
+    "uint32 nsAtom::Release()" : true,
 
     // Allocation API
     "malloc": true,

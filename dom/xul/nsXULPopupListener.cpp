@@ -310,7 +310,7 @@ nsXULPopupListener::ClosePopup()
 } // ClosePopup
 
 static already_AddRefed<nsIContent>
-GetImmediateChild(nsIContent* aContent, nsIAtom *aTag)
+GetImmediateChild(nsIContent* aContent, nsAtom *aTag)
 {
   for (nsIContent* child = aContent->GetFirstChild();
        child;
@@ -345,7 +345,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   nsresult rv = NS_OK;
 
   nsAutoString identifier;
-  nsIAtom* type = mIsContext ? nsGkAtoms::context : nsGkAtoms::popup;
+  nsAtom* type = mIsContext ? nsGkAtoms::context : nsGkAtoms::popup;
   bool hasPopupAttr = mElement->GetAttr(kNameSpaceID_None, type, identifier);
 
   if (identifier.IsEmpty()) {

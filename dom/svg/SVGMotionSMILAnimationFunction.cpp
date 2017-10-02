@@ -31,7 +31,7 @@ SVGMotionSMILAnimationFunction::SVGMotionSMILAnimationFunction()
 }
 
 void
-SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute)
+SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(nsAtom* aAttribute)
 {
   bool isAffected;
   if (aAttribute == nsGkAtoms::path) {
@@ -55,7 +55,7 @@ SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(nsIAtom* aAttrib
 }
 
 bool
-SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
+SVGMotionSMILAnimationFunction::SetAttr(nsAtom* aAttribute,
                                         const nsAString& aValue,
                                         nsAttrValue& aResult,
                                         nsresult* aParseResult)
@@ -91,7 +91,7 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
 }
 
 bool
-SVGMotionSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
+SVGMotionSMILAnimationFunction::UnsetAttr(nsAtom* aAttribute)
 {
   if (aAttribute == nsGkAtoms::keyPoints) {
     UnsetKeyPoints();

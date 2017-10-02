@@ -61,7 +61,7 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "prdtoa.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIURI.h"
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
@@ -933,7 +933,7 @@ Accessible::Attributes()
     return attributes.forget();
 
   // 'xml-roles' attribute for landmark.
-  nsIAtom* landmark = LandmarkRole();
+  nsAtom* landmark = LandmarkRole();
   if (landmark) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, landmark);
 
@@ -1483,7 +1483,7 @@ Accessible::ARIATransformRole(role aRole)
   return aRole;
 }
 
-nsIAtom*
+nsAtom*
 Accessible::LandmarkRole() const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
@@ -2564,7 +2564,7 @@ Accessible::CurrentItem()
 void
 Accessible::SetCurrentItem(Accessible* aItem)
 {
-  nsIAtom* id = aItem->GetContent()->GetID();
+  nsAtom* id = aItem->GetContent()->GetID();
   if (id) {
     nsAutoString idStr;
     id->ToString(idStr);
@@ -2647,7 +2647,7 @@ Accessible::GetSiblingAtOffset(int32_t aOffset, nsresult* aError) const
 }
 
 double
-Accessible::AttrNumericValue(nsIAtom* aAttr) const
+Accessible::AttrNumericValue(nsAtom* aAttr) const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)

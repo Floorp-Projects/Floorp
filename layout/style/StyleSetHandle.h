@@ -28,7 +28,7 @@ class ShadowRoot;
 class nsBindingManager;
 class nsCSSCounterStyleRule;
 struct nsFontFaceRuleContainer;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIDocument;
 class nsStyleContext;
@@ -140,10 +140,10 @@ public:
                               nsStyleContext* aParentContext,
                               dom::Element* aPseudoElement);
     inline already_AddRefed<nsStyleContext>
-    ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+    ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
                                        nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
-    ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
+    ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag);
     inline nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);
     inline nsresult PrependStyleSheet(SheetType aType, StyleSheet* aSheet);
     inline nsresult RemoveStyleSheet(SheetType aType, StyleSheet* aSheet);
@@ -175,7 +175,7 @@ public:
     inline void RootStyleContextRemoved();
 
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
-    inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
+    inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
     inline already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
 
     inline bool EnsureUniqueInnerOnCSSSheets();

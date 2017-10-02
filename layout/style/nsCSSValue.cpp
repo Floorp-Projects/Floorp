@@ -512,7 +512,7 @@ void nsCSSValue::SetStringValue(const nsString& aValue,
 }
 
 void
-nsCSSValue::SetAtomIdentValue(already_AddRefed<nsIAtom> aValue)
+nsCSSValue::SetAtomIdentValue(already_AddRefed<nsAtom> aValue)
 {
   Reset();
   mUnit = eCSSUnit_AtomIdent;
@@ -989,7 +989,7 @@ void
 nsCSSValue::AtomizeIdentValue()
 {
   MOZ_ASSERT(mUnit == eCSSUnit_Ident);
-  RefPtr<nsIAtom> atom = NS_Atomize(GetStringBufferValue());
+  RefPtr<nsAtom> atom = NS_Atomize(GetStringBufferValue());
   Reset();
   mUnit = eCSSUnit_AtomIdent;
   mValue.mAtom = atom.forget().take();

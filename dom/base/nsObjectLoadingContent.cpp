@@ -930,7 +930,7 @@ nsObjectLoadingContent::BuildParametersArray()
   for (uint32_t i = 0; i != content->GetAttrCount(); i += 1) {
     MozPluginParameter param;
     const nsAttrName* attrName = content->GetAttrNameAt(i);
-    nsIAtom* atom = attrName->LocalName();
+    nsAtom* atom = attrName->LocalName();
     content->GetAttr(attrName->NamespaceID(), atom, param.mValue);
     atom->ToString(param.mName);
     mCachedAttributes.AppendElement(param);

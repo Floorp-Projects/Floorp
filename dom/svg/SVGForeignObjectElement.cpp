@@ -133,7 +133,7 @@ SVGForeignObjectElement::BindToTree(nsIDocument* aDocument,
 }
 
 NS_IMETHODIMP_(bool)
-SVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
+SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap,
