@@ -173,6 +173,13 @@ public class WebAppManifest {
         return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
     }
 
+    private static Uri stripPath(final Uri uri) {
+        return new Uri.Builder()
+            .scheme(uri.getScheme())
+            .authority(uri.getAuthority())
+            .build();
+    }
+
     private static Uri stripLastPathSegment(final Uri uri) {
         final Uri.Builder builder = new Uri.Builder()
             .scheme(uri.getScheme())
@@ -187,7 +194,7 @@ public class WebAppManifest {
     }
 
     private Uri readScope(final JSONObject manifest) {
-        final Uri defaultScope = stripLastPathSegment(mStartUri);
+        final Uri defaultScope = stripPath(mStartUri);
         final String scopeStr = manifest.optString("scope", null);
         if (scopeStr == null) {
             return defaultScope;
