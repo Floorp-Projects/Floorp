@@ -638,10 +638,10 @@ protected:
 
   // These members are only used on outer windows.
   nsCOMPtr<mozilla::dom::Element> mFrameElement;
-  // This reference is used by the subclass nsGlobalWindow, and cleared in it's
-  // DetachFromDocShell() method. This method is called by nsDocShell::Destroy(),
-  // which is called before the nsDocShell is destroyed.
-  nsIDocShell* MOZ_NON_OWNING_REF mDocShell;  // Weak Reference
+
+  // This reference is used by nsGlobalWindow.
+  // nsIDocShell* mDocShell;
+  nsCOMPtr<nsIDocShell> mDocShell;
 
   // mPerformance is only used on inner windows.
   RefPtr<mozilla::dom::Performance> mPerformance;
