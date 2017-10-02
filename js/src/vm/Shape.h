@@ -733,8 +733,8 @@ class Shape : public gc::TenuredCell
         LINEAR_SEARCHES_MASK   = LINEAR_SEARCHES_MAX << LINEAR_SEARCHES_SHIFT,
 
         /*
-         * Mask to get the index in object slots for shapes which hasSlot().
-         * For !hasSlot() shapes in the property tree with a parent, stores the
+         * Mask to get the index in object slots for isDataProperty() shapes.
+         * For other shapes in the property tree with a parent, stores the
          * parent's slot index (which may be invalid), and invalid for all
          * other shapes.
          */
@@ -788,7 +788,7 @@ class Shape : public gc::TenuredCell
         MOZ_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
                       p->maybeSlot() <= maybeSlot());
         MOZ_ASSERT_IF(p && !inDictionary(),
-                      hasSlot() == (p->maybeSlot() != maybeSlot()));
+                      isDataProperty() == (p->maybeSlot() != maybeSlot()));
         parent = p;
     }
 
@@ -936,9 +936,10 @@ class Shape : public gc::TenuredCell
 
     /*
      * Whether this shape has a valid slot value. This may be true even if
-     * !hasSlot() (see SlotInfo comment above), and may be false even if
-     * hasSlot() if the shape is being constructed and has not had a slot
-     * assigned yet. After construction, hasSlot() implies !hasMissingSlot().
+     * !isDataProperty() (see SlotInfo comment above), and may be false even if
+     * isDataProperty() if the shape is being constructed and has not had a slot
+     * assigned yet. After construction, isDataProperty() implies
+     * !hasMissingSlot().
      */
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
@@ -1012,10 +1013,11 @@ class Shape : public gc::TenuredCell
 
     BaseShape* base() const { return base_.get(); }
 
-    bool hasSlot() const {
-        return !isEmptyShape() && !getter() && !setter();
+    bool isDataProperty() const {
+        MOZ_ASSERT(!isEmptyShape());
+        return !getter() && !setter();
     }
-    uint32_t slot() const { MOZ_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
+    uint32_t slot() const { MOZ_ASSERT(isDataProperty() && !hasMissingSlot()); return maybeSlot(); }
     uint32_t maybeSlot() const {
         return slotInfo & SLOT_MASK;
     }
@@ -1472,13 +1474,13 @@ struct StackShape
         this->rawSetter = rawSetter;
     }
 
-    bool hasSlot() const {
+    bool isDataProperty() const {
         MOZ_ASSERT(!JSID_IS_EMPTY(propid));
         return !rawGetter && !rawSetter;
     }
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
-    uint32_t slot() const { MOZ_ASSERT(hasSlot() && !hasMissingSlot()); return slot_; }
+    uint32_t slot() const { MOZ_ASSERT(isDataProperty() && !hasMissingSlot()); return slot_; }
     uint32_t maybeSlot() const { return slot_; }
 
     void setSlot(uint32_t slot) {
@@ -1507,7 +1509,7 @@ class WrappedPtrOperations<StackShape, Wrapper>
     const StackShape& ss() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
-    bool hasSlot() const { return ss().hasSlot(); }
+    bool isDataProperty() const { return ss().isDataProperty(); }
     bool hasMissingSlot() const { return ss().hasMissingSlot(); }
     uint32_t slot() const { return ss().slot(); }
     uint32_t maybeSlot() const { return ss().maybeSlot(); }

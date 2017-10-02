@@ -1150,7 +1150,7 @@ js::FunctionHasDefaultHasInstance(JSFunction* fun, const WellKnownSymbols& symbo
     jsid id = SYMBOL_TO_JSID(symbols.hasInstance);
     Shape* shape = fun->lookupPure(id);
     if (shape) {
-        if (!shape->hasSlot() || !shape->hasDefaultGetter())
+        if (!shape->isDataProperty())
             return false;
         const Value hasInstance = fun->as<NativeObject>().getSlot(shape->slot());
         return IsNativeFunction(hasInstance, js::fun_symbolHasInstance);
