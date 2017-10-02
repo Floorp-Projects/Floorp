@@ -130,7 +130,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["domnode"],
     spec: "devtools/shared/specs/node",
-    front: "devtools/shared/fronts/inspector",
+    front: "devtools/shared/fronts/node",
   },
   {
     types: ["performance"],
