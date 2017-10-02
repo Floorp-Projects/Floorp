@@ -827,6 +827,10 @@ html|span.ac-emphasize-text-url {
  * Tab Drag and Drop
  */
 
+.tab-drop-indicator-box {
+  -moz-box-align: center;
+}
+
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
   margin-top: -2px;
