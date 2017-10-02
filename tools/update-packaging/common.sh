@@ -16,9 +16,21 @@ if [[ -z "${MAR_OLD_FORMAT}" ]]; then
   XZ=${XZ:-xz}
   $XZ --version > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "xz was not found on this system!"
-    echo "exiting"
-    exit 1
+    # If $XZ is not set and not found on the path then this is probably
+    # running on a windows buildbot. Some of the Windows build systems have
+    # xz.exe in topsrcdir/xz/. Look in the places this would be in both a
+    # mozilla-central and comm-central build.
+    XZ="$(dirname "$(dirname "$(dirname "$0")")")/xz/xz.exe"
+    $XZ --version > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      XZ="$(dirname "$(dirname "$(dirname "$(dirname "$0")")")")/xz/xz.exe"
+      $XZ --version > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "xz was not found on this system!"
+        echo "exiting"
+        exit 1
+      fi
+    fi
   fi
 else
   MAR_OLD_FORMAT=1
