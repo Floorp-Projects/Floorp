@@ -35,27 +35,15 @@ HTMLOutputElement::~HTMLOutputElement()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLOutputElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
+                                   nsGenericHTMLFormElement,
+                                   mValidity,
+                                   mTokenList)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLOutputElement,
-                                                nsGenericHTMLFormElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTokenList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLOutputElement,
-                                                  nsGenericHTMLFormElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTokenList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(HTMLOutputElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLOutputElement, Element)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLOutputElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLOutputElement,
-                               nsIMutationObserver,
-                               nsIConstraintValidation)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
+                                             nsGenericHTMLFormElement,
+                                             nsIMutationObserver,
+                                             nsIConstraintValidation)
 
 NS_IMPL_ELEMENT_CLONE(HTMLOutputElement)
 
