@@ -239,7 +239,7 @@ const uint32_t sFileStreamFlags =
   nsIFileInputStream::SHARE_DELETE;
 
 void
-FileBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+FileBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> stream;
   aRv = NS_NewLocalFileInputStream(getter_AddRefs(stream), mFile, -1, -1,

@@ -41,7 +41,7 @@ public:
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  virtual void GetInternalStream(nsIInputStream** aStream,
+  virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
 
   virtual already_AddRefed<BlobImpl>

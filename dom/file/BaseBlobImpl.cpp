@@ -91,7 +91,7 @@ BaseBlobImpl::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   ErrorResult rv;
 
   nsCOMPtr<nsIInputStream> stream;
-  GetInternalStream(getter_AddRefs(stream), rv);
+  CreateInputStream(getter_AddRefs(stream), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
