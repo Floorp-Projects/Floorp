@@ -2319,7 +2319,9 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
                      "element should be equals to the current element "
                      "associated with the id in @form!");
 
-        if (element && element->IsHTMLElement(nsGkAtoms::form)) {
+        if (element &&
+            element->IsHTMLElement(nsGkAtoms::form) &&
+            nsContentUtils::IsInSameAnonymousTree(this, element)) {
           SetForm(static_cast<HTMLFormElement*>(element), aBindToTree);
         }
       }
