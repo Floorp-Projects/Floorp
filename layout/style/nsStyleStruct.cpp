@@ -1039,6 +1039,97 @@ StyleBasicShape::GetShapeTypeName() const
 }
 
 // --------------------
+// StyleShapeSource
+
+StyleShapeSource::StyleShapeSource(const StyleShapeSource& aSource)
+{
+  DoCopy(aSource);
+}
+
+StyleShapeSource&
+StyleShapeSource::operator=(const StyleShapeSource& aOther)
+{
+  if (this != &aOther) {
+    DoCopy(aOther);
+  }
+
+  return *this;
+}
+
+bool
+StyleShapeSource::operator==(const StyleShapeSource& aOther) const
+{
+  if (mType != aOther.mType) {
+    return false;
+  }
+
+  if (mType == StyleShapeSourceType::URL) {
+    return DefinitelyEqualURIs(GetURL(), aOther.GetURL());
+  } else if (mType == StyleShapeSourceType::Shape) {
+    return *mBasicShape == *aOther.mBasicShape &&
+      mReferenceBox == aOther.mReferenceBox;
+  } else if (mType == StyleShapeSourceType::Box) {
+    return mReferenceBox == aOther.mReferenceBox;
+  }
+
+  return true;
+}
+
+bool
+StyleShapeSource::SetURL(css::URLValue* aValue)
+{
+  MOZ_ASSERT(aValue);
+  if (!mShapeImage) {
+    mShapeImage = MakeUnique<nsStyleImage>();
+  }
+  mShapeImage->SetURLValue(do_AddRef(aValue));
+  mType = StyleShapeSourceType::URL;
+  return true;
+}
+
+void
+StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
+                                StyleGeometryBox aReferenceBox)
+{
+  NS_ASSERTION(aBasicShape, "expected pointer");
+  mBasicShape = Move(aBasicShape);
+  mReferenceBox = aReferenceBox;
+  mType = StyleShapeSourceType::Shape;
+}
+
+void
+StyleShapeSource::SetReferenceBox(StyleGeometryBox aReferenceBox)
+{
+  mReferenceBox = aReferenceBox;
+  mType = StyleShapeSourceType::Box;
+}
+
+void
+StyleShapeSource::DoCopy(const StyleShapeSource& aOther)
+{
+
+  switch (aOther.mType) {
+    case StyleShapeSourceType::None:
+      mReferenceBox = StyleGeometryBox::NoBox;
+      mType = StyleShapeSourceType::None;
+      break;
+
+    case StyleShapeSourceType::URL:
+      SetURL(aOther.GetURL());
+      break;
+
+    case StyleShapeSourceType::Shape:
+      SetBasicShape(MakeUnique<StyleBasicShape>(*aOther.GetBasicShape()),
+                    aOther.GetReferenceBox());
+      break;
+
+    case StyleShapeSourceType::Box:
+      SetReferenceBox(aOther.GetReferenceBox());
+      break;
+  }
+}
+
+// --------------------
 // nsStyleFilter
 //
 nsStyleFilter::nsStyleFilter()
@@ -1219,7 +1310,7 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!mClipPath.DefinitelyEquals(aNewData.mClipPath)) {
+  if (mClipPath != aNewData.mClipPath) {
     hint |= nsChangeHint_UpdateEffects |
             nsChangeHint_RepaintFrame;
     // clip-path changes require that we update the PreEffectsBBoxProperty,
@@ -3572,7 +3663,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     hint |= nsChangeHint_ReflowHintsForFloatAreaChange;
   }
 
-  if (!mShapeOutside.DefinitelyEquals(aNewData.mShapeOutside)) {
+  if (mShapeOutside != aNewData.mShapeOutside) {
     if (aNewData.mFloat != StyleFloat::None) {
       // If we are floating, and our shape-outside property changes, our
       // descendants are not impacted, but our ancestor and siblings are.

@@ -42,7 +42,7 @@
       return function(aPublicKeyCredential) {
         gTrackedCredential[aIdentifier] = {
           type: "public-key",
-          id: Uint8Array.from(aPublicKeyCredential.rawId),
+          id: new Uint8Array(aPublicKeyCredential.rawId),
           transports: [ "usb" ],
         }
         return Promise.resolve(aPublicKeyCredential);

@@ -314,8 +314,7 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "IOSurfaceSendRight")
       (iokit-user-client-class "IOFramebufferSharedUserClient")
       (iokit-user-client-class "AGPMClient")
-      (iokit-user-client-class "AppleGraphicsControlClient")
-      (iokit-user-client-class "AppleGraphicsPolicyClient"))
+      (iokit-user-client-class "AppleGraphicsControlClient"))
 
 ; bug 1153809
   (allow iokit-open

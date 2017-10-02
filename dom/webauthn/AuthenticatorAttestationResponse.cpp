@@ -56,7 +56,7 @@ AuthenticatorAttestationResponse::GetAttestationObject(JSContext* aCx,
                                                        JS::MutableHandle<JSObject*> aRetVal)
 {
   if (!mAttestationObjectCachedObj) {
-    mAttestationObjectCachedObj = mAttestationObject.ToUint8Array(aCx);
+    mAttestationObjectCachedObj = mAttestationObject.ToArrayBuffer(aCx);
   }
   aRetVal.set(mAttestationObjectCachedObj);
 }

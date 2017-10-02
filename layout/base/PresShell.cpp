@@ -3703,7 +3703,7 @@ PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
   RestyleManager* restyleManager = mPresContext->RestyleManager();
   uint32_t hoverGenerationBefore =
     restyleManager->GetHoverGeneration();
-  nsEventStatus status;
+  nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView)
     return;

@@ -55,7 +55,7 @@ PublicKeyCredential::GetRawId(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aRetVal)
 {
   if (!mRawIdCachedObj) {
-    mRawIdCachedObj = mRawId.ToUint8Array(aCx);
+    mRawIdCachedObj = mRawId.ToArrayBuffer(aCx);
   }
   aRetVal.set(mRawIdCachedObj);
 }
