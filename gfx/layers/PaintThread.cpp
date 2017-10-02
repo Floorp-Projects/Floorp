@@ -200,6 +200,13 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
   if (!mDrawTargetsToFlush.Contains(target)) {
     mDrawTargetsToFlush.AppendElement(target);
   }
+
+  if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
+    // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
+    // gets destroyed on the main thread (See bug 1404742). This assumes (unflushed) target
+    // DrawTargets do not themselves hold on to UnscaledFonts.
+    NS_ReleaseOnMainThreadSystemGroup("CapturePaintState::DrawTargetCapture", aState->mCapture.forget());
+  }
 }
 
 void

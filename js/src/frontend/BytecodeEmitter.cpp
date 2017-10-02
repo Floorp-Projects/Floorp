@@ -9628,7 +9628,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
                 return false;
         }
 
-        if (!emitArray(args, argc, JSOP_SPREADCALLARRAY))
+        if (!emitArray(args, argc))
             return false;
 
         if (emitOptCode) {
@@ -10141,11 +10141,11 @@ BytecodeEmitter::emitArrayLiteral(ParseNode* pn)
         }
     }
 
-    return emitArray(pn->pn_head, pn->pn_count, JSOP_NEWARRAY);
+    return emitArray(pn->pn_head, pn->pn_count);
 }
 
 bool
-BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
+BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count)
 {
 
     /*
@@ -10156,7 +10156,6 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
      * to avoid dup'ing and popping the array as each element is added, as
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
-    MOZ_ASSERT(op == JSOP_NEWARRAY || op == JSOP_SPREADCALLARRAY);
 
     uint32_t nspread = 0;
     for (ParseNode* elt = pn; elt; elt = elt->pn_next) {
@@ -10177,7 +10176,7 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
 
     // For arrays with spread, this is a very pessimistic allocation, the
     // minimum possible final size.
-    if (!emitUint32Operand(op, count - nspread))                    // ARRAY
+    if (!emitUint32Operand(JSOP_NEWARRAY, count - nspread))         // ARRAY
         return false;
 
     ParseNode* pn2 = pn;
