@@ -767,8 +767,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
-    // TODO(emilio): Unship.
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetWindowsTheme
   },
@@ -776,8 +775,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_os_version,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
-    // TODO(emilio): Unship.
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetOperatingSystemVersion
   },
