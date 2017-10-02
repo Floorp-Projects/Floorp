@@ -24,6 +24,9 @@ LOCAL_INCLUDES += [
 
 SPHINX_TREES['telemetry'] = 'docs'
 
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 

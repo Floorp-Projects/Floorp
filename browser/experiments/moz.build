@@ -19,3 +19,6 @@ EXTRA_JS_MODULES.experiments += [
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 SPHINX_TREES['experiments'] = 'docs'
+
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
