@@ -743,7 +743,6 @@ IonBuilder::inlineArrayJoin(CallInfo& callInfo)
             return false;
 
         const Class* clasp = thisTypes->getKnownClass(constraints());
-        // TODO: Handle unboxed arrays?
         if (clasp != &ArrayObject::class_)
             return false;
 

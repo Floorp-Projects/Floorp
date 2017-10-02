@@ -79,8 +79,6 @@ NewDenseFullyAllocatedArrayWithTemplate(JSContext* cx, uint32_t length, JSObject
 extern ArrayObject*
 NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::InitialHeap heap);
 
-// The methods below can create either boxed or unboxed arrays.
-
 extern ArrayObject*
 NewFullyAllocatedArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
                                   NewObjectKind newKind = GenericObject);
@@ -122,13 +120,6 @@ NewValuePair(JSContext* cx, const Value& val1, const Value& val2, MutableHandleV
  */
 extern bool
 WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index);
-
-/*
- * Canonicalize |vp| to a uint32_t value potentially suitable for use as an
- * array length.
- */
-extern bool
-CanonicalizeArrayLengthValue(JSContext* cx, HandleValue v, uint32_t* canonicalized);
 
 extern bool
 GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp);
