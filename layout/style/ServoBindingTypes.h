@@ -16,6 +16,7 @@
 #include "nsTArray.h"
 
 struct RawServoStyleSet;
+struct RawServoSelectorList;
 struct RawServoAnimationValueMap;
 struct RustString;
 
@@ -145,6 +146,7 @@ DECL_OWNED_REF_TYPE_FOR(RawServoAnimationValueMap)
 // it only asks Gecko to do so. In case we wish to in
 // the future, we should ensure that things being mutated
 // are protected from noalias violations by a cell type
+DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoNode)
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoNode)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoElement)
@@ -177,6 +179,8 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSPropertyIDSet)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoCSSPropertyIDList)
 DECL_BORROWED_REF_TYPE_FOR(nsXBLBinding)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
+DECL_OWNED_REF_TYPE_FOR(RawServoSelectorList)
+DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR
@@ -219,6 +223,7 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
   }
 
 DEFINE_BOXED_TYPE(StyleSet, RawServoStyleSet);
+DEFINE_BOXED_TYPE(SelectorList, RawServoSelectorList);
 
 #undef DEFINE_BOXED_TYPE
 
