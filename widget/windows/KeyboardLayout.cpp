@@ -1468,7 +1468,7 @@ NativeKey::InitWithKeyChar()
       MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
         ("%p   NativeKey::InitWithKeyChar(), removed char message, %s",
          this, ToString(charMsg).get()));
-      NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
+      Unused << NS_WARN_IF(charMsg.hwnd != mMsg.hwnd);
       mFollowingCharMsgs.AppendElement(charMsg);
     }
   }
@@ -4580,7 +4580,7 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
                   break;
                 }
                 default:
-                  NS_WARN_IF("File a bug for this dead-key handling!");
+                  NS_WARNING("File a bug for this dead-key handling!");
                   deadKeyActive = false;
                   break;
               }
