@@ -790,44 +790,95 @@ Collection.prototype = {
       }
       return Resource.prototype.post.call(this, data);
     }
-    let getConfig = (name, defaultVal) => {
-      // serverConfiguration is allowed to be missing during tests.
-      if (this._service.serverConfiguration && this._service.serverConfiguration.hasOwnProperty(name)) {
-        return this._service.serverConfiguration[name];
-      }
-      return defaultVal;
-    };
-
-    // On a server that does not support the batch API, we expect the /info/configuration
-    // endpoint to provide "max_record_payload_bytes" and "max_request_bytes" and limits.
-    // On a server that supports the batching API, we expect "max_record_payload_bytes"
-    // (as before), as well as "max_post_bytes", "max_post_records", "max_total_bytes" and
-    // "max_total_records". Much of the complexity here and in enqueue is attempting to
-    // handle both these cases simultaneously.
-    let config = {
-      // Note that from the server's POV, max_post_bytes is the sum of payload
-      // lengths, but we treat it equivalently to max_request_bytes (which is
-      // payload + metadata lengths).
-      max_post_bytes: getConfig("max_post_bytes",
-        getConfig("max_request_bytes", 260 * 1024)),
-
-      max_post_records: getConfig("max_post_records", Infinity),
-
-      max_batch_bytes: getConfig("max_total_bytes", Infinity),
-      max_batch_records: getConfig("max_total_records", Infinity),
-      max_record_payload_bytes: getConfig("max_record_payload_bytes", 256 * 1024),
-    };
-
-    if (config.max_post_bytes <= config.max_record_payload_bytes) {
-      this._log.warn("Server configuration max_post_bytes is too low for max_record_payload_bytes", config);
-      // Assume 4k of extra is enough. See also getMaxRecordPayloadSize in service.js
-      config.max_record_payload_bytes = config.max_post_bytes - 4096;
-    }
-
-    this._log.trace("new PostQueue created with config", config);
-    return new PostQueue(poster, timestamp, config, log, postCallback);
+    return new PostQueue(poster, timestamp,
+      this._service.serverConfiguration || {}, log, postCallback);
   },
 };
+
+// These are limits for requests provided by the server at the
+// info/configuration endpoint -- server documentation is available here:
+// http://moz-services-docs.readthedocs.io/en/latest/storage/apis-1.5.html#api-instructions
+//
+// All are optional, however we synthesize (non-infinite) default values for the
+// "max_request_bytes" and "max_record_payload_bytes" options. For the others,
+// we ignore them (we treat the limit is infinite) if they're missing.
+//
+// These are also the only ones that all servers (even batching-disabled
+// servers) should support, at least once this sync-serverstorage patch is
+// everywhere https://github.com/mozilla-services/server-syncstorage/pull/74
+//
+// Batching enabled servers also limit the amount of payload data and number
+// of and records we can send in a single post as well as in the whole batch.
+// Note that the byte limits for these there are just with respect to the
+// *payload* data, e.g. the data appearing in the payload property (a
+// string) of the object.
+//
+// Note that in practice, these limits should be sensible, but the code makes
+// no assumptions about this. If we hit any of the limits, we perform the
+// corresponding action (e.g. submit a request, possibly committing the
+// current batch).
+const DefaultPostQueueConfig = Object.freeze({
+  // Number of total bytes allowed in a request
+  max_request_bytes: 260 * 1024,
+
+  // Maximum number of bytes allowed in the "payload" property of a record.
+  max_record_payload_bytes: 256 * 1024,
+
+  // The limit for how many bytes worth of data appearing in "payload"
+  // properties are allowed in a single post.
+  max_post_bytes: Infinity,
+
+  // The limit for the number of records allowed in a single post.
+  max_post_records: Infinity,
+
+  // The limit for how many bytes worth of data appearing in "payload"
+  // properties are allowed in a batch. (Same as max_post_bytes, but for
+  // batches).
+  max_total_bytes: Infinity,
+
+  // The limit for the number of records allowed in a single post. (Same
+  // as max_post_records, but for batches).
+  max_total_records: Infinity,
+});
+
+
+// Manages a pair of (byte, count) limits for a PostQueue, such as
+// (max_post_bytes, max_post_records) or (max_total_bytes, max_total_records).
+class LimitTracker {
+  constructor(maxBytes, maxRecords) {
+    this.maxBytes = maxBytes;
+    this.maxRecords = maxRecords;
+    this.curBytes = 0;
+    this.curRecords = 0;
+  }
+
+  clear() {
+    this.curBytes = 0;
+    this.curRecords = 0;
+  }
+
+  canAddRecord(payloadSize) {
+    // The record counts are inclusive, but depending on the version of the
+    // server, the byte counts may or may not be inclusive (See
+    // https://github.com/mozilla-services/server-syncstorage/issues/73).
+    return this.curRecords + 1 <= this.maxRecords &&
+           this.curBytes + payloadSize < this.maxBytes;
+  }
+
+  canNeverAdd(recordSize) {
+    return recordSize >= this.maxBytes;
+  }
+
+  didAddRecord(recordSize) {
+    if (!this.canAddRecord(recordSize)) {
+      // This is a bug, caller is expected to call canAddRecord first.
+      throw new Error("LimitTracker.canAddRecord must be checked before adding record");
+    }
+    this.curRecords += 1;
+    this.curBytes += recordSize;
+  }
+}
+
 
 /* A helper to manage the posting of records while respecting the various
    size limits.
@@ -843,14 +894,22 @@ Collection.prototype = {
   In most cases we expect there to be exactly 1 batch consisting of possibly
   multiple POSTs.
 */
-function PostQueue(poster, timestamp, config, log, postCallback) {
+function PostQueue(poster, timestamp, serverConfig, log, postCallback) {
   // The "post" function we should use when it comes time to do the post.
   this.poster = poster;
   this.log = log;
 
-  // The config we use. We expect it to have fields "max_post_records",
-  // "max_batch_records", "max_post_bytes", and "max_batch_bytes"
-  this.config = config;
+  let config = Object.assign({}, DefaultPostQueueConfig, serverConfig);
+
+  if (!serverConfig.max_request_bytes && serverConfig.max_post_bytes) {
+    // Use max_post_bytes for max_request_bytes if it's missing. Only needed
+    // until server-syncstorage/pull/74 is everywhere, and even then it's
+    // unnecessary if the server limits are configured sanely (there's no
+    // guarantee of -- at least before that is fully deployed)
+    config.max_request_bytes = serverConfig.max_post_bytes;
+  }
+
+  this.log.trace("new PostQueue config (after defaults): ", config);
 
   // The callback we make with the response when we do get around to making the
   // post (which could be during any of the enqueue() calls or the final flush())
@@ -861,18 +920,24 @@ function PostQueue(poster, timestamp, config, log, postCallback) {
   // complete, or it's a post to a server that does not understand batching.
   this.postCallback = postCallback;
 
+  // Tracks the count and combined payload size for the records we've queued
+  // so far but are yet to POST.
+  this.postLimits = new LimitTracker(config.max_post_bytes, config.max_post_records);
+
+  // As above, but for the batch size.
+  this.batchLimits = new LimitTracker(config.max_total_bytes, config.max_total_records);
+
+  // Limit for the size of `this.queued` before we do a post.
+  this.maxRequestBytes = config.max_request_bytes;
+
+  // Limit for the size of incoming record payloads.
+  this.maxPayloadBytes = config.max_record_payload_bytes;
+
   // The string where we are capturing the stringified version of the records
   // queued so far. It will always be invalid JSON as it is always missing the
-  // closing bracket.
+  // closing bracket. It's also used to track whether or not we've gone past
+  // maxRequestBytes.
   this.queued = "";
-
-  // The number of records we've queued so far but are yet to POST.
-  this.numQueued = 0;
-
-  // The number of records/bytes we've processed in previous POSTs for our
-  // current batch. Does *not* include records currently queued for the next POST.
-  this.numAlreadyBatched = 0;
-  this.bytesAlreadyBatched = 0;
 
   // The ID of our current batch. Can be undefined (meaning we are yet to make
   // the first post of a patch, so don't know if we have a batch), null (meaning
@@ -897,43 +962,44 @@ PostQueue.prototype = {
 
     let bytes = JSON.stringify(jsonRepr);
 
-    // Tests sometimes return objects without payloads, and we just use the
-    // byte length for those cases.
-    let payloadLength = jsonRepr.payload ? jsonRepr.payload.length : bytes.length;
-    if (payloadLength > this.config.max_record_payload_bytes) {
-      return { enqueued: false, error: new Error("Single record too large to submit to server") };
-    }
+    // We use the payload size for the LimitTrackers, since that's what the
+    // byte limits other than max_request_bytes refer to.
+    let payloadLength = jsonRepr.payload.length;
 
     // The `+ 2` is to account for the 2-byte (maximum) overhead (one byte for
     // the leading comma or "[", which all records will have, and the other for
     // the final trailing "]", only present for the last record).
-    let newLength = this.queued.length + bytes.length + 2;
-    let newRecordCount = this.numQueued + 1;
+    let encodedLength = bytes.length + 2;
 
-    // Note that the max_post_records and max_batch_records server limits are
-    // inclusive (e.g. if the max_post_records == 100, it will allow a post with
-    // 100 records), but the byte limits are not. (See
-    // https://github.com/mozilla-services/server-syncstorage/issues/73)
+    // Check first if there's some limit that indicates we cannot ever enqueue
+    // this record.
+    let isTooBig = this.postLimits.canNeverAdd(payloadLength) ||
+                   this.batchLimits.canNeverAdd(payloadLength) ||
+                   encodedLength >= this.maxRequestBytes ||
+                   payloadLength >= this.maxPayloadBytes;
 
-    // Have we exceeeded the maximum size or record count for a single POST?
-    let postSizeExceeded = newRecordCount > this.config.max_post_records ||
-                           newLength >= this.config.max_post_bytes;
-
-    // Have we exceeded the maximum size or record count for the entire batch?
-    let batchSizeExceeded = (newRecordCount + this.numAlreadyBatched) > this.config.max_batch_records ||
-                            (newLength + this.bytesAlreadyBatched) >= this.config.max_batch_bytes;
-
-    if (postSizeExceeded || batchSizeExceeded) {
-      this.log.trace("PostQueue flushing due to ", { postSizeExceeded, batchSizeExceeded });
-      // We need to write the queue out before handling this one, but we only
-      // commit the batch (and thus start a new one) if the batch is full.
-      await this.flush(batchSizeExceeded);
+    if (isTooBig) {
+      return { enqueued: false, error: new Error("Single record too large to submit to server") };
     }
 
+    let canPostRecord = this.postLimits.canAddRecord(payloadLength);
+    let canBatchRecord = this.batchLimits.canAddRecord(payloadLength);
+    let canSendRecord = this.queued.length + encodedLength < this.maxRequestBytes;
+
+    if (!canPostRecord || !canBatchRecord || !canSendRecord) {
+      this.log.trace("PostQueue flushing: ", {canPostRecord, canSendRecord, canBatchRecord});
+      // We need to write the queue out before handling this one, but we only
+      // commit the batch (and thus start a new one) if the record couldn't fit
+      // inside the batch.
+      await this.flush(!canBatchRecord);
+    }
+
+    this.postLimits.didAddRecord(payloadLength);
+    this.batchLimits.didAddRecord(payloadLength);
+
     // Either a ',' or a '[' depending on whether this is the first record.
-    this.queued += this.numQueued ? "," : "[";
+    this.queued += this.queued.length ? "," : "[";
     this.queued += bytes;
-    this.numQueued++;
     return { enqueued: true };
   },
 
@@ -962,17 +1028,14 @@ PostQueue.prototype = {
 
     headers.push(["x-if-unmodified-since", this.lastModified]);
 
-    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length + 1} bytes with batch=${batch}`);
+    let numQueued = this.postLimits.curRecords;
+    this.log.info(`Posting ${numQueued} records of ${this.queued.length + 1} bytes with batch=${batch}`);
     let queued = this.queued + "]";
     if (finalBatchPost) {
-      this.bytesAlreadyBatched = 0;
-      this.numAlreadyBatched = 0;
-    } else {
-      this.bytesAlreadyBatched += queued.length;
-      this.numAlreadyBatched += this.numQueued;
+      this.batchLimits.clear();
     }
+    this.postLimits.clear();
     this.queued = "";
-    this.numQueued = 0;
     let response = await this.poster(queued, headers, batch, !!(finalBatchPost && this.batchID !== null));
 
     if (!response.success) {
