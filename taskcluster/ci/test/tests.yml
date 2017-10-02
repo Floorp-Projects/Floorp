@@ -1915,7 +1915,7 @@ test-verify:
             # do not run on ccov; see also the enable_code_coverage transform
             linux64-ccov/.*: []
             default: built-projects
-    tier: 3
+    tier: 2
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
