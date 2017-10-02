@@ -5,7 +5,7 @@
 //
 
 // EGLSanityCheckTest.cpp:
-//      tests used to check setup in which tests are run.
+//      Tests used to check environment in which other tests are run.
 
 #include <gtest/gtest.h>
 

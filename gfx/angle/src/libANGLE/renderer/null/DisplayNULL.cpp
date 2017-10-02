@@ -19,7 +19,7 @@
 namespace rx
 {
 
-DisplayNULL::DisplayNULL() : DisplayImpl(), mDevice(nullptr)
+DisplayNULL::DisplayNULL(const egl::DisplayState &state) : DisplayImpl(state), mDevice(nullptr)
 {
 }
 
@@ -30,11 +30,16 @@ DisplayNULL::~DisplayNULL()
 egl::Error DisplayNULL::initialize(egl::Display *display)
 {
     mDevice = new DeviceNULL();
+
+    constexpr size_t kMaxTotalAllocationSize = 1 << 28;  // 256MB
+    mAllocationTracker.reset(new AllocationTrackerNULL(kMaxTotalAllocationSize));
+
     return egl::NoError();
 }
 
 void DisplayNULL::terminate()
 {
+    mAllocationTracker.reset();
     SafeDelete(mDevice);
 }
 
@@ -93,7 +98,7 @@ bool DisplayNULL::testDeviceLost()
     return false;
 }
 
-egl::Error DisplayNULL::restoreLostDevice()
+egl::Error DisplayNULL::restoreLostDevice(const egl::Display *display)
 {
     return egl::NoError();
 }
@@ -114,14 +119,12 @@ egl::Error DisplayNULL::getDevice(DeviceImpl **device)
     return egl::NoError();
 }
 
-egl::Error DisplayNULL::waitClient() const
+egl::Error DisplayNULL::waitClient(const gl::Context *context) const
 {
     return egl::NoError();
 }
 
-egl::Error DisplayNULL::waitNative(EGLint engine,
-                                   egl::Surface *drawSurface,
-                                   egl::Surface *readSurface) const
+egl::Error DisplayNULL::waitNative(const gl::Context *context, EGLint engine) const
 {
     return egl::NoError();
 }
@@ -132,7 +135,6 @@ gl::Version DisplayNULL::getMaxSupportedESVersion() const
 }
 
 SurfaceImpl *DisplayNULL::createWindowSurface(const egl::SurfaceState &state,
-                                              const egl::Config *configuration,
                                               EGLNativeWindowType window,
                                               const egl::AttributeMap &attribs)
 {
@@ -140,14 +142,12 @@ SurfaceImpl *DisplayNULL::createWindowSurface(const egl::SurfaceState &state,
 }
 
 SurfaceImpl *DisplayNULL::createPbufferSurface(const egl::SurfaceState &state,
-                                               const egl::Config *configuration,
                                                const egl::AttributeMap &attribs)
 {
     return new SurfaceNULL(state);
 }
 
 SurfaceImpl *DisplayNULL::createPbufferFromClientBuffer(const egl::SurfaceState &state,
-                                                        const egl::Config *configuration,
                                                         EGLenum buftype,
                                                         EGLClientBuffer buffer,
                                                         const egl::AttributeMap &attribs)
@@ -156,23 +156,22 @@ SurfaceImpl *DisplayNULL::createPbufferFromClientBuffer(const egl::SurfaceState 
 }
 
 SurfaceImpl *DisplayNULL::createPixmapSurface(const egl::SurfaceState &state,
-                                              const egl::Config *configuration,
                                               NativePixmapType nativePixmap,
                                               const egl::AttributeMap &attribs)
 {
     return new SurfaceNULL(state);
 }
 
-ImageImpl *DisplayNULL::createImage(EGLenum target,
-                                    egl::ImageSibling *buffer,
+ImageImpl *DisplayNULL::createImage(const egl::ImageState &state,
+                                    EGLenum target,
                                     const egl::AttributeMap &attribs)
 {
-    return new ImageNULL();
+    return new ImageNULL(state);
 }
 
 ContextImpl *DisplayNULL::createContext(const gl::ContextState &state)
 {
-    return new ContextNULL(state);
+    return new ContextNULL(state, mAllocationTracker.get());
 }
 
 StreamProducerImpl *DisplayNULL::createStreamProducerD3DTextureNV12(
@@ -202,6 +201,11 @@ void DisplayNULL::generateExtensions(egl::DisplayExtensions *outExtensions) cons
     outExtensions->createContextWebGLCompatibility    = true;
     outExtensions->createContextBindGeneratesResource = true;
     outExtensions->swapBuffersWithDamage              = true;
+    outExtensions->pixelFormatFloat                   = true;
+    outExtensions->surfacelessContext                 = true;
+    outExtensions->displayTextureShareGroup           = true;
+    outExtensions->createContextClientArrays          = true;
+    outExtensions->programCacheControl                = true;
 }
 
 void DisplayNULL::generateCaps(egl::Caps *outCaps) const

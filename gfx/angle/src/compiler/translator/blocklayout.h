@@ -33,12 +33,10 @@ struct BlockMemberInfo
           arrayStride(arrayStride),
           matrixStride(matrixStride),
           isRowMajorMatrix(isRowMajorMatrix)
-    {}
-
-    static BlockMemberInfo getDefaultBlockInfo()
     {
-        return BlockMemberInfo(-1, -1, -1, false);
     }
+
+    static BlockMemberInfo getDefaultBlockInfo() { return BlockMemberInfo(-1, -1, -1, false); }
 
     int offset;
     int arrayStride;
@@ -57,9 +55,9 @@ class BlockLayoutEncoder
     size_t getBlockSize() const { return mCurrentOffset * BytesPerComponent; }
 
     virtual void enterAggregateType() = 0;
-    virtual void exitAggregateType() = 0;
+    virtual void exitAggregateType()  = 0;
 
-    static const size_t BytesPerComponent = 4u;
+    static const size_t BytesPerComponent           = 4u;
     static const unsigned int ComponentsPerRegister = 4u;
 
     static size_t getBlockRegister(const BlockMemberInfo &info);
@@ -70,8 +68,16 @@ class BlockLayoutEncoder
 
     void nextRegister();
 
-    virtual void getBlockLayoutInfo(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int *arrayStrideOut, int *matrixStrideOut) = 0;
-    virtual void advanceOffset(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int arrayStride, int matrixStride) = 0;
+    virtual void getBlockLayoutInfo(GLenum type,
+                                    unsigned int arraySize,
+                                    bool isRowMajorMatrix,
+                                    int *arrayStrideOut,
+                                    int *matrixStrideOut) = 0;
+    virtual void advanceOffset(GLenum type,
+                               unsigned int arraySize,
+                               bool isRowMajorMatrix,
+                               int arrayStride,
+                               int matrixStride) = 0;
 };
 
 // Block layout according to the std140 block layout
@@ -97,7 +103,6 @@ class Std140BlockEncoder : public BlockLayoutEncoder
                        int arrayStride,
                        int matrixStride) override;
 };
-
 }
 
-#endif // COMMON_BLOCKLAYOUT_H_
+#endif  // COMMON_BLOCKLAYOUT_H_

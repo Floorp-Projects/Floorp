@@ -29,6 +29,8 @@ class Sampler final : public RefCountObject, public LabeledObject
     Sampler(rx::GLImplFactory *factory, GLuint id);
     ~Sampler() override;
 
+    Error onDestroy(const Context *context) override { return NoError(); }
+
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
 
@@ -69,14 +71,15 @@ class Sampler final : public RefCountObject, public LabeledObject
 
     rx::SamplerImpl *getImplementation() const;
 
+    void syncState(const Context *context);
+
   private:
+    SamplerState mState;
     rx::SamplerImpl *mImpl;
 
     std::string mLabel;
-
-    SamplerState mSamplerState;
 };
 
-}
+}  // namespace gl
 
 #endif // LIBANGLE_SAMPLER_H_

@@ -47,7 +47,7 @@ egl::Error FunctionsEGLDL::initialize(EGLNativeDisplayType nativeDisplay, const 
         sNativeLib.handle = dlopen(libName, RTLD_NOW);
         if (!sNativeLib.handle)
         {
-            return egl::Error(EGL_NOT_INITIALIZED, "Could not dlopen native EGL: %s", dlerror());
+            return egl::EglNotInitialized() << "Could not dlopen native EGL: " << dlerror();
         }
     }
 
@@ -55,7 +55,7 @@ egl::Error FunctionsEGLDL::initialize(EGLNativeDisplayType nativeDisplay, const 
         reinterpret_cast<PFNEGLGETPROCADDRESSPROC>(dlsym(sNativeLib.handle, "eglGetProcAddress"));
     if (!mGetProcAddressPtr)
     {
-        return egl::Error(EGL_NOT_INITIALIZED, "Could not find eglGetProcAddress");
+        return egl::EglNotInitialized() << "Could not find eglGetProcAddress";
     }
 
     return FunctionsEGL::initialize(nativeDisplay);

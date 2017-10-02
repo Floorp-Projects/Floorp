@@ -46,6 +46,22 @@ inline bool IsQualcomm(uint32_t vendor_id)
 }
 
 // Intel
+class IntelDriverVersion
+{
+  public:
+    // Currently, We only provide the constructor with one parameter. It mainly used in Intel
+    // version number on windows. If you want to use this class on other platforms, it's easy to
+    // be extended.
+    IntelDriverVersion(uint16_t lastPart);
+    bool operator==(const IntelDriverVersion &);
+    bool operator!=(const IntelDriverVersion &);
+    bool operator<(const IntelDriverVersion &);
+    bool operator>=(const IntelDriverVersion &);
+
+  private:
+    uint16_t mVersionPart;
+};
+
 bool IsHaswell(uint32_t DeviceId);
 bool IsBroadwell(uint32_t DeviceId);
 bool IsCherryView(uint32_t DeviceId);

@@ -21,7 +21,7 @@ class EGLQueryContextTest : public testing::TestWithParam<PlatformParameters>
         int clientVersion = GetParam().majorVersion;
 
         PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"));
-        EXPECT_TRUE(eglGetPlatformDisplayEXT != NULL);
+        EXPECT_TRUE(eglGetPlatformDisplayEXT != nullptr);
 
         EGLint dispattrs[] =
         {
@@ -31,7 +31,7 @@ class EGLQueryContextTest : public testing::TestWithParam<PlatformParameters>
         mDisplay = eglGetPlatformDisplayEXT(
             EGL_PLATFORM_ANGLE_ANGLE, reinterpret_cast<void *>(EGL_DEFAULT_DISPLAY), dispattrs);
         EXPECT_TRUE(mDisplay != EGL_NO_DISPLAY);
-        EXPECT_TRUE(eglInitialize(mDisplay, NULL, NULL) != EGL_FALSE);
+        EXPECT_TRUE(eglInitialize(mDisplay, nullptr, nullptr) != EGL_FALSE);
 
         EGLint ncfg;
         EGLint cfgattrs[] =
@@ -51,7 +51,7 @@ class EGLQueryContextTest : public testing::TestWithParam<PlatformParameters>
             EGL_CONTEXT_CLIENT_VERSION, clientVersion,
             EGL_NONE
         };
-        mContext = eglCreateContext(mDisplay, mConfig, NULL, ctxattrs);
+        mContext = eglCreateContext(mDisplay, mConfig, nullptr, ctxattrs);
         EXPECT_TRUE(mContext != EGL_NO_CONTEXT);
 
         EGLint surfattrs[] =

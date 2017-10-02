@@ -25,9 +25,8 @@ class MaxTextureSizeTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vsSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vsSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -35,30 +34,25 @@ class MaxTextureSizeTest : public ANGLETest
             {
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
-            }
-        );
+            })";
 
-        const std::string textureFSSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string textureFSSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
-        const std::string blueFSSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string blueFSSource =
+            R"(precision highp float;
 
             void main()
             {
                 gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-            }
-        );
+            })";
 
         mTextureProgram = CompileProgram(vsSource, textureFSSource);
         mBlueProgram = CompileProgram(vsSource, blueFSSource);
@@ -242,7 +236,8 @@ TEST_P(MaxTextureSizeTest, RenderToTexture)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, textureWidth, textureHeight, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, textureWidth, textureHeight, 0, GL_BGRA_EXT,
+                 GL_UNSIGNED_BYTE, nullptr);
     EXPECT_GL_NO_ERROR();
 
     // create an FBO and attach the texture

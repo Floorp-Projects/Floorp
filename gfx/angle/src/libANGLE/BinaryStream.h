@@ -215,7 +215,7 @@ class BinaryOutputStream : angle::NonCopyable
 
     const void* data() const
     {
-        return mData.size() ? &mData[0] : NULL;
+        return mData.size() ? &mData[0] : nullptr;
     }
 
   private:
@@ -230,6 +230,6 @@ class BinaryOutputStream : angle::NonCopyable
     }
 
 };
-}
+}  // namespace gl
 
 #endif  // LIBANGLE_BINARYSTREAM_H_

@@ -4,25 +4,23 @@
 
 #include "gpu_test_config.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "gpu_info.h"
 #include "gpu_test_expectations_parser.h"
-
-#if defined(OS_LINUX)
-extern "C" {
-#   include <pci/pci.h>
-}
-#endif
 
 #if defined(OS_MACOSX)
 #include "gpu_test_config_mac.h"
 #endif
 
-using namespace gpu;
+#if !defined(OS_ANDROID)
+#include "gpu_info_util/SystemInfo.h"
+#endif
 
 #if defined(OS_WIN)
 
 namespace base {
-
 namespace {
 
 // Disable the deprecated function warning for GetVersionEx
@@ -32,12 +30,12 @@ class SysInfo
 {
   public:
     static void OperatingSystemVersionNumbers(
-        int32 *major_version, int32 *minor_version, int32 *bugfix_version);
+        int32_t *major_version, int32_t *minor_version, int32_t *bugfix_version);
 };
 
 // static
 void SysInfo::OperatingSystemVersionNumbers(
-    int32 *major_version, int32 *minor_version, int32 *bugfix_version)
+    int32_t *major_version, int32_t *minor_version, int32_t *bugfix_version)
 {
   OSVERSIONINFOEX version_info = { sizeof version_info };
   ::GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&version_info));
@@ -47,159 +45,9 @@ void SysInfo::OperatingSystemVersionNumbers(
 }
 
 } // anonymous namespace
-
 } // namespace base
 
-void DeviceIDToVendorAndDevice(const std::string& id,
-                               uint32* vendor_id,
-                               uint32* device_id) {
-  *vendor_id = 0;
-  *device_id = 0;
-  if (id.length() < 21)
-    return;
-  std::string vendor_id_string = id.substr(8, 4);
-  std::string device_id_string = id.substr(17, 4);
-  base::HexStringToUInt(vendor_id_string, vendor_id);
-  base::HexStringToUInt(device_id_string, device_id);
-}
-
-CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
-  DCHECK(vendor_id && device_id);
-  *vendor_id = 0;
-  *device_id = 0;
-
-  // Taken from http://developer.nvidia.com/object/device_ids.html
-  DISPLAY_DEVICEA dd;
-  dd.cb = sizeof(DISPLAY_DEVICEA);
-  std::string id;
-  for (int i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); ++i) {
-    if (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
-      id = dd.DeviceID;
-      break;
-    }
-  }
-
-  if (id.length() > 20) {
-    DeviceIDToVendorAndDevice(id, vendor_id, device_id);
-    if (*vendor_id != 0 && *device_id != 0)
-      return kCollectInfoSuccess;
-  }
-  return kCollectInfoNonFatalFailure;
-}
-
 #endif // defined(OS_WIN)
-
-#if defined(OS_LINUX)
-
-const uint32 kVendorIDIntel = 0x8086;
-const uint32 kVendorIDNVidia = 0x10de;
-const uint32 kVendorIDAMD = 0x1002;
-
-CollectInfoResult CollectPCIVideoCardInfo(GPUInfo* gpu_info) {
-  DCHECK(gpu_info);
-
-  struct pci_access* access = pci_alloc();
-  DCHECK(access != NULL);
-  pci_init(access);
-  pci_scan_bus(access);
-
-  bool primary_gpu_identified = false;
-  for (pci_dev* device = access->devices;
-       device != NULL; device = device->next) {
-    pci_fill_info(device, 33);
-    bool is_gpu = false;
-    switch (device->device_class) {
-      case PCI_CLASS_DISPLAY_VGA:
-      case PCI_CLASS_DISPLAY_XGA:
-      case PCI_CLASS_DISPLAY_3D:
-        is_gpu = true;
-        break;
-      case PCI_CLASS_DISPLAY_OTHER:
-      default:
-        break;
-    }
-    if (!is_gpu)
-      continue;
-    if (device->vendor_id == 0 || device->device_id == 0)
-      continue;
-
-    GPUInfo::GPUDevice gpu;
-    gpu.vendor_id = device->vendor_id;
-    gpu.device_id = device->device_id;
-
-    if (!primary_gpu_identified) {
-      primary_gpu_identified = true;
-      gpu_info->gpu = gpu;
-    } else {
-      // TODO(zmo): if there are multiple GPUs, we assume the non Intel
-      // one is primary. Revisit this logic because we actually don't know
-      // which GPU we are using at this point.
-      if (gpu_info->gpu.vendor_id == kVendorIDIntel &&
-          gpu.vendor_id != kVendorIDIntel) {
-        gpu_info->secondary_gpus.push_back(gpu_info->gpu);
-        gpu_info->gpu = gpu;
-      } else {
-        gpu_info->secondary_gpus.push_back(gpu);
-      }
-    }
-  }
-
-  // Detect Optimus or AMD Switchable GPU.
-  if (gpu_info->secondary_gpus.size() == 1 &&
-      gpu_info->secondary_gpus[0].vendor_id == kVendorIDIntel) {
-    if (gpu_info->gpu.vendor_id == kVendorIDNVidia)
-      gpu_info->optimus = true;
-    if (gpu_info->gpu.vendor_id == kVendorIDAMD)
-      gpu_info->amd_switchable = true;
-  }
-
-  pci_cleanup(access);
-  if (!primary_gpu_identified)
-    return kCollectInfoNonFatalFailure;
-  return kCollectInfoSuccess;
-}
-
-CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
-  DCHECK(vendor_id && device_id);
-  *vendor_id = 0;
-  *device_id = 0;
-
-  GPUInfo gpu_info;
-  CollectInfoResult result = CollectPCIVideoCardInfo(&gpu_info);
-  if (result == kCollectInfoSuccess) {
-    *vendor_id = gpu_info.gpu.vendor_id;
-    *device_id = gpu_info.gpu.device_id;
-  }
-  return result;
-}
-
-#endif // defined(OS_LINUX)
-
-#if defined(OS_MACOSX)
-
-CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
-  DCHECK(vendor_id && device_id);
-
-  GPUInfo::GPUDevice gpu = GetActiveGPU();
-  *vendor_id = gpu.vendor_id;
-  *device_id = gpu.device_id;
-
-  if (*vendor_id != 0 && *device_id != 0)
-    return kCollectInfoSuccess;
-  return kCollectInfoNonFatalFailure;
-}
-
-#endif
-
-#if defined(OS_ANDROID)
-CollectInfoResult CollectGpuID(uint32 *vendor_id, uint32 *device_id)
-{
-    DCHECK(vendor_id && device_id);
-    *vendor_id = 0;
-    *device_id = 0;
-    return kCollectInfoNonFatalFailure;
-}
-#endif  // defined(OS_ANDROID)
 
 namespace gpu {
 
@@ -211,9 +59,9 @@ GPUTestConfig::OS GetCurrentOS() {
 #elif defined(OS_LINUX) || defined(OS_OPENBSD)
   return GPUTestConfig::kOsLinux;
 #elif defined(OS_WIN)
-  int32 major_version = 0;
-  int32 minor_version = 0;
-  int32 bugfix_version = 0;
+  int32_t major_version = 0;
+  int32_t minor_version = 0;
+  int32_t bugfix_version = 0;
   base::SysInfo::OperatingSystemVersionNumbers(
       &major_version, &minor_version, &bugfix_version);
   if (major_version == 5)
@@ -227,9 +75,9 @@ GPUTestConfig::OS GetCurrentOS() {
   if (major_version == 10)
     return GPUTestConfig::kOsWin10;
 #elif defined(OS_MACOSX)
-  int32 major_version = 0;
-  int32 minor_version = 0;
-  int32 bugfix_version = 0;
+  int32_t major_version = 0;
+  int32_t minor_version = 0;
+  int32_t bugfix_version = 0;
   base::SysInfo::OperatingSystemVersionNumbers(
       &major_version, &minor_version, &bugfix_version);
   if (major_version == 10) {
@@ -248,6 +96,8 @@ GPUTestConfig::OS GetCurrentOS() {
         return GPUTestConfig::kOsMacYosemite;
       case 11:
         return GPUTestConfig::kOsMacElCapitan;
+      case 12:
+        return GPUTestConfig::kOsMacSierra;
     }
   }
 #elif defined(OS_ANDROID)
@@ -256,6 +106,26 @@ GPUTestConfig::OS GetCurrentOS() {
   return GPUTestConfig::kOsUnknown;
 }
 
+#if !defined(OS_ANDROID)
+CollectInfoResult CollectBasicGraphicsInfo(GPUInfo* gpu_info) {
+  angle::SystemInfo info;
+  if (!angle::GetSystemInfo(&info)) {
+    return kCollectInfoFatalFailure;
+  }
+  const angle::GPUDeviceInfo& gpu = info.gpus[info.primaryGPUIndex];
+  gpu_info->gpu.vendor_id = gpu.vendorId;
+  gpu_info->gpu.device_id = gpu.deviceId;
+  gpu_info->gpu.active = true;
+  return kCollectInfoSuccess;
+}
+#else
+CollectInfoResult CollectBasicGraphicsInfo(GPUInfo* gpu_info) {
+  gpu_info->gpu.vendor_id = 0;
+  gpu_info->gpu.device_id = 0;
+  gpu_info->gpu.active = true;
+  return kCollectInfoNonFatalFailure;
+}
+#endif  // defined(OS_ANDROID)
 }  // namespace anonymous
 
 GPUTestConfig::GPUTestConfig()
@@ -265,31 +135,33 @@ GPUTestConfig::GPUTestConfig()
       build_type_(kBuildTypeUnknown),
       api_(kAPIUnknown) {}
 
+GPUTestConfig::GPUTestConfig(const GPUTestConfig& other) = default;
+
 GPUTestConfig::~GPUTestConfig() {
 }
 
-void GPUTestConfig::set_os(int32 os) {
+void GPUTestConfig::set_os(int32_t os) {
   DCHECK_EQ(0, os & ~(kOsAndroid | kOsWin | kOsMac | kOsLinux | kOsChromeOS));
   os_ = os;
 }
 
-void GPUTestConfig::AddGPUVendor(uint32 gpu_vendor) {
+void GPUTestConfig::AddGPUVendor(uint32_t gpu_vendor) {
   DCHECK_NE(0u, gpu_vendor);
   for (size_t i = 0; i < gpu_vendor_.size(); ++i)
     DCHECK_NE(gpu_vendor_[i], gpu_vendor);
   gpu_vendor_.push_back(gpu_vendor);
 }
 
-void GPUTestConfig::set_gpu_device_id(uint32 id) {
+void GPUTestConfig::set_gpu_device_id(uint32_t id) {
   gpu_device_id_ = id;
 }
 
-void GPUTestConfig::set_build_type(int32 build_type) {
+void GPUTestConfig::set_build_type(int32_t build_type) {
   DCHECK_EQ(0, build_type & ~(kBuildTypeRelease | kBuildTypeDebug));
   build_type_ = build_type;
 }
 
-void GPUTestConfig::set_api(int32 api) {
+void GPUTestConfig::set_api(int32_t api) {
   DCHECK_EQ(0, api & ~(kAPID3D9 | kAPID3D11 | kAPIGLDesktop | kAPIGLES));
   api_ = api;
 }
@@ -342,7 +214,7 @@ void GPUTestConfig::ClearGPUVendor() {
 GPUTestBotConfig::~GPUTestBotConfig() {
 }
 
-void GPUTestBotConfig::AddGPUVendor(uint32 gpu_vendor) {
+void GPUTestBotConfig::AddGPUVendor(uint32_t gpu_vendor) {
   DCHECK_EQ(0u, GPUTestConfig::gpu_vendor().size());
   GPUTestConfig::AddGPUVendor(gpu_vendor);
 }
@@ -371,6 +243,7 @@ bool GPUTestBotConfig::IsValid() const {
     case kOsMacMavericks:
     case kOsMacYosemite:
     case kOsMacElCapitan:
+    case kOsMacSierra:
     case kOsLinux:
     case kOsChromeOS:
     case kOsAndroid:
@@ -430,41 +303,32 @@ bool GPUTestBotConfig::Matches(const std::string& config_data) const {
   return Matches(config);
 }
 
-bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo *gpu_info)
-{
-    bool rt;
-    if (gpu_info == NULL)
-    {
-        GPUInfo my_gpu_info;
-        CollectInfoResult result =
-            CollectGpuID(&my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
-        if (result != kCollectInfoSuccess)
-        {
-            LOG(ERROR) << "Fail to identify GPU\n";
-            DisableGPUInfoValidation();
-            rt = true;
-        }
-        else
-        {
-            rt = SetGPUInfo(my_gpu_info);
-        }
+bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo* gpu_info) {
+  bool rt;
+  if (gpu_info == NULL) {
+    GPUInfo my_gpu_info;
+    CollectInfoResult result = CollectBasicGraphicsInfo(&my_gpu_info);
+    if (result != kCollectInfoSuccess) {
+      LOG(ERROR) << "Fail to identify GPU\n";
+      DisableGPUInfoValidation();
+      rt = true;
+    } else {
+      rt = SetGPUInfo(my_gpu_info);
     }
-    else
-    {
-        rt = SetGPUInfo(*gpu_info);
-    }
-    set_os(GetCurrentOS());
-    if (os() == kOsUnknown)
-    {
-        LOG(ERROR) << "Unknown OS\n";
-        rt = false;
-    }
+  } else {
+    rt = SetGPUInfo(*gpu_info);
+  }
+  set_os(GetCurrentOS());
+  if (os() == kOsUnknown) {
+    LOG(ERROR) << "Unknown OS\n";
+    rt = false;
+  }
 #if defined(NDEBUG)
-    set_build_type(kBuildTypeRelease);
+  set_build_type(kBuildTypeRelease);
 #else
-    set_build_type(kBuildTypeDebug);
+  set_build_type(kBuildTypeDebug);
 #endif
-    return rt;
+  return rt;
 }
 
 // static
@@ -485,6 +349,11 @@ bool GPUTestBotConfig::CurrentConfigMatches(
     if (my_config.Matches(configs[i]))
       return true;
   }
+  return false;
+}
+
+// static
+bool GPUTestBotConfig::GpuBlacklistedOnBot() {
   return false;
 }
 

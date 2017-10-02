@@ -27,18 +27,28 @@ class RenderbufferD3D : public RenderbufferImpl
     RenderbufferD3D(RendererD3D *renderer);
     virtual ~RenderbufferD3D();
 
-    gl::Error setStorage(GLenum internalformat, size_t width, size_t height) override;
-    gl::Error setStorageMultisample(size_t samples,
+    gl::Error onDestroy(const gl::Context *context) override;
+
+    gl::Error setStorage(const gl::Context *context,
+                         GLenum internalformat,
+                         size_t width,
+                         size_t height) override;
+    gl::Error setStorageMultisample(const gl::Context *context,
+                                    size_t samples,
                                     GLenum internalformat,
                                     size_t width,
                                     size_t height) override;
-    gl::Error setStorageEGLImageTarget(egl::Image *image) override;
+    gl::Error setStorageEGLImageTarget(const gl::Context *context, egl::Image *image) override;
 
-    gl::Error getRenderTarget(RenderTargetD3D **outRenderTarget);
-    gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
+    gl::Error getRenderTarget(const gl::Context *context, RenderTargetD3D **outRenderTarget);
+    gl::Error getAttachmentRenderTarget(const gl::Context *context,
+                                        GLenum binding,
+                                        const gl::ImageIndex &imageIndex,
                                         FramebufferAttachmentRenderTarget **rtOut) override;
 
   private:
+    void deleteRenderTarget(const gl::Context *context);
+
     RendererD3D *mRenderer;
     RenderTargetD3D *mRenderTarget;
     EGLImageD3D *mImage;

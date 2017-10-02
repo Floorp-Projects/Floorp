@@ -5,8 +5,8 @@
 //
 // The SeparateDeclarations function processes declarations, so that in the end each declaration
 // contains only one declarator.
-// This is useful as an intermediate step when initialization needs to be separated from declaration,
-// or when things need to be unfolded out of the initializer.
+// This is useful as an intermediate step when initialization needs to be separated from
+// declaration, or when things need to be unfolded out of the initializer.
 // Example:
 //     int a[1] = int[1](1), b[1] = int[1](2);
 // gets transformed when run through this class into the AST equivalent of:
@@ -15,7 +15,7 @@
 
 #include "compiler/translator/SeparateDeclarations.h"
 
-#include "compiler/translator/IntermNode.h"
+#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -27,6 +27,7 @@ class SeparateDeclarationsTraverser : private TIntermTraverser
 {
   public:
     static void apply(TIntermNode *root);
+
   private:
     SeparateDeclarationsTraverser();
     bool visitDeclaration(Visit, TIntermDeclaration *node) override;
@@ -68,7 +69,7 @@ bool SeparateDeclarationsTraverser::visitDeclaration(Visit, TIntermDeclaration *
     return false;
 }
 
-} // namespace
+}  // namespace
 
 void SeparateDeclarations(TIntermNode *root)
 {
