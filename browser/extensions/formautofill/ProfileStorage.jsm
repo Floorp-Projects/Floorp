@@ -341,14 +341,13 @@ class AutofillRecords {
     } else {
       this._ensureMatchingVersion(record);
       recordToSave = record;
+      this._computeFields(recordToSave);
     }
 
     if (sourceSync) {
       let sync = this._getSyncMetaData(recordToSave, true);
       sync.changeCounter = 0;
     }
-
-    this._computeFields(recordToSave);
 
     this._store.data[this._collectionName].push(recordToSave);
 
