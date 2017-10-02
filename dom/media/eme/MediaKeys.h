@@ -29,6 +29,7 @@ namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 class MediaKeySession;
+struct MediaKeysPolicy;
 class HTMLMediaElement;
 
 typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
@@ -129,6 +130,10 @@ public:
   bool IsBoundToMediaElement() const;
 
   void GetSessionsInfo(nsString& sessionsInfo);
+
+  // JavaScript: MediaKeys.GetStatusForPolicy()
+  already_AddRefed<Promise> GetStatusForPolicy(const MediaKeysPolicy& aPolicy,
+                                               ErrorResult& aR);
 
 private:
 
