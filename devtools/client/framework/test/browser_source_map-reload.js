@@ -24,7 +24,6 @@ add_task(function* () {
   const service = toolbox.sourceMapURLService;
   const tab = toolbox.target.tab;
 
-  debugger
   let sourceSeen = waitForSourceLoad(toolbox, JS_URL);
   tab.linkedBrowser.loadURI(PAGE_URL);
   yield sourceSeen;
