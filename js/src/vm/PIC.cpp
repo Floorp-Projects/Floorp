@@ -47,7 +47,7 @@ js::ForOfPIC::Chain::initialize(JSContext* cx)
 
     // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
     Shape* iterShape = arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-    if (!iterShape || !iterShape->hasSlot() || !iterShape->hasDefaultGetter())
+    if (!iterShape || !iterShape->isDataProperty())
         return true;
 
     // Get the referred value, and ensure it holds the canonical ArrayValues function.
@@ -60,7 +60,7 @@ js::ForOfPIC::Chain::initialize(JSContext* cx)
 
     // Look up the 'next' value on ArrayIterator.prototype
     Shape* nextShape = arrayIteratorProto->lookup(cx, cx->names().next);
-    if (!nextShape || !nextShape->hasSlot())
+    if (!nextShape || !nextShape->isDataProperty())
         return true;
 
     // Get the referred value, ensure it holds the canonical ArrayIteratorNext function.
