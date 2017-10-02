@@ -738,20 +738,39 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     bool validPromotionRate;
     const float promotionRate = calcPromotionRate(&validPromotionRate);
     uint32_t pretenureCount = 0;
-    if (validPromotionRate) {
-        if (promotionRate > 0.8 || IsFullStoreBufferReason(reason)) {
-            JSContext* cx = TlsContext.get();
-            for (auto& entry : tenureCounts.entries) {
-                if (entry.count >= 3000) {
-                    ObjectGroup* group = entry.group;
-                    if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
-                        AutoCompartment ac(cx, group);
-                        group->setShouldPreTenure(cx);
-                        pretenureCount++;
-                    }
+    bool shouldPretenure = (validPromotionRate && promotionRate > 0.6) ||
+        IsFullStoreBufferReason(reason);
+
+    if (shouldPretenure) {
+        JSContext* cx = TlsContext.get();
+        for (auto& entry : tenureCounts.entries) {
+            if (entry.count >= 3000) {
+                ObjectGroup* group = entry.group;
+                if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
+                    AutoCompartment ac(cx, group);
+                    group->setShouldPreTenure(cx);
+                    pretenureCount++;
                 }
             }
         }
+    }
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+        if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
+            JSRuntime::AutoProhibitActiveContextChange apacc(rt);
+            CancelOffThreadIonCompile(zone);
+            bool preserving = zone->isPreservingCode();
+            zone->setPreservingCode(false);
+            zone->discardJitCode(rt->defaultFreeOp());
+            zone->setPreservingCode(preserving);
+            for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+                if (jit::JitCompartment* jitComp = c->jitCompartment()) {
+                    jitComp->discardStubs();
+                    jitComp->stringsCanBeInNursery = false;
+                }
+            }
+            zone->allocNurseryStrings = false;
+        }
+        zone->tenuredStrings = 0;
     }
     endProfile(ProfileKey::Pretenure);
 
@@ -1086,7 +1105,7 @@ js::Nursery::setStartPosition()
 void
 js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
 {
-    static const double GrowThreshold   = 0.05;
+    static const double GrowThreshold   = 0.03;
     static const double ShrinkThreshold = 0.01;
     unsigned newMaxNurseryChunks;
 
