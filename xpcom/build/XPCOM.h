@@ -59,7 +59,7 @@
 // interfaces that inherit directly from nsISupports
 
 #include "nsIArray.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsICategoryManager.h"
 #include "nsIClassInfo.h"
 #include "nsIComponentManager.h"

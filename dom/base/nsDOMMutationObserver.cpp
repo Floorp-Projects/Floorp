@@ -158,7 +158,7 @@ void
 nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
                                         mozilla::dom::Element* aElement,
                                         int32_t aNameSpaceID,
-                                        nsIAtom* aAttribute,
+                                        nsAtom* aAttribute,
                                         int32_t aModType,
                                         const nsAttrValue* aNewValue)
 {
@@ -683,7 +683,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     return;
   }
 
-  nsTArray<RefPtr<nsIAtom>> filters;
+  nsTArray<RefPtr<nsAtom>> filters;
   bool allAttrs = true;
   if (aOptions.mAttributeFilter.WasPassed()) {
     allAttrs = false;
@@ -767,7 +767,7 @@ nsDOMMutationObserver::GetObservingInfo(
     info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
     info.mNativeAnonymousChildList = mr->NativeAnonymousChildList();
     info.mAnimations = mr->Animations();
-    nsTArray<RefPtr<nsIAtom>>& filters = mr->AttributeFilter();
+    nsTArray<RefPtr<nsAtom>>& filters = mr->AttributeFilter();
     if (filters.Length()) {
       info.mAttributeFilter.Construct();
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
@@ -930,7 +930,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
 }
 
 nsDOMMutationRecord*
-nsDOMMutationObserver::CurrentRecord(nsIAtom* aType)
+nsDOMMutationObserver::CurrentRecord(nsAtom* aType)
 {
   NS_ASSERTION(sMutationLevel > 0, "Unexpected mutation level!");
 

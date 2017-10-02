@@ -19,7 +19,7 @@ Transaction interface to outside world
     0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 class EditorBase;
@@ -38,7 +38,7 @@ public:
 
   NS_IMETHOD EndPlaceHolderBatch()=0;
 
-  NS_IMETHOD GetTxnName(nsIAtom **aName)=0;
+  NS_IMETHOD GetTxnName(nsAtom **aName)=0;
 
   NS_IMETHOD StartSelectionEquals(mozilla::SelectionState* aSelState,
                                   bool* aResult) = 0;

@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nscore.h"
 #include "nsRuleNetwork.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDOMDocument.h"
 
 class nsXULTemplateQueryProcessorRDF;
@@ -23,7 +23,7 @@ class nsContentTestNode : public TestNode
 {
 public:
     nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
-                      nsIAtom* aContentVariable);
+                      nsAtom* aContentVariable);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
                                           bool* aCantHandleYet) const override;
@@ -31,7 +31,7 @@ public:
     nsresult
     Constrain(InstantiationSet& aInstantiations) override;
 
-    void SetTag(nsIAtom* aTag, nsIDOMDocument* aDocument)
+    void SetTag(nsAtom* aTag, nsIDOMDocument* aDocument)
     {
         mTag = aTag;
         mDocument = aDocument;
@@ -40,8 +40,8 @@ public:
 protected:
     nsXULTemplateQueryProcessorRDF *mProcessor;
     nsIDOMDocument* mDocument;
-    RefPtr<nsIAtom> mRefVariable;
-    RefPtr<nsIAtom> mTag;
+    RefPtr<nsAtom> mRefVariable;
+    RefPtr<nsAtom> mTag;
 };
 
 #endif // nsContentTestNode_h__

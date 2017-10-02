@@ -164,7 +164,7 @@ Attr::GetValue(nsAString& aValue)
 {
   Element* element = GetElement();
   if (element) {
-    RefPtr<nsIAtom> nameAtom = mNodeInfo->NameAtom();
+    RefPtr<nsAtom> nameAtom = mNodeInfo->NameAtom();
     element->GetAttr(mNodeInfo->NamespaceID(), nameAtom, aValue);
   }
   else {
@@ -183,7 +183,7 @@ Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
     return;
   }
 
-  RefPtr<nsIAtom> nameAtom = mNodeInfo->NameAtom();
+  RefPtr<nsAtom> nameAtom = mNodeInfo->NameAtom();
   aRv = element->SetAttr(mNodeInfo->NamespaceID(),
                          nameAtom,
                          mNodeInfo->GetPrefixAtom(),

@@ -25,7 +25,7 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t aModType) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -151,7 +151,7 @@ nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
 
 nsresult
 nsAutoRepeatBoxFrame::AttributeChanged(int32_t aNameSpaceID,
-                                       nsIAtom* aAttribute,
+                                       nsAtom* aAttribute,
                                        int32_t aModType)
 {
   if (aAttribute == nsGkAtoms::type) {

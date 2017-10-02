@@ -44,7 +44,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 
 bool
 HTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
@@ -264,7 +264,7 @@ HTMLBodyElement::GetAttributeMappingFunction() const
 }
 
 NS_IMETHODIMP_(bool)
-HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLBodyElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::link },
@@ -318,7 +318,7 @@ HTMLBodyElement::GetAssociatedEditor()
 }
 
 bool
-HTMLBodyElement::IsEventAttributeNameInternal(nsIAtom *aName)
+HTMLBodyElement::IsEventAttributeNameInternal(nsAtom *aName)
 {
   return nsContentUtils::IsEventAttributeName(aName,
                                               EventNameType_HTML |
@@ -338,7 +338,7 @@ HTMLBodyElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 nsresult
-HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
                               const nsAttrValue* aOldValue, bool aNotify)
 {

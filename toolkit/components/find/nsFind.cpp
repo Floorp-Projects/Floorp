@@ -18,7 +18,7 @@
 #include "nsIFormControl.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMElement.h"

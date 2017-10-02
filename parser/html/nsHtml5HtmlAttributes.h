@@ -24,7 +24,7 @@
 #ifndef nsHtml5HtmlAttributes_h
 #define nsHtml5HtmlAttributes_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -69,16 +69,16 @@ class nsHtml5HtmlAttributes
 
     nsHtml5String getValue(nsHtml5AttributeName* aName);
     int32_t getLength();
-    nsIAtom* getLocalNameNoBoundsCheck(int32_t aIndex);
+    nsAtom* getLocalNameNoBoundsCheck(int32_t aIndex);
     int32_t getURINoBoundsCheck(int32_t aIndex);
-    nsIAtom* getPrefixNoBoundsCheck(int32_t aIndex);
+    nsAtom* getPrefixNoBoundsCheck(int32_t aIndex);
     nsHtml5String getValueNoBoundsCheck(int32_t aIndex);
     nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t aIndex);
     int32_t getLineNoBoundsCheck(int32_t aIndex);
     void addAttribute(nsHtml5AttributeName* aName,
                       nsHtml5String aValue,
                       int32_t aLine);
-    void AddAttributeWithLocal(nsIAtom* aName,
+    void AddAttributeWithLocal(nsAtom* aName,
                                nsHtml5String aValue,
                                int32_t aLine);
     void clear(int32_t aMode);

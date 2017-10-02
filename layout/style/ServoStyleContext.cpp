@@ -18,7 +18,7 @@ namespace mozilla {
 
 ServoStyleContext::ServoStyleContext(
     nsPresContext* aPresContext,
-    nsIAtom* aPseudoTag,
+    nsAtom* aPseudoTag,
     CSSPseudoElementType aPseudoType,
     ServoComputedDataForgotten aComputedValues)
   : nsStyleContext(aPseudoTag, aPseudoType)
@@ -33,7 +33,7 @@ ServoStyleContext::ServoStyleContext(
 }
 
 ServoStyleContext*
-ServoStyleContext::GetCachedInheritingAnonBoxStyle(nsIAtom* aAnonBox) const
+ServoStyleContext::GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
 

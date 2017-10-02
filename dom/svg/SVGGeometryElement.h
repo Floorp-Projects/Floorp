@@ -51,7 +51,7 @@ protected:
 public:
   explicit SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
@@ -64,7 +64,7 @@ public:
     mCachedPath = nullptr;
   }
 
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
+  virtual bool AttributeDefinesGeometry(const nsAtom *aName);
 
   /**
    * Returns true if this element's geometry depends on the width or height of its

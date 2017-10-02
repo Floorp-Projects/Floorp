@@ -27,7 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsViewManager.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsNetCID.h"
 #include "nsIOfflineCacheUpdate.h"
@@ -300,7 +300,7 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
 }
 
 nsresult
-nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
+nsContentSink::ProcessHeaderData(nsAtom* aHeader, const nsAString& aValue,
                                  nsIContent* aContent)
 {
   nsresult rv = NS_OK;
@@ -852,7 +852,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
     nsAutoString result;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
-      RefPtr<nsIAtom> fieldAtom(NS_Atomize(header));
+      RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent);
     }
   }

@@ -60,8 +60,8 @@ txStylesheetCompiler::setBaseURI(const nsString& aBaseURI)
 }
 
 nsresult
-txStylesheetCompiler::startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
-                                   nsIAtom* aPrefix,
+txStylesheetCompiler::startElement(int32_t aNamespaceID, nsAtom* aLocalName,
+                                   nsAtom* aPrefix,
                                    txStylesheetAttr* aAttributes,
                                    int32_t aAttrCount)
 {
@@ -132,7 +132,7 @@ txStylesheetCompiler::startElement(const char16_t *aName,
         NS_ENSURE_SUCCESS(rv, rv);
         atts[i].mValue.Append(aAttrs[i * 2 + 1]);
 
-        RefPtr<nsIAtom> prefixToBind;
+        RefPtr<nsAtom> prefixToBind;
         if (atts[i].mPrefix == nsGkAtoms::xmlns) {
             prefixToBind = atts[i].mLocalName;
         }
@@ -156,7 +156,7 @@ txStylesheetCompiler::startElement(const char16_t *aName,
         }
     }
 
-    RefPtr<nsIAtom> prefix, localname;
+    RefPtr<nsAtom> prefix, localname;
     int32_t namespaceID;
     rv = XMLUtils::splitExpatName(aName, getter_AddRefs(prefix),
                                   getter_AddRefs(localname), &namespaceID);
@@ -168,8 +168,8 @@ txStylesheetCompiler::startElement(const char16_t *aName,
 
 nsresult
 txStylesheetCompiler::startElementInternal(int32_t aNamespaceID,
-                                           nsIAtom* aLocalName,
-                                           nsIAtom* aPrefix,
+                                           nsAtom* aLocalName,
+                                           nsAtom* aPrefix,
                                            txStylesheetAttr* aAttributes,
                                            int32_t aAttrCount)
 {
@@ -838,7 +838,7 @@ txStylesheetCompilerState::addVariable(const txExpandedName& aName)
 }
 
 nsresult
-txStylesheetCompilerState::resolveNamespacePrefix(nsIAtom* aPrefix,
+txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix,
                                                   int32_t& aID)
 {
     NS_ASSERTION(aPrefix && aPrefix != nsGkAtoms::_empty,
@@ -854,7 +854,7 @@ txStylesheetCompilerState::resolveNamespacePrefix(nsIAtom* aPrefix,
 class txErrorFunctionCall : public FunctionCall
 {
 public:
-    explicit txErrorFunctionCall(nsIAtom* aName)
+    explicit txErrorFunctionCall(nsAtom* aName)
       : mName(aName)
     {
     }
@@ -862,7 +862,7 @@ public:
     TX_DECL_FUNCTION
 
 private:
-    RefPtr<nsIAtom> mName;
+    RefPtr<nsAtom> mName;
 };
 
 nsresult
@@ -892,7 +892,7 @@ txErrorFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
+txErrorFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     NS_IF_ADDREF(*aAtom = mName);
 
@@ -901,7 +901,7 @@ txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
 #endif
 
 static nsresult
-TX_ConstructXSLTFunction(nsIAtom* aName, int32_t aNamespaceID,
+TX_ConstructXSLTFunction(nsAtom* aName, int32_t aNamespaceID,
                          txStylesheetCompilerState* aState,
                          FunctionCall** aFunction)
 {
@@ -953,7 +953,7 @@ TX_ConstructXSLTFunction(nsIAtom* aName, int32_t aNamespaceID,
     return NS_OK;
 }
 
-typedef nsresult (*txFunctionFactory)(nsIAtom* aName,
+typedef nsresult (*txFunctionFactory)(nsAtom* aName,
                                       int32_t aNamespaceID,
                                       txStylesheetCompilerState* aState,
                                       FunctionCall** aResult);
@@ -965,7 +965,7 @@ struct txFunctionFactoryMapping
 };
 
 extern nsresult
-TX_ConstructEXSLTFunction(nsIAtom *aName,
+TX_ConstructEXSLTFunction(nsAtom *aName,
                           int32_t aNamespaceID,
                           txStylesheetCompilerState* aState,
                           FunctionCall **aResult);
@@ -986,7 +986,7 @@ static txFunctionFactoryMapping kExtensionFunctions[] = {
 
 extern nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsIAtom *aName, nsISupports *aState,
+                            nsAtom *aName, nsISupports *aState,
                             FunctionCall **aFunction);
 
 struct txXPCOMFunctionMapping
@@ -998,7 +998,7 @@ struct txXPCOMFunctionMapping
 static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nullptr;
 
 static nsresult
-findFunction(nsIAtom* aName, int32_t aNamespaceID,
+findFunction(nsAtom* aName, int32_t aNamespaceID,
              txStylesheetCompilerState* aState, FunctionCall** aResult)
 {
     if (kExtensionFunctions[0].mNamespaceID == kNameSpaceID_Unknown) {
@@ -1065,7 +1065,7 @@ findFunction(nsIAtom* aName, int32_t aNamespaceID,
 }
 
 extern bool
-TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID)
+TX_XSLTFunctionAvailable(nsAtom* aName, int32_t aNameSpaceID)
 {
     RefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(EmptyString(),
@@ -1079,7 +1079,7 @@ TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID)
 }
 
 nsresult
-txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, int32_t aID,
+txStylesheetCompilerState::resolveFunctionCall(nsAtom* aName, int32_t aID,
                                                FunctionCall **aFunction)
 {
     *aFunction = nullptr;

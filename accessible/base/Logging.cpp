@@ -853,7 +853,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
   nsAutoCString tag;
   elm->NodeInfo()->NameAtom()->ToUTF8String(tag);
 
-  nsIAtom* idAtom = elm->GetID();
+  nsAtom* idAtom = elm->GetID();
   nsAutoCString id;
   if (idAtom)
     idAtom->ToUTF8String(id);
@@ -919,7 +919,7 @@ logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible)
     nsAutoCString tag;
     el->NodeInfo()->NameAtom()->ToUTF8String(tag);
 
-    nsIAtom* idAtom = el->GetID();
+    nsAtom* idAtom = el->GetID();
     nsAutoCString id;
     if (idAtom) {
       idAtom->ToUTF8String(id);

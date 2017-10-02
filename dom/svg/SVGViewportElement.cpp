@@ -78,7 +78,7 @@ SVGViewportElement::PreserveAspectRatio()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGViewportElement::IsAttributeMapped(const nsIAtom* name) const
+SVGViewportElement::IsAttributeMapped(const nsAtom* name) const
 {
   // We want to map the 'width' and 'height' attributes into style for
   // outer-<svg>, except when the attributes aren't set (since their default

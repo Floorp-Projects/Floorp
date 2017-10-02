@@ -51,7 +51,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTSpanElement)
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
+SVGTSpanElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sColorMap,

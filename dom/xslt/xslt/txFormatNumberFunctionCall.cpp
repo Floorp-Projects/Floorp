@@ -389,7 +389,7 @@ txFormatNumberFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-txFormatNumberFunctionCall::getNameAtom(nsIAtom** aAtom)
+txFormatNumberFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     *aAtom = nsGkAtoms::formatNumber;
     NS_ADDREF(*aAtom);

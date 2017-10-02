@@ -552,7 +552,7 @@ nsXULTooltipListener::HideTooltip()
 }
 
 static void
-GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
+GetImmediateChild(nsIContent* aContent, nsAtom *aTag, nsIContent** aResult)
 {
   *aResult = nullptr;
   uint32_t childCount = aContent->GetChildCount();

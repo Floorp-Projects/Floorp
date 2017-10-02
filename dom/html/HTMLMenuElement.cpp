@@ -106,7 +106,7 @@ HTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
 }
 
 nsresult
-HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
                               const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -124,7 +124,7 @@ HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
 bool
 HTMLMenuElement::ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {

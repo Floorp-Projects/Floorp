@@ -15,7 +15,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentSerializer.h"
 #include "nsIDocumentEncoder.h"
@@ -78,7 +78,7 @@ public:
 private:
   ~nsPlainTextSerializer();
 
-  nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
+  nsresult GetAttributeValue(nsAtom* aName, nsString& aValueRet);
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
@@ -95,10 +95,10 @@ private:
    * Returns the local name of the element as an atom if the element is an
    * HTML element and the atom is a static atom. Otherwise, nullptr is returned.
    */
-  static nsIAtom* GetIdForContent(nsIContent* aContent);
-  nsresult DoOpenContainer(nsIAtom* aTag);
-  nsresult DoCloseContainer(nsIAtom* aTag);
-  nsresult DoAddLeaf(nsIAtom* aTag);
+  static nsAtom* GetIdForContent(nsIContent* aContent);
+  nsresult DoOpenContainer(nsAtom* aTag);
+  nsresult DoCloseContainer(nsAtom* aTag);
+  nsresult DoAddLeaf(nsAtom* aTag);
   void DoAddText(bool aIsWhitespace, const nsAString& aText);
 
   // Inlined functions
@@ -129,8 +129,8 @@ private:
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
-  bool IsIgnorableRubyAnnotation(nsIAtom* aTag);
+  bool ShouldReplaceContainerWithPlaceholder(nsAtom* aTag);
+  bool IsIgnorableRubyAnnotation(nsAtom* aTag);
 
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
   bool IsElementBlock(mozilla::dom::Element* aElement);
@@ -213,7 +213,7 @@ private:
   // The tag stack: the stack of tags we're operating on, so we can nest.
   // The stack only ever points to static atoms, so they don't need to be
   // refcounted.
-  nsIAtom**        mTagStack;
+  nsAtom**        mTagStack;
   uint32_t         mTagStackIndex;
 
   // The stack indicating whether the elements we've been operating on are

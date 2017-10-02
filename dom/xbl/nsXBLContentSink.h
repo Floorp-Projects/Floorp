@@ -82,7 +82,7 @@ protected:
     bool OnOpenContainer(const char16_t **aAtts,
                            uint32_t aAttsCount,
                            int32_t aNameSpaceID,
-                           nsIAtom* aTagName,
+                           nsAtom* aTagName,
                            uint32_t aLineNumber) override;
 
     bool NotifyForDocElement() override { return false; }
@@ -104,7 +104,7 @@ protected:
     // Our own helpers for constructing XBL prototype objects.
     nsresult ConstructBinding(uint32_t aLineNumber);
     void ConstructHandler(const char16_t **aAtts, uint32_t aLineNumber);
-    void ConstructResource(const char16_t **aAtts, nsIAtom* aResourceType);
+    void ConstructResource(const char16_t **aAtts, nsAtom* aResourceType);
     void ConstructImplementation(const char16_t **aAtts);
     void ConstructProperty(const char16_t **aAtts, uint32_t aLineNumber);
     void ConstructMethod(const char16_t **aAtts);
@@ -122,7 +122,7 @@ protected:
                          bool *_retval) override;
 
 protected:
-  nsresult ReportUnexpectedElement(nsIAtom* aElementName, uint32_t aLineNumber);
+  nsresult ReportUnexpectedElement(nsAtom* aElementName, uint32_t aLineNumber);
 
   void AddMember(nsXBLProtoImplMember* aMember);
   void AddField(nsXBLProtoImplField* aField);

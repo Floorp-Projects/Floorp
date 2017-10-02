@@ -64,7 +64,7 @@ class nsFrameLoader;
 class nsHTMLCSSStyleSheet;
 class nsHTMLDocument;
 class nsHTMLStyleSheet;
-class nsIAtom;
+class nsAtom;
 class nsIBFCacheEntry;
 class nsIChannel;
 class nsIContent;
@@ -570,13 +570,13 @@ public:
    * registered for each ID.
    * @return the content currently associated with the ID.
    */
-  virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+  virtual Element* AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                        void* aData, bool aForImage) = 0;
   /**
    * Remove the (aObserver, aData, aForImage) triple for a specific ID, if
    * registered.
    */
-  virtual void RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+  virtual void RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                       void* aData, bool aForImage) = 0;
 
   /**
@@ -893,8 +893,8 @@ public:
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
-  virtual void GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const = 0;
-  virtual void SetHeaderData(nsIAtom* aheaderField, const nsAString& aData) = 0;
+  virtual void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const = 0;
+  virtual void SetHeaderData(nsAtom* aheaderField, const nsAString& aData) = 0;
 
   /**
    * Create a new presentation shell that will use aContext for its
@@ -1263,7 +1263,7 @@ public:
   Element* GetHtmlElement() const;
   // Returns the first child of GetHtmlContent which has the given tag,
   // or nullptr if that doesn't exist.
-  Element* GetHtmlChildElement(nsIAtom* aTag);
+  Element* GetHtmlChildElement(nsAtom* aTag);
   // Get the canonical <body> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <body> isn't there)
   mozilla::dom::HTMLBodyElement* GetBodyElement();
@@ -1540,10 +1540,10 @@ public:
   /**
    * Add/Remove an element to the document's id and name hashes
    */
-  virtual void AddToIdTable(Element* aElement, nsIAtom* aId) = 0;
-  virtual void RemoveFromIdTable(Element* aElement, nsIAtom* aId) = 0;
-  virtual void AddToNameTable(Element* aElement, nsIAtom* aName) = 0;
-  virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
+  virtual void AddToIdTable(Element* aElement, nsAtom* aId) = 0;
+  virtual void RemoveFromIdTable(Element* aElement, nsAtom* aId) = 0;
+  virtual void AddToNameTable(Element* aElement, nsAtom* aName) = 0;
+  virtual void RemoveFromNameTable(Element* aElement, nsAtom* aName) = 0;
 
   /**
    * Returns all elements in the fullscreen stack in the insertion order.
@@ -1860,7 +1860,7 @@ public:
    * Returns null if element name parsing failed.
    */
   virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
-                                               nsIAtom* aPrefix,
+                                               nsAtom* aPrefix,
                                                int32_t aNamespaceID,
                                                const nsAString* aIs = nullptr) = 0;
 
@@ -2093,7 +2093,7 @@ public:
    */
   virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,
-                                   nsIAtom* aAttrName,
+                                   nsAtom* aAttrName,
                                    const nsAString& aAttrValue) const = 0;
 
   /**
@@ -2790,7 +2790,7 @@ public:
    * Creates a new element in the HTML namespace with a local name given by
    * aTag.
    */
-  already_AddRefed<Element> CreateHTMLElement(nsIAtom* aTag);
+  already_AddRefed<Element> CreateHTMLElement(nsAtom* aTag);
 
   // WebIDL API
   nsIGlobalObject* GetParentObject() const

@@ -76,7 +76,7 @@ private:
   // Only ::before and ::after are supported.
   CSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
 
-  static nsIAtom* GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType);
+  static nsAtom* GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType);
 
   // mParentElement needs to be an owning reference since if script is holding
   // on to the pseudo-element, it needs to continue to be able to refer to

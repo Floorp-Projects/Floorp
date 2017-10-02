@@ -127,7 +127,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual nsIAtom* LandmarkRole() const override;
+  virtual nsAtom* LandmarkRole() const override;
   virtual a11y::role NativeRole() override;
 
 protected:

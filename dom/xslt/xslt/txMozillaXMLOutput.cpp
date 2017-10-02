@@ -99,13 +99,13 @@ txMozillaXMLOutput::~txMozillaXMLOutput()
 }
 
 nsresult
-txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
-                              nsIAtom* aLocalName,
-                              nsIAtom* aLowercaseLocalName,
+txMozillaXMLOutput::attribute(nsAtom* aPrefix,
+                              nsAtom* aLocalName,
+                              nsAtom* aLowercaseLocalName,
                               const int32_t aNsID,
                               const nsString& aValue)
 {
-    RefPtr<nsIAtom> owner;
+    RefPtr<nsAtom> owner;
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         if (aLowercaseLocalName) {
             aLocalName = aLowercaseLocalName;
@@ -122,12 +122,12 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
+txMozillaXMLOutput::attribute(nsAtom* aPrefix,
                               const nsAString& aLocalName,
                               const int32_t aNsID,
                               const nsString& aValue)
 {
-    RefPtr<nsIAtom> lname;
+    RefPtr<nsAtom> lname;
 
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         nsAutoString lnameStr;
@@ -154,8 +154,8 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::attributeInternal(nsIAtom* aPrefix,
-                                      nsIAtom* aLocalName,
+txMozillaXMLOutput::attributeInternal(nsAtom* aPrefix,
+                                      nsAtom* aLocalName,
                                       int32_t aNsID,
                                       const nsString& aValue)
 {
@@ -428,15 +428,15 @@ txMozillaXMLOutput::startDocument()
 }
 
 nsresult
-txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                                 nsIAtom* aLowercaseLocalName,
+txMozillaXMLOutput::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
+                                 nsAtom* aLowercaseLocalName,
                                  const int32_t aNsID)
 {
     NS_PRECONDITION(aNsID != kNameSpaceID_None || !aPrefix,
                     "Can't have prefix without namespace");
 
     if (mOutputFormat.mMethod == eHTMLOutput && aNsID == kNameSpaceID_None) {
-        RefPtr<nsIAtom> owner;
+        RefPtr<nsAtom> owner;
         if (!aLowercaseLocalName) {
             owner = TX_ToLowerCaseAtom(aLocalName);
             NS_ENSURE_TRUE(owner, NS_ERROR_OUT_OF_MEMORY);
@@ -452,12 +452,12 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
+txMozillaXMLOutput::startElement(nsAtom* aPrefix,
                                  const nsAString& aLocalName,
                                  const int32_t aNsID)
 {
     int32_t nsId = aNsID;
-    RefPtr<nsIAtom> lname;
+    RefPtr<nsAtom> lname;
 
     if (mOutputFormat.mMethod == eHTMLOutput && aNsID == kNameSpaceID_None) {
         nsId = kNameSpaceID_XHTML;
@@ -486,8 +486,8 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
 }
 
 nsresult
-txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
-                                         nsIAtom* aLocalName,
+txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
+                                         nsAtom* aLocalName,
                                          int32_t aNsID)
 {
     TX_ENSURE_CURRENTNODE;
@@ -758,7 +758,7 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
             aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
             if (!value.IsEmpty()) {
                 nsContentUtils::ASCIIToLower(httpEquiv);
-                RefPtr<nsIAtom> header = NS_Atomize(httpEquiv);
+                RefPtr<nsAtom> header = NS_Atomize(httpEquiv);
                 processHTTPEquiv(header, value);
             }
         }
@@ -767,7 +767,7 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
     return NS_OK;
 }
 
-void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsString& aValue)
+void txMozillaXMLOutput::processHTTPEquiv(nsAtom* aHeader, const nsString& aValue)
 {
     // For now we only handle "refresh". There's a longer list in
     // HTMLContentSink::ProcessHeaderData
@@ -893,7 +893,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
 
         nsresult rv = nsContentUtils::CheckQName(qName);
         if (NS_SUCCEEDED(rv)) {
-            RefPtr<nsIAtom> doctypeName = NS_Atomize(qName);
+            RefPtr<nsAtom> doctypeName = NS_Atomize(qName);
             if (!doctypeName) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -917,7 +917,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
 }
 
 nsresult
-txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
+txMozillaXMLOutput::createHTMLElement(nsAtom* aName,
                                       nsIContent** aResult)
 {
     NS_ASSERTION(mOutputFormat.mMethod == eHTMLOutput,

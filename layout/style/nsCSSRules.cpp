@@ -18,7 +18,7 @@
 #include "mozilla/css/NameSpaceRule.h"
 
 #include "nsString.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 #include "nsCSSProps.h"
 
@@ -692,7 +692,7 @@ DocumentRule::AppendConditionText(nsAString& aCssText) const
 // NameSpaceRule
 //
 
-NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
+NameSpaceRule::NameSpaceRule(nsAtom* aPrefix, const nsString& aURLSpec,
                              uint32_t aLineNumber, uint32_t aColumnNumber)
   : CSSNamespaceRule(aLineNumber, aColumnNumber),
     mPrefix(aPrefix),
@@ -2276,7 +2276,7 @@ NS_IMETHODIMP
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
   nsCSSParser parser;
-  if (RefPtr<nsIAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
+  if (RefPtr<nsAtom> name = parser.ParseCounterStyleName(aName, nullptr)) {
     nsIDocument* doc = GetDocument();
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 

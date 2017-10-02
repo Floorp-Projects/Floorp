@@ -68,7 +68,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
                                                  nsIContent *aOriginalElement,
                                                  nsAString& aTagPrefix,
                                                  const nsAString& aTagNamespaceURI,
-                                                 nsIAtom* aTagName,
+                                                 nsAtom* aTagName,
                                                  int32_t aNamespace,
                                                  nsAString& aStr)
 {
@@ -83,7 +83,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
   for (int32_t index = 0; index < count; index++) {
     const nsAttrName* name = aContent->GetAttrNameAt(index);
     int32_t namespaceID = name->NamespaceID();
-    nsIAtom* attrName = name->LocalName();
+    nsAtom* attrName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attrName);
@@ -187,7 +187,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIAtom *name = content->NodeInfo()->NameAtom();
+  nsAtom *name = content->NodeInfo()->NameAtom();
   int32_t ns = content->GetNameSpaceID();
 
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
@@ -300,7 +300,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
 
   nsIContent* content = aElement;
 
-  nsIAtom *name = content->NodeInfo()->NameAtom();
+  nsAtom *name = content->NodeInfo()->NameAtom();
   int32_t ns = content->GetNameSpaceID();
 
   if (ns == kNameSpaceID_XHTML &&

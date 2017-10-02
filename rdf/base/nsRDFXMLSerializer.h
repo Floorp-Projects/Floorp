@@ -44,7 +44,7 @@ protected:
     RegisterQName(nsIRDFResource* aResource);
     nsresult
     GetQName(nsIRDFResource* aResource, nsCString& aQName);
-    already_AddRefed<nsIAtom>
+    already_AddRefed<nsAtom>
     EnsureNewPrefix();
 
     nsresult

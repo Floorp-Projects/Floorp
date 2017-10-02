@@ -41,7 +41,7 @@ public:
 
   // nsIFrame interface:
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 };
 

@@ -36,7 +36,7 @@ HTMLLegendElement::GetFieldSet() const
 
 bool
 HTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
@@ -59,7 +59,7 @@ HTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsChangeHint
-HTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLLegendElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                           int32_t aModType) const
 {
   nsChangeHint retval =

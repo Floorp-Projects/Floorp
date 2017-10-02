@@ -516,7 +516,7 @@ private:
 class AccObjectAttrChangedEvent: public AccEvent
 {
 public:
-  AccObjectAttrChangedEvent(Accessible* aAccessible, nsIAtom* aAttribute) :
+  AccObjectAttrChangedEvent(Accessible* aAccessible, nsAtom* aAttribute) :
     AccEvent(::nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED, aAccessible),
     mAttribute(aAttribute) { }
 
@@ -528,10 +528,10 @@ public:
   }
 
   // AccObjectAttrChangedEvent
-  nsIAtom* GetAttribute() const { return mAttribute; }
+  nsAtom* GetAttribute() const { return mAttribute; }
 
 private:
-  RefPtr<nsIAtom> mAttribute;
+  RefPtr<nsAtom> mAttribute;
 
   virtual ~AccObjectAttrChangedEvent() { }
 };

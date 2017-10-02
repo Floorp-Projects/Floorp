@@ -8,7 +8,7 @@
 #define NS_SMILTIMEVALUESPECPARAMS_H_
 
 #include "nsSMILTimeValue.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 //----------------------------------------------------------------------
 // nsSMILTimeValueSpecParams
@@ -49,11 +49,11 @@ public:
   // The base element that this specification refers to.
   // For SYNCBASE types, this is the timebase
   // For EVENT and REPEAT types, this is the eventbase
-  RefPtr<nsIAtom> mDependentElemID;
+  RefPtr<nsAtom> mDependentElemID;
 
   // The event to respond to.
   // Only used for EVENT types.
-  RefPtr<nsIAtom> mEventSymbol;
+  RefPtr<nsAtom> mEventSymbol;
 
   // Indicates if this specification refers to the begin or end of the dependent
   // element.

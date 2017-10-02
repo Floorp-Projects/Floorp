@@ -105,7 +105,7 @@ nsDirectoryService::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return gService->QueryInterface(aIID, aResult);
 }
 
-#define DIR_ATOM(name_, value_) nsIAtom* nsDirectoryService::name_ = nullptr;
+#define DIR_ATOM(name_, value_) nsAtom* nsDirectoryService::name_ = nullptr;
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
 
@@ -412,7 +412,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   *aResult = nullptr;
   *aPersistent = true;
 
-  RefPtr<nsIAtom> inAtom = NS_Atomize(aProp);
+  RefPtr<nsAtom> inAtom = NS_Atomize(aProp);
 
   // check to see if it is one of our defaults
 

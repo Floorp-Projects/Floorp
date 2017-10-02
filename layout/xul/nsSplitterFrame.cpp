@@ -240,7 +240,7 @@ nsSplitterFrame::GetCursor(const nsPoint&    aPoint,
 
 nsresult
 nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   int32_t aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
@@ -670,7 +670,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsIContent* content = childBox->GetContent();
     nsIDocument* doc = content->OwnerDoc();
     int32_t dummy;
-    nsIAtom* atom = doc->BindingManager()->ResolveTag(content, &dummy);
+    nsAtom* atom = doc->BindingManager()->ResolveTag(content, &dummy);
 
     // skip over any splitters
     if (atom != nsGkAtoms::splitter) {
@@ -962,7 +962,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
   nsMargin margin(0,0,0,0);
   aChildBox->GetXULMargin(margin);
 
-  RefPtr<nsIAtom> attribute;
+  RefPtr<nsAtom> attribute;
 
   if (aIsHorizontal) {
     pref -= (margin.left + margin.right);

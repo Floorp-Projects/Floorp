@@ -635,7 +635,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   // Check to see if we are a "menupopup" node (if we are a native menu).
   {
     int32_t dummy;
-    RefPtr<nsIAtom> tag = mContent->OwnerDoc()->BindingManager()->ResolveTag(mContent, &dummy);
+    RefPtr<nsAtom> tag = mContent->OwnerDoc()->BindingManager()->ResolveTag(mContent, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = mContent;
       NS_ADDREF(*aResult);
@@ -650,7 +650,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   for (uint32_t i = 0; i < count; i++) {
     int32_t dummy;
     nsIContent *child = mContent->GetChildAt(i);
-    RefPtr<nsIAtom> tag = child->OwnerDoc()->BindingManager()->ResolveTag(child, &dummy);
+    RefPtr<nsAtom> tag = child->OwnerDoc()->BindingManager()->ResolveTag(child, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = child;
       NS_ADDREF(*aResult);
@@ -681,7 +681,7 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent)
 //
 
 void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent,
-                                      nsIAtom *aAttribute)
+                                      nsAtom *aAttribute)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 

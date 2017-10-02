@@ -274,7 +274,7 @@ void
 nsSHEntryShared::AttributeWillChange(nsIDocument* aDocument,
                                      dom::Element* aContent,
                                      int32_t aNameSpaceID,
-                                     nsIAtom* aAttribute,
+                                     nsAtom* aAttribute,
                                      int32_t aModType,
                                      const nsAttrValue* aNewValue)
 {
@@ -291,7 +291,7 @@ void
 nsSHEntryShared::AttributeChanged(nsIDocument* aDocument,
                                   dom::Element* aElement,
                                   int32_t aNameSpaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   int32_t aModType,
                                   const nsAttrValue* aOldValue)
 {

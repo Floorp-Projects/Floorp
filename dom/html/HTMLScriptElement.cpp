@@ -72,7 +72,7 @@ HTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 bool
 HTMLScriptElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
@@ -233,7 +233,7 @@ HTMLScriptElement::SetNoModule(bool aValue, ErrorResult& aRv)
 }
 
 nsresult
-HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {

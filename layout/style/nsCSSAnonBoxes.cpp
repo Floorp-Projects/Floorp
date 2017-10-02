@@ -28,13 +28,13 @@ static const nsStaticAtom CSSAnonBoxes_info[] = {
   // Put the non-inheriting anon boxes first, so we can index into them easily.
 #define CSS_ANON_BOX(name_, value_) /* nothing */
 #define CSS_NON_INHERITING_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSAnonBoxes::name_),
+  NS_STATIC_ATOM(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX
 
 #define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSAnonBoxes::name_),
+  NS_STATIC_ATOM(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
 #define CSS_NON_INHERITING_ANON_BOX(name_, value_) /* nothing */
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
@@ -46,7 +46,7 @@ void nsCSSAnonBoxes::AddRefAtoms()
   NS_RegisterStaticAtoms(CSSAnonBoxes_info);
 }
 
-bool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
+bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
 {
   return nsAtomListUtils::IsMember(aAtom, CSSAnonBoxes_info,
                                    ArrayLength(CSSAnonBoxes_info));
@@ -54,7 +54,7 @@ bool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
 
 #ifdef MOZ_XUL
 /* static */ bool
-nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
+nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudo));
   return StringBeginsWith(nsDependentAtomString(aPseudo),
@@ -63,7 +63,7 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
 #endif
 
 /* static*/ nsCSSAnonBoxes::NonInheriting
-nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsIAtom* aPseudo)
+nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
   for (NonInheritingBase i = 0;
@@ -77,7 +77,7 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsIAtom* aPseudo)
   MOZ_CRASH("Bogus pseudo passed to NonInheritingTypeForPseudoTag");
 }
 
-/* static */ nsIAtom*
+/* static */ nsAtom*
 nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
 {
   MOZ_ASSERT(aBoxType < NonInheriting::_Count);

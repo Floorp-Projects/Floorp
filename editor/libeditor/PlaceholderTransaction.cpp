@@ -18,7 +18,7 @@ using namespace dom;
 
 PlaceholderTransaction::PlaceholderTransaction(
                           EditorBase& aEditorBase,
-                          nsIAtom* aName,
+                          nsAtom* aName,
                           Maybe<SelectionState>&& aSelState)
   : mAbsorb(true)
   , mForwarding(nullptr)
@@ -167,7 +167,7 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
          mName.get() == nsGkAtoms::IMETxnName    ||
          mName.get() == nsGkAtoms::DeleteTxnName) && !mCommitted) {
       if (absorbingTransaction) {
-        RefPtr<nsIAtom> atom;
+        RefPtr<nsAtom> atom;
         absorbingTransaction->GetTxnName(getter_AddRefs(atom));
         if (atom && atom == mName) {
           // check if start selection of next placeholder matches
@@ -207,7 +207,7 @@ PlaceholderTransaction::GetTxnDescription(nsAString& aString)
 }
 
 NS_IMETHODIMP
-PlaceholderTransaction::GetTxnName(nsIAtom** aName)
+PlaceholderTransaction::GetTxnName(nsAtom** aName)
 {
   return GetName(aName);
 }

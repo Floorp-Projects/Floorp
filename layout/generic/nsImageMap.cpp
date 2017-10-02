@@ -896,7 +896,7 @@ void
 nsImageMap::AttributeChanged(nsIDocument*  aDocument,
                              dom::Element* aElement,
                              int32_t       aNameSpaceID,
-                             nsIAtom*      aAttribute,
+                             nsAtom*      aAttribute,
                              int32_t       aModType,
                              const nsAttrValue* aOldValue)
 {

@@ -204,7 +204,7 @@ DataTransfer::Constructor(const GlobalObject& aGlobal,
 {
   nsAutoCString onEventType("on");
   AppendUTF16toUTF8(aEventType, onEventType);
-  RefPtr<nsIAtom> eventTypeAtom = NS_Atomize(onEventType);
+  RefPtr<nsAtom> eventTypeAtom = NS_Atomize(onEventType);
   if (!eventTypeAtom) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
@@ -697,7 +697,7 @@ DataTransfer::TypesListMayHaveChanged()
 already_AddRefed<DataTransfer>
 DataTransfer::MozCloneForEvent(const nsAString& aEvent, ErrorResult& aRv)
 {
-  RefPtr<nsIAtom> atomEvt = NS_Atomize(aEvent);
+  RefPtr<nsAtom> atomEvt = NS_Atomize(aEvent);
   if (!atomEvt) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;

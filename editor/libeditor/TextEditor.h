@@ -65,10 +65,10 @@ public:
   // Overrides of EditorBase
   virtual nsresult RemoveAttributeOrEquivalent(
                      Element* aElement,
-                     nsIAtom* aAttribute,
+                     nsAtom* aAttribute,
                      bool aSuppressTransaction) override;
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsIAtom* aAttribute,
+                                            nsAtom* aAttribute,
                                             const nsAString& aValue,
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;

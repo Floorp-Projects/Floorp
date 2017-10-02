@@ -137,7 +137,7 @@ SVGPatternElement::Href()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGPatternElement::IsAttributeMapped(const nsIAtom* name) const
+SVGPatternElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sColorMap,

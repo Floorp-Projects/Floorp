@@ -16,9 +16,9 @@ extern mozilla::LazyLogModule gXULTemplateLog;
 
 nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
                                              nsXULTemplateQueryProcessorRDF* aProcessor,
-                                             nsIAtom* aSourceVariable,
+                                             nsAtom* aSourceVariable,
                                              nsIRDFResource* aProperty,
-                                             nsIAtom* aTargetVariable)
+                                             nsAtom* aTargetVariable)
     : nsRDFTestNode(aParent),
       mProcessor(aProcessor),
       mSourceVariable(aSourceVariable),
@@ -51,7 +51,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
                                              nsXULTemplateQueryProcessorRDF* aProcessor,
                                              nsIRDFResource* aSource,
                                              nsIRDFResource* aProperty,
-                                             nsIAtom* aTargetVariable)
+                                             nsAtom* aTargetVariable)
     : nsRDFTestNode(aParent),
       mProcessor(aProcessor),
       mSourceVariable(nullptr),
@@ -82,7 +82,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
 
 nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
                                              nsXULTemplateQueryProcessorRDF* aProcessor,
-                                             nsIAtom* aSourceVariable,
+                                             nsAtom* aSourceVariable,
                                              nsIRDFResource* aProperty,
                                              nsIRDFNode* aTarget)
     : nsRDFTestNode(aParent),
@@ -219,7 +219,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 rv = results->GetNext(getter_AddRefs(isupports));
                 if (NS_FAILED(rv)) return rv;
 
-                nsIAtom* variable;
+                nsAtom* variable;
                 nsCOMPtr<nsIRDFNode> value;
 
                 if (hasSourceBinding) {

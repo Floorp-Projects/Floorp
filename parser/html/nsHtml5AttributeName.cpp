@@ -27,7 +27,7 @@
 
 #define nsHtml5AttributeName_cpp__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -58,44 +58,44 @@ int32_t* nsHtml5AttributeName::ALL_NO_NS = 0;
 int32_t* nsHtml5AttributeName::XMLNS_NS = 0;
 int32_t* nsHtml5AttributeName::XML_NS = 0;
 int32_t* nsHtml5AttributeName::XLINK_NS = 0;
-nsIAtom** nsHtml5AttributeName::ALL_NO_PREFIX = 0;
-nsIAtom** nsHtml5AttributeName::XMLNS_PREFIX = 0;
-nsIAtom** nsHtml5AttributeName::XLINK_PREFIX = 0;
-nsIAtom** nsHtml5AttributeName::XML_PREFIX = 0;
-nsIAtom** 
-nsHtml5AttributeName::SVG_DIFFERENT(nsIAtom* name, nsIAtom* camel)
+nsAtom** nsHtml5AttributeName::ALL_NO_PREFIX = 0;
+nsAtom** nsHtml5AttributeName::XMLNS_PREFIX = 0;
+nsAtom** nsHtml5AttributeName::XLINK_PREFIX = 0;
+nsAtom** nsHtml5AttributeName::XML_PREFIX = 0;
+nsAtom** 
+nsHtml5AttributeName::SVG_DIFFERENT(nsAtom* name, nsAtom* camel)
 {
-  nsIAtom** arr = new nsIAtom*[4];
+  nsAtom** arr = new nsAtom*[4];
   arr[0] = name;
   arr[1] = name;
   arr[2] = camel;
   return arr;
 }
 
-nsIAtom** 
-nsHtml5AttributeName::MATH_DIFFERENT(nsIAtom* name, nsIAtom* camel)
+nsAtom** 
+nsHtml5AttributeName::MATH_DIFFERENT(nsAtom* name, nsAtom* camel)
 {
-  nsIAtom** arr = new nsIAtom*[4];
+  nsAtom** arr = new nsAtom*[4];
   arr[0] = name;
   arr[1] = camel;
   arr[2] = name;
   return arr;
 }
 
-nsIAtom** 
-nsHtml5AttributeName::COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix)
+nsAtom** 
+nsHtml5AttributeName::COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix)
 {
-  nsIAtom** arr = new nsIAtom*[4];
+  nsAtom** arr = new nsAtom*[4];
   arr[0] = name;
   arr[1] = suffix;
   arr[2] = suffix;
   return arr;
 }
 
-nsIAtom** 
-nsHtml5AttributeName::SAME_LOCAL(nsIAtom* name)
+nsAtom** 
+nsHtml5AttributeName::SAME_LOCAL(nsAtom* name)
 {
-  nsIAtom** arr = new nsIAtom*[4];
+  nsAtom** arr = new nsAtom*[4];
   arr[0] = name;
   arr[1] = name;
   arr[2] = name;
@@ -103,8 +103,8 @@ nsHtml5AttributeName::SAME_LOCAL(nsIAtom* name)
 }
 
 nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri,
-                                           nsIAtom** local,
-                                           nsIAtom** prefix)
+                                           nsAtom** local,
+                                           nsAtom** prefix)
   : uri(uri)
   , local(local)
   , prefix(prefix)
@@ -123,7 +123,7 @@ nsHtml5AttributeName::nsHtml5AttributeName()
 }
 
 nsHtml5AttributeName*
-nsHtml5AttributeName::createAttributeName(nsIAtom* name)
+nsHtml5AttributeName::createAttributeName(nsAtom* name)
 {
   return new nsHtml5AttributeName(nsHtml5AttributeName::ALL_NO_NS,
                                   nsHtml5AttributeName::SAME_LOCAL(name),
@@ -143,13 +143,13 @@ nsHtml5AttributeName::getUri(int32_t mode)
   return uri[mode];
 }
 
-nsIAtom* 
+nsAtom* 
 nsHtml5AttributeName::getLocal(int32_t mode)
 {
   return local[mode];
 }
 
-nsIAtom* 
+nsAtom* 
 nsHtml5AttributeName::getPrefix(int32_t mode)
 {
   return prefix[mode];
@@ -762,19 +762,19 @@ nsHtml5AttributeName::initializeStatics()
   XLINK_NS[0] = kNameSpaceID_None;
   XLINK_NS[1] = kNameSpaceID_XLink;
   XLINK_NS[2] = kNameSpaceID_XLink;
-  ALL_NO_PREFIX = new nsIAtom*[3];
+  ALL_NO_PREFIX = new nsAtom*[3];
   ALL_NO_PREFIX[0] = nullptr;
   ALL_NO_PREFIX[1] = nullptr;
   ALL_NO_PREFIX[2] = nullptr;
-  XMLNS_PREFIX = new nsIAtom*[3];
+  XMLNS_PREFIX = new nsAtom*[3];
   XMLNS_PREFIX[0] = nullptr;
   XMLNS_PREFIX[1] = nsGkAtoms::xmlns;
   XMLNS_PREFIX[2] = nsGkAtoms::xmlns;
-  XLINK_PREFIX = new nsIAtom*[3];
+  XLINK_PREFIX = new nsAtom*[3];
   XLINK_PREFIX[0] = nullptr;
   XLINK_PREFIX[1] = nsGkAtoms::xlink;
   XLINK_PREFIX[2] = nsGkAtoms::xlink;
-  XML_PREFIX = new nsIAtom*[3];
+  XML_PREFIX = new nsAtom*[3];
   XML_PREFIX[0] = nullptr;
   XML_PREFIX[1] = nsGkAtoms::xml;
   XML_PREFIX[2] = nsGkAtoms::xml;

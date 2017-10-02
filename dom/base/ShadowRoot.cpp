@@ -195,7 +195,7 @@ ShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 void
-ShadowRoot::AddToIdTable(Element* aElement, nsIAtom* aId)
+ShadowRoot::AddToIdTable(Element* aElement, nsAtom* aId)
 {
   nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
   if (entry) {
@@ -204,7 +204,7 @@ ShadowRoot::AddToIdTable(Element* aElement, nsIAtom* aId)
 }
 
 void
-ShadowRoot::RemoveFromIdTable(Element* aElement, nsIAtom* aId)
+ShadowRoot::RemoveFromIdTable(Element* aElement, nsAtom* aId)
 {
   nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   if (entry) {
@@ -477,7 +477,7 @@ void
 ShadowRoot::AttributeChanged(nsIDocument* aDocument,
                              Element* aElement,
                              int32_t aNameSpaceID,
-                             nsIAtom* aAttribute,
+                             nsAtom* aAttribute,
                              int32_t aModType,
                              const nsAttrValue* aOldValue)
 {

@@ -184,7 +184,7 @@ public:
    * @param aName the attribute
    * @return whether the name is an event handler name
    */
-  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by nsINode */
 // The using nsINode::Get/SetOn* are to avoid warnings about shadowing the XPCOM
@@ -245,7 +245,7 @@ public:
     return true;
   }
 
-  inline bool IsHTMLElement(nsIAtom* aTag) const
+  inline bool IsHTMLElement(nsAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag);
   }
@@ -342,16 +342,16 @@ public:
   }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
+                              nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsAttrValue& aResult) override;
 
   bool ParseBackgroundAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
   /**
@@ -434,7 +434,7 @@ public:
    * @param aResult the resulting HTMLValue
    * @return whether the value was parsed
    */
-  static bool ParseImageAttribute(nsIAtom* aAttribute,
+  static bool ParseImageAttribute(nsAtom* aAttribute,
                                     const nsAString& aString,
                                     nsAttrValue& aResult);
 
@@ -655,7 +655,7 @@ public:
    * @param aBaseAttr  name of base attribute.
    * @param aResult    result value [out]
    */
-  void GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult) const;
+  void GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr, nsAString& aResult) const;
 
   /**
    * Gets the absolute URI values of an attribute, by resolving any relative
@@ -663,7 +663,7 @@ public:
    * isn't a relative URI, the substring is returned as is. Only works for
    * attributes in null namespace.
    */
-  bool GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const;
+  bool GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr, nsIURI** aURI) const;
 
   /**
    * Returns the current disabled state of the element.
@@ -680,7 +680,7 @@ public:
   virtual bool IsLabelable() const override;
 
   static bool MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
-                                 nsIAtom* aAtom, void* aData);
+                                 nsAtom* aAtom, void* aData);
 
   already_AddRefed<nsINodeList> Labels();
 
@@ -689,7 +689,7 @@ public:
   static bool TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */);
 
   static inline bool
-  CanHaveName(nsIAtom* aTag)
+  CanHaveName(nsAtom* aTag)
   {
     return aTag == nsGkAtoms::img ||
            aTag == nsGkAtoms::form ||
@@ -719,7 +719,7 @@ protected:
   /**
    * Add/remove this element to the documents name cache
    */
-  void AddToNameTable(nsIAtom* aName) {
+  void AddToNameTable(nsAtom* aName) {
     NS_ASSERTION(HasName(), "Node doesn't have name?");
     nsIDocument* doc = GetUncomposedDoc();
     if (doc && !IsInAnonymousSubtree()) {
@@ -758,16 +758,16 @@ private:
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
-  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify) override;
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
 
   virtual mozilla::EventListenerManager*
-    GetEventListenerManagerForAttr(nsIAtom* aAttrName,
+    GetEventListenerManagerForAttr(nsAtom* aAttrName,
                                    bool* aDefer) override;
 
   /**
@@ -784,36 +784,36 @@ protected:
    */
   nsresult NewURIFromString(const nsAString& aURISpec, nsIURI** aURI);
 
-  void GetHTMLAttr(nsIAtom* aName, nsAString& aResult) const
+  void GetHTMLAttr(nsAtom* aName, nsAString& aResult) const
   {
     GetAttr(kNameSpaceID_None, aName, aResult);
   }
-  void GetHTMLAttr(nsIAtom* aName, mozilla::dom::DOMString& aResult) const
+  void GetHTMLAttr(nsAtom* aName, mozilla::dom::DOMString& aResult) const
   {
     GetAttr(kNameSpaceID_None, aName, aResult);
   }
-  void GetHTMLEnumAttr(nsIAtom* aName, nsAString& aResult) const
+  void GetHTMLEnumAttr(nsAtom* aName, nsAString& aResult) const
   {
     GetEnumAttr(aName, nullptr, aResult);
   }
-  void GetHTMLURIAttr(nsIAtom* aName, nsAString& aResult) const
+  void GetHTMLURIAttr(nsAtom* aName, nsAString& aResult) const
   {
     GetURIAttr(aName, nullptr, aResult);
   }
 
-  void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue)
+  void SetHTMLAttr(nsAtom* aName, const nsAString& aValue)
   {
     SetAttr(kNameSpaceID_None, aName, aValue, true);
   }
-  void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
+  void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
   {
     mozilla::dom::Element::SetAttr(aName, aValue, aError);
   }
-  void UnsetHTMLAttr(nsIAtom* aName, mozilla::ErrorResult& aError)
+  void UnsetHTMLAttr(nsAtom* aName, mozilla::ErrorResult& aError)
   {
     mozilla::dom::Element::UnsetAttr(aName, aError);
   }
-  void SetHTMLBoolAttr(nsIAtom* aName, bool aValue, mozilla::ErrorResult& aError)
+  void SetHTMLBoolAttr(nsAtom* aName, bool aValue, mozilla::ErrorResult& aError)
   {
     if (aValue) {
       SetHTMLAttr(aName, EmptyString(), aError);
@@ -822,7 +822,7 @@ protected:
     }
   }
   template<typename T>
-  void SetHTMLIntAttr(nsIAtom* aName, T aValue, mozilla::ErrorResult& aError)
+  void SetHTMLIntAttr(nsAtom* aName, T aValue, mozilla::ErrorResult& aError)
   {
     nsAutoString value;
     value.AppendInt(aValue);
@@ -839,7 +839,7 @@ protected:
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  nsresult SetAttrHelper(nsIAtom* aAttr, const nsAString& aValue);
+  nsresult SetAttrHelper(nsAtom* aAttr, const nsAString& aValue);
 
   /**
    * Helper method for NS_IMPL_INT_ATTR macro.
@@ -850,7 +850,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aDefault default-value to return if attribute isn't set.
    */
-  int32_t GetIntAttr(nsIAtom* aAttr, int32_t aDefault) const;
+  int32_t GetIntAttr(nsAtom* aAttr, int32_t aDefault) const;
 
   /**
    * Helper method for NS_IMPL_INT_ATTR macro.
@@ -860,7 +860,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
    */
-  nsresult SetIntAttr(nsIAtom* aAttr, int32_t aValue);
+  nsresult SetIntAttr(nsAtom* aAttr, int32_t aValue);
 
   /**
    * Helper method for NS_IMPL_UINT_ATTR macro.
@@ -871,7 +871,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aDefault default-value to return if attribute isn't set.
    */
-  uint32_t GetUnsignedIntAttr(nsIAtom* aAttr, uint32_t aDefault) const;
+  uint32_t GetUnsignedIntAttr(nsAtom* aAttr, uint32_t aDefault) const;
 
   /**
    * Helper method for NS_IMPL_UINT_ATTR macro.
@@ -884,7 +884,7 @@ protected:
    *                 doesn't provide one, should be 1 if the value is limited to
    *                 nonzero values, and 0 otherwise.
    */
-  void SetUnsignedIntAttr(nsIAtom* aName, uint32_t aValue, uint32_t aDefault,
+  void SetUnsignedIntAttr(nsAtom* aName, uint32_t aValue, uint32_t aDefault,
                           mozilla::ErrorResult& aError)
   {
     nsAutoString value;
@@ -904,7 +904,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Double value of attribute.
    */
-  void SetDoubleAttr(nsIAtom* aAttr, double aValue, mozilla::ErrorResult& aRv)
+  void SetDoubleAttr(nsAtom* aAttr, double aValue, mozilla::ErrorResult& aRv)
   {
     nsAutoString value;
     value.AppendFloat(aValue);
@@ -1130,11 +1130,11 @@ public:
 protected:
   virtual ~nsGenericHTMLFormElement();
 
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify) override;
 
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;

@@ -37,7 +37,7 @@ class gfxUserFontData;
 class gfxSVGGlyphs;
 class FontInfoData;
 struct FontListSizes;
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 class SVGContextPaint;
@@ -759,7 +759,7 @@ public:
     // Return true if the family should be included in the list, false to omit.
     // Default implementation returns true for everything, so no filtering
     // will occur; individual platforms may override.
-    virtual bool FilterForFontList(nsIAtom* aLangGroup,
+    virtual bool FilterForFontList(nsAtom* aLangGroup,
                                    const nsACString& aGeneric) const {
         return true;
     }

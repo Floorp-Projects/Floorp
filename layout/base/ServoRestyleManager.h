@@ -21,7 +21,7 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 class nsAttrValue;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIFrame;
 class nsStyleChangeList;
@@ -217,13 +217,13 @@ public:
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
                            int32_t aNameSpaceID,
-                           nsIAtom* aAttribute,
+                           nsAtom* aAttribute,
                            int32_t aModType,
                            const nsAttrValue* aNewValue);
   void ClassAttributeWillBeChangedBySMIL(dom::Element* aElement);
 
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
-                        nsIAtom* aAttribute, int32_t aModType,
+                        nsAtom* aAttribute, int32_t aModType,
                         const nsAttrValue* aOldValue);
 
   // This is only used to reparent things when moving them in/out of the
@@ -306,7 +306,7 @@ private:
   ServoElementSnapshot& SnapshotFor(mozilla::dom::Element* aElement);
   void TakeSnapshotForAttributeChange(mozilla::dom::Element* aElement,
                                       int32_t aNameSpaceID,
-                                      nsIAtom* aAttribute);
+                                      nsAtom* aAttribute);
 
   void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
 

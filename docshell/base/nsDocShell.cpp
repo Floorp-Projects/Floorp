@@ -362,7 +362,7 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
     return;
   }
 
-  RefPtr<nsIAtom> pingAtom = NS_Atomize("ping");
+  RefPtr<nsAtom> pingAtom = NS_Atomize("ping");
   if (!pingAtom) {
     return;
   }

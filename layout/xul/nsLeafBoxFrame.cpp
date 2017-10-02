@@ -68,7 +68,7 @@ nsLeafBoxFrame::Init(nsIContent*       aContent,
 
 nsresult
 nsLeafBoxFrame::AttributeChanged(int32_t aNameSpaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  int32_t aModType)
 {
   nsresult rv = nsLeafFrame::AttributeChanged(aNameSpaceID, aAttribute,

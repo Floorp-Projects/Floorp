@@ -11,7 +11,7 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsDebug.h"                    // for NS_ENSURE_ARG_POINTER
 #include "nsError.h"                    // for NS_OK, NS_FAILED, nsresult
-#include "nsIAtom.h"                    // for nsIAtom, NS_Atomize
+#include "nsAtom.h"                    // for nsAtom, NS_Atomize
 #include "nsID.h"
 #include "nsMemory.h"                   // for nsMemory
 #include "nsString.h"               // for nsAutoCString, nsAutoString, etc
@@ -48,7 +48,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     else
         generic.SetIsVoid(true);
 
-    RefPtr<nsIAtom> langGroupAtom;
+    RefPtr<nsAtom> langGroupAtom;
     if (aLangGroup) {
         nsAutoCString lowered;
         lowered.Assign(aLangGroup);
@@ -129,7 +129,7 @@ private:
 class EnumerateFontsTask final : public Runnable
 {
 public:
-    EnumerateFontsTask(nsIAtom* aLangGroupAtom,
+    EnumerateFontsTask(nsAtom* aLangGroupAtom,
                        const nsAutoCString& aGeneric,
                        UniquePtr<EnumerateFontsPromise> aEnumerateFontsPromise)
         : Runnable("EnumerateFontsTask")
@@ -156,7 +156,7 @@ public:
     }
 
 private:
-    RefPtr<nsIAtom> mLangGroupAtom;
+    RefPtr<nsAtom> mLangGroupAtom;
     nsAutoCStringN<16> mGeneric;
     UniquePtr<EnumerateFontsPromise> mEnumerateFontsPromise;
 };
@@ -192,7 +192,7 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
     nsresult rv = NS_NewNamedThread("FontEnumThread", getter_AddRefs(thread));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RefPtr<nsIAtom> langGroupAtom;
+    RefPtr<nsAtom> langGroupAtom;
     if (aLangGroup) {
         nsAutoCStringN<16> lowered;
         lowered.Assign(aLangGroup);

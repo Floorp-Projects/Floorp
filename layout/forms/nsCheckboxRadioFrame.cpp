@@ -203,7 +203,7 @@ nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState)
 }
 
 nsresult
-nsCheckboxRadioFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
+nsCheckboxRadioFrame::SetFormProperty(nsAtom* aName, const nsAString& aValue)
 {
   return NS_OK;
 }
