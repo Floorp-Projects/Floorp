@@ -16,21 +16,33 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeAndroid, nsNativeTheme, nsITheme)
 using namespace mozilla::gfx;
 
 static void
+ClampRectAndMoveToCenter(nsRect& aRect)
+{
+  if (aRect.width < aRect.height) {
+    aRect.y += (aRect.height - aRect.width) / 2;
+    aRect.height = aRect.width;
+    return;
+  }
+
+  if (aRect.height < aRect.width) {
+    aRect.x += (aRect.width - aRect.height) / 2;
+    aRect.width = aRect.height;
+  }
+}
+
+static void
 PaintCheckboxControl(nsIFrame* aFrame,
                      DrawTarget* aDrawTarget,
                      const nsRect& aRect,
                      const EventStates& aState)
 {
-  nsRect rect(aRect);
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
-
   // Checkbox controls aren't something that we can render on Android
   // natively. We fake native drawing of appearance: checkbox items
   // out here, and use hardcoded colours from AndroidColors.h to
   // simulate native theming.
   RectCornerRadii innerRadii(2, 2, 2, 2);
   nsRect paddingRect =
-    nsCSSRendering::GetBoxShadowInnerPaddingRect(aFrame, rect);
+    nsCSSRendering::GetBoxShadowInnerPaddingRect(aFrame, aRect);
   const nscoord twipsPerPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
   Rect shadowGfxRect = NSRectToRect(paddingRect, twipsPerPixel);
   shadowGfxRect.Round();
@@ -58,9 +70,6 @@ PaintCheckMark(nsIFrame* aFrame,
                DrawTarget* aDrawTarget,
                const nsRect& aRect)
 {
-  nsRect rect(nsPoint(aRect.X(), aRect.Y()), aFrame->GetSize());
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
-
   // Points come from the coordinates on a 7X7 unit box centered at 0,0
   const int32_t checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
   const int32_t checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
@@ -69,9 +78,9 @@ PaintCheckMark(nsIFrame* aFrame,
                                     // of the 7x7 unit checkmark
 
   // Scale the checkmark based on the smallest dimension
-  nscoord paintScale = std::min(rect.width, rect.height) / checkSize;
-  nsPoint paintCenter(rect.x + rect.width  / 2,
-                      rect.y + rect.height / 2);
+  nscoord paintScale = std::min(aRect.width, aRect.height) / checkSize;
+  nsPoint paintCenter(aRect.x + aRect.width  / 2,
+                      aRect.y + aRect.height / 2);
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   nsPoint p = paintCenter + nsPoint(checkPolygonX[0] * paintScale,
@@ -96,8 +105,7 @@ PaintIndeterminateMark(nsIFrame* aFrame,
 {
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  nsRect rect(nsPoint(aRect.X(), aRect.Y()), aFrame->GetSize());
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+  nsRect rect(aRect);
   rect.y += (rect.height - rect.height/4) / 2;
   rect.height /= 4;
 
@@ -113,15 +121,12 @@ PaintRadioControl(nsIFrame* aFrame,
                   const nsRect& aRect,
                   const EventStates& aState)
 {
-  nsRect rect(aRect);
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
-
   // Radio controls aren't something that we can render on Android
   // natively. We fake native drawing of appearance: radio items
   // out here, and use hardcoded colours to simulate native
   // theming.
   const nscoord twipsPerPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
-  Rect devPxRect = NSRectToRect(rect, twipsPerPixel);
+  Rect devPxRect = NSRectToRect(aRect, twipsPerPixel);
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
   AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
   RefPtr<Path> ellipse = builder->Finish();
@@ -149,8 +154,7 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
 {
   // The dot is an ellipse 2px on all sides smaller than the content-box,
   // drawn in the foreground color.
-  nsRect rect(nsPoint(aRect.X(), aRect.Y()), aFrame->GetSize());
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+  nsRect rect(aRect);
   rect.Deflate(nsPresContext::CSSPixelsToAppUnits(2),
                nsPresContext::CSSPixelsToAppUnits(2));
 
@@ -173,20 +177,23 @@ nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
                                            const nsRect& aDirtyRect)
 {
   EventStates eventState = GetContentState(aFrame, aWidgetType);
+  nsRect rect(aRect);
+  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+  ClampRectAndMoveToCenter(rect);
   switch (aWidgetType) {
     case NS_THEME_RADIO:
-      PaintRadioControl(aFrame, aContext->GetDrawTarget(), aRect, eventState);
+      PaintRadioControl(aFrame, aContext->GetDrawTarget(), rect, eventState);
       if (IsSelected(aFrame)) {
-        PaintCheckedRadioButton(aFrame, aContext->GetDrawTarget(), aRect);
+        PaintCheckedRadioButton(aFrame, aContext->GetDrawTarget(), rect);
       }
       break;
     case NS_THEME_CHECKBOX:
-      PaintCheckboxControl(aFrame, aContext->GetDrawTarget(), aRect, eventState);
+      PaintCheckboxControl(aFrame, aContext->GetDrawTarget(), rect, eventState);
       if (IsChecked(aFrame)) {
-        PaintCheckMark(aFrame, aContext->GetDrawTarget(), aRect);
+        PaintCheckMark(aFrame, aContext->GetDrawTarget(), rect);
       }
       if (GetIndeterminate(aFrame)) {
-        PaintIndeterminateMark(aFrame, aContext->GetDrawTarget(), aRect);
+        PaintIndeterminateMark(aFrame, aContext->GetDrawTarget(), rect);
       }
       break;
     default:
