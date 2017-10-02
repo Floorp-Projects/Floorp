@@ -175,13 +175,11 @@ StaticMutex sTabChildrenMutex;
 TabChildBase::TabChildBase()
   : mTabChildGlobal(nullptr)
 {
-  mozilla::HoldJSObjects(this);
 }
 
 TabChildBase::~TabChildBase()
 {
   mAnonymousGlobalScopes.Clear();
-  mozilla::DropJSObjects(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildBase)
@@ -445,6 +443,8 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mPendingDocShellBlockers(0)
   , mWidgetNativeData(0)
 {
+  mozilla::HoldJSObjects(this);
+
   nsWeakPtr weakPtrThis(do_GetWeakReference(static_cast<nsITabChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback = [weakPtrThis](uint64_t aInputBlockId,
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
@@ -702,6 +702,19 @@ TabChild::UpdateFrameType()
   docShell->SetFrameType(IsMozBrowserElement() ? nsIDocShell::FRAME_TYPE_BROWSER :
                            nsIDocShell::FRAME_TYPE_REGULAR);
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(TabChild)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChild, TabChildBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebNav)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChild, TabChildBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebNav)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(TabChild, TabChildBase)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
@@ -1139,6 +1152,8 @@ TabChild::~TabChild()
   if (mHistoryListener) {
     mHistoryListener->ClearTabChild();
   }
+
+  mozilla::DropJSObjects(this);
 }
 
 mozilla::ipc::IPCResult
