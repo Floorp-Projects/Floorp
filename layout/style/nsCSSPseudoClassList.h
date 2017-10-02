@@ -101,7 +101,8 @@ CSS_PSEUDO_CLASS(mozUseShadowTreeRoot, ":-moz-use-shadow-tree-root",
                  CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS, "")
 
 // Matches anything when the specified look-and-feel metric is set
-CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric", 0, "")
+CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric",
+                 CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "")
 
 // -moz-locale-dir(ltr) and -moz-locale-dir(rtl) may be used
 // to match based on the locale's chrome direction
