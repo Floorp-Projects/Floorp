@@ -71,6 +71,10 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
 
   gfxContextMatrixAutoSaveRestore autoSR(aCtx);
   gfxSize scaleFactors = aCtx->CurrentMatrix().ScaleFactors(true);
+  if (scaleFactors.IsEmpty()) {
+    return;
+  }
+
   gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
                         0.0f, scaleFactors.height,
                         0.0f, 0.0f);
