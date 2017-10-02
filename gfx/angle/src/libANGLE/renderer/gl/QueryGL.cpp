@@ -99,7 +99,7 @@ gl::Error StandardQueryGL::queryCounter()
     mFunctions->queryCounter(query, GL_TIMESTAMP);
     mPendingQueries.push_back(query);
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 template <typename T>
@@ -116,7 +116,7 @@ gl::Error StandardQueryGL::getResultBase(T *params)
     ASSERT(mPendingQueries.empty());
     *params = static_cast<T>(mResultSum);
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error StandardQueryGL::getResult(GLint *params)
@@ -150,7 +150,7 @@ gl::Error StandardQueryGL::isResultAvailable(bool *available)
     }
 
     *available = mPendingQueries.empty();
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error StandardQueryGL::pause()
@@ -170,7 +170,7 @@ gl::Error StandardQueryGL::pause()
         return error;
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error StandardQueryGL::resume()
@@ -188,7 +188,7 @@ gl::Error StandardQueryGL::resume()
         mStateManager->beginQuery(mType, mActiveQuery);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error StandardQueryGL::flush(bool force)
@@ -202,7 +202,7 @@ gl::Error StandardQueryGL::flush(bool force)
             mFunctions->getQueryObjectuiv(id, GL_QUERY_RESULT_AVAILABLE, &resultAvailable);
             if (resultAvailable == GL_FALSE)
             {
-                return gl::Error(GL_NO_ERROR);
+                return gl::NoError();
             }
         }
 
@@ -227,7 +227,7 @@ gl::Error StandardQueryGL::flush(bool force)
         mPendingQueries.pop_front();
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 class SyncProviderGL
@@ -278,10 +278,10 @@ class SyncProviderGLQuery : public SyncProviderGL
         : mFunctions(functions), mQuery(0)
     {
         mFunctions->genQueries(1, &mQuery);
-        stateManager->pauseQuery(queryType);
+        ANGLE_SWALLOW_ERR(stateManager->pauseQuery(queryType));
         mFunctions->beginQuery(queryType, mQuery);
         mFunctions->endQuery(queryType);
-        stateManager->resumeQuery(queryType);
+        ANGLE_SWALLOW_ERR(stateManager->resumeQuery(queryType));
     }
 
     virtual ~SyncProviderGLQuery() { mFunctions->deleteQueries(1, &mQuery); }
@@ -348,7 +348,7 @@ gl::Error SyncQueryGL::end()
     else
     {
         ASSERT(false);
-        return gl::Error(GL_INVALID_OPERATION, "No native support for sync queries.");
+        return gl::InternalError() << "No native support for sync queries.";
     }
     return gl::NoError();
 }

@@ -24,12 +24,12 @@ struct TexSubImageParams final : public RenderTestParams
         // Common default parameters
         majorVersion = 2;
         minorVersion = 0;
-        windowWidth = 512;
+        windowWidth  = 512;
         windowHeight = 512;
 
-        imageWidth = 1024;
-        imageHeight = 1024;
-        subImageWidth = 64;
+        imageWidth     = 1024;
+        imageHeight    = 1024;
+        subImageWidth  = 64;
         subImageHeight = 64;
         iterations     = 9;
     }
@@ -131,28 +131,24 @@ void TexSubImageBenchmark::initializeBenchmark()
 {
     const auto &params = GetParam();
 
-    const std::string vs = SHADER_SOURCE
-    (
-        attribute vec4 a_position;
+    const std::string vs =
+        R"(attribute vec4 a_position;
         attribute vec2 a_texCoord;
         varying vec2 v_texCoord;
         void main()
         {
             gl_Position = a_position;
-            v_texCoord = a_texCoord;
-        }
-    );
+            v_texCoord  = a_texCoord;
+        })";
 
-    const std::string fs = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fs =
+        R"(precision mediump float;
         varying vec2 v_texCoord;
         uniform sampler2D s_texture;
         void main()
         {
             gl_FragColor = texture2D(s_texture, v_texCoord);
-        }
-    );
+        })";
 
     mProgram = CompileProgram(vs, fs);
     ASSERT_NE(0u, mProgram);
@@ -165,23 +161,22 @@ void TexSubImageBenchmark::initializeBenchmark()
     mSamplerLoc = glGetUniformLocation(mProgram, "s_texture");
 
     // Build the vertex buffer
-    GLfloat vertices[] =
-    {
-        -0.5f, 0.5f, 0.0f,  // Position 0
-        0.0f, 0.0f,        // TexCoord 0
+    GLfloat vertices[] = {
+        -0.5f, 0.5f,  0.0f,  // Position 0
+        0.0f,  0.0f,         // TexCoord 0
         -0.5f, -0.5f, 0.0f,  // Position 1
-        0.0f, 1.0f,        // TexCoord 1
-        0.5f, -0.5f, 0.0f,  // Position 2
-        1.0f, 1.0f,        // TexCoord 2
-        0.5f, 0.5f, 0.0f,  // Position 3
-        1.0f, 0.0f         // TexCoord 3
+        0.0f,  1.0f,         // TexCoord 1
+        0.5f,  -0.5f, 0.0f,  // Position 2
+        1.0f,  1.0f,         // TexCoord 2
+        0.5f,  0.5f,  0.0f,  // Position 3
+        1.0f,  0.0f          // TexCoord 3
     };
 
     glGenBuffers(1, &mVertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+    GLushort indices[] = {0, 1, 2, 0, 2, 3};
     glGenBuffers(1, &mIndexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -198,11 +193,11 @@ void TexSubImageBenchmark::initializeBenchmark()
     {
         for (int x = 0; x < params.subImageWidth; ++x)
         {
-            int offset = (x + (y * params.subImageWidth)) * 4;
-            mPixels[offset + 0] = rand() % 255; // Red
-            mPixels[offset + 1] = rand() % 255; // Green
-            mPixels[offset + 2] = rand() % 255; // Blue
-            mPixels[offset + 3] = 255; // Alpha
+            int offset          = (x + (y * params.subImageWidth)) * 4;
+            mPixels[offset + 0] = rand() % 255;  // Red
+            mPixels[offset + 1] = rand() % 255;  // Green
+            mPixels[offset + 2] = rand() % 255;  // Blue
+            mPixels[offset + 3] = 255;           // Alpha
         }
     }
 
@@ -236,7 +231,8 @@ void TexSubImageBenchmark::drawBenchmark()
     // Load the vertex position
     glVertexAttribPointer(mPositionLoc, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
     // Load the texture coordinate
-    glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(mTexCoordLoc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
+                          reinterpret_cast<void *>(3 * sizeof(GLfloat)));
 
     glEnableVertexAttribArray(mPositionLoc);
     glEnableVertexAttribArray(mTexCoordLoc);
@@ -254,11 +250,9 @@ void TexSubImageBenchmark::drawBenchmark()
 
     for (unsigned int iteration = 0; iteration < params.iterations; ++iteration)
     {
-        glTexSubImage2D(GL_TEXTURE_2D, 0,
-                        rand() % (params.imageWidth - params.subImageWidth),
-                        rand() % (params.imageHeight - params.subImageHeight),
-                        params.subImageWidth, params.subImageHeight,
-                        GL_RGBA, GL_UNSIGNED_BYTE, mPixels);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, rand() % (params.imageWidth - params.subImageWidth),
+                        rand() % (params.imageHeight - params.subImageHeight), params.subImageWidth,
+                        params.subImageHeight, GL_RGBA, GL_UNSIGNED_BYTE, mPixels);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
     }
@@ -287,12 +281,11 @@ TexSubImageParams OpenGLParams()
     return params;
 }
 
-} // namespace
+}  // namespace
 
 TEST_P(TexSubImageBenchmark, Run)
 {
     run();
 }
 
-ANGLE_INSTANTIATE_TEST(TexSubImageBenchmark,
-                       D3D11Params(), D3D9Params(), OpenGLParams());
+ANGLE_INSTANTIATE_TEST(TexSubImageBenchmark, D3D11Params(), D3D9Params(), OpenGLParams());

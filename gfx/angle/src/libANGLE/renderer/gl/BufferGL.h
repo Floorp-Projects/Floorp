@@ -26,14 +26,31 @@ class BufferGL : public BufferImpl
              StateManagerGL *stateManager);
     ~BufferGL() override;
 
-    gl::Error setData(GLenum target, const void *data, size_t size, GLenum usage) override;
-    gl::Error setSubData(GLenum target, const void *data, size_t size, size_t offset) override;
-    gl::Error copySubData(BufferImpl* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size) override;
-    gl::Error map(GLenum access, GLvoid **mapPtr) override;
-    gl::Error mapRange(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr) override;
-    gl::Error unmap(GLboolean *result) override;
+    gl::Error setData(const gl::Context *context,
+                      GLenum target,
+                      const void *data,
+                      size_t size,
+                      GLenum usage) override;
+    gl::Error setSubData(const gl::Context *context,
+                         GLenum target,
+                         const void *data,
+                         size_t size,
+                         size_t offset) override;
+    gl::Error copySubData(const gl::Context *context,
+                          BufferImpl *source,
+                          GLintptr sourceOffset,
+                          GLintptr destOffset,
+                          GLsizeiptr size) override;
+    gl::Error map(const gl::Context *context, GLenum access, void **mapPtr) override;
+    gl::Error mapRange(const gl::Context *context,
+                       size_t offset,
+                       size_t length,
+                       GLbitfield access,
+                       void **mapPtr) override;
+    gl::Error unmap(const gl::Context *context, GLboolean *result) override;
 
-    gl::Error getIndexRange(GLenum type,
+    gl::Error getIndexRange(const gl::Context *context,
+                            GLenum type,
                             size_t offset,
                             size_t count,
                             bool primitiveRestartEnabled,
@@ -47,7 +64,7 @@ class BufferGL : public BufferImpl
     size_t mMapSize;
 
     bool mShadowBufferData;
-    MemoryBuffer mShadowCopy;
+    angle::MemoryBuffer mShadowCopy;
 
     size_t mBufferSize;
 
@@ -57,6 +74,6 @@ class BufferGL : public BufferImpl
     GLuint mBufferID;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_GL_BUFFERGL_H_
+#endif  // LIBANGLE_RENDERER_GL_BUFFERGL_H_

@@ -11,6 +11,9 @@
 
 #include "common/debug.h"
 
+#include "libANGLE/Context.h"
+#include "libANGLE/renderer/vulkan/ContextVk.h"
+
 namespace rx
 {
 
@@ -18,8 +21,18 @@ VertexArrayVk::VertexArrayVk(const gl::VertexArrayState &data) : VertexArrayImpl
 {
 }
 
-VertexArrayVk::~VertexArrayVk()
+void VertexArrayVk::destroy(const gl::Context *context)
 {
+}
+
+void VertexArrayVk::syncState(const gl::Context *context,
+                              const gl::VertexArray::DirtyBits &dirtyBits)
+{
+    ASSERT(dirtyBits.any());
+
+    // TODO(jmadill): Use pipeline cache.
+    auto contextVk = GetImplAs<ContextVk>(context);
+    contextVk->invalidateCurrentPipeline();
 }
 
 }  // namespace rx

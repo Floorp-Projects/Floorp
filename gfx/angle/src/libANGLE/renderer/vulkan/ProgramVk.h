@@ -11,6 +11,7 @@
 #define LIBANGLE_RENDERER_VULKAN_PROGRAMVK_H_
 
 #include "libANGLE/renderer/ProgramImpl.h"
+#include "libANGLE/renderer/vulkan/renderervk_utils.h"
 
 namespace rx
 {
@@ -20,12 +21,18 @@ class ProgramVk : public ProgramImpl
   public:
     ProgramVk(const gl::ProgramState &state);
     ~ProgramVk() override;
+    void destroy(const gl::Context *context) override;
 
-    LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) override;
-    gl::Error save(gl::BinaryOutputStream *stream) override;
+    gl::LinkResult load(const gl::Context *context,
+                        gl::InfoLog &infoLog,
+                        gl::BinaryInputStream *stream) override;
+    void save(const gl::Context *context, gl::BinaryOutputStream *stream) override;
     void setBinaryRetrievableHint(bool retrievable) override;
+    void setSeparable(bool separable) override;
 
-    LinkResult link(const gl::ContextState &data, gl::InfoLog &infoLog) override;
+    gl::LinkResult link(const gl::Context *context,
+                        const gl::VaryingPacking &packing,
+                        gl::InfoLog &infoLog) override;
     GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) override;
 
     void setUniform1fv(GLint location, GLsizei count, const GLfloat *v) override;
@@ -77,22 +84,38 @@ class ProgramVk : public ProgramImpl
                                GLboolean transpose,
                                const GLfloat *value) override;
 
+    void getUniformfv(const gl::Context *context, GLint location, GLfloat *params) const override;
+    void getUniformiv(const gl::Context *context, GLint location, GLint *params) const override;
+    void getUniformuiv(const gl::Context *context, GLint location, GLuint *params) const override;
+
     // TODO: synchronize in syncState when dirty bits exist.
     void setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) override;
 
     // May only be called after a successful link operation.
     // Return false for inactive blocks.
-    bool getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const override;
+    bool getUniformBlockSize(const std::string &blockName,
+                             const std::string &blockMappedName,
+                             size_t *sizeOut) const override;
 
     // May only be called after a successful link operation.
     // Returns false for inactive members.
     bool getUniformBlockMemberInfo(const std::string &memberUniformName,
+                                   const std::string &memberUniformMappedName,
                                    sh::BlockMemberInfo *memberInfoOut) const override;
 
     void setPathFragmentInputGen(const std::string &inputName,
                                  GLenum genMode,
                                  GLint components,
                                  const GLfloat *coeffs) override;
+
+    const vk::ShaderModule &getLinkedVertexModule() const;
+    const vk::ShaderModule &getLinkedFragmentModule() const;
+    gl::ErrorOrResult<vk::PipelineLayout *> getPipelineLayout(VkDevice device);
+
+  private:
+    vk::ShaderModule mLinkedVertexModule;
+    vk::ShaderModule mLinkedFragmentModule;
+    vk::PipelineLayout mPipelineLayout;
 };
 
 }  // namespace rx

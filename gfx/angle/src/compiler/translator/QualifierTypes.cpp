@@ -476,7 +476,7 @@ TTypeQualifier GetVariableTypeQualifierFromSortedSequence(
         {
             const TString &qualifierString = qualifier->getQualifierString();
             diagnostics->error(qualifier->getLine(), "invalid qualifier combination",
-                               qualifierString.c_str(), "");
+                               qualifierString.c_str());
             break;
         }
     }
@@ -521,7 +521,7 @@ TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
         {
             const TString &qualifierString = qualifier->getQualifierString();
             diagnostics->error(qualifier->getLine(), "invalid parameter qualifier",
-                               qualifierString.c_str(), "");
+                               qualifierString.c_str());
             break;
         }
     }
@@ -542,7 +542,7 @@ TTypeQualifier GetParameterTypeQualifierFromSortedSequence(
             break;
         default:
             diagnostics->error(sortedSequence[0]->getLine(), "Invalid parameter qualifier ",
-                               getQualifierString(typeQualifier.qualifier), "");
+                               getQualifierString(typeQualifier.qualifier));
     }
     return typeQualifier;
 }
@@ -559,6 +559,18 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
     {
         joinedQualifier.location = rightQualifier.location;
         ++joinedQualifier.locationsSpecified;
+    }
+    if (rightQualifier.yuv != false)
+    {
+        joinedQualifier.yuv = rightQualifier.yuv;
+    }
+    if (rightQualifier.binding != -1)
+    {
+        joinedQualifier.binding = rightQualifier.binding;
+    }
+    if (rightQualifier.offset != -1)
+    {
+        joinedQualifier.offset = rightQualifier.offset;
     }
     if (rightQualifier.matrixPacking != EmpUnspecified)
     {
@@ -578,15 +590,56 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
             {
                 diagnostics->error(rightQualifierLocation,
                                    "Cannot have multiple different work group size specifiers",
-                                   getWorkGroupSizeString(i), "");
+                                   getWorkGroupSizeString(i));
             }
             joinedQualifier.localSize[i] = rightQualifier.localSize[i];
         }
     }
 
+    if (rightQualifier.numViews != -1)
+    {
+        joinedQualifier.numViews = rightQualifier.numViews;
+    }
+
     if (rightQualifier.imageInternalFormat != EiifUnspecified)
     {
         joinedQualifier.imageInternalFormat = rightQualifier.imageInternalFormat;
+    }
+
+    if (rightQualifier.primitiveType != EptUndefined)
+    {
+        if (joinedQualifier.primitiveType != EptUndefined &&
+            joinedQualifier.primitiveType != rightQualifier.primitiveType)
+        {
+            diagnostics->error(rightQualifierLocation,
+                               "Cannot have multiple different primitive specifiers",
+                               getGeometryShaderPrimitiveTypeString(rightQualifier.primitiveType));
+        }
+        joinedQualifier.primitiveType = rightQualifier.primitiveType;
+    }
+
+    if (rightQualifier.invocations != 0)
+    {
+        if (joinedQualifier.invocations != 0 &&
+            joinedQualifier.invocations != rightQualifier.invocations)
+        {
+            diagnostics->error(rightQualifierLocation,
+                               "Cannot have multiple different invocations specifiers",
+                               "invocations");
+        }
+        joinedQualifier.invocations = rightQualifier.invocations;
+    }
+
+    if (rightQualifier.maxVertices != -1)
+    {
+        if (joinedQualifier.maxVertices != -1 &&
+            joinedQualifier.maxVertices != rightQualifier.maxVertices)
+        {
+            diagnostics->error(rightQualifierLocation,
+                               "Cannot have multiple different max_vertices specifiers",
+                               "max_vertices");
+        }
+        joinedQualifier.maxVertices = rightQualifier.maxVertices;
     }
 
     return joinedQualifier;
@@ -661,15 +714,13 @@ bool TTypeQualifierBuilder::checkSequenceIsValid(TDiagnostics *diagnostics) cons
     std::string errorMessage;
     if (HasRepeatingQualifiers(mQualifiers, areQualifierChecksRelaxed, &errorMessage))
     {
-        diagnostics->error(mQualifiers[0]->getLine(), "qualifier sequence", errorMessage.c_str(),
-                           "");
+        diagnostics->error(mQualifiers[0]->getLine(), errorMessage.c_str(), "qualifier sequence");
         return false;
     }
 
     if (!areQualifierChecksRelaxed && !AreQualifiersInOrder(mQualifiers, &errorMessage))
     {
-        diagnostics->error(mQualifiers[0]->getLine(), "qualifier sequence", errorMessage.c_str(),
-                           "");
+        diagnostics->error(mQualifiers[0]->getLine(), errorMessage.c_str(), "qualifier sequence");
         return false;
     }
 

@@ -25,23 +25,19 @@ class FramebufferRenderMipmapTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vsSource = SHADER_SOURCE
-        (
-            attribute highp vec4 position;
+        const std::string vsSource =
+            R"(attribute highp vec4 position;
             void main(void)
             {
                 gl_Position = position;
-            }
-        );
+            })";
 
-        const std::string fsSource = SHADER_SOURCE
-        (
-            uniform highp vec4 color;
+        const std::string fsSource =
+            R"(uniform highp vec4 color;
             void main(void)
             {
                 gl_FragColor = color;
-            }
-        );
+            })";
 
         mProgram = CompileProgram(vsSource, fsSource);
         if (mProgram == 0)
@@ -89,7 +85,7 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
     for (GLint i = 0; i < levels; i++)
     {
         GLsizei size = 1 << ((levels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
 
     EXPECT_GL_NO_ERROR();
@@ -154,7 +150,7 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     for (GLint i = 0; i < testLevels; i++)
     {
         GLsizei size = 1 << ((testLevels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
 
     EXPECT_GL_NO_ERROR();

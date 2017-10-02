@@ -62,6 +62,9 @@ bool BeginsWith(const char *str, const char *prefix);
 // Suffix may not be NUL and needs to be NULL terminated.
 // The comparison is case sensitive.
 bool EndsWith(const std::string& str, const char* suffix);
+
+// Convert to lower-case.
+void ToLower(std::string *str);
 }
 
 #endif // LIBANGLE_STRING_UTILS_H_

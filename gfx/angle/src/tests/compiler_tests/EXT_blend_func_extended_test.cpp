@@ -129,7 +129,7 @@ class EXTBlendFuncExtendedTest
         mResources.EXT_draw_buffers = 1;
         mResources.NV_draw_buffers  = 2;
 
-        mCompiler = NULL;
+        mCompiler = nullptr;
     }
 
     virtual void TearDown() { DestroyCompiler(); }
@@ -138,7 +138,7 @@ class EXTBlendFuncExtendedTest
         if (mCompiler)
         {
             sh::Destruct(mCompiler);
-            mCompiler = NULL;
+            mCompiler = nullptr;
         }
     }
 
@@ -147,7 +147,7 @@ class EXTBlendFuncExtendedTest
         DestroyCompiler();
         mCompiler = sh::ConstructCompiler(GL_FRAGMENT_SHADER, testing::get<0>(GetParam()),
                                           SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
-        ASSERT_TRUE(mCompiler != NULL) << "Compiler could not be constructed.";
+        ASSERT_TRUE(mCompiler != nullptr) << "Compiler could not be constructed.";
     }
 
     testing::AssertionResult TestShaderCompile(const char *pragma)

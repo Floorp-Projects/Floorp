@@ -5,6 +5,10 @@
 //
 
 #include "test_utils/ANGLETest.h"
+#include "test_utils/gl_raii.h"
+
+#include "common/mathutil.h"
+#include "platform/WorkaroundsD3D.h"
 
 using namespace angle;
 
@@ -28,7 +32,7 @@ class DepthStencilFormatsTestBase : public ANGLETest
         GLuint tex = 0;
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, 1, 1, 0, format, type, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, 1, 1, 0, format, type, nullptr);
         glDeleteTextures(1, &tex);
 
         return (glGetError() == GL_NO_ERROR);
@@ -64,9 +68,8 @@ class DepthStencilFormatsTestBase : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vertexShaderSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -74,20 +77,17 @@ class DepthStencilFormatsTestBase : public ANGLETest
             {
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
-            }
-        );
+            })";
 
-        const std::string fragmentShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string fragmentShaderSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         if (mProgram == 0)
@@ -190,3 +190,139 @@ ANGLE_INSTANTIATE_TEST(DepthStencilFormatsTest,
                        ES2_OPENGL(),
                        ES2_OPENGLES());
 ANGLE_INSTANTIATE_TEST(DepthStencilFormatsTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+
+class TinyDepthStencilWorkaroundTest : public ANGLETest
+{
+  public:
+    TinyDepthStencilWorkaroundTest()
+    {
+        setWindowWidth(512);
+        setWindowHeight(512);
+        setConfigRedBits(8);
+        setConfigGreenBits(8);
+        setConfigBlueBits(8);
+        setConfigAlphaBits(8);
+    }
+
+    // Override the workarounds to enable "tiny" depth/stencil textures.
+    void overrideWorkaroundsD3D(WorkaroundsD3D *workarounds) override
+    {
+        workarounds->emulateTinyStencilTextures = true;
+    }
+};
+
+// Tests that the tiny depth stencil textures workaround does not "stick" depth textures.
+// http://anglebug.com/1664
+TEST_P(TinyDepthStencilWorkaroundTest, DepthTexturesStick)
+{
+    const std::string &drawVS =
+        "#version 100\n"
+        "attribute vec3 vertex;\n"
+        "void main () {\n"
+        "  gl_Position = vec4(vertex.x, vertex.y, vertex.z * 2.0 - 1.0, 1);\n"
+        "}\n";
+
+    const std::string &drawFS =
+        "#version 100\n"
+        "void main () {\n"
+        "  gl_FragColor = vec4 (1.);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(drawProgram, drawVS, drawFS);
+
+    const std::string &blitVS =
+        "#version 100\n"
+        "attribute vec2 vertex;\n"
+        "varying vec2 position;\n"
+        "void main () {\n"
+        "  position = vertex * .5 + .5;\n"
+        "  gl_Position = vec4(vertex, 0, 1);\n"
+        "}\n";
+
+    const std::string &blitFS =
+        "#version 100\n"
+        "precision mediump float;\n"
+        "uniform sampler2D texture;\n"
+        "varying vec2 position;\n"
+        "void main () {\n"
+        "  gl_FragColor = vec4 (texture2D (texture, position).rrr, 1.);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(blitProgram, blitVS, blitFS);
+
+    GLint blitTextureLocation = glGetUniformLocation(blitProgram.get(), "texture");
+    ASSERT_NE(-1, blitTextureLocation);
+
+    GLTexture colorTex;
+    glBindTexture(GL_TEXTURE_2D, colorTex.get());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWindowWidth(), getWindowHeight(), 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLTexture depthTex;
+    glBindTexture(GL_TEXTURE_2D, depthTex.get());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    ASSERT_EQ(getWindowWidth(), getWindowHeight());
+    int levels = gl::log2(getWindowWidth());
+    for (int mipLevel = 0; mipLevel <= levels; ++mipLevel)
+    {
+        int size = getWindowWidth() >> mipLevel;
+        glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_DEPTH_STENCIL, size, size, 0, GL_DEPTH_STENCIL,
+                     GL_UNSIGNED_INT_24_8_OES, nullptr);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    ASSERT_GL_NO_ERROR();
+
+    GLFramebuffer framebuffer;
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.get());
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex.get(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex.get(), 0);
+
+    ASSERT_GL_NO_ERROR();
+
+    glDepthRangef(0.0f, 1.0f);
+    glViewport(0, 0, getWindowWidth(), getWindowHeight());
+    glClearColor(0, 0, 0, 1);
+
+    // Draw loop.
+    for (unsigned int frame = 0; frame < 3; ++frame)
+    {
+        // draw into FBO
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.get());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+
+        float depth = ((frame % 2 == 0) ? 0.0f : 1.0f);
+        drawQuad(drawProgram.get(), "vertex", depth);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // blit FBO
+        glDisable(GL_DEPTH_TEST);
+
+        glUseProgram(blitProgram.get());
+        glUniform1i(blitTextureLocation, 0);
+        glBindTexture(GL_TEXTURE_2D, depthTex.get());
+
+        drawQuad(blitProgram.get(), "vertex", 0.5f);
+
+        Vector4 depthVec(depth, depth, depth, 1);
+        GLColor depthColor(depthVec);
+
+        EXPECT_PIXEL_COLOR_NEAR(0, 0, depthColor, 1);
+        ASSERT_GL_NO_ERROR();
+    }
+}
+
+ANGLE_INSTANTIATE_TEST(TinyDepthStencilWorkaroundTest, ES3_D3D11());

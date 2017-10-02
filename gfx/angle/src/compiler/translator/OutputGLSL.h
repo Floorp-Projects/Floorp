@@ -19,7 +19,7 @@ class TOutputGLSL : public TOutputGLSLBase
                 ShArrayIndexClampingStrategy clampingStrategy,
                 ShHashFunction64 hashFunction,
                 NameMap &nameMap,
-                TSymbolTable &symbolTable,
+                TSymbolTable *symbolTable,
                 sh::GLenum shaderType,
                 int shaderVersion,
                 ShShaderOutput output,
@@ -28,7 +28,7 @@ class TOutputGLSL : public TOutputGLSLBase
   protected:
     bool writeVariablePrecision(TPrecision) override;
     void visitSymbol(TIntermSymbol *node) override;
-    TString translateTextureFunction(TString &name) override;
+    TString translateTextureFunction(const TString &name) override;
 };
 
 }  // namespace sh

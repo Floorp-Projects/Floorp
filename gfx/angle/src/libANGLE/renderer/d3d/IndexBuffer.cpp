@@ -71,7 +71,8 @@ gl::Error IndexBufferInterface::mapBuffer(unsigned int size, void **outMappedMem
     // Protect against integer overflow
     if (mWritePosition + size < mWritePosition)
     {
-        return gl::Error(GL_OUT_OF_MEMORY, "Mapping of internal index buffer would cause an integer overflow.");
+        return gl::OutOfMemory()
+               << "Mapping of internal index buffer would cause an integer overflow.";
     }
 
     gl::Error error = mIndexBuffer->mapBuffer(mWritePosition, size, outMappedMemory);
@@ -79,7 +80,7 @@ gl::Error IndexBufferInterface::mapBuffer(unsigned int size, void **outMappedMem
     {
         if (outMappedMemory)
         {
-            *outMappedMemory = NULL;
+            *outMappedMemory = nullptr;
         }
         return error;
     }
@@ -90,7 +91,7 @@ gl::Error IndexBufferInterface::mapBuffer(unsigned int size, void **outMappedMem
     }
 
     mWritePosition += size;
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error IndexBufferInterface::unmapBuffer()
@@ -162,7 +163,7 @@ gl::Error StreamingIndexBufferInterface::reserveBufferSpace(unsigned int size, G
         setWritePosition(0);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 
@@ -184,12 +185,12 @@ gl::Error StaticIndexBufferInterface::reserveBufferSpace(unsigned int size, GLen
     }
     else if (curSize >= size && indexType == getIndexType())
     {
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
     else
     {
         UNREACHABLE();
-        return gl::Error(GL_INVALID_OPERATION, "Internal static index buffers can't be resized");
+        return gl::InternalError() << "Internal static index buffers can't be resized";
     }
 }
 
