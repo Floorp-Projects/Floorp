@@ -637,18 +637,6 @@ DisplayListBuilder::~DisplayListBuilder()
 }
 
 void
-DisplayListBuilder::Begin(const LayerIntSize& aSize)
-{
-  wr_dp_begin(mWrState, aSize.width, aSize.height);
-}
-
-void
-DisplayListBuilder::End()
-{
-  wr_dp_end(mWrState);
-}
-
-void
 DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                              BuiltDisplayList& aOutDisplayList)
 {

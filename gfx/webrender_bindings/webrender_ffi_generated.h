@@ -851,12 +851,6 @@ void wr_dec_ref_arc(const VecU8 *aArc)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_begin(WrState *aState,
-                 uint32_t aWidth,
-                 uint32_t aHeight)
-WR_FUNC;
-
-WR_INLINE
 uint64_t wr_dp_define_clip(WrState *aState,
                            LayoutRect aClipRect,
                            const WrComplexClipRegion *aComplex,
@@ -878,10 +872,6 @@ uint64_t wr_dp_define_sticky_frame(WrState *aState,
                                    const StickySideConstraint *aRightRange,
                                    const StickySideConstraint *aBottomRange,
                                    const StickySideConstraint *aLeftRange)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_end(WrState *aState)
 WR_FUNC;
 
 WR_INLINE

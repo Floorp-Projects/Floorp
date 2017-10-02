@@ -45,7 +45,7 @@ TemporaryBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
 }
 
 void
-TemporaryBlobImpl::GetInternalStream(nsIInputStream** aStream,
+TemporaryBlobImpl::CreateInputStream(nsIInputStream** aStream,
                                      ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> stream =

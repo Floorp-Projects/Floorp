@@ -20,6 +20,8 @@ extern crate audioipc_client;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_server;
 extern crate u2fhid;
+extern crate log;
+extern crate syn;
 
 use std::boxed::Box;
 use std::ffi::CStr;

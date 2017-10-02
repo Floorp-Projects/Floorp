@@ -66,6 +66,7 @@ from ..frontend.data import (
     RustLibrary,
     HostRustLibrary,
     RustProgram,
+    RustTest,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -570,6 +571,9 @@ class RecursiveMakeBackend(CommonBackend):
             # Hook the program into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
+
+        elif isinstance(obj, RustTest):
+            self._process_rust_test(obj, backend_file)
 
         elif isinstance(obj, Program):
             self._process_program(obj, backend_file)
@@ -1123,6 +1127,12 @@ class RecursiveMakeBackend(CommonBackend):
                                         'HOST_RUST_PROGRAMS',
                                         'HOST_RUST_CARGO_PROGRAMS')
 
+    def _process_rust_test(self, obj, backend_file):
+        self._no_skip['check'].add(backend_file.relobjdir)
+        backend_file.write_once('CARGO_FILE := $(srcdir)/Cargo.toml\n')
+        backend_file.write_once('RUST_TEST := %s\n' % obj.name)
+        backend_file.write_once('RUST_TEST_FEATURES := %s\n' % ' '.join(obj.features))
+
     def _process_simple_program(self, obj, backend_file):
         if obj.is_unit_test:
             backend_file.write('CPP_UNIT_TESTS += %s\n' % obj.program)
@@ -1261,7 +1271,7 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_rust_library(self, libdef, backend_file):
         backend_file.write_once('%s := %s\n' % (libdef.LIB_FILE_VAR, libdef.import_name))
-        backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml\n')
+        backend_file.write_once('CARGO_FILE := $(srcdir)/Cargo.toml\n')
         # Need to normalize the path so Cargo sees the same paths from all
         # possible invocations of Cargo with this CARGO_TARGET_DIR.  Otherwise,
         # Cargo's dependency calculations don't work as we expect and we wind

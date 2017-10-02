@@ -309,7 +309,8 @@ public abstract class HomeFragment extends Fragment {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    GeckoApplication.createBrowserShortcut(displayTitle, info.url);
+                    GeckoApplication.createShortcut(displayTitle, info.url);
+
                 }
             });
 

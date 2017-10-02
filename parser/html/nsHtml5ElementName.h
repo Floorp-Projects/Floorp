@@ -396,6 +396,7 @@ public:
     static nsHtml5ElementName* ELT_RECT;
     static nsHtml5ElementName* ELT_RADIALGRADIENT;
     static nsHtml5ElementName* ELT_SELECT;
+    static nsHtml5ElementName* ELT_SLOT;
     static nsHtml5ElementName* ELT_SCRIPT;
     static nsHtml5ElementName* ELT_TFOOT;
     static nsHtml5ElementName* ELT_TEXT;

@@ -26,7 +26,6 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "ChildAsyncCall.h"
 #include "ChildTimer.h"
 #include "nsRect.h"
 #include "nsTHashtable.h"
@@ -238,10 +237,6 @@ public:
     uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
     void UnscheduleTimer(uint32_t id);
 
-    void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
-    // This function is a more general version of AsyncCall
-    void PostChildAsyncCall(already_AddRefed<ChildAsyncCall> aTask);
-
     int GetQuirks();
 
     void NPN_URLRedirectResponse(void* notifyData, NPBool allow);
@@ -448,13 +443,9 @@ private:
     HWND mWinlessHiddenMsgHWND;
 #endif
 
-    friend class ChildAsyncCall;
-
 #if defined(OS_WIN)
     nsTArray<FlashThrottleMsg*> mPendingFlashThrottleMsgs;
 #endif
-    Mutex mAsyncCallMutex;
-    nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
     /**
