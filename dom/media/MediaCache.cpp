@@ -462,7 +462,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
   , mIsTransportSeekable(false)
   , mCacheSuspended(false)
   , mChannelEnded(false)
-  , mStreamLength(-1)
   , mStreamOffset(0)
   , mPlaybackBytesPerSecond(10000)
   , mPinCount(0)
@@ -2372,10 +2371,10 @@ void
 MediaCacheStream::ThrottleReadahead(bool bThrottle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   if (mThrottleReadahead != bThrottle) {
     LOGI("Stream %p ThrottleReadahead %d", this, bThrottle);
     mThrottleReadahead = bThrottle;
-    ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
     mMediaCache->QueueUpdate();
   }
 }
