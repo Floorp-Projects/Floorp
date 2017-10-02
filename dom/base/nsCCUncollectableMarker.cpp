@@ -508,7 +508,7 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownG
   if (windowsById) {
     for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
       nsGlobalWindow* window = iter.Data();
-      if (!window->IsCleanedUp() && window->IsOuterWindow()) {
+      if (window->GetDocShell() && window->IsOuterWindow()) {
         window->TraceGlobalJSObject(aTrc);
         EventListenerManager* elm = window->GetExistingListenerManager();
         if (elm) {
