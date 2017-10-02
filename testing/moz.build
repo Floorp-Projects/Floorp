@@ -1,6 +1,5 @@
 with Files("awsy/**"):
     BUG_COMPONENT = ("Testing", "AWSY")
-    SCHEDULES.exclusive = ["awsy"]
 
 with Files("config/**"):
     BUG_COMPONENT = ("Testing", "General")
@@ -19,7 +18,6 @@ with Files("README.txt"):
 
 with Files("talos/**"):
     BUG_COMPONENT = ("Testing", "Talos")
-    SCHEDULES.exclusive = ['talos']
 
 with Files("talos/talos/tests/v8_7/**"):
     BUG_COMPONENT = ("Core", "Javascript Engine")
@@ -77,18 +75,15 @@ with Files("config/tooltool-manifests/**"):
 
 with Files("*cppunittest*"):
     BUG_COMPONENT = ("Testing", "General")
-    SCHEDULES.exclusive = ['cppunittest']
 
 with Files("gtest/**"):
     BUG_COMPONENT = ("Testing", "General")
-    SCHEDULES.exclusive = ['gtest']
 
 with Files("specialpowers/**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
 
 with Files("crashtest/**"):
     BUG_COMPONENT = ("Testing", "Reftest")
-    SCHEDULES.exclusive = ['reftest']
 
 with Files("config/marionette*"):
     BUG_COMPONENT = ("Testing", "Marionette")
