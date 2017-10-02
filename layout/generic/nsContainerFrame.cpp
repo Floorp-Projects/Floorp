@@ -1779,7 +1779,7 @@ nsContainerFrame::FrameStartsCounterScope(nsIFrame* aFrame)
   if (!content || !content->IsHTMLElement())
     return false;
 
-  nsIAtom* localName = content->NodeInfo()->NameAtom();
+  nsAtom* localName = content->NodeInfo()->NameAtom();
   return localName == nsGkAtoms::ol ||
          localName == nsGkAtoms::ul ||
          localName == nsGkAtoms::dir ||
@@ -1968,7 +1968,7 @@ nsContainerFrame::CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
 
 nsresult
 nsContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                   nsIAtom*        aAttribute,
+                                   nsAtom*        aAttribute,
                                    int32_t         aModType)
 {
   nsresult rv = nsSplittableFrame::AttributeChanged(aNameSpaceID,

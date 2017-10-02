@@ -15,9 +15,9 @@
 #include "mozilla/dom/NameSpaceConstants.h"
 
 template <>
-class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {
+class nsDefaultComparator <nsNameSpaceEntry, nsAtom*> {
   public:
-    bool Equals(const nsNameSpaceEntry& aEntry, nsIAtom* const& aPrefix) const {
+    bool Equals(const nsNameSpaceEntry& aEntry, nsAtom* const& aPrefix) const {
       return aEntry.prefix == aPrefix;
     }
 };
@@ -57,7 +57,7 @@ nsXMLNameSpaceMap::nsXMLNameSpaceMap()
 }
 
 nsresult
-nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, int32_t aNameSpaceID)
+nsXMLNameSpaceMap::AddPrefix(nsAtom *aPrefix, int32_t aNameSpaceID)
 {
   if (!mNameSpaces.Contains(aPrefix) && !mNameSpaces.AppendElement(aPrefix)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -67,7 +67,7 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, int32_t aNameSpaceID)
 }
 
 nsresult
-nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
+nsXMLNameSpaceMap::AddPrefix(nsAtom *aPrefix, nsString &aURI)
 {
   int32_t id;
   nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(aURI,
@@ -79,7 +79,7 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 }
 
 int32_t
-nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
+nsXMLNameSpaceMap::FindNameSpaceID(nsAtom *aPrefix) const
 {
   size_t index = mNameSpaces.IndexOf(aPrefix);
   if (index != mNameSpaces.NoIndex) {
@@ -92,7 +92,7 @@ nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
   return aPrefix ? kNameSpaceID_Unknown : kNameSpaceID_None;
 }
 
-nsIAtom*
+nsAtom*
 nsXMLNameSpaceMap::FindPrefix(int32_t aNameSpaceID) const
 {
   size_t index = mNameSpaces.IndexOf(aNameSpaceID);

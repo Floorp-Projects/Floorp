@@ -74,7 +74,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 nsresult
 nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                 nsIAtom*        aAttribute,
+                                 nsAtom*        aAttribute,
                                  int32_t         aModType)
 {
     bool aResize;
@@ -224,7 +224,7 @@ nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis)
 }
 
 void
-nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
+nsTextBoxFrame::UpdateAttributes(nsAtom*         aAttribute,
                                  bool&          aResize,
                                  bool&          aRedraw)
 {

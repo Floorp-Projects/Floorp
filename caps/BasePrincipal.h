@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/OriginAttributes.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContentSecurityPolicy;
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
@@ -86,7 +86,7 @@ public:
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
 
-  virtual bool AddonHasPermission(const nsIAtom* aPerm);
+  virtual bool AddonHasPermission(const nsAtom* aPerm);
 
   virtual bool IsCodebasePrincipal() const { return false; };
 
@@ -158,8 +158,8 @@ private:
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs,
                           const nsACString& aOriginNoSuffix);
 
-  RefPtr<nsIAtom> mOriginNoSuffix;
-  RefPtr<nsIAtom> mOriginSuffix;
+  RefPtr<nsAtom> mOriginNoSuffix;
+  RefPtr<nsAtom> mOriginSuffix;
 
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;

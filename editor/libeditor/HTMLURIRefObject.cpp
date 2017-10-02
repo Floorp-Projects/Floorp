@@ -84,7 +84,7 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
-  // XXX Why don't you use nsIAtom for comparing the tag name a lot?
+  // XXX Why don't you use nsAtom for comparing the tag name a lot?
   nsAutoString tagName;
   nsresult rv = mNode->GetNodeName(tagName);
   NS_ENSURE_SUCCESS(rv, rv);

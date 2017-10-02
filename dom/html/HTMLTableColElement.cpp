@@ -33,7 +33,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLTableColElement)
 
 bool
 HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
@@ -89,7 +89,7 @@ HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
 }
 
 NS_IMETHODIMP_(bool)
-HTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableColElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::width },

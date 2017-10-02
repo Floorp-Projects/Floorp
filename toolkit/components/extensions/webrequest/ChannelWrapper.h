@@ -146,7 +146,7 @@ public:
 
   void RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITabParent* aTabParent);
 
-  already_AddRefed<nsITraceableChannel> GetTraceableChannel(nsIAtom* aAddonId, dom::nsIContentParent* aContentParent) const;
+  already_AddRefed<nsITraceableChannel> GetTraceableChannel(nsAtom* aAddonId, dom::nsIContentParent* aContentParent) const;
 
 
   void GetMethod(nsCString& aRetVal) const;
@@ -225,8 +225,8 @@ public:
 
   using EventTarget::EventListenerAdded;
   using EventTarget::EventListenerRemoved;
-  virtual void EventListenerAdded(nsIAtom* aType) override;
-  virtual void EventListenerRemoved(nsIAtom* aType) override;
+  virtual void EventListenerAdded(nsAtom* aType) override;
+  virtual void EventListenerRemoved(nsAtom* aType) override;
 
 
   nsISupports* GetParentObject() const { return mParent; }
@@ -286,7 +286,7 @@ private:
   bool mSuspended = false;
 
 
-  nsInterfaceHashtable<nsPtrHashKey<const nsIAtom>, nsITabParent> mAddonEntries;
+  nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsITabParent> mAddonEntries;
 
 
   class RequestListener final : public nsIStreamListener

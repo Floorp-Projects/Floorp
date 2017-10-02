@@ -154,7 +154,7 @@ nsLineBreaker::FlushCurrentWord()
                                 BREAK_SKIP_SETTING_NO_BREAKS)
 
 nsresult
-nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
+nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
                           uint32_t aFlags, nsILineBreakSink* aSink)
 {
   NS_ASSERTION(aLength > 0, "Appending empty text...");
@@ -325,7 +325,7 @@ nsLineBreaker::FindHyphenationPoints(nsHyphenator *aHyphenator,
 }
 
 nsresult
-nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, uint32_t aLength,
+nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage, const uint8_t* aText, uint32_t aLength,
                           uint32_t aFlags, nsILineBreakSink* aSink)
 {
   NS_ASSERTION(aLength > 0, "Appending empty text...");
@@ -460,7 +460,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, u
 }
 
 void
-nsLineBreaker::UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage)
+nsLineBreaker::UpdateCurrentWordLanguage(nsAtom *aHyphenationLanguage)
 {
   if (mCurrentWordLanguage && mCurrentWordLanguage != aHyphenationLanguage) {
     mCurrentWordContainsMixedLang = true;

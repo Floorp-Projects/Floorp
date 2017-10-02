@@ -12,7 +12,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsRuleData.h"
 
 namespace mozilla {

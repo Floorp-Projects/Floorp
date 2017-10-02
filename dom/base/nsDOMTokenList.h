@@ -26,7 +26,7 @@ class ErrorResult;
 } // namespace mozilla
 
 class nsAttrValue;
-class nsIAtom;
+class nsAtom;
 
 // nsISupports must be on the primary inheritance chain
 
@@ -42,7 +42,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTokenList)
 
-  nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom,
+  nsDOMTokenList(Element* aElement, nsAtom* aAttrAtom,
                  const mozilla::dom::DOMTokenListSupportedTokenArray = nullptr);
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
@@ -88,7 +88,7 @@ protected:
 
   nsresult CheckToken(const nsAString& aStr);
   nsresult CheckTokens(const nsTArray<nsString>& aStr);
-  void RemoveDuplicatesInternal(nsTArray<RefPtr<nsIAtom>>* aArray,
+  void RemoveDuplicatesInternal(nsTArray<RefPtr<nsAtom>>* aArray,
                                 uint32_t aStart);
   void AddInternal(const nsAttrValue* aAttr,
                    const nsTArray<nsString>& aTokens);
@@ -100,7 +100,7 @@ protected:
   inline const nsAttrValue* GetParsedAttr();
 
   nsCOMPtr<Element> mElement;
-  RefPtr<nsIAtom> mAttrAtom;
+  RefPtr<nsAtom> mAttrAtom;
   const mozilla::dom::DOMTokenListSupportedTokenArray mSupportedTokens;
 };
 

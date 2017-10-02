@@ -13,7 +13,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsIPrincipal.h"

@@ -16,7 +16,7 @@
 #include "nsDOMMutationObserver.h"
 #include "nsTArray.h"
 
-class nsIAtom;
+class nsAtom;
 class nsPresContext;
 
 namespace mozilla {
@@ -35,7 +35,7 @@ class AnimationCollection
   typedef AnimationCollection<AnimationType> SelfType;
   typedef AnimationTypeTraits<AnimationType> TraitsType;
 
-  AnimationCollection(dom::Element* aElement, nsIAtom* aElementProperty)
+  AnimationCollection(dom::Element* aElement, nsAtom* aElementProperty)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mCheckGeneration(0)
@@ -61,7 +61,7 @@ public:
     mElement->DeleteProperty(mElementProperty);
   }
 
-  static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
+  static void PropertyDtor(void *aObject, nsAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
   // Get the collection of animations for the given |aElement| and
@@ -94,7 +94,7 @@ public:
 
   // the atom we use in mElement's prop table (must be a static atom,
   // i.e., in an atom list)
-  nsIAtom *mElementProperty;
+  nsAtom *mElementProperty;
 
   InfallibleTArray<RefPtr<AnimationType>> mAnimations;
 
@@ -109,7 +109,7 @@ public:
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
 private:
-  static nsIAtom* GetPropertyAtomForPseudoType(
+  static nsAtom* GetPropertyAtomForPseudoType(
     CSSPseudoElementType aPseudoType);
 
 #ifdef DEBUG

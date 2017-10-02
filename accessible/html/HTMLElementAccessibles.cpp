@@ -241,7 +241,7 @@ HTMLHeaderOrFooterAccessible::NativeRole()
   return roles::SECTION;
 }
 
-nsIAtom*
+nsAtom*
 HTMLHeaderOrFooterAccessible::LandmarkRole() const
 {
   if (!HasOwnContent())

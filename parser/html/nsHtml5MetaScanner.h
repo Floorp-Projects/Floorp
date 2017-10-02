@@ -29,7 +29,7 @@
 #ifndef nsHtml5MetaScanner_h
 #define nsHtml5MetaScanner_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"

@@ -35,7 +35,7 @@ nsHtml5AtomTable::~nsHtml5AtomTable()
 {
 }
 
-nsIAtom*
+nsAtom*
 nsHtml5AtomTable::GetAtom(const nsAString& aKey)
 {
 #ifdef DEBUG
@@ -45,12 +45,12 @@ nsHtml5AtomTable::GetAtom(const nsAString& aKey)
 #endif
 
   uint32_t index = mozilla::HashString(aKey) % RECENTLY_USED_PARSER_ATOMS_SIZE;
-  nsIAtom* cachedAtom = mRecentlyUsedParserAtoms[index];
+  nsAtom* cachedAtom = mRecentlyUsedParserAtoms[index];
   if (cachedAtom && cachedAtom->Equals(aKey)) {
     return cachedAtom;
   }
 
-  nsIAtom* atom = NS_GetStaticAtom(aKey);
+  nsAtom* atom = NS_GetStaticAtom(aKey);
   if (atom) {
     mRecentlyUsedParserAtoms[index] = atom;
     return atom;

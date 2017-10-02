@@ -2914,7 +2914,7 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
 }
 
 bool
-nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
+nsWindow::DispatchCommandEvent(nsAtom* aCommand)
 {
     nsEventStatus status;
     WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);

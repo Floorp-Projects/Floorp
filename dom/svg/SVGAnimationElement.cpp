@@ -60,20 +60,20 @@ SVGAnimationElement::Init()
 //----------------------------------------------------------------------
 
 const nsAttrValue*
-SVGAnimationElement::GetAnimAttr(nsIAtom* aName) const
+SVGAnimationElement::GetAnimAttr(nsAtom* aName) const
 {
   return mAttrsAndChildren.GetAttr(aName, kNameSpaceID_None);
 }
 
 bool
-SVGAnimationElement::GetAnimAttr(nsIAtom* aAttName,
+SVGAnimationElement::GetAnimAttr(nsAtom* aAttName,
                                  nsAString& aResult) const
 {
   return GetAttr(kNameSpaceID_None, aAttName, aResult);
 }
 
 bool
-SVGAnimationElement::HasAnimAttr(nsIAtom* aAttName) const
+SVGAnimationElement::HasAnimAttr(nsAtom* aAttName) const
 {
   return HasAttr(kNameSpaceID_None, aAttName);
 }
@@ -96,7 +96,7 @@ SVGAnimationElement::GetTargetElementContent()
 
 bool
 SVGAnimationElement::GetTargetAttributeName(int32_t *aNamespaceID,
-                                            nsIAtom **aLocalName) const
+                                            nsAtom **aLocalName) const
 {
   const nsAttrValue* nameAttr
     = mAttrsAndChildren.GetAttr(nsGkAtoms::attributeName);
@@ -242,7 +242,7 @@ SVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 bool
 SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
@@ -282,7 +282,7 @@ SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsresult
-SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                   const nsAttrValue* aValue,
                                   const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -336,7 +336,7 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
 nsresult
 SVGAnimationElement::UnsetAttr(int32_t aNamespaceID,
-                               nsIAtom* aAttribute, bool aNotify)
+                               nsAtom* aAttribute, bool aNotify)
 {
   nsresult rv = SVGAnimationElementBase::UnsetAttr(aNamespaceID, aAttribute,
                                                    aNotify);
@@ -445,7 +445,7 @@ SVGAnimationElement::EndElementAt(float offset, ErrorResult& rv)
 }
 
 bool
-SVGAnimationElement::IsEventAttributeNameInternal(nsIAtom* aName)
+SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SMIL);
 }

@@ -113,9 +113,9 @@ protected:
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute,
                              bool aNotify) override;
 
   // nsSVGSVGElement methods:
@@ -149,7 +149,7 @@ public:
 
 protected:
 
-  virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
+  virtual bool ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) override;
 

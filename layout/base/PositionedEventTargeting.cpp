@@ -190,7 +190,7 @@ IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor, nsAutoString* aLabelTarget
 }
 
 static nsIContent*
-GetClickableAncestor(nsIFrame* aFrame, nsIAtom* stopAt = nullptr, nsAutoString* aLabelTargetId = nullptr)
+GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* aLabelTargetId = nullptr)
 {
   // Input events propagate up the content tree so we'll follow the content
   // ancestors to look for elements accepting the click.

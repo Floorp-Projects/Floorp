@@ -712,7 +712,7 @@ nsMathMLmencloseFrame::FixInterFrameSpacing(ReflowOutput& aDesiredSize)
 
 nsresult
 nsMathMLmencloseFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                        nsIAtom*        aAttribute,
+                                        nsAtom*        aAttribute,
                                         int32_t         aModType)
 {
   if (aAttribute == nsGkAtoms::notation_) {

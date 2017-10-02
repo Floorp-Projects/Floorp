@@ -5,7 +5,7 @@
 
 #include "nsContentTestNode.h"
 #include "nsIRDFResource.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDOMElement.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULTemplateResult.h"
@@ -19,7 +19,7 @@ using mozilla::LogLevel;
 extern mozilla::LazyLogModule gXULTemplateLog;
 
 nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
-                                     nsIAtom* aRefVariable)
+                                     nsAtom* aRefVariable)
     : TestNode(nullptr),
       mProcessor(aProcessor),
       mDocument(nullptr),

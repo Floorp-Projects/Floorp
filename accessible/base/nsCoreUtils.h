@@ -220,7 +220,7 @@ public:
    * Convert attribute value of the given node to positive integer. If no
    * attribute or wrong value then false is returned.
    */
-  static bool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
+  static bool GetUIntAttr(nsIContent *aContent, nsAtom *aAttr,
                           int32_t* aUInt);
 
   /**

@@ -225,7 +225,7 @@ HTMLImageElement::Y()
 
 bool
 HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
@@ -258,7 +258,7 @@ HTMLImageElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 nsChangeHint
-HTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLImageElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                          int32_t aModType) const
 {
   nsChangeHint retval =
@@ -276,7 +276,7 @@ HTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLImageElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLImageElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,
@@ -296,7 +296,7 @@ HTMLImageElement::GetAttributeMappingFunction() const
 }
 
 nsresult
-HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValueOrString* aValue,
                                 bool aNotify)
 {
@@ -316,7 +316,7 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -381,7 +381,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLImageElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+HTMLImageElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValueOrString& aValue,
                                          bool aNotify)
 {
@@ -392,7 +392,7 @@ HTMLImageElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 void
-HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                        const nsAttrValueOrString& aValue,
                                        const nsAttrValue* aOldValue,
                                        bool aValueMaybeChanged, bool aNotify)

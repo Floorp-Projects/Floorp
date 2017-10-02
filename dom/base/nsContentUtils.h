@@ -58,7 +58,7 @@ class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
 class nsCacheableFuncStringHTMLCollection;
 class nsHtml5StringParser;
-class nsIAtom;
+class nsAtom;
 class nsIChannel;
 class nsIConsoleService;
 class nsIContent;
@@ -187,7 +187,7 @@ struct EventNameMapping
 {
   // This holds pointers to nsGkAtoms members, and is therefore safe as a
   // non-owning reference.
-  nsIAtom* MOZ_NON_OWNING_REF mAtom;
+  nsAtom* MOZ_NON_OWNING_REF mAtom;
   int32_t  mType;
   mozilla::EventMessage mMessage;
   mozilla::EventClassID mEventClassID;
@@ -462,7 +462,7 @@ public:
   /**
    * Similar to above, but to be used if one already has an atom for the ID
    */
-  static Element* MatchElementId(nsIContent *aContent, const nsIAtom* aId);
+  static Element* MatchElementId(nsIContent *aContent, const nsAtom* aId);
 
   /**
    * Reverses the document position flags passed in.
@@ -595,10 +595,10 @@ public:
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
   // Check if the principal is chrome or an addon with the permission.
-  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsIAtom* aPerm);
+  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsAtom* aPerm);
 
   // Check if the JS caller is chrome or an addon with the permission.
-  static bool CallerHasPermission(JSContext* aCx, const nsIAtom* aPerm);
+  static bool CallerHasPermission(JSContext* aCx, const nsAtom* aPerm);
 
   /**
    * GetDocumentFromCaller gets its document by looking at the last called
@@ -667,7 +667,7 @@ public:
    * Returns true if |aName| is a valid name to be registered via
    * document.registerElement.
    */
-  static bool IsCustomElementName(nsIAtom* aName);
+  static bool IsCustomElementName(nsAtom* aName);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
@@ -675,7 +675,7 @@ public:
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
                              const nsString& aQName,
-                             int32_t *aNamespace, nsIAtom **aLocalName);
+                             int32_t *aNamespace, nsAtom **aLocalName);
 
   static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                        const nsAString& aQualifiedName,
@@ -683,8 +683,8 @@ public:
                                        uint16_t aNodeType,
                                        mozilla::dom::NodeInfo** aNodeInfo);
 
-  static void SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
-                             nsIAtom **aTagName, int32_t *aNameSpaceID);
+  static void SplitExpatName(const char16_t *aExpatName, nsAtom **aPrefix,
+                             nsAtom **aTagName, int32_t *aNameSpaceID);
 
   // Get a permission-manager setting for the given principal and type.
   // If the pref doesn't exist or if it isn't ALLOW_ACTION, false is
@@ -739,7 +739,7 @@ public:
    * and the attribute value is non-empty.
    */
   static bool HasNonEmptyAttr(const nsIContent* aContent, int32_t aNameSpaceID,
-                                nsIAtom* aName);
+                                nsAtom* aName);
 
   /**
    * Method that gets the primary presContext for the node.
@@ -873,7 +873,7 @@ public:
    * set to null.
    */
   static nsresult QNameChanged(mozilla::dom::NodeInfo* aNodeInfo,
-                               nsIAtom* aName,
+                               nsAtom* aName,
                                mozilla::dom::NodeInfo** aResult);
 
   /**
@@ -882,7 +882,7 @@ public:
    * SVG's "evt" and the rest of the world's "event", and because onerror
    * on window takes 5 args.
    */
-  static void GetEventArgNames(int32_t aNameSpaceID, nsIAtom *aEventName,
+  static void GetEventArgNames(int32_t aNameSpaceID, nsAtom *aEventName,
                                bool aIsForWindow,
                                uint32_t *aArgCount, const char*** aArgNames);
 
@@ -1436,7 +1436,7 @@ public:
    * @param aName the event name to look up
    * @param aType the type of content
    */
-  static bool IsEventAttributeName(nsIAtom* aName, int32_t aType);
+  static bool IsEventAttributeName(nsAtom* aName, int32_t aType);
 
   /**
    * Return the event message for the event with the given name. The name is
@@ -1445,14 +1445,14 @@ public:
    *
    * @param aName the event name to look up
    */
-  static mozilla::EventMessage GetEventMessage(nsIAtom* aName);
+  static mozilla::EventMessage GetEventMessage(nsAtom* aName);
 
   /**
-   * Returns the EventMessage and nsIAtom to be used for event listener
+   * Returns the EventMessage and nsAtom to be used for event listener
    * registration.
    */
   static mozilla::EventMessage
-  GetEventMessageAndAtomForListener(const nsAString& aName, nsIAtom** aOnName);
+  GetEventMessageAndAtomForListener(const nsAString& aName, nsAtom** aOnName);
 
   /**
    * Return the EventClassID for the event with the given name. The name is the
@@ -1472,7 +1472,7 @@ public:
    * @param aName the event name to look up
    * @param aEventClassID only return event id for aEventClassID
    */
-  static nsIAtom* GetEventMessageAndAtom(const nsAString& aName,
+  static nsAtom* GetEventMessageAndAtom(const nsAString& aName,
                                          mozilla::EventClassID aEventClassID,
                                          mozilla::EventMessage* aEventMessage);
 
@@ -1530,7 +1530,7 @@ public:
    * @param aPrefix prefix of the node
    * @param aNamespaceID namespace of the node
    */
-  static bool IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
+  static bool IsValidNodeName(nsAtom *aLocalName, nsAtom *aPrefix,
                                 int32_t aNamespaceID);
 
   /**
@@ -1573,7 +1573,7 @@ public:
    */
   static nsresult ParseFragmentHTML(const nsAString& aSourceBuffer,
                                     nsIContent* aTargetNode,
-                                    nsIAtom* aContextLocalName,
+                                    nsAtom* aContextLocalName,
                                     int32_t aContextNamespace,
                                     bool aQuirks,
                                     bool aPreventScriptExecution);
@@ -2585,7 +2585,7 @@ public:
    *         false if the attribute doesn't exist, or has a malformed
    *                  value, such as an unknown or unterminated entity.
    */
-  static bool GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
+  static bool GetPseudoAttributeValue(const nsString& aSource, nsAtom *aName,
                                       nsAString& aValue);
 
   /**
@@ -3005,8 +3005,8 @@ public:
 
   static mozilla::dom::CustomElementDefinition*
   GetElementDefinitionIfObservingAttr(Element* aCustomElement,
-                                      nsIAtom* aExtensionType,
-                                      nsIAtom* aAttrName);
+                                      nsAtom* aExtensionType,
+                                      nsAtom* aAttrName);
 
   static void SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
                                   Element* aCustomElement,
@@ -3023,7 +3023,7 @@ public:
 
   static void GetCustomPrototype(nsIDocument* aDoc,
                                  int32_t aNamespaceID,
-                                 nsIAtom* aAtom,
+                                 nsAtom* aAtom,
                                  JS::MutableHandle<JSObject*> prototype);
 
   static bool AttemptLargeAllocationLoad(nsIHttpChannel* aChannel);
@@ -3246,7 +3246,7 @@ private:
 
   static bool MatchClassNames(mozilla::dom::Element* aElement,
                               int32_t aNamespaceID,
-                              nsIAtom* aAtom, void* aData);
+                              nsAtom* aAtom, void* aData);
   static void DestroyClassNameArray(void* aData);
   static void* AllocClassMatchingInfo(nsINode* aRootNode,
                                       const nsString* aClasses);
@@ -3302,9 +3302,9 @@ private:
 
   static nsIConsoleService* sConsoleService;
 
-  static nsDataHashtable<nsRefPtrHashKey<nsIAtom>, EventNameMapping>* sAtomEventTable;
+  static nsDataHashtable<nsRefPtrHashKey<nsAtom>, EventNameMapping>* sAtomEventTable;
   static nsDataHashtable<nsStringHashKey, EventNameMapping>* sStringEventTable;
-  static nsTArray<RefPtr<nsIAtom>>* sUserDefinedEvents;
+  static nsTArray<RefPtr<nsAtom>>* sUserDefinedEvents;
 
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];

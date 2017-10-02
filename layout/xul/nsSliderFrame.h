@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsRepeatService.h"
 #include "nsBoxFrame.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsIDOMEventListener.h"
@@ -69,7 +69,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t aModType) override;
 
   virtual void Init(nsIContent*       aContent,
@@ -102,7 +102,7 @@ public:
   static int32_t GetMaxPosition(nsIContent* content);
   static int32_t GetIncrement(nsIContent* content);
   static int32_t GetPageIncrement(nsIContent* content);
-  static int32_t GetIntegerAttribute(nsIContent* content, nsIAtom* atom, int32_t defaultValue);
+  static int32_t GetIntegerAttribute(nsIContent* content, nsAtom* atom, int32_t defaultValue);
   void EnsureOrient();
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,

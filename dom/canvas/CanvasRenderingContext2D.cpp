@@ -3072,7 +3072,7 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize
 {
 public:
   CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
-                         nsIAtom* aFontLanguage, bool aExplicitLanguage,
+                         nsAtom* aFontLanguage, bool aExplicitLanguage,
                          nsPresContext* aPresContext)
     : mSize(aSize)
     , mFont(aFont)
@@ -3106,7 +3106,7 @@ public:
 private:
   gfx::IntSize mSize;
   const nsFont& mFont;
-  nsIAtom* mFontLanguage;
+  nsAtom* mFontLanguage;
   bool mExplicitLanguage;
   nsPresContext* mPresContext;
 };

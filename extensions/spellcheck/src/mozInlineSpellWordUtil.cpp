@@ -10,7 +10,7 @@
 #include "mozilla/dom/Element.h"
 
 #include "nsDebug.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"

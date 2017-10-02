@@ -261,7 +261,7 @@ nsNumberControlFrame::SyncDisabledState()
 
 nsresult
 nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                       nsIAtom* aAttribute,
+                                       nsAtom* aAttribute,
                                        int32_t  aModType)
 {
   // nsGkAtoms::disabled is handled by SyncDisabledState
@@ -326,7 +326,7 @@ private:
 nsresult
 nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
                                            nsTArray<ContentInfo>& aElements,
-                                           nsIAtom* aTagName,
+                                           nsAtom* aTagName,
                                            CSSPseudoElementType aPseudoType)
 {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
@@ -457,7 +457,7 @@ nsNumberControlFrame::SetFocus(bool aOn, bool aRepaint)
 }
 
 nsresult
-nsNumberControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
+nsNumberControlFrame::SetFormProperty(nsAtom* aName, const nsAString& aValue)
 {
   return GetTextFieldFrame()->SetFormProperty(aName, aValue);
 }

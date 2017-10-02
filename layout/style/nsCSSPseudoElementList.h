@@ -6,7 +6,7 @@
 /* atom list for CSS pseudo-elements */
 
 /*
- * This file contains the list of nsIAtoms and their values for CSS
+ * This file contains the list of nsAtoms and their values for CSS
  * pseudo-elements.  It is designed to be used as inline input to
  * nsCSSPseudoElements.cpp *only* through the magic of C preprocessing.  All
  * entries must be enclosed either in the macro CSS_PSEUDO_ELEMENT;

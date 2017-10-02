@@ -96,7 +96,7 @@ nsSVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
 
 bool
 nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                   nsIAtom* aAttribute) const
+                                   nsAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::x ||
@@ -140,7 +140,7 @@ nsSVGFE::Result()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
+nsSVGFE::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFiltersMap
@@ -257,7 +257,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElementBase)
 
 bool
 SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                               nsIAtom* aAttribute) const
+                                                               nsAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::tableValues ||
@@ -466,7 +466,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFELightingElementBase)
 // Implementation
 
 NS_IMETHODIMP_(bool)
-nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
+nsSVGFELightingElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sLightingEffectsMap
@@ -533,7 +533,7 @@ nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& 
 
 bool
 nsSVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                  nsIAtom* aAttribute) const
+                                                  nsAtom* aAttribute) const
 {
   return nsSVGFELightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

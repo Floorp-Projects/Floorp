@@ -78,7 +78,7 @@ const uint32_t nsStyleContext::sDependencyTable[] = {
 
 #endif
 
-nsStyleContext::nsStyleContext(nsIAtom* aPseudoTag,
+nsStyleContext::nsStyleContext(nsAtom* aPseudoTag,
                                CSSPseudoElementType aPseudoType)
   : mPseudoTag(aPseudoTag)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
@@ -437,7 +437,7 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 
 already_AddRefed<GeckoStyleContext>
 NS_NewStyleContext(GeckoStyleContext* aParentContext,
-                   nsIAtom* aPseudoTag,
+                   nsAtom* aPseudoTag,
                    CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,
                    bool aSkipParentDisplayBasedStyleFixup)

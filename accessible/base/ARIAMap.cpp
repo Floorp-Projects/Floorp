@@ -1230,7 +1230,7 @@ static const EStateRule sWAIUnivStateMap[] = {
 
 struct AttrCharacteristics
 {
-  nsIAtom** attributeName;
+  nsAtom** attributeName;
   const uint8_t characteristics;
 };
 
@@ -1361,7 +1361,7 @@ aria::UniversalStatesFor(mozilla::dom::Element* aElement)
 }
 
 uint8_t
-aria::AttrCharacteristicsFor(nsIAtom* aAtom)
+aria::AttrCharacteristicsFor(nsAtom* aAtom)
 {
   for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++)
     if (*gWAIUnivAttrMap[i].attributeName == aAtom)
@@ -1389,7 +1389,7 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
     const nsAttrName* attr = mContent->GetAttrNameAt(mAttrIdx);
     mAttrIdx++;
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
-      nsIAtom* attrAtom = attr->Atom();
+      nsAtom* attrAtom = attr->Atom();
       nsDependentAtomString attrStr(attrAtom);
       if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
         continue; // Not ARIA

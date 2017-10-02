@@ -31,7 +31,7 @@ public:
                                   bool aLoadedAsData);
 
 private:
-    nsresult createXHTMLElement(nsIAtom* aName, nsIContent** aResult);
+    nsresult createXHTMLElement(nsAtom* aName, nsIContent** aResult);
 
     nsCOMPtr<nsIContent> mTextParent;
     nsWeakPtr mObserver;

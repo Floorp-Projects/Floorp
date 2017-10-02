@@ -13,7 +13,7 @@
 #include "mozilla/Omnijar.h"
 
 class nsHyphenator;
-class nsIAtom;
+class nsAtom;
 class nsIURI;
 
 class nsHyphenationManager
@@ -21,7 +21,7 @@ class nsHyphenationManager
 public:
   nsHyphenationManager();
 
-  already_AddRefed<nsHyphenator> GetHyphenator(nsIAtom *aLocale);
+  already_AddRefed<nsHyphenator> GetHyphenator(nsAtom *aLocale);
 
   static nsHyphenationManager *Instance();
 
@@ -45,9 +45,9 @@ protected:
   void LoadPatternListFromDir(nsIFile *aDir);
   void LoadAliases();
 
-  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, nsIAtom> mHyphAliases;
-  nsInterfaceHashtable<nsRefPtrHashKey<nsIAtom>, nsIURI> mPatternFiles;
-  nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, nsHyphenator> mHyphenators;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mHyphAliases;
+  nsInterfaceHashtable<nsRefPtrHashKey<nsAtom>, nsIURI> mPatternFiles;
+  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsHyphenator> mHyphenators;
 
   static nsHyphenationManager *sInstance;
 };

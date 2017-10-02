@@ -96,7 +96,7 @@ SVGFEBlendElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
 bool
 SVGFEBlendElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                             nsIAtom* aAttribute) const
+                                             nsAtom* aAttribute) const
 {
   return SVGFEBlendElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

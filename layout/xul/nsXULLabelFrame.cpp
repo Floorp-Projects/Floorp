@@ -82,7 +82,7 @@ nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 nsresult
 nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   int32_t aModType)
 {
   nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID,

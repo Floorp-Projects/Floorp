@@ -53,15 +53,15 @@ xpcAccessibleApplication* XPCApplicationAcc();
 typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
 
 struct MarkupAttrInfo {
-  nsIAtom** name;
-  nsIAtom** value;
+  nsAtom** name;
+  nsAtom** value;
 
-  nsIAtom** DOMAttrName;
-  nsIAtom** DOMAttrValue;
+  nsAtom** DOMAttrName;
+  nsAtom** DOMAttrValue;
 };
 
 struct MarkupMapInfo {
-  nsIAtom** tag;
+  nsAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
   MarkupAttrInfo attrs[4];
@@ -310,7 +310,7 @@ private:
    */
   static uint32_t gConsumers;
 
-  nsDataHashtable<nsPtrHashKey<const nsIAtom>, const mozilla::a11y::MarkupMapInfo*> mMarkupMaps;
+  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::MarkupMapInfo*> mMarkupMaps;
 
   friend nsAccessibilityService* GetAccService();
   friend nsAccessibilityService* GetOrCreateAccService(uint32_t);

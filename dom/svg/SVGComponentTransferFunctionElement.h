@@ -44,7 +44,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
+          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
 
   virtual int32_t GetChannel() = 0;
 

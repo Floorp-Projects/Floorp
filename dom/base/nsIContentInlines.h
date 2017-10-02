@@ -10,7 +10,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIFrame.h"
 #include "mozilla/dom/Element.h"
 
@@ -113,7 +113,7 @@ nsIContent::GetFlattenedTreeParent() const
 }
 
 inline bool
-nsIContent::IsEventAttributeName(nsIAtom* aName)
+nsIContent::IsEventAttributeName(nsAtom* aName)
 {
   const char16_t* name = aName->GetUTF16String();
   if (name[0] != 'o' || name[1] != 'n') {
