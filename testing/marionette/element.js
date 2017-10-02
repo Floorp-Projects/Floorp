@@ -15,7 +15,7 @@ const {
   pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-const {wait} = Cu.import("chrome://marionette/content/sync.js", {});
+const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["element"];
 
@@ -249,7 +249,7 @@ element.find = function(container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = wait.until((resolve, reject) => {
+    let findElements = new PollPromise((resolve, reject) => {
       let res = find_(container, strategy, selector, searchFn, opts);
       if (res.length > 0) {
         resolve(Array.from(res));
