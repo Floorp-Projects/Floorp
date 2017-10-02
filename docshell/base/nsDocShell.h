@@ -329,6 +329,28 @@ public:
     mAncestorPrincipals = mozilla::Move(aAncestorPrincipals);
   }
 
+  /**
+   * Get the list of ancestor outerWindowIDs for this docshell.  The list is meant
+   * to be the list of outer window IDs that correspond to the ancestorPrincipals
+   * above.   For each ancestor principal, we store the parent window ID.
+   */
+  const nsTArray<uint64_t>& AncestorOuterWindowIDs() const
+  {
+    return mAncestorOuterWindowIDs;
+  }
+
+  /**
+   * Set the list of ancestor outer window IDs for this docshell.  We call this
+   * from frameloader as well in order to keep the array matched with the
+   * ancestor principals.
+   *
+   * This method steals the data from the passed-in array.
+   */
+  void SetAncestorOuterWindowIDs(nsTArray<uint64_t>&& aAncestorOuterWindowIDs)
+  {
+    mAncestorOuterWindowIDs = mozilla::Move(aAncestorOuterWindowIDs);
+  }
+
 private:
   bool CanSetOriginAttributes();
 
@@ -1135,6 +1157,8 @@ private:
 
   // Our list of ancestor principals.
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
+  // Our list of ancestor outerWindowIDs.
+  nsTArray<uint64_t> mAncestorOuterWindowIDs;
 
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
