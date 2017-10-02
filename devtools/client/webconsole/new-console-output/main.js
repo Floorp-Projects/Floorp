@@ -16,8 +16,6 @@ this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceCon
   // privileges and runs entirely in content scope.
   let NewConsoleOutputWrapper = BrowserLoader({
     baseURI: "resource://devtools/client/webconsole/new-console-output/",
-    // The toolbox is not available for the browser console.
-    commonLibRequire: toolbox ? toolbox.browserRequire : null,
     window
   }).require("./new-console-output-wrapper");
 
