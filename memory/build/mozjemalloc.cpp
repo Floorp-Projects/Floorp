@@ -3681,6 +3681,8 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
   MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
   bin = run->bin;
   size = bin->reg_size;
+  MOZ_DIAGNOSTIC_ASSERT(uintptr_t(aPtr) >= uintptr_t(run) + bin->reg0_offset);
+  MOZ_DIAGNOSTIC_ASSERT((uintptr_t(aPtr) - (uintptr_t(run) + bin->reg0_offset)) % size == 0);
 
   memset(aPtr, kAllocPoison, size);
 
@@ -3740,6 +3742,7 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
 void
 arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr)
 {
+  MOZ_DIAGNOSTIC_ASSERT((uintptr_t(aPtr) & pagesize_mask) == 0);
   size_t pageind = (uintptr_t(aPtr) - uintptr_t(aChunk)) >> pagesize_2pow;
   size_t size = aChunk->map[pageind].bits & ~pagesize_mask;
 
