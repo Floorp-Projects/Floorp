@@ -85,6 +85,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.timeout = this._prefs.getIntPref("delay");
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
+        this._adoptIntoActiveWindow = this._prefs.getBoolPref("switchTabs.adoptIntoActiveWindow");
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("paste", this);
         this.inputField.addEventListener("mousedown", this);
@@ -625,7 +626,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 if (this.hasAttribute("actiontype")) {
                   this.handleRevert();
                   let prevTab = gBrowser.selectedTab;
-                  if (switchToTabHavingURI(url) && isTabEmpty(prevTab)) {
+                  let loadOpts = {
+                    adoptIntoActiveWindow: this._adoptIntoActiveWindow,
+                  };
+
+                  if (switchToTabHavingURI(url, false, loadOpts) && isTabEmpty(prevTab)) {
                     gBrowser.removeTab(prevTab);
                   }
                   return;
@@ -1123,6 +1128,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "maxRichResults":
                 this.popup.maxResults = this._prefs.getIntPref(aData);
+                break;
+              case "switchTabs.adoptIntoActiveWindow":
+                this._adoptIntoActiveWindow =
+                  this._prefs.getBoolPref("switchTabs.adoptIntoActiveWindow");
+                break;
             }
           }
         ]]></body>
