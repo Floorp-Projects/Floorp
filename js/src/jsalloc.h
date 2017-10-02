@@ -51,8 +51,6 @@ class SystemAllocPolicy
     }
 };
 
-void ReportOutOfMemory(JSContext* cx);
-
 /*
  * Allocation policy that calls the system memory functions and reports errors
  * to the context. Since the JSContext given on construction is stored for
@@ -131,7 +129,7 @@ class TempAllocPolicy
 
     bool checkSimulatedOOM() const {
         if (js::oom::ShouldFailWithOOM()) {
-            ReportOutOfMemory(cx_);
+            JS_ReportOutOfMemory(cx_);
             return false;
         }
 
