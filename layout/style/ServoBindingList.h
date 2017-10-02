@@ -132,6 +132,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
 SERVO_BINDING_FUNC(Servo_SelectorList_Parse,
                    RawServoSelectorList*,
                    const nsACString* selector_list)
+SERVO_BINDING_FUNC(Servo_SelectorList_Matches, bool,
+                   RawGeckoElementBorrowed, RawServoSelectorListBorrowed)
 SERVO_BINDING_FUNC(Servo_StyleSet_AddSizeOfExcludingThis, void,
                    mozilla::MallocSizeOf malloc_size_of,
                    mozilla::MallocSizeOf malloc_enclosing_size_of,
