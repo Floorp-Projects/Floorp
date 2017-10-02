@@ -763,8 +763,7 @@ TryAssignNative(JSContext* cx, HandleObject to, HandleObject from, bool* optimiz
         // with a non-native object.
         if (MOZ_LIKELY(from->isNative() &&
                        from->as<NativeObject>().lastProperty() == fromShape &&
-                       shape->hasDefaultGetter() &&
-                       shape->hasSlot()))
+                       shape->isDataProperty()))
         {
             if (!shape->enumerable())
                 continue;

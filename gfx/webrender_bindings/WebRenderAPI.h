@@ -207,9 +207,6 @@ public:
 
   ~DisplayListBuilder();
 
-  void Begin(const mozilla::LayerIntSize& aSize);
-
-  void End();
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 

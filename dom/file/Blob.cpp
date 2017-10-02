@@ -287,9 +287,9 @@ Blob::IsMemoryFile() const
 }
 
 void
-Blob::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+Blob::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
-  mImpl->GetInternalStream(aStream, aRv);
+  mImpl->CreateInputStream(aStream, aRv);
 }
 
 size_t

@@ -274,7 +274,7 @@ nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv)
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
   nsCOMPtr<nsIInputStream> msgStream;
-  aData.GetInternalStream(getter_AddRefs(msgStream), aRv);
+  aData.CreateInputStream(getter_AddRefs(msgStream), aRv);
   if (NS_WARN_IF(aRv.Failed())){
     return;
   }

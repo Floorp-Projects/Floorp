@@ -157,5 +157,12 @@ def NoVisibilityFlags():
     COMPILE_FLAGS['VISIBILITY'] = []
 
 
+@template
+def RustTest(name, features=None):
+    RUST_TEST = name
+
+    if features:
+        RUST_TEST_FEATURES = features
+
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')

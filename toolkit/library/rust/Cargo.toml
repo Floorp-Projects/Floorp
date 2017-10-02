@@ -18,6 +18,9 @@ no-static-ideograph-encoder-tables = ["gkrust-shared/no-static-ideograph-encoder
 [dependencies]
 gkrust-shared = { path = "shared" }
 
+[dev-dependencies]
+stylo_tests = { path = "../../../servo/tests/unit/stylo/" }
+
 [lib]
 path = "lib.rs"
 crate-type = ["staticlib"]

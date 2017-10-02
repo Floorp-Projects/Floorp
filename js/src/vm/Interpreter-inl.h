@@ -90,12 +90,9 @@ IsUninitializedLexicalSlot(HandleObject obj, Handle<PropertyResult> prop)
         return false;
 
     Shape* shape = prop.shape();
-    if (!shape->hasSlot() ||
-        !shape->hasDefaultGetter() ||
-        !shape->hasDefaultSetter())
-    {
+    if (!shape->isDataProperty())
         return false;
-    }
+
     MOZ_ASSERT(obj->as<NativeObject>().containsPure(shape));
     return IsUninitializedLexical(obj->as<NativeObject>().getSlot(shape->slot()));
 }
@@ -200,7 +197,7 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
         RootedShape shape(cx, prop.shape());
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
-            MOZ_ASSERT(shape->hasSlot());
+            MOZ_ASSERT(shape->isDataProperty());
             vp.set(holder->as<NativeObject>().getSlot(shape->slot()));
         } else {
             // Unwrap 'with' environments for reasons given in

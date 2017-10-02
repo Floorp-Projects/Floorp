@@ -221,7 +221,7 @@ SerializeInternal(BlobImpl* aBlobImpl, M* aManager, IPCBlob& aIPCBlob)
   aIPCBlob.fileId() = aBlobImpl->GetFileId();
 
   nsCOMPtr<nsIInputStream> inputStream;
-  aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+  aBlobImpl->CreateInputStream(getter_AddRefs(inputStream), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }

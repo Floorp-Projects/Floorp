@@ -133,7 +133,7 @@ private:
   }
 
   virtual void
-  GetInternalStream(nsIInputStream** aStream,
+  CreateInputStream(nsIInputStream** aStream,
                     ErrorResult& aRv) override;
 
   virtual int64_t
