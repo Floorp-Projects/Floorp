@@ -59,7 +59,7 @@ AuthenticatorAssertionResponse::GetAuthenticatorData(JSContext* aCx,
                                                      JS::MutableHandle<JSObject*> aRetVal)
 {
   if (!mAuthenticatorDataCachedObj) {
-    mAuthenticatorDataCachedObj = mAuthenticatorData.ToUint8Array(aCx);
+    mAuthenticatorDataCachedObj = mAuthenticatorData.ToArrayBuffer(aCx);
   }
   aRetVal.set(mAuthenticatorDataCachedObj);
 }
@@ -78,7 +78,7 @@ AuthenticatorAssertionResponse::GetSignature(JSContext* aCx,
                                              JS::MutableHandle<JSObject*> aRetVal)
 {
   if (!mSignatureCachedObj) {
-    mSignatureCachedObj = mSignature.ToUint8Array(aCx);
+    mSignatureCachedObj = mSignature.ToArrayBuffer(aCx);
   }
   aRetVal.set(mSignatureCachedObj);
 }

@@ -373,6 +373,13 @@
         ]
       }
     },
+    "ia": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia-ia"
+        ]
+      }
+    },
     "id": {
       "default": {
         "visibleDefaultEngines": [

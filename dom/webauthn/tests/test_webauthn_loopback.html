@@ -53,7 +53,7 @@ function() {
 
     is(aCredInfo.type, "public-key", "Credential type must be public-key")
 
-    ok(aCredInfo.rawId.length > 0, "Key ID exists");
+    ok(aCredInfo.rawId.byteLength > 0, "Key ID exists");
     is(aCredInfo.id, bytesToBase64UrlSafe(aCredInfo.rawId), "Encoded Key ID and Raw Key ID match");
 
     ok(aCredInfo.rawId === aCredInfo.rawId, "PublicKeyCredential.RawID is SameObject");
@@ -66,23 +66,26 @@ function() {
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "SHA-256", "Hash algorithm is correct");
 
-    return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject.buffer)
-    .then(function(decodedResult) {
+    return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
+    .then(function(aAttestationObj) {
       // Make sure the RP ID hash matches what we calculate.
       return crypto.subtle.digest("SHA-256", string2buffer(document.domain))
-      .then(function(calculatedHash) {
-        is(bytesToBase64(new Uint8Array(calculatedHash)), bytesToBase64(decodedResult.rpIdHash),
+      .then(function(calculatedRpIdHash) {
+        let calcHashStr = bytesToBase64UrlSafe(new Uint8Array(calculatedRpIdHash));
+        let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(aAttestationObj.authDataObj.rpIdHash));
+
+        is(calcHashStr, providedHashStr,
            "Calculated RP ID hash must match what the browser derived.");
-        return Promise.resolve(decodedResult);
+        return Promise.resolve(aAttestationObj);
       });
     })
-    .then(function(decodedResult) {
-      ok(decodedResult.flags == (flag_TUP | flag_AT),
+    .then(function(aAttestationObj) {
+      ok(aAttestationObj.authDataObj.flags == (flag_TUP | flag_AT),
          "User presence and Attestation Object must both be set");
 
       aCredInfo.clientDataObj = clientData;
-      aCredInfo.publicKeyHandle = decodedResult.publicKeyHandle;
-      aCredInfo.attestationObject = decodedResult.attestationObject;
+      aCredInfo.publicKeyHandle = aAttestationObj.authDataObj.publicKeyHandle;
+      aCredInfo.attestationObject = aAttestationObj.authDataObj.attestationAuthData;
       return aCredInfo;
     });
   }
@@ -100,23 +103,23 @@ function() {
 
     is(aAssertion.type, "public-key", "Credential type must be public-key")
 
-    ok(aAssertion.rawId.length > 0, "Key ID exists");
-    is(aAssertion.id, bytesToBase64UrlSafe(aAssertion.rawId), "Encoded Key ID and Raw Key ID match");
+    ok(aAssertion.rawId.byteLength > 0, "Key ID exists");
+    is(aAssertion.id, bytesToBase64UrlSafe(new Uint8Array(aAssertion.rawId)), "Encoded Key ID and Raw Key ID match");
 
     ok(aAssertion.response.authenticatorData === aAssertion.response.authenticatorData, "AuthenticatorAssertionResponse.AuthenticatorData is SameObject");
     ok(aAssertion.response.signature === aAssertion.response.signature, "AuthenticatorAssertionResponse.Signature is SameObject");
 
-    ok(aAssertion.response.authenticatorData.length > 0, "Authenticator data exists");
+    ok(aAssertion.response.authenticatorData.byteLength > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "SHA-256", "Hash algorithm is correct");
 
-    return webAuthnDecodeAttestation(aAssertion.response.authenticatorData)
-    .then(function(decodedResult) {
-      ok(decodedResult.flags == flag_TUP, "User presence must be the only flag set");
-      is(decodedResult.counter.length, 4, "Counter must be 4 bytes");
-      return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON, decodedResult)
+    return webAuthnDecodeAuthDataArray(aAssertion.response.authenticatorData)
+    .then(function(aAttestation) {
+      ok(new Uint8Array(aAttestation.flags) == flag_TUP, "User presence must be the only flag set");
+      is(aAttestation.counter.byteLength, 4, "Counter must be 4 bytes");
+      return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON, aAttestation)
     })
     .then(function(aParams) {
       console.log(aParams);
@@ -159,7 +162,7 @@ function() {
       user: user,
       challenge: gCredentialChallenge,
       parameters: [param],
-      excludeList: [{type: "public-key", id: Uint8Array.from(aCredInfo.rawId),
+      excludeList: [{type: "public-key", id: new Uint8Array(aCredInfo.rawId),
                      transports: ["usb"]}]
     };
     credm.create({publicKey: makeCredentialOptions})
@@ -177,7 +180,7 @@ function() {
   function testAssertion(aCredInfo) {
     let newCredential = {
       type: "public-key",
-      id: Uint8Array.from(aCredInfo.rawId),
+      id: new Uint8Array(aCredInfo.rawId),
       transports: ["usb"],
     }
 
