@@ -801,13 +801,11 @@ nsMediaFeatures::features[] = {
   // Internal -moz-is-glyph media feature: applies only inside SVG glyphs.
   // Internal because it is really only useful in the user agent anyway
   //  and therefore not worth standardizing.
-  //
-  // TODO(emilio): There's nothing that makes this internal at all!
   {
     &nsGkAtoms::_moz_is_glyph,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetIsGlyph
   },
