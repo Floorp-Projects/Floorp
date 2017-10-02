@@ -630,7 +630,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                     adoptIntoActiveWindow: this._adoptIntoActiveWindow,
                   };
 
-                  if (switchToTabHavingURI(url, false, loadOpts) && isTabEmpty(prevTab)) {
+                  if (switchToTabHavingURI(url, false, loadOpts) &&
+                      isTabEmpty(prevTab)) {
                     gBrowser.removeTab(prevTab);
                   }
                   return;
