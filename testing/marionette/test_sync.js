@@ -4,7 +4,9 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/wait.js");
+Cu.import("chrome://marionette/content/sync.js");
+
+const DEFAULT_TIMEOUT = 2000;
 
 add_task(async function test_until_types() {
   for (let typ of [true, false, "foo", 42, [], {}]) {
@@ -20,7 +22,7 @@ add_task(async function test_until_timeoutElapse() {
     reject();
   });
   let end = new Date().getTime();
-  greaterOrEqual((end - start), 2000);
+  greaterOrEqual((end - start), DEFAULT_TIMEOUT);
   greaterOrEqual(nevals, 15);
 });
 
@@ -49,7 +51,7 @@ add_task(async function test_until_noTimeout() {
   }, 0);
   let end = new Date().getTime();
   equal(1, nevals);
-  less((end - start), 2000);
+  less((end - start), DEFAULT_TIMEOUT);
 });
 
 add_task(async function test_until_timeout() {
