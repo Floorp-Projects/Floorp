@@ -13,6 +13,8 @@
 callback LifecycleCreatedCallback = void();
 callback LifecycleConnectedCallback = void();
 callback LifecycleDisconnectedCallback = void();
+callback LifecycleAdoptedCallback = void(Document? oldDocument,
+                                         Document? newDocment);
 callback LifecycleAttributeChangedCallback = void(DOMString attrName,
                                                   DOMString? oldValue,
                                                   DOMString? newValue,
@@ -22,6 +24,7 @@ dictionary LifecycleCallbacks {
   LifecycleCreatedCallback? createdCallback;
   LifecycleConnectedCallback? connectedCallback;
   LifecycleDisconnectedCallback? disconnectedCallback;
+  LifecycleAdoptedCallback? adoptedCallback;
   LifecycleAttributeChangedCallback? attributeChangedCallback;
 };
 
