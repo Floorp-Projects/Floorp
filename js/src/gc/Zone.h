@@ -482,6 +482,9 @@ struct Zone : public JS::shadow::Zone,
     // the current GC.
     js::UnprotectedData<size_t> gcDelayBytes;
 
+    js::ZoneGroupData<uint32_t> tenuredStrings;
+    js::ZoneGroupData<bool> allocNurseryStrings;
+
   private:
     // Shared Shape property tree.
     js::ZoneGroupData<js::PropertyTree> propertyTree_;

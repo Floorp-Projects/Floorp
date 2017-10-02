@@ -183,7 +183,11 @@ js::AllocateString(JSContext* cx, InitialHeap heap)
     if (!rt->gc.checkAllocatorState<allowGC>(cx, kind))
         return nullptr;
 
-    if (cx->nursery().isEnabled() && heap != TenuredHeap && cx->nursery().canAllocateStrings()) {
+    if (cx->nursery().isEnabled() &&
+        heap != TenuredHeap &&
+        cx->nursery().canAllocateStrings() &&
+        cx->zone()->allocNurseryStrings)
+    {
         auto str = static_cast<StringAllocT*>(rt->gc.tryNewNurseryString<allowGC>(cx, size, kind));
         if (str)
             return str;
