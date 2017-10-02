@@ -171,6 +171,9 @@ public:
   void NS_FASTCALL Assign(const self_type&);
   MOZ_MUST_USE bool NS_FASTCALL Assign(const self_type&, const fallible_t&);
 
+  void NS_FASTCALL Assign(self_type&&);
+  MOZ_MUST_USE bool NS_FASTCALL Assign(self_type&&, const fallible_t&);
+
   void NS_FASTCALL Assign(const substring_tuple_type&);
   MOZ_MUST_USE bool NS_FASTCALL Assign(const substring_tuple_type&,
                                        const fallible_t&);

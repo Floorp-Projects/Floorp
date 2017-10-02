@@ -486,6 +486,52 @@ nsTSubstring<T>::Assign(const self_type& aStr, const fallible_t& aFallible)
 
 template <typename T>
 void
+nsTSubstring<T>::Assign(self_type&& aStr)
+{
+  if (!Assign(mozilla::Move(aStr), mozilla::fallible)) {
+    AllocFailed(aStr.Length());
+  }
+}
+
+template <typename T>
+bool
+nsTSubstring<T>::Assign(self_type&& aStr, const fallible_t& aFallible)
+{
+  // We're moving |aStr| in this method, so we need to try to steal the data,
+  // and in the fallback perform a copy-assignment followed by a truncation of
+  // the original string.
+
+  if (&aStr == this) {
+    NS_WARNING("Move assigning a string to itself?");
+    return true;
+  }
+
+  if (aStr.mDataFlags & (DataFlags::SHARED | DataFlags::OWNED)) {
+    // If they have a SHARED or OWNED buffer, we can avoid a copy - so steal
+    // their buffer and reset them to the empty string.
+
+    // |aStr| should be null-terminated
+    NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED,
+                 "shared or owned, but not terminated");
+
+    ::ReleaseData(this->mData, this->mDataFlags);
+
+    SetData(aStr.mData, aStr.mLength, aStr.mDataFlags);
+    aStr.SetToEmptyBuffer();
+    return true;
+  }
+
+  // Otherwise treat this as a normal assignment, and truncate the moved string.
+  // We don't truncate the source string if the allocation failed.
+  if (!Assign(aStr, aFallible)) {
+    return false;
+  }
+  aStr.Truncate();
+  return true;
+}
+
+template <typename T>
+void
 nsTSubstring<T>::Assign(const substring_tuple_type& aTuple)
 {
   if (!Assign(aTuple, mozilla::fallible)) {
