@@ -45,6 +45,7 @@ static UniquePtr<nsString> sProfileDir;
 static UniquePtr<nsString> sContentTempDir;
 static UniquePtr<nsString> sRoamingAppDataDir;
 static UniquePtr<nsString> sLocalAppDataDir;
+static UniquePtr<nsString> sUserExtensionsDevDir;
 
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
@@ -122,6 +123,7 @@ SandboxBroker::CacheRulesDirectories()
   CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR, &sContentTempDir);
   CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
   CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
+  CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DEV_DIR, &sUserExtensionsDevDir);
 }
 
 SandboxBroker::SandboxBroker()
@@ -481,6 +483,10 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     // Add rule to allow read access extensions directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sProfileDir, NS_LITERAL_STRING("\\extensions\\*"));
+
+    // Read access to a directory for system extension dev (see bug 1393805)
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sUserExtensionsDevDir, NS_LITERAL_STRING("\\*"));
   }
 
   // Add the policy for the client side of a pipe. It is just a file
