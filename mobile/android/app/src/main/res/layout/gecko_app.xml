@@ -146,7 +146,7 @@
             android:id="@id/page_progress"
             style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
-            android:layout_height="2dp"
+            android:layout_height="3dp"
             android:layout_below="@id/browser_chrome"
             android:layout_marginTop="-2dp"
             android:background="@null"
