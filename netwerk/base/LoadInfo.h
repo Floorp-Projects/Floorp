@@ -115,8 +115,6 @@ private:
            const OriginAttributes& aOriginAttributes,
            RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
            RedirectHistoryArray& aRedirectChain,
-           nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals,
-           const nsTArray<uint64_t>& aAncestorOuterWindowIDs,
            const nsTArray<nsCString>& aUnsafeHeaders,
            bool aForcePreflight,
            bool aIsPreflight,
@@ -170,8 +168,6 @@ private:
   OriginAttributes                 mOriginAttributes;
   RedirectHistoryArray             mRedirectChainIncludingInternalRedirects;
   RedirectHistoryArray             mRedirectChain;
-  nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
-  nsTArray<uint64_t>               mAncestorOuterWindowIDs;
   nsTArray<nsCString>              mCorsUnsafeHeaders;
   bool                             mForcePreflight;
   bool                             mIsPreflight;

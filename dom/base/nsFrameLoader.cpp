@@ -2711,24 +2711,14 @@ nsFrameLoader::MaybeCreateDocShell()
 
   nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
 
-  // Typically there will be a window, however for some cases such as printing
-  // the document is cloned with a docshell that has no window.  We check
-  // IsStaticDocument to ensure we don't try to gather ancestors for those cases.
   if (!mDocShell->GetIsMozBrowser() &&
-      parentType == mDocShell->ItemType() &&
-      !doc->IsStaticDocument()) {
+      parentType == mDocShell->ItemType()) {
     // Propagate through the ancestor principals.
     nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
     // Make a copy, so we can modify it.
     ancestorPrincipals = doc->AncestorPrincipals();
     ancestorPrincipals.InsertElementAt(0, doc->NodePrincipal());
     nsDocShell::Cast(mDocShell)->SetAncestorPrincipals(Move(ancestorPrincipals));
-
-    // Repeat for outer window IDs.
-    nsTArray<uint64_t> ancestorOuterWindowIDs;
-    ancestorOuterWindowIDs = doc->AncestorOuterWindowIDs();
-    ancestorOuterWindowIDs.InsertElementAt(0, doc->GetWindow()->WindowID());
-    nsDocShell::Cast(mDocShell)->SetAncestorOuterWindowIDs(Move(ancestorOuterWindowIDs));
   }
 
   ReallyLoadFrameScripts();
