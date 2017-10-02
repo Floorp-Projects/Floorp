@@ -7,24 +7,17 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 const {
   InvalidSelectorError,
-  JavaScriptError,
   NoSuchElementError,
   pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/wait.js");
 
-const logger = Log.repository.getLogger("Marionette");
-
 this.EXPORTED_SYMBOLS = ["element"];
-
-const DOCUMENT_POSITION_DISCONNECTED = 1;
 
 const XMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
