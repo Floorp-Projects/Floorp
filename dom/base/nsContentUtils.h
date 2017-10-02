@@ -37,6 +37,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RangeBoundary.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocument.h"
 #include "nsIDOMMouseEvent.h"
@@ -136,6 +137,7 @@ class EventTarget;
 class IPCDataTransfer;
 class IPCDataTransferItem;
 struct LifecycleCallbackArgs;
+struct LifecycleAdoptedCallbackArgs;
 class NodeInfo;
 class nsIContentChild;
 class nsIContentParent;
@@ -445,6 +447,9 @@ public:
                                bool* aDisconnected = nullptr);
   static int32_t ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
                                nsIDOMNode* aParent2, int32_t aOffset2,
+                               bool* aDisconnected = nullptr);
+  static int32_t ComparePoints(const mozilla::RawRangeBoundary& aFirst,
+                               const mozilla::RawRangeBoundary& aSecond,
                                bool* aDisconnected = nullptr);
 
   /**
@@ -3016,6 +3021,7 @@ public:
   static void EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
                                        Element* aCustomElement,
                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
+                                       mozilla::dom::LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs = nullptr,
                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
   static void GetCustomPrototype(nsIDocument* aDoc,
@@ -3203,11 +3209,12 @@ public:
    */
   static bool IsMessageInputEvent(const IPC::Message& aMsg);
 
+  static void AsyncPrecreateStringBundles();
+
 private:
   static bool InitializeEventTable();
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
-  static void AsyncPrecreateStringBundles();
 
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);

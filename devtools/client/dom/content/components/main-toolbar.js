@@ -47,10 +47,11 @@ var MainToolbar = React.createClass({
     return (
       Toolbar({},
         ToolbarButton({
-          className: "btn refresh",
-          onClick: this.onRefresh},
-          l10n.getStr("dom.refresh")
-        ),
+          className: "refresh devtools-button",
+          id: "dom-refresh-button",
+          title: l10n.getStr("dom.refresh"),
+          onClick: this.onRefresh
+        }),
         SearchBox({
           delay: 250,
           onChange: this.onSearch,

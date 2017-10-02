@@ -1506,7 +1506,7 @@ public class BrowserApp extends GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    GeckoApplication.createBrowserShortcut(title, url);
+                    GeckoApplication.createShortcut(title, url);
                 }
             });
 

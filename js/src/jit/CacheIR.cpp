@@ -317,7 +317,7 @@ IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder, PropertyResult prop)
         return false;
 
     Shape* shape = prop.shape();
-    if (!shape->hasSlot() || !shape->hasDefaultGetter())
+    if (!shape->isDataProperty())
         return false;
 
     return true;
@@ -384,6 +384,66 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
         return false;
 
     return true;
+}
+
+static bool
+CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
+{
+    if (obj->isNative()) {
+        // Don't handle proto chains with resolve hooks.
+        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
+            return false;
+        if (obj->as<NativeObject>().contains(cx, id))
+            return false;
+    } else if (obj->is<UnboxedPlainObject>()) {
+        if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
+            return false;
+    } else if (obj->is<TypedObject>()) {
+        if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
+            return false;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+static bool
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id)
+{
+    JSObject* curObj = obj;
+    do {
+        if (!CheckHasNoSuchOwnProperty(cx, curObj, id))
+            return false;
+
+        if (!curObj->isNative()) {
+            // Non-native objects are only handled as the original receiver.
+            if (curObj != obj)
+                return false;
+        }
+
+        curObj = curObj->staticPrototype();
+    } while (curObj);
+
+    return true;
+}
+
+// Return whether obj is in some PreliminaryObjectArray and has a structure
+// that might change in the future.
+static bool
+IsPreliminaryObject(JSObject* obj)
+{
+    if (obj->isSingleton())
+        return false;
+
+    TypeNewScript* newScript = obj->group()->newScript();
+    if (newScript && !newScript->analyzed())
+        return true;
+
+    if (obj->group()->maybePreliminaryObjects())
+        return true;
+
+    return false;
 }
 
 static bool
@@ -1182,7 +1242,7 @@ GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId
         return false;
 
     Shape* shape = expando->lookup(cx_, id);
-    if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
+    if (!shape || !shape->isDataProperty())
         return false;
 
     maybeEmitIdGuard(id);
@@ -1191,6 +1251,18 @@ GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId
 
     trackAttached("UnboxedExpando");
     return true;
+}
+
+static TypedThingLayout
+GetTypedThingLayout(const Class* clasp)
+{
+    if (IsTypedArrayClass(clasp))
+        return Layout_TypedArray;
+    if (IsOutlineTypedObjectClass(clasp))
+        return Layout_OutlineTypedObject;
+    if (IsInlineTypedObjectClass(clasp))
+        return Layout_InlineTypedObject;
+    MOZ_CRASH("Bad object class");
 }
 
 bool
@@ -1608,6 +1680,42 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
     return true;
 }
 
+static bool
+IsPrimitiveArrayTypedObject(JSObject* obj)
+{
+    if (!obj->is<TypedObject>())
+        return false;
+    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
+    return descr.is<ArrayTypeDescr>() &&
+           descr.as<ArrayTypeDescr>().elementType().is<ScalarTypeDescr>();
+}
+
+static Scalar::Type
+PrimitiveArrayTypedObjectType(JSObject* obj)
+{
+    MOZ_ASSERT(IsPrimitiveArrayTypedObject(obj));
+    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
+    return descr.as<ArrayTypeDescr>().elementType().as<ScalarTypeDescr>().type();
+}
+
+
+static Scalar::Type
+TypedThingElementType(JSObject* obj)
+{
+    return obj->is<TypedArrayObject>()
+           ? obj->as<TypedArrayObject>().type()
+           : PrimitiveArrayTypedObjectType(obj);
+}
+
+static bool
+TypedThingRequiresFloatingPoint(JSObject* obj)
+{
+    Scalar::Type type = TypedThingElementType(obj);
+    return type == Scalar::Uint32 ||
+           type == Scalar::Float32 ||
+           type == Scalar::Float64;
+}
+
 bool
 GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                           uint32_t index, Int32OperandId indexId)
@@ -1816,7 +1924,7 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         return false;
 
     // The property must be found, and it must be found as a normal data property.
-    if (!shape->hasDefaultGetter() || !shape->hasSlot())
+    if (!shape->isDataProperty())
         return false;
 
     // This might still be an uninitialized lexical.
@@ -2664,18 +2772,14 @@ static Shape*
 LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id)
 {
     Shape* shape = obj->lookupPure(id);
-    if (!shape || !shape->hasSlot() || !shape->hasDefaultSetter() || !shape->writable())
+    if (!shape || !shape->isDataProperty() || !shape->writable())
         return nullptr;
 
     // If this is an op like JSOP_INITELEM / [[DefineOwnProperty]], the
     // property's attributes may have to be changed too, so make sure it's a
     // simple data property.
-    if (IsPropertyInitOp(op) && (!shape->configurable() ||
-                                 !shape->enumerable() ||
-                                 !shape->hasDefaultGetter()))
-    {
+    if (IsPropertyInitOp(op) && (!shape->configurable() || !shape->enumerable()))
         return nullptr;
-    }
 
     return shape;
 }
@@ -3597,8 +3701,7 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
 
     // Basic shape checks.
     if (propShape->inDictionary() ||
-        !propShape->hasSlot() ||
-        !propShape->hasDefaultSetter() ||
+        !propShape->isDataProperty() ||
         !propShape->writable())
     {
         return false;

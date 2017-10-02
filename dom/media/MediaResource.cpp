@@ -104,7 +104,7 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
     IgnoredErrorResult rv;
 
     nsCOMPtr<nsIInputStream> stream;
-    blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
+    blobImpl->CreateInputStream(getter_AddRefs(stream), rv);
     if (NS_WARN_IF(rv.Failed())) {
       return nullptr;
     }

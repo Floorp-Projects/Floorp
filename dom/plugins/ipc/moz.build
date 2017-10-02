@@ -15,7 +15,6 @@ EXPORTS.mozilla.plugins += [
     'AStream.h',
     'BrowserStreamChild.h',
     'BrowserStreamParent.h',
-    'ChildAsyncCall.h',
     'ChildTimer.h',
     'NPEventAndroid.h',
     'NPEventOSX.h',
@@ -64,7 +63,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 UNIFIED_SOURCES += [
     'BrowserStreamChild.cpp',
     'BrowserStreamParent.cpp',
-    'ChildAsyncCall.cpp',
     'ChildTimer.cpp',
     'PluginBackgroundDestroyer.cpp',
     'PluginInstanceParent.cpp',

@@ -79,7 +79,7 @@ StreamBlobImpl::~StreamBlobImpl()
 }
 
 void
-StreamBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+StreamBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> clonedStream;
   nsCOMPtr<nsIInputStream> replacementStream;

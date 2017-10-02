@@ -425,10 +425,10 @@ body {
   top: 0;
   height: 230px;
   width: 500px;
-  background-color: var(--theme-codemirror-gutter-background);
+  background-color: var(--theme-toolbar-background);
   transform: translateY(-250px);
   transition: transform 150ms cubic-bezier(0.07, 0.95, 0, 1);
-  box-shadow: 2px 4px 6px var(--popup-shadow-color);
+  box-shadow: 0 0 10px 2px var(--popup-shadow-color);
 }
 
 .modal.entering,
@@ -449,16 +449,36 @@ body {
 }
 .shortcuts-content {
   padding: 15px;
+  -moz-column-width: 250px;
+  -webkit-column-width: 250px;
+  column-width: 250px;
 }
 
 .shortcuts-content h2 {
   margin-top: 2px;
   margin-bottom: 2px;
-  color: var(--theme-graphs-bluegrey);
+  color: var(--theme-content-color1);
+}
+
+.mac .keystroke {
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
+  border-color: var(--theme-graphs-grey);
+  background-color: var(--theme-selection-color);
+  width: 21px;
+  height: 17px;
+  display: inline-block;
+  font-size: 10px;
+  text-align: center;
+  padding-top: 2px;
 }
 
 .shortcuts-section {
-  margin-bottom: 20px;
+  display: inline-block;
+  margin: 5px;
+  margin-bottom: 15px;
+  width: 250px;
 }
 
 .shortcuts-list {
@@ -471,16 +491,21 @@ body {
 
 .shortcuts-modal {
   height: fit-content;
+  width: 45%;
 }
 
 .shortcuts-list li {
-  width: 40%;
+  font-size: 12px;
   color: var(--theme-body-color);
   padding-top: 5px;
   display: flex;
   justify-content: space-between;
   border: 1px solid transparent;
 }
+:root {
+  --arrow-width: 10px;
+}
+
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -1345,7 +1370,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   height: calc(100% - 31px);
   display: flex;
   flex-direction: column;
-  z-index: 200;
+  z-index: 20;
   background-color: var(--theme-body-background);
   overflow-y: hidden;
 }
@@ -2586,16 +2611,24 @@ html .breakpoints-list .breakpoint.paused {
   border-color: var(--breakpoint-active-color-hover);
 }
 
-.breakpoints-list .breakpoint-checkbox {
-  margin-inline-start: 0;
-  vertical-align: -2px;
-}
-
 .breakpoints-list .breakpoint-label {
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
   display: inline-block;
   padding-inline-start: 2px;
-  padding-bottom: 4px;
   cursor: default;
+}
+
+.breakpoint-label .breakpoint-checkbox {
+  margin-inline-start: 0;
+  vertical-align: text-bottom;
+}
+
+.breakpoint-label .location {
+  width: 100%;
+  display: inline-block;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 0;
 }
 
 .breakpoints-list .pause-indicator {
@@ -2697,6 +2730,11 @@ html .breakpoints-list .breakpoint.paused {
 
 .expression-content {
   position: relative;
+}
+
+.expression-content .tree {
+  overflow-x: hidden;
+  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
 }
 
 .expression-content .tree-node {
@@ -2996,10 +3034,6 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--theme-toolbar-background);
 }
 
-.command-bar.vertical {
-  width: 100vw;
-}
-
 html[dir="rtl"] .command-bar {
   border-right: 1px solid var(--theme-splitter-color);
 }
@@ -3114,6 +3148,7 @@ html .command-bar > button:disabled {
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
+  --breakpoint-expression-right-clear-space: 36px;
 }
 
 /*

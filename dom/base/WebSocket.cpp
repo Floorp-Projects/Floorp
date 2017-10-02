@@ -2459,7 +2459,7 @@ WebSocket::Send(Blob& aData, ErrorResult& aRv)
   AssertIsOnTargetThread();
 
   nsCOMPtr<nsIInputStream> msgStream;
-  aData.GetInternalStream(getter_AddRefs(msgStream), aRv);
+  aData.CreateInputStream(getter_AddRefs(msgStream), aRv);
   if (NS_WARN_IF(aRv.Failed())){
     return;
   }

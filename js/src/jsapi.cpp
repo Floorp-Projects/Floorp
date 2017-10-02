@@ -164,11 +164,12 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
     assertSameCompartment(cx, obj);
 
     unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
-    if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE || code_ == JSMSG_SET_NON_OBJECT_RECEIVER) {
+    if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE) {
         RootedValue val(cx, ObjectValue(*obj));
         return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
                                      nullptr, nullptr, nullptr);
     }
+
     if (ErrorTakesArguments(code_)) {
         RootedValue idv(cx, IdToValue(id));
         RootedString str(cx, ValueToSource(cx, idv));
@@ -178,6 +179,15 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
         JSAutoByteString propName;
         if (!propName.encodeUtf8(cx, str))
             return false;
+
+        if (code_ == JSMSG_SET_NON_OBJECT_RECEIVER) {
+            // We know that the original receiver was a primitive, so unbox it.
+            RootedValue val(cx);
+            if (!Unbox(cx, obj, &val))
+                return false;
+            return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
+                                         nullptr, propName.ptr(), nullptr);
+        }
 
         if (ErrorTakesObjectArgument(code_)) {
             return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, code_,

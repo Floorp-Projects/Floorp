@@ -120,7 +120,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements Ico
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                GeckoApplication.createBrowserShortcut(title, url);
+                GeckoApplication.createShortcut(title, url);
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, TELEMETRY_EXTRA);
 
@@ -130,6 +130,8 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements Ico
             }
         });
     }
+
+
 
     private void loadShortcutIcon() {
         Icons.with(this)

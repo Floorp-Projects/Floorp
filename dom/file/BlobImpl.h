@@ -72,7 +72,7 @@ public:
   virtual const nsTArray<RefPtr<BlobImpl>>*
   GetSubBlobImpls() const = 0;
 
-  virtual void GetInternalStream(nsIInputStream** aStream,
+  virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) = 0;
 
   virtual int64_t GetFileId() = 0;

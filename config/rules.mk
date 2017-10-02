@@ -1008,6 +1008,18 @@ force-cargo-library-check:
 	@true
 endif # RUST_LIBRARY_FILE
 
+ifdef RUST_TEST
+
+ifdef RUST_TEST_FEATURES
+rust_features_flag := --features "$(RUST_TEST_FEATURES)"
+endif
+
+force-cargo-test-run:
+	$(call RUN_CARGO,test $(cargo_target_flag) -p $(RUST_TEST) $(rust_features_flag),$(target_cargo_env_vars))
+
+check:: force-cargo-test-run
+endif
+
 ifdef HOST_RUST_LIBRARY_FILE
 
 ifdef HOST_RUST_LIBRARY_FEATURES

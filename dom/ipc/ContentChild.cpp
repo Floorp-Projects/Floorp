@@ -2251,6 +2251,11 @@ ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
     static_cast<nsChromeRegistryContent*>(registrySvc.get());
   chromeRegistry->RegisterRemoteChrome(packages, resources, overrides,
                                        locale, reset);
+  static bool preloadDone = false;
+  if (!preloadDone) {
+    preloadDone = true;
+    nsContentUtils::AsyncPrecreateStringBundles();
+  }
   return IPC_OK();
 }
 

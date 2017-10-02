@@ -117,7 +117,7 @@ public:
     return nullptr;
   }
 
-  virtual void GetInternalStream(nsIInputStream** aStream,
+  virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override
   {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);

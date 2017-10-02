@@ -474,7 +474,7 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
             variant = ''
 
         # this variant name has branch after the variant type in BBB bug 1338871
-        if variant in ('qr', 'stylo', 'stylo-sequential', 'devedition', 'stylo disabled'):
+        if variant in ('qr', 'stylo', 'stylo-sequential', 'devedition', 'stylo-disabled'):
             name = '{prefix} {variant} {branch} talos {test_name}'
         elif variant:
             name = '{prefix} {branch} {variant} talos {test_name}'
@@ -499,12 +499,21 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
         prefix = BUILDER_NAME_PREFIX.get(
             (test_platform, test.get('virtualization')),
             BUILDER_NAME_PREFIX[test_platform])
-        buildername = '{prefix} {branch} {build_type} test {test_name}'.format(
-            prefix=prefix,
-            branch=branch,
-            build_type=build_type,
-            test_name=test_name
-        )
+        if variant in ['stylo-disabled']:
+            buildername = '{prefix} {variant} {branch} {build_type} test {test_name}'.format(
+                prefix=prefix,
+                variant=variant,
+                branch=branch,
+                build_type=build_type,
+                test_name=test_name
+            )
+        else:
+            buildername = '{prefix} {branch} {build_type} test {test_name}'.format(
+                prefix=prefix,
+                branch=branch,
+                build_type=build_type,
+                test_name=test_name
+            )
 
     worker.update({
         'buildername': buildername,
