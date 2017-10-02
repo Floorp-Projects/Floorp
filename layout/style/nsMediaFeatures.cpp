@@ -637,7 +637,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_color_picker_available,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::color_picker_available },
     GetSystemMetric
   },
@@ -645,7 +645,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_start_backward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_start_backward },
     GetSystemMetric
   },
@@ -653,7 +653,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_start_forward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_start_forward },
     GetSystemMetric
   },
@@ -661,7 +661,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_end_backward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_end_backward },
     GetSystemMetric
   },
@@ -669,7 +669,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_end_forward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_end_forward },
     GetSystemMetric
   },
@@ -677,7 +677,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_thumb_proportional,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_thumb_proportional },
     GetSystemMetric
   },
@@ -685,7 +685,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_overlay_scrollbars,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::overlay_scrollbars },
     GetSystemMetric
   },
@@ -693,7 +693,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_default_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_default_theme },
     GetSystemMetric
   },
@@ -701,7 +701,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_mac_graphite_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::mac_graphite_theme },
     GetSystemMetric
   },
@@ -709,7 +709,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_mac_yosemite_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::mac_yosemite_theme },
     GetSystemMetric
   },
@@ -717,7 +717,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_accent_color_in_titlebar,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_accent_color_in_titlebar },
     GetSystemMetric
   },
@@ -725,7 +725,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_compositor,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_compositor },
     GetSystemMetric
   },
@@ -733,7 +733,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_classic,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_classic },
     GetSystemMetric
   },
@@ -741,7 +741,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_glass,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_glass },
     GetSystemMetric
   },
@@ -749,6 +749,8 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_touch_enabled,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
+    // TODO(emilio): Unship (at least from content pages) once bug 1035774 is
+    // fixed.
     nsMediaFeature::eNoRequirements,
     { &nsGkAtoms::touch_enabled },
     GetSystemMetric
@@ -757,7 +759,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_menubar_drag,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::menubar_drag },
     GetSystemMetric
   },
@@ -765,6 +767,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
+    // TODO(emilio): Unship.
     nsMediaFeature::eNoRequirements,
     { nullptr },
     GetWindowsTheme
@@ -773,6 +776,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_os_version,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
+    // TODO(emilio): Unship.
     nsMediaFeature::eNoRequirements,
     { nullptr },
     GetOperatingSystemVersion
@@ -782,7 +786,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_swipe_animation_enabled,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::swipe_animation_enabled },
     GetSystemMetric
   },
@@ -791,7 +795,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_physical_home_button,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::physical_home_button },
     GetSystemMetric
   },
@@ -799,6 +803,8 @@ nsMediaFeatures::features[] = {
   // Internal -moz-is-glyph media feature: applies only inside SVG glyphs.
   // Internal because it is really only useful in the user agent anyway
   //  and therefore not worth standardizing.
+  //
+  // TODO(emilio): There's nothing that makes this internal at all!
   {
     &nsGkAtoms::_moz_is_glyph,
     nsMediaFeature::eMinMaxNotAllowed,
