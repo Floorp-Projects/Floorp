@@ -1302,7 +1302,7 @@ FeatureValuesToString(
 
 static void
 FontFeatureValuesRuleToString(
-  const mozilla::FontFamilyList& aFamilyList,
+  mozilla::SharedFontList* aFamilyList,
   const nsTArray<gfxFontFeatureValueSet::FeatureValues>& aFeatureValues,
   nsAString& aOutStr)
 {
@@ -1396,13 +1396,6 @@ struct MakeFamilyArray {
   nsTArray<nsString>& familyArray;
   bool hasGeneric;
 };
-
-void
-nsCSSFontFeatureValuesRule::SetFamilyList(
-  const mozilla::FontFamilyList& aFamilyList)
-{
-  mFamilyList = aFamilyList;
-}
 
 void
 nsCSSFontFeatureValuesRule::AddValueList(int32_t aVariantAlternate,
