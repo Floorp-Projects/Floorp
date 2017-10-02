@@ -220,6 +220,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CopyShapeSourceFrom", "aDst", null],
         ["Gecko_DestroyShapeSource", "aShape", null],
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
+        ["Gecko_NewBasicShape", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
         ["Gecko_nsFont_SetFontFeatureValuesLookup", "aFont", null],
         ["Gecko_nsFont_ResetFontFeatureValuesLookup", "aFont", null],
@@ -365,6 +366,14 @@ function ignoreCallEdge(entry, callee)
     // analysis is not smart enough to know this.
     if (/CachedBorderImageData::PurgeCachedImages/.test(callee) &&
         /nsStyleImage::/.test(name) &&
+        entry.isSafeArgument(0))
+    {
+        return true;
+    }
+
+    // StyleShapeSource exclusively owns its UniquePtr<nsStyleImage>.
+    if (/nsStyleImage::SetURLValue/.test(callee) &&
+        /StyleShapeSource::SetURL/.test(name) &&
         entry.isSafeArgument(0))
     {
         return true;
