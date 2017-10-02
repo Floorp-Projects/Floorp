@@ -449,7 +449,7 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 }
 
 void
-WebRenderBridgeParent::UpdateAPZ()
+WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
@@ -463,9 +463,11 @@ WebRenderBridgeParent::UpdateAPZ()
   if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
     apzc->UpdateFocusState(rootLayersId, GetLayersId(),
                            mScrollData.GetFocusTarget());
-    apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
-        mScrollData.IsFirstPaint(), GetLayersId(),
-        mScrollData.GetPaintSequenceNumber());
+    if (aUpdateHitTestingTree) {
+      apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
+          mScrollData.IsFirstPaint(), GetLayersId(),
+          mScrollData.GetPaintSequenceNumber());
+    }
   }
 }
 
@@ -567,7 +569,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
 
   mScrollData = aScrollData;
-  UpdateAPZ();
+  UpdateAPZ(true);
 
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
@@ -603,6 +605,14 @@ WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
                             aContentSize, dl, dlDesc, aScrollData,
                             Move(aResourceUpdates), Move(aSmallShmems), Move(aLargeShmems),
                             aIdNamespace, aTxnStartTime, aFwdTime);
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetFocusTarget(const FocusTarget& aFocusTarget)
+{
+  mScrollData.SetFocusTarget(aFocusTarget);
+  UpdateAPZ(false);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
