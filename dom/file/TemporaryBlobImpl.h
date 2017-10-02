@@ -21,7 +21,7 @@ public:
   TemporaryBlobImpl(PRFileDesc* aFD, uint64_t aStartPos,
                    uint64_t aLength, const nsAString& aContentType);
 
-  virtual void GetInternalStream(nsIInputStream** aStream,
+  virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
 
   virtual already_AddRefed<BlobImpl>

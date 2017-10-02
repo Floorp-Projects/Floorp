@@ -926,10 +926,6 @@ _pushpopupsenabledstate(NPP aNPP, NPBool enabled);
 static void
 _poppopupsenabledstate(NPP aNPP);
 
-static void
-_pluginthreadasynccall(NPP instance, PluginThreadCallback func,
-                       void *userData);
-
 static NPError
 _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 char **value, uint32_t *len);
@@ -1017,7 +1013,7 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_pushpopupsenabledstate,
     mozilla::plugins::child::_poppopupsenabledstate,
     mozilla::plugins::child::_enumerate,
-    mozilla::plugins::child::_pluginthreadasynccall,
+    nullptr, // pluginthreadasynccall, not used
     mozilla::plugins::child::_construct,
     mozilla::plugins::child::_getvalueforurl,
     mozilla::plugins::child::_setvalueforurl,
@@ -1548,18 +1544,6 @@ _poppopupsenabledstate(NPP aNPP)
     ENSURE_PLUGIN_THREAD_VOID();
 
     InstCast(aNPP)->CallNPN_PopPopupsEnabledState();
-}
-
-void
-_pluginthreadasynccall(NPP aNPP,
-                       PluginThreadCallback aFunc,
-                       void* aUserData)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    if (!aFunc)
-        return;
-
-    InstCast(aNPP)->AsyncCall(aFunc, aUserData);
 }
 
 NPError

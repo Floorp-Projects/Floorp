@@ -6826,7 +6826,7 @@ DatabaseFile::GetInputStream(ErrorResult &rv) const
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  mBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+  mBlobImpl->CreateInputStream(getter_AddRefs(inputStream), rv);
   if (rv.Failed()) {
     return nullptr;
   }

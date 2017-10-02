@@ -1910,24 +1910,6 @@ ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler& masm)
 // GetProp_Fallback
 //
 
-// Return whether obj is in some PreliminaryObjectArray and has a structure
-// that might change in the future.
-bool
-IsPreliminaryObject(JSObject* obj)
-{
-    if (obj->isSingleton())
-        return false;
-
-    TypeNewScript* newScript = obj->group()->newScript();
-    if (newScript && !newScript->analyzed())
-        return true;
-
-    if (obj->group()->maybePreliminaryObjects())
-        return true;
-
-    return false;
-}
-
 void
 StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
 {
@@ -1948,59 +1930,6 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
         else if (iter->isCacheIR_Updated() && iter->toCacheIR_Updated()->hasPreliminaryObject())
             iter.unlink(cx);
     }
-}
-
-bool
-CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
-{
-    if (obj->isNative()) {
-        // Don't handle proto chains with resolve hooks.
-        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
-            return false;
-        if (obj->as<NativeObject>().contains(cx, id))
-            return false;
-    } else if (obj->is<UnboxedPlainObject>()) {
-        if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
-            return false;
-    } else if (obj->is<TypedObject>()) {
-        if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
-            return false;
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
-bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
-                       JSObject** lastProto, size_t* protoChainDepthOut)
-{
-    size_t depth = 0;
-    JSObject* curObj = obj;
-    while (curObj) {
-        if (!CheckHasNoSuchOwnProperty(cx, curObj, id))
-            return false;
-
-        if (!curObj->isNative()) {
-            // Non-native objects are only handled as the original receiver.
-            if (curObj != obj)
-                return false;
-        }
-
-        JSObject* proto = curObj->staticPrototype();
-        if (!proto)
-            break;
-
-        curObj = proto;
-        depth++;
-    }
-
-    if (lastProto)
-        *lastProto = curObj;
-    if (protoChainDepthOut)
-        *protoChainDepthOut = depth;
-    return true;
 }
 
 static bool
@@ -2250,16 +2179,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + bailoutReturnOffset_.offset();
         cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
     }
-}
-
-void
-CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure)
-{
-    // All stubs manipulating typed objects must check the compartment-wide
-    // flag indicating whether their underlying storage might be detached, to
-    // bail out if needed.
-    int32_t* address = &cx->compartment()->detachedTypedObjects;
-    masm.branch32(Assembler::NotEqual, AbsoluteAddress(address), Imm32(0), failure);
 }
 
 void

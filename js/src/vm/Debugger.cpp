@@ -10644,7 +10644,7 @@ DebuggerObject::forceLexicalInitializationByName(JSContext* cx, HandleDebuggerOb
         MOZ_ASSERT(prop.isNativeProperty());
         Shape* shape = prop.shape();
         Value v = globalLexical->as<NativeObject>().getSlot(shape->slot());
-        if (shape->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+        if (shape->isDataProperty() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
             globalLexical->as<NativeObject>().setSlot(shape->slot(), UndefinedValue());
             result = true;
         }

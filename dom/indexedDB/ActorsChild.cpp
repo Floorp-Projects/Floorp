@@ -3382,14 +3382,14 @@ PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
     ErrorResult errorResult;
 
     nsCOMPtr<nsIInputStream> bytecodeStream;
-    bytecodeFile.mBlob->GetInternalStream(getter_AddRefs(bytecodeStream),
+    bytecodeFile.mBlob->CreateInputStream(getter_AddRefs(bytecodeStream),
                                           errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
       return errorResult.StealNSResult();
     }
 
     nsCOMPtr<nsIInputStream> compiledStream;
-    compiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
+    compiledFile.mBlob->CreateInputStream(getter_AddRefs(compiledStream),
                                           errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
       return errorResult.StealNSResult();

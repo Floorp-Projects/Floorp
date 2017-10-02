@@ -688,6 +688,44 @@ public:
 
     static auto GetApplicationContext() -> mozilla::jni::Object::LocalRef;
 
+    struct GetAudioOutputFramesPerBuffer_t {
+        typedef GeckoAppShell Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getAudioOutputFramesPerBuffer";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetAudioOutputFramesPerBuffer() -> int32_t;
+
+    struct GetAudioOutputSampleRate_t {
+        typedef GeckoAppShell Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getAudioOutputSampleRate";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetAudioOutputSampleRate() -> int32_t;
+
     struct GetConnection_t {
         typedef GeckoAppShell Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;

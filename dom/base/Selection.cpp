@@ -926,14 +926,29 @@ Selection::FocusOffset()
 nsIContent*
 Selection::GetChildAtAnchorOffset()
 {
-  if (!mAnchorFocusRange)
+  if (!mAnchorFocusRange) {
     return nullptr;
+  }
 
   if (GetDirection() == eDirNext) {
     return mAnchorFocusRange->GetChildAtStartOffset();
   }
 
   return mAnchorFocusRange->GetChildAtEndOffset();
+}
+
+nsIContent*
+Selection::GetChildAtFocusOffset()
+{
+  if (!mAnchorFocusRange) {
+    return nullptr;
+  }
+
+  if (GetDirection() == eDirNext){
+    return mAnchorFocusRange->GetChildAtEndOffset();
+  }
+
+  return mAnchorFocusRange->GetChildAtStartOffset();
 }
 
 static nsresult

@@ -142,7 +142,8 @@ Shape::handoffTableTo(Shape* shape)
 
     BaseShape* nbase = base();
 
-    MOZ_ASSERT_IF(shape->hasSlot(), nbase->slotSpan() > shape->slot());
+    MOZ_ASSERT_IF(!shape->isEmptyShape() && shape->isDataProperty(),
+                  nbase->slotSpan() > shape->slot());
 
     this->base_ = nbase->baseUnowned();
     nbase->adoptUnowned(shape->base()->toUnowned());
@@ -300,7 +301,7 @@ NativeObject::getChildProperty(JSContext* cx,
      * Unshared properties allocate a slot here but may lose it due to a
      * JS_ClearScope call.
      */
-    if (!child.hasSlot()) {
+    if (!child.isDataProperty()) {
         child.setSlot(parent->maybeSlot());
     } else {
         if (child.hasMissingSlot()) {
@@ -340,7 +341,7 @@ NativeObject::getChildProperty(JSContext* cx,
         Shape* shape = child.isAccessorShape() ? Allocate<AccessorShape>(cx) : Allocate<Shape>(cx);
         if (!shape)
             return nullptr;
-        if (child.hasSlot() && child.slot() >= obj->lastProperty()->base()->slotSpan()) {
+        if (child.isDataProperty() && child.slot() >= obj->lastProperty()->base()->slotSpan()) {
             if (!obj->setSlotSpan(cx, child.slot() + 1)) {
                 new (shape) Shape(obj->lastProperty()->base()->unowned(), 0);
                 return nullptr;
@@ -680,7 +681,7 @@ AssertCanChangeAttrs(Shape* shape, unsigned attrs)
     MOZ_ASSERT(attrs & JSPROP_PERMANENT);
 
     /* Reject attempts to remove a slot from the permanent data property. */
-    MOZ_ASSERT_IF(shape->isDataDescriptor() && shape->hasSlot(),
+    MOZ_ASSERT_IF(shape->isDataProperty(),
                   !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 #endif
 }
@@ -743,7 +744,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      * copy the existing shape's slot into slot so we can match shape, if all
      * other members match.
      */
-    bool hadSlot = shape->hasSlot();
+    bool hadSlot = shape->isDataProperty();
     uint32_t oldSlot = shape->maybeSlot();
     bool needSlot = !getter && !setter;
     if (needSlot && slot == SHAPE_INVALID_SLOT && hadSlot)
@@ -778,7 +779,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         shape = entry->shape();
     }
 
-    MOZ_ASSERT_IF(shape->hasSlot() && needSlot, shape->slot() == slot);
+    MOZ_ASSERT_IF(shape->isDataProperty() && needSlot, shape->slot() == slot);
 
     if (obj->inDictionaryMode()) {
         /*
@@ -855,7 +856,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      * to will botch an assertion in JSObject::freeSlot) if the new last
      * property (shape here) has a slotSpan that does not cover it.
      */
-    if (hadSlot && !shape->hasSlot() && oldSlot < obj->slotSpan())
+    if (hadSlot && !shape->isDataProperty() && oldSlot < obj->slotSpan())
         obj->freeSlot(cx, oldSlot);
 
     obj->checkShapeConsistency();
@@ -872,7 +873,7 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
 #ifdef DEBUG
     bool needSlot = !getter && !setter;
-    MOZ_ASSERT_IF(shape->hasSlot() != needSlot, needSlot);
+    MOZ_ASSERT_IF(shape->isDataProperty() != needSlot, needSlot);
 #endif
 
     MarkTypePropertyNonData(cx, obj, shape->propid());
@@ -954,7 +955,7 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
     }
 
     /* If shape has a slot, free its slot number. */
-    if (shape->hasSlot())
+    if (shape->isDataProperty())
         obj->freeSlot(cx, shape->slot());
 
     /*
@@ -1779,7 +1780,7 @@ Shape::dump(js::GenericPrinter& out) const
     out.printf(" g/s %p/%p slot %d attrs %x ",
                JS_FUNC_TO_DATA_PTR(void*, getter()),
                JS_FUNC_TO_DATA_PTR(void*, setter()),
-               hasSlot() ? slot() : -1, attrs);
+               isDataProperty() ? slot() : -1, attrs);
 
     if (attrs) {
         int first = 1;

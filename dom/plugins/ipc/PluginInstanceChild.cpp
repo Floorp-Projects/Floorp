@@ -158,7 +158,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessThrottleOldWndProc(0)
     , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
-    , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(MOZ_WIDGET_COCOA)
 #if defined(__i386__)
     , mEventModel(NPEventModelCarbon)
@@ -4040,25 +4039,6 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
 }
 
 void
-PluginInstanceChild::AsyncCall(PluginThreadCallback aFunc, void* aUserData)
-{
-    RefPtr<ChildAsyncCall> task = new ChildAsyncCall(this, aFunc, aUserData);
-    PostChildAsyncCall(task.forget());
-}
-
-void
-PluginInstanceChild::PostChildAsyncCall(already_AddRefed<ChildAsyncCall> aTask)
-{
-    RefPtr<ChildAsyncCall> task = aTask;
-
-    {
-        MutexAutoLock lock(mAsyncCallMutex);
-        mPendingAsyncCalls.AppendElement(task);
-    }
-    ProcessChild::message_loop()->PostTask(task.forget());
-}
-
-void
 PluginInstanceChild::SwapSurfaces()
 {
     RefPtr<gfxASurface> tmpsurf = mCurrentSurface;
@@ -4277,13 +4257,6 @@ PluginInstanceChild::Destroy()
     }
     mPendingFlashThrottleMsgs.Clear();
 #endif
-
-    // Pending async calls are discarded, not delivered. This matches the
-    // in-process behavior.
-    for (uint32_t i = 0; i < mPendingAsyncCalls.Length(); ++i)
-        mPendingAsyncCalls[i]->Cancel();
-
-    mPendingAsyncCalls.Clear();
 }
 
 mozilla::ipc::IPCResult

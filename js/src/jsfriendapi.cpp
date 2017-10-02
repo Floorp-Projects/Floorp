@@ -1123,7 +1123,7 @@ JS::ForceLexicalInitialization(JSContext *cx, HandleObject obj)
     for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
         Shape* s = &r.front();
         Value v = nobj->getSlot(s->slot());
-        if (s->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+        if (s->isDataProperty() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
             nobj->setSlot(s->slot(), UndefinedValue());
             initializedAny = true;
         }

@@ -1110,34 +1110,6 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_begin(state: &mut WrState,
-                              width: u32,
-                              height: u32) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-    state.frame_builder.dl_builder.data.clear();
-
-    let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
-                                 LayoutSize::new(width as f32, height as f32));
-    let prim_info = LayoutPrimitiveInfo::new(bounds);
-
-    state.frame_builder
-         .dl_builder
-         .push_stacking_context(&prim_info,
-                                webrender_api::ScrollPolicy::Scrollable,
-                                None,
-                                TransformStyle::Flat,
-                                None,
-                                MixBlendMode::Normal,
-                                Vec::new());
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_end(state: &mut WrState) {
-    debug_assert!(unsafe { !is_in_render_thread() });
-    state.frame_builder.dl_builder.pop_stacking_context();
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: LayoutRect,
                                               animation_id: u64,

@@ -738,41 +738,6 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 // GetElem_Fallback
 //
 
-bool
-IsPrimitiveArrayTypedObject(JSObject* obj)
-{
-    if (!obj->is<TypedObject>())
-        return false;
-    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
-    return descr.is<ArrayTypeDescr>() &&
-           descr.as<ArrayTypeDescr>().elementType().is<ScalarTypeDescr>();
-}
-
-static Scalar::Type
-PrimitiveArrayTypedObjectType(JSObject* obj)
-{
-    MOZ_ASSERT(IsPrimitiveArrayTypedObject(obj));
-    TypeDescr& descr = obj->as<TypedObject>().typeDescr();
-    return descr.as<ArrayTypeDescr>().elementType().as<ScalarTypeDescr>().type();
-}
-
-Scalar::Type
-TypedThingElementType(JSObject* obj)
-{
-    return obj->is<TypedArrayObject>()
-           ? obj->as<TypedArrayObject>().type()
-           : PrimitiveArrayTypedObjectType(obj);
-}
-
-bool
-TypedThingRequiresFloatingPoint(JSObject* obj)
-{
-    Scalar::Type type = TypedThingElementType(obj);
-    return type == Scalar::Uint32 ||
-           type == Scalar::Float32 ||
-           type == Scalar::Float64;
-}
-
 static bool
 DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_, HandleValue lhs,
                   HandleValue rhs, MutableHandleValue res)
@@ -4383,7 +4348,7 @@ TryAttachInstanceOfStub(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallba
         return true;
 
     Shape* shape = fun->lookupPure(cx->names().prototype);
-    if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
+    if (!shape || !shape->isDataProperty())
         return true;
 
     uint32_t slot = shape->slot();

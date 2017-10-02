@@ -7,6 +7,10 @@
 #ifndef mozilla_RangeBoundary_h
 #define mozilla_RangeBoundary_h
 
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
+#include "mozilla/Maybe.h"
+
 namespace mozilla {
 
 // This class will maintain a reference to the child immediately
@@ -52,6 +56,8 @@ public:
     if (!mRef) {
       mOffset = mozilla::Some(0);
     } else {
+      NS_WARNING_ASSERTION(mRef->GetParentNode() == mParent,
+                           "Initializing RangeBoundary with invalid value");
       mOffset.reset();
     }
   }
@@ -67,13 +73,14 @@ public:
         mRef = aContainer->GetLastChild();
       } else if (aOffset != 0) {
         mRef = mParent->GetChildAt(aOffset - 1);
-        MOZ_ASSERT(mRef);
       }
 
-      MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      NS_WARNING_ASSERTION(mRef || aOffset == 0,
+                           "Constructing RangeBoundary with invalid value");
     }
 
-    MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
+                         "Constructing RangeBoundary with invalid value");
   }
 
   RangeBoundaryBase()
@@ -110,7 +117,7 @@ public:
       return nullptr;
     }
     if (!mRef) {
-      MOZ_ASSERT(Offset() == 0);
+      MOZ_ASSERT(Offset() == 0, "invalid RangeBoundary");
       return mParent->GetFirstChild();
     }
     MOZ_ASSERT(mParent->GetChildAt(Offset()) == mRef->GetNextSibling());
@@ -142,7 +149,8 @@ public:
     MOZ_ASSERT(mParent->IsContainerNode(), "Range is positioned on a text node!");
 
     if (!mRef) {
-      MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0);
+      MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0,
+                 "Invalidating offset of invalid RangeBoundary?");
       return;
     }
     mOffset.reset();
@@ -163,13 +171,16 @@ public:
         MOZ_ASSERT(mRef);
       }
 
-      MOZ_ASSERT_IF(!mRef, aOffset == 0);
+      NS_WARNING_ASSERTION(mRef || aOffset == 0,
+                           "Setting RangeBoundary to invalid value");
     } else {
       mRef = nullptr;
     }
 
     mOffset = mozilla::Some(aOffset);
-    MOZ_ASSERT_IF(mRef, mRef->GetParentNode() == mParent);
+
+    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
+                         "Setting RangeBoundary to invalid value");
   }
 
   void
@@ -203,6 +214,27 @@ public:
     return Offset() <= Container()->Length();
   }
 
+  bool
+  IsStartOfContainer() const
+  {
+    // We're at the first point in the container if we don't have a reference,
+    // and our offset is 0. If we don't have a Ref, we should already have an
+    // offset, so we can just directly fetch it.
+    return !Ref() && mOffset.value() == 0;
+  }
+
+  bool
+  IsEndOfContainer() const
+  {
+    // We're at the last point in the container if Ref is a pointer to the last
+    // child in Container(), or our Offset() is the same as the length of our
+    // container. If we don't have a Ref, then we should already have an offset,
+    // so we can just directly fetch it.
+    return Ref()
+      ? !Ref()->GetNextSibling()
+      : mOffset.value() == Container()->Length();
+  }
+
   // Convenience methods for switching between the two types
   // of RangeBoundary.
   RangeBoundaryBase<nsINode*, nsIContent*>
@@ -225,6 +257,12 @@ public:
   {
     return mParent == aOther.mParent &&
       (mRef ? mRef == aOther.mRef : mOffset == aOther.mOffset);
+  }
+
+  template<typename A, typename B>
+  bool operator!=(const RangeBoundaryBase<A, B>& aOther) const
+  {
+    return !(*this == aOther);
   }
 
 private:

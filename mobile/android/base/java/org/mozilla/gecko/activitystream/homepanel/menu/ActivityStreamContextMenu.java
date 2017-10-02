@@ -284,12 +284,7 @@ public abstract class ActivityStreamContextMenu
                 break;
 
             case R.id.add_homescreen:
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        GeckoApplication.createBrowserShortcut(item.getTitle(), item.getUrl());
-                    }
-                });
+                GeckoApplication.createShortcut(item.getTitle(), item.getUrl());
                 break;
 
             case R.id.open_new_tab:

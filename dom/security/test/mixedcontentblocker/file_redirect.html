@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug1402363: Test mixed content redirects</title>
+</head>
+<body>
+
+<script type="text/javascript">
+  const PATH = "https://example.com/tests/dom/security/test/mixedcontentblocker/";
+
+  // check a fetch redirect from https to https (should be allowed)
+  fetch(PATH + "file_redirect_handler.sjs?https-to-https-redirect", {
+    method: 'get'
+  }).then(function(response) {
+    window.parent.postMessage("https-to-https-loaded", "*");
+  }).catch(function(err) {
+    window.parent.postMessage("https-to-https-blocked", "*");
+  });
+
+  // check a fetch redirect from https to http (should be blocked)
+  fetch(PATH + "file_redirect_handler.sjs?https-to-http-redirect", {
+    method: 'get'
+  }).then(function(response) {
+    window.parent.postMessage("https-to-http-loaded", "*");
+  }).catch(function(err) {
+    window.parent.postMessage("https-to-http-blocked", "*");
+  });
+
+</script>
+</body>
+</html>

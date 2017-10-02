@@ -95,7 +95,7 @@ class RegExpObject : public NativeObject
 
     static bool isInitialShape(RegExpObject* rx) {
         Shape* shape = rx->lastProperty();
-        if (!shape->hasSlot())
+        if (shape->isEmptyShape() || !shape->isDataProperty())
             return false;
         if (shape->maybeSlot() != LAST_INDEX_SLOT)
             return false;

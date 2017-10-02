@@ -358,6 +358,56 @@ win32-noopt/debug:
         - win32-rust
         - win64-sccache
 
+win32-rusttests/opt:
+    description: "Win32 Opt Rust tests"
+    index:
+        product: firefox
+        job-name: win32-rusttests-opt
+    treeherder:
+        platform: windows2012-32-rusttests/opt
+        symbol: tc(BR)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win32_rusttests_opt.py
+    run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - win32-clang-cl
+        - win32-rust
+        - win64-sccache
+
+win64-rusttests/opt:
+    description: "Win64 Opt Rust tests"
+    index:
+        product: firefox
+        job-name: win64-rusttests-opt
+    treeherder:
+        platform: windows2012-64-rusttests/opt
+        symbol: tc(BR)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_rusttests_opt.py
+    run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-sccache
+
 win64-asan/debug:
     description: "Win64 Debug ASAN"
     index:

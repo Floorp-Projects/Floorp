@@ -247,7 +247,9 @@ UniquePtr<SandboxBroker::Policy>
 SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
 {
   // Policy entries that vary per-process (currently the only reason
-  // that can happen is because they contain the pid) are added here.
+  // that can happen is because they contain the pid) are added here,
+  // as well as entries that depend on preferences or paths not available
+  // in early startup.
 
   MOZ_ASSERT(NS_IsMainThread());
   // File broker usage is controlled through a pref.
@@ -287,6 +289,11 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   // Bug 1198552: memory reporting.
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
+
+  // Bug 1384804, notably comment 15
+  // Used by libnuma, included by x265/ffmpeg, who falls back
+  // to get_mempolicy if this fails
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/status", aPid).get());
 
   // userContent.css and the extensions dir sit in the profile, which is
   // normally blocked and we can't get the profile dir earlier in startup,

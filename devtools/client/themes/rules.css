@@ -246,6 +246,11 @@
   min-height: 0;
 }
 
+:root[platform="win"] .ruleview-header,
+:root[platform="linux"] .ruleview-header {
+  margin-top: 4px;
+}
+
 .ruleview-expandable-header {
   cursor: pointer;
 }
@@ -253,6 +258,7 @@
 .ruleview-expandable-header:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
+
 
 .ruleview-rule-pseudo-element {
   padding-left:20px;
@@ -378,10 +384,8 @@
 }
 
 .ruleview-expander {
-  position: relative;
-  float: left;
-  left: -38px;
-  top: 1px;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 .ruleview-rule .ruleview-expander.theme-twisty:dir(rtl) {
@@ -390,18 +394,8 @@
 }
 
 .ruleview-newproperty {
-  margin-inline-start: -10px;
-}
-
-.ruleview-enableproperty {
-  position: relative;
-  float: left;
-  left: -38px;
-  top: 1px;
-}
-
-.ruleview-namecontainer {
-  margin-left: -38px;
+  /* (enable checkbox width: 12px) + (expander width: 15px) */
+  margin-inline-start: 27px;
 }
 
 .ruleview-namecontainer,
@@ -414,6 +408,10 @@
 .ruleview-computedlist {
   list-style: none;
   padding: 0;
+}
+
+.ruleview-computed {
+  margin-inline-start: 35px;
 }
 
 .ruleview-overridden-items {
@@ -540,7 +538,6 @@
 }
 
 .ruleview-property {
-  padding-left: 38px;
   border-left: 3px solid transparent;
   clear: right;
 }

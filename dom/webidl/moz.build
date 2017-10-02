@@ -616,6 +616,7 @@ WEBIDL_FILES = [
     'HTMLQuoteElement.webidl',
     'HTMLScriptElement.webidl',
     'HTMLSelectElement.webidl',
+    'HTMLSlotElement.webidl',
     'HTMLSourceElement.webidl',
     'HTMLSpanElement.webidl',
     'HTMLStyleElement.webidl',

@@ -841,8 +841,7 @@ ContentEventHandler::GenerateFlatTextContent(const RawRange& aRawRange,
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv =
-    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
-               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+    iter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1014,8 +1013,7 @@ ContentEventHandler::GenerateFlatFontRanges(const RawRange& aRawRange,
   int32_t baseOffset = 0;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv =
-    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
-               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+    iter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1640,8 +1638,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(const RawRange& aRawRange)
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv =
-    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
-               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+    iter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return FrameAndNodeOffset();
   }
@@ -1691,8 +1688,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange)
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv =
-    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
-               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+    iter->Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return FrameAndNodeOffset();
   }
@@ -2306,8 +2302,7 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
 
   // used to iterate over all contents and their frames
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  rv = iter->Init(rawRange.GetStartContainer(), rawRange.StartOffset(),
-                  rawRange.GetEndContainer(), rawRange.EndOffset());
+  rv = iter->Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
@@ -2934,9 +2929,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
         return rv;
       }
       iter = NS_NewPreContentIterator();
-      rv =
-        iter->Init(prevRawRange.GetStartContainer(), prevRawRange.StartOffset(),
-                   prevRawRange.GetEndContainer(), prevRawRange.EndOffset());
+      rv = iter->Init(prevRawRange.Start().AsRaw(), prevRawRange.End().AsRaw());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2947,9 +2940,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
         return rv;
       }
       iter = NS_NewPreContentIterator();
-      rv =
-        iter->Init(prevRawRange.GetStartContainer(), prevRawRange.StartOffset(),
-                   prevRawRange.GetEndContainer(), prevRawRange.EndOffset());
+      rv = iter->Init(prevRawRange.Start().AsRaw(), prevRawRange.End().AsRaw());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
