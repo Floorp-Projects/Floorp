@@ -205,6 +205,13 @@ TabStore.prototype = {
     return allTabs;
   },
 
+  getMaxRecordPayloadSize() {
+    // Tabs have a different max size due to being stored using memcached on the
+    // server (See bug 1403052), but we still check the server config to make
+    // sure we respect the global limits it sets.
+    return Math.min(512 * 1024, this.engine.service.getMaxRecordPayloadSize());
+  },
+
   async createRecord(id, collection) {
     let record = new TabSetRecord(collection, id);
     record.clientName = this.engine.service.clientsEngine.localName;
@@ -213,12 +220,12 @@ TabStore.prototype = {
     let tabs = this.getAllTabs(true).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
     });
-
+    let encoder = new TextEncoder("utf-8");
     // Figure out how many tabs we can pack into a payload.
     // We use byteLength here because the data is not encrypted in ascii yet.
-    let size = new TextEncoder("utf-8").encode(JSON.stringify(tabs)).byteLength;
+    let size = encoder.encode(JSON.stringify(tabs)).byteLength;
     let origLength = tabs.length;
-    const maxPayloadSize = this.engine.service.getMaxRecordPayloadSize();
+    const maxPayloadSize = this.getMaxRecordPayloadSize();
     // See bug 535326 comment 8 for an explanation of the estimation
     const MAX_TAB_SIZE = maxPayloadSize / 4 * 3 - 1500;
     if (size > MAX_TAB_SIZE) {
@@ -227,7 +234,7 @@ TabStore.prototype = {
       tabs = tabs.slice(0, cutoff + 1);
 
       // Keep dropping off the last entry until the data fits
-      while (JSON.stringify(tabs).length > MAX_TAB_SIZE)
+      while (encoder.encode(JSON.stringify(tabs)).byteLength > MAX_TAB_SIZE)
         tabs.pop();
     }
 
