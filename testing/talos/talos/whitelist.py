@@ -19,7 +19,7 @@ class Whitelist:
     PRE_PROFILE = ''
 
     def __init__(self, test_name, paths, path_substitutions,
-                 name_substitutions, init_with=None):
+                 name_substitutions, event_sources=None, init_with=None):
         self.test_name = test_name
         self.listmap = init_with if init_with else {}
         self.dependent_libs = self.load_dependent_libs() \
@@ -27,6 +27,7 @@ class Whitelist:
         self.paths = paths
         self.path_substitutions = path_substitutions
         self.name_substitutions = name_substitutions
+        self.expected_event_sources = event_sources or []
 
     def load(self, filename):
         if not self.load_dependent_libs():
@@ -81,7 +82,7 @@ class Whitelist:
 
         return filename.strip('/\\\ \t')
 
-    def check(self, test, file_name_index):
+    def check(self, test, file_name_index, event_source_index=None):
         errors = {}
         for row_key in test.iterkeys():
             filename = self.sanitize_filename(row_key[file_name_index])
@@ -91,6 +92,9 @@ class Whitelist:
                         self.listmap[filename]['ignore']:
                     continue
             elif filename in self.dependent_libs:
+                continue
+            elif event_source_index is not None and \
+                    test[event_source_index] in self.expected_event_sources:
                 continue
             else:
                 if filename not in errors:

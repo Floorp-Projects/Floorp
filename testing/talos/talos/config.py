@@ -217,7 +217,6 @@ GLOBAL_OVERRIDES = (
     'gecko_profile',
     'gecko_profile_interval',
     'gecko_profile_entries',
-    'mainthread',
     'rss',
     'shutdown',
     'tpcycles',
