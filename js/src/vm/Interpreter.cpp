@@ -2005,6 +2005,7 @@ CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
 CASE(JSOP_ITERNEXT)
+CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 {
@@ -3752,7 +3753,6 @@ CASE(JSOP_NEWINIT)
 END_CASE(JSOP_NEWINIT)
 
 CASE(JSOP_NEWARRAY)
-CASE(JSOP_SPREADCALLARRAY)
 {
     uint32_t length = GET_UINT32(REGS.pc);
     JSObject* obj = NewArrayOperation(cx, script, REGS.pc, length);
@@ -4987,7 +4987,7 @@ js::NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
             return UnboxedPlainObject::create(cx, group, newKind);
     }
 
-    RootedObject obj(cx);
+    RootedPlainObject obj(cx);
 
     if (*pc == JSOP_NEWOBJECT) {
         RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
@@ -5061,14 +5061,10 @@ js::NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32
     if (!obj)
         return nullptr;
 
-    if (newKind == SingletonObject) {
+    if (newKind == SingletonObject)
         MOZ_ASSERT(obj->isSingleton());
-    } else {
+    else
         obj->setGroup(group);
-
-        if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
-            preliminaryObjects->registerNewObject(obj);
-    }
 
     return obj;
 }
