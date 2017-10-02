@@ -782,6 +782,9 @@ class FunctionsGL
     // GL_EXT_discard_framebuffer
     PFNGLDISCARDFRAMEBUFFEREXTPROC discardFramebuffer;
 
+    // GL_NV_internalformat_sample_query
+    PFNGLGETINTERNALFORMATSAMPLEIVNVPROC getInternalformatSampleivNV;
+
   private:
     void initializeProcsDesktopGL();
     void initializeProcsGLES();

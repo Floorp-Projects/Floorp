@@ -2,7 +2,7 @@
 #define __eglplatform_h_
 
 /*
-** Copyright (c) 2007-2013 The Khronos Group Inc.
+** Copyright (c) 2007-2016 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -83,7 +83,8 @@ typedef HWND    EGLNativeWindowType;
 typedef IInspectable* EGLNativeWindowType;
 #endif
 
-#elif defined(__WINSCW__) || defined(__SYMBIAN32__)  /* Symbian */
+#elif defined(__APPLE__) || defined(__WINSCW__) || defined(__SYMBIAN32__) || \
+      defined(__Fuchsia__) || defined(__HAIKU__)
 
 typedef int   EGLNativeDisplayType;
 typedef void *EGLNativeWindowType;
@@ -105,6 +106,12 @@ typedef intptr_t EGLNativeDisplayType;
 typedef intptr_t EGLNativeWindowType;
 typedef intptr_t EGLNativePixmapType;
 
+#elif defined(WL_EGL_PLATFORM)
+
+typedef struct wl_display    *EGLNativeDisplayType;
+typedef struct wl_egl_pixmap *EGLNativePixmapType;
+typedef struct wl_egl_window *EGLNativeWindowType;
+
 #elif defined(__unix__)
 
 /* X11 (tentative)  */
@@ -114,18 +121,6 @@ typedef intptr_t EGLNativePixmapType;
 typedef Display *EGLNativeDisplayType;
 typedef Pixmap   EGLNativePixmapType;
 typedef Window   EGLNativeWindowType;
-
-#elif defined(__GNUC__) && ( defined(__APPLE_CPP__) || defined(__APPLE_CC__) || defined(__MACOS_CLASSIC__) )
-
-#if defined(__OBJC__)
-@class CALayer;
-#else
-class CALayer;
-#endif
-
-typedef void *EGLNativeDisplayType;
-typedef void *EGLNativePixmapType;
-typedef CALayer *EGLNativeWindowType;
 
 #else
 #error "Platform not recognized"
@@ -145,5 +140,13 @@ typedef EGLNativeWindowType  NativeWindowType;
  * integer type.
  */
 typedef khronos_int32_t EGLint;
+
+
+/* C++ / C typecast macros for special EGL handle values */
+#if defined(__cplusplus)
+#define EGL_CAST(type, value) (static_cast<type>(value))
+#else
+#define EGL_CAST(type, value) ((type) (value))
+#endif
 
 #endif /* __eglplatform_h */

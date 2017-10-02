@@ -28,23 +28,19 @@ class OcclusionQueriesTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string passthroughVS = SHADER_SOURCE
-        (
-            attribute highp vec4 position;
+        const std::string passthroughVS =
+            R"(attribute highp vec4 position;
             void main(void)
             {
                 gl_Position = position;
-            }
-        );
+            })";
 
-        const std::string passthroughPS = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string passthroughPS =
+            R"(precision highp float;
             void main(void)
             {
                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            }
-        );
+            })";
 
         mProgram = CompileProgram(passthroughVS, passthroughPS);
         ASSERT_NE(0u, mProgram);
@@ -288,23 +284,19 @@ TEST_P(OcclusionQueriesTest, MultiContext)
 
         eglMakeCurrent(display, surface, surface, context.context);
 
-        const std::string passthroughVS = SHADER_SOURCE
-        (
-            attribute highp vec4 position;
+        const std::string passthroughVS =
+            R"(attribute highp vec4 position;
             void main(void)
             {
                 gl_Position = position;
-            }
-        );
+            })";
 
-        const std::string passthroughPS = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string passthroughPS =
+            R"(precision highp float;
             void main(void)
             {
                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            }
-        );
+            })";
 
         context.program = CompileProgram(passthroughVS, passthroughPS);
         ASSERT_NE(context.program, 0u);
