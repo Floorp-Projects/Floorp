@@ -135,6 +135,9 @@ element.Store = class {
    * Determine if the provided web element reference has been seen
    * before/is in the element store.
    *
+   * Unlike when getting the element, a staleness check is not
+   * performed.
+   *
    * @param {string} uuid
    *     Element's associated web element reference.
    *
@@ -148,8 +151,14 @@ element.Store = class {
   /**
    * Retrieve a DOM element by its unique web element reference/UUID.
    *
+   * Upon retrieving the element, an element staleness check is
+   * performed.
+   *
    * @param {string} uuid
    *     Web element reference, or UUID.
+   * @param {WindowProxy} window
+   *     Current browsing context, which may differ from the associate
+   *     browsing context of <var>el</var>.
    *
    * @returns {Element}
    *     Element associated with reference.
@@ -162,7 +171,7 @@ element.Store = class {
    *     attached to the DOM, or its node document is no longer the
    *     active document.
    */
-  get(uuid) {
+  get(uuid, window) {
     if (!this.has(uuid)) {
       throw new NoSuchElementError(
           "Web element reference not seen before: " + uuid);
@@ -176,10 +185,11 @@ element.Store = class {
       delete this.els[uuid];
     }
 
-    if (element.isStale(el)) {
+    if (element.isStale(el, window)) {
       throw new StaleElementReferenceError(
           pprint`The element reference of ${el || uuid} stale; ` +
-              "either the element is no longer attached to the DOM " +
+              "either the element is no longer attached to the DOM, " +
+              "it is not in the current frame context, " +
               "or the document has been refreshed");
     }
 
@@ -622,22 +632,36 @@ element.generateUUID = function() {
  * Determines if <var>el</var> is stale.
  *
  * A stale element is an element no longer attached to the DOM or which
- * node document is not the active document.
+ * node document is not the active document of the current browsing
+ * context.
  *
- * @param {Element} el
- *     DOM element to check for staleness.
+ * The currently selected browsing context, specified through
+ * <var>window<var>, is a WebDriver concept defining the target
+ * against which commands will run.  As the current browsing context
+ * may differ from <var>el</var>'s associated context, an element is
+ * considered stale even if it is connected to a living (not discarded)
+ * browsing context such as an <tt>&lt;iframe&gt;</tt>.
+ *
+ * @param {Element=} el
+ *     DOM element to check for staleness.  If null, which may be
+ *     the case if the element has been unwrapped from a weak
+ *     reference, it is always considered stale.
+ * @param {WindowProxy=} window
+ *     Current browsing context, which may differ from the associate
+ *     browsing context of <var>el</var>.  When retrieving XUL
+ *     elements, this is optional.
  *
  * @return {boolean}
  *     True if <var>el</var> is stale, false otherwise.
  */
-element.isStale = function(el) {
-  if (!el) {
-    return true;
+element.isStale = function(el, window = undefined) {
+  if (typeof window == "undefined") {
+    window = el.ownerGlobal;
   }
 
-  let doc = el.ownerDocument;
-  let win = doc.defaultView;
-  if (!win || el.ownerDocument !== win.document) {
+  if (el === null ||
+      !el.ownerGlobal ||
+      el.ownerDocument !== window.document) {
     return true;
   }
 
