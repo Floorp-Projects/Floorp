@@ -37,7 +37,7 @@
  * - a generic nsIInputStream: StreamBlobImpl
  * - an empty blob: EmptyBlobImpl
  * - more blobs combined together: MultipartBlobImpl
- * Each one of these implementations has a custom ::GetInternalStream method.
+ * Each one of these implementations has a custom ::CreateInputStream method.
  * So, basically, each one has a different kind of nsIInputStream (nsFileStream,
  * nsIStringInputStream, SlicedInputStream, and so on).
  *

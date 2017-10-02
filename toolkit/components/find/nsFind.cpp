@@ -107,6 +107,12 @@ public:
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  virtual nsresult Init(const RawRangeBoundary& aStart,
+                        const RawRangeBoundary& aEnd) override
+  {
+    NS_NOTREACHED("internal error");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   // Not a range because one of the endpoints may be anonymous.
   nsresult Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
                 nsIDOMNode* aEndNode, int32_t aEndOffset);

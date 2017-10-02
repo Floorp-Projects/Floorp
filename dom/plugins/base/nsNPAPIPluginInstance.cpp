@@ -166,15 +166,8 @@ nsresult nsNPAPIPluginInstance::Stop()
     return NS_OK;
   }
 
-  // Make sure we lock while we're writing to mRunning after we've
-  // started as other threads might be checking that inside a lock.
-  {
-    AsyncCallbackAutoLock lock;
-    mRunning = DESTROYING;
-    mStopTime = TimeStamp::Now();
-  }
-
-  OnPluginDestroy(&mNPP);
+  mRunning = DESTROYING;
+  mStopTime = TimeStamp::Now();
 
   // clean up open streams
   while (mStreamListeners.Length() > 0) {

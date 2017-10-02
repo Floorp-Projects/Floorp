@@ -845,7 +845,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 
   ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
-  blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
+  blobImpl->CreateInputStream(getter_AddRefs(stream), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
@@ -961,7 +961,7 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
     return rv.StealNSResult();
   }
 
-  blobImpl->GetInternalStream(aStream, rv);
+  blobImpl->CreateInputStream(aStream, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }

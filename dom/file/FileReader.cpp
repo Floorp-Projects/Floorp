@@ -378,7 +378,7 @@ FileReader::ReadFileContent(Blob& aBlob,
   CopyUTF16toUTF8(aCharset, mCharset);
 
   nsCOMPtr<nsIInputStream> stream;
-  mBlob->GetInternalStream(getter_AddRefs(stream), aRv);
+  mBlob->CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

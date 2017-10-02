@@ -39,7 +39,7 @@ function* testTopLeft(inspector, view) {
   let gutters = assertGutters(view);
 
   info("Make sure that clicking on the twisty hides pseudo elements");
-  let expander = gutters[0].querySelector(".theme-twisty");
+  let expander = gutters[0].querySelector(".ruleview-expander");
   ok(!view.element.children[1].hidden, "Pseudo Elements are expanded");
 
   expander.click();
@@ -129,7 +129,7 @@ function* testTopRight(inspector, view) {
 
   let gutters = assertGutters(view);
 
-  let expander = gutters[0].querySelector(".theme-twisty");
+  let expander = gutters[0].querySelector(".ruleview-expander");
   ok(!view.element.firstChild.classList.contains("show-expandable-container"),
      "Pseudo Elements remain collapsed after switching element");
 

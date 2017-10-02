@@ -527,6 +527,23 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     nsIDocument* newDoc = aNode->OwnerDoc();
     if (newDoc) {
+      if (CustomElementRegistry::IsCustomElementEnabled()) {
+        // Adopted callback must be enqueued whenever a node’s
+        // shadow-including inclusive descendants that is custom.
+        Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
+        if (element) {
+          RefPtr<CustomElementData> data = element->GetCustomElementData();
+          if (data && data->mState == CustomElementData::State::eCustom) {
+            LifecycleAdoptedCallbackArgs args = {
+              oldDoc,
+              newDoc
+            };
+            nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eAdopted,
+                                                     element, nullptr, &args);
+          }
+        }
+      }
+
       // XXX what if oldDoc is null, we don't know if this should be
       // registered or not! Can that really happen?
       if (wasRegistered) {
