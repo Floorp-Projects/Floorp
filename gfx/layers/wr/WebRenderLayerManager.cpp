@@ -1285,5 +1285,14 @@ WebRenderLayerManager::CreateDisplayItemLayer()
   return MakeAndAddRef<WebRenderDisplayItemLayer>(this);
 }
 
+bool
+WebRenderLayerManager::SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
+                                                                const ScrollUpdateInfo& aUpdateInfo)
+{
+  // If we ever support changing the scroll position in an "empty transactions"
+  // properly in WR we can fill this in. Covered by bug 1382259.
+  return false;
+}
+
 } // namespace layers
 } // namespace mozilla
