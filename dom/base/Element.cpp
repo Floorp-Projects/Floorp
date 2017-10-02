@@ -4425,7 +4425,6 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     // Similarly, if our parent already has the bit we're propagating, we can
     // assume everything is already set up.
     if (parent->HasAllFlags(aBits)) {
-      MOZ_ASSERT(aElement->GetComposedDoc()->GetServoRestyleRoot());
       return;
     }
 
