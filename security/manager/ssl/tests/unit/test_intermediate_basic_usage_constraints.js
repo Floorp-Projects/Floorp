@@ -25,8 +25,8 @@ function test_cert_for_usages(certChainNicks, expected_usages) {
 
 add_task(async function() {
   let ee_usages = [ certificateUsageSSLClient, certificateUsageSSLServer,
-                    certificateUsageEmailSigner, certificateUsageEmailRecipient,
-                    certificateUsageObjectSigner ];
+                    certificateUsageEmailSigner,
+                    certificateUsageEmailRecipient ];
   let ca_usages = [ certificateUsageSSLCA ];
   let eku_usages = [ certificateUsageSSLClient, certificateUsageSSLServer ];
 
