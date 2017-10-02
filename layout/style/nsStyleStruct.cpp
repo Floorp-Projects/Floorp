@@ -1085,7 +1085,7 @@ StyleShapeSource::operator==(const StyleShapeSource& aOther) const
   return true;
 }
 
-bool
+void
 StyleShapeSource::SetURL(css::URLValue* aValue)
 {
   MOZ_ASSERT(aValue);
@@ -1094,7 +1094,6 @@ StyleShapeSource::SetURL(css::URLValue* aValue)
   }
   mShapeImage->SetURLValue(do_AddRef(aValue));
   mType = StyleShapeSourceType::URL;
-  return true;
 }
 
 void
