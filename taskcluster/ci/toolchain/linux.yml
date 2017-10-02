@@ -185,6 +185,23 @@ linux64-libdmg:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
 
+linux64-proguard-jar-repack:
+    description: "proguard.jar repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(proguard-jar)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: repack-proguard-jar.sh
+        toolchain-artifact: public/build/proguard-jar.tar.xz
+        toolchain-alias: proguard-jar
+
 linux64-rust-1.19:
     description: "rust repack"
     treeherder:
