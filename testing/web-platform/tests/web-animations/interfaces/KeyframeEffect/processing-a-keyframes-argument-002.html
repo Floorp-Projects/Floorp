@@ -53,4 +53,50 @@ test(function() {
 }, 'Invalid easing values are correctly rejected when using a keyframe'
    + ' sequence');
 
+test(function(t) {
+  let propAccessCount = 0;
+  const keyframe = {};
+  const addProp = prop => {
+    Object.defineProperty(keyframe, prop, {
+      get: () => { propAccessCount++; },
+      enumerable: true
+    });
+  }
+  addProp('height');
+  addProp('width');
+  keyframe.easing = 'easy-peasy';
+
+  assert_throws({ name: 'TypeError' }, () => {
+    new KeyframeEffect(target, keyframe);
+  });
+  assert_equals(propAccessCount, 2,
+    'All properties were read before throwing the easing error');
+}, 'Errors from invalid easings on a property-indexed keyframe are thrown after reading all properties');
+
+test(function(t) {
+  let propAccessCount = 0;
+
+  const addProp = (keyframe, prop) => {
+    Object.defineProperty(keyframe, prop, {
+      get: () => { propAccessCount++; },
+      enumerable: true
+    });
+  }
+
+  const kf1 = {};
+  addProp(kf1, 'height');
+  addProp(kf1, 'width');
+  kf1.easing = 'easy-peasy';
+
+  const kf2 = {};
+  addProp(kf2, 'height');
+  addProp(kf2, 'width');
+
+  assert_throws({ name: 'TypeError' }, () => {
+    new KeyframeEffect(target, [ kf1, kf2 ]);
+  });
+  assert_equals(propAccessCount, 4,
+    'All properties were read before throwing the easing error');
+}, 'Errors from invalid easings on a keyframe sequence are thrown after reading all properties');
+
 </script>
