@@ -2594,6 +2594,11 @@ gfxPlatform::InitOMTPConfig()
 
   featureOMTP.UserEnable("Enabled by pref");
 
+  if (mContentBackend == BackendType::CAIRO) {
+    featureOMTP.ForceDisable(FeatureStatus::Broken, "OMTP is not supported when using cairo",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_PREF"));
+  }
+
   if (InSafeMode()) {
     featureOMTP.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));

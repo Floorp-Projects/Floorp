@@ -905,8 +905,8 @@ class PreliminaryObjectArray
         mozilla::PodZero(this);
     }
 
-    void registerNewObject(JSObject* res);
-    void unregisterObject(JSObject* obj);
+    void registerNewObject(PlainObject* res);
+    void unregisterObject(PlainObject* obj);
 
     JSObject* get(size_t i) const {
         MOZ_ASSERT(i < COUNT);
