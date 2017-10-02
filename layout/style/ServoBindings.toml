@@ -177,7 +177,6 @@ whitelist-types = [
     "DOMIntersectionObserverEntry",
     "Element",
     "FontFamilyList",
-    "FontFamilyListRefCnt",
     "FontFamilyName",
     "FontFamilyType",
     "FontSizePrefs",
