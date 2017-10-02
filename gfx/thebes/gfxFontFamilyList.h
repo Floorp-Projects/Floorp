@@ -167,11 +167,72 @@ operator==(const FontFamilyName& a, const FontFamilyName& b) {
 }
 
 /**
+ * A refcounted array of FontFamilyNames.
+ */
+class SharedFontList
+{
+public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedFontList);
+
+    SharedFontList()
+    {
+    }
+
+    explicit SharedFontList(FontFamilyType aGenericType)
+        : mNames { FontFamilyName(aGenericType) }
+    {
+    }
+
+    SharedFontList(const nsAString& aFamilyName, QuotedName aQuoted)
+        : mNames { FontFamilyName(aFamilyName, aQuoted) }
+    {
+    }
+
+    explicit SharedFontList(const FontFamilyName& aName)
+        : mNames { aName }
+    {
+    }
+
+    explicit SharedFontList(nsTArray<FontFamilyName>&& aNames)
+        : mNames(Move(aNames))
+    {
+    }
+
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t n = 0;
+      n += aMallocSizeOf(this);
+      n += mNames.ShallowSizeOfExcludingThis(aMallocSizeOf);
+      for (const FontFamilyName& name : mNames) {
+          n += name.SizeOfExcludingThis(aMallocSizeOf);
+      }
+      return n;
+    }
+
+    size_t SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+    {
+        size_t n = 0;
+        if (mRefCnt.get() == 1) {
+          n += SizeOfIncludingThis(aMallocSizeOf);
+        }
+        return n;
+    }
+
+    const nsTArray<FontFamilyName> mNames;
+
+    static void Initialize();
+    static void Shutdown();
+    static StaticRefPtr<SharedFontList> sEmpty;
+
+private:
+    ~SharedFontList() = default;
+};
+
+/**
  * font family list, array of font families and a default font type.
  * font family names are either named strings or generics. the default
  * font type is used to preserve the variable font fallback behavior
- */ 
-
+ */
 class FontFamilyList {
 public:
     FontFamilyList()
