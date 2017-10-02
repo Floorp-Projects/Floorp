@@ -52,7 +52,6 @@ typedef struct _MacSandboxInfo {
   std::string appPath;
   std::string appBinaryPath;
   std::string appDir;
-  std::string appTempDir;
   std::string profileDir;
   std::string debugWriteDir;
 
