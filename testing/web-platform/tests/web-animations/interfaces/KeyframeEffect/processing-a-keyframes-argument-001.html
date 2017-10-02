@@ -44,12 +44,12 @@ function TestKeyframe(testProp) {
   let _propAccessCount = 0;
 
   Object.defineProperty(this, testProp, {
-    get: function() { _propAccessCount++; },
+    get: () => { _propAccessCount++; },
     enumerable: true,
   });
 
   Object.defineProperty(this, 'propAccessCount', {
-    get: function() { return _propAccessCount; }
+    get: () => _propAccessCount
   });
 }
 
@@ -58,7 +58,7 @@ function GetTestKeyframeSequence(testProp) {
 }
 
 for (const prop of gNonAnimatableProps) {
-  test(function(t) {
+  test(() => {
     const testKeyframe = new TestKeyframe(prop);
 
     new KeyframeEffect(null, testKeyframe);
@@ -69,7 +69,7 @@ for (const prop of gNonAnimatableProps) {
 }
 
 for (const prop of gNonAnimatableProps) {
-  test(function(t) {
+  test(() => {
     const testKeyframes = GetTestKeyframeSequence(prop);
 
     new KeyframeEffect(null, testKeyframes);
@@ -152,7 +152,7 @@ const gEquivalentSyntaxTests = [
 
 for (const {description, indexedKeyframes, sequencedKeyframes} of
      gEquivalentSyntaxTests) {
-  test(function(t) {
+  test(() => {
     assertEquivalentKeyframeSyntax(indexedKeyframes, sequencedKeyframes);
   }, `Equivalent property-indexed and sequenced keyframes: ${description}`);
 }
@@ -236,7 +236,7 @@ test(() => {
    + ' specified');
 
 test(() => {
-  assert_throws({ name: 'TypeError' }, function() {
+  assert_throws({ name: 'TypeError' }, () => {
     new KeyframeEffect(null, createIterable([
       { done: false, value: { left: '100px' } },
       { done: false, value: 1234 },
@@ -257,7 +257,7 @@ test(() => {
   ]);
 }, 'A list of values returned from a custom iterator should be ignored');
 
-test(function(t) {
+test(() => {
   const keyframe = {};
   Object.defineProperty(keyframe, 'width', { value: '200px' });
   Object.defineProperty(keyframe, 'height', {
@@ -275,7 +275,7 @@ test(function(t) {
   ]);
 }, 'Only enumerable properties on keyframes are read');
 
-test(function(t) {
+test(() => {
   const KeyframeParent = function() { this.width = '100px'; };
   KeyframeParent.prototype = { height: '100px' };
   const Keyframe = function() { this.top = '100px'; };
@@ -294,7 +294,7 @@ test(function(t) {
   ]);
 }, 'Only properties defined directly on keyframes are read');
 
-test(function(t) {
+test(() => {
   const keyframes = {};
   Object.defineProperty(keyframes, 'width', ['100px', '200px']);
   Object.defineProperty(keyframes, 'height', {
@@ -310,7 +310,7 @@ test(function(t) {
   ]);
 }, 'Only enumerable properties on property-indexed keyframes are read');
 
-test(function(t) {
+test(() => {
   const KeyframesParent = function() { this.width = '100px'; };
   KeyframesParent.prototype = { height: '100px' };
   const Keyframes = function() { this.top = ['100px', '200px']; };
@@ -329,7 +329,7 @@ test(function(t) {
   ]);
 }, 'Only properties defined directly on property-indexed keyframes are read');
 
-test(function(t) {
+test(() => {
   const expectedOrder = ['composite', 'easing', 'offset', 'left', 'marginLeft'];
   const actualOrder = [];
   const kf1 = {};
@@ -340,7 +340,7 @@ test(function(t) {
                                { prop: 'composite',  value: 'replace' }]) {
     Object.defineProperty(kf1, prop, {
       enumerable: true,
-      get: function() { actualOrder.push(prop); return value; }
+      get: () => { actualOrder.push(prop); return value; }
     });
   }
   const kf2 = { marginLeft: '10px', left: '20px', offset: 1 };
