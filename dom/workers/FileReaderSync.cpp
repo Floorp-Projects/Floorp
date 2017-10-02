@@ -72,7 +72,7 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  aBlob.GetInternalStream(getter_AddRefs(stream), aRv);
+  aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -107,7 +107,7 @@ FileReaderSync::ReadAsBinaryString(Blob& aBlob,
                                    ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> stream;
-  aBlob.GetInternalStream(getter_AddRefs(stream), aRv);
+  aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -136,7 +136,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
                            ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> stream;
-  aBlob.GetInternalStream(getter_AddRefs(stream), aRv);
+  aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -258,7 +258,7 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
   scratchResult.AppendLiteral(";base64,");
 
   nsCOMPtr<nsIInputStream> stream;
-  aBlob.GetInternalStream(getter_AddRefs(stream), aRv);
+  aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())){
     return;
   }

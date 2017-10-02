@@ -60,7 +60,7 @@ MemoryBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
 }
 
 void
-MemoryBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+MemoryBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   if (mLength > INT32_MAX) {
     aRv.Throw(NS_ERROR_FAILURE);

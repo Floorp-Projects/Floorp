@@ -88,7 +88,7 @@ public:
               ErrorResult& aRv);
 
   void
-  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv);
+  CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv);
 
   int64_t
   GetFileId();
