@@ -51,6 +51,7 @@ NAME_SUBSTITUTIONS = OrderedDict([
                     (re.compile(r'{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}'), '{uuid}'),
                     (re.compile(r'{uuid}\.\d+\.ver\w+\.db'), '{uuid-db}')])
 
+TUPLE_EVENT_SOURCE_INDEX = 1
 TUPLE_FILENAME_INDEX = 2
 WHITELIST_FILENAME = os.path.join(SCRIPT_DIR, 'mtio-whitelist.json')
 
@@ -143,7 +144,8 @@ def main(argv):
     wl = whitelist.Whitelist(test_name='mainthreadio',
                              paths={"{xre}": argv[3]},
                              path_substitutions=PATH_SUBSTITUTIONS,
-                             name_substitutions=NAME_SUBSTITUTIONS)
+                             name_substitutions=NAME_SUBSTITUTIONS,
+                             event_sources=["PoisonIOInterposer"])
     if not wl.load(WHITELIST_FILENAME):
         print("Failed to load whitelist")
         return 1
@@ -155,7 +157,7 @@ def main(argv):
 
     # Disabled until we enable TBPL oranges
     # search for unknown filenames
-    errors = wl.check(data, TUPLE_FILENAME_INDEX)
+    errors = wl.check(data, TUPLE_FILENAME_INDEX, TUPLE_EVENT_SOURCE_INDEX)
     if errors:
         strs = wl.get_error_strings(errors)
         wl.print_errors(strs)
