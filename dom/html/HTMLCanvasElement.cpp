@@ -1056,7 +1056,7 @@ HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect)
   // Instead, we mark the CanvasRenderer dirty and scheduling an empty transaction
   // which is effectively equivalent.
   CanvasRenderer* renderer = nullptr;
-  if (gfxPrefs::WebRenderLayersFree() && frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+  if (frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
     nsIFrame::WebRenderUserDataTable* userDataTable =
       frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
     RefPtr<WebRenderUserData> data;
