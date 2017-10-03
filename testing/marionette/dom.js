@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 this.EXPORTED_SYMBOLS = [
   "ContentEventObserverService",
   "WebElementEventTarget",
@@ -113,7 +111,7 @@ class WebElementEventTarget {
     });
   }
 
-  receiveMessage({target, name, data, objects}) {
+  receiveMessage({name, data, objects}) {
     if (name != "Marionette:DOM:OnEvent") {
       return;
     }
