@@ -269,6 +269,7 @@ struct ResumeFromException
     static const uint32_t RESUME_FINALLY = 2;
     static const uint32_t RESUME_FORCED_RETURN = 3;
     static const uint32_t RESUME_BAILOUT = 4;
+    static const uint32_t RESUME_WASM = 5;
 
     uint8_t* framePointer;
     uint8_t* stackPointer;
@@ -441,6 +442,14 @@ class RectifierFrameLayout : public JitFrameLayout
   public:
     static inline size_t Size() {
         return sizeof(RectifierFrameLayout);
+    }
+};
+
+class WasmFrameLayout : public JitFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(WasmFrameLayout);
     }
 };
 

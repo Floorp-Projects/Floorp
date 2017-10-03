@@ -608,3 +608,46 @@ var e = {call:() => 1000};
 for (var i = 0; i < 10; i++)
     e = new Instance(m, {a:{val:i, next:e.call}}).exports;
 assertEq(e.call(), 1090);
+
+(function testImportJitExit() {
+    let options = getJitCompilerOptions();
+    if (!options['baseline.enable'])
+        return;
+
+    let baselineTrigger = options['baseline.warmup.trigger'];
+
+    let valueToConvert = 0;
+    function ffi(n) { if (n == 1337) { return valueToConvert }; return 42; }
+
+    // Baseline compile ffi.
+    for (let i = baselineTrigger + 1; i --> 0;)
+        ffi(i);
+
+    let imports = { a: { ffi }};
+
+    i = wasmEvalText(`(module
+        (import $ffi "a" "ffi" (param i32) (result i32))
+        (func $foo (export "foo") (param i32) (result i32)
+         get_local 0
+         call $ffi)
+    )`, imports).exports;
+
+    // Enable the jit exit.
+    assertEq(i.foo(0), 42);
+
+    // Test the jit exit.
+    assertEq(i.foo(0), 42);
+    assertEq(i.foo(1337), 0);
+
+    // Test OOL coercion.
+    valueToConvert = 2**31;
+    assertEq(i.foo(1337), -(2**31));
+
+    // Test OOL error path.
+    valueToConvert = { valueOf() { throw new Error('make ffi great again'); } }
+    assertErrorMessage(() => i.foo(1337), Error, "make ffi great again");
+
+    valueToConvert = { toString() { throw new Error('a FFI to believe in'); } }
+    assertErrorMessage(() => i.foo(1337), Error, "a FFI to believe in");
+})();
+

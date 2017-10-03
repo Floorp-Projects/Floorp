@@ -160,8 +160,7 @@ SVGStyleElement::CharacterDataChanged(nsIDocument* aDocument,
 void
 SVGStyleElement::ContentAppended(nsIDocument* aDocument,
                                  nsIContent* aContainer,
-                                 nsIContent* aFirstNewContent,
-                                 int32_t aNewIndexInContainer)
+                                 nsIContent* aFirstNewContent)
 {
   ContentChanged(aContainer);
 }
@@ -169,8 +168,7 @@ SVGStyleElement::ContentAppended(nsIDocument* aDocument,
 void
 SVGStyleElement::ContentInserted(nsIDocument* aDocument,
                                  nsIContent* aContainer,
-                                 nsIContent* aChild,
-                                 int32_t aIndexInContainer)
+                                 nsIContent* aChild)
 {
   ContentChanged(aChild);
 }
@@ -179,7 +177,6 @@ void
 SVGStyleElement::ContentRemoved(nsIDocument* aDocument,
                                 nsIContent* aContainer,
                                 nsIContent* aChild,
-                                int32_t aIndexInContainer,
                                 nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);

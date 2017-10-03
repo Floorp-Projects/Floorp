@@ -10,12 +10,12 @@
 #include "jspubtd.h"
 #include "vm/UnicodeNonBMP.h"
 
+namespace js {
+namespace unicode {
+
 extern const bool js_isidstart[];
 extern const bool js_isident[];
 extern const bool js_isspace[];
-
-namespace js {
-namespace unicode {
 
 /*
  * This namespace contains all the knowledge required to handle Unicode

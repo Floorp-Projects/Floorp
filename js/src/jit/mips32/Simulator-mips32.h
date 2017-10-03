@@ -40,9 +40,9 @@
 
 namespace js {
 
-class WasmActivation;
-
 namespace jit {
+
+class JitActivation;
 
 class Simulator;
 class Redirection;
@@ -296,7 +296,7 @@ class Simulator {
 
     // Handle a wasm interrupt triggered by an async signal handler.
     void handleWasmInterrupt();
-    void startInterrupt(WasmActivation* act);
+    void startInterrupt(JitActivation* act);
 
     // Handle any wasm faults, returning true if the fault was handled.
     bool handleWasmFault(int32_t addr, unsigned numBytes);
@@ -356,7 +356,6 @@ class Simulator {
 
     // wasm async interrupt / fault support
     bool wasm_interrupt_;
-    wasm::SharedCode wasm_code_;
 
     // Debugger input.
     char* lastDebuggerInput_;

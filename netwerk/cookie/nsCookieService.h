@@ -232,7 +232,7 @@ class nsCookieService final : public nsICookieService
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie);
-  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartyUtil, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies);
+  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartyUtil, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
   static int64_t ParseServerTime(const nsCString &aServerTime);
   void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 

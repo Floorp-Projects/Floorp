@@ -141,8 +141,8 @@ BEGIN_TEST(testXDR_sourceMap)
         CHECK(script);
 
         size_t len = strlen(*sm);
-        JS::UniqueTwoByteChars expected_wrapper(js::InflateString(cx, *sm, &len));
-        char16_t *expected = expected_wrapper.get();
+        JS::UniqueTwoByteChars expected_wrapper(js::InflateString(cx, *sm, len));
+        char16_t* expected = expected_wrapper.get();
         CHECK(expected);
 
         // The script source takes responsibility of free'ing |expected|.

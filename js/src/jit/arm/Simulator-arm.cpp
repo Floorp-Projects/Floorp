@@ -1547,14 +1547,14 @@ Simulator::exclusiveMonitorClear()
 }
 
 void
-Simulator::startInterrupt(WasmActivation* activation)
+Simulator::startWasmInterrupt(JitActivation* activation)
 {
     JS::ProfilingFrameIterator::RegisterState state;
     state.pc = (void*) get_pc();
     state.fp = (void*) get_register(fp);
     state.sp = (void*) get_register(sp);
     state.lr = (void*) get_register(lr);
-    activation->startInterrupt(state);
+    activation->startWasmInterrupt(state);
 }
 
 // The signal handler only redirects the PC to the interrupt stub when the PC is
@@ -1576,7 +1576,7 @@ Simulator::handleWasmInterrupt()
     if (!fp)
         return;
 
-    startInterrupt(wasm::ActivationIfInnermost(cx_));
+    startWasmInterrupt(cx_->activation()->asJit());
     set_pc(int32_t(cs->interruptCode()));
 }
 
@@ -1589,28 +1589,25 @@ Simulator::handleWasmInterrupt()
 bool
 Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 {
-    WasmActivation* act = wasm::ActivationIfInnermost(cx_);
-    if (!act)
+    if (!cx_->activation() || !cx_->activation()->isJit())
         return false;
+    JitActivation* act = cx_->activation()->asJit();
 
     void* pc = reinterpret_cast<void*>(get_pc());
     uint8_t* fp = reinterpret_cast<uint8_t*>(get_register(r11));
 
-    // Cache the wasm::Code to avoid lookup on every load/store.
-    if (!wasm_code_ || !wasm_code_->containsCodePC(pc))
-        wasm_code_ = act->compartment()->wasm.lookupCode(pc);
-    if (!wasm_code_)
+    const wasm::CodeSegment* segment = act->compartment()->wasm.lookupCodeSegment(pc);
+    if (!segment)
         return false;
 
-    wasm::Instance* instance = wasm::LookupFaultingInstance(*wasm_code_, pc, fp);
+    wasm::Instance* instance = wasm::LookupFaultingInstance(*segment, pc, fp);
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
-    const wasm::CodeSegment* segment;
-    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc, &segment);
+    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
-        startInterrupt(act);
-        if (!instance->code().containsCodePC(pc, &segment))
+        startWasmInterrupt(act);
+        if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc(int32_t(segment->outOfBoundsCode()));
         return true;

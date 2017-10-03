@@ -170,8 +170,7 @@ nsFormFillController::AttributeChanged(nsIDocument* aDocument,
 void
 nsFormFillController::ContentAppended(nsIDocument* aDocument,
                                       nsIContent* aContainer,
-                                      nsIContent* aChild,
-                                      int32_t aIndexInContainer)
+                                      nsIContent* aChild)
 {
   if (mListNode && mListNode->Contains(aContainer)) {
     RevalidateDataList();
@@ -181,8 +180,7 @@ nsFormFillController::ContentAppended(nsIDocument* aDocument,
 void
 nsFormFillController::ContentInserted(nsIDocument* aDocument,
                                       nsIContent* aContainer,
-                                      nsIContent* aChild,
-                                      int32_t aIndexInContainer)
+                                      nsIContent* aChild)
 {
   if (mListNode && mListNode->Contains(aContainer)) {
     RevalidateDataList();
@@ -193,7 +191,6 @@ void
 nsFormFillController::ContentRemoved(nsIDocument* aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,
-                                     int32_t aIndexInContainer,
                                      nsIContent* aPreviousSibling)
 {
   if (mListNode && mListNode->Contains(aContainer)) {

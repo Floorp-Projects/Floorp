@@ -2861,7 +2861,7 @@ void
 MacroAssembler::linkExitFrame(Register cxreg, Register scratch)
 {
     loadPtr(Address(cxreg, JSContext::offsetOfActivation()), scratch);
-    storeStackPtr(Address(scratch, JitActivation::offsetOfExitFP()));
+    storeStackPtr(Address(scratch, JitActivation::offsetOfPackedExitFP()));
 }
 
 void
@@ -3112,19 +3112,6 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
     breakpoint();
 
     trapSites().clear();
-}
-
-void
-MacroAssembler::wasmAssertNonExitInvariants(Register activation)
-{
-#ifdef DEBUG
-    // WasmActivation.exitFP should be null when outside any exit frame.
-    Label ok;
-    Address exitFP(activation, WasmActivation::offsetOfExitFP());
-    branchPtr(Assembler::Equal, exitFP, ImmWord(0), &ok);
-    breakpoint();
-    bind(&ok);
-#endif
 }
 
 void
