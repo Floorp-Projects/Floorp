@@ -63,7 +63,7 @@ class HTTPWireProtocol(object):
         self._timeout = timeout
 
     def url(self, suffix):
-        return urlparse.urljoin(self.path_prefix, suffix)
+        return urlparse.urljoin(self.url_prefix, suffix)
 
     def send(self, method, url, body=None, headers=None):
         """Send a command to the remote.
