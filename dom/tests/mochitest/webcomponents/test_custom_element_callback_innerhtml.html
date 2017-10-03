@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1102502
 -->
 <head>
-  <title>Test for attached callback for element created in the document by the parser</title>
+  <title>Test for connected callback for element created in the document by the parser</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -19,10 +19,6 @@ SimpleTest.waitForExplicitFinish();
 var connectedCallbackCount = 0;
 
 var p = Object.create(HTMLElement.prototype);
-
-p.createdCallback = function() {
-  ok(true, "createdCallback called.");
-};
 
 p.connectedCallback = function() {
   ok(true, "connectedCallback should be called when the parser creates an element in the document.");
