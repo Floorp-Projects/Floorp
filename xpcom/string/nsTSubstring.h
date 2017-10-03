@@ -71,9 +71,6 @@ public:
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
 
-  using typename base_string_type::IsChar;
-  using typename base_string_type::IsChar16;
-
   // this acts like a virtual destructor
   ~nsTSubstring()
   {
@@ -187,19 +184,19 @@ public:
                                        const fallible_t&);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void Assign(char16ptr_t aData)
   {
     Assign(static_cast<const char16_t*>(aData));
   }
 
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void Assign(char16ptr_t aData, size_type aLength)
   {
     Assign(static_cast<const char16_t*>(aData), aLength);
   }
 
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   MOZ_MUST_USE bool Assign(char16ptr_t aData, size_type aLength,
                            const fallible_t& aFallible)
   {
@@ -237,7 +234,7 @@ public:
     AssignLiteral(aStr, N - 1);
   }
 
-  template<int N, typename EnableIfChar16 = IsChar16>
+  template<int N, typename Q = T, typename EnableIfChar16 = typename mozilla::Char16OnlyT<Q>>
   void AssignLiteral(const incompatible_char_type (&aStr)[N])
   {
     AssignASCII(aStr, N - 1);
@@ -254,7 +251,7 @@ public:
     return *this;
   }
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   self_type& operator=(char16ptr_t aData)
   {
     Assign(aData);
@@ -361,7 +358,7 @@ public:
   }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void Append(char16ptr_t aData, size_type aLength = size_type(-1))
   {
     Append(static_cast<const char16_t*>(aData), aLength);
@@ -466,14 +463,14 @@ public:
   }
 
   // Only enable for T = char16_t
-  template<int N, typename EnableIfChar16 = IsChar16>
+  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void AppendLiteral(const incompatible_char_type (&aStr)[N])
   {
     AppendASCII(aStr, N - 1);
   }
 
   // Only enable for T = char16_t
-  template<int N, typename EnableIfChar16 = IsChar16>
+  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   MOZ_MUST_USE bool
   AppendLiteral(const incompatible_char_type (&aStr)[N], const fallible_t& aFallible)
   {
@@ -491,7 +488,7 @@ public:
     return *this;
   }
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   self_type& operator+=(char16ptr_t aData)
   {
     Append(aData);
@@ -519,7 +516,7 @@ public:
     Replace(aPos, 0, aData, aLength);
   }
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   void Insert(char16ptr_t aData, index_type aPos,
               size_type aLength = size_type(-1))
   {
@@ -626,13 +623,13 @@ public:
   }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   size_type GetMutableData(wchar_t** aData, size_type aNewLen = size_type(-1))
   {
     return GetMutableData(reinterpret_cast<char16_t**>(aData), aNewLen);
   }
 
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   size_type GetMutableData(wchar_t** aData, size_type aNewLen,
                            const fallible_t& aFallible)
   {
@@ -672,21 +669,21 @@ public:
     return Append(aSpan.Elements(), len, aFallible);
   }
 
-  template <typename EnableIfChar = IsChar>
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   operator mozilla::Span<uint8_t>()
   {
     return mozilla::MakeSpan(reinterpret_cast<uint8_t*>(BeginWriting()),
                              base_string_type::Length());
   }
 
-  template <typename EnableIfChar = IsChar>
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   operator mozilla::Span<const uint8_t>() const
   {
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(base_string_type::BeginReading()),
                              base_string_type::Length());
   }
 
-  template <typename EnableIfChar = IsChar>
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   void Append(mozilla::Span<const uint8_t> aSpan)
   {
     auto len = aSpan.Length();
@@ -694,7 +691,7 @@ public:
     Append(reinterpret_cast<const char*>(aSpan.Elements()), len);
   }
 
-  template <typename EnableIfChar = IsChar>
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   MOZ_MUST_USE bool Append(mozilla::Span<const uint8_t> aSpan,
                            const fallible_t& aFallible)
   {
