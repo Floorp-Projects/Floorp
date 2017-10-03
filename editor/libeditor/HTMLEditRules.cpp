@@ -7459,6 +7459,7 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
   OwningNonNull<nsINode> selNode =
     *aSelection.GetRangeAt(0)->GetStartContainer();
   int32_t selOffset = aSelection.GetRangeAt(0)->StartOffset();
+  nsIContent* child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
 
   // First, let's check to see if we are after a <br>.  We take care of this
   // special-case first so that we don't accidentally fall through into one of
@@ -7471,7 +7472,11 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
   }
 
   // Are we after a block?  If so try set caret to following content
-  node = htmlEditor->GetPriorHTMLSibling(selNode, selOffset);
+  if (child) {
+    node = htmlEditor->GetPriorHTMLSibling(child);
+  } else {
+    node = nullptr;
+  }
   if (node && IsBlockNode(*node)) {
     aSelection.SetInterlinePosition(true);
     return;
