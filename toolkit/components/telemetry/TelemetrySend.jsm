@@ -1342,6 +1342,7 @@ var TelemetrySendImpl = {
                   .createInstance(Ci.nsIProcess);
     process.init(exe);
     process.startHidden = true;
+    process.noShell = true;
     process.run(/* blocking */ false, [url, pingPath], 2);
   },
 };
