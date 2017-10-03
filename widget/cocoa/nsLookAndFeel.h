@@ -13,8 +13,9 @@ public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
   virtual void NativeInit() final;
+  virtual void RefreshImpl();
+  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
   virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
   virtual bool GetFontImpl(FontID aID, nsString& aFontName,
@@ -31,8 +32,6 @@ public:
   virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
   virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
 
-  virtual void RefreshImpl();
-
 protected:
   static bool SystemWantsOverlayScrollbars();
   static bool AllowOverlayScrollbarsOverlap();
@@ -43,6 +42,45 @@ private:
 
   int32_t mAllowOverlayScrollbarsOverlap;
   bool mAllowOverlayScrollbarsOverlapCached;
+
+  nscolor mColorTextSelectBackground;
+  nscolor mColorTextSelectBackgroundDisabled;
+  nscolor mColorHighlight;
+  nscolor mColorMenuHover;
+  nscolor mColorTextSelectForeground;
+  nscolor mColorMenuHoverText;
+  nscolor mColorButtonText;
+  bool mHasColorButtonText;
+  nscolor mColorButtonHoverText;
+  nscolor mColorText;
+  nscolor mColorWindowText;
+  nscolor mColorActiveCaption;
+  nscolor mColorActiveBorder;
+  nscolor mColorGrayText;
+  nscolor mColorInactiveBorder;
+  nscolor mColorInactiveCaption;
+  nscolor mColorScrollbar;
+  nscolor mColorThreeDHighlight;
+  nscolor mColorMenu;
+  nscolor mColorWindowFrame;
+  nscolor mColorFieldText;
+  nscolor mColorDialog;
+  nscolor mColorDialogText;
+  nscolor mColorDragTargetZone;
+  nscolor mColorChromeActive;
+  nscolor mColorChromeInactive;
+  nscolor mColorFocusRing;
+  nscolor mColorTextSelect;
+  nscolor mColorDisabledToolbarText;
+  nscolor mColorMenuSelect;
+  nscolor mColorCellHighlight;
+  nscolor mColorEvenTreeRow;
+  nscolor mColorOddTreeRow;
+  nscolor mColorActiveSourceListSelection;
+
+  bool mInitialized;
+
+  void EnsureInit();
 };
 
 #endif // nsLookAndFeel_h_
