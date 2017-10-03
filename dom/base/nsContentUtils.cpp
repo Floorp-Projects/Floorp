@@ -202,6 +202,7 @@
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicodeProperties.h"
+#include "nsURLHelper.h"
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "nsWidgetsCID.h"
@@ -2331,6 +2332,54 @@ bool
 nsContentUtils::CallerHasPermission(JSContext* aCx, const nsAtom* aPerm)
 {
   return PrincipalHasPermission(SubjectPrincipal(aCx), aPerm);
+}
+
+// static
+nsIPrincipal*
+nsContentUtils::GetAttrTriggeringPrincipal(nsIContent* aContent, const nsAString& aAttrValue,
+                                           nsIPrincipal* aSubjectPrincipal)
+{
+  nsIPrincipal* contentPrin = aContent ? aContent->NodePrincipal() : nullptr;
+
+  // If the subject principal is the same as the content principal, or no
+  // explicit subject principal was provided, we don't need to do any further
+  // checks. Just return the content principal.
+  if (contentPrin == aSubjectPrincipal || !aSubjectPrincipal) {
+    return contentPrin;
+  }
+
+  // If the attribute value is empty, it's not an absolute URL, so don't bother
+  // with more expensive checks.
+  if (!aAttrValue.IsEmpty() &&
+      IsAbsoluteURL(NS_ConvertUTF16toUTF8(aAttrValue))) {
+    return aSubjectPrincipal;
+  }
+
+  return contentPrin;
+}
+
+// static
+bool
+nsContentUtils::IsAbsoluteURL(const nsACString& aURL)
+{
+  nsAutoCString scheme;
+  if (NS_FAILED(net_ExtractURLScheme(aURL, scheme))) {
+    // If we can't extract a scheme, it's not an absolute URL.
+    return false;
+  }
+
+  // If it parses as an absolute StandardURL, it's definitely an absolute URL,
+  // so no need to check with the IO service.
+  if (net_IsAbsoluteURL(aURL)) {
+    return true;
+  }
+
+  uint32_t flags;
+  if (NS_SUCCEEDED(sIOService->GetProtocolFlags(scheme.get(), &flags))) {
+    return flags & nsIProtocolHandler::URI_NORELATIVE;
+  }
+
+  return false;
 }
 
 //static
@@ -10408,13 +10457,17 @@ nsContentUtils::AppendNativeAnonymousChildren(
 
 /* static */ bool
 nsContentUtils::GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
+                                              nsIPrincipal* aDefaultPrincipal,
                                               nsIPrincipal** aLoadingPrincipal)
 {
   MOZ_ASSERT(aLoadingNode);
   MOZ_ASSERT(aLoadingPrincipal);
 
   bool result = false;
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingNode->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aDefaultPrincipal;
+  if (!loadingPrincipal) {
+    loadingPrincipal = aLoadingNode->NodePrincipal();
+  }
   nsAutoString loadingStr;
   aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::loadingprincipal,
                         loadingStr);

@@ -27,7 +27,9 @@ async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {
     let cleanupListeners;
     let testImage = document.createElement("img");
-    testImage.setAttribute("src", src);
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testImage.wrappedJSObject.setAttribute("src", src);
 
     let loadListener = () => {
       cleanupListeners();
