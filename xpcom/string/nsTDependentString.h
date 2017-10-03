@@ -52,10 +52,6 @@ public:
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
 
-  using typename base_string_type::IsChar;
-  using typename base_string_type::IsChar16;
-
-
 public:
 
   /**
@@ -72,7 +68,7 @@ public:
   }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   nsTDependentString(char16ptr_t aData, uint32_t aLength)
     : nsTDependentString(static_cast<const char16_t*>(aData), aLength)
   {
@@ -89,7 +85,7 @@ public:
   }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   explicit
   nsTDependentString(char16ptr_t aData)
     : nsTDependentString(static_cast<const char16_t*>(aData))
