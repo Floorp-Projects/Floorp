@@ -388,8 +388,6 @@ nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                          mozilla::layers::WebRenderLayerManager* aManager,
                                          nsDisplayListBuilder* aDisplayListBuilder)
 {
-  MOZ_ASSERT(aManager->IsLayersFreeTransaction());
-
   mOffset = mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
 
   mozilla::LayoutDeviceRect visible = mozilla::LayoutDeviceRect::FromAppUnits(
