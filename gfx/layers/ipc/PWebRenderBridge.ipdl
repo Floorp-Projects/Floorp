@@ -29,6 +29,7 @@ using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
+using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 
 namespace mozilla {
 namespace layers {
@@ -58,6 +59,7 @@ parent:
                           WebRenderScrollData aScrollData,
                           OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                           IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
+  async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);

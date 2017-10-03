@@ -274,7 +274,7 @@ VRDisplayPuppet::UpdateConstantBuffers()
 }
 
 bool
-VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
+VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
                              const IntSize& aSize,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
@@ -303,14 +303,13 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
       // The frames are submitted to VR compositor are decoded
       // into a base64Image and dispatched to the DOM side.
       D3D11_TEXTURE2D_DESC desc;
-      ID3D11Texture2D* texture = aSource->GetD3D11Texture();
-      texture->GetDesc(&desc);
+      aSource->GetDesc(&desc);
       MOZ_ASSERT(desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM,
                  "Only support B8G8R8A8_UNORM format.");
       // Map the staging resource
       ID3D11Texture2D* mappedTexture = nullptr;
       D3D11_MAPPED_SUBRESOURCE mapInfo;
-      HRESULT hr = mContext->Map(texture,
+      HRESULT hr = mContext->Map(aSource,
                                  0,  // Subsource
                                  D3D11_MAP_READ,
                                  0,  // MapFlags
@@ -338,7 +337,7 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
             return false;
           }
           // Copy the texture to a staging resource
-          mContext->CopyResource(stagingTexture, texture);
+          mContext->CopyResource(stagingTexture, aSource);
           // Map the staging resource
           hr = mContext->Map(stagingTexture,
                              0,  // Subsource
@@ -354,7 +353,7 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
           return false;
         }
       } else {
-        mappedTexture = texture;
+        mappedTexture = aSource;
       }
       // Ideally, we should convert the srcData to a PNG image and decode it
       // to a Base64 string here, but the GPU process does not have the privilege to
@@ -429,12 +428,15 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
       mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
       mContext->VSSetShader(mQuadVS, nullptr, 0);
       mContext->PSSetShader(mQuadPS, nullptr, 0);
-      ID3D11ShaderResourceView* srView = aSource->GetShaderResourceView();
-      if (!srView) {
-        NS_WARNING("Failed to get SRV for Puppet");
-        return false;
+
+      RefPtr<ID3D11ShaderResourceView> srView;
+      HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr, getter_AddRefs(srView));
+      if (FAILED(hr) || !srView) {
+        gfxWarning() << "Could not create shader resource view for Puppet: " << hexa(hr);
+        return nullptr;
       }
-      mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &srView);
+      ID3D11ShaderResourceView* viewPtr = srView.get();
+      mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &viewPtr);
       // XXX Use Constant from TexSlot in CompositorD3D11.cpp?
 
       ID3D11SamplerState *sampler = mLinearSamplerState;

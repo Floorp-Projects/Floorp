@@ -20,6 +20,7 @@
         style="@style/Gecko.PreferenceCategory"
         android:text="@string/pref_dialog_activitystream_header_content"/>
 
+    <!-- This will be hidden dynamically if Pocket is not available in the user's current locale. -->
     <org.mozilla.gecko.widget.SwitchPreferenceView
         android:id="@+id/preference_pocket"
         android:layout_width="match_parent"

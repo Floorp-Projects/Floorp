@@ -13,7 +13,7 @@ loader.lazyImporter(this, "escapeHTML", "resource://devtools/client/shared/widge
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "TableWidget", "devtools/client/shared/widgets/TableWidget", true);
-loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

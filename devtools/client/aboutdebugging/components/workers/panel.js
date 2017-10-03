@@ -23,7 +23,7 @@ loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
+  "devtools/shared/client/debugger-client", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");

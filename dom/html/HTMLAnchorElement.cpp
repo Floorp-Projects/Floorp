@@ -58,25 +58,13 @@ HTMLAnchorElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
          nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLAnchorElement,
-                               Link)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement,
+                                             nsGenericHTMLElement,
+                                             Link)
 
-NS_IMPL_ADDREF_INHERITED(HTMLAnchorElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLAnchorElement, Element)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAnchorElement)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAnchorElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAnchorElement,
-                                                nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement,
+                                   nsGenericHTMLElement,
+                                   mRelList)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 

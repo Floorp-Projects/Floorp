@@ -19,7 +19,7 @@ function runTests() {
   let Ci = Components.interfaces;
 
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  let {DebuggerClient} = require("devtools/shared/client/main");
+  let {DebuggerClient} = require("devtools/shared/client/debugger-client");
   let {DebuggerServer} = require("devtools/server/main");
   let Services = require("Services");
 

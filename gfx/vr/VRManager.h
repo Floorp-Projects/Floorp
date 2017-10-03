@@ -43,11 +43,6 @@ public:
   template<class T> void NotifyGamepadChange(uint32_t aIndex, const T& aInfo);
   RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
   void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
-
-  void SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
-                   uint64_t aFrameId,
-                   const gfx::Rect& aLeftEyeRect,
-                   const gfx::Rect& aRightEyeRect);
   RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
@@ -62,7 +57,6 @@ protected:
   ~VRManager();
 
 private:
-  RefPtr<layers::TextureHost> mLastFrame;
 
   void Init();
   void Destroy();
