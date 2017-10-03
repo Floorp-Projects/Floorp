@@ -174,11 +174,4 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 
 } // namespace mozilla
 
-/**
- * Initialize the critical sections for this platform so that we can
- * abort stack walks when needed.
- */
-MFBT_API void
-StackWalkInitCriticalAddress(void);
-
 #endif
