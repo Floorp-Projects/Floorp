@@ -1439,7 +1439,7 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
         form = NFC;
     } else {
         // Step 4.
-        RootedLinearString formStr(cx, ArgToRootedString(cx, args, 0));
+        JSLinearString* formStr = ArgToRootedString(cx, args, 0);
         if (!formStr)
             return false;
 
@@ -1592,7 +1592,6 @@ js::str_charAt(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::str_charCodeAt_impl(JSContext* cx, HandleString string, HandleValue index, MutableHandleValue res)
 {
-    RootedString str(cx);
     size_t i;
     if (index.isInt32()) {
         i = index.toInt32();
@@ -2460,7 +2459,7 @@ TrimString(const CharT* chars, bool trimLeft, bool trimRight, size_t length,
 static bool
 TrimString(JSContext* cx, const CallArgs& args, bool trimLeft, bool trimRight)
 {
-    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
+    JSString* str = ToStringForStringFunction(cx, args.thisv());
     if (!str)
         return false;
 
@@ -2478,11 +2477,11 @@ TrimString(JSContext* cx, const CallArgs& args, bool trimLeft, bool trimRight)
         TrimString(linear->twoByteChars(nogc), trimLeft, trimRight, length, &begin, &end);
     }
 
-    str = NewDependentString(cx, str, begin, end - begin);
-    if (!str)
+    JSLinearString* result = NewDependentString(cx, linear, begin, end - begin);
+    if (!result)
         return false;
 
-    args.rval().setString(str);
+    args.rval().setString(result);
     return true;
 }
 
