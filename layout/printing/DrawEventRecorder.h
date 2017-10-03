@@ -15,11 +15,12 @@ namespace layout {
 
 class PRFileDescStream : public mozilla::gfx::EventStream {
 public:
-  PRFileDescStream() : mFd(nullptr) {}
+  PRFileDescStream() : mFd(nullptr), mGood(true) {}
 
   void Open(const char* aFilename) {
     MOZ_ASSERT(!IsOpen());
     mFd = PR_Open(aFilename, PR_RDWR | PR_CREATE_FILE, PR_IRUSR | PR_IWUSR);
+    mGood = true;
   }
 
   void Close() {
@@ -46,8 +47,18 @@ public:
     }
   }
 
+  void read(char* aOut, size_t aSize) {
+    PRInt32 res = PR_Read(mFd, static_cast<void*>(aOut), aSize);
+    mGood = res >= 0 && ((size_t)res == aSize);
+  }
+
+  bool good() {
+    return mGood;
+  }
+
 private:
   PRFileDesc* mFd;
+  bool mGood;
 };
 
 class DrawEventRecorderPRFileDesc : public gfx::DrawEventRecorderPrivate
@@ -85,6 +96,7 @@ private:
 };
 
 }
+
 }
 
 #endif /* mozilla_layout_printing_DrawEventRecorder_h */
