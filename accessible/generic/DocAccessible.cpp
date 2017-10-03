@@ -1536,13 +1536,15 @@ DocAccessible::DoInitialUpdate()
     ParentDocument()->FireDelayedEvent(reorderEvent);
   }
 
-  TreeMutation mt(this);
-  uint32_t childCount = ChildCount();
-  for (uint32_t i = 0; i < childCount; i++) {
-    Accessible* child = GetChildAt(i);
-    mt.AfterInsertion(child);
+  if (IPCAccessibilityActive()) {
+    DocAccessibleChild* ipcDoc = IPCDoc();
+    MOZ_ASSERT(ipcDoc);
+    if (ipcDoc) {
+      for (auto idx = 0U; idx < mChildren.Length(); idx++) {
+        ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx);
+      }
+    }
   }
-  mt.Done();
 }
 
 void
