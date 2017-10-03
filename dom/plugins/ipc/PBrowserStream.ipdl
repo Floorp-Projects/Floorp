@@ -26,7 +26,6 @@ intr protocol PBrowserStream
 child:
   async Write(int32_t offset, uint32_t newlength,
               Buffer data);
-  async NPP_StreamAsFile(nsCString fname);
 
   /**
    * NPP_DestroyStream may race with other messages: the child acknowledges
@@ -36,31 +35,7 @@ child:
   async __delete__();
 
 parent:
-  intr NPN_RequestRead(IPCByteRanges ranges)
-    returns (NPError result);
   async StreamDestroyed();
-
-/*
-  TODO: turn on state machine.
-
-  // need configurable start state: if the constructor
-  // returns an error in result, start state should
-  // be DELETING.
-start state ALIVE:
-  send Write goto ALIVE;
-  call NPP_StreamAsFile goto ALIVE;
-  send NPP_DestroyStream goto ALIVE;
-  answer NPN_RequestRead goto ALIVE;
-  recv NPN_DestroyStream goto DYING;
-
-state DYING:
-  answer NPN_RequestRead goto DYING;
-  recv NPN_DestroyStream goto DYING;
-  recv StreamDestroyed goto DELETING;
-
-state DELETING:
-  send __delete__;
-*/
 };
 
 } // namespace plugins

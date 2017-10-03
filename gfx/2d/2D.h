@@ -519,6 +519,9 @@ public:
   /** @deprecated
    * Get the raw bitmap data of the surface.
    * Can return null if there was OOM allocating surface data.
+   *
+   * Deprecated means you shouldn't be using this!! Use Map instead.
+   * Please deny any reviews which add calls to this!
    */
   virtual uint8_t *GetData() = 0;
 

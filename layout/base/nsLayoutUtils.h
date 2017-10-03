@@ -1066,6 +1066,10 @@ public:
                                         const nscoord aRadii[8],
                                         const nsRect& aTestRect);
 
+  static bool MaybeCreateDisplayPortInFirstScrollFrameEncountered(
+    nsIFrame* aFrame, nsDisplayListBuilder& aBuilder);
+
+
   enum class PaintFrameFlags : uint32_t {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,
@@ -2814,10 +2818,15 @@ public:
    * displayport yet (as tracked by |aBuilder|), calculate and set a
    * displayport.
    *
-   * This is intended to be called during display list building.
+   * If this is called during display list building pass DoNotRepaint in
+   * aRepaintMode.
+   *
+   * Returns true if there is a displayport on an async scrollable scrollframe
+   * after this call, either because one was just added or it already existed.
    */
-  static void MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                     nsIFrame* aScrollFrame);
+  static bool MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
+                                     nsIFrame* aScrollFrame,
+                                     RepaintMode aRepaintMode);
 
   static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
 
