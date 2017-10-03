@@ -440,7 +440,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
                 // If profiling is off, patch the resume address to nullptr,
                 // to ensure the old address is not used anywhere.
                 //
-                // If profiling is on, JitProfilingFrameIterator requires a
+                // If profiling is on, JSJitProfilingFrameIterator requires a
                 // valid return address.
                 MOZ_ASSERT(frame.baselineFrame()->isHandlingException());
                 MOZ_ASSERT(frame.baselineFrame()->overridePc() == pc);
