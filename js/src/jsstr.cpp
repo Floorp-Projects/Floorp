@@ -46,6 +46,7 @@
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
@@ -4574,19 +4575,10 @@ BuildFlatMatchArray(JSContext* cx, HandleString str, HandleString pattern, int32
 static bool
 CallIsStringOptimizable(JSContext* cx, const char* name, bool* result)
 {
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedPropertyName propName(cx, atom->asPropertyName());
-
-    RootedValue funcVal(cx);
-    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), propName, propName, 0, &funcVal))
-        return false;
-
     FixedInvokeArgs<0> args(cx);
 
     RootedValue rval(cx);
-    if (!Call(cx, funcVal, UndefinedHandleValue, args, &rval))
+    if (!CallSelfHostedFunction(cx, name, UndefinedHandleValue, args, &rval))
         return false;
 
     *result = rval.toBoolean();
