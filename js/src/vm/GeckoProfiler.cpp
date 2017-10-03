@@ -74,7 +74,7 @@ GetTopProfilingJitFrame(Activation* act)
     if (!jsExitFP)
         return nullptr;
 
-    jit::JitProfilingFrameIterator iter(jsExitFP);
+    jit::JSJitProfilingFrameIterator iter(jsExitFP);
     MOZ_ASSERT(!iter.done());
     return iter.fp();
 }

@@ -23,7 +23,7 @@ namespace js {
     class Activation;
     namespace jit {
         class JitActivation;
-        class JitProfilingFrameIterator;
+        class JSJitProfilingFrameIterator;
         class JitcodeGlobalEntry;
     } // namespace jit
     namespace wasm {
@@ -75,16 +75,16 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
         return *static_cast<const js::wasm::ProfilingFrameIterator*>(storage());
     }
 
-    js::jit::JitProfilingFrameIterator& jitIter() {
+    js::jit::JSJitProfilingFrameIterator& jsJitIter() {
         MOZ_ASSERT(!done());
-        MOZ_ASSERT(isJit());
-        return *static_cast<js::jit::JitProfilingFrameIterator*>(storage());
+        MOZ_ASSERT(isJSJit());
+        return *static_cast<js::jit::JSJitProfilingFrameIterator*>(storage());
     }
 
-    const js::jit::JitProfilingFrameIterator& jitIter() const {
+    const js::jit::JSJitProfilingFrameIterator& jsJitIter() const {
         MOZ_ASSERT(!done());
-        MOZ_ASSERT(isJit());
-        return *static_cast<const js::jit::JitProfilingFrameIterator*>(storage());
+        MOZ_ASSERT(isJSJit());
+        return *static_cast<const js::jit::JSJitProfilingFrameIterator*>(storage());
     }
 
     void settleFrames();
@@ -134,7 +134,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
     } JS_HAZ_GC_INVALIDATED;
 
     bool isWasm() const;
-    bool isJit() const;
+    bool isJSJit() const;
 
     uint32_t extractStack(Frame* frames, uint32_t offset, uint32_t end) const;
 
