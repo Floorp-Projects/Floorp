@@ -383,22 +383,12 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
             *tierEntry = masm.currentOffset();
     }
 
-    // To make the jit exit faster, we don't set exitFP although we set the
-    // exit reason: the profiling iteration knows how to recover FP.
-    if (!reason.isNone() && !(reason.isFixed() && reason.fixed() == ExitReason::Fixed::ImportJit)) {
-        Register act = ABINonArgReg0;
-
-        // Native callers expect the native ABI, which assume that non-saved
-        // registers are preserved. Explicitly preserve the act register
-        // in that case.
-        if (reason.isNative() && !act.volatile_())
-            masm.Push(act);
-
-        SetExitFP(masm, act);
-
-        if (reason.isNative() && !act.volatile_())
-            masm.Pop(act);
-    }
+    // Set exitFP to tell the wasm frame iterators to know where to start
+    // unwinding. In the special case of the optimized import-JIT stub, we're
+    // just calling into more JIT code which can be unwound, so exitFP isn't
+    // needed.
+    if (!reason.isNone() && !(reason.isFixed() && reason.fixed() == ExitReason::Fixed::ImportJit))
+        SetExitFP(masm, NativeABIPrologueClobberable);
 
     if (framePushed)
         masm.subFromStackPtr(Imm32(framePushed));
@@ -534,12 +524,34 @@ wasm::GenerateExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReaso
     masm.setFramePushed(0);
 }
 
+static void
+AssertNoWasmExitFPInJitExit(MacroAssembler& masm)
+{
+    // As a general stack invariant, if Activation::packedExitFP is tagged as
+    // wasm, it must point to a valid wasm::Frame. The JIT exit stub calls into
+    // JIT code and thus does not really exit, thus, when entering/leaving the
+    // JIT exit stub from/to normal wasm code, packedExitFP is not tagged wasm.
+#ifdef DEBUG
+    Register scratch = ABINonArgReturnReg0;
+    LoadActivation(masm, scratch);
+
+    Label ok;
+    masm.branchTestPtr(Assembler::Zero,
+                       Address(scratch, JitActivation::offsetOfPackedExitFP()),
+                       Imm32(uintptr_t(JitActivation::ExitFpWasmBit)),
+                       &ok);
+    masm.breakpoint();
+    masm.bind(&ok);
+#endif
+}
+
 void
 wasm::GenerateJitExitPrologue(MacroAssembler& masm, unsigned framePushed, CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
     GenerateCallablePrologue(masm, framePushed, ExitReason(ExitReason::Fixed::ImportJit),
                              &offsets->begin, nullptr, CompileMode::Once, 0);
+    AssertNoWasmExitFPInJitExit(masm);
     masm.setFramePushed(framePushed);
 }
 
@@ -548,13 +560,7 @@ wasm::GenerateJitExitEpilogue(MacroAssembler& masm, unsigned framePushed, Callab
 {
     // Inverse of GenerateJitExitPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
-
-#ifdef DEBUG
-    Register scratch = ABINonArgReturnReg0;
-    LoadActivation(masm, scratch);
-    masm.wasmAssertNonExitInvariants(scratch);
-#endif
-
+    AssertNoWasmExitFPInJitExit(masm);
     GenerateCallableEpilogue(masm, framePushed, ExitReason::None(), &offsets->ret);
     masm.setFramePushed(0);
 }
