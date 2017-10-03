@@ -53,6 +53,7 @@ job-template:
       by-build-platform:
          default: []
          android-api-16-nightly:
+            - android-sdk-linux
             - proguard-jar
    tooltool:
       by-build-platform:

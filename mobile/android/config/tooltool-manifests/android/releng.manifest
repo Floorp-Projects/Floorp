@@ -9,14 +9,6 @@
     "unpack": true
   },
   {
-    "size": 735632692,
-    "visibility": "internal",
-    "digest": "dc4329803b4f941d52d61a32c054e209890c2dd793ac2cbbeadb15e4bd23104f7ba99c113472326c7751dbe99e00238208432a05183d9a01bed13f38297b3b3c",
-    "algorithm": "sha512",
-    "filename": "android-sdk-linux.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 6856444,
     "visibility": "public",
     "unpack": true,
