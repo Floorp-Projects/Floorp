@@ -35,8 +35,44 @@ namespace cache {
 namespace db {
 const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
+// ## Firefox 57 Cache API v25/v26/v27 Schema Hack Info
+// ### Overview
+// In Firefox 57 we introduced Cache API schema version 26 and Quota Manager
+// schema v3 to support tracking padding for opaque responses.  Unfortunately,
+// Firefox 57 is a big release that may potentially result in users downgrading
+// to Firefox 56 due to 57 retiring add-ons.  These schema changes have the
+// unfortunate side-effect of causing QuotaManager and all its clients to break
+// if the user downgrades to 56.  In order to avoid making a bad situation
+// worse, we're now retrofitting 57 so that Firefox 56 won't freak out.
+//
+// ### Implementation
+// We're introducing a new schema version 27 that uses an on-disk schema version
+// of v25.  We differentiate v25 from v27 by the presence of the column added
+// by v26.  This translates to:
+// - v25: on-disk schema=25, no "response_padding_size" column in table
+//   "entries".
+// - v26: on-disk schema=26, yes "response_padding_size" column in table
+//   "entries".
+// - v27: on-disk schema=25, yes "response_padding_size" column in table
+//   "entries".
+//
+// ### Fallout
+// Firefox 57 is happy because it sees schema 27 and everything is as it
+// expects.
+//
+// Firefox 56 non-DEBUG build is fine/happy, but DEBUG builds will not be.
+// - Our QuotaClient will invoke `NS_WARNING("Unknown Cache file found!");`
+//   at QuotaManager init time.  This is harmless but annoying and potentially
+//   misleading.
+// - The DEBUG-only Validate() call will error out whenever an attempt is made
+//   to open a DOM Cache database because it will notice the schema is broken
+//   and there is no attempt at recovery.
+//
+const int32_t kHackyDowngradeSchemaVersion = 25;
+const int32_t kHackyPaddingSizePresentVersion = 27;
+//
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 26;
+const int32_t kLatestSchemaVersion = 27;
 // ---------
 // The following constants define the SQL schema.  These are defined in the
 // same order the SQL should be executed in CreateOrMigrateSchema().  They are
@@ -356,6 +392,8 @@ static nsresult CreateAndBindKeyStatement(mozIStorageConnection* aConn,
                                           mozIStorageStatement** aStateOut);
 static nsresult HashCString(nsICryptoHash* aCrypto, const nsACString& aIn,
                             nsACString& aOut);
+nsresult GetEffectiveSchemaVersion(mozIStorageConnection* aConn,
+                                   int32_t& schemaVersion);
 nsresult Validate(mozIStorageConnection* aConn);
 nsresult Migrate(mozIStorageConnection* aConn);
 } // namespace
@@ -412,7 +450,7 @@ CreateOrMigrateSchema(mozIStorageConnection* aConn)
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
   int32_t schemaVersion;
-  nsresult rv = aConn->GetSchemaVersion(&schemaVersion);
+  nsresult rv = GetEffectiveSchemaVersion(aConn, schemaVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (schemaVersion == kLatestSchemaVersion) {
@@ -473,10 +511,10 @@ CreateOrMigrateSchema(mozIStorageConnection* aConn)
     rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableStorage));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = aConn->SetSchemaVersion(kLatestSchemaVersion);
+    rv = aConn->SetSchemaVersion(kHackyDowngradeSchemaVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = aConn->GetSchemaVersion(&schemaVersion);
+    rv = GetEffectiveSchemaVersion(aConn, schemaVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
@@ -2463,6 +2501,44 @@ IncrementalVacuum(mozIStorageConnection* aConn)
 
 namespace {
 
+// Wrapper around mozIStorageConnection::GetSchemaVersion() that compensates
+// for hacky downgrade schema version tricks.  See the block comments for
+// kHackyDowngradeSchemaVersion and kHackyPaddingSizePresentVersion.
+nsresult
+GetEffectiveSchemaVersion(mozIStorageConnection* aConn,
+                          int32_t& schemaVersion)
+{
+  nsresult rv = aConn->GetSchemaVersion(&schemaVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (schemaVersion == kHackyDowngradeSchemaVersion) {
+    // This is the special case.  Check for the existence of the
+    // "response_padding_size" colum in table "entries".
+    //
+    // (pragma_table_info is a table-valued function format variant of
+    // "PRAGMA table_info" supported since SQLite 3.16.0.  Firefox 53 shipped
+    // was the first release with this functionality, shipping 3.16.2.)
+    nsCOMPtr<mozIStorageStatement> stmt;
+    nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name FROM pragma_table_info('entries') WHERE "
+      "name = 'response_padding_size'"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    // If there are any result rows, then the column is present.
+    bool hasColumn = false;
+    rv = stmt->ExecuteStep(&hasColumn);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    if (hasColumn) {
+      schemaVersion = kHackyPaddingSizePresentVersion;
+    }
+  }
+
+  return NS_OK;
+}
+
+
 #ifdef DEBUG
 struct Expect
 {
@@ -2492,7 +2568,7 @@ nsresult
 Validate(mozIStorageConnection* aConn)
 {
   int32_t schemaVersion;
-  nsresult rv = aConn->GetSchemaVersion(&schemaVersion);
+  nsresult rv = GetEffectiveSchemaVersion(aConn, schemaVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (NS_WARN_IF(schemaVersion != kLatestSchemaVersion)) {
@@ -2598,6 +2674,7 @@ nsresult MigrateFrom22To23(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom23To24(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom24To25(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom25To26(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom26To27(mozIStorageConnection* aConn, bool& aRewriteSchema);
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
   Migration(15, MigrateFrom15To16),
@@ -2611,6 +2688,7 @@ Migration sMigrationList[] = {
   Migration(23, MigrateFrom23To24),
   Migration(24, MigrateFrom24To25),
   Migration(25, MigrateFrom25To26),
+  Migration(26, MigrateFrom26To27),
 };
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
 nsresult
@@ -2649,7 +2727,7 @@ Migrate(mozIStorageConnection* aConn)
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
   int32_t currentVersion = 0;
-  nsresult rv = aConn->GetSchemaVersion(&currentVersion);
+  nsresult rv = GetEffectiveSchemaVersion(aConn, currentVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool rewriteSchema = false;
@@ -2675,7 +2753,7 @@ Migrate(mozIStorageConnection* aConn)
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     int32_t lastVersion = currentVersion;
 #endif
-    rv = aConn->GetSchemaVersion(&currentVersion);
+    rv = GetEffectiveSchemaVersion(aConn, currentVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     MOZ_DIAGNOSTIC_ASSERT(currentVersion > lastVersion);
   }
@@ -3171,6 +3249,16 @@ nsresult MigrateFrom25To26(mozIStorageConnection* aConn, bool& aRewriteSchema)
 
   aRewriteSchema = true;
 
+  return rv;
+}
+
+nsresult MigrateFrom26To27(mozIStorageConnection* aConn, bool& aRewriteSchema)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  nsresult rv = aConn->SetSchemaVersion(kHackyDowngradeSchemaVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   return rv;
 }
 
