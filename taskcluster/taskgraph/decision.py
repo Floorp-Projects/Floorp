@@ -215,11 +215,7 @@ def get_decision_parameters(options):
         else:
             parameters['try_options'] = None
 
-        if parameters['try_mode'] == 'try_option_syntax':
-            # Try option syntax is imprecise, so optimize away tasks even if they
-            # are selected by the syntax.
-            parameters['optimize_target_tasks'] = True
-        elif parameters['try_mode'] == 'try_task_config':
+        if parameters['try_mode']:
             # The user has explicitly requested a set of jobs, so run them all
             # regardless of optimization.  Their dependencies can be optimized,
             # though.
