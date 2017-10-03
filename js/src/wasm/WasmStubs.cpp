@@ -913,7 +913,7 @@ struct ABIFunctionArgs
         uint32_t abi = uint32_t(abiType);
         while (i--)
             abi = abi >> ArgType_Shift;
-        return ToMIRType(ABIArgType(abi));
+        return ToMIRType(ABIArgType(abi & ArgType_Mask));
     }
 };
 

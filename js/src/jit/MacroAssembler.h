@@ -2326,7 +2326,7 @@ ToMIRType(MIRType t)
 static inline MIRType
 ToMIRType(ABIArgType argType)
 {
-    switch (argType & ArgType_Mask) {
+    switch (argType) {
       case ArgType_General: return MIRType::Int32;
       case ArgType_Double:  return MIRType::Double;
       case ArgType_Float32: return MIRType::Float32;
