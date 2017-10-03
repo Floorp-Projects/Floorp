@@ -16,18 +16,6 @@ requestLongerTimeout(5);
 
 /* These reflows happen only the first time the awesomebar panel opens. */
 const EXPECTED_REFLOWS_FIRST_OPEN = [
-  // Bug 1357054
-  {
-    stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "_onChanged@chrome://global/content/bindings/autocomplete.xml",
-      "_appendCurrentResult/<@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 6, // This number should only ever go down - never up.
-    minTimes: 0, // Sometimes this is not hit.
-  },
-
   {
     stack: [
       "_rebuild@chrome://browser/content/search/search.xml",
@@ -54,15 +42,6 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
 
   {
     stack: [
-      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
-      "handleOverUnderflow@chrome://global/content/bindings/autocomplete.xml",
-      "set_siteIconStart@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 6, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
       "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate/this._adjustHeightTimeout<@chrome://global/content/bindings/autocomplete.xml",
     ],
@@ -79,16 +58,6 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "invalidate@chrome://global/content/bindings/autocomplete.xml"
     ],
     times: 60, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
-      "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 3, // This number should only ever go down - never up.
   },
 
   // Bug 1359989
@@ -117,17 +86,6 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
     stack: [
       "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
       "_invalidate/this._adjustHeightTimeout<@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 3, // This number should only ever go down - never up.
-  },
-
-  // Bug 1384256
-  {
-    stack: [
-      "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
     times: 3, // This number should only ever go down - never up.
   },
