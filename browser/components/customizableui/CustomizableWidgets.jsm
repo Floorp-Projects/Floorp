@@ -215,7 +215,7 @@ const CustomizableWidgets = [
 
       let utils = RecentlyClosedTabsAndWindowsMenuUtils;
       let method = `get${viewType}Fragment`;
-      let fragment = utils[method](window, "toolbarbutton");
+      let fragment = utils[method](window, "toolbarbutton", true);
       let elementCount = fragment.childElementCount;
       this._panelMenuView._setEmptyPopupStatus(panelview, !elementCount);
       if (!elementCount)
