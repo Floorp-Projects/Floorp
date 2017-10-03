@@ -24,7 +24,7 @@ namespace layers {
 class StackingContextHelper;
 } // namespace layers
 namespace wr {
-struct WrComplexClipRegion;
+struct ComplexClipRegion;
 } // namepsace wr
 } // namespace mozilla
 
@@ -180,9 +180,9 @@ public:
   uint32_t GetRoundedRectCount() const { return mRoundedClipRects.Length(); }
   void AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const;
 
-  void ToWrComplexClipRegions(int32_t aAppUnitsPerDevPixel,
+  void ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
                               const layers::StackingContextHelper& aSc,
-                              nsTArray<wr::WrComplexClipRegion>& aOutArray) const;
+                              nsTArray<wr::ComplexClipRegion>& aOutArray) const;
 
   static const DisplayItemClip& NoClip();
 
