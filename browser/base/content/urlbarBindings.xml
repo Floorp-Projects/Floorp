@@ -1891,22 +1891,26 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          this.mInput = aInput;
-          aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
-          this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
-          this._invalidate();
+          // Set the direction of the popup based on the textbox (bug 649840).
+          // getComputedStyle causes a layout flush, so avoid calling it if a
+          // direction has already been set.
+          if (!this.style.direction) {
+            this.style.direction =
+              aElement.ownerGlobal.getComputedStyle(aElement).direction;
+          }
+          let popupDirection = this.style.direction;
 
-          var documentRect = window.document.documentElement.getBoundingClientRect();
-          var width = documentRect.right - documentRect.left;
+          // Make the popup span the width of the window.  First, set its width.
+          let documentRect =
+            this.DOMWindowUtils
+                .getBoundsWithoutFlushing(window.document.documentElement);
+          let width = documentRect.right - documentRect.left;
           this.setAttribute("width", width);
 
-          // Adjust the direction of the autocomplete popup list based on the textbox direction, bug 649840
-          var popupDirection = aElement.ownerGlobal.getComputedStyle(aElement).direction;
-          this.style.direction = popupDirection;
-
-          // Make the popup's starting margin negative so that the leading edge
-          // of the popup aligns with the window border.
-          let elementRect = aElement.getBoundingClientRect();
+          // Now make its starting margin negative so that its leading edge
+          // aligns with the window border.
+          let elementRect =
+            this.DOMWindowUtils.getBoundsWithoutFlushing(aElement);
           if (popupDirection == "rtl") {
             let offset = elementRect.right - documentRect.right
             this.style.marginRight = offset + "px";
@@ -1918,14 +1922,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Keep the popup items' site icons aligned with the urlbar's identity
           // icon if it's not too far from the edge of the window.  We define
           // "too far" as "more than 30% of the window's width AND more than
-          // 250px"
+          // 250px".  Do this *before* adding any items because when the new
+          // value of siteIconStart is different from the previous value, over-
+          // and underflow must be handled for each item already in the popup.
           let boundToCheck = popupDirection == "rtl" ? "right" : "left";
           let inputRect = this.DOMWindowUtils.getBoundsWithoutFlushing(aInput);
           let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
           let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
           if (alignSiteIcons) {
+            let identityIcon = document.getElementById("identity-icon");
             let identityRect =
-              document.getElementById("identity-icon").getBoundingClientRect();
+              this.DOMWindowUtils.getBoundsWithoutFlushing(identityIcon);
             this.siteIconStart = popupDirection == "rtl" ? identityRect.right
                                                          : identityRect.left;
           } else {
@@ -1933,6 +1940,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // according to whatever's in the CSS.
             this.siteIconStart = undefined;
           }
+
+          // Now that siteIconStart has been set, start adding items (via
+          // _invalidate).
+          this.mInput = aInput;
+          aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
+          this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
+          this._invalidate();
 
           try {
             let whichNotification = aInput.whichSearchSuggestionsNotification;
