@@ -5,35 +5,29 @@
 "use strict";
 
 /**
- * From underscore's `_.debounce`
- * http://underscorejs.org
- * (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Underscore may be freely distributed under the MIT license.
+ * Create a debouncing function wrapper to only call the target function after a certain
+ * amount of time has passed without it being called.
  *
- * [and in turn extracted from the SDK's "lang/functional/concurrent.js"]
+ * @param {Function} func
+ *         The function to debounce
+ * @param {number} wait
+ *         The wait period
+ * @param {Object} scope
+ *         The scope to use for func
+ * @return {Function} The debounced function
  */
-exports.debounce = function (fn, wait) {
-  let timeout, args, context, timestamp, result;
+exports.debounce = function (func, wait, scope) {
+  let timer = null;
 
-  let later = function () {
-    let last = Date.now() - timestamp;
-    if (last < wait) {
-      timeout = setTimeout(later, wait - last);
-    } else {
-      timeout = null;
-      result = fn.apply(context, args);
-      context = args = null;
-    }
-  };
-
-  return function (...aArgs) {
-    context = this;
-    args = aArgs;
-    timestamp  = Date.now();
-    if (!timeout) {
-      timeout = setTimeout(later, wait);
+  return function () {
+    if (timer) {
+      clearTimeout(timer);
     }
 
-    return result;
+    let args = arguments;
+    timer = setTimeout(function () {
+      timer = null;
+      func.apply(scope, args);
+    }, wait);
   };
 };

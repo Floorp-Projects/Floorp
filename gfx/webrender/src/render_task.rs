@@ -307,6 +307,7 @@ impl RenderTask {
         extra_clip: Option<ClipWorkItem>,
         prim_rect: DeviceIntRect,
         clip_store: &ClipStore,
+        is_axis_aligned: bool,
     ) -> Option<RenderTask> {
         // Filter out all the clip instances that don't contribute to the result
         let mut inner_rect = Some(task_rect);
@@ -358,7 +359,7 @@ impl RenderTask {
             if inner_rect.contains_rect(&prim_rect) {
                 return None;
             }
-            if clips.len() == 1 {
+            if is_axis_aligned && clips.len() == 1 {
                 geometry_kind = clips[0].get_geometry_kind(clip_store);
             }
         }

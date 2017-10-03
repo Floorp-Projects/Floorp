@@ -13,7 +13,7 @@ const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");
-const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
+const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/GripMessageBody"));
 
 const TABLE_ROW_MAX_ITEMS = 1000;
 const TABLE_COLUMN_MAX_ITEMS = 10;

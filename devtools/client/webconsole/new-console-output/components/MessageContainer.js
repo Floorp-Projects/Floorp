@@ -18,12 +18,12 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const componentMap = new Map([
-  ["ConsoleApiCall", require("./message-types/console-api-call")],
-  ["ConsoleCommand", require("./message-types/console-command")],
-  ["DefaultRenderer", require("./message-types/default-renderer")],
-  ["EvaluationResult", require("./message-types/evaluation-result")],
-  ["NetworkEventMessage", require("./message-types/network-event-message")],
-  ["PageError", require("./message-types/page-error")]
+  ["ConsoleApiCall", require("./message-types/ConsoleApiCall")],
+  ["ConsoleCommand", require("./message-types/ConsoleCommand")],
+  ["DefaultRenderer", require("./message-types/DefaultRenderer")],
+  ["EvaluationResult", require("./message-types/EvaluationResult")],
+  ["NetworkEventMessage", require("./message-types/NetworkEventMessage")],
+  ["PageError", require("./message-types/PageError")]
 ]);
 
 const MessageContainer = createClass({

@@ -26,7 +26,10 @@
           <image class="panel-arrow" side="top"/>
         </box>
         <box class="panel-arrowcontent" side="top" flex="1">
-          <hbox id="customization-panelHolder"/>
+          <vbox id="customization-panelHolder">
+            <description id="customization-panelHeader">&customizeMode.overflowList.title;</description>
+            <description id="customization-panelDescription">&customizeMode.overflowList.description;</description>
+          </vbox>
           <box class="panel-inner-arrowcontentfooter" hidden="true"/>
         </box>
       </vbox>
