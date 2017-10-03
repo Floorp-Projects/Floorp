@@ -86,6 +86,236 @@ const TEST_CONDITIONS = {
   },
 };
 
+
+/**
+ * The tests to run. Each test must define an updateList or test. The following
+ * properties are used:
+ *
+ * updateList: The set of add-ons the server should respond with.
+ * test:       A function to run to perform the update check (replaces
+ *             updateList)
+ * fails:      An optional property, if true the update check is expected to
+ *             fail.
+ * finalState: An optional property, the expected final state of system add-ons,
+ *             if missing the test condition's initialState is used.
+ */
+const TESTS = {
+  // Test that a blank response does nothing
+  blank: {
+    updateList: null,
+  },
+
+  // Test that an empty list removes existing updates, leaving defaults.
+  empty: {
+    updateList: [],
+    finalState: {
+      blank: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withAppSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: "2.0"},
+        { isUpgrade: false, version: "2.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withProfileSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withBothSets: [
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        // Set this to `true` to so `verifySystemAddonState()` expects a blank profile dir
+        { isUpgrade: true, version: null}
+      ]
+    },
+  },
+  // Tests that a new set of system add-ons gets installed
+  newset: {
+    updateList: [
+      { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi" }
+    ],
+    finalState: {
+      blank: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withAppSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: "2.0"},
+        { isUpgrade: false, version: "2.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withProfileSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withBothSets: [
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: true, version: "1.0"}
+      ]
+    }
+  },
+
+  // Tests that an upgraded set of system add-ons gets installed
+  upgrades: {
+    updateList: [
+      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi" },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" }
+    ],
+    finalState: {
+      blank: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withAppSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withProfileSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ],
+      withBothSets: [
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: false, version: null}
+      ]
+    }
+  },
+
+  // Tests that a set of system add-ons, some new, some existing gets installed
+  overlapping: {
+    updateList: [
+      { id: "system1@tests.mozilla.org", version: "2.0", path: "system1_2.xpi" },
+      { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" },
+      { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+    ],
+    finalState: {
+      blank: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withAppSet: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withProfileSet: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withBothSets: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ]
+    }
+  },
+
+  // Correct sizes and hashes should work
+  checkSizeHash: {
+    updateList: [
+      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4697 },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "a4c7198d56deb315511c02937fd96c696de6cb84" },
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4691, hashFunction: "sha1", hashValue: "6887b916a1a9a5338b0df4181f6187f5396861eb" }
+    ],
+    finalState: {
+      blank: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withAppSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withProfileSet: [
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"}
+      ],
+      withBothSets: [
+        { isUpgrade: false, version: "1.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: false, version: null},
+        { isUpgrade: true, version: "1.0"}
+      ]
+    }
+  }
+}
+
+add_task(async function setup() {
+  // Initialise the profile
+  startupManager();
+  await promiseShutdownManager();
+});
+
+add_task(async function() {
+  for (let setupName of Object.keys(TEST_CONDITIONS)) {
+    for (let testName of Object.keys(TESTS)) {
+        do_print("Running test " + setupName + " " + testName);
+
+        let setup = TEST_CONDITIONS[setupName];
+        let test = TESTS[testName];
+
+        await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
+    }
+  }
+});
+
+// Some custom tests
 // Test that the update check is performed as part of the regular add-on update
 // check
 add_task(async function test_addon_update() {
