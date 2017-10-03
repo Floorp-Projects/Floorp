@@ -399,8 +399,7 @@ XRE_InitChildProcess(int aArgc,
 
   mozilla::LogModule::Init();
 
-  char aLocal;
-  AutoProfilerInit profilerInit(&aLocal);
+  AutoProfilerInit profilerInit;
 
   AUTO_PROFILER_LABEL("XRE_InitChildProcess", OTHER);
 
@@ -772,8 +771,7 @@ XRE_InitParentProcess(int aArgc,
 
   mozilla::LogModule::Init();
 
-  char aLocal;
-  AutoProfilerInit profilerInit(&aLocal);
+  AutoProfilerInit profilerInit;
 
   ScopedXREEmbed embed;
 
