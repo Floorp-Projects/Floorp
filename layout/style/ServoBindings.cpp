@@ -2704,14 +2704,13 @@ Gecko_Destroy_nsStyle##name(nsStyle##name* ptr)                               \
 void
 Gecko_RegisterProfilerThread(const char* name)
 {
-  char stackTop;
-  profiler_register_thread(name, &stackTop);
+  PROFILER_REGISTER_THREAD(name);
 }
 
 void
 Gecko_UnregisterProfilerThread()
 {
-  profiler_unregister_thread();
+  PROFILER_UNREGISTER_THREAD();
 }
 
 bool

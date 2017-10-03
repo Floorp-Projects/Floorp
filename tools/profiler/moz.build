@@ -11,7 +11,9 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     ]
     EXPORTS += [
         'public/ChildProfilerController.h',
+        'public/GeckoProfilerReporter.h',
         'public/ProfilerChild.h',
+        'public/ProfilerMarkerPayload.h',
         'public/ProfilerParent.h',
         'public/shared-libraries.h',
     ]
@@ -117,10 +119,10 @@ IPDL_SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+# GeckoProfiler.h is the only code that's visible in non-MOZ_GECKO_PROFILER
+# builds, and it only contains no-op macros in that case.
 EXPORTS += [
     'public/GeckoProfiler.h',
-    'public/GeckoProfilerReporter.h',
-    'public/ProfilerMarkerPayload.h',
 ]
 
 if CONFIG['MOZ_TASK_TRACER']:

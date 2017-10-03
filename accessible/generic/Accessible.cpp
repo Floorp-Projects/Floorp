@@ -845,6 +845,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
@@ -853,6 +854,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
     strMarker.Append(strEventType);
     profiler_add_marker(strMarker.get());
   }
+#endif
 
   if (IPCAccessibilityActive() && Document()) {
     DocAccessibleChild* ipcDoc = mDoc->IPCDoc();

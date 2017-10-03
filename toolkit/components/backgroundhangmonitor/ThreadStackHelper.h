@@ -7,6 +7,8 @@
 #ifndef mozilla_ThreadStackHelper_h
 #define mozilla_ThreadStackHelper_h
 
+#ifdef MOZ_GECKO_PROFILER
+
 #include "js/ProfilingStack.h"
 #include "HangDetails.h"
 #include "nsThread.h"
@@ -25,10 +27,8 @@
 
 // Support pseudostack and native stack on these platforms.
 #if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
-#  ifdef MOZ_GECKO_PROFILER
-#    define MOZ_THREADSTACKHELPER_PSEUDO
-#    define MOZ_THREADSTACKHELPER_NATIVE
-#  endif
+#  define MOZ_THREADSTACKHELPER_PSEUDO
+#  define MOZ_THREADSTACKHELPER_NATIVE
 #endif
 
 
@@ -105,5 +105,7 @@ private:
 };
 
 } // namespace mozilla
+
+#endif // MOZ_GECKO_PROFILER
 
 #endif // mozilla_ThreadStackHelper_h
