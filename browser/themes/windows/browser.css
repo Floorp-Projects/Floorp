@@ -9,7 +9,7 @@
 
 %include ../shared/browser.inc.css
 %filter substitution
-%define glassShadowColor hsla(209,67%,12%,0.35)
+%define glassShadowColor hsla(240,5%,5%,0.3)
 
 :root {
   --titlebar-text-color: currentColor;
