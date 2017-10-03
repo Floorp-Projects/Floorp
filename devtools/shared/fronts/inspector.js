@@ -12,56 +12,14 @@ const {
 } = require("devtools/shared/protocol.js");
 const {
   inspectorSpec,
-  nodeListSpec,
   walkerSpec
 } = require("devtools/shared/specs/inspector");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 loader.lazyRequireGetter(this, "nodeConstants",
   "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);
-
-/**
- * Client side of a node list as returned by querySelectorAll()
- */
-const NodeListFront = FrontClassWithSpec(nodeListSpec, {
-  initialize: function (client, form) {
-    Front.prototype.initialize.call(this, client, form);
-  },
-
-  destroy: function () {
-    Front.prototype.destroy.call(this);
-  },
-
-  marshallPool: function () {
-    return this.parent();
-  },
-
-  // Update the object given a form representation off the wire.
-  form: function (json) {
-    this.length = json.length;
-  },
-
-  item: custom(function (index) {
-    return this._item(index).then(response => {
-      return response.node;
-    });
-  }, {
-    impl: "_item"
-  }),
-
-  items: custom(function (start, end) {
-    return this._items(start, end).then(response => {
-      return response.nodes;
-    });
-  }, {
-    impl: "_items"
-  })
-});
-
-exports.NodeListFront = NodeListFront;
 
 /**
  * Client side of the DOM walker.
