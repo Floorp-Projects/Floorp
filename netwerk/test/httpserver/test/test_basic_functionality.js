@@ -35,7 +35,7 @@ function run_test()
   // XXX should actually test this works with a file by comparing streams!
   var dirServ = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties);
-  var path = dirServ.get("CurWorkD", Ci.nsIFile);
+  var path = dirServ.get("CurProcD", Ci.nsIFile);
   srv.registerDirectory("/", path);
 
   // register a few test paths

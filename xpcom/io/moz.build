@@ -132,10 +132,7 @@ FINAL_LIBRARY = 'xul'
 if CONFIG['OS_ARCH'] == 'Linux' and 'lib64' in CONFIG['libdir']:
     DEFINES['HAVE_USR_LIB64_DIR'] = True
 
-LOCAL_INCLUDES += [
-    '!..',
-    '../build',
-]
+LOCAL_INCLUDES += ['!..']
 
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
