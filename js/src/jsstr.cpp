@@ -2544,80 +2544,93 @@ FindDollarIndex(const CharT* chars, size_t length)
 
 } /* anonymous namespace */
 
+/*
+ * Constructs a result string that looks like:
+ *
+ *      newstring = string[:matchStart] + repstr + string[matchEnd:]
+ */
 static JSString*
-BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
-                     size_t match, size_t patternLength)
+BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleLinearString repstr,
+                     size_t matchStart, size_t patternLength)
 {
-    RopeBuilder builder(cx);
+    size_t matchEnd = matchStart + patternLength;
+
+    RootedString resultStr(cx, NewDependentString(cx, textstr, 0, matchStart));
+    if (!resultStr)
+        return nullptr;
+
+    resultStr = ConcatStrings<CanGC>(cx, resultStr, repstr);
+    if (!resultStr)
+        return nullptr;
+
+    MOZ_ASSERT(textstr->length() >= matchEnd);
+    RootedString rest(cx, NewDependentString(cx, textstr, matchEnd, textstr->length() - matchEnd));
+    if (!rest)
+        return nullptr;
+
+    return ConcatStrings<CanGC>(cx, resultStr, rest);
+}
+
+static JSString*
+BuildFlatRopeReplacement(JSContext* cx, HandleString textstr, HandleLinearString repstr,
+                         size_t match, size_t patternLength)
+{
+    MOZ_ASSERT(textstr->isRope());
+
     size_t matchEnd = match + patternLength;
 
-    if (textstr->isRope()) {
-        /*
-         * If we are replacing over a rope, avoid flattening it by iterating
-         * through it, building a new rope.
-         */
-        StringSegmentRange r(cx);
-        if (!r.init(textstr))
-            return nullptr;
+    /*
+     * If we are replacing over a rope, avoid flattening it by iterating
+     * through it, building a new rope.
+     */
+    StringSegmentRange r(cx);
+    if (!r.init(textstr))
+        return nullptr;
 
-        size_t pos = 0;
-        while (!r.empty()) {
-            RootedString str(cx, r.front());
-            size_t len = str->length();
-            size_t strEnd = pos + len;
-            if (pos < matchEnd && strEnd > match) {
+    RopeBuilder builder(cx);
+    size_t pos = 0;
+    while (!r.empty()) {
+        RootedString str(cx, r.front());
+        size_t len = str->length();
+        size_t strEnd = pos + len;
+        if (pos < matchEnd && strEnd > match) {
+            /*
+             * We need to special-case any part of the rope that overlaps
+             * with the replacement string.
+             */
+            if (match >= pos) {
                 /*
-                 * We need to special-case any part of the rope that overlaps
-                 * with the replacement string.
+                 * If this part of the rope overlaps with the left side of
+                 * the pattern, then it must be the only one to overlap with
+                 * the first character in the pattern, so we include the
+                 * replacement string here.
                  */
-                if (match >= pos) {
-                    /*
-                     * If this part of the rope overlaps with the left side of
-                     * the pattern, then it must be the only one to overlap with
-                     * the first character in the pattern, so we include the
-                     * replacement string here.
-                     */
-                    RootedString leftSide(cx, NewDependentString(cx, str, 0, match - pos));
-                    if (!leftSide ||
-                        !builder.append(leftSide) ||
-                        !builder.append(repstr))
-                    {
-                        return nullptr;
-                    }
+                RootedString leftSide(cx, NewDependentString(cx, str, 0, match - pos));
+                if (!leftSide ||
+                    !builder.append(leftSide) ||
+                    !builder.append(repstr))
+                {
+                    return nullptr;
                 }
+            }
 
-                /*
-                 * If str runs off the end of the matched string, append the
-                 * last part of str.
-                 */
-                if (strEnd > matchEnd) {
-                    RootedString rightSide(cx, NewDependentString(cx, str, matchEnd - pos,
-                                                                  strEnd - matchEnd));
-                    if (!rightSide || !builder.append(rightSide))
-                        return nullptr;
-                }
-            } else {
-                if (!builder.append(str))
+            /*
+             * If str runs off the end of the matched string, append the
+             * last part of str.
+             */
+            if (strEnd > matchEnd) {
+                RootedString rightSide(cx, NewDependentString(cx, str, matchEnd - pos,
+                                                              strEnd - matchEnd));
+                if (!rightSide || !builder.append(rightSide))
                     return nullptr;
             }
-            pos += str->length();
-            if (!r.popFront())
+        } else {
+            if (!builder.append(str))
                 return nullptr;
         }
-    } else {
-        RootedString leftSide(cx, NewDependentString(cx, textstr, 0, match));
-        if (!leftSide)
+        pos += str->length();
+        if (!r.popFront())
             return nullptr;
-        RootedString rightSide(cx);
-        rightSide = NewDependentString(cx, textstr, match + patternLength,
-                                       textstr->length() - match - patternLength);
-        if (!rightSide ||
-            !builder.append(leftSide) ||
-            !builder.append(repstr) ||
-            !builder.append(rightSide))
-        {
-            return nullptr;
-        }
     }
 
     return builder.result();
@@ -2672,14 +2685,11 @@ AppendDollarReplacement(StringBuffer& newReplaceChars, size_t firstDollarIndex,
 }
 
 /*
- * Perform a linear-scan dollar substitution on the replacement text,
- * constructing a result string that looks like:
- *
- *      newstring = string[:matchStart] + dollarSub(replaceValue) + string[matchLimit:]
+ * Perform a linear-scan dollar substitution on the replacement text.
  */
-static JSString*
-BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* repstr,
-                       uint32_t firstDollarIndex, size_t matchStart, size_t patternLength)
+static JSLinearString*
+InterpretDollarReplacement(JSContext* cx, HandleString textstrArg, HandleLinearString repstr,
+                           uint32_t firstDollarIndex, size_t matchStart, size_t patternLength)
 {
     RootedLinearString textstr(cx, textstrArg->ensureLinear(cx));
     if (!textstr)
@@ -2714,25 +2724,7 @@ BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* reps
     if (!res)
         return nullptr;
 
-    RootedString leftSide(cx, NewDependentString(cx, textstr, 0, matchStart));
-    if (!leftSide)
-        return nullptr;
-
-    RootedString newReplace(cx, newReplaceChars.finishString());
-    if (!newReplace)
-        return nullptr;
-
-    MOZ_ASSERT(textstr->length() >= matchLimit);
-    RootedString rightSide(cx, NewDependentString(cx, textstr, matchLimit,
-                                                  textstr->length() - matchLimit));
-    if (!rightSide)
-        return nullptr;
-
-    RopeBuilder builder(cx);
-    if (!builder.append(leftSide) || !builder.append(newReplace) || !builder.append(rightSide))
-        return nullptr;
-
-    return builder.result();
+    return newReplaceChars.finishString();
 }
 
 template <typename StrChar, typename RepChar>
@@ -2881,8 +2873,13 @@ js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString patt
     if (match < 0)
         return string;
 
-    if (dollarIndex != UINT32_MAX)
-        return BuildDollarReplacement(cx, string, repl, dollarIndex, match, patternLength);
+    if (dollarIndex != UINT32_MAX) {
+        repl = InterpretDollarReplacement(cx, string, repl, dollarIndex, match, patternLength);
+        if (!repl)
+            return nullptr;
+    } else if (string->isRope()) {
+        return BuildFlatRopeReplacement(cx, string, repl, match, patternLength);
+    }
     return BuildFlatReplacement(cx, string, repl, match, patternLength);
 }
 
