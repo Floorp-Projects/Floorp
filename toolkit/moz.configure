@@ -1226,3 +1226,23 @@ def enable_asan_reporter(value):
 
 set_config('MOZ_ASAN_REPORTER', enable_asan_reporter)
 set_define('MOZ_ASAN_REPORTER', enable_asan_reporter)
+
+@depends(target, c_compiler)
+def xpcom_abi(target, c_compiler):
+    if not c_compiler:
+        return ''
+
+    if c_compiler.type in ('msvc', 'clang-cl'):
+        assert target.kernel == 'WINNT'
+        return '%s-msvc' % target.cpu
+
+    assert c_compiler.type in ('gcc', 'clang')
+    # Everything else uses the gcc ABI.
+    return '%s-gcc3' % ('arm-eabi' if target.cpu == 'arm' else target.cpu,)
+
+@depends(xpcom_abi)
+def xpcom_abi_quoted(abi):
+    return '"%s"' % abi
+
+set_config('TARGET_XPCOM_ABI', xpcom_abi)
+set_define('TARGET_XPCOM_ABI', xpcom_abi_quoted)
