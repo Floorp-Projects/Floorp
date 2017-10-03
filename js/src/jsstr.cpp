@@ -2052,35 +2052,48 @@ RopeMatch(JSContext* cx, JSRope* text, JSLinearString* pat, int* match)
     return true;
 }
 
-/* ES6 draft rc4 21.1.3.7. */
-bool
-js::str_includes(JSContext* cx, unsigned argc, Value* vp)
+static MOZ_ALWAYS_INLINE bool
+ReportErrorIfFirstArgIsRegExp(JSContext* cx, const CallArgs& args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    // Only call IsRegExp if the first argument is definitely an object, so we
+    // don't pay the cost of an additional function call in the common case.
+    if (args.length() == 0 || !args[0].isObject())
+        return true;
 
-    // Steps 1, 2, and 3
-    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
-    if (!str)
-        return false;
-
-    // Steps 4 and 5
     bool isRegExp;
-    if (!IsRegExp(cx, args.get(0), &isRegExp))
+    if (!IsRegExp(cx, args[0], &isRegExp))
         return false;
 
-    // Step 6
     if (isRegExp) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
                                   "first", "", "Regular Expression");
         return false;
     }
+    return true;
+}
 
-    // Steps 7 and 8
+// ES2018 draft rev de77aaeffce115deaf948ed30c7dbe4c60983c0c
+// 21.1.3.7 String.prototype.includes ( searchString [ , position ] )
+bool
+js::str_includes(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Steps 1-2.
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
+    if (!str)
+        return false;
+
+    // Steps 3-4.
+    if (!ReportErrorIfFirstArgIsRegExp(cx, args))
+        return false;
+
+    // Step 5.
     RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Steps 9 and 10
+    // Step 6.
     uint32_t pos = 0;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -2094,13 +2107,13 @@ js::str_includes(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    // Step 11
+    // Step 7.
     uint32_t textLen = str->length();
 
-    // Step 12
+    // Step 8.
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Steps 13 and 14
+    // Steps 9-10.
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
         return false;
@@ -2300,35 +2313,28 @@ js::HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start)
     return EqualChars(pat->latin1Chars(nogc), textChars, patLen);
 }
 
-/* ES6 draft rc3 21.1.3.18. */
+// ES2018 draft rev de77aaeffce115deaf948ed30c7dbe4c60983c0c
+// 21.1.3.20 String.prototype.startsWith ( searchString [ , position ] )
 bool
 js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Steps 1, 2, and 3
+    // Steps 1-2.
     RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
-    // Steps 4 and 5
-    bool isRegExp;
-    if (!IsRegExp(cx, args.get(0), &isRegExp))
+    // Steps 3-4.
+    if (!ReportErrorIfFirstArgIsRegExp(cx, args))
         return false;
 
-    // Step 6
-    if (isRegExp) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
-                                  "first", "", "Regular Expression");
-        return false;
-    }
-
-    // Steps 7 and 8
+    // Step 5.
     RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Steps 9 and 10
+    // Step 6.
     uint32_t pos = 0;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -2342,22 +2348,22 @@ js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    // Step 11
+    // Step 7.
     uint32_t textLen = str->length();
 
-    // Step 12
+    // Step 8.
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Step 13
+    // Step 9.
     uint32_t searchLen = searchStr->length();
 
-    // Step 14
+    // Step 10.
     if (searchLen + start < searchLen || searchLen + start > textLen) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Steps 15 and 16
+    // Steps 11-12.
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
         return false;
@@ -2366,38 +2372,31 @@ js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* ES6 draft rc3 21.1.3.6. */
+// ES2018 draft rev de77aaeffce115deaf948ed30c7dbe4c60983c0c
+// 21.1.3.6 String.prototype.endsWith ( searchString [ , endPosition ] )
 bool
 js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Steps 1, 2, and 3
+    // Steps 1-2.
     RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
-    // Steps 4 and 5
-    bool isRegExp;
-    if (!IsRegExp(cx, args.get(0), &isRegExp))
+    // Steps 3-4.
+    if (!ReportErrorIfFirstArgIsRegExp(cx, args))
         return false;
 
-    // Step 6
-    if (isRegExp) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
-                                  "first", "", "Regular Expression");
-        return false;
-    }
-
-    // Steps 7 and 8
+    // Step 5.
     RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Step 9
+    // Step 6.
     uint32_t textLen = str->length();
 
-    // Steps 10 and 11
+    // Step 7.
     uint32_t pos = textLen;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -2411,22 +2410,22 @@ js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    // Step 12
+    // Step 8.
     uint32_t end = Min(Max(pos, 0U), textLen);
 
-    // Step 13
+    // Step 9.
     uint32_t searchLen = searchStr->length();
 
-    // Step 15 (reordered)
+    // Step 11 (reordered).
     if (searchLen > end) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Step 14
+    // Step 10.
     uint32_t start = end - searchLen;
 
-    // Steps 16 and 17
+    // Steps 12-13.
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
         return false;
