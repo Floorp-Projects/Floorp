@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.6.31 [July 27, 2017]
+ * Last changed in libpng 1.6.33 [September 28, 2017]
  * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_31 Your_png_h_is_not_version_1_6_31;
+typedef png_libpng_version_1_6_34 Your_png_h_is_not_version_1_6_34;
 
 #ifdef __GNUC__
 /* The version tests may need to be added to, but the problem warning has
@@ -619,8 +619,18 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
    /* Free any eXIf entry */
    if (((mask & PNG_FREE_EXIF) & info_ptr->free_me) != 0)
    {
-      png_free(png_ptr, info_ptr->exif);
-      info_ptr->exif = NULL;
+# ifdef PNG_READ_eXIf_SUPPORTED
+      if (info_ptr->eXIf_buf)
+      {
+         png_free(png_ptr, info_ptr->eXIf_buf);
+         info_ptr->eXIf_buf = NULL;
+      }
+# endif
+      if (info_ptr->exif)
+      {
+         png_free(png_ptr, info_ptr->exif);
+         info_ptr->exif = NULL;
+      }
       info_ptr->valid &= ~PNG_INFO_eXIf;
    }
 #endif
@@ -806,7 +816,7 @@ png_get_copyright(png_const_structrp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.31+apng - July 27, 2017" PNG_STRING_NEWLINE \
+      "libpng version 1.6.34+apng - September 29, 2017" PNG_STRING_NEWLINE \
       "Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson" \
       PNG_STRING_NEWLINE \
       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
@@ -815,7 +825,7 @@ png_get_copyright(png_const_structrp png_ptr)
       "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
       "Portions Copyright (c) 2008-2017 Max Stepin" PNG_STRING_NEWLINE ;
 #  else
-   return "libpng version 1.6.31+apng - July 27, 2017\
+   return "libpng version 1.6.34+apng - September 29, 2017\
       Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
@@ -1907,12 +1917,12 @@ png_colorspace_set_sRGB(png_const_structrp png_ptr, png_colorspacerp colorspace,
     */
    if (intent < 0 || intent >= PNG_sRGB_INTENT_LAST)
       return png_icc_profile_error(png_ptr, colorspace, "sRGB",
-          (unsigned)intent, "invalid sRGB rendering intent");
+          (png_alloc_size_t)intent, "invalid sRGB rendering intent");
 
    if ((colorspace->flags & PNG_COLORSPACE_HAVE_INTENT) != 0 &&
        colorspace->rendering_intent != intent)
       return png_icc_profile_error(png_ptr, colorspace, "sRGB",
-         (unsigned)intent, "inconsistent rendering intents");
+         (png_alloc_size_t)intent, "inconsistent rendering intents");
 
    if ((colorspace->flags & PNG_COLORSPACE_FROM_sRGB) != 0)
    {
@@ -1973,7 +1983,6 @@ icc_check_length(png_const_structrp png_ptr, png_colorspacerp colorspace,
    if (profile_length < 132)
       return png_icc_profile_error(png_ptr, colorspace, name, profile_length,
           "too short");
-
    return 1;
 }
 
@@ -2218,15 +2227,6 @@ png_icc_check_tag_table(png_const_structrp png_ptr, png_colorspacerp colorspace,
        * being in range.  All defined tag types have an 8 byte header - a 4 byte
        * type signature then 0.
        */
-      if ((tag_start & 3) != 0)
-      {
-         /* CNHP730S.icc shipped with Microsoft Windows 64 violates this, it is
-          * only a warning here because libpng does not care about the
-          * alignment.
-          */
-         (void)png_icc_profile_error(png_ptr, NULL, name, tag_id,
-             "ICC profile tag start not a multiple of 4");
-      }
 
       /* This is a hard error; potentially it can cause read outside the
        * profile.
@@ -2234,6 +2234,16 @@ png_icc_check_tag_table(png_const_structrp png_ptr, png_colorspacerp colorspace,
       if (tag_start > profile_length || tag_length > profile_length - tag_start)
          return png_icc_profile_error(png_ptr, colorspace, name, tag_id,
              "ICC profile tag outside profile");
+
+      if ((tag_start & 3) != 0)
+      {
+         /* CNHP730S.icc shipped with Microsoft Windows 64 violates this; it is
+          * only a warning here because libpng does not care about the
+          * alignment.
+          */
+         (void)png_icc_profile_error(png_ptr, NULL, name, tag_id,
+             "ICC profile tag start not a multiple of 4");
+      }
    }
 
    return 1; /* success, maybe with warnings */
@@ -3755,7 +3765,7 @@ png_log16bit(png_uint_32 x)
  * of getting this accuracy in practice.
  *
  * To deal with this the following exp() function works out the exponent of the
- * frational part of the logarithm by using an accurate 32-bit value from the
+ * fractional part of the logarithm by using an accurate 32-bit value from the
  * top four fractional bits then multiplying in the remaining bits.
  */
 static const png_uint_32

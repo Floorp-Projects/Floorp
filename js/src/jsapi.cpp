@@ -4108,7 +4108,7 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options, ScopeKind scopeKin
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else
-        chars.reset(InflateString(cx, bytes, &length));
+        chars.reset(InflateString(cx, bytes, length));
     if (!chars)
         return false;
 
@@ -4611,7 +4611,7 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else
-        chars.reset(InflateString(cx, bytes, &length));
+        chars.reset(InflateString(cx, bytes, length));
     if (!chars)
         return false;
 
@@ -4792,7 +4792,7 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
     if (options.utf8)
         chars = UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(bytes, length), &length).get();
     else
-        chars = InflateString(cx, bytes, &length);
+        chars = InflateString(cx, bytes, length);
     if (!chars)
         return false;
 
@@ -6609,7 +6609,7 @@ JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned fla
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    ScopedJSFreePtr<char16_t> chars(InflateString(cx, bytes, &length));
+    ScopedJSFreePtr<char16_t> chars(InflateString(cx, bytes, length));
     if (!chars)
         return nullptr;
 

@@ -761,8 +761,10 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
-                                    int32_t aIndexInContainer)
+void nsMenuX::ObserveContentRemoved(nsIDocument* aDocument,
+                                    nsIContent* aContainer,
+                                    nsIContent* aChild,
+                                    nsIContent* aPreviousSibling)
 {
   if (gConstructingMenu)
     return;

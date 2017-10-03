@@ -813,7 +813,6 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
         println('    }')
         println('')
         println('    MOZ_ASSERT_UNREACHABLE("Bad character input.");')
-        println('    return;')
 
         println('}')
 
@@ -822,6 +821,62 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
     write_LengthUpperCaseSpecialCasing()
     println('')
     write_AppendUpperCaseSpecialCasing()
+
+def write_ascii_lookup_tables(table, index, write, println):
+    def is_id_compat(code):
+        return code == ord(u'\N{DOLLAR SIGN}') or code == ord(u'\N{LOW LINE}')
+    def is_id_start(code):
+        (upper, lower, flags) = table[index[code]]
+        return (flags & FLAG_UNICODE_ID_START) or is_id_compat(code)
+    def is_id_continue(code):
+        (upper, lower, flags) = table[index[code]]
+        return (flags & FLAG_UNICODE_ID_CONTINUE_ONLY) or is_id_start(code)
+    def is_space(code):
+        (upper, lower, flags) = table[index[code]]
+        return flags & FLAG_SPACE
+
+    def write_entries(name, predicate):
+        println('const bool unicode::{}[] = {{'.format(name))
+        println('/*       0     1     2     3     4     5     6     7     8     9  */')
+        for i in range(0, 13):
+            write('/* {0: >2} */'.format(i))
+            for j in range(0, 10):
+                code = i * 10 + j;
+                if (code <= 0x7f):
+                    write(' {},'.format('true' if predicate(code) else '____'))
+            println('')
+        println('};')
+
+    println('')
+    println('#define ____ false')
+
+    println("""
+/*
+ * Identifier start chars:
+ * -      36:    $
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */""")
+    write_entries('js_isidstart', is_id_start)
+
+    println("""
+/*
+ * Identifier chars:
+ * -      36:    $
+ * -  48..57: 0..9
+ * -  65..90: A..Z
+ * -      95:    _
+ * - 97..122: a..z
+ */""")
+    write_entries('js_isident', is_id_continue)
+
+    println("""
+/* Whitespace chars: '\\t', '\\n', '\\v', '\\f', '\\r', ' '. */""")
+    write_entries('js_isspace', is_space)
+
+    println('')
+    println('#undef ____')
 
 def make_bmp_mapping_test(version, codepoint_table, unconditional_tolower, unconditional_toupper):
     def unicodeEsc(n):
@@ -1160,6 +1215,8 @@ def make_unicode_file(version,
                                              println)
 
         write_special_casing_methods(unconditional_toupper, codepoint_table, println)
+
+        write_ascii_lookup_tables(table, index, write, println)
 
 def getsize(data):
     """ return smallest possible integer size for the given array """

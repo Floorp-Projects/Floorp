@@ -193,16 +193,14 @@ void HTMLOutputElement::CharacterDataChanged(nsIDocument* aDocument,
 
 void HTMLOutputElement::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
-                                        nsIContent* aFirstNewContent,
-                                        int32_t aNewIndexInContainer)
+                                        nsIContent* aFirstNewContent)
 {
   DescendantsChanged();
 }
 
 void HTMLOutputElement::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
-                                        nsIContent* aChild,
-                                        int32_t aIndexInContainer)
+                                        nsIContent* aChild)
 {
   DescendantsChanged();
 }
@@ -210,7 +208,6 @@ void HTMLOutputElement::ContentInserted(nsIDocument* aDocument,
 void HTMLOutputElement::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
-                                       int32_t aIndexInContainer,
                                        nsIContent* aPreviousSibling)
 {
   DescendantsChanged();

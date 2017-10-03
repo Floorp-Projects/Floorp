@@ -135,15 +135,12 @@ ProxyObject::setPrivate(const Value& priv)
 void
 ProxyObject::nuke()
 {
-    // Select a dead proxy handler based on the properties of this wrapper.
-    // Do this before clearing the target.
-    const BaseProxyHandler* handler = SelectDeadProxyHandler(this);
-
-    // Clear the target reference.
-    setSameCompartmentPrivate(NullValue());
+    // Clear the target reference and replaced it with a value that encodes
+    // various information about the original target.
+    setSameCompartmentPrivate(DeadProxyTargetValue(this));
 
     // Update the handler to make this a DeadObjectProxy.
-    setHandler(handler);
+    setHandler(&DeadObjectProxy::singleton);
 
     // The proxy's reserved slots are not cleared and will continue to be
     // traced. This avoids the possibility of triggering write barriers while

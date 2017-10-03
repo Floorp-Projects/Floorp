@@ -22,14 +22,12 @@
 #include "wasm/WasmJS.h"
 
 namespace js {
-
-class WasmActivation;
-
 namespace wasm {
 
-class Code;
 class CodeSegment;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
+
+typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;
 
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
 // per-compartment state. wasm::Compartment tracks every live instance in the
@@ -39,9 +37,8 @@ typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 class Compartment
 {
     InstanceVector instances_;
-    volatile bool  mutatingInstances_;
-
-    friend class js::WasmActivation;
+    CodeSegmentVector codeSegments_;
+    volatile bool mutatingInstances_;
 
     struct AutoMutateInstances {
         Compartment &c;
@@ -75,11 +72,11 @@ class Compartment
 
     const InstanceVector& instances() const { return instances_; }
 
-    // This methods returns the wasm::Code containing the given pc, if any
-    // exists in the compartment, and the segment for the tier in which the
-    // pc was found.
+    // These methods return the wasm::CodeSegment (resp. wasm::Code) containing
+    // the given pc, if any exist in the compartment.
 
-    const Code* lookupCode(const void* pc, const CodeSegment** segment = nullptr) const;
+    const CodeSegment* lookupCodeSegment(const void* pc) const;
+    const Code* lookupCode(const void* pc) const;
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 
