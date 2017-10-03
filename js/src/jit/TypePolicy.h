@@ -7,6 +7,8 @@
 #ifndef jit_TypePolicy_h
 #define jit_TypePolicy_h
 
+#include "mozilla/TypeTraits.h"
+
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
 
@@ -410,46 +412,25 @@ class CacheIdPolicy final : public TypePolicy
 };
 
 // Combine multiple policies.
-template <class Lhs, class Rhs>
+template <class... Policies>
 class MixPolicy final : public TypePolicy
 {
-  public:
-    EMPTY_DATA_;
-    static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* ins) {
-        return Lhs::staticAdjustInputs(alloc, ins) && Rhs::staticAdjustInputs(alloc, ins);
+    template <class P>
+    static bool staticAdjustInputsHelper(TempAllocator& alloc, MInstruction* ins) {
+        return P::staticAdjustInputs(alloc, ins);
     }
-    virtual MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) override {
-        return staticAdjustInputs(alloc, ins);
-    }
-};
 
-// Combine three policies.
-template <class Policy1, class Policy2, class Policy3>
-class Mix3Policy final : public TypePolicy
-{
-  public:
-    EMPTY_DATA_;
-    static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* ins) {
-        return Policy1::staticAdjustInputs(alloc, ins) &&
-               Policy2::staticAdjustInputs(alloc, ins) &&
-               Policy3::staticAdjustInputs(alloc, ins);
+    template <class P, class... Rest>
+    static typename mozilla::EnableIf<(sizeof...(Rest) > 0), bool>::Type
+    staticAdjustInputsHelper(TempAllocator& alloc, MInstruction* ins) {
+        return P::staticAdjustInputs(alloc, ins) &&
+               MixPolicy::staticAdjustInputsHelper<Rest...>(alloc, ins);
     }
-    virtual MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) override {
-        return staticAdjustInputs(alloc, ins);
-    }
-};
 
-// Combine four policies.  (Missing variadic templates yet?)
-template <class Policy1, class Policy2, class Policy3, class Policy4>
-class Mix4Policy : public TypePolicy
-{
   public:
     EMPTY_DATA_;
     static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc, MInstruction* ins) {
-        return Policy1::staticAdjustInputs(alloc, ins) &&
-               Policy2::staticAdjustInputs(alloc, ins) &&
-               Policy3::staticAdjustInputs(alloc, ins) &&
-               Policy4::staticAdjustInputs(alloc, ins);
+        return MixPolicy::staticAdjustInputsHelper<Policies...>(alloc, ins);
     }
     virtual MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) override {
         return staticAdjustInputs(alloc, ins);
