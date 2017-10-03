@@ -2044,10 +2044,8 @@ public:
   }
 
   /**
-   * Function to create the WebRenderCommands without
-   * Layer. For layers mode, aManager->IsLayersFreeTransaction()
-   * should be false to prevent doing GetLayerState again. For
-   * layers-free mode, we should check if the layer state is
+   * Function to create the WebRenderCommands.
+   * We should check if the layer state is
    * active first and have an early return if the layer state is
    * not active.
    *
