@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.21.2"
+version = "0.21.3"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -22,34 +22,34 @@ readme = "README.md"
 keywords = ["css", "syntax", "parser"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
-[dependencies.itoa]
+[dependencies.matches]
+version = "0.1"
+
+[dependencies.phf]
+version = "0.7"
+
+[dependencies.cssparser-macros]
+version = "0.3"
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+
+[dependencies.dtoa-short]
 version = "0.3"
 
 [dependencies.heapsize]
 version = ">= 0.3, < 0.5"
 optional = true
 
-[dependencies.matches]
-version = "0.1"
+[dependencies.smallvec]
+version = "0.4.3"
 
 [dependencies.procedural-masquerade]
 version = "0.1"
 
-[dependencies.dtoa-short]
+[dependencies.itoa]
 version = "0.3"
-
-[dependencies.smallvec]
-version = "0.4.3"
-
-[dependencies.cssparser-macros]
-version = "0.3"
-
-[dependencies.phf]
-version = "0.7"
-
-[dependencies.serde]
-version = "1.0"
-optional = true
 [dev-dependencies.rustc-serialize]
 version = "0.3"
 
@@ -58,11 +58,11 @@ version = "0.7"
 
 [dev-dependencies.difference]
 version = "1.0"
-[build-dependencies.quote]
-version = "0.3"
-
 [build-dependencies.syn]
 version = "0.11"
+
+[build-dependencies.quote]
+version = "0.3"
 
 [features]
 dummy_match_byte = []
