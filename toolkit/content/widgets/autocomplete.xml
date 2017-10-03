@@ -1405,13 +1405,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
-            if (typeof item._onChanged == "function") {
-              // The binding may have not been applied yet.
-              setTimeout(() => {
-                item._onChanged();
-              }, 0);
-            }
-
             this._currentIndex++;
           }
 
@@ -1435,11 +1428,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           <![CDATA[
           if (val != this._siteIconStart) {
             this._siteIconStart = val;
+            let varName = "--item-padding-start";
+            if (typeof(val) == "number") {
+              let paddingInCSS =
+                  3   // .autocomplete-richlistbox padding-left/right
+                + 6   // .ac-site-icon margin-inline-start
+                + 16  // .ac-site-icon width
+                + 6;  // .ac-site-icon margin-inline-end
+              let actualVal = Math.round(val) - paddingInCSS;
+              this.style.setProperty(varName, actualVal + "px");
+            } else {
+              this.style.removeProperty(varName);
+            }
             for (let item of this.richlistbox.childNodes) {
-              let changed = item.adjustSiteIconStart(val);
-              if (changed) {
-                item.handleOverUnderflow();
-              }
+              item.handleOverUnderflow();
             }
           }
           return val;
@@ -1498,7 +1500,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <content align="center"
              onoverflow="this._onOverflow();"
              onunderflow="this._onUnderflow();">
-      <xul:spacer anonid="type-icon-spacer"/>
       <xul:image anonid="type-icon"
                  class="ac-type-icon"
                  xbl:inherits="selected,current,type"/>
@@ -1596,7 +1597,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <content align="center"
              onoverflow="this._onOverflow();"
              onunderflow="this._onUnderflow();">
-      <xul:spacer anonid="type-icon-spacer"/>
       <xul:image anonid="type-icon"
                  class="ac-type-icon"
                  xbl:inherits="selected,current,type"/>
@@ -1651,9 +1651,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
-          this._typeIconSpacer = document.getAnonymousElementByAttribute(
-            this, "anonid", "type-icon-spacer"
-          );
           this._typeIcon = document.getAnonymousElementByAttribute(
             this, "anonid", "type-icon"
           );
@@ -2080,20 +2077,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
-      <method name="_onChanged">
-        <body>
-          <![CDATA[
-            let popup = this.parentNode.parentNode;
-            let iconChanged = this.adjustSiteIconStart(popup._siteIconStart);
-
-            if (iconChanged) {
-              this.handleOverUnderflow();
-            }
-          ]]>
-        </body>
-      </method>
-
-
       <method name="_reuseAcItem">
         <body>
           <![CDATA[
@@ -2109,9 +2092,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 action.params.engineName == popup.overrideSearchEngineName) {
 
               this.collapsed = false;
-              // Call adjustSiteIconStart only after setting collapsed=
-              // false.  The calculations it does may be wrong otherwise.
-              this.adjustSiteIconStart(popup._siteIconStart);
+
               // The popup may have changed size between now and the last
               // time the item was shown, so always handle over/underflow.
               let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
@@ -2375,40 +2356,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this._actionText.style.removeProperty("max-width");
             this._hasMaxWidths = false;
           }
-          ]]>
-        </body>
-      </method>
-
-      <!-- Sets the x-coordinate of the leading edge of the site icon (favicon)
-           relative the the leading edge of the window.
-           @param newStart The new x-coordinate, relative to the leading edge of
-                  the window.  Pass undefined to reset the icon's position to
-                  whatever is specified in CSS.
-           @return True if the icon's position changed, false if not. -->
-      <method name="adjustSiteIconStart">
-        <parameter name="newStart"/>
-        <body>
-          <![CDATA[
-          if (typeof(newStart) != "number") {
-            this._typeIconSpacer.style.removeProperty("width");
-            return true;
-          }
-
-          let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindowUtils);
-          let rect = utils.getBoundsWithoutFlushing(this._siteIcon);
-
-          let dir = this.getAttribute("dir");
-          let delta = dir == "rtl" ? rect.right - Math.round(newStart)
-                                   : Math.round(newStart) - rect.left;
-          if (delta) {
-            let currentSpacerWidth = this._typeIconSpacer.style.width || "0px";
-            this._typeIconSpacer.style.width =
-              (parseInt(currentSpacerWidth, 10) + delta) + "px";
-            return true;
-          }
-
-          return false;
           ]]>
         </body>
       </method>

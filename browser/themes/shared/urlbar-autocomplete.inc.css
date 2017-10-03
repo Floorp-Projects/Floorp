@@ -16,6 +16,7 @@
   min-height: 30px;
   font: message-box;
   border-radius: 2px;
+  padding-inline-start: var(--item-padding-start);
 }
 
 :root[uidensity=touch] .autocomplete-richlistitem {
