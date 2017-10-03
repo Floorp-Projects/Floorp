@@ -13,17 +13,8 @@
 #elif defined(XP_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #elif defined(XP_UNIX)
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-#if defined(__FreeBSD__) || defined(__DragonFly__) || \
-    defined(__FreeBSD_kernel__) || defined(__NetBSD__) || \
-    defined(__OpenBSD__)
-#include <sys/sysctl.h>
-#endif
-#if defined(__OpenBSD__)
 #include <sys/stat.h>
+#include <string.h>
 #endif
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -40,10 +31,10 @@ class BinaryPath
 {
 public:
 #ifdef XP_WIN
-  static nsresult Get(char aResult[MAXPATHLEN])
+  static nsresult Get(const char* argv0, char aResult[MAXPATHLEN])
   {
     wchar_t wide_path[MAXPATHLEN];
-    nsresult rv = GetW(wide_path);
+    nsresult rv = GetW(argv0, wide_path);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -58,7 +49,7 @@ public:
     static wchar_t exeLongPath[MAXPATHLEN] = L"";
 
     if (!cached) {
-      nsresult rv = GetW(exeLongPath);
+      nsresult rv = GetW(nullptr, exeLongPath);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -79,7 +70,7 @@ public:
   }
 
 private:
-  static nsresult GetW(wchar_t aResult[MAXPATHLEN])
+  static nsresult GetW(const char* argv0, wchar_t aResult[MAXPATHLEN])
   {
     static bool cached = false;
     static wchar_t moduleFileName[MAXPATHLEN] = L"";
@@ -100,7 +91,7 @@ private:
   }
 
 #elif defined(XP_MACOSX)
-  static nsresult Get(char aResult[MAXPATHLEN])
+  static nsresult Get(const char* argv0, char aResult[MAXPATHLEN])
   {
     // Works even if we're not bundled.
     CFBundleRef appBundle = CFBundleGetMainBundle();
@@ -140,7 +131,7 @@ private:
   }
 
 #elif defined(ANDROID)
-  static nsresult Get(char aResult[MAXPATHLEN])
+  static nsresult Get(const char* argv0, char aResult[MAXPATHLEN])
   {
     // On Android, we use the GRE_HOME variable that is set by the Java
     // bootstrap code.
@@ -154,72 +145,14 @@ private:
     return NS_OK;
   }
 
-#elif defined(XP_LINUX) || defined(XP_SOLARIS)
-  static nsresult Get(char aResult[MAXPATHLEN])
-  {
-#  if defined(XP_SOLARIS)
-    const char path[] = "/proc/self/path/a.out";
-#  else
-    const char path[] = "/proc/self/exe";
-#  endif
-
-    ssize_t len = readlink(path, aResult, MAXPATHLEN - 1);
-    if (len < 0) {
-      return NS_ERROR_FAILURE;
-    }
-    aResult[len] = '\0';
-    return NS_OK;
-  }
-
-#elif defined(__FreeBSD__) || defined(__DragonFly__) || \
-      defined(__FreeBSD_kernel__) || defined(__NetBSD__)
-  static nsresult Get(char aResult[MAXPATHLEN])
-  {
-    int mib[4];
-    mib[0] = CTL_KERN;
-#ifdef __NetBSD__
-    mib[1] = KERN_PROC_ARGS;
-    mib[2] = -1;
-    mib[3] = KERN_PROC_PATHNAME;
-#else
-    mib[1] = KERN_PROC;
-    mib[2] = KERN_PROC_PATHNAME;
-    mib[3] = -1;
-#endif
-
-    size_t len = MAXPATHLEN;
-    if (sysctl(mib, 4, aResult, &len, nullptr, 0) < 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-
-#elif defined(__OpenBSD__)
-  static nsresult Get(char aResult[MAXPATHLEN])
-  {
-    int mib[4];
-    mib[0] = CTL_KERN;
-    mib[1] = KERN_PROC_ARGS;
-    mib[2] = getpid();
-    mib[3] = KERN_PROC_ARGV;
-
-    size_t len = 0;
-    if (sysctl(mib, 4, nullptr, &len, nullptr, 0) < 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    auto argv = MakeUnique<const char*[]>(len / sizeof(const char*));
-    if (sysctl(mib, 4, argv.get(), &len, nullptr, 0) < 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return GetFromArgv0(argv[0], aResult);
-  }
-
-  static nsresult GetFromArgv0(const char* aArgv0, char aResult[MAXPATHLEN])
+#elif defined(XP_UNIX)
+  static nsresult Get(const char* aArgv0, char aResult[MAXPATHLEN])
   {
     struct stat fileStat;
+    // on unix, there is no official way to get the path of the current binary.
+    // instead of using the MOZILLA_FIVE_HOME hack, which doesn't scale to
+    // multiple applications, we will try a series of techniques:
+    //
     // 1) use realpath() on argv[0], which works unless we're loaded from the
     //    PATH. Only do so if argv[0] looks like a path (contains a /).
     // 2) manually walk through the PATH and look for ourself
@@ -262,10 +195,10 @@ private:
 #endif
 
 public:
-  static UniqueFreePtr<char> Get()
+  static UniqueFreePtr<char> Get(const char *aArgv0)
   {
     char path[MAXPATHLEN];
-    if (NS_FAILED(Get(path))) {
+    if (NS_FAILED(Get(aArgv0, path))) {
       return nullptr;
     }
     UniqueFreePtr<char> result;
@@ -274,15 +207,15 @@ public:
   }
 
 #ifdef MOZILLA_INTERNAL_API
-  static nsresult GetFile(nsIFile** aResult)
+  static nsresult GetFile(const char* aArgv0, nsIFile** aResult)
   {
     nsCOMPtr<nsIFile> lf;
 #ifdef XP_WIN
     wchar_t exePath[MAXPATHLEN];
-    nsresult rv = GetW(exePath);
+    nsresult rv = GetW(aArgv0, exePath);
 #else
     char exePath[MAXPATHLEN];
-    nsresult rv = Get(exePath);
+    nsresult rv = Get(aArgv0, exePath);
 #endif
     if (NS_FAILED(rv)) {
       return rv;
