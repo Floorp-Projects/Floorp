@@ -247,18 +247,18 @@ impl Example for App {
 
         let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         builder.push_border(&info, border_widths, border_details);
-
+        builder.pop_clip_id();
 
         if false {
             // draw text?
             let font_key = api.generate_font_key();
-            let font_bytes = load_file("res/FreeSans.ttf");
+            let font_bytes = load_file("../wrench/reftest/text/FreeSans.ttf");
             resources.add_raw_font(font_key, font_bytes, 0);
 
             let font_instance_key = api.generate_font_instance_key();
             resources.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None, Vec::new());
 
-            let text_bounds = (100, 200).by(700, 300);
+            let text_bounds = (100, 50).by(700, 200);
             let glyphs = vec![
                 GlyphInstance {
                     index: 48,
@@ -344,7 +344,6 @@ impl Example for App {
             );
         }
 
-        builder.pop_clip_id();
         builder.pop_stacking_context();
     }
 

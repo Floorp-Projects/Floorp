@@ -35,6 +35,7 @@ serde_derive = { optional = true, version = "1.0" }
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
+env_logger = "0.4"
 rand = "0.3"                # for the benchmarks
 servo-glutin = "0.12"     # for the example apps
 
