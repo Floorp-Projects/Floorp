@@ -437,6 +437,11 @@ add_task(async function test_contentscript_triggeringPrincipals() {
       element: ["img", {}],
       src: "img.png",
     },
+    {
+      element: ["img", {}],
+      src: "imgset.png",
+      srcAttr: "srcset",
+    },
   ];
 
   /**
