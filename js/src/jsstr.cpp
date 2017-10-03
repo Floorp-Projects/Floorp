@@ -1829,16 +1829,10 @@ StringMatch(const TextChar* text, uint32_t textLen, const PatChar* pat, uint32_t
      * For big patterns with large potential overlap we want the SIMD-optimized
      * speed of memcmp. For small patterns, a simple loop is faster. We also can't
      * use memcmp if one of the strings is TwoByte and the other is Latin-1.
-     *
-     * FIXME: Linux memcmp performance is sad and the manual loop is faster.
      */
-    return
-#if !defined(__linux__)
-        (patLen > 128 && IsSame<TextChar, PatChar>::value)
-            ? Matcher<MemCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen)
-            :
-#endif
-              Matcher<ManualCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen);
+    return (patLen > 128 && IsSame<TextChar, PatChar>::value)
+           ? Matcher<MemCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen)
+           : Matcher<ManualCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen);
 }
 
 static int32_t
