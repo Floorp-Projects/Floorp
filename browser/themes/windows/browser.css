@@ -1061,34 +1061,27 @@ notification[value="translation"] {
 
 /* Private browsing and accessibility indicators */
 
-@media (-moz-os-version: windows-win7) {
-  /* Making sure that indicators take up all available vertical space. */
-  :root[tabsintitlebar]:not([inFullscreen]) .private-browsing-indicator,
-  :root[tabsintitlebar]:not([inFullscreen]) .accessibility-indicator {
-    height: var(--tab-min-height);
-  }
+:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator),
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator) {
+  margin-top: calc(-1 * var(--space-above-tabbar));
+}
 
-  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .private-browsing-indicator,
-  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) .accessibility-indicator {
-    height: calc(var(--tab-min-height) + 4px);
+/* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
+@media (-moz-os-version: windows-win7) {
+  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator),
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator) {
+    margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
   }
 }
 
-:root:-moz-any([tabsintitlebar], [inFullscreen]):not([privatebrowsingmode=temporary]) .accessibility-indicator,
-:root:-moz-any([tabsintitlebar], [inFullscreen]) .private-browsing-indicator {
+:root:not([privatebrowsingmode=temporary]) .accessibility-indicator,
+:root .private-browsing-indicator {
   margin-inline-end: 12px;
 }
 
 :root:not([accessibilitymode]) .private-browsing-indicator,
 .accessibility-indicator {
   margin-inline-start: 12px;
-}
-
-:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
-:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
-:root[accessibilitymode]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .accessibility-indicator,
-:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
-  display: none;
 }
 
 /* End private browsing and accessibility indicators */
