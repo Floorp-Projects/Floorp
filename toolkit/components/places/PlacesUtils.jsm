@@ -1170,7 +1170,7 @@ this.PlacesUtils = {
    *        name, flags, expires.
    *        If the value for an annotation is not set it will be removed.
    */
-  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos, aSource) {
+  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos, aSource, aDontUpdateLastModified) {
     var annosvc = this.annotations;
 
     aAnnos.forEach(function(anno) {
@@ -1181,7 +1181,7 @@ this.PlacesUtils = {
         let expires = ("expires" in anno) ?
           anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
         annosvc.setItemAnnotation(aItemId, anno.name, anno.value, flags,
-                                  expires, aSource);
+                                  expires, aSource, aDontUpdateLastModified);
       }
     });
   },
