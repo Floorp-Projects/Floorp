@@ -266,7 +266,7 @@ add_task(async function test_startup() {
 
   // Restart everything, and force the permissions store to be
   // re-read on startup
-  ExtensionPermissions._uninit();
+  await ExtensionPermissions._uninit();
   await AddonTestUtils.promiseRestartManager();
   await extension1.awaitStartup();
   await extension2.awaitStartup();
