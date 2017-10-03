@@ -57,6 +57,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/js/xpconnect/src',
     '/netwerk/base',
+    '/netwerk/cookie',
 ]
 
 if CONFIG['ENABLE_TESTS']:
