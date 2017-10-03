@@ -99,7 +99,7 @@ public:
   }
 
   virtual nsresult
-  UpgradeStorageFrom2_0To3_0(nsIFile* aDirectory)
+  UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory)
   {
     return NS_OK;
   }
