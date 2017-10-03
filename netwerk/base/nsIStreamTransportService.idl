@@ -12,9 +12,6 @@ interface nsIInputAvailableCallback;
 /**
  * This service read/writes a stream on a background thread.
  *
- * Note: instead of using this interface, probably you want to use
- * NS_MakeAsyncNonBlockingInputStream.
- *
  * Use this service to transform any blocking stream (e.g., file stream)
  * into a fully asynchronous stream that can be read/written without 
  * blocking the main thread.

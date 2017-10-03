@@ -6,8 +6,9 @@
 
 #include "FetchStream.h"
 #include "mozilla/dom/DOMException.h"
+#include "nsITransport.h"
+#include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
-#include "nsStreamUtils.h"
 #include "WorkerPrivate.h"
 #include "Workers.h"
 
@@ -204,13 +205,43 @@ FetchStream::RequestDataCallback(JSContext* aCx,
     // mOriginalInputStream into an nsIAsyncInputStream.
     MOZ_ASSERT(stream->mOriginalInputStream);
 
-    nsCOMPtr<nsIAsyncInputStream> asyncStream;
-    nsresult rv =
-      NS_MakeAsyncNonBlockingInputStream(stream->mOriginalInputStream,
-                                         getter_AddRefs(asyncStream));
+    bool nonBlocking = false;
+    nsresult rv = stream->mOriginalInputStream->IsNonBlocking(&nonBlocking);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       stream->ErrorPropagation(aCx, aStream, rv);
       return;
+    }
+
+    nsCOMPtr<nsIAsyncInputStream> asyncStream =
+      do_QueryInterface(stream->mOriginalInputStream);
+    if (!nonBlocking || !asyncStream) {
+      nsCOMPtr<nsIStreamTransportService> sts =
+        do_GetService(kStreamTransportServiceCID, &rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        stream->ErrorPropagation(aCx, aStream, rv);
+        return;
+      }
+
+      nsCOMPtr<nsITransport> transport;
+      rv = sts->CreateInputTransport(stream->mOriginalInputStream,
+                                     /* aCloseWhenDone */ true,
+                                     getter_AddRefs(transport));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        stream->ErrorPropagation(aCx, aStream, rv);
+        return;
+      }
+
+      nsCOMPtr<nsIInputStream> wrapper;
+      rv = transport->OpenInputStream(/* aFlags */ 0,
+                                       /* aSegmentSize */ 0,
+                                       /* aSegmentCount */ 0,
+                                       getter_AddRefs(wrapper));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        stream->ErrorPropagation(aCx, aStream, rv);
+        return;
+      }
+
+      asyncStream = do_QueryInterface(wrapper);
     }
 
     stream->mInputStream = asyncStream;
