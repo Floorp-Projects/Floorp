@@ -68,15 +68,16 @@ class HTTPWireProtocol(object):
     def send(self, method, uri, body=None, headers=None):
         """Send a command to the remote.
 
-        :param method: "POST" or "GET".
-        :param url: "command part" of the requests URL path
-        :param body: Body of the request.  Defaults to an empty dictionary
-            if ``method`` is "POST".
+        :param method: `GET`, `POST`, or `DELETE`.
+        :param uri: Relative endpoint of the requests URL path.
+        :param body: Body of the request.  Defaults to an empty
+            dictionary if ``method`` is `POST`.
         :param headers: Additional headers to include in the request.
-        :return: an instance of wdclient.Response describing the HTTP response
-            received from the remote end.
-        """
 
+        :return: Instance of ``wdclient.Response`` describing the
+            HTTP response received from the remote end.
+
+        """
         if body is None and method == "POST":
             body = {}
 
