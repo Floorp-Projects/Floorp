@@ -455,7 +455,7 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
 }
 #endif // DEBUG
 
-JitProfilingFrameIterator::JitProfilingFrameIterator(
+JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(
         JSContext* cx, const JS::ProfilingFrameIterator::RegisterState& state)
 {
     // If no profilingActivation is live, initialize directly to
@@ -524,7 +524,7 @@ GetPreviousRawFrame(CommonFrameLayout* frame)
     return ReturnType((uint8_t*)frame + prevSize);
 }
 
-JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
+JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(void* exitFrame)
 {
     // Skip the exit frame.
     ExitFrameLayout* frame = (ExitFrameLayout*) exitFrame;
@@ -532,7 +532,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
 }
 
 bool
-JitProfilingFrameIterator::tryInitWithPC(void* pc)
+JSJitProfilingFrameIterator::tryInitWithPC(void* pc)
 {
     JSScript* callee = frameScript();
 
@@ -554,7 +554,7 @@ JitProfilingFrameIterator::tryInitWithPC(void* pc)
 }
 
 bool
-JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc, JSRuntime* rt,
+JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc, JSRuntime* rt,
                                             bool forLastCallSite)
 {
     if (!pc)
@@ -613,7 +613,7 @@ JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc,
 }
 
 void
-JitProfilingFrameIterator::fixBaselineReturnAddress()
+JSJitProfilingFrameIterator::fixBaselineReturnAddress()
 {
     MOZ_ASSERT(type_ == JitFrame_BaselineJS);
     BaselineFrame* bl = (BaselineFrame*)(fp_ - BaselineFrame::FramePointerOffset -
@@ -637,14 +637,14 @@ JitProfilingFrameIterator::fixBaselineReturnAddress()
 }
 
 void
-JitProfilingFrameIterator::operator++()
+JSJitProfilingFrameIterator::operator++()
 {
     JitFrameLayout* frame = framePtr();
     moveToNextFrame(frame);
 }
 
 void
-JitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
+JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
 {
     /*
      * fp_ points to a Baseline or Ion frame.  The possible call-stacks
@@ -752,7 +752,7 @@ JitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
 
     if (prevType == JitFrame_CppToJSJit) {
         // No previous frame, set to null to indicate that
-        // JitProfilingFrameIterator is done().
+        // JSJitProfilingFrameIterator is done().
         returnAddressToFp_ = nullptr;
         fp_ = nullptr;
         type_ = JitFrame_CppToJSJit;
@@ -761,4 +761,3 @@ JitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
 
     MOZ_CRASH("Bad frame type.");
 }
-
