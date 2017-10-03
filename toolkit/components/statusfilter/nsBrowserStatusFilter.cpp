@@ -42,11 +42,20 @@ nsBrowserStatusFilter::~nsBrowserStatusFilter()
 // nsBrowserStatusFilter::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsBrowserStatusFilter,
-                  nsIWebProgress,
-                  nsIWebProgressListener,
-                  nsIWebProgressListener2,
-                  nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTION(nsBrowserStatusFilter,
+                         mListener,
+                         mTarget)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBrowserStatusFilter)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener2)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgress)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBrowserStatusFilter)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBrowserStatusFilter)
 
 //-----------------------------------------------------------------------------
 // nsBrowserStatusFilter::nsIWebProgress
