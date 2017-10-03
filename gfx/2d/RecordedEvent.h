@@ -210,6 +210,7 @@ struct MemStream {
 class EventStream {
 public:
   virtual void write(const char* aData, size_t aSize) = 0;
+  virtual void read(char* aOut, size_t aSize) = 0;
 };
 
 class RecordedEvent {
@@ -298,6 +299,7 @@ public:
   template<class S>
   static RecordedEvent *LoadEvent(S &aStream, EventType aType);
   static RecordedEvent *LoadEventFromStream(std::istream &aStream, EventType aType);
+  static RecordedEvent *LoadEventFromStream(EventStream& aStream, EventType aType);
 
   // An alternative to LoadEvent that avoids a heap allocation for the event.
   // This accepts a callable `f' that will take a RecordedEvent* as a single parameter

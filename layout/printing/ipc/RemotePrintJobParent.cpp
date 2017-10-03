@@ -124,7 +124,9 @@ RemotePrintJobParent::PrintPage(const nsCString& aPageFileName)
     return rv;
   }
 
-  std::ifstream recording(recordingPath.get(), std::ifstream::binary);
+  PRFileDescStream recording;
+  recording.Open(recordingPath.get());
+  MOZ_ASSERT(recording.IsOpen());
   if (!mPrintTranslator->TranslateRecording(recording)) {
     return NS_ERROR_FAILURE;
   }
@@ -134,7 +136,7 @@ RemotePrintJobParent::PrintPage(const nsCString& aPageFileName)
     return rv;
   }
 
-  recording.close();
+  recording.Close();
   rv = recordingFile->Remove(/* recursive= */ false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -240,5 +242,3 @@ RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy)
 
 } // namespace layout
 } // namespace mozilla
-
-
