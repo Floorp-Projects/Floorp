@@ -8,6 +8,7 @@
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/InputStreamParams.h"
+#include "mozilla/NonBlockingAsyncInputStream.h"
 #include "IPCBlobInputStreamThread.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -641,7 +642,17 @@ IPCBlobInputStream::EnsureAsyncRemoteStream()
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mRemoteStream);
-  if (!asyncStream || !nonBlocking) {
+
+  // If non-blocking and non-async, let's use NonBlockingAsyncInputStream.
+  if (nonBlocking && !asyncStream) {
+    rv = NonBlockingAsyncInputStream::Create(mRemoteStream,
+                                             getter_AddRefs(asyncStream));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (!asyncStream) {
     // Let's make the stream async using the DOMFile thread.
     nsCOMPtr<nsIAsyncInputStream> pipeIn;
     nsCOMPtr<nsIAsyncOutputStream> pipeOut;
