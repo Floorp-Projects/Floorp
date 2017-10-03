@@ -95,7 +95,6 @@ devtools.jar:
     content/framework/connect/connect.js (framework/connect/connect.js)
     content/shared/widgets/graphs-frame.xhtml (shared/widgets/graphs-frame.xhtml)
     content/shared/widgets/cubic-bezier.css (shared/widgets/cubic-bezier.css)
-    content/shared/widgets/mdn-docs.css (shared/widgets/mdn-docs.css)
     content/shared/widgets/filter-widget.css (shared/widgets/filter-widget.css)
     content/shared/widgets/color-widget.css (shared/widgets/color-widget.css)
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)

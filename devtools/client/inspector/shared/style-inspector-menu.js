@@ -25,8 +25,6 @@ const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.prope
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
-const PREF_ENABLE_MDN_DOCS_TOOLTIP =
-  "devtools.inspector.mdnDocsTooltip.enabled";
 const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
 /**
@@ -57,7 +55,6 @@ function StyleInspectorMenu(view, options) {
   this._onCopySelector = this._onCopySelector.bind(this);
   this._onCopyUrl = this._onCopyUrl.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
-  this._onShowMdnDocs = this._onShowMdnDocs.bind(this);
   this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
 }
 
@@ -230,19 +227,6 @@ StyleInspectorMenu.prototype = {
     });
     menu.append(menuitemAddRule);
 
-    // Show MDN Docs
-    let mdnDocsAccessKey = "styleinspector.contextmenu.showMdnDocs.accessKey";
-    let menuitemShowMdnDocs = new MenuItem({
-      label: STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.showMdnDocs"),
-      accesskey: STYLE_INSPECTOR_L10N.getStr(mdnDocsAccessKey),
-      click: () => {
-        this._onShowMdnDocs();
-      },
-      visible: (Services.prefs.getBoolPref(PREF_ENABLE_MDN_DOCS_TOOLTIP) &&
-                                                    this._isPropertyName()),
-    });
-    menu.append(menuitemShowMdnDocs);
-
     // Show Original Sources
     let sourcesAccessKey = "styleinspector.contextmenu.toggleOrigSources.accessKey";
     let menuitemSources = new MenuItem({
@@ -407,16 +391,6 @@ StyleInspectorMenu.prototype = {
 
     clipboardHelper.copyString(message);
   }),
-
-  /**
-   *  Show docs from MDN for a CSS property.
-   */
-  _onShowMdnDocs: function () {
-    let cssPropertyName = this.styleDocument.popupNode.textContent;
-    let anchor = this.styleDocument.popupNode.parentNode;
-    let cssDocsTooltip = this.view.tooltips.getTooltip("cssDocs");
-    cssDocsTooltip.show(anchor, cssPropertyName);
-  },
 
   /**
    * Add a new rule to the current element.

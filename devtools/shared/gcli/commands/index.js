@@ -65,7 +65,6 @@ exports.devtoolsModules = [
   "devtools/shared/gcli/commands/inject",
   "devtools/shared/gcli/commands/jsb",
   "devtools/shared/gcli/commands/listen",
-  "devtools/shared/gcli/commands/mdn",
   "devtools/shared/gcli/commands/measure",
   "devtools/shared/gcli/commands/media",
   "devtools/shared/gcli/commands/pagemod",
