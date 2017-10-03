@@ -112,16 +112,13 @@ public:
 
   virtual void SetRoot(Layer* aLayer) override;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
-  virtual already_AddRefed<RefLayer> CreateRefLayer() override;
-  virtual already_AddRefed<TextLayer> CreateTextLayer() override;
-  virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
-  virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
+  already_AddRefed<PaintedLayer> CreatePaintedLayer() override { return nullptr; }
+  already_AddRefed<ContainerLayer> CreateContainerLayer() override { return nullptr; }
+  already_AddRefed<ImageLayer> CreateImageLayer() override { return nullptr; }
+  already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
+  already_AddRefed<TextLayer> CreateTextLayer() override { return nullptr; }
+  already_AddRefed<BorderLayer> CreateBorderLayer() override { return nullptr; }
+  already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
   virtual bool NeedsWidgetInvalidation() override { return false; }
 

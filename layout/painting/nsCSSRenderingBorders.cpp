@@ -29,7 +29,6 @@
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/Range.h"
 #include <algorithm>
 
