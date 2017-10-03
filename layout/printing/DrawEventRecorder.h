@@ -17,9 +17,9 @@ class PRFileDescStream : public mozilla::gfx::EventStream {
 public:
   PRFileDescStream() : mFd(nullptr), mGood(true) {}
 
-  void Open(const char* aFilename) {
+  void OpenFD(PRFileDesc* aFd) {
     MOZ_ASSERT(!IsOpen());
-    mFd = PR_Open(aFilename, PR_RDWR | PR_CREATE_FILE, PR_IRUSR | PR_IWUSR);
+    mFd = aFd;
     mGood = true;
   }
 
@@ -38,6 +38,10 @@ public:
     if (IsOpen()) {
       PR_Sync(mFd);
     }
+  }
+
+  void Seek(PRInt32 aOffset, PRSeekWhence aWhence) {
+    PR_Seek(mFd, aOffset, aWhence);
   }
 
   void write(const char* aData, size_t aSize) {
@@ -65,7 +69,7 @@ class DrawEventRecorderPRFileDesc : public gfx::DrawEventRecorderPrivate
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPRFileDesc, override)
-  explicit DrawEventRecorderPRFileDesc(const char* aFilename);
+  explicit DrawEventRecorderPRFileDesc() { };
   ~DrawEventRecorderPRFileDesc();
 
   void RecordEvent(const gfx::RecordedEvent& aEvent) override;
@@ -76,11 +80,9 @@ public:
   bool IsOpen();
 
   /**
-   * Opens new file with the provided name. The recorder does NOT forget which
-   * objects it has recorded. This can be used with Close, so that a recording
-   * can be processed in chunks. The file must not already be open.
+   * Opens the recorder with the provided PRFileDesc *.
    */
-  void OpenNew(const char* aFilename);
+  void OpenFD(PRFileDesc* aFd);
 
   /**
    * Closes the file so that it can be processed. The recorder does NOT forget
