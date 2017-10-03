@@ -179,7 +179,7 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
-async function loadAddonManager(...args) {
+function loadAddonManager(...args) {
   AddonTestUtils.init(gGlobalScope);
   AddonTestUtils.overrideCertDB();
   createAppInfo(...args);
@@ -188,8 +188,6 @@ async function loadAddonManager(...args) {
   // used by system add-ons.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
   AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
-  await AddonTestUtils.overrideBuiltIns(
-          {"system": ["tel-system-xpi@tests.mozilla.org"]});
   return AddonTestUtils.promiseStartupManager();
 }
 

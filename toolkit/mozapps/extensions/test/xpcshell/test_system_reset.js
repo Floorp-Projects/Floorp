@@ -95,7 +95,6 @@ async function check_installed(conditions) {
 
 // Test with a missing features directory
 add_task(async function test_missing_app_dir() {
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager();
 
   let conditions = [
@@ -115,7 +114,6 @@ add_task(async function test_missing_app_dir() {
 add_task(async function test_new_version() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager();
 
   let conditions = [
@@ -135,7 +133,6 @@ add_task(async function test_new_version() {
 add_task(async function test_upgrade() {
   gAppInfo.version = "2";
   distroDir.leafName = "app2";
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager();
 
   let conditions = [
@@ -155,7 +152,6 @@ add_task(async function test_upgrade() {
 add_task(async function test_downgrade() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager();
 
   let conditions = [
@@ -199,7 +195,6 @@ add_task(async function test_updated() {
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -217,7 +212,6 @@ add_task(async function test_updated() {
 // default system add-ons
 add_task(async function safe_mode_disabled() {
   gAppInfo.inSafeMode = true;
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -234,7 +228,6 @@ add_task(async function safe_mode_disabled() {
 // Leaving safe mode should re-enable the updated system add-ons
 add_task(async function normal_mode_enabled() {
   gAppInfo.inSafeMode = false;
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -254,7 +247,6 @@ add_task(async function test_skips_additional() {
   let file = do_get_file("data/system_addons/system4_1.xpi");
   file.copyTo(updatesDir, "system4@tests.mozilla.org.xpi");
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -275,7 +267,6 @@ add_task(async function test_revert() {
   // With the add-on physically gone from disk we won't see uninstall events
   BootstrapMonitor.clear("system2@tests.mozilla.org");
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   // With system add-on 2 gone the updated set is now invalid so it reverts to
@@ -296,7 +287,6 @@ add_task(async function test_reuse() {
   let file = do_get_file("data/system_addons/system2_2.xpi");
   file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -314,7 +304,6 @@ add_task(async function test_reuse() {
 add_task(async function test_corrupt_pref() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "foo");
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -351,7 +340,6 @@ add_task(async function test_bad_profile_cert() {
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -369,7 +357,6 @@ add_task(async function test_bad_profile_cert() {
 add_task(async function test_bad_app_cert() {
   gAppInfo.version = "3";
   distroDir.leafName = "app3";
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager();
 
   // Since we updated the app version, the system addon set should be reset as well.
@@ -420,7 +407,6 @@ add_task(async function test_updated_bad_update_set() {
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
-  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
   startupManager(false);
 
   let conditions = [
@@ -431,3 +417,4 @@ add_task(async function test_updated_bad_update_set() {
 
   await promiseShutdownManager();
 });
+
