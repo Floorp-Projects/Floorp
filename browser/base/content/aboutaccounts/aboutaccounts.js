@@ -18,11 +18,6 @@ Cu.import("resource://services-sync/util.js");
 
 const ACTION_URL_PARAM = "action";
 
-const OBSERVER_TOPICS = [
-  fxAccountsCommon.ONVERIFIED_NOTIFICATION,
-  fxAccountsCommon.ONLOGOUT_NOTIFICATION,
-];
-
 function log(msg) {
   // dump("FXA: " + msg + "\n");
 }
@@ -300,24 +295,15 @@ document.addEventListener("DOMContentLoaded", function() {
 function initObservers() {
   function observe(subject, topic, data) {
     log("about:accounts observed " + topic);
-    if (topic == fxAccountsCommon.ONLOGOUT_NOTIFICATION) {
-      // All about:account windows get changed to action=signin on logout.
-      window.location = "about:accounts?action=signin";
-      return;
-    }
-
-    // must be onverified - we want to open preferences.
-    openPrefs();
+    window.location = "about:accounts?action=signin";
   }
 
-  for (let topic of OBSERVER_TOPICS) {
-    Services.obs.addObserver(observe, topic);
-  }
+  Services.obs.addObserver(observe, fxAccountsCommon.ONLOGOUT_NOTIFICATION);
+
   window.addEventListener("unload", function(event) {
-    log("about:accounts unloading")
-    for (let topic of OBSERVER_TOPICS) {
-      Services.obs.removeObserver(observe, topic);
-    }
+    log("about:accounts unloading");
+    Services.obs.removeObserver(observe,
+                                fxAccountsCommon.ONLOGOUT_NOTIFICATION);
   });
 }
 initObservers();

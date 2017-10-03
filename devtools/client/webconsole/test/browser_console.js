@@ -17,7 +17,7 @@ const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 const TEST_IMAGE = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-image.png";
 
-const {ObjectClient} = require("devtools/shared/client/main");
+const ObjectClient = require("devtools/shared/client/object-client");
 
 add_task(function* () {
   yield loadTab(TEST_URI);

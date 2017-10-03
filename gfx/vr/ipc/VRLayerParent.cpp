@@ -6,6 +6,7 @@
 
 #include "VRLayerParent.h"
 #include "mozilla/Unused.h"
+#include "VRDisplayHost.h"
 
 namespace mozilla {
 namespace gfx {
@@ -55,14 +56,18 @@ VRLayerParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-VRLayerParent::RecvSubmitFrame(PTextureParent* texture,
+VRLayerParent::RecvSubmitFrame(const layers::SurfaceDescriptor &aTexture,
                                const uint64_t& aFrameId,
                                const gfx::Rect& aLeftEyeRect,
                                const gfx::Rect& aRightEyeRect)
 {
   if (mVRDisplayID) {
     VRManager* vm = VRManager::Get();
-    vm->SubmitFrame(this, texture, aFrameId, aLeftEyeRect, aRightEyeRect);
+    RefPtr<VRDisplayHost> display = vm->GetDisplay(mVRDisplayID);
+    if (display) {
+      display->SubmitFrame(this, aTexture, aFrameId,
+                           aLeftEyeRect, aRightEyeRect);
+    }
   }
 
   return IPC_OK();

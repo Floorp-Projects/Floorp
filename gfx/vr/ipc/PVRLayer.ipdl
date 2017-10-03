@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include LayersSurfaces;
 include protocol PVRManager;
-include protocol PTexture;
 
 using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
 
@@ -18,7 +18,7 @@ async protocol PVRLayer
   manager PVRManager;
 
 parent:
-  async SubmitFrame(PTexture aTexture, uint64_t aFrameId,
+  async SubmitFrame(SurfaceDescriptor aTexture, uint64_t aFrameId,
                     Rect aLeftEyeRect, Rect aRightEyeRect);
 
   async Destroy();

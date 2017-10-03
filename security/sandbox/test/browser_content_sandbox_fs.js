@@ -405,6 +405,17 @@ async function testFileAccess() {
     });
   }
 
+  if (isWin()) {
+    let extDir = GetPerUserExtensionDir();
+    tests.push({
+      desc:       "per-user extensions dir",
+      ok:         true,
+      browser:    webBrowser,
+      file:       extDir,
+      minLevel:   minHomeReadSandboxLevel(),
+    });
+  }
+
   if (isMac()) {
     // If ~/Library/Caches/TemporaryItems exists, when level <= 2 we
     // make sure it's readable. For level 3, we make sure it isn't.

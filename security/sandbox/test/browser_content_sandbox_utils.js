@@ -71,6 +71,10 @@ function GetHomeDir() {
   return (homeDir);
 }
 
+function GetPerUserExtensionDir() {
+  return Services.dirsvc.get("XREUSysExt", Ci.nsIFile);
+}
+
 // Returns a file object for the file or directory named |name| in the
 // profile directory.
 function GetProfileEntry(name) {

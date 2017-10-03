@@ -969,6 +969,11 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                        \
   NS_IMPL_RELEASE_INHERITED(aClass, aSuper)
 
+#define NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(aClass, aSuper)            \
+  NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(aClass)                                 \
+  NS_INTERFACE_MAP_END_INHERITING(aSuper)                                         \
+  NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                        \
+  NS_IMPL_RELEASE_INHERITED(aClass, aSuper)
 
 /**
  * Equivalency of the high three words where two IIDs have the same

@@ -12,7 +12,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
+  "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "gDevTools",
   "devtools/client/framework/devtools", true);
 

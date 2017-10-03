@@ -21,7 +21,7 @@ if (url.search.length > 1) {
   const { Toolbox } = require("devtools/client/framework/toolbox");
   const { TargetFactory } = require("devtools/client/framework/target");
   const { DebuggerServer } = require("devtools/server/main");
-  const { DebuggerClient } = require("devtools/shared/client/main");
+  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
   const { Task } = require("devtools/shared/task");
 
   // `host` is the frame element loading the toolbox.

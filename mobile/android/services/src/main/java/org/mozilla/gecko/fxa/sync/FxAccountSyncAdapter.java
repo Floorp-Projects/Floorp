@@ -75,7 +75,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   // Tracks the last seen storage hostname for backoff purposes.
   private static final String PREF_BACKOFF_STORAGE_HOST = "backoffStorageHost";
   // Preference key for allowing sync over metered connections.
-  public static final String PREFS_SYNC_METERED = "sync.allow_metered";
+  public static final String PREFS_SYNC_RESTRICT_METERED = "sync.restrict_metered";
 
   // Used to do cheap in-memory rate limiting. Don't sync again if we
   // successfully synced within this duration.
@@ -510,10 +510,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     boolean shouldRejectSyncViaSettings = false;
     // Check whether we should ignore settings or not.
     if (!extras.getBoolean(ContentResolver.SYNC_EXTRAS_IGNORE_SETTINGS, false)) {
-      // If it's not user-initiated, we should check if we are allowed to sync on metered connections.
-      boolean isMeteredAllowed = true;
+      // Check if we are allowed to sync on metered connections.
+      boolean isMeteredRestricted = false;
       try {
-        isMeteredAllowed = fxAccount.getSyncPrefs().getBoolean(PREFS_SYNC_METERED, true);
+        isMeteredRestricted = fxAccount.getSyncPrefs().getBoolean(PREFS_SYNC_RESTRICT_METERED, false);
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Failed to read sync preferences. Allowing metered connections by default.");
       }
@@ -522,7 +522,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       final boolean isMetered = manager.isActiveNetworkMetered();
       // If the connection is metered and syncing over metered connections is
       // not permitted, we should bail.
-      shouldRejectSyncViaSettings = !isMeteredAllowed && isMetered;
+      shouldRejectSyncViaSettings = isMeteredRestricted && isMetered;
     }
 
 

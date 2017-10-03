@@ -106,6 +106,7 @@ public:
                                                  const wr::IdNamespace& aIdNamespace,
                                                  const TimeStamp& aTxnStartTime,
                                                  const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvSetFocusTarget(const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
@@ -174,7 +175,7 @@ public:
     return mIdNamespace;
   }
 
-  void UpdateAPZ();
+  void UpdateAPZ(bool aUpdateHitTestingTree);
   const WebRenderScrollData& GetScrollData() const;
 
   void FlushRendering(bool aIsSync);
