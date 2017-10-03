@@ -463,11 +463,10 @@ namespace mozilla {
 class MOZ_RAII AutoProfilerInit
 {
 public:
-  explicit AutoProfilerInit(void* stackTop
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoProfilerInit(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_init(stackTop);
+    profiler_init(this);
   }
 
   ~AutoProfilerInit() { profiler_shutdown(); }
