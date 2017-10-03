@@ -156,12 +156,6 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
-  DrawPaintedLayerCallback GetPaintedLayerCallback() const
-  { return mPaintedLayerCallback; }
-
-  void* GetPaintedLayerCallbackData() const
-  { return mPaintedLayerCallbackData; }
-
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
   void AddImageKeyForDiscard(wr::ImageKey);
@@ -254,9 +248,7 @@ private:
 
   void ClearLayer(Layer* aLayer);
 
-  bool EndTransactionInternal(DrawPaintedLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags,
+  bool EndTransactionInternal(EndTransactionFlags aFlags,
                               nsDisplayList* aDisplayList = nullptr,
                               nsDisplayListBuilder* aDisplayListBuilder = nullptr);
 
@@ -302,11 +294,6 @@ private:
   // Compositor animation ids for animations that are done now and that we want
   // the compositor to discard information for.
   nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
-
-  /* PaintedLayer callbacks; valid at the end of a transaciton,
-   * while rendering */
-  DrawPaintedLayerCallback mPaintedLayerCallback;
-  void *mPaintedLayerCallbackData;
 
   RefPtr<WebRenderBridgeChild> mWrChild;
 
