@@ -903,7 +903,7 @@ body,
 .tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel,
 .tree-container .treeTable .treeRow.tree-section > .treeLabelCell > .treeLabel:hover,
 .tree-container .treeTable .treeRow.tree-section > .treeValueCell:not(:hover) * {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-toolbar-color);
 }
 
 .tree-container .treeTable .treeValueCell {

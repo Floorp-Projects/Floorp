@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  document.head.appendChild(build_rule(".x[y~='e500']", 100000, "{ color: blue; }"));
+  var div = document.createElement("div");
+  div.className = "x";
+  let val = "";
+  for (let i = 0; i < 1000; i++) {
+    val += "e" + i + " ";
+  }
+  div.setAttribute("y", val);
+  document.body.appendChild(div);
+  flush_style(div);
+  perf_start();
+  div.style.color = "green";
+  flush_style(div);
+  perf_finish();
+};
+</script>
+<body></body>

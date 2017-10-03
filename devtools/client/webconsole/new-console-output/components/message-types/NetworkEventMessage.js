@@ -12,7 +12,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/Message"));
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const TabboxPanel = createFactory(require("devtools/client/netmonitor/src/components/tabbox-panel"));

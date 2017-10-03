@@ -13,8 +13,8 @@ const Provider = createFactory(require("react-redux").Provider);
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
-const EvaluationResult = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result"));
-const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
+const EvaluationResult = createFactory(require("devtools/client/webconsole/new-console-output/components/message-types/EvaluationResult"));
+const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/MessageIndent");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
