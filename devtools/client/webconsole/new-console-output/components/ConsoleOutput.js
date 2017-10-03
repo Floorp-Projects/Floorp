@@ -19,7 +19,7 @@ const {
   getVisibleMessages,
   getAllRepeatById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
-const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/message-container").MessageContainer);
+const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/MessageContainer").MessageContainer);
 const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/new-console-output/constants");

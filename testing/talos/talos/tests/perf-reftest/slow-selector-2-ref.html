@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<style>
+.first:first-child { color: blue; }
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  let root = document.createElement("div");
+  root.appendChild(document.createElement("div"));
+  let first = document.createElement("div");
+  first.className = "first";
+  root.appendChild(first);
+  document.body.appendChild(root);
+  flush_style(root);
+  perf_start();
+  root.firstChild.remove();
+  flush_style(root);
+  perf_finish();
+};
+</script>

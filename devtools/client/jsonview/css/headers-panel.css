@@ -24,7 +24,7 @@
 }
 
 .headersPanelBox .netInfoHeadersGroup {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-toolbar-color);
   margin-bottom: 10px;
   border-bottom: 1px solid var(--theme-splitter-color);
   padding-top: 8px;

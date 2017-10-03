@@ -249,6 +249,15 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if(ctx->stun_servers[j].transport!=IPPROTO_UDP)
             continue;
 
+          if (ctx->stun_servers[j].type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
+            if (nr_transport_addr_check_compatibility(
+                  &addrs[i].addr,
+                  &ctx->stun_servers[j].u.addr)) {
+              r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping STUN server because of link local mis-match",ctx->label);
+              continue;
+            }
+          }
+
           /* Ensure id is set (nr_ice_ctx_set_stun_servers does not) */
           ctx->stun_servers[j].id = j;
           if(r=nr_ice_candidate_create(ctx,component,
@@ -278,6 +287,15 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         /* Skip non-UDP */
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_UDP)
           continue;
+
+        if (ctx->turn_servers[j].turn_server.type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
+          if (nr_transport_addr_check_compatibility(
+                &addrs[i].addr,
+                &ctx->turn_servers[j].turn_server.u.addr)) {
+            r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of link local mis-match",ctx->label);
+            continue;
+          }
+        }
 
         if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
           /* Ensure id is set with a unique value */
@@ -514,12 +532,13 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_TCP)
           continue;
 
-        if (ctx->turn_servers[j].turn_server.type == NR_ICE_STUN_SERVER_TYPE_ADDR &&
-            nr_transport_addr_cmp(&ctx->turn_servers[j].turn_server.u.addr,
-                                  &addrs[i].addr,
-                                  NR_TRANSPORT_ADDR_CMP_MODE_VERSION)) {
-          r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of IP version mis-match (%u - %u)",ctx->label,addrs[i].addr.ip_version,ctx->turn_servers[j].turn_server.u.addr.ip_version);
-          continue;
+        if (ctx->turn_servers[j].turn_server.type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
+          if (nr_transport_addr_check_compatibility(
+                &addrs[i].addr,
+                &ctx->turn_servers[j].turn_server.u.addr)) {
+            r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of link local mis-match",ctx->label);
+            continue;
+          }
         }
 
         if (!ice_tcp_disabled) {

@@ -11,8 +11,8 @@ const {
   createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
-const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/grip-message-body");
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/Message"));
+const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/GripMessageBody");
 
 EvaluationResult.displayName = "EvaluationResult";
 
