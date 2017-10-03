@@ -199,6 +199,7 @@ class Automation(object):
         envVar = "DYLD_LIBRARY_PATH"
         dmdLibrary = "libdmd.dylib"
       else: # unixish
+        env['MOZILLA_FIVE_HOME'] = xrePath
         dmdLibrary = "libdmd.so"
       if envVar in env:
         ldLibraryPath = ldLibraryPath + ":" + env[envVar]
