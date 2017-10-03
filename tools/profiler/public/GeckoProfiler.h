@@ -60,6 +60,11 @@ class TimeStamp;
 # define PROFILER_FUNC_VOID(decl) static inline void decl {}
 #endif
 
+// Macros used by the AUTO_PROFILER_* macros below.
+#define PROFILER_RAII_PASTE(id, line) id ## line
+#define PROFILER_RAII_EXPAND(id, line) PROFILER_RAII_PASTE(id, line)
+#define PROFILER_RAII PROFILER_RAII_EXPAND(raiiObject, __LINE__)
+
 //---------------------------------------------------------------------------
 // Profiler features
 //---------------------------------------------------------------------------
@@ -351,12 +356,6 @@ PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
 // Put profiling data into the profiler (labels and markers)
 //---------------------------------------------------------------------------
 
-#define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
-#define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
-  PROFILER_APPEND_LINE_NUMBER_PASTE(id, line)
-#define PROFILER_APPEND_LINE_NUMBER(id) \
-  PROFILER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
-
 // Insert an RAII object in this scope to enter a pseudo stack frame. Any
 // samples collected in this scope will contain this label in their pseudo
 // stack. The label argument must be a string literal. It is usually of the
@@ -368,9 +367,8 @@ PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
 // Use AUTO_PROFILER_LABEL_DYNAMIC if you want to add additional / dynamic
 // information to the pseudo stack frame.
 #define AUTO_PROFILER_LABEL(label, category) \
-  mozilla::AutoProfilerLabel \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)( \
-    label, nullptr, __LINE__, js::ProfileEntry::Category::category)
+  mozilla::AutoProfilerLabel PROFILER_RAII(label, nullptr, __LINE__, \
+                                           js::ProfileEntry::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL, but with an additional string. The inserted
 // RAII object stores the dynamicStr pointer in a field; it does not copy the
@@ -389,9 +387,8 @@ PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
 // Consequently, AUTO_PROFILER_LABEL frames take up considerably less space in
 // the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC frames.
 #define AUTO_PROFILER_LABEL_DYNAMIC(label, category, dynamicStr) \
-  mozilla::AutoProfilerLabel \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)( \
-    label, dynamicStr, __LINE__, js::ProfileEntry::Category::category)
+  mozilla::AutoProfilerLabel PROFILER_RAII(label, dynamicStr, __LINE__, \
+                                           js::ProfileEntry::Category::category)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
