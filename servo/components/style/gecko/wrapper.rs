@@ -66,7 +66,7 @@ use gecko_bindings::structs::nsChangeHint;
 use gecko_bindings::structs::nsIDocument_DocumentTheme as DocumentTheme;
 use gecko_bindings::structs::nsRestyleHint;
 use gecko_bindings::sugar::ownership::{HasArcFFI, HasSimpleFFI};
-use hash::HashMap;
+use hash::FnvHashMap;
 use logical_geometry::WritingMode;
 use media_queries::Device;
 use properties::{ComputedValues, parse_style_attribute};
@@ -1308,14 +1308,14 @@ impl<'le> TElement for GeckoElement<'le> {
     }
 
     fn get_css_transitions_info(&self)
-                                -> HashMap<TransitionProperty, Arc<AnimationValue>> {
+                                -> FnvHashMap<TransitionProperty, Arc<AnimationValue>> {
         use gecko_bindings::bindings::Gecko_ElementTransitions_EndValueAt;
         use gecko_bindings::bindings::Gecko_ElementTransitions_Length;
         use gecko_bindings::bindings::Gecko_ElementTransitions_PropertyAt;
 
         let collection_length =
             unsafe { Gecko_ElementTransitions_Length(self.0) };
-        let mut map = HashMap::with_capacity(collection_length);
+        let mut map = FnvHashMap::with_capacity_and_hasher(collection_length, Default::default());
         for i in 0..collection_length {
             let (property, raw_end_value) = unsafe {
                 (Gecko_ElementTransitions_PropertyAt(self.0, i as usize).into(),
@@ -1364,8 +1364,9 @@ impl<'le> TElement for GeckoElement<'le> {
                                 before_change_style: &ComputedValues,
                                 after_change_style: &ComputedValues)
                                 -> bool {
+        use fnv::FnvBuildHasher;
         use gecko_bindings::structs::nsCSSPropertyID;
-        use hash::HashSet;
+        use hash::FnvHashSet;
 
         debug_assert!(self.might_need_transitions_update(Some(before_change_style),
                                                          after_change_style),
@@ -1378,7 +1379,10 @@ impl<'le> TElement for GeckoElement<'le> {
         let mut transitions_to_keep = if !existing_transitions.is_empty() &&
                                          (after_change_box_style.transition_nscsspropertyid_at(0) !=
                                               nsCSSPropertyID::eCSSPropertyExtra_all_properties) {
-            Some(HashSet::<TransitionProperty>::with_capacity(transitions_count))
+            Some(FnvHashSet::<TransitionProperty>::with_capacity_and_hasher(
+                transitions_count,
+                FnvBuildHasher::default(),
+            ))
         } else {
             None
         };
@@ -1451,7 +1455,7 @@ impl<'le> TElement for GeckoElement<'le> {
         combined_duration: f32,
         before_change_style: &ComputedValues,
         after_change_style: &ComputedValues,
-        existing_transitions: &HashMap<TransitionProperty, Arc<AnimationValue>>,
+        existing_transitions: &FnvHashMap<TransitionProperty, Arc<AnimationValue>>,
     ) -> bool {
         use values::animated::{Animate, Procedure};
 
