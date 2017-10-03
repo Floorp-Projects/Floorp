@@ -19,11 +19,9 @@
 #include "js/Debug.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
 
-#include "vm/Debugger-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
@@ -1500,7 +1498,7 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
 
     // Let the Debugger know about this Promise.
     if (informDebugger)
-        Debugger::onNewPromise(cx, promise);
+        JS::dbg::onNewPromise(cx, promise);
 
     return promise;
 }
@@ -1673,7 +1671,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     }
 
     // Let the Debugger know about this Promise.
-    Debugger::onNewPromise(cx, promise);
+    JS::dbg::onNewPromise(cx, promise);
 
     // Step 11.
     return promise;
@@ -3387,7 +3385,7 @@ PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
     if (promise->state() == JS::PromiseState::Rejected && promise->isUnhandled())
         cx->runtime()->addUnhandledRejectedPromise(cx, promise);
 
-    Debugger::onPromiseSettled(cx, promise);
+    JS::dbg::onPromiseSettled(cx, promise);
 }
 
 OffThreadPromiseTask::OffThreadPromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
