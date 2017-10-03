@@ -187,7 +187,7 @@ fn parse_case(tts: &mut iter::Peekable<vec::IntoIter<syn::TokenTree>>,
             Some(syn::TokenTree::Token(syn::Token::Ident(ident))) => {
                 assert_eq!(last_byte, None, "I don't support ranges with identifiers!");
                 assert_eq!(*binding, None);
-                for mut byte in table.iter_mut() {
+                for byte in table.iter_mut() {
                     if *byte == 0 {
                         *byte = case_id;
                     }
@@ -196,7 +196,7 @@ fn parse_case(tts: &mut iter::Peekable<vec::IntoIter<syn::TokenTree>>,
             }
             Some(syn::TokenTree::Token(syn::Token::Underscore)) => {
                 assert_eq!(last_byte, None);
-                for mut byte in table.iter_mut() {
+                for byte in table.iter_mut() {
                     if *byte == 0 {
                         *byte = case_id;
                     }

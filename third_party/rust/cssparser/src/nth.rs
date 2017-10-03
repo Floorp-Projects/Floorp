@@ -89,9 +89,10 @@ fn parse_signless_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32, b_sign: i32) -> 
 }
 
 fn parse_n_dash_digits(string: &str) -> Result<i32, ()> {
-    if string.len() >= 3
-    && string[..2].eq_ignore_ascii_case("n-")
-    && string[2..].chars().all(|c| matches!(c, '0'...'9'))
+    let bytes = string.as_bytes();
+    if bytes.len() >= 3
+    && bytes[..2].eq_ignore_ascii_case(b"n-")
+    && bytes[2..].iter().all(|&c| matches!(c, b'0'...b'9'))
     {
         Ok(parse_number_saturate(&string[1..]).unwrap())  // Include the minus sign
     } else {
