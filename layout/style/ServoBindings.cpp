@@ -68,7 +68,6 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
-#include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
 
@@ -2631,13 +2630,6 @@ Gecko_ShouldCreateStyleThreadPool()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return !mozilla::BrowserTabsRemoteAutostart() || XRE_IsContentProcess();
-}
-
-size_t
-Gecko_GetSystemPageSize()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mozilla::ipc::SharedMemory::SystemPageSize();
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
