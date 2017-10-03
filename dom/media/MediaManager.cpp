@@ -3856,7 +3856,7 @@ SourceListener::NotifyRemoved()
   LOG(("SourceListener removed, mFinished = %d", (int) mFinished));
   mRemoved = true;
 
-  if (!mFinished) {
+  if (mActivated && !mFinished) {
     NotifyFinished();
   }
 
