@@ -7,7 +7,6 @@
 
 #include "FrameMetrics.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderLayer.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "UnitTransforms.h"
@@ -15,86 +14,12 @@
 namespace mozilla {
 namespace layers {
 
-ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
-                                             wr::DisplayListBuilder& aBuilder,
-                                             wr::IpcResourceUpdateQueue& aResources,
-                                             const StackingContextHelper& aStackingContext)
-  : mLayer(aLayer)
-  , mBuilder(&aBuilder)
-  , mPushedLayerLocalClip(false)
-  , mPushedClipAndScroll(false)
-{
-  if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
-    // If APZ is disabled then we don't need to push the scrolling clips. We
-    // still want to push the layer's local clip though.
-    PushLayerLocalClip(aStackingContext, aResources);
-    return;
-  }
-
-  Layer* layer = mLayer->GetLayer();
-  for (uint32_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
-    const ScrollMetadata& metadata = layer->GetScrollMetadata(i - 1);
-    // The scroll clip on a given metadata is affected by all async transforms
-    // from metadatas "above" it, but not the async transform on the metadata
-    // itself. Therefore we need to push this clip before we push the
-    // corresponding scroll layer, so that when we set an async scroll position
-    // on the scroll layer, the clip isn't affected by it.
-    if (const Maybe<LayerClip>& clip = metadata.GetScrollClip()) {
-      PushLayerClip(clip.ref(), aStackingContext, aResources);
-    }
-
-    const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
-    if (layer->GetIsFixedPosition() &&
-        layer->GetFixedPositionScrollContainerId() == fm.GetScrollId()) {
-      // If the layer contents are fixed for this metadata onwards, we need
-      // to insert the layer's local clip at this point in the clip tree,
-      // as a child of whatever's on the stack.
-      PushLayerLocalClip(aStackingContext, aResources);
-    }
-
-    DefineAndPushScrollLayer(fm, aStackingContext);
-  }
-
-  // The scrolled clip on the layer is "inside" all of the scrollable metadatas
-  // on that layer. That is, the clip scrolls along with the content in
-  // child layers. So we need to apply this after pushing all the scroll layers,
-  // which we do above.
-  if (const Maybe<LayerClip>& scrolledClip = layer->GetScrolledClip()) {
-    PushLayerClip(scrolledClip.ref(), aStackingContext, aResources);
-  }
-
-  // If the layer is marked as fixed-position, it is fixed relative to something
-  // (the scroll layer referred to by GetFixedPositionScrollContainerId, hereafter
-  // referred to as the "scroll container"). What this really means is that we
-  // don't want this content to scroll with any scroll layer on the stack up to
-  // and including the scroll container, but we do want it to scroll with any
-  // ancestor scroll layers.
-  // Also, the local clip on the layer (defined by layer->GetClipRect() and
-  // layer->GetMaskLayer()) also need to be fixed relative to the scroll
-  // container. This is why we inserted it into the clip tree during the
-  // loop above when we encountered the scroll container.
-  // At this point we do a PushClipAndScrollInfo that maintains
-  // the current non-scrolling clip stack, but resets the scrolling clip stack
-  // to the ancestor of the scroll container.
-  if (layer->GetIsFixedPosition()) {
-    FrameMetrics::ViewID fixedFor = layer->GetFixedPositionScrollContainerId();
-    Maybe<FrameMetrics::ViewID> scrollsWith = mBuilder->ParentScrollIdFor(fixedFor);
-    Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
-    // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
-    mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
-  } else {
-    PushLayerLocalClip(aStackingContext, aResources);
-  }
-}
-
 ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
                                              wr::DisplayListBuilder& aBuilder,
                                              const StackingContextHelper& aStackingContext,
                                              WebRenderLayerManager::ClipIdMap& aCache,
                                              bool aApzEnabled)
-  : mLayer(nullptr)
-  , mBuilder(&aBuilder)
-  , mPushedLayerLocalClip(false)
+  : mBuilder(&aBuilder)
   , mPushedClipAndScroll(false)
 {
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -275,98 +200,22 @@ ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
   return true;
 }
 
-void
-ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStackingContext,
-                                          wr::IpcResourceUpdateQueue& aResources)
-{
-  Layer* layer = mLayer->GetLayer();
-  Maybe<ParentLayerRect> clip;
-  if (const Maybe<ParentLayerIntRect>& rect = layer->GetClipRect()) {
-    clip = Some(IntRectToRect(rect.ref()));
-  } else if (layer->GetMaskLayer()) {
-    // this layer has a mask, but no clip rect. so let's use the transformed
-    // visible bounds as the clip rect.
-    clip = Some(layer->GetLocalTransformTyped().TransformBounds(mLayer->Bounds()));
-  }
-  if (clip) {
-    Maybe<wr::WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext, aResources);
-    LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
-        PixelCastJustification::MovingDownToChildren);
-    mBuilder->PushClip(mBuilder->DefineClip(
-        aStackingContext.ToRelativeLayoutRect(clipRect), nullptr, mask.ptrOr(nullptr)));
-    mPushedLayerLocalClip = true;
-  }
-}
-
-void
-ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
-                                     const StackingContextHelper& aSc,
-                                     wr::IpcResourceUpdateQueue& aResources)
-{
-  LayerRect clipRect = IntRectToRect(ViewAs<LayerPixel>(aClip.GetClipRect(),
-        PixelCastJustification::MovingDownToChildren));
-  Maybe<wr::WrImageMask> mask;
-  if (Maybe<size_t> maskLayerIndex = aClip.GetMaskLayerIndex()) {
-    Layer* maskLayer = mLayer->GetLayer()->GetAncestorMaskLayerAt(maskLayerIndex.value());
-    WebRenderLayer* maskWrLayer = WebRenderLayer::ToWebRenderLayer(maskLayer);
-    // TODO: check this transform is correct in all cases
-    mask = maskWrLayer->RenderMaskLayer(aSc, maskLayer->GetTransform(), aResources);
-  }
-  mBuilder->PushClip(mBuilder->DefineClip(
-      aSc.ToRelativeLayoutRect(clipRect), nullptr, mask.ptrOr(nullptr)));
-}
-
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
-  if (!mLayer) {
-    // For layers-free mode.
-    if (mPushedClipAndScroll) {
-      mBuilder->PopClipAndScrollInfo();
-    }
-    while (!mPushedClips.empty()) {
-      wr::ScrollOrClipId id = mPushedClips.back();
-      if (id.is<wr::WrClipId>()) {
-        mBuilder->PopClip();
-      } else {
-        MOZ_ASSERT(id.is<FrameMetrics::ViewID>());
-        mBuilder->PopScrollLayer();
-      }
-      mPushedClips.pop_back();
-    }
-    return;
-  }
-
-  Layer* layer = mLayer->GetLayer();
-  if (!mLayer->WrManager()->AsyncPanZoomEnabled()) {
-    if (mPushedLayerLocalClip) {
-      mBuilder->PopClip();
-    }
-    return;
-  }
-
-  if (layer->GetIsFixedPosition()) {
+  if (mPushedClipAndScroll) {
     mBuilder->PopClipAndScrollInfo();
-  } else if (mPushedLayerLocalClip) {
-    mBuilder->PopClip();
   }
-  if (layer->GetScrolledClip()) {
-    mBuilder->PopClip();
-  }
-  for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i);
-    if (fm.IsScrollable()) {
+  while (!mPushedClips.empty()) {
+    wr::ScrollOrClipId id = mPushedClips.back();
+    if (id.is<wr::WrClipId>()) {
+      mBuilder->PopClip();
+    } else {
+      MOZ_ASSERT(id.is<FrameMetrics::ViewID>());
       mBuilder->PopScrollLayer();
     }
-    if (layer->GetIsFixedPosition() &&
-        layer->GetFixedPositionScrollContainerId() == fm.GetScrollId() &&
-        mPushedLayerLocalClip) {
-      mBuilder->PopClip();
-    }
-    const ScrollMetadata& metadata = layer->GetScrollMetadata(i);
-    if (metadata.GetScrollClip()) {
-      mBuilder->PopClip();
-    }
+    mPushedClips.pop_back();
   }
+  return;
 }
 
 } // namespace layers
