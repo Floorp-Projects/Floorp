@@ -58,6 +58,10 @@ public class TestActivityStreamConfiguration {
      */
     private Locale getLocaleFromLanguageTag(final String tag) {
         final String[] split = tag.split("-");
-        return new Locale(split[0], split[1]);
+        if (split.length == 1) {
+            return new Locale(split[0]);
+        } else {
+            return new Locale(split[0], split[1]);
+        }
     }
 }
