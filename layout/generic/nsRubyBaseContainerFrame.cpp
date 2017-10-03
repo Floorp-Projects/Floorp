@@ -314,12 +314,12 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   mDescendantLeadings.Reset();
 
   nsIFrame* lineContainer = aReflowInput.mLineLayout->LineContainerFrame();
-  MoveOverflowToChildList(lineContainer);
+  MoveInlineOverflowToChildList(lineContainer);
   // Ask text containers to drain overflows
   AutoRubyTextContainerArray textContainers(this);
   const uint32_t rtcCount = textContainers.Length();
   for (uint32_t i = 0; i < rtcCount; i++) {
-    textContainers[i]->MoveOverflowToChildList(lineContainer);
+    textContainers[i]->MoveInlineOverflowToChildList(lineContainer);
   }
 
   WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();

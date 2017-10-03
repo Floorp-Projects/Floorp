@@ -629,12 +629,20 @@ protected:
    * Resets the overlist pointers to nullptr, and updates the receiver's child
    * count and content mapping.
    *
-   * @param aLineContainer the line container of the current frame if it
-   *          has one. nullptr if unrelated.
+   * @return true if any frames were moved and false otherwise
+   */
+  bool MoveOverflowToChildList();
+
+  /**
+   * Basically same as MoveOverflowToChildList, except that this is for
+   * handling inline children where children of prev-in-flow can be
+   * pushed to overflow list even if a next-in-flow exists.
+   *
+   * @param aLineContainer the line container of the current frame.
    *
    * @return true if any frames were moved and false otherwise
    */
-  bool MoveOverflowToChildList(nsIFrame* aLineContainer = nullptr);
+  bool MoveInlineOverflowToChildList(nsIFrame* aLineContainer);
 
   /**
    * Push aFromChild and its next siblings to the overflow list.
