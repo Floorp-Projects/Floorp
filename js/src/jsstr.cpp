@@ -2855,7 +2855,7 @@ js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString patt
     if (!repl)
         return nullptr;
 
-    RootedAtom pat(cx, AtomizeString(cx, pattern));
+    RootedLinearString pat(cx, pattern->ensureLinear(cx));
     if (!pat)
         return nullptr;
 
