@@ -142,13 +142,13 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
   }
-  void GetSrc(nsAString& aSrc)
+  void GetSrc(nsAString& aSrc, nsIPrincipal&)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {
-    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
   void GetSrcset(nsAString& aSrcset)
   {
@@ -426,6 +426,7 @@ private:
 
   bool mInDocResponsiveContent;
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
+  nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 
   // Last URL that was attempted to load by this element.
   nsCOMPtr<nsIURI> mLastSelectedSource;

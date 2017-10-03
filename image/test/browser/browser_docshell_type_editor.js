@@ -109,7 +109,9 @@ add_task(async function() {
           resolve();
         }
         doc.body.appendChild(image);
-        image.src = "chrome://test1/skin/privileged.png";
+        // Set the src via wrappedJSObject so the load is triggered with
+        // the content page's principal rather than ours.
+        image.wrappedJSObject.src = "chrome://test1/skin/privileged.png";
       });
     });
   });
