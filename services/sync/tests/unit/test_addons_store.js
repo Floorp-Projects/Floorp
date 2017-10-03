@@ -37,7 +37,6 @@ function loadSystemAddon() {
 
 loadAddonTestFunctions();
 loadSystemAddon();
-awaitPromise(overrideBuiltIns({ "system": [SYSTEM_ADDON_ID] }));
 startupManager();
 
 let engine;
