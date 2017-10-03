@@ -171,12 +171,7 @@ public:
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
-  virtual void Mutated(Layer* aLayer) override;
-  virtual void MutatedSimple(Layer* aLayer) override;
-
-  void Hold(Layer* aLayer);
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
-  bool IsMutatedLayer(Layer* aLayer);
 
   // See equivalent function in ClientLayerManager
   void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
@@ -302,8 +297,6 @@ private:
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
-  LayerRefArray mKeepAlive;
-
   // These fields are used to save a copy of the display list for
   // empty transactions in layers-free mode.
   wr::BuiltDisplayList mBuiltDisplayList;
@@ -337,12 +330,6 @@ public:
 private:
   ClipIdMap mClipIdCache;
 
-  // Layers that have been mutated. If we have an empty transaction
-  // then a display item layer will no longer be valid
-  // if it was a mutated layers.
-  void AddMutatedLayer(Layer* aLayer);
-  void ClearMutatedLayers();
-  LayerRefArray mMutatedLayers;
   bool mTransactionIncomplete;
 
   bool mNeedsComposite;
