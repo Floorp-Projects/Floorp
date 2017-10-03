@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
+#include "mozilla/UniquePtrExtensions.h"
 #else
 #ifdef XP_MACOSX
 #include <crt_externs.h>
@@ -72,6 +73,7 @@ nsProcess::nsProcess()
   , mShutdown(false)
   , mBlocking(false)
   , mStartHidden(false)
+  , mNoShell(false)
   , mPid(-1)
   , mObserver(nullptr)
   , mWeakObserver(nullptr)
@@ -466,46 +468,78 @@ nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
 
 #if defined(PROCESSMODEL_WINAPI)
   BOOL retVal;
-  wchar_t* cmdLine = nullptr;
+  UniqueFreePtr<wchar_t> cmdLine;
 
   // |aMyArgv| is null-terminated and always starts with the program path. If
   // the second slot is non-null then arguments are being passed.
-  if (aMyArgv[1] && assembleCmdLine(aMyArgv + 1, &cmdLine,
-                                    aArgsUTF8 ? CP_UTF8 : CP_ACP) == -1) {
-    return NS_ERROR_FILE_EXECUTION_FAILED;
-  }
+  if (aMyArgv[1] || mNoShell) {
+    // Pass the executable path as argv[0] to the launched program when calling
+    // CreateProcess().
+    char** argv = mNoShell ? aMyArgv : aMyArgv + 1;
 
-  /* The SEE_MASK_NO_CONSOLE flag is important to prevent console windows
-   * from appearing. This makes behavior the same on all platforms. The flag
-   * will not have any effect on non-console applications.
-   */
+    wchar_t* assembledCmdLine = nullptr;
+    if (assembleCmdLine(argv, &assembledCmdLine,
+                        aArgsUTF8 ? CP_UTF8 : CP_ACP) == -1) {
+      return NS_ERROR_FILE_EXECUTION_FAILED;
+    }
+    cmdLine.reset(assembledCmdLine);
+  }
 
   // The program name in aMyArgv[0] is always UTF-8
   NS_ConvertUTF8toUTF16 wideFile(aMyArgv[0]);
 
-  SHELLEXECUTEINFOW sinfo;
-  memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
-  sinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-  sinfo.hwnd   = nullptr;
-  sinfo.lpFile = wideFile.get();
-  sinfo.nShow  = mStartHidden ? SW_HIDE : SW_SHOWNORMAL;
-  sinfo.fMask  = SEE_MASK_FLAG_DDEWAIT |
-                 SEE_MASK_NO_CONSOLE |
-                 SEE_MASK_NOCLOSEPROCESS;
+  if (mNoShell) {
+    STARTUPINFO startupInfo;
+    ZeroMemory(&startupInfo, sizeof(startupInfo));
+    startupInfo.cb = sizeof(startupInfo);
+    startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+    startupInfo.wShowWindow = mStartHidden ? SW_HIDE : SW_SHOWNORMAL;
 
-  if (cmdLine) {
-    sinfo.lpParameters = cmdLine;
-  }
+    PROCESS_INFORMATION processInfo;
+    retVal = CreateProcess(/* lpApplicationName = */ wideFile.get(),
+                           /* lpCommandLine */ cmdLine.get(),
+                           /* lpProcessAttributes = */ NULL,
+                           /* lpThreadAttributes = */ NULL,
+                           /* bInheritHandles = */ FALSE,
+                           /* dwCreationFlags = */ 0,
+                           /* lpEnvironment = */ NULL,
+                           /* lpCurrentDirectory = */ NULL,
+                           /* lpStartupInfo = */ &startupInfo,
+                           /* lpProcessInformation */ &processInfo);
 
-  retVal = ShellExecuteExW(&sinfo);
-  if (!retVal) {
-    return NS_ERROR_FILE_EXECUTION_FAILED;
-  }
+    if (!retVal) {
+      return NS_ERROR_FILE_EXECUTION_FAILED;
+    }
 
-  mProcess = sinfo.hProcess;
+    CloseHandle(processInfo.hThread);
 
-  if (cmdLine) {
-    free(cmdLine);
+    mProcess = processInfo.hProcess;
+  } else {
+    SHELLEXECUTEINFOW sinfo;
+    memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
+    sinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+    sinfo.hwnd   = nullptr;
+    sinfo.lpFile = wideFile.get();
+    sinfo.nShow  = mStartHidden ? SW_HIDE : SW_SHOWNORMAL;
+
+    /* The SEE_MASK_NO_CONSOLE flag is important to prevent console windows
+     * from appearing. This makes behavior the same on all platforms. The flag
+     * will not have any effect on non-console applications.
+     */
+    sinfo.fMask  = SEE_MASK_FLAG_DDEWAIT |
+                   SEE_MASK_NO_CONSOLE |
+                   SEE_MASK_NOCLOSEPROCESS;
+
+    if (cmdLine) {
+      sinfo.lpParameters = cmdLine.get();
+    }
+
+    retVal = ShellExecuteExW(&sinfo);
+    if (!retVal) {
+      return NS_ERROR_FILE_EXECUTION_FAILED;
+    }
+
+    mProcess = sinfo.hProcess;
   }
 
   mPid = GetProcessId(mProcess);
@@ -600,6 +634,20 @@ NS_IMETHODIMP
 nsProcess::SetStartHidden(bool aStartHidden)
 {
   mStartHidden = aStartHidden;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProcess::GetNoShell(bool* aNoShell)
+{
+  *aNoShell = mNoShell;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProcess::SetNoShell(bool aNoShell)
+{
+  mNoShell = aNoShell;
   return NS_OK;
 }
 
