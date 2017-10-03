@@ -461,7 +461,7 @@ TEST(GeckoProfiler, Markers)
   profiler_tracing("A", "C", TRACING_INTERVAL_END);
 
   UniqueProfilerBacktrace bt = profiler_get_backtrace();
-  profiler_tracing("B", "A", Move(bt), TRACING_EVENT);
+  profiler_tracing("B", "A", TRACING_EVENT, Move(bt));
 
   {
     AutoProfilerTracing tracing("C", "A");
