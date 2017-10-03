@@ -36,7 +36,7 @@ enum FrameType
 
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
-    JitFrame_Entry,
+    JitFrame_CppToJSJit,
 
     // A rectifier frame sits in between two JS frames, adapting argc != nargs
     // mismatches in calls.
@@ -55,6 +55,11 @@ enum FrameType
     // frame is always the last frame in a JitActivation iff the bailout frame
     // information is recorded on the JitActivation.
     JitFrame_Bailout,
+
+    // A wasm to JS frame is constructed during fast calls from wasm to the JS
+    // jits, used as a marker to interleave JS jit and wasm frames. From the
+    // point of view of JS JITs, this is just another kind of entry frame.
+    JitFrame_WasmToJSJit,
 };
 
 enum ReadFrameArgsBehavior {
@@ -173,9 +178,13 @@ class JSJitFrameIter
     bool isBareExit() const;
     template <typename T> bool isExitFrameLayout() const;
 
-    bool isEntry() const {
-        return type_ == JitFrame_Entry;
+    static bool isEntry(FrameType type) {
+        return type == JitFrame_CppToJSJit || type == JitFrame_WasmToJSJit;
     }
+    bool isEntry() const {
+        return isEntry(type_);
+    }
+
     bool isFunctionFrame() const;
 
     bool isConstructing() const;
@@ -206,10 +215,10 @@ class JSJitFrameIter
         return frameSize_;
     }
 
-    // Functions used to iterate on frames. When prevType is JitFrame_Entry,
-    // the current frame is the last frame.
+    // Functions used to iterate on frames. When prevType is an entry,
+    // the current frame is the last JS Jit frame.
     bool done() const {
-        return type_ == JitFrame_Entry;
+        return isEntry();
     }
     void operator++();
 

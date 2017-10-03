@@ -638,8 +638,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
 void
 nsRange::ContentAppended(nsIDocument* aDocument,
                          nsIContent*  aContainer,
-                         nsIContent*  aFirstNewContent,
-                         int32_t      aNewIndexInContainer)
+                         nsIContent*  aFirstNewContent)
 {
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
 
@@ -677,8 +676,7 @@ nsRange::ContentAppended(nsIDocument* aDocument,
 void
 nsRange::ContentInserted(nsIDocument* aDocument,
                          nsIContent* aContainer,
-                         nsIContent* aChild,
-                         int32_t /* aIndexInContainer */)
+                         nsIContent* aChild)
 {
   MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
 
@@ -731,7 +729,6 @@ void
 nsRange::ContentRemoved(nsIDocument* aDocument,
                         nsIContent* aContainer,
                         nsIContent* aChild,
-                        int32_t /* aIndexInContainer */,
                         nsIContent* aPreviousSibling)
 {
   MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");

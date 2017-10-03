@@ -924,8 +924,7 @@ nsImageMap::AttributeChanged(nsIDocument*  aDocument,
 void
 nsImageMap::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aFirstNewContent,
-                            int32_t     /* unused */)
+                            nsIContent* aFirstNewContent)
 {
   MaybeUpdateAreas(aContainer);
 }
@@ -933,8 +932,7 @@ nsImageMap::ContentAppended(nsIDocument *aDocument,
 void
 nsImageMap::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aChild,
-                            int32_t /* unused */)
+                            nsIContent* aChild)
 {
   MaybeUpdateAreas(aContainer);
 }
@@ -943,7 +941,6 @@ void
 nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
-                           int32_t aIndexInContainer,
                            nsIContent* aPreviousSibling)
 {
   MaybeUpdateAreas(aContainer);

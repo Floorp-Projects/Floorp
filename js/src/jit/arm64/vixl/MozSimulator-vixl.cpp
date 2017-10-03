@@ -257,7 +257,7 @@ void Simulator::handle_wasm_interrupt() {
   state.fp = fp;
   state.lr = (uint8_t*) xreg(30);
   state.sp = (uint8_t*) xreg(31);
-  js::wasm::ActivationIfInnermost(cx_)->startInterrupt(state);
+  cx_->activation_->asJit()->startWasmInterrupt(state);
 
   set_pc((Instruction*)cs->interruptCode());
 }

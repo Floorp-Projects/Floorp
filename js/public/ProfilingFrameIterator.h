@@ -46,9 +46,17 @@ struct ForEachTrackedOptimizationTypeInfoOp;
 // contents to become out of date.
 class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
 {
+  public:
+    enum class Kind : bool {
+        JSJit,
+        Wasm
+    };
+
+  private:
     JSContext* cx_;
     uint32_t sampleBufferGen_;
     js::Activation* activation_;
+    Kind kind_;
 
     static const unsigned StorageSpace = 8 * sizeof(void*);
     alignas(void*) unsigned char storage_[StorageSpace];
@@ -79,6 +87,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
         return *static_cast<const js::jit::JitProfilingFrameIterator*>(storage());
     }
 
+    void settleFrames();
     void settle();
 
     bool hasSampleBufferGen() const {

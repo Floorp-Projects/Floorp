@@ -237,7 +237,7 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
     mIPCSync = !!boolval;
 
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookieLeaveSecurityAlone, &boolval)))
-   mLeaveSecureAlone = !!boolval;
+    mLeaveSecureAlone = !!boolval;
 
   if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
     mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
@@ -279,7 +279,8 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
                                 mThirdPartySession, aHostURI,
                                 aIsForeign, nullptr,
-                                CountCookiesFromHashTable(baseDomain, aOriginAttrs));
+                                CountCookiesFromHashTable(baseDomain, aOriginAttrs),
+                                aOriginAttrs);
 
   if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
     return;
@@ -526,7 +527,8 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
                                 mThirdPartySession, aHostURI,
                                 !!isForeign, aCookieString,
-                                CountCookiesFromHashTable(baseDomain, attrs));
+                                CountCookiesFromHashTable(baseDomain, attrs),
+                                attrs);
 
   if (cookieStatus != STATUS_ACCEPTED && cookieStatus != STATUS_ACCEPT_SESSION) {
     return NS_OK;
