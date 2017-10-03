@@ -41,7 +41,6 @@
 #include "js/UbiNodeShortestPaths.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
-#include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
@@ -60,7 +59,6 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -1945,13 +1943,13 @@ SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
+    RootedNativeObject promise(cx, &args[0].toObject().as<NativeObject>());
     int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();
     promise->setFixedSlot(PromiseSlot_Flags,
                           Int32Value(flags | PROMISE_FLAG_RESOLVED | PROMISE_FLAG_FULFILLED));
     promise->setFixedSlot(PromiseSlot_ReactionsOrResult, UndefinedValue());
 
-    Debugger::onPromiseSettled(cx, promise);
+    JS::dbg::onPromiseSettled(cx, promise);
     return true;
 }
 

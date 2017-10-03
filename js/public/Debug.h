@@ -290,6 +290,37 @@ FireOnGarbageCollectionHookRequired(JSContext* cx);
 JS_PUBLIC_API(bool)
 FireOnGarbageCollectionHook(JSContext* cx, GarbageCollectionEvent::Ptr&& data);
 
+
+
+// Handlers for observing Promises
+// -------------------------------
+//
+// The Debugger wants to observe behavior of promises, which are implemented by
+// Gecko with webidl and which SpiderMonkey knows nothing about. On the other
+// hand, Gecko knows nothing about which (if any) debuggers are observing a
+// promise's global. The compromise is that Gecko is responsible for calling
+// these handlers at the appropriate times, and SpiderMonkey will handle
+// notifying any Debugger instances that are observing the given promise's
+// global.
+
+// Notify any Debugger instances observing this promise's global that a new
+// promise was allocated.
+JS_PUBLIC_API(void)
+onNewPromise(JSContext* cx, HandleObject promise);
+
+// Notify any Debugger instances observing this promise's global that the
+// promise has settled (ie, it has either been fulfilled or rejected). Note that
+// this is *not* equivalent to the promise resolution (ie, the promise's fate
+// getting locked in) because you can resolve a promise with another pending
+// promise, in which case neither promise has settled yet.
+//
+// It is Gecko's responsibility to ensure that this is never called on the same
+// promise more than once (because a promise can only make the transition from
+// unsettled to settled once).
+JS_PUBLIC_API(void)
+onPromiseSettled(JSContext* cx, HandleObject promise);
+
+
 
 // Return true if the given value is a Debugger object, false otherwise.
 JS_PUBLIC_API(bool)
