@@ -86,8 +86,19 @@ function FlushTestBuffer()
 
 function LogWidgetLayersFailure()
 {
-  logger.error("USE_WIDGET_LAYERS disabled because the screen resolution is too low. This falls back to an alternate rendering path (that may not be representative) and is not implemented with e10s enabled.");
-  logger.error("Consider increasing your screen resolution, or adding '--disable-e10s' to your './mach reftest' command");
+  logger.error(
+    "Screen resolution is too low - USE_WIDGET_LAYERS was disabled. " +
+    (g.browserIsRemote ?
+      "Since E10s is enabled, there is no fallback rendering path!" :
+      "The fallback rendering path is not reliably consistent with on-screen rendering."));
+
+  logger.error(
+    "If you cannot increase your screen resolution you can try reducing " +
+    "gecko's pixel scaling by adding something like '--setpref " +
+    "layout.css.devPixelsPerPx=1.0' to your './mach reftest' command " +
+    "(possibly as an alias in ~/.mozbuild/machrc). Note that this is " +
+    "inconsistent with CI testing, and may interfere with HighDPI/" +
+    "reftest-zoom tests.");
 }
 
 function AllocateCanvas()
