@@ -186,7 +186,7 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   }
 
   // We might used painted layer images so don't delete them yet.
-  return EndTransactionInternal(nullptr, nullptr, aFlags);
+  return EndTransactionInternal(aFlags);
 }
 
 /*static*/ int32_t
@@ -365,9 +365,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
   WrBridge()->RemoveExpiredFontKeys();
-  EndTransactionInternal(nullptr,
-                         nullptr,
-                         EndTransactionFlags::END_DEFAULT,
+  EndTransactionInternal(EndTransactionFlags::END_DEFAULT,
                          aDisplayList,
                          aDisplayListBuilder);
 }
@@ -708,20 +706,17 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
-  WrBridge()->RemoveExpiredFontKeys();
-  EndTransactionInternal(aCallback, aCallbackData, aFlags);
+  // This should never get called, all callers should use
+  // EndTransactionWithoutLayer instead.
+  MOZ_ASSERT(false);
 }
 
 bool
-WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
-                                              void* aCallbackData,
-                                              EndTransactionFlags aFlags,
+WebRenderLayerManager::EndTransactionInternal(EndTransactionFlags aFlags,
                                               nsDisplayList* aDisplayList,
                                               nsDisplayListBuilder* aDisplayListBuilder)
 {
   AutoProfilerTracing tracing("Paint", "RenderLayers");
-  mPaintedLayerCallback = aCallback;
-  mPaintedLayerCallbackData = aCallbackData;
   mTransactionIncomplete = false;
 
   if (gfxPrefs::LayersDump()) {

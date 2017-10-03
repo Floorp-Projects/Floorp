@@ -6426,6 +6426,11 @@ PresShell::Paint(nsView*         aViewToPaint,
     return;
   }
 
+  if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    // TODO: bug 1405465 - create a WR display list which simulates the color layer below.
+    return;
+  }
+
   RefPtr<ColorLayer> root = layerManager->CreateColorLayer();
   if (root) {
     nsPresContext* pc = GetPresContext();
