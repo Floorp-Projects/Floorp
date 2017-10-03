@@ -13,7 +13,8 @@ integration branches are at SCM level 3.
 Scheduling a Task on Try
 ------------------------
 
-There are two methods for scheduling a task on try.
+There are three methods for scheduling a task on try: legacy try option syntax,
+try task config, and an empty try.
 
 Try Option Syntax
 :::::::::::::::::
@@ -131,6 +132,14 @@ It looks like this:
     }
 
 See the `existing templates`_ for examples.
+
+Empty Try
+:::::::::
+
+If there is no try syntax or ``try_task_config.json``, the ``try_mode``
+parameter is None and no tasks are selected to run.  The resulting push will
+only have a decision task, but one with an "add jobs" action that can be used
+to add the desired jobs to the try push.
 
 .. _tryselect: https://dxr.mozilla.org/mozilla-central/source/tools/tryselect
 .. _JSON-e: https://taskcluster.github.io/json-e/
