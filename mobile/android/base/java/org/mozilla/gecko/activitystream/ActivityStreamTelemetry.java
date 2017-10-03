@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.activitystream;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -13,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.homepanel.ActivityStreamConfiguration;
 import org.mozilla.gecko.activitystream.homepanel.ActivityStreamPanel;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
@@ -69,6 +71,7 @@ public class ActivityStreamTelemetry {
     private final static int POCKET_ENABLED_VALUE = 4;
     private final static int VISITED_ENABLED_VALUE = 8;
     private final static int BOOKMARKED_ENABLED_VALUE = 16;
+    private final static int POCKET_ENABLED_BY_LOCALE = 32;
 
     /**
      * Calculates the bit-packed value of the user's Activity Stream preferences (e.g. enabled/disabled sections).
@@ -76,10 +79,14 @@ public class ActivityStreamTelemetry {
      * @param sharedPreferences SharedPreferences of this profile
      * @return bit-packed value of the user's AS preferences, which is the sum of the values of the enabled preferences.
      */
-    public static int getASUserPreferencesValue(final SharedPreferences sharedPreferences, final Resources res) {
+    public static int getASUserPreferencesValue(final Context context, final SharedPreferences sharedPreferences) {
+        final Resources res = context.getResources();
         int bitPackedPrefValue = 0;
 
-        // todo: Add bit for isPocketAllowedByLocale.
+        if (ActivityStreamConfiguration.isPocketEnabledByLocale(context)) {
+            bitPackedPrefValue += POCKET_ENABLED_BY_LOCALE;
+        }
+
         if (sharedPreferences.getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, res.getBoolean(R.bool.pref_activitystream_pocket_enabled_default))) {
             bitPackedPrefValue += POCKET_ENABLED_VALUE;
         }
