@@ -3823,24 +3823,6 @@ HTMLEditor::GetPriorHTMLSibling(nsIDOMNode* inNode,
   return NS_OK;
 }
 
-nsresult
-HTMLEditor::GetPriorHTMLSibling(nsIDOMNode* inParent,
-                                int32_t inOffset,
-                                nsCOMPtr<nsIDOMNode>* outNode)
-{
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = nullptr;
-
-  nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> child = parent->GetChildAt(inOffset);
-  NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
-
-  *outNode = do_QueryInterface(GetPriorHTMLSibling(child));
-  return NS_OK;
-}
-
 /**
  * GetNextHTMLSibling() returns the next editable sibling, if there is
  * one within the parent.
