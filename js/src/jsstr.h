@@ -68,24 +68,6 @@ CompareChars(const char16_t* s1, size_t len1, JSLinearString* s2);
 
 }  /* namespace js */
 
-struct JSSubString {
-    JSLinearString* base;
-    size_t          offset;
-    size_t          length;
-
-    JSSubString() { mozilla::PodZero(this); }
-
-    void initEmpty(JSLinearString* base) {
-        this->base = base;
-        offset = length = 0;
-    }
-    void init(JSLinearString* base, size_t offset, size_t length) {
-        this->base = base;
-        this->offset = offset;
-        this->length = length;
-    }
-};
-
 /*
  * Shorthands for ASCII (7-bit) decimal and hex conversion.
  * Manually inline isdigit and isxdigit for performance; MSVC doesn't do this for us.
