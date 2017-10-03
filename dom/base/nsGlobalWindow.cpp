@@ -9893,7 +9893,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                                          JS::Handle<JSObject*> aHandler)
 {
   if (!mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers = new XBLPrototypeHandlerTable();
+    mCachedXBLPrototypeHandlers = MakeUnique<XBLPrototypeHandlerTable>();
     PreserveWrapper(ToSupports(this));
   }
 
@@ -13526,7 +13526,7 @@ nsGlobalWindow::EnableOrientationChangeListener()
   if (!nsContentUtils::ShouldResistFingerprinting(mDocShell) &&
       !mOrientationChangeObserver) {
     mOrientationChangeObserver =
-      new WindowOrientationObserver(this);
+      MakeUnique<WindowOrientationObserver>(this);
   }
 }
 
