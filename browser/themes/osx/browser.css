@@ -335,6 +335,14 @@
 %include ../shared/autocomplete.inc.css
 %include ../shared/urlbar-autocomplete.inc.css
 
+/* Give an extra margin top to align the top of the awesomebar with the
+ * bottom of the nav bar, OSX calculates the panel position with an missing
+ * 1px - https://bugzilla.mozilla.org/show_bug.cgi?id=1406353
+ */
+#PopupAutoCompleteRichResult {
+  margin-top: 1px;
+}
+
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid #C7C7C7;
 }
