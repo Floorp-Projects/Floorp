@@ -8,7 +8,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
 
+import android.view.View;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.homepanel.ActivityStreamConfiguration;
 
 /**
  * Custom preference that also adds additional options to the dialog of preferences for Top Sites settings.
@@ -23,6 +25,13 @@ public class TopSitesPanelsPreference extends PanelsPreference {
     @Override
     protected void configureDialogBuilder(AlertDialog.Builder builder) {
         final LayoutInflater inflater = LayoutInflater.from(getContext());
-        builder.setView(inflater.inflate(R.layout.preference_topsites_panel_dialog, null));
+        final View panelDialogView = inflater.inflate(R.layout.preference_topsites_panel_dialog, null);
+
+        if (!ActivityStreamConfiguration.isPocketEnabledByLocale(getContext())) {
+            final View pocketPreferenceView = panelDialogView.findViewById(R.id.preference_pocket);
+            pocketPreferenceView.setVisibility(View.GONE);
+        }
+
+        builder.setView(panelDialogView);
     }
 }

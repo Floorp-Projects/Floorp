@@ -15,4 +15,5 @@ DevToolsModules(
     'prefs.js',
     'request-utils.js',
     'sort-predicates.js',
+    'sort-utils.js'
 )

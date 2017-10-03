@@ -1144,7 +1144,9 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
             filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity)));
         }
     } else {
-        filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
+        if animation_id > 0 {
+            filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
+        }
     }
 
     let transform = unsafe { transform.as_ref() };

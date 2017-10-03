@@ -19,7 +19,7 @@ window.onload = function () {
 
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const Services = require("Services");
-  const { DebuggerClient } = require("devtools/shared/client/main");
+  const { DebuggerClient } = require("devtools/shared/client/debugger-client");
   const { DebuggerServer } = require("devtools/server/main");
 
   // Always log packets when running tests.

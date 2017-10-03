@@ -255,7 +255,8 @@ VRDisplayHost::NotifyVSync()
 }
 
 void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
+VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
+                           const layers::SurfaceDescriptor &aTexture,
                            uint64_t aFrameId,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect)
@@ -273,59 +274,75 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
   }
   mFrameStarted = false;
 
+  switch (aTexture.type()) {
+
 #if defined(XP_WIN)
+    case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
+      if (!CreateD3DObjects()) {
+        return;
+      }
+      const SurfaceDescriptorD3D10& surf = aTexture.get_SurfaceDescriptorD3D10();
+      RefPtr<ID3D11Texture2D> dxTexture;
+      HRESULT hr = mDevice->OpenSharedResource((HANDLE)surf.handle(),
+        __uuidof(ID3D11Texture2D),
+        (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
+      if (FAILED(hr) || !dxTexture) {
+        NS_WARNING("Failed to open shared texture");
+        return;
+      }
 
-  TextureHost* th = TextureHost::AsTextureHost(aTexture);
-
-  // WebVR doesn't use the compositor to compose the frame, so use
-  // AutoLockTextureHostWithoutCompositor here.
-  AutoLockTextureHostWithoutCompositor autoLock(th);
-  if (autoLock.Failed()) {
-    NS_WARNING("Failed to lock the VR layer texture");
-    return;
-  }
-
-  CompositableTextureSourceRef source;
-  if (!th->BindTextureSource(source)) {
-    NS_WARNING("The TextureHost was successfully locked but can't provide a TextureSource");
-    return;
-  }
-  MOZ_ASSERT(source);
-
-  IntSize texSize = source->GetSize();
-
-  TextureSourceD3D11* sourceD3D11 = source->AsSourceD3D11();
-  if (!sourceD3D11) {
-    NS_WARNING("VRDisplayHost::SubmitFrame failed to get a TextureSourceD3D11");
-    return;
-  }
-
-  if (!SubmitFrame(sourceD3D11, texSize, aLeftEyeRect, aRightEyeRect)) {
-    return;
-  }
-
+      // Similar to LockD3DTexture in TextureD3D11.cpp
+      RefPtr<IDXGIKeyedMutex> mutex;
+      dxTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+      if (mutex) {
+        HRESULT hr = mutex->AcquireSync(0, 1000);
+        if (hr == WAIT_TIMEOUT) {
+          gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
+        }
+        else if (hr == WAIT_ABANDONED) {
+          gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
+        }
+        if (FAILED(hr)) {
+          NS_WARNING("Failed to lock the texture");
+          return;
+        }
+      }
+      bool success = SubmitFrame(dxTexture, surf.size(),
+                                 aLeftEyeRect, aRightEyeRect);
+      if (mutex) {
+        HRESULT hr = mutex->ReleaseSync(0);
+        if (FAILED(hr)) {
+          NS_WARNING("Failed to unlock the texture");
+        }
+      }
+      if (!success) {
+        return;
+      }
+      break;
+    }
 #elif defined(XP_MACOSX)
-
-  TextureHost* th = TextureHost::AsTextureHost(aTexture);
-
-  MacIOSurface* surf = th->GetMacIOSurface();
-  if (!surf) {
-    NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
-    return;
-  }
-
-  IntSize texSize = gfx::IntSize(surf->GetDevicePixelWidth(),
-                                 surf->GetDevicePixelHeight());
-
-  if (!SubmitFrame(surf, texSize, aLeftEyeRect, aRightEyeRect)) {
-    return;
-  }
-
-#else
-
-  NS_WARNING("WebVR is not supported on this platform.");
-  return;
+    case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
+      const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
+      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(desc.surfaceId(),
+                                                              desc.scaleFactor(),
+                                                              !desc.isOpaque());
+      if (!surf) {
+        NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
+        return;
+      }
+      IntSize texSize = gfx::IntSize(surf->GetDevicePixelWidth(),
+                                     surf->GetDevicePixelHeight());
+      if (!SubmitFrame(surf, texSize, aLeftEyeRect, aRightEyeRect)) {
+        return;
+      }
+      break;
+    }
 #endif
+    default: {
+      NS_WARNING("Unsupported SurfaceDescriptor type for VR layer texture");
+      return;
+    }
+  }
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 

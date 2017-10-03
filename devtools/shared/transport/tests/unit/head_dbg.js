@@ -32,7 +32,7 @@ const Services = require("Services");
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerClient } = require("devtools/shared/client/main");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 // Convert an nsIScriptError 'flags' value into an appropriate string.
 function scriptErrorFlagsToKind(flags) {

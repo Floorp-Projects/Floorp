@@ -20,7 +20,7 @@ loader.lazyGetter(this, "WorkersPanel",
   () => createFactory(require("./workers/panel")));
 
 loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
+  "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "Telemetry",
   "devtools/client/shared/telemetry");
 

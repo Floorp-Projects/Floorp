@@ -15,7 +15,7 @@ var { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var customLoader = new DevToolsLoader();
 customLoader.invisibleToDebugger = true;
 var { DebuggerServer } = customLoader.require("devtools/server/main");
-var { DebuggerClient } = require("devtools/shared/client/main");
+var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function initDebuggerClient() {
   if (!DebuggerServer.initialized) {

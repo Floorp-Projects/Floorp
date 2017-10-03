@@ -341,8 +341,6 @@ public:
   static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
   static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
 
-  void StartVRPresentation();
-  void StopVRPresentation();
   already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
 
 protected:
@@ -386,7 +384,6 @@ protected:
   RefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
-  bool mVRPresentationActive;
 
 public:
   // Record whether this canvas should be write-only or not.

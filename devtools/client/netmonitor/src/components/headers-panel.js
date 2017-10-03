@@ -20,6 +20,7 @@ const {
   getHTTPStatusCodeURL,
 } = require("../utils/mdn-utils");
 const { writeHeaderText } = require("../utils/request-utils");
+const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Components
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
@@ -74,7 +75,7 @@ const HeadersPanel = createClass({
           , {})
       };
 
-      propertiesResult[headerKey] = this.sortByKey(propertiesResult[headerKey]);
+      propertiesResult[headerKey] = sortObjectKeys(propertiesResult[headerKey]);
       return propertiesResult;
     }
 
@@ -126,16 +127,6 @@ const HeadersPanel = createClass({
         }) : null
       )
     );
-  },
-
-  sortByKey: function (object) {
-    let result = {};
-    Object.keys(object).sort(function (left, right) {
-      return left.toLowerCase().localeCompare(right.toLowerCase());
-    }).forEach(function (key) {
-      result[key] = object[key];
-    });
-    return result;
   },
 
   render() {

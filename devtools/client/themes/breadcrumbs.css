@@ -87,15 +87,10 @@
 
 .breadcrumbs-widget-item {
   background-color: transparent;
-  -moz-appearance: none;
-  min-height: 24px;
-  min-width: 65px;
-  margin: 0;
-  padding: 0 8px 0 20px;
   border: none;
-  outline: none;
-  color: hsl(210,30%,85%);
-  position: relative;
+  margin-inline-start: 10px;
+  margin-inline-end: 1px;
+  padding: 0 0 2px 0;
 }
 
 .breadcrumbs-widget-item > .button-box {
@@ -108,30 +103,8 @@
   border-width: 0;
 }
 
-.breadcrumbs-widget-item::before {
-  content: "";
-  position: absolute;
-  top: 1px;
-  offset-inline-start: 0;
-  width: 12px;
-  height: 22px;
-  background-repeat: no-repeat;
-  /* Given the 1/2 aspect ratio of the separator pseudo-element and the 45deg angle of
-     the arrow shape, we need the arrow edges to be at this position from the start of
-     the gradient line. */
-  --position: 66.5%;
-  /* The color of the thin line in the arrow-shaped separator between 2 unselected
-     crumbs. There is no theme variable for this, this used to be an image. */
-  --line-color: #ACACAC;
-  --background-color: var(--theme-body-background);
-}
-
 #debugger-toolbar .breadcrumbs-widget-item::before {
   --background-color: var(--theme-toolbar-background);
-}
-
-.theme-dark .breadcrumbs-widget-item::before {
-  --line-color: #6E6E6E;
 }
 
 .breadcrumbs-widget-item:first-child::before {
@@ -141,68 +114,6 @@
 
 .breadcrumbs-widget-item:dir(rtl)::before {
   transform: scaleX(-1);
-}
-
-.breadcrumbs-widget-item:not([checked])::before {
-  background-color: var(--background-color);
-  background-image:
-    linear-gradient(45deg,
-                    var(--background-color) 30%,
-                    transparent),
-    linear-gradient(-45deg,
-                    transparent,
-                    var(--background-color) 70%,
-                    var(--background-color)),
-    linear-gradient(45deg,
-                    transparent var(--position),
-                    var(--line-color) var(--position),
-                    var(--line-color) calc(var(--position) + 1px),
-                    transparent 0),
-    linear-gradient(-45deg,
-                    transparent calc(100% - var(--position)),
-                    var(--line-color) calc(100% - var(--position)),
-                    var(--line-color) calc(calc(100% - var(--position)) + 1px),
-                    transparent 0);
-  background-size:
-    100% 50%,
-    100% 50%,
-    100%,
-    100%;
-  background-position:
-    left bottom,
-    left top,
-    left top,
-    left top;
-}
-
-.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item::before {
-  background-color: var(--theme-selection-background);
-  background-image:
-    linear-gradient(45deg,
-                    transparent var(--position),
-                    var(--background-color) 0),
-    linear-gradient(-45deg,
-                    var(--background-color) calc(100% - var(--position)),
-                    transparent 0);
-  background-size: unset;
-}
-
-.breadcrumbs-widget-item[checked]::before {
-  background-image:
-    linear-gradient(45deg,
-                    transparent var(--position),
-                    var(--theme-selection-background) 0),
-    linear-gradient(-45deg,
-                    var(--theme-selection-background) calc(100% - var(--position)),
-                    var(--background-color) 0);
-}
-
-.breadcrumbs-widget-item[checked] {
-  background-color: var(--theme-selection-background);
-}
-
-.breadcrumbs-widget-item:first-child {
-  background-image: none;
 }
 
 /* RTL support: move the images that were on the left to the right,
@@ -217,11 +128,23 @@
   background-position: center right;
 }
 
-.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item:not(:first-child)::before {
+  content: url(chrome://devtools/skin/images/breadcrumbs-divider.svg);
+  background: none;
+  position: relative;
+  left: -3px;
+  margin: 0 4px 0 -1px;
+  top: -1px;
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id {
+  color: var(--theme-highlight-purple);
+}
+
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag,
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes,
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-classes {
-  color: var(--theme-selection-color);
+  color: var(--theme-highlight-blue);
 }
 
 .theme-dark .breadcrumbs-widget-item {
@@ -244,34 +167,16 @@
   color: var(--theme-highlight-lightorange);
 }
 
-.theme-dark .breadcrumbs-widget-item:not([checked]):hover label {
-  color: white;
-}
-
-.theme-light .breadcrumbs-widget-item:not([checked]):hover label {
-  color: black;
-}
-
 /* Firebug theme support for breadcrumbs widget. */
 
 .theme-firebug .breadcrumbs-widget-item {
-  margin-inline-start: 10px;
-  margin-inline-end: 1px;
-  background-image: none;
   border: 1px solid transparent;
-  color: #141414;
   border-radius: 2px;
-  min-width: 0;
-  min-height: 0;
   padding: 0;
-  font-size: var(--theme-toolbar-font-size);
 }
 
 .theme-firebug .breadcrumbs-widget-item:hover {
   border-color: rgba(0, 0, 0, 0.2);
-  background: transparent linear-gradient(
-              rgba(255, 255, 255, 0.4),
-              rgba(255, 255, 255, 0.2)) no-repeat;
   box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.6) inset,
               0 0 1px rgba(255, 255, 255, 0.6) inset,
               0 0 2px rgba(0, 0, 0, 0.05);
@@ -287,13 +192,8 @@
 }
 
 .theme-firebug .breadcrumbs-widget-item:not(:first-child)::before {
-  content: url(chrome://devtools/skin/images/firebug/breadcrumbs-divider.svg);
-  background: none;
-  position: relative;
-  left: -3px;
   margin: 0 0 0 -5px;
-  padding: 0;
-  width: 5px;
+  top: 0;
 }
 
 /* Breadcrumbs Separators (reset selection styles) */
