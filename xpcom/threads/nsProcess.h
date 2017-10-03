@@ -63,6 +63,7 @@ private:
   bool mShutdown;
   bool mBlocking;
   bool mStartHidden;
+  bool mNoShell;
 
   nsCOMPtr<nsIFile> mExecutable;
   nsString mTargetPath;

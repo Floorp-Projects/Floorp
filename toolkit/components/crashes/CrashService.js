@@ -50,6 +50,8 @@ function runMinidumpAnalyzer(minidumpPath) {
                       .createInstance(Ci.nsIProcess);
       process.init(exe);
       process.startHidden = true;
+      process.noShell = true;
+
       process.runAsync(args, args.length, (subject, topic, data) => {
         switch (topic) {
           case "process-finished":
