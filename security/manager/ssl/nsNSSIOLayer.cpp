@@ -2621,6 +2621,15 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
           fd, static_cast<unsigned int>(range.min),
               static_cast<unsigned int>(range.max)));
 
+  // If the user has set their minimum version to something higher than what
+  // we've now set the maximum to, this will result in an inconsistent version
+  // range unless we fix it up. This will override their preference, but we only
+  // do this for sites critical to the operation of the browser (e.g. update
+  // servers) and telemetry experiments.
+  if (range.min > range.max) {
+    range.min = range.max;
+  }
+
   if (SSL_VersionRangeSet(fd, &range) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
