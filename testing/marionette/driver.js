@@ -2697,14 +2697,12 @@ GeckoDriver.prototype.deleteCookie = function(cmd) {
   assert.noUserPrompt(this.dialog);
 
   let {hostname, pathname} = this.currentURL;
-  let candidateName = assert.string(cmd.parameters.name);
-  for (let toDelete of cookie.iter(hostname, pathname)) {
-    if (toDelete.name === candidateName) {
-      return cookie.remove(toDelete);
+  let name = assert.string(cmd.parameters.name);
+  for (let c of cookie.iter(hostname, pathname)) {
+    if (c.name === name) {
+      cookie.remove(c);
     }
   }
-
-  throw new UnknownError("Unable to find cookie");
 };
 
 /**
