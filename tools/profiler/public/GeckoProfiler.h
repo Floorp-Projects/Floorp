@@ -416,11 +416,11 @@ enum TracingKind {
 // inactive or in privacy mode.
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory,
                                     const char* aMarkerName,
-                                    TracingKind aKind = TRACING_EVENT))
+                                    TracingKind aKind))
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory,
                                     const char* aMarkerName,
-                                    UniqueProfilerBacktrace aCause,
-                                    TracingKind aKind = TRACING_EVENT))
+                                    TracingKind aKind,
+                                    UniqueProfilerBacktrace aCause))
 
 //---------------------------------------------------------------------------
 // Output profiles
@@ -590,17 +590,6 @@ public:
 class MOZ_RAII AutoProfilerTracing
 {
 public:
-  AutoProfilerTracing(const char* aCategory, const char* aMarkerName,
-                      UniqueProfilerBacktrace aBacktrace
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mCategory(aCategory)
-    , mMarkerName(aMarkerName)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mMarkerName, Move(aBacktrace),
-                     TRACING_INTERVAL_START);
-  }
-
   AutoProfilerTracing(const char* aCategory, const char* aMarkerName
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
@@ -608,6 +597,17 @@ public:
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START);
+  }
+
+  AutoProfilerTracing(const char* aCategory, const char* aMarkerName,
+                      UniqueProfilerBacktrace aBacktrace
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mCategory(aCategory)
+    , mMarkerName(aMarkerName)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START,
+                     Move(aBacktrace));
   }
 
   ~AutoProfilerTracing()
