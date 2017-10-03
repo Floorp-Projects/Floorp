@@ -869,7 +869,9 @@ add_task(async function setup() {
   // For test_addonsStartup below, we want to test a "warm" startup where
   // there is already a database on disk.  Simulate that here by just
   // restarting the AddonManager.
-  await AddonTestUtils.promiseRestartManager();
+  await AddonTestUtils.promiseShutdownManager();
+  await AddonTestUtils.overrideBuiltIns({"system": []});
+  await AddonTestUtils.promiseStartupManager();
 
   // Register a fake plugin host for consistent flash version data.
   registerFakePluginHost();

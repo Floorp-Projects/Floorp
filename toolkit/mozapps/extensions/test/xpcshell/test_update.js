@@ -1359,12 +1359,14 @@ function check_test_7_cache() {
 
 // Test that the update check returns nothing for addons in locked install
 // locations.
-add_test(function run_test_locked_install() {
+add_test(async function run_test_locked_install() {
   const lockedDir = gProfD.clone();
   lockedDir.append("locked_extensions");
   registerDirectory("XREAppFeat", lockedDir);
-  restartManager();
-  writeInstallRDFForExtension({
+
+  await promiseShutdownManager();
+
+  writeInstallRDFToXPI({
     id: "addon13@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
@@ -1375,7 +1377,11 @@ add_test(function run_test_locked_install() {
     }],
     name: "Test Addon 13",
   }, lockedDir);
-  restartManager();
+
+  let validAddons = { "system": ["addon13@tests.mozilla.org"] };
+  await overrideBuiltIns(validAddons);
+
+  await promiseStartupManager();
 
   AddonManager.getAddonByID("addon13@tests.mozilla.org", function(a13) {
     do_check_neq(a13, null);
