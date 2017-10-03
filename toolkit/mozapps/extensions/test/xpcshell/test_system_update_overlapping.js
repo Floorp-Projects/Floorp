@@ -1,4 +1,4 @@
-// Tests that system add-on upgrades fail to upgrade in expected cases.
+// Tests that system add-on upgrades work.
 
 Components.utils.import("resource://testing-common/httpd.js");
 
@@ -99,73 +99,50 @@ const TEST_CONDITIONS = {
  *             if missing the test condition's initialState is used.
  */
 const TESTS = {
-  // Specifying an incorrect version should stop us updating anything
-  badVersion: {
-    fails: true,
+  // Tests that a set of system add-ons, some new, some existing gets installed
+  overlapping: {
     updateList: [
-      { id: "system2@tests.mozilla.org", version: "4.0", path: "system2_3.xpi" },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" }
+      { id: "system1@tests.mozilla.org", version: "2.0", path: "system1_2.xpi" },
+      { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" },
+      { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
     ],
-  },
-
-  // Specifying an invalid size should stop us updating anything
-  badSize: {
-    fails: true,
-    updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 2 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi" }
-    ],
-  },
-
-  // Specifying an incorrect hash should stop us updating anything
-  badHash: {
-    fails: true,
-    updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi" },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "205a4c49bd513ebd30594e380c19e86bba1f83e2" }
-    ],
-  },
-
-  // A bad certificate should stop updates
-  badCert: {
-    fails: true,
-    updateList: [
-      { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1_badcert.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
-    ],
-  },
-
-  // An unpacked add-on should stop updates.
-  notPacked: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_1_unpack.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
-    ],
-  },
-
-  // A non-bootstrap add-on should stop updates.
-  notBootstrap: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_2_notBootstrap.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
-    ],
-  },
-
-  // A non-multiprocess add-on should stop updates.
-  notMultiprocess: {
-    fails: true,
-    updateList: [
-      { id: "system6@tests.mozilla.org", version: "1.0", path: "system6_3_notMultiprocess.xpi" },
-      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
-    ],
+    finalState: {
+      blank: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withAppSet: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withProfileSet: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ],
+      withBothSets: [
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "2.0"},
+        { isUpgrade: true, version: "3.0"},
+        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null}
+      ]
+    }
   }
 }
 
 add_task(async function setup() {
   // Initialise the profile
-  await overrideBuiltIns({ "system": [] });
+  awaitPromise(overrideBuiltIns({ "system": [] }));
   startupManager();
   await promiseShutdownManager();
 });
@@ -178,7 +155,7 @@ add_task(async function() {
         let setup = TEST_CONDITIONS[setupName];
         let test = TESTS[testName];
 
-        await execSystemAddonTest(setupName, setup, test, distroDir);
+        await execSystemAddonTest(setupName, setup, test, distroDir, root, testserver);
     }
   }
 });
