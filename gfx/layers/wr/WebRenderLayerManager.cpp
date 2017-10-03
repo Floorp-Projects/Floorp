@@ -42,7 +42,6 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mEndTransactionWithoutLayers(false)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
-  , mShouldNotifyInvalidation(false)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -332,14 +331,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       }
     }
 
-    // If there is any invalid item, we should notify nsPresContext after EndTransaction.
-    if (!mShouldNotifyInvalidation) {
-      nsRect invalid;
-      if (item->IsInvalid(invalid)) {
-        mShouldNotifyInvalidation = true;
-      }
-    }
-
     { // scope the ScrollingLayersHelper
       ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, AsyncPanZoomEnabled());
 
@@ -513,15 +504,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
         aManager->SetRoot(layer);
         layerBuilder->WillEndTransaction();
 
-        nsIntRegion invalid;
-        props->ComputeDifferences(layer, invalid, nullptr);
-
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
-
-        if (!invalid.IsEmpty()) {
-          aWrManager->SetNotifyInvalidation(true);
-        }
       }
 
       if (aManager->InTransaction()) {
@@ -768,9 +752,6 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
   if (mEndTransactionWithoutLayers) {
-    // Reset the notification flag at the begin of the EndTransaction.
-    mShouldNotifyInvalidation = false;
-
     // aDisplayList being null here means this is an empty transaction following a layers-free
     // transaction, so we reuse the previously built displaylist and scroll
     // metadata information
@@ -819,9 +800,6 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
         WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
-        if (canvas->IsDirty()) {
-          mShouldNotifyInvalidation = true;
-        }
         canvas->UpdateCompositableClient();
       }
     }

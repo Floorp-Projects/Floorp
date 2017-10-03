@@ -2187,7 +2187,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       TriggerPendingAnimations(document, layerManager->GetAnimationReadyTime());
     }
 
-    if (wrManager->ShouldNotifyInvalidation()) {
+    if (presContext->RefreshDriver()->HasScheduleFlush()) {
       presContext->NotifyInvalidation(layerManager->GetLastTransactionId(), nsIntRect());
     }
 

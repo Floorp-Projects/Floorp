@@ -246,9 +246,6 @@ public:
     return res.forget();
   }
 
-  bool ShouldNotifyInvalidation() const { return mShouldNotifyInvalidation; }
-  void SetNotifyInvalidation(bool aShouldNotifyInvalidation) { mShouldNotifyInvalidation = aShouldNotifyInvalidation; }
-
   bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
                                                 const ScrollUpdateInfo& aUpdateInfo) override;
 
@@ -387,10 +384,6 @@ private:
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;
   // Store of WebRenderCanvasData objects for use in empty transactions
   CanvasDataSet mLastCanvasDatas;
-
-  // True if the layers-free transaction has invalidation region and then
-  // we should send notification after EndTransaction
-  bool mShouldNotifyInvalidation;
 
   WebRenderUserDataRefTable mWebRenderUserDatas;
 };
