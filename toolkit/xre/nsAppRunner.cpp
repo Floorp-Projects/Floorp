@@ -4740,8 +4740,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   CodeCoverageHandler::Init();
 #endif
 
-  char aLocal;
-  AutoProfilerInit profilerInit(&aLocal);
+  AutoProfilerInit profilerInit;
 
   AUTO_PROFILER_LABEL("XREMain::XRE_main", OTHER);
 
