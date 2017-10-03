@@ -1039,10 +1039,10 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   bool result =
     nsContentUtils::GetLoadingPrincipalForXULNode(content,
-                                                  getter_AddRefs(loadingPrincipal));
+                                                  getter_AddRefs(triggeringPrincipal));
 
   // If result is true, which means this node has specified 'loadingprincipal'
   // attribute on it, so we use favicon as the policy type.
@@ -1055,7 +1055,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   nsresult rv = nsContentUtils::LoadImage(aNewURI,
                                           thisNode,
                                           aDocument,
-                                          loadingPrincipal,
+                                          triggeringPrincipal,
                                           0,
                                           aDocument->GetDocumentURI(),
                                           referrerPolicy,
