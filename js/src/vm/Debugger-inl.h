@@ -73,6 +73,20 @@ js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmI
         slowPathOnNewWasmInstance(cx, wasmInstance);
 }
 
+/* static */ void
+js::Debugger::onNewPromise(JSContext* cx, Handle<PromiseObject*> promise)
+{
+    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        slowPathPromiseHook(cx, Debugger::OnNewPromise, promise);
+}
+
+/* static */ void
+js::Debugger::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise)
+{
+    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
+}
+
 inline bool
 js::Debugger::getScriptFrame(JSContext* cx, const FrameIter& iter,
                              MutableHandle<DebuggerFrame*> result)
