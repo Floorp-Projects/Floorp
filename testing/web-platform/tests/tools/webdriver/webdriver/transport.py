@@ -100,8 +100,7 @@ class HTTPWireProtocol(object):
         conn.request(method, url, body, headers)
 
         try:
-            response = Response.from_http_response(conn.getresponse())
+            response = conn.getresponse()
+            return Response.from_http_response(response)
         finally:
             conn.close()
-
-        return response
