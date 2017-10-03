@@ -61,43 +61,41 @@ __aeabi_uidivmod(int, int);
 #endif
 
 // This utility function can only be called for builtins that are called
-// directly from wasm code. Note that WasmCall pushes both an outer
-// WasmActivation and an inner JitActivation that becomes active when calling
-// JIT code.
-static WasmActivation*
+// directly from wasm code.
+static JitActivation*
 CallingActivation()
 {
     Activation* act = TlsContext.get()->activation();
-    MOZ_ASSERT(!act->asJit()->isActive(), "WasmCall pushes an inactive JitActivation");
-    return act->prev()->asWasm();
+    MOZ_ASSERT(act->asJit()->hasWasmExitFP());
+    return act->asJit();
 }
 
 static void*
 WasmHandleExecutionInterrupt()
 {
-    WasmActivation* activation = CallingActivation();
-    MOZ_ASSERT(activation->interrupted());
+    JitActivation* activation = CallingActivation();
+    MOZ_ASSERT(activation->isWasmInterrupted());
 
     if (!CheckForInterrupt(activation->cx())) {
         // If CheckForInterrupt failed, it is time to interrupt execution.
         // Returning nullptr to the caller will jump to the throw stub which
-        // will call WasmHandleThrow. The WasmActivation must stay in the
+        // will call HandleThrow. The JitActivation must stay in the
         // interrupted state until then so that stack unwinding works in
-        // WasmHandleThrow.
+        // HandleThrow.
         return nullptr;
     }
 
     // If CheckForInterrupt succeeded, then execution can proceed and the
     // interrupt is over.
-    void* resumePC = activation->resumePC();
-    activation->finishInterrupt();
+    void* resumePC = activation->wasmResumePC();
+    activation->finishWasmInterrupt();
     return resumePC;
 }
 
 static bool
 WasmHandleDebugTrap()
 {
-    WasmActivation* activation = CallingActivation();
+    JitActivation* activation = CallingActivation();
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
@@ -162,28 +160,27 @@ WasmHandleDebugTrap()
 // is responsible for notifying the debugger of each unwound frame. The return
 // value is the new stack address which the calling stub will set to the sp
 // register before executing a return instruction.
-static void*
-WasmHandleThrow()
-{
-    WasmActivation* activation = CallingActivation();
-    JSContext* cx = activation->cx();
 
+void*
+wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
+{
     // WasmFrameIter iterates down wasm frames in the activation starting at
-    // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
-    // once each time WasmFrameIter is incremented, ultimately leaving exitFP
-    // null when the WasmFrameIter is done().  This is necessary to prevent a
-    // DebugFrame from being observed again after we just called onLeaveFrame
-    // (which would lead to the frame being re-added to the map of live frames,
-    // right as it becomes trash).
+    // JitActivation::wasmExitFP(). Pass Unwind::True to pop
+    // JitActivation::wasmExitFP() once each time WasmFrameIter is incremented,
+    // ultimately leaving exit FP null when the WasmFrameIter is done().  This
+    // is necessary to prevent a DebugFrame from being observed again after we
+    // just called onLeaveFrame (which would lead to the frame being re-added
+    // to the map of live frames, right as it becomes trash).
     //
     // TODO(bug 1360211): when JitActivation and WasmActivation get merged,
     // we'll be able to switch to ion / other wasm state from here, and we'll
     // need to do things differently.
 
-    WasmFrameIter iter(activation, WasmFrameIter::Unwind::True);
+    MOZ_ASSERT(CallingActivation() == iter.activation());
     MOZ_ASSERT(!iter.done());
+    iter.setUnwind(WasmFrameIter::Unwind::True);
 
-    // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
+    // Live wasm code on the stack is kept alive (in TraceJitActivation) by
     // marking the instance of every wasm::Frame found by WasmFrameIter.
     // However, as explained above, we're popping frames while iterating which
     // means that a GC during this loop could collect the code of frames whose
@@ -220,10 +217,20 @@ WasmHandleThrow()
             JS_ReportErrorASCII(cx, "Unexpected success from onLeaveFrame");
         }
         frame->leave(cx);
-     }
+    }
 
-    MOZ_ASSERT(!activation->interrupted(), "unwinding clears the interrupt");
+    MOZ_ASSERT(!cx->activation()->asJit()->isWasmInterrupted(), "unwinding clears the interrupt");
+
     return iter.unwoundAddressOfReturnAddress();
+}
+
+static void*
+WasmHandleThrow()
+{
+    JitActivation* activation = CallingActivation();
+    JSContext* cx = activation->cx();
+    WasmFrameIter iter(activation);
+    return HandleThrow(cx, iter);
 }
 
 static void

@@ -1104,7 +1104,8 @@ CacheFileMetadata::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   n += mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mallocSizeOf(mHashArray);
   n += mallocSizeOf(mBuf);
-  n += mallocSizeOf(mWriteBuf);
+  // Ignore mWriteBuf, it's not safe to access it when metadata is being
+  // written and it's null otherwise.
   // mListener is usually the owning CacheFile.
 
   return n;

@@ -55,6 +55,9 @@ struct ZoneGCStats
     /* Number of zones collected in this GC. */
     int collectedZoneCount;
 
+    /* Number of zones that could have been collected in this GC. */
+    int collectableZoneCount;
+
     /* Total number of zones in the Runtime at the start of this GC. */
     int zoneCount;
 
@@ -70,12 +73,13 @@ struct ZoneGCStats
     /* Total number of compartments swept by this GC. */
     int sweptCompartmentCount;
 
-    bool isCollectingAllZones() const { return collectedZoneCount == zoneCount; }
+    bool isFullCollection() const {
+        return collectedZoneCount == collectableZoneCount;
+    }
 
-    ZoneGCStats()
-      : collectedZoneCount(0), zoneCount(0), sweptZoneCount(0),
-        collectedCompartmentCount(0), compartmentCount(0), sweptCompartmentCount(0)
-    {}
+    ZoneGCStats() {
+        mozilla::PodZero(this);
+    }
 };
 
 #define FOR_EACH_GC_PROFILE_TIME(_)                                           \

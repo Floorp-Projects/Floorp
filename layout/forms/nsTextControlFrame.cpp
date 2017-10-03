@@ -1477,8 +1477,7 @@ void
 nsTextControlFrame::nsAnonDivObserver::ContentAppended(
   nsIDocument* aDocument,
   nsIContent* aContainer,
-  nsIContent* aFirstNewContent,
-  int32_t /* unused */)
+  nsIContent* aFirstNewContent)
 {
   mFrame.ClearCachedValue();
 }
@@ -1487,8 +1486,7 @@ void
 nsTextControlFrame::nsAnonDivObserver::ContentInserted(
   nsIDocument* aDocument,
   nsIContent* aContainer,
-  nsIContent* aChild,
-  int32_t /* unused */)
+  nsIContent* aChild)
 {
   mFrame.ClearCachedValue();
 }
@@ -1498,7 +1496,6 @@ nsTextControlFrame::nsAnonDivObserver::ContentRemoved(
   nsIDocument* aDocument,
   nsIContent* aContainer,
   nsIContent* aChild,
-  int32_t aIndexInContainer,
   nsIContent* aPreviousSibling)
 {
   mFrame.ClearCachedValue();

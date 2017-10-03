@@ -205,7 +205,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool finishLinking();
     bool finishMetadata(const ShareableBytes& bytecode);
-    UniqueConstCodeSegment finishCodeSegment(const ShareableBytes& bytecode);
+    UniqueCodeSegment finishCodeSegment(const ShareableBytes& bytecode);
     UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     bool isAsmJS() const { return env_->isAsmJS(); }

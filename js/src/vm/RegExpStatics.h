@@ -59,9 +59,6 @@ class RegExpStatics
     bool makeMatch(JSContext* cx, size_t pairNum, MutableHandleValue out);
     bool createDependent(JSContext* cx, size_t start, size_t end, MutableHandleValue out);
 
-    struct InitBuffer {};
-    explicit RegExpStatics(InitBuffer) {}
-
   public:
     /* Mutators. */
     inline void updateLazily(JSContext* cx, JSLinearString* input,
@@ -80,15 +77,6 @@ class RegExpStatics
     inline void setPendingInput(JSString* newInput);
 
   public:
-    /* Default match accessor. */
-    const MatchPairs& getMatches() const {
-        /* Safe: only used by String methods, which do not set lazy mode. */
-        MOZ_ASSERT(!pendingLazyEvaluation);
-        return matches;
-    }
-
-    JSString* getPendingInput() const { return pendingInput; }
-
     void trace(JSTracer* trc) {
         /*
          * Changes to this function must also be reflected in
@@ -107,14 +95,6 @@ class RegExpStatics
     bool createParen(JSContext* cx, size_t pairNum, MutableHandleValue out);
     bool createLeftContext(JSContext* cx, MutableHandleValue out);
     bool createRightContext(JSContext* cx, MutableHandleValue out);
-
-    /* Infallible substring creators. */
-
-    void getParen(size_t pairNum, JSSubString* out) const;
-    void getLastMatch(JSSubString* out) const;
-    void getLastParen(JSSubString* out) const;
-    void getLeftContext(JSSubString* out) const;
-    void getRightContext(JSSubString* out) const;
 
     static size_t offsetOfPendingInput() {
         return offsetof(RegExpStatics, pendingInput);
@@ -253,73 +233,6 @@ RegExpStatics::createRightContext(JSContext* cx, MutableHandleValue out)
         return true;
     }
     return createDependent(cx, matches[0].limit, matchesInput->length(), out);
-}
-
-inline void
-RegExpStatics::getParen(size_t pairNum, JSSubString* out) const
-{
-    MOZ_ASSERT(!pendingLazyEvaluation);
-
-    MOZ_ASSERT(pairNum >= 1 && pairNum < matches.pairCount());
-    const MatchPair& pair = matches[pairNum];
-    if (pair.isUndefined()) {
-        out->initEmpty(matchesInput);
-        return;
-    }
-    out->init(matchesInput, pair.start, pair.length());
-}
-
-inline void
-RegExpStatics::getLastMatch(JSSubString* out) const
-{
-    MOZ_ASSERT(!pendingLazyEvaluation);
-
-    if (matches.empty()) {
-        out->initEmpty(matchesInput);
-        return;
-    }
-    MOZ_ASSERT(matchesInput);
-    MOZ_ASSERT(matches[0].limit >= matches[0].start);
-    out->init(matchesInput, matches[0].start, matches[0].length());
-}
-
-inline void
-RegExpStatics::getLastParen(JSSubString* out) const
-{
-    MOZ_ASSERT(!pendingLazyEvaluation);
-
-    /* Note: the first pair is the whole match. */
-    if (matches.empty() || matches.pairCount() == 1) {
-        out->initEmpty(matchesInput);
-        return;
-    }
-    getParen(matches.parenCount(), out);
-}
-
-inline void
-RegExpStatics::getLeftContext(JSSubString* out) const
-{
-    MOZ_ASSERT(!pendingLazyEvaluation);
-
-    if (matches.empty()) {
-        out->initEmpty(matchesInput);
-        return;
-    }
-    out->init(matchesInput, 0, matches[0].start);
-}
-
-inline void
-RegExpStatics::getRightContext(JSSubString* out) const
-{
-    MOZ_ASSERT(!pendingLazyEvaluation);
-
-    if (matches.empty()) {
-        out->initEmpty(matchesInput);
-        return;
-    }
-    MOZ_ASSERT(matches[0].limit <= int(matchesInput->length()));
-    size_t length = matchesInput->length() - matches[0].limit;
-    out->init(matchesInput, matches[0].limit, length);
 }
 
 inline void

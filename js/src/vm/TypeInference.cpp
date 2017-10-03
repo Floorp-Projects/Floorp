@@ -3591,37 +3591,34 @@ PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx, ObjectGroup* gro
     ScopedJSDeletePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
     group->detachPreliminaryObjects();
 
-    if (shape()) {
-        MOZ_ASSERT(shape()->slotSpan() != 0);
-        MOZ_ASSERT(OnlyHasDataProperties(shape()));
+    MOZ_ASSERT(shape());
+    MOZ_ASSERT(shape()->slotSpan() != 0);
+    MOZ_ASSERT(OnlyHasDataProperties(shape()));
 
-        // Make sure all the preliminary objects reflect the properties originally
-        // in the template object.
-        for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
-            JSObject* objBase = preliminaryObjects->get(i);
-            if (!objBase)
-                continue;
-            PlainObject* obj = &objBase->as<PlainObject>();
+    // Make sure all the preliminary objects reflect the properties originally
+    // in the template object.
+    for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
+        JSObject* objBase = preliminaryObjects->get(i);
+        if (!objBase)
+            continue;
+        PlainObject* obj = &objBase->as<PlainObject>();
 
-            if (obj->inDictionaryMode() || !OnlyHasDataProperties(obj->lastProperty()))
-                return;
+        if (obj->inDictionaryMode() || !OnlyHasDataProperties(obj->lastProperty()))
+            return;
 
-            if (CommonPrefix(obj->lastProperty(), shape()) != shape())
-                return;
-        }
+        if (CommonPrefix(obj->lastProperty(), shape()) != shape())
+            return;
     }
 
     TryConvertToUnboxedLayout(cx, enter, shape(), group, preliminaryObjects);
     if (group->maybeUnboxedLayout())
         return;
 
-    if (shape()) {
-        // We weren't able to use an unboxed layout, but since the preliminary
-        // objects still reflect the template object's properties, and all
-        // objects in the future will be created with those properties, the
-        // properties can be marked as definite for objects in the group.
-        group->addDefiniteProperties(cx, shape());
-    }
+    // We weren't able to use an unboxed layout, but since the preliminary
+    // objects still reflect the template object's properties, and all
+    // objects in the future will be created with those properties, the
+    // properties can be marked as definite for objects in the group.
+    group->addDefiniteProperties(cx, shape());
 }
 
 /////////////////////////////////////////////////////////////////////

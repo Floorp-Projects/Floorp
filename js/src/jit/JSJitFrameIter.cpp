@@ -14,7 +14,7 @@ using namespace js;
 using namespace js::jit;
 
 JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
-  : current_(activation->exitFP()),
+  : current_(activation->jsExitFP()),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
@@ -153,15 +153,15 @@ JSJitFrameIter::prevFp() const
 void
 JSJitFrameIter::operator++()
 {
-    MOZ_ASSERT(type_ != JitFrame_Entry);
+    MOZ_ASSERT(!isEntry());
 
     frameSize_ = prevFrameLocalSize();
     cachedSafepointIndex_ = nullptr;
 
     // If the next frame is the entry frame, just exit. Don't update current_,
     // since the entry and first frames overlap.
-    if (current()->prevType() == JitFrame_Entry) {
-        type_ = JitFrame_Entry;
+    if (isEntry(current()->prevType())) {
+        type_ = current()->prevType();
         return;
     }
 
@@ -337,7 +337,7 @@ void
 JSJitFrameIter::dump() const
 {
     switch (type_) {
-      case JitFrame_Entry:
+      case JitFrame_CppToJSJit:
         fprintf(stderr, " Entry frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
@@ -366,6 +366,10 @@ JSJitFrameIter::dump() const
         break;
       case JitFrame_IonICCall:
         fprintf(stderr, " Ion IC call\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
+      case JitFrame_WasmToJSJit:
+        fprintf(stderr, " Fast wasm-to-JS entry frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
       case JitFrame_Exit:

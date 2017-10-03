@@ -7,6 +7,7 @@
 interface nsICookie2;
 interface nsIURI;
 interface nsIChannel;
+interface nsIPrincipal;
 
 typedef long nsCookieAccess;
 
@@ -54,17 +55,14 @@ interface nsICookiePermission : nsISupports
    * this method is called to test whether or not the given URI/channel may
    * access the cookie database, either to set or get cookies.
    *
-   * @param aURI
-   *        the URI trying to access cookies
-   * @param aChannel
-   *        the channel corresponding to aURI
+   * @param aPrincipal
+   *        the principal trying to access cookies.
    *
    * @return one of the following nsCookieAccess values:
    *         ACCESS_DEFAULT, ACCESS_ALLOW, ACCESS_DENY, or
    *         ACCESS_ALLOW_FIRST_PARTY_ONLY
    */
-  nsCookieAccess canAccess(in nsIURI     aURI,
-                           in nsIChannel aChannel);
+  nsCookieAccess canAccess(in nsIPrincipal aPrincipal);
 
   /**
    * canSetCookie

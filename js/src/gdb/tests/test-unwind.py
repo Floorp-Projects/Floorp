@@ -27,7 +27,7 @@ def do_unwinder_test():
             first = False
         elif frame.function() == "<<JitFrame_Exit>>":
             found_exit = True
-        elif frame.function() == "<<JitFrame_Entry>>":
+        elif frame.function() == "<<JitFrame_CppToJSJit>>":
             found_entry = True
         elif frame.function() == "main":
             found_main = True

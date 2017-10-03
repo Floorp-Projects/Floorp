@@ -69,6 +69,7 @@ class CodeSegment
     typedef UniquePtr<uint8_t, FreeCode> UniqueCodeBytes;
     static UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
 
+    const Code*     code_;
     Tier            tier_;
     UniqueCodeBytes bytes_;
     uint32_t        length_;
@@ -86,36 +87,43 @@ class CodeSegment
                     const LinkDataTier& linkData,
                     const Metadata& metadata);
 
-    static UniqueConstCodeSegment create(Tier tier,
-                                         UniqueCodeBytes bytes,
-                                         uint32_t codeLength,
-                                         const ShareableBytes& bytecode,
-                                         const LinkDataTier& linkData,
-                                         const Metadata& metadata);
+    static UniqueCodeSegment create(Tier tier,
+                                    UniqueCodeBytes bytes,
+                                    uint32_t codeLength,
+                                    const ShareableBytes& bytecode,
+                                    const LinkDataTier& linkData,
+                                    const Metadata& metadata);
   public:
     CodeSegment(const CodeSegment&) = delete;
     void operator=(const CodeSegment&) = delete;
 
     CodeSegment()
-      : tier_(Tier(-1)),
+      : code_(nullptr),
+        tier_(Tier(-1)),
         length_(0),
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
         unalignedAccessCode_(nullptr)
     {}
 
-    static UniqueConstCodeSegment create(Tier tier,
-                                         jit::MacroAssembler& masm,
-                                         const ShareableBytes& bytecode,
-                                         const LinkDataTier& linkData,
-                                         const Metadata& metadata);
+    static UniqueCodeSegment create(Tier tier,
+                                    jit::MacroAssembler& masm,
+                                    const ShareableBytes& bytecode,
+                                    const LinkDataTier& linkData,
+                                    const Metadata& metadata);
 
-    static UniqueConstCodeSegment create(Tier tier,
-                                         const Bytes& unlinkedBytes,
-                                         const ShareableBytes& bytecode,
-                                         const LinkDataTier& linkData,
-                                         const Metadata& metadata);
+    static UniqueCodeSegment create(Tier tier,
+                                    const Bytes& unlinkedBytes,
+                                    const ShareableBytes& bytecode,
+                                    const LinkDataTier& linkData,
+                                    const Metadata& metadata);
 
+    void initCode(const Code* code) {
+        MOZ_ASSERT(!code_);
+        code_ = code;
+    }
+
+    const Code* code() const { MOZ_ASSERT(code_); return code_; }
     Tier tier() const { return tier_; }
 
     uint8_t* base() const { return bytes_.get(); }
@@ -450,14 +458,19 @@ class Code : public ShareableBase<Code>
     ExclusiveData<CacheableCharsVector> profilingLabels_;
     UniqueJumpTable                     jumpTable_;
 
+    UniqueConstCodeSegment takeOwnership(UniqueCodeSegment segment) const {
+        segment->initCode(this);
+        return UniqueConstCodeSegment(segment.release());
+    }
+
   public:
     Code();
-    Code(UniqueConstCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
+    Code(UniqueCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
 
     void** jumpTable() const { return jumpTable_.get(); }
 
     bool hasTier2() const { return metadata_->hasTier2(); }
-    void setTier2(UniqueConstCodeSegment segment) const;
+    void setTier2(UniqueCodeSegment segment) const;
     Tiers tiers() const;
     bool hasTier(Tier t) const;
 
@@ -470,10 +483,10 @@ class Code : public ShareableBase<Code>
 
     // Metadata lookup functions:
 
-    const CallSite* lookupCallSite(void* returnAddress, const CodeSegment** segment = nullptr) const;
-    const CodeRange* lookupRange(void* pc, const CodeSegment** segment = nullptr) const;
-    const MemoryAccess* lookupMemoryAccess(void* pc, const CodeSegment** segment = nullptr) const;
-    bool containsCodePC(const void* pc, const CodeSegment** segmentp = nullptr) const;
+    const CallSite* lookupCallSite(void* returnAddress) const;
+    const CodeRange* lookupRange(void* pc) const;
+    const MemoryAccess* lookupMemoryAccess(void* pc) const;
+    bool containsCodePC(const void* pc) const;
 
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.

@@ -524,9 +524,8 @@
 
     function test9_prepare() {
       this.eventSeq = [
-        new invokerChecker(EVENT_SHOW, () => {
-          let doc = getNode("t9_container").contentDocument;
-          return doc && doc.getElementById("container");
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, () => {
+          return getNode("t9_container").contentDocument;
         })
       ];
 

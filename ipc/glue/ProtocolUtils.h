@@ -626,18 +626,22 @@ public:
 
     Endpoint(Endpoint&& aOther)
       : mValid(aOther.mValid)
-      , mMode(aOther.mMode)
       , mTransport(aOther.mTransport)
       , mMyPid(aOther.mMyPid)
       , mOtherPid(aOther.mOtherPid)
     {
+        if (aOther.mValid) {
+            mMode = aOther.mMode;
+        }
         aOther.mValid = false;
     }
 
     Endpoint& operator=(Endpoint&& aOther)
     {
         mValid = aOther.mValid;
-        mMode = aOther.mMode;
+        if (aOther.mValid) {
+            mMode = aOther.mMode;
+        }
         mTransport = aOther.mTransport;
         mMyPid = aOther.mMyPid;
         mOtherPid = aOther.mOtherPid;

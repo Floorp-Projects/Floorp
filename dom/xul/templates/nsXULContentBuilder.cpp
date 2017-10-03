@@ -1040,8 +1040,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
         MOZ_AUTO_DOC_UPDATE(container->GetUncomposedDoc(), UPDATE_CONTENT_MODEL,
                             true);
         nsNodeUtils::ContentAppended(container,
-                                     container->GetChildAt(newIndexInContainer),
-                                     newIndexInContainer);
+                                     container->GetChildAt(newIndexInContainer));
     }
 
     NS_IF_RELEASE(container);

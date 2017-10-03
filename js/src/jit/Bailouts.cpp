@@ -37,7 +37,7 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
                IsInRange(FAKE_EXITFP_FOR_BAILOUT + sizeof(CommonFrameLayout), 0, 0x1000),
                "Fake exitfp pointer should be within the first page.");
 
-    cx->activation()->asJit()->setExitFP(FAKE_EXITFP_FOR_BAILOUT);
+    cx->activation()->asJit()->setJSExitFP(FAKE_EXITFP_FOR_BAILOUT);
 
     JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
@@ -109,7 +109,7 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
     JSContext* cx = TlsContext.get();
 
     // We don't have an exit frame.
-    cx->activation()->asJit()->setExitFP(FAKE_EXITFP_FOR_BAILOUT);
+    cx->activation()->asJit()->setJSExitFP(FAKE_EXITFP_FOR_BAILOUT);
 
     JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
@@ -195,9 +195,9 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
     MOZ_ASSERT_IF(!excInfo.propagatingIonExceptionForDebugMode(), cx->isExceptionPending());
 
     JitActivation* act = cx->activation()->asJit();
-    uint8_t* prevExitFP = act->exitFP();
-    auto restoreExitFP = mozilla::MakeScopeExit([&]() { act->setExitFP(prevExitFP); });
-    act->setExitFP(FAKE_EXITFP_FOR_BAILOUT);
+    uint8_t* prevExitFP = act->jsExitFP();
+    auto restoreExitFP = mozilla::MakeScopeExit([&]() { act->setJSExitFP(prevExitFP); });
+    act->setJSExitFP(FAKE_EXITFP_FOR_BAILOUT);
 
     gc::AutoSuppressGC suppress(cx);
 
@@ -306,7 +306,7 @@ jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutK
 void
 BailoutFrameInfo::attachOnJitActivation(const JitActivationIterator& jitActivations)
 {
-    MOZ_ASSERT(jitActivations.exitFP() == FAKE_EXITFP_FOR_BAILOUT);
+    MOZ_ASSERT(jitActivations->asJit()->jsExitFP() == FAKE_EXITFP_FOR_BAILOUT);
     activation_ = jitActivations->asJit();
     activation_->setBailoutData(this);
 }
