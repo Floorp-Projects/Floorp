@@ -245,8 +245,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
     return;
   }
 
-  const nsTArray<FontFamilyName>& fontlist = aFamilyList.GetFontlist();
-  AppendEscapedCSSFontFamilyList(fontlist, aResult);
+  AppendEscapedCSSFontFamilyList(aFamilyList.GetFontlist().get(), aResult);
 }
 
 
