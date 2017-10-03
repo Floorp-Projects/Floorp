@@ -91,13 +91,13 @@ public class ActivityStreamPanel extends FrameLayout {
                 FirefoxAccounts.firefoxAccountsExist(context)
         );
 
-        updateSharedPreferencesGlobalExtras(sharedPreferences, context.getResources());
+        updateSharedPreferencesGlobalExtras(context, sharedPreferences);
     }
 
-    private void updateSharedPreferencesGlobalExtras(final SharedPreferences sharedPreferences, final Resources res) {
+    private void updateSharedPreferencesGlobalExtras(final Context context, final SharedPreferences sharedPreferences) {
         ActivityStreamTelemetry.Extras.setGlobal(
                 ActivityStreamTelemetry.Contract.AS_USER_PREFERENCES,
-                ActivityStreamTelemetry.getASUserPreferencesValue(sharedPreferences, res)
+                ActivityStreamTelemetry.getASUserPreferencesValue(context, sharedPreferences)
         );
     }
 
@@ -124,10 +124,10 @@ public class ActivityStreamPanel extends FrameLayout {
         adapter.swapTopSitesCursor(null);
     }
 
-    public void reload(LoaderManager lm, SharedPreferences sharedPreferences, Resources res) {
+    public void reload(final LoaderManager lm, final Context context, final SharedPreferences sharedPreferences) {
         adapter.clearAndInit();
 
-        updateSharedPreferencesGlobalExtras(sharedPreferences, res);
+        updateSharedPreferencesGlobalExtras(context, sharedPreferences);
 
         // Destroy loaders so they don't restart loading when returning.
         lm.destroyLoader(LOADER_ID_HIGHLIGHTS);

@@ -18,13 +18,22 @@ A concept of a "global" extra is meant to support recording certain context info
 ``fx_account_present``, values: true, false
 Indicates if Firefox Account is currently enabled.
 
-``as_user_preferences``, values: (bit-packed) value of preferences enabled
+``as_user_preferences``, values: (bit-packed) value of preferences, and related settings, enabled
 Each preference is assigned a value that is a unique power of 2, and value of as_user_preferences is the sum of all enabled preferences values.
 
-The SharedPreferences preferences measured (with their value) are:
-pref_activitystream_pocket_enabled: 4
-pref_activitystream_visited_enabled: 8
-pref_activitystream_recentbookmarks_enabled: 16
+Some values are taken directly from Android SharedPreferences: these are prefixed with "(SharedPrefs)"". All preferences
+measured (with their values) are:
+
+- (SharedPrefs) pref_activitystream_pocket_enabled: 4
+- (SharedPrefs) pref_activitystream_visited_enabled: 8
+- (SharedPrefs) pref_activitystream_recentbookmarks_enabled: 16
+- Is Pocket enabled in the user's current locale: 32
+
+**Important note on Pocket:** A user's ability to override ``pref_activitystream_pocket_enabled`` will be influenced by whether
+or not Pocket is shown so when checking that preference, it is also recommended to check whether Pocket is enabled in the user's
+current locale. We initially limited the locales that get Pocket recommendations in `bug 1404460`_.
+
+.. _bug 1404460: https://bugzilla.mozilla.org/show_bug.cgi?id=1404460
 
 Extra information available for various event types
 ===================================================
