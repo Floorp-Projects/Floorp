@@ -25,6 +25,9 @@ class RecordedEventDerived : public RecordedEvent {
   void RecordToStream(std::ostream &aStream) const {
     static_cast<const Derived*>(this)->Record(aStream);
   }
+  void RecordToStream(EventStream& aStream) const {
+    static_cast<const Derived*>(this)->Record(aStream);
+  }
   void RecordToStream(MemStream &aStream) const {
     SizeCollector size;
     static_cast<const Derived*>(this)->Record(size);
@@ -79,7 +82,7 @@ public:
   SurfaceFormat mFormat;
   bool mHasExistingData;
   RefPtr<SourceSurface> mExistingData;
-  
+
 private:
   friend class RecordedEvent;
 
@@ -511,7 +514,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "SetTransform"; }
 
   Matrix mTransform;
@@ -536,7 +539,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "DrawSurface"; }
 private:
   friend class RecordedEvent;
@@ -565,7 +568,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "DrawSurfaceWithShadow"; }
 private:
   friend class RecordedEvent;
@@ -614,12 +617,12 @@ class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
 public:
   MOZ_IMPLICIT RecordedPathCreation(PathRecording *aPath);
   ~RecordedPathCreation();
-  
+
   virtual bool PlayEvent(Translator *aTranslator) const;
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "Path Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -639,12 +642,12 @@ public:
     : RecordedEventDerived(PATHDESTRUCTION), mRefPtr(aPath)
   {
   }
-  
+
   virtual bool PlayEvent(Translator *aTranslator) const;
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "Path Destruction"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -671,7 +674,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "SourceSurface Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -699,7 +702,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "SourceSurface Destruction"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -775,7 +778,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "GradientStops Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -802,7 +805,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "GradientStops Destruction"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -825,7 +828,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "Snapshot"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 private:
@@ -1045,7 +1048,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "ScaledFont Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 
@@ -1103,7 +1106,7 @@ public:
 
   template<class S> void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
-  
+
   virtual std::string GetName() const { return "MaskSurface"; }
 private:
   friend class RecordedEvent;
@@ -1288,7 +1291,7 @@ inline void
 RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource) const
 {
   aDestination.mType = aSource.GetType();
-  
+
   switch (aSource.GetType()) {
   case PatternType::COLOR:
     {
@@ -2283,7 +2286,7 @@ RecordedPathCreation::~RecordedPathCreation()
 inline bool
 RecordedPathCreation::PlayEvent(Translator *aTranslator) const
 {
-  RefPtr<PathBuilder> builder = 
+  RefPtr<PathBuilder> builder =
     aTranslator->GetReferenceDrawTarget()->CreatePathBuilder(mFillRule);
 
   for (size_t i = 0; i < mPathOps.size(); i++) {

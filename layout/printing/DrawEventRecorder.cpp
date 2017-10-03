@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "DrawEventRecorder.h"
+
+namespace mozilla {
+namespace layout {
+
+void
+DrawEventRecorderPRFileDesc::RecordEvent(const gfx::RecordedEvent& aEvent)
+{
+  WriteElement(mOutputStream, aEvent.GetType());
+
+  aEvent.RecordToStream(mOutputStream);
+
+  Flush();
+}
+
+DrawEventRecorderPRFileDesc::DrawEventRecorderPRFileDesc(const char* aFilename)
+{
+  mOutputStream.Open(aFilename);
+  WriteHeader(mOutputStream);
+}
+
+DrawEventRecorderPRFileDesc::~DrawEventRecorderPRFileDesc()
+{
+  if (IsOpen()) {
+    Close();
+  }
+}
+
+void
+DrawEventRecorderPRFileDesc::Flush()
+{
+  mOutputStream.Flush();
+}
+
+bool
+DrawEventRecorderPRFileDesc::IsOpen()
+{
+  return mOutputStream.IsOpen();
+}
+
+void
+DrawEventRecorderPRFileDesc::OpenNew(const char* aFilename)
+{
+  MOZ_ASSERT(!IsOpen());
+
+  mOutputStream.Open(aFilename);
+  WriteHeader(mOutputStream);
+}
+
+void
+DrawEventRecorderPRFileDesc::Close()
+{
+  MOZ_ASSERT(IsOpen());
+
+  mOutputStream.Close();
+}
+
+}
+}

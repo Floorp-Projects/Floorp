@@ -184,7 +184,7 @@ nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
     return rv;
   }
 
-  mRecorder = new mozilla::gfx::DrawEventRecorderFile(recordingPath.get());
+  mRecorder = new mozilla::layout::DrawEventRecorderPRFileDesc(recordingPath.get());
   return mRemotePrintJob->InitializePrint(nsString(aTitle),
                                           nsString(aPrintToFileName),
                                           aStartPage, aEndPage);
