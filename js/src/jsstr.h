@@ -268,12 +268,11 @@ SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengt
 
 /*
  * Inflate bytes in ASCII encoding to char16_t code units. Return null on error,
- * otherwise return the char16_t buffer that was malloc'ed. length is updated to
- * the length of the new string (in char16_t code units). A null char is
- * appended, but it is not included in the length.
+ * otherwise return the char16_t buffer that was malloc'ed. A null char is
+ * appended.
  */
 extern char16_t*
-InflateString(JSContext* cx, const char* bytes, size_t* length);
+InflateString(JSContext* cx, const char* bytes, size_t length);
 
 /*
  * Inflate bytes to JS chars in an existing buffer. 'dst' must be large

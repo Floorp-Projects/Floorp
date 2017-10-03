@@ -3882,27 +3882,14 @@ template const char16_t*
 js_strchr_limit(const char16_t* s, char16_t c, const char16_t* limit);
 
 char16_t*
-js::InflateString(JSContext* cx, const char* bytes, size_t* lengthp)
+js::InflateString(JSContext* cx, const char* bytes, size_t length)
 {
-    size_t nchars;
-    char16_t* chars;
-    size_t nbytes = *lengthp;
-
-    nchars = nbytes;
-    chars = cx->pod_malloc<char16_t>(nchars + 1);
+    char16_t* chars = cx->pod_malloc<char16_t>(length + 1);
     if (!chars)
-        goto bad;
-    for (size_t i = 0; i < nchars; i++)
-        chars[i] = (unsigned char) bytes[i];
-    *lengthp = nchars;
-    chars[nchars] = 0;
+        return nullptr;
+    CopyAndInflateChars(chars, bytes, length);
+    chars[length] = 0;
     return chars;
-
-  bad:
-    // For compatibility with callers of JS_DecodeBytes we must zero lengthp
-    // on errors.
-    *lengthp = 0;
-    return nullptr;
 }
 
 template <typename CharT>
