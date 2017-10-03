@@ -35,6 +35,11 @@ to_speex_quality(cubeb_resampler_quality q)
   }
 }
 
+uint32_t min_buffered_audio_frame(uint32_t sample_rate)
+{
+  return sample_rate / 20;
+}
+
 template<typename T>
 passthrough_resampler<T>::passthrough_resampler(cubeb_stream * s,
                                                 cubeb_data_callback cb,
