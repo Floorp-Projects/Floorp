@@ -38,17 +38,13 @@ MOZ_END_STD_NAMESPACE
 #include <stdio.h>
 
 /* This header file contains the internal C++ API of the resamplers, for testing. */
-namespace {
+
 // When dropping audio input frames to prevent building
 // an input delay, this function returns the number of frames
 // to keep in the buffer.
 // @parameter sample_rate The sample rate of the stream.
 // @return A number of frames to keep.
-uint32_t min_buffered_audio_frame(uint32_t sample_rate)
-{
-  return sample_rate / 20;
-}
-}
+uint32_t min_buffered_audio_frame(uint32_t sample_rate);
 
 int to_speex_quality(cubeb_resampler_quality q);
 
