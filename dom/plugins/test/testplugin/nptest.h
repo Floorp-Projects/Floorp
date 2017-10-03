@@ -91,10 +91,6 @@ typedef struct TestNPObject : NPObject {
 
 typedef struct _PlatformData PlatformData;
 
-typedef struct TestRange : NPByteRange {
-  bool waiting;
-} TestRange;
-
 typedef struct InstanceData {
   NPP npp;
   NPWindow window;
@@ -130,13 +126,9 @@ typedef struct InstanceData {
   std::string frame;
   std::string timerTestScriptCallback;
   std::ostringstream err;
-  uint16_t streamMode;
   int32_t streamChunkSize;
   int32_t streamBufSize;
-  int32_t fileBufSize;
-  TestRange* testrange;
   void* streamBuf;
-  void* fileBuf;
   bool crashOnDestroy;
   bool cleanupWidget;
   ActivationState topLevelWindowActivationState;

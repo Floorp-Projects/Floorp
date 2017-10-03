@@ -82,6 +82,12 @@ interface nsIProcess : nsISupports
   attribute boolean startHidden;
 
   /**
+   * When set to true the process will be launched directly without using the
+   * shell. This currently affects only the Windows platform.
+   */
+  attribute boolean noShell;
+
+  /**
    * The process identifier of the currently running process. This will only
    * be available after the process has started and may not be available on
    * some platforms.

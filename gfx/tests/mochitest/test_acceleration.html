@@ -32,6 +32,7 @@ var windows = SpecialPowers.Services.ww.getWindowEnumerator();
 var windowutils;
 var acceleratedWindows = 0;
 var advancedLayersWindows = 0;
+var layerManagerLog = [];
 while (windows.hasMoreElements()) {
   windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
@@ -42,6 +43,8 @@ while (windows.hasMoreElements()) {
     if (windowutils.usingAdvancedLayers) {
       advancedLayersWindows++;
     }
+    layerManagerLog.push(windowutils.layerManagerType + ":" +
+                         windowutils.usingAdvancedLayers);
   } catch (e) {
     // The window may not have a layer manager, in which case we get an error.
     // Don't count it as an accelerated window.
@@ -112,7 +115,8 @@ switch(osName)
       shouldGetAL &= advancedLayersEnabledOnWin7;
     }
     if (shouldGetAL) {
-      isnot(advancedLayersWindows, 0, "Advanced Layers enabled on Windows");
+      isnot(advancedLayersWindows, 0, "Advanced Layers enabled on Windows; "
+                                      + layerManagerLog.join(","));
     } else {
       is(advancedLayersWindows, 0, "Advanced Layers disabled on Windows");
     }
