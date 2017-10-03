@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<style>
+.x { color: blue; }
+.y { background-color: green; }
+</style>
+<script src="util.js"></script>
+<script>
+function find_leftmost(e) {
+  while (e.firstChild) {
+    e = e.firstChild;
+  }
+  return e;
+}
+window.onload = function() {
+  document.head.appendChild(build_rule("div", 1, "{ color: blue; }", 100));
+  let root = document.createElement("div");
+  root.className = "root";
+  root.appendChild(build_dom(50000, "div"));
+  let leftmost = find_leftmost(root);
+  document.body.appendChild(root);
+  flush_style(root);
+  perf_start();
+  document.body.className = "x";
+  leftmost.className = "y";
+  flush_style(root);
+  perf_finish();
+};
+</script>
+<body></body>

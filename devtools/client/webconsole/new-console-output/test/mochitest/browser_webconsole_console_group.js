@@ -9,7 +9,7 @@
 // behave as expected.
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console-group.html";
-const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/message-indent");
+const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/MessageIndent");
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");

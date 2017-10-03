@@ -10,8 +10,8 @@ const { createFactory, DOM } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
-const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
+const FilterButton = require("devtools/client/webconsole/new-console-output/components/FilterButton");
+const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const {

@@ -2205,8 +2205,12 @@ class StaticAnalysis(MachCommandBase):
                      help='Strip NUM leading components from file names in diff mode.')
     @CommandArgument('--fix', '-f', default=False, action='store_true',
                      help='Try to autofix errors detected by clang-tidy checkers.')
+    @CommandArgument('--header-filter', '-h-f', default='', metavar='header_filter',
+                     help='Regular expression matching the names of the headers to '
+                          'output diagnostics from. Diagnostics from the main file '
+                          'of each translation unit are always displayed')
     def check(self, source=None, jobs=2, strip=1, verbose=False,
-              checks='-*', fix=False):
+              checks='-*', fix=False, header_filter=''):
         self._set_log_level(verbose)
         rc = self._build_compile_db(verbose=verbose)
         if rc != 0:
@@ -2228,6 +2232,10 @@ class StaticAnalysis(MachCommandBase):
         common_args = ['-clang-tidy-binary', self._clang_tidy_path,
                        '-checks=%s' % checks,
                        '-extra-arg=-DMOZ_CLANG_PLUGIN']
+
+        if len(header_filter):
+            common_args.append('-header-filter=%s' % header_filter)
+
         if fix:
             common_args.append('-fix')
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  let s = "";
+  s += ".x";
+  for (let j = 0; j < 100; j++) {
+    s += "[y~=v" + j + "]";
+  }
+  s += " { background-color: yellow; }";
+  var style = document.createElement("style");
+  style.textContent = s;
+  document.head.appendChild(style);
+  let els = [];
+  for (let i = 0; i < 1000; i++) {
+    var el = document.createElement("e" + i);
+    el.className = "x";
+    let val = "";
+    for (let j = 0; j < 100; j++) {
+      val += "v" + j + " ";
+    }
+    el.setAttribute("y", val);
+    document.body.appendChild(el);
+    els.push(el);
+  }
+  flush_style(els[0]);
+  perf_start();
+  for (let el of els) {
+    el.className = "";
+  }
+  flush_style(els[0]);
+  perf_finish();
+};
+</script>
+<body></body>

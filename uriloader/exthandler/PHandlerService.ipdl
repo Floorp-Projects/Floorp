@@ -30,6 +30,8 @@ parent:
   sync FillHandlerInfo(HandlerInfo aHandlerInfoData,
                        nsCString aOverrideType)
       returns (HandlerInfo handlerInfoData);
+  sync ExistsForProtocol(nsCString aProtocolScheme)
+      returns (bool exists);
   sync Exists(HandlerInfo aHandlerInfo)
       returns (bool exists);
   sync GetTypeFromExtension(nsCString aFileExtension)
