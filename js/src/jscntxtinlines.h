@@ -55,9 +55,7 @@ class CompartmentChecker
 
     void check(JSCompartment* c) {
         if (c && !compartment->runtimeFromAnyThread()->isAtomsCompartment(c)) {
-            if (!compartment)
-                compartment = c;
-            else if (c != compartment)
+            if (c != compartment)
                 fail(compartment, c);
         }
     }
