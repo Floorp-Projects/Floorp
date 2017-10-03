@@ -924,9 +924,7 @@ element.getPointerInteractablePaintTree = function(el) {
 
 // TODO(ato): Not implemented.
 // In fact, it's not defined in the spec.
-element.isKeyboardInteractable = function(el) {
-  return true;
-};
+element.isKeyboardInteractable = () => true;
 
 /**
  * Attempts to scroll into view |el|.

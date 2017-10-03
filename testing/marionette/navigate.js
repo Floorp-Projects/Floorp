@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {utils: Cu} = Components;
 
 Cu.importGlobalProperties(["URL"]);
 
