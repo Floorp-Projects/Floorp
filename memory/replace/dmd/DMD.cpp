@@ -1561,14 +1561,6 @@ Options::ModeString() const
 // DMD start-up
 //---------------------------------------------------------------------------
 
-#ifdef XP_MACOSX
-static void
-NopStackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
-                     void* aClosure)
-{
-}
-#endif
-
 static void
 prefork()
 {
@@ -1616,17 +1608,6 @@ Init(const malloc_table_t* aMallocTable)
 
   // Parse $DMD env var.
   gOptions = InfallibleAllocPolicy::new_<Options>(e);
-
-#ifdef XP_MACOSX
-  // On Mac OS X we need to call StackWalkInitCriticalAddress() very early
-  // (prior to the creation of any mutexes, apparently) otherwise we can get
-  // hangs when getting stack traces (bug 821577).  But
-  // StackWalkInitCriticalAddress() isn't exported from xpcom/, so instead we
-  // just call MozStackWalk, because that calls StackWalkInitCriticalAddress().
-  // See the comment above StackWalkInitCriticalAddress() for more details.
-  (void)MozStackWalk(NopStackWalkCallback, /* skipFrames */ 0,
-                     /* maxFrames */ 1, nullptr);
-#endif
 
   gStateLock = InfallibleAllocPolicy::new_<Mutex>();
 
