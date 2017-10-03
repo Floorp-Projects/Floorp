@@ -8,7 +8,7 @@ let enabledOnStartup = false;
 // ScreenshotsEnabled/Disabled promises return true if it was already
 // Enabled/Disabled, and false if it need to Enable/Disable.
 function promiseScreenshotsEnabled() {
-  if (!Services.prefs.getBoolPref("extensions.screenshots.system-disabled", false)) {
+  if (!Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
     info("Screenshots was already enabled, assuming enabled by default for tests");
     enabledOnStartup = true;
     return Promise.resolve(true);
@@ -24,12 +24,12 @@ function promiseScreenshotsEnabled() {
       }
     }, 100);
     info("Set Screenshots disabled pref to false.");
-    Services.prefs.setBoolPref("extensions.screenshots.system-disabled", false);
+    Services.prefs.setBoolPref("extensions.screenshots.disabled", false);
   });
 }
 
 function promiseScreenshotsDisabled() {
-  if (Services.prefs.getBoolPref("extensions.screenshots.system-disabled", false)) {
+  if (Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
     info("Screenshots already disabled");
     return Promise.resolve(true);
   }
@@ -43,7 +43,7 @@ function promiseScreenshotsDisabled() {
       }
     }, 100);
     info("Set Screenshots disabled pref to true.");
-    Services.prefs.setBoolPref("extensions.screenshots.system-disabled", true);
+    Services.prefs.setBoolPref("extensions.screenshots.disabled", true);
   });
 }
 
