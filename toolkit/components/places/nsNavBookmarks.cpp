@@ -3319,16 +3319,18 @@ nsNavBookmarks::OnPageAnnotationSet(nsIURI* aPage, const nsACString& aName)
 
 NS_IMETHODIMP
 nsNavBookmarks::OnItemAnnotationSet(int64_t aItemId, const nsACString& aName,
-                                    uint16_t aSource)
+                                    uint16_t aSource, bool aDontUpdateLastModified)
 {
   BookmarkData bookmark;
   nsresult rv = FetchItemInfo(aItemId, bookmark);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bookmark.lastModified = RoundedPRNow();
-  rv = SetItemDateInternal(LAST_MODIFIED, DetermineSyncChangeDelta(aSource),
-                           bookmark.id, bookmark.lastModified);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!aDontUpdateLastModified) {
+    bookmark.lastModified = RoundedPRNow();
+    rv = SetItemDateInternal(LAST_MODIFIED, DetermineSyncChangeDelta(aSource),
+                             bookmark.id, bookmark.lastModified);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
@@ -3360,7 +3362,7 @@ nsNavBookmarks::OnItemAnnotationRemoved(int64_t aItemId, const nsACString& aName
 {
   // As of now this is doing the same as OnItemAnnotationSet, so just forward
   // the call.
-  nsresult rv = OnItemAnnotationSet(aItemId, aName, aSource);
+  nsresult rv = OnItemAnnotationSet(aItemId, aName, aSource, false);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
