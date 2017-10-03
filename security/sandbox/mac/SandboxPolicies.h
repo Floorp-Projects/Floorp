@@ -327,9 +327,7 @@ static const char contentSandboxRules[] = R"(
   (allow file-write-create
     (require-all
       (subpath appTempDir)
-      (require-any
-        (vnode-type REGULAR-FILE)
-        (vnode-type DIRECTORY))))
+      (vnode-type REGULAR-FILE)))
 
   ; bug 1382260
   ; We may need to load fonts from outside of the standard
