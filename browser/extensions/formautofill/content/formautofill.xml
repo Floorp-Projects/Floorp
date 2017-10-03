@@ -45,11 +45,6 @@
         </body>
       </method>
 
-      <method name="_onChanged">
-        <body>
-        </body>
-      </method>
-
       <method name="_onOverflow">
         <body></body>
       </method>
