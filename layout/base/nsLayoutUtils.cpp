@@ -3706,7 +3706,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   {
     AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame:BuildDisplayList",
                         GRAPHICS);
-    AutoProfilerTracing tracing("Paint", "DisplayList");
+    AUTO_PROFILER_TRACING("Paint", "DisplayList");
 
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
 
@@ -3759,7 +3759,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                                  startBuildDisplayList);
 
   bool profilerNeedsDisplayList =
-    profiler_feature_active(ProfilerFeature::DisplayListDump);
+    PROFILER_FEATURE_ACTIVE(ProfilerFeature::DisplayListDump);
   bool consoleNeedsDisplayList = gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint();
 #ifdef MOZ_DUMP_PAINTING
   FILE* savedDumpFile = gfxUtils::sDumpPaintFile;
@@ -3804,7 +3804,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // Flush stream now to avoid reordering dump output relative to
       // messages dumped by PaintRoot below.
       if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
-        profiler_tracing("log", ss->str().c_str(), TRACING_EVENT);
+        PROFILER_TRACING("log", ss->str().c_str(), TRACING_EVENT);
       } else {
         fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
       }
@@ -3877,7 +3877,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
 
     if (profilerNeedsDisplayList && !consoleNeedsDisplayList) {
-      profiler_tracing("log", ss->str().c_str(), TRACING_EVENT);
+      PROFILER_TRACING("log", ss->str().c_str(), TRACING_EVENT);
     } else {
       fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
     }

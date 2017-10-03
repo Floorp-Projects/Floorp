@@ -1514,7 +1514,7 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
       appStartup->DestroyHiddenWindow();
 
     gDirServiceProvider->DoShutdown();
-    profiler_add_marker("Shutdown early");
+    PROFILER_ADD_MARKER("Shutdown early");
 
     WriteConsoleLog();
 
@@ -4740,8 +4740,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   CodeCoverageHandler::Init();
 #endif
 
-  AutoProfilerInit profilerInit;
-
+  AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XREMain::XRE_main", OTHER);
 
   nsresult rv = NS_OK;

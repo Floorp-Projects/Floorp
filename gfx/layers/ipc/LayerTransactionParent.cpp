@@ -170,7 +170,7 @@ LayerTransactionParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 {
-  AutoProfilerTracing tracing("Paint", "LayerTransaction");
+  AUTO_PROFILER_TRACING("Paint", "LayerTransaction");
   AUTO_PROFILER_LABEL("LayerTransactionParent::RecvUpdate", GRAPHICS);
 
   TimeStamp updateStart = TimeStamp::Now();
