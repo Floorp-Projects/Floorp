@@ -1503,9 +1503,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // including "normal" OutOfLineCode.
     void wasmEmitTrapOutOfLineCode();
 
-    // Assert invariants that should be true within any non-exit-stub wasm code.
-    void wasmAssertNonExitInvariants(Register activation);
-
     // Perform a stack-overflow test, branching to the given Label on overflow.
     void wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow);
 

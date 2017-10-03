@@ -3115,20 +3115,6 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
 }
 
 void
-MacroAssembler::wasmAssertNonExitInvariants(Register activation)
-{
-#ifdef DEBUG
-    // packedExitFP should not be tagged as wasm. Note this includes nullptr.
-    Label ok;
-    Address packedExitFP(activation, JitActivation::offsetOfPackedExitFP());
-    branchTestPtr(Assembler::Zero, packedExitFP, Imm32(uintptr_t(JitActivation::ExitFpWasmBit)),
-                  &ok);
-    breakpoint();
-    bind(&ok);
-#endif
-}
-
-void
 MacroAssembler::wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow)
 {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, addressOfContext)), scratch);
