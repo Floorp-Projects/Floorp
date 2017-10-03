@@ -12,20 +12,13 @@
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "nsDisplayList.h"
-#include "WebRenderCanvasLayer.h"
 #include "WebRenderCanvasRenderer.h"
-#include "WebRenderColorLayer.h"
-#include "WebRenderContainerLayer.h"
-#include "WebRenderImageLayer.h"
-#include "WebRenderPaintedLayer.h"
-#include "WebRenderPaintedLayerBlob.h"
-#include "WebRenderTextLayer.h"
-#include "WebRenderDisplayItemLayer.h"
 
 namespace mozilla {
 
@@ -1177,70 +1170,6 @@ void
 WebRenderLayerManager::SetRoot(Layer* aLayer)
 {
   mRoot = aLayer;
-}
-
-already_AddRefed<PaintedLayer>
-WebRenderLayerManager::CreatePaintedLayer()
-{
-  if (gfxPrefs::WebRenderBlobImages()) {
-    return MakeAndAddRef<WebRenderPaintedLayerBlob>(this);
-  } else {
-    return MakeAndAddRef<WebRenderPaintedLayer>(this);
-  }
-}
-
-already_AddRefed<ContainerLayer>
-WebRenderLayerManager::CreateContainerLayer()
-{
-  return MakeAndAddRef<WebRenderContainerLayer>(this);
-}
-
-already_AddRefed<ImageLayer>
-WebRenderLayerManager::CreateImageLayer()
-{
-  return MakeAndAddRef<WebRenderImageLayer>(this);
-}
-
-already_AddRefed<CanvasLayer>
-WebRenderLayerManager::CreateCanvasLayer()
-{
-  return MakeAndAddRef<WebRenderCanvasLayer>(this);
-}
-
-already_AddRefed<ReadbackLayer>
-WebRenderLayerManager::CreateReadbackLayer()
-{
-  return nullptr;
-}
-
-already_AddRefed<ColorLayer>
-WebRenderLayerManager::CreateColorLayer()
-{
-  return MakeAndAddRef<WebRenderColorLayer>(this);
-}
-
-already_AddRefed<RefLayer>
-WebRenderLayerManager::CreateRefLayer()
-{
-  return MakeAndAddRef<WebRenderRefLayer>(this);
-}
-
-already_AddRefed<TextLayer>
-WebRenderLayerManager::CreateTextLayer()
-{
-  return MakeAndAddRef<WebRenderTextLayer>(this);
-}
-
-already_AddRefed<BorderLayer>
-WebRenderLayerManager::CreateBorderLayer()
-{
-  return nullptr;
-}
-
-already_AddRefed<DisplayItemLayer>
-WebRenderLayerManager::CreateDisplayItemLayer()
-{
-  return MakeAndAddRef<WebRenderDisplayItemLayer>(this);
 }
 
 bool

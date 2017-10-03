@@ -19,7 +19,7 @@
 #include "Layers.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
-#include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"

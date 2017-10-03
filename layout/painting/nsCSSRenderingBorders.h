@@ -31,7 +31,6 @@ class GradientStops;
 } // namespace gfx
 namespace layers {
 class StackingContextHelper;
-class WebRenderDisplayItemLayer;
 } // namespace layers
 } // namespace mozilla
 
