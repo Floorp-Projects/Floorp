@@ -232,9 +232,9 @@ static int do_main(int argc, char* argv[], char* envp[])
 }
 
 static nsresult
-InitXPCOMGlue()
+InitXPCOMGlue(const char *argv0)
 {
-  UniqueFreePtr<char> exePath = BinaryPath::Get();
+  UniqueFreePtr<char> exePath = BinaryPath::Get(argv0);
   if (!exePath) {
     Output("Couldn't find the application directory.\n");
     return NS_ERROR_FAILURE;
@@ -272,7 +272,7 @@ int main(int argc, char* argv[], char* envp[])
     }
 #endif
 
-    nsresult rv = InitXPCOMGlue();
+    nsresult rv = InitXPCOMGlue(argv[0]);
     if (NS_FAILED(rv)) {
       return 255;
     }
@@ -290,7 +290,7 @@ int main(int argc, char* argv[], char* envp[])
   DllBlocklist_Initialize();
 #endif
 
-  nsresult rv = InitXPCOMGlue();
+  nsresult rv = InitXPCOMGlue(argv[0]);
   if (NS_FAILED(rv)) {
     return 255;
   }
