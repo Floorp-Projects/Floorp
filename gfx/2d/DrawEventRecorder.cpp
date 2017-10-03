@@ -16,15 +16,6 @@ DrawEventRecorderPrivate::DrawEventRecorderPrivate()
 {
 }
 
-template<class S>
-void
-DrawEventRecorderPrivate::WriteHeader(S &aStream)
-{
-  WriteElement(aStream, kMagicInt);
-  WriteElement(aStream, kMajorRevision);
-  WriteElement(aStream, kMinorRevision);
-}
-
 void
 DrawEventRecorderFile::RecordEvent(const RecordedEvent &aEvent)
 {

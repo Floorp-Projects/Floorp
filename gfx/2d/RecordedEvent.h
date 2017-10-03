@@ -207,6 +207,11 @@ struct MemStream {
   ~MemStream() { free(mData); }
 };
 
+class EventStream {
+public:
+  virtual void write(const char* aData, size_t aSize) = 0;
+};
+
 class RecordedEvent {
 public:
   enum EventType {
@@ -266,8 +271,9 @@ public:
    */
   virtual bool PlayEvent(Translator *aTranslator) const { return true; }
 
-  virtual void RecordToStream(std::ostream &aStream) const {}
-  virtual void RecordToStream(MemStream &aStream) const  = 0;
+  virtual void RecordToStream(std::ostream& aStream) const = 0;
+  virtual void RecordToStream(EventStream& aStream) const = 0;
+  virtual void RecordToStream(MemStream& aStream) const = 0;
 
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const { }
 
@@ -298,7 +304,7 @@ public:
   template<class S, class F>
   static bool DoWithEvent(S &aStream, EventType aType, F f);
 
-  EventType GetType() { return (EventType)mType; }
+  EventType GetType() const { return (EventType)mType; }
 protected:
   friend class DrawEventRecorderPrivate;
   friend class DrawEventRecorderFile;
@@ -315,4 +321,3 @@ protected:
 } // namespace mozilla
 
 #endif
-
