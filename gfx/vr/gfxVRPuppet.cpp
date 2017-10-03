@@ -433,7 +433,7 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr, getter_AddRefs(srView));
       if (FAILED(hr) || !srView) {
         gfxWarning() << "Could not create shader resource view for Puppet: " << hexa(hr);
-        return nullptr;
+        return false;
       }
       ID3D11ShaderResourceView* viewPtr = srView.get();
       mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &viewPtr);
