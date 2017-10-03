@@ -107,7 +107,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   height: 16px;
   max-width: 16px;
   max-height: 16px;
-  margin-inline-start: 14px;
+  margin-inline-start: 6px;
   margin-inline-end: 6px;
 }
 
