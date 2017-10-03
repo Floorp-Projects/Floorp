@@ -222,8 +222,6 @@ protected:
     static int32_t NPP_WriteReady(NPP instance, NPStream* stream);
     static int32_t NPP_Write(NPP instance, NPStream* stream,
                              int32_t offset, int32_t len, void* buffer);
-    static void NPP_StreamAsFile(NPP instance,
-                                 NPStream* stream, const char* fname);
     static void NPP_Print(NPP instance, NPPrint* platformPrint);
     static int16_t NPP_HandleEvent(NPP instance, void* event);
     static void NPP_URLNotify(NPP instance, const char* url,

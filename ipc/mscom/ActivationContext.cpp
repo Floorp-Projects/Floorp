@@ -168,11 +168,25 @@ ActivationContext::GetCurrentManifestPath(nsAString& aOutManifestPath)
 
 #endif // defined(MOZILLA_INTERNAL_API)
 
+ActivationContextRegion::ActivationContextRegion()
+  : mActCookie(0)
+{
+}
+
 ActivationContextRegion::ActivationContextRegion(const ActivationContext& aActCtx)
   : mActCtx(aActCtx)
   , mActCookie(0)
 {
   Activate();
+}
+
+ActivationContextRegion&
+ActivationContextRegion::operator=(const ActivationContext& aActCtx)
+{
+  Deactivate();
+  mActCtx = aActCtx;
+  Activate();
+  return *this;
 }
 
 ActivationContextRegion::ActivationContextRegion(ActivationContext&& aActCtx)
@@ -182,6 +196,32 @@ ActivationContextRegion::ActivationContextRegion(ActivationContext&& aActCtx)
   Activate();
 }
 
+ActivationContextRegion&
+ActivationContextRegion::operator=(ActivationContext&& aActCtx)
+{
+  Deactivate();
+  mActCtx = Move(aActCtx);
+  Activate();
+  return *this;
+}
+
+ActivationContextRegion::ActivationContextRegion(ActivationContextRegion&& aRgn)
+  : mActCtx(Move(aRgn.mActCtx))
+  , mActCookie(aRgn.mActCookie)
+{
+  aRgn.mActCookie = 0;
+}
+
+ActivationContextRegion&
+ActivationContextRegion::operator=(ActivationContextRegion&& aRgn)
+{
+  Deactivate();
+  mActCtx = Move(aRgn.mActCtx);
+  mActCookie = aRgn.mActCookie;
+  aRgn.mActCookie = 0;
+  return *this;
+}
+
 void
 ActivationContextRegion::Activate()
 {
@@ -189,18 +229,29 @@ ActivationContextRegion::Activate()
     return;
   }
 
-  DebugOnly<BOOL> activated = ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
-  MOZ_ASSERT(activated);
+  BOOL activated = ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
+  MOZ_DIAGNOSTIC_ASSERT(activated);
+}
+
+bool
+ActivationContextRegion::Deactivate()
+{
+  if (!mActCookie) {
+    return true;
+  }
+
+  BOOL deactivated = ::DeactivateActCtx(0, mActCookie);
+  MOZ_DIAGNOSTIC_ASSERT(deactivated);
+  if (deactivated) {
+    mActCookie = 0;
+  }
+
+  return !!deactivated;
 }
 
 ActivationContextRegion::~ActivationContextRegion()
 {
-  if (!mActCookie) {
-    return;
-  }
-
-  DebugOnly<BOOL> deactivated = ::DeactivateActCtx(0, mActCookie);
-  MOZ_ASSERT(deactivated);
+  Deactivate();
 }
 
 } // namespace mscom

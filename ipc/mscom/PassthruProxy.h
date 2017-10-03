@@ -8,6 +8,7 @@
 #define mozilla_mscom_PassthruProxy_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/NotNull.h"
 
@@ -39,7 +40,9 @@ public:
   {
     static_assert(detail::VTableSizer<Iface>::Size >= 3, "VTable too small");
 
-    RefPtr<PassthruProxy> passthru(new PassthruProxy(__uuidof(Iface),
+    detail::EnvironmentSelector<Iface>::Type env;
+
+    RefPtr<PassthruProxy> passthru(new PassthruProxy(&env, __uuidof(Iface),
                                                      detail::VTableSizer<Iface>::Size,
                                                      aIn));
 
@@ -92,8 +95,8 @@ public:
   { return E_NOTIMPL; }
 
 private:
-  PassthruProxy(REFIID aIidToWrap, uint32_t aVTableSize,
-                NotNull<IUnknown*> aObjToWrap);
+  PassthruProxy(ProxyStream::Environment* aEnv, REFIID aIidToWrap,
+                uint32_t aVTableSize, NotNull<IUnknown*> aObjToWrap);
   ~PassthruProxy();
 
   bool IsInitialMarshal() const { return !mStream; }

@@ -30,10 +30,26 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ProxyStreamFlags);
 class ProxyStream final
 {
 public:
+  class MOZ_RAII Environment
+  {
+  public:
+    virtual ~Environment() = default;
+    virtual bool Push() = 0;
+    virtual bool Pop() = 0;
+  };
+
+  class MOZ_RAII DefaultEnvironment : public Environment
+  {
+  public:
+    bool Push() override { return true; }
+    bool Pop() override { return true; }
+  };
+
   ProxyStream();
-  ProxyStream(REFIID aIID, IUnknown* aObject,
+  ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
               ProxyStreamFlags aFlags = ProxyStreamFlags::eDefault);
-  ProxyStream(REFIID aIID, const BYTE* aInitBuf, const int aInitBufSize);
+  ProxyStream(REFIID aIID, const BYTE* aInitBuf, const int aInitBufSize,
+              Environment* aEnv);
 
   ~ProxyStream();
 
@@ -68,6 +84,15 @@ private:
   bool            mPreserveStream;
 };
 
+namespace detail {
+
+template <typename Interface>
+struct EnvironmentSelector
+{
+  typedef ProxyStream::DefaultEnvironment Type;
+};
+
+} // namespace detail
 } // namespace mscom
 } // namespace mozilla
 
