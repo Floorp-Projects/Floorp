@@ -174,19 +174,14 @@ WebRenderLayerManager::BeginTransaction()
 bool
 WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  if (!mRoot) {
-    // With the WebRenderLayerManager we reject attempts to set most kind of
-    // "pending data" for empty transactions. Any place that attempts to update
-    // transforms or scroll offset, for example, will get failure return values
-    // back, and will fall back to a full transaction. Therefore the only piece
-    // of "pending" information we need to send in an empty transaction is the
-    // APZ focus state.
-    WrBridge()->SendSetFocusTarget(mFocusTarget);
-    return true;
-  }
-
-  // We might used painted layer images so don't delete them yet.
-  return EndTransactionInternal(aFlags);
+  // With the WebRenderLayerManager we reject attempts to set most kind of
+  // "pending data" for empty transactions. Any place that attempts to update
+  // transforms or scroll offset, for example, will get failure return values
+  // back, and will fall back to a full transaction. Therefore the only piece
+  // of "pending" information we need to send in an empty transaction is the
+  // APZ focus state.
+  WrBridge()->SendSetFocusTarget(mFocusTarget);
+  return true;
 }
 
 /*static*/ int32_t
@@ -844,11 +839,6 @@ WebRenderLayerManager::EndTransactionInternal(EndTransactionFlags aFlags,
 
   ClearDisplayItemLayers();
 
-  // this may result in Layers being deleted, which results in
-  // PLayer::Send__delete__() and DeallocShmem()
-  mKeepAlive.Clear();
-  ClearMutatedLayers();
-
   return true;
 }
 
@@ -990,44 +980,6 @@ WebRenderLayerManager::DiscardLocalImages()
 }
 
 void
-WebRenderLayerManager::Mutated(Layer* aLayer)
-{
-  LayerManager::Mutated(aLayer);
-  AddMutatedLayer(aLayer);
-}
-
-void
-WebRenderLayerManager::MutatedSimple(Layer* aLayer)
-{
-  LayerManager::Mutated(aLayer);
-  AddMutatedLayer(aLayer);
-}
-
-void
-WebRenderLayerManager::AddMutatedLayer(Layer* aLayer)
-{
-  mMutatedLayers.AppendElement(aLayer);
-}
-
-void
-WebRenderLayerManager::ClearMutatedLayers()
-{
-  mMutatedLayers.Clear();
-}
-
-bool
-WebRenderLayerManager::IsMutatedLayer(Layer* aLayer)
-{
-  return mMutatedLayers.Contains(aLayer);
-}
-
-void
-WebRenderLayerManager::Hold(Layer* aLayer)
-{
-  mKeepAlive.AppendElement(aLayer);
-}
-
-void
 WebRenderLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 {
   if (WrBridge()->IPCOpen()) {
@@ -1088,11 +1040,6 @@ void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WrBridge()->BeginClearCachedResources();
-  if (aSubtree) {
-    ClearLayer(aSubtree);
-  } else if (mRoot) {
-    ClearLayer(mRoot);
-  }
   DiscardImages();
   WrBridge()->EndClearCachedResources();
 }
@@ -1164,7 +1111,8 @@ WebRenderLayerManager::ScheduleComposite()
 void
 WebRenderLayerManager::SetRoot(Layer* aLayer)
 {
-  mRoot = aLayer;
+  // This should never get called
+  MOZ_ASSERT(false);
 }
 
 bool
