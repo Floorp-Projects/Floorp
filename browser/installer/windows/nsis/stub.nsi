@@ -419,10 +419,13 @@ Function .onInit
 
   ; Initialize the majority of variables except those that need to be reset
   ; when a page is displayed.
+  StrCpy $ExitCode "${ERR_DOWNLOAD_CANCEL}"
   StrCpy $IntroPhaseSeconds "0"
   StrCpy $OptionsPhaseSeconds "0"
   StrCpy $EndPreInstallPhaseTickCount "0"
   StrCpy $EndInstallPhaseTickCount "0"
+  StrCpy $StartDownloadPhaseTickCount "0"
+  StrCpy $EndDownloadPhaseTickCount "0"
   StrCpy $InitialInstallRequirementsCode ""
   StrCpy $IsDownloadFinished ""
   StrCpy $FirefoxLaunchCode "0"
@@ -820,9 +823,7 @@ Function createInstall
   StrCpy $DownloadRetryCount "0"
   StrCpy $DownloadedBytes "0"
   StrCpy $StartLastDownloadTickCount ""
-  StrCpy $EndDownloadPhaseTickCount ""
   StrCpy $DownloadFirstTransferSeconds ""
-  StrCpy $ExitCode "${ERR_DOWNLOAD_CANCEL}"
   StrCpy $OpenedDownloadPage "0"
 
   ClearErrors
@@ -1171,7 +1172,6 @@ Function SendPing
     ; $EndFinishPhaseTickCount is used to determine how long the download was
     ; in progress.
     ${If} "$IsDownloadFinished" == "false"
-    ${OrIf} "$EndDownloadPhaseTickCount" == ""
       StrCpy $EndDownloadPhaseTickCount "$EndFinishPhaseTickCount"
       ; Cancel the download in progress
       InetBgDL::Get /RESET /END
