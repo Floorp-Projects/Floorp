@@ -12,6 +12,7 @@ const {
 
 const {
   nodeSpec,
+  nodeListSpec,
 } = require("devtools/shared/specs/node");
 
 const promise = require("promise");
@@ -21,6 +22,46 @@ loader.lazyRequireGetter(this, "nodeConstants",
   "devtools/shared/dom-node-constants");
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
+
+/**
+ * Client side of a node list as returned by querySelectorAll()
+ */
+const NodeListFront = FrontClassWithSpec(nodeListSpec, {
+  initialize: function (client, form) {
+    Front.prototype.initialize.call(this, client, form);
+  },
+
+  destroy: function () {
+    Front.prototype.destroy.call(this);
+  },
+
+  marshallPool: function () {
+    return this.parent();
+  },
+
+  // Update the object given a form representation off the wire.
+  form: function (json) {
+    this.length = json.length;
+  },
+
+  item: custom(function (index) {
+    return this._item(index).then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_item"
+  }),
+
+  items: custom(function (start, end) {
+    return this._items(start, end).then(response => {
+      return response.nodes;
+    });
+  }, {
+    impl: "_items"
+  })
+});
+
+exports.NodeListFront = NodeListFront;
 
 /**
  * Convenience API for building a list of attribute modifications
