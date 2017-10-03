@@ -49,7 +49,7 @@ public class ActivityStreamHomeFragment
                 || TextUtils.equals(s, ActivityStreamPanel.PREF_POCKET_ENABLED);
 
         if (shouldReload) {
-            activityStreamPanel.reload(getLoaderManager(), sharedPreferences, this.getResources());
+            activityStreamPanel.reload(getLoaderManager(), getContext(), sharedPreferences);
         }
 
     }
