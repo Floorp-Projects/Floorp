@@ -1727,46 +1727,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 NPError
 _requestread(NPStream *pstream, NPByteRange *rangeList)
 {
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_requestread called from the wrong thread\n"));
-    return NPERR_INVALID_PARAM;
-  }
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_RequestRead: stream=%p\n",
-                                     (void*)pstream));
-
-#ifdef PLUGIN_LOGGING
-  for(NPByteRange * range = rangeList; range != nullptr; range = range->next)
-    MOZ_LOG(nsPluginLogging::gNPNLog,PLUGIN_LOG_NOISY,
-    ("%i-%i", range->offset, range->offset + range->length - 1));
-
-  MOZ_LOG(nsPluginLogging::gNPNLog,PLUGIN_LOG_NOISY, ("\n\n"));
-  PR_LogFlush();
-#endif
-
-  if (!pstream || !rangeList || !pstream->ndata)
-    return NPERR_INVALID_PARAM;
-
-  nsNPAPIStreamWrapper* streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
-  nsNPAPIPluginStreamListener* streamlistener = streamWrapper->GetStreamListener();
-  if (!streamlistener) {
-    return NPERR_GENERIC_ERROR;
-  }
-
-  int32_t streamtype = NP_NORMAL;
-
-  streamlistener->GetStreamType(&streamtype);
-
-  if (streamtype != NP_SEEK)
-    return NPERR_STREAM_NOT_SEEKABLE;
-
-  if (!streamlistener->mStreamListenerPeer)
-    return NPERR_GENERIC_ERROR;
-
-  nsresult rv = streamlistener->mStreamListenerPeer->RequestRead((NPByteRange *)rangeList);
-  if (NS_FAILED(rv))
-    return NPERR_GENERIC_ERROR;
-
-  return NPERR_NO_ERROR;
+  return NPERR_STREAM_NOT_SEEKABLE;
 }
 
 // Deprecated, only stubbed out

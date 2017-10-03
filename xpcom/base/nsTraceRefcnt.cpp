@@ -921,7 +921,6 @@ NS_LogInit()
   NS_SetMainThread();
 
   // FIXME: This is called multiple times, we should probably not allow that.
-  StackWalkInitCriticalAddress();
   if (++gInitCount) {
     nsTraceRefcnt::SetActivityIsLegal(true);
   }

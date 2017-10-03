@@ -302,10 +302,6 @@ with it.
 
 The attributes which control stream tests are:
 
-"streammode": one of "normal", "asfile", "asfileonly", "seek". Sets the
-  stream mode to the specified mode in any call to NPP_NewStream.
-  Defaults to "asfileonly".
-
 "streamchunksize": the number of bytes the plugin reports it can accept
   in calls to NPP_WriteReady.  Defaults to 1,024.
 
@@ -333,15 +329,6 @@ The attributes which control stream tests are:
   data: url, and sent back to the browser in another stream via a call to
   NPN_GetURL, whereupon it should be displayed in the specified frame.
 
-"range": one or more byte ranges, in the format "offset,length;offset,length".
-  Only valid when "streammode" = "seek".  When "range" is present, the plugin
-  will request the specified byte ranges from the stream via a call to
-  NPN_RequestRead, which it makes after the browser makes its final call to
-  NPP_Write.  The plugin verifies that the browser makes additional calls
-  to NPP_Write according to the requested byte ranges, and that the data
-  received is correct.  Any errors will appear in the test "frame", if
-  specified.
-
 "posturl": a url.  After the plugin receives a stream, and NPP_DestroyStream
   is called, if "posturl" is specified, the plugin will post the contents
   of the stream to the specified url via NPN_PostURL.  See "postmode" for
@@ -367,10 +354,6 @@ The attributes which control stream tests are:
 
 "failurecode": one of the NPError constants.  Used to specify the error
   that will be returned by the "functiontofail".
-
-If the plugin is instantiated as a full-page plugin, the following defaults
-are used:
-  streammode="seek" frame="testframe" range="100,100"
 
 * streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects, postFile = false)
 This will test how NPN_GetURLNotify and NPN_PostURLNotify behave when they are

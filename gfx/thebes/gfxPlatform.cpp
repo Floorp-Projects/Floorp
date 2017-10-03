@@ -2566,14 +2566,9 @@ gfxPlatform::InitWebRenderConfig()
 void
 gfxPlatform::InitOMTPConfig()
 {
-  bool prefEnabled = Preferences::GetBool("layers.omtp.enabled", false);
+  ScopedGfxFeatureReporter reporter("OMTP");
 
-  // We don't want to report anything for this feature when turned off, as it is still early in development
-  if (!prefEnabled) {
-    return;
-  }
-
-  ScopedGfxFeatureReporter reporter("OMTP", prefEnabled);
+  FeatureState& omtp = gfxConfig::GetFeature(Feature::OMTP);
 
   if (!XRE_IsParentProcess()) {
     // The parent process runs through all the real decision-making code
@@ -2585,26 +2580,25 @@ gfxPlatform::InitOMTPConfig()
     return;
   }
 
-  FeatureState& featureOMTP = gfxConfig::GetFeature(Feature::OMTP);
-
-  featureOMTP.DisableByDefault(
-      FeatureStatus::OptIn,
-      "OMTP is an opt-in feature",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
-
-  featureOMTP.UserEnable("Enabled by pref");
+  omtp.SetDefaultFromPref(
+    "layers.omtp.enabled",
+    true,
+    Preferences::GetDefaultBool("layers.omtp.enabled", false));
 
   if (mContentBackend == BackendType::CAIRO) {
-    featureOMTP.ForceDisable(FeatureStatus::Broken, "OMTP is not supported when using cairo",
+    omtp.ForceDisable(FeatureStatus::Broken, "OMTP is not supported when using cairo",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_PREF"));
   }
 
   if (InSafeMode()) {
-    featureOMTP.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
-                         NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
+    omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
+  } else if (gfxPrefs::LayersTilesEnabled()) {
+    omtp.ForceDisable(FeatureStatus::Blocked, "OMTP does not yet support tiling",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_OMTP_TILING"));
   }
 
-  if (gfxConfig::IsEnabled(Feature::OMTP)) {
+  if (omtp.IsEnabled()) {
     gfxVars::SetUseOMTP(true);
     reporter.SetSuccessful();
   }

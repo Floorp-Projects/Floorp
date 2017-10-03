@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = () => {
+  a = document.createElement("div")
+  b = document.createElement("div")
+  a.appendChild(b)
+  document.documentElement.appendChild(a)
+  a.style.overflow = "scroll"
+  a.style.columnWidth = "calc(-15px)"
+  b.style.display = "table-caption"
+  requestIdleCallback(() => {
+    a.style.stopColor = "#000"
+    b.style.gridColumn = "crispEdges"
+    window.saved = b.offsetWidth;
+    document.documentElement.className = "";
+  })
+}
+</script>
+</head>
+</html>

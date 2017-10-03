@@ -65,8 +65,6 @@ public:
                            const char* fileName);
   nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer,
                          nsresult status);
-  nsresult GetStreamType(int32_t *result);
-  bool SetStreamType(uint16_t aType, bool aNeedsResume = true);
 
   bool IsStarted();
   nsresult CleanUpStream(NPReason reason);
@@ -112,7 +110,6 @@ protected:
   nsNPAPIStreamWrapper *mNPStreamWrapper;
   uint32_t mStreamBufferSize;
   int32_t mStreamBufferByteCount;
-  int32_t mStreamType;
   StreamState mStreamState;
   bool mStreamCleanedUp;
   bool mCallNotify;

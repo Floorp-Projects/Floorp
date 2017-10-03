@@ -1698,7 +1698,6 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     aFuncs->setwindow = NPP_SetWindow;
     aFuncs->newstream = NPP_NewStream;
     aFuncs->destroystream = NPP_DestroyStream;
-    aFuncs->asfile = NPP_StreamAsFile;
     aFuncs->writeready = NPP_WriteReady;
     aFuncs->write = NPP_Write;
     aFuncs->print = NPP_Print;
@@ -1791,18 +1790,6 @@ PluginModuleParent::NPP_Write(NPP instance,
         return -1;
 
     return s->Write(offset, len, buffer);
-}
-
-void
-PluginModuleParent::NPP_StreamAsFile(NPP instance,
-                                     NPStream* stream,
-                                     const char* fname)
-{
-    BrowserStreamParent* s = StreamCast(instance, stream);
-    if (!s)
-        return;
-
-    s->StreamAsFile(fname);
 }
 
 void
