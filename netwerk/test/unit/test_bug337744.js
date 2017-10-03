@@ -94,15 +94,9 @@ function run_test() {
   let rootFile = Services.dirsvc.get("GreD", Ci.nsIFile);
   let rootURI = Services.io.newFileURI(rootFile);
 
-  let inexistentFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  inexistentFile.initWithPath("/this/directory/does/not/exist");
-  let inexistentURI = Services.io.newFileURI(inexistentFile);
-
   resProto.setSubstitution("res-test", rootURI);
-  resProto.setSubstitution("res-inexistent", inexistentURI);
   do_register_cleanup(() => {
     resProto.setSubstitution("res-test", null);
-    resProto.setSubstitution("res-inexistent", null);
   });
 
   let baseRoot = resProto.resolveURI(Services.io.newURI("resource:///"));
@@ -110,7 +104,6 @@ function run_test() {
 
   for (var spec of specs) {
     check_safe_resolution(spec, rootURI.spec);
-    check_safe_resolution(spec.replace("res-test", "res-inexistent"), inexistentURI.spec);
     check_safe_resolution(spec.replace("res-test", ""), baseRoot);
     check_safe_resolution(spec.replace("res-test", "gre"), greRoot);
   }
