@@ -316,23 +316,25 @@ nsNSSSocketInfo::SetHandshakeCompleted()
     Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_TYPE, handshakeType);
   }
 
-
-    // Remove the plain text layer as it is not needed anymore.
-    // The plain text layer is not always present - so its not a fatal error
-    // if it cannot be removed
+  // Remove the plaintext layer as it is not needed anymore.
+  // The plaintext layer is not always present - so it's not a fatal error if it
+  // cannot be removed.
+  // Note that PR_PopIOLayer may modify its stack, so a pointer returned by
+  // PR_GetIdentitiesLayer may not point to what we think it points to after
+  // calling PR_PopIOLayer. We must operate on the pointer returned by
+  // PR_PopIOLayer.
+  if (PR_GetIdentitiesLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity)) {
     PRFileDesc* poppedPlaintext =
-      PR_GetIdentitiesLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
-    if (poppedPlaintext) {
       PR_PopIOLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
-      poppedPlaintext->dtor(poppedPlaintext);
-    }
+    poppedPlaintext->dtor(poppedPlaintext);
+  }
 
-    mHandshakeCompleted = true;
+  mHandshakeCompleted = true;
 
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*) mFd));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*) mFd));
 
-    mIsFullHandshake = false; // reset for next handshake on this connection
+  mIsFullHandshake = false; // reset for next handshake on this connection
 }
 
 void
@@ -990,12 +992,15 @@ nsNSSSocketInfo::CloseSocketAndDestroy(
                popped->identity == nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
              "SSL Layer not on top of stack");
 
-  // The plain text layer is not always present - so its not a fatal error
-  // if it cannot be removed
-  PRFileDesc* poppedPlaintext =
-    PR_GetIdentitiesLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
-  if (poppedPlaintext) {
-    PR_PopIOLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
+  // The plaintext layer is not always present - so it's not a fatal error if it
+  // cannot be removed.
+  // Note that PR_PopIOLayer may modify its stack, so a pointer returned by
+  // PR_GetIdentitiesLayer may not point to what we think it points to after
+  // calling PR_PopIOLayer. We must operate on the pointer returned by
+  // PR_PopIOLayer.
+  if (PR_GetIdentitiesLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity)) {
+    PRFileDesc* poppedPlaintext =
+      PR_PopIOLayer(mFd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
     poppedPlaintext->dtor(poppedPlaintext);
   }
 
@@ -2817,7 +2822,11 @@ nsSSLIOLayerAddToSocket(int32_t family,
     layer->dtor(layer);
   }
   if (plaintextLayer) {
-    PR_PopIOLayer(fd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
+    // Note that PR_*IOLayer operations may modify the stack of fds, so a
+    // previously-valid pointer may no longer point to what we think it points
+    // to after calling PR_PopIOLayer. We must operate on the pointer returned
+    // by PR_PopIOLayer.
+    plaintextLayer = PR_PopIOLayer(fd, nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity);
     plaintextLayer->dtor(plaintextLayer);
   }
   return NS_ERROR_FAILURE;
