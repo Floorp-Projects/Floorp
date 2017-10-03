@@ -329,23 +329,34 @@ public:
                                          aDecreaseSize,
                                          temporaryPaddingFileExist);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        mozilla::dom::cache::
-        LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
+        // Don't delete the temporary padding file here to force the next action
+        // recalculate the padding size.
         return rv;
       }
 
       rv = aCommitHook();
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        mozilla::dom::cache::
-        LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
+        // Don't delete the temporary padding file here to force the next action
+        // recalculate the padding size.
         return rv;
       }
 
       rv = mozilla::dom::cache::LockedDirectoryPaddingFinalizeWrite(aBaseDir);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         // Force restore file next time.
-        mozilla::dom::cache::
-        LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+        Unused << mozilla::dom::cache::
+                  LockedDirectoryPaddingDeleteFile(aBaseDir,
+                                                   DirPaddingFile::FILE);
+
+        // Ensure that we are able to force the padding file to be restored.
+        MOZ_ASSERT(
+          mozilla::dom::cache::
+          DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
+
+        // Since both the body file and header have been stored in the
+        // file-system, just make the action be resolve and let the padding file
+        // be restored in the next action.
+        rv = NS_OK;
       }
     }
 
