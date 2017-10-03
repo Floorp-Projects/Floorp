@@ -39,7 +39,6 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mLastAsr(nullptr)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
-  , mEndTransactionWithoutLayers(false)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
 {
@@ -372,7 +371,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                                   nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
-  mEndTransactionWithoutLayers = true;
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(nullptr,
                          nullptr,
@@ -717,7 +715,6 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
-  mEndTransactionWithoutLayers = false;
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
@@ -751,73 +748,60 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
-  if (mEndTransactionWithoutLayers) {
-    // aDisplayList being null here means this is an empty transaction following a layers-free
-    // transaction, so we reuse the previously built displaylist and scroll
-    // metadata information
-    if (aDisplayList && aDisplayListBuilder) {
-      StackingContextHelper sc;
-      mParentCommands.Clear();
-      mScrollData = WebRenderScrollData();
-      MOZ_ASSERT(mLayerScrollData.empty());
-      mLastCanvasDatas.Clear();
-      mLastAsr = nullptr;
+  // aDisplayList being null here means this is an empty transaction following a layers-free
+  // transaction, so we reuse the previously built displaylist and scroll
+  // metadata information
+  if (aDisplayList && aDisplayListBuilder) {
+    StackingContextHelper sc;
+    mParentCommands.Clear();
+    mScrollData = WebRenderScrollData();
+    MOZ_ASSERT(mLayerScrollData.empty());
+    mLastCanvasDatas.Clear();
+    mLastAsr = nullptr;
 
-      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
+    CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
 
-      builder.Finalize(contentSize, mBuiltDisplayList);
+    builder.Finalize(contentSize, mBuiltDisplayList);
 
-      // Make a "root" layer data that has everything else as descendants
-      mLayerScrollData.emplace_back();
-      mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
-      if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
-        nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
-        if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
-          mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-        }
-      }
-      RefPtr<WebRenderLayerManager> self(this);
-      auto callback = [self](FrameMetrics::ViewID aScrollId) -> bool {
-        return self->mScrollData.HasMetadataFor(aScrollId);
-      };
-      if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
-            aDisplayListBuilder, nullptr, ContainerLayerParameters(), callback)) {
-        mLayerScrollData.back().AppendScrollMetadata(mScrollData, rootMetadata.ref());
-      }
-      // Append the WebRenderLayerScrollData items into WebRenderScrollData
-      // in reverse order, from topmost to bottommost. This is in keeping with
-      // the semantics of WebRenderScrollData.
-      for (auto i = mLayerScrollData.crbegin(); i != mLayerScrollData.crend(); i++) {
-        mScrollData.AddLayerData(*i);
-      }
-      mLayerScrollData.clear();
-      mClipIdCache.clear();
-
-      // Remove the user data those are not displayed on the screen and
-      // also reset the data to unused for next transaction.
-      RemoveUnusedAndResetWebRenderUserData();
-    } else {
-      for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
-        WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
-        canvas->UpdateCompositableClient();
+    // Make a "root" layer data that has everything else as descendants
+    mLayerScrollData.emplace_back();
+    mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
+    if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
+      nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
+      if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
+        mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
       }
     }
+    RefPtr<WebRenderLayerManager> self(this);
+    auto callback = [self](FrameMetrics::ViewID aScrollId) -> bool {
+      return self->mScrollData.HasMetadataFor(aScrollId);
+    };
+    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
+          aDisplayListBuilder, nullptr, ContainerLayerParameters(), callback)) {
+      mLayerScrollData.back().AppendScrollMetadata(mScrollData, rootMetadata.ref());
+    }
+    // Append the WebRenderLayerScrollData items into WebRenderScrollData
+    // in reverse order, from topmost to bottommost. This is in keeping with
+    // the semantics of WebRenderScrollData.
+    for (auto i = mLayerScrollData.crbegin(); i != mLayerScrollData.crend(); i++) {
+      mScrollData.AddLayerData(*i);
+    }
+    mLayerScrollData.clear();
+    mClipIdCache.clear();
 
-    builder.PushBuiltDisplayList(mBuiltDisplayList);
-    WrBridge()->AddWebRenderParentCommands(mParentCommands);
+    // Remove the user data those are not displayed on the screen and
+    // also reset the data to unused for next transaction.
+    RemoveUnusedAndResetWebRenderUserData();
   } else {
-    mScrollData = WebRenderScrollData();
-
-    mRoot->StartPendingAnimations(mAnimationReadyTime);
-    StackingContextHelper sc;
-
-    WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, resourceUpdates, sc);
-
-    // Need to do this after RenderLayer because the compositor animation IDs
-    // get populated during RenderLayer and we need those.
-    PopulateScrollData(mScrollData, mRoot.get());
+    for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
+      RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+      WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
+      canvas->UpdateCompositableClient();
+    }
   }
+
+  builder.PushBuiltDisplayList(mBuiltDisplayList);
+  WrBridge()->AddWebRenderParentCommands(mParentCommands);
 
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   WrBridge()->ClearReadLocks();
@@ -982,19 +966,13 @@ WebRenderLayerManager::AddActiveCompositorAnimationId(uint64_t aId)
   // client side so that we don't try to discard the same animation id multiple
   // times. We could just ignore the multiple-discard on the parent side, but
   // checking on the content side reduces IPC traffic.
-  MOZ_ASSERT(IsLayersFreeTransaction());
   mActiveCompositorAnimationIds.insert(aId);
 }
 
 void
 WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 {
-  if (!IsLayersFreeTransaction()) {
-    // For layers-full we don't track the active animation id in
-    // mActiveCompositorAnimationIds, we just call this on layer destruction and
-    // don't need to worry about discarding the same id multiple times.
-    mDiscardedCompositorAnimationsIds.AppendElement(aId);
-  } else if (mActiveCompositorAnimationIds.erase(aId)) {
+  if (mActiveCompositorAnimationIds.erase(aId)) {
     // For layers-free ensure we don't try to discard an animation id that wasn't
     // active. We also remove it from mActiveCompositorAnimationIds so we don't
     // discard it again unless it gets re-activated.

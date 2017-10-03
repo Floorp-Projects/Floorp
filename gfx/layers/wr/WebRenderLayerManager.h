@@ -102,7 +102,6 @@ public:
                                               wr::IpcResourceUpdateQueue& aResources);
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                   nsDisplayListBuilder* aDisplayListBuilder);
-  bool IsLayersFreeTransaction() { return mEndTransactionWithoutLayers; }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) override;
@@ -365,7 +364,6 @@ private:
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
-  bool mEndTransactionWithoutLayers;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send
