@@ -875,10 +875,10 @@ LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn)
 
   // The content of padding file is untrusted, so remove it here.
   nsresult rv = LockedDirectoryPaddingDeleteFile(aBaseDir,
-                                                 DirPaddingFile::TMP_FILE);
+                                                 DirPaddingFile::FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   int64_t paddingSize = 0;
