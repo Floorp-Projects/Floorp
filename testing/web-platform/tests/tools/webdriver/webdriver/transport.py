@@ -65,7 +65,7 @@ class HTTPWireProtocol(object):
     def url(self, suffix):
         return urlparse.urljoin(self.url_prefix, suffix)
 
-    def send(self, method, url, body=None, headers=None):
+    def send(self, method, uri, body=None, headers=None):
         """Send a command to the remote.
 
         :param method: "POST" or "GET".
@@ -89,7 +89,7 @@ class HTTPWireProtocol(object):
         if headers is None:
             headers = {}
 
-        url = self.url_prefix + url
+        url = self.url(uri)
 
         kwargs = {}
         if self._timeout is not None:
