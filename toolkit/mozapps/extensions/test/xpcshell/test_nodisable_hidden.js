@@ -18,7 +18,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 // normal add-ons can be user disabled.
 add_task(async function() {
 
-  writeInstallRDFToDir({
+  writeInstallRDFToXPI({
     id: NORMAL_ID,
     version: "1.0",
     bootstrap: true,
@@ -62,7 +62,7 @@ add_task(async function() {
 // system add-ons can never be user disabled.
 add_task(async function() {
 
-  writeInstallRDFToDir({
+  writeInstallRDFToXPI({
     id: SYSTEM_ID,
     version: "1.0",
     bootstrap: true,
@@ -73,6 +73,8 @@ add_task(async function() {
     }],
     name: "Test disabling hidden add-ons, hidden system add-on case.",
   }, distroDir, SYSTEM_ID);
+
+  await overrideBuiltIns({ "system": [SYSTEM_ID] });
 
   startupManager();
 
