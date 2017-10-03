@@ -9,10 +9,10 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 // Components under test.
-const { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/new-console-output/components/message-container");
-const ConsoleApiCall = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
-const EvaluationResult = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
-const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
+const { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/new-console-output/components/MessageContainer");
+const ConsoleApiCall = require("devtools/client/webconsole/new-console-output/components/message-types/ConsoleApiCall");
+const EvaluationResult = require("devtools/client/webconsole/new-console-output/components/message-types/EvaluationResult");
+const PageError = require("devtools/client/webconsole/new-console-output/components/message-types/PageError");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");

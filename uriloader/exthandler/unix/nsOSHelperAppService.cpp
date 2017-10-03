@@ -7,11 +7,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if defined(MOZ_ENABLE_CONTENTACTION)
-#include <contentaction/contentaction.h>
-#include <QString>
-#endif
-
 #include "nsOSHelperAppService.h"
 #include "nsMIMEInfoUnix.h"
 #ifdef MOZ_WIDGET_GTK
@@ -32,6 +27,7 @@
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "ContentHandlerService.h"
 #include "prenv.h"      // for PR_GetEnv()
 #include "nsAutoPtr.h"
 #include "mozilla/Preferences.h"
@@ -1132,25 +1128,24 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists)
 {
-  LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
-       aProtocolScheme));
-  *aHandlerExists = false;
+  nsresult rv = NS_OK;
 
-#if defined(MOZ_ENABLE_CONTENTACTION)
-  // libcontentaction requires character ':' after scheme
-  ContentAction::Action action =
-    ContentAction::Action::defaultActionForScheme(QString(aProtocolScheme) + ':');
-
-  if (action.isValid())
-    *aHandlerExists = true;
-#endif
-
+  if (!XRE_IsContentProcess()) {
 #ifdef MOZ_WIDGET_GTK
-  // Check the GNOME registry for a protocol handler
-  *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
+    // Check the GNOME registry for a protocol handler
+    *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
+#else
+    *aHandlerExists = false;
 #endif
+  } else {
+    *aHandlerExists = false;
+    nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && handlerSvc) {
+      rv = handlerSvc->ExistsForProtocol(nsCString(aProtocolScheme), aHandlerExists);
+    }
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)

@@ -57,7 +57,7 @@
   margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
   margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
 
-  cursor: n-resize;
+  cursor: ns-resize;
 }
 
 .devtools-side-splitter {
@@ -70,7 +70,7 @@
   margin-inline-start: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
   margin-inline-end: calc(-1 * var(--devtools-splitter-inline-end-width));
 
-  cursor: e-resize;
+  cursor: ew-resize;
 }
 
 .devtools-horizontal-splitter.disabled,

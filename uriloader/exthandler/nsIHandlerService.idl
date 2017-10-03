@@ -120,4 +120,14 @@ interface nsIHandlerService : nsISupports
    * @returns the MIME type, if any; otherwise returns an empty string ("").
    */
   ACString getTypeFromExtension(in ACString aFileExtension);
+
+  /**
+   * Whether or not there is a handler known to the OS for the
+   * specified protocol type.
+   *
+   * @param aProtocolScheme scheme to check for support
+   *
+   * @returns whether or not a handler exists
+   */
+  boolean existsForProtocol(in ACString aProtocolScheme);
 };

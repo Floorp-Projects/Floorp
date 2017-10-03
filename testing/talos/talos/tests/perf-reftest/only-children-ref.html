@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<style>
+.x > div, .x > span { background-color: yellow; }
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  let root = document.createElement("div");
+  root.appendChild(document.createElement("div"));
+  document.body.appendChild(root);
+  flush_style(root);
+  perf_start();
+  root.firstChild.className = "x";
+  flush_style(root);
+  perf_finish();
+};
+</script>
+<body></body>

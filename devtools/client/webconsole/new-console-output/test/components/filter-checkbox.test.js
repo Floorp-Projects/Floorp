@@ -7,7 +7,7 @@ const { render } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const FilterCheckbox = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-checkbox"));
+const FilterCheckbox = createFactory(require("devtools/client/webconsole/new-console-output/components/FilterCheckbox"));
 
 describe("FilterCheckbox component:", () => {
   const props = {

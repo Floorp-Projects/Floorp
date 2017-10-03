@@ -20,8 +20,8 @@ const {
   FILTERS,
 } = require("../constants");
 
-const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
-const FilterCheckbox = require("devtools/client/webconsole/new-console-output/components/filter-checkbox");
+const FilterButton = require("devtools/client/webconsole/new-console-output/components/FilterButton");
+const FilterCheckbox = require("devtools/client/webconsole/new-console-output/components/FilterCheckbox");
 
 const FilterBar = createClass({
 

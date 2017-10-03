@@ -12,11 +12,11 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/grip-message-body");
-const ConsoleTable = createFactory(require("devtools/client/webconsole/new-console-output/components/console-table"));
+const GripMessageBody = require("devtools/client/webconsole/new-console-output/components/GripMessageBody");
+const ConsoleTable = createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleTable"));
 const {isGroupType, l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
 
-const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/Message"));
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
 

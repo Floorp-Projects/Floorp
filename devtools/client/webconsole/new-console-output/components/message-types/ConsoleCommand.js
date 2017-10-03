@@ -11,7 +11,7 @@ const {
   createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
+const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/Message"));
 
 ConsoleCommand.displayName = "ConsoleCommand";
 
