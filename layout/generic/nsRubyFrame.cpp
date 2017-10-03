@@ -115,7 +115,8 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   }
 
   // Grab overflow frames from prev-in-flow and its own.
-  MoveOverflowToChildList(aReflowInput.mLineLayout->LineContainerFrame());
+  MoveInlineOverflowToChildList(
+    aReflowInput.mLineLayout->LineContainerFrame());
 
   // Clear leadings
   mLeadings.Reset();
