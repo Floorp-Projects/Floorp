@@ -7,7 +7,6 @@
 @import url(chrome://devtools/content/shared/widgets/color-widget.css);
 @import url(chrome://devtools/content/shared/widgets/cubic-bezier.css);
 @import url(chrome://devtools/content/shared/widgets/filter-widget.css);
-@import url(chrome://devtools/content/shared/widgets/mdn-docs.css);
 @import url(chrome://devtools/content/shared/widgets/spectrum.css);
 
 /* Tooltip specific theme variables */

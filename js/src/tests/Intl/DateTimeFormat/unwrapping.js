@@ -3,9 +3,18 @@
 // Test UnwrapDateTimeFormat operation.
 
 const dateTimeFormatFunctions = [];
-dateTimeFormatFunctions.push(Intl.DateTimeFormat.prototype.resolvedOptions);
-dateTimeFormatFunctions.push(Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, "format").get);
-dateTimeFormatFunctions.push(Intl.DateTimeFormat.prototype.formatToParts);
+dateTimeFormatFunctions.push({
+    function: Intl.DateTimeFormat.prototype.resolvedOptions,
+    unwrap: true,
+});
+dateTimeFormatFunctions.push({
+    function: Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, "format").get,
+    unwrap: true,
+});
+dateTimeFormatFunctions.push({
+    function: Intl.DateTimeFormat.prototype.formatToParts,
+    unwrap: false,
+});
 
 function IsConstructor(o) {
   try {
@@ -58,7 +67,7 @@ function thisValues(C) {
 const intlFallbackSymbol = Object.getOwnPropertySymbols(Intl.DateTimeFormat.call(Object.create(Intl.DateTimeFormat.prototype)))[0];
 
 // Test Intl.DateTimeFormat.prototype methods.
-for (let dateTimeFormatFunction of dateTimeFormatFunctions) {
+for (let {function: dateTimeFormatFunction, unwrap} of dateTimeFormatFunctions) {
     // Test a TypeError is thrown when the this-value isn't an initialized
     // Intl.DateTimeFormat instance.
     for (let thisValue of thisValues(Intl.DateTimeFormat)) {
@@ -79,10 +88,15 @@ for (let dateTimeFormatFunction of dateTimeFormatFunctions) {
     }
 
     for (let thisValue of intlObjects(Intl.DateTimeFormat)) {
-        dateTimeFormatFunction.call({
+        let obj = {
             __proto__: Intl.DateTimeFormat.prototype,
             [intlFallbackSymbol]: thisValue,
-        });
+        };
+        if (unwrap) {
+            dateTimeFormatFunction.call(obj);
+        } else {
+            assertThrowsInstanceOf(() => dateTimeFormatFunction.call(obj), TypeError);
+        }
     }
 
     // Ensure [[FallbackSymbol]] isn't retrieved for Intl.DateTimeFormat instances.
@@ -126,8 +140,8 @@ for (let dateTimeFormatFunction of dateTimeFormatFunctions) {
 
         delete Intl.DateTimeFormat[Symbol.hasInstance];
 
-        assertEq(hasInstanceCalled, true);
-        assertEq(symbolGetterCalled, true);
+        assertEq(hasInstanceCalled, unwrap);
+        assertEq(symbolGetterCalled, unwrap);
     }
 
     // Test with primitive values.
@@ -177,35 +191,21 @@ for (let dateTimeFormatFunction of dateTimeFormatFunctions) {
     }
 }
 
-// Test formatToParts() returns the correct result for objects initialized as Intl.DateTimeFormat instances.
-if ("formatToParts" in Intl.DateTimeFormat.prototype) {
-    // An actual Intl.DateTimeFormat instance.
-    let dateTimeFormat = new Intl.DateTimeFormat();
+// Ensure formatToParts() doesn't use the fallback semantics.
+{
+    let formatToParts = Intl.DateTimeFormat.prototype.formatToParts;
 
     // An object initialized as a DateTimeFormat instance.
     let thisValue = Object.create(Intl.DateTimeFormat.prototype);
     Intl.DateTimeFormat.call(thisValue);
+    assertThrowsInstanceOf(() => formatToParts.call(thisValue), TypeError);
 
     // Object with [[FallbackSymbol]] set to DateTimeFormat instance.
     let fakeObj = {
         __proto__: Intl.DateTimeFormat.prototype,
-        [intlFallbackSymbol]: dateTimeFormat,
+        [intlFallbackSymbol]: new Intl.DateTimeFormat(),
     };
-
-    function assertEqParts(actual, expected) {
-        assertEq(actual.length, expected.length, "parts count mismatch");
-        for (var i = 0; i < expected.length; i++) {
-            assertEq(actual[i].type, expected[i].type, "type mismatch at " + i);
-            assertEq(actual[i].value, expected[i].value, "value mismatch at " + i);
-        }
-    }
-
-    for (let number of [0, Date.now(), -Date.now()]) {
-        let expected = dateTimeFormat.formatToParts(number);
-        assertEqParts(thisValue.formatToParts(number), expected);
-        assertEqParts(thisValue[intlFallbackSymbol].formatToParts(number), expected);
-        assertEqParts(fakeObj.formatToParts(number), expected);
-    }
+    assertThrowsInstanceOf(() => formatToParts.call(fakeObj), TypeError);
 }
 
 // Test resolvedOptions() returns the same results.

@@ -160,7 +160,7 @@ struct SavedFrame::Lookup {
     {
         MOZ_ASSERT(source);
         MOZ_ASSERT_IF(framePtr.isSome(), activation);
-        MOZ_ASSERT_IF(framePtr.isSome() && !activation->isWasm(), pc);
+        MOZ_ASSERT_IF(framePtr.isSome() && !activation->hasWasmExitFP(), pc);
 
 #ifdef JS_MORE_DETERMINISTIC
         column = 0;

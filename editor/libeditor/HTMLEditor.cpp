@@ -3133,21 +3133,17 @@ HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
 void
 HTMLEditor::ContentAppended(nsIDocument* aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aFirstNewContent,
-                            int32_t aIndexInContainer)
+                            nsIContent* aFirstNewContent)
 {
-  DoContentInserted(aDocument, aContainer, aFirstNewContent, aIndexInContainer,
-                    eAppended);
+  DoContentInserted(aDocument, aContainer, aFirstNewContent, eAppended);
 }
 
 void
 HTMLEditor::ContentInserted(nsIDocument* aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aChild,
-                            int32_t aIndexInContainer)
+                            nsIContent* aChild)
 {
-  DoContentInserted(aDocument, aContainer, aChild, aIndexInContainer,
-                    eInserted);
+  DoContentInserted(aDocument, aContainer, aChild, eInserted);
 }
 
 bool
@@ -3175,7 +3171,6 @@ void
 HTMLEditor::DoContentInserted(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              int32_t /* aIndexInContainer */,
                               InsertedOrAppended aInsertedOrAppended)
 {
   MOZ_ASSERT(aChild);
@@ -3226,7 +3221,6 @@ void
 HTMLEditor::ContentRemoved(nsIDocument* aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
-                           int32_t aIndexInContainer,
                            nsIContent* aPreviousSibling)
 {
   if (!IsInObservedSubtree(aDocument, aContainer, aChild)) {

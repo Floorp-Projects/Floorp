@@ -2370,8 +2370,14 @@ _SetCanonicalName(Intl_NumberFormat_format_get, "get format");
 
 
 function Intl_NumberFormat_formatToParts(value) {
-    // Steps 1-3.
-    var nf = UnwrapNumberFormat(this, "formatToParts");
+    // Step 1.
+    var nf = this;
+
+    // Steps 2-3.
+    if (!IsObject(nf) || !IsNumberFormat(nf)) {
+        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "NumberFormat", "formatToParts",
+                       "NumberFormat");
+    }
 
     // Ensure the NumberFormat internals are resolved.
     getNumberFormatInternals(nf);
@@ -3071,8 +3077,14 @@ _SetCanonicalName(Intl_DateTimeFormat_format_get, "get format");
  * Intl.DateTimeFormat.prototype.formatToParts ( date )
  */
 function Intl_DateTimeFormat_formatToParts(date) {
-    // Steps 1-3.
-    var dtf = UnwrapDateTimeFormat(this, "formatToParts");
+    // Step 1.
+    var dtf = this;
+
+    // Steps 2-3.
+    if (!IsObject(dtf) || !IsDateTimeFormat(dtf)) {
+        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "DateTimeFormat", "formatToParts",
+                       "DateTimeFormat");
+    }
 
     // Ensure the DateTimeFormat internals are resolved.
     getDateTimeFormatInternals(dtf);

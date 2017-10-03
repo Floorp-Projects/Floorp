@@ -22,7 +22,6 @@ DevToolsModules(
     'Graphs.js',
     'GraphsWorker.js',
     'LineGraphWidget.js',
-    'MdnDocsWidget.js',
     'MountainGraphWidget.js',
     'SideMenuWidget.jsm',
     'SimpleListWidget.jsm',

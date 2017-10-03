@@ -78,16 +78,21 @@ let Tabbar = createClass({
 
   // Public API
 
-  addTab: function (id, title, selected = false, panel, url) {
+  addTab: function (id, title, selected = false, panel, url, index = -1) {
     let tabs = this.state.tabs.slice();
-    tabs.push({id, title, panel, url});
+
+    if (index >= 0) {
+      tabs.splice(index, 0, {id, title, panel, url});
+    } else {
+      tabs.push({id, title, panel, url});
+    }
 
     let newState = Object.assign({}, this.state, {
       tabs: tabs,
     });
 
     if (selected) {
-      newState.activeTab = tabs.length - 1;
+      newState.activeTab = index >= 0 ? index : tabs.length - 1;
     }
 
     this.setState(newState, () => {
