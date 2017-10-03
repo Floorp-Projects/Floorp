@@ -53,7 +53,3 @@ export MOZ_ANDROID_POCKET=1
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
 
 # End ../android-api-16-frontend/nightly.
-
-# Populated after checking out the sources and before building the
-# tree as part of the dependencies task bin/ scripts.
-ac_add_options --with-android-sdk="/builds/worker/.mozbuild/android-sdk-linux"

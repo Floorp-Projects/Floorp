@@ -224,6 +224,30 @@ linux64-proguard-jar-repack:
         toolchain-artifact: public/build/proguard-jar.tar.xz
         toolchain-alias: proguard-jar
 
+linux64-android-sdk-linux-repack:
+    description: "Android SDK (Linux) repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(android-sdk-linux)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 36000
+        artifacts:
+          - name: project/gecko/android-sdk
+            path: /builds/worker/project/gecko/android-sdk/
+            type: directory
+    run:
+        using: toolchain-script
+        script: repack-android-sdk-linux.sh
+        tc-vcs: false
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
+        toolchain-alias: android-sdk-linux
+
 linux64-rust-1.19:
     description: "rust repack"
     treeherder:
