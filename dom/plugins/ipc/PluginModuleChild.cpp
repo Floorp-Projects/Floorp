@@ -1045,13 +1045,7 @@ NPError
 _requestread(NPStream* aStream,
              NPByteRange* aRangeList)
 {
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    ENSURE_PLUGIN_THREAD(NPERR_INVALID_PARAM);
-
-    BrowserStreamChild* bs =
-        static_cast<BrowserStreamChild*>(static_cast<AStream*>(aStream->ndata));
-    bs->EnsureCorrectStream(aStream);
-    return bs->NPN_RequestRead(aRangeList);
+    return NPERR_STREAM_NOT_SEEKABLE;
 }
 
 NPError
