@@ -8,6 +8,7 @@
 
 #include "2D.h"
 #include <vector>
+#include "mozilla/Mutex.h"
 #include "skia/include/core/SkCanvas.h"
 #include "skia/include/core/SkImage.h"
 
@@ -28,7 +29,7 @@ public:
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
 
-  sk_sp<SkImage>& GetImage() { return mImage; }
+  sk_sp<SkImage> GetImage();
 
   bool InitFromData(unsigned char* aData,
                     const IntSize &aSize,
@@ -40,6 +41,13 @@ public:
                      DrawTargetSkia* aOwner = nullptr);
 
   virtual uint8_t* GetData();
+
+  /**
+   * The caller is responsible for ensuring aMappedSurface is not null.
+   */
+  virtual bool Map(MapType, MappedSurface *aMappedSurface);
+
+  virtual void Unmap();
 
   virtual int32_t Stride() { return mStride; }
 
@@ -53,6 +61,7 @@ private:
   IntSize mSize;
   int32_t mStride;
   RefPtr<DrawTargetSkia> mDrawTarget;
+  Mutex mChangeMutex;
 };
 
 } // namespace gfx
