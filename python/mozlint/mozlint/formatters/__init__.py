@@ -10,6 +10,7 @@ from ..result import ResultEncoder
 from .compact import CompactFormatter
 from .stylish import StylishFormatter
 from .treeherder import TreeherderFormatter
+from .unix import UnixFormatter
 
 
 class JSONFormatter(object):
@@ -22,6 +23,7 @@ all_formatters = {
     'json': JSONFormatter,
     'stylish': StylishFormatter,
     'treeherder': TreeherderFormatter,
+    'unix': UnixFormatter,
 }
 
 
