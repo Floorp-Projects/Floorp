@@ -1256,12 +1256,9 @@ Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder)
 }
 
 void
-Gecko_FontFamilyList_Clear(FontFamilyList* aList) {
-  aList->Clear();
-}
-
-void
-Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName, bool aQuoted)
+Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames,
+                                          nsIAtom* aName,
+                                          bool aQuoted)
 {
   FontFamilyName family;
   aName->ToString(family.mName);
@@ -1269,14 +1266,40 @@ Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName, bool aQu
     family.mType = eFamily_named_quoted;
   }
 
-  aList->Append(family);
+  aNames->AppendElement(family);
 }
 
 void
-Gecko_FontFamilyList_AppendGeneric(FontFamilyList* aList, FontFamilyType aType)
+Gecko_nsTArray_FontFamilyName_AppendGeneric(nsTArray<FontFamilyName>* aNames,
+                                            FontFamilyType aType)
 {
-  aList->Append(FontFamilyName(aType));
+  aNames->AppendElement(FontFamilyName(aType));
 }
+
+SharedFontList*
+Gecko_SharedFontList_Create()
+{
+  RefPtr<SharedFontList> fontlist = new SharedFontList();
+  return fontlist.forget().take();
+}
+
+MOZ_DEFINE_MALLOC_SIZE_OF(GeckoSharedFontListMallocSizeOf)
+
+size_t
+Gecko_SharedFontList_SizeOfIncludingThisIfUnshared(SharedFontList* aFontlist)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return aFontlist->SizeOfIncludingThisIfUnshared(GeckoSharedFontListMallocSizeOf);
+}
+
+size_t
+Gecko_SharedFontList_SizeOfIncludingThis(SharedFontList* aFontlist)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return aFontlist->SizeOfIncludingThis(GeckoSharedFontListMallocSizeOf);
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(mozilla::SharedFontList, SharedFontList);
 
 void
 Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src)
