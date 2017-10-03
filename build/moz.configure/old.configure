@@ -243,6 +243,7 @@ def old_configure_options(*options):
     '--with-branding',
     '--with-cross-lib',
     '--with-debug-label',
+    '--with-default-mozilla-five-home',
     '--with-distribution-id',
     '--with-doc-include-dirs',
     '--with-doc-input-dirs',
