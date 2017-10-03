@@ -3811,28 +3811,6 @@ js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes)
            : EqualChars(latin1, str->twoByteChars(nogc), length);
 }
 
-size_t
-js_strlen(const char16_t* s)
-{
-    const char16_t* t;
-
-    for (t = s; *t != 0; t++)
-        continue;
-    return (size_t)(t - s);
-}
-
-int32_t
-js_strcmp(const char16_t* lhs, const char16_t* rhs)
-{
-    while (true) {
-        if (*lhs != *rhs)
-            return int32_t(*lhs) - int32_t(*rhs);
-        if (*lhs == 0)
-            return 0;
-        ++lhs; ++rhs;
-    }
-}
-
 int32_t
 js_fputs(const char16_t* s, FILE* f)
 {
