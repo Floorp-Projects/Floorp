@@ -5,8 +5,6 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.support.annotation.VisibleForTesting;
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.Locales;
@@ -23,24 +21,23 @@ import java.util.Set;
  */
 public class ActivityStreamConfiguration {
 
-    private static final Set<Locale> enabledLocales;
+    private static final Set<Locale> pocketEnabledLocales;
+    @VisibleForTesting static final String[] pocketEnabledLocaleTags = new String[] {
+            // Sorted alphabetically to preserve blame for additions/removals.
+            "de-AT",
+            "de-CH",
+            "de-DE",
+            "en-GB",
+            "en-US",
+            "en-ZA",
+    };
 
     static {
-        final String[] enabledLocaleTags = new String[] {
-                // Sorted alphabetically to preserve blame for additions/removals.
-                "de-AT",
-                "de-CH",
-                "de-DE",
-                "en-GB",
-                "en-US",
-                "en-ZA",
-        };
-
         final Set<Locale> mutableEnabledLocales = new HashSet<>();
-        for (final String enabledLocaleTag : enabledLocaleTags) {
+        for (final String enabledLocaleTag : pocketEnabledLocaleTags) {
             mutableEnabledLocales.add(Locales.parseLocaleCode(enabledLocaleTag));
         }
-        enabledLocales = Collections.unmodifiableSet(mutableEnabledLocales);
+        pocketEnabledLocales = Collections.unmodifiableSet(mutableEnabledLocales);
     }
 
     private ActivityStreamConfiguration() {}
@@ -61,6 +58,13 @@ public class ActivityStreamConfiguration {
     }
 
     @VisibleForTesting static boolean isPocketEnabledByLocaleInner(final Locale locale) {
-        return enabledLocales.contains(locale);
+        // This comparison will use Locale.equals and thus compare all Locale fields including variant (some variant
+        // examples are "scotland" (Scottish english) and "oxendict" (Oxford Dictionary standard spelling)). The tags
+        // we've whitelisted have no variant so they will fail to match locales with variants, even if the language and
+        // country are the same. In practice, I can't find a use of variants in Android locales, so I've opted to leave
+        // this comparison the way it is to 1) avoid churn, 2) keep the code simple, and 3) because I don't know how
+        // Product would want to handle these variants. If we wanted to ignore variants in comparisons, we could compare
+        // the language and country only.
+        return pocketEnabledLocales.contains(locale);
     }
 }
