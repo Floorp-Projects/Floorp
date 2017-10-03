@@ -100,36 +100,6 @@ function advanceValidate(keyCode, value, insertionPoint) {
 exports.advanceValidate = advanceValidate;
 
 /**
- * Create a debouncing function wrapper to only call the target function after a certain
- * amount of time has passed without it being called.
- *
- * @param {Function} func
- *         The function to debounce
- * @param {number} wait
- *         The wait period
- * @param {Object} scope
- *         The scope to use for func
- * @return {Function} The debounced function
- */
-function debounce(func, wait, scope) {
-  let timer = null;
-
-  return function () {
-    if (timer) {
-      clearTimeout(timer);
-    }
-
-    let args = arguments;
-    timer = setTimeout(function () {
-      timer = null;
-      func.apply(scope, args);
-    }, wait);
-  };
-}
-
-exports.debounce = debounce;
-
-/**
  * From underscore's `_.throttle`
  * http://underscorejs.org
  * (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
