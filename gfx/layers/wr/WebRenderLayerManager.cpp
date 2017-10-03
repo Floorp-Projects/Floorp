@@ -231,7 +231,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
   WrBridge()->RemoveExpiredFontKeys();
 
-  AutoProfilerTracing tracing("Paint", "RenderLayers");
+  AUTO_PROFILER_TRACING("Paint", "RenderLayers");
   mTransactionIncomplete = false;
 
   if (gfxPrefs::LayersDump()) {
@@ -303,8 +303,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   mLastDisplayListSize = dl.dl.inner.capacity;
 
   {
-    AutoProfilerTracing
-      tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
+    AUTO_PROFILER_TRACING("Paint", sync ? "ForwardDPTransactionSync"
+                                        : "ForwardDPTransaction");
     WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(), sync,
                                mLatestTransactionId, mScrollData, transactionStart);
   }
