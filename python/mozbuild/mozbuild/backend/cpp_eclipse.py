@@ -564,6 +564,8 @@ refresh.enabled=true
 
 STATIC_CORE_RUNTIME_PREFS="""eclipse.preferences.version=1
 content-types/org.eclipse.cdt.core.cxxSource/file-extensions=mm
+content-types/org.eclipse.core.runtime.xml/file-extensions=xul
+content-types/org.eclipse.wst.jsdt.core.jsSource/file-extensions=jsm
 """
 
 STATIC_UI_PREFS="""eclipse.preferences.version=1
