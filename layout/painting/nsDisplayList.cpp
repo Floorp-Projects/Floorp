@@ -2152,8 +2152,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   nsIPresShell* presShell = presContext->PresShell();
   nsIDocument* document = presShell->GetDocument();
 
-  if (gfxPrefs::WebRenderLayersFree() &&
-      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     if (doBeginTransaction) {
       if (aCtx) {
         if (!layerManager->BeginTransactionWithTarget(aCtx)) {
