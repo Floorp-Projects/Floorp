@@ -2208,6 +2208,9 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       break;
 
     case eCSSUnit_FontFamilyList:
+      // The SharedFontList is a refcounted object, but is unique per
+      // declaration. We don't measure the references from computed
+      // values.
       n += mValue.mFontFamilyList->SizeOfIncludingThis(aMallocSizeOf);
       break;
 

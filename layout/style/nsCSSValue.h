@@ -818,13 +818,13 @@ public:
     return mValue.mSharedList;
   }
 
-  mozilla::SharedFontList* GetFontFamilyListValue() const
+  mozilla::NotNull<mozilla::SharedFontList*> GetFontFamilyListValue() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_FontFamilyList,
                "not a font family list value");
     NS_ASSERTION(mValue.mFontFamilyList != nullptr,
                  "font family list value should never be null");
-    return mValue.mFontFamilyList;
+    return mozilla::WrapNotNull(mValue.mFontFamilyList);
   }
 
   // bodies of these are below
