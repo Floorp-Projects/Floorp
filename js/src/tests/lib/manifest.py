@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import buildconfig
 import os, re, sys
 from subprocess import Popen, PIPE
 
@@ -22,8 +21,8 @@ def split_path_into_dirs(path):
     return dirs
 
 class XULInfo:
-    def __init__(self, cpu, os, isdebug):
-        self.cpu = cpu
+    def __init__(self, abi, os, isdebug):
+        self.abi = abi
         self.os = os
         self.isdebug = isdebug
         self.browserIsRemote = False
@@ -32,12 +31,12 @@ class XULInfo:
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
-        return ('var xulRuntime = {{ OS: "{}", CPU: "{}", shell: true }};'
+        return ('var xulRuntime = {{ OS: "{}", XPCOMABI: "{}", shell: true }};'
                 'var release_or_beta = getBuildConfiguration().release_or_beta;'
                 'var isDebugBuild={}; var Android={}; '
                 'var browserIsRemote={}'.format(
                     self.os,
-                    self.cpu,
+                    self.abi,
                     str(self.isdebug).lower(),
                     str(self.os == "Android").lower(),
                     str(self.browserIsRemote).lower()))
@@ -45,12 +44,39 @@ class XULInfo:
     @classmethod
     def create(cls, jsdir):
         """Create a XULInfo based on the current platform's characteristics."""
-        s = buildconfig.substs
-        kw = {}
-        kw['cpu'] = s['TARGET_CPU']
-        kw['os'] = s['OS_TARGET']
-        kw['isdebug'] = s['MOZ_DEBUG'] == '1'
 
+        # Our strategy is to find the autoconf.mk generated for the build and
+        # read the values from there.
+
+        # Find config/autoconf.mk.
+        dirs = split_path_into_dirs(os.getcwd()) + split_path_into_dirs(jsdir)
+
+        path = None
+        for dir in dirs:
+            _path = os.path.join(dir, 'config/autoconf.mk')
+            if os.path.isfile(_path):
+                path = _path
+                break
+
+        if path == None:
+            print("Can't find config/autoconf.mk on a directory containing"
+                  " the JS shell (searched from {})".format(jsdir))
+            sys.exit(1)
+
+        # Read the values.
+        val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG)\s*=\s*(.*)')
+        kw = {'isdebug': False}
+        for line in open(path):
+            m = val_re.match(line)
+            if m:
+                key, val = m.groups()
+                val = val.rstrip()
+                if key == 'TARGET_XPCOM_ABI':
+                    kw['abi'] = val
+                if key == 'OS_TARGET':
+                    kw['os'] = val
+                if key == 'MOZ_DEBUG':
+                    kw['isdebug'] = (val == '1')
         return cls(**kw)
 
 class XULInfoTester:
