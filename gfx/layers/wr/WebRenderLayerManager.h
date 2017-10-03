@@ -243,10 +243,6 @@ private:
 
   void ClearLayer(Layer* aLayer);
 
-  bool EndTransactionInternal(EndTransactionFlags aFlags,
-                              nsDisplayList* aDisplayList = nullptr,
-                              nsDisplayListBuilder* aDisplayListBuilder = nullptr);
-
   void RemoveUnusedAndResetWebRenderUserData()
   {
     for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
