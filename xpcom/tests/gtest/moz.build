@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'TestID.cpp',
     'TestMozPromise.cpp',
     'TestMultiplexInputStream.cpp',
+    'TestNonBlockingAsyncInputStream.cpp',
     'TestNsDeque.cpp',
     'TestNSPRLogModulesParser.cpp',
     'TestObserverArray.cpp',
