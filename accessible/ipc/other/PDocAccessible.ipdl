@@ -29,6 +29,7 @@ struct ShowEventData
   uint64_t ID;
   uint32_t Idx;
   AccessibleData[] NewTree;
+  bool EventSuppressed;
 };
 
 struct Attribute

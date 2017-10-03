@@ -45,6 +45,11 @@ public:
     SendShutdown();
   }
 
+  /**
+   * Serializes a shown tree and sends it to the chrome process.
+   */
+  void InsertIntoIpcTree(Accessible* aParent,
+                         Accessible* aChild, uint32_t aIdxInParent);
   void ShowEvent(AccShowEvent* aShowEvent);
 
   virtual void ActorDestroy(ActorDestroyReason) override

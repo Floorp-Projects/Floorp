@@ -110,7 +110,8 @@ private:
     SerializedShow(DocAccessibleChild* aTarget,
                    ShowEventData& aEventData, bool aFromUser)
       : DeferredEvent(aTarget)
-      , mEventData(aEventData.ID(), aEventData.Idx(), nsTArray<AccessibleData>())
+      , mEventData(aEventData.ID(), aEventData.Idx(),
+                   nsTArray<AccessibleData>(), aEventData.EventSuppressed())
       , mFromUser(aFromUser)
     {
       // Since IPDL doesn't generate a move constructor for ShowEventData,
