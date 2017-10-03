@@ -30,14 +30,10 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
-                                                        NPError* result) override;
-
   virtual mozilla::ipc::IPCResult RecvStreamDestroyed() override;
 
   int32_t WriteReady();
   int32_t Write(int32_t offset, int32_t len, void* buffer);
-  void StreamAsFile(const char* fname);
 
   void NPP_DestroyStream(NPReason reason);
 
