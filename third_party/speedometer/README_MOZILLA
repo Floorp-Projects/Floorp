@@ -2,7 +2,7 @@ The source from this directory was copied from the
 PerformanceTests/Speedometer directory of the Webkit repository
 at: https://svn.webkit.org/repository/webkit/trunk
 
-The SVN revision used was: 221009
+The SVN revision used was: 222778
 
 The contents of this directory are intended for use to "train" the
 profile guided optimization (PGO) of Firefox and for benchmarking
