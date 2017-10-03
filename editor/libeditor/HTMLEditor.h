@@ -1076,7 +1076,7 @@ private:
                                        const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                         nsIContent* aChild, int32_t aIndexInContainer,
+                         nsIContent* aChild,
                          InsertedOrAppended aInsertedOrAppended);
   already_AddRefed<Element> GetElementOrParentByTagName(
                               const nsAString& aTagName, nsINode* aNode);

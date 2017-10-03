@@ -28,14 +28,14 @@ class AutoInflatedString {
 
     template<size_t N> void operator=(const char (&str)[N]) {
         length_ = N - 1;
-        chars_ = InflateString(cx, str, &length_);
+        chars_ = InflateString(cx, str, length_);
         if (!chars_)
             abort();
     }
 
     void operator=(const char* str) {
         length_ = strlen(str);
-        chars_ = InflateString(cx, str, &length_);
+        chars_ = InflateString(cx, str, length_);
         if (!chars_)
             abort();
     }

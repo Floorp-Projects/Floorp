@@ -160,14 +160,12 @@ nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 
 void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
-                             nsIContent* aFirstNewContent,
-                             int32_t aNewIndexInContainer)
+                             nsIContent* aFirstNewContent)
 {
   nsIDocument* doc = aContainer->OwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aFirstNewContent,
-                              aNewIndexInContainer));
+                             (doc, aContainer, aFirstNewContent));
 }
 
 void
@@ -181,8 +179,7 @@ nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
 
 void
 nsNodeUtils::ContentInserted(nsINode* aContainer,
-                             nsIContent* aChild,
-                             int32_t aIndexInContainer)
+                             nsIContent* aChild)
 {
   NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
@@ -200,13 +197,12 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
-                             (document, container, aChild, aIndexInContainer));
+                             (document, container, aChild));
 }
 
 void
 nsNodeUtils::ContentRemoved(nsINode* aContainer,
                             nsIContent* aChild,
-                            int32_t aIndexInContainer,
                             nsIContent* aPreviousSibling)
 {
   NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
@@ -225,8 +221,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
-                             (document, container, aChild, aIndexInContainer,
-                              aPreviousSibling));
+                             (document, container, aChild, aPreviousSibling));
 }
 
 Maybe<NonOwningAnimationTarget>
@@ -477,19 +472,37 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       return nullptr;
     }
 
-    if (clone->IsElement()) {
+    if (CustomElementRegistry::IsCustomElementEnabled() && clone->IsElement()) {
       // The cloned node may be a custom element that may require
-      // enqueing created callback and prototype swizzling.
+      // enqueing upgrade reaction.
       Element* elem = clone->AsElement();
-      if (nsContentUtils::IsCustomElementName(nodeInfo->NameAtom())) {
-        nsContentUtils::SetupCustomElement(elem);
+      CustomElementDefinition* definition = nullptr;
+      RefPtr<nsIAtom> tagAtom = nodeInfo->NameAtom();
+      if (nsContentUtils::IsCustomElementName(tagAtom)) {
+        definition =
+          nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
+                                                        nodeInfo->LocalName(),
+                                                        nodeInfo->NamespaceID());
+        if (definition) {
+          elem->SetCustomElementData(new CustomElementData(tagAtom));
+          nsContentUtils::EnqueueUpgradeReaction(elem, definition);
+        }
       } else {
         // Check if node may be custom element by type extension.
         // ex. <button is="x-button">
         nsAutoString extension;
         if (elem->GetAttr(kNameSpaceID_None, nsGkAtoms::is, extension) &&
             !extension.IsEmpty()) {
-          nsContentUtils::SetupCustomElement(elem, &extension);
+          definition =
+            nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
+                                                          nodeInfo->LocalName(),
+                                                          nodeInfo->NamespaceID(),
+                                                          &extension);
+          if (definition) {
+            RefPtr<nsIAtom> typeAtom = NS_Atomize(extension);
+            elem->SetCustomElementData(new CustomElementData(typeAtom));
+            nsContentUtils::EnqueueUpgradeReaction(elem, definition);
+          }
         }
       }
     }

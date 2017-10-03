@@ -200,12 +200,15 @@ assertStackContainsSeq(stacks, ">,f1,>,<,f1,>,>,<,f1,>,f2,>,<,f1,>,<,f2,>,<,f1,>
 
 
 // Ion FFI exit
-for (var i = 0; i < 20; i++)
+var jitOptions = getJitCompilerOptions();
+if (jitOptions['baseline.enable']) {
+    for (var i = 0; i < 20; i++)
+        assertEq(f1(), 32);
+    enableSingleStepProfiling();
     assertEq(f1(), 32);
-enableSingleStepProfiling();
-assertEq(f1(), 32);
-var stacks = disableSingleStepProfiling();
-assertStackContainsSeq(stacks, ">,f1,>,<,f1,>,>,<,f1,>,f2,>,<,f1,>,<,f2,>,<,f1,>,f2,>,<,f1,>,>,<,f1,>,<,f1,>,f1,>,>");
+    var stacks = disableSingleStepProfiling();
+    assertStackContainsSeq(stacks, ">,f1,>,<,f1,>,>,<,f1,>,f2,>,<,f1,>,<,f2,>,<,f1,>,f2,>,<,f1,>,>,<,f1,>,<,f1,>,f1,>,>");
+}
 
 
 if (isSimdAvailable() && typeof SIMD !== 'undefined') {

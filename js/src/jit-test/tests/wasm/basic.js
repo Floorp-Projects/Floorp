@@ -1,4 +1,4 @@
-const LinkError = WebAssembly.LinkError;
+const { LinkError } = WebAssembly;
 
 // ----------------------------------------------------------------------------
 // exports

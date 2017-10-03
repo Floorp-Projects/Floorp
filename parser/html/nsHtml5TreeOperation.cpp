@@ -179,11 +179,10 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   nsresult rv = NS_OK;
   nsHtml5OtherDocUpdate update(aParent->OwnerDoc(),
                                aBuilder->GetDocument());
-  uint32_t childCount = aParent->GetChildCount();
   rv = aParent->AppendChildTo(aNode, false);
   if (NS_SUCCEEDED(rv)) {
     aNode->SetParserHasNotified();
-    nsNodeUtils::ContentAppended(aParent, aNode, childCount);
+    nsNodeUtils::ContentAppended(aParent, aNode);
   }
   return rv;
 }
@@ -198,7 +197,6 @@ nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
   nsresult rv = NS_OK;
 
   nsIDocument* doc = aBuilder->GetDocument();
-  uint32_t childCount = doc->GetChildCount();
   rv = doc->AppendChildTo(aNode, false);
   if (rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR) {
     aNode->SetParserHasNotified();
@@ -206,7 +204,7 @@ nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
   }
   NS_ENSURE_SUCCESS(rv, rv);
   aNode->SetParserHasNotified();
-  nsNodeUtils::ContentInserted(doc, aNode, childCount);
+  nsNodeUtils::ContentInserted(doc, aNode);
 
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot to block scripts");
@@ -260,7 +258,6 @@ nsHtml5TreeOperation::AppendChildrenToNewParent(nsIContent* aNode,
   nsHtml5OtherDocUpdate update(aParent->OwnerDoc(),
                                aBuilder->GetDocument());
 
-  uint32_t childCount = aParent->GetChildCount();
   bool didAppend = false;
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetFirstChild();
@@ -270,8 +267,7 @@ nsHtml5TreeOperation::AppendChildrenToNewParent(nsIContent* aNode,
     didAppend = true;
   }
   if (didAppend) {
-    nsNodeUtils::ContentAppended(aParent, aParent->GetChildAt(childCount),
-                                 childCount);
+    nsNodeUtils::ContentAppended(aParent, aParent->GetLastChild());
   }
   return NS_OK;
 }
@@ -294,7 +290,7 @@ nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
     uint32_t pos = foster->IndexOf(aTable);
     nsresult rv = foster->InsertChildAt(aNode, pos, false);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsNodeUtils::ContentInserted(foster, aNode, pos);
+    nsNodeUtils::ContentInserted(foster, aNode);
     return rv;
   }
 
@@ -634,7 +630,7 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
 
     rv = foster->InsertChildAt(text, pos, false);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsNodeUtils::ContentInserted(foster, text, pos);
+    nsNodeUtils::ContentInserted(foster, text);
     return rv;
   }
 

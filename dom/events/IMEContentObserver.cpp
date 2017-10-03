@@ -1121,8 +1121,7 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
 void
 IMEContentObserver::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
-                                    nsIContent* aFirstNewContent,
-                                    int32_t /* unused */)
+                                    nsIContent* aFirstNewContent)
 {
   NotifyContentAdded(NODE_FROM(aContainer, aDocument),
                      aFirstNewContent, aContainer->GetLastChild());
@@ -1131,9 +1130,9 @@ IMEContentObserver::ContentAppended(nsIDocument* aDocument,
 void
 IMEContentObserver::ContentInserted(nsIDocument* aDocument,
                                     nsIContent* aContainer,
-                                    nsIContent* aChild,
-                                    int32_t /* unused */)
+                                    nsIContent* aChild)
 {
+  MOZ_ASSERT(aChild);
   NotifyContentAdded(NODE_FROM(aContainer, aDocument),
                      aChild, aChild);
 }
@@ -1142,7 +1141,6 @@ void
 IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aContainer,
                                    nsIContent* aChild,
-                                   int32_t /* unused */,
                                    nsIContent* aPreviousSibling)
 {
   if (!NeedsTextChangeNotification()) {
@@ -1153,6 +1151,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 
   nsINode* containerNode = NODE_FROM(aContainer, aDocument);
+
+  MOZ_ASSERT(containerNode);
 
   uint32_t offset = 0;
   nsresult rv = NS_OK;

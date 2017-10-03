@@ -558,9 +558,6 @@ JSContext::currentScript(jsbytecode** ppc,
         *ppc = nullptr;
 
     js::Activation* act = activation();
-    while (act && act->isJit() && !act->asJit()->isActive())
-        act = act->prev();
-
     if (!act)
         return nullptr;
 
@@ -570,14 +567,13 @@ JSContext::currentScript(jsbytecode** ppc,
         return nullptr;
 
     if (act->isJit()) {
+        if (act->hasWasmExitFP())
+            return nullptr;
         JSScript* script = nullptr;
         js::jit::GetPcScript(const_cast<JSContext*>(this), &script, ppc);
         MOZ_ASSERT(allowCrossCompartment || script->compartment() == compartment());
         return script;
     }
-
-    if (act->isWasm())
-        return nullptr;
 
     MOZ_ASSERT(act->isInterpreter());
 

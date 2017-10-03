@@ -139,14 +139,15 @@ nsCookiePermission::SetAccess(nsIURI         *aURI,
 }
 
 NS_IMETHODIMP
-nsCookiePermission::CanAccess(nsIURI         *aURI,
-                              nsIChannel     *aChannel,
+nsCookiePermission::CanAccess(nsIPrincipal   *aPrincipal,
                               nsCookieAccess *aResult)
 {
   // Check this protocol doesn't allow cookies
   bool hasFlags;
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
   nsresult rv =
-    NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
+    NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
                         &hasFlags);
   if (NS_FAILED(rv) || hasFlags) {
     *aResult = ACCESS_DENY;
@@ -158,7 +159,7 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
     return NS_ERROR_UNEXPECTED;
 
   // finally, check with permission manager...
-  rv = mPermMgr->TestPermission(aURI, kPermissionType, (uint32_t *) aResult);
+  rv = mPermMgr->TestPermissionFromPrincipal(aPrincipal, kPermissionType, (uint32_t *) aResult);
   if (NS_SUCCEEDED(rv)) {
     if (*aResult == nsICookiePermission::ACCESS_SESSION) {
       *aResult = nsICookiePermission::ACCESS_ALLOW;
