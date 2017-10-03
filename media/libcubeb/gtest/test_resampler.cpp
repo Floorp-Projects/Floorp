@@ -125,7 +125,7 @@ void test_delay_lines(uint32_t delay_frames, uint32_t channels, uint32_t chunk_m
   const size_t length_s = 2;
   const size_t rate = 44100;
   const size_t length_frames = rate * length_s;
-  delay_line<float> delay(delay_frames, channels);
+  delay_line<float> delay(delay_frames, channels, rate);
   auto_array<float> input;
   auto_array<float> output;
   uint32_t chunk_length = channels * chunk_ms * rate / 1000;
@@ -629,10 +629,12 @@ TEST(cubeb, resampler_passthrough_input_only)
 template<typename T>
 long seq(T* array, int stride, long start, long count)
 {
+  uint32_t output_idx = 0;
   for(int i = 0; i < count; i++) {
     for (int j = 0; j < stride; j++) {
-      array[i + j] = static_cast<T>(start + i);
+      array[output_idx + j] = static_cast<T>(start + i);
     }
+    output_idx += stride;
   }
   return start + count;
 }
@@ -649,11 +651,28 @@ void is_seq(T * array, int stride, long count, long expected_start)
   }
 }
 
+template<typename T>
+void is_not_seq(T * array, int stride, long count, long expected_start)
+{
+  uint32_t output_index = 0;
+  for (long i = 0; i < count; i++) {
+    for (int j = 0; j < stride; j++) {
+      ASSERT_NE(array[output_index + j], expected_start + i);
+    }
+    output_index += stride;
+  }
+}
+
+struct closure {
+  int input_channel_count;
+};
+
 // gtest does not support using ASSERT_EQ and friend in a function that returns
 // a value.
 template<typename T>
 void check_duplex(const T * input_buffer,
-                  T * output_buffer, long frame_count)
+                  T * output_buffer, long frame_count,
+                  int input_channel_count)
 {
   ASSERT_EQ(frame_count, 256);
   // Silence scan-build warning.
@@ -661,18 +680,28 @@ void check_duplex(const T * input_buffer,
   ASSERT_TRUE(!!input_buffer); assert(input_buffer);
 
   int output_index = 0;
+  int input_index = 0;
   for (int i = 0; i < frame_count; i++) {
-    // output is two channels, input is one channel, we upmix.
-    output_buffer[output_index] = output_buffer[output_index+1] = input_buffer[i];
+    // output is two channels, input one or two channels.
+    if (input_channel_count == 1) {
+      output_buffer[output_index] = output_buffer[output_index + 1] = input_buffer[i];
+    } else if (input_channel_count == 2) {
+      output_buffer[output_index] = input_buffer[input_index];
+      output_buffer[output_index + 1] = input_buffer[input_index + 1];
+    }
     output_index += 2;
+    input_index += input_channel_count;
   }
 }
 
-long cb_passthrough_resampler_duplex(cubeb_stream * /*stm*/, void * /*user_ptr*/,
+long cb_passthrough_resampler_duplex(cubeb_stream * /*stm*/, void * user_ptr,
                                      const void * input_buffer,
                                      void * output_buffer, long frame_count)
 {
-  check_duplex<float>(static_cast<const float*>(input_buffer), static_cast<float*>(output_buffer), frame_count);
+  closure * c = reinterpret_cast<closure*>(user_ptr);
+  check_duplex<float>(static_cast<const float*>(input_buffer),
+                      static_cast<float*>(output_buffer),
+                      frame_count, c->input_channel_count);
   return frame_count;
 }
 
@@ -698,9 +727,12 @@ TEST(cubeb, resampler_passthrough_duplex_callback_reordering)
 
   int target_rate = input_params.rate;
 
+  closure c;
+  c.input_channel_count = input_channels;
+
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params,
-                           target_rate, cb_passthrough_resampler_duplex, nullptr,
+                           target_rate, cb_passthrough_resampler_duplex, &c,
                            CUBEB_RESAMPLER_QUALITY_VOIP);
 
   const long BUF_BASE_SIZE = 256;
@@ -755,3 +787,101 @@ TEST(cubeb, resampler_passthrough_duplex_callback_reordering)
 
   cubeb_resampler_destroy(resampler);
 }
+
+// Artificially simulate output thread underruns,
+// by building up artificial delay in the input.
+// Check that the frame drop logic kicks in.
+TEST(cubeb, resampler_drift_drop_data)
+{
+  for (uint32_t input_channels = 1; input_channels < 3; input_channels++) {
+    cubeb_stream_params input_params;
+    cubeb_stream_params output_params;
+
+    const int output_channels = 2;
+    const int sample_rate = 44100;
+
+    input_params.channels = input_channels;
+    input_params.rate = sample_rate;
+    input_params.format = CUBEB_SAMPLE_FLOAT32NE;
+
+    output_params.channels = output_channels;
+    output_params.rate = sample_rate;
+    output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+
+    int target_rate = input_params.rate;
+
+    closure c;
+    c.input_channel_count = input_channels;
+
+    cubeb_resampler * resampler =
+      cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params,
+        target_rate, cb_passthrough_resampler_duplex, &c,
+        CUBEB_RESAMPLER_QUALITY_VOIP);
+
+    const long BUF_BASE_SIZE = 256;
+
+    // The factor by which the deadline is missed. This is intentionally
+    // kind of large to trigger the frame drop quickly. In real life, multiple
+    // smaller under-runs would accumulate.
+    const long UNDERRUN_FACTOR = 10;
+    // Number buffer used for pre-buffering, that some backends do.
+    const long PREBUFFER_FACTOR = 2;
+
+    std::vector<float> input_buffer_prebuffer(input_channels * BUF_BASE_SIZE * PREBUFFER_FACTOR);
+    std::vector<float> input_buffer_glitch(input_channels * BUF_BASE_SIZE * UNDERRUN_FACTOR);
+    std::vector<float> input_buffer_normal(input_channels * BUF_BASE_SIZE);
+    std::vector<float> output_buffer(output_channels * BUF_BASE_SIZE);
+
+    long seq_idx = 0;
+    long output_seq_idx = 0;
+
+    long prebuffer_frames = input_buffer_prebuffer.size() / input_params.channels;
+    seq_idx = seq(input_buffer_prebuffer.data(), input_channels, seq_idx,
+      prebuffer_frames);
+
+    long got = cubeb_resampler_fill(resampler, input_buffer_prebuffer.data(), &prebuffer_frames,
+      output_buffer.data(), BUF_BASE_SIZE);
+
+    output_seq_idx += BUF_BASE_SIZE;
+
+    // prebuffer_frames will hold the frames used by the resampler.
+    ASSERT_EQ(prebuffer_frames, BUF_BASE_SIZE);
+    ASSERT_EQ(got, BUF_BASE_SIZE);
+
+    for (uint32_t i = 0; i < 300; i++) {
+      long int frames = BUF_BASE_SIZE;
+      if (i != 0 && (i % 100) == 1) {
+        // Once in a while, the output thread misses its deadline.
+        // The input thread still produces data, so it ends up accumulating. Simulate this by providing a
+        // much bigger input buffer. Check that the sequence is now unaligned, meaning we've dropped data
+        // to keep everything in sync.
+        seq_idx = seq(input_buffer_glitch.data(), input_channels, seq_idx, BUF_BASE_SIZE * UNDERRUN_FACTOR);
+        frames = BUF_BASE_SIZE * UNDERRUN_FACTOR;
+        got = cubeb_resampler_fill(resampler, input_buffer_glitch.data(), &frames, output_buffer.data(), BUF_BASE_SIZE);
+        is_seq(output_buffer.data(), 2, BUF_BASE_SIZE, output_seq_idx);
+        output_seq_idx += BUF_BASE_SIZE;
+      }
+      else if (i != 0 && (i % 100) == 2) {
+        // On the next iteration, the sequence should be broken
+        seq_idx = seq(input_buffer_normal.data(), input_channels, seq_idx, BUF_BASE_SIZE);
+        long normal_input_frame_count = 256;
+        got = cubeb_resampler_fill(resampler, input_buffer_normal.data(), &normal_input_frame_count, output_buffer.data(), BUF_BASE_SIZE);
+        is_not_seq(output_buffer.data(), output_channels, BUF_BASE_SIZE, output_seq_idx);
+        // Reclock so that we can use is_seq again.
+        output_seq_idx = output_buffer[BUF_BASE_SIZE * output_channels - 1] + 1;
+      }
+      else {
+        // normal case
+        seq_idx = seq(input_buffer_normal.data(), input_channels, seq_idx, BUF_BASE_SIZE);
+        long normal_input_frame_count = 256;
+        got = cubeb_resampler_fill(resampler, input_buffer_normal.data(), &normal_input_frame_count, output_buffer.data(), BUF_BASE_SIZE);
+        is_seq(output_buffer.data(), output_channels, BUF_BASE_SIZE, output_seq_idx);
+        output_seq_idx += BUF_BASE_SIZE;
+      }
+      ASSERT_EQ(got, BUF_BASE_SIZE);
+    }
+
+    cubeb_resampler_destroy(resampler);
+  }
+}
+
