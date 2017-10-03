@@ -661,3 +661,4 @@ load 1373586.html
 load 1401420-1.html
 load 1401709.html
 load 1401807.html
+asserts(11) load 1405443.html # bug 1405443
