@@ -1669,6 +1669,12 @@ CustomizeMode.prototype = {
     this._dragOffset = {x: aEvent.clientX - itemCenter.x,
                         y: aEvent.clientY - itemCenter.y};
 
+    let toolbarParent = draggedItem.closest("toolbar");
+    if (toolbarParent) {
+      let toolbarRect = this._dwu.getBoundsWithoutFlushing(toolbarParent);
+      toolbarParent.style.minHeight = toolbarRect.height + "px";
+    }
+
     gDraggingInToolbars = new Set();
 
     // Hack needed so that the dragimage will still show the
@@ -1860,6 +1866,11 @@ CustomizeMode.prototype = {
     draggedItem.hidden = false;
     draggedItem.removeAttribute("mousedown");
 
+    let toolbarParent = draggedItem.closest("toolbar");
+    if (toolbarParent) {
+      toolbarParent.style.removeProperty("min-height");
+    }
+
     // Do nothing if the target was dropped onto itself (ie, no change in area
     // or position).
     if (draggedItem == aTargetNode) {
@@ -2035,6 +2046,11 @@ CustomizeMode.prototype = {
     if (draggedWrapper) {
       draggedWrapper.hidden = false;
       draggedWrapper.removeAttribute("mousedown");
+
+      let toolbarParent = draggedWrapper.closest("toolbar");
+      if (toolbarParent) {
+        toolbarParent.style.removeProperty("min-height");
+      }
     }
 
     if (this._dragOverItem) {
