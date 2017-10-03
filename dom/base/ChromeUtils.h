@@ -145,9 +145,6 @@ public:
                            JS::HandleObject aTarget,
                            JS::MutableHandleObject aRetval,
                            ErrorResult& aRv);
-
-  static void CorruptRuleHashAndCrash(GlobalObject& aGlobal,
-                                      unsigned long aIndex);
 };
 
 } // namespace dom
