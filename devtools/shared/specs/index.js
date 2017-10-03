@@ -123,12 +123,12 @@ const Types = exports.__TypesForTests = [
   },
   /* imageData isn't an actor but just a DictType */
   {
-    types: ["imageData"],
+    types: ["imageData", "disconnectedNode", "disconnectedNodeArray"],
     spec: "devtools/shared/specs/node",
     front: null,
   },
   {
-    types: ["domnode"],
+    types: ["domnode", "domnodelist"],
     spec: "devtools/shared/specs/node",
     front: "devtools/shared/fronts/node",
   },
