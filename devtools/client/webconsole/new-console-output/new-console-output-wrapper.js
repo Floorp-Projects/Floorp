@@ -13,8 +13,8 @@ const { createContextMenu } = require("devtools/client/webconsole/new-console-ou
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
-const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
+const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
+const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
 
 let store = null;
 
@@ -266,24 +266,25 @@ NewConsoleOutputWrapper.prototype = {
 
       if (this.queuedMessageUpdates.length > 0) {
         this.queuedMessageUpdates.forEach(({ message, res }) => {
-          actions.networkMessageUpdate(message);
+          store.dispatch(actions.networkMessageUpdate(message));
           this.jsterm.hud.emit("network-message-updated", res);
         });
         this.queuedMessageUpdates = [];
       }
       if (this.queuedRequestUpdates.length > 0) {
         this.queuedRequestUpdates.forEach(({ id, data}) => {
-          actions.networkUpdateRequest(id, data);
-          // Fire an event indicating that all data fetched from
-          // the backend has been received. This is based on
-          // 'FirefoxDataProvider.isQueuePayloadReady', see more
-          // comments in that method.
-          // (netmonitor/src/connector/firefox-data-provider).
-          // This event might be utilized in tests to find the right
-          // time when to finish.
-          this.jsterm.hud.emit("network-request-payload-ready", {id, data});
+          store.dispatch(actions.networkUpdateRequest(id, data));
         });
         this.queuedRequestUpdates = [];
+
+        // Fire an event indicating that all data fetched from
+        // the backend has been received. This is based on
+        // 'FirefoxDataProvider.isQueuePayloadReady', see more
+        // comments in that method.
+        // (netmonitor/src/connector/firefox-data-provider).
+        // This event might be utilized in tests to find the right
+        // time when to finish.
+        this.jsterm.hud.emit("network-request-payload-ready");
       }
     }, 50);
   },

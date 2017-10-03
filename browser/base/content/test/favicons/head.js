@@ -7,3 +7,5 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
   "resource://testing-common/BrowserTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentTask",
   "resource://testing-common/ContentTask.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");

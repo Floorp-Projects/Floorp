@@ -313,16 +313,7 @@ BoxModel.prototype = {
           return;
         }
 
-        if (!this.inspector) {
-          return;
-        }
-
-        let node = this.inspector.selection.nodeFront;
-        this.inspector.pageStyle.getLayout(node, {
-          autoMargins: true,
-        }).then(layout => {
-          this.store.dispatch(updateLayout(layout));
-        }, console.error);
+        this.updateBoxModel("editable-value-change");
       },
       cssProperties: getCssProperties(this.inspector.toolbox)
     }, event);

@@ -94,8 +94,8 @@
     margin-inline-end: 0;
     margin-inline-start: 0;
 
-    /* In some edge case the cursor is not changed to n-resize */
-    cursor: n-resize;
+    /* In some edge case the cursor is not changed to ns-resize */
+    cursor: ns-resize;
   }
 
   .devtools-responsive-container > .devtools-sidebar-tabs:not(.pane-collapsed) {

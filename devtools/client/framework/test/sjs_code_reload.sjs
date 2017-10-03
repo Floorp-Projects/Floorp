@@ -13,7 +13,7 @@ function handleRequest(request, response) {
   response.setHeader("Access-Control-Allow-Origin", "*", false);
 
   // Redirect to a different file each time.
-  let counter = 1 + +getState("counter");
+  let counter = 1 + (+getState("counter") % 2);
 
   let index = request.path.lastIndexOf("/");
   let newPath = request.path.substr(0, index + 1) +

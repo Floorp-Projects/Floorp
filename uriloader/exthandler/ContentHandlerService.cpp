@@ -154,6 +154,14 @@ NS_IMETHODIMP ContentHandlerService::Remove(nsIHandlerInfo *aHandlerInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ContentHandlerService::ExistsForProtocol(const nsACString& aProtocolScheme, bool* aRetval)
+{
+  if (!mHandlerServiceChild->SendExistsForProtocol(nsCString(aProtocolScheme), aRetval)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP ContentHandlerService::GetTypeFromExtension(const nsACString & aFileExtension, nsACString & _retval)
 {
