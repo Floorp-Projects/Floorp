@@ -292,6 +292,7 @@ var gSearchResultsPane = {
 
       if (!resultsFound) {
         let noResultsEl = document.querySelector(".no-results-message");
+        noResultsEl.setAttribute("query", this.query);
         noResultsEl.hidden = false;
 
         let strings = this.strings;

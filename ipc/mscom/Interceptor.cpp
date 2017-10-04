@@ -216,13 +216,23 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
   return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
 
+REFIID
+Interceptor::MarshalAs(REFIID aIid) const
+{
+#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+  return IsCallerExternalProcess() ? aIid : mEventSink->MarshalAs(aIid);
+#else
+  return mEventSink->MarshalAs(aIid);
+#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+}
+
 HRESULT
 Interceptor::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                CLSID* pCid)
 {
-  return mStdMarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                        mshlflags, pCid);
+  return mStdMarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
+                                        pvDestContext, mshlflags, pCid);
 }
 
 HRESULT
@@ -230,7 +240,7 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                DWORD* pSize)
 {
-  HRESULT hr = mStdMarshal->GetMarshalSizeMax(riid, pv, dwDestContext,
+  HRESULT hr = mStdMarshal->GetMarshalSizeMax(MarshalAs(riid), pv, dwDestContext,
                                               pvDestContext, mshlflags, pSize);
   if (FAILED(hr)) {
     return hr;
@@ -269,7 +279,7 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
 
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
-  hr = mStdMarshal->MarshalInterface(pStm, riid, pv, dwDestContext,
+  hr = mStdMarshal->MarshalInterface(pStm, MarshalAs(riid), pv, dwDestContext,
                                      pvDestContext, mshlflags);
   if (FAILED(hr)) {
     return hr;
@@ -466,7 +476,7 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
   hr = PublishTarget(aLiveSetLock, unkInterceptor, aTargetIid, Move(aTarget));
   ENSURE_HR_SUCCEEDED(hr);
 
-  if (mEventSink->MarshalAs(aTargetIid) == aTargetIid) {
+  if (MarshalAs(aTargetIid) == aTargetIid) {
     hr = unkInterceptor->QueryInterface(aTargetIid, aOutInterceptor);
     ENSURE_HR_SUCCEEDED(hr);
     return hr;
@@ -499,7 +509,7 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
     return S_OK;
   }
 
-  REFIID interceptorIid = mEventSink->MarshalAs(aIid);
+  REFIID interceptorIid = MarshalAs(aIid);
 
   RefPtr<IUnknown> unkInterceptor;
   IUnknown* interfaceForQILog = nullptr;

@@ -51,7 +51,7 @@ class SystemAllocPolicy
     }
 };
 
-void ReportOutOfMemory(JSContext* cx);
+JS_FRIEND_API(void) ReportOutOfMemory(JSContext* cx);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors

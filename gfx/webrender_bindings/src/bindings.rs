@@ -339,22 +339,6 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrComplexClipRegion {
-    rect: LayoutRect,
-    radii: BorderRadius,
-}
-
-impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
-    fn into(self) -> ComplexClipRegion {
-        ComplexClipRegion {
-            rect: self.rect.into(),
-            radii: self.radii.into(),
-        }
-    }
-}
-
 #[repr(u32)]
 #[derive(Copy, Clone)]
 pub enum WrFilterOpType {
@@ -1187,13 +1171,13 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
                                     clip_rect: LayoutRect,
-                                    complex: *const WrComplexClipRegion,
+                                    complex: *const ComplexClipRegion,
                                     complex_count: usize,
                                     mask: *const WrImageMask)
                                     -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
     let complex_slice = make_slice(complex, complex_count);
-    let complex_iter = complex_slice.iter().map(|x| x.into());
+    let complex_iter = complex_slice.iter().cloned();
     let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
 
     let clip_id = state.frame_builder.dl_builder.define_clip(None, clip_rect, complex_iter, mask);

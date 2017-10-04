@@ -406,11 +406,13 @@ struct BorderRadius {
   }
 };
 
-struct WrComplexClipRegion {
+struct ComplexClipRegion {
+  // The boundaries of the rectangle.
   LayoutRect rect;
+  // Border radii of this rectangle.
   BorderRadius radii;
 
-  bool operator==(const WrComplexClipRegion& aOther) const {
+  bool operator==(const ComplexClipRegion& aOther) const {
     return rect == aOther.rect &&
            radii == aOther.radii;
   }
@@ -853,7 +855,7 @@ WR_FUNC;
 WR_INLINE
 uint64_t wr_dp_define_clip(WrState *aState,
                            LayoutRect aClipRect,
-                           const WrComplexClipRegion *aComplex,
+                           const ComplexClipRegion *aComplex,
                            size_t aComplexCount,
                            const WrImageMask *aMask)
 WR_FUNC;
