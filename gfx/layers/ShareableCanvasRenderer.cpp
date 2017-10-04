@@ -62,7 +62,7 @@ ShareableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
   UniquePtr<gl::SurfaceFactory> factory =
     gl::GLScreenBuffer::CreateFactory(mGLContext, caps, forwarder, mFlags);
 
-  if (mGLFrontbuffer || aData.mIsMirror) {
+  if (mGLFrontbuffer) {
     // We're using a source other than the one in the default screen.
     // (SkiaGL)
     mFactory = Move(factory);

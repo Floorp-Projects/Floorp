@@ -313,9 +313,9 @@ static inline wr::LayoutSize ToLayoutSize(const gfx::SizeTyped<T>& size)
   return ls;
 }
 
-static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const RoundedRect& rect)
+static inline wr::ComplexClipRegion ToComplexClipRegion(const RoundedRect& rect)
 {
-  wr::WrComplexClipRegion ret;
+  wr::ComplexClipRegion ret;
   ret.rect               = ToLayoutRect(rect.rect);
   ret.radii.top_left     = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopLeft]);
   ret.radii.top_right    = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopRight]);
@@ -495,20 +495,20 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float
   return prop;
 }
 
-static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const wr::LayoutRect& rect,
-                                                            const mozilla::LayerSize& size)
+static inline wr::ComplexClipRegion ToComplexClipRegion(const wr::LayoutRect& rect,
+                                                        const mozilla::LayerSize& size)
 {
-  wr::WrComplexClipRegion complex_clip;
+  wr::ComplexClipRegion complex_clip;
   complex_clip.rect = rect;
   complex_clip.radii = wr::ToUniformBorderRadius(size);
   return complex_clip;
 }
 
 template<class T>
-static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
-                                                            const mozilla::LayerSize& size)
+static inline wr::ComplexClipRegion ToComplexClipRegion(const gfx::RectTyped<T>& rect,
+                                                        const mozilla::LayerSize& size)
 {
-  return ToWrComplexClipRegion(wr::ToLayoutRect(rect), size);
+  return ToComplexClipRegion(wr::ToLayoutRect(rect), size);
 }
 
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.

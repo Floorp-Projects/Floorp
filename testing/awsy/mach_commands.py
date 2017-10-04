@@ -84,7 +84,7 @@ class MachCommands(MachCommandBase):
 
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
-                    'perTabPause', 'settleWaitTime', 'maxTabs'):
+                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd'):
             if kwargs[arg]:
                 runtime_testvars[arg] = kwargs[arg]
 
@@ -141,6 +141,39 @@ class MachCommands(MachCommandBase):
         # If '--preferences' was not specified supply our default set.
         if not kwargs['prefs_files']:
             kwargs['prefs_files'] = [os.path.join(awsy_source_dir, 'conf', 'prefs.json')]
+
+        # Setup DMD env vars if necessary.
+        if kwargs['dmd']:
+            dmd_params = []
+
+            bin_dir = os.path.dirname(binary)
+            lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
+            dmd_lib = os.path.join(bin_dir, lib_name)
+            if not os.path.exists(dmd_lib):
+                print("Please build with |--enable-dmd| to use DMD.")
+                return 1
+
+            env_vars = {
+                "Darwin": {
+                    "DYLD_INSERT_LIBRARIES": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "Linux": {
+                    "LD_PRELOAD": dmd_lib,
+                    "LD_LIBRARY_PATH": bin_dir,
+                },
+                "WINNT": {
+                    "MOZ_REPLACE_MALLOC_LIB": dmd_lib,
+                },
+            }
+
+            arch = self.substs['OS_ARCH']
+            for k, v in env_vars[arch].iteritems():
+                os.environ[k] = v
+
+            # Also add the bin dir to the python path so we can use dmd.py
+            if bin_dir not in sys.path:
+                sys.path.append(bin_dir)
 
         for k, v in kwargs.iteritems():
             setattr(args, k, v)
@@ -209,6 +242,9 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
                      dest='single_stylo_traversal', default=False,
                      help='Set STYLO_THREADS=1.')
+    @CommandArgument('--dmd', group='AWSY', action='store_true',
+                     dest='dmd', default=False,
+                     help='Enable DMD during testing. Requires a DMD-enabled build.')
     def run_awsy_test(self, tests, **kwargs):
         """mach awsy-test runs the in-tree version of the Are We Slim Yet
         (AWSY) tests.

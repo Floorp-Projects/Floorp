@@ -62,7 +62,6 @@ protected:
 
   bool mIsAlphaPremultiplied;
   gl::OriginPos mOriginPos;
-  bool mIsMirror;
 
   bool mOpaque;
 

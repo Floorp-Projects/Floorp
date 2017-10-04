@@ -323,12 +323,7 @@ SurfaceFactory::NewTexClient(const gfx::IntSize& size, const layers::LayersIPCCh
         mRecycleFreePool.pop();
 
         if (cur->Surf()->mSize == size){
-            // In the general case, textureClients transit textures through
-            // CompositorForwarder. But, the textureClient created by VRManagerChild
-            // has a different LayerIPCChannel, PVRManager. Therefore, textureClients
-            // need to be separated into different cases.
-            if ((aLayersChannel && aLayersChannel == cur->GetAllocator()) ||
-                (cur->GetAllocator() != gfx::VRManagerChild::Get())) {
+            if (aLayersChannel && aLayersChannel == cur->GetAllocator()) {
                 cur->Surf()->WaitForBufferOwnership();
                 return cur.forget();
             }

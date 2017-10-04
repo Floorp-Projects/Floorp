@@ -433,12 +433,10 @@ public:
 
     already_AddRefed<Layer>
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
-                   LayerManager* manager,
-                   bool aMirror = false) override;
+                   LayerManager* manager) override;
     bool
     InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                             CanvasRenderer* aRenderer,
-                             bool aMirror = false) override;
+                             CanvasRenderer* aRenderer) override;
 
     // Note that 'clean' here refers to its invalidation state, not the
     // contents of the buffer.
@@ -1437,7 +1435,6 @@ protected:
     bool mInvalidated;
     bool mCapturedFrameInvalidated;
     bool mResetLayer;
-    bool mLayerIsMirror;
     bool mOptionsFrozen;
     bool mDisableExtensions;
     bool mIsMesa;

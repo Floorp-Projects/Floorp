@@ -751,12 +751,23 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   line-height: 30px;
 }
 
-.no-results-container {
+.no-results-container:nth-child(2) {
   margin-top: 64px;
 }
 
-.no-results-container > image {
+.no-results-container:nth-child(2) > image {
   list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-results.svg");
   width: 380px;
   height: 293px;
+}
+
+.no-results-message[query*=🔥🦊] {
+  background-image: url("chrome://browser/skin/preferences/in-content/critters-postcard.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.no-results-message[query*=🔥🦊] > .no-results-container {
+  visibility: hidden;
 }
