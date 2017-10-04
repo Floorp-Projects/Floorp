@@ -299,18 +299,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     return NS_OK;
   }
 
-  if ((mCodecContext->pix_fmt == AV_PIX_FMT_YUV420P10LE ||
-       mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
-#endif
-       ) &&
-      (!mImageAllocator || mImageAllocator->GetCompositorBackendType()
-                           != layers::LayersBackend::LAYERS_BASIC)) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                       RESULT_DETAIL("unsupported format type (hdr)"));
-  }
-
   // If we've decoded a frame then we need to output it
   int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
   // Retrieve duration from dts.
