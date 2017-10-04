@@ -2117,16 +2117,7 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   if (!mDocument->MediaQueryLists().isEmpty()) {
     // We build a list of all the notifications we're going to send
     // before we send any of them.
-
-    // Copy pointers to all the lists into a new array, in case one of our
-    // notifications modifies the list.
-    nsTArray<RefPtr<mozilla::dom::MediaQueryList>> localMediaQueryLists;
-    for (auto* mql : mDocument->MediaQueryLists()) {
-      localMediaQueryLists.AppendElement(mql);
-    }
-
-    // Now iterate our local array of the lists.
-    for (auto mql : localMediaQueryLists) {
+    for (auto mql : mDocument->MediaQueryLists()) {
       nsAutoMicroTask mt;
       mql->MaybeNotify();
     }
