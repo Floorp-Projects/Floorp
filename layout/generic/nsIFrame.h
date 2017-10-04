@@ -623,6 +623,7 @@ public:
     , mParentIsWrapperAnonBox(false)
     , mIsWrapperBoxNeedingRestyle(false)
     , mReflowRequestedForCharDataChange(false)
+    , mForceDescendIntoIfVisible(false)
     , mIsPrimaryFrame(false)
   {
     mozilla::PodZero(&mOverflow);
@@ -4076,6 +4077,9 @@ public:
 
   void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
 
+  bool ForceDescendIntoIfVisible() { return mForceDescendIntoIfVisible; }
+  void SetForceDescendIntoIfVisible(bool aForce) { mForceDescendIntoIfVisible = aForce; }
+
 protected:
 
   /**
@@ -4236,6 +4240,13 @@ protected:
    */
   bool mReflowRequestedForCharDataChange : 1;
 
+  /**
+   * This bit is used during BuildDisplayList to mark frames that need to
+   * have display items rebuilt. We will descend into them if they are
+   * currently visible, even if they don't intersect the dirty area.
+   */
+  bool mForceDescendIntoIfVisible : 1;
+
 private:
   /**
    * True if this is the primary frame for mContent.
@@ -4244,7 +4255,7 @@ private:
 
 protected:
 
-  // There is a 9-bit gap left here.
+  // There is a 8-bit gap left here.
 
   // Helpers
   /**
