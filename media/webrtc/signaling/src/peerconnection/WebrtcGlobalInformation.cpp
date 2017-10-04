@@ -36,11 +36,7 @@
 #include "PeerConnectionImpl.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
-static const char* wgiLogTag = "WebrtcGlobalInformation";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG wgiLogTag
+static const char* logTag = "WebrtcGlobalInformation";
 
 namespace mozilla {
 namespace dom {
@@ -110,7 +106,7 @@ public:
     mCallback.get()->Call(mResult, rv);
 
     if (rv.Failed()) {
-      CSFLogError(LOGTAG, "Error firing stats observer callback");
+      CSFLogError(logTag, "Error firing stats observer callback");
     }
   }
 
@@ -270,7 +266,7 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
   StatsRequest* request = StatsRequest::Get(aRequestId);
 
   if (!request) {
-    CSFLogError(LOGTAG, "Bad RequestId");
+    CSFLogError(logTag, "Bad RequestId");
     return;
   }
 
@@ -341,7 +337,7 @@ static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
   LogRequest* request = LogRequest::Get(aRequestId);
 
   if (!request) {
-    CSFLogError(LOGTAG, "Bad RequestId");
+    CSFLogError(logTag, "Bad RequestId");
     return;
   }
 
@@ -720,7 +716,7 @@ WebrtcGlobalParent::RecvGetStatsResult(const int& aRequestId,
   StatsRequest* request = StatsRequest::Get(aRequestId);
 
   if (!request) {
-    CSFLogError(LOGTAG, "Bad RequestId");
+    CSFLogError(logTag, "Bad RequestId");
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -764,7 +760,7 @@ WebrtcGlobalParent::RecvGetLogResult(const int& aRequestId,
   LogRequest* request = LogRequest::Get(aRequestId);
 
   if (!request) {
-    CSFLogError(LOGTAG, "Bad RequestId");
+    CSFLogError(logTag, "Bad RequestId");
     return IPC_FAIL_NO_REASON(this);
   }
   request->mResult.AppendElements(aLog, fallible);
@@ -783,7 +779,7 @@ WebrtcGlobalParent::RecvGetLogResult(const int& aRequestId,
 
   if (NS_FAILED(rv)) {
     //Unable to get gecko process log. Return what has been collected.
-    CSFLogError(LOGTAG, "Unable to extract chrome process log");
+    CSFLogError(logTag, "Unable to extract chrome process log");
     request->Complete();
     LogRequest::Delete(aRequestId);
   }
