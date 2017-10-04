@@ -28,7 +28,7 @@ exports.items = [
     description: l10n.lookup("measureDesc"),
     manual: l10n.lookup("measureManual"),
     buttonId: "command-button-measure",
-    buttonClass: "command-button command-button-invertable",
+    buttonClass: "command-button",
     tooltipText: l10n.lookup("measureTooltip"),
     state: {
       isChecked: (target) => CommandState.isEnabledForTarget(target, "measure"),
