@@ -195,10 +195,8 @@
   fill: var(--theme-toolbar-selected-color);
 }
 
-.devtools-tab:not(.highlighted) > .highlighted-icon,
-.devtools-tab.selected > .highlighted-icon,
-.devtools-tab:not(.selected).highlighted > .default-icon {
-  display: none;
+.devtools-tab:not(.selected).highlighted > img {
+  fill: var(--theme-toolbar-highlighted-color);
 }
 
 /* The options tab is special - it doesn't have the same parent
