@@ -17,7 +17,6 @@
 #define AVPixelFormat PixelFormat
 #define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
 #define AV_PIX_FMT_YUVJ420P PIX_FMT_YUVJ420P
-#define AV_PIX_FMT_YUV422P PIX_FMT_YUV422P
 #define AV_PIX_FMT_YUV444P PIX_FMT_YUV444P
 #define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
@@ -49,9 +48,6 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
       case AV_PIX_FMT_YUV444P:
         FFMPEG_LOG("Requesting pixel format YUV444P.");
         return AV_PIX_FMT_YUV444P;
-      case AV_PIX_FMT_YUV422P:
-        FFMPEG_LOG("Requesting pixel format YUV422P.");
-        return AV_PIX_FMT_YUV422P;
       case AV_PIX_FMT_YUV420P:
         FFMPEG_LOG("Requesting pixel format YUV420P.");
         return AV_PIX_FMT_YUV420P;
@@ -323,9 +319,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   b.mPlanes[0].mHeight = mFrame->height;
   if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
-    b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
-  } else if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV422P) {
-    b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
   } else {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
