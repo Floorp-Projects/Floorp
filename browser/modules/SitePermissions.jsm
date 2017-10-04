@@ -620,8 +620,6 @@ var gPermissionObject = {
     exactHostMatch: true
   },
 
-  "indexedDB": {},
-
   "focus-tab-by-prompt": {
     exactHostMatch: true,
     states: [ SitePermissions.UNKNOWN, SitePermissions.ALLOW ],

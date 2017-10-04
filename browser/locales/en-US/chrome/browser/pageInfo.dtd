@@ -59,9 +59,6 @@
 <!ENTITY  permissionsFor        "Permissions for:">
 <!ENTITY  permPlugins           "Activate Plugins">
 
-<!ENTITY  permClearStorage           "Clear Storage">
-<!ENTITY  permClearStorage.accesskey "C">
-
 <!ENTITY  securityTab           "Security">
 <!ENTITY  securityTab.accesskey "S">
 <!ENTITY  securityView.certView "View Certificate">
