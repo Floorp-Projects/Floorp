@@ -3146,10 +3146,12 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   };
 }
 
-nsDisplayBackgroundImage::nsDisplayBackgroundImage(const InitData& aInitData)
+nsDisplayBackgroundImage::nsDisplayBackgroundImage(const InitData& aInitData,
+                                                   nsIFrame* aFrameForBounds)
   : nsDisplayImageContainer(aInitData.builder, aInitData.frame)
   , mBackgroundStyle(aInitData.backgroundStyle)
   , mImage(aInitData.image)
+  , mDependentFrame(nullptr)
   , mBackgroundRect(aInitData.backgroundRect)
   , mFillRect(aInitData.fillArea)
   , mDestRect(aInitData.destArea)
@@ -3160,7 +3162,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(const InitData& aInitData)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
-  mBounds = GetBoundsInternal(aInitData.builder);
+  mBounds = GetBoundsInternal(aInitData.builder, aFrameForBounds);
   if (mShouldFixToViewport) {
     mAnimatedGeometryRoot = aInitData.builder->FindAnimatedGeometryRootFor(this);
 
@@ -3178,12 +3180,15 @@ nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_DTOR(nsDisplayBackgroundImage);
 #endif
+  if (mDependentFrame) {
+    mDependentFrame->RemoveDisplayItem(this);
+  }
 }
 
-static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
+static nsIFrame* GetBackgroundStyleContextFrame(nsIFrame* aFrame)
 {
-  nsStyleContext *sc;
-  if (!nsCSSRendering::FindBackground(aFrame, &sc)) {
+  nsIFrame* f;
+  if (!nsCSSRendering::FindBackgroundFrame(aFrame, &f)) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, other wise keep going in order to let the theme stuff
@@ -3198,9 +3203,9 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
       return nullptr;
     }
 
-    sc = aFrame->StyleContext();
+    f = aFrame;
   }
-  return sc;
+  return f;
 }
 
 /* static */ void
@@ -3278,9 +3283,16 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   }
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
+  nsIFrame* dependentFrame = nullptr;
   if (!isThemed) {
     if (!bgSC) {
-      bgSC = GetBackgroundStyleContext(aFrame);
+      dependentFrame = GetBackgroundStyleContextFrame(aFrame);
+      if (dependentFrame) {
+        bgSC = dependentFrame->StyleContext();
+        if (dependentFrame == aFrame) {
+          dependentFrame = nullptr;
+        }
+      }
     }
     if (bgSC) {
       bg = bgSC->StyleBackground();
@@ -3348,16 +3360,19 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         clipState->ClipContentDescendants(clip.mBGClipArea, clip.mRadii);
       }
     }
+    nsDisplayBackgroundColor *bgItem;
     if (aSecondaryReferenceFrame) {
-      bgItemList.AppendNewToTop(
+      bgItem =
           new (aBuilder) nsDisplayTableBackgroundColor(aBuilder, aSecondaryReferenceFrame, bgColorRect, bg,
                                                        drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0),
-                                                       aFrame));
+                                                       aFrame);
     } else {
-      bgItemList.AppendNewToTop(
+      bgItem =
           new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bgColorRect, bg,
-                                                  drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0)));
+                                                  drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0));
     }
+    bgItem->SetDependentFrame(aBuilder, dependentFrame);
+    bgItemList.AppendNewToTop(bgItem);
   }
 
   if (isThemed) {
@@ -3438,11 +3453,15 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
         if (aSecondaryReferenceFrame) {
-          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(bgData, aSecondaryReferenceFrame);
+          nsDisplayBackgroundImage::InitData tableData = bgData;
+          nsIFrame* styleFrame = tableData.frame;
+          tableData.frame = aSecondaryReferenceFrame;
+          bgItem = new (aBuilder) nsDisplayTableBackgroundImage(tableData, styleFrame);
         } else {
           bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
         }
       }
+      bgItem->SetDependentFrame(aBuilder, dependentFrame);
       if (aSecondaryReferenceFrame) {
         thisItemList.AppendNewToTop(
           nsDisplayTableFixedPosition::CreateForFixedBackground(aBuilder,
@@ -3456,13 +3475,18 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       }
 
     } else {
+      nsDisplayBackgroundImage* bgItem;
       if (aSecondaryReferenceFrame) {
-        thisItemList.AppendNewToTop(
-          new (aBuilder) nsDisplayTableBackgroundImage(bgData,
-                                                       aSecondaryReferenceFrame));
+        nsDisplayBackgroundImage::InitData tableData = bgData;
+        nsIFrame* styleFrame = tableData.frame;
+        tableData.frame = aSecondaryReferenceFrame;
+
+        bgItem = new (aBuilder) nsDisplayTableBackgroundImage(tableData, styleFrame);
       } else {
-        thisItemList.AppendNewToTop(new (aBuilder) nsDisplayBackgroundImage(bgData));
+        bgItem = new (aBuilder) nsDisplayBackgroundImage(bgData);
       }
+      bgItem->SetDependentFrame(aBuilder, dependentFrame);
+      thisItemList.AppendNewToTop(bgItem);
     }
 
     if (bg->mImage.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -3954,31 +3978,36 @@ nsDisplayBackgroundImage::GetBounds(nsDisplayListBuilder* aBuilder,
 }
 
 nsRect
-nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
-  nsPresContext* presContext = mFrame->PresContext();
+nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder,
+                                            nsIFrame* aFrameForBounds)
+{
+  // This allows nsDisplayTableBackgroundImage to change the frame used for
+  // bounds calculation.
+  nsIFrame* frame = aFrameForBounds ? aFrameForBounds : mFrame;
+
+  nsPresContext* presContext = frame->PresContext();
 
   if (!mBackgroundStyle) {
     return nsRect();
   }
 
   nsRect clipRect = mBackgroundRect;
-  if (mFrame->IsCanvasFrame()) {
-    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    clipRect = frame->CanvasArea() + ToReferenceFrame();
+  if (frame->IsCanvasFrame()) {
+    nsCanvasFrame* canvasFrame = static_cast<nsCanvasFrame*>(frame);
+    clipRect = canvasFrame->CanvasArea() + ToReferenceFrame();
   }
   const nsStyleImageLayers::Layer& layer = mBackgroundStyle->mImage.mLayers[mLayer];
-  return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
+  return nsCSSRendering::GetBackgroundLayerRect(presContext, frame,
                                                 mBackgroundRect, clipRect, layer,
                                                 aBuilder->GetBackgroundPaintFlags());
 }
 
 nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(const InitData& aData,
                                                              nsIFrame* aCellFrame)
-  : nsDisplayBackgroundImage(aData)
-  , mStyleFrame(aData.frame)
+  : nsDisplayBackgroundImage(aData, aCellFrame)
+  , mStyleFrame(aCellFrame)
   , mTableType(GetTableTypeFromFrame(mStyleFrame))
 {
-  mFrame = aCellFrame;
 }
 
 bool
