@@ -10,19 +10,14 @@ module.exports = createClass({
   displayName: "ToolboxTab",
 
   renderIcon(definition, isHighlighted) {
-    const {icon, highlightedicon} = definition;
+    const {icon} = definition;
     if (!icon) {
       return [];
     }
     return [
       img({
-        className: "default-icon",
         src: icon
       }),
-      img({
-        className: "highlighted-icon",
-        src: highlightedicon || icon
-      })
     ];
   },
 
