@@ -253,11 +253,10 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
+    Node newBinary(ParseNodeKind kind, Node left, Node right) {
         return NodeGeneric;
     }
-    Node appendOrCreateList(ParseNodeKind kind, Node left, Node right,
-                            ParseContext* pc, JSOp op = JSOP_NOP) {
+    Node appendOrCreateList(ParseNodeKind kind, Node left, Node right, ParseContext* pc) {
         return NodeGeneric;
     }
 
@@ -490,7 +489,7 @@ class SyntaxParseHandler
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs, JSOp op) {
         if (kind == PNK_ASSIGN)
             return NodeUnparenthesizedAssignment;
-        return newBinary(kind, lhs, rhs, op);
+        return newBinary(kind, lhs, rhs);
     }
 
     bool isUnparenthesizedCommaExpression(Node node) {
