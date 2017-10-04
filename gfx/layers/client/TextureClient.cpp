@@ -1256,12 +1256,9 @@ TextureClient::CreateForRawBufferAccess(LayersIPCChannel* aAllocator,
 already_AddRefed<TextureClient>
 TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
                               gfx::IntSize aYSize,
-                              uint32_t aYStride,
                               gfx::IntSize aCbCrSize,
-                              uint32_t aCbCrStride,
                               StereoMode aStereoMode,
                               YUVColorSpace aYUVColorSpace,
-                              uint32_t aDepth,
                               TextureFlags aTextureFlags)
 {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
@@ -1272,12 +1269,9 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
     return nullptr;
   }
 
-  TextureData* data =
-    BufferTextureData::CreateForYCbCr(aAllocator,
-                                      aYSize, aYStride,
-                                      aCbCrSize, aCbCrStride,
-                                      aStereoMode, aYUVColorSpace,
-                                      aDepth, aTextureFlags);
+  TextureData* data = BufferTextureData::CreateForYCbCr(aAllocator, aYSize, aCbCrSize,
+                                                        aStereoMode, aYUVColorSpace,
+                                                        aTextureFlags);
   if (!data) {
     return nullptr;
   }
@@ -1291,15 +1285,15 @@ already_AddRefed<TextureClient>
 TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
                                             size_t aSize,
                                             YUVColorSpace aYUVColorSpace,
-                                            uint32_t aDepth,
                                             TextureFlags aTextureFlags)
 {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }
 
-  TextureData* data = BufferTextureData::CreateForYCbCrWithBufferSize(
-    aAllocator, aSize, aYUVColorSpace, aDepth, aTextureFlags);
+  TextureData* data =
+    BufferTextureData::CreateForYCbCrWithBufferSize(aAllocator, aSize, aYUVColorSpace,
+                                                    aTextureFlags);
   if (!data) {
     return nullptr;
   }
@@ -1308,28 +1302,26 @@ TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
                                       aAllocator->GetTextureForwarder());
 }
 
-TextureClient::TextureClient(TextureData* aData,
-                             TextureFlags aFlags,
-                             LayersIPCChannel* aAllocator)
-  : AtomicRefCountedWithFinalize("TextureClient")
-  , mAllocator(aAllocator)
-  , mActor(nullptr)
-  , mData(aData)
-  , mFlags(aFlags)
-  , mOpenMode(OpenMode::OPEN_NONE)
+TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, LayersIPCChannel* aAllocator)
+: AtomicRefCountedWithFinalize("TextureClient")
+, mAllocator(aAllocator)
+, mActor(nullptr)
+, mData(aData)
+, mFlags(aFlags)
+, mOpenMode(OpenMode::OPEN_NONE)
 #ifdef DEBUG
-  , mExpectedDtRefs(0)
+, mExpectedDtRefs(0)
 #endif
-  , mIsLocked(false)
-  , mIsReadLocked(false)
-  , mUpdated(false)
-  , mAddedToCompositableClient(false)
-  , mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false)
-  , mWorkaroundAnnoyingSharedSurfaceOwnershipIssues(false)
-  , mFwdTransactionId(0)
-  , mSerial(++sSerialCounter)
+, mIsLocked(false)
+, mIsReadLocked(false)
+, mUpdated(false)
+, mAddedToCompositableClient(false)
+, mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false)
+, mWorkaroundAnnoyingSharedSurfaceOwnershipIssues(false)
+, mFwdTransactionId(0)
+, mSerial(++sSerialCounter)
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
-  , mPoolTracker(nullptr)
+, mPoolTracker(nullptr)
 #endif
 {
   mData->FillInfo(mInfo);
@@ -1765,18 +1757,14 @@ UpdateYCbCrTextureClient(TextureClient* aTexture, const PlanarYCbCrData& aData)
   srcData.y.size = aData.mYSize;
   srcData.y.stride = aData.mYStride;
   srcData.y.skip = aData.mYSkip;
-  MOZ_ASSERT(aData.mDepth == 8 || (aData.mDepth > 8 && aData.mDepth <= 16));
-  srcData.y.bytesPerPixel = (aData.mDepth > 8) ? 2 : 1;
   srcData.cb.data = aData.mCbChannel;
   srcData.cb.size = aData.mCbCrSize;
   srcData.cb.stride = aData.mCbCrStride;
   srcData.cb.skip = aData.mCbSkip;
-  srcData.cb.bytesPerPixel = (aData.mDepth > 8) ? 2 : 1;
   srcData.cr.data = aData.mCrChannel;
   srcData.cr.size = aData.mCbCrSize;
   srcData.cr.stride = aData.mCbCrStride;
   srcData.cr.skip = aData.mCrSkip;
-  srcData.cr.bytesPerPixel = (aData.mDepth > 8) ? 2 : 1;
   srcData.metadata = nullptr;
 
   if (!srcData.CopyInto(mapped)) {
@@ -1821,19 +1809,15 @@ MappedYCbCrChannelData::CopyInto(MappedYCbCrChannelData& aDst)
       // fast-ish path
       memcpy(aDst.data + i * aDst.stride,
              data + i * stride,
-             size.width * bytesPerPixel);
+             size.width);
     } else {
       // slow path
       uint8_t* src = data + i * stride;
       uint8_t* dst = aDst.data + i * aDst.stride;
       for (int32_t j = 0; j < size.width; ++j) {
-        for (uint32_t k = 0; k < bytesPerPixel; ++k) {
-          *dst = *src;
-          src += 1;
-          dst += 1;
-        }
-        src += skip;
-        dst += aDst.skip;
+        *dst = *src;
+        src += 1 + skip;
+        dst += 1 + aDst.skip;
       }
     }
   }
