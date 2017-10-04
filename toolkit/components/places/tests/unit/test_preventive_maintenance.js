@@ -1331,6 +1331,32 @@ tests.push({
   },
 });
 
+tests.push({
+  name: "S.2",
+  desc: "drop tombstones for bookmarks that aren't deleted",
+
+  async setup() {
+    addBookmark(null, bs.TYPE_BOOKMARK, bs.bookmarksMenuFolder, null, null,
+                "", "bookmarkAAAA");
+
+    await PlacesUtils.withConnectionWrapper("Insert tombstones", db =>
+      db.executeTransaction(async function() {
+        for (let guid of ["bookmarkAAAA", "bookmarkBBBB"]) {
+          await db.executeCached(`
+            INSERT INTO moz_bookmarks_deleted(guid)
+            VALUES(:guid)`,
+            { guid });
+        }
+      })
+    );
+  },
+
+  async check() {
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    do_check_matches(tombstones.map(info => info.guid), ["bookmarkBBBB"]);
+  },
+});
+
 // ------------------------------------------------------------------------------
 
 tests.push({
