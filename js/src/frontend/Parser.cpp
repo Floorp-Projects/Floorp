@@ -7989,41 +7989,6 @@ Parser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yieldHand
     return seq;
 }
 
-static const JSOp ParseNodeKindToJSOp[] = {
-    JSOP_OR,
-    JSOP_AND,
-    JSOP_BITOR,
-    JSOP_BITXOR,
-    JSOP_BITAND,
-    JSOP_STRICTEQ,
-    JSOP_EQ,
-    JSOP_STRICTNE,
-    JSOP_NE,
-    JSOP_LT,
-    JSOP_LE,
-    JSOP_GT,
-    JSOP_GE,
-    JSOP_INSTANCEOF,
-    JSOP_IN,
-    JSOP_LSH,
-    JSOP_RSH,
-    JSOP_URSH,
-    JSOP_ADD,
-    JSOP_SUB,
-    JSOP_MUL,
-    JSOP_DIV,
-    JSOP_MOD,
-    JSOP_POW
-};
-
-static inline JSOp
-BinaryOpParseNodeKindToJSOp(ParseNodeKind pnk)
-{
-    MOZ_ASSERT(pnk >= PNK_BINOP_FIRST);
-    MOZ_ASSERT(pnk <= PNK_BINOP_LAST);
-    return ParseNodeKindToJSOp[pnk - PNK_BINOP_FIRST];
-}
-
 static ParseNodeKind
 BinaryOpTokenKindToParseNodeKind(TokenKind tok)
 {
@@ -8130,8 +8095,7 @@ Parser<ParseHandler, CharT>::orExpr1(InHandling inHandling, YieldHandling yieldH
         while (depth > 0 && Precedence(kindStack[depth - 1]) >= Precedence(pnk)) {
             depth--;
             ParseNodeKind combiningPnk = kindStack[depth];
-            JSOp combiningOp = BinaryOpParseNodeKindToJSOp(combiningPnk);
-            pn = handler.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc, combiningOp);
+            pn = handler.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc);
             if (!pn)
                 return pn;
         }

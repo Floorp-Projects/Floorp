@@ -1734,7 +1734,7 @@ class ASTSerializer
         return StringValue(atom ? atom : cx->names().empty);
     }
 
-    BinaryOperator binop(ParseNodeKind kind, JSOp op);
+    BinaryOperator binop(ParseNodeKind kind);
     UnaryOperator unop(ParseNodeKind kind, JSOp op);
     AssignmentOperator aop(JSOp op);
 
@@ -1906,7 +1906,7 @@ ASTSerializer::unop(ParseNodeKind kind, JSOp op)
 }
 
 BinaryOperator
-ASTSerializer::binop(ParseNodeKind kind, JSOp op)
+ASTSerializer::binop(ParseNodeKind kind)
 {
     switch (kind) {
       case PNK_LSH:
@@ -2632,7 +2632,7 @@ ASTSerializer::leftAssociate(ParseNode* pn, MutableHandleValue dst)
             if (!builder.logicalExpression(lor, left, right, &subpos, &left))
                 return false;
         } else {
-            BinaryOperator op = binop(pn->getKind(), pn->getOp());
+            BinaryOperator op = binop(pn->getKind());
             LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
 
             if (!builder.binaryExpression(op, left, right, &subpos, &left))
@@ -2676,7 +2676,7 @@ ASTSerializer::rightAssociate(ParseNode* pn, MutableHandleValue dst)
 
         TokenPos subpos(pn->pn_pos.begin, next->pn_pos.end);
 
-        BinaryOperator op = binop(pn->getKind(), pn->getOp());
+        BinaryOperator op = binop(pn->getKind());
         LOCAL_ASSERT(op > BINOP_ERR && op < BINOP_LIMIT);
 
         if (!builder.binaryExpression(op, left, right, &subpos, &right))

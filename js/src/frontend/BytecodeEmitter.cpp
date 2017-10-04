@@ -9676,6 +9676,41 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
     return true;
 }
 
+static const JSOp ParseNodeKindToJSOp[] = {
+    JSOP_OR,
+    JSOP_AND,
+    JSOP_BITOR,
+    JSOP_BITXOR,
+    JSOP_BITAND,
+    JSOP_STRICTEQ,
+    JSOP_EQ,
+    JSOP_STRICTNE,
+    JSOP_NE,
+    JSOP_LT,
+    JSOP_LE,
+    JSOP_GT,
+    JSOP_GE,
+    JSOP_INSTANCEOF,
+    JSOP_IN,
+    JSOP_LSH,
+    JSOP_RSH,
+    JSOP_URSH,
+    JSOP_ADD,
+    JSOP_SUB,
+    JSOP_MUL,
+    JSOP_DIV,
+    JSOP_MOD,
+    JSOP_POW
+};
+
+static inline JSOp
+BinaryOpParseNodeKindToJSOp(ParseNodeKind pnk)
+{
+    MOZ_ASSERT(pnk >= PNK_BINOP_FIRST);
+    MOZ_ASSERT(pnk <= PNK_BINOP_LAST);
+    return ParseNodeKindToJSOp[pnk - PNK_BINOP_FIRST];
+}
+
 bool
 BytecodeEmitter::emitRightAssociative(ParseNode* pn)
 {
@@ -9703,7 +9738,7 @@ BytecodeEmitter::emitLeftAssociative(ParseNode* pn)
     // Left-associative operator chain.
     if (!emitTree(pn->pn_head))
         return false;
-    JSOp op = pn->getOp();
+    JSOp op = BinaryOpParseNodeKindToJSOp(pn->getKind());
     ParseNode* nextExpr = pn->pn_head->pn_next;
     do {
         if (!emitTree(nextExpr))
@@ -9718,6 +9753,7 @@ bool
 BytecodeEmitter::emitLogical(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isArity(PN_LIST));
+    MOZ_ASSERT(pn->isKind(PNK_OR) || pn->isKind(PNK_AND));
 
     /*
      * JSOP_OR converts the operand on the stack to boolean, leaves the original
@@ -9735,7 +9771,7 @@ BytecodeEmitter::emitLogical(ParseNode* pn)
     ParseNode* pn2 = pn->pn_head;
     if (!emitTree(pn2))
         return false;
-    JSOp op = pn->getOp();
+    JSOp op = pn->isKind(PNK_OR) ? JSOP_OR : JSOP_AND;
     JumpList jump;
     if (!emitJump(op, &jump))
         return false;
