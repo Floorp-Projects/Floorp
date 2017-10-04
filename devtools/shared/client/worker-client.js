@@ -4,9 +4,9 @@
 
 "use strict";
 
-const {DebuggerClient} = require("./debugger-client");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const eventSource = require("./event-source");
+const eventSource = require("devtools/shared/client/event-source");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
 const noop = () => {};

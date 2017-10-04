@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("./debugger-client");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * A ArrayBufferClient provides a way to access ArrayBuffer from the
