@@ -623,12 +623,11 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 }
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
-                                       const wr::LayoutSize& aContentSize,
-                                       size_t aCapacity)
+                                       const wr::LayoutSize& aContentSize)
   : mMaskClipCount(0)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aId, aContentSize, aCapacity);
+  mWrState = wr_state_new(aId, aContentSize);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
