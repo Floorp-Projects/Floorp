@@ -706,6 +706,11 @@ class MemoryCounter
         bytes_ -= bytes;
     }
 
+    void adopt(MemoryCounter<T>& other) {
+        bytes_ += other.bytes();
+        other.reset();
+    }
+
     ptrdiff_t bytes() const { return bytes_; }
     size_t maxBytes() const { return maxBytes_; }
     size_t initialMaxBytes(const AutoLockGC& lock) const { return initialMaxBytes_; }
