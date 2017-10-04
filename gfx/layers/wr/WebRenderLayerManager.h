@@ -16,7 +16,7 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
-#include "mozilla/layers/WebRenderCommandsBuilder.h"
+#include "mozilla/layers/WebRenderCommandBuilder.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -150,8 +150,9 @@ public:
 
   bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
                                                 const ScrollUpdateInfo& aUpdateInfo) override;
-  WebRenderCommandsBuilder& CommandBuilder() { return mWebRenderCommandsBuilder; }
-  WebRenderUserDataRefTable* GetWebRenderUserDataTable() { return mWebRenderCommandsBuilder.GetWebRenderUserDataTable(); }
+
+  WebRenderCommandBuilder& CommandBuilder() { return mWebRenderCommandBuilder; }
+  WebRenderUserDataRefTable* GetWebRenderUserDataTable() { return mWebRenderCommandBuilder.GetWebRenderUserDataTable(); }
   WebRenderScrollData& GetScrollData() { return mScrollData; }
 
 private:
@@ -196,21 +197,21 @@ private:
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
 
- // When we're doing a transaction in order to draw to a non-default
- // target, the layers transaction is only performed in order to send
- // a PLayers:Update.  We save the original non-default target to
- // mTarget, and then perform the transaction. After the transaction ends,
- // we send a message to our remote side to capture the actual pixels
- // being drawn to the default target, and then copy those pixels
- // back to mTarget.
- RefPtr<gfxContext> mTarget;
+  // When we're doing a transaction in order to draw to a non-default
+  // target, the layers transaction is only performed in order to send
+  // a PLayers:Update.  We save the original non-default target to
+  // mTarget, and then perform the transaction. After the transaction ends,
+  // we send a message to our remote side to capture the actual pixels
+  // being drawn to the default target, and then copy those pixels
+  // back to mTarget.
+  RefPtr<gfxContext> mTarget;
 
   // See equivalent field in ClientLayerManager
   uint32_t mPaintSequenceNumber;
   // See equivalent field in ClientLayerManager
   APZTestData mApzTestData;
 
-  WebRenderCommandsBuilder mWebRenderCommandsBuilder;
+  WebRenderCommandBuilder mWebRenderCommandBuilder;
 };
 
 } // namespace layers

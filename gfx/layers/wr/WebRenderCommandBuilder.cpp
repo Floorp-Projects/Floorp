@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebRenderCommandsBuilder.h"
+#include "WebRenderCommandBuilder.h"
 
 #include "BasicLayers.h"
 #include "mozilla/gfx/2D.h"
@@ -23,19 +23,19 @@
 namespace mozilla {
 namespace layers {
 
-void WebRenderCommandsBuilder::Destroy()
+void WebRenderCommandBuilder::Destroy()
 {
   mLastCanvasDatas.Clear();
   RemoveUnusedAndResetWebRenderUserData();
 }
 
 void
-WebRenderCommandsBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                                 wr::IpcResourceUpdateQueue& aResourceUpdates,
-                                                 nsDisplayList* aDisplayList,
-                                                 nsDisplayListBuilder* aDisplayListBuilder,
-                                                 WebRenderScrollData& aScrollData,
-                                                 wr::LayoutSize& aContentSize)
+WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                wr::IpcResourceUpdateQueue& aResourceUpdates,
+                                                nsDisplayList* aDisplayList,
+                                                nsDisplayListBuilder* aDisplayListBuilder,
+                                                WebRenderScrollData& aScrollData,
+                                                wr::LayoutSize& aContentSize)
 {
   { // scoping for StackingContextHelper RAII
 
@@ -86,11 +86,11 @@ WebRenderCommandsBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilde
 }
 
 void
-WebRenderCommandsBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
-                                                                 nsDisplayListBuilder* aDisplayListBuilder,
-                                                                 const StackingContextHelper& aSc,
-                                                                 wr::DisplayListBuilder& aBuilder,
-                                                                 wr::IpcResourceUpdateQueue& aResources)
+WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
+                                                                nsDisplayListBuilder* aDisplayListBuilder,
+                                                                const StackingContextHelper& aSc,
+                                                                wr::DisplayListBuilder& aBuilder,
+                                                                wr::IpcResourceUpdateQueue& aResources)
 {
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
   EventRegions eventRegions;
@@ -108,7 +108,6 @@ WebRenderCommandsBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* 
         continue;
       }
     }
-
 
     // Peek ahead to the next item and try merging with it or swapping with it
     // if necessary.
@@ -239,12 +238,12 @@ WebRenderCommandsBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* 
 }
 
 Maybe<wr::ImageKey>
-WebRenderCommandsBuilder::CreateImageKey(nsDisplayItem* aItem,
-                                         ImageContainer* aContainer,
-                                         mozilla::wr::DisplayListBuilder& aBuilder,
-                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                         const StackingContextHelper& aSc,
-                                         gfx::IntSize& aSize)
+WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
+                                        ImageContainer* aContainer,
+                                        mozilla::wr::DisplayListBuilder& aBuilder,
+                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                        const StackingContextHelper& aSc,
+                                        gfx::IntSize& aSize)
 {
   RefPtr<WebRenderImageData> imageData = CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
   MOZ_ASSERT(imageData);
@@ -288,12 +287,12 @@ WebRenderCommandsBuilder::CreateImageKey(nsDisplayItem* aItem,
 }
 
 bool
-WebRenderCommandsBuilder::PushImage(nsDisplayItem* aItem,
-                                    ImageContainer* aContainer,
-                                    mozilla::wr::DisplayListBuilder& aBuilder,
-                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                    const StackingContextHelper& aSc,
-                                    const LayerRect& aRect)
+WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
+                                   ImageContainer* aContainer,
+                                   mozilla::wr::DisplayListBuilder& aBuilder,
+                                   mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                   const StackingContextHelper& aSc,
+                                   const LayerRect& aRect)
 {
   gfx::IntSize size;
   Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer,
@@ -390,12 +389,12 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 }
 
 already_AddRefed<WebRenderFallbackData>
-WebRenderCommandsBuilder::GenerateFallbackData(nsDisplayItem* aItem,
-                                               wr::DisplayListBuilder& aBuilder,
-                                               wr::IpcResourceUpdateQueue& aResources,
-                                               const StackingContextHelper& aSc,
-                                               nsDisplayListBuilder* aDisplayListBuilder,
-                                               LayerRect& aImageRect)
+WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
+                                              wr::DisplayListBuilder& aBuilder,
+                                              wr::IpcResourceUpdateQueue& aResources,
+                                              const StackingContextHelper& aSc,
+                                              nsDisplayListBuilder* aDisplayListBuilder,
+                                              LayerRect& aImageRect)
 {
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
@@ -500,7 +499,6 @@ WebRenderCommandsBuilder::GenerateFallbackData(nsDisplayItem* aItem,
         }
       }
 
-
       // Force update the key in fallback data since we repaint the image in this path.
       // If not force update, fallbackData may reuse the original key because it
       // doesn't know UpdateImageHelper already updated the image container.
@@ -523,12 +521,12 @@ WebRenderCommandsBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 }
 
 Maybe<wr::WrImageMask>
-WebRenderCommandsBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
-                                           wr::DisplayListBuilder& aBuilder,
-                                           wr::IpcResourceUpdateQueue& aResources,
-                                           const StackingContextHelper& aSc,
-                                           nsDisplayListBuilder* aDisplayListBuilder,
-                                           const LayerRect& aBounds)
+WebRenderCommandBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
+                                          wr::DisplayListBuilder& aBuilder,
+                                          wr::IpcResourceUpdateQueue& aResources,
+                                          const StackingContextHelper& aSc,
+                                          nsDisplayListBuilder* aDisplayListBuilder,
+                                          const LayerRect& aBounds)
 {
   LayerRect imageRect;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
@@ -546,11 +544,11 @@ WebRenderCommandsBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
 }
 
 bool
-WebRenderCommandsBuilder::PushItemAsImage(nsDisplayItem* aItem,
-                                          wr::DisplayListBuilder& aBuilder,
-                                          wr::IpcResourceUpdateQueue& aResources,
-                                          const StackingContextHelper& aSc,
-                                          nsDisplayListBuilder* aDisplayListBuilder)
+WebRenderCommandBuilder::PushItemAsImage(nsDisplayItem* aItem,
+                                         wr::DisplayListBuilder& aBuilder,
+                                         wr::IpcResourceUpdateQueue& aResources,
+                                         const StackingContextHelper& aSc,
+                                         nsDisplayListBuilder* aDisplayListBuilder)
 {
   LayerRect imageRect;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
@@ -571,7 +569,7 @@ WebRenderCommandsBuilder::PushItemAsImage(nsDisplayItem* aItem,
 }
 
 void
-WebRenderCommandsBuilder::RemoveUnusedAndResetWebRenderUserData()
+WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData()
 {
   for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
     WebRenderUserData* data = iter.Get()->GetKey();
@@ -605,4 +603,3 @@ WebRenderCommandsBuilder::RemoveUnusedAndResetWebRenderUserData()
 
 } // namespace layers
 } // namespace mozilla
-
