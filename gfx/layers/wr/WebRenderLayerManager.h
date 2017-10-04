@@ -351,8 +351,6 @@ private:
   CanvasDataSet mLastCanvasDatas;
 
   WebRenderUserDataRefTable mWebRenderUserDatas;
-
-  size_t mLastDisplayListSize;
 };
 
 } // namespace layers

@@ -202,8 +202,7 @@ protected:
 class DisplayListBuilder {
 public:
   explicit DisplayListBuilder(wr::PipelineId aId,
-                              const wr::LayoutSize& aContentSize,
-                              size_t aCapacity = 0);
+                              const wr::LayoutSize& aContentSize);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
