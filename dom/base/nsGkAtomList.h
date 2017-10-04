@@ -2307,7 +2307,6 @@ GK_ATOM(_moz_device_pixel_ratio, "-moz-device-pixel-ratio")
 GK_ATOM(_moz_device_orientation, "-moz-device-orientation")
 GK_ATOM(_moz_is_resource_document, "-moz-is-resource-document")
 GK_ATOM(_moz_swipe_animation_enabled, "-moz-swipe-animation-enabled")
-GK_ATOM(_moz_physical_home_button, "-moz-physical-home-button")
 
 // application commands
 GK_ATOM(Back, "Back")
