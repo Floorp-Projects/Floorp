@@ -443,7 +443,9 @@ struct Zone : public JS::shadow::Zone,
     }
 
     void resetGCMallocBytes() { gcMallocCounter.reset(); }
-    void setGCMaxMallocBytes(size_t value) { gcMallocCounter.setMax(value); }
+    void setGCMaxMallocBytes(size_t value, const js::AutoLockGC& lock) {
+        gcMallocCounter.setMax(value, lock);
+    }
     void updateMallocCounter(size_t nbytes) {
         if (!runtime_->gc.updateMallocCounter(nbytes))
             gcMallocCounter.update(this, nbytes);
