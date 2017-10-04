@@ -1,20 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
-
 import json
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import urllib2
 import zipfile
 import hashlib
 from xml.dom import minidom
-
-from six import reraise
 
 import mozfile
 from mozlog.unstructured import getLogger
@@ -320,7 +315,7 @@ class AddonManager(object):
             else:
                 raise IOError('Add-on path is neither an XPI nor a directory: %s' % addon_path)
         except (IOError, KeyError) as e:
-            reraise(AddonFormatError(str(e)), None, sys.exc_info()[2])
+            raise AddonFormatError(str(e)), None, sys.exc_info()[2]
 
         if is_webext:
             details['version'] = manifest['version']
@@ -350,7 +345,7 @@ class AddonManager(object):
                     if entry in details.keys():
                         details.update({entry: get_text(node)})
             except Exception as e:
-                reraise(AddonFormatError(str(e)), None, sys.exc_info()[2])
+                raise AddonFormatError(str(e)), None, sys.exc_info()[2]
 
         # turn unpack into a true/false value
         if isinstance(details['unpack'], basestring):

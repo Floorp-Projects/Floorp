@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function
-
-
 from ConfigParser import (
     ConfigParser,
     RawConfigParser
@@ -92,7 +89,7 @@ class Device(object):
                 break
             time.sleep(1)
         else:
-            print("timed out waiting for profiles.ini")
+            print "timed out waiting for profiles.ini"
 
         local_profiles_ini = tempfile.NamedTemporaryFile()
         self.dm.getFile(self.app_ctx.remote_profiles_ini, local_profiles_ini.name)
@@ -178,7 +175,7 @@ class Device(object):
         :param busybox: Path to busybox binary to install.
         """
         self.dm.remount()
-        print('pushing %s' % self.app_ctx.remote_busybox)
+        print 'pushing %s' % self.app_ctx.remote_busybox
         self.dm.pushFile(busybox, self.app_ctx.remote_busybox, retryLimit=10)
         # TODO for some reason using dm.shellCheckOutput doesn't work,
         #      while calling adb shell directly does.
