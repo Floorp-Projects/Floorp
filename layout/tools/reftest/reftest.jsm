@@ -668,14 +668,7 @@ function BuildConditionSandbox(aURL) {
     var env = CC["@mozilla.org/process/environment;1"].
                 getService(CI.nsIEnvironment);
 
-    // xr.XPCOMABI throws exception for configurations without full ABI
-    // support (mobile builds on ARM)
-    var XPCOMABI = "";
-    try {
-        XPCOMABI = xr.XPCOMABI;
-    } catch(e) {}
-
-    sandbox.xulRuntime = CU.cloneInto({widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: XPCOMABI}, sandbox);
+    sandbox.xulRuntime = CU.cloneInto({widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: xr.XPCOMABI}, sandbox);
 
     var testRect = gBrowser.getBoundingClientRect();
     sandbox.smallScreen = false;
