@@ -263,8 +263,7 @@ async function scheduleMac(name, base, args = "") {
     },
     provisioner: "localprovisioner",
     workerType: "nss-macos-10-12",
-    platform: "mac",
-    tier: 3
+    platform: "mac"
   });
 
   // Build base definition.

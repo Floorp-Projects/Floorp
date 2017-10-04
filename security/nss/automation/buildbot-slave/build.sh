@@ -236,11 +236,14 @@ check_abi()
     BASE_NSPR=NSPR_$(head -1 ${HGDIR}/baseline/nss/automation/release/nspr-version.txt | cut -d . -f 1-2 | tr . _)_BRANCH
     hg clone -u "${BASE_NSPR}" "${HGDIR}/nspr" "${HGDIR}/baseline/nspr"
     if [ $? -ne 0 ]; then
-        echo "invalid tag ${BASE_NSPR} derived from ${BASE_NSS} automation/release/nspr-version.txt"
-        return 1
+        echo "nonexisting tag ${BASE_NSPR} derived from ${BASE_NSS} automation/release/nspr-version.txt"
+        # Assume that version hasn't been released yet, fall back to trunk
+        pushd "${HGDIR}/baseline/nspr"
+        hg update default
+        popd
     fi
 
-    print_log "######## building older NSPR/NSS ########"
+    print_log "######## building baseline NSPR/NSS ########"
     pushd ${HGDIR}/baseline/nss
 
     print_log "$ ${MAKE} ${NSS_BUILD_TARGET}"
