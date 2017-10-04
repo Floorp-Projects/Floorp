@@ -661,6 +661,9 @@ class MemoryCounter
     // GC trigger threshold for memory allocations.
     size_t maxBytes_;
 
+    // Initial GC trigger threshold.
+    GCLockData<size_t> initialMaxBytes_;
+
     // Whether a GC has been triggered as a result of bytes_ exceeding
     // maxBytes_.
     mozilla::Atomic<bool, mozilla::ReleaseAcquire> triggered_;
@@ -669,18 +672,23 @@ class MemoryCounter
     MemoryCounter()
       : bytes_(0),
         maxBytes_(0),
+        initialMaxBytes_(0),
         triggered_(false)
     { }
 
-    void reset() {
-        bytes_ = 0;
-        triggered_ = false;
+    void updateOnGC(const AutoLockGC& lock) {
+        if (isTooMuchMalloc())
+            maxBytes_ *= 2;
+        else
+            maxBytes_ = std::max(initialMaxBytes_.ref(), size_t(maxBytes_ * 0.9));
+        reset();
     }
 
     void setMax(size_t newMax, const AutoLockGC& lock) {
         // For compatibility treat any value that exceeds PTRDIFF_T_MAX to
         // mean that value.
-        maxBytes_ = (ptrdiff_t(newMax) >= 0) ? newMax : size_t(-1) >> 1;
+        initialMaxBytes_ = (ptrdiff_t(newMax) >= 0) ? newMax : size_t(-1) >> 1;
+        maxBytes_ = initialMaxBytes_;
         reset();
     }
 
@@ -693,9 +701,21 @@ class MemoryCounter
         return triggered_;
     }
 
+    void decrement(size_t bytes) {
+        MOZ_ASSERT(bytes <= bytes_);
+        bytes_ -= bytes;
+    }
+
     ptrdiff_t bytes() const { return bytes_; }
     size_t maxBytes() const { return maxBytes_; }
+    size_t initialMaxBytes(const AutoLockGC& lock) const { return initialMaxBytes_; }
     bool isTooMuchMalloc() const { return bytes_ >= maxBytes_; }
+
+  private:
+    void reset() {
+        bytes_ = 0;
+        triggered_ = false;
+    }
 };
 
 class GCRuntime
@@ -841,9 +861,9 @@ class GCRuntime
     int32_t getMallocBytes() const { return mallocCounter.bytes(); }
     size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
     bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }
-    void resetMallocBytes() { mallocCounter.reset(); }
     void setMaxMallocBytes(size_t value, const AutoLockGC& lock);
     bool updateMallocCounter(size_t nbytes) { return mallocCounter.update(this, nbytes); }
+    void updateMallocCountersOnGC();
 
     void setGCCallback(JSGCCallback callback, void* data);
     void callGCCallback(JSGCStatus status) const;
