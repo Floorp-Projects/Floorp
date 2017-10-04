@@ -173,6 +173,11 @@ SlicedInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
     aCount = mStart + mLength - mCurPos;
   }
 
+  // Nothing else to read.
+  if (!aCount) {
+    return NS_OK;
+  }
+
   nsresult rv = mInputStream->Read(aBuffer, aCount, aReadCount);
   if (NS_WARN_IF(NS_FAILED(rv)) || *aReadCount == 0) {
     return rv;
