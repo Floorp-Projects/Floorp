@@ -1406,39 +1406,13 @@ nsIDocument::SelectorCache::~SelectorCache()
   AgeAllGenerations();
 }
 
-void
-nsIDocument::SelectorCache::SelectorList::Reset()
-{
-  if (mIsServo) {
-    if (mServo) {
-      Servo_SelectorList_Drop(mServo);
-      mServo = nullptr;
-    }
-  } else {
-    if (mGecko) {
-      delete mGecko;
-      mGecko = nullptr;
-    }
-  }
-}
-
 // CacheList takes ownership of aSelectorList.
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
-                                           mozilla::UniquePtr<nsCSSSelectorList>&& aSelectorList)
+                                           nsCSSSelectorList* aSelectorList)
 {
   MOZ_ASSERT(NS_IsMainThread());
   SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-  mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
-  AddObject(key);
-}
-
-void nsIDocument::SelectorCache::CacheList(
-  const nsAString& aSelector,
-  UniquePtr<RawServoSelectorList>&& aSelectorList)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-  mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
+  mTable.Put(key->mKey, aSelectorList);
   AddObject(key);
 }
 
