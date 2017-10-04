@@ -97,7 +97,7 @@ class FullParseHandler
 
     ParseNode* newComputedName(ParseNode* expr, uint32_t begin, uint32_t end) {
         TokenPos pos(begin, end);
-        return new_<UnaryNode>(PNK_COMPUTED_NAME, JSOP_NOP, pos, expr);
+        return new_<UnaryNode>(PNK_COMPUTED_NAME, pos, expr);
     }
 
     ParseNode* newObjectLiteralPropertyName(JSAtom* atom, const TokenPos& pos) {
@@ -199,22 +199,22 @@ class FullParseHandler
 
     ParseNode* newUnary(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
         TokenPos pos(begin, kid->pn_pos.end);
-        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
+        return new_<UnaryNode>(kind, pos, kid);
     }
 
     ParseNode* newUpdate(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
         TokenPos pos(begin, kid->pn_pos.end);
-        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
+        return new_<UnaryNode>(kind, pos, kid);
     }
 
     ParseNode* newSpread(uint32_t begin, ParseNode* kid) {
         TokenPos pos(begin, kid->pn_pos.end);
-        return new_<UnaryNode>(PNK_SPREAD, JSOP_NOP, pos, kid);
+        return new_<UnaryNode>(PNK_SPREAD, pos, kid);
     }
 
     ParseNode* newArrayPush(uint32_t begin, ParseNode* kid) {
         TokenPos pos(begin, kid->pn_pos.end);
-        return new_<UnaryNode>(PNK_ARRAYPUSH, JSOP_ARRAYPUSH, pos, kid);
+        return new_<UnaryNode>(PNK_ARRAYPUSH, pos, kid);
     }
 
     ParseNode* newBinary(ParseNodeKind kind, ParseNode* left, ParseNode* right,
@@ -307,7 +307,7 @@ class FullParseHandler
         return new_<NullaryNode>(PNK_POSHOLDER, pos);
     }
     ParseNode* newSuperBase(ParseNode* thisName, const TokenPos& pos) {
-        return new_<UnaryNode>(PNK_SUPERBASE, JSOP_NOP, pos, thisName);
+        return new_<UnaryNode>(PNK_SUPERBASE, pos, thisName);
     }
 
     MOZ_MUST_USE bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
@@ -399,22 +399,22 @@ class FullParseHandler
 
     ParseNode* newInitialYieldExpression(uint32_t begin, ParseNode* gen) {
         TokenPos pos(begin, begin + 1);
-        return new_<UnaryNode>(PNK_INITIALYIELD, JSOP_INITIALYIELD, pos, gen);
+        return new_<UnaryNode>(PNK_INITIALYIELD, pos, gen);
     }
 
     ParseNode* newYieldExpression(uint32_t begin, ParseNode* value) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
-        return new_<UnaryNode>(PNK_YIELD, JSOP_YIELD, pos, value);
+        return new_<UnaryNode>(PNK_YIELD, pos, value);
     }
 
     ParseNode* newYieldStarExpression(uint32_t begin, ParseNode* value) {
         TokenPos pos(begin, value->pn_pos.end);
-        return new_<UnaryNode>(PNK_YIELD_STAR, JSOP_NOP, pos, value);
+        return new_<UnaryNode>(PNK_YIELD_STAR, pos, value);
     }
 
     ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
-        return new_<UnaryNode>(PNK_AWAIT, JSOP_AWAIT, pos, value);
+        return new_<UnaryNode>(PNK_AWAIT, pos, value);
     }
 
     // Statements
@@ -487,7 +487,7 @@ class FullParseHandler
     }
 
     ParseNode* newEmptyStatement(const TokenPos& pos) {
-        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, pos, (ParseNode*) nullptr);
+        return new_<UnaryNode>(PNK_SEMI, pos, nullptr);
     }
 
     ParseNode* newImportDeclaration(ParseNode* importSpecSet,
@@ -501,7 +501,7 @@ class FullParseHandler
     }
 
     ParseNode* newExportDeclaration(ParseNode* kid, const TokenPos& pos) {
-        return new_<UnaryNode>(PNK_EXPORT, JSOP_NOP, pos, kid);
+        return new_<UnaryNode>(PNK_EXPORT, pos, kid);
     }
 
     ParseNode* newExportFromDeclaration(uint32_t begin, ParseNode* exportSpecSet,
@@ -525,7 +525,7 @@ class FullParseHandler
 
     ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
-        return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos(expr->pn_pos.begin, end), expr);
+        return new_<UnaryNode>(PNK_SEMI, TokenPos(expr->pn_pos.begin, end), expr);
     }
 
     ParseNode* newIfStatement(uint32_t begin, ParseNode* cond, ParseNode* thenBranch,
@@ -610,11 +610,11 @@ class FullParseHandler
 
     ParseNode* newReturnStatement(ParseNode* expr, const TokenPos& pos) {
         MOZ_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
-        return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
+        return new_<UnaryNode>(PNK_RETURN, pos, expr);
     }
 
     ParseNode* newExpressionBody(ParseNode* expr) {
-        return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, expr->pn_pos, expr);
+        return new_<UnaryNode>(PNK_RETURN, expr->pn_pos, expr);
     }
 
     ParseNode* newWithStatement(uint32_t begin, ParseNode* expr, ParseNode* body) {
@@ -628,7 +628,7 @@ class FullParseHandler
 
     ParseNode* newThrowStatement(ParseNode* expr, const TokenPos& pos) {
         MOZ_ASSERT(pos.encloses(expr->pn_pos));
-        return new_<UnaryNode>(PNK_THROW, JSOP_THROW, pos, expr);
+        return new_<UnaryNode>(PNK_THROW, pos, expr);
     }
 
     ParseNode* newTryStatement(uint32_t begin, ParseNode* body, ParseNode* catchList,
