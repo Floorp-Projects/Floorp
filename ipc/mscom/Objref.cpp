@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 
 #include <guiddef.h>
@@ -112,6 +113,28 @@ enum OBJREF_FLAGS
 
 struct OBJREF
 {
+  static size_t SizeOfFixedLenHeader(OBJREF_FLAGS aFlags)
+  {
+    size_t size = sizeof(mSignature) + sizeof(mFlags) + sizeof(mIid);
+
+    switch (aFlags) {
+      case OBJREF_TYPE_STANDARD:
+        size += OBJREF_STANDARD::SizeOfFixedLenHeader();
+        break;
+      case OBJREF_TYPE_HANDLER:
+        size += OBJREF_HANDLER::SizeOfFixedLenHeader();
+        break;
+      case OBJREF_TYPE_CUSTOM:
+        size += OBJREF_CUSTOM::SizeOfFixedLenHeader();
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unsupported OBJREF type");
+        return 0;
+    }
+
+    return size;
+  }
+
   size_t SizeOf() const
   {
     size_t size = sizeof(mSignature) + sizeof(mFlags) + sizeof(mIid);
@@ -385,6 +408,35 @@ GetOBJREFSize(NotNull<IStream*> aStream)
 
   accumulatedSize += DUALSTRINGARRAY::SizeFromNumEntries(numEntries);
   return accumulatedSize;
+}
+
+bool
+SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid)
+{
+  ULARGE_INTEGER initialStreamPos;
+
+  LARGE_INTEGER seekTo;
+  seekTo.QuadPart = 0LL;
+  HRESULT hr = aStream->Seek(seekTo, STREAM_SEEK_CUR, &initialStreamPos);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  auto resetStreamPos = MakeScopeExit([&]() {
+    seekTo.QuadPart = initialStreamPos.QuadPart;
+    hr = aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr);
+    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
+  });
+
+  seekTo.QuadPart = aStart + sizeof(OBJREF::mSignature) + sizeof(OBJREF::mFlags);
+  hr = aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  ULONG bytesWritten;
+  hr = aStream->Write(&aNewIid, sizeof(IID), &bytesWritten);
+  return SUCCEEDED(hr) && bytesWritten == sizeof(IID);
 }
 
 } // namespace mscom
