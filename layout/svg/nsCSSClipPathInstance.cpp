@@ -69,6 +69,21 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
+/* static */ Rect
+nsCSSClipPathInstance::GetBoundingRectForBasicShapeClip(nsIFrame* aFrame,
+                                                        const StyleShapeSource& aClipPathStyle)
+{
+  MOZ_ASSERT(aClipPathStyle.GetType() == StyleShapeSourceType::Shape ||
+             aClipPathStyle.GetType() == StyleShapeSourceType::Box);
+
+  nsCSSClipPathInstance instance(aFrame, aClipPathStyle);
+
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  RefPtr<Path> path = instance.CreateClipPath(drawTarget);
+  return path->GetBounds();
+}
+
 already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
 {
