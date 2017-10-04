@@ -27,15 +27,6 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 
-// For HTTP seeking, if number of bytes needing to be
-// seeked forward is less than this value then a read is
-// done rather than a byte range request.
-//
-// If we assume a 100Mbit connection, and assume reissuing an HTTP seek causes
-// a delay of 200ms, then in that 200ms we could have simply read ahead 2MB. So
-// setting SEEK_VS_READ_THRESHOLD to 1MB sounds reasonable.
-static const int64_t SEEK_VS_READ_THRESHOLD = 1 * 1024 * 1024;
-
 class nsIHttpChannel;
 class nsIPrincipal;
 
