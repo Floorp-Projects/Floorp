@@ -100,7 +100,7 @@ addEventListener("load", function() {
   arrow.style.transition = "none";
 
   // and off we go...
-  countReflows(testSimplePanel, 1).then(SimpleTest.finish);
+  countReflows(testSimplePanel, 0).then(SimpleTest.finish);
 });
 ]]>
 </script>
