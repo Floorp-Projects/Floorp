@@ -9,7 +9,9 @@
 #include "BaseMediaResource.h"
 #include "MediaCache.h"
 #include "MediaChannelStatistics.h"
+#include "mozilla/Mutex.h"
 #include "nsIChannelEventSink.h"
+#include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIThreadRetargetableStreamListener.h"
 
