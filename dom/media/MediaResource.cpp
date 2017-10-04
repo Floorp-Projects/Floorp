@@ -12,6 +12,9 @@
 #include "FileMediaResource.h"
 #include "MediaResource.h"
 #include "MediaResourceCallback.h"
+#include "mozilla/Logging.h"
+#include "mozilla/SystemGroup.h"
+#include "mozilla/ErrorNames.h"
 
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
