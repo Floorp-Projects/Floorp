@@ -478,6 +478,9 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     return NS_ERROR_FAILURE;
 #endif
   }
+  else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DEV_DIR)) {
+    return GetSysUserExtensionsDevDirectory(aFile);
+  }
   else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
     bool persistent = false;
     rv = GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(file));
@@ -1522,6 +1525,23 @@ nsXREDirProvider::GetSysUserExtensionsDirectory(nsIFile** aFile)
   return NS_OK;
 }
 
+nsresult
+nsXREDirProvider::GetSysUserExtensionsDevDirectory(nsIFile** aFile)
+{
+  nsCOMPtr<nsIFile> localDir;
+  nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AppendSysUserExtensionsDevPath(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = EnsureDirectoryExists(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  localDir.forget(aFile);
+  return NS_OK;
+}
+
 #if defined(XP_UNIX) || defined(XP_MACOSX)
 nsresult
 nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
@@ -1625,6 +1645,39 @@ nsXREDirProvider::AppendSysUserExtensionPath(nsIFile* aFile)
 
 #else
 #error "Don't know how to get XRE user extension path on your platform"
+#endif
+  return NS_OK;
+}
+
+nsresult
+nsXREDirProvider::AppendSysUserExtensionsDevPath(nsIFile* aFile)
+{
+  MOZ_ASSERT(aFile);
+
+  nsresult rv;
+
+#if defined (XP_MACOSX) || defined(XP_WIN)
+
+  static const char* const sXR = "Mozilla";
+  rv = aFile->AppendNative(nsDependentCString(sXR));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const char* const sExtensions = "SystemExtensionsDev";
+  rv = aFile->AppendNative(nsDependentCString(sExtensions));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#elif defined(XP_UNIX)
+
+  static const char* const sXR = ".mozilla";
+  rv = aFile->AppendNative(nsDependentCString(sXR));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const char* const sExtensions = "systemextensionsdev";
+  rv = aFile->AppendNative(nsDependentCString(sExtensions));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#else
+#error "Don't know how to get XRE system extension dev path on your platform"
 #endif
   return NS_OK;
 }
