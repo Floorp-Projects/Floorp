@@ -10,7 +10,7 @@ const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManag
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
-     "geo", "image", "indexedDB", "install", "microphone", "popup", "screen"];
+     "geo", "image", "install", "microphone", "popup", "screen"];
   if (STORAGE_MANAGER_ENABLED) {
     // The persistent-storage permission is still only pref-on on Nightly
     // so we add it only when it's pref-on.
@@ -96,7 +96,7 @@ add_task(async function testExactHostMatch() {
     // Should remove this checking and add it as default after it is fully pref-on.
     exactHostMatched.push("persistent-storage");
   }
-  let nonExactHostMatched = ["image", "cookie", "popup", "install", "indexedDB"];
+  let nonExactHostMatched = ["image", "cookie", "popup", "install"];
 
   let permissions = SitePermissions.listPermissions();
   for (let permission of permissions) {
