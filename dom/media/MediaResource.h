@@ -36,8 +36,6 @@
 // setting SEEK_VS_READ_THRESHOLD to 1MB sounds reasonable.
 static const int64_t SEEK_VS_READ_THRESHOLD = 1 * 1024 * 1024;
 
-static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
-
 class nsIHttpChannel;
 class nsIPrincipal;
 

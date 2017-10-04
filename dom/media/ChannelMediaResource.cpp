@@ -14,6 +14,7 @@
 
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 static const uint32_t HTTP_OK_CODE = 200;
+static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
 // Debug logging macro with object pointer and class name.
