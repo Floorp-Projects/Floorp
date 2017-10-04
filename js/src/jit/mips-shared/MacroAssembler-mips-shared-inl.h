@@ -29,13 +29,13 @@ MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
 void
 MacroAssembler::move8SignExtend(Register src, Register dest)
 {
-    as_seb(dest, src);
+    ma_seb(dest, src);
 }
 
 void
 MacroAssembler::move16SignExtend(Register src, Register dest)
 {
-    as_seh(dest, src);
+    ma_seh(dest, src);
 }
 
 // ===============================================================
