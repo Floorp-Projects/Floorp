@@ -3,11 +3,11 @@
 
 "use strict";
 
-// Ensure target="_blank" link opens a new tab
+// Ensure Cmd/Ctrl-clicking link opens a new tab
 
 const TAB_URL = "http://example.com/";
 const TEST_URL =
-  `data:text/html,<a href="${TAB_URL}" target="_blank">Click me</a>`
+  `data:text/html,<a href="${TAB_URL}">Click me</a>`
   .replace(/ /g, "%20");
 
 addRDMTask(TEST_URL, function* ({ ui }) {
@@ -16,12 +16,13 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   // Wait until the viewport has been added
   yield waitUntilState(store, state => state.viewports.length == 1);
 
-  // Click the target="_blank" link and wait for a new tab
+  // Cmd-click the link and wait for a new tab
   yield waitForFrameLoad(ui, TEST_URL);
   let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, TAB_URL);
-  spawnViewportTask(ui, {}, function* () {
-    content.document.querySelector("a").click(); // eslint-disable-line
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("a", {
+    ctrlKey: true,
+    metaKey: true,
+  }, ui.getViewportBrowser());
   let newTab = yield newTabPromise;
   ok(newTab, "New tab opened from link");
   yield removeTab(newTab);
