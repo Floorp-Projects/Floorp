@@ -21,8 +21,7 @@ var gEditItemOverlay = {
     if (!("uris" in aInitInfo) && !("node" in aInitInfo))
       throw new Error("Neither node nor uris set for pane info");
 
-    // Once we stop supporting legacy add-ons the code should throw if a node is
-    // not passed.
+    // We either pass a node or uris.
     let node = "node" in aInitInfo ? aInitInfo.node : null;
 
     // Since there's no true UI for folder shortcuts (they show up just as their target
