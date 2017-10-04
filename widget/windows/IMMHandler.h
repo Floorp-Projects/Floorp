@@ -157,6 +157,8 @@ public:
   static void DefaultProcOfPluginEvent(nsWindow* aWindow,
                                        const NPEvent* aEvent);
 
+  static bool IsGoogleJapaneseInputActive();
+
 protected:
   static void EnsureHandlerInstance();
 
@@ -165,7 +167,6 @@ protected:
   static bool IsComposingWindow(nsWindow* aWindow);
 
   static bool IsJapanist2003Active();
-  static bool IsGoogleJapaneseInputActive();
 
   static bool ShouldDrawCompositionStringOurselves();
   static bool IsVerticalWritingSupported();

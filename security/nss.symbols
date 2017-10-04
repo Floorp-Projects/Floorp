@@ -263,6 +263,7 @@ NSS_Init
 NSS_Initialize
 NSS_InitWithMerge
 NSS_IsInitialized
+NSS_OptionGet
 NSS_OptionSet
 NSS_NoDB_Init
 NSS_SecureMemcmp

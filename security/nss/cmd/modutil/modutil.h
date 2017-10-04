@@ -29,6 +29,7 @@ Error AddModule(char *moduleName, char *libFile, char *ciphers,
 Error DeleteModule(char *moduleName);
 Error ListModule(char *moduleName);
 Error ListModules();
+Error InitPW(void);
 Error ChangePW(char *tokenName, char *pwFile, char *newpwFile);
 Error EnableModule(char *moduleName, char *slotName, PRBool enable);
 Error RawAddModule(char *dbmodulespec, char *modulespec);

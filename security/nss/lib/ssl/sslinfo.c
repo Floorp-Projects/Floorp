@@ -78,11 +78,22 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             /* Get these fromm |ss->sec| because that is accurate
              * even with TLS 1.3 disaggregated cipher suites. */
             inf.keaType = ss->sec.keaType;
-            inf.keaGroup = ss->sec.keaGroup ? ss->sec.keaGroup->name : ssl_grp_none;
+            inf.originalKeaGroup = ss->sec.originalKeaGroup
+                                       ? ss->sec.originalKeaGroup->name
+                                       : ssl_grp_none;
+            inf.keaGroup = ss->sec.keaGroup
+                               ? ss->sec.keaGroup->name
+                               : ssl_grp_none;
             inf.keaKeyBits = ss->sec.keaKeyBits;
             inf.authType = ss->sec.authType;
             inf.authKeyBits = ss->sec.authKeyBits;
             inf.signatureScheme = ss->sec.signatureScheme;
+            /* If this is a resumed session, signatureScheme isn't set in ss->sec.
+             * Use the signature scheme from the previous handshake. */
+            if (inf.signatureScheme == ssl_sig_none && sid->sigScheme) {
+                inf.signatureScheme = sid->sigScheme;
+            }
+            inf.resumed = ss->statelessResume || ss->ssl3.hs.isResuming;
         }
         if (sid) {
             unsigned int sidLen;
