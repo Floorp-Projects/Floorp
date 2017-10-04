@@ -369,8 +369,8 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
             return nullptr;
     }
 
-    AUTO_PROFILER_LABEL_DYNAMIC("mozJSComponentLoader::LoadModule", OTHER,
-                                spec.get());
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+      "mozJSComponentLoader::LoadModule", OTHER, spec);
 
     ModuleEntry* mod;
     if (mModules.Get(spec, &mod))
