@@ -4,8 +4,6 @@
 
 """Methods for testing interactions with mozharness."""
 
-from __future__ import absolute_import
-
 import json
 import os
 import sys

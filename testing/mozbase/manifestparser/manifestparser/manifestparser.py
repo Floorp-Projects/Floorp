@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 from StringIO import StringIO
 import json
 import fnmatch
@@ -377,8 +375,8 @@ class ManifestParser(object):
                 raise IOError("Strict mode enabled, test paths must exist. "
                               "The following test(s) are missing: %s" %
                               json.dumps(missing_paths, indent=2))
-            print("Warning: The following test(s) are missing: %s" %
-                  json.dumps(missing_paths, indent=2), file=sys.stderr)
+            print >> sys.stderr, "Warning: The following test(s) are missing: %s" % \
+                json.dumps(missing_paths, indent=2)
         return missing
 
     def verifyDirectory(self, directories, pattern=None, extensions=None):
@@ -453,12 +451,12 @@ class ManifestParser(object):
 
         # print the .ini manifest
         if global_tags or global_kwargs:
-            print('[DEFAULT]', file=fp)
+            print >> fp, '[DEFAULT]'
             for tag in global_tags:
-                print('%s =' % tag, file=fp)
+                print >> fp, '%s =' % tag
             for key, value in global_kwargs.items():
-                print('%s = %s' % (key, value), file=fp)
-            print(file=fp)
+                print >> fp, '%s = %s' % (key, value)
+            print >> fp
 
         for test in tests:
             test = test.copy()  # don't overwrite
@@ -469,7 +467,7 @@ class ManifestParser(object):
                 if self.rootdir:
                     path = relpath(test['path'], self.rootdir)
                 path = denormalize_path(path)
-            print('[%s]' % path, file=fp)
+            print >> fp, '[%s]' % path
 
             # reserved keywords:
             reserved = ['path', 'name', 'here', 'manifest', 'relpath', 'ancestor-manifest']
@@ -480,8 +478,8 @@ class ManifestParser(object):
                     continue
                 if key in global_tags and not test[key]:
                     continue
-                print('%s = %s' % (key, test[key]), file=fp)
-            print(file=fp)
+                print >> fp, '%s = %s' % (key, test[key])
+            print >> fp
 
         if close:
             # close the created file
@@ -569,7 +567,7 @@ class ManifestParser(object):
                     message = "Missing test: '%s' does not exist!"
                     if self.strict:
                         raise IOError(message)
-                    print(message + " Skipping.", file=sys.stderr)
+                    print >> sys.stderr, message + " Skipping."
                     continue
                 destination = os.path.join(rootdir, _relpath)
                 shutil.copy(source, destination)
@@ -674,9 +672,9 @@ class ManifestParser(object):
             if (dirnames or filenames) and not (os.path.exists(manifest_path) and overwrite):
                 with file(manifest_path, 'w') as manifest:
                     for dirname in dirnames:
-                        print('[include:%s]' % os.path.join(dirname, filename), file=manifest)
+                        print >> manifest, '[include:%s]' % os.path.join(dirname, filename)
                     for _filename in filenames:
-                        print('[%s]' % _filename, file=manifest)
+                        print >> manifest, '[%s]' % _filename
 
                 # add to list of manifests
                 manifest_dict.setdefault(directory, manifest_path)
@@ -726,8 +724,8 @@ class ManifestParser(object):
                              for filename in filenames]
 
             # write to manifest
-            print('\n'.join(['[%s]' % denormalize_path(filename)
-                             for filename in filenames]), file=write)
+            print >> write, '\n'.join(['[%s]' % denormalize_path(filename)
+                                       for filename in filenames])
 
         cls._walk_directories(directories, callback, pattern=pattern, ignore=ignore)
 

@@ -11,12 +11,10 @@ subclasses ``FirefoxProfile`` and ``ThundebirdProfile`` are available
 with preset preferences for those applications.
 """
 
-from __future__ import absolute_import
-
-from mozprofile.addons import *
-from mozprofile.cli import *
-from mozprofile.diff import *
-from mozprofile.permissions import *
-from mozprofile.prefs import *
-from mozprofile.profile import *
-from mozprofile.view import *
+from addons import *
+from cli import *
+from diff import *
+from permissions import *
+from prefs import *
+from profile import *
+from view import *
