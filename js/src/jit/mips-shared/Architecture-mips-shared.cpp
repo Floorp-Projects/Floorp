@@ -13,6 +13,7 @@
 
 #define HWCAP_MIPS (1 << 28)
 #define HWCAP_LOONGSON (1 << 27)
+#define HWCAP_R2 (1 << 26)
 #define HWCAP_FPU (1 << 0)
 
 namespace js {
@@ -25,6 +26,7 @@ get_mips_flags()
 
 #if defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     flags |= HWCAP_FPU;
+    flags |= HWCAP_R2;
 #else
 # ifdef __linux__
     FILE* fp = fopen("/proc/cpuinfo", "r");
@@ -39,6 +41,8 @@ get_mips_flags()
         flags |= HWCAP_FPU;
     if (strstr(buf, "Loongson"))
         flags |= HWCAP_LOONGSON;
+    if (strstr(buf, "mips32r2") || strstr(buf, "mips64r2"))
+        flags |= HWCAP_R2;
 # endif
 #endif // JS_SIMULATOR_MIPS32 || JS_SIMULATOR_MIPS64
     return flags;
@@ -54,11 +58,17 @@ static bool check_loongson()
     return mips_private::Flags & HWCAP_LOONGSON;
 }
 
+static bool check_r2()
+{
+    return mips_private::Flags & HWCAP_R2;
+}
+
 namespace mips_private {
     // Cache a local copy so we only have to read /proc/cpuinfo once.
     uint32_t Flags = get_mips_flags();
     bool hasFPU = check_fpu();;
     bool isLoongson = check_loongson();
+    bool hasR2 = check_r2();
 }
 
 Registers::Code
