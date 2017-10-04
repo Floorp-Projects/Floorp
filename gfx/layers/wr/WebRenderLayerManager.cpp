@@ -34,6 +34,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mIsFirstPaint(false)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
+  , mLastDisplayListSize(0)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -728,7 +729,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   DiscardCompositorAnimations();
 
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
   { // scoping for StackingContextHelper RAII
@@ -743,6 +744,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
     CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
 
     builder.Finalize(contentSize, mBuiltDisplayList);
+    mLastDisplayListSize = mBuiltDisplayList.dl.inner.capacity;
 
     // Make a "root" layer data that has everything else as descendants
     mLayerScrollData.emplace_back();
