@@ -38,7 +38,7 @@ public:
   explicit IPCBlobInputStream(IPCBlobInputStreamChild* aActor);
 
   void
-  StreamReady(already_AddRefed<nsIInputStream> aInputStream);
+  StreamReady(nsIInputStream* aInputStream);
 
 private:
   ~IPCBlobInputStream();

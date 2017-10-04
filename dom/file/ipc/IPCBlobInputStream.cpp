@@ -381,33 +381,30 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 }
 
 void
-IPCBlobInputStream::StreamReady(already_AddRefed<nsIInputStream> aInputStream)
+IPCBlobInputStream::StreamReady(nsIInputStream* aInputStream)
 {
-  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
-
   // We have been closed in the meantime.
   if (mState == eClosed) {
-    if (inputStream) {
-      inputStream->Close();
+    if (aInputStream) {
+      aInputStream->Close();
     }
     return;
   }
 
-  // If inputStream is null, it means that the serialization went wrong or the
+  // If aInputStream is null, it means that the serialization went wrong or the
   // stream is not available anymore. We keep the state as pending just to block
   // any additional operation.
 
-  if (!inputStream) {
+  if (!aInputStream) {
     return;
   }
 
   // Now it's the right time to apply a slice if needed.
   if (mStart > 0 || mLength < mActor->Size()) {
-    inputStream =
-      new SlicedInputStream(inputStream.forget(), mStart, mLength);
+    aInputStream = new SlicedInputStream(aInputStream, mStart, mLength);
   }
 
-  mRemoteStream = inputStream;
+  mRemoteStream = aInputStream;
 
   MOZ_ASSERT(mState == ePending);
   mState = eRunning;
@@ -478,8 +475,7 @@ IPCBlobInputStream::InitWithExistingRange(uint64_t aStart, uint64_t aLength)
   // because the stream is immediately consumable.
   if (mState == eRunning && mRemoteStream && XRE_IsParentProcess() &&
       (mStart > 0 || mLength < mActor->Size())) {
-    mRemoteStream =
-      new SlicedInputStream(mRemoteStream.forget(), mStart, mLength);
+    mRemoteStream = new SlicedInputStream(mRemoteStream, mStart, mLength);
   }
 }
 

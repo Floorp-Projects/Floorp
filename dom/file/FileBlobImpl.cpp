@@ -254,7 +254,7 @@ FileBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
   }
 
   RefPtr<SlicedInputStream> slicedInputStream =
-    new SlicedInputStream(stream.forget(), mStart, mLength);
+    new SlicedInputStream(stream, mStart, mLength);
   slicedInputStream.forget(aStream);
 }
 
