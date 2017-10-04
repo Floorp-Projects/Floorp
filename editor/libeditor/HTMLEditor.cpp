@@ -3854,25 +3854,6 @@ HTMLEditor::GetNextHTMLSibling(nsIDOMNode* inNode,
   return NS_OK;
 }
 
-/**
- * GetNextHTMLSibling() returns the next editable sibling, if there is
- * one within the parent.  just like above routine but takes a parent/offset
- * instead of a node.
- */
-nsIContent*
-HTMLEditor::GetNextHTMLSibling(nsINode* aParent,
-                               int32_t aOffset)
-{
-  MOZ_ASSERT(aParent);
-
-  nsIContent* node = aParent->GetChildAt(aOffset + 1);
-  if (!node || IsEditable(node)) {
-    return node;
-  }
-
-  return GetNextHTMLSibling(node);
-}
-
 nsresult
 HTMLEditor::GetNextHTMLSibling(nsIDOMNode* inParent,
                                int32_t inOffset,
@@ -3884,7 +3865,10 @@ HTMLEditor::GetNextHTMLSibling(nsIDOMNode* inParent,
   nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
-  *outNode = do_QueryInterface(GetNextHTMLSibling(parent, inOffset));
+  nsCOMPtr<nsINode> child = parent->GetChildAt(inOffset);
+  NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
+
+  *outNode = do_QueryInterface(GetPriorHTMLSibling(child));
   return NS_OK;
 }
 
