@@ -815,18 +815,9 @@ public:
   virtual bool CopyData(const Data& aData) = 0;
 
   /**
-   * This doesn't make a copy of the data buffers. Can be used when mBuffer is
-   * pre allocated with AllocateAndGetNewBuffer(size) and then AdoptData is
-   * called to only update the picture size, planes etc. fields in mData.
-   * The GStreamer media backend uses this to decode into PlanarYCbCrImage(s)
-   * directly.
+   * This doesn't make a copy of the data buffers.
    */
-  virtual bool AdoptData(const Data &aData);
-
-  /**
-   * This allocates and returns a new buffer
-   */
-  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) = 0;
+  virtual bool AdoptData(const Data& aData);
 
   /**
    * Ask this Image to not convert YUV to RGB during SetData, and make
@@ -882,7 +873,6 @@ public:
   explicit RecyclingPlanarYCbCrImage(BufferRecycleBin *aRecycleBin) : mRecycleBin(aRecycleBin) {}
   virtual ~RecyclingPlanarYCbCrImage() override;
   virtual bool CopyData(const Data& aData) override;
-  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) override;
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 protected:
 
