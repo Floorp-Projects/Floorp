@@ -267,7 +267,7 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_FORHEAD  ternary     pn_kid1:  init expr before first ';' or nullptr
  *                          pn_kid2:  cond expr before second ';' or nullptr
  *                          pn_kid3:  update expr after second ';' or nullptr
- * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
+ * PNK_THROW    unary       pn_kid: exception
  * PNK_TRY      ternary     pn_kid1: try block
  *                          pn_kid2: null or PNK_CATCHLIST list
  *                          pn_kid3: null or finally block
@@ -427,8 +427,7 @@ IsTypeofKind(ParseNodeKind kind)
  *                          pn_head: list of 1 element, which is block
  *                          enclosing for loop(s) and optionally
  *                          if-guarded PNK_ARRAYPUSH
- * PNK_ARRAYPUSH    unary   pn_op: JSOP_ARRAYCOMP
- *                          pn_kid: array comprehension expression
+ * PNK_ARRAYPUSH    unary   pn_kid: array comprehension expression
  * PNK_NOP          nullary
  */
 enum ParseNodeArity
@@ -849,8 +848,8 @@ struct NullaryNode : public ParseNode
 
 struct UnaryNode : public ParseNode
 {
-    UnaryNode(ParseNodeKind kind, JSOp op, const TokenPos& pos, ParseNode* kid)
-      : ParseNode(kind, op, PN_UNARY, pos)
+    UnaryNode(ParseNodeKind kind, const TokenPos& pos, ParseNode* kid)
+      : ParseNode(kind, JSOP_NOP, PN_UNARY, pos)
     {
         pn_kid = kid;
     }
@@ -1143,7 +1142,7 @@ class ThisLiteral : public UnaryNode
 {
   public:
     ThisLiteral(const TokenPos& pos, ParseNode* thisName)
-      : UnaryNode(PNK_THIS, JSOP_NOP, pos, thisName)
+      : UnaryNode(PNK_THIS, pos, thisName)
     { }
 };
 
