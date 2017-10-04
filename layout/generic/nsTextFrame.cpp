@@ -5049,7 +5049,6 @@ public:
 #endif
   }
 
-  RefPtr<TextDrawTarget> mTextDrawer;
   nsRect mBounds;
   float mOpacity;
 };
@@ -5150,19 +5149,13 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     return true;
   }
 
-  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget();
+  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aSc);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
   // TODO: Paint() checks mDisableSubpixelAA, we should too.
   RenderToContext(captureCtx, aDisplayListBuilder, true);
 
-  if (!textDrawer->CanSerializeFonts()) {
-    return false;
-  }
-
-  textDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, mBounds);
-
-  return true;
+  return textDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, mBounds);
 }
 
 void
