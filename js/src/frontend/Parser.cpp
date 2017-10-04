@@ -5015,26 +5015,22 @@ Parser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
 {
     MOZ_ASSERT(kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST);
 
-    JSOp op;
     DeclarationKind declKind;
     switch (kind) {
       case PNK_VAR:
-        op = JSOP_DEFVAR;
         declKind = DeclarationKind::Var;
         break;
       case PNK_CONST:
-        op = JSOP_DEFCONST;
         declKind = DeclarationKind::Const;
         break;
       case PNK_LET:
-        op = JSOP_DEFLET;
         declKind = DeclarationKind::Let;
         break;
       default:
         MOZ_CRASH("Unknown declaration kind");
     }
 
-    Node decl = handler.newDeclarationList(kind, pos(), op);
+    Node decl = handler.newDeclarationList(kind, pos());
     if (!decl)
         return null();
 

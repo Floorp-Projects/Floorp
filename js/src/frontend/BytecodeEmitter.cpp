@@ -6148,6 +6148,7 @@ bool
 BytecodeEmitter::emitDeclarationList(ParseNode* declList)
 {
     MOZ_ASSERT(declList->isArity(PN_LIST));
+    MOZ_ASSERT(declList->isOp(JSOP_NOP));
 
     ParseNode* next;
     for (ParseNode* decl = declList->pn_head; decl; decl = next) {
