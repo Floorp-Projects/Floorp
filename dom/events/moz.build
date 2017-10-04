@@ -36,6 +36,7 @@ EXPORTS.mozilla += [
     'PhysicalKeyCodeNameList.h',
     'TextComposition.h',
     'VirtualKeyCodeList.h',
+    'WheelHandlingHelper.h',
 ]
 
 EXPORTS.mozilla.dom += [
