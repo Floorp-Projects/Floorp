@@ -22,55 +22,55 @@ PerformanceNavigationTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aG
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::UnloadEventStart()
+PerformanceNavigationTiming::UnloadEventStart() const
 {
-  return mTiming->GetDOMTiming()->GetUnloadEventStart();
+  return mTiming->GetDOMTiming()->GetUnloadEventStartHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::UnloadEventEnd()
+PerformanceNavigationTiming::UnloadEventEnd() const
 {
-  return mTiming->GetDOMTiming()->GetUnloadEventEnd();
+  return mTiming->GetDOMTiming()->GetUnloadEventEndHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::DomInteractive()
+PerformanceNavigationTiming::DomInteractive() const
 {
-  return mTiming->GetDOMTiming()->GetDomInteractive();
+  return mTiming->GetDOMTiming()->GetDomInteractiveHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::DomContentLoadedEventStart()
+PerformanceNavigationTiming::DomContentLoadedEventStart() const
 {
-  return mTiming->GetDOMTiming()->GetDomContentLoadedEventStart();
+  return mTiming->GetDOMTiming()->GetDomContentLoadedEventStartHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::DomContentLoadedEventEnd()
+PerformanceNavigationTiming::DomContentLoadedEventEnd() const
 {
-  return mTiming->GetDOMTiming()->GetDomContentLoadedEventEnd();
+  return mTiming->GetDOMTiming()->GetDomContentLoadedEventEndHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::DomComplete()
+PerformanceNavigationTiming::DomComplete() const
 {
-  return mTiming->GetDOMTiming()->GetDomComplete();
+  return mTiming->GetDOMTiming()->GetDomCompleteHighRes();
 }
 
 DOMHighResTimeStamp
-PerformanceNavigationTiming::LoadEventStart()
+PerformanceNavigationTiming::LoadEventStart() const
 {
-  return mTiming->GetDOMTiming()->GetLoadEventStart();
+  return mTiming->GetDOMTiming()->GetLoadEventStartHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::LoadEventEnd() const
 {
-  return mTiming->GetDOMTiming()->GetLoadEventEnd();
+  return mTiming->GetDOMTiming()->GetLoadEventEndHighRes();
 }
 
 NavigationType
-PerformanceNavigationTiming::Type()
+PerformanceNavigationTiming::Type() const
 {
   switch(mTiming->GetDOMTiming()->GetType()) {
     case nsDOMNavigationTiming::TYPE_NAVIGATE:
@@ -90,7 +90,7 @@ PerformanceNavigationTiming::Type()
 }
 
 uint16_t
-PerformanceNavigationTiming::RedirectCount()
+PerformanceNavigationTiming::RedirectCount() const
 {
   return mTiming->GetRedirectCount();
 }
