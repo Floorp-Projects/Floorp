@@ -237,7 +237,7 @@ class SyntaxParseHandler
         return NodeUnparenthesizedUnary;
     }
 
-    Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
+    Node newUnary(ParseNodeKind kind, uint32_t begin, Node kid) {
         return NodeUnparenthesizedUnary;
     }
 
