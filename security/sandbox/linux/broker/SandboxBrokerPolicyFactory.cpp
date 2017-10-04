@@ -259,13 +259,25 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // Firefox binary dir.
   // Note that unlike the previous cases, we use NS_GetSpecialDirectory
   // instead of GetSpecialSystemDirectory. The former requires a working XPCOM
-  // system, which may not be the case for some tests. For quering for the
+  // system, which may not be the case for some tests. For querying for the
   // location of XPCOM things, we can use it anyway.
   nsCOMPtr<nsIFile> ffDir;
   rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(ffDir));
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString tmpPath;
     rv = ffDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdonly, tmpPath.get());
+    }
+  }
+
+  // ~/.mozilla/systemextensionsdev (bug 1393805)
+  nsCOMPtr<nsIFile> sysExtDevDir;
+  rv = NS_GetSpecialDirectory(XRE_USER_SYS_EXTENSION_DEV_DIR,
+                              getter_AddRefs(sysExtDevDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = sysExtDevDir->GetNativePath(tmpPath);
     if (NS_SUCCEEDED(rv)) {
       policy->AddDir(rdonly, tmpPath.get());
     }
