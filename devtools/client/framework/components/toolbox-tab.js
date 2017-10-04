@@ -29,11 +29,6 @@ module.exports = createClass({
 
     const className = [
       "devtools-tab",
-      panelDefinition.invertIconForLightTheme || panelDefinition.invertIconForDarkTheme
-        ? "icon-invertable"
-        : "",
-      panelDefinition.invertIconForLightTheme ? "icon-invertable-light-theme" : "",
-      panelDefinition.invertIconForDarkTheme ? "icon-invertable-dark-theme" : "",
       currentToolId === id ? "selected" : "",
       highlightedTool === id ? "highlighted" : "",
       iconOnly ? "devtools-tab-icon-only" : ""
