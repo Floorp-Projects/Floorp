@@ -296,10 +296,15 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
       WrBridge()->GetSyncObject()->Synchronize();
     }
   }
+
+  wr::BuiltDisplayList dl;
+  builder.Finalize(contentSize, dl);
+  mLastDisplayListSize = dl.dl.inner.capacity;
+
   {
     AutoProfilerTracing
       tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
-    WrBridge()->EndTransaction(builder, resourceUpdates, size.ToUnknownSize(), sync,
+    WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(), sync,
                                mLatestTransactionId, mScrollData, transactionStart);
   }
 
