@@ -29,11 +29,7 @@
 #include "gmp-video-decode.h" // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h" // GMP_API_VIDEO_ENCODER
 
-static const char* pccLogTag = "PeerConnectionCtx";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG pccLogTag
+static const char* logTag = "PeerConnectionCtx";
 
 namespace mozilla {
 
@@ -69,7 +65,7 @@ public:
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-      CSFLogDebug(LOGTAG, "Shutting down PeerConnectionCtx");
+      CSFLogDebug(logTag, "Shutting down PeerConnectionCtx");
       PeerConnectionCtx::Destroy();
 
       nsCOMPtr<nsIObserverService> observerService =
@@ -90,13 +86,13 @@ public:
     }
     if (strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) == 0) {
       if (NS_strcmp(aData, u"" NS_IOSERVICE_OFFLINE) == 0) {
-        CSFLogDebug(LOGTAG, "Updating network state to offline");
+        CSFLogDebug(logTag, "Updating network state to offline");
         PeerConnectionCtx::UpdateNetworkState(false);
       } else if(NS_strcmp(aData, u"" NS_IOSERVICE_ONLINE) == 0) {
-        CSFLogDebug(LOGTAG, "Updating network state to online");
+        CSFLogDebug(logTag, "Updating network state to online");
         PeerConnectionCtx::UpdateNetworkState(true);
       } else {
-        CSFLogDebug(LOGTAG, "Received unsupported network state event");
+        CSFLogDebug(logTag, "Received unsupported network state event");
         MOZ_CRASH();
       }
     }
@@ -143,7 +139,7 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gInstance) {
-    CSFLogDebug(LOGTAG, "Creating PeerConnectionCtx");
+    CSFLogDebug(logTag, "Creating PeerConnectionCtx");
     PeerConnectionCtx *ctx = new PeerConnectionCtx();
 
     res = ctx->Initialize();
@@ -173,7 +169,7 @@ bool PeerConnectionCtx::isActive() {
 }
 
 void PeerConnectionCtx::Destroy() {
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
   if (gInstance) {
     gInstance->Cleanup();
@@ -401,7 +397,7 @@ void PeerConnectionCtx::initGMP()
   mGMPService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
 
   if (!mGMPService) {
-    CSFLogError(LOGTAG, "%s failed to get the gecko-media-plugin-service",
+    CSFLogError(logTag, "%s failed to get the gecko-media-plugin-service",
                 __FUNCTION__);
     return;
   }
@@ -411,7 +407,7 @@ void PeerConnectionCtx::initGMP()
 
   if (NS_FAILED(rv)) {
     mGMPService = nullptr;
-    CSFLogError(LOGTAG,
+    CSFLogError(logTag,
                 "%s failed to get the gecko-media-plugin thread, err=%u",
                 __FUNCTION__,
                 static_cast<unsigned>(rv));
@@ -423,7 +419,7 @@ void PeerConnectionCtx::initGMP()
 }
 
 nsresult PeerConnectionCtx::Cleanup() {
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
 
   mQueuedJSEPOperations.Clear();
   mGMPService = nullptr;

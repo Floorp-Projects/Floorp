@@ -56,11 +56,7 @@
 namespace mozilla {
 using namespace dom;
 
-static const char* pcmLogTag = "PeerConnectionMedia";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG pcmLogTag
+static const char* logTag = "PeerConnectionMedia";
 
 //XXX(pkerr) What about bitrate settings? Going with the defaults for now.
 RefPtr<WebRtcCallWrapper>
@@ -79,7 +75,7 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
   RefPtr<LocalSourceStreamInfo> oldInfo(GetLocalStreamById(aOldStreamId));
 
   if (!oldInfo) {
-    CSFLogError(LOGTAG, "Failed to find stream id %s", aOldStreamId.c_str());
+    CSFLogError(logTag, "Failed to find stream id %s", aOldStreamId.c_str());
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -90,7 +86,7 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
   RefPtr<LocalSourceStreamInfo> newInfo(GetLocalStreamById(aNewStreamId));
 
   if (!newInfo) {
-    CSFLogError(LOGTAG, "Failed to add track id %s", aNewTrackId.c_str());
+    CSFLogError(logTag, "Failed to add track id %s", aNewTrackId.c_str());
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
@@ -185,7 +181,7 @@ PeerConnectionImpl::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& r
 {
   RefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
 
-  CSFLogDebug(LOGTAG, "Created PeerConnection: %p", pc.get());
+  CSFLogDebug(logTag, "Created PeerConnection: %p", pc.get());
 
   return pc.forget();
 }
@@ -194,7 +190,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 {
   PeerConnectionImpl *pc = new PeerConnectionImpl();
 
-  CSFLogDebug(LOGTAG, "Created PeerConnection: %p", pc);
+  CSFLogDebug(logTag, "Created PeerConnection: %p", pc);
 
   return pc;
 }
@@ -210,7 +206,7 @@ OnProxyAvailable(nsICancelable *request,
     return NS_OK;
   }
 
-  CSFLogInfo(LOGTAG, "%s: Proxy Available: %d", __FUNCTION__, (int)result);
+  CSFLogInfo(logTag, "%s: Proxy Available: %d", __FUNCTION__, (int)result);
 
   if (NS_SUCCEEDED(result) && proxyinfo) {
     SetProxyOnPcm(*proxyinfo);
@@ -227,20 +223,20 @@ void
 PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
     nsIProxyInfo& proxyinfo)
 {
-  CSFLogInfo(LOGTAG, "%s: Had proxyinfo", __FUNCTION__);
+  CSFLogInfo(logTag, "%s: Had proxyinfo", __FUNCTION__);
   nsresult rv;
   nsCString httpsProxyHost;
   int32_t httpsProxyPort;
 
   rv = proxyinfo.GetHost(httpsProxyHost);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get proxy server host", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to get proxy server host", __FUNCTION__);
     return;
   }
 
   rv = proxyinfo.GetPort(&httpsProxyPort);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get proxy server port", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to get proxy server port", __FUNCTION__);
     return;
   }
 
@@ -256,7 +252,7 @@ PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
                            static_cast<uint16_t>(httpsProxyPort),
                            "webrtc,c-webrtc"));
   } else {
-    CSFLogError(LOGTAG, "%s: Failed to set proxy server (ICE ctx unavailable)",
+    CSFLogError(logTag, "%s: Failed to set proxy server (ICE ctx unavailable)",
         __FUNCTION__);
   }
 }
@@ -267,7 +263,7 @@ void
 PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     const mozilla::net::NrIceStunAddrArray& addrs)
 {
-  CSFLogInfo(LOGTAG, "%s: receiving (%d) stun addrs", __FUNCTION__,
+  CSFLogInfo(logTag, "%s: receiving (%d) stun addrs", __FUNCTION__,
                                                       (int)addrs.Length());
   if (pcm_) {
     pcm_->mStunAddrs = addrs;
@@ -296,7 +292,7 @@ void
 PeerConnectionMedia::InitLocalAddrs()
 {
   if (XRE_IsContentProcess()) {
-    CSFLogDebug(LOGTAG, "%s: Get stun addresses via IPC",
+    CSFLogDebug(logTag, "%s: Get stun addresses via IPC",
                 mParentHandle.c_str());
 
     nsCOMPtr<nsIEventTarget> target = mParent->GetWindow()
@@ -332,7 +328,7 @@ PeerConnectionMedia::InitProxy()
   nsCOMPtr<nsIProtocolProxyService> pps =
     do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get proxy service: %d", __FUNCTION__, (int)rv);
+    CSFLogError(logTag, "%s: Failed to get proxy service: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
 
@@ -342,7 +338,7 @@ PeerConnectionMedia::InitProxy()
   nsCOMPtr<nsIURI> fakeHttpsLocation;
   rv = NS_NewURI(getter_AddRefs(fakeHttpsLocation), "https://example.com");
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to set URI: %d", __FUNCTION__, (int)rv);
+    CSFLogError(logTag, "%s: Failed to set URI: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
 
@@ -354,7 +350,7 @@ PeerConnectionMedia::InitProxy()
                      nsIContentPolicy::TYPE_OTHER);
 
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get channel from URI: %d",
+    CSFLogError(logTag, "%s: Failed to get channel from URI: %d",
                 __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
@@ -368,7 +364,7 @@ PeerConnectionMedia::InitProxy()
                          nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
                          handler, target, getter_AddRefs(mProxyRequest));
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to resolve protocol proxy: %d", __FUNCTION__, (int)rv);
+    CSFLogError(logTag, "%s: Failed to resolve protocol proxy: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
 
@@ -395,31 +391,31 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
                                         mParent->GetAllowIceLinkLocal(),
                                         policy);
   if(!mIceCtxHdlr) {
-    CSFLogError(LOGTAG, "%s: Failed to create Ice Context", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
   if (NS_FAILED(rv = mIceCtxHdlr->ctx()->SetStunServers(stun_servers))) {
-    CSFLogError(LOGTAG, "%s: Failed to set stun servers", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to set stun servers", __FUNCTION__);
     return rv;
   }
   // Give us a way to globally turn off TURN support
   bool disabled = Preferences::GetBool("media.peerconnection.turn.disable", false);
   if (!disabled) {
     if (NS_FAILED(rv = mIceCtxHdlr->ctx()->SetTurnServers(turn_servers))) {
-      CSFLogError(LOGTAG, "%s: Failed to set turn servers", __FUNCTION__);
+      CSFLogError(logTag, "%s: Failed to set turn servers", __FUNCTION__);
       return rv;
     }
   } else if (!turn_servers.empty()) {
-    CSFLogError(LOGTAG, "%s: Setting turn servers disabled", __FUNCTION__);
+    CSFLogError(logTag, "%s: Setting turn servers disabled", __FUNCTION__);
   }
   if (NS_FAILED(rv = mDNSResolver->Init())) {
-    CSFLogError(LOGTAG, "%s: Failed to initialize dns resolver", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to initialize dns resolver", __FUNCTION__);
     return rv;
   }
   if (NS_FAILED(rv =
       mIceCtxHdlr->ctx()->SetResolver(mDNSResolver->AllocateResolver()))) {
-    CSFLogError(LOGTAG, "%s: Failed to get dns resolver", __FUNCTION__);
+    CSFLogError(logTag, "%s: Failed to get dns resolver", __FUNCTION__);
     return rv;
   }
   ConnectSignals(mIceCtxHdlr->ctx().get());
@@ -453,7 +449,7 @@ PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
 {
   RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aLevel));
   if (!stream) {
-    CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%u components=%u",
+    CSFLogDebug(logTag, "%s: Creating ICE media stream=%u components=%u",
                 mParentHandle.c_str(),
                 static_cast<unsigned>(aLevel),
                 static_cast<unsigned>(aComponentCount));
@@ -465,7 +461,7 @@ PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
                                 aComponentCount);
 
     if (!stream) {
-      CSFLogError(LOGTAG, "Failed to create ICE stream.");
+      CSFLogError(logTag, "Failed to create ICE stream.");
       return;
     }
 
@@ -491,12 +487,12 @@ PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession,
 
     if (transport->mComponents) {
       MOZ_ASSERT(transport->mIce);
-      CSFLogDebug(LOGTAG, "Transport %u is active", static_cast<unsigned>(i));
+      CSFLogDebug(logTag, "Transport %u is active", static_cast<unsigned>(i));
       ufrag = transport->mIce->GetUfrag();
       pwd = transport->mIce->GetPassword();
       candidates = transport->mIce->GetCandidates();
     } else {
-      CSFLogDebug(LOGTAG, "Transport %u is disabled", static_cast<unsigned>(i));
+      CSFLogDebug(logTag, "Transport %u is disabled", static_cast<unsigned>(i));
       // Make sure the MediaPipelineFactory doesn't try to use these.
       RemoveTransportFlow(i, false);
       RemoveTransportFlow(i, true);
@@ -541,7 +537,7 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
     const std::vector<std::string>& aCandidateList) {
 
   if (!aComponentCount) {
-    CSFLogDebug(LOGTAG, "%s: Removing ICE media stream=%u",
+    CSFLogDebug(logTag, "%s: Removing ICE media stream=%u",
                 mParentHandle.c_str(),
                 static_cast<unsigned>(aMLine));
     mIceCtxHdlr->ctx()->SetStream(aMLine, nullptr);
@@ -555,7 +551,7 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
   }
 
   if (!stream->HasParsedAttributes()) {
-    CSFLogDebug(LOGTAG, "%s: Activating ICE media stream=%u components=%u",
+    CSFLogDebug(logTag, "%s: Activating ICE media stream=%u components=%u",
                 mParentHandle.c_str(),
                 static_cast<unsigned>(aMLine),
                 static_cast<unsigned>(aComponentCount));
@@ -570,7 +566,7 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
 
     nsresult rv = stream->ParseAttributes(attrs);
     if (NS_FAILED(rv)) {
-      CSFLogError(LOGTAG, "Couldn't parse ICE attributes, rv=%u",
+      CSFLogError(logTag, "Couldn't parse ICE attributes, rv=%u",
                           static_cast<unsigned>(rv));
     }
 
@@ -642,7 +638,7 @@ PeerConnectionMedia::StartIceChecks_s(
     bool aIsIceLite,
     const std::vector<std::string>& aIceOptionsList) {
 
-  CSFLogDebug(LOGTAG, "Starting ICE Checking");
+  CSFLogDebug(logTag, "Starting ICE Checking");
 
   std::vector<std::string> attributes;
   if (aIsIceLite) {
@@ -658,7 +654,7 @@ PeerConnectionMedia::StartIceChecks_s(
 
   nsresult rv = mIceCtxHdlr->ctx()->ParseGlobalAttributes(attributes);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: couldn't parse global parameters", __FUNCTION__ );
+    CSFLogError(logTag, "%s: couldn't parse global parameters", __FUNCTION__ );
   }
 
   mIceCtxHdlr->ctx()->SetControlling(aIsControlling ?
@@ -879,14 +875,14 @@ PeerConnectionMedia::AddIceCandidate_s(const std::string& aCandidate,
                                        uint32_t aMLine) {
   RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aMLine));
   if (!stream) {
-    CSFLogError(LOGTAG, "No ICE stream for candidate at level %u: %s",
+    CSFLogError(logTag, "No ICE stream for candidate at level %u: %s",
                         static_cast<unsigned>(aMLine), aCandidate.c_str());
     return;
   }
 
   nsresult rv = stream->ParseTrickleCandidate(aCandidate);
   if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "Couldn't process ICE candidate at level %u",
+    CSFLogError(logTag, "Couldn't process ICE candidate at level %u",
                 static_cast<unsigned>(aMLine));
     return;
   }
@@ -989,7 +985,7 @@ PeerConnectionMedia::AddTrack(DOMMediaStream& aMediaStream,
 {
   ASSERT_ON_THREAD(mMainThread);
 
-  CSFLogDebug(LOGTAG, "%s: MediaStream: %p", __FUNCTION__, &aMediaStream);
+  CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, &aMediaStream);
 
   RefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
@@ -1009,7 +1005,7 @@ PeerConnectionMedia::RemoveLocalTrack(const std::string& streamId,
 {
   ASSERT_ON_THREAD(mMainThread);
 
-  CSFLogDebug(LOGTAG, "%s: stream: %s track: %s", __FUNCTION__,
+  CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
   RefPtr<LocalSourceStreamInfo> localSourceStream =
@@ -1031,7 +1027,7 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
 {
   ASSERT_ON_THREAD(mMainThread);
 
-  CSFLogDebug(LOGTAG, "%s: stream: %s track: %s", __FUNCTION__,
+  CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
   RefPtr<RemoteSourceStreamInfo> remoteSourceStream =
@@ -1052,7 +1048,7 @@ PeerConnectionMedia::SelfDestruct()
 {
   ASSERT_ON_THREAD(mMainThread);
 
-  CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
+  CSFLogDebug(logTag, "%s: ", __FUNCTION__);
 
   // Shut down the media
   for (uint32_t i=0; i < mLocalSourceStreams.Length(); ++i) {
@@ -1078,13 +1074,13 @@ PeerConnectionMedia::SelfDestruct()
       this, &PeerConnectionMedia::ShutdownMediaTransport_s),
                 NS_DISPATCH_NORMAL);
 
-  CSFLogDebug(LOGTAG, "%s: Media shut down", __FUNCTION__);
+  CSFLogDebug(logTag, "%s: Media shut down", __FUNCTION__);
 }
 
 void
 PeerConnectionMedia::SelfDestruct_m()
 {
-  CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
+  CSFLogDebug(logTag, "%s: ", __FUNCTION__);
 
   ASSERT_ON_THREAD(mMainThread);
 
@@ -1102,7 +1098,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
 {
   ASSERT_ON_THREAD(mSTSThread);
 
-  CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
+  CSFLogDebug(logTag, "%s: ", __FUNCTION__);
 
   // Here we access m{Local|Remote}SourceStreams off the main thread.
   // That's OK because by here PeerConnectionImpl has forgotten about us,
@@ -1123,7 +1119,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   NrIceStats stats = mIceCtxHdlr->Destroy();
 
-  CSFLogDebug(LOGTAG, "Ice Telemetry: stun (retransmits: %d)"
+  CSFLogDebug(logTag, "Ice Telemetry: stun (retransmits: %d)"
                       "   turn (401s: %d   403s: %d   438s: %d)",
               stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
               stats.turn_438s);
@@ -1290,7 +1286,7 @@ PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
   MOZ_ASSERT(aStream);
   MOZ_RELEASE_ASSERT(mIceCtxHdlr);
 
-  CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aStream->name().c_str());
+  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 
   NrIceCandidate candidate;
   NrIceCandidate rtcpCandidate;
@@ -1344,7 +1340,7 @@ PeerConnectionMedia::GetDefaultCandidates(const NrIceMediaStream& aStream,
   if (NS_FAILED(res)) {
     aCandidate->cand_addr.host.clear();
     aCandidate->cand_addr.port = 0;
-    CSFLogError(LOGTAG, "%s: GetDefaultCandidates failed for level %u, "
+    CSFLogError(logTag, "%s: GetDefaultCandidates failed for level %u, "
                         "res=%u",
                         __FUNCTION__,
                         static_cast<unsigned>(aStream.GetLevel()),
@@ -1373,7 +1369,7 @@ PeerConnectionMedia::IceStreamReady_s(NrIceMediaStream *aStream)
 {
   MOZ_ASSERT(aStream);
 
-  CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aStream->name().c_str());
+  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 }
 
 void
@@ -1477,7 +1473,7 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
                                         const std::string& newTrackId)
 {
   if (mPipelines.count(newTrackId)) {
-    CSFLogError(LOGTAG, "%s: Pipeline already exists for %s/%s",
+    CSFLogError(logTag, "%s: Pipeline already exists for %s/%s",
                 __FUNCTION__, mId.c_str(), newTrackId.c_str());
     return NS_ERROR_INVALID_ARG;
   }
@@ -1487,7 +1483,7 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
   if (!pipeline) {
     // Replacetrack can potentially happen in the middle of offer/answer, before
     // the pipeline has been created.
-    CSFLogInfo(LOGTAG, "%s: Replacing track before the pipeline has been "
+    CSFLogInfo(logTag, "%s: Replacing track before the pipeline has been "
                        "created, nothing to do.", __FUNCTION__);
     return NS_OK;
   }
@@ -1615,7 +1611,7 @@ SourceStreamInfo::StorePipeline(
 {
   MOZ_ASSERT(mPipelines.find(trackId) == mPipelines.end());
   if (mPipelines.find(trackId) != mPipelines.end()) {
-    CSFLogError(LOGTAG, "%s: Storing duplicate track", __FUNCTION__);
+    CSFLogError(logTag, "%s: Storing duplicate track", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
@@ -1664,7 +1660,7 @@ RemoteSourceStreamInfo::SyncPipeline(
                                                   aPipeline->Conduit() :
                                                   i->second->Conduit());
       video_conduit->SyncTo(audio_conduit);
-      CSFLogDebug(LOGTAG, "Syncing %p to %p, %s to %s",
+      CSFLogDebug(logTag, "Syncing %p to %p, %s to %s",
                           video_conduit, audio_conduit,
                           i->first.c_str(), aPipeline->trackid().c_str());
     }
@@ -1688,7 +1684,7 @@ RemoteSourceStreamInfo::StartReceiving()
   // bunch of locking that would be required (and potential blocking)
   // if we used smaller values and updated them on each NotifyPull.
   source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-  CSFLogDebug(LOGTAG, "Finished adding tracks to MediaStream %p", source);
+  CSFLogDebug(logTag, "Finished adding tracks to MediaStream %p", source);
 }
 
 RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(

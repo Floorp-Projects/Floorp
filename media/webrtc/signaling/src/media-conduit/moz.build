@@ -18,17 +18,21 @@ LOCAL_INCLUDES += [
     '/media/webrtc/trunk',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'AudioConduit.cpp',
+    'VideoConduit.cpp',
+]
+
+UNIFIED_SOURCES += [
     'GmpVideoCodec.cpp',
     'MediaDataDecoderCodec.cpp',
-    'VideoConduit.cpp',
     'WebrtcGmpVideoCodec.cpp',
     'WebrtcMediaDataDecoderCodec.cpp',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    UNIFIED_SOURCES += [
+    # Duplicate definition of logTag
+    SOURCES += [
         'MediaCodecVideoCodec.cpp',
         'WebrtcMediaCodecVP8VideoCodec.cpp',
     ]
