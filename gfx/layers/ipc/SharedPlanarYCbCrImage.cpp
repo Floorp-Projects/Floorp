@@ -96,9 +96,47 @@ SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData)
   return true;
 }
 
-bool
-SharedPlanarYCbCrImage::AdoptData(const Data& aData)
+// needs to be overriden because the parent class sets mBuffer which we
+// do not want to happen.
+uint8_t*
+SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
+  MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
+  size_t size = ImageDataSerializer::ComputeYCbCrBufferSize(aSize);
+  if (!size) {
+    return nullptr;
+  }
+
+  // XXX Add YUVColorSpace handling. Use YUVColorSpace::BT601 for now.
+  mTextureClient = TextureClient::CreateForYCbCrWithBufferSize(mCompositable->GetForwarder(),
+                                                               size,
+                                                               YUVColorSpace::BT601,
+                                                               mCompositable->GetTextureFlags());
+
+  // get new buffer _without_ setting mBuffer.
+  if (!mTextureClient) {
+    return nullptr;
+  }
+
+  // update buffer size
+  mBufferSize = size;
+
+  MappedYCbCrTextureData mapped;
+  if (mTextureClient->BorrowMappedYCbCrData(mapped)) {
+    // The caller expects a pointer to the beginning of the writable part of the
+    // buffer which is where the y channel starts by default.
+    return mapped.y.data;
+  } else {
+    MOZ_CRASH("GFX: Cannot borrow mapped YCbCr data");
+  }
+}
+
+bool
+SharedPlanarYCbCrImage::AdoptData(const Data &aData)
+{
+  // AdoptData is used to update YUV plane offsets without (re)allocating
+  // memory previously allocated with AllocateAndGetNewBuffer().
+
   MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
   if (!mTextureClient) {
     return false;

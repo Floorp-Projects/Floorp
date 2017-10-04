@@ -35,9 +35,10 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
   virtual bool CopyData(const PlanarYCbCrData& aData) override;
-  virtual bool AdoptData(const Data& aData) override;
+  virtual bool AdoptData(const Data &aData) override;
 
   virtual bool Allocate(PlanarYCbCrData& aData);
+  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) override;
 
   virtual bool IsValid() override;
 
