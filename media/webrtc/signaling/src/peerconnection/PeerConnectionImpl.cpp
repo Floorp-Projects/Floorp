@@ -317,6 +317,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mNegotiationNeeded(false)
   , mPrivateWindow(false)
   , mActiveOnWindow(false)
+  , mPacketDumpEnabled(false)
+  , mPacketDumpFlagsMutex("Packet dump flags mutex")
 {
   MOZ_ASSERT(NS_IsMainThread());
   auto log = RLogConnector::CreateInstance();
@@ -2328,6 +2330,69 @@ PeerConnectionImpl::OnMediaError(const std::string& aError)
   // TODO: Let content know about this somehow.
 }
 
+bool
+PeerConnectionImpl::ShouldDumpPacket(size_t level, dom::mozPacketDumpType type,
+                                     bool sending) const
+{
+  if (!mPacketDumpEnabled) {
+    return false;
+  }
+
+  MutexAutoLock lock(mPacketDumpFlagsMutex);
+
+  const std::vector<unsigned>* packetDumpFlags;
+
+  if (sending) {
+    packetDumpFlags = &mSendPacketDumpFlags;
+  } else {
+    packetDumpFlags = &mRecvPacketDumpFlags;
+  }
+
+  if (level < packetDumpFlags->size()) {
+    unsigned flag = 1 << (unsigned)type;
+    return flag & packetDumpFlags->at(level);
+  }
+
+  return false;
+}
+
+void
+PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
+                                 bool sending, UniquePtr<uint8_t[]>& packet,
+                                 size_t size)
+{
+  if (IsClosed()) {
+    return;
+  }
+
+  if (!ShouldDumpPacket(level, type, sending)) {
+    return;
+  }
+
+  RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
+
+  // TODO: Is this efficient? Should we try grabbing our JS ctx from somewhere
+  // else?
+  AutoJSAPI jsapi;
+  if(!jsapi.Init(GetWindow())) {
+    return;
+  }
+
+  JS::Rooted<JSObject*> jsobj(jsapi.cx(),
+    JS_NewArrayBufferWithContents(jsapi.cx(), size, packet.release()));
+
+  RootedSpiderMonkeyInterface<ArrayBuffer> arrayBuffer(jsapi.cx());
+  if (!arrayBuffer.Init(jsobj)) {
+    return;
+  }
+
+  JSErrorResult jrv;
+  pco->OnPacket(level, type, sending, arrayBuffer, jrv);
+}
+
 nsresult
 PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
                              const Sequence<OwningNonNull<DOMMediaStream>>& aStreams)
@@ -2419,6 +2484,52 @@ PeerConnectionImpl::AddRIDFilter(MediaStreamTrack& aRecvTrack,
   if (pipeline) {
     pipeline->AddRIDFilter_m(NS_ConvertUTF16toUTF8(aRid).get());
   }
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::EnablePacketDump(unsigned long level,
+                                     dom::mozPacketDumpType type,
+                                     bool sending)
+{
+  mPacketDumpEnabled = true;
+  std::vector<unsigned>* packetDumpFlags;
+  if (sending) {
+    packetDumpFlags = &mSendPacketDumpFlags;
+  } else {
+    packetDumpFlags = &mRecvPacketDumpFlags;
+  }
+
+  unsigned flag = 1 << (unsigned)type;
+
+  MutexAutoLock lock(mPacketDumpFlagsMutex);
+  if (level >= packetDumpFlags->size()) {
+    packetDumpFlags->resize(level + 1);
+  }
+
+  (*packetDumpFlags)[level] |= flag;
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::DisablePacketDump(unsigned long level,
+                                      dom::mozPacketDumpType type,
+                                      bool sending)
+{
+  std::vector<unsigned>* packetDumpFlags;
+  if (sending) {
+    packetDumpFlags = &mSendPacketDumpFlags;
+  } else {
+    packetDumpFlags = &mRecvPacketDumpFlags;
+  }
+
+  unsigned flag = 1 << (unsigned)type;
+
+  MutexAutoLock lock(mPacketDumpFlagsMutex);
+  if (level < packetDumpFlags->size()) {
+    (*packetDumpFlags)[level] &= ~flag;
+  }
+
   return NS_OK;
 }
 

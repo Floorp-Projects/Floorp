@@ -220,7 +220,7 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamil
   // In order to avoid using ANY records which are not always implemented as a
   // "Gimme what you have" request in hostname resolvers, we should send A
   // and/or AAAA requests, based on the address family requested.
-  unsigned int ttl = -1;
+  unsigned int ttl = (unsigned int)-1;
   if (aAddressFamily == PR_AF_UNSPEC || aAddressFamily == PR_AF_INET) {
     _GetMinTTLForRequestType_Windows(dnsapi, aHost, DNS_TYPE_A, &ttl);
   }
@@ -234,7 +234,7 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamil
     dnsapi = nullptr;
   }
 
-  if (ttl == -1) {
+  if (ttl == (unsigned int)-1) {
     LOG("No useable TTL found.");
     return NS_ERROR_FAILURE;
   }

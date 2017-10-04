@@ -64,8 +64,8 @@ add_test(function test_fromJSON() {
 
   // name and value
   for (let invalidType of [42, true, [], {}, null, undefined]) {
-    Assert.throws(() => cookie.fromJSON({name: invalidType}), "Cookie name must be string");
-    Assert.throws(() => cookie.fromJSON({value: invalidType}), "Cookie value must be string");
+    Assert.throws(() => cookie.fromJSON({name: invalidType}), /Cookie name must be string/);
+    Assert.throws(() => cookie.fromJSON({name: "foo", value: invalidType}), /Cookie value must be string/);
   }
 
   // domain
@@ -75,7 +75,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       domain: invalidType
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie domain must be string");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie domain must be string/);
   }
   let test = {
     name: "foo",
@@ -92,7 +92,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       path: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie path must be string");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie path must be string/);
   }
 
   // secure
@@ -102,7 +102,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       secure: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie secure flag must be boolean");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie secure flag must be boolean/);
   }
 
   // httpOnly
@@ -112,7 +112,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       httpOnly: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie httpOnly flag must be boolean");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie httpOnly flag must be boolean/);
   }
 
   // session
@@ -122,7 +122,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       session: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie session flag must be boolean");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie session flag must be boolean/);
   }
 
   // expiry
@@ -132,7 +132,7 @@ add_test(function test_fromJSON() {
       value: "bar",
       expiry: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), "Cookie expiry must be a positive integer");
+    Assert.throws(() => cookie.fromJSON(test), /Cookie expiry must be a positive integer/);
   }
 
   // bare requirements
@@ -171,17 +171,14 @@ add_test(function test_add() {
 
   for (let invalidType of [42, true, [], {}, null, undefined]) {
     Assert.throws(
-        () => cookie.add(invalidType),
-        "Cookie must have string name");
-    Assert.throws(
         () => cookie.add({name: invalidType}),
-        "Cookie must have string name");
+        /Cookie name must be string/);
     Assert.throws(
         () => cookie.add({name: "name", value: invalidType}),
-        "Cookie must have string value");
+        /Cookie value must be string/);
     Assert.throws(
         () => cookie.add({name: "name", value: "value", domain: invalidType}),
-        "Cookie must have string domain");
+        /Cookie domain must be string/);
   }
 
   cookie.add({
@@ -206,7 +203,7 @@ add_test(function test_add() {
   Assert.throws(() => {
     let biscuit = {name: "name3", value: "value3", domain: "domain3"};
     cookie.add(biscuit, {restrictToHost: "other domain"});
-  }, "Cookies may only be set for the current domain");
+  }, /Cookies may only be set for the current domain/);
 
   cookie.add({
     name: "name4",

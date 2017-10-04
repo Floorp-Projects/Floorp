@@ -2296,7 +2296,7 @@ nsStyleSet::BuildFontFeatureValueSet()
 
   RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
   for (nsCSSFontFeatureValuesRule* rule : rules) {
-    const nsTArray<FontFamilyName>& familyList = rule->GetFamilyList().GetFontlist();
+    const nsTArray<FontFamilyName>& familyList = rule->GetFamilyList()->mNames;
     const nsTArray<gfxFontFeatureValueSet::FeatureValues>&
       featureValues = rule->GetFeatureValues();
 

@@ -31,7 +31,7 @@
 
 // this port is based off of v8 svn revision 9837
 
-/* static */ Thread::tid_t
+/* static */ int
 Thread::GetCurrentId()
 {
   return gettid();

@@ -4039,7 +4039,7 @@ CSSParserImpl::ParseFontFeatureValuesRule(RuleAppendFunc aAppendFunc,
   }
 
   // add family to rule
-  const FontFamilyList* fontlist = fontlistValue.GetFontFamilyListValue();
+  SharedFontList* fontlist = fontlistValue.GetFontFamilyListValue();
 
   // family list has generic ==> parse error
   if (fontlist->HasGeneric()) {
@@ -4047,7 +4047,7 @@ CSSParserImpl::ParseFontFeatureValuesRule(RuleAppendFunc aAppendFunc,
     return false;
   }
 
-  valuesRule->SetFamilyList(*fontlist);
+  valuesRule->SetFamilyList(fontlist);
 
   // open brace
   if (!ExpectSymbol('{', true)) {
@@ -11997,8 +11997,8 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
       return false;
 
     // name can only be a single, non-generic name
-    const FontFamilyList* f = value.GetFontFamilyListValue();
-    const nsTArray<FontFamilyName>& fontlist = f->GetFontlist();
+    const SharedFontList* f = value.GetFontFamilyListValue();
+    const nsTArray<FontFamilyName>& fontlist = f->mNames;
 
     if (fontlist.Length() != 1 || !fontlist[0].IsNamed()) {
       return false;
@@ -14771,26 +14771,26 @@ CSSParserImpl::ParseOneFamily(nsAString& aFamily,
 
 
 static bool
-AppendGeneric(nsCSSKeyword aKeyword, FontFamilyList *aFamilyList)
+AppendGeneric(nsCSSKeyword aKeyword, nsTArray<FontFamilyName>& aFamilyList)
 {
   switch (aKeyword) {
     case eCSSKeyword_serif:
-      aFamilyList->Append(FontFamilyName(eFamily_serif));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_serif));
       return true;
     case eCSSKeyword_sans_serif:
-      aFamilyList->Append(FontFamilyName(eFamily_sans_serif));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_sans_serif));
       return true;
     case eCSSKeyword_monospace:
-      aFamilyList->Append(FontFamilyName(eFamily_monospace));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_monospace));
       return true;
     case eCSSKeyword_cursive:
-      aFamilyList->Append(FontFamilyName(eFamily_cursive));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_cursive));
       return true;
     case eCSSKeyword_fantasy:
-      aFamilyList->Append(FontFamilyName(eFamily_fantasy));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_fantasy));
       return true;
     case eCSSKeyword__moz_fixed:
-      aFamilyList->Append(FontFamilyName(eFamily_moz_fixed));
+      aFamilyList.AppendElement(FontFamilyName(eFamily_moz_fixed));
       return true;
     default:
       break;
@@ -14802,8 +14802,7 @@ AppendGeneric(nsCSSKeyword aKeyword, FontFamilyList *aFamilyList)
 bool
 CSSParserImpl::ParseFamily(nsCSSValue& aValue)
 {
-  RefPtr<css::FontFamilyListRefCnt> familyList =
-    new css::FontFamilyListRefCnt();
+  nsTArray<FontFamilyName> families;
   nsAutoString family;
   bool single, quoted;
 
@@ -14839,12 +14838,12 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
         }
         break;
       default:
-        foundGeneric = AppendGeneric(keyword, familyList);
+        foundGeneric = AppendGeneric(keyword, families);
     }
   }
 
   if (!foundGeneric) {
-    familyList->Append(
+    families.AppendElement(
       FontFamilyName(family, (quoted ? eQuotedName : eUnquotedName)));
   }
 
@@ -14873,22 +14872,24 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
           }
           break;
         default:
-          foundGeneric = AppendGeneric(keyword, familyList);
+          foundGeneric = AppendGeneric(keyword, families);
           break;
       }
     }
 
     if (!foundGeneric) {
-      familyList->Append(
+      families.AppendElement(
         FontFamilyName(nextFamily, (quoted ? eQuotedName : eUnquotedName)));
     }
   }
 
-  if (familyList->IsEmpty()) {
+  if (families.IsEmpty()) {
     return false;
   }
 
-  aValue.SetFontFamilyListValue(familyList);
+  RefPtr<SharedFontList> familyList =
+    new SharedFontList(Move(families));
+  aValue.SetFontFamilyListValue(familyList.forget());
   return true;
 }
 

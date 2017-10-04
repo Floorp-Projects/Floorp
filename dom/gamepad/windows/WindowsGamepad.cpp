@@ -388,7 +388,7 @@ class WindowsGamepadService
   void ScanForRawInputDevices();
   // Look for connected XInput devices.
   bool ScanForXInputDevices();
-  bool HaveXInputGamepad(int userIndex);
+  bool HaveXInputGamepad(unsigned int userIndex);
 
   bool mIsXInputMonitoring;
   void PollXInput();
@@ -462,7 +462,7 @@ WindowsGamepadService::DevicesChangeCallback(nsITimer *aTimer, void* aService)
 }
 
 bool
-WindowsGamepadService::HaveXInputGamepad(int userIndex)
+WindowsGamepadService::HaveXInputGamepad(unsigned int userIndex)
 {
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     if (mGamepads[i].type == kXInputGamepad
@@ -486,7 +486,7 @@ WindowsGamepadService::ScanForXInputDevices()
     return found;
   }
 
-  for (int i = 0; i < XUSER_MAX_COUNT; i++) {
+  for (unsigned int i = 0; i < XUSER_MAX_COUNT; i++) {
     XINPUT_STATE state = {};
     if (mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
       continue;

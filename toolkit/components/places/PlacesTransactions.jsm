@@ -993,8 +993,6 @@ function createItemsFromBookmarksTree(tree, restoring = false,
         if ("tags" in item) {
           PlacesUtils.tagging.tagURI(Services.io.newURI(item.uri),
                                      item.tags.split(","));
-          if (restoring)
-            shouldResetLastModified = true;
         }
         break;
       }
@@ -1041,9 +1039,8 @@ function createItemsFromBookmarksTree(tree, restoring = false,
 
       if (annos.length > 0) {
         let itemId = await PlacesUtils.promiseItemId(guid);
-        PlacesUtils.setAnnotationsForItem(itemId, annos);
-        if (restoring)
-          shouldResetLastModified = true;
+        PlacesUtils.setAnnotationsForItem(itemId, annos,
+          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
       }
     }
 
@@ -1092,7 +1089,8 @@ PT.NewBookmark.prototype = Object.seal({
       info = await PlacesUtils.bookmarks.insert(info);
       if (annotations.length > 0) {
         let itemId = await PlacesUtils.promiseItemId(info.guid);
-        PlacesUtils.setAnnotationsForItem(itemId, annotations);
+        PlacesUtils.setAnnotationsForItem(itemId, annotations,
+          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
       }
       if (tags.length > 0) {
         PlacesUtils.tagging.tagURI(Services.io.newURI(url.href), tags);
@@ -1111,10 +1109,6 @@ PT.NewBookmark.prototype = Object.seal({
     };
     this.redo = async function() {
       await createItem();
-      // CreateItem will update the lastModified value if tags or annotations
-      // are present, but we don't care to restore it. The likely of a user
-      // creating a bookmark, undoing and redoing that, and still caring
-      // about lastModified is basically non-existant.
     };
     return info.guid;
   }
@@ -1165,7 +1159,8 @@ PT.NewFolder.prototype = Object.seal({
 
       if (annotations.length > 0) {
         let itemId = await PlacesUtils.promiseItemId(folderGuid);
-        PlacesUtils.setAnnotationsForItem(itemId, annotations);
+        PlacesUtils.setAnnotationsForItem(itemId, annotations,
+          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
       }
     }
     await createItem();
@@ -1175,8 +1170,6 @@ PT.NewFolder.prototype = Object.seal({
     };
     this.redo = async function() {
       await createItem();
-      // See the reasoning in CreateItem for why we don't care
-      // about precisely resetting the lastModified value.
     };
     return folderGuid;
   }
@@ -1224,7 +1217,8 @@ PT.NewLivemark.prototype = Object.seal({
     let createItem = async function() {
       let livemark = await PlacesUtils.livemarks.addLivemark(livemarkInfo);
       if (annotations.length > 0) {
-        PlacesUtils.setAnnotationsForItem(livemark.id, annotations);
+        PlacesUtils.setAnnotationsForItem(livemark.id, annotations,
+          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
       }
       return livemark;
     };

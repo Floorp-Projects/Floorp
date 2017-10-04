@@ -32,11 +32,6 @@
 
 namespace {
 
-enum ParsingState {
-  KEY_NAME,
-  KEY_VALUE
-};
-
 static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 }  // namespace

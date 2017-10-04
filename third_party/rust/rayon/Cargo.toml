@@ -12,7 +12,7 @@
 
 [package]
 name = "rayon"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 description = "Simple work-stealing parallelism for Rust"
 documentation = "https://docs.rs/rayon/"
@@ -23,14 +23,14 @@ version = "1.2"
 [dev-dependencies.rand]
 version = "0.3"
 
-[dev-dependencies.futures]
-version = "0.1.7"
+[dev-dependencies.compiletest_rs]
+version = "0.2.1"
 
 [dev-dependencies.docopt]
 version = "0.7"
 
-[dev-dependencies.compiletest_rs]
-version = "0.2.1"
-
 [dev-dependencies.rustc-serialize]
 version = "0.3"
+
+[dev-dependencies.futures]
+version = "0.1.7"
