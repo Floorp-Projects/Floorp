@@ -6480,7 +6480,7 @@ ParseNode::getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
             count = pn_count - 1;
             pn = pn_head->pn_next;
         } else {
-            MOZ_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+            MOZ_ASSERT(!(pn_xflags & PNX_NONCONST));
             count = pn_count;
             pn = pn_head;
         }
@@ -6511,7 +6511,6 @@ ParseNode::getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
         return true;
       }
       case PNK_OBJECT: {
-        MOZ_ASSERT(isOp(JSOP_NEWINIT));
         MOZ_ASSERT(!(pn_xflags & PNX_NONCONST));
 
         if (allowObjects == DontAllowObjects) {
