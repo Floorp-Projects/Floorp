@@ -92,7 +92,6 @@ BytesPerPixel(SurfaceFormat aFormat)
   case SurfaceFormat::A8:
     return 1;
   case SurfaceFormat::R5G6B5_UINT16:
-  case SurfaceFormat::A16:
     return 2;
   case SurfaceFormat::R8G8B8:
   case SurfaceFormat::B8G8R8:
@@ -105,19 +104,6 @@ BytesPerPixel(SurfaceFormat aFormat)
   default:
     return 4;
   }
-}
-
-static inline SurfaceFormat
-SurfaceFormatForAlphaDepth(uint32_t aDepth)
-{
-  if (aDepth == 8) {
-    return SurfaceFormat::A8;
-  } else if (aDepth == 10 ||
-             aDepth == 12) {
-    return SurfaceFormat::A16;
-  }
-  MOZ_ASSERT_UNREACHABLE("Unsupported alpha depth");
-  return SurfaceFormat::UNKNOWN;
 }
 
 static inline bool
