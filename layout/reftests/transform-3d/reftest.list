@@ -54,7 +54,7 @@ fails-if(webrender) == sorting-2a.html sorting-2-ref.html
 == sorting-2b.html sorting-2-ref.html
 == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
-fuzzy-if(webrender,0-1,0-1) == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
+fuzzy-if(webrender,0-1,0-2) == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
