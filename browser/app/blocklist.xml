@@ -941,10 +941,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i1262" id="my7thfakeid@gmail.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i86" id="{45147e67-4020-47e2-8f7a-55464fb535aa}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1277,6 +1273,14 @@
     <emItem blockID="i674" id="crossriderapp12555@crossrider.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="a84e6eba-4bc1-4416-b481-9b837d39f9f0" id="firefox@mega.co.nz">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="3.16.1" severity="1">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="56.0a1"/>
+        </targetApplication>
+      </versionRange>
     </emItem>
     <emItem blockID="i1034" id="a88a77ahjjfjakckmmabsy278djasi@jetpack">
       <prefs/>
@@ -2104,6 +2108,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i816" id="noOpus@outlook.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i1262" id="my7thfakeid@gmail.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
