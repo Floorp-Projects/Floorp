@@ -290,7 +290,7 @@ public:
     {
     }
 
-    FontFamilyList(NotNull<SharedFontList*> aFontList)
+    explicit FontFamilyList(NotNull<SharedFontList*> aFontList)
         : mFontlist(aFontList)
         , mDefaultFontType(eFamily_none)
     {
