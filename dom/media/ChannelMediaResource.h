@@ -6,8 +6,12 @@
 #ifndef mozilla_dom_media_ChannelMediaResource_h
 #define mozilla_dom_media_ChannelMediaResource_h
 
-#include "MediaResource.h"
+#include "BaseMediaResource.h"
+#include "MediaCache.h"
 #include "MediaChannelStatistics.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 namespace mozilla {
 
