@@ -2267,6 +2267,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           //    the default -1 value. Then handleEnter will know it should not
           //    delay the action, cause a result wont't ever arrive.
           this.input.controller.setInitiallySelectedIndex(0);
+
+          // Since we are starting a new search, reset the currently selected
+          // one-off button, to cover those cases where the oneoff buttons
+          // binding won't receive an actual DOM event. For example, a search
+          // could be started without an actual input event, and the popup may
+          // not have been closed from the previous search.
+          this.oneOffSearchButtons.selectedButton = null;
         ]]></body>
       </method>
 
