@@ -4,8 +4,6 @@
 diff two profile summaries
 """
 
-from __future__ import absolute_import, print_function
-
 import difflib
 import profile
 import optparse
@@ -74,10 +72,10 @@ def diff_profiles(args=sys.argv[1:]):
     # display them
     while diffs:
         key, value = diffs.pop(0)
-        print('[%s]:\n' % key)
-        print(value)
+        print '[%s]:\n' % key
+        print value
         if diffs:
-            print('-' * 4)
+            print '-' * 4
 
 
 if __name__ == '__main__':

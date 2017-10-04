@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import os
 import sys
 import tempfile
@@ -15,7 +13,6 @@ import unittest
 import mozunit
 
 import mozfile
-
 from mozversion import errors, get_version
 
 

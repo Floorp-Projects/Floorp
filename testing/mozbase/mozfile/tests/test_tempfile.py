@@ -7,7 +7,6 @@
 """
 tests for mozfile.NamedTemporaryFile
 """
-from __future__ import absolute_import
 
 import mozfile
 import os

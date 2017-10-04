@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # flake8: noqa
 
-from __future__ import absolute_import
-
 from copy import deepcopy
 import os
 import unittest

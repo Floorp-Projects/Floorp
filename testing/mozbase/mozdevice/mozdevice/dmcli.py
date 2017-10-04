@@ -5,7 +5,6 @@
 """
 Command-line client to control a device
 """
-from __future__ import absolute_import, print_function
 
 import errno
 import logging
@@ -210,7 +209,7 @@ class DMCli(object):
                                   logLevel=logLevel)
 
     def deviceroot(self, args):
-        print(self.dm.deviceRoot)
+        print self.dm.deviceRoot
 
     def push(self, args):
         (src, dest) = (args.local_file, args.remote_file)
@@ -226,7 +225,7 @@ class DMCli(object):
     def pull(self, args):
         (src, dest) = (args.local_file, args.remote_file)
         if not self.dm.fileExists(src):
-            print('No such file or directory')
+            print 'No such file or directory'
             return
         if not dest:
             dest = posixpath.basename(src)
@@ -252,7 +251,7 @@ class DMCli(object):
 
     def listapps(self, args):
         for app in self.dm.getInstalledApps():
-            print(app)
+            print app
 
     def stopapp(self, args):
         self.dm.stopApplication(args.appname)
@@ -264,7 +263,7 @@ class DMCli(object):
     def shell(self, args):
         buf = StringIO.StringIO()
         self.dm.shell(args.command, buf, root=args.root)
-        print(str(buf.getvalue()[0:-1]).rstrip())
+        print str(buf.getvalue()[0:-1]).rstrip()
 
     def getinfo(self, args):
         info = self.dm.getInfo(directive=args.directive)
@@ -272,12 +271,12 @@ class DMCli(object):
             if infokey == "process":
                 pass  # skip process list: get that through ps
             elif args.directive is None:
-                print("%s: %s" % (infokey.upper(), infoitem))
+                print "%s: %s" % (infokey.upper(), infoitem)
             else:
-                print(infoitem)
+                print infoitem
 
     def logcat(self, args):
-        print(''.join(self.dm.getLogcat()))
+        print ''.join(self.dm.getLogcat())
 
     def clearlogcat(self, args):
         self.dm.recordLogcat()
@@ -288,22 +287,22 @@ class DMCli(object):
     def processlist(self, args):
         pslist = self.dm.getProcessList()
         for ps in pslist:
-            print(" ".join(str(i) for i in ps))
+            print " ".join(str(i) for i in ps)
 
     def listfiles(self, args):
         filelist = self.dm.listFiles(args.remote_dir)
         for file in filelist:
-            print(file)
+            print file
 
     def removefile(self, args):
         self.dm.removeFile(args.remote_file)
 
     def isdir(self, args):
         if self.dm.dirExists(args.remote_dir):
-            print("TRUE")
+            print "TRUE"
             return
 
-        print("FALSE")
+        print "FALSE"
         return errno.ENOTDIR
 
     def mkdir(self, args):
@@ -317,9 +316,9 @@ class DMCli(object):
 
     def isfile(self, args):
         if self.dm.fileExists(args.remote_file):
-            print("TRUE")
+            print "TRUE"
             return
-        print("FALSE")
+        print "FALSE"
         return errno.ENOENT
 
     def launchfennec(self, args):

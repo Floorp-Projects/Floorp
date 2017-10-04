@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import os
 import sys
 
@@ -139,7 +137,7 @@ class CLI(MozProfileCLI):
         # attach a debugger if specified
         debug_args, interactive = self.debugger_arguments()
         runner.start(debug_args=debug_args, interactive=interactive)
-        print('Starting: ' + ' '.join(runner.command))
+        print 'Starting: ' + ' '.join(runner.command)
         try:
             runner.wait()
         except KeyboardInterrupt:

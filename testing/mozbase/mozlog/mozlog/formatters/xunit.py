@@ -1,9 +1,7 @@
-from __future__ import absolute_import
-
 import types
 from xml.etree import ElementTree
 
-from . import base
+import base
 
 
 def format_test_id(test_id):
