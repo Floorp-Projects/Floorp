@@ -101,19 +101,12 @@ NewConsoleOutputWrapper.prototype = {
       let messageEl = target.closest(".message");
       let clipboardText = messageEl ? messageEl.textContent : null;
 
-      let messageVariable = target.closest(".objectBox");
-      // Ensure that console.group and console.groupCollapsed commands are not captured
-      let variableText = (messageVariable
-        && !(messageEl.classList.contains("startGroup"))
-        && !(messageEl.classList.contains("startGroupCollapsed")))
-          ? messageVariable.textContent : null;
-
       // Retrieve closes actor id from the DOM.
       let actorEl = target.closest("[data-link-actor-id]");
       let actor = actorEl ? actorEl.dataset.linkActorId : null;
 
       let menu = createContextMenu(this.jsterm, this.parentNode,
-        { actor, clipboardText, variableText, message, serviceContainer });
+        { actor, clipboardText, message, serviceContainer });
 
       // Emit the "menu-open" event for testing.
       menu.once("open", () => this.emit("menu-open"));
