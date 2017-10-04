@@ -9,7 +9,6 @@
 
 #include "MediaStreamGraphImpl.h"
 
-#include <inttypes.h>
 #include <math.h>
 
 #include "nspr.h"
@@ -57,7 +56,7 @@
 
 #include "nsThreadUtils.h"
 
-#include "CSFLog.h"
+#include "logging.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
@@ -71,11 +70,8 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-static const char* mpLogTag = "MediaPipeline";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG mpLogTag
+// Logging context
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 extern mozilla::LogModule* AudioLogModule();
@@ -152,8 +148,8 @@ public:
     // giving us a margin to not cause some machines to drop every other frame.
     const int32_t queueThrottlingLimit = 1;
     if (mLength > queueThrottlingLimit) {
-      CSFLogDebug(LOGTAG, "VideoFrameConverter %p queue is full. Throttling by throwing away a frame.",
-                  this);
+      MOZ_MTLOG(ML_DEBUG, "VideoFrameConverter " << this << " queue is full." <<
+                          " Throttling by throwing away a frame.");
 #ifdef DEBUG
       ++mThrottleCount;
       mThrottleRecord = std::max(mThrottleCount, mThrottleRecord);
@@ -163,14 +159,15 @@ public:
 
 #ifdef DEBUG
     if (mThrottleCount > 0) {
+      auto level = ML_DEBUG;
       if (mThrottleCount > 5) {
         // Log at a higher level when we have large drops.
-        CSFLogInfo(LOGTAG, "VideoFrameConverter %p stopped throttling after throwing away %d frames. Longest throttle so far was %d frames.",
-                   this, mThrottleCount, mThrottleRecord);
-      } else {
-        CSFLogDebug(LOGTAG, "VideoFrameConverter %p stopped throttling after throwing away %d frames. Longest throttle so far was %d frames.",
-                    this, mThrottleCount, mThrottleRecord);
+        level = ML_INFO;
       }
+      MOZ_MTLOG(level, "VideoFrameConverter " << this << " stopped" <<
+                       " throttling after throwing away " << mThrottleCount <<
+                       " frames. Longest throttle so far was " <<
+                       mThrottleRecord << " frames.");
       mThrottleCount = 0;
     }
 #endif
@@ -253,7 +250,7 @@ protected:
   {
     // check for parameter sanity
     if (!aBuffer || aVideoFrameLength == 0 || aWidth == 0 || aHeight == 0) {
-      CSFLogError(LOGTAG, "%s Invalid Parameters", __FUNCTION__);
+      MOZ_MTLOG(ML_ERROR, __FUNCTION__ << " Invalid Parameters ");
       MOZ_ASSERT(false);
       return;
     }
@@ -311,7 +308,7 @@ protected:
         // Fill Cb/Cr planes
         memset(pixelData.get() + yPlaneLen.value(), 0x80, cbcrPlaneLen);
 
-        CSFLogDebug(LOGTAG, "Sending a black video frame");
+        MOZ_MTLOG(ML_DEBUG, "Sending a black video frame");
         VideoFrameConverted(Move(pixelData), length.value(),
                             size.width, size.height,
                             mozilla::kVideoI420, 0);
@@ -347,7 +344,7 @@ protected:
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0, 0, // not setting timestamps
                                       webrtc::kVideoRotation_0);
-        CSFLogDebug(LOGTAG, "Sending an I420 video frame");
+        MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame");
         VideoFrameConverted(i420_frame);
         return;
       }
@@ -355,16 +352,15 @@ protected:
 
     RefPtr<SourceSurface> surf = aImage->GetAsSourceSurface();
     if (!surf) {
-      CSFLogError(LOGTAG, "Getting surface from %s image failed",
-                  Stringify(format).c_str());
+      MOZ_MTLOG(ML_ERROR, "Getting surface from " << Stringify(format) << " image failed");
       return;
     }
 
     RefPtr<DataSourceSurface> data = surf->GetDataSurface();
     if (!data) {
-      CSFLogError(LOGTAG, "Getting data surface from %s image with %s (%s) surface failed",
-                  Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
-                  Stringify(surf->GetFormat()).c_str());
+      MOZ_MTLOG(ML_ERROR, "Getting data surface from " << Stringify(format)
+                          << " image with " << Stringify(surf->GetType()) << "("
+                          << Stringify(surf->GetFormat()) << ") surface failed");
       return;
     }
 
@@ -387,9 +383,9 @@ protected:
 
     DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
     if (!map.IsMapped()) {
-      CSFLogError(LOGTAG, "Reading DataSourceSurface from %s image with %s (%s) surface failed",
-                  Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
-                  Stringify(surf->GetFormat()).c_str());
+      MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface from " << Stringify(format)
+                          << " image with " << Stringify(surf->GetType()) << "("
+                          << Stringify(surf->GetFormat()) << ") surface failed");
       return;
     }
 
@@ -415,18 +411,16 @@ protected:
                                   size.width, size.height);
         break;
       default:
-        CSFLogError(LOGTAG, "Unsupported RGB video format %s",
-                    Stringify(surf->GetFormat()).c_str());
+        MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format" << Stringify(surf->GetFormat()));
         MOZ_ASSERT(PR_FALSE);
         return;
     }
     if (rv != 0) {
-      CSFLogError(LOGTAG, "%s to I420 conversion failed",
-                  Stringify(surf->GetFormat()).c_str());
+      MOZ_MTLOG(ML_ERROR, Stringify(surf->GetFormat()) << " to I420 conversion failed");
       return;
     }
-    CSFLogDebug(LOGTAG, "Sending an I420 video frame converted from %s",
-                Stringify(surf->GetFormat()).c_str());
+    MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame converted from " <<
+                        Stringify(surf->GetFormat()));
     VideoFrameConverted(Move(yuv_scoped), buffer_size.value(), size.width, size.height, mozilla::kVideoI420, 0);
   }
 
@@ -600,7 +594,7 @@ MediaPipeline::MediaPipeline(const std::string& pc,
 
 MediaPipeline::~MediaPipeline() {
   ASSERT_ON_THREAD(main_thread_);
-  CSFLogInfo(LOGTAG, "Destroying MediaPipeline: %s", description_.c_str());
+  MOZ_MTLOG(ML_INFO, "Destroying MediaPipeline: " << description_);
 }
 
 nsresult MediaPipeline::Init() {
@@ -776,7 +770,7 @@ void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state
   MOZ_ASSERT(info);
 
   if (state == TransportLayer::TS_OPEN) {
-    CSFLogInfo(LOGTAG, "Flow is ready");
+    MOZ_MTLOG(ML_INFO, "Flow is ready");
     TransportReady_s(*info);
   } else if (state == TransportLayer::TS_CLOSED ||
              state == TransportLayer::TS_ERROR) {
@@ -808,13 +802,14 @@ nsresult MediaPipeline::TransportReady_s(TransportInfo &info) {
   // TODO(ekr@rtfm.com): implement some kind of notification on
   // failure. bug 852665.
   if (info.state_ != MP_CONNECTING) {
-    CSFLogError(LOGTAG, "Transport ready for flow in wrong state:%s :%s",
-                description_.c_str(), ToString(info.type_));
+    MOZ_MTLOG(ML_ERROR, "Transport ready for flow in wrong state:" <<
+              description_ << ": " << ToString(info.type_));
     return NS_ERROR_FAILURE;
   }
 
-  CSFLogInfo(LOGTAG, "Transport ready for pipeline %p flow %s: %s", this,
-             description_.c_str(), ToString(info.type_));
+  MOZ_MTLOG(ML_INFO, "Transport ready for pipeline " <<
+            static_cast<void *>(this) << " flow " << description_ << ": " <<
+            ToString(info.type_));
 
   // TODO(bcampen@mozilla.com): Should we disconnect from the flow on failure?
   nsresult res;
@@ -827,7 +822,7 @@ nsresult MediaPipeline::TransportReady_s(TransportInfo &info) {
   uint16_t cipher_suite;
   res = dtls->GetSrtpCipher(&cipher_suite);
   if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "Failed to negotiate DTLS-SRTP. This is an error");
+    MOZ_MTLOG(ML_ERROR, "Failed to negotiate DTLS-SRTP. This is an error");
     info.state_ = MP_CLOSED;
     UpdateRtcpMuxState(info);
     return res;
@@ -838,7 +833,7 @@ nsresult MediaPipeline::TransportReady_s(TransportInfo &info) {
   res = dtls->ExportKeyingMaterial(kDTLSExporterLabel, false, "",
                                    srtp_block, sizeof(srtp_block));
   if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "Failed to compute DTLS-SRTP keys. This is an error");
+    MOZ_MTLOG(ML_ERROR, "Failed to compute DTLS-SRTP keys. This is an error");
     info.state_ = MP_CLOSED;
     UpdateRtcpMuxState(info);
     MOZ_CRASH();  // TODO: Remove once we have enough field experience to
@@ -880,15 +875,16 @@ nsresult MediaPipeline::TransportReady_s(TransportInfo &info) {
   info.recv_srtp_ = SrtpFlow::Create(cipher_suite, true, read_key,
                                      SRTP_TOTAL_KEY_LENGTH);
   if (!info.send_srtp_ || !info.recv_srtp_) {
-    CSFLogError(LOGTAG, "Couldn't create SRTP flow for %s",
-                ToString(info.type_));
+    MOZ_MTLOG(ML_ERROR, "Couldn't create SRTP flow for "
+              << ToString(info.type_));
     info.state_ = MP_CLOSED;
     UpdateRtcpMuxState(info);
     return NS_ERROR_FAILURE;
   }
 
-  CSFLogInfo(LOGTAG, "Listening for %s packets received on %p",
-             ToString(info.type_), dtls->downward());
+    MOZ_MTLOG(ML_INFO, "Listening for " << ToString(info.type_)
+                       << " packets received on " <<
+                       static_cast<void *>(dtls->downward()));
 
   switch (info.type_) {
     case RTP:
@@ -921,7 +917,7 @@ nsresult MediaPipeline::TransportFailed_s(TransportInfo &info) {
   info.state_ = MP_CLOSED;
   UpdateRtcpMuxState(info);
 
-  CSFLogInfo(LOGTAG, "Transport closed for flow %s", ToString(info.type_));
+  MOZ_MTLOG(ML_INFO, "Transport closed for flow " << ToString(info.type_));
 
   NS_WARNING(
       "MediaPipeline Transport failed. This is not properly cleaned up yet");
@@ -963,7 +959,7 @@ nsresult MediaPipeline::SendPacket(TransportFlow *flow, const void *data,
     if (res == TE_WOULDBLOCK)
       return NS_OK;
 
-    CSFLogError(LOGTAG, "Failed write on stream %s", description_.c_str());
+    MOZ_MTLOG(ML_ERROR, "Failed write on stream " << description_);
     return NS_BASE_STREAM_CLOSED;
   }
 
@@ -975,18 +971,21 @@ void MediaPipeline::increment_rtp_packets_sent(int32_t bytes) {
   rtp_bytes_sent_ += bytes;
 
   if (!(rtp_packets_sent_ % 100)) {
-    CSFLogInfo(LOGTAG, "RTP sent packet count for %s Pipeline %p Flow: %p: %u (%" PRId64 " bytes)",
-               description_.c_str(), this, static_cast<void *>(rtp_.transport_),
-               rtp_packets_sent_, rtp_bytes_sent_);
+    MOZ_MTLOG(ML_INFO, "RTP sent packet count for " << description_
+              << " Pipeline " << static_cast<void *>(this)
+              << " Flow : " << static_cast<void *>(rtp_.transport_)
+              << ": " << rtp_packets_sent_
+              << " (" << rtp_bytes_sent_ << " bytes)");
   }
 }
 
 void MediaPipeline::increment_rtcp_packets_sent() {
   ++rtcp_packets_sent_;
   if (!(rtcp_packets_sent_ % 100)) {
-    CSFLogInfo(LOGTAG, "RTCP sent packet count for %s Pipeline %p Flow: %p: %u",
-               description_.c_str(), this, static_cast<void *>(rtp_.transport_),
-               rtcp_packets_sent_);
+    MOZ_MTLOG(ML_INFO, "RTCP sent packet count for " << description_
+              << " Pipeline " << static_cast<void *>(this)
+              << " Flow : " << static_cast<void *>(rtcp_.transport_)
+              << ": " << rtcp_packets_sent_);
   }
 }
 
@@ -994,18 +993,21 @@ void MediaPipeline::increment_rtp_packets_received(int32_t bytes) {
   ++rtp_packets_received_;
   rtp_bytes_received_ += bytes;
   if (!(rtp_packets_received_ % 100)) {
-    CSFLogInfo(LOGTAG, "RTP received packet count for %s Pipeline %p Flow: %p: %u (%" PRId64 " bytes)",
-               description_.c_str(), this, static_cast<void *>(rtp_.transport_),
-               rtp_packets_received_, rtp_bytes_received_);
+    MOZ_MTLOG(ML_INFO, "RTP received packet count for " << description_
+              << " Pipeline " << static_cast<void *>(this)
+              << " Flow : " << static_cast<void *>(rtp_.transport_)
+              << ": " << rtp_packets_received_
+              << " (" << rtp_bytes_received_ << " bytes)");
   }
 }
 
 void MediaPipeline::increment_rtcp_packets_received() {
   ++rtcp_packets_received_;
   if (!(rtcp_packets_received_ % 100)) {
-    CSFLogInfo(LOGTAG, "RTCP received packet count for %s Pipeline %p Flow: %p: %u",
-               description_.c_str(), this, static_cast<void *>(rtp_.transport_),
-               rtcp_packets_received_);
+    MOZ_MTLOG(ML_INFO, "RTCP received packet count for " << description_
+              << " Pipeline " << static_cast<void *>(this)
+              << " Flow : " << static_cast<void *>(rtcp_.transport_)
+              << ": " << rtcp_packets_received_);
   }
 }
 
@@ -1013,22 +1015,22 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
                                       const unsigned char *data,
                                       size_t len) {
   if (!transport_->pipeline()) {
-    CSFLogError(LOGTAG, "Discarding incoming packet; transport disconnected");
+    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; transport disconnected");
     return;
   }
 
   if (!conduit_) {
-    CSFLogDebug(LOGTAG, "Discarding incoming packet; media disconnected");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; media disconnected");
     return;
   }
 
   if (rtp_.state_ != MP_OPEN) {
-    CSFLogError(LOGTAG, "Discarding incoming packet; pipeline not open");
+    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; pipeline not open");
     return;
   }
 
   if (rtp_.transport_->state() != TransportLayer::TS_OPEN) {
-    CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
+    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; transport not open");
     return;
   }
 
@@ -1113,11 +1115,11 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
                    inner_data[2],
                    inner_data[3]);
 
-    CSFLogError(LOGTAG, "Error unprotecting RTP in %s len= %zu [%s]",
-                description_.c_str(), len, tmp);
+    MOZ_MTLOG(ML_NOTICE, "Error unprotecting RTP in " << description_
+              << "len= " << len << "[" << tmp << "...]");
     return;
   }
-  CSFLogDebug(LOGTAG, "%s received RTP packet.", description_.c_str());
+  MOZ_MTLOG(ML_DEBUG, description_ << " received RTP packet.");
   increment_rtp_packets_received(out_len);
 
   RtpLogger::LogPacket(inner_data.get(), out_len, true, true, header.headerLength,
@@ -1133,22 +1135,22 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
                                        const unsigned char *data,
                                        size_t len) {
   if (!transport_->pipeline()) {
-    CSFLogDebug(LOGTAG, "Discarding incoming packet; transport disconnected");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; transport disconnected");
     return;
   }
 
   if (!conduit_) {
-    CSFLogDebug(LOGTAG, "Discarding incoming packet; media disconnected");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; media disconnected");
     return;
   }
 
   if (rtcp_.state_ != MP_OPEN) {
-    CSFLogDebug(LOGTAG, "Discarding incoming packet; pipeline not open");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; pipeline not open");
     return;
   }
 
   if (rtcp_.transport_->state() != TransportLayer::TS_OPEN) {
-    CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
+    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; transport not open");
     return;
   }
 
@@ -1166,7 +1168,7 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
   // TODO bug 1279153: remove SR check for reduced size RTCP
   if (filter_ && direction_ == RECEIVE) {
     if (!filter_->FilterSenderReport(data, len)) {
-      CSFLogWarn(LOGTAG, "Dropping incoming RTCP packet; filtered out");
+      MOZ_MTLOG(ML_NOTICE, "Dropping incoming RTCP packet; filtered out");
       return;
     }
   }
@@ -1187,7 +1189,7 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
   if (!NS_SUCCEEDED(res))
     return;
 
-  CSFLogDebug(LOGTAG, "%s received RTCP packet.", description_.c_str());
+  MOZ_MTLOG(ML_DEBUG, description_ << " received RTCP packet.");
   increment_rtcp_packets_received();
 
   RtpLogger::LogPacket(inner_data.get(), out_len, true, false, 0, description_);
@@ -1237,7 +1239,7 @@ void MediaPipeline::PacketReceived(TransportLayer *layer,
                                    const unsigned char *data,
                                    size_t len) {
   if (!transport_->pipeline()) {
-    CSFLogDebug(LOGTAG, "Discarding incoming packet; transport disconnected");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; transport disconnected");
     return;
   }
 
@@ -1484,8 +1486,9 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
   description_ += "]";
 
   // TODO(ekr@rtfm.com): Check for errors
-  CSFLogDebug(LOGTAG, "Attaching pipeline to track %p conduit type=%s", this,
-              (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
+  MOZ_MTLOG(ML_DEBUG, "Attaching pipeline to track "
+            << static_cast<void *>(domtrack_) << " conduit type=" <<
+            (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // With full duplex we don't risk having audio come in late to the MSG
@@ -1581,9 +1584,10 @@ nsresult MediaPipelineTransmit::ReplaceTrack(MediaStreamTrack& domtrack) {
   nsString nsTrackId;
   domtrack.GetId(nsTrackId);
   std::string track_id(NS_ConvertUTF16toUTF8(nsTrackId).get());
-  CSFLogDebug(LOGTAG, "Reattaching pipeline %s to track %p track %s conduit type: %s",
-              description_.c_str(), &domtrack, track_id.c_str(),
-              (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
+  MOZ_MTLOG(ML_DEBUG, "Reattaching pipeline " << description_ << " to track "
+            << static_cast<void *>(&domtrack)
+            << " track " << track_id << " conduit type=" <<
+            (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
 
   DetachMedia();
   domtrack_ = &domtrack; // Detach clears it
@@ -1616,13 +1620,13 @@ nsresult MediaPipeline::ConnectTransport_s(TransportInfo &info) {
   if (info.transport_->state() == TransportLayer::TS_OPEN) {
     nsresult res = TransportReady_s(info);
     if (NS_FAILED(res)) {
-      CSFLogError(LOGTAG, "Error calling TransportReady(); res=%u in %s",
-                  static_cast<uint32_t>(res), __FUNCTION__);
+      MOZ_MTLOG(ML_ERROR, "Error calling TransportReady(); res="
+                << static_cast<uint32_t>(res) << " in " << __FUNCTION__);
       return res;
     }
   } else if (info.transport_->state() == TransportLayer::TS_ERROR) {
-    CSFLogError(LOGTAG, "%s transport is already in error state",
-                ToString(info.type_));
+    MOZ_MTLOG(ML_ERROR, ToString(info.type_)
+                        << "transport is already in error state");
     TransportFailed_s(info);
     return NS_ERROR_FAILURE;
   }
@@ -1673,7 +1677,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   TransportInfo& transport = is_rtp ? pipeline_->rtp_ : pipeline_->rtcp_;
 
   if (!transport.send_srtp_) {
-    CSFLogDebug(LOGTAG, "Couldn't write RTP/RTCP packet; SRTP not set up yet");
+    MOZ_MTLOG(ML_DEBUG, "Couldn't write RTP/RTCP packet; SRTP not set up yet");
     return NS_OK;
   }
 
@@ -1720,8 +1724,8 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   // paranoia; don't have uninitialized bytes included in data->len()
   data->SetLength(out_len);
 
-  CSFLogDebug(LOGTAG, "%s sending %s packet", pipeline_->description_.c_str(),
-              (is_rtp ? "RTP" : "RTCP"));
+  MOZ_MTLOG(ML_DEBUG, pipeline_->description_ << " sending " <<
+            (is_rtp ? "RTP" : "RTCP") << " packet");
   if (is_rtp) {
     pipeline_->packet_dumper_->Dump(
         pipeline_->level(), dom::mozPacketDumpType::Srtp, true, data->data(), out_len);
@@ -1770,8 +1774,9 @@ void MediaPipelineTransmit::PipelineListener::
 NotifyRealtimeTrackData(MediaStreamGraph* graph,
                         StreamTime offset,
                         const MediaSegment& media) {
-  CSFLogDebug(LOGTAG, "MediaPipeline::NotifyRealtimeTrackData() listener=%p, offset=%" PRId64 ", duration=%" PRId64,
-              this, offset, media.GetDuration());
+  MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyRealtimeTrackData() listener=" <<
+                      this << ", offset=" << offset <<
+                      ", duration=" << media.GetDuration());
 
   if (media.GetType() == MediaSegment::VIDEO) {
     // We have to call the upstream NotifyRealtimeTrackData and
@@ -1787,7 +1792,7 @@ void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedChanges(MediaStreamGraph* graph,
                     StreamTime offset,
                     const MediaSegment& queued_media) {
-  CSFLogDebug(LOGTAG, "MediaPipeline::NotifyQueuedChanges()");
+  MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedChanges()");
 
   if (queued_media.GetType() == MediaSegment::VIDEO) {
     // We always get video from SetCurrentFrames().
@@ -1811,15 +1816,15 @@ NotifyQueuedChanges(MediaStreamGraph* graph,
 
 void MediaPipelineTransmit::PipelineListener::
 NotifyDirectListenerInstalled(InstallationResult aResult) {
-  CSFLogInfo(LOGTAG, "MediaPipeline::NotifyDirectListenerInstalled() listener=%p, result=%d",
-             this, static_cast<int32_t>(aResult));
+  MOZ_MTLOG(ML_INFO, "MediaPipeline::NotifyDirectListenerInstalled() listener= " <<
+                     this << ", result=" << static_cast<int32_t>(aResult));
 
   direct_connect_ = InstallationResult::SUCCESS == aResult;
 }
 
 void MediaPipelineTransmit::PipelineListener::
 NotifyDirectListenerUninstalled() {
-  CSFLogInfo(LOGTAG, "MediaPipeline::NotifyDirectListenerUninstalled() listener=%p", this);
+  MOZ_MTLOG(ML_INFO, "MediaPipeline::NotifyDirectListenerUninstalled() listener=" << this);
 
   direct_connect_ = false;
 }
@@ -1827,7 +1832,7 @@ NotifyDirectListenerUninstalled() {
 void MediaPipelineTransmit::PipelineListener::
 NewData(const MediaSegment& media, TrackRate aRate /* = 0 */) {
   if (!active_) {
-    CSFLogDebug(LOGTAG, "Discarding packets because transport not ready");
+    MOZ_MTLOG(ML_DEBUG, "Discarding packets because transport not ready");
     return;
   }
 
@@ -2027,7 +2032,7 @@ public:
   {
     MOZ_ASSERT(source_);
     if (!source_) {
-      CSFLogError(LOGTAG, "NotifyPull() called from a non-SourceMediaStream");
+      MOZ_MTLOG(ML_ERROR, "NotifyPull() called from a non-SourceMediaStream");
       return;
     }
 
@@ -2048,9 +2053,10 @@ public:
 
       if (err != kMediaConduitNoError) {
         // Insert silence on conduit/GIPS failure (extremely unlikely)
-        CSFLogError(LOGTAG, "Audio conduit failed (%d) to return data @ %" PRId64 " (desired %" PRId64 " -> %f)",
-                    err, played_ticks_, desired_time,
-                    source_->StreamTimeToSeconds(desired_time));
+        MOZ_MTLOG(ML_ERROR, "Audio conduit failed (" << err
+                  << ") to return data @ " << played_ticks_
+                  << " (desired " << desired_time << " -> "
+                  << source_->StreamTimeToSeconds(desired_time) << ")");
         // if this is not enough we'll loop and provide more
         samples_length = WEBRTC_DEFAULT_SAMPLE_RATE/100;
         PodArrayZero(scratch_buffer);
@@ -2058,8 +2064,8 @@ public:
 
       MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX_BYTES);
 
-      CSFLogDebug(LOGTAG, "Audio conduit returned buffer of length %u",
-                  samples_length);
+      MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
+                << samples_length);
 
       RefPtr<SharedBuffer> samples = SharedBuffer::Create(samples_length * sizeof(uint16_t));
       int16_t *samples_data = static_cast<int16_t *>(samples->Data());
@@ -2102,7 +2108,7 @@ public:
           }
         }
       } else {
-        CSFLogError(LOGTAG, "AppendToTrack failed");
+        MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
         // we can't un-read the data, but that's ok since we don't want to
         // buffer - but don't i-loop!
         return;
@@ -2148,7 +2154,7 @@ void MediaPipelineReceiveAudio::DetachMedia()
 nsresult MediaPipelineReceiveAudio::Init()
 {
   ASSERT_ON_THREAD(main_thread_);
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
   description_ = pc_ + "| Receive audio[";
   description_ += track_id_;
@@ -2196,7 +2202,7 @@ public:
       if (source_->AppendToTrack(track_id_, &segment)) {
         played_ticks_ = desired_time;
       } else {
-        CSFLogError(LOGTAG, "AppendToTrack failed");
+        MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
         return;
       }
     }
@@ -2330,7 +2336,7 @@ void MediaPipelineReceiveVideo::DetachMedia()
 
 nsresult MediaPipelineReceiveVideo::Init() {
   ASSERT_ON_THREAD(main_thread_);
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
   description_ = pc_ + "| Receive video[";
   description_ += track_id_;
