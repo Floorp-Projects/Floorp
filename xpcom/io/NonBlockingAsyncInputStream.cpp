@@ -162,12 +162,46 @@ NonBlockingAsyncInputStream::Read(char* aBuffer, uint32_t aCount,
   return mInputStream->Read(aBuffer, aCount, aReadCount);
 }
 
+namespace {
+
+class MOZ_RAII ReadSegmentsData
+{
+public:
+  ReadSegmentsData(NonBlockingAsyncInputStream* aStream,
+                   nsWriteSegmentFun aFunc,
+                   void* aClosure)
+    : mStream(aStream)
+    , mFunc(aFunc)
+    , mClosure(aClosure)
+  {}
+
+  NonBlockingAsyncInputStream* mStream;
+  nsWriteSegmentFun mFunc;
+  void* mClosure;
+};
+
+nsresult
+ReadSegmentsWriter(nsIInputStream* aInStream,
+                   void* aClosure,
+                   const char* aFromSegment,
+                   uint32_t aToOffset,
+                   uint32_t aCount,
+                   uint32_t* aWriteCount)
+{
+  ReadSegmentsData* data = static_cast<ReadSegmentsData*>(aClosure);
+  return data->mFunc(data->mStream, data->mClosure, aFromSegment, aToOffset,
+                     aCount, aWriteCount);
+}
+
+} // anonymous
+
 NS_IMETHODIMP
 NonBlockingAsyncInputStream::ReadSegments(nsWriteSegmentFun aWriter,
                                           void* aClosure, uint32_t aCount,
-                                          uint32_t *aResult)
+                                          uint32_t* aResult)
 {
-  return mInputStream->ReadSegments(aWriter, aClosure, aCount, aResult);
+  ReadSegmentsData data(this, aWriter, aClosure);
+  return mInputStream->ReadSegments(ReadSegmentsWriter, &data, aCount, aResult);
 }
 
 NS_IMETHODIMP
@@ -283,7 +317,7 @@ NonBlockingAsyncInputStream::Seek(int32_t aWhence, int64_t aOffset)
 }
 
 NS_IMETHODIMP
-NonBlockingAsyncInputStream::Tell(int64_t *aResult)
+NonBlockingAsyncInputStream::Tell(int64_t* aResult)
 {
   NS_ENSURE_STATE(mWeakSeekableInputStream);
   return mWeakSeekableInputStream->Tell(aResult);
