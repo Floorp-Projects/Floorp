@@ -7,6 +7,7 @@
 #define mozilla_dom_media_ChannelMediaResource_h
 
 #include "MediaResource.h"
+#include "MediaChannelStatistics.h"
 
 namespace mozilla {
 
