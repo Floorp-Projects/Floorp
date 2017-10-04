@@ -156,20 +156,10 @@ private:
  * example. You must ensure that no threads are calling these methods once
  * the MediaResource has been Closed.
  */
-
 class MediaResourceIndex
 {
 public:
-  explicit MediaResourceIndex(MediaResource* aResource)
-    : mResource(aResource)
-    , mOffset(0)
-    , mCacheBlockSize(aResource->ShouldCacheReads()
-                      ? SelectCacheSize(MediaPrefs::MediaResourceIndexCache())
-                      : 0 )
-    , mCachedOffset(0)
-    , mCachedBytes(0)
-    , mCachedBlock(MakeUnique<char[]>(mCacheBlockSize))
-  {}
+  explicit MediaResourceIndex(MediaResource* aResource);
 
   // Read up to aCount bytes from the stream. The buffer must have
   // enough room for at least aCount bytes. Stores the number of
@@ -251,46 +241,11 @@ public:
   // MediaReadAt may return fewer bytes than requested if end of stream is
   // encountered. There is no need to call it again to get more data.
   // Note this method will not update mOffset.
-  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) const
-  {
-    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-    if (aOffset < 0) {
-      return bytes.forget();
-    }
-    bool ok = bytes->SetLength(aCount, fallible);
-    NS_ENSURE_TRUE(ok, nullptr);
-    char* curr = reinterpret_cast<char*>(bytes->Elements());
-    const char* start = curr;
-    while (aCount > 0) {
-      uint32_t bytesRead;
-      nsresult rv = mResource->ReadAt(aOffset, curr, aCount, &bytesRead);
-      NS_ENSURE_SUCCESS(rv, nullptr);
-      if (!bytesRead) {
-        break;
-      }
-      aOffset += bytesRead;
-      if (aOffset < 0) {
-        // Very unlikely overflow.
-        break;
-      }
-      aCount -= bytesRead;
-      curr += bytesRead;
-    }
-    bytes->SetLength(curr - start);
-    return bytes.forget();
-  }
+  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset,
+                                                uint32_t aCount) const;
 
   already_AddRefed<MediaByteBuffer> CachedMediaReadAt(int64_t aOffset,
-                                                      uint32_t aCount) const
-  {
-    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-    bool ok = bytes->SetLength(aCount, fallible);
-    NS_ENSURE_TRUE(ok, nullptr);
-    char* curr = reinterpret_cast<char*>(bytes->Elements());
-    nsresult rv = mResource->ReadFromCache(curr, aOffset, aCount);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    return bytes.forget();
-  }
+                                                      uint32_t aCount) const;
 
   // Get the length of the stream in bytes. Returns -1 if not known.
   // This can change over time; after a seek operation, a misbehaving
@@ -298,7 +253,7 @@ public:
   // reported previously --- or it may just lie in its Content-Length
   // header and give us more or less data than it reported. We will adjust
   // the result of GetLength to reflect the data that's actually arriving.
-  int64_t GetLength() const { return mResource->GetLength(); }
+  int64_t GetLength() const;
 
 private:
   // If the resource has cached data past the requested range, try to grab it
@@ -312,44 +267,13 @@ private:
                          uint32_t* aBytes);
 
   // Select the next power of 2 (in range 32B-128KB, or 0 -> no cache)
-  static uint32_t SelectCacheSize(uint32_t aHint)
-  {
-    if (aHint == 0) {
-      return 0;
-    }
-    if (aHint <= 32) {
-      return 32;
-    }
-    if (aHint > 64*1024) {
-      return 128*1024;
-    }
-    // 32-bit next power of 2, from:
-    // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    aHint--;
-    aHint |= aHint >> 1;
-    aHint |= aHint >> 2;
-    aHint |= aHint >> 4;
-    aHint |= aHint >> 8;
-    aHint |= aHint >> 16;
-    aHint++;
-    return aHint;
-  }
+  static uint32_t SelectCacheSize(uint32_t aHint);
 
   // Maps a file offset to a mCachedBlock index.
-  uint32_t IndexInCache(int64_t aOffsetInFile) const
-  {
-    const uint32_t index = uint32_t(aOffsetInFile) & (mCacheBlockSize - 1);
-    MOZ_ASSERT(index == aOffsetInFile % mCacheBlockSize);
-    return index;
-  }
+  uint32_t IndexInCache(int64_t aOffsetInFile) const;
 
   // Starting file offset of the cache block that contains a given file offset.
-  int64_t CacheOffsetContaining(int64_t aOffsetInFile) const
-  {
-    const int64_t offset = aOffsetInFile & ~(int64_t(mCacheBlockSize) - 1);
-    MOZ_ASSERT(offset == aOffsetInFile - IndexInCache(aOffsetInFile));
-    return offset;
-  }
+  int64_t CacheOffsetContaining(int64_t aOffsetInFile) const;
 
   RefPtr<MediaResource> mResource;
   int64_t mOffset;
