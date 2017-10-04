@@ -5,7 +5,7 @@
 use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize};
 use api::{DevicePoint, ExtendMode, FontInstance, FontRenderMode, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
-use api::{LayerSize, LayerVector2D, LineOrientation, LineStyle, TextShadow};
+use api::{LayerSize, LayerVector2D, LineOrientation, LineStyle, Shadow};
 use api::{TileOffset, YuvColorSpace, YuvFormat, device_length};
 use app_units::Au;
 use border::BorderCornerInstance;
@@ -110,7 +110,7 @@ pub enum PrimitiveKind {
     AngleGradient,
     RadialGradient,
     BoxShadow,
-    TextShadow,
+    Shadow,
     Line,
 }
 
@@ -515,8 +515,8 @@ impl RadialGradientPrimitiveCpu {
 }
 
 #[derive(Debug)]
-pub struct TextShadowPrimitiveCpu {
-    pub shadow: TextShadow,
+pub struct ShadowPrimitiveCpu {
+    pub shadow: Shadow,
     pub primitives: Vec<PrimitiveIndex>,
     pub render_task_id: Option<RenderTaskId>,
 }
@@ -807,7 +807,7 @@ pub enum PrimitiveContainer {
     AngleGradient(GradientPrimitiveCpu),
     RadialGradient(RadialGradientPrimitiveCpu),
     BoxShadow(BoxShadowPrimitiveCpu),
-    TextShadow(TextShadowPrimitiveCpu),
+    Shadow(ShadowPrimitiveCpu),
     Line(LinePrimitive),
 }
 
@@ -815,7 +815,7 @@ pub struct PrimitiveStore {
     /// CPU side information only.
     pub cpu_rectangles: Vec<RectanglePrimitive>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
-    pub cpu_text_shadows: Vec<TextShadowPrimitiveCpu>,
+    pub cpu_shadows: Vec<ShadowPrimitiveCpu>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
     pub cpu_yuv_images: Vec<YuvImagePrimitiveCpu>,
     pub cpu_gradients: Vec<GradientPrimitiveCpu>,
@@ -832,7 +832,7 @@ impl PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_rectangles: Vec::new(),
             cpu_text_runs: Vec::new(),
-            cpu_text_shadows: Vec::new(),
+            cpu_shadows: Vec::new(),
             cpu_images: Vec::new(),
             cpu_yuv_images: Vec::new(),
             cpu_gradients: Vec::new(),
@@ -848,7 +848,7 @@ impl PrimitiveStore {
             cpu_metadata: recycle_vec(self.cpu_metadata),
             cpu_rectangles: recycle_vec(self.cpu_rectangles),
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
-            cpu_text_shadows: recycle_vec(self.cpu_text_shadows),
+            cpu_shadows: recycle_vec(self.cpu_shadows),
             cpu_images: recycle_vec(self.cpu_images),
             cpu_yuv_images: recycle_vec(self.cpu_yuv_images),
             cpu_gradients: recycle_vec(self.cpu_gradients),
@@ -920,15 +920,15 @@ impl PrimitiveStore {
                 self.cpu_text_runs.push(text_cpu);
                 metadata
             }
-            PrimitiveContainer::TextShadow(text_shadow) => {
+            PrimitiveContainer::Shadow(shadow) => {
                 let metadata = PrimitiveMetadata {
                     opacity: PrimitiveOpacity::translucent(),
-                    prim_kind: PrimitiveKind::TextShadow,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_text_shadows.len()),
+                    prim_kind: PrimitiveKind::Shadow,
+                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_shadows.len()),
                     ..base_metadata
                 };
 
-                self.cpu_text_shadows.push(text_shadow);
+                self.cpu_shadows.push(shadow);
                 metadata
             }
             PrimitiveContainer::Image(image_cpu) => {
@@ -1035,9 +1035,9 @@ impl PrimitiveStore {
                 let box_shadow = &self.cpu_box_shadows[metadata.cpu_prim_index.0];
                 box_shadow.render_task_id
             }
-            PrimitiveKind::TextShadow => {
-                let text_shadow = &self.cpu_text_shadows[metadata.cpu_prim_index.0];
-                text_shadow.render_task_id
+            PrimitiveKind::Shadow => {
+                let shadow = &self.cpu_shadows[metadata.cpu_prim_index.0];
+                shadow.render_task_id
             }
             PrimitiveKind::Rectangle |
             PrimitiveKind::TextRun |
@@ -1114,10 +1114,10 @@ impl PrimitiveStore {
                 // ignore the new task if we are in a dependency context
                 box_shadow.render_task_id = render_tasks.map(|rt| rt.add(render_task));
             }
-            PrimitiveKind::TextShadow => {
-                let shadow = &mut self.cpu_text_shadows[metadata.cpu_prim_index.0];
+            PrimitiveKind::Shadow => {
+                let shadow = &mut self.cpu_shadows[metadata.cpu_prim_index.0];
 
-                // This is a text-shadow element. Create a render task that will
+                // This is a shadow element. Create a render task that will
                 // render the text run to a target, and then apply a gaussian
                 // blur to that text run in order to build the actual primitive
                 // which will be blitted to the framebuffer.
@@ -1234,8 +1234,8 @@ impl PrimitiveStore {
                     let text = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                     text.write_gpu_blocks(&mut request);
                 }
-                PrimitiveKind::TextShadow => {
-                    let prim = &self.cpu_text_shadows[metadata.cpu_prim_index.0];
+                PrimitiveKind::Shadow => {
+                    let prim = &self.cpu_shadows[metadata.cpu_prim_index.0];
                     request.push(prim.shadow.color);
                     request.push([
                         prim.shadow.offset.x,
@@ -1374,8 +1374,8 @@ impl PrimitiveStore {
             };
 
             let dependencies = match metadata.prim_kind {
-                PrimitiveKind::TextShadow =>
-                    self.cpu_text_shadows[metadata.cpu_prim_index.0].primitives.clone(),
+                PrimitiveKind::Shadow =>
+                    self.cpu_shadows[metadata.cpu_prim_index.0].primitives.clone(),
                 _ => Vec::new(),
             };
             (geometry, dependencies)

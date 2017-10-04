@@ -43,6 +43,8 @@ void main(void) {
 
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.extend_mode.x) != EXTEND_MODE_CLAMP);
+
+    write_clip(vi.screen_pos, prim.clip_area);
 }
 #endif
 
@@ -57,8 +59,21 @@ void main(void) {
 
     float offset = dot(pos - vStartPoint, vScaledDir);
 
-    oFragColor = sample_gradient(vGradientAddress,
+    vec4 color = sample_gradient(vGradientAddress,
                                  offset,
                                  vGradientRepeat);
+
+    // Un-premultiply the color from sampling the gradient.
+    if (color.a > 0.0) {
+        color.rgb /= color.a;
+
+        // Apply the clip mask
+        color.a = min(color.a, do_clip());
+
+        // Pre-multiply the result.
+        color.rgb *= color.a;
+    }
+
+    oFragColor = color;
 }
 #endif
