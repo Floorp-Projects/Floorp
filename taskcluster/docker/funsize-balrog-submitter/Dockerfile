@@ -26,7 +26,8 @@ COPY scripts/* /home/worker/bin/
 RUN mkdir /home/worker/keys
 COPY *.pubkey /home/worker/keys/
 COPY runme.sh /runme.sh
-RUN chmod 755 /home/worker/bin/* /runme.sh
+COPY submit_complete.sh /submit_complete.sh
+RUN chmod 755 /home/worker/bin/* /runme.sh /submit_complete.sh
 
 ENV           HOME          /home/worker
 ENV           SHELL         /bin/bash
