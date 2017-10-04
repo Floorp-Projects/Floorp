@@ -10274,20 +10274,28 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count)
     return true;
 }
 
+static inline JSOp
+UnaryOpParseNodeKindToJSOp(ParseNodeKind pnk)
+{
+    switch (pnk) {
+      case PNK_THROW: return JSOP_THROW;
+      case PNK_VOID: return JSOP_VOID;
+      case PNK_NOT: return JSOP_NOT;
+      case PNK_BITNOT: return JSOP_BITNOT;
+      case PNK_POS: return JSOP_POS;
+      case PNK_NEG: return JSOP_NEG;
+      default: MOZ_CRASH("unexpected unary op");
+    }
+}
+
 bool
 BytecodeEmitter::emitUnary(ParseNode* pn)
 {
     if (!updateSourceCoordNotes(pn->pn_pos.begin))
         return false;
-
-    /* Unary op, including unary +/-. */
-    JSOp op = pn->getOp();
-    ParseNode* pn2 = pn->pn_kid;
-
-    if (!emitTree(pn2))
+    if (!emitTree(pn->pn_kid))
         return false;
-
-    return emit1(op);
+    return emit1(UnaryOpParseNodeKindToJSOp(pn->getKind()));
 }
 
 bool

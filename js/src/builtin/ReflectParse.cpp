@@ -1735,7 +1735,7 @@ class ASTSerializer
     }
 
     BinaryOperator binop(ParseNodeKind kind);
-    UnaryOperator unop(ParseNodeKind kind, JSOp op);
+    UnaryOperator unop(ParseNodeKind kind);
     AssignmentOperator aop(JSOp op);
 
     bool statements(ParseNode* pn, NodeVector& elts);
@@ -1878,7 +1878,7 @@ ASTSerializer::aop(JSOp op)
 }
 
 UnaryOperator
-ASTSerializer::unop(ParseNodeKind kind, JSOp op)
+ASTSerializer::unop(ParseNodeKind kind)
 {
     if (IsDeleteKind(kind))
         return UNOP_DELETE;
@@ -1886,19 +1886,18 @@ ASTSerializer::unop(ParseNodeKind kind, JSOp op)
     if (IsTypeofKind(kind))
         return UNOP_TYPEOF;
 
-    if (kind == PNK_AWAIT)
+    switch (kind) {
+      case PNK_AWAIT:
         return UNOP_AWAIT;
-
-    switch (op) {
-      case JSOP_NEG:
+      case PNK_NEG:
         return UNOP_NEG;
-      case JSOP_POS:
+      case PNK_POS:
         return UNOP_POS;
-      case JSOP_NOT:
+      case PNK_NOT:
         return UNOP_NOT;
-      case JSOP_BITNOT:
+      case PNK_BITNOT:
         return UNOP_BITNOT;
-      case JSOP_VOID:
+      case PNK_VOID:
         return UNOP_VOID;
       default:
         return UNOP_ERR;
@@ -2936,7 +2935,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_NEG: {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
-        UnaryOperator op = unop(pn->getKind(), pn->getOp());
+        UnaryOperator op = unop(pn->getKind());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
 
         RootedValue expr(cx);

@@ -181,27 +181,25 @@ class FullParseHandler
     ParseNode* newDelete(uint32_t begin, ParseNode* expr) {
         if (expr->isKind(PNK_NAME)) {
             expr->setOp(JSOP_DELNAME);
-            return newUnary(PNK_DELETENAME, JSOP_NOP, begin, expr);
+            return newUnary(PNK_DELETENAME, begin, expr);
         }
 
         if (expr->isKind(PNK_DOT))
-            return newUnary(PNK_DELETEPROP, JSOP_NOP, begin, expr);
+            return newUnary(PNK_DELETEPROP, begin, expr);
 
         if (expr->isKind(PNK_ELEM))
-            return newUnary(PNK_DELETEELEM, JSOP_NOP, begin, expr);
+            return newUnary(PNK_DELETEELEM, begin, expr);
 
-        return newUnary(PNK_DELETEEXPR, JSOP_NOP, begin, expr);
+        return newUnary(PNK_DELETEEXPR, begin, expr);
     }
 
     ParseNode* newTypeof(uint32_t begin, ParseNode* kid) {
-        TokenPos pos(begin, kid->pn_pos.end);
-        ParseNodeKind kind = kid->isKind(PNK_NAME) ? PNK_TYPEOFNAME : PNK_TYPEOFEXPR;
-        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
+        return newUnary(kid->isKind(PNK_NAME) ? PNK_TYPEOFNAME : PNK_TYPEOFEXPR, begin, kid);
     }
 
-    ParseNode* newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode* kid) {
-        TokenPos pos(begin, kid ? kid->pn_pos.end : begin + 1);
-        return new_<UnaryNode>(kind, op, pos, kid);
+    ParseNode* newUnary(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
+        TokenPos pos(begin, kid->pn_pos.end);
+        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
     }
 
     ParseNode* newUpdate(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
@@ -317,7 +315,7 @@ class FullParseHandler
         // singleton objects will have Object.prototype as their [[Prototype]].
         setListFlag(literal, PNX_NONCONST);
 
-        ParseNode* mutation = newUnary(PNK_MUTATEPROTO, JSOP_NOP, begin, expr);
+        ParseNode* mutation = newUnary(PNK_MUTATEPROTO, begin, expr);
         if (!mutation)
             return false;
         literal->append(mutation);

@@ -8466,13 +8466,13 @@ Parser<ParseHandler, CharT>::checkIncDecOperand(Node operand, uint32_t operandOf
 
 template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
-Parser<ParseHandler, CharT>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, JSOp op,
+Parser<ParseHandler, CharT>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
                                          uint32_t begin)
 {
     Node kid = unaryExpr(yieldHandling, TripledotProhibited);
     if (!kid)
         return null();
-    return handler.newUnary(kind, op, begin, kid);
+    return handler.newUnary(kind, begin, kid);
 }
 
 template <class ParseHandler, typename CharT>
@@ -8491,15 +8491,15 @@ Parser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
     uint32_t begin = pos().begin;
     switch (tt) {
       case TOK_VOID:
-        return unaryOpExpr(yieldHandling, PNK_VOID, JSOP_VOID, begin);
+        return unaryOpExpr(yieldHandling, PNK_VOID, begin);
       case TOK_NOT:
-        return unaryOpExpr(yieldHandling, PNK_NOT, JSOP_NOT, begin);
+        return unaryOpExpr(yieldHandling, PNK_NOT, begin);
       case TOK_BITNOT:
-        return unaryOpExpr(yieldHandling, PNK_BITNOT, JSOP_BITNOT, begin);
+        return unaryOpExpr(yieldHandling, PNK_BITNOT, begin);
       case TOK_ADD:
-        return unaryOpExpr(yieldHandling, PNK_POS, JSOP_POS, begin);
+        return unaryOpExpr(yieldHandling, PNK_POS, begin);
       case TOK_SUB:
-        return unaryOpExpr(yieldHandling, PNK_NEG, JSOP_NEG, begin);
+        return unaryOpExpr(yieldHandling, PNK_NEG, begin);
 
       case TOK_TYPEOF: {
         // The |typeof| operator is specially parsed to distinguish its
