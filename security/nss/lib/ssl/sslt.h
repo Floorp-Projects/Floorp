@@ -275,6 +275,14 @@ typedef struct SSLChannelInfoStr {
     SSLAuthType authType;
     SSLSignatureScheme signatureScheme;
 
+    /* The following fields were added in NSS 3.34. */
+    /* When the session was resumed this holds the key exchange group of the
+     * original handshake. */
+    SSLNamedGroup originalKeaGroup;
+    /* This field is PR_TRUE when the session is resumed and PR_FALSE
+     * otherwise. */
+    PRBool resumed;
+
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
 } SSLChannelInfo;

@@ -23,6 +23,7 @@ struct nssOps {
     PRInt32 tlsVersionMaxPolicy;
     PRInt32 dtlsVersionMinPolicy;
     PRInt32 dtlsVersionMaxPolicy;
+    PRInt32 pkcs12DecodeForceUnicode;
 };
 
 static struct nssOps nss_ops = {
@@ -33,6 +34,7 @@ static struct nssOps nss_ops = {
     0xffff, /* set TLS max to more than the largest legal SSL value */
     1,
     0xffff,
+    PR_FALSE
 };
 
 SECStatus
@@ -61,6 +63,9 @@ NSS_OptionSet(PRInt32 which, PRInt32 value)
             break;
         case NSS_DTLS_VERSION_MAX_POLICY:
             nss_ops.dtlsVersionMaxPolicy = value;
+            break;
+        case __NSS_PKCS12_DECODE_FORCE_UNICODE:
+            nss_ops.pkcs12DecodeForceUnicode = value;
             break;
         default:
             rv = SECFailure;
@@ -95,6 +100,9 @@ NSS_OptionGet(PRInt32 which, PRInt32 *value)
             break;
         case NSS_DTLS_VERSION_MAX_POLICY:
             *value = nss_ops.dtlsVersionMaxPolicy;
+            break;
+        case __NSS_PKCS12_DECODE_FORCE_UNICODE:
+            *value = nss_ops.pkcs12DecodeForceUnicode;
             break;
         default:
             rv = SECFailure;

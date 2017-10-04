@@ -124,6 +124,7 @@ FILE *ssl_trace_iob;
 
 #ifdef NSS_ALLOW_SSLKEYLOGFILE
 FILE *ssl_keylog_iob;
+PZLock *ssl_keylog_lock;
 #endif
 
 char lockStatus[] = "Locks are ENABLED.  ";
@@ -3544,6 +3545,12 @@ ssl_SetDefaultsFromEnvironment(void)
                           ssl_keylog_iob);
                 }
                 SSL_TRACE(("SSL: logging SSL/TLS secrets to %s", ev));
+                ssl_keylog_lock = PR_NewLock();
+                if (!ssl_keylog_lock) {
+                    SSL_TRACE(("SSL: failed to create key log lock"));
+                    fclose(ssl_keylog_iob);
+                    ssl_keylog_iob = NULL;
+                }
             }
         }
 #endif

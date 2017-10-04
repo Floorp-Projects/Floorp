@@ -802,7 +802,7 @@ ssl3_ClientHandleStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData
 }
 
 PRUint32 ssl_ticket_lifetime = 2 * 24 * 60 * 60; /* 2 days in seconds */
-#define TLS_EX_SESS_TICKET_VERSION (0x0105)
+#define TLS_EX_SESS_TICKET_VERSION (0x0106)
 
 /*
  * Called from ssl3_SendNewSessionTicket, tls13_SendNewSessionTicket
@@ -882,6 +882,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         + sizeof(ssl3CipherSuite)              /* ciphersuite */
         + 1                                    /* compression */
         + 10                                   /* cipher spec parameters */
+        + 8                                    /* kea group and sig scheme */
         + 1                                    /* certType arguments */
         + 1                                    /* SessionTicket.ms_is_wrapped */
         + 4                                    /* msWrapMech */
@@ -935,6 +936,19 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     if (rv != SECSuccess)
         goto loser;
     rv = ssl3_AppendNumberToItem(&plaintext, ss->sec.keaKeyBits, 4);
+    if (rv != SECSuccess)
+        goto loser;
+    if (ss->sec.keaGroup) {
+        rv = ssl3_AppendNumberToItem(&plaintext, ss->sec.keaGroup->name, 4);
+        if (rv != SECSuccess)
+            goto loser;
+    } else {
+        /* No kea group. Write 0 as invalid value. */
+        rv = ssl3_AppendNumberToItem(&plaintext, 0, 4);
+        if (rv != SECSuccess)
+            goto loser;
+    }
+    rv = ssl3_AppendNumberToItem(&plaintext, ss->sec.signatureScheme, 4);
     if (rv != SECSuccess)
         goto loser;
 
@@ -1165,6 +1179,18 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
         return SECFailure;
     }
     parsedTicket->keaKeyBits = temp;
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &len);
+    if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+    parsedTicket->originalKeaGroup = temp;
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &len);
+    if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+    parsedTicket->signatureScheme = (SSLSignatureScheme)temp;
 
     /* Read the optional named curve. */
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 1, &buffer, &len);
@@ -1319,7 +1345,9 @@ ssl_CreateSIDFromTicket(sslSocket *ss, const SECItem *rawTicket,
     sid->authKeyBits = parsedTicket->authKeyBits;
     sid->keaType = parsedTicket->keaType;
     sid->keaKeyBits = parsedTicket->keaKeyBits;
+    sid->keaGroup = parsedTicket->originalKeaGroup;
     sid->namedCurve = parsedTicket->namedCurve;
+    sid->sigScheme = parsedTicket->signatureScheme;
 
     rv = SECITEM_CopyItem(NULL, &sid->u.ssl3.locked.sessionTicket.ticket,
                           rawTicket);

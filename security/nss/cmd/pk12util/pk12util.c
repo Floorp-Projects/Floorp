@@ -23,6 +23,7 @@
 static char *progName;
 PRBool pk12_debugging = PR_FALSE;
 PRBool dumpRawFile;
+static PRBool pk12uForceUnicode;
 
 PRIntn pk12uErrno = 0;
 
@@ -357,6 +358,7 @@ p12U_ReadPKCS12File(SECItem *uniPwp, char *in_file, PK11SlotInfo *slot,
     SECItem p12file = { 0 };
     SECStatus rv = SECFailure;
     PRBool swapUnicode = PR_FALSE;
+    PRBool forceUnicode = pk12uForceUnicode;
     PRBool trypw;
     int error;
 
@@ -424,6 +426,18 @@ p12U_ReadPKCS12File(SECItem *uniPwp, char *in_file, PK11SlotInfo *slot,
                 SEC_PKCS12DecoderFinish(p12dcx);
                 uniPwp->len = 0;
                 trypw = PR_TRUE;
+            } else if (forceUnicode == pk12uForceUnicode) {
+                /* try again with a different password encoding */
+                forceUnicode = !pk12uForceUnicode;
+                rv = NSS_OptionSet(__NSS_PKCS12_DECODE_FORCE_UNICODE,
+                                   forceUnicode);
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName, "PKCS12 decoding failed to set option");
+                    pk12uErrno = PK12UERR_DECODEVERIFY;
+                    break;
+                }
+                SEC_PKCS12DecoderFinish(p12dcx);
+                trypw = PR_TRUE;
             } else {
                 SECU_PrintError(progName, "PKCS12 decode not verified");
                 pk12uErrno = PK12UERR_DECODEVERIFY;
@@ -431,6 +445,15 @@ p12U_ReadPKCS12File(SECItem *uniPwp, char *in_file, PK11SlotInfo *slot,
             }
         }
     } while (trypw == PR_TRUE);
+
+    /* revert the option setting */
+    if (forceUnicode != pk12uForceUnicode) {
+        rv = NSS_OptionSet(__NSS_PKCS12_DECODE_FORCE_UNICODE, pk12uForceUnicode);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "PKCS12 decoding failed to set option");
+            pk12uErrno = PK12UERR_DECODEVERIFY;
+        }
+    }
 /* rv has been set at this point */
 
 done:
@@ -470,6 +493,8 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 {
     SEC_PKCS12DecoderContext *p12dcx = NULL;
     SECItem uniPwitem = { 0 };
+    PRBool forceUnicode = pk12uForceUnicode;
+    PRBool trypw;
     SECStatus rv = SECFailure;
 
     rv = P12U_InitSlot(slot, slotPw);
@@ -480,31 +505,62 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
         return rv;
     }
 
-    rv = SECFailure;
-    p12dcx = p12U_ReadPKCS12File(&uniPwitem, in_file, slot, slotPw, p12FilePw);
+    do {
+        trypw = PR_FALSE; /* normally we do this once */
+        rv = SECFailure;
+        p12dcx = p12U_ReadPKCS12File(&uniPwitem, in_file, slot, slotPw, p12FilePw);
 
-    if (p12dcx == NULL) {
-        goto loser;
-    }
-
-    /* make sure the bags are okey dokey -- nicknames correct, etc. */
-    rv = SEC_PKCS12DecoderValidateBags(p12dcx, P12U_NicknameCollisionCallback);
-    if (rv != SECSuccess) {
-        if (PORT_GetError() == SEC_ERROR_PKCS12_DUPLICATE_DATA) {
-            pk12uErrno = PK12UERR_CERTALREADYEXISTS;
-        } else {
-            pk12uErrno = PK12UERR_DECODEVALIBAGS;
+        if (p12dcx == NULL) {
+            goto loser;
         }
-        SECU_PrintError(progName, "PKCS12 decode validate bags failed");
-        goto loser;
-    }
 
-    /* stuff 'em in */
-    rv = SEC_PKCS12DecoderImportBags(p12dcx);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "PKCS12 decode import bags failed");
-        pk12uErrno = PK12UERR_DECODEIMPTBAGS;
-        goto loser;
+        /* make sure the bags are okey dokey -- nicknames correct, etc. */
+        rv = SEC_PKCS12DecoderValidateBags(p12dcx, P12U_NicknameCollisionCallback);
+        if (rv != SECSuccess) {
+            if (PORT_GetError() == SEC_ERROR_PKCS12_DUPLICATE_DATA) {
+                pk12uErrno = PK12UERR_CERTALREADYEXISTS;
+            } else {
+                pk12uErrno = PK12UERR_DECODEVALIBAGS;
+            }
+            SECU_PrintError(progName, "PKCS12 decode validate bags failed");
+            goto loser;
+        }
+
+        /* stuff 'em in */
+        if (forceUnicode != pk12uForceUnicode) {
+            rv = NSS_OptionSet(__NSS_PKCS12_DECODE_FORCE_UNICODE,
+                               forceUnicode);
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName, "PKCS12 decode set option failed");
+                pk12uErrno = PK12UERR_DECODEIMPTBAGS;
+                goto loser;
+            }
+        }
+        rv = SEC_PKCS12DecoderImportBags(p12dcx);
+        if (rv != SECSuccess) {
+            if (PR_GetError() == SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY &&
+                forceUnicode == pk12uForceUnicode) {
+                /* try again with a different password encoding */
+                forceUnicode = !pk12uForceUnicode;
+                SEC_PKCS12DecoderFinish(p12dcx);
+                SECITEM_ZfreeItem(&uniPwitem, PR_FALSE);
+                trypw = PR_TRUE;
+            } else {
+                SECU_PrintError(progName, "PKCS12 decode import bags failed");
+                pk12uErrno = PK12UERR_DECODEIMPTBAGS;
+                goto loser;
+            }
+        }
+    } while (trypw);
+
+    /* revert the option setting */
+    if (forceUnicode != pk12uForceUnicode) {
+        rv = NSS_OptionSet(__NSS_PKCS12_DECODE_FORCE_UNICODE, pk12uForceUnicode);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "PKCS12 decode set option failed");
+            pk12uErrno = PK12UERR_DECODEIMPTBAGS;
+            goto loser;
+        }
     }
 
     fprintf(stdout, "%s: PKCS12 IMPORT SUCCESSFUL\n", progName);
@@ -947,6 +1003,7 @@ main(int argc, char **argv)
     int keyLen = 0;
     int certKeyLen = 0;
     secuCommand pk12util;
+    PRInt32 forceUnicode;
 
 #ifdef _CRTDBG_MAP_ALLOC
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -977,6 +1034,14 @@ main(int argc, char **argv)
         !pk12util.options[opt_Nickname].activated) {
         Usage(progName);
     }
+
+    rv = NSS_OptionGet(__NSS_PKCS12_DECODE_FORCE_UNICODE, &forceUnicode);
+    if (rv != SECSuccess) {
+        SECU_PrintError(progName,
+                        "Failed to get NSS_PKCS12_DECODE_FORCE_UNICODE option");
+        Usage(progName);
+    }
+    pk12uForceUnicode = forceUnicode;
 
     slotname = SECU_GetOptionArg(&pk12util, opt_TokenName);
 
