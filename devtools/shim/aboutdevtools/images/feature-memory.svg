@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
+    <title>Memory</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-846.000000, -3508.000000)">
+            <path d="M918,3609.05462 C918,3611.74049 920.178731,3613.9179 922.866215,3613.9179 L994.621505,3613.9179 C997.308989,3613.9179 999.48772,3611.74049 999.48772,3609.05462 L999.48772,3574.73675 C995.606387,3572.77699 992.938301,3569.64701 992.938301,3565.00403 C992.938301,3560.36017 995.606387,3557.23107 999.48772,3555.27131 L999.48772,3530.86328 C999.48772,3528.17742 997.308989,3526 994.621505,3526 L922.866215,3526 C920.178731,3526 918,3528.17742 918,3530.86328" id="Stroke-1" stroke="#0080FF" stroke-width="5" stroke-linecap="round"></path>
+            <path d="M918,3532 L918,3554.51876 C921.882215,3556.47764 924.549419,3559.60762 924.549419,3564.25149 C924.549419,3568.89358 921.882215,3572.02356 918,3573.98421 L918,3610.19047" id="Stroke-3" stroke="#0080FF" stroke-width="5" stroke-linecap="round"></path>
+            <path d="M965,3594 L965,3599.21751" id="Stroke-5" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M976,3594 L976,3599.21751" id="Stroke-7" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M954,3594 L954,3599.21751" id="Stroke-9" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M943,3594 L943,3599.21751" id="Stroke-11" stroke="#00C7D8" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M972.908182,3546 L946.753278,3546 C944.688851,3546 943,3547.68615 943,3549.74628 L943,3573.58554 C943,3575.64566 944.688851,3577.33181 946.753278,3577.33181 L972.908182,3577.33181 C974.972609,3577.33181 976.662285,3575.64566 976.662285,3573.58554 L976.662285,3549.74628 C976.662285,3547.68615 974.972609,3546 972.908182,3546 Z" id="Stroke-31" stroke="#0022A9" stroke-width="4" stroke-linecap="round"></path>
+            <g id="Group-19" transform="translate(938.000000, 3541.000000)" stroke="#0022A9" stroke-width="4" stroke-linecap="round">
+                <path d="M39.3191489,13 L43.9659236,13" id="Stroke-19"></path>
+                <path d="M39.3191489,21 L43.9659236,21" id="Stroke-21"></path>
+                <path d="M39.3191489,30 L43.9659236,30" id="Stroke-23"></path>
+                <path d="M0,13 L4.64677463,13" id="Stroke-25"></path>
+                <path d="M0,21 L4.64677463,21" id="Stroke-27"></path>
+                <path d="M0,30 L4.64677463,30" id="Stroke-29"></path>
+                <path d="M13,5.07816341 L13,0.445188366" id="Stroke-33"></path>
+                <path d="M21.5,5.07816341 L21.5,0.445188366" id="Stroke-35"></path>
+                <path d="M30,5.07816341 L30,0.445188366" id="Stroke-37"></path>
+                <path d="M13,42.2908441 L13,37.6578691" id="Stroke-39"></path>
+                <path d="M21.5,42.2908441 L21.5,37.6578691" id="Stroke-41"></path>
+                <path d="M30,42.2908441 L30,37.6578691" id="Stroke-43"></path>
+            </g>
+            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
+        </g>
+    </g>
+</svg>
