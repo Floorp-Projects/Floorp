@@ -258,6 +258,7 @@ def get_tool(config, key):
 # clang/
 #   bin/
 #     clang-tidy
+#     clang-apply-replacements
 #   include/
 #     * (nothing will be deleted here)
 #   lib/
@@ -278,8 +279,10 @@ def prune_final_dir_for_clang_tidy(final_dir):
         if not os.path.isdir(f):
             raise Exception("Expected %s to be a directory" %f)
 
-    # In bin/, only keep clang-tidy.
-    re_clang_tidy = re.compile(r"^clang-tidy(\.exe)?$", re.I)
+    # In bin/, only keep clang-tidy and clang-apply-replacements. The last one
+    # is used to auto-fix some of the issues detected by clang-tidy.
+    re_clang_tidy = re.compile(
+        r"^clang-(tidy|apply-replacements)(\.exe)?$", re.I)
     for f in glob.glob("%s/bin/*" % final_dir):
         if re_clang_tidy.search(os.path.basename(f)) is None:
             delete(f)
