@@ -30,6 +30,7 @@
         'ssl_gather_unittest.cc',
         'ssl_gtest.cc',
         'ssl_hrr_unittest.cc',
+        'ssl_keylog_unittest.cc',
         'ssl_loopback_unittest.cc',
         'ssl_misc_unittest.cc',
         'ssl_record_unittest.cc',

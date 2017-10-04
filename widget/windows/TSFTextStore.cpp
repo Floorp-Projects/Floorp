@@ -9,10 +9,9 @@
 
 #include <olectl.h>
 #include <algorithm>
-
 #include "nscore.h"
-#include "nsWindow.h"
-#include "nsPrintfCString.h"
+
+#include "IMMHandler.h"
 #include "WinIMEHandler.h"
 #include "WinUtils.h"
 #include "mozilla/AutoRestore.h"
@@ -22,6 +21,8 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsIXULRuntime.h"
+#include "nsWindow.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace widget {
@@ -1087,6 +1088,7 @@ public:
 
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSJapaneseIMEActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsMSOfficeJapaneseIME2010Active)
+  DECL_AND_IMPL_IS_TIP_ACTIVE(IsGoogleJapaneseInputActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOKActive)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2011Active)
   DECL_AND_IMPL_IS_TIP_ACTIVE(IsATOK2012Active)
@@ -1148,6 +1150,16 @@ private:
     static const GUID kGUID = {
       0x54EDCC94, 0x1524, 0x4BB1,
         { 0x9F, 0xB7, 0x7B, 0xAB, 0xE4, 0xF4, 0xCA, 0x64 }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
+
+  bool IsGoogleJapaneseInputActiveInternal() const
+  {
+    // {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
+    static const GUID kGUID = {
+      0x773EB24E, 0xCA1D, 0x4B1B,
+        { 0xB4, 0x20, 0xFA, 0x98, 0x5B, 0xB0, 0xB8, 0x0D }
     };
     return mActiveTIPGUID == kGUID;
   }
@@ -1221,8 +1233,6 @@ private:
 
   // * ATOK 2017
   //   - {6DBFD8F5-701D-11E6-920F-782BCBA6348F}
-  // * Google Japanese Input
-  //   - {773EB24E-CA1D-4B1B-B420-FA985BB0B80D}
 
   /****************************************************************************
    * Traditional Chinese TIP
@@ -3616,6 +3626,29 @@ TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
   mInputScopes.Clear();
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
     if (aHTMLInputInputMode.EqualsLiteral("url")) {
+      mInputScopes.AppendElement(IS_URL);
+    } else if (aHTMLInputInputMode.EqualsLiteral("mozAwesomebar")) {
+      // Even if Awesomebar has focus, user may not input URL directly.
+      // However, on-screen keyboard for URL should be shown because it has
+      // some useful additional keys like ".com" and they are not hindrances
+      // even when inputting non-URL text, e.g., words to search something in
+      // the web.  On the other hand, MS-IME for Japanese and Google Japanese
+      // Input make their open state "closed" automatically if we notify them
+      // of URL as the input scope.  However, this is very annoying for the
+      // users when they try to input some words to search the web or
+      // bookmark/history items.  Therefore, if they are active, we need to
+      // notify them of the default input scope for avoiding this issue.
+      // FYI: Google Japanese Input may be an IMM-IME.  If it's installed on
+      //      Win7, it's always IMM-IME.  Otherwise, basically, it's a TIP.
+      //      However, if it's installed on Win7 and has not been updated yet
+      //      after the OS is upgraded to Win8 or later, it's still an IMM-IME.
+      //      Therefore, we also need to check with IMMHandler here.
+      if (TSFStaticSink::IsMSJapaneseIMEActive() ||
+          TSFStaticSink::IsGoogleJapaneseInputActive() ||
+          IMMHandler::IsGoogleJapaneseInputActive()) {
+        return;
+      }
+      // Don't append IS_SEARCH here for showing on-screen keyboard for URL.
       mInputScopes.AppendElement(IS_URL);
     } else if (aHTMLInputInputMode.EqualsLiteral("email")) {
       mInputScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
@@ -6557,6 +6590,13 @@ bool
 TSFTextStore::IsMSJapaneseIMEActive()
 {
   return TSFStaticSink::IsMSJapaneseIMEActive();
+}
+
+// static
+bool
+TSFTextStore::IsGoogleJapaneseInputActive()
+{
+  return TSFStaticSink::IsGoogleJapaneseInputActive();
 }
 
 /******************************************************************/

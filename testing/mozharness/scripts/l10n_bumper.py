@@ -191,7 +191,7 @@ class L10nBumper(VCSScript):
 
     def build_commit_message(self, name, locale_map):
         comments = ''
-        approval_str = 'r=release a=l10n-bump'
+        approval_str = 'DONTBUILD r=release a=l10n-bump'
         for locale, revision in sorted(locale_map.items()):
             comments += "%s -> %s\n" % (locale, revision)
         if self.config['ignore_closed_tree']:
