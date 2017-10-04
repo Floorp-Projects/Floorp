@@ -24,6 +24,10 @@ class PerformanceNavigationTiming final
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
+  // Note that aPerformanceTiming must be initalized with zeroTime = 0
+  // so that timestamps are relative to startTime, as opposed to the
+  // performance.timing object for which timestamps are absolute and has a
+  // zeroTime initialized to navigationStart
   explicit PerformanceNavigationTiming(PerformanceTiming* aPerformanceTiming,
                                        Performance* aPerformance,
                                        nsIHttpChannel* aChannel)
