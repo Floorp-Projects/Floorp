@@ -82,8 +82,8 @@ macro_rules! ascii_alu {
                 //                   }
                 //                   dst_until_alignment
                 //               }
-                };
-                if until_alignment + STRIDE_SIZE <= len {
+            };
+            if until_alignment + STRIDE_SIZE <= len {
                 // Moving pointers to alignment seems to be a pessimization on
                 // x86_64 for operations that have UTF-16 as the internal
                 // Unicode representation. However, since it seems to be a win
@@ -355,7 +355,7 @@ macro_rules! ascii_to_basic_latin_simd_stride {
         if !is_ascii(simd) {
             return false;
         }
-        let (first, second) = unpack(simd);
+        let (first, second) = simd_unpack(simd);
         $store(dst, first);
         $store(dst.offset(8), second);
         true
@@ -371,12 +371,11 @@ macro_rules! basic_latin_to_ascii_simd_stride {
     pub unsafe fn $name(src: *const u16, dst: *mut u8) -> bool {
         let first = $load(src);
         let second = $load(src.offset(8));
-        match pack_basic_latin(first, second) {
-            Some(packed) => {
-                $store(dst, packed);
-                true
-            },
-            None => false,
+        if is_basic_latin(first | second) {
+            $store(dst, simd_pack(first, second));
+            true
+        } else {
+            false
         }
     });
 }
