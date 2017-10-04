@@ -446,7 +446,7 @@ TextureSource::Name() const
   MOZ_CRASH("GFX: TextureSource without class name");
   return "TextureSource";
 }
-
+  
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
 : TextureHost(aFlags)
@@ -880,16 +880,6 @@ BufferTextureHost::GetYUVColorSpace() const
   return YUVColorSpace::UNKNOWN;
 }
 
-uint32_t
-BufferTextureHost::GetDepth() const
-{
-  if (mFormat == gfx::SurfaceFormat::YUV) {
-    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-    return desc.depth();
-  }
-  return 8;
-}
-
 bool
 BufferTextureHost::UploadIfNeeded()
 {
@@ -996,19 +986,19 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 
     RefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
-                                                    desc.yStride(),
+                                                    desc.ySize().width,
                                                     desc.ySize(),
-                                                    SurfaceFormatForAlphaDepth(desc.depth()));
+                                                    gfx::SurfaceFormat::A8);
     RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
-                                                    desc.cbCrStride(),
+                                                    desc.cbCrSize().width,
                                                     desc.cbCrSize(),
-                                                    SurfaceFormatForAlphaDepth(desc.depth()));
+                                                    gfx::SurfaceFormat::A8);
     RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
-                                                    desc.cbCrStride(),
+                                                    desc.cbCrSize().width,
                                                     desc.cbCrSize(),
-                                                    SurfaceFormatForAlphaDepth(desc.depth()));
+                                                    gfx::SurfaceFormat::A8);
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
     if (!tempY ||

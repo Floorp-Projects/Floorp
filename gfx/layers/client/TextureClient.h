@@ -139,7 +139,6 @@ struct MappedYCbCrChannelData
   gfx::IntSize size;
   int32_t stride;
   int32_t skip;
-  uint32_t bytesPerPixel;
 
   bool CopyInto(MappedYCbCrChannelData& aDst);
 };
@@ -348,12 +347,9 @@ public:
   static already_AddRefed<TextureClient>
   CreateForYCbCr(KnowsCompositor* aAllocator,
                  gfx::IntSize aYSize,
-                 uint32_t aYStride,
                  gfx::IntSize aCbCrSize,
-                 uint32_t aCbCrStride,
                  StereoMode aStereoMode,
                  YUVColorSpace aYUVColorSpace,
-                 uint32_t aDepth,
                  TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient (can be accessed through raw
@@ -373,7 +369,6 @@ public:
   CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
                                size_t aSize,
                                YUVColorSpace aYUVColorSpace,
-                               uint32_t aDepth,
                                TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient of the same type.

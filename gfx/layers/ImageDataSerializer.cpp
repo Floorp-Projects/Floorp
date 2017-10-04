@@ -71,10 +71,16 @@ ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
       !gfx::Factory::AllowedSurfaceSize(IntSize(aCbCrStride, aCbCrSize.height))) {
     return 0;
   }
-
   // Overflow checks are performed in AllowedSurfaceSize
   return GetAlignedStride<4>(aYSize.height, aYStride) +
          2 * GetAlignedStride<4>(aCbCrSize.height, aCbCrStride);
+}
+
+// Minimum required shmem size in bytes
+uint32_t
+ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, const gfx::IntSize& aCbCrSize)
+{
+  return ComputeYCbCrBufferSize(aYSize, aYSize.width, aCbCrSize, aCbCrSize.width);
 }
 
 uint32_t
@@ -131,26 +137,16 @@ Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(const BufferDescriptor& aDescri
 
 Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(const BufferDescriptor& aDescriptor)
 {
+{
   switch (aDescriptor.type()) {
     case BufferDescriptor::TRGBDescriptor:
       return Nothing();
     case BufferDescriptor::TYCbCrDescriptor:
       return Some(aDescriptor.get_YCbCrDescriptor().yUVColorSpace());
     default:
-      MOZ_CRASH("GFX:  YUVColorSpaceFromBufferDescriptor");
+      MOZ_CRASH("GFX:  CbCrSizeFromBufferDescriptor");
   }
 }
-
-Maybe<uint32_t> DepthFromBufferDescriptor(const BufferDescriptor& aDescriptor)
-{
-  switch (aDescriptor.type()) {
-    case BufferDescriptor::TRGBDescriptor:
-      return Nothing();
-    case BufferDescriptor::TYCbCrDescriptor:
-      return Some(aDescriptor.get_YCbCrDescriptor().depth());
-    default:
-      MOZ_CRASH("GFX:  DepthFromBufferDescriptor");
-  }
 }
 
 Maybe<StereoMode> StereoModeFromBufferDescriptor(const BufferDescriptor& aDescriptor)
@@ -161,7 +157,7 @@ Maybe<StereoMode> StereoModeFromBufferDescriptor(const BufferDescriptor& aDescri
     case BufferDescriptor::TYCbCrDescriptor:
       return Some(aDescriptor.get_YCbCrDescriptor().stereoMode());
     default:
-      MOZ_CRASH("GFX:  StereoModeFromBufferDescriptor");
+      MOZ_CRASH("GFX:  CbCrSizeFromBufferDescriptor");
   }
 }
 
@@ -184,6 +180,9 @@ already_AddRefed<DataSourceSurface>
 DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor, gfx::DataSourceSurface* aSurface)
 {
   gfx::IntSize ySize = aDescriptor.ySize();
+  gfx::IntSize cbCrSize = aDescriptor.cbCrSize();
+  int32_t yStride = ySize.width;
+  int32_t cbCrStride = cbCrSize.width;
 
   RefPtr<DataSourceSurface> result;
   if (aSurface) {
@@ -210,15 +209,14 @@ DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aD
 
   layers::PlanarYCbCrData ycbcrData;
   ycbcrData.mYChannel     = GetYChannel(aBuffer, aDescriptor);
-  ycbcrData.mYStride      = aDescriptor.yStride();
+  ycbcrData.mYStride      = yStride;
   ycbcrData.mYSize        = ySize;
   ycbcrData.mCbChannel    = GetCbChannel(aBuffer, aDescriptor);
   ycbcrData.mCrChannel    = GetCrChannel(aBuffer, aDescriptor);
-  ycbcrData.mCbCrStride   = aDescriptor.cbCrStride();
-  ycbcrData.mCbCrSize     = aDescriptor.cbCrSize();
+  ycbcrData.mCbCrStride   = cbCrStride;
+  ycbcrData.mCbCrSize     = cbCrSize;
   ycbcrData.mPicSize      = ySize;
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
-  ycbcrData.mDepth        = aDescriptor.depth();
 
   gfx::ConvertYCbCrToRGB(ycbcrData,
                          gfx::SurfaceFormat::B8G8R8X8,
@@ -239,18 +237,21 @@ ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                    int32_t aStride)
 {
   MOZ_ASSERT(aBuffer);
+  gfx::IntSize ySize = aDescriptor.ySize();
+  gfx::IntSize cbCrSize = aDescriptor.cbCrSize();
+  int32_t yStride = ySize.width;
+  int32_t cbCrStride = cbCrSize.width;
 
   layers::PlanarYCbCrData ycbcrData;
   ycbcrData.mYChannel     = GetYChannel(aBuffer, aDescriptor);
-  ycbcrData.mYStride      = aDescriptor.yStride();;
-  ycbcrData.mYSize        = aDescriptor.ySize();
+  ycbcrData.mYStride      = yStride;
+  ycbcrData.mYSize        = ySize;
   ycbcrData.mCbChannel    = GetCbChannel(aBuffer, aDescriptor);
   ycbcrData.mCrChannel    = GetCrChannel(aBuffer, aDescriptor);
-  ycbcrData.mCbCrStride   = aDescriptor.cbCrStride();
-  ycbcrData.mCbCrSize     = aDescriptor.cbCrSize();
-  ycbcrData.mPicSize      = aDescriptor.ySize();
+  ycbcrData.mCbCrStride   = cbCrStride;
+  ycbcrData.mCbCrSize     = cbCrSize;
+  ycbcrData.mPicSize      = ySize;
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
-  ycbcrData.mDepth        = aDescriptor.depth();
 
   gfx::ConvertYCbCrToRGB(ycbcrData, aDestFormat, aDestSize, aDestBuffer, aStride);
 }
