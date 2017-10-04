@@ -17,16 +17,15 @@ import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
-import org.mozilla.focus.utils.beautifyUrl
+import org.mozilla.focus.ext.beautifyUrl
 import java.lang.ref.WeakReference
 
-class SessionViewHolder internal constructor(private val fragment: SessionsSheetFragment, itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+class SessionViewHolder internal constructor(private val fragment: SessionsSheetFragment, private val textView: TextView) : RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
         @JvmField
         internal val LAYOUT_ID = R.layout.item_session
     }
 
-    private val textView: TextView = itemView as TextView
     private var sessionReference: WeakReference<Session> = WeakReference<Session>(null)
 
     init {
@@ -67,10 +66,8 @@ class SessionViewHolder internal constructor(private val fragment: SessionsSheet
     }
 
     override fun onClick(view: View) {
-        val session = sessionReference.get()
-        if (session != null) {
-            selectSession(session)
-        }
+        val session = sessionReference.get() ?: return
+        selectSession(session)
     }
 
     private fun selectSession(session: Session) {

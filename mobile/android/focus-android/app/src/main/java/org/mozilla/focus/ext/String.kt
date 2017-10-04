@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.utils
+package org.mozilla.focus.ext
 
 import android.net.Uri
+import org.mozilla.focus.utils.UrlUtils
 
 // Extension functions for the String class
 
@@ -14,7 +15,7 @@ import android.net.Uri
  * Spec: https://github.com/mozilla-mobile/focus-android/issues/1231#issuecomment-326237077
  */
 fun String.beautifyUrl(): String {
-    if (!UrlUtils.isHttpOrHttps(this) || isNullOrEmpty()) {
+    if (isNullOrEmpty() || !UrlUtils.isHttpOrHttps(this)) {
         return this
     }
 

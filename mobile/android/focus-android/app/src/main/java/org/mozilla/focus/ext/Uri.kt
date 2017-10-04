@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.utils
+package org.mozilla.focus.ext
 
 import android.net.Uri
 
 // Extension functions for the android.net.Uri class
-
-internal object Constants {
-    val ELLIPSIS_CHARACTER = '…'
-}
 
 /**
  * Return the truncated host of this Uri. The truncated host will only contain up to 2-3 segments of
@@ -61,28 +57,12 @@ fun Uri.truncatedHost() : String? {
  * /foo/bar/test/index.html -> /foo/…/index.html
  */
 fun Uri.truncatedPath(): String {
-    val pathBuilder = StringBuilder()
+    val segments = pathSegments
 
-    for ((index, segment) in pathSegments.withIndex()) {
-        when (index) {
-            0 -> {
-                // Pick the first segment
-                pathBuilder.append("/")
-                pathBuilder.append(segment)
-            }
-            pathSegments.size - 1 -> {
-                // Pick the last segment
-                pathBuilder.append("/")
-                pathBuilder.append(segment)
-            }
-            1 -> {
-                // If this is the second element and there are more elements then insert the
-                // ellipsis character here.
-                pathBuilder.append("/")
-                pathBuilder.append(Constants.ELLIPSIS_CHARACTER)
-            }
-        }
+    return when(segments.size) {
+        0 -> ""
+        1 -> "/" + segments[0]
+        2 -> "/" + segments.joinToString(separator = "/" )
+        else -> "/" + listOf(segments.first(), Char.ELLIPSIS, segments.last()).joinToString(separator = "/" )
     }
-
-    return pathBuilder.toString()
 }

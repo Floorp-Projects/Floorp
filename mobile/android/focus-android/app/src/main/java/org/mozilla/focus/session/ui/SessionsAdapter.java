@@ -8,6 +8,7 @@ import android.arch.lifecycle.Observer;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.mozilla.focus.session.Session;
 
@@ -39,7 +40,7 @@ public class SessionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             case SessionViewHolder.LAYOUT_ID:
                 return new SessionViewHolder(
                         fragment,
-                        inflater.inflate(SessionViewHolder.LAYOUT_ID, parent, false));
+                        (TextView) inflater.inflate(SessionViewHolder.LAYOUT_ID, parent, false));
             default:
                 throw new IllegalStateException("Unknown viewType");
         }
