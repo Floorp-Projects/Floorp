@@ -260,10 +260,6 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newTernary(ParseNodeKind kind, Node first, Node second, Node third, JSOp op = JSOP_NOP) {
-        return NodeGeneric;
-    }
-
     // Expressions
 
     Node newArrayComprehension(Node body, const TokenPos& pos) { return NodeGeneric; }

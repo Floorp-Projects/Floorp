@@ -883,8 +883,8 @@ struct BinaryNode : public ParseNode
 
 struct TernaryNode : public ParseNode
 {
-    TernaryNode(ParseNodeKind kind, JSOp op, ParseNode* kid1, ParseNode* kid2, ParseNode* kid3)
-      : ParseNode(kind, op, PN_TERNARY,
+    TernaryNode(ParseNodeKind kind, ParseNode* kid1, ParseNode* kid2, ParseNode* kid3)
+      : ParseNode(kind, JSOP_NOP, PN_TERNARY,
                   TokenPos((kid1 ? kid1 : kid2 ? kid2 : kid3)->pn_pos.begin,
                            (kid3 ? kid3 : kid2 ? kid2 : kid1)->pn_pos.end))
     {
@@ -893,9 +893,9 @@ struct TernaryNode : public ParseNode
         pn_kid3 = kid3;
     }
 
-    TernaryNode(ParseNodeKind kind, JSOp op, ParseNode* kid1, ParseNode* kid2, ParseNode* kid3,
+    TernaryNode(ParseNodeKind kind, ParseNode* kid1, ParseNode* kid2, ParseNode* kid3,
                 const TokenPos& pos)
-      : ParseNode(kind, op, PN_TERNARY, pos)
+      : ParseNode(kind, JSOP_NOP, PN_TERNARY, pos)
     {
         pn_kid1 = kid1;
         pn_kid2 = kid2;
@@ -1320,7 +1320,7 @@ struct ClassNames : public BinaryNode {
 struct ClassNode : public TernaryNode {
     ClassNode(ParseNode* names, ParseNode* heritage, ParseNode* methodsOrBlock,
               const TokenPos& pos)
-      : TernaryNode(PNK_CLASS, JSOP_NOP, names, heritage, methodsOrBlock, pos)
+      : TernaryNode(PNK_CLASS, names, heritage, methodsOrBlock, pos)
     {
         MOZ_ASSERT_IF(names, names->is<ClassNames>());
         MOZ_ASSERT(methodsOrBlock->is<LexicalScopeNode>() ||
