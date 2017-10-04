@@ -1423,13 +1423,11 @@
               findBar._findField.getAttribute("focused") == "true");
           }
 
-          // If focus is in the tab bar, retain it there.
-          if (document.activeElement == oldTab) {
-            // We need to explicitly focus the new tab, because
-            // tabbox.xml does this only in some cases.
-            newTab.focus();
-          } else if (gMultiProcessBrowser && document.activeElement !== newBrowser) {
-
+          let activeEl = document.activeElement;
+          // In e10s, if focus isn't already in the tabstrip or on the new browser,
+          // and the new browser's previous focus wasn't in the url bar but focus is
+          // there now, we need to adjust focus further.
+          if (gMultiProcessBrowser && activeEl != newBrowser && activeEl != newTab) {
             let keepFocusOnUrlBar = newBrowser &&
                                     newBrowser._urlbarFocused &&
                                     gURLBar &&
