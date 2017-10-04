@@ -515,7 +515,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   /**
    * Upon receiving an event from the highlighter, forward it to the client.
    */
-  _onHighlighterEvent: function (data) {
+  _onHighlighterEvent: function (type, data) {
     this.emit("highlighter-event", data);
   },
 
