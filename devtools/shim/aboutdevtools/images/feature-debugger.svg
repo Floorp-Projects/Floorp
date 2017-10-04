@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
+    <title>Debugger</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-843.000000, -2865.000000)">
+            <g id="Group-11" transform="translate(892.000000, 2893.000000)">
+                <g id="Page-1" transform="translate(4.032520, 0.000000)" stroke="#0080FF" stroke-width="4" stroke-linecap="round">
+                    <path d="M101.173069,18.4397779 L101.173069,14.4680499 C101.173069,11.4317399 103.618565,8.9694856 106.635539,8.9694856 L117.258565,8.9694856" id="Stroke-1"></path>
+                    <polyline id="Stroke-3" points="111.688269 2.54689767 118.069417 8.97002819 111.688269 15.3931587"></polyline>
+                    <path d="M89.3390484,28 L97.1187005,28" id="Stroke-5"></path>
+                    <path d="M104.283097,28 L112.063828,28" id="Stroke-7"></path>
+                    <path d="M44.237984,28 L53.1153058,28" id="Stroke-16"></path>
+                    <path d="M61.2894936,28 L70.1668153,28" id="Stroke-18"></path>
+                    <path d="M47.537031,0.000325551471 L52.0409266,0.000325551471 C55.4827353,0.000325551471 58.2743527,2.80874957 58.2743527,6.27261722 L58.2743527,18.4710308" id="Stroke-20"></path>
+                    <polyline id="Stroke-22" points="65.5557405 12.0750296 58.2742449 19.4031932 50.991671 12.0750296"></polyline>
+                    <path d="M47.537031,0.000325551471 L52.0409266,0.000325551471 C55.4827353,0.000325551471 58.2743527,2.80874957 58.2743527,6.27261722 L58.2743527,18.4710308" id="Stroke-24"></path>
+                    <polyline id="Stroke-26" points="65.5557405 12.0750296 58.2742449 19.4031932 50.991671 12.0750296"></polyline>
+                    <path d="M3.81743446,28 L7.27973011,28" id="Stroke-28"></path>
+                    <path d="M0.057215327,16.1793655 L2.74855446,12.0274991 C4.8058762,8.85445741 9.03050228,7.96027604 12.1833371,10.0307834 L23.2861892,17.3220512" id="Stroke-30"></path>
+                    <polyline id="Stroke-32" points="21.8156571 6.78590337 24.1339179 17.8785271 13.1119353 20.2105608"></polyline>
+                    <path d="M0.057215327,16.1793655 L2.74855446,12.0274991 C4.8058762,8.85445741 9.03050228,7.96027604 12.1833371,10.0307834 L23.2861892,17.3220512" id="Stroke-34"></path>
+                    <polyline id="Stroke-36" points="21.8156571 6.78590337 24.1339179 17.8785271 13.1119353 20.2105608"></polyline>
+                </g>
+                <rect id="Rectangle-10" fill="#00C7D8" x="0" y="46.6764706" width="124" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-10" fill="#0080FF" x="1" y="62.9117647" width="35.2299995" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-10" fill="#1C2142" x="45.2764228" y="62.9117647" width="45.3658537" height="5" rx="2.5"></rect>
+            </g>
+            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
+        </g>
+    </g>
+</svg>

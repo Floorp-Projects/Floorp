@@ -4,4 +4,23 @@
 
 devtools-shim.jar:
 %   content devtools-shim %content/
+    content/aboutdevtools/aboutdevtools.xhtml  (aboutdevtools/aboutdevtools.xhtml)
+    content/aboutdevtools/aboutdevtools.css (aboutdevtools/aboutdevtools.css)
+    content/aboutdevtools/aboutdevtools.js (aboutdevtools/aboutdevtools.js)
+
+    content/aboutdevtools/images/otter.png (aboutdevtools/images/otter.png)
+
+    content/aboutdevtools/images/feature-inspector.svg (aboutdevtools/images/feature-inspector.svg)
+    content/aboutdevtools/images/feature-console.svg (aboutdevtools/images/feature-console.svg)
+    content/aboutdevtools/images/feature-debugger.svg (aboutdevtools/images/feature-debugger.svg)
+    content/aboutdevtools/images/feature-network.svg (aboutdevtools/images/feature-network.svg)
+    content/aboutdevtools/images/feature-memory.svg (aboutdevtools/images/feature-memory.svg)
+    content/aboutdevtools/images/feature-visual-editing.svg (aboutdevtools/images/feature-visual-editing.svg)
+    content/aboutdevtools/images/feature-responsive-mode.svg (aboutdevtools/images/feature-responsive-mode.svg)
+    content/aboutdevtools/images/feature-storage.svg (aboutdevtools/images/feature-storage.svg)
+    content/aboutdevtools/images/feature-performance.svg (aboutdevtools/images/feature-performance.svg)
+    content/aboutdevtools/images/feature-style-editor.svg (aboutdevtools/images/feature-style-editor.svg)
+    content/aboutdevtools/images/feature-web-audio.svg (aboutdevtools/images/feature-web-audio.svg)
+    content/aboutdevtools/images/feature-scratchpad.svg (aboutdevtools/images/feature-scratchpad.svg)
+
     content/DevToolsShim.jsm  (DevToolsShim.jsm)
