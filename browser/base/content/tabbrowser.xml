@@ -5808,10 +5808,57 @@
         ]]></body>
       </method>
 
+      <method name="_updateNewTabVisibility">
+        <body><![CDATA[
+          let sib = this.tabContainer.nextElementSibling;
+          while (sib && sib.hidden) {
+            sib = sib.nextElementSibling;
+          }
+          const kAttr = "hasadjacentnewtabbutton";
+          if (sib && sib.id == "new-tab-button") {
+            this.tabContainer.setAttribute(kAttr, "true");
+          } else {
+            this.tabContainer.removeAttribute(kAttr);
+          }
+        ]]></body>
+      </method>
+
+      <method name="onWidgetAfterDOMChange">
+        <parameter name="aNode"/>
+        <parameter name="aNextNode"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          if (aContainer.ownerDocument == document &&
+              aContainer.id == "TabsToolbar") {
+            this._updateNewTabVisibility();
+          }
+        ]]></body>
+      </method>
+      <method name="onAreaNodeRegistered">
+        <parameter name="aArea"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          if (aContainer.ownerDocument == document &&
+              aArea == "TabsToolbar") {
+            this._updateNewTabVisibility();
+          }
+        ]]></body>
+      </method>
+      <method name="onAreaReset">
+        <parameter name="aArea"/>
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          this.onAreaNodeRegistered(aArea, aContainer);
+        ]]></body>
+      </method>
+
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentBrowser.permanentKey = {};
+
+          CustomizableUI.addListener(this);
+          this._updateNewTabVisibility();
 
           Services.obs.addObserver(this, "contextual-identity-updated");
 
@@ -5921,6 +5968,8 @@
       <destructor>
         <![CDATA[
           Services.obs.removeObserver(this, "contextual-identity-updated");
+
+          CustomizableUI.removeListener(this);
 
           for (let tab of this.tabs) {
             let browser = tab.linkedBrowser;
