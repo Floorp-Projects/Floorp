@@ -156,7 +156,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 static nsIFrame::ChildListID
-ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, nsIFrame* aChild)
+ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
 {
   if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
     return nsIFrame::kFloatList;
@@ -165,7 +165,7 @@ ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, nsIFrame* aChild)
     return nsIFrame::kPopupList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
-    return nsLayoutUtils::IsReallyFixedPos(aChild)
+    return nsLayoutUtils::MayBeReallyFixedPos(aChild)
       ? nsIFrame::kFixedList : nsIFrame::kAbsoluteList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_ABSPOS) {
