@@ -16,7 +16,6 @@ import org.mozilla.focus.R
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.ext.beautifyUrl
 import java.lang.ref.WeakReference
 
@@ -59,10 +58,7 @@ class SessionViewHolder internal constructor(private val fragment: SessionsSheet
     }
 
     private fun updateUrl(session: Session) {
-        val shortUrl = UrlUtils.stripCommonSubdomains(
-                UrlUtils.stripScheme(session.url.value))
-
-        textView.text = shortUrl.beautifyUrl()
+        textView.text = session.url.value.beautifyUrl()
     }
 
     override fun onClick(view: View) {
