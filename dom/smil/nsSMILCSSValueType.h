@@ -124,6 +124,22 @@ public:
    */
   static nsCSSPropertyID PropertyFromValue(const nsSMILValue& aValue);
 
+  /**
+   * If |aValue| is an empty value, converts it to a suitable zero value by
+   * matching the type of value stored in |aValueToMatch|.
+   *
+   * There is no indication if this method fails. If a suitable zero value could
+   * not be created, |aValue| is simply unmodified.
+   *
+   * @param aValue        The nsSMILValue (of type nsSMILCSSValueType) to
+   *                      possibly update.
+   * @param aValueToMatch A nsSMILValue (of type nsSMILCSSValueType) for which
+   *                      a corresponding zero value will be created if |aValue|
+   *                      is empty.
+   */
+  static void FinalizeValue(nsSMILValue& aValue,
+                            const nsSMILValue& aValueToMatch);
+
 private:
   // Private constructor: prevent instances beyond my singleton.
   constexpr nsSMILCSSValueType() {}
