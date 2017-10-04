@@ -8,7 +8,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.7.0")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.7.1")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -2455,7 +2455,7 @@ impl Encoding {
                     .unwrap()
             );
             unsafe {
-                let mut vec = string.as_mut_vec();
+                let vec = string.as_mut_vec();
                 vec.set_len(valid_up_to);
                 std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
             }
@@ -2556,7 +2556,7 @@ impl Encoding {
                         .unwrap()
             );
             unsafe {
-                let mut vec = string.as_mut_vec();
+                let vec = string.as_mut_vec();
                 vec.set_len(valid_up_to);
                 std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
             }

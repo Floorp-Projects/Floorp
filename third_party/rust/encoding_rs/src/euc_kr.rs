@@ -379,4 +379,18 @@ mod tests {
         assert_eq!(encoding, EUC_KR);
         assert_eq!(&cow[..], &expectation[..]);
     }
+
+    #[test]
+    fn test_euc_kr_encode_from_two_low_surrogates() {
+        let expectation = b"&#65533;&#65533;";
+        let mut output = [0u8; 40];
+        let mut encoder = EUC_KR.new_encoder();
+        let (result, read, written, had_errors) =
+            encoder.encode_from_utf16(&[0xDC00u16, 0xDEDEu16], &mut output[..], true);
+        assert_eq!(result, CoderResult::InputEmpty);
+        assert_eq!(read, 2);
+        assert_eq!(written, expectation.len());
+        assert!(had_errors);
+        assert_eq!(&output[..written], expectation);
+    }
 }
