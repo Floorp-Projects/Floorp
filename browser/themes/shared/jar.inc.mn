@@ -189,7 +189,6 @@
   skin/classic/browser/search-indicator-badge-add@2x.png       (../shared/search/search-indicator-badge-add@2x.png)
   skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
-  skin/classic/browser/gear.svg                                (../shared/search/gear.svg)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
