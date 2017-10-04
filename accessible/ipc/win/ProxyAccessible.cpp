@@ -34,7 +34,7 @@ ProxyAccessible::GetCOMInterface(void** aOutAccessible) const
     return false;
   }
 
-  if (!mCOMProxy) {
+  if (!mCOMProxy && mSafeToRecurse) {
     // See if we can lazily obtain a COM proxy
     AccessibleWrap* wrap = WrapperFor(this);
     bool isDefunct = false;
