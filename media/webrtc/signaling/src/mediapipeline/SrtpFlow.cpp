@@ -13,13 +13,9 @@
 
 #include "mozilla/RefPtr.h"
 
-static const char* sfLogTag = "SrtpFlow";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG sfLogTag
-
+// Logging context
 using namespace mozilla;
+MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
 
@@ -42,12 +38,12 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   RefPtr<SrtpFlow> flow = new SrtpFlow();
 
   if (!key) {
-    CSFLogError(LOGTAG, "Null SRTP key specified");
+    MOZ_MTLOG(ML_ERROR, "Null SRTP key specified");
     return nullptr;
   }
 
   if (key_len != SRTP_TOTAL_KEY_LENGTH) {
-    CSFLogError(LOGTAG, "Invalid SRTP key length");
+    MOZ_MTLOG(ML_ERROR, "Invalid SRTP key length");
     return nullptr;
   }
 
@@ -58,19 +54,19 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   // since any flow can only have one cipher suite with DTLS-SRTP
   switch (cipher_suite) {
     case SRTP_AES128_CM_HMAC_SHA1_80:
-      CSFLogDebug(LOGTAG,
-                  "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
+      MOZ_MTLOG(ML_DEBUG,
+                "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
       break;
     case SRTP_AES128_CM_HMAC_SHA1_32:
-      CSFLogDebug(LOGTAG,
-                  "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
+      MOZ_MTLOG(ML_DEBUG,
+                "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
       crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
       crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // 80-bit per RFC 5764
       break;                                                   // S 4.1.2.
     default:
-      CSFLogError(LOGTAG, "Request to set unknown SRTP cipher suite");
+      MOZ_MTLOG(ML_ERROR, "Request to set unknown SRTP cipher suite");
       return nullptr;
   }
   // This key is copied into the srtp_t object, so we don't
@@ -87,7 +83,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   // Now make the session
   err_status_t r = srtp_create(&flow->session_, &policy);
   if (r != err_status_ok) {
-    CSFLogError(LOGTAG, "Error creating srtp session");
+    MOZ_MTLOG(ML_ERROR, "Error creating srtp session");
     return nullptr;
   }
 
@@ -99,30 +95,30 @@ nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len,
                                int max_len, int *out_len) {
   MOZ_ASSERT(in);
   if (!in) {
-    CSFLogError(LOGTAG, "NULL input value");
+    MOZ_MTLOG(ML_ERROR, "NULL input value");
     return NS_ERROR_NULL_POINTER;
   }
 
   if (in_len < 0) {
-    CSFLogError(LOGTAG, "Input length is negative");
+    MOZ_MTLOG(ML_ERROR, "Input length is negative");
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (max_len < 0) {
-    CSFLogError(LOGTAG, "Max output length is negative");
+    MOZ_MTLOG(ML_ERROR, "Max output length is negative");
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (protect) {
     if ((max_len < SRTP_MAX_EXPANSION) ||
         ((max_len - SRTP_MAX_EXPANSION) < in_len)) {
-      CSFLogError(LOGTAG, "Output too short");
+      MOZ_MTLOG(ML_ERROR, "Output too short");
       return NS_ERROR_ILLEGAL_VALUE;
     }
   }
   else {
     if (in_len > max_len) {
-      CSFLogError(LOGTAG, "Output too short");
+      MOZ_MTLOG(ML_ERROR, "Output too short");
       return NS_ERROR_ILLEGAL_VALUE;
     }
   }
@@ -140,7 +136,7 @@ nsresult SrtpFlow::ProtectRtp(void *in, int in_len,
   err_status_t r = srtp_protect(session_, in, &len);
 
   if (r != err_status_ok) {
-    CSFLogError(LOGTAG, "Error protecting SRTP packet");
+    MOZ_MTLOG(ML_ERROR, "Error protecting SRTP packet");
     return NS_ERROR_FAILURE;
   }
 
@@ -148,8 +144,8 @@ nsresult SrtpFlow::ProtectRtp(void *in, int in_len,
   *out_len = len;
 
 
-  CSFLogDebug(LOGTAG, "Successfully protected an SRTP packet of len %d",
-              *out_len);
+  MOZ_MTLOG(ML_DEBUG, "Successfully protected an SRTP packet of len "
+            << *out_len);
 
   return NS_OK;
 }
@@ -164,15 +160,15 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
   err_status_t r = srtp_unprotect(session_, in, &len);
 
   if (r != err_status_ok) {
-    CSFLogError(LOGTAG, "Error unprotecting SRTP packet error=%d", (int)r);
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  CSFLogDebug(LOGTAG, "Successfully unprotected an SRTP packet of len %d",
-              *out_len);
+  MOZ_MTLOG(ML_DEBUG, "Successfully unprotected an SRTP packet of len "
+            << *out_len);
 
   return NS_OK;
 }
@@ -187,15 +183,15 @@ nsresult SrtpFlow::ProtectRtcp(void *in, int in_len,
   err_status_t r = srtp_protect_rtcp(session_, in, &len);
 
   if (r != err_status_ok) {
-    CSFLogError(LOGTAG, "Error protecting SRTCP packet");
+    MOZ_MTLOG(ML_ERROR, "Error protecting SRTCP packet");
     return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  CSFLogDebug(LOGTAG, "Successfully protected an SRTCP packet of len %d",
-              *out_len);
+  MOZ_MTLOG(ML_DEBUG, "Successfully protected an SRTCP packet of len "
+            << *out_len);
 
   return NS_OK;
 }
@@ -210,15 +206,15 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
   err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
 
   if (r != err_status_ok) {
-    CSFLogError(LOGTAG, "Error unprotecting SRTCP packet error=%d", (int)r);
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTCP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  CSFLogDebug(LOGTAG, "Successfully unprotected an SRTCP packet of len %d",
-              *out_len);
+  MOZ_MTLOG(ML_DEBUG, "Successfully unprotected an SRTCP packet of len "
+            << *out_len);
 
   return NS_OK;
 }
@@ -233,14 +229,14 @@ nsresult SrtpFlow::Init() {
   if (!initialized) {
     err_status_t r = srtp_init();
     if (r != err_status_ok) {
-      CSFLogError(LOGTAG, "Could not initialize SRTP");
+      MOZ_MTLOG(ML_ERROR, "Could not initialize SRTP");
       MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
 
     r = srtp_install_event_handler(&SrtpFlow::srtp_event_handler);
     if (r != err_status_ok) {
-      CSFLogError(LOGTAG, "Could not install SRTP event handler");
+      MOZ_MTLOG(ML_ERROR, "Could not install SRTP event handler");
       MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
