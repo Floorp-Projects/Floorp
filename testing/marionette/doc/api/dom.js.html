@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: error</title>
+    <title>JSDoc: Source: dom.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,689 +17,221 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: error</h1>
-
-    
-
-
-
-
-<section>
-
-<header>
-    
-        <h2>error</h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-        
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line55">line 55</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".isError"><span class="type-signature">(static) </span>isError<span class="signature">(val)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Check if |val| is an instance of the |Error| prototype.</p>
-<p>Because error objects may originate from different globals, comparing
-the prototype of the left hand side with the prototype property from
-the right hand side, which is what |instanceof| does, will not work.
-If the LHS and RHS come from different globals, this check will always
-fail because the two objects will not have the same identity.</p>
-<p>Therefore it is not safe to use |instanceof| in any multi-global
-situation, e.g. in content across multiple Window objects or anywhere
-in chrome scope.</p>
-<p>This function also contains a special check if |val| is an XPCOM
-|nsIException| because they are special snowflakes and may indeed
-cause Firefox to crash if used with |instanceof|.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>val</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Any value that should be undergo the test for errorness.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line79">line 79</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>True if error, false otherwise.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".isWebDriverError"><span class="type-signature">(static) </span>isWebDriverError<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Checks if obj is an object in the WebDriverError prototypal chain.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line98">line 98</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".report"><span class="type-signature">(static) </span>report<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Unhandled error reporter.  Dumps the error and its stacktrace to console,
-and reports error to the Browser Console.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line128">line 128</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".stringify"><span class="type-signature">(static) </span>stringify<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Prettifies an instance of Error and its stacktrace to a string.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line139">line 139</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".wrap"><span class="type-signature">(static) </span>wrap<span class="signature">(err)</span><span class="type-signature"> &rarr; {<a href="WebDriverError.html">WebDriverError</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Ensures error instance is a WebDriverError.</p>
-<p>If the given error is already in the WebDriverError prototype
-chain, |err| is returned unmodified.  If it is not, it is wrapped
-in UnknownError.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>err</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Error</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Error to conditionally turn into a WebDriverError.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line117">line 117</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>If |err| is a WebDriverError, it is returned unmodified.
-    Otherwise an UnknownError type is returned.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="WebDriverError.html">WebDriverError</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-    
-
-    
-
-    
-</article>
-
-</section>
+    <h1 class="page-title">Source: dom.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {utils: Cu} = Components;
+
+this.EXPORTED_SYMBOLS = [
+  "ContentEventObserverService",
+  "WebElementEventTarget",
+];
+
+/**
+ * The {@link EventTarget} for web elements can be used to observe DOM
+ * events in the content document.
+ *
+ * A caveat of the current implementation is that it is only possible
+ * to listen for top-level &lt;code>window&lt;/code> global events.
+ *
+ * It needs to be backed by a {@link ContentEventObserverService} in a
+ * content frame script.
+ *
+ * Usage:
+ *
+ * &lt;pre>&lt;code>
+ *     let observer = new WebElementEventTarget(messageManager);
+ *     await new Promise(resolve => {
+ *       observer.addEventListener("visibilitychange", resolve, {once: true});
+ *       chromeWindow.minimize();
+ *     });
+ * &lt;/code>&lt;/pre>
+ */
+class WebElementEventTarget {
+  /**
+   * @param {function(): nsIMessageListenerManager} messageManagerFn
+   *     Message manager to the current browser.
+   */
+  constructor(messageManager) {
+    this.mm = messageManager;
+    this.listeners = {};
+    this.mm.addMessageListener("Marionette:DOM:OnEvent", this);
+  }
+
+  /**
+   * Register an event handler of a specific event type from the content
+   * frame.
+   *
+   * @param {string} type
+   *     Event type to listen for.
+   * @param {EventListener} listener
+   *     Object which receives a notification (a {@link BareEvent})
+   *     when an event of the specified type occurs.  This must be
+   *     an object implementing the {@link EventListener} interface,
+   *     or a JavaScript function.
+   * @param {boolean=} once
+   *     Indicates that the &lt;var>listener&lt;/var> should be invoked at
+   *     most once after being added.  If true, the &lt;var>listener&lt;/var>
+   *     would automatically be removed when invoked.
+   */
+  addEventListener(type, listener, {once = false} = {}) {
+    if (!(type in this.listeners)) {
+      this.listeners[type] = [];
+    }
+
+    if (!this.listeners[type].includes(listener)) {
+      listener.once = once;
+      this.listeners[type].push(listener);
+    }
+
+    this.mm.sendAsyncMessage("Marionette:DOM:AddEventListener", {type});
+  }
+
+  /**
+   * Removes an event listener.
+   *
+   * @param {string} type
+   *     Type of event to cease listening for.
+   * @param {EventListener} listener
+   *     Event handler to remove from the event target.
+   */
+  removeEventListener(type, listener) {
+    if (!(type in this.listeners)) {
+      return;
+    }
+
+    let stack = this.listeners[type];
+    for (let i = stack.length - 1; i >= 0; --i) {
+      if (stack[i] === listener) {
+        stack.splice(i, 1);
+        if (stack.length == 0) {
+          this.mm.sendAsyncMessage("Marionette:DOM:RemoveEventListener", {type});
+        }
+        return;
+      }
+    }
+  }
+
+  dispatchEvent(event) {
+    if (!(event.type in this.listeners)) {
+      return;
+    }
+
+    event.target = this;
+
+    let stack = this.listeners[event.type].slice(0);
+    stack.forEach(listener => {
+      listener.call(this, event);
+
+      if (listener.once) {
+        this.removeEventListener(event.type, listener);
+      }
+    });
+  }
+
+  receiveMessage({target, name, data, objects}) {
+    if (name != "Marionette:DOM:OnEvent") {
+      return;
+    }
+
+    let ev = {
+      type: data.type,
+      target: objects.target,
+    };
+    this.dispatchEvent(ev);
+  }
+}
+this.WebElementEventTarget = WebElementEventTarget;
+
+/**
+ * Provides the frame script backend for the
+ * {@link WebElementEventTarget}.
+ *
+ * This service receives requests for new DOM events to listen for and
+ * to cease listening for, and despatches IPC messages to the browser
+ * when they fire.
+ */
+class ContentEventObserverService {
+  /**
+   * @param {WindowProxy} windowGlobal
+   *     Window.
+   * @param {nsIMessageSender.sendAsyncMessage} sendAsyncMessage
+   *     Function for sending an async message to the parent browser.
+   */
+  constructor(windowGlobal, sendAsyncMessage) {
+    this.window = windowGlobal;
+    this.sendAsyncMessage = sendAsyncMessage;
+    this.events = new Set();
+  }
+
+  /**
+   * Observe a new DOM event.
+   *
+   * When the DOM event of &lt;var>type&lt;/var> fires, a message is passed
+   * to the parent browser's event observer.
+   *
+   * If event type is already being observed, only a single message
+   * is sent.  E.g. multiple registration for events will only ever emit
+   * a maximum of one message.
+   *
+   * @param {string} type
+   *     DOM event to listen for.
+   */
+  add(type) {
+    if (this.events.has(type)) {
+      return;
+    }
+    this.window.addEventListener(type, this);
+    this.events.add(type);
+  }
+
+  /**
+   * Ceases observing a DOM event.
+   *
+   * @param {string} type
+   *     DOM event to stop listening for.
+   */
+  remove(type) {
+    if (!this.events.has(type)) {
+      return;
+    }
+    this.window.removeEventListener(type, this);
+    this.events.delete(type);
+  }
+
+  /** Ceases observing all previously registered DOM events. */
+  clear() {
+    for (let ev of this) {
+      this.remove(ev);
+    }
+  }
+
+  * [Symbol.iterator]() {
+    for (let ev of this.events) {
+      yield ev;
+    }
+  }
+
+  handleEvent({type, target}) {
+    this.sendAsyncMessage("Marionette:DOM:OnEvent", {type}, {target});
+  }
+}
+this.ContentEventObserverService = ContentEventObserverService;
+</code></pre>
+        </article>
+    </section>
 
 
 

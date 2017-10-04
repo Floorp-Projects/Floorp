@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: error</title>
+    <title>JSDoc: Class: WebElementEventTarget</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: error</h1>
+    <h1 class="page-title">Class: WebElementEventTarget</h1>
 
     
 
@@ -28,7 +28,22 @@
 
 <header>
     
-        <h2>error</h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>WebElementEventTarget<span class="signature">(messageManagerFn)</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description"><p>The <code>EventTarget</code> for web elements can be used to observe DOM
+events in the content document.</p>
+<p>A caveat of the current implementation is that it is only possible
+to listen for top-level <code>window</code> global events.</p>
+<p>It needs to be backed by a <a href="ContentEventObserverService.html"><code>ContentEventObserverService</code></a> in a
+content frame script.</p>
+<p>Usage:</p>
+<pre><code>
+    let observer = new WebElementEventTarget(messageManager);
+    await new Promise(resolve => {
+      observer.addEventListener("visibilitychange", resolve, {once: true});
+      chromeWindow.minimize();
+    });
+</code></pre></div>
         
     
 </header>
@@ -38,7 +53,77 @@
     
         
 
+    
+    <h2>Constructor</h2>
+    
+
+    
+    <h4 class="name" id="WebElementEventTarget"><span class="type-signature"></span>new WebElementEventTarget<span class="signature">(messageManagerFn)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
         
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>messageManagerFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Message manager to the current browser.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
 
 
 <dl class="details">
@@ -70,7 +155,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line55">line 55</a>
+        <a href="dom.js.html">dom.js</a>, <a href="dom.js.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -82,7 +167,22 @@
 </dl>
 
 
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     </div>
 
@@ -109,7 +209,7 @@
     
 
     
-    <h4 class="name" id=".isError"><span class="type-signature">(static) </span>isError<span class="signature">(val)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id="addEventListener"><span class="type-signature"></span>addEventListener<span class="signature">(type, listener, once<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -117,18 +217,8 @@
 
 
 <div class="description">
-    <p>Check if |val| is an instance of the |Error| prototype.</p>
-<p>Because error objects may originate from different globals, comparing
-the prototype of the left hand side with the prototype property from
-the right hand side, which is what |instanceof| does, will not work.
-If the LHS and RHS come from different globals, this check will always
-fail because the two objects will not have the same identity.</p>
-<p>Therefore it is not safe to use |instanceof| in any multi-global
-situation, e.g. in content across multiple Window objects or anywhere
-in chrome scope.</p>
-<p>This function also contains a special check if |val| is an XPCOM
-|nsIException| because they are special snowflakes and may indeed
-cause Firefox to crash if used with |instanceof|.</p>
+    <p>Register an event handler of a specific event type from the content
+frame.</p>
 </div>
 
 
@@ -152,6 +242,8 @@ cause Firefox to crash if used with |instanceof|.</p>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -164,442 +256,100 @@ cause Firefox to crash if used with |instanceof|.</p>
 
         <tr>
             
-                <td class="name"><code>val</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">*</span>
+<span class="param-type">string</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>Any value that should be undergo the test for errorness.</p></td>
+            <td class="description last"><p>Event type to listen for.</p></td>
         </tr>
 
     
-    </tbody>
-</table>
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">EventListener</span>
 
 
+            
+            </td>
 
+            
+                <td class="attributes">
+                
 
+                
 
+                
+                </td>
+            
 
-<dl class="details">
+            
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line79">line 79</a>
-    </li></ul></dd>
-    
+            <td class="description last"><p>Object which receives a notification (a <code>BareEvent</code>)
+    when an event of the specified type occurs.  This must be
+    an object implementing the <code>EventListener</code> interface,
+    or a JavaScript function.</p></td>
+        </tr>
 
     
 
-    
+        <tr>
+            
+                <td class="name"><code>once</code></td>
+            
 
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>True if error, false otherwise.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
+            <td class="type">
+            
+                
 <span class="param-type">boolean</span>
 
 
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".isWebDriverError"><span class="type-signature">(static) </span>isWebDriverError<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Checks if obj is an object in the WebDriverError prototypal chain.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line98">line 98</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".report"><span class="type-signature">(static) </span>report<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Unhandled error reporter.  Dumps the error and its stacktrace to console,
-and reports error to the Browser Console.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line128">line 128</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".stringify"><span class="type-signature">(static) </span>stringify<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Prettifies an instance of Error and its stacktrace to a string.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line139">line 139</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".wrap"><span class="type-signature">(static) </span>wrap<span class="signature">(err)</span><span class="type-signature"> &rarr; {<a href="WebDriverError.html">WebDriverError</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Ensures error instance is a WebDriverError.</p>
-<p>If the given error is already in the WebDriverError prototype
-chain, |err| is returned unmodified.  If it is not, it is wrapped
-in UnknownError.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>err</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Error</span>
-
-
             
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>Error to conditionally turn into a WebDriverError.</p></td>
+            <td class="description last"><p>Indicates that the <var>listener</var> should be invoked at
+    most once after being added.  If true, the <var>listener</var>
+    would automatically be removed when invoked.</p></td>
         </tr>
 
     
@@ -640,7 +390,7 @@ in UnknownError.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="error.js.html">error.js</a>, <a href="error.js.html#line117">line 117</a>
+        <a href="dom.js.html">dom.js</a>, <a href="dom.js.html#line61">line 61</a>
     </li></ul></dd>
     
 
@@ -663,29 +413,164 @@ in UnknownError.</p>
 
 
 
-<h5>Returns:</h5>
+
+
+
+
 
         
-<div class="param-desc">
-    <p>If |err| is a WebDriverError, it is returned unmodified.
-    Otherwise an UnknownError type is returned.</p>
+            
+
+    
+
+    
+    <h4 class="name" id="removeEventListener"><span class="type-signature"></span>removeEventListener<span class="signature">(type, listener)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Removes an event listener.</p>
 </div>
 
 
 
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
         
-<span class="param-type"><a href="WebDriverError.html">WebDriverError</a></span>
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
 
 
-    </dd>
-</dl>
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Type of event to cease listening for.</p></td>
+        </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">EventListener</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Event handler to remove from the event target.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="dom.js.html">dom.js</a>, <a href="dom.js.html#line82">line 82</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
