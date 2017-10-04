@@ -6,7 +6,7 @@ module.exports = {
 	},
 	plugins: ["plugins/markdown"],
 	opts: {
-		destination: "doc",
+		destination: "doc/api",
 		readme: "README.html",
 		private: true,
 	}
