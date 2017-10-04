@@ -59,7 +59,8 @@ const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const {nodeSpec, nodeListSpec, walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
+const {walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
+const {nodeSpec, nodeListSpec} = require("devtools/shared/specs/node");
 
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");

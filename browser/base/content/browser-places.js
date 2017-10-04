@@ -1900,6 +1900,19 @@ var BookmarkingUI = {
         case "panelMenu_viewBookmarksSidebar":
           button.setAttribute("checked", SidebarUI.currentID == "viewBookmarksSidebar");
           break;
+        case "panelMenu_viewBookmarksToolbar":
+          let toolbar = document.getElementById("PersonalToolbar");
+          // This is an actual toolbarbutton[type=checkbox], and its checked
+          // attribute will get added/removed by the binding when clicked.
+          // Setting the attribute to 'false' breaks showing the toolbar,
+          // because the binding removes the attribute instead of setting it
+          // to 'true' when clicked.
+          if (toolbar.getAttribute("collapsed") != "true") {
+            button.setAttribute("checked", "true");
+          } else {
+            button.removeAttribute("checked");
+          }
+          break;
         default:
           update = false;
           break;

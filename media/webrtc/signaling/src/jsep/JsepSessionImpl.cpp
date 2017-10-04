@@ -338,7 +338,7 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     }
   }
   if (addVideoExt != SdpDirectionAttribute::kInactive) {
-    AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addVideoExt);
+    AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamIdUri, addVideoExt);
   }
 
   it->mTrack->SetJsConstraints(constraints);
@@ -2387,12 +2387,15 @@ JsepSessionImpl::SetupDefaultCodecs()
 void
 JsepSessionImpl::SetupDefaultRtpExtensions()
 {
-  AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+  AddAudioRtpExtension(webrtc::RtpExtension::kAudioLevelUri,
                        SdpDirectionAttribute::Direction::kSendonly);
-  AddVideoRtpExtension(
-    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
+  AddAudioRtpExtension(webrtc::RtpExtension::kMIdUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
-  AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:toffset",
+  AddVideoRtpExtension(webrtc::RtpExtension::kAbsSendTimeUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kTimestampOffsetUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kMIdUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
 }
 

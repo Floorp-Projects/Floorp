@@ -6,8 +6,6 @@
 
 const protocol = require("devtools/shared/protocol");
 const { Arg, generateActorSpec, RetVal, types } = protocol;
-// eslint-disable-next-line no-unused-vars
-const { nodeSpec } = require("devtools/shared/specs/inspector");
 
 types.addActorType("accessible");
 

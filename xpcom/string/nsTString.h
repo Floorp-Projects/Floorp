@@ -525,13 +525,24 @@ protected:
 //extern template class nsTString<char>;
 //extern template class nsTString<char16_t>;
 
-template <typename T>
-class nsTFixedString : public nsTString<T>
+/**
+ * nsTAutoStringN
+ *
+ * Subclass of nsTString that adds support for stack-based string
+ * allocation.  It is normally not a good idea to use this class on the
+ * heap, because it will allocate space which may be wasted if the string
+ * it contains is significantly smaller or any larger than 64 characters.
+ *
+ * NAMES:
+ *   nsAutoStringN / nsTAutoString for wide characters
+ *   nsAutoCStringN / nsTAutoCString for narrow characters
+ */
+template<typename T, size_t N>
+class MOZ_NON_MEMMOVABLE nsTAutoStringN : public nsTString<T>
 {
 public:
 
-  typedef nsTFixedString<T> self_type;
-  typedef nsTFixedString<T> fixed_string_type;
+  typedef nsTAutoStringN<T, N> self_type;
 
   typedef nsTString<T> base_string_type;
   typedef typename base_string_type::string_type string_type;
@@ -551,126 +562,28 @@ public:
 public:
 
   /**
-   * @param aData
-   *        fixed-size buffer to be used by the string (the contents of
-   *        this buffer may be modified by the string)
-   * @param aStorageSize
-   *        the size of the fixed buffer
-   * @param aLength (optional)
-   *        the length of the string already contained in the buffer
-   */
-
-  nsTFixedString(char_type* aData, size_type aStorageSize)
-    : string_type(aData, uint32_t(char_traits::length(aData)),
-                  DataFlags::TERMINATED | DataFlags::FIXED,
-                  ClassFlags::FIXED)
-    , mFixedCapacity(aStorageSize - 1)
-    , mFixedBuf(aData)
-  {
-  }
-
-  nsTFixedString(char_type* aData, size_type aStorageSize,
-                 size_type aLength)
-    : string_type(aData, aLength, DataFlags::TERMINATED | DataFlags::FIXED,
-                  ClassFlags::FIXED)
-    , mFixedCapacity(aStorageSize - 1)
-    , mFixedBuf(aData)
-  {
-    // null-terminate
-    mFixedBuf[aLength] = char_type(0);
-  }
-
-  // |operator=| does not inherit, so we must define our own
-  self_type& operator=(char_type aChar)
-  {
-    this->Assign(aChar);
-    return *this;
-  }
-  self_type& operator=(const char_type* aData)
-  {
-    this->Assign(aData);
-    return *this;
-  }
-  self_type& operator=(const substring_type& aStr)
-  {
-    this->Assign(aStr);
-    return *this;
-  }
-  self_type& operator=(const substring_tuple_type& aTuple)
-  {
-    this->Assign(aTuple);
-    return *this;
-  }
-
-protected:
-
-  friend class nsTSubstring<T>;
-
-  size_type  mFixedCapacity;
-  char_type* mFixedBuf;
-};
-
-extern template class nsTFixedString<char>;
-extern template class nsTFixedString<char>;
-
-/**
- * nsTAutoStringN
- *
- * Subclass of nsTString that adds support for stack-based string
- * allocation.  It is normally not a good idea to use this class on the
- * heap, because it will allocate space which may be wasted if the string
- * it contains is significantly smaller or any larger than 64 characters.
- *
- * NAMES:
- *   nsAutoStringN / nsTAutoString for wide characters
- *   nsAutoCStringN / nsTAutoCString for narrow characters
- */
-template<typename T, size_t N>
-class MOZ_NON_MEMMOVABLE nsTAutoStringN : public nsTFixedString<T>
-{
-public:
-
-  typedef nsTAutoStringN<T, N> self_type;
-
-#ifdef __clang__
-  // bindgen w/ clang 3.9 at least chokes on a typedef, but using is okay.
-  using typename nsTFixedString<T>::fixed_string_type;
-#else
-  // On the other hand msvc chokes on the using statement. It seems others
-  // don't care either way so we lump them in here.
-  typedef typename nsTFixedString<T>::fixed_string_type fixed_string_type;
-#endif
-
-  typedef typename fixed_string_type::char_type char_type;
-  typedef typename fixed_string_type::char_traits char_traits;
-  typedef typename fixed_string_type::substring_type substring_type;
-  typedef typename fixed_string_type::size_type size_type;
-  typedef typename fixed_string_type::substring_tuple_type substring_tuple_type;
-
-  using typename fixed_string_type::IsChar;
-  using typename fixed_string_type::IsChar16;
-
-public:
-
-  /**
    * constructors
    */
 
   nsTAutoStringN()
-    : fixed_string_type(mStorage, N, 0)
+    : string_type(mStorage, 0, DataFlags::TERMINATED | DataFlags::INLINE,
+                  ClassFlags::INLINE)
+    , mInlineCapacity(N - 1)
   {
+    // null-terminate
+    mStorage[0] = char_type(0);
   }
 
   explicit
   nsTAutoStringN(char_type aChar)
-    : fixed_string_type(mStorage, N, 0)
+    : self_type()
   {
     this->Assign(aChar);
   }
 
   explicit
   nsTAutoStringN(const char_type* aData, size_type aLength = size_type(-1))
-    : fixed_string_type(mStorage, N, 0)
+    : self_type()
   {
     this->Assign(aData, aLength);
   }
@@ -679,26 +592,26 @@ public:
   template <typename EnableIfChar16 = IsChar16>
   explicit
   nsTAutoStringN(char16ptr_t aData, size_type aLength = size_type(-1))
-    : nsTAutoStringN(static_cast<const char16_t*>(aData), aLength)
+    : self_type(static_cast<const char16_t*>(aData), aLength)
   {
   }
 #endif
 
   nsTAutoStringN(const self_type& aStr)
-    : fixed_string_type(mStorage, N, 0)
+    : self_type()
   {
     this->Assign(aStr);
   }
 
   explicit
   nsTAutoStringN(const substring_type& aStr)
-    : fixed_string_type(mStorage, N, 0)
+    : self_type()
   {
     this->Assign(aStr);
   }
 
   MOZ_IMPLICIT nsTAutoStringN(const substring_tuple_type& aTuple)
-    : fixed_string_type(mStorage, N, 0)
+    : self_type()
   {
     this->Assign(aTuple);
   }
@@ -740,8 +653,12 @@ public:
 
   static const size_t kStorageSize = N;
 
-private:
+protected:
+  friend class nsTSubstring<T>;
 
+  size_type mInlineCapacity;
+
+private:
   char_type mStorage[N];
 };
 

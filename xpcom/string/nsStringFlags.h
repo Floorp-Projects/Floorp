@@ -40,30 +40,30 @@ enum class StringDataFlags : uint16_t
   //
   // Some comments about the string data flags:
   //
-  //   SHARED, OWNED, and FIXED are all mutually exlusive.  They
+  //   SHARED, OWNED, and INLINE are all mutually exlusive.  They
   //   indicate the allocation type of mData.  If none of these flags
   //   are set, then the string buffer is dependent.
   //
-  //   SHARED, OWNED, or FIXED imply TERMINATED.  This is because
+  //   SHARED, OWNED, or INLINE imply TERMINATED.  This is because
   //   the string classes always allocate null-terminated buffers, and
   //   non-terminated substrings are always dependent.
   //
   //   VOIDED implies TERMINATED, and moreover it implies that mData
   //   points to char_traits::sEmptyBuffer.  Therefore, VOIDED is
-  //   mutually exclusive with SHARED, OWNED, and FIXED.
+  //   mutually exclusive with SHARED, OWNED, and INLINE.
 
   TERMINATED   = 1 << 0,  // IsTerminated returns true
   VOIDED       = 1 << 1,  // IsVoid returns true
   SHARED       = 1 << 2,  // mData points to a heap-allocated, shared buffer
   OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
-  FIXED        = 1 << 4,  // mData points to a fixed-size writable, dependent buffer
+  INLINE       = 1 << 4,  // mData points to a writable, inline buffer
   LITERAL      = 1 << 5   // mData points to a string literal; DataFlags::TERMINATED will also be set
 };
 
 // bits for mClassFlags
 enum class StringClassFlags : uint16_t
 {
-  FIXED           = 1 << 0, // |this| is of type nsTFixedString
+  INLINE          = 1 << 0, // |this|'s buffer is inline
   NULL_TERMINATED = 1 << 1  // |this| requires its buffer is null-terminated
 };
 

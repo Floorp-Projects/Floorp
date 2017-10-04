@@ -22,9 +22,7 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 class PostTraversalTask;
-namespace css {
-class FontFamilyListRefCnt;
-} // namespace css
+class SharedFontList;
 namespace dom {
 class FontFace;
 class Promise;
@@ -315,7 +313,7 @@ private:
 
   void ParseFontShorthandForMatching(
               const nsAString& aFont,
-              RefPtr<mozilla::css::FontFamilyListRefCnt>& aFamilyList,
+              RefPtr<SharedFontList>& aFamilyList,
               uint32_t& aWeight,
               int32_t& aStretch,
               uint8_t& aStyle,

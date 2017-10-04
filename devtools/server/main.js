@@ -564,11 +564,6 @@ var DebuggerServer = {
       constructor: "PromisesActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/performance-entries", {
-      prefix: "performanceEntries",
-      constructor: "PerformanceEntriesActor",
-      type: { tab: true }
-    });
     this.registerModule("devtools/server/actors/emulation", {
       prefix: "emulation",
       constructor: "EmulationActor",

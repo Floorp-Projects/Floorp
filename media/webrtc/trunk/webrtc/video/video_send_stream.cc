@@ -825,6 +825,11 @@ VideoSendStreamImpl::VideoSendStreamImpl(
   ConfigureProtection();
   ConfigureSsrcs();
 
+  // Configure the mid for each of the rtp modules
+  for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+    rtp_rtcp->SetMID(config_->rtp.mid.c_str());
+  }
+
   // TODO(pbos): Should we set CNAME on all RTP modules?
   rtp_rtcp_modules_.front()->SetCNAME(config_->rtp.c_name.c_str());
 

@@ -28,7 +28,7 @@ add_task(async function () {
     content.wrappedJSObject.console.log(
       "oi-test",
       [1, 2, {a: "a", b: "b"}],
-      {c: "c", d: [3, 4]}
+      {c: "c", d: [3, 4], length: 987}
     );
   });
 
@@ -36,7 +36,7 @@ add_task(async function () {
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(objectInspectors.length, 2, "There is the expected number of object inspectors");
 
-  const [arrayOi] = objectInspectors;
+  const [arrayOi, objectOi] = objectInspectors;
 
   info("Expanding the array object inspector");
 
@@ -51,7 +51,14 @@ add_task(async function () {
     "The arrow of the root node of the tree is expanded after clicking on it");
 
   let arrayOiNodes = arrayOi.querySelectorAll(".node");
-  // There are 6 nodes: the root, 1, 2, {a: "a", b: "b"}, length and the proto.
+
+  // The object inspector now looks like:
+  // ▼ […]
+  // |  0: 1
+  // |  1: 2
+  // |  ▶︎ 2: {a: "a", b: "b"}
+  // |  length: 3
+  // |  ▶︎ __proto__
   is(arrayOiNodes.length, 6, "There is the expected number of nodes in the tree");
 
   info("Expanding a leaf of the array object inspector");
@@ -67,8 +74,17 @@ add_task(async function () {
     "The arrow of the root node of the tree is expanded after clicking on it");
 
   arrayOiNodes = arrayOi.querySelectorAll(".node");
-  // There are now 9 nodes, the 6 original ones, and 3 new from the expanded object:
-  // a, b and the proto.
+
+  // The object inspector now looks like:
+  // ▼ […]
+  // |  0: 1
+  // |  1: 2
+  // |  ▼ 2: {…}
+  // |  |  a: "a"
+  // |  |  b: "b"
+  // |  |  ▶︎ __proto__
+  // |  length: 3
+  // |  ▶︎ __proto__
   is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
 
   info("Collapsing the root");
@@ -98,4 +114,23 @@ add_task(async function () {
     "The object tree is still expanded");
 
   is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
+
+  let onObjectOiMutation = waitForNodeMutation(objectOi, {
+    childList: true
+  });
+
+  objectOi.querySelector(".arrow").click();
+  await onObjectOiMutation;
+
+  ok(objectOi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the root node of the tree is expanded after clicking on it");
+
+  let objectOiNodes = objectOi.querySelectorAll(".node");
+  // The object inspector now looks like:
+  // ▼ {…}
+  // |  c: "c"
+  // |  ▶︎ d: [3, 4]
+  // |  length: 987
+  // |  ▶︎ __proto__
+  is(objectOiNodes.length, 5, "There is the expected number of nodes in the tree");
 });

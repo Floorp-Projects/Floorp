@@ -36,7 +36,6 @@ function test_methods_presence(miHelper) {
   equal(miHelper.addGetCalendarInfo instanceof Function, true);
   equal(miHelper.addGetDisplayNames instanceof Function, true);
   equal(miHelper.addGetLocaleInfo instanceof Function, true);
-  equal(miHelper.addPluralRulesConstructor instanceof Function, true);
   equal(miHelper.addDateTimeFormatConstructor instanceof Function, true);
 
   let x = {};
@@ -49,9 +48,6 @@ function test_methods_presence(miHelper) {
 
   miHelper.addGetLocaleInfo(x);
   equal(x.getLocaleInfo instanceof Function, true);
-
-  miHelper.addPluralRulesConstructor(x);
-  equal(x.PluralRules instanceof Function, true);
 
   miHelper.addDateTimeFormatConstructor(x);
   equal(x.DateTimeFormat instanceof Function, true);

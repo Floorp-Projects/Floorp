@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-#[macro_use]
 extern crate nsstring;
 
 use std::fmt::Write;
@@ -64,37 +63,9 @@ pub extern fn Rust_AssignFromCpp() {
 }
 
 #[no_mangle]
-pub extern fn Rust_FixedAssignFromCpp() {
-    let mut cs_buf: [u8; 64] = [0; 64];
-    let cs_buf_ptr = &cs_buf as *const _ as usize;
-    let mut s_buf: [u16; 64] = [0; 64];
-    let s_buf_ptr = &s_buf as *const _ as usize;
-    let mut cs = nsFixedCString::new(&mut cs_buf);
-    let mut s = nsFixedString::new(&mut s_buf);
-    unsafe {
-        Cpp_AssignFromCpp(&mut *cs, &mut *s);
-    }
-    expect_eq!(cs, "Hello, World!");
-    expect_eq!(s, "Hello, World!");
-    expect_eq!(cs.as_ptr() as usize, cs_buf_ptr);
-    expect_eq!(s.as_ptr() as usize, s_buf_ptr);
-}
-
-#[no_mangle]
-pub extern fn Rust_AutoAssignFromCpp() {
-    ns_auto_cstring!(cs);
-    ns_auto_string!(s);
-    unsafe {
-        Cpp_AssignFromCpp(&mut *cs, &mut *s);
-    }
-    expect_eq!(cs, "Hello, World!");
-    expect_eq!(s, "Hello, World!");
-}
-
-#[no_mangle]
 pub extern fn Rust_StringWrite() {
-    ns_auto_cstring!(cs);
-    ns_auto_string!(s);
+    let mut cs = nsCString::new();
+    let mut s = nsString::new();
 
     write!(s, "a").unwrap();
     write!(cs, "a").unwrap();

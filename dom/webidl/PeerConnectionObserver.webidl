@@ -47,4 +47,8 @@ interface PeerConnectionObserver
 
   /* DTMF callback */
   void onDTMFToneChange(DOMString trackId, DOMString tone);
+
+  /* Packet dump callback */
+  void onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
+                ArrayBuffer packet);
 };

@@ -22,7 +22,7 @@ DevToolsModules(
     'inspector.js',
     'layout.js',
     'memory.js',
-    'performance-entries.js',
+    'node.js',
     'performance-recording.js',
     'performance.js',
     'preference.js',

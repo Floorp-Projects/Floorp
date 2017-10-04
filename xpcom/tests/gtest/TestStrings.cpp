@@ -426,20 +426,6 @@ TEST(Strings, equals_ic)
   EXPECT_FALSE(s.LowerCaseEqualsLiteral("view-source"));
 }
 
-TEST(Strings, fixed_string)
-{
-  char buf[256] = "hello world";
-
-  nsFixedCString s(buf, sizeof(buf));
-
-  EXPECT_EQ(s.Length(), strlen(buf));
-
-  EXPECT_STREQ(s.get(), buf);
-
-  s.Assign("foopy doopy doo");
-  EXPECT_EQ(s.get(), buf);
-}
-
 TEST(Strings, concat)
 {
   nsCString bar("bar");

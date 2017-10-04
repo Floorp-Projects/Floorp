@@ -11,8 +11,8 @@ define(function (require, exports, module) {
 
   const { createFactories } = require("devtools/client/shared/react-utils");
 
-  const { Headers } = createFactories(require("./headers"));
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
+  const { Headers } = createFactories(require("./Headers"));
+  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   const { div } = dom;
 

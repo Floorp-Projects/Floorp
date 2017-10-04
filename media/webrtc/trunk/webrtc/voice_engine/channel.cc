@@ -2565,6 +2565,18 @@ int Channel::VoiceActivityIndicator(int& activity) {
   return 0;
 }
 
+int Channel::SetLocalMID(const char* mid) {
+  WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
+               "Channel::SetLocalMID()");
+  if (channel_state_.Get().sending) {
+    _engineStatisticsPtr->SetLastError(VE_ALREADY_SENDING, kTraceError,
+                                       "SetLocalMID() already sending");
+    return -1;
+  }
+  _rtpRtcpModule->SetMID(mid);
+  return 0;
+}
+
 int Channel::SetLocalSSRC(unsigned int ssrc) {
   WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
                "Channel::SetLocalSSRC()");
@@ -2590,6 +2602,10 @@ int Channel::GetRemoteSSRC(unsigned int& ssrc) {
 int Channel::SetSendAudioLevelIndicationStatus(bool enable, unsigned char id) {
   _includeAudioLevelIndication = enable;
   return SetSendRtpHeaderExtension(enable, kRtpExtensionAudioLevel, id);
+}
+
+int Channel::SetSendMIDStatus(bool enable, unsigned char id) {
+  return SetSendRtpHeaderExtension(enable, kRtpExtensionMId, id);
 }
 
 int Channel::SetReceiveAudioLevelIndicationStatus(bool enable,
