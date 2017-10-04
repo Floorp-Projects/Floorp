@@ -799,13 +799,7 @@ JSRuntime::forkRandomKeyGenerator()
 void
 JSRuntime::updateMallocCounter(size_t nbytes)
 {
-    updateMallocCounter(nullptr, nbytes);
-}
-
-void
-JSRuntime::updateMallocCounter(JS::Zone* zone, size_t nbytes)
-{
-    gc.updateMallocCounter(zone, nbytes);
+    gc.updateMallocCounter(nbytes);
 }
 
 JS_FRIEND_API(void*)

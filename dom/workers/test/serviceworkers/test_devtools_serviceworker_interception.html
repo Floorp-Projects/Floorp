@@ -65,7 +65,8 @@ function executeTest(aWindow) {
                                          "hello.html?ForBypassingHttpCache"))
 
     // Tear down
-    .then(_ => registration.unregister());
+    .then(_ => registration.unregister())
+    .then(_ => aWindow.close());
 }
 
 function register(aWindow, aURL, aScope) {

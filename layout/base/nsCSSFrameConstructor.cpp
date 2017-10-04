@@ -1260,8 +1260,10 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
     if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
       *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
       if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+        *aPlaceholderType |= PLACEHOLDER_FOR_FIXEDPOS;
         return &mTopLayerFixedItems;
       }
+      *aPlaceholderType |= PLACEHOLDER_FOR_ABSPOS;
       return &mTopLayerAbsoluteItems;
     }
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
@@ -1303,11 +1305,11 @@ nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
   nsAbsoluteItems* frameItems = GetOutOfFlowFrameItems(backdropFrame,
                                                        true, true, false,
                                                        &placeholderType);
-  MOZ_ASSERT(placeholderType == PLACEHOLDER_FOR_TOPLAYER);
+  MOZ_ASSERT(placeholderType & PLACEHOLDER_FOR_TOPLAYER);
 
   nsIFrame* placeholder = nsCSSFrameConstructor::
     CreatePlaceholderFrameFor(mPresShell, aContent, backdropFrame,
-                              frame, nullptr, PLACEHOLDER_FOR_TOPLAYER);
+                              frame, nullptr, placeholderType);
   nsFrameList temp(placeholder, placeholder);
   frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
 
@@ -1361,7 +1363,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
 
-    if (placeholderType == PLACEHOLDER_FOR_TOPLAYER) {
+    if (placeholderType & PLACEHOLDER_FOR_TOPLAYER) {
       ConstructBackdropFrameFor(aContent, aNewFrame);
     }
   }

@@ -20,7 +20,7 @@ class TlsRecordHeader;
 class AeadCipher {
  public:
   AeadCipher(CK_MECHANISM_TYPE mech) : mech_(mech), key_(nullptr) {}
-  ~AeadCipher();
+  virtual ~AeadCipher();
 
   bool Init(PK11SymKey *key, const uint8_t *iv);
   virtual bool Aead(bool decrypt, uint64_t seq, const uint8_t *in, size_t inlen,

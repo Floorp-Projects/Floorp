@@ -1946,6 +1946,15 @@ cert_test_ocspresp()
   ocspr ${SERVER_CADIR} "serverCA" "chain-1-serverCA" -f "${R_PWFILE}" 2>&1
 }
 
+cert_test_implicit_db_init()
+{
+  echo "$SCRIPTNAME: test implicit database init"
+
+  CU_ACTION="Add cert with trust flags to db with implicit init"
+  mkdir ${IMPLICIT_INIT_DIR}
+  certu -A -n ca -t 'C,C,C' -d ${P_R_IMPLICIT_INIT_DIR} -i "${SERVER_CADIR}/serverCA.ca.cert"
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1962,6 +1971,7 @@ cert_cleanup()
 
 cert_init
 cert_all_CA
+cert_test_implicit_db_init
 cert_extended_ssl
 cert_ssl
 cert_smime_client

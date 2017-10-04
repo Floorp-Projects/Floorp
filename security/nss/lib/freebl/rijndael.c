@@ -27,16 +27,39 @@
 #include "intel-gcm.h"
 #endif /* INTEL_GCM */
 
+/* Forward declarations */
+void rijndael_native_key_expansion(AESContext *cx, const unsigned char *key,
+                                   unsigned int Nk);
+void rijndael_native_encryptBlock(AESContext *cx,
+                                  unsigned char *output,
+                                  const unsigned char *input);
+
+/* Stub definitions for the above rijndael_native_* functions, which
+ * shouldn't be used unless NSS_X86_OR_X64 is defined */
+#ifndef NSS_X86_OR_X64
+void
+rijndael_native_key_expansion(AESContext *cx, const unsigned char *key,
+                              unsigned int Nk)
+{
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+    PORT_Assert(0);
+}
+
+void
+rijndael_native_encryptBlock(AESContext *cx,
+                             unsigned char *output,
+                             const unsigned char *input)
+{
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+    PORT_Assert(0);
+}
+#endif /* NSS_X86_OR_X64 */
+
 /*
- * There are currently five ways to build this code, varying in performance
+ * There are currently three ways to build this code, varying in performance
  * and code size.
  *
  * RIJNDAEL_INCLUDE_TABLES         Include all tables from rijndael32.tab
- * RIJNDAEL_GENERATE_TABLES        Generate tables on first
- *                                 encryption/decryption, then store them;
- *                                 use the function gfm
- * RIJNDAEL_GENERATE_TABLES_MACRO  Same as above, but use macros to do
- *                                 the generation
  * RIJNDAEL_GENERATE_VALUES        Do not store tables, generate the table
  *                                 values "on-the-fly", using gfm
  * RIJNDAEL_GENERATE_VALUES_MACRO  Same as above, but use macros
@@ -108,8 +131,7 @@
     ((a & 0x80) ? ((a << 1) ^ 0x1b) : (a << 1))
 
 /* Choose GFM method (macros or function) */
-#if defined(RIJNDAEL_GENERATE_TABLES_MACRO) || \
-    defined(RIJNDAEL_GENERATE_VALUES_MACRO)
+#if defined(RIJNDAEL_GENERATE_VALUES_MACRO)
 
 /*
  * Galois field GF(2**8) multipliers, in macro form
@@ -133,7 +155,7 @@
 #define GFM0E(a) \
     (GFM02(a) ^ GFM04(a) ^ GFM08(a)) /* a * 0E = a * (02 + 04 + 08) */
 
-#else /* RIJNDAEL_GENERATE_TABLES or RIJNDAEL_GENERATE_VALUES */
+#else /* RIJNDAEL_GENERATE_VALUES */
 
 /* GF_MULTIPLY
  *
@@ -244,7 +266,7 @@ gen_TInvXi(PRUint8 tx, PRUint8 i)
 #define IMXC1(b) G_IMXC1(b)
 #define IMXC2(b) G_IMXC2(b)
 #define IMXC3(b) G_IMXC3(b)
-#elif defined(RIJNDAEL_GENERATE_VALUES_MACRO)
+#else /* RIJNDAEL_GENERATE_VALUES_MACRO */
 /* generate values for the tables with macros */
 #define T0(i) G_T0(i)
 #define T1(i) G_T1(i)
@@ -258,83 +280,9 @@ gen_TInvXi(PRUint8 tx, PRUint8 i)
 #define IMXC1(b) G_IMXC1(b)
 #define IMXC2(b) G_IMXC2(b)
 #define IMXC3(b) G_IMXC3(b)
-#else /* RIJNDAEL_GENERATE_TABLES or RIJNDAEL_GENERATE_TABLES_MACRO */
-/* Generate T and T**-1 table values and store, then index */
-/* The inverse mix column tables are still generated */
-#define T0(i) rijndaelTables->T0[i]
-#define T1(i) rijndaelTables->T1[i]
-#define T2(i) rijndaelTables->T2[i]
-#define T3(i) rijndaelTables->T3[i]
-#define TInv0(i) rijndaelTables->TInv0[i]
-#define TInv1(i) rijndaelTables->TInv1[i]
-#define TInv2(i) rijndaelTables->TInv2[i]
-#define TInv3(i) rijndaelTables->TInv3[i]
-#define IMXC0(b) G_IMXC0(b)
-#define IMXC1(b) G_IMXC1(b)
-#define IMXC2(b) G_IMXC2(b)
-#define IMXC3(b) G_IMXC3(b)
 #endif /* choose T-table indexing method */
 
 #endif /* not RIJNDAEL_INCLUDE_TABLES */
-
-#if defined(RIJNDAEL_GENERATE_TABLES) || \
-    defined(RIJNDAEL_GENERATE_TABLES_MACRO)
-
-/* Code to generate and store the tables */
-
-struct rijndael_tables_str {
-    PRUint32 T0[256];
-    PRUint32 T1[256];
-    PRUint32 T2[256];
-    PRUint32 T3[256];
-    PRUint32 TInv0[256];
-    PRUint32 TInv1[256];
-    PRUint32 TInv2[256];
-    PRUint32 TInv3[256];
-};
-
-static struct rijndael_tables_str *rijndaelTables = NULL;
-static PRCallOnceType coRTInit = { 0, 0, 0 };
-static PRStatus
-init_rijndael_tables(void)
-{
-    PRUint32 i;
-    PRUint8 si01, si02, si03, si04, si08, si09, si0B, si0D, si0E;
-    struct rijndael_tables_str *rts;
-    rts = (struct rijndael_tables_str *)
-        PORT_Alloc(sizeof(struct rijndael_tables_str));
-    if (!rts)
-        return PR_FAILURE;
-    for (i = 0; i < 256; i++) {
-        /* The forward values */
-        si01 = SBOX(i);
-        si02 = XTIME(si01);
-        si03 = si02 ^ si01;
-        rts->T0[i] = WORD4(si02, si01, si01, si03);
-        rts->T1[i] = WORD4(si03, si02, si01, si01);
-        rts->T2[i] = WORD4(si01, si03, si02, si01);
-        rts->T3[i] = WORD4(si01, si01, si03, si02);
-        /* The inverse values */
-        si01 = SINV(i);
-        si02 = XTIME(si01);
-        si04 = XTIME(si02);
-        si08 = XTIME(si04);
-        si03 = si02 ^ si01;
-        si09 = si08 ^ si01;
-        si0B = si08 ^ si03;
-        si0D = si09 ^ si04;
-        si0E = si08 ^ si04 ^ si02;
-        rts->TInv0[i] = WORD4(si0E, si09, si0D, si0B);
-        rts->TInv1[i] = WORD4(si0B, si0E, si09, si0D);
-        rts->TInv2[i] = WORD4(si0D, si0B, si0E, si09);
-        rts->TInv3[i] = WORD4(si09, si0D, si0B, si0E);
-    }
-    /* wait until all the values are in to set */
-    rijndaelTables = rts;
-    return PR_SUCCESS;
-}
-
-#endif /* code to generate tables */
 
 /**************************************************************************
  *
@@ -387,162 +335,6 @@ rijndael_key_expansion7(AESContext *cx, const unsigned char *key, unsigned int N
             tmp = SUBBYTE(tmp);
         *pW = W[i - Nk] ^ tmp;
     }
-}
-
-#if defined(NSS_X86_OR_X64)
-#define EXPAND_KEY128(k, rcon, res)                   \
-    tmp_key = _mm_aeskeygenassist_si128(k, rcon);     \
-    tmp_key = _mm_shuffle_epi32(tmp_key, 0xFF);       \
-    tmp = _mm_xor_si128(k, _mm_slli_si128(k, 4));     \
-    tmp = _mm_xor_si128(tmp, _mm_slli_si128(tmp, 4)); \
-    tmp = _mm_xor_si128(tmp, _mm_slli_si128(tmp, 4)); \
-    res = _mm_xor_si128(tmp, tmp_key)
-
-static void
-native_key_expansion128(AESContext *cx, const unsigned char *key)
-{
-    __m128i *keySchedule = cx->keySchedule;
-    pre_align __m128i tmp_key post_align;
-    pre_align __m128i tmp post_align;
-    keySchedule[0] = _mm_loadu_si128((__m128i *)key);
-    EXPAND_KEY128(keySchedule[0], 0x01, keySchedule[1]);
-    EXPAND_KEY128(keySchedule[1], 0x02, keySchedule[2]);
-    EXPAND_KEY128(keySchedule[2], 0x04, keySchedule[3]);
-    EXPAND_KEY128(keySchedule[3], 0x08, keySchedule[4]);
-    EXPAND_KEY128(keySchedule[4], 0x10, keySchedule[5]);
-    EXPAND_KEY128(keySchedule[5], 0x20, keySchedule[6]);
-    EXPAND_KEY128(keySchedule[6], 0x40, keySchedule[7]);
-    EXPAND_KEY128(keySchedule[7], 0x80, keySchedule[8]);
-    EXPAND_KEY128(keySchedule[8], 0x1B, keySchedule[9]);
-    EXPAND_KEY128(keySchedule[9], 0x36, keySchedule[10]);
-}
-
-#define EXPAND_KEY192_PART1(res, k0, kt, rcon)                                \
-    tmp2 = _mm_slli_si128(k0, 4);                                             \
-    tmp1 = _mm_xor_si128(k0, tmp2);                                           \
-    tmp2 = _mm_slli_si128(tmp2, 4);                                           \
-    tmp1 = _mm_xor_si128(_mm_xor_si128(tmp1, tmp2), _mm_slli_si128(tmp2, 4)); \
-    tmp2 = _mm_aeskeygenassist_si128(kt, rcon);                               \
-    res = _mm_xor_si128(tmp1, _mm_shuffle_epi32(tmp2, 0x55))
-
-#define EXPAND_KEY192_PART2(res, k1, k2)             \
-    tmp2 = _mm_xor_si128(k1, _mm_slli_si128(k1, 4)); \
-    res = _mm_xor_si128(tmp2, _mm_shuffle_epi32(k2, 0xFF))
-
-#define EXPAND_KEY192(k0, res1, res2, res3, carry, rcon1, rcon2)         \
-    EXPAND_KEY192_PART1(tmp3, k0, res1, rcon1);                          \
-    EXPAND_KEY192_PART2(carry, res1, tmp3);                              \
-    res1 = _mm_castpd_si128(_mm_shuffle_pd(_mm_castsi128_pd(res1),       \
-                                           _mm_castsi128_pd(tmp3), 0));  \
-    res2 = _mm_castpd_si128(_mm_shuffle_pd(_mm_castsi128_pd(tmp3),       \
-                                           _mm_castsi128_pd(carry), 1)); \
-    EXPAND_KEY192_PART1(res3, tmp3, carry, rcon2)
-
-static void
-native_key_expansion192(AESContext *cx, const unsigned char *key)
-{
-    __m128i *keySchedule = cx->keySchedule;
-    pre_align __m128i tmp1 post_align;
-    pre_align __m128i tmp2 post_align;
-    pre_align __m128i tmp3 post_align;
-    pre_align __m128i carry post_align;
-    keySchedule[0] = _mm_loadu_si128((__m128i *)key);
-    keySchedule[1] = _mm_loadu_si128((__m128i *)(key + 16));
-    EXPAND_KEY192(keySchedule[0], keySchedule[1], keySchedule[2],
-                  keySchedule[3], carry, 0x1, 0x2);
-    EXPAND_KEY192_PART2(keySchedule[4], carry, keySchedule[3]);
-    EXPAND_KEY192(keySchedule[3], keySchedule[4], keySchedule[5],
-                  keySchedule[6], carry, 0x4, 0x8);
-    EXPAND_KEY192_PART2(keySchedule[7], carry, keySchedule[6]);
-    EXPAND_KEY192(keySchedule[6], keySchedule[7], keySchedule[8],
-                  keySchedule[9], carry, 0x10, 0x20);
-    EXPAND_KEY192_PART2(keySchedule[10], carry, keySchedule[9]);
-    EXPAND_KEY192(keySchedule[9], keySchedule[10], keySchedule[11],
-                  keySchedule[12], carry, 0x40, 0x80);
-}
-
-#define EXPAND_KEY256_PART(res, rconx, k1x, k2x, X)                           \
-    tmp_key = _mm_shuffle_epi32(_mm_aeskeygenassist_si128(k2x, rconx), X);    \
-    tmp2 = _mm_slli_si128(k1x, 4);                                            \
-    tmp1 = _mm_xor_si128(k1x, tmp2);                                          \
-    tmp2 = _mm_slli_si128(tmp2, 4);                                           \
-    tmp1 = _mm_xor_si128(_mm_xor_si128(tmp1, tmp2), _mm_slli_si128(tmp2, 4)); \
-    res = _mm_xor_si128(tmp1, tmp_key);
-
-#define EXPAND_KEY256(res1, res2, k1, k2, rcon)   \
-    EXPAND_KEY256_PART(res1, rcon, k1, k2, 0xFF); \
-    EXPAND_KEY256_PART(res2, 0x00, k2, res1, 0xAA)
-
-static void
-native_key_expansion256(AESContext *cx, const unsigned char *key)
-{
-    __m128i *keySchedule = cx->keySchedule;
-    pre_align __m128i tmp_key post_align;
-    pre_align __m128i tmp1 post_align;
-    pre_align __m128i tmp2 post_align;
-    keySchedule[0] = _mm_loadu_si128((__m128i *)key);
-    keySchedule[1] = _mm_loadu_si128((__m128i *)(key + 16));
-    EXPAND_KEY256(keySchedule[2], keySchedule[3], keySchedule[0],
-                  keySchedule[1], 0x01);
-    EXPAND_KEY256(keySchedule[4], keySchedule[5], keySchedule[2],
-                  keySchedule[3], 0x02);
-    EXPAND_KEY256(keySchedule[6], keySchedule[7], keySchedule[4],
-                  keySchedule[5], 0x04);
-    EXPAND_KEY256(keySchedule[8], keySchedule[9], keySchedule[6],
-                  keySchedule[7], 0x08);
-    EXPAND_KEY256(keySchedule[10], keySchedule[11], keySchedule[8],
-                  keySchedule[9], 0x10);
-    EXPAND_KEY256(keySchedule[12], keySchedule[13], keySchedule[10],
-                  keySchedule[11], 0x20);
-    EXPAND_KEY256_PART(keySchedule[14], 0x40, keySchedule[12],
-                       keySchedule[13], 0xFF);
-}
-
-#endif /* NSS_X86_OR_X64 */
-
-/*
- * AES key expansion using aes-ni instructions.
- */
-static void
-native_key_expansion(AESContext *cx, const unsigned char *key, unsigned int Nk)
-{
-#ifdef NSS_X86_OR_X64
-    switch (Nk) {
-        case 4:
-            native_key_expansion128(cx, key);
-            return;
-        case 6:
-            native_key_expansion192(cx, key);
-            return;
-        case 8:
-            native_key_expansion256(cx, key);
-            return;
-        default:
-            /* This shouldn't happen. */
-            PORT_Assert(0);
-    }
-#else
-    PORT_Assert(0);
-#endif /* NSS_X86_OR_X64 */
-}
-
-static void
-native_encryptBlock(AESContext *cx,
-                    unsigned char *output,
-                    const unsigned char *input)
-{
-#ifdef NSS_X86_OR_X64
-    int i;
-    pre_align __m128i m post_align = _mm_loadu_si128((__m128i *)input);
-    m = _mm_xor_si128(m, cx->keySchedule[0]);
-    for (i = 1; i < cx->Nr; ++i) {
-        m = _mm_aesenc_si128(m, cx->keySchedule[i]);
-    }
-    m = _mm_aesenclast_si128(m, cx->keySchedule[cx->Nr]);
-    _mm_storeu_si128((__m128i *)output, m);
-#else
-    PORT_Assert(0);
-#endif /* NSS_X86_OR_X64 */
 }
 
 /* rijndael_key_expansion
@@ -910,7 +702,7 @@ rijndael_encryptECB(AESContext *cx, unsigned char *output,
 
     if (aesni_support()) {
         /* Use hardware acceleration for normal AES parameters. */
-        encryptor = &native_encryptBlock;
+        encryptor = &rijndael_native_encryptBlock;
     } else {
         encryptor = &rijndael_encryptBlock128;
     }
@@ -1100,22 +892,13 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
     } else
 #endif
     {
-
-#if defined(RIJNDAEL_GENERATE_TABLES) || \
-    defined(RIJNDAEL_GENERATE_TABLES_MACRO)
-        if (rijndaelTables == NULL) {
-            if (PR_CallOnce(&coRTInit, init_rijndael_tables) != PR_SUCCESS) {
-                return SECFailure;
-            }
-        }
-#endif
         /* Generate expanded key */
         if (encrypt) {
             if (use_hw_aes && (cx->mode == NSS_AES_GCM || cx->mode == NSS_AES ||
                                cx->mode == NSS_AES_CTR)) {
                 PORT_Assert(keysize == 16 || keysize == 24 || keysize == 32);
                 /* Prepare hardware key for normal AES parameters. */
-                native_key_expansion(cx, key, Nk);
+                rijndael_native_key_expansion(cx, key, Nk);
             } else {
                 rijndael_key_expansion(cx, key, Nk);
             }

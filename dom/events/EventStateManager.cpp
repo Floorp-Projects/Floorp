@@ -4422,6 +4422,10 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
   if (sIsPointerLocked) {
     MOZ_ASSERT(aWidget, "Locking pointer requires a widget");
 
+    // Release all pointer capture when a pointer lock is successfully applied
+    // on an element.
+    PointerEventHandler::ReleaseAllPointerCapture();
+
     // Store the last known ref point so we can reposition the pointer after unlock.
     sPreLockPoint = sLastRefPoint;
 

@@ -40,7 +40,7 @@
 
 nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
-                                 nsFrameState aTypeBit);
+                                 nsFrameState aTypeBits);
 
 #define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
                                   PLACEHOLDER_FOR_ABSPOS | \
@@ -65,18 +65,19 @@ public:
    */
   friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext,
-                                          nsFrameState aTypeBit);
-  nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBit)
+                                          nsFrameState aTypeBits);
+  nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBits)
     : nsFrame(aContext, kClassID)
     , mOutOfFlowFrame(nullptr)
   {
-    NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||
-                    aTypeBit == PLACEHOLDER_FOR_ABSPOS ||
-                    aTypeBit == PLACEHOLDER_FOR_FIXEDPOS ||
-                    aTypeBit == PLACEHOLDER_FOR_POPUP ||
-                    aTypeBit == PLACEHOLDER_FOR_TOPLAYER,
-                    "Unexpected type bit");
-    AddStateBits(aTypeBit);
+    MOZ_ASSERT(aTypeBits == PLACEHOLDER_FOR_FLOAT ||
+               aTypeBits == PLACEHOLDER_FOR_ABSPOS ||
+               aTypeBits == PLACEHOLDER_FOR_FIXEDPOS ||
+               aTypeBits == PLACEHOLDER_FOR_POPUP ||
+               aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_ABSPOS) ||
+               aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_FIXEDPOS),
+               "Unexpected type bit");
+    AddStateBits(aTypeBits);
   }
 
   // Get/Set the associated out of flow frame

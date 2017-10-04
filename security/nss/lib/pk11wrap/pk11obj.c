@@ -201,7 +201,6 @@ PK11_GetAttributes(PLArenaPool *arena, PK11SlotInfo *slot,
     /* make pedantic happy... note that it's only used arena != NULL */
     void *mark = NULL;
     CK_RV crv;
-    PORT_Assert(slot->session != CK_INVALID_SESSION);
     if (slot->session == CK_INVALID_SESSION)
         return CKR_SESSION_HANDLE_INVALID;
 
