@@ -51,9 +51,10 @@ const SWAPPED_BROWSER_STATE = [
 const PROPERTIES_FROM_BROWSER_WINDOW = [
   // This is used by PermissionUI.jsm for permission doorhangers.
   "PopupNotifications",
-  // This is used by ContentClick.jsm when opening links in ways other than just
-  // navigating the viewport.
+  // These are used by ContentClick.jsm when opening links in ways other than just
+  // navigating the viewport, such as a new tab by pressing Cmd-Click.
   "whereToOpenLink",
+  "openLinkIn",
   // This is used by various event handlers, typically to call `getTabForBrowser` to map
   // a browser back to a tab.
   "gBrowser",
