@@ -128,7 +128,8 @@ def add_common_arguments(parser):
                         help="Paths of tests to run.")
     parser.add_argument("--verify",
                         action="store_true", default=False,
-                        help="Verify test(s) by running multiple times.")
+                        help="Run tests in verification mode: Run many times in different "
+                             "ways, to see if there are intermittent failures.")
     parser.add_argument("--verify-max-time",
                         dest="verifyMaxTime",
                         type=int, default=3600,
