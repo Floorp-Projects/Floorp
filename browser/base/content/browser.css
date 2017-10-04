@@ -323,6 +323,7 @@ toolbarpaletteitem {
 #main-window[inFullscreen][inDOMFullscreen] #fullscr-toggler,
 #main-window[inFullscreen][inDOMFullscreen] #sidebar-box,
 #main-window[inFullscreen][inDOMFullscreen] #sidebar-splitter,
+#main-window[inFullscreen][inDOMFullscreen] #developer-toolbar,
 #main-window[inFullscreen]:not([OSXLionFullscreen]) toolbar:not([fullscreentoolbar=true]),
 #main-window[inFullscreen] #global-notificationbox,
 #main-window[inFullscreen] #high-priority-global-notificationbox {
