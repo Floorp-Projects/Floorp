@@ -253,9 +253,6 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newBinary(ParseNodeKind kind, Node left, Node right) {
-        return NodeGeneric;
-    }
     Node appendOrCreateList(ParseNodeKind kind, Node left, Node right, ParseContext* pc) {
         return NodeGeneric;
     }
@@ -308,6 +305,9 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
     Node newExportDefaultDeclaration(Node kid, Node maybeBinding, const TokenPos& pos) {
+        return NodeGeneric;
+    }
+    Node newExportSpec(Node bindingName, Node exportName) {
         return NodeGeneric;
     }
     Node newExportBatchSpec(const TokenPos& pos) {
@@ -470,10 +470,8 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs, JSOp op) {
-        if (kind == PNK_ASSIGN)
-            return NodeUnparenthesizedAssignment;
-        return newBinary(kind, lhs, rhs);
+    Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
+        return kind == PNK_ASSIGN ? NodeUnparenthesizedAssignment : NodeGeneric;
     }
 
     bool isUnparenthesizedCommaExpression(Node node) {

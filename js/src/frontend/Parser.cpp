@@ -4439,7 +4439,7 @@ Parser<ParseHandler, CharT>::bindingInitializer(Node lhs, DeclarationKind kind,
 
     handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
-    Node assign = handler.newAssignment(PNK_ASSIGN, lhs, rhs, JSOP_NOP);
+    Node assign = handler.newAssignment(PNK_ASSIGN, lhs, rhs);
     if (!assign)
         return null();
 
@@ -4834,7 +4834,7 @@ Parser<ParseHandler, CharT>::declarationPattern(Node decl, DeclarationKind declK
         tokenStream.addModifierException(TokenStream::OperandIsNone);
     }
 
-    return handler.newBinary(PNK_ASSIGN, pattern, init);
+    return handler.newAssignment(PNK_ASSIGN, pattern, init);
 }
 
 template <class ParseHandler, typename CharT>
@@ -5152,7 +5152,7 @@ Parser<FullParseHandler, char16_t>::namedImportsOrNamespaceImport(TokenKind tt, 
             if (!importNameNode)
                 return false;
 
-            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importNameNode, bindingName);
+            Node importSpec = handler.newImportSpec(importNameNode, bindingName);
             if (!importSpec)
                 return false;
 
@@ -5198,7 +5198,7 @@ Parser<FullParseHandler, char16_t>::namedImportsOrNamespaceImport(TokenKind tt, 
         // environment.
         pc->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
 
-        Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingNameNode);
+        Node importSpec = handler.newImportSpec(importName, bindingNameNode);
         if (!importSpec)
             return false;
 
@@ -5265,7 +5265,7 @@ Parser<FullParseHandler, char16_t>::importDeclaration()
             if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos()))
                 return null();
 
-            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+            Node importSpec = handler.newImportSpec(importName, bindingName);
             if (!importSpec)
                 return null();
 
@@ -5571,7 +5571,7 @@ Parser<ParseHandler, CharT>::exportClause(uint32_t begin)
         if (!checkExportedNameForClause(exportName))
             return null();
 
-        Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
+        Node exportSpec = handler.newExportSpec(bindingName, exportName);
         if (!exportSpec)
             return null();
 
@@ -8250,21 +8250,20 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
     }
 
     ParseNodeKind kind;
-    JSOp op;
     switch (tokenStream.currentToken().type) {
-      case TOK_ASSIGN:       kind = PNK_ASSIGN;       op = JSOP_NOP;    break;
-      case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    op = JSOP_ADD;    break;
-      case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    op = JSOP_SUB;    break;
-      case TOK_BITORASSIGN:  kind = PNK_BITORASSIGN;  op = JSOP_BITOR;  break;
-      case TOK_BITXORASSIGN: kind = PNK_BITXORASSIGN; op = JSOP_BITXOR; break;
-      case TOK_BITANDASSIGN: kind = PNK_BITANDASSIGN; op = JSOP_BITAND; break;
-      case TOK_LSHASSIGN:    kind = PNK_LSHASSIGN;    op = JSOP_LSH;    break;
-      case TOK_RSHASSIGN:    kind = PNK_RSHASSIGN;    op = JSOP_RSH;    break;
-      case TOK_URSHASSIGN:   kind = PNK_URSHASSIGN;   op = JSOP_URSH;   break;
-      case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    op = JSOP_MUL;    break;
-      case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    op = JSOP_DIV;    break;
-      case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    op = JSOP_MOD;    break;
-      case TOK_POWASSIGN:    kind = PNK_POWASSIGN;    op = JSOP_POW;    break;
+      case TOK_ASSIGN:       kind = PNK_ASSIGN;       break;
+      case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    break;
+      case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    break;
+      case TOK_BITORASSIGN:  kind = PNK_BITORASSIGN;  break;
+      case TOK_BITXORASSIGN: kind = PNK_BITXORASSIGN; break;
+      case TOK_BITANDASSIGN: kind = PNK_BITANDASSIGN; break;
+      case TOK_LSHASSIGN:    kind = PNK_LSHASSIGN;    break;
+      case TOK_RSHASSIGN:    kind = PNK_RSHASSIGN;    break;
+      case TOK_URSHASSIGN:   kind = PNK_URSHASSIGN;   break;
+      case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    break;
+      case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    break;
+      case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    break;
+      case TOK_POWASSIGN:    kind = PNK_POWASSIGN;    break;
 
       case TOK_ARROW: {
 
@@ -8406,7 +8405,7 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
     if (kind == PNK_ASSIGN)
         handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
-    return handler.newAssignment(kind, lhs, rhs, op);
+    return handler.newAssignment(kind, lhs, rhs);
 }
 
 template <class ParseHandler, typename CharT>
@@ -10053,7 +10052,7 @@ Parser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
 
                 handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
-                Node propExpr = handler.newAssignment(PNK_ASSIGN, lhs, rhs, JSOP_NOP);
+                Node propExpr = handler.newAssignment(PNK_ASSIGN, lhs, rhs);
                 if (!propExpr)
                     return null();
 

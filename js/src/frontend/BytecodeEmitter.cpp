@@ -6227,9 +6227,32 @@ EmitAssignmentRhs(BytecodeEmitter* bce, ParseNode* rhs, uint8_t offset)
     return true;
 }
 
-bool
-BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
+static inline JSOp
+CompoundAssignmentParseNodeKindToJSOp(ParseNodeKind pnk)
 {
+    switch (pnk) {
+      case PNK_ASSIGN:       return JSOP_NOP;
+      case PNK_ADDASSIGN:    return JSOP_ADD;
+      case PNK_SUBASSIGN:    return JSOP_SUB;
+      case PNK_BITORASSIGN:  return JSOP_BITOR;
+      case PNK_BITXORASSIGN: return JSOP_BITXOR;
+      case PNK_BITANDASSIGN: return JSOP_BITAND;
+      case PNK_LSHASSIGN:    return JSOP_LSH;
+      case PNK_RSHASSIGN:    return JSOP_RSH;
+      case PNK_URSHASSIGN:   return JSOP_URSH;
+      case PNK_MULASSIGN:    return JSOP_MUL;
+      case PNK_DIVASSIGN:    return JSOP_DIV;
+      case PNK_MODASSIGN:    return JSOP_MOD;
+      case PNK_POWASSIGN:    return JSOP_POW;
+      default: MOZ_CRASH("unexpected compound assignment op");
+    }
+}
+
+bool
+BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rhs)
+{
+    JSOp op = CompoundAssignmentParseNodeKindToJSOp(pnk);
+
     // Name assignments are handled separately because choosing ops and when
     // to emit BINDNAME is involved and should avoid duplication.
     if (lhs->isKind(PNK_NAME)) {
@@ -6255,8 +6278,10 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
             }
 
             // Emit the compound assignment op if there is one.
-            if (op != JSOP_NOP && !bce->emit1(op))
-                return false;
+            if (op != JSOP_NOP) {
+                if (!bce->emit1(op))
+                    return false;
+            }
 
             return true;
         };
@@ -7138,7 +7163,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
     // initialization is just assigning the iteration value to a target
     // expression.
     if (!parser.isDeclarationList(target))
-        return emitAssignment(target, JSOP_NOP, nullptr); // ... ITERVAL
+        return emitAssignment(target, PNK_ASSIGN, nullptr); // ... ITERVAL
 
     // Otherwise, per-loop initialization is (possibly) declaration
     // initialization.  If the declaration is a lexical declaration, it must be
@@ -7863,7 +7888,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
 
     // Notice: Comprehension for-of doesn't perform IteratorClose, since it's
     // not in the spec.
-    if (!emitAssignment(loopVariableName, JSOP_NOP, nullptr)) // ITER VALUE
+    if (!emitAssignment(loopVariableName, PNK_ASSIGN, nullptr)) // ITER VALUE
         return false;
 
     // Remove VALUE from the stack to release it.
@@ -7987,7 +8012,7 @@ BytecodeEmitter::emitComprehensionForIn(ParseNode* pn)
 
     // Emit code to assign the enumeration value to the left hand side, but
     // also leave it on the stack.
-    if (!emitAssignment(forHead->pn_kid2, JSOP_NOP, nullptr))
+    if (!emitAssignment(forHead->pn_kid2, PNK_ASSIGN, nullptr))
         return false;
 
     /* The stack should be balanced around the assignment opcode sequence. */
@@ -11018,7 +11043,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
       case PNK_POWASSIGN:
-        if (!emitAssignment(pn->pn_left, pn->getOp(), pn->pn_right))
+        if (!emitAssignment(pn->pn_left, pn->getKind(), pn->pn_right))
             return false;
         break;
 
