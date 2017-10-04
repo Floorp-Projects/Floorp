@@ -835,6 +835,13 @@ this.PlacesDBUtils = {
       query: "DROP TRIGGER moz_bm_fix_guids_temp_trigger",
     });
 
+    // S.2 drop tombstones for bookmarks that aren't deleted.
+    cleanupStatements.push({
+      query:
+      `DELETE FROM moz_bookmarks_deleted
+       WHERE guid IN (SELECT guid FROM moz_bookmarks)`,
+    });
+
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
     return cleanupStatements;
