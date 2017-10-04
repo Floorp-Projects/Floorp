@@ -279,21 +279,22 @@ DXGI_FORMAT Image11::getDXGIFormat() const
 gl::Error Image11::loadData(const gl::Context *context,
                             const gl::Box &area,
                             const gl::PixelUnpackState &unpack,
-                            GLenum type,
+                            GLenum inputType,
                             const void *input,
                             bool applySkipImages)
 {
-    const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
+    const auto sizedInputFormat = getSizedInputFormat(inputType);
+    const gl::InternalFormat &inputFormat = gl::GetSizedInternalFormatInfo(sizedInputFormat);
     GLuint inputRowPitch                 = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+        inputFormat.computeRowPitch(area.width, unpack.alignment, unpack.rowLength),
         inputRowPitch);
     GLuint inputDepthPitch = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeDepthPitch(area.height, unpack.imageHeight, inputRowPitch),
+    ANGLE_TRY_RESULT(gl::InternalFormat::computeDepthPitch(area.height, unpack.imageHeight, inputRowPitch),
                      inputDepthPitch);
     GLuint inputSkipBytes = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeSkipBytes(inputRowPitch, inputDepthPitch, unpack, applySkipImages),
+        inputFormat.computeSkipBytes(inputRowPitch, inputDepthPitch, unpack, applySkipImages),
         inputSkipBytes);
 
     const d3d11::DXGIFormatSize &dxgiFormatInfo = d3d11::GetDXGIFormatSizeInfo(mDXGIFormat);
@@ -301,7 +302,7 @@ gl::Error Image11::loadData(const gl::Context *context,
 
     const d3d11::Format &d3dFormatInfo =
         d3d11::Format::Get(mInternalFormat, mRenderer->getRenderer11DeviceCaps());
-    LoadImageFunction loadFunction = d3dFormatInfo.getLoadFunctions()(type).loadFunction;
+    LoadImageFunction loadFunction = d3dFormatInfo.getLoadFunctions()(inputType).loadFunction;
 
     D3D11_MAPPED_SUBRESOURCE mappedImage;
     ANGLE_TRY(map(context, D3D11_MAP_WRITE, &mappedImage));
@@ -324,9 +325,9 @@ gl::Error Image11::loadCompressedData(const gl::Context *context,
 {
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch                = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0), inputRowPitch);
+    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(area.width, 1, 0), inputRowPitch);
     GLsizei inputDepthPitch = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeDepthPitch(area.height, 0, inputRowPitch), inputDepthPitch);
+    ANGLE_TRY_RESULT(gl::InternalFormat::computeDepthPitch(area.height, 0, inputRowPitch), inputDepthPitch);
 
     const d3d11::DXGIFormatSize &dxgiFormatInfo = d3d11::GetDXGIFormatSizeInfo(mDXGIFormat);
     GLuint outputPixelSize                      = dxgiFormatInfo.pixelBytes;
