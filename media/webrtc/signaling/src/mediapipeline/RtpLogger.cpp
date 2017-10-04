@@ -5,8 +5,7 @@
 // Original author: nohlmeier@mozilla.com
 
 #include "RtpLogger.h"
-
-#include "CSFLog.h"
+#include "logging.h"
 
 #include <ctime>
 #include <iomanip>
@@ -20,22 +19,17 @@
 
 // Logging context
 using namespace mozilla;
-
-static const char* rlLogTag = "RtpLogger";
-#ifdef LOGTAG
-#undef LOGTAG
-#endif
-#define LOGTAG rlLogTag
+MOZ_MTLOG_MODULE("rtplogger")
 
 namespace mozilla {
 
 bool RtpLogger::IsPacketLoggingOn() {
-  return CSFLogTestLevel(CSF_LOG_DEBUG);
+  return MOZ_LOG_TEST(getLogModule(), ML_DEBUG);
 }
 
 void RtpLogger::LogPacket(const unsigned char *data, int len, bool input,
                           bool isRtp, int headerLength, std::string desc) {
-  if (CSFLogTestLevel(CSF_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(getLogModule(), ML_DEBUG)) {
     std::stringstream ss;
     /* This creates text2pcap compatible format, e.g.:
      *   O 10:36:26.864934  000000 80 c8 00 06 6d ... RTCP_PACKET
@@ -72,8 +66,9 @@ void RtpLogger::LogPacket(const unsigned char *data, int len, bool input,
         ss << " " << std::setw(2) << (int)data[i];
       }
     }
-    CSFLogDebug(LOGTAG, "%s%s%s", ss.str().c_str(),
-                (isRtp ? " RTP_PACKET " : " RTCP_PACKET "), desc.c_str());
+    MOZ_MTLOG(ML_DEBUG, "\n" << ss.str() <<
+              (isRtp ? " RTP_PACKET " : " RTCP_PACKET ") <<
+              desc);
   }
 }
 
