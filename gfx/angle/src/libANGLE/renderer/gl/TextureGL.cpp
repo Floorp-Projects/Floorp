@@ -342,12 +342,12 @@ gl::Error TextureGL::setSubImageRowByRowWorkaround(const gl::Context *context,
     mStateManager->setPixelUnpackState(directUnpack);
     directUnpack.pixelBuffer.set(context, nullptr);
 
-    const gl::InternalFormat &glFormat   = gl::GetInternalFormatInfo(format, type);
-    GLuint rowBytes                      = 0;
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+    const gl::InternalFormat &glFormat = gl::GetInternalFormatInfo(format, type);
+    GLuint rowBytes = 0;
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, unpack.alignment, unpack.rowLength),
                      rowBytes);
     GLuint imageBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
+    ANGLE_TRY_RESULT(gl::InternalFormat::computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
                      imageBytes);
     bool useTexImage3D = UseTexImage3D(getTarget());
     GLuint skipBytes   = 0;
@@ -395,10 +395,10 @@ gl::Error TextureGL::setSubImagePaddingWorkaround(const gl::Context *context,
 {
     const gl::InternalFormat &glFormat = gl::GetInternalFormatInfo(format, type);
     GLuint rowBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, unpack.alignment, unpack.rowLength),
                      rowBytes);
     GLuint imageBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
+    ANGLE_TRY_RESULT(gl::InternalFormat::computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
                      imageBytes);
     bool useTexImage3D = UseTexImage3D(getTarget());
     GLuint skipBytes   = 0;
@@ -842,8 +842,7 @@ gl::Error TextureGL::setStorage(const gl::Context *context,
                                                                      internalFormat);
 
                         GLuint dataSize = 0;
-                        ANGLE_TRY_RESULT(internalFormatInfo.computeCompressedImageSize(
-                                             GL_UNSIGNED_BYTE, levelSize),
+                        ANGLE_TRY_RESULT(internalFormatInfo.computeCompressedImageSize(levelSize),
                                          dataSize);
                         mFunctions->compressedTexImage2D(target, static_cast<GLint>(level),
                                                          compressedTexImageFormat.format,
@@ -874,7 +873,7 @@ gl::Error TextureGL::setStorage(const gl::Context *context,
 
                             GLuint dataSize = 0;
                             ANGLE_TRY_RESULT(internalFormatInfo.computeCompressedImageSize(
-                                                 GL_UNSIGNED_BYTE, levelSize),
+                                                 levelSize),
                                              dataSize);
                             mFunctions->compressedTexImage2D(
                                 face, static_cast<GLint>(level), compressedTexImageFormat.format,
@@ -934,7 +933,7 @@ gl::Error TextureGL::setStorage(const gl::Context *context,
 
                     GLuint dataSize = 0;
                     ANGLE_TRY_RESULT(
-                        internalFormatInfo.computeCompressedImageSize(GL_UNSIGNED_BYTE, levelSize),
+                        internalFormatInfo.computeCompressedImageSize(levelSize),
                         dataSize);
                     mFunctions->compressedTexImage3D(target, i, compressedTexImageFormat.format,
                                                      levelSize.width, levelSize.height,

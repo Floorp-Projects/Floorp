@@ -55,7 +55,7 @@
 // Controls if our threading code uses std::async or falls back to single-threaded operations.
 // TODO(jmadill): Enable on Linux once STL chrono headers are updated.
 #if !defined(ANGLE_STD_ASYNC_WORKERS)
-#if defined(ANGLE_PLATFORM_WINDOWS)
+#if !defined(__MINGW32__) && defined(ANGLE_PLATFORM_WINDOWS)
 #define ANGLE_STD_ASYNC_WORKERS ANGLE_ENABLED
 #else
 #define ANGLE_STD_ASYNC_WORKERS ANGLE_DISABLED
