@@ -607,24 +607,12 @@ PlanarYCbCrImage::GetOffscreenFormat()
 }
 
 bool
-PlanarYCbCrImage::AdoptData(const Data &aData)
+PlanarYCbCrImage::AdoptData(const Data& aData)
 {
   mData = aData;
   mSize = aData.mPicSize;
   mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
   return true;
-}
-
-uint8_t*
-RecyclingPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
-{
-  // get new buffer
-  mBuffer = AllocateBuffer(aSize);
-  if (mBuffer) {
-    // update buffer size
-    mBufferSize = aSize;
-  }
-  return mBuffer.get();
 }
 
 already_AddRefed<gfx::SourceSurface>
