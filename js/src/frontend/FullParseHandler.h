@@ -231,13 +231,6 @@ class FullParseHandler
         return ParseNode::appendOrCreateList(kind, left, right, this, pc);
     }
 
-    ParseNode* newTernary(ParseNodeKind kind,
-                          ParseNode* first, ParseNode* second, ParseNode* third,
-                          JSOp op = JSOP_NOP)
-    {
-        return new_<TernaryNode>(kind, op, first, second, third);
-    }
-
     // Expressions
 
     ParseNode* newArrayComprehension(ParseNode* body, const TokenPos& pos) {
@@ -540,7 +533,7 @@ class FullParseHandler
     ParseNode* newIfStatement(uint32_t begin, ParseNode* cond, ParseNode* thenBranch,
                               ParseNode* elseBranch)
     {
-        ParseNode* pn = new_<TernaryNode>(PNK_IF, JSOP_NOP, cond, thenBranch, elseBranch);
+        ParseNode* pn = new_<TernaryNode>(PNK_IF, cond, thenBranch, elseBranch);
         if (!pn)
             return null();
         pn->pn_pos.begin = begin;
@@ -590,14 +583,14 @@ class FullParseHandler
     ParseNode* newForHead(ParseNode* init, ParseNode* test, ParseNode* update,
                           const TokenPos& pos)
     {
-        return new_<TernaryNode>(PNK_FORHEAD, JSOP_NOP, init, test, update, pos);
+        return new_<TernaryNode>(PNK_FORHEAD, init, test, update, pos);
     }
 
     ParseNode* newForInOrOfHead(ParseNodeKind kind, ParseNode* target, ParseNode* iteratedExpr,
                                 const TokenPos& pos)
     {
         MOZ_ASSERT(kind == PNK_FORIN || kind == PNK_FOROF);
-        return new_<TernaryNode>(kind, JSOP_NOP, target, nullptr, iteratedExpr, pos);
+        return new_<TernaryNode>(kind, target, nullptr, iteratedExpr, pos);
     }
 
     ParseNode* newSwitchStatement(uint32_t begin, ParseNode* discriminant, ParseNode* caseList) {
@@ -643,7 +636,7 @@ class FullParseHandler
     ParseNode* newTryStatement(uint32_t begin, ParseNode* body, ParseNode* catchList,
                                ParseNode* finallyBlock) {
         TokenPos pos(begin, (finallyBlock ? finallyBlock : catchList)->pn_pos.end);
-        return new_<TernaryNode>(PNK_TRY, JSOP_NOP, body, catchList, finallyBlock, pos);
+        return new_<TernaryNode>(PNK_TRY, body, catchList, finallyBlock, pos);
     }
 
     ParseNode* newDebuggerStatement(const TokenPos& pos) {
@@ -943,7 +936,7 @@ FullParseHandler::addCatchBlock(ParseNode* catchList, ParseNode* lexicalScope,
                                 ParseNode* catchName, ParseNode* catchGuard,
                                 ParseNode* catchBody)
 {
-    ParseNode* catchpn = newTernary(PNK_CATCH, catchName, catchGuard, catchBody);
+    ParseNode* catchpn = new_<TernaryNode>(PNK_CATCH, catchName, catchGuard, catchBody);
     if (!catchpn)
         return false;
     catchList->append(lexicalScope);
