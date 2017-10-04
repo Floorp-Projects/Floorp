@@ -226,9 +226,9 @@ class FullParseHandler
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
     ParseNode* appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
-                                  ParseContext* pc, JSOp op = JSOP_NOP)
+                                  ParseContext* pc)
     {
-        return ParseNode::appendOrCreateList(kind, op, left, right, this, pc);
+        return ParseNode::appendOrCreateList(kind, left, right, this, pc);
     }
 
     ParseNode* newTernary(ParseNodeKind kind,
@@ -956,7 +956,7 @@ FullParseHandler::setLastFunctionFormalParameterDefault(ParseNode* funcpn,
                                                         ParseNode* defaultValue)
 {
     ParseNode* arg = funcpn->pn_body->last();
-    ParseNode* pn = newBinary(PNK_ASSIGN, arg, defaultValue, JSOP_NOP);
+    ParseNode* pn = newBinary(PNK_ASSIGN, arg, defaultValue);
     if (!pn)
         return false;
 

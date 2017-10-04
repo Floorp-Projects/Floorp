@@ -571,7 +571,7 @@ ParseNodeAllocator::allocNode()
 }
 
 ParseNode*
-ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right,
+ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
                               FullParseHandler* handler, ParseContext* pc)
 {
     // The asm.js specification is written in ECMAScript grammar terms that
@@ -593,9 +593,7 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, Pars
         // processed with a left fold because (+) is left-associative.
         //
         if (left->isKind(kind) &&
-            left->isOp(op) &&
-            (CodeSpec[op].format & JOF_LEFTASSOC ||
-             (kind == PNK_POW && !left->pn_parens)))
+            (kind == PNK_POW ? !left->pn_parens : left->isBinaryOperation()))
         {
             ListNode* list = &left->as<ListNode>();
 
@@ -606,7 +604,7 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, Pars
         }
     }
 
-    ParseNode* list = handler->new_<ListNode>(kind, op, left);
+    ParseNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
     if (!list)
         return nullptr;
 

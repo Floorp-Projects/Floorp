@@ -347,8 +347,8 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_STAR,
  * PNK_DIV,
  * PNK_MOD,
- * PNK_POW                  (**) is right-associative, but forms a list
- *                          nonetheless. Special hacks everywhere.
+ * PNK_POW                  (**) is right-associative, but still forms a list.
+ *                          See comments in ParseNode::appendOrCreateList.
  *
  * PNK_POS,     unary       pn_kid: UNARY expr
  * PNK_NEG
@@ -614,7 +614,7 @@ class ParseNode
      * |right| to it and return |left|.  Otherwise return a [left, right] list.
      */
     static ParseNode*
-    appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right,
+    appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
                        FullParseHandler* handler, ParseContext* pc);
 
     inline PropertyName* name() const;
