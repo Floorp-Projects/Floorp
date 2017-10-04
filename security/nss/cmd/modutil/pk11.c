@@ -670,6 +670,39 @@ loser:
 
 /************************************************************************
  *
+ * I n i t P W
+ */
+Error
+InitPW(void)
+{
+    PK11SlotInfo *slot;
+    Error ret = UNSPECIFIED_ERR;
+
+    slot = PK11_GetInternalKeySlot();
+    if (!slot) {
+        PR_fprintf(PR_STDERR, errStrings[NO_SUCH_TOKEN_ERR], "internal");
+        return NO_SUCH_TOKEN_ERR;
+    }
+
+    /* Set the initial password to empty */
+    if (PK11_NeedUserInit(slot)) {
+        if (PK11_InitPin(slot, NULL, "") != SECSuccess) {
+            PR_fprintf(PR_STDERR, errStrings[INITPW_FAILED_ERR]);
+            ret = INITPW_FAILED_ERR;
+            goto loser;
+        }
+    }
+
+    ret = SUCCESS;
+
+loser:
+    PK11_FreeSlot(slot);
+
+    return ret;
+}
+
+/************************************************************************
+ *
  * C h a n g e P W
  */
 Error
