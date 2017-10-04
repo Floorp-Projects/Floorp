@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
@@ -57,6 +58,12 @@ function promiseOnVisitObserved() {
       ])
     }, true);
   });
+}
+
+function isDateApproximately(actual, expected, skewMillis = 1000) {
+  let lowerBound = expected - skewMillis;
+  let upperBound = expected + skewMillis;
+  return actual >= lowerBound && actual <= upperBound;
 }
 
 var engine = new HistoryEngine(Service);
@@ -254,6 +261,80 @@ add_task(async function test_invalid_records() {
      title: "Get Firebug!",
      visits: []}
   ]);
+});
+
+add_task(async function test_clamp_visit_dates() {
+  let futureVisitTime = Date.now() + 5 * 60 * 1000;
+  let recentVisitTime = Date.now() - 5 * 60 * 1000;
+
+  await applyEnsureNoFailures([{
+    id: "visitAAAAAAA",
+    histUri: "http://example.com/a",
+    title: "A",
+    visits: [{
+      date: "invalidDate",
+      type: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    id: "visitBBBBBBB",
+    histUri: "http://example.com/b",
+    title: "B",
+    visits: [{
+      date: 100,
+      type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    }, {
+      date: 250,
+      type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    }, {
+      date: recentVisitTime * 1000,
+      type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    }],
+  }, {
+    id: "visitCCCCCCC",
+    histUri: "http://example.com/c",
+    title: "D",
+    visits: [{
+      date: futureVisitTime * 1000,
+      type: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
+    }],
+  }, {
+    id: "visitDDDDDDD",
+    histUri: "http://example.com/d",
+    title: "D",
+    visits: [{
+      date: recentVisitTime * 1000,
+      type: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+    }],
+  }]);
+
+  let visitsForA = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "http://example.com/a");
+  deepEqual(visitsForA, [], "Should ignore visits with invalid dates");
+
+  let visitsForB = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "http://example.com/b");
+  deepEqual(visitsForB, [{
+    date: recentVisitTime * 1000,
+    type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }, {
+    // We should clamp visit dates older than original Mosaic release.
+    date: PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP * 1000,
+    type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }], "Should record clamped visit and valid visit for B");
+
+  let visitsForC = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "http://example.com/c");
+  equal(visitsForC.length, 1, "Should record clamped future visit for C");
+  let visitDateForC = PlacesUtils.toDate(visitsForC[0].date);
+  ok(isDateApproximately(visitDateForC, Date.now()),
+    "Should clamp future visit date for C to now");
+
+  let visitsForD = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "http://example.com/d");
+  deepEqual(visitsForD, [{
+    date: recentVisitTime * 1000,
+    type: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+  }], "Should not clamp valid visit dates");
 });
 
 add_task(async function test_remove() {

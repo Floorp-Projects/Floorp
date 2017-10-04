@@ -275,16 +275,23 @@ HistoryStore.prototype = {
         continue;
       }
 
-      // Dates need to be integers.
-      visit.date = Math.round(visit.date);
+      // Dates need to be integers. Future and far past dates are clamped to the
+      // current date and earliest sensible date, respectively.
+      let originalVisitDate = PlacesUtils.toDate(Math.round(visit.date));
+      visit.date = PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
 
-      if (curVisits.indexOf(visit.date + "," + visit.type) != -1) {
+      let visitDateAsPRTime = PlacesUtils.toPRTime(visit.date);
+      let visitKey = visitDateAsPRTime + "," + visit.type;
+      if (curVisits.indexOf(visitKey) != -1) {
         // Visit is a dupe, don't increment 'k' so the element will be
         // overwritten.
         continue;
       }
 
-      visit.date = PlacesUtils.toDate(visit.date);
+      // Note the visit key, so that we don't add duplicate visits with
+      // clamped timestamps.
+      curVisits.push(visitKey);
+
       visit.transition = visit.type;
       k += 1;
     }
