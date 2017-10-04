@@ -28,9 +28,8 @@ class VRControllerPuppet;
 } // namespace impl
 
 class VRManagerParent final : public PVRManagerParent
-                            , public HostIPCAllocator
-                            , public ShmemAllocator
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent);
 public:
   explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
 
@@ -38,39 +37,14 @@ public:
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
 
-  virtual base::ProcessId GetChildProcessId() override;
-
-  // ShmemAllocator
-
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  virtual bool AllocShmem(size_t aSize,
-    ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) override;
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-    ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) override;
-
-  virtual void DeallocShmem(ipc::Shmem& aShmem) override;
-
-  virtual bool IsSameProcess() const override;
+  bool IsSameProcess() const;
   bool HaveEventListener();
   bool HaveControllerListener();
-
-  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
-  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
   bool SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent);
   bool SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID);
 
 protected:
   ~VRManagerParent();
-
-  virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
-                                              const LayersBackend& aLayersBackend,
-                                              const TextureFlags& aFlags,
-                                              const uint64_t& aSerial) override;
-  virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 
   virtual PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
                                               const uint32_t& aGroup) override;

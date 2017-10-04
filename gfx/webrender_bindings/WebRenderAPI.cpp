@@ -683,7 +683,7 @@ DisplayListBuilder::PopStackingContext()
 
 wr::WrClipId
 DisplayListBuilder::DefineClip(const wr::LayoutRect& aClipRect,
-                               const nsTArray<wr::WrComplexClipRegion>* aComplex,
+                               const nsTArray<wr::ComplexClipRegion>* aComplex,
                                const wr::WrImageMask* aMask)
 {
   uint64_t clip_id = wr_dp_define_clip(mWrState, aClipRect,

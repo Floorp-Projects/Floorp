@@ -476,12 +476,12 @@ DisplayItemClip::ToString() const
 }
 
 void
-DisplayItemClip::ToWrComplexClipRegions(int32_t aAppUnitsPerDevPixel,
-                                        const layers::StackingContextHelper& aSc,
-                                        nsTArray<wr::WrComplexClipRegion>& aOutArray) const
+DisplayItemClip::ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
+                                      const layers::StackingContextHelper& aSc,
+                                      nsTArray<wr::ComplexClipRegion>& aOutArray) const
 {
   for (uint32_t i = 0; i < mRoundedClipRects.Length(); i++) {
-    wr::WrComplexClipRegion* region = aOutArray.AppendElement();
+    wr::ComplexClipRegion* region = aOutArray.AppendElement();
     region->rect = aSc.ToRelativeLayoutRect(LayoutDeviceRect::FromAppUnits(
         mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
     const nscoord* radii = mRoundedClipRects[i].mRadii;
