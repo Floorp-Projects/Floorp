@@ -47,12 +47,6 @@ WAVDemuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-bool
-WAVDemuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return aType == TrackInfo::kAudioTrack;
-}
-
 uint32_t
 WAVDemuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {
