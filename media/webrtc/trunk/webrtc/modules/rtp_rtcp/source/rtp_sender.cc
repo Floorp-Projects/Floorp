@@ -443,7 +443,8 @@ bool RTPSender::SendOutgoingData(FrameType frame_type,
            frame_type == kEmptyFrame);
 
     result = audio_->SendAudio(frame_type, payload_type, rtp_timestamp,
-                               payload_data, payload_size, fragmentation);
+                               payload_data, payload_size, fragmentation,
+                               &mId);
   } else {
     TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", capture_time_ms,
                             "Send", "type", FrameTypeToString(frame_type));

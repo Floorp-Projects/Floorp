@@ -37,6 +37,21 @@ public:
   }
 
   /**
+   * Retrieve a reference to the value for a key.
+   *
+   * @param aKey the key to retrieve.
+   * @return a reference to the found value, or nullptr if no entry was found
+   * with the given key.
+   */
+  DataType* GetValue(KeyType aKey)
+  {
+    if (EntryType* ent = this->GetEntry(aKey)) {
+      return &ent->mData;
+    }
+    return nullptr;
+  }
+
+  /**
    * Retrieve the value for a key and remove the corresponding entry at
    * the same time.
    *

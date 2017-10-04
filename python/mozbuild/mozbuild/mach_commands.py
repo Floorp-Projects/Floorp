@@ -2243,19 +2243,17 @@ class StaticAnalysis(MachCommandBase):
 
         compile_db = json.loads(open(self._compile_db, 'r').read())
         total = 0
-        files = []
         import re
         name_re = re.compile('(' + ')|('.join(source) + ')')
         for f in compile_db:
             if name_re.search(f['file']):
                 total = total + 1
-                files.append(f['file'])
 
         if not total:
             return 0
 
         args = [python, self._run_clang_tidy_path, '-p', self.topobjdir]
-        args += ['-j', str(jobs)] + files + common_args
+        args += ['-j', str(jobs)] + source + common_args
         cwd = self.topobjdir
 
         monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)

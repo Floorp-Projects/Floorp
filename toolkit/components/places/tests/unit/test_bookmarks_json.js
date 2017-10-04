@@ -48,13 +48,13 @@ var test_bookmarks = {
       title: "test",
       description: "folder test comment",
       dateAdded: 1177541020000000,
-      // lastModified: 1177541050000000,
+      lastModified: 1177541050000000,
       children: [
         { guid: "OCyeUO5uu9GX",
           title: "test post keyword",
           description: "item description",
           dateAdded: 1177375336000000,
-          // lastModified: 1177375423000000,
+          lastModified: 1177375423000000,
           keyword: "test",
           sidebar: true,
           postData: "hidden1%3Dbar&text1%3D%25s",
@@ -76,12 +76,20 @@ var test_bookmarks = {
       // Note: date gets truncated to milliseconds, whereas the value in bookmarks.json
       // has full microseconds.
       dateAdded: 1361551979451000,
+      lastModified: 1361551979457000,
     }
   ],
   unfiled: [
     { guid: "OCyeUO5uu9FW",
       title: "Example.tld",
       url: "http://example.tld/"
+    },
+    { guid: "Cfkety492Afk",
+      title: "test tagged bookmark",
+      dateAdded: 1507025843703000,
+      lastModified: 1507025844703000,
+      url: "http://example.tld/tagged",
+      tags: ["foo"],
     }
   ]
 };
@@ -209,7 +217,7 @@ async function checkItem(aExpected, aNode) {
         break;
       }
       case "charset":
-        let testURI = NetUtil.newURI(aNode.uri);
+        let testURI = Services.io.newURI(aNode.uri);
         do_check_eq((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
         break;
       case "feedUrl":
@@ -228,6 +236,11 @@ async function checkItem(aExpected, aNode) {
         }
 
         folder.containerOpen = false;
+        break;
+      case "tags":
+        let uri = Services.io.newURI(aNode.uri);
+        Assert.deepEqual(PlacesUtils.tagging.getTagsForURI(uri), aExpected.tags,
+          "should have the expected tags");
         break;
       default:
         throw new Error("Unknown property");

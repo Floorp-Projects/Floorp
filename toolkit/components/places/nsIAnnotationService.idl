@@ -20,7 +20,8 @@ interface nsIAnnotationObserver : nsISupports
                              in AUTF8String aName);
     void onItemAnnotationSet(in long long aItemId,
                              in AUTF8String aName,
-                             in unsigned short aSource);
+                             in unsigned short aSource,
+                             in boolean aDontUpdateLastModified);
 
     /**
      * Called when an annotation is deleted. If aName is empty, then ALL
@@ -40,7 +41,7 @@ interface nsIAnnotationService : nsISupports
     /**
      * Valid values for aExpiration, which sets the expiration policy for your
      * annotation. The times for the days, weeks and months policies are
-     * measured since the last visit date of the page in question. These 
+     * measured since the last visit date of the page in question. These
      * will not expire so long as the user keeps visiting the page from time
      * to time.
      */
@@ -53,7 +54,7 @@ interface nsIAnnotationService : nsISupports
 
     // For general page settings, things the user is interested in seeing
     // if they come back to this page some time in the near future.
-    // Removed at 30 days. 
+    // Removed at 30 days.
     const unsigned short EXPIRE_WEEKS = 2;
 
     // Something that the user will be interested in seeing in their
@@ -131,7 +132,8 @@ interface nsIAnnotationService : nsISupports
                            in nsIVariant aValue,
                            in long aFlags,
                            in unsigned short aExpiration,
-                           [optional] in unsigned short aSource);
+                           [optional] in unsigned short aSource,
+                           [optional] in bool aDontUpdateLastModified);
 
     /**
      * @throws NS_ERROR_ILLEGAL_VALUE if the page or the bookmark doesn't exist.
@@ -146,7 +148,8 @@ interface nsIAnnotationService : nsISupports
                                             in AString aValue,
                                             in long aFlags,
                                             in unsigned short aExpiration,
-                                            [optional] in unsigned short aSource);
+                                            [optional] in unsigned short aSource,
+                                            [optional] in bool aDontUpdateLastModified);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes an Int32 as
@@ -164,7 +167,8 @@ interface nsIAnnotationService : nsISupports
                                            in long aValue,
                                            in long aFlags,
                                            in unsigned short aExpiration,
-                                           [optional] in unsigned short aSource);
+                                           [optional] in unsigned short aSource,
+                                           [optional] in bool aDontUpdateLastModified);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes an Int64 as
@@ -182,7 +186,8 @@ interface nsIAnnotationService : nsISupports
                                            in long long aValue,
                                            in long aFlags,
                                            in unsigned short aExpiration,
-                                           [optional] in unsigned short aSource);
+                                           [optional] in unsigned short aSource,
+                                           [optional] in bool aDontUpdateLastModified);
 
     /**
      * Sets an annotation just like setAnnotationString, but takes a double as
@@ -200,7 +205,8 @@ interface nsIAnnotationService : nsISupports
                                             in double aValue,
                                             in long aFlags,
                                             in unsigned short aExpiration,
-                                            [optional] in unsigned short aSource);
+                                            [optional] in unsigned short aSource,
+                                            [optional] in boolean aDontUpdateLastModified);
 
     /**
      * Retrieves the value of a given annotation. Throws an error if the

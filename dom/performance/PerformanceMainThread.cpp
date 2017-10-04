@@ -312,9 +312,11 @@ PerformanceMainThread::CreationTime() const
 void
 PerformanceMainThread::EnsureDocEntry()
 {
-  if (!mDocEntry) {
+  if (!mDocEntry && nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    mDocEntry = new PerformanceNavigationTiming(Timing(), this,
+    RefPtr<PerformanceTiming> timing =
+      new PerformanceTiming(this, mChannel, nullptr, 0);
+    mDocEntry = new PerformanceNavigationTiming(timing, this,
                                                 httpChannel);
   }
 }

@@ -268,6 +268,17 @@
           "lastModified": 1361551979402952,
           "type": "text/x-moz-place",
           "uri": "http://example.tld/"
+        },
+        {
+          "guid": "Cfkety492Afk",
+          "title": "test tagged bookmark",
+          "id": 15,
+          "parent": 5,
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "type": "text/x-moz-place",
+          "uri": "http://example.tld/tagged",
+          "tags": "foo"
         }
       ]
     }

@@ -190,8 +190,11 @@ public:
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
 
-  const mozilla::FontFamilyList& GetFamilyList() { return mFamilyList; }
-  void SetFamilyList(const mozilla::FontFamilyList& aFamilyList);
+  mozilla::SharedFontList* GetFamilyList() const { return mFamilyList; }
+  void SetFamilyList(mozilla::SharedFontList* aFamilyList)
+  {
+    mFamilyList = aFamilyList;
+  }
 
   void AddValueList(int32_t aVariantAlternate,
                     nsTArray<gfxFontFeatureValueSet::ValueList>& aValueList);
@@ -206,7 +209,7 @@ public:
 protected:
   ~nsCSSFontFeatureValuesRule() {}
 
-  mozilla::FontFamilyList mFamilyList;
+  RefPtr<mozilla::SharedFontList> mFamilyList;
   nsTArray<gfxFontFeatureValueSet::FeatureValues> mFeatureValues;
 };
 

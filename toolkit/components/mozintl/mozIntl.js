@@ -70,14 +70,6 @@ class MozIntl {
     return this._cache.getLocaleInfo(getLocales(locales), ...args);
   }
 
-  createPluralRules(locales, ...args) {
-    if (!this._cache.hasOwnProperty("PluralRules")) {
-      mozIntlHelper.addPluralRulesConstructor(this._cache);
-    }
-
-    return new this._cache.PluralRules(getLocales(locales), ...args);
-  }
-
   createDateTimeFormat(locales, options, ...args) {
     if (!this._cache.hasOwnProperty("DateTimeFormat")) {
       mozIntlHelper.addDateTimeFormatConstructor(this._cache);

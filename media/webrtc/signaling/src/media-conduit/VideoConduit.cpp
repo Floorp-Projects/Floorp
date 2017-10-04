@@ -370,6 +370,12 @@ WebrtcVideoConduit::SetLocalCNAME(const char* cname)
   return true;
 }
 
+bool WebrtcVideoConduit::SetLocalMID(const std::string& mid)
+{
+  mSendStreamConfig.rtp.mid = mid;
+  return true;
+}
+
 MediaConduitErrorCode
 WebrtcVideoConduit::ConfigureCodecMode(webrtc::VideoCodecMode mode)
 {
