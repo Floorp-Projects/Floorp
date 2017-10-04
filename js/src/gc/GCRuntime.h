@@ -846,7 +846,7 @@ class GCRuntime
     bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }
     void resetMallocBytes() { mallocCounter.reset(); }
     void setMaxMallocBytes(size_t value);
-    void updateMallocCounter(JS::Zone* zone, size_t nbytes);
+    bool updateMallocCounter(size_t nbytes) { return mallocCounter.update(this, nbytes); }
 
     void setGCCallback(JSGCCallback callback, void* data);
     void callGCCallback(JSGCStatus status) const;

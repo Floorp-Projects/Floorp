@@ -1823,14 +1823,6 @@ GCRuntime::setMaxMallocBytes(size_t value)
         zone->setGCMaxMallocBytes(value);
 }
 
-void
-GCRuntime::updateMallocCounter(JS::Zone* zone, size_t nbytes)
-{
-    bool triggered = mallocCounter.update(this, nbytes);
-    if (!triggered && zone)
-        zone->updateMallocCounter(nbytes);
-}
-
 double
 ZoneHeapThreshold::allocTrigger(bool highFrequencyGC) const
 {
