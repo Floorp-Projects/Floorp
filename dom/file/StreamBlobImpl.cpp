@@ -49,17 +49,6 @@ StreamBlobImpl::StreamBlobImpl(nsIInputStream* aInputStream,
   mImmutable = true;
 }
 
-StreamBlobImpl::StreamBlobImpl(StreamBlobImpl* aOther,
-                               const nsAString& aContentType,
-                               uint64_t aStart, uint64_t aLength)
-  : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength)
-  , mInputStream(new SlicedInputStream(aOther->mInputStream, aStart, aLength))
-  , mIsDirectory(false)
-  , mFileId(-1)
-{
-  mImmutable = true;
-}
-
 StreamBlobImpl::StreamBlobImpl(nsIInputStream* aInputStream,
                                const nsAString& aName,
                                const nsAString& aContentType,
@@ -106,22 +95,29 @@ StreamBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     return impl.forget();
   }
 
+  nsCOMPtr<nsIInputStream> clonedStream;
+
   nsCOMPtr<nsICloneableInputStreamWithRange> stream =
     do_QueryInterface(mInputStream);
   if (stream) {
-    nsCOMPtr<nsIInputStream> clonedStream;
     aRv = stream->CloneWithRange(aStart, aLength, getter_AddRefs(clonedStream));
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
+  } else {
+    GetInternalStream(getter_AddRefs(clonedStream), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
 
-    RefPtr<BlobImpl> impl =
-      new StreamBlobImpl(clonedStream, aContentType, aLength);
-    return impl.forget();
+    clonedStream =
+      new SlicedInputStream(clonedStream.forget(), aStart, aLength);
   }
 
-  RefPtr<BlobImpl> impl;
-    impl = new StreamBlobImpl(this, aContentType, aStart, aLength);
+  MOZ_ASSERT(clonedStream);
+
+  RefPtr<BlobImpl> impl =
+    new StreamBlobImpl(clonedStream, aContentType, aLength);
   return impl.forget();
 }
 
