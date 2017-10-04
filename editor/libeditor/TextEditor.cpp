@@ -1639,12 +1639,14 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't select the trailing BR node if we have one
-  int32_t selOffset;
-  nsCOMPtr<nsINode> selNode;
-  rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsINode* childNode = selNode->GetChildAt(selOffset - 1);
+  nsCOMPtr<nsIContent> childNode;
+  rv = GetEndChildNode(aSelection, getter_AddRefs(childNode));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (childNode) {
+    childNode = childNode->GetPreviousSibling();
+  }
 
   if (childNode && TextEditUtils::IsMozBR(childNode)) {
     int32_t parentOffset;
