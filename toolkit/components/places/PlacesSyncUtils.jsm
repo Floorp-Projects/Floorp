@@ -76,6 +76,25 @@ function* chunkArray(array, chunkLength) {
 
 const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
   /**
+   * Clamps a history visit date between the current date and the earliest
+   * sensible date.
+   *
+   * @param {Date} visitDate
+   *        The visit date.
+   * @return {Date} The clamped visit date.
+   */
+  clampVisitDate(visitDate) {
+    let currentDate = new Date();
+    if (visitDate > currentDate) {
+      return currentDate;
+    }
+    if (visitDate < BookmarkSyncUtils.EARLIEST_BOOKMARK_TIMESTAMP) {
+      return new Date(BookmarkSyncUtils.EARLIEST_BOOKMARK_TIMESTAMP);
+    }
+    return visitDate;
+  },
+
+  /**
    * Fetches the frecency for the URL provided
    *
    * @param url
