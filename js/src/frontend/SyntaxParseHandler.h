@@ -262,6 +262,7 @@ class SyntaxParseHandler
 
     // Expressions
 
+    Node newGeneratorComprehension(Node genfn, const TokenPos& pos) { return NodeGeneric; }
     Node newArrayComprehension(Node body, const TokenPos& pos) { return NodeGeneric; }
     Node newArrayLiteral(uint32_t begin) { return NodeUnparenthesizedArray; }
     MOZ_MUST_USE bool addElision(Node literal, const TokenPos& pos) { return true; }
@@ -269,6 +270,7 @@ class SyntaxParseHandler
     void addArrayElement(Node literal, Node element) { }
 
     Node newCall(const TokenPos& pos) { return NodeFunctionCall; }
+    Node newSuperCall(Node callee) { return NodeGeneric; }
     Node newTaggedTemplate(const TokenPos& pos) { return NodeGeneric; }
 
     Node newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
@@ -404,24 +406,15 @@ class SyntaxParseHandler
         return ts.currentToken().pos.begin;
     }
 
-    Node newList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
+    Node newList(ParseNodeKind kind, const TokenPos& pos) {
         MOZ_ASSERT(kind != PNK_VAR);
         MOZ_ASSERT(kind != PNK_LET);
         MOZ_ASSERT(kind != PNK_CONST);
         return NodeGeneric;
     }
 
-  private:
-    Node newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
-        return newList(kind, TokenPos(begin, begin + 1), op);
-    }
-
-    template<typename T>
-    Node newList(ParseNodeKind kind, const T& begin, JSOp op = JSOP_NOP) = delete;
-
-  public:
-    Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
-        return newList(kind, TokenPos(), op);
+    Node newList(ParseNodeKind kind, Node kid) {
+        return newList(kind, TokenPos());
     }
 
     Node newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
@@ -456,7 +449,7 @@ class SyntaxParseHandler
     }
 
     Node newCatchList(const TokenPos& pos) {
-        return newList(PNK_CATCHLIST, pos, JSOP_NOP);
+        return NodeGeneric;
     }
 
     Node newCommaExpressionList(Node kid) {
@@ -474,12 +467,7 @@ class SyntaxParseHandler
     }
 
     Node newNewExpression(uint32_t begin, Node ctor) {
-        Node newExpr = newList(PNK_NEW, begin, JSOP_NEW);
-        if (!newExpr)
-            return newExpr;
-
-        addList(newExpr, ctor);
-        return newExpr;
+        return NodeGeneric;
     }
 
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs, JSOp op) {

@@ -231,6 +231,16 @@ class FullParseHandler
 
     // Expressions
 
+    ParseNode* newGeneratorComprehension(ParseNode* genfn, const TokenPos& pos) {
+        MOZ_ASSERT(pos.begin <= genfn->pn_pos.begin);
+        MOZ_ASSERT(genfn->pn_pos.end <= pos.end);
+        ParseNode* result = new_<ListNode>(PNK_GENEXP, JSOP_CALL, pos);
+        if (!result)
+            return null();
+        result->append(genfn);
+        return result;
+    }
+
     ParseNode* newArrayComprehension(ParseNode* body, const TokenPos& pos) {
         MOZ_ASSERT(pos.begin <= body->pn_pos.begin);
         MOZ_ASSERT(body->pn_pos.end <= pos.end);
@@ -274,11 +284,15 @@ class FullParseHandler
     }
 
     ParseNode* newCall(const TokenPos& pos) {
-        return newList(PNK_CALL, pos, JSOP_CALL);
+        return new_<ListNode>(PNK_CALL, JSOP_CALL, pos);
+    }
+
+    ParseNode* newSuperCall(ParseNode* callee) {
+        return new_<ListNode>(PNK_SUPERCALL, JSOP_SUPERCALL, callee);
     }
 
     ParseNode* newTaggedTemplate(const TokenPos& pos) {
-        return newList(PNK_TAGGED_TEMPLATE, pos, JSOP_CALL);
+        return new_<ListNode>(PNK_TAGGED_TEMPLATE, JSOP_CALL, pos);
     }
 
     ParseNode* newObjectLiteral(uint32_t begin) {
@@ -708,7 +722,7 @@ class FullParseHandler
     }
 
     Node newNewExpression(uint32_t begin, ParseNode* ctor) {
-        ParseNode* newExpr = newList(PNK_NEW, begin, JSOP_NEW);
+        ParseNode* newExpr = new_<ListNode>(PNK_NEW, JSOP_NEW, TokenPos(begin, begin + 1));
         if (!newExpr)
             return nullptr;
 
@@ -791,23 +805,23 @@ class FullParseHandler
         return kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST;
     }
 
-    ParseNode* newList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
+    ParseNode* newList(ParseNodeKind kind, const TokenPos& pos) {
         MOZ_ASSERT(!isDeclarationKind(kind));
-        return new_<ListNode>(kind, op, pos);
+        return new_<ListNode>(kind, JSOP_NOP, pos);
     }
 
   private:
-    ParseNode* newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
-        return newList(kind, TokenPos(begin, begin + 1), op);
+    ParseNode* newList(ParseNodeKind kind, uint32_t begin) {
+        return newList(kind, TokenPos(begin, begin + 1));
     }
 
     template<typename T>
-    ParseNode* newList(ParseNodeKind kind, const T& begin, JSOp op = JSOP_NOP) = delete;
+    ParseNode* newList(ParseNodeKind kind, const T& begin) = delete;
 
   public:
-    ParseNode* newList(ParseNodeKind kind, ParseNode* kid, JSOp op = JSOP_NOP) {
+    ParseNode* newList(ParseNodeKind kind, ParseNode* kid) {
         MOZ_ASSERT(!isDeclarationKind(kind));
-        return new_<ListNode>(kind, op, kid);
+        return new_<ListNode>(kind, JSOP_NOP, kid);
     }
 
     ParseNode* newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
@@ -830,7 +844,7 @@ class FullParseHandler
     }
 
     ParseNode* newCommaExpressionList(ParseNode* kid) {
-        return newList(PNK_COMMA, kid, JSOP_NOP);
+        return new_<ListNode>(PNK_COMMA, JSOP_NOP, kid);
     }
 
     void addList(ParseNode* list, ParseNode* kid) {
