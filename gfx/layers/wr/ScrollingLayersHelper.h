@@ -7,7 +7,7 @@
 #define GFX_SCROLLINGLAYERSHELPER_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderCommandBuilder.h"
 
 namespace mozilla {
 
@@ -28,7 +28,7 @@ public:
   ScrollingLayersHelper(nsDisplayItem* aItem,
                         wr::DisplayListBuilder& aBuilder,
                         const StackingContextHelper& aStackingContext,
-                        WebRenderCommandsBuilder::ClipIdMap& aCache,
+                        WebRenderCommandBuilder::ClipIdMap& aCache,
                         bool aApzEnabled);
   ~ScrollingLayersHelper();
 
@@ -39,12 +39,12 @@ private:
                                  wr::DisplayListBuilder& aBuilder,
                                  int32_t aAppUnitsPerDevPixel,
                                  const StackingContextHelper& aStackingContext,
-                                 WebRenderCommandsBuilder::ClipIdMap& aCache);
+                                 WebRenderCommandBuilder::ClipIdMap& aCache);
   void DefineAndPushChain(const DisplayItemClipChain* aChain,
                           wr::DisplayListBuilder& aBuilder,
                           const StackingContextHelper& aStackingContext,
                           int32_t aAppUnitsPerDevPixel,
-                          WebRenderCommandsBuilder::ClipIdMap& aCache);
+                          WebRenderCommandBuilder::ClipIdMap& aCache);
   bool DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
                                 const StackingContextHelper& aStackingContext);
 

@@ -7,7 +7,6 @@
 
 #include "FrameMetrics.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "UnitTransforms.h"
 
@@ -17,7 +16,7 @@ namespace layers {
 ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
                                              wr::DisplayListBuilder& aBuilder,
                                              const StackingContextHelper& aStackingContext,
-                                             WebRenderCommandsBuilder::ClipIdMap& aCache,
+                                             WebRenderCommandBuilder::ClipIdMap& aCache,
                                              bool aApzEnabled)
   : mBuilder(&aBuilder)
   , mPushedClipAndScroll(false)
@@ -76,7 +75,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
                                                  wr::DisplayListBuilder& aBuilder,
                                                  int32_t aAppUnitsPerDevPixel,
                                                  const StackingContextHelper& aStackingContext,
-                                                 WebRenderCommandsBuilder::ClipIdMap& aCache)
+                                                 WebRenderCommandBuilder::ClipIdMap& aCache)
 {
   if (!aAsr) {
     return;
@@ -130,7 +129,7 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
                                           wr::DisplayListBuilder& aBuilder,
                                           const StackingContextHelper& aStackingContext,
                                           int32_t aAppUnitsPerDevPixel,
-                                          WebRenderCommandsBuilder::ClipIdMap& aCache)
+                                          WebRenderCommandBuilder::ClipIdMap& aCache)
 {
   if (!aChain) {
     return;
