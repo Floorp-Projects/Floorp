@@ -1736,7 +1736,7 @@ class ASTSerializer
 
     BinaryOperator binop(ParseNodeKind kind);
     UnaryOperator unop(ParseNodeKind kind);
-    AssignmentOperator aop(JSOp op);
+    AssignmentOperator aop(ParseNodeKind kind);
 
     bool statements(ParseNode* pn, NodeVector& elts);
     bool expressions(ParseNode* pn, NodeVector& elts);
@@ -1843,34 +1843,34 @@ class ASTSerializer
 } /* anonymous namespace */
 
 AssignmentOperator
-ASTSerializer::aop(JSOp op)
+ASTSerializer::aop(ParseNodeKind kind)
 {
-    switch (op) {
-      case JSOP_NOP:
+    switch (kind) {
+      case PNK_ASSIGN:
         return AOP_ASSIGN;
-      case JSOP_ADD:
+      case PNK_ADDASSIGN:
         return AOP_PLUS;
-      case JSOP_SUB:
+      case PNK_SUBASSIGN:
         return AOP_MINUS;
-      case JSOP_MUL:
+      case PNK_MULASSIGN:
         return AOP_STAR;
-      case JSOP_DIV:
+      case PNK_DIVASSIGN:
         return AOP_DIV;
-      case JSOP_MOD:
+      case PNK_MODASSIGN:
         return AOP_MOD;
-      case JSOP_POW:
+      case PNK_POWASSIGN:
         return AOP_POW;
-      case JSOP_LSH:
+      case PNK_LSHASSIGN:
         return AOP_LSH;
-      case JSOP_RSH:
+      case PNK_RSHASSIGN:
         return AOP_RSH;
-      case JSOP_URSH:
+      case PNK_URSHASSIGN:
         return AOP_URSH;
-      case JSOP_BITOR:
+      case PNK_BITORASSIGN:
         return AOP_BITOR;
-      case JSOP_BITXOR:
+      case PNK_BITXORASSIGN:
         return AOP_BITXOR;
-      case JSOP_BITAND:
+      case PNK_BITANDASSIGN:
         return AOP_BITAND;
       default:
         return AOP_ERR;
@@ -2886,7 +2886,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
-        AssignmentOperator op = aop(pn->getOp());
+        AssignmentOperator op = aop(pn->getKind());
         LOCAL_ASSERT(op > AOP_ERR && op < AOP_LIMIT);
 
         RootedValue lhs(cx), rhs(cx);
