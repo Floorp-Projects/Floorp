@@ -2230,6 +2230,7 @@ class StaticAnalysis(MachCommandBase):
             checks = self._get_checks()
 
         common_args = ['-clang-tidy-binary', self._clang_tidy_path,
+                       '-clang-apply-replacements-binary', self._clang_apply_replacements,
                        '-checks=%s' % checks,
                        '-extra-arg=-DMOZ_CLANG_PLUGIN']
 
@@ -2398,10 +2399,13 @@ class StaticAnalysis(MachCommandBase):
                                        "clang-tidy")
         self._clang_tidy_path = mozpath.join(clang_tidy_path, "clang", "bin",
                                              "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
+        self._clang_apply_replacements = mozpath.join(clang_tidy_path, "clang", "bin",
+                                                      "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
         self._run_clang_tidy_path = mozpath.join(clang_tidy_path, "clang", "share",
                                                  "clang", "run-clang-tidy.py")
 
         if os.path.exists(self._clang_tidy_path) and \
+           os.path.exists(self._clang_apply_replacements) and \
            os.path.exists(self._run_clang_tidy_path) and \
            not force:
             return 0
@@ -2468,6 +2472,7 @@ class StaticAnalysis(MachCommandBase):
                             'the expected output')
 
         assert os.path.exists(self._clang_tidy_path)
+        assert os.path.exists(self._clang_apply_replacements)
         assert os.path.exists(self._run_clang_tidy_path)
         return 0
 
