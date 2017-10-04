@@ -590,14 +590,13 @@ class MochitestArguments(ArgumentContainer):
         [["--verify"],
          {"action": "store_true",
           "default": False,
-          "help": "Test verification mode.",
-          "suppress": True,
+          "help": "Run tests in verification mode: Run many times in different "
+                  "ways, to see if there are intermittent failures.",
           }],
         [["--verify-max-time"],
          {"type": int,
           "default": 3600,
           "help": "Maximum time, in seconds, to run in --verify mode.",
-          "suppress": True,
           }],
     ]
 

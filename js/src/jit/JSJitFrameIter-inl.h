@@ -45,14 +45,14 @@ JSJitFrameIter::prevFrameLocalSize() const
 }
 
 inline JitFrameLayout*
-JitProfilingFrameIterator::framePtr()
+JSJitProfilingFrameIterator::framePtr()
 {
     MOZ_ASSERT(!done());
     return (JitFrameLayout*) fp_;
 }
 
 inline JSScript*
-JitProfilingFrameIterator::frameScript()
+JSJitProfilingFrameIterator::frameScript()
 {
     return ScriptFromCalleeToken(framePtr()->calleeToken());
 }

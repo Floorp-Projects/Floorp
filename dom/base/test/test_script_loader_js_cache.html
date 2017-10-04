@@ -44,17 +44,6 @@
       }
     };
 
-    function flushNeckoCache() {
-      return new Promise (resolve => {
-        // We need to do a GC pass to ensure the cache entry has been freed.
-        SpecialPowers.gc();
-        var nsICacheTesting = SpecialPowers.Ci.nsICacheTesting;
-        var cacheTesting = SpecialPowers.Services.cache2;
-        cacheTesting = cacheTesting.QueryInterface(nsICacheTesting);
-        cacheTesting.flush(() => { resolve(); });
-      });
-    };
-
     function WaitForScriptTagEvent(url) {
       var iframe = document.createElement("iframe");
       document.body.appendChild(iframe);
@@ -138,9 +127,6 @@
       assert_equals(await stateMachineResult, "bytecode_saved",
                     "[1] ScriptLoadRequest status after the first visit");
 
-      // When the bytecode is saved, we have to flush the cache to read it.
-      await flushNeckoCache();
-
       // Reload the same test page, and verify that the code path taken by
       // the nsScriptLoadRequest corresponds to the code path which is
       // loading bytecode and executing it.
@@ -154,9 +140,6 @@
       stateMachineResult = WaitForScriptTagEvent("file_js_cache_with_sri.html");
       assert_equals(await stateMachineResult, "fallback_bytecode_saved",
                     "[3] ScriptLoadRequest status after the SRI hash");
-
-      // When the bytecode is saved, we have to flush the cache to read it.
-      await flushNeckoCache();
 
       // Loading a page, which has the same SRI should verify the SRI and
       // continue by executing the bytecode.

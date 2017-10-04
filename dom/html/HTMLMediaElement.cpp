@@ -2660,6 +2660,18 @@ HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
 already_AddRefed<Promise>
 HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv)
 {
+  /* This will cause JIT code to be kept around longer, to help performance
+   * when using SeekToNextFrame to iterate through every frame of a video.
+   */
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(OwnerDoc()->GetInnerWindow());
+
+  if (global) {
+    if (JSObject *obj = global->GetGlobalJSObject()) {
+      js::NotifyAnimationActivity(obj);
+    }
+  }
+
   return Seek(CurrentTime(), SeekTarget::NextFrame, aRv);
 }
 
