@@ -2274,6 +2274,14 @@ public:
   }
 
   /*
+   * Returns true if the performance timing APIs are enabled.
+   */
+  static bool IsPerformanceNavigationTimingEnabled()
+  {
+    return sIsPerformanceNavigationTimingEnabled;
+  }
+
+  /*
    * Returns true if notification should be sent for peformance timing events.
    */
   static bool SendPerformanceTimingNotifications()
@@ -3340,6 +3348,7 @@ private:
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
+  static bool sIsPerformanceNavigationTimingEnabled;
   static bool sIsUserTimingLoggingEnabled;
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
