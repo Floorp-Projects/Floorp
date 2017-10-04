@@ -8,7 +8,7 @@
 #include "DecoderTraits.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
-#include "MediaResource.h"
+#include "BaseMediaResource.h"
 #include "MediaShutdownManager.h"
 
 namespace mozilla {

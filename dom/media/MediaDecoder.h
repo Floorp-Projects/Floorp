@@ -8,6 +8,7 @@
 #define MediaDecoder_h_
 
 #include "DecoderDoctorDiagnostics.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
