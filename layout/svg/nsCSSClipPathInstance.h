@@ -20,6 +20,7 @@ class nsCSSClipPathInstance
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Path Path;
+  typedef mozilla::gfx::Rect Rect;
 
 public:
   static void ApplyBasicShapeClip(gfxContext& aContext,
@@ -27,6 +28,9 @@ public:
   // aPoint is in CSS pixels.
   static bool HitTestBasicShapeClip(nsIFrame* aFrame,
                                     const gfxPoint& aPoint);
+
+  static Rect GetBoundingRectForBasicShapeClip(nsIFrame* aFrame,
+                                               const StyleShapeSource& aClipPathStyle);
 private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
                                  const StyleShapeSource aClipPathStyle)
