@@ -3898,6 +3898,32 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
   return NS_OK;
 }
 
+nsresult
+EditorBase::GetEndChildNode(Selection* aSelection,
+                            nsIContent** aEndNode)
+{
+  MOZ_ASSERT(aSelection);
+  MOZ_ASSERT(aEndNode);
+
+  *aEndNode = nullptr;
+
+  if (NS_WARN_IF(!aSelection->RangeCount())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const nsRange* range = aSelection->GetRangeAt(0);
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IF_ADDREF(*aEndNode = range->GetChildAtEndOffset());
+  return NS_OK;
+}
+
 /**
  * IsPreformatted() checks the style info for the node for the preformatted
  * text style.
