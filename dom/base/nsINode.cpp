@@ -2676,27 +2676,74 @@ nsINode::Length() const
   }
 }
 
-nsCSSSelectorList*
-nsINode::ParseSelectorList(const nsAString& aSelectorString,
-                           ErrorResult& aRv)
+const RawServoSelectorList*
+nsINode::ParseServoSelectorList(
+  const nsAString& aSelectorString,
+  ErrorResult& aRv)
 {
   nsIDocument* doc = OwnerDoc();
+  MOZ_ASSERT(doc->IsStyledByServo());
+
   nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
-  nsCSSSelectorList* selectorList = nullptr;
-  bool haveCachedList = cache.GetList(aSelectorString, &selectorList);
-  if (haveCachedList) {
-    if (!selectorList) {
+  nsIDocument::SelectorCache::SelectorList* list =
+    cache.GetList(aSelectorString);
+  if (list) {
+    if (!*list) {
       // Invalid selector.
       aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
         NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
         NS_LITERAL_CSTRING("' is not a valid selector")
       );
     }
-    return selectorList;
+
+    // FIXME(emilio): Make this private and use `WithSelectorList` everywhere,
+    // then assert.
+    if (list->IsServo()) {
+      return list->AsServo();
+    }
+  }
+
+  NS_ConvertUTF16toUTF8 selectorString(aSelectorString);
+
+  auto* selectorList = Servo_SelectorList_Parse(&selectorString);
+  if (!selectorList) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
+      NS_LITERAL_CSTRING("'") + selectorString +
+      NS_LITERAL_CSTRING("' is not a valid selector")
+    );
+  }
+
+  cache.CacheList(aSelectorString, UniquePtr<RawServoSelectorList>(selectorList));
+  return selectorList;
+}
+
+nsCSSSelectorList*
+nsINode::ParseSelectorList(const nsAString& aSelectorString,
+                           ErrorResult& aRv)
+{
+  nsIDocument* doc = OwnerDoc();
+  nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
+  nsIDocument::SelectorCache::SelectorList* list =
+    cache.GetList(aSelectorString);
+  if (list) {
+    if (!*list) {
+      // Invalid selector.
+      aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
+        NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
+        NS_LITERAL_CSTRING("' is not a valid selector")
+      );
+    }
+
+    // FIXME(emilio): Make this private and use `WithSelectorList` everywhere,
+    // then assert.
+    if (list->IsGecko()) {
+      return list->AsGecko();
+    }
   }
 
   nsCSSParser parser(doc->CSSLoader());
 
+  nsCSSSelectorList* selectorList = nullptr;
   aRv = parser.ParseSelectorString(aSelectorString,
                                    doc->GetDocumentURI(),
                                    0, // XXXbz get the line number!
@@ -2714,7 +2761,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
       NS_LITERAL_CSTRING("' is not a valid selector")
     );
 
-    cache.CacheList(aSelectorString, nullptr);
+    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>());
     return nullptr;
   }
 
@@ -2734,7 +2781,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
   if (selectorList) {
     NS_ASSERTION(selectorList->mSelectors,
                  "How can we not have any selectors?");
-    cache.CacheList(aSelectorString, selectorList);
+    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>(selectorList));
   } else {
     // This is the "only pseudo-element selectors" case, which is
     // not common, so just don't worry about caching it.  That way a

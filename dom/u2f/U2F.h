@@ -14,7 +14,6 @@
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
-#include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
 #include "nsWrapperCache.h"
 #include "U2FAuthenticator.h"

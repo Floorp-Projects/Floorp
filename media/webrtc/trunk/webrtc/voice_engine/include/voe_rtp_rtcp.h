@@ -110,6 +110,9 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   // deleted.
   virtual int Release() = 0;
 
+  // Sets the local RTP MID for the specified |channel|.
+  virtual int SetLocalMID(int channel, const char* mid) = 0;
+
   // Sets the local RTP synchronization source identifier (SSRC) explicitly.
   virtual int SetLocalSSRC(int channel, unsigned int ssrc) = 0;
 
@@ -123,6 +126,9 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   virtual int SetSendAudioLevelIndicationStatus(int channel,
                                                 bool enable,
                                                 unsigned char id = 1) = 0;
+
+  // Sets the status of sending MID on a specific |channel|.
+  virtual int SetSendMIDStatus(int channel, bool enable, unsigned char id = 1) = 0;
 
   // Sets the status of receiving rtp-audio-level-indication on a specific
   // |channel|.

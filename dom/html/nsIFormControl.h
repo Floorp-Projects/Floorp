@@ -202,6 +202,13 @@ public:
   inline bool IsSingleLineTextControl(bool aExcludePassword) const;
 
   /**
+  * Returns true if this is a single line text control or a number control.
+  * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
+  * @return true if this is a single line text control or a number control.
+  */
+  inline bool IsSingleLineTextOrNumberControl(bool aExcludePassword) const;
+
+  /**
    * Returns whether this is a submittable form control.
    * @return whether this is a submittable form control.
    */
@@ -263,6 +270,13 @@ bool
 nsIFormControl::IsSingleLineTextControl(bool aExcludePassword) const
 {
   return IsSingleLineTextControl(aExcludePassword, ControlType());
+}
+
+bool
+nsIFormControl::IsSingleLineTextOrNumberControl(bool aExcludePassword) const
+{
+  return IsSingleLineTextControl(aExcludePassword) ||
+         ControlType() == NS_FORM_INPUT_NUMBER;
 }
 
 /*static*/

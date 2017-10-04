@@ -66,6 +66,14 @@ interface PeerConnectionImpl  {
   void addRIDExtension(MediaStreamTrack recvTrack, unsigned short extensionId);
   void addRIDFilter(MediaStreamTrack recvTrack, DOMString rid);
 
+  void enablePacketDump(unsigned long level,
+                        mozPacketDumpType type,
+                        boolean sending);
+
+  void disablePacketDump(unsigned long level,
+                         mozPacketDumpType type,
+                         boolean sending);
+
   /* As the ICE candidates roll in this one should be called each time
    * in order to keep the candidate list up-to-date for the next SDP-related
    * call PeerConnectionImpl does not parse ICE candidates, just sticks them

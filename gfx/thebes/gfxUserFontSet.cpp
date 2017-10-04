@@ -1074,7 +1074,7 @@ gfxUserFontSet::LookupFamily(const nsAString& aFamilyName) const
 bool
 gfxUserFontSet::ContainsUserFontSetFonts(const FontFamilyList& aFontList) const
 {
-    for (const FontFamilyName& name : aFontList.GetFontlist()) {
+    for (const FontFamilyName& name : aFontList.GetFontlist()->mNames) {
         if (name.mType != eFamily_named &&
             name.mType != eFamily_named_quoted) {
             continue;

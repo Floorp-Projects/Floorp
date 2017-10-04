@@ -1,6 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||!this.hasOwnProperty("addIntlExtras"))
-
-addIntlExtras(Intl);
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
 function IsConstructor(o) {
   try {

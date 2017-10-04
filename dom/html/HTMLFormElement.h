@@ -221,6 +221,12 @@ public:
   bool ImplicitSubmissionIsDisabled() const;
 
   /**
+  * Check whether a given nsIFormControl is the last single line input control
+  * that is not disabled. aControl is expected to not be null.
+  */
+  bool IsLastActiveElement(const nsIFormControl* aControl) const;
+
+  /**
    * Check whether a given nsIFormControl is the default submit
    * element.  This is different from just comparing to
    * GetDefaultSubmitElement() in certain situations inside an update

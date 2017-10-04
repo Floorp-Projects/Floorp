@@ -9,7 +9,7 @@
 define(function (require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
+  const { MainTabbedArea } = createFactories(require("./components/MainTabbedArea"));
 
   const json = document.getElementById("json");
 

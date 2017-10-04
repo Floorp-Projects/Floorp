@@ -1338,11 +1338,16 @@ IMEStateManager::SetIMEState(const IMEState& aState,
         if ((form = do_QueryInterface(formElement)) &&
             form->GetDefaultSubmitElement()) {
           willSubmit = true;
-        // is this an html form and does it only have a single text input element?
-        } else if (formElement && formElement->IsHTMLElement(nsGkAtoms::form) &&
-                   !static_cast<dom::HTMLFormElement*>(formElement)->
-                     ImplicitSubmissionIsDisabled()) {
-          willSubmit = true;
+        // is this an html form...
+        } else if (formElement && formElement->IsHTMLElement(nsGkAtoms::form)) {
+          dom::HTMLFormElement* htmlForm =
+            static_cast<dom::HTMLFormElement*>(formElement);
+          // ... and does it only have a single text input element ?
+          if (!htmlForm->ImplicitSubmissionIsDisabled() ||
+              // ... or is this the last non-disabled element?
+              htmlForm->IsLastActiveElement(control)) {
+            willSubmit = true;
+          }
         }
       }
       context.mActionHint.Assign(

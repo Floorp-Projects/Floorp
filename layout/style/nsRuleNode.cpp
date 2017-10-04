@@ -4376,16 +4376,13 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // the optimization with a non-null aStartStruct?
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
   if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
-    const FontFamilyList* fontlist = familyValue->GetFontFamilyListValue();
-    FontFamilyList& fl = font->mFont.fontlist;
-    fl = *fontlist;
-
-    // extract the first generic in the fontlist, if exists
-    FontFamilyType fontType = fontlist->FirstGeneric();
+    NotNull<SharedFontList*> fontlist = familyValue->GetFontFamilyListValue();
+    font->mFont.fontlist = FontFamilyList(fontlist);
 
     // if only a single generic, set the generic type
-    if (fontlist->Length() == 1) {
-      switch (fontType) {
+    if (fontlist->mNames.Length() == 1) {
+      // extract the first generic in the fontlist, if exists
+      switch (font->mFont.fontlist.FirstGeneric()) {
         case eFamily_serif:
           generic = kGenericFont_serif;
           break;

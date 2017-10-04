@@ -9,10 +9,10 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'headers-panel.js',
-    'headers.js',
-    'json-panel.js',
-    'main-tabbed-area.js',
-    'search-box.js',
-    'text-panel.js'
+    'Headers.js',
+    'HeadersPanel.js',
+    'JsonPanel.js',
+    'MainTabbedArea.js',
+    'SearchBox.js',
+    'TextPanel.js'
 )

@@ -24,6 +24,7 @@ LOCAL_INCLUDES += [
 SOURCES += [
     'MediaPipelineFactory.cpp',
     'MediaStreamList.cpp',
+    'PacketDumper.cpp',
     'PeerConnectionCtx.cpp',
     'PeerConnectionImpl.cpp',
     'PeerConnectionMedia.cpp',
