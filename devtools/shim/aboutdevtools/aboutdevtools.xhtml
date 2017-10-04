@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+<!ENTITY % aboutdevtoolsDTD SYSTEM "chrome://devtools-shim/locale/aboutdevtools.dtd"> %aboutdevtoolsDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" dir="&locale.dir;">
+<head>
+  <title>&aboutDevtools.headTitle;</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>a
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.css"  type="text/css"/>
+  <script type="application/javascript" src="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.js"></script>
+</head>
+<body>
+  <div id="install-page" class="wrapper" hidden="true">
+    <div class="box">
+      <div class="left-pane" />
+      <div class="right-pane">
+        <h1 id="common-title" hidden="true">&aboutDevtools.enable.title;</h1>
+        <h1 id="inspect-title" hidden="true">&aboutDevtools.enable.inspectElementTitle;</h1>
+
+        <!-- Include all the possible message, hidden by default
+             as we can't lazily load localized strings from dtd -->
+        <p class="message" id="about-debugging-message" hidden="true">&aboutDevtools.enable.aboutDebuggingMessage;</p>
+        <p class="message" id="menu-message" hidden="true">&aboutDevtools.enable.menuMessage;</p>
+        <p class="message" id="key-shortcut-message" hidden="true">&aboutDevtools.enable.keyShortcutMessage;</p>
+        <p class="message" id="inspect-element-message" hidden="true">&aboutDevtools.enable.inspectElementMessage;</p>
+
+        <p class="message">&aboutDevtools.enable.commonMessage;</p>
+        <a href="https://developer.mozilla.org/docs/Tools" target="_blank">&aboutDevtools.enable.learnMoreLink;</a>
+        <button class="installpage-button" id="install">&aboutDevtools.enable.installButton;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- This page, hidden by default is displayed once the add-on is installed -->
+  <div id="welcome-page" class="wrapper" hidden="true">
+    <div class="box">
+      <div class="left-pane" />
+      <div class="right-pane">
+        <h1>&aboutDevtools.welcome.title;</h1>
+        <p class="message" id="welcome-message">&aboutDevtools.welcome.message;</p>
+      </div>
+    </div>
+
+    <div class="features">
+      <ul class="features-list">
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-inspector.svg" alt=""/>
+          <h3 class="feature-name">Inspector</h3>
+          <p class="feature-desc">Inspect and refine code to build pixel-perfect layouts.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-console.svg" alt=""/>
+          <h3 class="feature-name">Console</h3>
+          <p class="feature-desc">Track CSS, JavaScript, security and network issues.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-debugger.svg" alt=""/>
+          <h3 class="feature-name">Debugger</h3>
+          <p class="feature-desc">Powerful JavaScript debugger with support for your framework.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-network.svg" alt=""/>
+          <h3 class="feature-name">Network</h3>
+          <p class="feature-desc">Monitor network requests that can slow or block your site.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-storage.svg" alt=""/>
+          <h3 class="feature-name">Storage panel</h3>
+          <p class="feature-desc">Add, modify and remove cache, cookies, databases and session data.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-responsive-mode.svg" alt=""/>
+          <h3 class="feature-name">Responsive Design Mode</h3>
+          <p class="feature-desc">Test sites on emulated devices in your browser.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-visual-editing.svg" alt=""/>
+          <h3 class="feature-name">Visual Editing</h3>
+          <p class="feature-desc">Fine-tune animations, alignment and padding.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-performance.svg" alt=""/>
+          <h3 class="feature-name">Performance</h3>
+          <p class="feature-desc">Unblock bottlenecks, streamline processes, optimize assets.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-memory.svg" alt=""/>
+          <h3 class="feature-name">Memory</h3>
+          <p class="feature-desc">Find memory leaks and make your application zippy.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-web-audio.svg" alt=""/>
+          <h3 class="feature-name">Web Audio</h3>
+          <p class="feature-desc">The only developer tool for inspecting the Web Audio API.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-scratchpad.svg" alt=""/>
+          <h3 class="feature-name">Scratchpad</h3>
+          <p class="feature-desc">Edit, write, run and execute JavaScript in real time.</p>
+        </li>
+
+        <li class="feature">
+          <img class="feature-icon" src="chrome://devtools-shim/content/aboutdevtools/images/feature-style-editor.svg" alt=""/>
+          <h3 class="feature-name">Style Editor</h3>
+          <p class="feature-desc">Edit and manage all your CSS stylesheets in your browser.</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>
