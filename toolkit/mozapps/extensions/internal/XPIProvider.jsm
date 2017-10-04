@@ -5332,6 +5332,10 @@ AddonWrapper.prototype = {
     return isWebExtension(addonFor(this).type);
   },
 
+  get isAPIExtension() {
+    return addonFor(this).type == "apiextension";
+  },
+
   get temporarilyInstalled() {
     return addonFor(this)._installLocation == TemporaryInstallLocation;
   },
