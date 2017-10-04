@@ -41,6 +41,18 @@ MediaResource::Destroy()
 NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
 
+MediaResourceIndex::MediaResourceIndex(MediaResource* aResource)
+  : mResource(aResource)
+  , mOffset(0)
+  , mCacheBlockSize(aResource->ShouldCacheReads()
+                      ? SelectCacheSize(MediaPrefs::MediaResourceIndexCache())
+                      : 0)
+  , mCachedOffset(0)
+  , mCachedBytes(0)
+  , mCachedBlock(MakeUnique<char[]>(mCacheBlockSize))
+{
+}
+
 nsresult
 MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
@@ -498,6 +510,102 @@ MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
   mOffset = aOffset;
 
   return NS_OK;
+}
+
+already_AddRefed<MediaByteBuffer>
+MediaResourceIndex::MediaReadAt(int64_t aOffset, uint32_t aCount) const
+{
+  RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+  if (aOffset < 0) {
+    return bytes.forget();
+  }
+  bool ok = bytes->SetLength(aCount, fallible);
+  NS_ENSURE_TRUE(ok, nullptr);
+  char* curr = reinterpret_cast<char*>(bytes->Elements());
+  const char* start = curr;
+  while (aCount > 0) {
+    uint32_t bytesRead;
+    nsresult rv = mResource->ReadAt(aOffset, curr, aCount, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    if (!bytesRead) {
+      break;
+    }
+    aOffset += bytesRead;
+    if (aOffset < 0) {
+      // Very unlikely overflow.
+      break;
+    }
+    aCount -= bytesRead;
+    curr += bytesRead;
+  }
+  bytes->SetLength(curr - start);
+  return bytes.forget();
+}
+
+already_AddRefed<MediaByteBuffer>
+MediaResourceIndex::CachedMediaReadAt(int64_t aOffset, uint32_t aCount) const
+{
+  RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+  bool ok = bytes->SetLength(aCount, fallible);
+  NS_ENSURE_TRUE(ok, nullptr);
+  char* curr = reinterpret_cast<char*>(bytes->Elements());
+  nsresult rv = mResource->ReadFromCache(curr, aOffset, aCount);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return bytes.forget();
+}
+
+// Get the length of the stream in bytes. Returns -1 if not known.
+// This can change over time; after a seek operation, a misbehaving
+// server may give us a resource of a different length to what it had
+// reported previously --- or it may just lie in its Content-Length
+// header and give us more or less data than it reported. We will adjust
+// the result of GetLength to reflect the data that's actually arriving.
+int64_t
+MediaResourceIndex::GetLength() const
+{
+  return mResource->GetLength();
+}
+
+// Select the next power of 2 (in range 32B-128KB, or 0 -> no cache)
+/* static */
+uint32_t
+MediaResourceIndex::SelectCacheSize(uint32_t aHint)
+{
+  if (aHint == 0) {
+    return 0;
+  }
+  if (aHint <= 32) {
+    return 32;
+  }
+  if (aHint > 64 * 1024) {
+    return 128 * 1024;
+  }
+  // 32-bit next power of 2, from:
+  // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+  aHint--;
+  aHint |= aHint >> 1;
+  aHint |= aHint >> 2;
+  aHint |= aHint >> 4;
+  aHint |= aHint >> 8;
+  aHint |= aHint >> 16;
+  aHint++;
+  return aHint;
+}
+
+uint32_t
+MediaResourceIndex::IndexInCache(int64_t aOffsetInFile) const
+{
+  const uint32_t index = uint32_t(aOffsetInFile) & (mCacheBlockSize - 1);
+  MOZ_ASSERT(index == aOffsetInFile % mCacheBlockSize);
+  return index;
+}
+
+int64_t
+MediaResourceIndex::CacheOffsetContaining(int64_t aOffsetInFile) const
+{
+  const int64_t offset = aOffsetInFile & ~(int64_t(mCacheBlockSize) - 1);
+  MOZ_ASSERT(offset == aOffsetInFile - IndexInCache(aOffsetInFile));
+  return offset;
 }
 
 } // namespace mozilla
