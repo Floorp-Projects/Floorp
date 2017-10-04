@@ -246,7 +246,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         self.add_argument("--verify",
                           action="store_true",
                           default=False,
-                          help="Test verification mode.")
+                          help="Run tests in verification mode: Run many times in different "
+                               "ways, to see if there are intermittent failures.")
 
         self.add_argument("--verify-max-time",
                           type=int,
