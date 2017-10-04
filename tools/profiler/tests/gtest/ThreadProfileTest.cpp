@@ -11,14 +11,14 @@
 
 // Make sure we can initialize our thread profile
 TEST(ThreadProfile, Initialization) {
-  Thread::tid_t tid = 1000;
+  int tid = 1000;
   ThreadInfo info("testThread", tid, true, nullptr);
   info.StartProfiling();
 }
 
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry) {
-  Thread::tid_t tid = 1000;
+  int tid = 1000;
   ThreadInfo info("testThread", tid, true, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
@@ -29,7 +29,7 @@ TEST(ThreadProfile, InsertOneEntry) {
 
 // See if we can insert some entries
 TEST(ThreadProfile, InsertEntriesNoWrap) {
-  Thread::tid_t tid = 1000;
+  int tid = 1000;
   ThreadInfo info("testThread", tid, true, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(100);
   int test_size = 50;
@@ -47,7 +47,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
 
 // See if wrapping works as it should in the basic case
 TEST(ThreadProfile, InsertEntriesWrap) {
-  Thread::tid_t tid = 1000;
+  int tid = 1000;
   // we can fit only 24 entries in this buffer because of the empty slot
   int entries = 24;
   int buffer_size = entries + 1;
