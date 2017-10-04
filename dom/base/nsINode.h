@@ -2087,12 +2087,12 @@ protected:
     mozilla::ErrorResult& aRv);
 
   /**
-   * Parse the given selector string into a SelectorList.
+   * Parse the given selector string a SelectorList, depending on whether we're
+   * in a Servo or Gecko-backed document, and execute either aServoFunctor or
+   * aGeckoFunctor on it.
    *
-   * A null return value with a non-failing aRv means the string only
-   * contained pseudo-element selectors.
-   *
-   * A failing aRv means the string was not a valid selector.
+   * Note that the selector list is owned by the owner doc's selector cache
+   * which can get expired, so you shouldn't keep it around for long.
    */
   template<typename Ret, typename ServoFunctor, typename GeckoFunctor>
   Ret WithSelectorList(
