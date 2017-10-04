@@ -118,7 +118,7 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
         id,
         title: description,
         className: (
-          "command-button command-button-invertable devtools-button "
+          "command-button devtools-button "
           + buttonClass + (isChecked ? " checked" : "")
         ),
         onClick: (event) => {
