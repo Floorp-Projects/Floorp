@@ -217,7 +217,7 @@ langpack-%: libs-%
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) \
 	  -DTK_DEFINES=$(TK_DEFINES) -DAPP_DEFINES=$(APP_DEFINES) $(MOZILLA_DIR)/toolkit/locales/generic/install.rdf -o $(DIST)/xpi-stage/$(XPI_NAME)/install.rdf)
-	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) $(LANGPACK_FILE) install.rdf $(PKG_ZIP_DIRS) chrome.manifest)
+	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.js $(LANGPACK_FILE) install.rdf $(PKG_ZIP_DIRS) chrome.manifest)
 
 langpack-webext-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-webext-%: AB_CD=$*
