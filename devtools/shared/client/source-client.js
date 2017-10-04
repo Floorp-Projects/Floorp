@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {DebuggerClient} = require("./debugger-client");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 loader.lazyRequireGetter(this, "BreakpointClient", "devtools/shared/client/breakpoint-client");
 
 const noop = () => {};
