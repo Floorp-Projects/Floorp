@@ -498,11 +498,14 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // the overflow area, so just add nsDisplayCanvasBackground instead of
   // calling DisplayBorderBackgroundOutline.
   if (IsVisibleForPainting(aBuilder)) {
-    nsStyleContext* bgSC;
     const nsStyleBackground* bg = nullptr;
+    nsIFrame* dependentFrame = nullptr;
     bool isThemed = IsThemed();
-    if (!isThemed && nsCSSRendering::FindBackground(this, &bgSC)) {
-      bg = bgSC->StyleBackground();
+    if (!isThemed && nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
+      bg = dependentFrame->StyleContext()->StyleBackground();
+      if (dependentFrame == this) {
+        dependentFrame = nullptr;
+      }
     }
     aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
@@ -565,12 +568,15 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
           bgImageClip.Clear();
           bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
+          bgItem->SetDependentFrame(aBuilder, dependentFrame);
         }
         thisItemList.AppendNewToTop(
           nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
 
       } else {
-        thisItemList.AppendNewToTop(new (aBuilder) nsDisplayCanvasBackgroundImage(bgData));
+        nsDisplayCanvasBackgroundImage* bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
+        bgItem->SetDependentFrame(aBuilder, dependentFrame);
+        thisItemList.AppendNewToTop(bgItem);
       }
 
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {

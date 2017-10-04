@@ -2479,6 +2479,11 @@ public:
     return mFrame->GetContent() == aOther->Frame()->GetContent();
   }
 
+  virtual nsIFrame* GetDependentFrame()
+  {
+    return nullptr;
+  }
+
 protected:
   nsDisplayItem() = delete;
 
@@ -3475,7 +3480,8 @@ public:
                               const nsStyleBackground* aBackgroundStyle,
                               LayerizeFixed aLayerizeFixed);
 
-  explicit nsDisplayBackgroundImage(const InitData& aInitData);
+  explicit nsDisplayBackgroundImage(const InitData& aInitData,
+                                    nsIFrame* aFrameForBounds = nullptr);
   virtual ~nsDisplayBackgroundImage();
 
   // This will create and append new items for all the layers of the
@@ -3565,13 +3571,38 @@ public:
     return mShouldFixToViewport;
   }
 
+  virtual nsIFrame* GetDependentFrame() override
+  {
+    return mDependentFrame;
+  }
+
+  void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  {
+    if (!aBuilder->IsRetainingDisplayList()) {
+      return;
+    }
+    mDependentFrame = aFrame;
+    if (aFrame) {
+      mDependentFrame->AddDisplayItem(this);
+    }
+  }
+
+  virtual void RemoveFrame(nsIFrame* aFrame) override
+  {
+    if (aFrame == mDependentFrame) {
+      mDependentFrame = nullptr;
+    }
+    nsDisplayItem::RemoveFrame(aFrame);
+  }
+
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
   bool CanBuildWebRenderDisplayItems(LayerManager* aManager);
   bool TryOptimizeToImageLayer(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
-  nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
+  nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
+                           nsIFrame* aFrameForBounds = nullptr);
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -3592,6 +3623,7 @@ protected:
   // mIsThemed is true or if FindBackground returned false.
   const nsStyleBackground* mBackgroundStyle;
   nsCOMPtr<imgIContainer> mImage;
+  nsIFrame* mDependentFrame;
   nsRect mBackgroundRect; // relative to the reference frame
   nsRect mFillRect;
   nsRect mDestRect;
@@ -3725,9 +3757,16 @@ public:
     : nsDisplayItem(aBuilder, aFrame)
     , mBackgroundRect(aBackgroundRect)
     , mBackgroundStyle(aBackgroundStyle)
+    , mDependentFrame(nullptr)
     , mColor(Color::FromABGR(aColor))
   {
     mState.mColor = mColor;
+  }
+  virtual ~nsDisplayBackgroundColor()
+  {
+    if (mDependentFrame) {
+      mDependentFrame->RemoveDisplayItem(this);
+    }
   }
 
   virtual void RestoreState() override
@@ -3784,13 +3823,39 @@ public:
     ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
   }
 
+  virtual nsIFrame* GetDependentFrame() override
+  {
+    return mDependentFrame;
+  }
+
+  void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  {
+    if (!aBuilder->IsRetainingDisplayList()) {
+      return;
+    }
+    mDependentFrame = aFrame;
+    if (aFrame) {
+      mDependentFrame->AddDisplayItem(this);
+    }
+  }
+
+  virtual void RemoveFrame(nsIFrame* aFrame) override
+  {
+    if (aFrame == mDependentFrame) {
+      mDependentFrame = nullptr;
+    }
+    nsDisplayItem::RemoveFrame(aFrame);
+  }
+
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
 protected:
   const nsRect mBackgroundRect;
   const nsStyleBackground* mBackgroundStyle;
+  nsIFrame* mDependentFrame;
   mozilla::gfx::Color mColor;
+
   struct {
     mozilla::gfx::Color mColor;
   } mState;
