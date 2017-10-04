@@ -92,7 +92,7 @@ function waitForPopupPositioned(actionFn, callback)
 {
   panel.addEventListener("popuppositioned", function listener() {
     panel.removeEventListener("popuppositioned", listener, false);
-    callback();
+    SimpleTest.executeSoon(callback);
   }, false);
   actionFn();
 }
@@ -173,26 +173,38 @@ var tests = [
   ['simpleMoveToAnchorHorizontal', 'middle', function(next) {
     openPopup("after_end", function() {
       isArrowPositionedOn("right");
-      panel.moveToAnchor(anchor, "after_end", 20, 0);
-      // the anchor and the panel should have moved 20px right without flipping.
-      isArrowPositionedOn("right", 20);
-      panel.moveToAnchor(anchor, "after_end", -20, 0);
-      // the anchor and the panel should have moved 20px left without flipping.
-      isArrowPositionedOn("right", -20);
-      next();
+      waitForPopupPositioned(
+       () => { panel.moveToAnchor(anchor, "after_end", 20, 0); },
+       () => {
+         // the anchor and the panel should have moved 20px right without flipping.
+         isArrowPositionedOn("right", 20);
+         waitForPopupPositioned(
+           () => { panel.moveToAnchor(anchor, "after_end", -20, 0);  },
+           () => {
+             // the anchor and the panel should have moved 20px left without flipping.
+             isArrowPositionedOn("right", -20);
+             next();
+          });
+       });
     });
   }],
 
   ['simpleMoveToAnchorVertical', 'middle', function(next) {
     openPopup("start_after", function() {
       isArrowPositionedOn("bottom");
-      panel.moveToAnchor(anchor, "start_after", 0, 20);
-      // the anchor and the panel should have moved 20px down without flipping.
-      isArrowPositionedOn("bottom", 20);
-      panel.moveToAnchor(anchor, "start_after", 0, -20);
-      // the anchor and the panel should have moved 20px up without flipping.
-      isArrowPositionedOn("bottom", -20);
-      next();
+      waitForPopupPositioned(
+       () => { panel.moveToAnchor(anchor, "start_after", 0, 20); },
+       () => {
+         // the anchor and the panel should have moved 20px down without flipping.
+         isArrowPositionedOn("bottom", 20);
+         waitForPopupPositioned(
+           () => { panel.moveToAnchor(anchor, "start_after", 0, -20) },
+           () => {
+             // the anchor and the panel should have moved 20px up without flipping.
+             isArrowPositionedOn("bottom", -20);
+             next();
+          });
+       });
     });
   }],
 
