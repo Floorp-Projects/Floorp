@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nssrenam.h"
+#include "nss.h"
 #include "p12t.h"
 #include "p12.h"
 #include "plarena.h"
@@ -126,6 +127,7 @@ struct SEC_PKCS12DecoderContextStr {
     SECKEYGetPasswordKey pwfn;
     void *pwfnarg;
     PRBool swapUnicodeBytes;
+    PRBool forceUnicode;
 
     /* import information */
     PRBool bagsVerified;
@@ -192,8 +194,18 @@ sec_pkcs12_decoder_get_decrypt_key(void *arg, SECAlgorithmID *algid)
     }
 
     algorithm = SECOID_GetAlgorithmTag(algid);
-    if (!sec_pkcs12_decode_password(NULL, &pwitem, algorithm, p12dcx->pwitem))
-        return NULL;
+
+    if (p12dcx->forceUnicode) {
+        if (SECITEM_CopyItem(NULL, &pwitem, p12dcx->pwitem) != SECSuccess) {
+            PK11_FreeSlot(slot);
+            return NULL;
+        }
+    } else {
+        if (!sec_pkcs12_decode_password(NULL, &pwitem, algorithm, p12dcx->pwitem)) {
+            PK11_FreeSlot(slot);
+            return NULL;
+        }
+    }
 
     bulkKey = PK11_PBEKeyGen(slot, algid, &pwitem, PR_FALSE, p12dcx->wincx);
     /* some tokens can't generate PBE keys on their own, generate the
@@ -1164,6 +1176,8 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 {
     SEC_PKCS12DecoderContext *p12dcx;
     PLArenaPool *arena;
+    PRInt32 forceUnicode = PR_FALSE;
+    SECStatus rv;
 
     arena = PORT_NewArena(2048); /* different size? */
     if (!arena) {
@@ -1196,6 +1210,11 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 #else
     p12dcx->swapUnicodeBytes = PR_FALSE;
 #endif
+    rv = NSS_OptionGet(__NSS_PKCS12_DECODE_FORCE_UNICODE, &forceUnicode);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    p12dcx->forceUnicode = forceUnicode;
     p12dcx->errorValue = 0;
     p12dcx->error = PR_FALSE;
 
@@ -2428,7 +2447,7 @@ sec_pkcs12_get_public_value_and_type(SECKEYPublicKey *pubKey, KeyType *type);
 static SECStatus
 sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECKEYPublicKey *pubKey,
                    unsigned int keyUsage,
-                   SECItem *nickName, void *wincx)
+                   SECItem *nickName, PRBool forceUnicode, void *wincx)
 {
     SECStatus rv;
     SECItem *publicValue = NULL;
@@ -2466,9 +2485,21 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECKEYPublicKey *pubKey,
                 &key->safeBagContent.pkcs8ShroudedKeyBag->algorithm;
             SECOidTag algorithm = SECOID_GetAlgorithmTag(algid);
 
-            if (!sec_pkcs12_decode_password(NULL, &pwitem, algorithm,
-                                            key->pwitem))
-                return SECFailure;
+            if (forceUnicode) {
+                if (SECITEM_CopyItem(NULL, &pwitem, key->pwitem) != SECSuccess) {
+                    key->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+                    key->problem = PR_TRUE;
+                    return SECFailure;
+                }
+            } else {
+                if (!sec_pkcs12_decode_password(NULL, &pwitem, algorithm,
+                                                key->pwitem)) {
+                    key->error = SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY;
+                    key->problem = PR_TRUE;
+                    return SECFailure;
+                }
+            }
+
             rv = PK11_ImportEncryptedPrivateKeyInfo(key->slot,
                                                     key->safeBagContent.pkcs8ShroudedKeyBag,
                                                     &pwitem, nickName, publicValue,
@@ -2923,7 +2954,8 @@ sec_pkcs12_get_public_value_and_type(SECKEYPublicKey *pubKey,
  * two passes in sec_pkcs12_validate_bags.
  */
 static SECStatus
-sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, void *wincx)
+sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, PRBool forceUnicode,
+                        void *wincx)
 {
     sec_PKCS12SafeBag **keyList;
     int i;
@@ -2976,7 +3008,8 @@ sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, void *wincx)
                 key->problem = PR_TRUE;
                 rv = SECFailure;
             } else {
-                rv = sec_pkcs12_add_key(key, pubKey, keyUsage, nickName, wincx);
+                rv = sec_pkcs12_add_key(key, pubKey, keyUsage, nickName,
+                                        forceUnicode, wincx);
             }
             if (pubKey) {
                 SECKEY_DestroyPublicKey(pubKey);
@@ -3053,6 +3086,9 @@ sec_pkcs12_install_bags(sec_PKCS12SafeBag **safeBags, void *wincx)
 SECStatus
 SEC_PKCS12DecoderImportBags(SEC_PKCS12DecoderContext *p12dcx)
 {
+    PRBool forceUnicode = PR_FALSE;
+    SECStatus rv;
+
     if (!p12dcx || p12dcx->error) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -3062,7 +3098,16 @@ SEC_PKCS12DecoderImportBags(SEC_PKCS12DecoderContext *p12dcx)
         return SECFailure;
     }
 
-    return sec_pkcs12_install_bags(p12dcx->safeBags, p12dcx->wincx);
+    /* We need to check the option here as well as in
+     * SEC_PKCS12DecoderStart, because different PBE's could be used
+     * for PKCS #7 and PKCS #8 */
+    rv = NSS_OptionGet(__NSS_PKCS12_DECODE_FORCE_UNICODE, &forceUnicode);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    return sec_pkcs12_install_bags(p12dcx->safeBags, forceUnicode,
+                                   p12dcx->wincx);
 }
 
 PRBool

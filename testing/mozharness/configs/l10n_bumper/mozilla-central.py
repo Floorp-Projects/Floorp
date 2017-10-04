@@ -35,7 +35,7 @@ config = {
             "path": "mobile/android/locales/maemo-locales"
         }],
     }, {
-        "path": "browser/locales/central-changesets.json",
+        "path": "browser/locales/l10n-changesets.json",
         "format": "json",
         "name": "Firefox l10n changesets",
         "ignore_config": {

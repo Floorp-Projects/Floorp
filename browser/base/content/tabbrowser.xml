@@ -8084,7 +8084,6 @@
       <![CDATA[
         if (this.selected) {
           this.style.MozUserFocus = "ignore";
-          this.clientTop; // just using this to flush style updates
         } else if (this.mOverCloseButton ||
                    this._overPlayingIcon) {
           // Prevent tabbox.xml from selecting the tab.

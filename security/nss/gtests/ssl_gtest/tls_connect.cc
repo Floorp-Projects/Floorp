@@ -113,6 +113,7 @@ TlsConnectTestBase::TlsConnectTestBase(SSLProtocolVariant variant,
       server_model_(nullptr),
       version_(version),
       expected_resumption_mode_(RESUME_NONE),
+      expected_resumptions_(0),
       session_ids_(),
       expect_extended_master_secret_(false),
       expect_early_data_accepted_(false),
@@ -220,12 +221,15 @@ void TlsConnectTestBase::Reset(const std::string& server_name,
   Init();
 }
 
-void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected) {
+void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected,
+                                          uint8_t num_resumptions) {
   expected_resumption_mode_ = expected;
   if (expected != RESUME_NONE) {
     client_->ExpectResumption();
     server_->ExpectResumption();
+    expected_resumptions_ = num_resumptions;
   }
+  EXPECT_EQ(expected_resumptions_ == 0, expected == RESUME_NONE);
 }
 
 void TlsConnectTestBase::EnsureTlsSetup() {
@@ -315,10 +319,12 @@ void TlsConnectTestBase::CheckConnected() {
 void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type, SSLNamedGroup kea_group,
                                    SSLAuthType auth_type,
                                    SSLSignatureScheme sig_scheme) const {
-  client_->CheckKEA(kea_type, kea_group);
-  server_->CheckKEA(kea_type, kea_group);
-  client_->CheckAuthType(auth_type, sig_scheme);
+  if (kea_group != ssl_grp_none) {
+    client_->CheckKEA(kea_type, kea_group);
+    server_->CheckKEA(kea_type, kea_group);
+  }
   server_->CheckAuthType(auth_type, sig_scheme);
+  client_->CheckAuthType(auth_type, sig_scheme);
 }
 
 void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type,
@@ -371,6 +377,17 @@ void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type,
 
 void TlsConnectTestBase::CheckKeys() const {
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
+
+void TlsConnectTestBase::CheckKeysResumption(SSLKEAType kea_type,
+                                             SSLNamedGroup kea_group,
+                                             SSLNamedGroup original_kea_group,
+                                             SSLAuthType auth_type,
+                                             SSLSignatureScheme sig_scheme) {
+  CheckKeys(kea_type, kea_group, auth_type, sig_scheme);
+  EXPECT_TRUE(expected_resumption_mode_ != RESUME_NONE);
+  client_->CheckOriginalKEA(original_kea_group);
+  server_->CheckOriginalKEA(original_kea_group);
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {
@@ -477,8 +494,8 @@ void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,
 void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
   EXPECT_NE(RESUME_BOTH, expected);
 
-  int resume_count = expected ? 1 : 0;
-  int stateless_count = (expected & RESUME_TICKET) ? 1 : 0;
+  int resume_count = expected ? expected_resumptions_ : 0;
+  int stateless_count = (expected & RESUME_TICKET) ? expected_resumptions_ : 0;
 
   // Note: hch == server counter; hsh == client counter.
   SSL3Statistics* stats = SSL_GetStatistics();
@@ -491,7 +508,7 @@ void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
   if (expected != RESUME_NONE) {
     if (client_->version() < SSL_LIBRARY_VERSION_TLS_1_3) {
       // Check that the last two session ids match.
-      ASSERT_EQ(2U, session_ids_.size());
+      ASSERT_EQ(1U + expected_resumptions_, session_ids_.size());
       EXPECT_EQ(session_ids_[session_ids_.size() - 1],
                 session_ids_[session_ids_.size() - 2]);
     } else {

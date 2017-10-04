@@ -64,6 +64,7 @@ public:
   // Got/release pointer capture of the specified pointer by the content.
   static void SetPointerCaptureById(uint32_t aPointerId, nsIContent* aContent);
   static void ReleasePointerCaptureById(uint32_t aPointerId);
+  static void ReleaseAllPointerCapture();
 
   // Get the pointer captured info of the specified pointer.
   static PointerCaptureInfo* GetPointerCaptureInfo(uint32_t aPointerId);

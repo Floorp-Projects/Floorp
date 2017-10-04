@@ -495,6 +495,12 @@ void TlsAgent::CheckKEA(SSLKEAType kea_type, SSLNamedGroup kea_group,
   }
 }
 
+void TlsAgent::CheckOriginalKEA(SSLNamedGroup kea_group) const {
+  if (kea_group != ssl_grp_ffdhe_custom) {
+    EXPECT_EQ(kea_group, info_.originalKeaGroup);
+  }
+}
+
 void TlsAgent::CheckAuthType(SSLAuthType auth_type,
                              SSLSignatureScheme sig_scheme) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
@@ -719,6 +725,8 @@ void TlsAgent::Connected() {
   SECStatus rv = SSL_GetChannelInfo(ssl_fd(), &info_, sizeof(info_));
   EXPECT_EQ(SECSuccess, rv);
   EXPECT_EQ(sizeof(info_), info_.length);
+
+  EXPECT_EQ(expect_resumption_, info_.resumed == PR_TRUE);
 
   // Preliminary values are exposed through callbacks during the handshake.
   // If either expected values were set or the callbacks were called, check

@@ -1865,10 +1865,10 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
     MOZ_ASSERT(activation_->isProfiling());
 
     static_assert(sizeof(wasm::ProfilingFrameIterator) <= StorageSpace &&
-                  sizeof(jit::JitProfilingFrameIterator) <= StorageSpace,
+                  sizeof(jit::JSJitProfilingFrameIterator) <= StorageSpace,
                   "ProfilingFrameIterator::storage_ is too small");
     static_assert(alignof(void*) >= alignof(wasm::ProfilingFrameIterator) &&
-                  alignof(void*) >= alignof(jit::JitProfilingFrameIterator),
+                  alignof(void*) >= alignof(jit::JSJitProfilingFrameIterator),
                   "ProfilingFrameIterator::storage_ is too weakly aligned");
 
     iteratorConstruct(state);
@@ -1891,7 +1891,7 @@ JS::ProfilingFrameIterator::operator++()
     if (isWasm())
         ++wasmIter();
     else
-        ++jitIter();
+        ++jsJitIter();
     settle();
 }
 
@@ -1899,8 +1899,8 @@ void
 JS::ProfilingFrameIterator::settleFrames()
 {
     // Handle transition frames (see comment in JitFrameIter::operator++).
-    if (isJit() && !jitIter().done() && jitIter().frameType() == jit::JitFrame_WasmToJSJit) {
-        wasm::Frame* fp = (wasm::Frame*) jitIter().fp();
+    if (isJSJit() && !jsJitIter().done() && jsJitIter().frameType() == jit::JitFrame_WasmToJSJit) {
+        wasm::Frame* fp = (wasm::Frame*) jsJitIter().fp();
         iteratorDestroy();
         new (storage()) wasm::ProfilingFrameIterator(*activation_->asJit(), fp);
         kind_ = Kind::Wasm;
@@ -1943,7 +1943,7 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
         return;
     }
 
-    new (storage()) jit::JitProfilingFrameIterator(cx_, state);
+    new (storage()) jit::JSJitProfilingFrameIterator(cx_, state);
     kind_ = Kind::JSJit;
 }
 
@@ -1964,7 +1964,7 @@ JS::ProfilingFrameIterator::iteratorConstruct()
         return;
     }
 
-    new (storage()) jit::JitProfilingFrameIterator(activation->jsExitFP());
+    new (storage()) jit::JSJitProfilingFrameIterator(activation->jsExitFP());
     kind_ = Kind::JSJit;
 }
 
@@ -1979,7 +1979,7 @@ JS::ProfilingFrameIterator::iteratorDestroy()
         return;
     }
 
-    jitIter().~JitProfilingFrameIterator();
+    jsJitIter().~JSJitProfilingFrameIterator();
 }
 
 bool
@@ -1991,7 +1991,7 @@ JS::ProfilingFrameIterator::iteratorDone()
     if (isWasm())
         return wasmIter().done();
 
-    return jitIter().done();
+    return jsJitIter().done();
 }
 
 void*
@@ -2003,7 +2003,7 @@ JS::ProfilingFrameIterator::stackAddress() const
     if (isWasm())
         return wasmIter().stackAddress();
 
-    return jitIter().stackAddress();
+    return jsJitIter().stackAddress();
 }
 
 Maybe<JS::ProfilingFrameIterator::Frame>
@@ -2021,10 +2021,10 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
         return mozilla::Some(frame);
     }
 
-    MOZ_ASSERT(isJit());
+    MOZ_ASSERT(isJSJit());
 
     // Look up an entry for the return address.
-    void* returnAddr = jitIter().returnAddressToFp();
+    void* returnAddr = jsJitIter().returnAddressToFp();
     jit::JitcodeGlobalTable* table = cx_->runtime()->jitRuntime()->getJitcodeGlobalTable();
     if (hasSampleBufferGen())
         *entry = table->lookupForSamplerInfallible(returnAddr, cx_->runtime(), sampleBufferGen_);
@@ -2067,7 +2067,7 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
 
     // Extract the stack for the entry.  Assume maximum inlining depth is <64
     const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(cx_->runtime(), jitIter().returnAddressToFp(),
+    uint32_t depth = entry.callStackAtAddr(cx_->runtime(), jsJitIter().returnAddressToFp(),
                                            labels, ArrayLength(labels));
     MOZ_ASSERT(depth < ArrayLength(labels));
     for (uint32_t i = 0; i < depth; i++) {
@@ -2095,7 +2095,7 @@ JS::ProfilingFrameIterator::isWasm() const
 }
 
 bool
-JS::ProfilingFrameIterator::isJit() const
+JS::ProfilingFrameIterator::isJSJit() const
 {
     return kind_ == Kind::JSJit;
 }

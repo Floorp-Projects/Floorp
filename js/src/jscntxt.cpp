@@ -1609,6 +1609,17 @@ JSContext::findVersion()
     return runtime()->defaultVersion();
 }
 
+void
+JSContext::updateMallocCounter(size_t nbytes)
+{
+    if (!zone()) {
+        runtime()->updateMallocCounter(nbytes);
+        return;
+    }
+
+    zone()->updateMallocCounter(nbytes);
+}
+
 #ifdef DEBUG
 
 JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext* cxArg)

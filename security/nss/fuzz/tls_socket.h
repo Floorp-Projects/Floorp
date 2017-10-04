@@ -10,6 +10,7 @@
 class DummyPrSocket : public DummyIOLayerMethods {
  public:
   DummyPrSocket(const uint8_t *buf, size_t len) : buf_(buf), len_(len) {}
+  virtual ~DummyPrSocket() {}
 
   int32_t Read(PRFileDesc *f, void *data, int32_t len) override;
   int32_t Write(PRFileDesc *f, const void *buf, int32_t length) override;

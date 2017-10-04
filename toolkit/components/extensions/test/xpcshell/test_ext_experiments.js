@@ -151,6 +151,31 @@ add_task(async function test_experiments_api() {
   let hello = await promise;
   equal(hello, "Here I am", "Should get hello from add-on");
 
+  // Install management test add-on.
+  let managementAddon = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {gecko: {id: "management@web.extension"}},
+      permissions: ["management"],
+    },
+    async background() {
+      // Should find the simple extension.
+      let normalAddon = await browser.management.get("boring@web.extension");
+      browser.test.assertEq(normalAddon.id, "boring@web.extension", "Found boring addon");
+
+      try {
+        // Not allowed to get the API experiment.
+        await browser.management.get("fooBar@experiments.addons.mozilla.org");
+      } catch (e) {
+        browser.test.sendMessage("done");
+      }
+    },
+    useAddonManager: "temporary",
+  });
+
+  await managementAddon.startup();
+  await managementAddon.awaitMessage("done");
+  await managementAddon.unload();
+
   // Cleanup.
   apiAddon.uninstall();
 

@@ -6054,35 +6054,14 @@ ssl3_SendRSAClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
         goto loser;
     }
 
-#ifdef NSS_ALLOW_SSLKEYLOGFILE
-    if (ssl_keylog_iob) {
+#ifdef TRACE
+    if (ssl_trace >= 100) {
         SECStatus extractRV = PK11_ExtractKeyValue(pms);
         if (extractRV == SECSuccess) {
             SECItem *keyData = PK11_GetKeyData(pms);
             if (keyData && keyData->data && keyData->len) {
-#ifdef TRACE
-                if (ssl_trace >= 100) {
-                    ssl_PrintBuf(ss, "Pre-Master Secret",
-                                 keyData->data, keyData->len);
-                }
-#endif
-                if (ssl_keylog_iob && enc_pms.len >= 8 && keyData->len == 48) {
-                    /* https://developer.mozilla.org/en/NSS_Key_Log_Format */
-
-                    /* There could be multiple, concurrent writers to the
-                     * keylog, so we have to do everything in a single call to
-                     * fwrite. */
-                    char buf[4 + 8 * 2 + 1 + 48 * 2 + 1];
-
-                    strcpy(buf, "RSA ");
-                    hexEncode(buf + 4, enc_pms.data, 8);
-                    buf[20] = ' ';
-                    hexEncode(buf + 21, keyData->data, 48);
-                    buf[sizeof(buf) - 1] = '\n';
-
-                    fwrite(buf, sizeof(buf), 1, ssl_keylog_iob);
-                    fflush(ssl_keylog_iob);
-                }
+                ssl_PrintBuf(ss, "Pre-Master Secret",
+                             keyData->data, keyData->len);
             }
         }
     }
@@ -6930,6 +6909,8 @@ ssl3_HandleServerHelloPart2(sslSocket *ss, const SECItem *sidBytes,
             ss->sec.authKeyBits = sid->authKeyBits;
             ss->sec.keaType = sid->keaType;
             ss->sec.keaKeyBits = sid->keaKeyBits;
+            ss->sec.originalKeaGroup = ssl_LookupNamedGroup(sid->keaGroup);
+            ss->sec.signatureScheme = sid->sigScheme;
 
             if (sid->u.ssl3.keys.msIsWrapped) {
                 PK11SlotInfo *slot;
@@ -7940,6 +7921,7 @@ ssl3_NewSessionID(sslSocket *ss, PRBool is_server)
     sid->references = 1;
     sid->cached = never_cached;
     sid->version = ss->version;
+    sid->sigScheme = ssl_sig_none;
 
     sid->u.ssl3.keys.resumable = PR_TRUE;
     sid->u.ssl3.policy = SSL_ALLOWED;
@@ -8913,6 +8895,8 @@ compression_found:
             ss->sec.authKeyBits = sid->authKeyBits;
             ss->sec.keaType = sid->keaType;
             ss->sec.keaKeyBits = sid->keaKeyBits;
+            ss->sec.originalKeaGroup = ssl_LookupNamedGroup(sid->keaGroup);
+            ss->sec.signatureScheme = sid->sigScheme;
 
             ss->sec.localCert =
                 CERT_DupCertificate(ss->sec.serverCert->serverCert);
@@ -8984,6 +8968,7 @@ compression_found:
     }
 
     if (sid) { /* we had a sid, but it's no longer valid, free it */
+        ss->statelessResume = PR_FALSE;
         SSL_AtomicIncrementLong(&ssl3stats.hch_sid_cache_not_ok);
         ss->sec.uncache(sid);
         ssl_FreeSID(sid);
@@ -11160,40 +11145,44 @@ ssl3_SendNextProto(sslSocket *ss)
     return rv;
 }
 
-/* called from ssl3_SendFinished
+/* called from ssl3_SendFinished and tls13_DeriveSecret.
  *
  * This function is simply a debugging aid and therefore does not return a
  * SECStatus. */
-static void
-ssl3_RecordKeyLog(sslSocket *ss)
+void
+ssl3_RecordKeyLog(sslSocket *ss, const char *label, PK11SymKey *secret)
 {
 #ifdef NSS_ALLOW_SSLKEYLOGFILE
     SECStatus rv;
     SECItem *keyData;
-    char buf[14 /* "CLIENT_RANDOM " */ +
-             SSL3_RANDOM_LENGTH * 2 /* client_random */ +
-             1 /* " " */ +
-             48 * 2 /* master secret */ +
-             1 /* new line */];
-    unsigned int j;
+    /* Longest label is "CLIENT_HANDSHAKE_TRAFFIC_SECRET", master secret is 48
+     * bytes which happens to be the largest in TLS 1.3 as well (SHA384).
+     * Maximum line length: "CLIENT_HANDSHAKE_TRAFFIC_SECRET" (31) + " " (1) +
+     * client_random (32*2) + " " (1) +
+     * traffic_secret (48*2) + "\n" (1) = 194. */
+    char buf[200];
+    unsigned int offset, len;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     if (!ssl_keylog_iob)
         return;
 
-    rv = PK11_ExtractKeyValue(ss->ssl3.cwSpec->master_secret);
+    rv = PK11_ExtractKeyValue(secret);
     if (rv != SECSuccess)
         return;
 
-    ssl_GetSpecReadLock(ss);
-
     /* keyData does not need to be freed. */
-    keyData = PK11_GetKeyData(ss->ssl3.cwSpec->master_secret);
-    if (!keyData || !keyData->data || keyData->len != 48) {
-        ssl_ReleaseSpecReadLock(ss);
+    keyData = PK11_GetKeyData(secret);
+    if (!keyData || !keyData->data)
         return;
-    }
+
+    len = strlen(label) + 1 +          /* label + space */
+          SSL3_RANDOM_LENGTH * 2 + 1 + /* client random (hex) + space */
+          keyData->len * 2 + 1;        /* secret (hex) + newline */
+    PORT_Assert(len <= sizeof(buf));
+    if (len > sizeof(buf))
+        return;
 
     /* https://developer.mozilla.org/en/NSS_Key_Log_Format */
 
@@ -11201,23 +11190,22 @@ ssl3_RecordKeyLog(sslSocket *ss)
      * keylog, so we have to do everything in a single call to
      * fwrite. */
 
-    memcpy(buf, "CLIENT_RANDOM ", 14);
-    j = 14;
-    hexEncode(buf + j, ss->ssl3.hs.client_random.rand, SSL3_RANDOM_LENGTH);
-    j += SSL3_RANDOM_LENGTH * 2;
-    buf[j++] = ' ';
-    hexEncode(buf + j, keyData->data, 48);
-    j += 48 * 2;
-    buf[j++] = '\n';
+    strcpy(buf, label);
+    offset = strlen(label);
+    buf[offset++] += ' ';
+    hexEncode(buf + offset, ss->ssl3.hs.client_random.rand, SSL3_RANDOM_LENGTH);
+    offset += SSL3_RANDOM_LENGTH * 2;
+    buf[offset++] = ' ';
+    hexEncode(buf + offset, keyData->data, keyData->len);
+    offset += keyData->len * 2;
+    buf[offset++] = '\n';
 
-    PORT_Assert(j == sizeof(buf));
+    PORT_Assert(offset == len);
 
-    ssl_ReleaseSpecReadLock(ss);
-
-    if (fwrite(buf, sizeof(buf), 1, ssl_keylog_iob) != 1)
-        return;
-    fflush(ssl_keylog_iob);
-    return;
+    PZ_Lock(ssl_keylog_lock);
+    if (fwrite(buf, len, 1, ssl_keylog_iob) == 1)
+        fflush(ssl_keylog_iob);
+    PZ_Unlock(ssl_keylog_lock);
 #endif
 }
 
@@ -11284,7 +11272,7 @@ ssl3_SendFinished(sslSocket *ss, PRInt32 flags)
         goto fail; /* error code set by ssl3_FlushHandshake */
     }
 
-    ssl3_RecordKeyLog(ss);
+    ssl3_RecordKeyLog(ss, "CLIENT_RANDOM", ss->ssl3.cwSpec->master_secret);
 
     return SECSuccess;
 
@@ -11554,6 +11542,12 @@ ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid)
     sid->authKeyBits = ss->sec.authKeyBits;
     sid->keaType = ss->sec.keaType;
     sid->keaKeyBits = ss->sec.keaKeyBits;
+    if (ss->sec.keaGroup) {
+        sid->keaGroup = ss->sec.keaGroup->name;
+    } else {
+        sid->keaGroup = ssl_grp_none;
+    }
+    sid->sigScheme = ss->sec.signatureScheme;
     sid->lastAccessTime = sid->creationTime = ssl_Time();
     sid->expirationTime = sid->creationTime + ssl3_sid_timeout;
     sid->localCert = CERT_DupCertificate(ss->sec.localCert);

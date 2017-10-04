@@ -168,6 +168,17 @@ PointerEventHandler::ReleasePointerCaptureById(uint32_t aPointerId)
   }
 }
 
+/* static */ void
+PointerEventHandler::ReleaseAllPointerCapture()
+{
+  for (auto iter = sPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
+    PointerCaptureInfo* data = iter.UserData();
+    if (data && data->mPendingContent) {
+      ReleasePointerCaptureById(iter.Key());
+    }
+  }
+}
+
 /* static */ bool
 PointerEventHandler::GetPointerInfo(uint32_t aPointerId, bool& aActiveState)
 {
