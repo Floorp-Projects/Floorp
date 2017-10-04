@@ -253,7 +253,6 @@ ConstructPlanarYCbCrData(const VideoInfo& aInfo,
   data.mPicSize = aPicture.Size();
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;
-  data.mDepth = aBuffer.mDepth;
   return data;
 }
 
