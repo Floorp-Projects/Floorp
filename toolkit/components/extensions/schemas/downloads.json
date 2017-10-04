@@ -387,7 +387,7 @@
                 "optional": true
               },
               "saveAs": {
-                "description": "Use a file-chooser to allow the user to select a filename.",
+                "description": "Use a file-chooser to allow the user to select a filename. If the option is not specified, the file chooser will be shown only if the Firefox \"Always ask you where to save files\" option is enabled (i.e. the pref <code>browser.download.useDownloadDir</code> is set to <code>false</code>).",
                 "optional": true,
                 "type": "boolean"
               },

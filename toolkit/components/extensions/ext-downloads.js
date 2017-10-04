@@ -46,6 +46,8 @@ const FORBIDDEN_HEADERS = ["ACCEPT-CHARSET", "ACCEPT-ENCODING",
 
 const FORBIDDEN_PREFIXES = /^PROXY-|^SEC-/i;
 
+const PROMPTLESS_DOWNLOAD_PREF = "browser.download.useDownloadDir";
+
 class DownloadItem {
   constructor(id, download, extension) {
     this.id = id;
@@ -481,6 +483,17 @@ this.downloads = class extends ExtensionAPI {
 
             let target = OS.Path.join(downloadsDir, filename || "download");
 
+            let saveAs;
+            if (options.saveAs !== null) {
+              saveAs = options.saveAs;
+            } else {
+              // If options.saveAs was not specified, only show the file chooser
+              // if |browser.download.useDownloadDir == false|. That is to say,
+              // only show the file chooser if Firefox normally shows it when
+              // a file is downloaded.
+              saveAs = !Services.prefs.getBoolPref(PROMPTLESS_DOWNLOAD_PREF, true);
+            }
+
             // Create any needed subdirectories if required by filename.
             const dir = OS.Path.dirname(target);
             await OS.File.makeDir(dir, {from: downloadsDir});
@@ -494,7 +507,7 @@ this.downloads = class extends ExtensionAPI {
                 case "uniquify":
                 default:
                   target = DownloadPaths.createNiceUniqueFile(new FileUtils.File(target)).path;
-                  if (options.saveAs) {
+                  if (saveAs) {
                     // createNiceUniqueFile actually creates the file, which
                     // is premature if we need to show a SaveAs dialog.
                     await OS.File.remove(target);
@@ -506,7 +519,7 @@ this.downloads = class extends ExtensionAPI {
               }
             }
 
-            if (!options.saveAs) {
+            if (!saveAs) {
               return target;
             }
 
