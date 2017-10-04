@@ -127,10 +127,6 @@ using mozilla::dom::FakePluginMimeEntry;
     }                                                                \
   }
 
-// this is the name of the directory which will be created
-// to cache temporary files.
-#define kPluginTmpDirName NS_LITERAL_CSTRING("plugtmp")
-
 static const char *kPrefWhitelist = "plugin.allowed_types";
 static const char *kPrefLoadInParentPrefix = "plugin.load_in_parent_process.";
 static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_types";
@@ -670,27 +666,6 @@ void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag)
                                                  nsITimer::TYPE_ONE_SHOT);
     }
   }
-}
-
-nsresult
-nsPluginHost::GetPluginTempDir(nsIFile **aDir)
-{
-  if (!sPluginTempDir) {
-    nsCOMPtr<nsIFile> tmpDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                         getter_AddRefs(tmpDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = tmpDir->AppendNative(kPluginTmpDirName);
-
-    // make it unique, and mode == 0700, not world-readable
-    rv = tmpDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    tmpDir.swap(sPluginTempDir);
-  }
-
-  return sPluginTempDir->Clone(aDir);
 }
 
 nsresult

@@ -182,8 +182,6 @@ public:
   AddHeadersToChannel(const char *aHeadersData, uint32_t aHeadersDataLen,
                       nsIChannel *aGenericChannel);
 
-  static nsresult GetPluginTempDir(nsIFile **aDir);
-
   // Helper that checks if a type is whitelisted in plugin.allowed_types.
   // Always returns true if plugin.allowed_types is not set
   static bool IsTypeWhitelisted(const char *aType);

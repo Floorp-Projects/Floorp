@@ -90,6 +90,14 @@ add_task(async function test_addCrash() {
     Assert.ok(false, "StackTraces does not contain valid JSON.");
   }
 
+  try {
+    let telemetryEnvironment = JSON.parse(crash.metadata.TelemetryEnvironment);
+    Assert.equal(telemetryEnvironment.EscapedField, "EscapedData\n\nfoo");
+  } catch (e) {
+    Assert.ok(false,
+              "TelemetryEnvironment contents were not properly re-escaped\n");
+  }
+
   await teardown();
 });
 

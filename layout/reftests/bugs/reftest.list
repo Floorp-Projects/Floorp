@@ -1591,7 +1591,7 @@ fuzzy-if(d2d,52,1051) == 586683-1.html 586683-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
 != 589682-1.html 589682-1-notref.html
-pref(dom.meta-viewport.enabled,true) skip-if(Android) skip-if(webrender) == 593243-1.html 593243-1-ref.html # bug 593168
+pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-1.html 593243-1-ref.html # bug 593168
 pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-2.html 593243-2-ref.html # bug 593168
 == 593544-1.html 593544-1-ref.html
 random-if(Android) == 594333-1.html 594333-1-ref.html
@@ -1839,7 +1839,7 @@ pref(layout.css.overflow-clip-box.enabled,true) fuzzy-if(skiaContent,2,845) == 9
 == 1021564-3.html 1021564-ref.html
 == 1021564-4.html 1021564-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
-fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) fails-if(webrender) == 1022612-1.html 1022612-1-ref.html
+fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) == 1022612-1.html 1022612-1-ref.html
 skip-if(styloVsGecko) == 1024473-1.html 1024473-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 fuzzy-if(skiaContent,1,24000) == 1025914-1.html 1025914-1-ref.html
 == 1042104-1.html 1042104-1-ref.html

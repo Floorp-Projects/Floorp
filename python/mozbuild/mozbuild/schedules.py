@@ -16,11 +16,32 @@ INCLUSIVE_COMPONENTS = [
     'js-lint',
     'yaml-lint',
 ]
+INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
+
 EXCLUSIVE_COMPONENTS = [
     # os families
     'android',
     'linux',
     'macosx',
     'windows',
+    # test suites
+    'awsy',
+    'cppunittest',
+    'firefox-ui',
+    'geckoview',
+    'gtest',
+    'jittest',
+    'marionette',
+    'mochitest',
+    'reftest',
+    'robocop',
+    'talos',
+    'telemetry-tests-client',
+    'xpcshell',
+    'xpcshell-coverage',
+    'web-platform-tests',
+    'web-platform-tests-reftests',
+    'web-platform-tests-wdspec',
 ]
+EXCLUSIVE_COMPONENTS = sorted(EXCLUSIVE_COMPONENTS)
 ALL_COMPONENTS = INCLUSIVE_COMPONENTS + EXCLUSIVE_COMPONENTS

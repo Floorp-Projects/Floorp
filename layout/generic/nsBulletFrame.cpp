@@ -15,7 +15,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/StackingContextHelper.h"
-#include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
@@ -667,11 +667,9 @@ nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                          mozilla::layers::WebRenderLayerManager* aManager,
                                          nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (aManager->IsLayersFreeTransaction()) {
-    ContainerLayerParameters parameter;
-    if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
-      return false;
-    }
+  ContainerLayerParameters parameter;
+  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+    return false;
   }
 
   if (!mBulletRenderer)

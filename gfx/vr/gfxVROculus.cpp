@@ -1110,7 +1110,7 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
   HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr, getter_AddRefs(srView));
   if (FAILED(hr)) {
     gfxWarning() << "Could not create shader resource view for Oculus: " << hexa(hr);
-    return nullptr;
+    return false;
   }
   ID3D11ShaderResourceView* viewPtr = srView.get();
   mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &viewPtr);

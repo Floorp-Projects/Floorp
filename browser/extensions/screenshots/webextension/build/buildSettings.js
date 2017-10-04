@@ -3,7 +3,9 @@ window.buildSettings = {
   logLevel: "" || "warn",
   captureText: ("" === "true"),
   uploadBinary: ("" === "true"),
-  pngToJpegCutoff: parseInt("" || 2500000, 10)
+  pngToJpegCutoff: parseInt("" || 2500000, 10),
+  maxImageHeight: parseInt("" || 5000, 10),
+  maxImageWidth: parseInt("" || 5000, 10)
 };
 null;
 

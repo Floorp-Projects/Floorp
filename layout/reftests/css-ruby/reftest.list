@@ -27,6 +27,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 fuzzy-if(winWidget,255,792) == lang-specific-style-1.html lang-specific-style-1-ref.html # bug 1134947
 == line-breaking-1.html line-breaking-1-ref.html
 == line-breaking-2.html line-breaking-2-ref.html
+== line-breaking-3.html line-breaking-3-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-1.html line-break-suppression-1-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-2.html line-break-suppression-2-ref.html
 == line-break-suppression-3.html line-break-suppression-3-ref.html

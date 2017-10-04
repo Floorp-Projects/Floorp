@@ -583,42 +583,6 @@ impl<K, V, S> HashMap<K, V, S>
     }
 }
 
-impl<K: Hash + Eq, V> HashMap<K, V, RandomState> {
-    /// Creates an empty `HashMap`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    /// let mut map: HashMap<&str, isize> = HashMap::new();
-    /// ```
-    #[inline]
-    pub fn new() -> HashMap<K, V, RandomState> {
-        Default::default()
-    }
-
-    /// Creates an empty `HashMap` with the specified capacity.
-    ///
-    /// The hash map will be able to hold at least `capacity` elements without
-    /// reallocating. If `capacity` is 0, the hash map will not allocate.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::collections::HashMap;
-    /// let mut map: HashMap<&str, isize> = HashMap::with_capacity(10);
-    /// ```
-    #[inline]
-    pub fn with_capacity(capacity: usize) -> HashMap<K, V, RandomState> {
-        HashMap::with_capacity_and_hasher(capacity, Default::default())
-    }
-
-    #[inline]
-    pub fn try_with_capacity(capacity: usize) -> Result<HashMap<K, V, RandomState>, FailedAllocationError> {
-        HashMap::try_with_capacity_and_hasher(capacity, Default::default())
-    }
-}
-
 impl<K, V, S> HashMap<K, V, S>
     where K: Eq + Hash,
           S: BuildHasher
@@ -1025,12 +989,6 @@ impl<K, V, S> HashMap<K, V, S>
     /// ```
     pub fn len(&self) -> usize {
         self.table.size()
-    }
-
-    /// Access to the raw buffer backing this hashmap.
-    pub fn raw_buffer(&self) -> (*const (), usize) {
-        assert!(self.raw_capacity() != 0);
-        self.table.raw_buffer()
     }
 
     /// Returns true if the map contains no elements.

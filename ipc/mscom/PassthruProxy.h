@@ -40,7 +40,7 @@ public:
   {
     static_assert(detail::VTableSizer<Iface>::Size >= 3, "VTable too small");
 
-    detail::EnvironmentSelector<Iface>::Type env;
+    typename detail::EnvironmentSelector<Iface>::Type env;
 
     RefPtr<PassthruProxy> passthru(new PassthruProxy(&env, __uuidof(Iface),
                                                      detail::VTableSizer<Iface>::Size,

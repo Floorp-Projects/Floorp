@@ -12,20 +12,13 @@
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "nsDisplayList.h"
-#include "WebRenderCanvasLayer.h"
 #include "WebRenderCanvasRenderer.h"
-#include "WebRenderColorLayer.h"
-#include "WebRenderContainerLayer.h"
-#include "WebRenderImageLayer.h"
-#include "WebRenderPaintedLayer.h"
-#include "WebRenderPaintedLayerBlob.h"
-#include "WebRenderTextLayer.h"
-#include "WebRenderDisplayItemLayer.h"
 
 namespace mozilla {
 
@@ -39,10 +32,8 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mLastAsr(nullptr)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
-  , mEndTransactionWithoutLayers(false)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
-  , mShouldNotifyInvalidation(false)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -183,19 +174,23 @@ WebRenderLayerManager::BeginTransaction()
 bool
 WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  if (!mRoot) {
-    // With the WebRenderLayerManager we reject attempts to set most kind of
-    // "pending data" for empty transactions. Any place that attempts to update
-    // transforms or scroll offset, for example, will get failure return values
-    // back, and will fall back to a full transaction. Therefore the only piece
-    // of "pending" information we need to send in an empty transaction is the
-    // APZ focus state.
-    WrBridge()->SendSetFocusTarget(mFocusTarget);
-    return true;
-  }
+  // With the WebRenderLayerManager we reject attempts to set most kind of
+  // "pending data" for empty transactions. Any place that attempts to update
+  // transforms or scroll offset, for example, will get failure return values
+  // back, and will fall back to a full transaction. Therefore the only piece
+  // of "pending" information we need to send in an empty transaction is the
+  // APZ focus state.
+  WrBridge()->SendSetFocusTarget(mFocusTarget);
 
-  // We might used painted layer images so don't delete them yet.
-  return EndTransactionInternal(nullptr, nullptr, aFlags);
+  // We also need to update canvases that might have changed, but this code
+  // as-is causes crashes so comment it out for now.
+  //for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
+  //  RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+  //  WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
+  //  canvas->UpdateCompositableClient();
+  //}
+
+  return true;
 }
 
 /*static*/ int32_t
@@ -226,9 +221,8 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
   bool apzEnabled = AsyncPanZoomEnabled();
   EventRegions eventRegions;
 
-  nsDisplayList savedItems;
-  nsDisplayItem* item;
-  while ((item = aDisplayList->RemoveBottom()) != nullptr) {
+  for (nsDisplayItem* i = aDisplayList->GetBottom(); i; i = i->GetAbove()) {
+    nsDisplayItem* item = i;
     DisplayItemType itemType = item->GetType();
 
     // If the item is a event regions item, but is empty (has no regions in it)
@@ -237,7 +231,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
       if (eventRegions->IsEmpty()) {
-        item->Destroy(aDisplayListBuilder);
         continue;
       }
     }
@@ -254,7 +247,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       mergedItems.AppendElement(peek);
 
       // Move the iterator forward since we will merge this item.
-      item = peek;
+      i = peek;
     }
 
     if (mergedItems.Length() > 1) {
@@ -262,15 +255,13 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       MOZ_ASSERT(item && itemType == item->GetType());
     }
 
-    nsDisplayList* itemSameCoordinateSystemChildren
-      = item->GetSameCoordinateSystemChildren();
+    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
     if (item->ShouldFlattenAway(aDisplayListBuilder)) {
-      aDisplayList->AppendToBottom(itemSameCoordinateSystemChildren);
-      item->Destroy(aDisplayListBuilder);
+      MOZ_ASSERT(childItems);
+      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
+                                             aBuilder, aResources);
       continue;
     }
-
-    savedItems.AppendToTop(item);
 
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing = mLayerScrollData.size();
@@ -336,14 +327,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       }
     }
 
-    // If there is any invalid item, we should notify nsPresContext after EndTransaction.
-    if (!mShouldNotifyInvalidation) {
-      nsRect invalid;
-      if (item->IsInvalid(invalid)) {
-        mShouldNotifyInvalidation = true;
-      }
-    }
-
     { // scope the ScrollingLayersHelper
       ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, AsyncPanZoomEnabled());
 
@@ -368,7 +351,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       mLayerScrollData.back().Initialize(mScrollData, item, descendants, stopAtAsr);
     }
   }
-  aDisplayList->AppendToTop(&savedItems);
 
   // If we have any event region info left over we need to flush it before we
   // return. Again, at this point the layer data list must be non-empty, and
@@ -379,20 +361,6 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     MOZ_ASSERT(!mLayerScrollData.empty());
     mLayerScrollData.back().AddEventRegions(eventRegions);
   }
-}
-
-void
-WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
-                                                  nsDisplayListBuilder* aDisplayListBuilder)
-{
-  MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
-  mEndTransactionWithoutLayers = true;
-  WrBridge()->RemoveExpiredFontKeys();
-  EndTransactionInternal(nullptr,
-                         nullptr,
-                         EndTransactionFlags::END_DEFAULT,
-                         aDisplayList,
-                         aDisplayListBuilder);
 }
 
 Maybe<wr::ImageKey>
@@ -518,15 +486,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
         aManager->SetRoot(layer);
         layerBuilder->WillEndTransaction();
 
-        nsIntRegion invalid;
-        props->ComputeDifferences(layer, invalid, nullptr);
-
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
-
-        if (!invalid.IsEmpty()) {
-          aWrManager->SetNotifyInvalidation(true);
-        }
       }
 
       if (aManager->InTransaction()) {
@@ -738,21 +699,19 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
-  mEndTransactionWithoutLayers = false;
-  WrBridge()->RemoveExpiredFontKeys();
-  EndTransactionInternal(aCallback, aCallbackData, aFlags);
+  // This should never get called, all callers should use
+  // EndTransactionWithoutLayer instead.
+  MOZ_ASSERT(false);
 }
 
-bool
-WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
-                                              void* aCallbackData,
-                                              EndTransactionFlags aFlags,
-                                              nsDisplayList* aDisplayList,
-                                              nsDisplayListBuilder* aDisplayListBuilder)
+void
+WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
+                                                  nsDisplayListBuilder* aDisplayListBuilder)
 {
+  MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
+  WrBridge()->RemoveExpiredFontKeys();
+
   AutoProfilerTracing tracing("Paint", "RenderLayers");
-  mPaintedLayerCallback = aCallback;
-  mPaintedLayerCallbackData = aCallbackData;
   mTransactionIncomplete = false;
 
   if (gfxPrefs::LayersDump()) {
@@ -764,7 +723,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   if (!WrBridge()->BeginTransaction(size.ToUnknownSize())) {
-    return false;
+    return;
   }
   DiscardCompositorAnimations();
 
@@ -772,79 +731,52 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
-  if (mEndTransactionWithoutLayers) {
-    // Reset the notification flag at the begin of the EndTransaction.
-    mShouldNotifyInvalidation = false;
+  { // scoping for StackingContextHelper RAII
 
-    // aDisplayList being null here means this is an empty transaction following a layers-free
-    // transaction, so we reuse the previously built displaylist and scroll
-    // metadata information
-    if (aDisplayList && aDisplayListBuilder) {
-      StackingContextHelper sc;
-      mParentCommands.Clear();
-      mScrollData = WebRenderScrollData();
-      MOZ_ASSERT(mLayerScrollData.empty());
-      mLastCanvasDatas.Clear();
-      mLastAsr = nullptr;
+    StackingContextHelper sc;
+    mParentCommands.Clear();
+    mScrollData = WebRenderScrollData();
+    MOZ_ASSERT(mLayerScrollData.empty());
+    mLastCanvasDatas.Clear();
+    mLastAsr = nullptr;
 
-      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
+    CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder, resourceUpdates);
 
-      builder.Finalize(contentSize, mBuiltDisplayList);
+    builder.Finalize(contentSize, mBuiltDisplayList);
 
-      // Make a "root" layer data that has everything else as descendants
-      mLayerScrollData.emplace_back();
-      mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
-      if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
-        nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
-        if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
-          mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-        }
-      }
-      RefPtr<WebRenderLayerManager> self(this);
-      auto callback = [self](FrameMetrics::ViewID aScrollId) -> bool {
-        return self->mScrollData.HasMetadataFor(aScrollId);
-      };
-      if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
-            aDisplayListBuilder, nullptr, ContainerLayerParameters(), callback)) {
-        mLayerScrollData.back().AppendScrollMetadata(mScrollData, rootMetadata.ref());
-      }
-      // Append the WebRenderLayerScrollData items into WebRenderScrollData
-      // in reverse order, from topmost to bottommost. This is in keeping with
-      // the semantics of WebRenderScrollData.
-      for (auto i = mLayerScrollData.crbegin(); i != mLayerScrollData.crend(); i++) {
-        mScrollData.AddLayerData(*i);
-      }
-      mLayerScrollData.clear();
-      mClipIdCache.clear();
-
-      // Remove the user data those are not displayed on the screen and
-      // also reset the data to unused for next transaction.
-      RemoveUnusedAndResetWebRenderUserData();
-    } else {
-      for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
-        WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
-        if (canvas->IsDirty()) {
-          mShouldNotifyInvalidation = true;
-        }
-        canvas->UpdateCompositableClient();
+    // Make a "root" layer data that has everything else as descendants
+    mLayerScrollData.emplace_back();
+    mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
+    if (aDisplayListBuilder->IsBuildingLayerEventRegions()) {
+      nsIPresShell* shell = aDisplayListBuilder->RootReferenceFrame()->PresContext()->PresShell();
+      if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(shell)) {
+        mLayerScrollData.back().SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
       }
     }
+    RefPtr<WebRenderLayerManager> self(this);
+    auto callback = [self](FrameMetrics::ViewID aScrollId) -> bool {
+      return self->mScrollData.HasMetadataFor(aScrollId);
+    };
+    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
+          aDisplayListBuilder, nullptr, ContainerLayerParameters(), callback)) {
+      mLayerScrollData.back().AppendScrollMetadata(mScrollData, rootMetadata.ref());
+    }
+    // Append the WebRenderLayerScrollData items into WebRenderScrollData
+    // in reverse order, from topmost to bottommost. This is in keeping with
+    // the semantics of WebRenderScrollData.
+    for (auto i = mLayerScrollData.crbegin(); i != mLayerScrollData.crend(); i++) {
+      mScrollData.AddLayerData(*i);
+    }
+    mLayerScrollData.clear();
+    mClipIdCache.clear();
 
-    builder.PushBuiltDisplayList(mBuiltDisplayList);
-    WrBridge()->AddWebRenderParentCommands(mParentCommands);
-  } else {
-    mScrollData = WebRenderScrollData();
-
-    mRoot->StartPendingAnimations(mAnimationReadyTime);
-    StackingContextHelper sc;
-
-    WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, resourceUpdates, sc);
-
-    // Need to do this after RenderLayer because the compositor animation IDs
-    // get populated during RenderLayer and we need those.
-    PopulateScrollData(mScrollData, mRoot.get());
+    // Remove the user data those are not displayed on the screen and
+    // also reset the data to unused for next transaction.
+    RemoveUnusedAndResetWebRenderUserData();
   }
+
+  builder.PushBuiltDisplayList(mBuiltDisplayList);
+  WrBridge()->AddWebRenderParentCommands(mParentCommands);
 
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   WrBridge()->ClearReadLocks();
@@ -855,7 +787,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   if (mTransactionIncomplete) {
     DiscardLocalImages();
     WrBridge()->ProcessWebRenderParentCommands();
-    return false;
+    return;
   }
 
   if (AsyncPanZoomEnabled()) {
@@ -898,13 +830,6 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mNeedsComposite = false;
 
   ClearDisplayItemLayers();
-
-  // this may result in Layers being deleted, which results in
-  // PLayer::Send__delete__() and DeallocShmem()
-  mKeepAlive.Clear();
-  ClearMutatedLayers();
-
-  return true;
 }
 
 void
@@ -1009,19 +934,13 @@ WebRenderLayerManager::AddActiveCompositorAnimationId(uint64_t aId)
   // client side so that we don't try to discard the same animation id multiple
   // times. We could just ignore the multiple-discard on the parent side, but
   // checking on the content side reduces IPC traffic.
-  MOZ_ASSERT(IsLayersFreeTransaction());
   mActiveCompositorAnimationIds.insert(aId);
 }
 
 void
 WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 {
-  if (!IsLayersFreeTransaction()) {
-    // For layers-full we don't track the active animation id in
-    // mActiveCompositorAnimationIds, we just call this on layer destruction and
-    // don't need to worry about discarding the same id multiple times.
-    mDiscardedCompositorAnimationsIds.AppendElement(aId);
-  } else if (mActiveCompositorAnimationIds.erase(aId)) {
+  if (mActiveCompositorAnimationIds.erase(aId)) {
     // For layers-free ensure we don't try to discard an animation id that wasn't
     // active. We also remove it from mActiveCompositorAnimationIds so we don't
     // discard it again unless it gets re-activated.
@@ -1048,44 +967,6 @@ WebRenderLayerManager::DiscardLocalImages()
   // image keys but didn't tell the parent about them yet.
   mImageKeysToDeleteLater.Clear();
   mImageKeysToDelete.Clear();
-}
-
-void
-WebRenderLayerManager::Mutated(Layer* aLayer)
-{
-  LayerManager::Mutated(aLayer);
-  AddMutatedLayer(aLayer);
-}
-
-void
-WebRenderLayerManager::MutatedSimple(Layer* aLayer)
-{
-  LayerManager::Mutated(aLayer);
-  AddMutatedLayer(aLayer);
-}
-
-void
-WebRenderLayerManager::AddMutatedLayer(Layer* aLayer)
-{
-  mMutatedLayers.AppendElement(aLayer);
-}
-
-void
-WebRenderLayerManager::ClearMutatedLayers()
-{
-  mMutatedLayers.Clear();
-}
-
-bool
-WebRenderLayerManager::IsMutatedLayer(Layer* aLayer)
-{
-  return mMutatedLayers.Contains(aLayer);
-}
-
-void
-WebRenderLayerManager::Hold(Layer* aLayer)
-{
-  mKeepAlive.AppendElement(aLayer);
 }
 
 void
@@ -1149,11 +1030,6 @@ void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WrBridge()->BeginClearCachedResources();
-  if (aSubtree) {
-    ClearLayer(aSubtree);
-  } else if (mRoot) {
-    ClearLayer(mRoot);
-  }
   DiscardImages();
   WrBridge()->EndClearCachedResources();
 }
@@ -1225,71 +1101,8 @@ WebRenderLayerManager::ScheduleComposite()
 void
 WebRenderLayerManager::SetRoot(Layer* aLayer)
 {
-  mRoot = aLayer;
-}
-
-already_AddRefed<PaintedLayer>
-WebRenderLayerManager::CreatePaintedLayer()
-{
-  if (gfxPrefs::WebRenderBlobImages()) {
-    return MakeAndAddRef<WebRenderPaintedLayerBlob>(this);
-  } else {
-    return MakeAndAddRef<WebRenderPaintedLayer>(this);
-  }
-}
-
-already_AddRefed<ContainerLayer>
-WebRenderLayerManager::CreateContainerLayer()
-{
-  return MakeAndAddRef<WebRenderContainerLayer>(this);
-}
-
-already_AddRefed<ImageLayer>
-WebRenderLayerManager::CreateImageLayer()
-{
-  return MakeAndAddRef<WebRenderImageLayer>(this);
-}
-
-already_AddRefed<CanvasLayer>
-WebRenderLayerManager::CreateCanvasLayer()
-{
-  return MakeAndAddRef<WebRenderCanvasLayer>(this);
-}
-
-already_AddRefed<ReadbackLayer>
-WebRenderLayerManager::CreateReadbackLayer()
-{
-  return nullptr;
-}
-
-already_AddRefed<ColorLayer>
-WebRenderLayerManager::CreateColorLayer()
-{
-  return MakeAndAddRef<WebRenderColorLayer>(this);
-}
-
-already_AddRefed<RefLayer>
-WebRenderLayerManager::CreateRefLayer()
-{
-  return MakeAndAddRef<WebRenderRefLayer>(this);
-}
-
-already_AddRefed<TextLayer>
-WebRenderLayerManager::CreateTextLayer()
-{
-  return MakeAndAddRef<WebRenderTextLayer>(this);
-}
-
-already_AddRefed<BorderLayer>
-WebRenderLayerManager::CreateBorderLayer()
-{
-  return nullptr;
-}
-
-already_AddRefed<DisplayItemLayer>
-WebRenderLayerManager::CreateDisplayItemLayer()
-{
-  return MakeAndAddRef<WebRenderDisplayItemLayer>(this);
+  // This should never get called
+  MOZ_ASSERT(false);
 }
 
 bool
