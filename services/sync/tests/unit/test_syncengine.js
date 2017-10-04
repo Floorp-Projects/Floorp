@@ -93,12 +93,28 @@ add_task(async function test_toFetch() {
 
     // Write file to disk
     let toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    let wrotePromise = promiseOneObserver("sync-testing:file-saved:toFetch");
     engine.toFetch = toFetch;
     do_check_eq(engine.toFetch, toFetch);
     // toFetch is written asynchronously
-    await Async.promiseYield();
+    await wrotePromise;
     let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
     do_check_eq(fakefile, JSON.stringify(toFetch));
+
+    // Make sure it work for consecutive writes before the callback is executed.
+    toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    let toFetch2 = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    wrotePromise = promiseOneObserver("sync-testing:file-saved:toFetch");
+
+    engine.toFetch = toFetch;
+    do_check_eq(engine.toFetch, toFetch);
+
+    engine.toFetch = toFetch2;
+    do_check_eq(engine.toFetch, toFetch2);
+    // Note that do to the way CommonUtils.namedTimer works, we won't get a 2nd callback.
+    await wrotePromise;
+    fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
+    do_check_eq(fakefile, JSON.stringify(toFetch2));
 
     // Read file from disk
     toFetch = [Utils.makeGUID(), Utils.makeGUID()];
@@ -123,12 +139,28 @@ add_task(async function test_previousFailed() {
 
     // Write file to disk
     let previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    let wrotePromise = promiseOneObserver("sync-testing:file-saved:previousFailed");
     engine.previousFailed = previousFailed;
     do_check_eq(engine.previousFailed, previousFailed);
     // previousFailed is written asynchronously
-    await Async.promiseYield();
+    await wrotePromise;
     let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
     do_check_eq(fakefile, JSON.stringify(previousFailed));
+
+    // Make sure it work for consecutive writes before the callback is executed.
+    previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    let previousFailed2 = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    wrotePromise = promiseOneObserver("sync-testing:file-saved:previousFailed");
+
+    engine.previousFailed = previousFailed;
+    do_check_eq(engine.previousFailed, previousFailed);
+
+    engine.previousFailed = previousFailed2;
+    do_check_eq(engine.previousFailed, previousFailed2);
+    // Note that do to the way CommonUtils.namedTimer works, we're only notified once.
+    await wrotePromise;
+    fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
+    do_check_eq(fakefile, JSON.stringify(previousFailed2));
 
     // Read file from disk
     previousFailed = [Utils.makeGUID(), Utils.makeGUID()];
