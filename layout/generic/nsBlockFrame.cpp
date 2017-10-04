@@ -6634,6 +6634,7 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   // stick outside of the line's bounding box or our bounding box)
   // intersects the dirty rect then paint the line.
   bool intersect = aLineArea.Intersects(aBuilder->GetDirtyRect());
+  bool visible = aLineArea.Intersects(aBuilder->GetVisibleRect());
 #ifdef DEBUG
   if (nsBlockFrame::gLamePaintMetrics) {
     aDrawnLines++;
@@ -6649,7 +6650,7 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   // frame in the line, it's also true for aFrame.
   bool lineInline = aLine->IsInline();
   bool lineMayHaveTextOverflow = aTextOverflow && lineInline;
-  if (!intersect && !aBuilder->ShouldDescendIntoFrame(aFrame) &&
+  if (!intersect && !aBuilder->ShouldDescendIntoFrame(aFrame, visible) &&
       !lineMayHaveTextOverflow)
     return;
 
@@ -6734,7 +6735,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Also skip the cursor if we're creating text overflow markers,
   // since we need to know what line number we're up to in order
   // to generate unique display item keys.
-  nsLineBox* cursor = (aBuilder->ShouldDescendIntoFrame(this) || textOverflow) ?
+  nsLineBox* cursor = (aBuilder->ShouldDescendIntoFrame(this, true) || textOverflow) ?
     nullptr : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
   LineIterator line_end = LinesEnd();
 

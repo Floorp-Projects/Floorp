@@ -2375,7 +2375,7 @@ WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   if (!aSource->IsEmpty()) {
     nsDisplayTransform *sepIdItem =
       new (aBuilder) nsDisplayTransform(aBuilder, aFrame, aSource,
-                                        aBuilder->GetDirtyRect(), Matrix4x4(), aIndex);
+                                        aBuilder->GetVisibleRect(), Matrix4x4(), aIndex);
     sepIdItem->SetNoExtendContext();
     aTarget->AppendToTop(sepIdItem);
   }
@@ -2433,6 +2433,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // For preserves3d, use the dirty rect already installed on the
   // builder, since aDirtyRect maybe distorted for transforms along
   // the chain.
+  nsRect visibleRect = aBuilder->GetVisibleRect();
   nsRect dirtyRect = aBuilder->GetDirtyRect();
 
   bool inTransform = aBuilder->IsInTransform();
@@ -2444,7 +2445,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   AutoSaveRestoreContainsBlendMode autoRestoreBlendMode(*aBuilder);
   aBuilder->SetContainsBlendMode(false);
 
-  nsRect dirtyRectOutsideTransform = dirtyRect;
+  nsRect visibleRectOutsideTransform = visibleRect;
   bool allowAsyncAnimation = false;
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
@@ -2453,9 +2454,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     switch (decision) {
     case nsDisplayTransform::FullPrerender:
       allowAsyncAnimation = true;
+      visibleRect = dirtyRect;
       break;
     case nsDisplayTransform::PartialPrerender:
       allowAsyncAnimation = true;
+      visibleRect = dirtyRect;
       MOZ_FALLTHROUGH;
       // fall through to the NoPrerender case
     case nsDisplayTransform::NoPrerender:
@@ -2466,16 +2469,18 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       // If we're in preserve-3d then grab the dirty rect that was given to the root
       // and transform using the combined transform.
       if (Combines3DTransformWithAncestors(disp)) {
-        dirtyRect = aBuilder->GetPreserves3DRects();
+        dirtyRect = aBuilder->GetPreserves3DRects(&visibleRect);
       }
 
       nsRect untransformedDirtyRect;
       if (nsDisplayTransform::UntransformRect(dirtyRect, overflow, this,
             &untransformedDirtyRect)) {
         dirtyRect = untransformedDirtyRect;
+        nsDisplayTransform::UntransformRect(visibleRect, overflow, this, &visibleRect);
       } else {
         // This should only happen if the transform is singular, in which case nothing is visible anyway
         dirtyRect.SetEmpty();
+        visibleRect.SetEmpty();
       }
     }
     inTransform = true;
@@ -2485,11 +2490,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
 
-  nsRect dirtyRectOutsideSVGEffects = dirtyRect;
+  nsRect visibleRectOutsideSVGEffects = visibleRect;
   nsDisplayList hoistedScrollInfoItemsStorage(aBuilder);
   if (usingSVGEffects) {
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
+    visibleRect =
+      nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, visibleRect);
     aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
@@ -2511,7 +2518,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     (nsLayoutUtils::IsFixedPosFrameInDisplayPort(this) || BuilderHasScrolledClip(aBuilder));
 
   nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingDisplayList(aBuilder, this, dirtyRect, true);
+    buildingDisplayList(aBuilder, this, visibleRect, dirtyRect, true);
 
   // Depending on the effects that are applied to this frame, we can create
   // multiple container display items and wrap them around our contents.
@@ -2585,6 +2592,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     if (contentClip) {
       aBuilder->IntersectDirtyRect(*contentClip);
+      aBuilder->IntersectVisibleRect(*contentClip);
       nestedClipState.ClipContentDescendants(*contentClip +
                                              aBuilder->ToReferenceFrame(this));
     }
@@ -2707,7 +2715,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       clipState.Restore();
     }
     // Revert to the post-filter dirty rect.
-    aBuilder->SetDirtyRect(dirtyRectOutsideSVGEffects);
+    aBuilder->SetVisibleRect(visibleRectOutsideSVGEffects);
 
     // Skip all filter effects while generating glyph mask.
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
@@ -2740,7 +2748,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* If the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
    */
-  if (useOpacity && !resultList.IsEmpty()) {
+  if (useOpacity) {
     // Don't clip nsDisplayOpacity items. We clip their descendants instead.
     // The clip we would set on an element with opacity would clip
     // all descendant content, but some should not be clipped.
@@ -2763,7 +2771,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * We also traverse into sublists created by nsDisplayWrapList, so that we find all the
    * correct children.
    */
-  if (isTransformed && !resultList.IsEmpty() && extend3DContext) {
+  if (isTransformed && extend3DContext) {
     // Install dummy nsDisplayTransform as a leaf containing
     // descendants not participating this 3D rendering context.
     nsDisplayList nonparticipants(aBuilder);
@@ -2790,14 +2798,14 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(&participants);
   }
 
-  if (isTransformed && !resultList.IsEmpty()) {
+  if (isTransformed) {
     if (clipCapturedBy == ContainerItemType::eTransform) {
       // Restore clip state now so nsDisplayTransform is clipped properly.
       clipState.Restore();
     }
     // Revert to the dirtyrect coming in from the parent, without our transform
     // taken into account.
-    aBuilder->SetDirtyRect(dirtyRectOutsideTransform);
+    aBuilder->SetVisibleRect(visibleRectOutsideTransform);
     // Revert to the outer reference frame and offset because all display
     // items we create from now on are outside the transform.
     nsPoint toOuterReferenceFrame;
@@ -2811,7 +2819,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     nsDisplayTransform *transformItem =
       new (aBuilder) nsDisplayTransform(aBuilder, this,
-                                        &resultList, dirtyRect, 0,
+                                        &resultList, visibleRect, 0,
                                         allowAsyncAnimation);
     resultList.AppendNewToTop(transformItem);
 
@@ -2870,7 +2878,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * not affected by foreground opacity (only background alpha).
    */
 
-  if (useBlendMode && !resultList.IsEmpty()) {
+  if (useBlendMode) {
     DisplayListClipState::AutoSaveRestore blendModeClipState(aBuilder);
     blendModeClipState.ClearUpToASR(containerItemASR);
     resultList.AppendNewToTop(
@@ -2916,7 +2924,7 @@ WrapInWrapList(nsDisplayListBuilder* aBuilder,
  */
 static bool
 DescendIntoChild(nsDisplayListBuilder* aBuilder, nsIFrame *aChild,
-                 const nsRect& aDirty)
+                 const nsRect& aVisible, const nsRect& aDirty)
 {
   nsIFrame* child = aChild;
   const nsRect& dirty = aDirty;
@@ -2938,7 +2946,11 @@ DescendIntoChild(nsDisplayListBuilder* aBuilder, nsIFrame *aChild,
       (shell->IgnoringViewportScrolling() && child == shell->GetRootScrollFrame());
     if (!keepDescending) {
       nsRect childDirty;
-      if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect())) {
+      if (!childDirty.IntersectRect(dirty, child->GetVisualOverflowRect()) &&
+          (!child->ForceDescendIntoIfVisible())) {
+        return false;
+      }
+      if (!childDirty.IntersectRect(aVisible, child->GetVisualOverflowRect())) {
         return false;
       }
       // Usually we could set dirty to childDirty now but there's no
@@ -2990,13 +3002,14 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     // dirty rect in child-relative coordinates
     nsRect dirty = aBuilder->GetDirtyRect() - child->GetOffsetTo(this);
+    nsRect visible = aBuilder->GetVisibleRect() - child->GetOffsetTo(this);
 
-    if (!DescendIntoChild(aBuilder, child, dirty)) {
+    if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
       return;
     }
 
     nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingForChild(aBuilder, child, dirty, false);
+      buildingForChild(aBuilder, child, visible, dirty, false);
 
     CheckForApzAwareEventHandlers(aBuilder, child);
 
@@ -3039,6 +3052,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // dirty rect in child-relative coordinates
   NS_ASSERTION(aBuilder->GetCurrentFrame() == this, "Wrong coord space!");
   nsPoint offset = child->GetOffsetTo(this);
+  nsRect visible = aBuilder->GetVisibleRect() - offset;
   nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
@@ -3068,11 +3082,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       return;
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
     if (savedOutOfFlowData) {
+      visible = savedOutOfFlowData->mVisibleRect;
       dirty = savedOutOfFlowData->mDirtyRect;
     } else {
       // The out-of-flow frame did not intersect the dirty area. We may still
       // need to traverse into it, since it may contain placeholders we need
       // to enter to reach other out-of-flow frames that are visible.
+      visible.SetEmpty();
       dirty.SetEmpty();
     }
     pseudoStackingContext = true;
@@ -3089,9 +3105,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->GetIncludeAllOutOfFlows() &&
       (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    visible = child->GetVisualOverflowRect();
     dirty = child->GetVisualOverflowRect();
     awayFromCommonPath = true;
-  } else if (!DescendIntoChild(aBuilder, child, dirty)) {
+  } else if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
     return;
   }
 
@@ -3137,7 +3154,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                "Stacking contexts must also be pseudo-stacking-contexts");
 
   nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingForChild(aBuilder, child, dirty, pseudoStackingContext);
+    buildingForChild(aBuilder, child, visible, dirty, pseudoStackingContext);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   CheckForApzAwareEventHandlers(aBuilder, child);
@@ -3152,7 +3169,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     MOZ_ASSERT(awayFromCommonPath, "It is impossible when savedOutOfFlowData is true");
   } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO &&
              isPlaceholder) {
-    NS_ASSERTION(dirty.IsEmpty(), "should have empty visible rect");
+    NS_ASSERTION(visible.IsEmpty(), "should have empty visible rect");
     // Every item we build from now until we descent into an out of flow that
     // does have saved out of flow data should be invisible. This state gets
     // restored when AutoBuildingDisplayList gets out of scope.
@@ -3199,6 +3216,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     Maybe<nsRect> clipPropClip =
       child->GetClipPropClipRect(disp, effects, child->GetSize());
     if (clipPropClip) {
+      aBuilder->IntersectVisibleRect(*clipPropClip);
       aBuilder->IntersectDirtyRect(*clipPropClip);
       clipState.ClipContentDescendants(
         *clipPropClip + aBuilder->ToReferenceFrame(child));
