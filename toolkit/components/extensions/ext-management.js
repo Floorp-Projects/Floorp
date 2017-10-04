@@ -89,6 +89,16 @@ const listenerMap = new WeakMap();
 // Some management APIs are intentionally limited.
 const allowedTypes = ["theme", "extension"];
 
+function checkAllowedAddon(addon) {
+  if (addon.isSystem || addon.isAPIExtension) {
+    return false;
+  }
+  if (addon.type == "extension" && !addon.isWebExtension) {
+    return false;
+  }
+  return allowedTypes.includes(addon.type);
+}
+
 class AddonListener extends ExtensionUtils.EventEmitter {
   constructor() {
     super();
@@ -104,33 +114,29 @@ class AddonListener extends ExtensionUtils.EventEmitter {
     return getExtensionInfoForAddon(ext, addon);
   }
 
-  checkAllowed(addon) {
-    return !addon.isSystem && allowedTypes.includes(addon.type);
-  }
-
   onEnabled(addon) {
-    if (!this.checkAllowed(addon)) {
+    if (!checkAllowedAddon(addon)) {
       return;
     }
     this.emit("onEnabled", this.getExtensionInfo(addon));
   }
 
   onDisabled(addon) {
-    if (!this.checkAllowed(addon)) {
+    if (!checkAllowedAddon(addon)) {
       return;
     }
     this.emit("onDisabled", this.getExtensionInfo(addon));
   }
 
   onInstalled(addon) {
-    if (!this.checkAllowed(addon)) {
+    if (!checkAllowedAddon(addon)) {
       return;
     }
     this.emit("onInstalled", this.getExtensionInfo(addon));
   }
 
   onUninstalled(addon) {
-    if (!this.checkAllowed(addon)) {
+    if (!checkAllowedAddon(addon)) {
       return;
     }
     this.emit("onUninstalled", this.getExtensionInfo(addon));
@@ -165,18 +171,22 @@ this.management = class extends ExtensionAPI {
       management: {
         async get(id) {
           let addon = await AddonManager.getAddonByID(id);
-          if (!addon.isSystem) {
-            // If the extension is enabled get it and use it for more data.
-            let ext = addon.isWebExtension && GlobalManager.extensionMap.get(addon.id);
-            return getExtensionInfoForAddon(ext, addon);
+          if (!addon) {
+            throw new ExtensionError(`No such addon ${id}`);
           }
+          if (!checkAllowedAddon(addon)) {
+            throw new ExtensionError("get not allowed for this addon");
+          }
+          // If the extension is enabled get it and use it for more data.
+          let ext = GlobalManager.extensionMap.get(addon.id);
+          return getExtensionInfoForAddon(ext, addon);
         },
 
         async getAll() {
           let addons = await AddonManager.getAddonsByTypes(allowedTypes);
-          return addons.filter(addon => !addon.isSystem).map(addon => {
+          return addons.filter(checkAllowedAddon).map(addon => {
             // If the extension is enabled get it and use it for more data.
-            let ext = addon.isWebExtension && GlobalManager.extensionMap.get(addon.id);
+            let ext = GlobalManager.extensionMap.get(addon.id);
             return getExtensionInfoForAddon(ext, addon);
           });
         },
