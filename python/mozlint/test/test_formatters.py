@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import json
+import os
 from collections import defaultdict
 
 import mozunit
@@ -13,6 +14,10 @@ import pytest
 from mozlint import ResultContainer
 from mozlint import formatters
 
+NORMALISED_PATHS = {
+    'abc': os.path.normpath('a/b/c.txt'),
+    'def': os.path.normpath('d/e/f.txt'),
+}
 
 EXPECTED = {
     'compact': {
@@ -47,6 +52,14 @@ TEST-UNEXPECTED-ERROR | a/b/c.txt:1 | oh no foo (foo)
 TEST-UNEXPECTED-ERROR | a/b/c.txt:4 | oh no baz (baz)
 TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
 """.strip(),
+    },
+    'unix': {
+        'kwargs': {},
+        'format': """
+{abc}:1: foo error: oh no foo
+{abc}:4: baz error: oh no baz
+{def}:4:2: bar-not-allowed warning: oh no bar
+""".format(**NORMALISED_PATHS).strip(),
     },
 }
 

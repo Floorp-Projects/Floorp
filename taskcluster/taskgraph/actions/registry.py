@@ -193,7 +193,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 'expires': {'$fromNow': '1 year'},
                 'metadata': {
                     'owner': 'mozilla-taskcluster-maintenance@mozilla.com',
-                    'source': '{}raw-file/{}/{}'.format(
+                    'source': '{}/raw-file/{}/{}'.format(
                         parameters['head_repository'], parameters['head_rev'], source_path,
                     ),
                     'name': 'Action: {}'.format(title),

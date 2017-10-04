@@ -365,7 +365,7 @@ class AbstractShot {
   get filename() {
     let filenameTitle = this.title;
     let date = new Date(this.createdDate);
-    filenameTitle = filenameTitle.replace(/[:\\<>/!@&*.|\n\r\t]/g, " ");
+    filenameTitle = filenameTitle.replace(/[:\\<>/!@&?"*.|\n\r\t]/g, " ");
     filenameTitle = filenameTitle.replace(/\s{1,4000}/g, " ");
     let clipFilename = `Screenshot-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${filenameTitle}`;
     const clipFilenameBytesSize = clipFilename.length * 2; // JS STrings are UTF-16
@@ -707,7 +707,14 @@ class _Clip {
     }
     assert(checkObject(image, ["url"], ["dimensions", "text", "location", "captureType", "type"]), "Bad attrs for Clip Image:", Object.keys(image));
     assert(isValidClipImageUrl(image.url), "Bad Clip image URL:", image.url);
-    assert(image.captureType == "madeSelection" || image.captureType == "selection" || image.captureType == "visible" || image.captureType == "auto" || image.captureType == "fullPage" || !image.captureType, "Bad image.captureType:", image.captureType);
+    assert(
+      image.captureType == "madeSelection" ||
+      image.captureType == "selection" ||
+      image.captureType == "visible" ||
+      image.captureType == "auto" ||
+      image.captureType == "fullPage" ||
+      image.captureType == "fullPageTruncated" ||
+      !image.captureType, "Bad image.captureType:", image.captureType);
     assert(typeof image.text == "string" || !image.text, "Bad Clip image text:", image.text);
     if (image.dimensions) {
       assert(typeof image.dimensions.x == "number" && typeof image.dimensions.y == "number", "Bad Clip image dimensions:", image.dimensions);

@@ -1070,45 +1070,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
         suggestedSitesCursor.close();
 
-        boolean hasPreparedBlankTiles = false;
-
-        // We can somewhat reduce the number of blanks we produce by eliminating suggested sites.
-        // We do the actual limit calculation in SQL (since we need to take into account the number
-        // of pinned sites too), but this might avoid producing 5 or so additional blank tiles
-        // that would then need to be filtered out.
-        final int maxBlanksNeeded = suggestedGridLimit - suggestedSitesCursor.getCount();
-
-        final StringBuilder blanksBuilder = new StringBuilder();
-        for (int i = 0; i < maxBlanksNeeded; i++) {
-            if (hasPreparedBlankTiles) {
-                blanksBuilder.append(" UNION ALL");
-            } else {
-                hasPreparedBlankTiles = true;
-            }
-
-            blanksBuilder.append(" SELECT" +
-                                 " -1 AS " + Bookmarks._ID + "," +
-                                 " '' AS " + Bookmarks.URL + "," +
-                                 " '' AS " + Bookmarks.TITLE);
-        }
-
-
-
         // To restrict suggested sites to the grid, we simply subtract the number of topsites (which have already had
         // the pinned sites filtered out), and the number of pinned sites.
         // SQLite completely ignores negative limits, hence we need to manually limit to 0 in this case.
         final String suggestedLimitClause = " LIMIT MAX(0, (" + suggestedGridLimit + " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ") - (SELECT COUNT(*) " + pinnedSitesFromClause + "))) ";
-
-        // Pinned site positions are zero indexed, but we need to get the maximum 1-indexed position.
-        // Hence to correctly calculate the largest pinned position (which should be 0 if there are
-        // no sites, or 1-6 if we have at least one pinned site), we coalesce the DB position (0-5)
-        // with -1 to represent no-sites, which allows us to directly add 1 to obtain the expected value
-        // regardless of whether a position was actually retrieved.
-        final String blanksLimitClause = " LIMIT MAX(0, " +
-                            "COALESCE((SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + "), -1) + 1" +
-                            " - (SELECT COUNT(*) " + pinnedSitesFromClause + ")" +
-                            " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ")" +
-                            ")";
 
         db.beginTransaction();
         try {
@@ -1153,24 +1118,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                            suggestedLimitClause + " )",
 
                            suggestedSiteArgs);
-            }
-
-            if (hasPreparedBlankTiles) {
-                db.execSQL("INSERT INTO " + TABLE_TOPSITES +
-                           // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
-                           // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
-                           // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
-                           " SELECT * FROM (SELECT " +
-                           Bookmarks._ID + ", " +
-                           Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
-                           " -1 AS " + Combined.HISTORY_ID + ", " +
-                           " NULL AS " + Combined.HISTORY_GUID + ", " +
-                           Bookmarks.URL + ", " +
-                           Bookmarks.TITLE + ", " +
-                           "NULL AS " + Combined.HISTORY_ID + ", " +
-                           TopSites.TYPE_BLANK + " as " + TopSites.TYPE +
-                           " FROM ( " + blanksBuilder.toString() + " )" +
-                           blanksLimitClause + " )");
             }
 
             // If we retrieve more topsites than we have free positions for in the freeIdSubquery,

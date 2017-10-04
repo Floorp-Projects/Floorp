@@ -5,7 +5,6 @@
 
 #include "mozilla/layers/StackingContextHelper.h"
 
-#include "mozilla/layers/WebRenderLayer.h"
 #include "UnitTransforms.h"
 #include "nsDisplayList.h"
 
@@ -17,56 +16,6 @@ StackingContextHelper::StackingContextHelper()
   , mScale(1.0f, 1.0f)
 {
   // mOrigin remains at 0,0
-}
-
-StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
-                                             wr::DisplayListBuilder& aBuilder,
-                                             WebRenderLayer* aLayer,
-                                             const Maybe<gfx::Matrix4x4>& aTransform,
-                                             const nsTArray<wr::WrFilterOp>& aFilters)
-  : mBuilder(&aBuilder)
-  , mScale(1.0f, 1.0f)
-{
-  wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
-  Layer* layer = aLayer->GetLayer();
-  mTransform = aTransform.valueOr(layer->GetTransform());
-
-  float opacity = 1.0f;
-  mBuilder->PushStackingContext(scBounds, 0, &opacity,
-                                mTransform.IsIdentity() ? nullptr : &mTransform,
-                                wr::TransformStyle::Flat,
-                                nullptr,
-                                wr::ToMixBlendMode(layer->GetMixBlendMode()),
-                                aFilters,
-                                true);
-  mOrigin = aLayer->Bounds().TopLeft();
-}
-
-StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
-                                             wr::DisplayListBuilder& aBuilder,
-                                             WebRenderLayer* aLayer,
-                                             uint64_t aAnimationsId,
-                                             float* aOpacityPtr,
-                                             gfx::Matrix4x4* aTransformPtr,
-                                             const nsTArray<wr::WrFilterOp>& aFilters)
-  : mBuilder(&aBuilder)
-  , mScale(1.0f, 1.0f)
-{
-  wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
-  if (aTransformPtr) {
-    mTransform = *aTransformPtr;
-  }
-
-  mBuilder->PushStackingContext(scBounds,
-                                aAnimationsId,
-                                aOpacityPtr,
-                                aTransformPtr,
-                                wr::TransformStyle::Flat,
-                                nullptr,
-                                wr::ToMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
-                                aFilters,
-                                true);
-  mOrigin = aLayer->Bounds().TopLeft();
 }
 
 StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,

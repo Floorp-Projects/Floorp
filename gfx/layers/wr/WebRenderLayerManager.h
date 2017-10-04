@@ -102,7 +102,6 @@ public:
                                               wr::IpcResourceUpdateQueue& aResources);
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                   nsDisplayListBuilder* aDisplayListBuilder);
-  bool IsLayersFreeTransaction() { return mEndTransactionWithoutLayers; }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) override;
@@ -113,16 +112,13 @@ public:
 
   virtual void SetRoot(Layer* aLayer) override;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
-  virtual already_AddRefed<RefLayer> CreateRefLayer() override;
-  virtual already_AddRefed<TextLayer> CreateTextLayer() override;
-  virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
-  virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
+  already_AddRefed<PaintedLayer> CreatePaintedLayer() override { return nullptr; }
+  already_AddRefed<ContainerLayer> CreateContainerLayer() override { return nullptr; }
+  already_AddRefed<ImageLayer> CreateImageLayer() override { return nullptr; }
+  already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
+  already_AddRefed<TextLayer> CreateTextLayer() override { return nullptr; }
+  already_AddRefed<BorderLayer> CreateBorderLayer() override { return nullptr; }
+  already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
   virtual bool NeedsWidgetInvalidation() override { return false; }
 
@@ -160,12 +156,6 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
-  DrawPaintedLayerCallback GetPaintedLayerCallback() const
-  { return mPaintedLayerCallback; }
-
-  void* GetPaintedLayerCallbackData() const
-  { return mPaintedLayerCallbackData; }
-
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
   void AddImageKeyForDiscard(wr::ImageKey);
@@ -181,12 +171,7 @@ public:
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
-  virtual void Mutated(Layer* aLayer) override;
-  virtual void MutatedSimple(Layer* aLayer) override;
-
-  void Hold(Layer* aLayer);
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
-  bool IsMutatedLayer(Layer* aLayer);
 
   // See equivalent function in ClientLayerManager
   void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
@@ -246,9 +231,6 @@ public:
     return res.forget();
   }
 
-  bool ShouldNotifyInvalidation() const { return mShouldNotifyInvalidation; }
-  void SetNotifyInvalidation(bool aShouldNotifyInvalidation) { mShouldNotifyInvalidation = aShouldNotifyInvalidation; }
-
   bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
                                                 const ScrollUpdateInfo& aUpdateInfo) override;
 
@@ -260,12 +242,6 @@ private:
   void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
 
   void ClearLayer(Layer* aLayer);
-
-  bool EndTransactionInternal(DrawPaintedLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags,
-                              nsDisplayList* aDisplayList = nullptr,
-                              nsDisplayListBuilder* aDisplayListBuilder = nullptr);
 
   void RemoveUnusedAndResetWebRenderUserData()
   {
@@ -310,19 +286,12 @@ private:
   // the compositor to discard information for.
   nsTArray<uint64_t> mDiscardedCompositorAnimationsIds;
 
-  /* PaintedLayer callbacks; valid at the end of a transaciton,
-   * while rendering */
-  DrawPaintedLayerCallback mPaintedLayerCallback;
-  void *mPaintedLayerCallbackData;
-
   RefPtr<WebRenderBridgeChild> mWrChild;
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   uint64_t mLatestTransactionId;
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
-
-  LayerRefArray mKeepAlive;
 
   // These fields are used to save a copy of the display list for
   // empty transactions in layers-free mode.
@@ -357,18 +326,11 @@ public:
 private:
   ClipIdMap mClipIdCache;
 
-  // Layers that have been mutated. If we have an empty transaction
-  // then a display item layer will no longer be valid
-  // if it was a mutated layers.
-  void AddMutatedLayer(Layer* aLayer);
-  void ClearMutatedLayers();
-  LayerRefArray mMutatedLayers;
   bool mTransactionIncomplete;
 
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
-  bool mEndTransactionWithoutLayers;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send
@@ -387,10 +349,6 @@ private:
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;
   // Store of WebRenderCanvasData objects for use in empty transactions
   CanvasDataSet mLastCanvasDatas;
-
-  // True if the layers-free transaction has invalidation region and then
-  // we should send notification after EndTransaction
-  bool mShouldNotifyInvalidation;
 
   WebRenderUserDataRefTable mWebRenderUserDatas;
 };

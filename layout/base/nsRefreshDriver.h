@@ -217,6 +217,9 @@ public:
   bool ViewManagerFlushIsPending() {
     return mViewManagerFlushIsPending;
   }
+  bool HasScheduleFlush() {
+    return mHasScheduleFlush;
+  }
 
   /**
    * Add a document for which we have FrameRequestCallbacks
@@ -442,6 +445,11 @@ private:
   bool mNeedToRecomputeVisibility;
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
+
+  // True if the view manager needs a flush. Layers-free mode uses this value
+  // to know when to notify invalidation.
+  bool mHasScheduleFlush;
+
   bool mInRefresh;
 
   // True if the refresh driver is suspended waiting for transaction

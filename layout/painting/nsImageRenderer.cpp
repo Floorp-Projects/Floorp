@@ -589,7 +589,6 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
                                             mozilla::wr::DisplayListBuilder& aBuilder,
                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
                                             const mozilla::layers::StackingContextHelper& aSc,
-                                            mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                             mozilla::layers::WebRenderLayerManager* aManager,
                                             nsDisplayItem* aItem,
                                             const nsRect& aDirtyRect,
@@ -615,7 +614,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
       nsCSSGradientRenderer renderer =
         nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aLayer, aDest, aFill,
+      renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aDest, aFill,
                                           aRepeatSize, aSrc, !aItem->BackfaceIsHidden(), aOpacity);
       break;
     }
@@ -737,7 +736,6 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
                                                     mozilla::wr::DisplayListBuilder& aBuilder,
                                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
                                                     const mozilla::layers::StackingContextHelper& aSc,
-                                                    WebRenderDisplayItemLayer*       aLayer,
                                                     mozilla::layers::WebRenderLayerManager* aManager,
                                                     nsDisplayItem*       aItem,
                                                     const nsRect&        aDest,
@@ -756,7 +754,7 @@ nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresCo
     return DrawResult::SUCCESS;
   }
   return BuildWebRenderDisplayItems(aPresContext, aBuilder, aResources, aSc,
-                                    aLayer, aManager, aItem,
+                                    aManager, aItem,
                                     aDirty, aDest, aFill, aAnchor, aRepeatSize,
                                     CSSIntRect(0, 0,
                                                nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
