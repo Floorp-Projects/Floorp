@@ -367,7 +367,7 @@ class FullParseHandler
     }
 
     MOZ_MUST_USE bool addObjectMethodDefinition(ParseNode* literal, ParseNode* key, ParseNode* fn,
-                                                JSOp op)
+                                                AccessorType atype)
     {
         MOZ_ASSERT(literal->isArity(PN_LIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
@@ -376,7 +376,7 @@ class FullParseHandler
                    key->isKind(PNK_COMPUTED_NAME));
         literal->pn_xflags |= PNX_NONCONST;
 
-        ParseNode* propdef = newBinary(PNK_COLON, key, fn, op);
+        ParseNode* propdef = newBinary(PNK_COLON, key, fn, AccessorTypeToJSOp(atype));
         if (!propdef)
             return false;
         literal->append(propdef);
@@ -384,7 +384,7 @@ class FullParseHandler
     }
 
     MOZ_MUST_USE bool addClassMethodDefinition(ParseNode* methodList, ParseNode* key, ParseNode* fn,
-                                               JSOp op, bool isStatic)
+                                               AccessorType atype, bool isStatic)
     {
         MOZ_ASSERT(methodList->isKind(PNK_CLASSMETHODLIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
@@ -392,7 +392,7 @@ class FullParseHandler
                    key->isKind(PNK_STRING) ||
                    key->isKind(PNK_COMPUTED_NAME));
 
-        ParseNode* classMethod = new_<ClassMethod>(key, fn, op, isStatic);
+        ParseNode* classMethod = new_<ClassMethod>(key, fn, AccessorTypeToJSOp(atype), isStatic);
         if (!classMethod)
             return false;
         methodList->append(classMethod);
