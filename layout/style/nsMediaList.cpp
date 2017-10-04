@@ -129,23 +129,23 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
                      required.GetUnit() == eCSSUnit_Pixel ||
                      required.GetUnit() == eCSSUnit_Centimeter,
                      "bad required value");
-        float actualDPPX = actual.GetFloatValue();
+        float actualDPI = actual.GetFloatValue();
         float overrideDPPX = aPresContext->GetOverrideDPPX();
 
         if (overrideDPPX > 0) {
-          actualDPPX = overrideDPPX;
+          actualDPI = overrideDPPX * 96.0f;
         } else if (actual.GetUnit() == eCSSUnit_Centimeter) {
-          actualDPPX = actualDPPX * 2.54f / 96.0f;
-        } else if (actual.GetUnit() == eCSSUnit_Inch) {
-          actualDPPX = actualDPPX / 96.0f;
+          actualDPI = actualDPI * 2.54f;
+        } else if (actual.GetUnit() == eCSSUnit_Pixel) {
+          actualDPI = actualDPI * 96.0f;
         }
-        float requiredDPPX = required.GetFloatValue();
+        float requiredDPI = required.GetFloatValue();
         if (required.GetUnit() == eCSSUnit_Centimeter) {
-          requiredDPPX = requiredDPPX * 2.54f / 96.0f;
-        } else if (required.GetUnit() == eCSSUnit_Inch) {
-          requiredDPPX = requiredDPPX / 96.0f;
+          requiredDPI = requiredDPI * 2.54f;
+        } else if (required.GetUnit() == eCSSUnit_Pixel) {
+          requiredDPI = requiredDPI * 96.0f;
         }
-        cmp = DoCompare(actualDPPX, requiredDPPX);
+        cmp = DoCompare(actualDPI, requiredDPI);
       }
       break;
     case nsMediaFeature::eEnumerated:
