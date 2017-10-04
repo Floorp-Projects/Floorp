@@ -3496,31 +3496,21 @@ Element::Closest(const nsAString& aSelector, ErrorResult& aResult)
 bool
 Element::Matches(const nsAString& aSelector, ErrorResult& aError)
 {
-  return WithSelectorList<bool>(
-    aSelector,
-    aError,
-    [&](const RawServoSelectorList* aList) {
-      if (!aList) {
-        return false;
-      }
-      return Servo_SelectorList_Matches(this, aList);
-    },
-    [&](nsCSSSelectorList* aList) {
-      if (!aList) {
-        // Either we failed (and aError already has the exception), or this
-        // is a pseudo-element-only selector that matches nothing.
-        return false;
-      }
-      TreeMatchContext matchingContext(false,
-                                       nsRuleWalker::eRelevantLinkUnvisited,
-                                       OwnerDoc(),
-                                       TreeMatchContext::eNeverMatchVisited);
-      matchingContext.SetHasSpecifiedScope();
-      matchingContext.AddScopeElement(this);
-      return nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
-                                                     aList);
-    }
-  );
+  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aError);
+  if (!selectorList) {
+    // Either we failed (and aError already has the exception), or this
+    // is a pseudo-element-only selector that matches nothing.
+    return false;
+  }
+
+  TreeMatchContext matchingContext(false,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   OwnerDoc(),
+                                   TreeMatchContext::eNeverMatchVisited);
+  matchingContext.SetHasSpecifiedScope();
+  matchingContext.AddScopeElement(this);
+  return nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
+                                                 selectorList);
 }
 
 static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
