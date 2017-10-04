@@ -2682,23 +2682,21 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
 {
   nsIDocument* doc = OwnerDoc();
   nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
-  nsIDocument::SelectorCache::SelectorList* list =
-    cache.GetList(aSelectorString);
-  if (list) {
-    if (!*list) {
+  nsCSSSelectorList* selectorList = nullptr;
+  bool haveCachedList = cache.GetList(aSelectorString, &selectorList);
+  if (haveCachedList) {
+    if (!selectorList) {
       // Invalid selector.
       aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
         NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
         NS_LITERAL_CSTRING("' is not a valid selector")
       );
     }
-    MOZ_ASSERT(list->IsGecko(), "We haven't done anything with Servo yet");
-    return list->AsGecko();
+    return selectorList;
   }
 
   nsCSSParser parser(doc->CSSLoader());
 
-  nsCSSSelectorList* selectorList = nullptr;
   aRv = parser.ParseSelectorString(aSelectorString,
                                    doc->GetDocumentURI(),
                                    0, // XXXbz get the line number!
@@ -2716,7 +2714,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
       NS_LITERAL_CSTRING("' is not a valid selector")
     );
 
-    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>());
+    cache.CacheList(aSelectorString, nullptr);
     return nullptr;
   }
 
@@ -2736,7 +2734,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
   if (selectorList) {
     NS_ASSERTION(selectorList->mSelectors,
                  "How can we not have any selectors?");
-    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>(selectorList));
+    cache.CacheList(aSelectorString, selectorList);
   } else {
     // This is the "only pseudo-element selectors" case, which is
     // not common, so just don't worry about caching it.  That way a
