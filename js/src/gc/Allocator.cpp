@@ -428,7 +428,7 @@ GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind,
 
     // Trigger an incremental slice if needed.
     if (checkThresholds)
-        maybeAllocTriggerZoneGC(zone, lock);
+        maybeAllocTriggerGC(zone, lock);
 
     return arena;
 }
