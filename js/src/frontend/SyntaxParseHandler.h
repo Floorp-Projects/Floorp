@@ -430,7 +430,7 @@ class SyntaxParseHandler
         return newList(kind, TokenPos(), op);
     }
 
-    Node newDeclarationList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
+    Node newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
         if (kind == PNK_VAR)
             return NodeVarDeclaration;
         MOZ_ASSERT(kind == PNK_LET || kind == PNK_CONST);

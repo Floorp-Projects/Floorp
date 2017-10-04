@@ -819,9 +819,9 @@ class FullParseHandler
         return new_<ListNode>(kind, op, kid);
     }
 
-    ParseNode* newDeclarationList(ParseNodeKind kind, const TokenPos& pos, JSOp op) {
+    ParseNode* newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
         MOZ_ASSERT(isDeclarationKind(kind));
-        return new_<ListNode>(kind, op, pos);
+        return new_<ListNode>(kind, JSOP_NOP, pos);
     }
 
     bool isDeclarationList(ParseNode* node) {
