@@ -6095,14 +6095,8 @@ void CanvasRenderingContext2D::RemoveDrawObserver()
 already_AddRefed<Layer>
 CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer* aOldLayer,
-                                         LayerManager* aManager,
-                                         bool aMirror /* = false */)
+                                         LayerManager* aManager)
 {
-  if (aMirror) {
-    // Not supported for CanvasRenderingContext2D
-    return nullptr;
-  }
-
   if (mOpaque || mIsSkiaGL) {
     // If we're opaque then make sure we have a surface so we paint black
     // instead of transparent.
@@ -6173,7 +6167,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
-  InitializeCanvasRenderer(aBuilder, canvasRenderer, aMirror);
+  InitializeCanvasRenderer(aBuilder, canvasRenderer);
   uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
   canvasLayer->SetContentFlags(flags);
 
@@ -6184,8 +6178,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
 bool
 CanvasRenderingContext2D::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                                                   CanvasRenderer* aRenderer,
-                                                   bool aMirror)
+                                                   CanvasRenderer* aRenderer)
 {
   CanvasInitializeData data;
   data.mSize = GetSize();

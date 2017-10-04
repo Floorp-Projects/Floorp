@@ -245,6 +245,22 @@ AccessibleHandler::MarshalAs(REFIID aIid)
 }
 
 HRESULT
+AccessibleHandler::GetMarshalInterface(REFIID aMarshalAsIid,
+                                       NotNull<IUnknown*> aProxy,
+                                       NotNull<IID*> aOutIid,
+                                       NotNull<IUnknown**> aOutUnk)
+{
+  if (aMarshalAsIid == NEWEST_IA2_IID) {
+    *aOutIid = IID_IAccessible;
+  } else {
+    *aOutIid = aMarshalAsIid;
+  }
+
+  return aProxy->QueryInterface(aMarshalAsIid,
+      reinterpret_cast<void**>(static_cast<IUnknown**>(aOutUnk)));
+}
+
+HRESULT
 AccessibleHandler::GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize)
 {
   if (!aOutPayloadSize) {

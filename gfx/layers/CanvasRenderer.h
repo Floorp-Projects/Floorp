@@ -41,7 +41,6 @@ struct CanvasInitializeData {
     , mSize(0,0)
     , mHasAlpha(false)
     , mIsGLAlphaPremult(true)
-    , mIsMirror(false)
   { }
 
   // One of these three must be specified for Canvas2D, but never more than one
@@ -66,10 +65,6 @@ struct CanvasInitializeData {
 
   // Whether mGLContext contains data that is alpha-premultiplied.
   bool mIsGLAlphaPremult;
-
-  // Whether the canvas front buffer is already being rendered somewhere else.
-  // When true, do not swap buffers or Morph() to another factory on mGLContext
-  bool mIsMirror;
 };
 
 // Based class which used for canvas rendering. There are many derived classes for

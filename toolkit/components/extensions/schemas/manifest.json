@@ -19,6 +19,11 @@
             "optional": true
           },
 
+          "minimum_opera_version":{
+            "type": "string",
+            "optional": true
+          },
+
           "applications": {
             "type": "object",
             "optional": true,

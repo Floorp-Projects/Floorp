@@ -256,6 +256,8 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
 
     /* Step 3. */
     if (scx->replacer && scx->replacer->isCallable()) {
+        MOZ_ASSERT(holder != nullptr, "holder object must be present when replacer is callable");
+
         if (!keyStr) {
             keyStr = KeyStringifier<KeyType>::toString(cx, key);
             if (!keyStr)
@@ -748,15 +750,21 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const V
         MOZ_ASSERT(gap.empty());
     }
 
-    /* Step 9. */
-    RootedPlainObject wrapper(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!wrapper)
-        return false;
-
-    /* Steps 10-11. */
+    RootedPlainObject wrapper(cx);
     RootedId emptyId(cx, NameToId(cx->names().empty));
-    if (!NativeDefineDataProperty(cx, wrapper, emptyId, vp, JSPROP_ENUMERATE))
-        return false;
+    if (replacer && replacer->isCallable()) {
+        // We can skip creating the initial wrapper object if no replacer
+        // function is present.
+
+        /* Step 9. */
+        wrapper = NewBuiltinClassInstance<PlainObject>(cx);
+        if (!wrapper)
+            return false;
+
+        /* Steps 10-11. */
+        if (!NativeDefineDataProperty(cx, wrapper, emptyId, vp, JSPROP_ENUMERATE))
+            return false;
+    }
 
     /* Step 12. */
     StringifyContext scx(cx, sb, gap, replacer, propertyList,

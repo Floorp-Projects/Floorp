@@ -2,12 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import fnmatch
 import glob
+import gzip
 import json
 import os
 import sys
 import time
 import shutil
+import tempfile
 
 from marionette_harness import MarionetteTestCase
 from marionette_driver import Actions
@@ -49,6 +52,8 @@ class TestMemoryUsage(MarionetteTestCase):
             os.unlink(f)
         for f in glob.glob(os.path.join(self._resultsDir, 'perfherder_data.json')):
             os.unlink(f)
+        for f in glob.glob(os.path.join(self._resultsDir, 'dmd-*.json.gz')):
+            os.unlink(f)
 
         self._urls = []
 
@@ -66,6 +71,7 @@ class TestMemoryUsage(MarionetteTestCase):
         self._perTabPause = self.testvars.get("perTabPause", PER_TAB_PAUSE)
         self._settleWaitTime = self.testvars.get("settleWaitTime", SETTLE_WAIT_TIME)
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
+        self._dmd = self.testvars.get("dmd", False)
 
         self._webservers = webservers.WebServers("localhost",
                                                  8001,
@@ -95,6 +101,9 @@ class TestMemoryUsage(MarionetteTestCase):
             json.dump(perf_blob, fp, indent=2)
         self.logger.info("Perfherder data written to %s" % perf_file)
 
+        if self._dmd:
+            self.cleanup_dmd()
+
         # copy it to moz upload dir if set
         if 'MOZ_UPLOAD_DIR' in os.environ:
             for file in os.listdir(self._resultsDir):
@@ -103,6 +112,29 @@ class TestMemoryUsage(MarionetteTestCase):
                     shutil.copy2(file, os.environ["MOZ_UPLOAD_DIR"])
 
         self.logger.info("done tearing down!")
+
+    def cleanup_dmd(self):
+        """
+        Handles moving DMD reports from the temp dir to our resultsDir.
+        """
+        from dmd import fixStackTraces
+
+        # Move DMD files from temp dir to resultsDir.
+        tmpdir = tempfile.gettempdir()
+        tmp_files = os.listdir(tmpdir)
+        for f in fnmatch.filter(tmp_files, "dmd-*.json.gz"):
+            f = os.path.join(tmpdir, f)
+            self.logger.info("Fixing stacks for %s, this may take a while" % f)
+            isZipped = True
+            fixStackTraces(f, isZipped, gzip.open)
+            shutil.move(f, self._resultsDir)
+
+        # Also attempt to cleanup the unified memory reports.
+        for f in fnmatch.filter(tmp_files, "unified-memory-report-*.json.gz"):
+            try:
+                os.remove(f)
+            except OSError:
+                self.logger.info("Unable to remove %s" % f)
 
     def reset_state(self):
         self._pages_loaded = 0
@@ -225,7 +257,74 @@ class TestMemoryUsage(MarionetteTestCase):
         else:
             self.logger.info("checkpoint created, stored in %s" % checkpoint_path)
 
+        # Now trigger a DMD report if requested.
+        if self._dmd:
+            self.do_dmd(checkpointName, iteration)
+
         return checkpoint
+
+    def do_dmd(self, checkpointName, iteration):
+        """
+        Triggers DMD reports that are used to help identify sources of
+        'heap-unclassified'.
+
+        NB: This will dump DMD reports to the temp dir. Unfortunately it also
+        dumps memory reports, but that's all we have to work with right now.
+        """
+        self.logger.info("Starting %s DMD reports..." % checkpointName)
+
+        ident = "%s-%d" % (checkpointName, iteration)
+
+        # TODO(ER): This actually takes a minimize argument. We could use that
+        # rather than have a separate `do_gc` function. Also it generates a
+        # memory report so we could combine this with `do_checkpoint`. The main
+        # issue would be moving everything out of the temp dir.
+        #
+        # Generated files have the form:
+        #   dmd-<checkpoint>-<iteration>-pid.json.gz, ie:
+        #   dmd-TabsOpenForceGC-0-10885.json.gz
+        #
+        # and for the memory report:
+        #   unified-memory-report-<checkpoint>-<iteration>.json.gz
+        dmd_script = r"""
+            const Cc = Components.classes;
+            const Ci = Components.interfaces;
+
+            let dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+            dumper.dumpMemoryInfoToTempDir(
+                "%s",
+                /* anonymize = */ false,
+                /* minimize = */ false);
+            """ % ident
+
+        try:
+            # This is async and there's no callback so we use the existence
+            # of an incomplete memory report to check if it hasn't finished yet.
+            self.marionette.execute_script(dmd_script, script_timeout=60000)
+            tmpdir = tempfile.gettempdir()
+            prefix = "incomplete-unified-memory-report-%s-%d-*" % (checkpointName, iteration)
+            max_wait = 60
+            elapsed = 0
+            while fnmatch.filter(os.listdir(tmpdir), prefix) and elapsed < max_wait:
+                self.logger.info("Waiting for memory report to finish")
+                time.sleep(1)
+                elapsed += 1
+
+            incomplete = fnmatch.filter(os.listdir(tmpdir), prefix)
+            if incomplete:
+                # The memory reports never finished.
+                self.logger.error("Incomplete memory reports leftover.")
+                for f in incomplete:
+                    os.remove(os.path.join(tmpdir, f))
+
+        except JavascriptException, e:
+            self.logger.error("DMD JavaScript error: %s" % e)
+        except ScriptTimeoutException:
+            self.logger.error("DMD timed out")
+        except:
+            self.logger.error("Unexpected error: %s" % sys.exc_info()[0])
+        else:
+            self.logger.info("DMD started, prefixed with %s" % ident)
 
     def open_and_focus(self):
         """Opens the next URL in the list and focuses on the tab it is opened in.

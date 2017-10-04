@@ -12,7 +12,7 @@
 </hbox>
 
 <groupbox class="no-results-message" data-category="paneSearchResults" hidden="true">
-  <vbox>
+  <vbox class="no-results-container">
     <label id="sorry-message"></label>
     <label id="need-help"></label>
   </vbox>

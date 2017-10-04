@@ -1982,7 +1982,7 @@ protected:
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
   using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;
-  nsAutoPtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
+  mozilla::UniquePtr<XBLPrototypeHandlerTable> mCachedXBLPrototypeHandlers;
 
   // mSuspendedDoc is only set on outer windows. It's useful when we get matched
   // EnterModalState/LeaveModalState calls, in which case the outer window is
@@ -2015,7 +2015,7 @@ protected:
   nsTArray<uint32_t> mEnabledSensors;
 
 #if defined(MOZ_WIDGET_ANDROID)
-  nsAutoPtr<mozilla::dom::WindowOrientationObserver> mOrientationChangeObserver;
+  mozilla::UniquePtr<mozilla::dom::WindowOrientationObserver> mOrientationChangeObserver;
 #endif
 
 #ifdef MOZ_WEBSPEECH

@@ -78,7 +78,7 @@ public:
   {
   }
   nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther) :
-    mKey(mozilla::Move(aOther.GetKey())),
+    mKey(mozilla::Move(aOther.mKey)),
     mIdContentList(mozilla::Move(aOther.mIdContentList)),
     mNameContentList(aOther.mNameContentList.forget()),
     mChangeCallbacks(aOther.mChangeCallbacks.forget()),
@@ -86,8 +86,6 @@ public:
   {
   }
   ~nsIdentifierMapEntry();
-
-  KeyType GetKey() const { return mKey; }
 
   nsString GetKeyAsString() const
   {
