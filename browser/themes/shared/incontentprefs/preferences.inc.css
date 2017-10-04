@@ -789,7 +789,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 .no-results-message[query*=🔥🦊] {
-  background-image: url("chrome://browser/skin/preferences/in-content/critters-postcard.png");
+  background-image: url("chrome://browser/skin/preferences/in-content/critters-postcard.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
