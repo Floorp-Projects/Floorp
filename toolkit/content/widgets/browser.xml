@@ -554,13 +554,6 @@
         ]]></setter>
       </property>
 
-      <property name="deviceFullZoom"
-                readonly="true">
-        <getter><![CDATA[
-          return this.markupDocumentViewer.deviceFullZoom;
-        ]]></getter>
-      </property>
-
       <property name="textZoom">
         <getter><![CDATA[
           return this.markupDocumentViewer.textZoom;
