@@ -1165,7 +1165,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
          */
         MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
         MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_NURSERY_BYTES, maxNurseryBytes, lock));
-        setMaxMallocBytes(maxbytes);
+        setMaxMallocBytes(maxbytes, lock);
 
         const char* size = getenv("JSGC_MARK_STACK_LIMIT");
         if (size)
@@ -1247,9 +1247,7 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
 {
     switch (key) {
       case JSGC_MAX_MALLOC_BYTES:
-        setMaxMallocBytes(value);
-        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-            zone->setGCMaxMallocBytes(maxMallocBytesAllocated() * 0.9);
+        setMaxMallocBytes(value, lock);
         break;
       case JSGC_SLICE_TIME_BUDGET:
         defaultTimeBudget_ = value ? value : SliceBudget::UnlimitedTimeBudget;
@@ -1438,9 +1436,7 @@ GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock)
 {
     switch (key) {
       case JSGC_MAX_MALLOC_BYTES:
-        setMaxMallocBytes(0xffffffff);
-        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-            zone->setGCMaxMallocBytes(maxMallocBytesAllocated() * 0.9);
+        setMaxMallocBytes(0xffffffff, lock);
         break;
       case JSGC_SLICE_TIME_BUDGET:
         defaultTimeBudget_ = TuningDefaults::DefaultTimeBudget;
@@ -1816,11 +1812,11 @@ js::RemoveRawValueRoot(JSContext* cx, Value* vp)
 }
 
 void
-GCRuntime::setMaxMallocBytes(size_t value)
+GCRuntime::setMaxMallocBytes(size_t value, const AutoLockGC& lock)
 {
-    mallocCounter.setMax(value);
+    mallocCounter.setMax(value, lock);
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        zone->setGCMaxMallocBytes(value);
+        zone->setGCMaxMallocBytes(value * 0.9, lock);
 }
 
 double
