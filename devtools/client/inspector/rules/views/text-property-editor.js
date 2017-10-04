@@ -973,9 +973,6 @@ TextPropertyEditor.prototype = {
     let selector = `.ruleview-shape-point.active`;
     for (let pointNode of ruleViewEl.querySelectorAll(selector)) {
       this._toggleShapePointActive(pointNode, false);
-      // Emit event for unit tests when point is hovered on highlighter
-      // and same point is highlighted in the rule view
-      this.ruleView.emit("ruleview-shape-point-highlight");
     }
 
     if (typeof point === "string") {
@@ -991,9 +988,6 @@ TextPropertyEditor.prototype = {
         let nodeInfo = view.getNodeInfo(pointNode);
         if (highlighters.isRuleViewShapePoint(nodeInfo)) {
           this._toggleShapePointActive(pointNode, true);
-          // Emit event for unit tests when point is hovered on highlighter
-          // and same point is highlighted in the rule view
-          this.ruleView.emit("ruleview-shape-point-highlight");
         }
       }
     }
