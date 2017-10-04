@@ -282,7 +282,6 @@
     macro(pattern, pattern, "pattern") \
     macro(pending, pending, "pending") \
     macro(PluralRules, PluralRules, "PluralRules") \
-    macro(PluralRulesSelect, PluralRulesSelect, "Intl_PluralRules_Select") \
     macro(percentSign, percentSign, "percentSign") \
     macro(plusSign, plusSign, "plusSign") \
     macro(public, public_, "public") \

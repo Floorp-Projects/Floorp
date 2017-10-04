@@ -336,31 +336,6 @@ private:
   operator=(const GridTemplateAreasValue& aOther) = delete;
 };
 
-class FontFamilyListRefCnt final : public FontFamilyList {
-public:
-    FontFamilyListRefCnt()
-        : FontFamilyList()
-    {}
-
-    explicit FontFamilyListRefCnt(FontFamilyType aGenericType)
-        : FontFamilyList(aGenericType)
-    {}
-
-    FontFamilyListRefCnt(const nsAString& aFamilyName,
-                         QuotedName aQuoted)
-        : FontFamilyList(aFamilyName, aQuoted)
-    {}
-
-    FontFamilyListRefCnt(const FontFamilyListRefCnt& aOther)
-        : FontFamilyList(aOther)
-    {}
-
-    NS_INLINE_DECL_REFCOUNTING(FontFamilyListRefCnt);
-
-private:
-    ~FontFamilyListRefCnt() {}
-};
-
 struct RGBAColorData
 {
   // 1.0 means 100% for all components, but the value may fall outside
@@ -528,7 +503,7 @@ enum nsCSSUnit {
   eCSSUnit_PairListDep  = 57,     // (nsCSSValuePairList*) same as PairList
                                   //   but does not own the list
 
-  eCSSUnit_FontFamilyList = 58,   // (FontFamilyList*) value
+  eCSSUnit_FontFamilyList = 58,   // (SharedFontList*) value
 
   // Atom units
   eCSSUnit_AtomIdent    = 60,     // (nsIAtom*) for its string as an identifier
@@ -641,7 +616,7 @@ public:
   explicit nsCSSValue(nsCSSValueGradient* aValue);
   explicit nsCSSValue(nsCSSValueTokenStream* aValue);
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
-  explicit nsCSSValue(mozilla::css::FontFamilyListRefCnt* aValue);
+  explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
     : mUnit(aOther.mUnit)
@@ -843,13 +818,13 @@ public:
     return mValue.mSharedList;
   }
 
-  mozilla::FontFamilyList* GetFontFamilyListValue() const
+  mozilla::NotNull<mozilla::SharedFontList*> GetFontFamilyListValue() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_FontFamilyList,
                "not a font family list value");
     NS_ASSERTION(mValue.mFontFamilyList != nullptr,
                  "font family list value should never be null");
-    return mValue.mFontFamilyList;
+    return mozilla::WrapNotNull(mValue.mFontFamilyList);
   }
 
   // bodies of these are below
@@ -962,7 +937,7 @@ public:
   void SetGradientValue(nsCSSValueGradient* aGradient);
   void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
-  void SetFontFamilyListValue(mozilla::css::FontFamilyListRefCnt* aFontListValue);
+  void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetSharedListValue(nsCSSValueSharedList* aList);
@@ -1064,7 +1039,7 @@ protected:
     nsCSSValuePairList_heap* MOZ_OWNING_REF mPairList;
     nsCSSValuePairList* mPairListDependent;
     nsCSSValueFloatColor* MOZ_OWNING_REF mFloatColor;
-    mozilla::css::FontFamilyListRefCnt* MOZ_OWNING_REF mFontFamilyList;
+    mozilla::SharedFontList* MOZ_OWNING_REF mFontFamilyList;
     mozilla::css::ComplexColorValue* MOZ_OWNING_REF mComplexColor;
   } mValue;
 };

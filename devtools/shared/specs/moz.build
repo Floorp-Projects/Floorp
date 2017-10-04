@@ -28,7 +28,6 @@ DevToolsModules(
     'layout.js',
     'memory.js',
     'node.js',
-    'performance-entries.js',
     'performance-recording.js',
     'performance.js',
     'preference.js',

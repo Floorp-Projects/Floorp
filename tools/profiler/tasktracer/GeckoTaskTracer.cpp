@@ -347,6 +347,9 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
     log->mBegin.mTime = GetTimestamp();
     log->mBegin.mPid = getpid();
     log->mBegin.mTid = Thread::GetCurrentId();
+
+    MOZ_ASSERT(log->mBegin.mPid >= 0, "native process ID is < 0 (signed integer overflow)");
+    MOZ_ASSERT(log->mBegin.mTid >= 0, "native thread ID is < 0  (signed integer overflow)");
   }
 }
 

@@ -16,6 +16,7 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/layers/WebRenderCommandBuilder.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -63,43 +64,6 @@ public:
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override;
   virtual bool BeginTransaction() override;
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
-  Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
-                                     ImageContainer* aContainer,
-                                     mozilla::wr::DisplayListBuilder& aBuilder,
-                                     mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                     const StackingContextHelper& aSc,
-                                     gfx::IntSize& aSize);
-  bool PushImage(nsDisplayItem* aItem,
-                 ImageContainer* aContainer,
-                 mozilla::wr::DisplayListBuilder& aBuilder,
-                 mozilla::wr::IpcResourceUpdateQueue& aResources,
-                 const StackingContextHelper& aSc,
-                 const LayerRect& aRect);
-
-  already_AddRefed<WebRenderFallbackData>
-  GenerateFallbackData(nsDisplayItem* aItem,
-                       wr::DisplayListBuilder& aBuilder,
-                       wr::IpcResourceUpdateQueue& aResourceUpdates,
-                       const StackingContextHelper& aSc,
-                       nsDisplayListBuilder* aDisplayListBuilder,
-                       LayerRect& aImageRect);
-
-  Maybe<wr::WrImageMask> BuildWrMaskImage(nsDisplayItem* aItem,
-                                          wr::DisplayListBuilder& aBuilder,
-                                          wr::IpcResourceUpdateQueue& aResources,
-                                          const StackingContextHelper& aSc,
-                                          nsDisplayListBuilder* aDisplayListBuilder,
-                                          const LayerRect& aBounds);
-  bool PushItemAsImage(nsDisplayItem* aItem,
-                       wr::DisplayListBuilder& aBuilder,
-                       wr::IpcResourceUpdateQueue& aResources,
-                       const StackingContextHelper& aSc,
-                       nsDisplayListBuilder* aDisplayListBuilder);
-  void CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
-                                              nsDisplayListBuilder* aDisplayListBuilder,
-                                              const StackingContextHelper& aSc,
-                                              wr::DisplayListBuilder& aBuilder,
-                                              wr::IpcResourceUpdateQueue& aResources);
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                   nsDisplayListBuilder* aDisplayListBuilder);
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
@@ -184,55 +148,12 @@ public:
   const APZTestData& GetAPZTestData() const
   { return mApzTestData; }
 
-  // Those are data that we kept between transactions. We used to cache some
-  // data in the layer. But in layers free mode, we don't have layer which
-  // means we need some other place to cached the data between transaction.
-  // We store the data in frame's property.
-  template<class T> already_AddRefed<T>
-  CreateOrRecycleWebRenderUserData(nsDisplayItem* aItem, bool* aOutIsRecycled = nullptr)
-  {
-    MOZ_ASSERT(aItem);
-    nsIFrame* frame = aItem->Frame();
-    if (aOutIsRecycled) {
-      *aOutIsRecycled = true;
-    }
-
-    nsIFrame::WebRenderUserDataTable* userDataTable =
-      frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
-
-    if (!userDataTable) {
-      userDataTable = new nsIFrame::WebRenderUserDataTable();
-      frame->AddProperty(nsIFrame::WebRenderUserDataProperty(), userDataTable);
-    }
-
-    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
-    if (!data || (data->GetType() != T::Type()) || !data->IsDataValid(this)) {
-      // To recreate a new user data, we should remove the data from the table first.
-      if (data) {
-        data->RemoveFromTable();
-      }
-      data = new T(this, aItem, &mWebRenderUserDatas);
-      mWebRenderUserDatas.PutEntry(data);
-      if (aOutIsRecycled) {
-        *aOutIsRecycled = false;
-      }
-    }
-
-    MOZ_ASSERT(data);
-    MOZ_ASSERT(data->GetType() == T::Type());
-
-    // Mark the data as being used. We will remove unused user data in the end of EndTransaction.
-    data->SetUsed(true);
-
-    if (T::Type() == WebRenderUserData::UserDataType::eCanvas) {
-      mLastCanvasDatas.PutEntry(data->AsCanvasData());
-    }
-    RefPtr<T> res = static_cast<T*>(data.get());
-    return res.forget();
-  }
-
   bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
                                                 const ScrollUpdateInfo& aUpdateInfo) override;
+
+  WebRenderCommandBuilder& CommandBuilder() { return mWebRenderCommandBuilder; }
+  WebRenderUserDataRefTable* GetWebRenderUserDataTable() { return mWebRenderCommandBuilder.GetWebRenderUserDataTable(); }
+  WebRenderScrollData& GetScrollData() { return mScrollData; }
 
 private:
   /**
@@ -242,33 +163,6 @@ private:
   void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
 
   void ClearLayer(Layer* aLayer);
-
-  void RemoveUnusedAndResetWebRenderUserData()
-  {
-    for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
-      WebRenderUserData* data = iter.Get()->GetKey();
-      if (!data->IsUsed()) {
-        nsIFrame* frame = data->GetFrame();
-
-        MOZ_ASSERT(frame->HasProperty(nsIFrame::WebRenderUserDataProperty()));
-
-        nsIFrame::WebRenderUserDataTable* userDataTable =
-          frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
-
-        MOZ_ASSERT(userDataTable->Count());
-
-        userDataTable->Remove(data->GetDisplayItemKey());
-
-        if (!userDataTable->Count()) {
-          frame->RemoveProperty(nsIFrame::WebRenderUserDataProperty());
-        }
-        iter.Remove();
-        continue;
-      }
-
-      data->SetUsed(false);
-    }
-  }
 
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
@@ -293,38 +187,9 @@ private:
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
-  // These fields are used to save a copy of the display list for
-  // empty transactions in layers-free mode.
-  wr::BuiltDisplayList mBuiltDisplayList;
-  nsTArray<WebRenderParentCommand> mParentCommands;
-
   // This holds the scroll data that we need to send to the compositor for
   // APZ to do it's job
   WebRenderScrollData mScrollData;
-  // We use this as a temporary data structure while building the mScrollData
-  // inside a layers-free transaction.
-  std::vector<WebRenderLayerScrollData> mLayerScrollData;
-  // We use this as a temporary data structure to track the current display
-  // item's ASR as we recurse in CreateWebRenderCommandsFromDisplayList. We
-  // need this so that WebRenderLayerScrollData items that deeper in the
-  // tree don't duplicate scroll metadata that their ancestors already have.
-  std::vector<const ActiveScrolledRoot*> mAsrStack;
-  const ActiveScrolledRoot* mLastAsr;
-
-public:
-  // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
-  // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
-  // (A != B). In this hopefully-rare case, they will get separate entries
-  // in this map when in fact we could collapse them. However, to collapse
-  // them involves writing a custom hash function for the pointer type such that
-  // A and B hash to the same things whenever DisplayItemClipChain::Equal(A, B)
-  // is true, and that will incur a performance penalty for all the hashmap
-  // operations, so is probably not worth it. With the current code we might
-  // end up creating multiple clips in WR that are effectively identical but
-  // have separate clip ids. Hopefully this won't happen very often.
-  typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
-private:
-  ClipIdMap mClipIdCache;
 
   bool mTransactionIncomplete;
 
@@ -332,27 +197,21 @@ private:
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
 
- // When we're doing a transaction in order to draw to a non-default
- // target, the layers transaction is only performed in order to send
- // a PLayers:Update.  We save the original non-default target to
- // mTarget, and then perform the transaction. After the transaction ends,
- // we send a message to our remote side to capture the actual pixels
- // being drawn to the default target, and then copy those pixels
- // back to mTarget.
- RefPtr<gfxContext> mTarget;
+  // When we're doing a transaction in order to draw to a non-default
+  // target, the layers transaction is only performed in order to send
+  // a PLayers:Update.  We save the original non-default target to
+  // mTarget, and then perform the transaction. After the transaction ends,
+  // we send a message to our remote side to capture the actual pixels
+  // being drawn to the default target, and then copy those pixels
+  // back to mTarget.
+  RefPtr<gfxContext> mTarget;
 
   // See equivalent field in ClientLayerManager
   uint32_t mPaintSequenceNumber;
   // See equivalent field in ClientLayerManager
   APZTestData mApzTestData;
 
-  typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;
-  // Store of WebRenderCanvasData objects for use in empty transactions
-  CanvasDataSet mLastCanvasDatas;
-
-  WebRenderUserDataRefTable mWebRenderUserDatas;
-
-  size_t mLastDisplayListSize;
+  WebRenderCommandBuilder mWebRenderCommandBuilder;
 };
 
 } // namespace layers

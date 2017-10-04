@@ -57,7 +57,7 @@ function bytesToBase64UrlSafe(buf) {
 }
 
 function base64ToBytesUrlSafe(str) {
-  if (str.length % 4 == 1) {
+  if (!str || str.length % 4 == 1) {
     throw "Improper b64 string";
   }
 

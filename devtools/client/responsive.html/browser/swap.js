@@ -31,7 +31,8 @@ const { tunnelToInnerBrowser } = require("./tunnel");
  *        container page.
  */
 function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
-  let gBrowser = tab.ownerDocument.defaultView.gBrowser;
+  let browserWindow = tab.ownerGlobal;
+  let gBrowser = browserWindow.gBrowser;
   let innerBrowser;
   let tunnel;
 
@@ -41,12 +42,32 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   // event, this one is easier for DevTools to follow because it's only emitted once per
   // transition, instead of twice like SwapDocShells.
   let dispatchDevToolsBrowserSwap = (from, to) => {
-    let CustomEvent = tab.ownerDocument.defaultView.CustomEvent;
+    let CustomEvent = browserWindow.CustomEvent;
     let event = new CustomEvent("DevTools:BrowserSwap", {
       detail: to,
       bubbles: true,
     });
     from.dispatchEvent(event);
+  };
+
+  // A version of `gBrowser.addTab` that absorbs the `TabOpen` event.
+  // The swap process uses a temporary tab, and there's no real need for others to hear
+  // about it.  This hides the temporary tab from things like WebExtensions.
+  let addTabSilently = (uri, options) => {
+    browserWindow.addEventListener("TabOpen", event => {
+      event.stopImmediatePropagation();
+    }, { capture: true, once: true });
+    return gBrowser.addTab(uri, options);
+  };
+
+  // A version of `gBrowser.swapBrowsersAndCloseOther` that absorbs the `TabClose` event.
+  // The swap process uses a temporary tab, and there's no real need for others to hear
+  // about it.  This hides the temporary tab from things like WebExtensions.
+  let swapBrowsersAndCloseOtherSilently = (ourTab, otherTab) => {
+    browserWindow.addEventListener("TabClose", event => {
+      event.stopImmediatePropagation();
+    }, { capture: true, once: true });
+    gBrowser.swapBrowsersAndCloseOther(ourTab, otherTab);
   };
 
   return {
@@ -62,7 +83,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       freezeNavigationState(tab);
 
       // 1. Create a temporary, hidden tab to load the tool UI.
-      let containerTab = gBrowser.addTab("about:blank", {
+      let containerTab = addTabSilently("about:blank", {
         skipAnimation: true,
         forceNotRemote: true,
       });
@@ -128,7 +149,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 6. Swap the tool UI (with viewport showing the content) into the
       //    original browser tab and close the temporary tab used to load the
       //    tool via `swapBrowsersAndCloseOther`.
-      gBrowser.swapBrowsersAndCloseOther(tab, containerTab);
+      swapBrowsersAndCloseOtherSilently(tab, containerTab);
 
       // 7. Start a tunnel from the tool tab's browser to the viewport browser
       //    so that some browser UI functions, like navigation, are connected to
@@ -166,7 +187,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       tunnel = null;
 
       // 2. Create a temporary, hidden tab to hold the content.
-      let contentTab = gBrowser.addTab("about:blank", {
+      let contentTab = addTabSilently("about:blank", {
         skipAnimation: true,
       });
       gBrowser.hideTab(contentTab);
@@ -199,7 +220,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    temporary tab used to hold the content via
       //    `swapBrowsersAndCloseOther`.
       dispatchDevToolsBrowserSwap(contentBrowser, tab.linkedBrowser);
-      gBrowser.swapBrowsersAndCloseOther(tab, contentTab);
+      swapBrowsersAndCloseOtherSilently(tab, contentTab);
 
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
@@ -213,6 +234,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       }
 
       gBrowser = null;
+      browserWindow = null;
 
       // The focus manager seems to get a little dizzy after all this swapping.  If a
       // content element had been focused inside the viewport before stopping, it will

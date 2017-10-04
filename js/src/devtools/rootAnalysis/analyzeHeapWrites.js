@@ -238,6 +238,8 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CounterStyle_GetName", "aResult", null],
         ["Gecko_CounterStyle_GetSingleString", "aResult", null],
         ["Gecko_EnsureMozBorderColors", "aBorder", null],
+        ["Gecko_nsTArray_FontFamilyName_AppendNamed", "aNames", null],
+        ["Gecko_nsTArray_FontFamilyName_AppendGeneric", "aNames", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -506,7 +508,6 @@ function ignoreContents(entry)
             /(nsTSubstring<T>|nsAC?String)::StripTaggedASCII/,
             /(nsTSubstring<T>|nsAC?String)::operator=/,
             /nsTAutoStringN<T, N>::nsTAutoStringN/,
-            /nsTFixedString<T>::nsTFixedString/,
 
             // Similar for some other data structures
             /nsCOMArray_base::SetCapacity/,

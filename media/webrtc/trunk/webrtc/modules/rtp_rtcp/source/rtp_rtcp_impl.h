@@ -89,6 +89,7 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
   void SetCsrcs(const std::vector<uint32_t>& csrcs) override;
 
   int32_t SetRID(const char *rid) override;
+  int32_t SetMID(const char *mid) override;
 
   RTCPSender::FeedbackState GetFeedbackState();
 

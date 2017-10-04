@@ -15,8 +15,8 @@ define(function (require, exports, module) {
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { Rep } = REPS;
 
-  const { SearchBox } = createFactories(require("./search-box"));
-  const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
+  const { SearchBox } = createFactories(require("./SearchBox"));
+  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   const { div } = dom;
   const AUTO_EXPAND_MAX_SIZE = 100 * 1024;

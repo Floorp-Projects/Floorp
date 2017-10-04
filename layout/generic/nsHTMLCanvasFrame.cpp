@@ -137,7 +137,7 @@ public:
       {
         bool isRecycled;
         RefPtr<WebRenderCanvasData> canvasData =
-          aManager->CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(this, &isRecycled);
+          aManager->CommandBuilder().CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(this, &isRecycled);
         WebRenderCanvasRendererAsync* data =
           static_cast<WebRenderCanvasRendererAsync*>(canvasData->GetCanvasRenderer());
 

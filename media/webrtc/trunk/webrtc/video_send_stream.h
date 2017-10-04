@@ -169,6 +169,7 @@ class VideoSendStream {
       std::string c_name;
 
       std::vector<std::string> rids;
+      std::string mid;
     } rtp;
 
     // Transport for outgoing packets.

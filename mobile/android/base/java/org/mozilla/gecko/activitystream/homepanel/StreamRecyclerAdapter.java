@@ -123,7 +123,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     @Override
     public int getItemViewType(int position) {
         if (position >= recyclerViewModel.size()) {
-            throw new IllegalArgumentException("Requested position does not exist");
+            throw new IllegalArgumentException("Requested position, " + position + ", does not exist. Size is :" +
+                    recyclerViewModel.size());
         }
         return recyclerViewModel.get(position).getRowItemType().getViewType();
     }

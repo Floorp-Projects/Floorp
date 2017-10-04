@@ -69,7 +69,7 @@
 
 using namespace mozilla;
 
-/* static */ Thread::tid_t
+/* static */ int
 Thread::GetCurrentId()
 {
   return gettid();

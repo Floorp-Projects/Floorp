@@ -36,7 +36,26 @@ async function doTests() {
     version: version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
-    local_isnot(res.errorCode, 0, "AppID should not work from another subdomain in this registered domain");
+    // Changed in Bug 1244959 to behave like W3C Web Authentication
+    local_is(res.errorCode, 0, "AppID should work from another subdomain in this registered domain");
+  });
+
+  // sub-subdomain check
+  await promiseU2FRegister("https://sub.test1.example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    // Changed in Bug 1244959 to behave like W3C Web Authentication
+    local_is(res.errorCode, 0, "AppID should work from a sub-subdomain");
+  });
+
+  // sub-subdomain check
+  await promiseU2FRegister("https://test2.example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    // Changed in Bug 1244959 to behave like W3C Web Authentication
+    local_is(res.errorCode, 0, "AppID should work from another subdomain of the eTLD+1");
   });
 
   // other domain check
@@ -45,6 +64,14 @@ async function doTests() {
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_isnot(res.errorCode, 0, "AppID should not work from other domains");
+  });
+
+  // TLD check
+  await promiseU2FRegister("https://com:8888/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work from the eTLD itself");
   });
 
   local_finished();

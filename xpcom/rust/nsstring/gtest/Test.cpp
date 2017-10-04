@@ -21,8 +21,6 @@ extern "C" {
 
 SIZE_ALIGN_CHECK(nsString)
 SIZE_ALIGN_CHECK(nsCString)
-SIZE_ALIGN_CHECK(nsFixedString)
-SIZE_ALIGN_CHECK(nsFixedCString)
 
 #define MEMBER_CHECK(Clazz, Member)                                     \
   extern "C" void Rust_Test_Member_##Clazz##_##Member(size_t* size,     \
@@ -35,7 +33,7 @@ SIZE_ALIGN_CHECK(nsFixedCString)
         size_t size, align, offset;                                     \
         Rust_Test_Member_##Clazz##_##Member(&size, &align, &offset);    \
         EXPECT_EQ(size, sizeof(mozilla::DeclVal<Hack>().Member));       \
-        EXPECT_EQ(size, alignof(decltype(mozilla::DeclVal<Hack>().Member))); \
+        EXPECT_EQ(align, alignof(decltype(mozilla::DeclVal<Hack>().Member))); \
         EXPECT_EQ(offset, offsetof(Hack, Member));                      \
       }                                                                 \
     };                                                                  \
@@ -51,26 +49,22 @@ MEMBER_CHECK(nsCString, mData)
 MEMBER_CHECK(nsCString, mLength)
 MEMBER_CHECK(nsCString, mDataFlags)
 MEMBER_CHECK(nsCString, mClassFlags)
-MEMBER_CHECK(nsFixedString, mFixedCapacity)
-MEMBER_CHECK(nsFixedString, mFixedBuf)
-MEMBER_CHECK(nsFixedCString, mFixedCapacity)
-MEMBER_CHECK(nsFixedCString, mFixedBuf)
 
 extern "C" void Rust_Test_NsStringFlags(uint16_t* f_terminated,
                                         uint16_t* f_voided,
                                         uint16_t* f_shared,
                                         uint16_t* f_owned,
-                                        uint16_t* f_fixed,
+                                        uint16_t* f_inline,
                                         uint16_t* f_literal,
-                                        uint16_t* f_class_fixed,
+                                        uint16_t* f_class_inline,
                                         uint16_t* f_class_null_terminated);
 TEST(RustNsString, NsStringFlags) {
-  uint16_t f_terminated, f_voided, f_shared, f_owned, f_fixed, f_literal,
-           f_class_fixed, f_class_null_terminated;
+  uint16_t f_terminated, f_voided, f_shared, f_owned, f_inline, f_literal,
+           f_class_inline, f_class_null_terminated;
   Rust_Test_NsStringFlags(&f_terminated,
                           &f_voided, &f_shared,
-                          &f_owned, &f_fixed,
-                          &f_literal, &f_class_fixed, &f_class_null_terminated);
+                          &f_owned, &f_inline,
+                          &f_literal, &f_class_inline, &f_class_null_terminated);
   EXPECT_EQ(f_terminated, uint16_t(nsAString::DataFlags::TERMINATED));
   EXPECT_EQ(f_terminated, uint16_t(nsACString::DataFlags::TERMINATED));
   EXPECT_EQ(f_voided, uint16_t(nsAString::DataFlags::VOIDED));
@@ -79,12 +73,12 @@ TEST(RustNsString, NsStringFlags) {
   EXPECT_EQ(f_shared, uint16_t(nsACString::DataFlags::SHARED));
   EXPECT_EQ(f_owned, uint16_t(nsAString::DataFlags::OWNED));
   EXPECT_EQ(f_owned, uint16_t(nsACString::DataFlags::OWNED));
-  EXPECT_EQ(f_fixed, uint16_t(nsAString::DataFlags::FIXED));
-  EXPECT_EQ(f_fixed, uint16_t(nsACString::DataFlags::FIXED));
+  EXPECT_EQ(f_inline, uint16_t(nsAString::DataFlags::INLINE));
+  EXPECT_EQ(f_inline, uint16_t(nsACString::DataFlags::INLINE));
   EXPECT_EQ(f_literal, uint16_t(nsAString::DataFlags::LITERAL));
   EXPECT_EQ(f_literal, uint16_t(nsACString::DataFlags::LITERAL));
-  EXPECT_EQ(f_class_fixed, uint16_t(nsAString::ClassFlags::FIXED));
-  EXPECT_EQ(f_class_fixed, uint16_t(nsACString::ClassFlags::FIXED));
+  EXPECT_EQ(f_class_inline, uint16_t(nsAString::ClassFlags::INLINE));
+  EXPECT_EQ(f_class_inline, uint16_t(nsACString::ClassFlags::INLINE));
   EXPECT_EQ(f_class_null_terminated, uint16_t(nsAString::ClassFlags::NULL_TERMINATED));
   EXPECT_EQ(f_class_null_terminated, uint16_t(nsACString::ClassFlags::NULL_TERMINATED));
 }
@@ -118,14 +112,6 @@ extern "C" {
 extern "C" void Rust_AssignFromCpp();
 TEST(RustNsString, AssignFromCpp) {
   Rust_AssignFromCpp();
-}
-extern "C" void Rust_FixedAssignFromCpp();
-TEST(RustNsString, FixedAssignFromCpp) {
-  Rust_FixedAssignFromCpp();
-}
-extern "C" void Rust_AutoAssignFromCpp();
-TEST(RustNsString, AutoAssignFromCpp) {
-  Rust_AutoAssignFromCpp();
 }
 
 extern "C" void Rust_StringWrite();
