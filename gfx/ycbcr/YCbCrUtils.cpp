@@ -66,27 +66,6 @@ GetYCbCrToRGBDestFormatAndSize(const layers::PlanarYCbCrData& aData,
   }
 }
 
-static inline void
-ConvertYCbCr16to8Line(uint8_t* aDst,
-                      int aStride,
-                      const uint16_t* aSrc,
-                      int aStride16,
-                      int aWidth,
-                      int aHeight,
-                      int aDepth)
-{
-  uint16_t mask = (1 << aDepth) - 1;
-
-  for (int i = 0; i < aHeight; i++) {
-    for (int j = 0; j < aWidth; j++) {
-      uint16_t val = (aSrc[j] & mask) >> (aDepth - 8);
-      aDst[j] = val;
-    }
-    aDst += aStride;
-    aSrc += aStride16;
-  }
-}
-
 void
 ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                   const SurfaceFormat& aDestFormat,
@@ -100,139 +79,77 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
               aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1) &&
              (aData.mCbCrSize.height == aData.mYSize.height ||
               aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1));
-
-  // Used if converting to 8 bits YUV.
-  UniquePtr<uint8_t[]> yChannel;
-  UniquePtr<uint8_t[]> cbChannel;
-  UniquePtr<uint8_t[]> crChannel;
-  layers::PlanarYCbCrData dstData;
-  const layers::PlanarYCbCrData& srcData = aData.mDepth == 8 ? aData : dstData;
-
-  if (aData.mDepth != 8) {
-    MOZ_ASSERT(aData.mDepth > 8 && aData.mDepth <= 16);
-    // Convert to 8 bits data first.
-    dstData.mPicSize = aData.mPicSize;
-    dstData.mPicX = aData.mPicX;
-    dstData.mPicY = aData.mPicY;
-    dstData.mYSize = aData.mYSize;
-    // We align the destination stride to 32 bytes, so that libyuv can use
-    // SSE optimised code.
-    dstData.mYStride = (aData.mYSize.width + 31) & ~31;
-    dstData.mCbCrSize = aData.mCbCrSize;
-    dstData.mCbCrStride = (aData.mCbCrSize.width + 31) & ~31;
-    dstData.mYUVColorSpace = aData.mYUVColorSpace;
-    dstData.mDepth = 8;
-
-    size_t ySize = GetAlignedStride<1>(dstData.mYStride, aData.mYSize.height);
-    size_t cbcrSize =
-      GetAlignedStride<1>(dstData.mCbCrStride, aData.mCbCrSize.height);
-    if (ySize == 0 || cbcrSize == 0) {
-      return;
-    }
-    yChannel = MakeUnique<uint8_t[]>(ySize);
-    cbChannel = MakeUnique<uint8_t[]>(cbcrSize);
-    crChannel = MakeUnique<uint8_t[]>(cbcrSize);
-
-    dstData.mYChannel = yChannel.get();
-    dstData.mCbChannel = cbChannel.get();
-    dstData.mCrChannel = crChannel.get();
-
-    ConvertYCbCr16to8Line(dstData.mYChannel,
-                          dstData.mYStride,
-                          reinterpret_cast<uint16_t*>(aData.mYChannel),
-                          aData.mYStride / 2,
-                          aData.mYSize.width,
-                          aData.mYSize.height,
-                          aData.mDepth);
-
-    ConvertYCbCr16to8Line(dstData.mCbChannel,
-                          dstData.mCbCrStride,
-                          reinterpret_cast<uint16_t*>(aData.mCbChannel),
-                          aData.mCbCrStride / 2,
-                          aData.mCbCrSize.width,
-                          aData.mCbCrSize.height,
-                          aData.mDepth);
-
-    ConvertYCbCr16to8Line(dstData.mCrChannel,
-                          dstData.mCbCrStride,
-                          reinterpret_cast<uint16_t*>(aData.mCrChannel),
-                          aData.mCbCrStride / 2,
-                          aData.mCbCrSize.width,
-                          aData.mCbCrSize.height,
-                          aData.mDepth);
-  }
-
   YUVType yuvtype =
-    TypeFromSize(srcData.mYSize.width,
-                 srcData.mYSize.height,
-                 srcData.mCbCrSize.width,
-                 srcData.mCbCrSize.height);
+    TypeFromSize(aData.mYSize.width,
+                 aData.mYSize.height,
+                 aData.mCbCrSize.width,
+                 aData.mCbCrSize.height);
 
   // Convert from YCbCr to RGB now, scaling the image if needed.
-  if (aDestSize != srcData.mPicSize) {
+  if (aDestSize != aData.mPicSize) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == SurfaceFormat::R5G6B5_UINT16) {
-      ScaleYCbCrToRGB565(srcData.mYChannel,
-                         srcData.mCbChannel,
-                         srcData.mCrChannel,
+      ScaleYCbCrToRGB565(aData.mYChannel,
+                         aData.mCbChannel,
+                         aData.mCrChannel,
                          aDestBuffer,
-                         srcData.mPicX,
-                         srcData.mPicY,
-                         srcData.mPicSize.width,
-                         srcData.mPicSize.height,
+                         aData.mPicX,
+                         aData.mPicY,
+                         aData.mPicSize.width,
+                         aData.mPicSize.height,
                          aDestSize.width,
                          aDestSize.height,
-                         srcData.mYStride,
-                         srcData.mCbCrStride,
+                         aData.mYStride,
+                         aData.mCbCrStride,
                          aStride,
                          yuvtype,
                          FILTER_BILINEAR);
     } else
 #endif
-      ScaleYCbCrToRGB32(srcData.mYChannel, //
-                        srcData.mCbChannel,
-                        srcData.mCrChannel,
+      ScaleYCbCrToRGB32(aData.mYChannel, //
+                        aData.mCbChannel,
+                        aData.mCrChannel,
                         aDestBuffer,
-                        srcData.mPicSize.width,
-                        srcData.mPicSize.height,
+                        aData.mPicSize.width,
+                        aData.mPicSize.height,
                         aDestSize.width,
                         aDestSize.height,
-                        srcData.mYStride,
-                        srcData.mCbCrStride,
+                        aData.mYStride,
+                        aData.mCbCrStride,
                         aStride,
                         yuvtype,
-                        srcData.mYUVColorSpace,
+                        aData.mYUVColorSpace,
                         FILTER_BILINEAR);
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == SurfaceFormat::R5G6B5_UINT16) {
-      ConvertYCbCrToRGB565(srcData.mYChannel,
-                           srcData.mCbChannel,
-                           srcData.mCrChannel,
+      ConvertYCbCrToRGB565(aData.mYChannel,
+                           aData.mCbChannel,
+                           aData.mCrChannel,
                            aDestBuffer,
-                           srcData.mPicX,
-                           srcData.mPicY,
-                           srcData.mPicSize.width,
-                           srcData.mPicSize.height,
-                           srcData.mYStride,
-                           srcData.mCbCrStride,
+                           aData.mPicX,
+                           aData.mPicY,
+                           aData.mPicSize.width,
+                           aData.mPicSize.height,
+                           aData.mYStride,
+                           aData.mCbCrStride,
                            aStride,
                            yuvtype);
     } else // aDestFormat != SurfaceFormat::R5G6B5_UINT16
 #endif
-      ConvertYCbCrToRGB32(srcData.mYChannel, //
-                          srcData.mCbChannel,
-                          srcData.mCrChannel,
+      ConvertYCbCrToRGB32(aData.mYChannel, //
+                          aData.mCbChannel,
+                          aData.mCrChannel,
                           aDestBuffer,
-                          srcData.mPicX,
-                          srcData.mPicY,
-                          srcData.mPicSize.width,
-                          srcData.mPicSize.height,
-                          srcData.mYStride,
-                          srcData.mCbCrStride,
+                          aData.mPicX,
+                          aData.mPicY,
+                          aData.mPicSize.width,
+                          aData.mPicSize.height,
+                          aData.mYStride,
+                          aData.mCbCrStride,
                           aStride,
                           yuvtype,
-                          srcData.mYUVColorSpace);
+                          aData.mYUVColorSpace);
   }
 }
 
