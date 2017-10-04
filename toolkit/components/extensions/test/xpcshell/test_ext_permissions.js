@@ -284,7 +284,7 @@ add_task(async function test_startup() {
 
   // Restart everything, and force the permissions store to be
   // re-read on startup
-  ExtensionPermissions._uninit();
+  await ExtensionPermissions._uninit();
   await AddonTestUtils.promiseRestartManager();
   await extension1.awaitStartup();
   await extension2.awaitStartup();
@@ -355,7 +355,7 @@ add_task(async function test_alreadyGranted() {
 
   await withHandlingUserInput(extension, async () => {
     let url = await extension.awaitMessage("ready");
-    await ExtensionTestUtils.loadContentPage(url, {extension});
+    let page = await ExtensionTestUtils.loadContentPage(url, {extension});
     await extension.awaitMessage("page-ready");
 
     async function checkRequest(arg, expectPrompt, msg) {
@@ -390,6 +390,7 @@ add_task(async function test_alreadyGranted() {
                        "already granted optional wildcard origin");
     await checkRequest({origins: ["http://host.optional-domain.com/"]}, false,
                        "host matching optional wildcard origin");
+    await page.close();
   });
 
   await extension.unload();

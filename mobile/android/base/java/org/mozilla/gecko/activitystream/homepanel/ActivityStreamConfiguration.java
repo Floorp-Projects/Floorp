@@ -22,8 +22,16 @@ import java.util.Set;
 public class ActivityStreamConfiguration {
 
     private static final Set<Locale> pocketEnabledLocales;
+
+    /**
+     * Notes for testing: Firefox for Android can get its locale from two places: the system locale and an override for
+     * this locale specified in Fennec settings. As such, you should be sure to test all locale updates with both
+     * settings when possible. For example, Deutsch will be "de-DE" in the Android system but "de" when using the Fennec
+     * override.
+     */
     @VisibleForTesting static final String[] pocketEnabledLocaleTags = new String[] {
             // Sorted alphabetically to preserve blame for additions/removals.
+            "de", // used by Firefox multi-locale builds.
             "de-AT",
             "de-CH",
             "de-DE",

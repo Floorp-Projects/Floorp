@@ -156,6 +156,7 @@ let HeadlessShell = {
       }
     } finally {
       Services.startup.exitLastWindowClosingSurvivalArea();
+      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
     }
   }
 };

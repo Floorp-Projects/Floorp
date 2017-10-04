@@ -10,6 +10,7 @@ import unittest
 
 from mozunit import main
 
+from mozbuild import schedules
 from mozbuild.frontend.context import BugzillaComponent
 from mozbuild.frontend.reader import (
     BuildReaderError,
@@ -485,7 +486,7 @@ class TestBuildReader(unittest.TestCase):
         info = reader.files_info(['somefile', 'foo.win', 'foo.osx', 'subd/aa.py', 'subd/yaml.py'])
         # default: all exclusive, no inclusive
         self.assertEqual(info['somefile']['SCHEDULES'].inclusive, [])
-        self.assertEqual(info['somefile']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+        self.assertEqual(info['somefile']['SCHEDULES'].exclusive, schedules.EXCLUSIVE_COMPONENTS)
         # windows-only
         self.assertEqual(info['foo.win']['SCHEDULES'].inclusive, [])
         self.assertEqual(info['foo.win']['SCHEDULES'].exclusive, ['windows'])
@@ -494,13 +495,13 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual(info['foo.osx']['SCHEDULES'].exclusive, ['macosx'])
         # top-level moz.build specifies subd/**.py with an inclusive option
         self.assertEqual(info['subd/aa.py']['SCHEDULES'].inclusive, ['py-lint'])
-        self.assertEqual(info['subd/aa.py']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+        self.assertEqual(info['subd/aa.py']['SCHEDULES'].exclusive, schedules.EXCLUSIVE_COMPONENTS)
         # Files('yaml.py') in subd/moz.build *overrides* Files('subdir/**.py')
         self.assertEqual(info['subd/yaml.py']['SCHEDULES'].inclusive, ['yaml-lint'])
-        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].exclusive, schedules.EXCLUSIVE_COMPONENTS)
 
-        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].components,
-                ['android', 'linux', 'macosx', 'windows', 'yaml-lint'])
+        self.assertEqual(set(info['subd/yaml.py']['SCHEDULES'].components),
+                         set(schedules.EXCLUSIVE_COMPONENTS + ['yaml-lint']))
 
 if __name__ == '__main__':
     main()
