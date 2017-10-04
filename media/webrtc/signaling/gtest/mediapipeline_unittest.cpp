@@ -355,7 +355,7 @@ class TestAgentSend : public TestAgent {
 
   virtual void CreatePipelines_s(bool aIsRtcpMux) {
 
-    std::string test_pc("PC");
+    std::string test_pc;
 
     if (aIsRtcpMux) {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
@@ -405,7 +405,7 @@ class TestAgentReceive : public TestAgent {
   }
 
   virtual void CreatePipelines_s(bool aIsRtcpMux) {
-      std::string test_pc("PC");
+      std::string test_pc;
 
     if (aIsRtcpMux) {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);

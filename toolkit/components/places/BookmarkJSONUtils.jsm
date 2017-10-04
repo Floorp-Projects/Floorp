@@ -455,7 +455,7 @@ function translateTreeTypes(node) {
     let lastModified = PlacesUtils.toDate(node.lastModified);
     // Ensure we get a last modified date that's later or equal to the dateAdded
     // so that we don't upset the Bookmarks API.
-    if (lastModified >= node.dataAdded) {
+    if (lastModified >= node.dateAdded) {
       node.lastModified = lastModified;
     } else {
       delete node.lastModified;

@@ -206,6 +206,30 @@ AppendUnquotedFamilyName(const nsAString& aFamilyName, nsAString& aResult)
 
 /* static */ void
 nsStyleUtil::AppendEscapedCSSFontFamilyList(
+  const nsTArray<mozilla::FontFamilyName>& aNames,
+  nsAString& aResult)
+{
+  size_t i, len = aNames.Length();
+  for (i = 0; i < len; i++) {
+    if (i != 0) {
+      aResult.AppendLiteral(", ");
+    }
+    const FontFamilyName& name = aNames[i];
+    switch (name.mType) {
+      case eFamily_named:
+        AppendUnquotedFamilyName(name.mName, aResult);
+        break;
+      case eFamily_named_quoted:
+        AppendEscapedCSSString(name.mName, aResult);
+        break;
+      default:
+        name.AppendToString(aResult);
+    }
+  }
+}
+
+/* static */ void
+nsStyleUtil::AppendEscapedCSSFontFamilyList(
   const mozilla::FontFamilyList& aFamilyList,
   nsAString& aResult)
 {
@@ -221,24 +245,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
     return;
   }
 
-  const nsTArray<FontFamilyName>& fontlist = aFamilyList.GetFontlist();
-  size_t i, len = fontlist.Length();
-  for (i = 0; i < len; i++) {
-    if (i != 0) {
-      aResult.AppendLiteral(", ");
-    }
-    const FontFamilyName& name = fontlist[i];
-    switch (name.mType) {
-      case eFamily_named:
-        AppendUnquotedFamilyName(name.mName, aResult);
-        break;
-      case eFamily_named_quoted:
-        AppendEscapedCSSString(name.mName, aResult);
-        break;
-      default:
-        name.AppendToString(aResult);
-    }
-  }
+  AppendEscapedCSSFontFamilyList(aFamilyList.GetFontlist().get(), aResult);
 }
 
 

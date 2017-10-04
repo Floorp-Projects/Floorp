@@ -4735,8 +4735,8 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
 
 HRESULT
 TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
-                                           LONG aStart,
-                                           LONG aLength,
+                                           ULONG aStart,
+                                           ULONG aLength,
                                            bool aPreserveSelection)
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,

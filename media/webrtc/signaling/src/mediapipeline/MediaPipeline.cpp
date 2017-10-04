@@ -599,6 +599,7 @@ MediaPipeline::~MediaPipeline() {
 
 nsresult MediaPipeline::Init() {
   ASSERT_ON_THREAD(main_thread_);
+  packet_dumper_ = new PacketDumper(pc_);
 
   if (direction_ == RECEIVE) {
     conduit_->SetReceiverTransport(transport_);
@@ -634,6 +635,9 @@ MediaPipeline::DetachTransport_s()
   transport_->Detach();
   rtp_.Detach();
   rtcp_.Detach();
+
+  // Make sure any cycles are broken
+  packet_dumper_ = nullptr;
 }
 
 nsresult
@@ -691,7 +695,10 @@ MediaPipeline::UpdateTransport_s(int level,
 
   if ((rtp_transport != rtp_.transport_) ||
       (rtcp_transport != rtcp_.transport_)) {
-    DetachTransport_s();
+    disconnect_all();
+    transport_->Detach();
+    rtp_.Detach();
+    rtcp_.Detach();
     rtp_ = TransportInfo(rtp_transport, rtcp_mux ? MUX : RTP);
     rtcp_ = TransportInfo(rtcp_transport, rtcp_mux ? MUX : RTCP);
     AttachTransport_s();
@@ -1090,6 +1097,9 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
     }
   }
 
+  packet_dumper_->Dump(
+      level_, dom::mozPacketDumpType::Srtp, false, data, len);
+
   // Make a copy rather than cast away constness
   auto inner_data = MakeUnique<unsigned char[]>(len);
   memcpy(inner_data.get(), data, len);
@@ -1114,6 +1124,9 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
   RtpLogger::LogPacket(inner_data.get(), out_len, true, true, header.headerLength,
                        description_);
+
+  packet_dumper_->Dump(
+      level_, dom::mozPacketDumpType::Rtp, false, inner_data.get(), out_len);
 
   (void)conduit_->ReceivedRTPPacket(inner_data.get(), out_len, header.ssrc);  // Ignore error codes
 }
@@ -1160,6 +1173,9 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
     }
   }
 
+  packet_dumper_->Dump(
+      level_, dom::mozPacketDumpType::Srtcp, false, data, len);
+
   // Make a copy rather than cast away constness
   auto inner_data = MakeUnique<unsigned char[]>(len);
   memcpy(inner_data.get(), data, len);
@@ -1177,6 +1193,9 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
   increment_rtcp_packets_received();
 
   RtpLogger::LogPacket(inner_data.get(), out_len, true, false, 0, description_);
+
+  packet_dumper_->Dump(
+      level_, dom::mozPacketDumpType::Rtcp, false, data, len);
 
   MOZ_ASSERT(rtcp_.recv_srtp_);  // This should never happen
 
@@ -1682,11 +1701,17 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   int out_len;
   nsresult res;
   if (is_rtp) {
+    pipeline_->packet_dumper_->Dump(
+        pipeline_->level(), dom::mozPacketDumpType::Rtp, true, data->data(), data->len());
+
     res = transport.send_srtp_->ProtectRtp(data->data(),
                                            data->len(),
                                            data->capacity(),
                                            &out_len);
   } else {
+    pipeline_->packet_dumper_->Dump(
+        pipeline_->level(), dom::mozPacketDumpType::Rtcp, true, data->data(), data->len());
+
     res = transport.send_srtp_->ProtectRtcp(data->data(),
                                             data->len(),
                                             data->capacity(),
@@ -1702,8 +1727,14 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   MOZ_MTLOG(ML_DEBUG, pipeline_->description_ << " sending " <<
             (is_rtp ? "RTP" : "RTCP") << " packet");
   if (is_rtp) {
+    pipeline_->packet_dumper_->Dump(
+        pipeline_->level(), dom::mozPacketDumpType::Srtp, true, data->data(), out_len);
+
     pipeline_->increment_rtp_packets_sent(out_len);
   } else {
+    pipeline_->packet_dumper_->Dump(
+        pipeline_->level(), dom::mozPacketDumpType::Srtcp, true, data->data(), out_len);
+
     pipeline_->increment_rtcp_packets_sent();
   }
   return pipeline_->SendPacket(transport.transport_, data->data(), out_len);

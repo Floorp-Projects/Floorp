@@ -1045,7 +1045,7 @@ ContentEventHandler::GenerateFlatFontRanges(const RawRange& aRawRange,
           const FontFamilyList& fontList = font.fontlist;
           const FontFamilyName& fontName = fontList.IsEmpty() ?
             FontFamilyName(fontList.GetDefaultFontType()) :
-            fontList.GetFontlist()[0];
+            fontList.GetFontlist()->mNames[0];
           fontName.AppendToString(fontRange->mFontName, false);
           fontRange->mFontSize =
             frame->PresContext()->AppUnitsToDevPixels(font.size);

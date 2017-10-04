@@ -264,7 +264,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
                                        nsIVariant* aValue,
                                        int32_t aFlags,
                                        uint16_t aExpiration,
-                                       uint16_t aSource)
+                                       uint16_t aSource,
+                                       bool aDontUpdateLastModified)
 {
   AUTO_PROFILER_LABEL("nsAnnotationService::SetItemAnnotation", OTHER);
 
@@ -290,7 +291,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetItemAnnotationInt32(aItemId, aName, valueInt, aFlags, aExpiration, aSource);
+        rv = SetItemAnnotationInt32(aItemId, aName, valueInt, aFlags,
+                                    aExpiration, aSource, aDontUpdateLastModified);
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
@@ -303,7 +305,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetItemAnnotationInt64(aItemId, aName, valueLong, aFlags, aExpiration, aSource);
+        rv = SetItemAnnotationInt64(aItemId, aName, valueLong, aFlags,
+                                    aExpiration, aSource, aDontUpdateLastModified);
         NS_ENSURE_SUCCESS(rv, rv);
         return NS_OK;
       }
@@ -315,7 +318,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       double valueDouble;
       rv = aValue->GetAsDouble(&valueDouble);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetItemAnnotationDouble(aItemId, aName, valueDouble, aFlags, aExpiration, aSource);
+      rv = SetItemAnnotationDouble(aItemId, aName, valueDouble, aFlags,
+                                   aExpiration, aSource, aDontUpdateLastModified);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -332,7 +336,8 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
       nsAutoString stringValue;
       rv = aValue->GetAsAString(stringValue);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetItemAnnotationString(aItemId, aName, stringValue, aFlags, aExpiration, aSource);
+      rv = SetItemAnnotationString(aItemId, aName, stringValue, aFlags,
+                                   aExpiration, aSource, aDontUpdateLastModified);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -367,7 +372,8 @@ nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
                                              const nsAString& aValue,
                                              int32_t aFlags,
                                              uint16_t aExpiration,
-                                             uint16_t aSource)
+                                             uint16_t aSource,
+                                             bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -378,7 +384,7 @@ nsAnnotationService::SetItemAnnotationString(int64_t aItemId,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource, aDontUpdateLastModified));
 
   return NS_OK;
 }
@@ -438,7 +444,8 @@ nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                             int32_t aValue,
                                             int32_t aFlags,
                                             uint16_t aExpiration,
-                                            uint16_t aSource)
+                                            uint16_t aSource,
+                                            bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -449,7 +456,7 @@ nsAnnotationService::SetItemAnnotationInt32(int64_t aItemId,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource, aDontUpdateLastModified));
 
   return NS_OK;
 }
@@ -509,7 +516,8 @@ nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
                                             int64_t aValue,
                                             int32_t aFlags,
                                             uint16_t aExpiration,
-                                            uint16_t aSource)
+                                            uint16_t aSource,
+                                            bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -520,7 +528,7 @@ nsAnnotationService::SetItemAnnotationInt64(int64_t aItemId,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource, aDontUpdateLastModified));
 
   return NS_OK;
 }
@@ -580,7 +588,8 @@ nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                              double aValue,
                                              int32_t aFlags,
                                              uint16_t aExpiration,
-                                             uint16_t aSource)
+                                             uint16_t aSource,
+                                             bool aDontUpdateLastModified)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
@@ -591,7 +600,7 @@ nsAnnotationService::SetItemAnnotationDouble(int64_t aItemId,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource));
+  NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aItemId, aName, aSource, aDontUpdateLastModified));
 
   return NS_OK;
 }
@@ -1639,7 +1648,7 @@ nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
     rv = copyStmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aDestItemId, annoName, aSource));
+    NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aDestItemId, annoName, aSource, false));
   }
 
   rv = transaction.Commit();

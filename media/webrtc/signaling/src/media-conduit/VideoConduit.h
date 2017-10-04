@@ -298,6 +298,7 @@ public:
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetRemoteSSRC(unsigned int ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
+  bool SetLocalMID(const std::string& mid) override;
 
   bool GetSendPacketTypeStats(
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;

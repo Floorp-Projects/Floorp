@@ -55,6 +55,7 @@ class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsDOMMutationObserver;
 class nsRange;
+struct RawServoSelectorList;
 
 namespace mozilla {
 class EventListenerManager;
@@ -2066,9 +2067,45 @@ protected:
    * contained pseudo-element selectors.
    *
    * A failing aRv means the string was not a valid selector.
+   *
+   * Note that the selector list returned here is owned by the owner doc's
+   * selector cache.
    */
   nsCSSSelectorList* ParseSelectorList(const nsAString& aSelectorString,
                                        mozilla::ErrorResult& aRv);
+
+  /**
+   * Parse the given selector string into a servo SelectorList.
+   *
+   * Never returns null if aRv is not failing.
+   *
+   * Note that the selector list returned here is owned by the owner doc's
+   * selector cache.
+   */
+  const RawServoSelectorList* ParseServoSelectorList(
+    const nsAString& aSelectorString,
+    mozilla::ErrorResult& aRv);
+
+  /**
+   * Parse the given selector string into a SelectorList.
+   *
+   * A null return value with a non-failing aRv means the string only
+   * contained pseudo-element selectors.
+   *
+   * A failing aRv means the string was not a valid selector.
+   */
+  template<typename Ret, typename ServoFunctor, typename GeckoFunctor>
+  Ret WithSelectorList(
+    const nsAString& aSelectorString,
+    mozilla::ErrorResult& aRv,
+    const ServoFunctor& aServoFunctor,
+    const GeckoFunctor& aGeckoFunctor)
+  {
+    if (IsStyledByServo()) {
+      return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
+    }
+    return aGeckoFunctor(ParseSelectorList(aSelectorString, aRv));
+  }
 
 public:
   /* Event stuff that documents and elements share.  This needs to be

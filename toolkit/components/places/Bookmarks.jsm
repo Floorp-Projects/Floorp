@@ -1506,8 +1506,10 @@ async function insertLivemarkData(items) {
 
       let id = livemark.id;
       if (item.annos && item.annos.length) {
+        // Note: for annotations, we intentionally skip updating the last modified
+        // value for the bookmark, to avoid a second update of the added bookmark.
         PlacesUtils.setAnnotationsForItem(id, item.annos,
-                                          item.source);
+                                          item.source, true);
       }
     }
   }
@@ -1522,7 +1524,9 @@ async function insertLivemarkData(items) {
  */
 async function handleBookmarkItemSpecialData(itemId, item) {
   if (item.annos && item.annos.length) {
-    PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source)
+    // Note: for annotations, we intentionally skip updating the last modified
+    // value for the bookmark, to avoid a second update of the added bookmark.
+    PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source, true)
   }
   if ("keyword" in item && item.keyword) {
     // POST data could be set in 2 ways:

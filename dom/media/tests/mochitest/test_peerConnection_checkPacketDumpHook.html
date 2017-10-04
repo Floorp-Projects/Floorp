@@ -1,0 +1,107 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1377299",
+    title: "Check that packet dump hooks generate callbacks"
+  });
+
+  function waitForPacket(pc, checkFunction) {
+    return new Promise(resolve => {
+      function onPacket(level, type, sending, packet) {
+        if (checkFunction(level, type, sending, packet)) {
+          SpecialPowers.wrap(pc).mozSetPacketCallback(() => {});
+          resolve();
+        }
+      }
+
+      SpecialPowers.wrap(pc).mozSetPacketCallback(onPacket);
+    }
+    );
+  }
+
+  async function waitForSendPacket(pc, type, level) {
+    await SpecialPowers.wrap(pc).mozEnablePacketDump(level, type, true);
+    await timeout(
+      waitForPacket(pc, (obsLevel, obsType, sending) => {
+        is(obsLevel, level, "Level for packet is " + level);
+        is(obsType, type, "Type for packet is " + type);
+        ok(sending, "This is a send packet");
+        return true;
+      }),
+      10000, "Timeout waiting for " + type + " send packet on level " + level);
+    await SpecialPowers.wrap(pc).mozDisablePacketDump(level, type, true);
+  }
+
+  async function waitForRecvPacket(pc, type, level) {
+    await SpecialPowers.wrap(pc).mozEnablePacketDump(level, type, false);
+    await timeout(
+      waitForPacket(pc, (obsLevel, obsType, sending) => {
+        is(obsLevel, level, "Level for packet is " + level);
+        is(obsType, type, "Type for packet is " + type);
+        ok(!sending, "This is a recv packet");
+        return true;
+      }),
+      10000, "Timeout waiting for " + type + " recv packet on level " + level);
+    await SpecialPowers.wrap(pc).mozDisablePacketDump(level, type, false);
+  }
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true, video: true}],
+                             [{audio: true, video: true}]);
+    // pc.js uses video elements by default, we want to test audio elements here
+    test.pcLocal.audioElementsOnly = true;
+
+    test.chain.insertBefore('PC_LOCAL_WAIT_FOR_MEDIA_FLOW',[
+        async function PC_LOCAL_CHECK_PACKET_DUMP_HOOKS() {
+          await waitForRecvPacket(test.pcLocal._pc, "rtp", 0);
+          await waitForRecvPacket(test.pcLocal._pc, "rtcp", 0);
+          await waitForRecvPacket(test.pcLocal._pc, "srtp", 0);
+          await waitForRecvPacket(test.pcLocal._pc, "srtcp", 0);
+          await waitForSendPacket(test.pcLocal._pc, "rtp", 0);
+          await waitForSendPacket(test.pcLocal._pc, "rtcp", 0);
+          await waitForSendPacket(test.pcLocal._pc, "srtp", 0);
+          await waitForSendPacket(test.pcLocal._pc, "srtcp", 0);
+
+          await waitForRecvPacket(test.pcLocal._pc, "rtp", 1);
+          await waitForRecvPacket(test.pcLocal._pc, "rtcp", 1);
+          await waitForRecvPacket(test.pcLocal._pc, "srtp", 1);
+          await waitForRecvPacket(test.pcLocal._pc, "srtcp", 1);
+          await waitForSendPacket(test.pcLocal._pc, "rtp", 1);
+          await waitForSendPacket(test.pcLocal._pc, "rtcp", 1);
+          await waitForSendPacket(test.pcLocal._pc, "srtp", 1);
+          await waitForSendPacket(test.pcLocal._pc, "srtcp", 1);
+        },
+        async function PC_REMOTE_CHECK_PACKET_DUMP_HOOKS() {
+          await waitForRecvPacket(test.pcRemote._pc, "rtp", 0);
+          await waitForRecvPacket(test.pcRemote._pc, "rtcp", 0);
+          await waitForRecvPacket(test.pcRemote._pc, "srtp", 0);
+          await waitForRecvPacket(test.pcRemote._pc, "srtcp", 0);
+          await waitForSendPacket(test.pcRemote._pc, "rtp", 0);
+          await waitForSendPacket(test.pcRemote._pc, "rtcp", 0);
+          await waitForSendPacket(test.pcRemote._pc, "srtp", 0);
+          await waitForSendPacket(test.pcRemote._pc, "srtcp", 0);
+
+          await waitForRecvPacket(test.pcRemote._pc, "rtp", 1);
+          await waitForRecvPacket(test.pcRemote._pc, "rtcp", 1);
+          await waitForRecvPacket(test.pcRemote._pc, "srtp", 1);
+          await waitForRecvPacket(test.pcRemote._pc, "srtcp", 1);
+          await waitForSendPacket(test.pcRemote._pc, "rtp", 1);
+          await waitForSendPacket(test.pcRemote._pc, "rtcp", 1);
+          await waitForSendPacket(test.pcRemote._pc, "srtp", 1);
+          await waitForSendPacket(test.pcRemote._pc, "srtcp", 1);
+        }
+    ]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

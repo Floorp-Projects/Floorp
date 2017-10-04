@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.hasOwnProperty('addIntlExtras')||xulRuntime.shell)
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||xulRuntime.shell)
 // -- test in browser only that ICU has locale data for all Mozilla languages
 
 // This array contains the locales that ICU supports in
@@ -361,8 +361,6 @@ var locales = [
     "zh-Hant-MO",
     "zh-Hant-TW",
 ];
-
-addIntlExtras(Intl);
 
 const result = Intl.PluralRules.supportedLocalesOf(locales);
 

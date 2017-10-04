@@ -40,6 +40,27 @@ const SWAPPED_BROWSER_STATE = [
 ];
 
 /**
+ * Various parts of the Firefox code base expect to access properties on the browser
+ * window in response to events (by reaching for the window via the event's target).
+ *
+ * When RDM is enabled, these bits of code instead reach the RDM tool's window instead of
+ * the browser window, which won't have the properties they are looking for. At the
+ * moment, we address this by exposing them from the browser window on RDM's window as
+ * needed.
+ */
+const PROPERTIES_FROM_BROWSER_WINDOW = [
+  // This is used by PermissionUI.jsm for permission doorhangers.
+  "PopupNotifications",
+  // These are used by ContentClick.jsm when opening links in ways other than just
+  // navigating the viewport, such as a new tab by pressing Cmd-Click.
+  "whereToOpenLink",
+  "openLinkIn",
+  // This is used by various event handlers, typically to call `getTabForBrowser` to map
+  // a browser back to a tab.
+  "gBrowser",
+];
+
+/**
  * This module takes an "outer" <xul:browser> from a browser tab as described by
  * Firefox's tabbrowser.xml and wires it up to an "inner" <iframe mozbrowser>
  * browser element containing arbitrary page content of interest.
@@ -199,28 +220,18 @@ function tunnelToInnerBrowser(outer, inner) {
         outer[property] = inner[property];
       }
 
-      // Expose `PopupNotifications` on the content's owner global.
-      // This is used by PermissionUI.jsm for permission doorhangers.
-      // Note: This pollutes the responsive.html tool UI's global.
-      Object.defineProperty(inner.ownerGlobal, "PopupNotifications", {
-        get() {
-          return outer.ownerGlobal.PopupNotifications;
-        },
-        configurable: true,
-        enumerable: true,
-      });
-
-      // Expose `whereToOpenLink` on the content's owner global.
-      // This is used by ContentClick.jsm when opening links in ways other than just
-      // navigating the viewport.
-      // Note: This pollutes the responsive.html tool UI's global.
-      Object.defineProperty(inner.ownerGlobal, "whereToOpenLink", {
-        get() {
-          return outer.ownerGlobal.whereToOpenLink;
-        },
-        configurable: true,
-        enumerable: true,
-      });
+      // Expose various properties from the browser window on the RDM tool's global.  This
+      // aids various bits of code that expect to find a browser window, such as event
+      // handlers that reach for the window via the event's target.
+      for (let property of PROPERTIES_FROM_BROWSER_WINDOW) {
+        Object.defineProperty(inner.ownerGlobal, property, {
+          get() {
+            return outer.ownerGlobal[property];
+          },
+          configurable: true,
+          enumerable: true,
+        });
+      }
 
       // Add mozbrowser event handlers
       inner.addEventListener("mozbrowseropenwindow", this);
@@ -277,8 +288,9 @@ function tunnelToInnerBrowser(outer, inner) {
       outer.removeAttribute("remoteType");
 
       // Delete browser window properties exposed on content's owner global
-      delete inner.ownerGlobal.PopupNotifications;
-      delete inner.ownerGlobal.whereToOpenLink;
+      for (let property of PROPERTIES_FROM_BROWSER_WINDOW) {
+        delete inner.ownerGlobal[property];
+      }
 
       // Remove mozbrowser event handlers
       inner.removeEventListener("mozbrowseropenwindow", this);

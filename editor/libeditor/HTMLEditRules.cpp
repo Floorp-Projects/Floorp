@@ -1624,7 +1624,18 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     ReturnInHeader(aSelection, *blockParent, node, offset);
     *aHandled = true;
     return NS_OK;
-  } else if (blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div)) {
+  }
+  // XXX Ideally, we should take same behavior with both <p> container and
+  //     <div> container.  However, we are still using <br> as default
+  //     paragraph separator (non-standard) and we've split only <p> container
+  //     long time.  Therefore, some web apps may depend on this behavior like
+  //     Gmail.  So, let's use traditional odd behavior only when the default
+  //     paragraph separator is <br>.  Otherwise, take consistent behavior
+  //     between <p> container and <div> container.
+  else if ((separator == ParagraphSeparator::br &&
+            blockParent->IsHTMLElement(nsGkAtoms::p)) ||
+           (separator != ParagraphSeparator::br &&
+            blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     // Paragraphs: special rules to look for <br>s
     nsresult rv =
       ReturnInParagraph(&aSelection, GetAsDOMNode(blockParent),

@@ -295,10 +295,12 @@ class Channel
   int VoiceActivityIndicator(int& activity);
 
   // VoERTP_RTCP
+  int SetLocalMID(const char* mid);
   int SetLocalSSRC(unsigned int ssrc);
   int GetLocalSSRC(unsigned int& ssrc);
   int GetRemoteSSRC(unsigned int& ssrc);
   int SetSendAudioLevelIndicationStatus(bool enable, unsigned char id);
+  int SetSendMIDStatus(bool enable, unsigned char id);
   int SetReceiveAudioLevelIndicationStatus(bool enable, unsigned char id);
   int SetSendAbsoluteSenderTimeStatus(bool enable, unsigned char id);
   int SetReceiveAbsoluteSenderTimeStatus(bool enable, unsigned char id);

@@ -199,7 +199,7 @@ FontFaceSet::RemoveDOMContentLoadedListener()
 void
 FontFaceSet::ParseFontShorthandForMatching(
                             const nsAString& aFont,
-                            RefPtr<FontFamilyListRefCnt>& aFamilyList,
+                            RefPtr<SharedFontList>& aFamilyList,
                             uint32_t& aWeight,
                             int32_t& aStretch,
                             uint8_t& aStyle,
@@ -241,8 +241,7 @@ FontFaceSet::ParseFontShorthandForMatching(
     return;
   }
 
-  aFamilyList =
-    static_cast<FontFamilyListRefCnt*>(family->GetFontFamilyListValue());
+  aFamilyList = family->GetFontFamilyListValue();
 
   int32_t weight = data->ValueFor(eCSSProperty_font_weight)->GetIntValue();
 
@@ -282,7 +281,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
                                    nsTArray<FontFace*>& aFontFaces,
                                    ErrorResult& aRv)
 {
-  RefPtr<FontFamilyListRefCnt> familyList;
+  RefPtr<SharedFontList> familyList;
   uint32_t weight;
   int32_t stretch;
   uint8_t italicStyle;
@@ -304,7 +303,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
   // Set of FontFaces that we want to return.
   nsTHashtable<nsPtrHashKey<FontFace>> matchingFaces;
 
-  for (const FontFamilyName& fontFamilyName : familyList->GetFontlist()) {
+  for (const FontFamilyName& fontFamilyName : familyList->mNames) {
     RefPtr<gfxFontFamily> family =
       mUserFontSet->LookupFamily(fontFamilyName.mName);
 

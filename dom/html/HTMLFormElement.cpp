@@ -1828,12 +1828,25 @@ HTMLFormElement::ImplicitSubmissionIsDisabled() const
   uint32_t numDisablingControlsFound = 0;
   uint32_t length = mControls->mElements.Length();
   for (uint32_t i = 0; i < length && numDisablingControlsFound < 2; ++i) {
-    if (mControls->mElements[i]->IsSingleLineTextControl(false) ||
-        mControls->mElements[i]->ControlType() == NS_FORM_INPUT_NUMBER) {
+    if (mControls->mElements[i]->IsSingleLineTextOrNumberControl(false)) {
       numDisablingControlsFound++;
     }
   }
   return numDisablingControlsFound != 1;
+}
+
+bool
+HTMLFormElement::IsLastActiveElement(const nsIFormControl* aControl) const
+{
+  NS_PRECONDITION(aControl, "Unexpected call");
+
+  for (auto* element : Reversed(mControls->mElements)) {
+    if (element->IsSingleLineTextOrNumberControl(false) &&
+        !element->IsDisabled()) {
+      return element == aControl;
+    }
+  }
+  return false;
 }
 
 NS_IMETHODIMP
