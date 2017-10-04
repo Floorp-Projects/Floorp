@@ -26,11 +26,15 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestCompleteLog();
 
-var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one" ];
+var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one", "root" ];
 // non-Mac will always focus the default button if any of the dialog buttons
 // would be focused
 if (navigator.platform.indexOf("Mac") == -1)
   expected[1] = "_accept";
+
+let extraDialog = "data:application/vnd.mozilla.xul+xml,<dialog id='root' buttons='none' " +
+                  "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
+                  "<button id='nonbutton' noinitialfocus='true'/></dialog>";
 
 var step = 0;
 var fullKeyboardAccess = false;
@@ -55,7 +59,8 @@ function runTest()
   }
 
   var expectedFocus = expected[step - 1];
-  var win = window.openDialog("dialog_dialogfocus.xul", "_new", "chrome,dialog", step);
+  let filename = expectedFocus == "root" ? "dialog_dialogfocus2.xul" : "dialog_dialogfocus.xul";
+  var win = window.openDialog(filename, "_new", "chrome,dialog", step);
 
   function checkDialogFocus(event)
   {
@@ -83,14 +88,30 @@ function runTest()
       info("match = " + match);
     }
 
-    win.removeEventListener("focus", checkDialogFocus, true);
+    win.removeEventListener("focus", checkDialogFocusEvent, true);
     ok(match, "focus step " + step);
 
     win.close();
     SimpleTest.waitForFocus(runTest, window);
   }
 
-  win.addEventListener("focus", checkDialogFocus, true);
+  function checkDialogFocusRoot(event) {
+    if (event.target == win) {
+      is(win.document.activeElement, win.document.documentElement, "No other focus but root");
+      win.close();
+      SimpleTest.waitForFocus(runTest, window);
+    }
+  }
+
+  function checkDialogFocusEvent(event) {
+    // Delay to have time for focus/blur to occur.
+    if (expectedFocus == "root") {
+      setTimeout(checkDialogFocusRoot, 0, event);
+    } else {
+      checkDialogFocus(event);
+    }
+  }
+  win.addEventListener("focus", checkDialogFocusEvent, true);
 }
 
 SimpleTest.waitForFocus(startTest, window);
