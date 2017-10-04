@@ -781,7 +781,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     Node functionBody(InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
                       FunctionBodyType type);
 
-    Node unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, JSOp op, uint32_t begin);
+    Node unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, uint32_t begin);
 
     Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
