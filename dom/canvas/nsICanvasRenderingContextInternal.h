@@ -139,11 +139,9 @@ public:
   // one for the given layer manager if not available.
   virtual already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* builder,
                                                  Layer *oldLayer,
-                                                 LayerManager *manager,
-                                                 bool aMirror = false) = 0;
+                                                 LayerManager *manager) = 0;
   virtual bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                                        CanvasRenderer* aRenderer,
-                                        bool aMirror = false) { return true; }
+                                        CanvasRenderer* aRenderer) { return true; }
 
   // Return true if the canvas should be forced to be "inactive" to ensure
   // it can be drawn to the screen even if it's too large to be blitted by
