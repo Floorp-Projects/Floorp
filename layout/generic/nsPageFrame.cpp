@@ -546,9 +546,9 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     clipState.Clear();
     clipState.ClipContainingBlockDescendants(clipRect, nullptr);
 
-    nsRect dirtyRect = child->GetVisualOverflowRectRelativeToSelf();
+    nsRect visibleRect = child->GetVisualOverflowRectRelativeToSelf();
     nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingForChild(aBuilder, child, dirtyRect,
+      buildingForChild(aBuilder, child, visibleRect, visibleRect,
                        aBuilder->IsAtRootOfPseudoStackingContext());
     child->BuildDisplayListForStackingContext(aBuilder, &content);
 
@@ -561,19 +561,19 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // following placeholders to their out-of-flows) end up on the list.
     nsIFrame* page = child;
     while ((page = GetNextPage(page)) != nullptr) {
-      nsRect childDirty = dirtyRect + child->GetOffsetTo(page);
+      nsRect childVisible = visibleRect + child->GetOffsetTo(page);
 
       nsDisplayListBuilder::AutoBuildingDisplayList
-        buildingForChild(aBuilder, page, childDirty,
+        buildingForChild(aBuilder, page, childVisible, childVisible,
                          aBuilder->IsAtRootOfPseudoStackingContext());
       BuildDisplayListForExtraPage(aBuilder, this, page, &content);
     }
 
-    // Invoke AutoBuildingDisplayList to ensure that the correct dirtyRect
+    // Invoke AutoBuildingDisplayList to ensure that the correct visibleRect
     // is used to compute the visible rect if AddCanvasBackgroundColorItem
     // creates a display item.
     nsDisplayListBuilder::AutoBuildingDisplayList
-      building(aBuilder, child, dirtyRect, true);
+      building(aBuilder, child, visibleRect, visibleRect, true);
 
     // Add the canvas background color to the bottom of the list. This
     // happens after we've built the list so that AddCanvasBackgroundColorItem

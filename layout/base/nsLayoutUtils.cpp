@@ -3276,7 +3276,9 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
   builder.EnterPresShell(aFrame);
 
+  builder.SetVisibleRect(aRect);
   builder.SetDirtyRect(aRect);
+
   aFrame->BuildDisplayListForStackingContext(&builder, &list);
   builder.LeavePresShell(aFrame, nullptr);
 
@@ -3548,7 +3550,7 @@ nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
     nsRect bounds = nsRect(aBuilder.ToReferenceFrame(aFrame),
                            aFrame->GetSize());
     nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingDisplayList(&aBuilder, aFrame, bounds, false);
+      buildingDisplayList(&aBuilder, aFrame, bounds, bounds, false);
     presShell->AddPrintPreviewBackgroundItem(aBuilder, aList, aFrame, bounds);
   } else if (frameType != LayoutFrameType::Page) {
     // For printing, this function is first called on an nsPageFrame, which
@@ -3563,7 +3565,7 @@ nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
     nsRect canvasArea = aVisibleRegion.GetBounds();
     canvasArea.IntersectRect(aCanvasArea, canvasArea);
     nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingDisplayList(&aBuilder, aFrame, canvasArea, false);
+      buildingDisplayList(&aBuilder, aFrame, canvasArea, canvasArea, false);
     presShell->AddCanvasBackgroundColorItem(
       aBuilder, aList, aFrame, canvasArea, aBackstop);
   }
@@ -3628,7 +3630,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     nsIScrollableFrame* rootScrollableFrame = presShell->GetRootScrollFrameAsScrollable();
     MOZ_ASSERT(rootScrollableFrame);
     nsRect displayPortBase = aFrame->GetVisualOverflowRectRelativeToSelf();
-    Unused << rootScrollableFrame->DecideScrollableLayer(&builder, &displayPortBase,
+    nsRect temp = displayPortBase;
+    Unused << rootScrollableFrame->DecideScrollableLayer(&builder, &displayPortBase, &temp,
                 /* aSetBase = */ true);
   }
 
@@ -3729,6 +3732,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
 
       builder.SetDirtyRect(dirtyRect);
+      builder.SetVisibleRect(dirtyRect);
       aFrame->BuildDisplayListForStackingContext(&builder, &list);
     }
 

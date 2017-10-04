@@ -414,6 +414,7 @@ public:
   ScrollSnapInfo GetScrollSnapInfo() const;
 
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                             nsRect* aVisibleRect,
                              nsRect* aDirtyRect,
                              bool aSetBase);
   void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
@@ -958,9 +959,10 @@ public:
     return mHelper.UsesContainerScrolling();
   }
   virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aVisibleRect,
                                      nsRect* aDirtyRect,
                                      bool aSetBase) override {
-    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aSetBase);
+    return mHelper.DecideScrollableLayer(aBuilder, aVisibleRect, aDirtyRect, aSetBase);
   }
   virtual void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) override {
     mHelper.NotifyApproximateFrameVisibilityUpdate(aIgnoreDisplayPort);
@@ -1473,9 +1475,10 @@ public:
     mHelper.SetZoomableByAPZ(aZoomable);
   }
   virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aVisibleRect,
                                      nsRect* aDirtyRect,
                                      bool aSetBase) override {
-    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aSetBase);
+    return mHelper.DecideScrollableLayer(aBuilder, aVisibleRect, aDirtyRect, aSetBase);
   }
   virtual void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) override {
     mHelper.NotifyApproximateFrameVisibilityUpdate(aIgnoreDisplayPort);

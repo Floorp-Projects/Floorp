@@ -177,7 +177,7 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // ChromeProcessController::InitializeRoot, and we should to supply the
     // base rect.
     nsRect displayPortBase =
-      aBuilder->GetDirtyRect().Intersect(nsRect(nsPoint(0, 0), GetSize()));
+      aBuilder->GetVisibleRect().Intersect(nsRect(nsPoint(0, 0), GetSize()));
     nsLayoutUtils::SetDisplayPortBase(mContent, displayPortBase);
   }
 
