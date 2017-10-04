@@ -5,7 +5,7 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const {DebuggerClient} = require("./debugger-client");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * A RootClient object represents a root actor on the server. Each

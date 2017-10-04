@@ -4,8 +4,8 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("./debugger-client");
-const eventSource = require("./event-source");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const eventSource = require("devtools/shared/client/event-source");
 
 /**
  * Environment clients are used to manipulate the lexical environment actors.
