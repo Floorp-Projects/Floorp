@@ -27,6 +27,7 @@
   --theme-toolbar-color: var(--grey-90);
   --theme-toolbar-selected-color: var(--blue-60);
   --theme-toolbar-checked-color: var(--blue-60);
+  --theme-toolbar-highlighted-color: #5FC749;
   --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-hover: var(--grey-20);
@@ -111,6 +112,7 @@
   --theme-toolbar-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
   --theme-toolbar-checked-color: #75BFFF;
+  --theme-toolbar-highlighted-color: #5FC749;
   --theme-toolbar-background-hover: #20232B;
   --theme-toolbar-background-alt: #2F343E;
   --theme-toolbar-hover: #252526;
