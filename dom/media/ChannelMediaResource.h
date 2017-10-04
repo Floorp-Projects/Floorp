@@ -12,6 +12,48 @@
 namespace mozilla {
 
 /**
+ * This class is responsible for managing the suspend count and report suspend
+ * status of channel.
+ **/
+class ChannelSuspendAgent
+{
+public:
+  explicit ChannelSuspendAgent(nsIChannel* aChannel)
+    : mChannel(aChannel)
+    , mIsChannelSuspended(false)
+  {
+  }
+
+  // True when the channel has been suspended or needs to be suspended.
+  bool IsSuspended();
+
+  // Return true when the channel is logically suspended, i.e. the suspend
+  // count goes from 0 to 1.
+  bool Suspend();
+
+  // Return true only when the suspend count is equal to zero.
+  bool Resume();
+
+  // Call after opening channel, set channel and check whether the channel
+  // needs to be suspended.
+  void NotifyChannelOpened(nsIChannel* aChannel);
+
+  // Call before closing channel, reset the channel internal status if needed.
+  void NotifyChannelClosing();
+
+  // Check whether we need to suspend the channel.
+  void UpdateSuspendedStatusIfNeeded();
+
+private:
+  // Only suspends channel but not changes the suspend count.
+  void SuspendInternal();
+
+  nsIChannel* mChannel;
+  uint32_t mSuspendCount = 0;
+  bool mIsChannelSuspended;
+};
+
+/**
  * This is the MediaResource implementation that wraps Necko channels.
  * Much of its functionality is actually delegated to MediaCache via
  * an underlying MediaCacheStream.
