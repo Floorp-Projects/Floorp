@@ -237,10 +237,6 @@ class SyntaxParseHandler
         return NodeUnparenthesizedUnary;
     }
 
-    Node newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
-        return NodeGeneric;
-    }
-
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         return NodeUnparenthesizedUnary;
     }
@@ -315,6 +311,9 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
     Node newExportDefaultDeclaration(Node kid, Node maybeBinding, const TokenPos& pos) {
+        return NodeGeneric;
+    }
+    Node newExportBatchSpec(const TokenPos& pos) {
         return NodeGeneric;
     }
 
