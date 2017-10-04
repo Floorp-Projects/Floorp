@@ -199,10 +199,6 @@ class FullParseHandler
         return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
     }
 
-    ParseNode* newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
-        return new_<NullaryNode>(kind, op, pos);
-    }
-
     ParseNode* newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode* kid) {
         TokenPos pos(begin, kid ? kid->pn_pos.end : begin + 1);
         return new_<UnaryNode>(kind, op, pos, kid);
@@ -530,6 +526,10 @@ class FullParseHandler
     ParseNode* newExportDefaultDeclaration(ParseNode* kid, ParseNode* maybeBinding,
                                            const TokenPos& pos) {
         return new_<BinaryNode>(PNK_EXPORT_DEFAULT, JSOP_NOP, pos, kid, maybeBinding);
+    }
+
+    ParseNode* newExportBatchSpec(const TokenPos& pos) {
+        return new_<NullaryNode>(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos);
     }
 
     ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {

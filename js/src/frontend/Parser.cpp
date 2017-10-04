@@ -5490,7 +5490,7 @@ Parser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
     // Handle the form |export *| by adding a special export batch
     // specifier to the list.
-    Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
+    Node exportSpec = handler.newExportBatchSpec(pos());
     if (!exportSpec)
         return null();
 
