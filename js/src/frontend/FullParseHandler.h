@@ -255,11 +255,7 @@ class FullParseHandler
     }
 
     ParseNode* newArrayLiteral(uint32_t begin) {
-        ParseNode* literal = new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
-        // Later in this stack: remove dependency on this opcode.
-        if (literal)
-            literal->setOp(JSOP_NEWINIT);
-        return literal;
+        return new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
     }
 
     MOZ_MUST_USE bool addElision(ParseNode* literal, const TokenPos& pos) {
@@ -299,11 +295,7 @@ class FullParseHandler
     }
 
     ParseNode* newObjectLiteral(uint32_t begin) {
-        ParseNode* literal = new_<ListNode>(PNK_OBJECT, TokenPos(begin, begin + 1));
-        // Later in this stack: remove dependency on this opcode.
-        if (literal)
-            literal->setOp(JSOP_NEWINIT);
-        return literal;
+        return new_<ListNode>(PNK_OBJECT, TokenPos(begin, begin + 1));
     }
 
     ParseNode* newClass(ParseNode* name, ParseNode* heritage, ParseNode* methodBlock,
