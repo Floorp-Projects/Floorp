@@ -22,12 +22,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION "3.33" _NSS_CUSTOMIZED
+#define NSS_VERSION "3.34" _NSS_CUSTOMIZED " Beta"
 #define NSS_VMAJOR 3
-#define NSS_VMINOR 33
+#define NSS_VMINOR 34
 #define NSS_VPATCH 0
 #define NSS_VBUILD 0
-#define NSS_BETA PR_FALSE
+#define NSS_BETA PR_TRUE
 
 #ifndef RC_INVOKED
 
@@ -290,6 +290,15 @@ SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
 #define NSS_TLS_VERSION_MAX_POLICY 0x009
 #define NSS_DTLS_VERSION_MIN_POLICY 0x00a
 #define NSS_DTLS_VERSION_MAX_POLICY 0x00b
+
+/* Until NSS 3.30, the PKCS#12 implementation used BMPString encoding
+ * for all passwords.  This changed to use UTF-8 for non-PKCS#12 PBEs
+ * in NSS 3.31.
+ *
+ * For backward compatibility, this option reverts the behavior to the
+ * old NSS versions.  This option might be removed in the future NSS
+ * releases; don't rely on it. */
+#define __NSS_PKCS12_DECODE_FORCE_UNICODE 0x00c
 
 /*
  * Set and get global options for the NSS library.

@@ -231,12 +231,6 @@
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char *ProgramName);
 
-// This workaround is fixed in Rust 1.19. For details, see bug 1358151.
-// Implementation in toolkit/library/rust/shared/lib.rs
-extern "C" {
-  void rust_init_please_remove_this_after_updating_rust_1_19();
-}
-
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 #define FILE_INVALIDATE_CACHES NS_LITERAL_CSTRING(".purgecaches")
 
@@ -3199,9 +3193,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (!aExitFlag)
     return 1;
   *aExitFlag = false;
-
-  // This workaround is fixed in Rust 1.19. For details, see bug 1358151.
-  rust_init_please_remove_this_after_updating_rust_1_19();
 
   atexit(UnexpectedExit);
   auto expectedShutdown = mozilla::MakeScopeExit([&] {

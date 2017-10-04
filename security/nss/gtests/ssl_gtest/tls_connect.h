@@ -81,6 +81,11 @@ class TlsConnectTestBase : public ::testing::Test {
   void CheckKeys(SSLKEAType kea_type, SSLAuthType auth_type) const;
   // This version assumes defaults.
   void CheckKeys() const;
+  // Check that keys on resumed sessions.
+  void CheckKeysResumption(SSLKEAType kea_type, SSLNamedGroup kea_group,
+                           SSLNamedGroup original_kea_group,
+                           SSLAuthType auth_type,
+                           SSLSignatureScheme sig_scheme);
   void CheckGroups(const DataBuffer& groups,
                    std::function<void(SSLNamedGroup)> check_group);
   void CheckShares(const DataBuffer& shares,
@@ -89,7 +94,8 @@ class TlsConnectTestBase : public ::testing::Test {
   void ConfigureVersion(uint16_t version);
   void SetExpectedVersion(uint16_t version);
   // Expect resumption of a particular type.
-  void ExpectResumption(SessionResumptionMode expected);
+  void ExpectResumption(SessionResumptionMode expected,
+                        uint8_t num_resumed = 1);
   void DisableAllCiphers();
   void EnableOnlyStaticRsaCiphers();
   void EnableOnlyDheCiphers();
@@ -123,6 +129,7 @@ class TlsConnectTestBase : public ::testing::Test {
   std::unique_ptr<TlsAgent> server_model_;
   uint16_t version_;
   SessionResumptionMode expected_resumption_mode_;
+  uint8_t expected_resumptions_;
   std::vector<std::vector<uint8_t>> session_ids_;
 
   // A simple value of "a", "b".  Note that the preferred value of "a" is placed

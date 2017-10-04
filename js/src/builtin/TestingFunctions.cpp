@@ -2472,6 +2472,13 @@ testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
+    if (cx->activation()->hasWasmExitFP()) {
+        // Exited through wasm. Note this is false when the fast wasm->jit exit
+        // was taken, in which case we actually have jit frames on the stack.
+        args.rval().setBoolean(false);
+        return true;
+    }
+
     ScriptFrameIter iter(cx);
     if (!iter.done() && iter.isIon()) {
         // Reset the counter of the IonScript's script.

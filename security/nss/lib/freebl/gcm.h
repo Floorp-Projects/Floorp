@@ -9,7 +9,21 @@
 #include <stdint.h>
 
 #ifdef NSS_X86_OR_X64
+/* GCC <= 4.8 doesn't support including emmintrin.h without enabling SSE2 */
+#if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+    (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ <= 8))
+#pragma GCC push_options
+#pragma GCC target("sse2")
+#undef NSS_DISABLE_SSE2
+#define NSS_DISABLE_SSE2 1
+#endif /* GCC <= 4.8 */
+
 #include <emmintrin.h> /* __m128i */
+
+#ifdef NSS_DISABLE_SSE2
+#undef NSS_DISABLE_SSE2
+#pragma GCC pop_options
+#endif /* NSS_DISABLE_SSE2 */
 #endif
 
 SEC_BEGIN_PROTOS

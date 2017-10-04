@@ -68,6 +68,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         CLIENT_CADIR=${HOSTDIR}/clientCA
         EXT_SERVERDIR=${HOSTDIR}/ext_server
         EXT_CLIENTDIR=${HOSTDIR}/ext_client
+        IMPLICIT_INIT_DIR=${HOSTDIR}/implicit_init
 
         IOPR_CADIR=${HOSTDIR}/CA_iopr
         IOPR_SSL_SERVERDIR=${HOSTDIR}/server_ssl_iopr
@@ -536,6 +537,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_ECCURVES="ECCURVES.$version"
     D_EXT_SERVER="ExtendedServer.$version"
     D_EXT_CLIENT="ExtendedClient.$version"
+    D_IMPLICIT_INIT="ImplicitInit.$version"
     D_CERT_EXTENSTIONS="CertExtensions.$version"
     D_DISTRUST="Distrust.$version"
 
@@ -555,6 +557,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_EVEDIR=../eve
     R_EXT_SERVERDIR=../ext_server
     R_EXT_CLIENTDIR=../ext_client
+    R_IMPLICIT_INIT_DIR=../implicit_init
     R_CERT_EXT=../cert_extensions
     R_STAPLINGDIR=../stapling
     R_NOLOGINDIR=../nologin
@@ -575,6 +578,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     P_R_NOLOGINDIR=${R_NOLOGINDIR}
     P_R_EXT_SERVERDIR=${R_EXT_SERVERDIR}
     P_R_EXT_CLIENTDIR=${R_EXT_CLIENTDIR}
+    P_R_IMPLICIT_INIT_DIR=${R_IMPLICIT_INIT_DIR}
     if [ -n "${MULTIACCESS_DBM}" ]; then
         P_R_CADIR="multiaccess:${D_CA}"
         P_R_ALICEDIR="multiaccess:${D_ALICE}"
@@ -586,6 +590,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         P_R_NOLOGINDIR="multiaccess:${D_NOLOGIN}"
         P_R_EXT_SERVERDIR="multiaccess:${D_EXT_SERVER}"
         P_R_EXT_CLIENTDIR="multiaccess:${D_EXT_CLIENT}"
+        P_R_IMPLICIT_INIT_DIR="multiaccess:${D_IMPLICIT_INIT}"
     fi
 
     R_PWFILE=../tests.pw

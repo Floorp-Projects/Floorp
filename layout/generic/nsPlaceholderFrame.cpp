@@ -25,9 +25,9 @@ using namespace mozilla::gfx;
 
 nsIFrame*
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                       nsFrameState aTypeBit)
+                       nsFrameState aTypeBits)
 {
-  return new (aPresShell) nsPlaceholderFrame(aContext, aTypeBit);
+  return new (aPresShell) nsPlaceholderFrame(aContext, aTypeBits);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
@@ -155,6 +155,26 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+static nsIFrame::ChildListID
+ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
+{
+  if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
+    return nsIFrame::kFloatList;
+  }
+  if (aPlaceholderState & PLACEHOLDER_FOR_POPUP) {
+    return nsIFrame::kPopupList;
+  }
+  if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
+    return nsLayoutUtils::MayBeReallyFixedPos(aChild)
+      ? nsIFrame::kFixedList : nsIFrame::kAbsoluteList;
+  }
+  if (aPlaceholderState & PLACEHOLDER_FOR_ABSPOS) {
+    return nsIFrame::kAbsoluteList;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(false, "unknown list");
+  return nsIFrame::kFloatList;
+}
+
 void
 nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
@@ -162,12 +182,13 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (oof) {
     mOutOfFlowFrame = nullptr;
     oof->DeleteProperty(nsIFrame::PlaceholderFrameProperty());
+
     // If aDestructRoot is not an ancestor of the out-of-flow frame,
     // then call RemoveFrame on it here.
     // Also destroy it here if it's a popup frame. (Bug 96291)
     if ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
         !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof)) {
-      ChildListID listId = nsLayoutUtils::GetChildListNameFor(oof);
+      ChildListID listId = ChildListIDForOutOfFlow(GetStateBits(), oof);
       nsFrameManager* fm = PresContext()->GetPresShell()->FrameManager();
       fm->RemoveFrame(listId, oof);
     }

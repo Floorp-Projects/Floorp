@@ -3010,6 +3010,33 @@ certutil_main(int argc, char **argv, PRBool initialize)
         }
     }
 
+    /* if we are going to modify the cert database,
+     * make sure it's initialized */
+    if (certutil.commands[cmd_ModifyCertTrust].activated ||
+        certutil.commands[cmd_CreateAndAddCert].activated ||
+        certutil.commands[cmd_AddCert].activated ||
+        certutil.commands[cmd_AddEmailCert].activated) {
+        if (PK11_NeedUserInit(slot)) {
+            char *password = NULL;
+            /* fetch the password from the command line or the file
+             * if no password is supplied, initialize the password to NULL */
+            if (pwdata.source == PW_FROMFILE) {
+                password = SECU_FilePasswd(slot, PR_FALSE, pwdata.data);
+            } else if (pwdata.source == PW_PLAINTEXT) {
+                password = PL_strdup(pwdata.data);
+            }
+            rv = PK11_InitPin(slot, (char *)NULL, password ? password : "");
+            if (password) {
+                PORT_Memset(password, 0, PL_strlen(password));
+                PORT_Free(password);
+            }
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName, "Could not set password for the slot");
+                goto shutdown;
+            }
+        }
+    }
+
     /* walk through the upgrade merge if necessary.
      * This option is more to test what some applications will want to do
      * to do an automatic upgrade. The --merge command is more useful for

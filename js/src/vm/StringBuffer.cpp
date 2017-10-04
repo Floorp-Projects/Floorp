@@ -92,7 +92,7 @@ FinishStringFlat(JSContext* cx, StringBuffer& sb, Buffer& cb)
      * The allocation was made on a TempAllocPolicy, so account for the string
      * data on the string's zone.
      */
-    str->zone()->updateMallocCounter(sizeof(CharT) * len);
+    cx->updateMallocCounter(sizeof(CharT) * len);
 
     buf.forget();
     return str;

@@ -26,7 +26,8 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   nsIURI* aURI,
   nsContentPolicyType aContentPolicyType,
   nsIPrincipal* aTriggeringPrincipal,
-  bool aLoadFromExternal)
+  bool aLoadFromExternal,
+  bool aIsDownLoad)
 {
   // Let's block all toplevel document navigations to a data: URI.
   // In all cases where the toplevel document is navigated to a
@@ -39,7 +40,7 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   if (!mozilla::net::nsIOService::BlockToplevelDataUriNavigations()) {
     return true;
   }
-  if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
+  if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT || aIsDownLoad) {
     return true;
   }
   bool isDataURI =
@@ -590,6 +591,7 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
           uri,
           newLoadInfo->GetExternalContentPolicyType(),
           nullTriggeringPrincipal,
+          false,
           false)) {
         // logging to console happens within AllowTopLevelNavigationToDataURI
       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);

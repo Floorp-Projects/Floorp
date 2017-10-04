@@ -1310,6 +1310,11 @@ IMEStateManager::SetIMEState(const IMEState& aState,
         nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
                         context.mHTMLInputInputmode);
+      if (context.mHTMLInputInputmode.EqualsLiteral("mozAwesomebar") &&
+          !nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
+        // mozAwesomebar should be allowed only in chrome
+        context.mHTMLInputInputmode.Truncate();
+      }
     }
 
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,

@@ -57,7 +57,13 @@ macro_rules! ioctl {
                       (($ioty as u32) << TYPESHIFT) |
                       (($nr as u32) << NRSHIFT) |
                       ((size as u32) << SIZESHIFT);
-            from_unix_result(libc::ioctl(fd, ioc as libc::c_ulong, val))
+
+            #[cfg(not(target_env = "musl"))]
+            type IocType = libc::c_ulong;
+            #[cfg(target_env = "musl")]
+            type IocType = libc::c_int;
+
+            from_unix_result(libc::ioctl(fd, ioc as IocType, val))
         }
     );
 }
