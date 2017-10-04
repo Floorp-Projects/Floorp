@@ -1,0 +1,6 @@
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<dialog id="root" buttons="none" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <button id="nonbutton" noinitialfocus="true"/>
+</dialog>
+
