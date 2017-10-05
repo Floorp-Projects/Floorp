@@ -181,7 +181,7 @@ tabbrowser {
   100% { transform: translateX(100%); }
 }
 
-:root[sessionrestored] .tab-throbber[progress]:not([notselectedsinceload])::before {
+:root[sessionrestored] .tab-throbber[progress]::before {
   fill: var(--tab-loading-fill);
   opacity: 1;
 }
