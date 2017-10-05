@@ -433,6 +433,11 @@ add_task(async function test_contentscript_triggeringPrincipals() {
    * {@see getElementData}.
    */
   const TESTS = [
+    // TODO: <frame> element, which requires a frameset document.
+    {
+      element: ["iframe", {}],
+      src: "iframe.html",
+    },
     {
       element: ["img", {}],
       src: "img.png",

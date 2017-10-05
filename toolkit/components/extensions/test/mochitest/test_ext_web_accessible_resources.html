@@ -112,7 +112,9 @@ add_task(async function test_web_accessible_resources() {
     browser.runtime.onMessage.addListener(([msg, url], sender, respond) => {
       if (msg == "load-iframe") {
         let iframe = document.createElement("iframe");
-        iframe.setAttribute("src", url);
+        // Set the src via wrappedJSObject so the load is triggered with the
+        // content page's principal rather than ours.
+        iframe.wrappedJSObject.setAttribute("src", url);
         iframe.addEventListener("load", () => { respond(true); });
         iframe.addEventListener("error", () => { respond(false); });
         document.body.appendChild(iframe);
