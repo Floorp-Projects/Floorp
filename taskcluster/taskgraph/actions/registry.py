@@ -16,6 +16,7 @@ from mozbuild.util import memoize
 from types import FunctionType
 from collections import namedtuple
 from taskgraph import create
+from taskgraph.util import taskcluster
 from taskgraph.util.docker import docker_image
 from taskgraph.parameters import Parameters
 
@@ -240,7 +241,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         },
                     },
                     'cache': {
-                        'level-{}-checkouts'.format(parameters['level']):
+                        'level-{}-checkouts-sparse-v1'.format(parameters['level']):
                             '/builds/worker/checkouts',
                     },
                     'features': {
@@ -252,6 +253,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                     'command': [
                         '/builds/worker/bin/run-task',
                         '--vcs-checkout=/builds/worker/checkouts/gecko',
+                        '--sparse-profile=build/sparse-profiles/taskgraph',
                         '--', 'bash', '-cx',
                         """\
 cd /builds/worker/checkouts/gecko &&
@@ -336,6 +338,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
 
     if test:
         create.testing = True
+        taskcluster.testing = True
 
     cb(Parameters(**parameters), input, task_group_id, task_id, task)
 
