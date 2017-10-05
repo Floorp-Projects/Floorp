@@ -20,7 +20,8 @@
 #include <utils/Log.h>
 
 #include "include/ESDS.h"
-
+#include "mozilla/fallible.h"
+#include <new>
 #include <string.h>
 
 namespace stagefright {
