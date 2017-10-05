@@ -7,7 +7,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "168b5cfaae92"
+        "revision": "3cf31748d02d"
     }, 
     "af": {
         "platforms": [
@@ -87,7 +87,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "510f0ea802ed"
+        "revision": "b26e776bdb73"
     }, 
     "bn-BD": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "973252e0a79d"
+        "revision": "d4f268592962"
     }, 
     "ja": {
         "platforms": [
