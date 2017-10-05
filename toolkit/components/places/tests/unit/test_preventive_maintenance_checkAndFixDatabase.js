@@ -23,7 +23,7 @@ add_task(async function() {
         failedTasks.push(val);
       }
     });
-    Assert.equal(numberOfTasksRun, 6, "Check that we have run all tasks.");
-    Assert.equal(successfulTasks.length, 6, "Check that we have run all tasks successfully");
+    Assert.equal(numberOfTasksRun, 7, "Check that we have run all tasks.");
+    Assert.equal(successfulTasks.length, 7, "Check that we have run all tasks successfully");
     Assert.equal(failedTasks.length, 0, "Check that no task is failing");
 });
