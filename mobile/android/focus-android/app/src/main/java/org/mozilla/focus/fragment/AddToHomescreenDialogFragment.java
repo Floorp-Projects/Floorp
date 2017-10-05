@@ -6,8 +6,6 @@
 package org.mozilla.focus.fragment;
 
 import android.app.Dialog;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -22,8 +20,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-
 import org.mozilla.focus.R;
+import org.mozilla.focus.ext.DrawableKt;
 import org.mozilla.focus.shortcut.HomeScreen;
 import org.mozilla.focus.shortcut.IconGenerator;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -62,10 +60,9 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         final View dialogView = inflater.inflate(R.layout.add_to_homescreen, null);
         builder.setView(dialogView);
 
-        final Bitmap icon = IconGenerator.generateLauncherIcon(getActivity(), url);
-        final Drawable d = new BitmapDrawable(getResources(), icon);
+        final Drawable iconDrawable = IconGenerator.generateLauncherIcon(getActivity(), url);
         final ImageView iconView = (ImageView) dialogView.findViewById(R.id.homescreen_icon);
-        iconView.setImageDrawable(d);
+        iconView.setImageDrawable(iconDrawable);
 
         final ImageView blockIcon = (ImageView) dialogView.findViewById(R.id.homescreen_dialog_block_icon);
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_16_disabled);
@@ -95,7 +92,8 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         addToHomescreenDialogConfirmButton.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HomeScreen.installShortCut(getActivity(), icon, url, editableTitle.getText().toString().trim(), blockingEnabled);
+                HomeScreen.installShortCut(getActivity(), DrawableKt.toBitmap(iconDrawable), url,
+                        editableTitle.getText().toString().trim(), blockingEnabled);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
                 dismiss();
             }});

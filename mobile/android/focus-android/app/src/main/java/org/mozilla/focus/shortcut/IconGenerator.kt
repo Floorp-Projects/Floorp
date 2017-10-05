@@ -15,6 +15,7 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
 import android.util.TypedValue
@@ -36,7 +37,15 @@ class IconGenerator {
          * on top of a generic launcher icon shape that we provide.
          */
         @JvmStatic
-        fun generateLauncherIcon(context: Context, url: String?): Bitmap {
+        fun generateLauncherIcon(context: Context, url: String?) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            generateAdaptiveLauncherIcon(context, url)
+        } else {
+            // It'd more natural to return a Bitmap from generateLauncherIconPreOreo but we want to
+            // match the type of generateAdaptiveLauncherIcon so we wrap it in a Drawable.
+            BitmapDrawable(context.resources, generateLauncherIconPreOreo(context, url))
+        }
+
+        private fun generateLauncherIconPreOreo(context: Context, url: String?): Bitmap {
             val options = BitmapFactory.Options()
             options.inMutable = true
 
