@@ -42,7 +42,7 @@ function runTest2() {
   wrappedFrame.addEventListener("mozbrowserloadend", function onloadend(e) {
     ok(wrappedFrame.contentWindow.document.location.href.endsWith(HTTP_URI),
        "http: URI navigation should be allowed");
-    wrappedFrame.src = DATA_URI
+    frame.src = DATA_URI
 
     // wait for 1000ms and check that the data: URI did not load
     setTimeout(function () {
@@ -51,7 +51,7 @@ function runTest2() {
             "data: URI navigation should be blocked");
       SimpleTest.finish();
     }, 1000);
-  });
+  }, {once: true});
 }
 
 addEventListener('testready', runTest1);

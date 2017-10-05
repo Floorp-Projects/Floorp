@@ -113,6 +113,16 @@ public:
 
   void LoadURI(nsIURI* aURI, mozilla::ErrorResult& aRv);
 
+  /**
+   * Triggers a load of the given URI.
+   *
+   * @param aURI The URI to load.
+   * @param aTriggeringPrincipal The triggering principal for the load. May be
+   *        null, in which case the node principal of the owner content will be
+   *        used.
+   */
+  nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal);
+
   void SetIsPrerendered(mozilla::ErrorResult& aRv);
 
   void MakePrerenderedLoaderActive(mozilla::ErrorResult& aRv);
@@ -324,7 +334,7 @@ public:
    */
   void ApplySandboxFlags(uint32_t sandboxFlags);
 
-  void GetURL(nsString& aURL);
+  void GetURL(nsString& aURL, nsIPrincipal** aTriggeringPrincipal);
 
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsIntRect& aRect);
@@ -384,7 +394,16 @@ private:
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
   void UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame);
-  nsresult CheckURILoad(nsIURI* aURI);
+
+  /**
+   * Checks whether a load of the given URI should be allowed, and returns an
+   * error result if it should not.
+   *
+   * @param aURI The URI to check.
+   * @param aTriggeringPrincipal The triggering principal for the load. May be
+   *        null, in which case the node principal of the owner content is used.
+   */
+  nsresult CheckURILoad(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal);
   void FireErrorEvent();
   nsresult ReallyStartLoadingInternal();
 
@@ -430,6 +449,7 @@ private:
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   mozilla::dom::Element* mOwnerContent; // WEAK
 
   // After the frameloader has been removed from the DOM but before all of the
