@@ -538,6 +538,7 @@ JitFrameIter::skipNonScriptedJSFrames()
         jit::JSJitFrameIter& frames = asJSJit();
         while (!frames.isScripted() && !frames.done())
             ++frames;
+        settle();
     }
 }
 

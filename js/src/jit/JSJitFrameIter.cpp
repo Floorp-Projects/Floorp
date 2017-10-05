@@ -644,6 +644,17 @@ JSJitProfilingFrameIterator::operator++()
 }
 
 void
+JSJitProfilingFrameIterator::moveToWasmFrame(CommonFrameLayout* frame)
+{
+    // No previous js jit frame, this is a transition frame, used to
+    // pass a wasm iterator the correct value of FP.
+    returnAddressToFp_ = nullptr;
+    fp_ = GetPreviousRawFrame<uint8_t*>(frame);
+    type_ = JitFrame_WasmToJSJit;
+    MOZ_ASSERT(!done());
+}
+
+void
 JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
 {
     /*
@@ -666,6 +677,8 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
      * |    ^--- Ion
      * |    |
      * |    ^--- Baseline Stub <---- Baseline
+     * |    |
+     * |    ^--- WasmToJSJit <--- (other wasm frames)
      * |
      * ^--- Entry Frame (From C++)
      *      Exit Frame (From previous JitActivation)
@@ -726,6 +739,11 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
             return;
         }
 
+        if (rectPrevType == JitFrame_WasmToJSJit) {
+            moveToWasmFrame(rectFrame);
+            return;
+        }
+
         MOZ_CRASH("Bad frame type prior to rectifier frame.");
     }
 
@@ -742,11 +760,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
     }
 
     if (prevType == JitFrame_WasmToJSJit) {
-        // No previous js jit frame, this is a transition frame, used to pass
-        // a wasm iterator the correct value of FP.
-        returnAddressToFp_ = nullptr;
-        fp_ = GetPreviousRawFrame<uint8_t*>(frame);
-        type_ = JitFrame_WasmToJSJit;
+        moveToWasmFrame(frame);
         return;
     }
 
