@@ -1307,7 +1307,8 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrState *wr_state_new(WrPipelineId aPipelineId,
-                      LayoutSize aContentSize)
+                      LayoutSize aContentSize,
+                      size_t aCapacity)
 WR_FUNC;
 
 WR_INLINE

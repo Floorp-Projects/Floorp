@@ -34,6 +34,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
   , mWebRenderCommandBuilder(this)
+  , mLastDisplayListSize(0)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -244,7 +245,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   DiscardCompositorAnimations();
 
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
   mWebRenderCommandBuilder.BuildWebRenderCommands(builder,
