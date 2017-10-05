@@ -1,0 +1,16 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for partials"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  {{ locale }}:
+    partial_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ partial_version }}-{{ version }}.{{ locale }}.win32-to-win64.partial.mar
+      s3_key: {{ s3_prefix }}update/win32-to-win64/{{ locale }}/firefox-{{ partial_version }}-{{ version }}.partial.mar
+    partial_mar_sig:
+      artifact: {{ artifact_base_url }}/firefox-{{ partial_version }}-{{ version }}.{{ locale }}.win32-to-win64.partial.mar.asc
+      s3_key: {{ s3_prefix }}update/win32-to-win64/{{ locale }}/firefox-{{ partial_version }}-{{ version }}.partial.mar.asc
+{% endfor %}
