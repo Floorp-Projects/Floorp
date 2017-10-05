@@ -743,7 +743,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   if (this.sessionID) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
   }
-  this.sessionID = element.generateUUID();
+  this.sessionID = WebElement.generateUUID();
   this.newSessionCommandId = cmd.id;
 
   try {
