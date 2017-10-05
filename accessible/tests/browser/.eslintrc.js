@@ -4,6 +4,9 @@ module.exports = {
   "extends": [
     "plugin:mozilla/browser-test"
   ],
+  "globals": {
+    "gBrowser": false
+  },
   "rules": {
     "mozilla/no-aArgs": "error",
     "mozilla/no-cpows-in-tests": "error",
