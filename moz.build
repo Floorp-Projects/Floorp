@@ -79,7 +79,7 @@ DIRS += [
     'third_party/python',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     # These python manifests are included here so they get picked up without an objdir
     PYTHON_UNITTEST_MANIFESTS += [
         'layout/tools/reftest/selftest/python.ini',
@@ -125,14 +125,14 @@ DIRS += [
     'mozglue',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['xpcom/xpidl']
 
 if CONFIG['USE_ICU']:
     DIRS += ['config/external/icu']
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    if not CONFIG['JS_STANDALONE']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT']:
         DIRS += [
             'config/external',
             'security',
