@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<head>
+  <title>Test page with a mock domain which is NOT listed in the stylo blocklist</title>
+</head>
+<script>
+window.onload = function() {
+  if (SpecialPowers.getDOMWindowUtils(window).isStyledByServo == true) {
+    opener.postMessage("TEST-PASS", "*");
+  } else {
+    opener.postMessage("TEST-FAIL", "*");
+  }
+}
+</script>
