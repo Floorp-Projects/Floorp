@@ -2098,11 +2098,17 @@ photonpanelmultiview #panelMenu_pocket {
 .subviewbutton.download {
   -moz-box-align: start;
   min-height: 48px;
+  padding-inline-start: 8px;
 }
 
 .subviewbutton.download > .toolbarbutton-icon,
 .subviewbutton.download > .toolbarbutton-text > label {
   margin: 4px 0 0;
+}
+
+.subviewbutton.download > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
 }
 
 .subviewbutton.download > .toolbarbutton-text > .status-text {
