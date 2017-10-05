@@ -55,7 +55,9 @@ public class GeckoViewActivity extends Activity {
             }
         }
 
-        GeckoView.preload(this, geckoArgs);
+        final boolean useMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA,
+                                                                    true);
+        GeckoView.preload(this, geckoArgs, useMultiprocess);
 
         setContentView(R.layout.geckoview_activity);
 
@@ -72,6 +74,8 @@ public class GeckoViewActivity extends Activity {
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoView.setPermissionDelegate(permission);
 
+        mGeckoView.getSettings().setBoolean(GeckoViewSettings.USE_MULTIPROCESS,
+                                            useMultiprocess);
         loadSettings(getIntent());
         loadFromIntent(getIntent());
     }
@@ -93,9 +97,6 @@ public class GeckoViewActivity extends Activity {
     }
 
     private void loadSettings(final Intent intent) {
-        mGeckoView.getSettings().setBoolean(
-            GeckoViewSettings.USE_MULTIPROCESS,
-            intent.getBooleanExtra(USE_MULTIPROCESS_EXTRA, true));
         mGeckoView.getSettings().setBoolean(
             GeckoViewSettings.USE_REMOTE_DEBUGGER,
             intent.getBooleanExtra(USE_REMOTE_DEBUGGER_EXTRA, false));
