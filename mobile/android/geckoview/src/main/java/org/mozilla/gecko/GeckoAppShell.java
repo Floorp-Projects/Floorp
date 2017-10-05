@@ -1810,11 +1810,6 @@ public class GeckoAppShell
         return sScreenSize;
     }
 
-    @WrapForJNI
-    private static int startGeckoServiceChildProcess(String type, String[] args, int crashFd, int ipcFd) {
-        return GeckoProcessManager.getInstance().start(type, args, crashFd, ipcFd);
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     public static int getAudioOutputFramesPerBuffer() {
         if (SysInfo.getVersion() < 17) {

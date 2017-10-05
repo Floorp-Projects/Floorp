@@ -1273,11 +1273,11 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
                                             ProcessHandle* process_handle)
 {
   MOZ_ASSERT((fds_to_remap.size() > 0) && (fds_to_remap.size() <= 2));
-  JNIEnv* env = mozilla::jni::GetEnvForThread();
+  JNIEnv* const env = mozilla::jni::GetEnvForThread();
   MOZ_ASSERT(env);
 
-  int argvSize = argv.size();
-  jni::ObjectArray::LocalRef jargs = jni::ObjectArray::LocalRef::Adopt(env->NewObjectArray(argvSize, env->FindClass("java/lang/String"), nullptr));
+  const int argvSize = argv.size();
+  jni::ObjectArray::LocalRef jargs = jni::ObjectArray::New<jni::String>(argvSize);
   for (int ix = 0; ix < argvSize; ix++) {
     jargs->SetElement(ix, jni::StringParam(argv[ix].c_str(), env));
   }
@@ -1286,7 +1286,7 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
   it++;
   // If the Crash Reporter is disabled, there will not be a second file descriptor.
   int32_t crashFd = (it != fds_to_remap.end()) ? it->first : -1;
-  int32_t handle = java::GeckoAppShell::StartGeckoServiceChildProcess(type, jargs, crashFd, ipcFd);
+  int32_t handle = java::GeckoProcessManager::Start(type, jargs, crashFd, ipcFd);
 
   if (process_handle) {
     *process_handle = handle;
