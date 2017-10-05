@@ -410,9 +410,10 @@
       <method name="getTabBrowser">
         <body>
           <![CDATA[
-            for (let node = this.parentNode; node instanceof Element; node = node.parentNode) {
-              if (node.localName == "tabbrowser")
-                return node;
+            if (this.ownerGlobal.gBrowser &&
+                this.ownerGlobal.gBrowser.getTabForBrowser &&
+                this.ownerGlobal.gBrowser.getTabForBrowser(this)) {
+              return this.ownerGlobal.gBrowser;
             }
             return null;
           ]]>

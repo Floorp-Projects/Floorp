@@ -883,7 +883,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
         if (isWrapper) {
             // Look for a tabbrowser and see if targetWindow corresponds to one
             // within that tabbrowser. If not, just return.
-            var tabBrowser = document.getElementsByTagName("tabbrowser")[0] || null;
+            var tabBrowser = window.gBrowser || null;
             browser = tabBrowser ? tabBrowser.getBrowserForContentWindow(targetWindow.top) : null;
             if (!browser) {
                 SimpleTest.info("child process window cannot be focused");

@@ -154,7 +154,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // bug 1331449.
     win.document.getElementById("browser-bottombox")
        .setAttribute("devtoolstheme", devtoolsTheme);
-    win.document.getElementById("content")
+    win.document.getElementById("appcontent")
        .setAttribute("devtoolstheme", devtoolsTheme);
   },
 
