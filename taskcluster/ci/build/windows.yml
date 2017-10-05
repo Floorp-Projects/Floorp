@@ -519,3 +519,31 @@ win64-devedition-nightly/opt:
         - win64-clang-cl
         - win64-rust
         - win64-sccache
+
+win32-mingw32/debug:
+    description: "Win32 MinGW Debug"
+    index:
+        product: firefox
+        job-name: win32-mingw32-debug
+    treeherder:
+        platform: windows-mingw32-32/debug
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_windows_32_mingw_builds.py
+        need-xvfb: false
+    toolchains:
+        - linux64-gcc
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-mingw32-gcc
+        - linux64-mingw32-nsis
+        - linux64-mingw32-fxc2

@@ -1,0 +1,81 @@
+# Sets:
+#    MOZ_AUTOMATION flags
+#    SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE - shouldn't be used?
+#    TOOLTOOL_DIR
+#    MAKECAB - shouldn't be used?
+. "$topsrcdir/build/mozconfig.win-common"
+
+# MinGW does not have (or need) makecab
+unset MAKECAB
+
+# These aren't supported on mingw at this time
+# Bug 1393817
+MOZ_AUTOMATION_L10N_CHECK=0
+# This might be fixed on -central now
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+# Bug 1393803
+MOZ_AUTOMATION_INSTALLER=0
+
+# Sets:
+#  build/mozconfig.common
+#    AUTOCLOBBER=1
+#    --enable-crashreporter
+#    --enable-release
+#    LLVM_CONFIG
+#    MOZ_ADDON_SIGNING
+#    MOZ_REQUIRE_SIGNING
+#    --enable-js-shell
+#  build/mozconfig.automation
+#    MOZ_AUTOMATION_ flags
+#  build/mozconfig.rust
+#    TOOLTOOL_DIR
+#    RUSTC
+#    CARGO
+. "$topsrcdir/browser/config/mozconfigs/common"
+
+# MinGW Stuff
+ac_add_options --target=i686-w64-mingw32
+ac_add_options --with-toolchain-prefix=i686-w64-mingw32-
+
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+
+# Knock this out from above
+ac_add_options --disable-js-shell
+
+# GCC compiling for Windows exposes a lot of warnings. We are tracking them in Bug 1394433
+ac_add_options --disable-warnings-as-errors
+
+# Temporary config settings until we get these working on mingw
+ac_add_options --disable-tests
+ac_add_options --disable-accessibility # https://sourceforge.net/p/mingw-w64/bugs/648/
+
+# Long story
+ac_add_options --disable-sandbox # Bug 1230910
+ac_add_options --disable-stylo # Bug 1390583
+
+# These aren't supported on mingw at this time
+ac_add_options --disable-webrtc # Bug 1393901
+ac_add_options --disable-crashreporter # Bug 1391685
+ac_add_options --disable-maintenance-service
+
+# Find our toolchain
+CC="$TOOLTOOL_DIR/gcc/bin/i686-w64-mingw32-gcc"
+CXX="$TOOLTOOL_DIR/gcc/bin/i686-w64-mingw32-g++"
+
+HOST_CC="$TOOLTOOL_DIR/gcc/bin/gcc"
+HOST_CXX="$TOOLTOOL_DIR/gcc/bin/g++"
+
+# We want to make sure we use binutils and other binaries in the tooltool
+# package.
+mk_add_options PATH="$TOOLTOOL_DIR/gcc/bin:$TOOLTOOL_DIR/gcc/i686-w64-mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
+
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib
+mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+
+# Do not include the visual studio related mozconfigs of course
+
+ac_add_options --with-branding=browser/branding/nightly
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
