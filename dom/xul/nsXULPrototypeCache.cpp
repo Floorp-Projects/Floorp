@@ -399,11 +399,15 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
     nsCOMPtr<nsIStorageStream> storageStream;
     bool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
     if (found) {
-        objectOutput = do_CreateInstance("mozilla.org/binaryoutputstream;1");
-        if (!objectOutput) return NS_ERROR_OUT_OF_MEMORY;
+        // Setting an output stream here causes crashes on Windows. The previous
+        // version of this code always returned NS_ERROR_OUT_OF_MEMORY here,
+        // because it used a mistyped contract ID to create its object stream.
+        return NS_ERROR_NOT_IMPLEMENTED;
+#if 0
         nsCOMPtr<nsIOutputStream> outputStream
             = do_QueryInterface(storageStream);
-        objectOutput->SetOutputStream(outputStream);
+        objectOutput = NS_NewObjectOutputStream(outputStream);
+#endif
     } else {
         rv = NewObjectOutputWrappedStorageStream(getter_AddRefs(objectOutput),
                                                  getter_AddRefs(storageStream),
