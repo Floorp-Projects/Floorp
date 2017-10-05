@@ -90,11 +90,6 @@ private:
                  int64_t aLastModifiedDate,
                  uint64_t aLength);
 
-  StreamBlobImpl(StreamBlobImpl* aOther,
-                 const nsAString& aContentType,
-                 uint64_t aStart,
-                 uint64_t aLength);
-
   ~StreamBlobImpl();
 
   void MaybeRegisterMemoryReporter();
