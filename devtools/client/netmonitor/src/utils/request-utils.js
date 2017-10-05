@@ -109,6 +109,21 @@ function decodeUnicodeUrl(string) {
 }
 
 /**
+ * Decode base64 string.
+ *
+ * @param {string} url - a string
+ * @return {string} decoded string
+ */
+function decodeUnicodeBase64(string) {
+  try {
+    return decodeURIComponent(atob(string));
+  } catch (err) {
+    // Ignore error and return input string directly.
+  }
+  return string;
+}
+
+/**
  * Helper for getting an abbreviated string for a mime type.
  *
  * @param {string} mimeType - mime type
@@ -375,6 +390,7 @@ function getResponseHeader(item, header) {
 }
 
 module.exports = {
+  decodeUnicodeBase64,
   getFormDataSections,
   fetchHeaders,
   formDataURI,
