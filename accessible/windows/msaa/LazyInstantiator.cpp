@@ -812,7 +812,12 @@ HRESULT
 LazyInstantiator::accNavigate(long navDir, VARIANT varStart,
                               VARIANT *pvarEndUpAt)
 {
-  return E_NOTIMPL;
+  if (!pvarEndUpAt) {
+    return E_INVALIDARG;
+  }
+
+  RESOLVE_ROOT;
+  return mWeakAccessible->accNavigate(navDir, varStart, pvarEndUpAt);
 }
 
 HRESULT
