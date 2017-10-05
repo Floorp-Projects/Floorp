@@ -26,7 +26,16 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T>
 public:
 
   typedef nsTLiteralString<T> self_type;
+
+#ifdef __clang__
+  // bindgen w/ clang 3.9 at least chokes on a typedef, but using is okay.
+  using typename mozilla::detail::nsTStringRepr<T>::base_string_type;
+#else
+  // On the other hand msvc chokes on the using statement. It seems others
+  // don't care either way so we lump them in here.
   typedef typename mozilla::detail::nsTStringRepr<T>::base_string_type base_string_type;
+#endif
+
   typedef typename base_string_type::char_type char_type;
   typedef typename base_string_type::size_type size_type;
   typedef typename base_string_type::DataFlags DataFlags;
