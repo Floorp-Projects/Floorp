@@ -10,7 +10,6 @@ import subprocess
 import platform
 import json
 import argparse
-import tempfile
 import glob
 import errno
 import re
@@ -83,6 +82,7 @@ def build_tar_package(tar, name, base, directory):
     # understand it.
     if is_windows():
         name = name.replace('\\', '/')
+
         def f(match):
             return '/' + match.group(1).lower()
         name = re.sub(r'^([A-Za-z]):', f, name)
@@ -195,7 +195,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                   "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
-                  src_dir];
+                  src_dir]
     if is_windows():
         cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
         cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
@@ -225,6 +225,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
     # installed, so we copy it by ourselves.
     if is_windows():
         install_import_library(build_dir, inst_dir)
+
 
 # Return the absolute path of a build tool.  We first look to see if the
 # variable is defined in the config file, and if so we make sure it's an
@@ -277,7 +278,7 @@ def prune_final_dir_for_clang_tidy(final_dir):
         if os.path.basename(f) not in dirs:
             raise Exception("Found unknown file %s in the final directory" % f)
         if not os.path.isdir(f):
-            raise Exception("Expected %s to be a directory" %f)
+            raise Exception("Expected %s to be a directory" % f)
 
     # In bin/, only keep clang-tidy and clang-apply-replacements. The last one
     # is used to auto-fix some of the issues detected by clang-tidy.
@@ -467,7 +468,7 @@ if __name__ == "__main__":
         # On Windows, we have to re-copy the whole directory every time.
         if not is_windows() and os.path.islink(l[1]):
             continue
-        delete(l[1]);
+        delete(l[1])
         if os.path.exists(l[0]):
             symlink(l[0], l[1])
 
@@ -500,8 +501,8 @@ if __name__ == "__main__":
         extra_asmflags = []
         extra_ldflags = []
 
-        if os.environ.has_key('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
+        if 'LD_LIBRARY_PATH' in os.environ:
+            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH'])
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
     elif is_windows():
@@ -523,7 +524,7 @@ if __name__ == "__main__":
         extra_cxxflags2 = ["-stdlib=libc++"]
 
         extra_flags = ["-target", "x86_64-apple-darwin11", "-mlinker-version=137",
-                       "-B", "%s/bin" %  os.getenv("CROSS_CCTOOLS_PATH"),
+                       "-B", "%s/bin" % os.getenv("CROSS_CCTOOLS_PATH"),
                        "-isysroot", os.getenv("CROSS_SYSROOT"),
                        # technically the sysroot flag there should be enough to deduce this,
                        # but clang needs some help to figure this out.
