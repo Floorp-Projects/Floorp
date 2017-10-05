@@ -45,9 +45,25 @@ add_task(async function() {
   is(header.nextSibling.nextSibling.nextSibling.theme.id, DARK_THEME_ID,
      "The third theme should be the dark theme");
 
+  let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  header.nextSibling.nextSibling.doCommand(); // Select light theme
+  info("Clicked on light theme");
+  await themeChangedPromise;
+
+  popupShownPromise = popupShown(popup);
+  EventUtils.synthesizeMouseAtCenter(themesButton, {});
+  info("Clicked on themes button a third time");
+  await popupShownPromise;
+
+  let activeThemes = popup.querySelectorAll("toolbarbutton.customization-lwtheme-menu-theme[active]");
+  is(activeThemes.length, 1, "Exactly 1 theme should be selected");
+  if (activeThemes.length > 0) {
+    is(activeThemes[0].theme.id, LIGHT_THEME_ID, "Light theme should be selected");
+  }
+
   let firstLWTheme = recommendedHeader.nextSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
-  let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
@@ -56,6 +72,12 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
   info("Clicked on themes button");
   await popupShownPromise;
+
+  activeThemes = popup.querySelectorAll("toolbarbutton.customization-lwtheme-menu-theme[active]");
+  is(activeThemes.length, 1, "Exactly 1 theme should be selected");
+  if (activeThemes.length > 0) {
+    is(activeThemes[0].theme.id, firstLWThemeId, "First theme should be selected");
+  }
 
   is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
   let installedThemeId = header.nextSibling.nextSibling.nextSibling.nextSibling.theme.id;
@@ -78,7 +100,7 @@ add_task(async function() {
   // ensure current theme isn't set to "Default"
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
-  info("Clicked on themes button a second time");
+  info("Clicked on themes button a fourth time");
   await popupShownPromise;
 
   firstLWTheme = recommendedHeader.nextSibling;
@@ -98,7 +120,7 @@ add_task(async function() {
   await startCustomizing();
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
-  info("Clicked on themes button a second time");
+  info("Clicked on themes button a fifth time");
   await popupShownPromise;
   header = document.getElementById("customization-lwtheme-menu-header");
   is(header.hidden, false, "Header should never be hidden");

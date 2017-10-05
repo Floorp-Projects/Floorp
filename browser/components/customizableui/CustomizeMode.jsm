@@ -1358,9 +1358,10 @@ CustomizeMode.prototype = {
           tbb.setAttribute("tooltiptext", aTheme.description);
         tbb.setAttribute("tabindex", "0");
         tbb.classList.add("customization-lwtheme-menu-theme");
-        tbb.setAttribute("aria-checked", aTheme.isActive);
+        let isActive = activeThemeID == aTheme.id;
+        tbb.setAttribute("aria-checked", isActive);
         tbb.setAttribute("role", "menuitemradio");
-        if (aTheme.isActive) {
+        if (isActive) {
           tbb.setAttribute("active", "true");
         }
         tbb.addEventListener("focus", previewTheme);
@@ -1374,12 +1375,8 @@ CustomizeMode.prototype = {
       let themes = [aDefaultTheme];
       let lwts = LightweightThemeManager.usedThemes;
       let currentLwt = LightweightThemeManager.currentTheme;
-      // The lwts besides the builtin themes don't have an isActive property:
-      for (let lwt of lwts) {
-        if (!lwt.hasOwnProperty("isActive")) {
-          lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
-        }
-      }
+
+      let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
 
       // Move the current theme (if any) and the light/dark themes to the start:
       let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];
