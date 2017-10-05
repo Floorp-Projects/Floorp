@@ -11,7 +11,10 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("chrome://marionette/content/element.js");
+const {
+  element,
+  WebElement,
+} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   JavaScriptError,
   ScriptTimeoutError,
@@ -197,6 +200,14 @@ evaluate.sandbox = function(sb, script, args = [],
  * @return {Object}
  *     Same object as provided by <var>obj</var> with the web elements
  *     replaced by DOM elements.
+ *
+ * @throws {NoSuchElementError}
+ *     If <var>seenEls</var> is given and the web element reference
+ *     has not been seen before.
+ * @throws {StaleElementReferenceError}
+ *     If <var>seenEls</var> is given and the element has gone stale,
+ *     indicating it is no longer attached to the DOM, or its node
+ *     document is no longer the active document.
  */
 evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
   switch (typeof obj) {
@@ -215,17 +226,12 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
         return obj.map(e => evaluate.fromJSON(e, seenEls, window));
 
       // web elements
-      } else if (Object.keys(obj).includes(element.Key) ||
-          Object.keys(obj).includes(element.LegacyKey)) {
-        /* eslint-disable */
-        let uuid = obj[element.Key] || obj[element.LegacyKey];
-        let el = seenEls.get(uuid, window);
-        /* eslint-enable */
-        if (!el) {
-          throw new WebDriverError(`Unknown element: ${uuid}`);
+      } else if (WebElement.isReference(obj)) {
+        let webEl = WebElement.fromJSON(obj);
+        if (seenEls) {
+          return seenEls.get(webEl, window);
         }
-        return el;
-
+        return webEl;
       }
 
       // arbitrary objects
