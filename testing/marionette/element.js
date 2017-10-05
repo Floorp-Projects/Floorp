@@ -413,6 +413,24 @@ element.findByLinkText = function(node, s) {
 };
 
 /**
+ * Find anonymous nodes of <var>node</var>.
+ *
+ * @param {XULElement} rootNode
+ *     Root node of the document.
+ * @param {XULElement} node
+ *     Where in the DOM hierarchy to begin searching.
+ *
+ * @return {Iterable.<XULElement>}
+ *     Iterator over anonymous elements.
+ */
+element.findAnonymousNodes = function* (rootNode, node) {
+  let anons = rootNode.getAnonymousNodes(node) || [];
+  for (let node of anons) {
+    yield node;
+  }
+};
+
+/**
  * Find all hyperlinks descendant of |node| which link text contains |s|.
  *
  * @param {DOMElement} node
@@ -524,7 +542,7 @@ function findElement(using, value, rootNode, startNode) {
       }
 
     case element.Strategy.Anon:
-      return rootNode.getAnonymousNodes(startNode);
+      return element.findAnonymousNodes(rootNode, startNode).next().value;
 
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(value)[0];
@@ -587,7 +605,7 @@ function findElements(using, value, rootNode, startNode) {
       return startNode.querySelectorAll(value);
 
     case element.Strategy.Anon:
-      return rootNode.getAnonymousNodes(startNode);
+      return [...element.findAnonymousNodes(rootNode, startNode)];
 
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(value)[0];
