@@ -188,16 +188,17 @@ evaluate.sandbox = function(sb, script, args = [],
  *
  * @param {Object} obj
  *     Arbitrary object containing web elements.
- * @param {element.Store} seenEls
- *     Element store to use for lookup of web element references.
- * @param {WindowProxy} window
- *     Current browsing context.
+ * @param {element.Store=} seenEls
+ *     Known element store to look up web elements from.  If undefined,
+ *     the web element references are returned instead.
+ * @param {WindowProxy=} window
+ *     Current browsing context, if <var>seenEls</var> is provided.
  *
  * @return {Object}
  *     Same object as provided by <var>obj</var> with the web elements
  *     replaced by DOM elements.
  */
-evaluate.fromJSON = function(obj, seenEls, window) {
+evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
   switch (typeof obj) {
     case "boolean":
     case "number":
