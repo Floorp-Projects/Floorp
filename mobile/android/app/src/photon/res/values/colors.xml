@@ -10,8 +10,8 @@
     <color name="photon_text_main_private">#FFFFFF</color>
     <color name="photon_text_secondary">#B2B2B2</color>
     <color name="photon_text_secondary_private">#737373</color>
-    <color name="photon_text_placeholder">#737373</color>
-    <color name="photon_text_placeholder_private">#B2B2B2</color>
+    <color name="photon_text_placeholder">#B2B2B2</color>
+    <color name="photon_text_placeholder_private">#737373</color>
     <color name="photon_text_selected_highlight">#4D0A84FF</color>
     <color name="photon_text_selected_highlight_private">#4DAC39FF</color>
 
