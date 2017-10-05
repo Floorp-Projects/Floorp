@@ -1193,14 +1193,15 @@ public:
         nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
     // If aElement has 'loadingprincipal' attribute, we will use the value as
-    // loadingPrincipal for the channel, otherwise it will default to use
+    // triggeringPrincipal for the channel, otherwise it will default to use
     // aElement->NodePrincipal().
     // This function returns true when aElement has 'loadingprincipal', so if
     // setAttrs is true we will override the origin attributes on the channel
     // later.
-    nsCOMPtr<nsIPrincipal> loadingPrincipal;
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     bool setAttrs = nsContentUtils::GetLoadingPrincipalForXULNode(aElement,
-                                    getter_AddRefs(loadingPrincipal));
+                                    aElement->mLoadingSrcTriggeringPrincipal,
+                                    getter_AddRefs(triggeringPrincipal));
 
     nsCOMPtr<nsILoadGroup> loadGroup = aElement->GetDocumentLoadGroup();
     nsCOMPtr<nsIChannel> channel;
@@ -1208,7 +1209,7 @@ public:
       NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
                                            aElement->mLoadingSrc,
                                            static_cast<Element*>(aElement),
-                                           loadingPrincipal,
+                                           triggeringPrincipal,
                                            securityFlags,
                                            contentPolicyType,
                                            loadGroup,
@@ -1228,7 +1229,7 @@ public:
       nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
       if (loadInfo) {
         // The function simply returns NS_OK, so we ignore the return value.
-        Unused << loadInfo->SetOriginAttributes(loadingPrincipal->OriginAttributesRef());
+        Unused << loadInfo->SetOriginAttributes(triggeringPrincipal->OriginAttributesRef());
       }
     }
 
@@ -1793,6 +1794,7 @@ void HTMLMediaElement::AbortExistingLoads()
 
   RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
+  mLoadingSrcTriggeringPrincipal = nullptr;
   mMediaSource = nullptr;
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING ||
@@ -2054,6 +2056,7 @@ void HTMLMediaElement::SelectResource()
 
       RemoveMediaElementFromURITable();
       mLoadingSrc = uri;
+      mLoadingSrcTriggeringPrincipal = mSrcAttrTriggeringPrincipal;
       mMediaSource = mSrcMediaSource;
       UpdatePreloadAction();
       if (mPreloadAction == HTMLMediaElement::PRELOAD_NONE &&
@@ -2374,6 +2377,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
 
     RemoveMediaElementFromURITable();
     mLoadingSrc = uri;
+    mLoadingSrcTriggeringPrincipal = nullptr;
     mMediaSource = childSrc->GetSrcMediaSource();
     NS_ASSERTION(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING,
                  "Network state should be loading");
@@ -2598,6 +2602,7 @@ nsresult HTMLMediaElement::LoadWithChannel(nsIChannel* aChannel,
   AbortExistingLoads();
   mIsRunningLoadMethod = false;
 
+  mLoadingSrcTriggeringPrincipal = nullptr;
   nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mLoadingSrc));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4456,6 +4461,9 @@ HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src) {
       mSrcMediaSource = nullptr;
+      mSrcAttrTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+          this, aValue ? aValue->GetStringValue() : EmptyString(),
+          aMaybeScriptedPrincipal);
       if (aValue) {
         nsString srcStr = aValue->GetStringValue();
         nsCOMPtr<nsIURI> uri;
