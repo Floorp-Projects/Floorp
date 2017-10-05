@@ -236,6 +236,60 @@ FormAutofillHandler.prototype = {
     }
   },
 
+  /**
+   * Replace tel with tel-national if tel violates the input element's
+   * restriction.
+   * @param {Object} profile
+   *        A profile to be converted.
+   */
+  _telTransformer(profile) {
+    if (!profile.tel || !profile["tel-national"]) {
+      return;
+    }
+
+    let detail = this.getFieldDetailByName("tel");
+    if (!detail) {
+      return;
+    }
+
+    let element = detail.elementWeakRef.get();
+    let _pattern;
+    let testPattern = str => {
+      if (!_pattern) {
+        // The pattern has to match the entire value.
+        _pattern = new RegExp("^(?:" + element.pattern + ")$", "u");
+      }
+      return _pattern.test(str);
+    };
+    if (element.pattern) {
+      if (testPattern(profile.tel)) {
+        return;
+      }
+    } else if (element.maxLength) {
+      if (profile.tel.length <= element.maxLength) {
+        return;
+      }
+    }
+
+    if (detail._reason != "autocomplete") {
+      // Since we only target people living in US and using en-US websites in
+      // MVP, it makes more sense to fill `tel-national` instead of `tel`
+      // if the field is identified by heuristics and no other clues to
+      // determine which one is better.
+      // TODO: [Bug 1407545] This should be improved once more countries are
+      // supported.
+      profile.tel = profile["tel-national"];
+    } else if (element.pattern) {
+      if (testPattern(profile["tel-national"])) {
+        profile.tel = profile["tel-national"];
+      }
+    } else if (element.maxLength) {
+      if (profile["tel-national"].length <= element.maxLength) {
+        profile.tel = profile["tel-national"];
+      }
+    }
+  },
+
   _matchSelectOptions(profile) {
     if (!this._cacheValue.matchingSelectOption) {
       this._cacheValue.matchingSelectOption = new WeakMap();
@@ -277,6 +331,7 @@ FormAutofillHandler.prototype = {
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this._addressTransformer(profile);
+      this._telTransformer(profile);
       this._matchSelectOptions(profile);
     }
     return originalProfiles;

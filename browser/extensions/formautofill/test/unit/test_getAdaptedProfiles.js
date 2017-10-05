@@ -14,6 +14,8 @@ const DEFAULT_ADDRESS_RECORD = {
   "address-line3": "line3",
   "address-level1": "CA",
   "country": "US",
+  "tel": "+19876543210",
+  "tel-national": "9876543210",
 };
 
 const DEFAULT_CREDITCARD_RECORD = {
@@ -39,6 +41,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
@@ -59,6 +63,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
@@ -77,6 +83,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
@@ -96,6 +104,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
@@ -115,6 +125,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
@@ -139,6 +151,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-CA",
@@ -167,6 +181,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-OO",
@@ -195,6 +211,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-2",
@@ -223,6 +241,8 @@ const TESTCASES = [
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
     }],
     expectedOptionElements: [{
       "address-level1": "option-address-level1-same2",
@@ -249,6 +269,176 @@ const TESTCASES = [
       "address-line1": "2 Harrison St",
       "address-line2": "line2",
       "address-line3": "line3",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Change the tel value of a profile to tel-national for a field without pattern and maxlength.",
+    document: `<form>
+               <input id="telephone">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "9876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Do not change the profile for an autocomplete=\"tel\" field without patern and maxlength.",
+    document: `<form>
+               <input id="tel" autocomplete="tel">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "`tel` field with `maxlength` can be filled with `tel` value.",
+    document: `<form>
+               <input id="telephone" maxlength="12">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "`tel` field with `maxlength` can be filled with `tel-national` value.",
+    document: `<form>
+               <input id="telephone" maxlength="10">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "9876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "`tel` field with `pattern` attr can be filled with `tel` value.",
+    document: `<form>
+               <input id="telephone" pattern="[+][0-9]+">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Change the tel value of a profile to tel-national one when the pattern is matched.",
+    document: `<form>
+               <input id="telephone" pattern="\d*">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "9876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Matching pattern when a field is with autocomplete=\"tel\".",
+    document: `<form>
+               <input id="tel" autocomplete="tel" pattern="[0-9]+">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "9876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Checking maxlength first when a field is with maxlength.",
+    document: `<form>
+               <input id="tel" autocomplete="tel" maxlength="10">
+               <input id="line1" autocomplete="address-line1">
+               <input id="line2" autocomplete="address-line2">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St\nline2\nline3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      "address-line1": "2 Harrison St",
+      "address-line2": "line2 line3",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "9876543210",
+      "tel-national": "9876543210",
     }],
   },
   {
