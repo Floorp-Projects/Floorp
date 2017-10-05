@@ -65,19 +65,6 @@ static CFBundleRef getPluginBundle(const char* path)
   return bundle;
 }
 
-static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
-{
-  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
-  if (!lfm)
-    return NS_ERROR_FAILURE;
-  CFURLRef url;
-  nsresult rv = lfm->GetCFURL(&url);
-  if (NS_SUCCEEDED(rv))
-    outURL = url;
-
-  return rv;
-}
-
 bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCString fileName;
@@ -362,49 +349,6 @@ static char* GetNextPluginStringFromHandle(Handle h, short *index)
   return ret;
 }
 
-static bool IsCompatibleArch(nsIFile *file)
-{
-  CFURLRef pluginURL = nullptr;
-  if (NS_FAILED(toCFURLRef(file, pluginURL)))
-    return false;
-
-  bool isPluginFile = false;
-
-  CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
-  if (pluginBundle) {
-    UInt32 packageType, packageCreator;
-    ::CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
-    if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
-      // Get path to plugin as a C string.
-      char executablePath[PATH_MAX];
-      executablePath[0] = '\0';
-      if (!::CFURLGetFileSystemRepresentation(pluginURL, true, (UInt8*)&executablePath, PATH_MAX)) {
-        executablePath[0] = '\0';
-      }
-
-      uint32_t pluginLibArchitectures;
-      nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
-      if (NS_FAILED(rv)) {
-        return false;
-      }
-
-      uint32_t supportedArchitectures =
-#ifdef __LP64__
-          mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
-#else
-          base::GetCurrentProcessArchitecture();
-#endif
-
-      // Consider the plugin architecture valid if there is any overlap in the masks.
-      isPluginFile = !!(supportedArchitectures & pluginLibArchitectures);
-    }
-    ::CFRelease(pluginBundle);
-  }
-
-  ::CFRelease(pluginURL);
-  return isPluginFile;
-}
-
 /**
  * Obtains all of the information currently available for this plugin.
  */
@@ -413,10 +357,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   *outLibrary = nullptr;
 
   nsresult rv = NS_OK;
-
-  if (!IsCompatibleArch(mPlugin)) {
-      return NS_ERROR_FAILURE;
-  }
 
   // clear out the info, except for the first field.
   memset(&info, 0, sizeof(info));
