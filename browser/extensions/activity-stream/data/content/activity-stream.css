@@ -210,7 +210,11 @@ main {
 
 .body-wrapper {
   opacity: 0;
-  transition: opacity 75ms ease-in-out 125ms; }
+  transition: opacity 75ms ease-in-out; }
+
+@-moz-document url(about:newtab) {
+  .body-wrapper {
+    transition-delay: 125ms; } }
   .body-wrapper.on {
     opacity: 1; }
 
