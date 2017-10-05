@@ -212,6 +212,8 @@ private:
   APZTestData mApzTestData;
 
   WebRenderCommandBuilder mWebRenderCommandBuilder;
+
+  size_t mLastDisplayListSize;
 };
 
 } // namespace layers

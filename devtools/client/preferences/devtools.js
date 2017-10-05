@@ -59,7 +59,7 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the new color widget
 pref("devtools.inspector.colorWidget.enabled", false);
 // Enable the CSS shapes highlighter
-pref("devtools.inspector.shapesHighlighter.enabled", false);
+pref("devtools.inspector.shapesHighlighter.enabled", true);
 
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
