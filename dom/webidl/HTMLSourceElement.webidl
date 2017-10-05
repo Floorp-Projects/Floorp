@@ -13,7 +13,7 @@
 
 [HTMLConstructor]
 interface HTMLSourceElement : HTMLElement {
-           [CEReactions, SetterThrows]
+           [CEReactions, NeedsSubjectPrincipal, SetterThrows]
            attribute DOMString src;
            [CEReactions, SetterThrows]
            attribute DOMString type;
