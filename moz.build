@@ -98,7 +98,6 @@ if not CONFIG['JS_STANDALONE']:
     DIRS += [
         'build',
         'tools',
-        'probes',
     ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
