@@ -122,7 +122,9 @@ public class MultitaskingTest {
             onFloatingTabsButton()
                     .perform(click());
 
-            onView(withText(UrlUtils.stripScheme(webServer.url("tab2.html").toString())))
+            final String expectedUrl = webServer.getHostName() + "/tab2.html";
+
+            onView(withText(expectedUrl))
                     .perform(click());
 
             onWebView()
