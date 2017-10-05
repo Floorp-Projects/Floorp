@@ -3320,7 +3320,7 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
   }
 
   // Note: The following permissions logic is mirrored in
-  // toolkit/modules/addons/MatchPattern.jsm:MatchPattern.matchesCookie().
+  // extensions::MatchPattern::MatchesCookie.
   // If it changes, please update that function, or file a bug for someone
   // else to do so.
 

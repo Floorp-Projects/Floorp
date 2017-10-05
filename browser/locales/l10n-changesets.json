@@ -459,6 +459,16 @@
         ], 
         "revision": "default"
     }, 
+    "ia": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
     "id": {
         "platforms": [
             "linux", 
