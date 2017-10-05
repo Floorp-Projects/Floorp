@@ -58,6 +58,8 @@ interface nsIObjectOutputStream : nsIBinaryOutputStream
 };
 
 %{C++
+already_AddRefed<nsIObjectOutputStream>
+NS_NewObjectOutputStream(nsIOutputStream* aOutputStream);
 
 inline nsresult
 NS_WriteOptionalObject(nsIObjectOutputStream* aStream, nsISupports* aObject,
