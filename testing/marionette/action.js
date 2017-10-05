@@ -9,7 +9,10 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/element.js");
+const {
+  element,
+  WebElement,
+} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   InvalidArgumentError,
   MoveTargetOutOfBoundsError,
@@ -362,7 +365,7 @@ action.PointerOrigin.get = function(obj) {
     let name = capitalize(obj);
     assert.in(name, this, pprint`Unknown pointer-move origin: ${obj}`);
     origin = this[name];
-  } else if (!element.isWebElementReference(obj)) {
+  } else if (!WebElement.isReference(obj)) {
     throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
       pprint`web element reference, got ${obj}`);
   }
@@ -1320,8 +1323,8 @@ function dispatchPointerMove(a, inputState, tickDuration, seenEls, window) {
     const start = Date.now();
     const [startX, startY] = [inputState.x, inputState.y];
 
-    let target = action.computePointerDestination(a, inputState,
-        getElementCenter(a.origin, seenEls, window));
+    let coords = getElementCenter(a.origin);
+    let target = action.computePointerDestination(a, inputState, coords);
     const [targetX, targetY] = [target.x, target.y];
 
     if (!inViewPort(targetX, targetY, window)) {
@@ -1430,11 +1433,8 @@ function inViewPort(x, y, win) {
   return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
 }
 
-function getElementCenter(elementReference, seenEls, window) {
-  if (element.isWebElementReference(elementReference)) {
-    let uuid = elementReference[element.Key] ||
-        elementReference[element.LegacyKey];
-    let el = seenEls.get(uuid, window);
+function getElementCenter(el) {
+  if (element.isDOMElement(el)) {
     return element.coordinates(el);
   }
   return {};
