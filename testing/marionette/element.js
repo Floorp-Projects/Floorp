@@ -397,15 +397,16 @@ element.findByXPathAll = function(root, startNode, expr) {
 };
 
 /**
- * Find all hyperlinks dscendant of |node| which link text is |s|.
+ * Find all hyperlinks descendant of <var>node</var> which link text
+ * is <var>s</var>.
  *
  * @param {DOMElement} node
- *     Where in the DOM hierarchy to being searching.
+ *     Where in the DOM hierarchy to begin searching.
  * @param {string} s
  *     Link text to search for.
  *
  * @return {Array.<DOMAnchorElement>}
- *     Sequence of link elements which text is |s|.
+ *     Sequence of link elements which text is <var>s</var>.
  */
 element.findByLinkText = function(node, s) {
   return filterLinks(node, link => link.text.trim() === s);
