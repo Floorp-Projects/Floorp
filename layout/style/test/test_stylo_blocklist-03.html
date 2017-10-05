@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the mechanism of stylo blocklist</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+// "http://example.com" should not be in the blocklist by any chance. Adding this
+// line is just for safety, and it also makes this test more readable.
+SpecialPowers.getDOMWindowUtils(window).removeFromStyloBlocklist("example.com");
+let win =
+  window.open("http://example.com/tests/layout/style/test/stylo_non_blocked_domain_page.html", "");
+window.onmessage = function (evt) {
+  is(evt.data, "TEST-PASS",
+     "Document without blocked domain should use servo backend");
+  win.close();
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
