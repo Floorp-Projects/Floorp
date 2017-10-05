@@ -88,4 +88,12 @@
         <item name="android:paddingEnd">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 
+    <style name="TabsTray.AddTab" parent="TabsTray.V17.AddTab"/>
+    <style name="TabsTray.V17.AddTab" parent="TabsTray.Base.AddTab"/>
+
+    <style name="TabsTray.Menu" parent="TabsTray.V17.Menu"/>
+    <style name="TabsTray.V17.Menu" parent="TabsTray.Base.Menu">
+        <item name="android:layout_marginEnd">6dp</item>
+    </style>
+
 </resources>
