@@ -12,7 +12,8 @@
   fill: transparent;
 }
 
-#pocket-button-box[open="true"] > #pocket-button {
+#pocket-button-box[open="true"] > #pocket-button,
+#pocket-button-box[pocketed="true"] > #pocket-button {
   fill: #ef4056;
   fill-opacity: 1;
 }

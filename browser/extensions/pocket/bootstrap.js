@@ -159,11 +159,10 @@ var PocketPageAction = {
           if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
             PocketPageAction.urlbarNode.setAttribute("animate", "true");
           }
-        },
-        onIframeHiding(iframe, panel) {
-          if (iframe.getAttribute("itemAdded") == "true") {
-            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
-          }
+
+          let browser = panel.ownerGlobal.gBrowser.selectedBrowser;
+          PocketPageAction.pocketedBrowser = browser;
+          PocketPageAction.pocketedBrowserInnerWindowID = browser.innerWindowID;
         },
         onIframeHidden(iframe, panel) {
           if (!PocketPageAction.urlbarNode) {
@@ -171,11 +170,65 @@ var PocketPageAction = {
           }
           PocketPageAction.urlbarNode.removeAttribute("animate");
           PocketPageAction.urlbarNode.removeAttribute("open");
-          PocketPageAction.urlbarNode = null;
+          delete PocketPageAction.urlbarNode;
+
+          if (iframe.getAttribute("itemAdded") == "true") {
+            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
+            PocketPageAction.innerWindowIDsByBrowser.set(
+              PocketPageAction.pocketedBrowser,
+              PocketPageAction.pocketedBrowserInnerWindowID
+            );
+          } else {
+            PocketPageAction.innerWindowIDsByBrowser.delete(
+              PocketPageAction.pocketedBrowser
+            );
+          }
+          PocketPageAction.updateUrlbarNodeState(panel.ownerGlobal);
+          delete PocketPageAction.pocketedBrowser;
+          delete PocketPageAction.pocketedBrowserInnerWindowID;
+        },
+        onLocationChange(browserWindow) {
+          PocketPageAction.updateUrlbarNodeState(browserWindow);
         },
       }));
     }
     Pocket.pageAction = this.pageAction;
+  },
+
+  // For pocketed inner windows, this maps their <browser>s to those inner
+  // window IDs.  If a browser's inner window changes, then the mapped ID will
+  // be out of date, meaning that the new inner window has not been pocketed.
+  // If a browser goes away, then it'll be gone from this map too since it's
+  // weak.  To tell whether a window has been pocketed then, look up its browser
+  // in this map and compare the mapped inner window ID to the ID of the current
+  // inner window.
+  get innerWindowIDsByBrowser() {
+    delete this.innerWindowIDsByBrowser;
+    return this.innerWindowIDsByBrowser = new WeakMap();
+  },
+
+  // Sets or removes the "pocketed" attribute on the Pocket urlbar button as
+  // necessary.
+  updateUrlbarNodeState(browserWindow) {
+    if (!this.pageAction) {
+      return;
+    }
+    let {BrowserPageActions} = browserWindow;
+    let urlbarNode = browserWindow.document.getElementById(
+      BrowserPageActions._urlbarButtonNodeIDForActionID(this.pageAction.id)
+    );
+    if (!urlbarNode) {
+      return;
+    }
+    let browser = browserWindow.gBrowser.selectedBrowser;
+    let pocketedInnerWindowID = this.innerWindowIDsByBrowser.get(browser);
+    if (pocketedInnerWindowID == browser.innerWindowID) {
+      // The current window in this browser is pocketed.
+      urlbarNode.setAttribute("pocketed", "true");
+    } else {
+      // The window isn't pocketed.
+      urlbarNode.removeAttribute("pocketed");
+    }
   },
 
   shutdown() {
