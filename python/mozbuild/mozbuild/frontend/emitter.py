@@ -1275,7 +1275,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _process_test_manifest(self, context, info, manifest_path, mpmanifest):
         flavor, install_root, install_subdir, package_tests = info
 
-        path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+        path = manifest_path.full_path
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
             context.config.topsrcdir))
@@ -1375,8 +1375,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 context)
 
     def _process_reftest_manifest(self, context, flavor, manifest_path, manifest):
-        manifest_full_path = mozpath.normpath(mozpath.join(
-            context.srcdir, manifest_path))
+        manifest_full_path = manifest_path.full_path
         manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
             context.config.topsrcdir))
 
