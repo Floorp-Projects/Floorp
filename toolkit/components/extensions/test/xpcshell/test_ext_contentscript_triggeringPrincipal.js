@@ -442,6 +442,11 @@ add_task(async function test_contentscript_triggeringPrincipals() {
       src: "imgset.png",
       srcAttr: "srcset",
     },
+    {
+      element: ["script", {}],
+      src: "script.js",
+      liveSrc: false,
+    },
   ];
 
   /**

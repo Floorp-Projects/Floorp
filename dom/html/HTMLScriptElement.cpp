@@ -169,9 +169,9 @@ HTMLScriptElement::Defer()
 }
 
 void
-HTMLScriptElement::SetSrc(const nsAString& aSrc, ErrorResult& rv)
+HTMLScriptElement::SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& rv)
 {
-  rv = SetAttrHelper(nsGkAtoms::src, aSrc);
+  SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, rv);
 }
 
 void
@@ -241,6 +241,11 @@ HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
     mForceAsync = false;
+  }
+  if (nsGkAtoms::src == aName && kNameSpaceID_None == aNamespaceID) {
+    mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+        this, aValue ? aValue->GetStringValue() : EmptyString(),
+        aMaybeScriptedPrincipal);
   }
   return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName,
                                             aValue, aOldValue,
