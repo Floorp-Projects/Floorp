@@ -35,7 +35,7 @@
 
     <color name="colorTextInactive">#80FFFFFF</color>
 
-    <color name="snackbarBackground">#414146</color>
+    <color name="snackbarBackground">#FF414146</color>
     <color name="snackbarTextColor">#ffffffff</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
