@@ -47,6 +47,9 @@ toolchain_run_schema = Schema({
         'internal',
     ),
 
+    # If true, tc-vcs will be enabled.  Not supported on Windows.
+    Required('tc-vcs', default=True): bool,
+
     # Paths/patterns pointing to files that influence the outcome of a
     # toolchain build.
     Optional('resources'): [basestring],
@@ -120,7 +123,8 @@ def docker_worker_toolchain(config, job, taskdesc):
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
         docker_worker_add_public_artifacts(config, job, taskdesc)
 
-    docker_worker_add_tc_vcs_cache(config, job, taskdesc)
+    if run['tc-vcs']:
+        docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)
 
