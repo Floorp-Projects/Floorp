@@ -115,7 +115,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('chrome'):
             # TODO: update to use safe browsing notification bar class when bug 1139544 lands
             label = self.browser.localize_property(button_property)
-            button = (self.marionette.find_element(By.ID, 'content')
+            button = (self.marionette.find_element(By.TAG_NAME, 'tabbrowser')
                       .find_element('anon attribute', {'label': label}))
 
             self.browser.tabbar.open_tab(lambda _: button.click())
@@ -132,7 +132,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('chrome'):
             # TODO: update to use safe browsing notification bar class when bug 1139544 lands
             label = self.browser.localize_property('safebrowsing.getMeOutOfHereButton.label')
-            button = (self.marionette.find_element(By.ID, 'content')
+            button = (self.marionette.find_element(By.TAG_NAME, 'tabbrowser')
                       .find_element('anon attribute', {'label': label}))
             button.click()
 
@@ -144,7 +144,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
     def check_x_button(self):
         with self.marionette.using_context('chrome'):
             # TODO: update to use safe browsing notification bar class when bug 1139544 lands
-            button = (self.marionette.find_element(By.ID, 'content')
+            button = (self.marionette.find_element(By.TAG_NAME, 'tabbrowser')
                       .find_element('anon attribute', {'value': 'blocked-badware-page'})
                       .find_element('anon attribute',
                                     {'class': 'messageCloseButton close-icon tabbable'}))

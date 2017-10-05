@@ -1332,7 +1332,7 @@ BrowserGlue.prototype = {
       var browser = browserEnum.getNext();
       if (!PrivateBrowsingUtils.isWindowPrivate(browser))
         allWindowsPrivate = false;
-      var tabbrowser = browser.document.getElementById("content");
+      var tabbrowser = browser.ownerGlobal.gBrowser;
       if (tabbrowser)
         pagecount += tabbrowser.browsers.length - tabbrowser._numPinnedTabs;
     }

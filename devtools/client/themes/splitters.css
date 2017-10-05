@@ -20,12 +20,12 @@
   --devtools-splitter-inline-end-width: 4px;
 }
 
-#content[devtoolstheme="light"] {
+#appcontent[devtoolstheme="light"] {
   /* These variables are used in browser.xul but inside the toolbox they are overridden by --theme-splitter-color */
   --devtools-splitter-color: #dde1e4;
 }
 
-#content[devtoolstheme="dark"] {
+#appcontent[devtoolstheme="dark"] {
   --devtools-splitter-color: #42484f;
 }
 

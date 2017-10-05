@@ -6456,7 +6456,7 @@
       </destructor>
 
       <field name="tabbrowser" readonly="true">
-        document.getElementById(this.getAttribute("tabbrowser"));
+        gBrowser;
       </field>
 
       <field name="tabbox" readonly="true">
