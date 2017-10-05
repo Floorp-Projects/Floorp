@@ -20,7 +20,7 @@ interface HTMLSourceElement : HTMLElement {
 };
 
 partial interface HTMLSourceElement {
-           [CEReactions, SetterThrows]
+           [CEReactions, NeedsSubjectPrincipal, SetterThrows]
            attribute DOMString srcset;
            [CEReactions, SetterThrows]
            attribute DOMString sizes;
