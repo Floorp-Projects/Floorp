@@ -54,14 +54,14 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Code, env, &sectionStart, &sectionSize, "code"))
+    MaybeSectionRange range;
+    if (!d.startSection(SectionId::Code, env, &range, "code"))
         return false;
 
     if (!mg.startFuncDefs())
         return false;
 
-    if (sectionStart == Decoder::NotStarted) {
+    if (!range) {
         if (env->numFuncDefs() != 0)
             return d.fail("expected function bodies");
 
@@ -80,7 +80,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
             return false;
     }
 
-    if (!d.finishSection(sectionStart, sectionSize, "code"))
+    if (!d.finishSection(*range, "code"))
         return false;
 
     return mg.finishFuncDefs();
