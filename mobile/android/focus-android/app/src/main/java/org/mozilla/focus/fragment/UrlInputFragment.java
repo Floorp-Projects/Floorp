@@ -32,6 +32,7 @@ import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.locale.LocaleAwareFragment;
+import org.mozilla.focus.menu.home.HomeMenu;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.Source;
@@ -40,13 +41,14 @@ import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
+import org.mozilla.focus.whatsnew.WhatsNew;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 import org.mozilla.focus.widget.ResizableKeyboardLinearLayout;
 
 /**
  * Fragment for displaying he URL input controls.
  */
-public class UrlInputFragment extends LocaleAwareFragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener, PopupMenu.OnMenuItemClickListener {
+public class UrlInputFragment extends LocaleAwareFragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener {
     public static final String FRAGMENT_TAG = "url_input";
 
     private static final String ARGUMENT_ANIMATION = "animation";
@@ -115,7 +117,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
     private View toolbarBackgroundView;
     private View menuView;
 
-    private @Nullable PopupMenu displayedPopupMenu;
+    private @Nullable HomeMenu displayedPopupMenu;
 
     private volatile boolean isAnimating;
 
@@ -267,12 +269,36 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
                 break;
 
             case R.id.menu:
-                final PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
-                popupMenu.getMenuInflater().inflate(R.menu.menu_home, popupMenu.getMenu());
-                popupMenu.setOnMenuItemClickListener(this);
-                popupMenu.setGravity(Gravity.TOP);
-                popupMenu.show();
-                displayedPopupMenu = popupMenu;
+                final HomeMenu menu = new HomeMenu(getContext(), this);
+                menu.show(view);
+
+                displayedPopupMenu = menu;
+                break;
+
+            case R.id.whats_new:
+                WhatsNew.reset(getContext());
+
+                SessionManager.getInstance()
+                        .createSession(Source.MENU, WhatsNew.SUMO_URL);
+                break;
+
+            case R.id.settings:
+                ((LocaleAwareAppCompatActivity) getActivity()).openPreferences();
+                break;
+
+            case R.id.about:
+                final Intent aboutIntent = InfoActivity.getAboutIntent(getActivity());
+                startActivity(aboutIntent);
+                break;
+
+            case R.id.rights:
+                final Intent rightsIntent = InfoActivity.getRightsIntent(getActivity());
+                startActivity(rightsIntent);
+                break;
+
+            case R.id.help:
+                final Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
+                startActivity(helpIntent);
                 break;
 
             default:
@@ -569,35 +595,6 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
             searchView.setText(content);
             searchViewContainer.setVisibility(View.VISIBLE);
-        }
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        final int id = item.getItemId();
-
-        switch (id) {
-            case R.id.settings:
-                ((LocaleAwareAppCompatActivity) getActivity()).openPreferences();
-                return true;
-
-            case R.id.about:
-                Intent aboutIntent = InfoActivity.getAboutIntent(getActivity());
-                startActivity(aboutIntent);
-                return true;
-
-            case R.id.rights:
-                Intent rightsIntent = InfoActivity.getRightsIntent(getActivity());
-                startActivity(rightsIntent);
-                return true;
-
-            case R.id.help:
-                Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
-                startActivity(helpIntent);
-                return true;
-
-            default:
-                throw new IllegalStateException("Unhandled view ID in onMenuItemClick()");
         }
     }
 }

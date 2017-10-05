@@ -29,6 +29,11 @@
     <color name="colorSheetSessionBackground">#fff9f9fa</color>
     <color name="colorSheetSessionBackgroundPressed">#ffededf0</color>
 
+    <color name="colorDotHighlight">@color/photonBlue40</color>
+
+    <color name="colorMenuBackground">#414141</color>
+    <color name="colorMenuBackgroundDark">#272727</color>
+
     <color name="colorCursor">#ccffffff</color>
 
     <color name="colorOverlay">#cc000000</color>
