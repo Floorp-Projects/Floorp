@@ -832,10 +832,6 @@ mochitest-media:
             macosx64.*: 1
             windows10-64.*: 1
             default: 3
-    worker-type:
-        by-test-platform:
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     mozharness:
         by-test-platform:
             android.*:
