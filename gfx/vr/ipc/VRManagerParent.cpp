@@ -11,9 +11,9 @@
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"       // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"               // for TimeStamp
-#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Unused.h"
 #include "VRManager.h"
+#include "VRThread.h"
 #include "gfxVRPuppet.h"
 
 namespace mozilla {
@@ -87,7 +87,7 @@ VRManagerParent::UnregisterFromManager()
 /* static */ bool
 VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  MessageLoop* loop = layers::CompositorThreadHolder::Loop();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), true);
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
@@ -111,7 +111,7 @@ VRManagerParent::Bind(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 /*static*/ void
-VRManagerParent::RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager)
+VRManagerParent::RegisterVRManagerInVRListenerThread(VRManagerParent* aVRManager)
 {
   aVRManager->RegisterWithManager();
 }
@@ -119,21 +119,21 @@ VRManagerParent::RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager
 /*static*/ VRManagerParent*
 VRManagerParent::CreateSameProcess()
 {
-  MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
   RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId(), false);
-  vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
+  vmp->mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
-  loop->PostTask(NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
+  loop->PostTask(NewRunnableFunction(RegisterVRManagerInVRListenerThread, vmp.get()));
   return vmp.get();
 }
 
 bool
 VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), false);
-  vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
+  vmp->mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     "gfx::VRManagerParent::Bind",
     vmp,
@@ -145,7 +145,7 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
 void
 VRManagerParent::DeferredDestroy()
 {
-  mCompositorThreadHolder = nullptr;
+  mVRListenerThreadHolder = nullptr;
   mSelfRef = nullptr;
 }
 
@@ -162,12 +162,15 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
 void
 VRManagerParent::OnChannelConnected(int32_t aPid)
 {
-  mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
+  mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvRefreshDisplays()
 {
+  // TODO: Bug 1406327, Launch VR listener thread here.
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+
   // This is called to refresh the VR Displays for Navigator.GetVRDevices().
   // We must pass "true" to VRManager::RefreshVRDisplays()
   // to ensure that the promise returned by Navigator.GetVRDevices
