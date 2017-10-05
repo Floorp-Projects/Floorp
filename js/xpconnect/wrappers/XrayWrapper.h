@@ -38,12 +38,6 @@ namespace XrayUtils {
 bool
 IsXPCWNHolderClass(const JSClass* clasp);
 
-JSObject*
-GetExpandoChain(JS::HandleObject target);
-
-bool
-CloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject srcChain);
-
 bool
 IsTransparent(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id);
 
