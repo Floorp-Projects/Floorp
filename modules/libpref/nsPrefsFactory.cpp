@@ -21,7 +21,10 @@ static NS_DEFINE_CID(kRelativeFilePrefCID, NS_RELATIVEFILEPREF_CID);
 
 static mozilla::Module::CIDEntry kPrefCIDs[] = {
   { &kPrefServiceCID, true, nullptr, PreferencesConstructor },
-  { &kPrefLocalizedStringCID, false, nullptr, nsPrefLocalizedStringConstructor },
+  { &kPrefLocalizedStringCID,
+    false,
+    nullptr,
+    nsPrefLocalizedStringConstructor },
   { &kRelativeFilePrefCID, false, nullptr, nsRelativeFilePrefConstructor },
   { nullptr }
 };
@@ -41,14 +44,12 @@ UnloadPrefsModule()
   Preferences::Shutdown();
 }
 
-static const mozilla::Module kPrefModule = {
-  mozilla::Module::kVersion,
-  kPrefCIDs,
-  kPrefContracts,
-  nullptr,
-  nullptr,
-  nullptr,
-  UnloadPrefsModule
-};
+static const mozilla::Module kPrefModule = { mozilla::Module::kVersion,
+                                             kPrefCIDs,
+                                             kPrefContracts,
+                                             nullptr,
+                                             nullptr,
+                                             nullptr,
+                                             UnloadPrefsModule };
 
 NSMODULE_DEFN(nsPrefModule) = &kPrefModule;
