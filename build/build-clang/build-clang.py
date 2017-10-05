@@ -582,7 +582,5 @@ if __name__ == "__main__":
         prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, "clang"))
         package_name = "clang-tidy"
 
-    if is_darwin() or is_windows():
-        build_tar_package("tar", package_name + ".tar.bz2", final_stage_dir, "clang")
-    else:
-        build_tar_package("tar", package_name + ".tar.xz", final_stage_dir, "clang")
+    ext = "bz2" if is_darwin() or is_windows() else "xz"
+    build_tar_package("tar", "%.tar.%s" % (package_name, ext), final_stage_dir, "clang")
