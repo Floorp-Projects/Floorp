@@ -335,6 +335,8 @@ let extensionControlledContentIds = {
   "defaultSearch": "browserDefaultSearchExtensionContent",
 };
 
+let extensionControlledIds = {};
+
 /**
   * Check if a pref is being managed by an extension.
   */
@@ -358,9 +360,15 @@ async function handleControllingExtension(type, settingName) {
   // then we should treat the setting as not being controlled.
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1411046 for an example.
   if (addon) {
+    extensionControlledIds[settingName] = info.id;
     showControllingExtension(settingName, addon);
   } else {
-    hideControllingExtension(settingName);
+    if (extensionControlledIds[settingName] && !document.hidden) {
+      showEnableExtensionMessage(settingName);
+    } else {
+      hideControllingExtension(settingName);
+    }
+    delete extensionControlledIds[settingName];
   }
 
   return !!addon;
@@ -404,6 +412,26 @@ function hideControllingExtension(settingName) {
   getControllingExtensionEl(settingName).hidden = true;
 }
 
+function showEnableExtensionMessage(settingName) {
+  let extensionControlledContent = getControllingExtensionEl(settingName);
+  extensionControlledContent.classList.add("extension-controlled-disabled");
+  let icon = url => `<image src="${url}" class="extension-controlled-icon"/>`;
+  let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg");
+  let toolbarIcon = icon("chrome://browser/skin/menu.svg");
+  let message = document
+    .getElementById("bundlePreferences")
+    .getFormattedString("extensionControlled.enable", [addonIcon, toolbarIcon]);
+  let description = extensionControlledContent.querySelector("description");
+  // eslint-disable-next-line no-unsanitized/property
+  description.innerHTML = message;
+  let dismissButton = document.createElement("image");
+  dismissButton.setAttribute("class", "extension-controlled-icon close-icon");
+  dismissButton.addEventListener("click", function dismissHandler() {
+    hideControllingExtension(settingName);
+    dismissButton.removeEventListener("click", dismissHandler);
+  });
+  description.appendChild(dismissButton);
+}
 
 function makeDisableControllingExtension(type, settingName) {
   return async function disableExtension() {
