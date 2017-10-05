@@ -18,5 +18,5 @@ DIRS += [
   'misc',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     TEST_DIRS += ['tests']
