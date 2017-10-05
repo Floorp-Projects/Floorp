@@ -242,6 +242,29 @@ private:
 };
 
 /**
+ * SQL function to check if a GUID is valid.  This is just a wrapper around
+ * IsValidGUID in Helpers.h.
+ *
+ * @return true if valid, false otherwise.
+ */
+class IsValidGUIDFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~IsValidGUIDFunction() {}
+};
+
+/**
  * SQL function to unreverse the rev_host of a page.
  *
  * @param rev_host
