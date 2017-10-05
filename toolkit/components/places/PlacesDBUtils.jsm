@@ -58,6 +58,7 @@ this.PlacesDBUtils = {
   async maintenanceOnIdle() {
     let tasks = [
       this.checkIntegrity,
+      this.invalidateCaches,
       this.checkCoherence,
       this._refreshUI
     ];
@@ -87,6 +88,7 @@ this.PlacesDBUtils = {
   async checkAndFixDatabase() {
     let tasks = [
       this.checkIntegrity,
+      this.invalidateCaches,
       this.checkCoherence,
       this.expire,
       this.vacuum,
@@ -198,6 +200,30 @@ this.PlacesDBUtils = {
         PlacesDBUtils.clearPendingTasks();
         throw new Error("Unable to check database integrity");
       }
+    }
+    return logs;
+  },
+
+  async invalidateCaches() {
+    let logs = [];
+    try {
+      await PlacesUtils.withConnectionWrapper(
+        "PlacesDBUtils: invalidate caches",
+        async (db) => {
+          let idsWithInvalidGuidsRows = await db.execute(`
+            SELECT id FROM moz_bookmarks
+            WHERE guid IS NULL OR
+                  NOT IS_VALID_GUID(guid)`);
+          for (let row of idsWithInvalidGuidsRows) {
+            let id = row.getResultByName("id");
+            PlacesUtils.invalidateCachedGuidFor(id);
+          }
+        }
+      );
+      logs.push("The caches have been invalidated");
+    } catch (ex) {
+      PlacesDBUtils.clearPendingTasks();
+      throw new Error("Unable to invalidate caches");
     }
     return logs;
   },
@@ -758,6 +784,56 @@ this.PlacesDBUtils = {
       query: `UPDATE moz_places SET url_hash = hash(url) WHERE url_hash = 0`
     };
     cleanupStatements.push(fixMissingHashes);
+
+    // MOZ_BOOKMARKS
+    // S.1 fix invalid GUIDs for synced bookmarks.
+    //     This requires multiple related statements.
+    //     First, we insert tombstones for all synced bookmarks with invalid
+    //     GUIDs, so that we can delete them on the server. Second, we add a
+    //     temporary trigger to bump the change counter for the parents of any
+    //     items we update, since Sync stores the list of child GUIDs on the
+    //     parent. Finally, we assign new GUIDs for all items with missing and
+    //     invalid GUIDs, bump their change counters, and reset their sync
+    //     statuses to NEW so that they're considered for deduping.
+    cleanupStatements.push({
+      query:
+      `INSERT OR IGNORE INTO moz_bookmarks_deleted(guid, dateRemoved)
+       SELECT guid, :dateRemoved
+       FROM moz_bookmarks
+       WHERE syncStatus <> :syncStatus AND
+             guid NOT NULL AND
+             NOT IS_VALID_GUID(guid)`,
+      params: {
+        dateRemoved: PlacesUtils.toPRTime(new Date()),
+        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      },
+    });
+    cleanupStatements.push({
+      query:
+      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_fix_guids_temp_trigger
+       AFTER UPDATE of guid ON moz_bookmarks
+       FOR EACH ROW
+       BEGIN
+         UPDATE moz_bookmarks
+         SET syncChangeCounter = syncChangeCounter + 1
+         WHERE id = NEW.parent;
+      END`,
+    });
+    cleanupStatements.push({
+      query:
+      `UPDATE moz_bookmarks
+       SET guid = GENERATE_GUID(),
+           syncChangeCounter = syncChangeCounter + 1,
+           syncStatus = :syncStatus
+       WHERE guid IS NULL OR
+             NOT IS_VALID_GUID(guid)`,
+      params: {
+        syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      },
+    });
+    cleanupStatements.push({
+      query: "DROP TRIGGER moz_bm_fix_guids_temp_trigger",
+    });
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
