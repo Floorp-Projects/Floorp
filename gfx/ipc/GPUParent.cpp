@@ -37,6 +37,7 @@
 #include "ProcessUtils.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
+#include "VRThread.h"
 #include "VsyncBridgeParent.h"
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -120,6 +121,8 @@ GPUParent::Init(base::ProcessId aParentPid,
   }
 
   CompositorThreadHolder::Start();
+  // TODO: Bug 1406327, Start VRListenerThreadHolder when loading VR content.
+  VRListenerThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   APZCTreeManager::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
@@ -431,6 +434,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   dom::VideoDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
+  VRListenerThreadHolder::Shutdown();
   if (gfxVars::UseWebRender()) {
     wr::RenderThread::ShutDown();
   }
