@@ -174,9 +174,27 @@ button > hbox > label {
 
 .extension-controlled-icon {
   height: 20px;
-  margin-bottom: 6px;
-  vertical-align: bottom;
+  margin: 2px 0 6px;
+  vertical-align: middle;
   width: 20px;
+}
+
+.extension-controlled-disabled {
+  -moz-context-properties: fill, fill-opacity, stroke-opacity;
+  color: GrayText;
+  fill: currentColor;
+  fill-opacity: 1;
+  stroke-opacity: 1;
+}
+
+.extension-controlled-disabled > .extension-controlled-button {
+  display: none;
+}
+
+.extension-controlled-icon.close-icon {
+  height: 30px;
+  width: 30px;
+  margin-inline-start: 5px;
 }
 
 #getStarted {
