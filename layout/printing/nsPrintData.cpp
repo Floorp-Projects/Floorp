@@ -26,7 +26,6 @@ static mozilla::LazyLogModule gPrintingLog("printing");
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType)
   : mType(aType)
-  , mDebugFilePtr(nullptr)
   , mPrintDocList(0)
   , mIsIFrameSelected(false)
   , mIsParentAFrameSet(false)
@@ -70,7 +69,7 @@ nsPrintData::~nsPrintData()
     OnEndPrinting();
   }
 
-  if (mPrintDC && !mDebugFilePtr) {
+  if (mPrintDC) {
     PR_PL(("****************** End Document ************************\n"));
     PR_PL(("\n"));
     bool isCancelled = false;
