@@ -392,9 +392,6 @@ protected:
   nsAutoPtr<AutoPrintEventDispatcher> mAutoBeforeAndAfterPrint;
 #endif // NS_PRINT_PREVIEW
 
-#ifdef DEBUG
-  FILE* mDebugFile;
-#endif // DEBUG
 #endif // NS_PRINTING
 
   /* character set member data */
@@ -500,10 +497,6 @@ void nsDocumentViewer::PrepareToStartLoad()
 #endif
   }
 
-#ifdef DEBUG
-  mDebugFile = nullptr;
-#endif
-
 #endif // NS_PRINTING
 }
 
@@ -531,9 +524,6 @@ nsDocumentViewer::nsDocumentViewer()
     mOriginalPrintPreviewScale(0.0),
     mPrintPreviewZoom(1.0),
 #endif // NS_PRINT_PREVIEW
-#ifdef DEBUG
-    mDebugFile(nullptr),
-#endif // DEBUG
 #endif // NS_PRINTING
     mHintCharsetSource(kCharsetUninitialized),
     mHintCharset(nullptr),
@@ -2847,8 +2837,7 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsIDOMNode* aNode)
  */
 NS_IMETHODIMP
 nsDocumentViewer::Print(bool              aSilent,
-                          FILE *            aDebugFile,
-                          nsIPrintSettings* aPrintSettings)
+                        nsIPrintSettings* aPrintSettings)
 {
 #ifdef NS_PRINTING
   nsCOMPtr<nsIPrintSettings> printSettings;
@@ -2856,7 +2845,6 @@ nsDocumentViewer::Print(bool              aSilent,
 #ifdef DEBUG
   nsresult rv = NS_ERROR_FAILURE;
 
-  mDebugFile = aDebugFile;
   // if they don't pass in a PrintSettings, then make one
   // it will have all the default values
   printSettings = aPrintSettings;
@@ -4007,13 +3995,7 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
     rv = printEngine->Initialize(this, mContainer, mDocument,
                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                 mPageZoom,
-#ifdef DEBUG
-                                 mDebugFile
-#else
-                                 nullptr
-#endif
-                                 );
+                                 mPageZoom);
     if (NS_FAILED(rv)) {
       printEngine->Destroy();
       return rv;
@@ -4099,13 +4081,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     rv = printEngine->Initialize(this, mContainer, doc,
                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                 mPageZoom,
-#ifdef DEBUG
-                                 mDebugFile
-#else
-                                 nullptr
-#endif
-                                 );
+                                 mPageZoom);
     if (NS_FAILED(rv)) {
       printEngine->Destroy();
       return rv;

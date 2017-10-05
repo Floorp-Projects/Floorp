@@ -81,8 +81,7 @@ public:
   nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
                       nsIDocShell*            aContainer,
                       nsIDocument*            aDocument,
-                      float                   aScreenDPI,
-                      FILE*                   aDebugFile);
+                      float                   aScreenDPI);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
 
@@ -280,8 +279,6 @@ protected:
   RefPtr<nsPrintData> mOldPrtPreview;
 
   nsCOMPtr<nsIDocument>   mDocument;
-
-  FILE* mDebugFile;
 
   int32_t mLoadCounter;
   bool mDidLoadDataForPrinting;
