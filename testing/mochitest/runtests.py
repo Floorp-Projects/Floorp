@@ -2364,6 +2364,7 @@ toolbar#nav-bar {
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
             stepOptions.runUntilFailure = True
+            stepOptions.profilePath = None
             result = self.runTests(stepOptions)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
@@ -2374,6 +2375,7 @@ toolbar#nav-bar {
             stepOptions.repeat = 0
             stepOptions.keep_open = False
             for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                stepOptions.profilePath = None
                 result = self.runTests(stepOptions)
                 result = result or (-2 if self.countfail > 0 else 0)
                 self.message_logger.finish()
@@ -2386,6 +2388,7 @@ toolbar#nav-bar {
             stepOptions.repeat = VERIFY_REPEAT
             stepOptions.keep_open = False
             stepOptions.environment.append("MOZ_CHAOSMODE=3")
+            stepOptions.profilePath = None
             result = self.runTests(stepOptions)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
@@ -2397,6 +2400,7 @@ toolbar#nav-bar {
             stepOptions.keep_open = False
             stepOptions.environment.append("MOZ_CHAOSMODE=3")
             for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                stepOptions.profilePath = None
                 result = self.runTests(stepOptions)
                 result = result or (-2 if self.countfail > 0 else 0)
                 self.message_logger.finish()
