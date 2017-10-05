@@ -512,6 +512,7 @@ this.PanelMultiView = class {
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
       let playTransition = (!!previousViewNode && !showingSameView && this._panel.state == "open");
+      let isMainView = viewNode.id == this._mainViewId;
 
       let dwu, previousRect;
       if (playTransition || this.panelViews) {
@@ -519,16 +520,15 @@ this.PanelMultiView = class {
         previousRect = previousViewNode.__lastKnownBoundingRect =
           dwu.getBoundsWithoutFlushing(previousViewNode);
         if (this.panelViews) {
-          // Here go the measures that have the same caching lifetime as the width
-          // of the main view, i.e. 'forever', during the instance lifetime.
+          // Cache the measures that have the same caching lifetime as the width
+          // or height of the main view, i.e. whilst the panel is shown and/ or
+          // visible.
           if (!this._mainViewWidth) {
             this._mainViewWidth = previousRect.width;
             let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild || previousViewNode).top;
             let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild || previousViewNode).bottom;
             this._viewVerticalPadding = previousRect.height - (bottom - top);
           }
-          // Here go the measures that have the same caching lifetime as the height
-          // of the main view, i.e. whilst the panel is shown and/ or visible.
           if (!this._mainViewHeight) {
             this._mainViewHeight = previousRect.height;
             this._viewContainer.style.minHeight = this._mainViewHeight + "px";
@@ -540,7 +540,7 @@ this.PanelMultiView = class {
       // Because the 'mainview' attribute may be out-of-sync, due to view node
       // reparenting in combination with ephemeral PanelMultiView instances,
       // this is the best place to correct it (just before showing).
-      if (viewNode.id == this._mainViewId)
+      if (isMainView)
         viewNode.setAttribute("mainview", true);
       else
         viewNode.removeAttribute("mainview");
@@ -551,7 +551,7 @@ this.PanelMultiView = class {
           viewNode.setAttribute("title", aAnchor.getAttribute("label"));
         viewNode.classList.add("PanelUI-subView");
       }
-      if (this.panelViews && this._mainViewWidth)
+      if (this.panelViews && !isMainView && this._mainViewWidth)
         viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
       if (!showingSameView || !viewNode.hasAttribute("current")) {
