@@ -868,17 +868,16 @@ LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir)
 
 // static
 nsresult
-LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn)
+LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn,
+                              bool aMustRestore, int64_t* aPaddingSizeOut)
 {
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
 
   // The content of padding file is untrusted, so remove it here.
   nsresult rv = LockedDirectoryPaddingDeleteFile(aBaseDir,
                                                  DirPaddingFile::FILE);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   int64_t paddingSize = 0;
@@ -886,8 +885,18 @@ LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
+  *aPaddingSizeOut = paddingSize;
 
-  LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize);
+  rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If we cannot write the correct padding size to file, just keep the
+    // temporary file and let the padding size to be recalculate in the next
+    // action
+    return aMustRestore ? rv : NS_OK;
+  }
+
+  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return rv;
 }
