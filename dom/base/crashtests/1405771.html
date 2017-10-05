@@ -1,0 +1,20 @@
+<html>
+<head>
+<script></script>
+<!-- a -->
+<script>
+window.onload=function(){
+  let s=window.getSelection();
+  let r=document.createRange();
+  r.selectNode(document.getElementById('b'));
+  s.addRange(r);
+  try{window.getSelection().modify('extend','forward','word')}catch(e){}
+  let o=document.getElementById('a');
+  o.parentNode.replaceChild(document.createElement('col'), o);
+}
+</script>
+>
+<template id='a' contenteditable='true'></template>
+<header id='b'></header>
+<!-- a -->
+</html>
