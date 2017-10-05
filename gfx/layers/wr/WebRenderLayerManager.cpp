@@ -190,6 +190,9 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   //  canvas->UpdateCompositableClient();
   //}
 
+  if (!(aFlags & EndTransactionFlags::END_NO_COMPOSITE)) {
+    ScheduleComposite();
+  }
   return true;
 }
 
