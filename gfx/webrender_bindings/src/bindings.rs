@@ -1062,6 +1062,15 @@ impl WebRenderFrameBuilder {
             dl_builder: webrender_api::DisplayListBuilder::new(root_pipeline_id, content_size),
         }
     }
+    pub fn with_capacity(root_pipeline_id: WrPipelineId,
+               content_size: LayoutSize,
+               capacity: usize) -> WebRenderFrameBuilder {
+        WebRenderFrameBuilder {
+            root_pipeline_id: root_pipeline_id,
+            dl_builder: webrender_api::DisplayListBuilder::with_capacity(root_pipeline_id, content_size, capacity),
+        }
+    }
+
 }
 
 pub struct WrState {
@@ -1071,13 +1080,15 @@ pub struct WrState {
 
 #[no_mangle]
 pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
-                               content_size: LayoutSize) -> *mut WrState {
+                               content_size: LayoutSize,
+                               capacity: usize) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
                              pipeline_id: pipeline_id,
-                             frame_builder: WebRenderFrameBuilder::new(pipeline_id,
-                                                                       content_size),
+                             frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id,
+                                                                                 content_size,
+                                                                                 capacity),
                          });
 
     Box::into_raw(state)

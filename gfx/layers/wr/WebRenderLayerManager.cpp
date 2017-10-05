@@ -34,6 +34,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
   , mWebRenderCommandBuilder(this)
+  , mLastDisplayListSize(0)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -244,7 +245,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   DiscardCompositorAnimations();
 
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
 
   mWebRenderCommandBuilder.BuildWebRenderCommands(builder,
@@ -295,10 +296,15 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
       WrBridge()->GetSyncObject()->Synchronize();
     }
   }
+
+  wr::BuiltDisplayList dl;
+  builder.Finalize(contentSize, dl);
+  mLastDisplayListSize = dl.dl.inner.capacity;
+
   {
     AutoProfilerTracing
       tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
-    WrBridge()->EndTransaction(builder, resourceUpdates, size.ToUnknownSize(), sync,
+    WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(), sync,
                                mLatestTransactionId, mScrollData, transactionStart);
   }
 
