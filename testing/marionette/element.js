@@ -73,9 +73,6 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
  */
 this.element = {};
 
-element.Key = "element-6066-11e4-a52e-4f735466cecf";
-element.LegacyKey = "ELEMENT";
-
 element.Strategy = {
   ClassName: "class name",
   Selector: "css selector",
@@ -130,13 +127,27 @@ element.Store = class {
   /**
    * Make an element seen.
    *
-   * @param {Element} el
+   * @param {(Element|WindowProxy|XULElement)} el
    *    Element to add to set of seen elements.
    *
-   * @return {string}
+   * @return {WebElement}
    *     Web element reference associated with element.
+   *
+   * @throws {TypeError}
+   *     If <var>el</var> is not an {@link Element} or a {@link XULElement}.
    */
   add(el) {
+    const isDOMElement = element.isDOMElement(el);
+    const isSVGElement = element.isSVGElement(el);
+    const isDOMWindow = element.isDOMWindow(el);
+    const isXULElement = element.isXULElement(el);
+    const context = isXULElement ? "chrome" : "content";
+
+    if (!(isDOMElement || isSVGElement || isDOMWindow || isXULElement)) {
+      throw new TypeError("Expected Element, SVGElement, " +
+          pprint`WindowProxy, or XULElement, got: ${el}`);
+    }
+
     for (let i in this.els) {
       let foundEl;
       try {
@@ -145,7 +156,7 @@ element.Store = class {
 
       if (foundEl) {
         if (new XPCNativeWrapper(foundEl) == new XPCNativeWrapper(el)) {
-          return i;
+          return WebElement.fromUUID(i, context);
         }
 
       // cleanup reference to gc'd element
@@ -154,9 +165,9 @@ element.Store = class {
       }
     }
 
-    let id = element.generateUUID();
-    this.els[id] = Cu.getWeakReference(el);
-    return id;
+    let webEl = WebElement.from(el);
+    this.els[webEl.uuid] = Cu.getWeakReference(el);
+    return webEl;
   }
 
   /**
@@ -166,31 +177,39 @@ element.Store = class {
    * Unlike when getting the element, a staleness check is not
    * performed.
    *
-   * @param {string} uuid
+   * @param {WebElement} webEl
    *     Element's associated web element reference.
    *
    * @return {boolean}
    *     True if element is in the store, false otherwise.
+   *
+   * @throws {TypeError}
+   *     If <var>webEl</var> is not a {@link WebElement}.
    */
-  has(uuid) {
-    return Object.keys(this.els).includes(uuid);
+  has(webEl) {
+    if (!(webEl instanceof WebElement)) {
+      throw new TypeError(
+          pprint`Expected web element, got: ${webEl}`);
+    }
+    return Object.keys(this.els).includes(webEl.uuid);
   }
 
   /**
-   * Retrieve a DOM element by its unique web element reference/UUID.
+   * Retrieve a DOM {@link Element} or a {@link XULElement} by its
+   * unique {@link WebElement} reference.
    *
-   * Upon retrieving the element, an element staleness check is
-   * performed.
-   *
-   * @param {string} uuid
-   *     Web element reference, or UUID.
+   * @param {WebElement} webEl
+   *     Web element reference to find the associated {@link Element}
+   *     of.
    * @param {WindowProxy} window
    *     Current browsing context, which may differ from the associate
    *     browsing context of <var>el</var>.
    *
-   * @returns {Element}
+   * @returns {(Element|XULElement)}
    *     Element associated with reference.
    *
+   * @throws {TypeError}
+   *     If <var>webEl</var> is not a {@link WebElement}.
    * @throws {NoSuchElementError}
    *     If the web element reference <var>uuid</var> has not been
    *     seen before.
@@ -199,23 +218,27 @@ element.Store = class {
    *     attached to the DOM, or its node document is no longer the
    *     active document.
    */
-  get(uuid, window) {
-    if (!this.has(uuid)) {
+  get(webEl, window) {
+    if (!(webEl instanceof WebElement)) {
+      throw new TypeError(
+          pprint`Expected web element, got: ${webEl}`);
+    }
+    if (!this.has(webEl)) {
       throw new NoSuchElementError(
-          "Web element reference not seen before: " + uuid);
+          "Web element reference not seen before: " + webEl.uuid);
     }
 
     let el;
-    let ref = this.els[uuid];
+    let ref = this.els[webEl.uuid];
     try {
       el = ref.get();
     } catch (e) {
-      delete this.els[uuid];
+      delete this.els[webEl.uuid];
     }
 
     if (element.isStale(el, window)) {
       throw new StaleElementReferenceError(
-          pprint`The element reference of ${el || uuid} stale; ` +
+          pprint`The element reference of ${el || webEl.uuid} is stale; ` +
               "either the element is no longer attached to the DOM, " +
               "it is not in the current frame context, " +
               "or the document has been refreshed");
@@ -661,11 +684,6 @@ element.makeWebElement = function(uuid) {
     [element.Key]: uuid,
     [element.LegacyKey]: uuid,
   };
-};
-
-element.generateUUID = function() {
-  let uuid = uuidGen.generateUUID().toString();
-  return uuid.substring(1, uuid.length - 1);
 };
 
 /**

@@ -23,7 +23,10 @@ const {
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/cookie.js");
-Cu.import("chrome://marionette/content/element.js");
+const {
+  element,
+  WebElement,
+} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   ElementNotInteractableError,
   InsecureCertificateError,
