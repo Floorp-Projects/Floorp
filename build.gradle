@@ -47,7 +47,7 @@ buildscript {
                 url repository
             }
         }
-        // For dexcount-gradle-plugin and other in tree plugins.
+        // For in tree plugins.
         maven {
             url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
