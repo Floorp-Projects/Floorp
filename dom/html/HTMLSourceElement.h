@@ -73,6 +73,11 @@ public:
     return mSrcTriggeringPrincipal;
   }
 
+  nsIPrincipal* GetSrcsetTriggeringPrincipal() const
+  {
+    return mSrcsetTriggeringPrincipal;
+  }
+
   void GetType(DOMString& aType)
   {
     GetHTMLAttr(nsGkAtoms::type, aType);
@@ -82,13 +87,13 @@ public:
     SetHTMLAttr(nsGkAtoms::type, aType, rv);
   }
 
-  void GetSrcset(DOMString& aSrcset)
+  void GetSrcset(DOMString& aSrcset, nsIPrincipal&)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
-  void SetSrcset(const nsAString& aSrcset, mozilla::ErrorResult& rv)
+  void SetSrcset(const nsAString& aSrcset, nsIPrincipal& aTriggeringPrincipal, mozilla::ErrorResult& rv)
   {
-    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, rv);
+    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aTriggeringPrincipal, rv);
   }
 
   void GetSizes(DOMString& aSizes)
@@ -127,6 +132,9 @@ private:
 
   // The triggering principal for the src attribute.
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
+
+  // The triggering principal for the srcset attribute.
+  nsCOMPtr<nsIPrincipal> mSrcsetTriggeringPrincipal;
 
   // Generates a new MediaList using the given input
   void UpdateMediaList(const nsAttrValue* aValue);

@@ -456,6 +456,11 @@ add_task(async function test_contentscript_triggeringPrincipals() {
       srcAttr: "srcset",
     },
     {
+      element: ["picture", {}, ["source", {}], ["img", {}]],
+      src: "picture.png",
+      srcAttr: "srcset",
+    },
+    {
       element: ["script", {}],
       src: "script.js",
       liveSrc: false,
