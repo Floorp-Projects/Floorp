@@ -285,3 +285,7 @@ https://tls1.example.com:443        privileged,tls1
 
 # Hosts for youtube rewrite tests
 https://mochitest.youtube.com:443
+
+# Hosts for stylo blocklist tests
+http://stylo-blocklist.com:80          privileged
+http://test.stylo-blocklist.com:80     privileged
