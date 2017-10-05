@@ -6,6 +6,7 @@
 
 #include "MediaResource.h"
 #include "mozilla/DebugOnly.h"
+#include "MediaPrefs.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ErrorNames.h"

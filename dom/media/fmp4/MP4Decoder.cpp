@@ -6,6 +6,7 @@
 
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
+#include "MediaPrefs.h"
 #include "MP4Demuxer.h"
 #include "nsMimeTypes.h"
 #include "VideoUtils.h"
