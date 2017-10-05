@@ -13,7 +13,7 @@ DIRS += [
     'fallible',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['volatile']
 
 # NB: gtest dir is included in toolkit/toolkit.build due to its dependency
