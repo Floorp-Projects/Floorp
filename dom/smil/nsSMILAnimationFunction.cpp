@@ -470,6 +470,30 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     } else {
       uint32_t index = (uint32_t)floor(scaledSimpleProgress * aValues.Length());
       aResult = aValues[index];
+
+      // For animation of CSS properties, normally when interpolating we perform
+      // a zero-value fixup which means that empty values (values with type
+      // nsSMILCSSValueType but a null pointer value) are converted into
+      // a suitable zero value based on whatever they're being interpolated
+      // with. For discrete animation, however, since we don't interpolate,
+      // that never happens. In some rare cases, such as discrete non-additive
+      // by-animation, we can arrive here with |aResult| being such an empty
+      // value so we need to manually perform the fixup.
+      //
+      // We could define a generic method for this on nsSMILValue but its faster
+      // and simpler to just special case nsSMILCSSValueType.
+      if (aResult.mType == &nsSMILCSSValueType::sSingleton) {
+        // We have currently only ever encountered this case for the first
+        // value of a by-animation (which has two values) and since we have no
+        // way of testing other cases we just skip them (but assert if we
+        // ever do encounter them so that we can add code to handle them).
+        if (index + 1 >= aValues.Length()) {
+          MOZ_ASSERT(aResult.mU.mPtr, "The last value should not be empty");
+        } else {
+          // Base the type of the zero value on the next element in the series.
+          nsSMILCSSValueType::FinalizeValue(aResult, aValues[index + 1]);
+        }
+      }
     }
     rv = NS_OK;
   }

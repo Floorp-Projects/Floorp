@@ -10,7 +10,6 @@
 
 #include "pratom.h"
 #include "prenv.h"
-#include "prclist.h"
 
 #include "jsfriendapi.h"
 

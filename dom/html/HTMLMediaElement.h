@@ -810,6 +810,7 @@ protected:
   class StreamListener;
   class StreamSizeListener;
   class ShutdownObserver;
+  class ForceReloadListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
@@ -986,7 +987,7 @@ protected:
   /**
    * Call this before modifying mLoadingSrc.
    */
-  void RemoveMediaElementFromURITable();
+  void RemoveMediaElementFromURITable(bool aFroceClearEntry = false);
   /**
    * Call this to find a media element with the same NodePrincipal and mLoadingSrc
    * set to aURI, and with a decoder on which Load() has been called.
@@ -1391,6 +1392,7 @@ protected:
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
   const RefPtr<ShutdownObserver> mShutdownObserver;
+  RefPtr<ForceReloadListener> mForceReloadListener;
 
   // Holds a reference to the MediaSource, if any, referenced by the src
   // attribute on the media element.

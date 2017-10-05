@@ -604,6 +604,12 @@ public:
   }
 
   float GetFullZoom() { return mFullZoom; }
+  /**
+   * Device full zoom differs from full zoom because it gets the zoom from
+   * the device context, which may be using a different zoom due to rounding
+   * of app units to device pixels.
+   */
+  float GetDeviceFullZoom();
   void SetFullZoom(float aZoom);
 
   float GetOverrideDPPX() { return mOverrideDPPX; }
