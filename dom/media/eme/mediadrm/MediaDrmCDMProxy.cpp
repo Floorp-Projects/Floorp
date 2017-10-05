@@ -108,7 +108,7 @@ MediaDrmCDMProxy::LoadSession(PromiseId aPromiseId,
 {
   // TODO: Implement LoadSession.
   RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                NS_LITERAL_CSTRING("Currently Fennec did not support LoadSession"));
+                NS_LITERAL_CSTRING("Currently Fennec does not support LoadSession"));
 }
 
 void
@@ -117,7 +117,7 @@ MediaDrmCDMProxy::SetServerCertificate(PromiseId aPromiseId,
 {
   // TODO: Implement SetServerCertificate.
   RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                NS_LITERAL_CSTRING("Currently Fennec did not support SetServerCertificate"));
+                NS_LITERAL_CSTRING("Currently Fennec does not support SetServerCertificate"));
 }
 
 void
@@ -168,7 +168,7 @@ MediaDrmCDMProxy::RemoveSession(const nsAString& aSessionId,
 {
   // TODO: Implement RemoveSession.
   RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
-                NS_LITERAL_CSTRING("Currently Fennec did not support RemoveSession"));
+                NS_LITERAL_CSTRING("Currently Fennec does not support RemoveSession"));
 }
 
 void
@@ -370,6 +370,15 @@ MediaDrmCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
 {
   CDMCaps::AutoLock caps(Capabilites());
   caps.GetSessionIdsForKeyId(aKeyId, aSessionIds);
+}
+
+void
+MediaDrmCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
+                                     const nsAString& aMinHdcpVersion)
+{
+  // TODO: Implement GetStatusForPolicy.
+  RejectPromise(aPromiseId, NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                NS_LITERAL_CSTRING("Currently Fennec does not support GetStatusForPolicy"));
 }
 
 #ifdef DEBUG
