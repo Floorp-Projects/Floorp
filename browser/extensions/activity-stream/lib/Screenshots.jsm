@@ -65,36 +65,31 @@ this.Screenshots = {
 
   /**
    * Conditionally get a screenshot for a link if there's no existing pending
-   * screenshot. Updates the link object's desired property with the result.
+   * screenshot. Updates the cached link's desired property with the result.
    *
    * @param link {object} Link object to update
    * @param url {string} Url to get a screenshot of
    * @param property {string} Name of property on object to set
    @ @param onScreenshot {function} Callback for when the screenshot loads
    */
-  async maybeGetAndSetScreenshot(link, url, property, onScreenshot) {
-    // Make a link copy so we can stash internal properties to cache
-    const updateCache = link.__updateCache ? link.__updateCache.bind(link) :
-      () => {};
-
-    // Request a screenshot if we don't already have one pending
-    if (!link.__fetchingScreenshot) {
-      link.__fetchingScreenshot = this.getScreenshotForURL(url);
-      updateCache("__fetchingScreenshot");
-
-      // Trigger this callback only when first requesting
-      link.__fetchingScreenshot.then(onScreenshot).catch();
+  async maybeCacheScreenshot(link, url, property, onScreenshot) {
+    // Nothing to do if we already have a pending screenshot
+    const cache = link.__sharedCache;
+    if (cache.fetchingScreenshot) {
+      return;
     }
 
-    // Clean up now that we got the screenshot
-    const screenshot = await link.__fetchingScreenshot;
-    delete link.__fetchingScreenshot;
-    updateCache("__fetchingScreenshot");
+    // Save the promise to the cache so other links get it immediately
+    cache.fetchingScreenshot = this.getScreenshotForURL(url);
 
-    // Update the link so the screenshot is in the cache
+    // Clean up now that we got the screenshot
+    const screenshot = await cache.fetchingScreenshot;
+    delete cache.fetchingScreenshot;
+
+    // Update the cache for future links and call back for existing content
     if (screenshot) {
-      link[property] = screenshot;
-      updateCache(property);
+      cache.updateLink(property, screenshot);
+      onScreenshot(screenshot);
     }
   }
 };
