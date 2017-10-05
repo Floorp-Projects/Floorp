@@ -42,17 +42,12 @@ public:
 
   ~GeckoChildProcessHost();
 
-  static nsresult GetArchitecturesForBinary(const char *path, uint32_t *result);
-
-  static uint32_t GetSupportedArchitecturesForProcessType(GeckoProcessType type);
-
   static uint32_t GetUniqueID();
 
   // Block until the IPC channel for our subprocess is initialized,
   // but no longer.  The child process may or may not have been
   // created when this method returns.
-  bool AsyncLaunch(StringVector aExtraOpts=StringVector(),
-                   base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
+  bool AsyncLaunch(StringVector aExtraOpts=StringVector());
 
   virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0);
 
@@ -74,11 +69,9 @@ public:
   // the IPC channel, meaning it's fully initialized.  (Or until an
   // error occurs.)
   bool SyncLaunch(StringVector aExtraOpts=StringVector(),
-                  int32_t timeoutMs=0,
-                  base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
+                  int32_t timeoutMs=0);
 
-  virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-                                  base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
+  virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector());
 
   virtual void OnChannelConnected(int32_t peer_pid);
   virtual void OnMessageReceived(IPC::Message&& aMsg);
@@ -174,11 +167,9 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
 
   // Does the actual work for AsyncLaunch, on the IO thread.
-  bool PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts,
-                                  base::ProcessArchitecture arch);
+  bool PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts);
 
-  bool RunPerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-                             base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
+  bool RunPerformAsyncLaunch(StringVector aExtraOpts=StringVector());
 
   enum class BinaryPathType {
     Self,
