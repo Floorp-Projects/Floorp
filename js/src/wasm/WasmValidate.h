@@ -25,6 +25,17 @@
 namespace js {
 namespace wasm {
 
+// This struct captures the bytecode offset of a section's payload (so not
+// including the header) and the size of the payload.
+
+struct SectionRange
+{
+    uint32_t start;
+    uint32_t size;
+};
+
+typedef Maybe<SectionRange> MaybeSectionRange;
+
 // ModuleEnvironment contains all the state necessary to validate, process or
 // render functions. It is created by decoding all the sections before the wasm
 // code section and then used immutably during. When compiling a module using a
@@ -553,16 +564,12 @@ class Decoder
 
     // See "section" description in Encoder.
 
-    static const uint32_t NotStarted = UINT32_MAX;
-
     MOZ_MUST_USE bool startSection(SectionId id,
                                    ModuleEnvironment* env,
-                                   uint32_t* sectionStart,
-                                   uint32_t* sectionSize,
+                                   MaybeSectionRange* range,
                                    const char* sectionName,
                                    bool peeking = false);
-    MOZ_MUST_USE bool finishSection(uint32_t sectionStart,
-                                    uint32_t sectionSize,
+    MOZ_MUST_USE bool finishSection(const SectionRange& range,
                                     const char* sectionName);
     MOZ_MUST_USE bool peekSectionSize(SectionId id,
                                       ModuleEnvironment* env,
@@ -575,24 +582,21 @@ class Decoder
     MOZ_MUST_USE bool startCustomSection(const char* expected,
                                          size_t expectedLength,
                                          ModuleEnvironment* env,
-                                         uint32_t* sectionStart,
-                                         uint32_t* sectionSize);
+                                         MaybeSectionRange* range);
     template <size_t NameSizeWith0>
     MOZ_MUST_USE bool startCustomSection(const char (&name)[NameSizeWith0],
                                          ModuleEnvironment* env,
-                                         uint32_t* sectionStart,
-                                         uint32_t* sectionSize)
+                                         MaybeSectionRange* range)
     {
         MOZ_ASSERT(name[NameSizeWith0 - 1] == '\0');
-        return startCustomSection(name, NameSizeWith0 - 1, env, sectionStart, sectionSize);
+        return startCustomSection(name, NameSizeWith0 - 1, env, range);
     }
-    void finishCustomSection(uint32_t sectionStart, uint32_t sectionSize);
+    void finishCustomSection(const SectionRange& range);
     MOZ_MUST_USE bool skipCustomSection(ModuleEnvironment* env);
 
-    // The Name section has its own subsections. Like startSection, NotStart is
-    // returned as the endOffset if the given name subsection wasn't present.
+    // The Name section has its own optional subsections.
 
-    MOZ_MUST_USE bool startNameSubsection(NameType nameType, uint32_t* endOffset);
+    MOZ_MUST_USE bool startNameSubsection(NameType nameType, Maybe<uint32_t>* endOffset);
     MOZ_MUST_USE bool finishNameSubsection(uint32_t endOffset);
 
     // The infallible "unchecked" decoding functions can be used when we are
