@@ -28,7 +28,7 @@ Cu.import("resource:///modules/RecentWindow.jsm");
 
 const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
 
-const PROCESS_COUNT_PREF = "dom.ipc.processCount";
+const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
 
 const TARGET_URI = "chrome://tabpaint/content/target.html";
 
@@ -72,8 +72,8 @@ var TabPaint = {
 
     this.originalAnimate = Services.prefs.getBoolPref(ANIMATION_PREF);
     Services.prefs.setBoolPref(ANIMATION_PREF, false);
-    this.originalProcessCount = Services.prefs.getIntPref(PROCESS_COUNT_PREF);
-    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
+    Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,
+                              Services.appinfo.E10S_MULTI_EXPERIMENT);
   },
 
   uninit() {
@@ -82,7 +82,7 @@ var TabPaint = {
     }
 
     Services.prefs.setBoolPref(ANIMATION_PREF, this.originalAnimate);
-    Services.prefs.setIntPref(PROCESS_COUNT_PREF, this.originalProcessCount);
+    Services.prefs.clearUserPref(MULTI_OPT_OUT_PREF);
   },
 
   receiveMessage(msg) {
