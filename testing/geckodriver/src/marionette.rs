@@ -57,6 +57,10 @@ use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
 
+// Firefox' integrated background monitor which observes long running threads during
+// shutdown kills those after 65s. Wait some additional seconds for a safe shutdown
+const TIMEOUT_BROWSER_SHUTDOWN: u64 = 70 * 1000;
+
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
              (Method::Post, "/session/{sessionId}/moz/context", GeckoExtensionRoute::SetContext),
@@ -573,18 +577,51 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         }
     }
 
-    fn delete_session(&mut self, _: &Option<Session>) {
-        if let Ok(connection) = self.connection.lock() {
-            if let Some(ref conn) = *connection {
+    fn delete_session(&mut self, session: &Option<Session>) {
+        // If there is still an active session send a delete session command
+        // and wait for the browser to quit
+        if let Some(ref s) = *session {
+            let delete_session = WebDriverMessage {
+                session_id: Some(s.id.clone()),
+                command: WebDriverCommand::DeleteSession
+            };
+            let _ = self.handle_command(session, delete_session);
+
+            if let Some(ref mut runner) = self.browser {
+                let timeout = TIMEOUT_BROWSER_SHUTDOWN;
+                let poll_interval = 100;
+                let poll_attempts = timeout / poll_interval;
+                let mut poll_attempt = 0;
+
+                while runner.is_running() {
+                    if poll_attempt <= poll_attempts {
+                        debug!("Waiting for the browser process to shutdown");
+                        poll_attempt += 1;
+                        sleep(Duration::from_millis(poll_interval));
+                    } else {
+                        warn!("Browser process did not shutdown");
+                        break;
+                    }
+                }
+            }
+        }
+
+        if let Ok(ref mut connection) = self.connection.lock() {
+            if let Some(conn) = connection.as_mut() {
                 conn.close();
             }
         }
+
+        // If the browser is still open then kill the process
         if let Some(ref mut runner) = self.browser {
-            debug!("Stopping browser process");
-            if runner.stop().is_err() {
-                error!("Failed to kill browser process");
-            };
+            if runner.is_running() {
+                info!("Forcing a shutdown of the browser process");
+                if runner.stop().is_err() {
+                    error!("Failed to kill browser process");
+                };
+            }
         }
+
         self.connection = Mutex::new(None);
         self.browser = None;
     }
