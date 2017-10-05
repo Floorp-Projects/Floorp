@@ -126,14 +126,6 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       MOZ_ASSERT(item && itemType == item->GetType());
     }
 
-    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
-    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
-      MOZ_ASSERT(childItems);
-      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
-                                             aBuilder, aResources);
-      continue;
-    }
-
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing = mLayerScrollData.size();
     if (apzEnabled) {
@@ -198,7 +190,13 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    { // scope the ScrollingLayersHelper
+    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
+    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
+      MOZ_ASSERT(childItems);
+      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
+                                             aBuilder, aResources);
+    } else {
+      // ensure the scope of ScrollingLayersHelper is maintained
       ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, apzEnabled);
 
       // Note: this call to CreateWebRenderCommands can recurse back into
