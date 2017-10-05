@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Managed via the message managers.
-/* global initialProcessData */
+/* globals MatchPatternSet, initialProcessData */
 
 "use strict";
 
@@ -15,8 +15,6 @@ var Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
                                   "resource://gre/modules/WebRequestCommon.jsm");
 
@@ -53,7 +51,7 @@ var ContentPolicy = {
       this.register();
     }
     if (filter.urls) {
-      filter.urls = new MatchPattern(filter.urls);
+      filter.urls = new MatchPatternSet(filter.urls);
     }
     this.contentPolicies.set(id, {blocking, filter});
   },

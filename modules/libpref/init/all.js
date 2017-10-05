@@ -5888,7 +5888,7 @@ pref("layers.mlgpu.enable-on-windows7", true);
 // it to a boolean as appropriate. In particular, do NOT add ifdefs here to
 // turn these on and off, instead use the conditional-pref code in gfxPrefs.h
 // to do that.
-pref("layers.advanced.background-color", 2);
+pref("layers.advanced.background-color", false);
 pref("layers.advanced.background-image", 2);
 pref("layers.advanced.border-layers", 2);
 pref("layers.advanced.boxshadow-inset-layers", 2);

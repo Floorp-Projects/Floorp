@@ -68,7 +68,8 @@ public:
 
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   bool BeginTransaction(const  gfx::IntSize& aSize);
-  void EndTransaction(wr::DisplayListBuilder &aBuilder,
+  void EndTransaction(const wr::LayoutSize& aContentSize,
+                      wr::BuiltDisplayList& dl,
                       wr::IpcResourceUpdateQueue& aResources,
                       const gfx::IntSize& aSize,
                       bool aIsSync, uint64_t aTransactionId,
