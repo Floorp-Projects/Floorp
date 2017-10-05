@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -462,7 +463,7 @@ public class GeckoView extends LayerView {
      * @param context Activity or Application Context for starting GeckoView.
      */
     public static void preload(final Context context) {
-        preload(context, /* geckoArgs */ null);
+        preload(context, /* geckoArgs */ null, /* multiprocess */ false);
     }
 
     /**
@@ -470,23 +471,26 @@ public class GeckoView extends LayerView {
      * if Gecko is not already running.
      *
      * @param context Activity or Application Context for starting GeckoView.
-     * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running
+     * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running.
+     * @param multiprocess True if child process in multiprocess mode should be preloaded.
      */
-    public static void preload(final Context context, final String geckoArgs) {
+    public static void preload(final Context context, final String geckoArgs,
+                               final boolean multiprocess) {
         final Context appContext = context.getApplicationContext();
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(appContext);
         }
 
-        if (GeckoThread.initMainProcess(/* profile */ null,
-                                        geckoArgs,
-                                        /* debugging */ false)) {
+        final int flags = multiprocess ? GeckoThread.FLAG_PRELOAD_CHILD : 0;
+        if (GeckoThread.initMainProcess(/* profile */ null, geckoArgs, flags)) {
             GeckoThread.launch();
         }
     }
 
     private void init(final Context context, final GeckoViewSettings settings) {
-        preload(context);
+        final boolean multiprocess = settings != null &&
+                                     settings.getBoolean(GeckoViewSettings.USE_MULTIPROCESS);
+        preload(context, /* geckoArgs */ null, multiprocess);
 
         initializeView();
         mListener.registerListeners();
