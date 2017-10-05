@@ -1299,18 +1299,6 @@ XrayTraits::getExpandoClass(JSContext* cx, HandleObject target) const
     return &DefaultXrayExpandoObjectClass;
 }
 
-namespace XrayUtils {
-JSObject* GetExpandoChain(HandleObject target)
-{
-    return GetXrayTraits(target)->getExpandoChain(target);
-}
-
-bool CloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject srcChain)
-{
-    return GetXrayTraits(dst)->cloneExpandoChain(cx, dst, srcChain);
-}
-} // namespace XrayUtils
-
 static JSObject*
 GetHolder(JSObject* obj)
 {
