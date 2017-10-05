@@ -36,16 +36,6 @@ interface nsIFileInputStream : nsIInputStream
               in long behaviorFlags);
 
     /**
-     * If this is set, the file will be deleted by the time the stream is
-     * closed.  It may be removed before the stream is closed if it is possible
-     * to delete it and still read from it.
-     *
-     * If OPEN_ON_READ is defined, and the file was recreated after the first
-     * delete, the file will be deleted again when it is closed again.
-     */
-    const long DELETE_ON_CLOSE = 1<<1;
-
-    /**
      * If this is set, the file will close automatically when the end of the
      * file is reached.
      */
