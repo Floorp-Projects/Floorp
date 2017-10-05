@@ -29,7 +29,6 @@
     <dimen name="browser_toolbar_height_flipper">@dimen/browser_toolbar_height</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
-    <dimen name="browser_toolbar_menu_icon_height">16dp</dimen>
     <dimen name="browser_toolbar_menu_radius">2dp</dimen>
 
     <dimen name="browser_toolbar_url_height">32dp</dimen>
