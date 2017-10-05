@@ -276,10 +276,14 @@ evaluate.toJSON = function(obj, seenEls) {
   } else if (element.isCollection(obj)) {
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
+  // WebElement
+  } else if (WebElement.isReference(obj)) {
+    return obj;
+
   // Element, SVGElement, XULElement
   } else if (element.isElement(obj)) {
-    let uuid = seenEls.add(obj);
-    return element.makeWebElement(uuid);
+    let webEl = seenEls.add(obj);
+    return webEl.toJSON();
 
   // custom JSON representation
   } else if (typeof obj.toJSON == "function") {
