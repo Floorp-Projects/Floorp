@@ -609,7 +609,7 @@ status_t MPEG4Extractor::parseDrmSINF(off64_t *offset, off64_t data_offset) {
                 return ERROR_MALFORMED;
             }
             sinf->len = dataLen - 3;
-            sinf->IPMPData = new (fallible) char[sinf->len];
+            sinf->IPMPData = new (mozilla::fallible) char[sinf->len];
             if (!sinf->IPMPData) {
                 return -ENOMEM;
             }
@@ -1047,7 +1047,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
             // Copy the contents of the box (including header) verbatim.
             pssh.datalen = chunk_data_size + 8;
-            pssh.data = new (fallible) uint8_t[pssh.datalen];
+            pssh.data = new (mozilla::fallible) uint8_t[pssh.datalen];
             if (!pssh.data) {
                 return -ENOMEM;
             }
@@ -1679,7 +1679,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
               return ERROR_MALFORMED;
             }
 
-            sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size);
+            sp<ABuffer> buffer = new (mozilla::fallible) ABuffer(chunk_data_size);
             if (!buffer.get() || !buffer->data()) {
                 return -ENOMEM;
             }
@@ -1914,7 +1914,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             if (size >= kMAX_ALLOCATION - chunk_size) {
                 return ERROR_MALFORMED;
             }
-            uint8_t *buffer = new (fallible) uint8_t[size + chunk_size];
+            uint8_t *buffer = new (mozilla::fallible) uint8_t[size + chunk_size];
             if (!buffer) {
                 return -ENOMEM;
             }
@@ -1949,7 +1949,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 if (chunk_data_size <= kSkipBytesOfDataBox) {
                   return ERROR_MALFORMED;
                 }
-                sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size + 1);
+                sp<ABuffer> buffer = new (mozilla::fallible) ABuffer(chunk_data_size + 1);
                 if (!buffer.get() || !buffer->data()) {
                     return -ENOMEM;
                 }
