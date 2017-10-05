@@ -25,11 +25,7 @@ NS_SerializeToString(nsISerializable* obj, nsACString& str)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIObjectOutputStream> objstream =
-      do_CreateInstance("@mozilla.org/binaryoutputstream;1");
-  if (!objstream)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  objstream->SetOutputStream(stream);
+    NS_NewObjectOutputStream(stream);
   nsresult rv =
       objstream->WriteCompoundObject(obj, NS_GET_IID(nsISupports), true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -48,11 +44,7 @@ NS_DeserializeObject(const nsACString& str, nsISupports** obj)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObjectInputStream> objstream =
-      do_CreateInstance("@mozilla.org/binaryinputstream;1");
-  if (!objstream)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  objstream->SetInputStream(stream);
+    NS_NewObjectInputStream(stream);
   return objstream->ReadObject(true, obj);
 }
 
