@@ -1188,9 +1188,9 @@ Animation::ResumeAt(const TimeDuration& aReadyTime)
   // but it's currently not necessary.
   MOZ_ASSERT(mPendingState == PendingState::PlayPending,
              "Expected to resume a play-pending animation");
-  MOZ_ASSERT(mHoldTime.IsNull() != mStartTime.IsNull(),
+  MOZ_ASSERT(!mHoldTime.IsNull() || !mStartTime.IsNull(),
              "An animation in the play-pending state should have either a"
-             " resolved hold time or resolved start time (but not both)");
+             " resolved hold time or resolved start time");
 
   // If we aborted a pending pause operation we will already have a start time
   // we should use. In all other cases, we resolve it from the ready time.

@@ -439,6 +439,11 @@ public:
   virtual YUVColorSpace GetYUVColorSpace() const { return YUVColorSpace::UNKNOWN; }
 
   /**
+   * Return the bit depth of the image. Used with YUV textures.
+   */
+  virtual uint32_t GetBitDepth() const { return 8; }
+
+  /**
    * Called during the transaction. The TextureSource may or may not be composited.
    *
    * Note that this is called outside of lock/unlock.
@@ -731,6 +736,8 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const override;
 
   virtual YUVColorSpace GetYUVColorSpace() const override;
+
+  virtual uint32_t GetBitDepth() const override;
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 

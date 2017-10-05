@@ -37,6 +37,7 @@
 
 #include "SpecialSystemDirectory.h"
 #include "nsAppFileLocationProvider.h"
+#include "BinaryPath.h"
 
 using namespace mozilla;
 
@@ -65,129 +66,17 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-
-  nsCOMPtr<nsIProperties> dirService;
-  rv = nsDirectoryService::Create(nullptr,
-                                  NS_GET_IID(nsIProperties),
-                                  getter_AddRefs(dirService));  // needs to be around for life of product
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (dirService) {
-    nsCOMPtr<nsIFile> localFile;
-    dirService->Get(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
-                    getter_AddRefs(localFile));
-    if (localFile) {
-      localFile.forget(aFile);
-      return NS_OK;
-    }
-  }
-
-  RefPtr<nsLocalFile> localFile = new nsLocalFile;
-
-#ifdef XP_WIN
-  wchar_t buf[MAX_PATH + 1];
-  SetLastError(ERROR_SUCCESS);
-  if (GetModuleFileNameW(0, buf, mozilla::ArrayLength(buf)) &&
-      GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    // chop off the executable name by finding the rightmost backslash
-    wchar_t* lastSlash = wcsrchr(buf, L'\\');
-    if (lastSlash) {
-      *(lastSlash + 1) = L'\0';
-    }
-
-    localFile->InitWithPath(nsDependentString(buf));
-    localFile.forget(aFile);
+  nsCOMPtr<nsIFile> file;
+  gService->Get(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
+                getter_AddRefs(file));
+  if (file) {
+    file.forget(aFile);
     return NS_OK;
   }
 
-#elif defined(MOZ_WIDGET_COCOA)
-  // Works even if we're not bundled.
-  CFBundleRef appBundle = CFBundleGetMainBundle();
-  if (appBundle) {
-    CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
-    if (bundleURL) {
-      CFURLRef parentURL = CFURLCreateCopyDeletingLastPathComponent(
-        kCFAllocatorDefault, bundleURL);
-      if (parentURL) {
-        // Pass true for the "resolveAgainstBase" arg to CFURLGetFileSystemRepresentation.
-        // This will resolve the relative portion of the CFURL against it base, giving a full
-        // path, which CFURLCopyFileSystemPath doesn't do.
-        char buffer[PATH_MAX];
-        if (CFURLGetFileSystemRepresentation(parentURL, true,
-                                             (UInt8*)buffer, sizeof(buffer))) {
-#ifdef DEBUG_conrad
-          printf("nsDirectoryService - CurrentProcessDir is: %s\n", buffer);
-#endif
-          rv = localFile->InitWithNativePath(nsDependentCString(buffer));
-          if (NS_SUCCEEDED(rv)) {
-            localFile.forget(aFile);
-          }
-        }
-        CFRelease(parentURL);
-      }
-      CFRelease(bundleURL);
-    }
+  if (NS_SUCCEEDED(BinaryPath::GetFile(getter_AddRefs(file)))) {
+    return file->GetParent(aFile);
   }
-
-  NS_ASSERTION(*aFile, "nsDirectoryService - Could not determine CurrentProcessDir.\n");
-  if (*aFile) {
-    return NS_OK;
-  }
-
-#elif defined(XP_UNIX)
-
-  // In the absence of a good way to get the executable directory let
-  // us try this for unix:
-  //    - if MOZILLA_FIVE_HOME is defined, that is it
-  //    - else give the current directory
-  char buf[MAXPATHLEN];
-
-  // The MOZ_DEFAULT_MOZILLA_FIVE_HOME variable can be set at configure time with
-  // a --with-default-mozilla-five-home=foo autoconf flag.
-  //
-  // The idea here is to allow for builds that have a default MOZILLA_FIVE_HOME
-  // regardless of the environment.  This makes it easier to write apps that
-  // embed mozilla without having to worry about setting up the environment
-  //
-  // We do this by putenv()ing the default value into the environment.  Note that
-  // we only do this if it is not already set.
-#ifdef MOZ_DEFAULT_MOZILLA_FIVE_HOME
-  const char* home = PR_GetEnv("MOZILLA_FIVE_HOME");
-  if (!home || !*home) {
-    putenv("MOZILLA_FIVE_HOME=" MOZ_DEFAULT_MOZILLA_FIVE_HOME);
-  }
-#endif
-
-  char* moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
-  if (moz5 && *moz5) {
-    if (realpath(moz5, buf)) {
-      localFile->InitWithNativePath(nsDependentCString(buf));
-      localFile.forget(aFile);
-      return NS_OK;
-    }
-  }
-#if defined(DEBUG)
-  static bool firstWarning = true;
-
-  if ((!moz5 || !*moz5) && firstWarning) {
-    // Warn that MOZILLA_FIVE_HOME not set, once.
-    printf("Warning: MOZILLA_FIVE_HOME not set.\n");
-    firstWarning = false;
-  }
-#endif /* DEBUG */
-
-  // Fall back to current directory.
-  if (getcwd(buf, sizeof(buf))) {
-    localFile->InitWithNativePath(nsDependentCString(buf));
-    localFile.forget(aFile);
-    return NS_OK;
-  }
-
-#endif
-
   NS_ERROR("unable to get current process directory");
   return NS_ERROR_FAILURE;
 } // GetCurrentProcessDirectory()
