@@ -42,13 +42,15 @@
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/menu"
         style="@style/UrlBar.Menu"
+        android:background="@drawable/url_bar_action_button"
         android:contentDescription="@string/menu"
         android:src="@drawable/ic_overflow"/>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/tabs"
         style="@style/UrlBar.Tabs"
-        android:layout_alignWithParentIfMissing="true"/>
+        android:layout_alignWithParentIfMissing="true"
+        android:background="@drawable/url_bar_action_button"/>
 
     <org.mozilla.gecko.toolbar.TabCounter
         android:id="@+id/tabs_counter"
