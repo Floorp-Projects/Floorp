@@ -751,6 +751,7 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aRequest,
 
   childRequest->mIsTopLevel = false;
   childRequest->mURI = aURI;
+  childRequest->mTriggeringPrincipal = aRequest->mTriggeringPrincipal;
   childRequest->mIsInline = false;
   childRequest->mReferrerPolicy = aRequest->mReferrerPolicy;
   childRequest->mParent = aRequest;
@@ -1019,15 +1020,17 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel),
-                              aRequest->mURI,
-                              context,
-                              securityFlags,
-                              contentPolicyType,
-                              loadGroup,
-                              prompter,
-                              nsIRequest::LOAD_NORMAL |
-                              nsIChannel::LOAD_CLASSIFY_URI);
+  nsresult rv = NS_NewChannelWithTriggeringPrincipal(
+      getter_AddRefs(channel),
+      aRequest->mURI,
+      context,
+      aRequest->mTriggeringPrincipal,
+      securityFlags,
+      contentPolicyType,
+      loadGroup,
+      prompter,
+      nsIRequest::LOAD_NORMAL |
+      nsIChannel::LOAD_CLASSIFY_URI);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1372,9 +1375,15 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
         }
       }
 
+      nsCOMPtr<nsIPrincipal> principal = aElement->GetScriptURITriggeringPrincipal();
+      if (!principal) {
+        principal = scriptContent->NodePrincipal();
+      }
+
       request = CreateLoadRequest(scriptKind, aElement, version, ourCORSMode,
                                   sriMetadata);
       request->mURI = scriptURI;
+      request->mTriggeringPrincipal = Move(principal);
       request->mIsInline = false;
       request->mReferrerPolicy = ourRefPolicy;
       // keep request->mScriptFromHead to false so we don't treat non preloaded
@@ -1519,6 +1528,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   request->mJSVersion = version;
   request->mIsInline = true;
   request->mURI = mDocument->GetDocumentURI();
+  request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mLineNo = aElement->GetScriptLineNumber();
   request->mProgress = ScriptLoadRequest::Progress::Loading_Source;
   request->mDataType = ScriptLoadRequest::DataType::Source;
@@ -3104,6 +3114,7 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
     CreateLoadRequest(ScriptKind::Classic, nullptr, 0,
                       Element::StringToCORSMode(aCrossOrigin), sriMetadata);
   request->mURI = aURI;
+  request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mIsInline = false;
   request->mReferrerPolicy = aReferrerPolicy;
   request->mScriptFromHead = aScriptFromHead;

@@ -207,7 +207,9 @@ add_task(async function test_web_accessible_resources_csp() {
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testScriptElement.wrappedJSObject.setAttribute("src", browser.extension.getURL("test_script.js"));
     document.head.appendChild(testScriptElement);
     browser.runtime.sendMessage("script-loaded");
   }
@@ -299,7 +301,9 @@ add_task(async function test_web_accessible_resources_mixed_content() {
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testScriptElement.wrappedJSObject.setAttribute("src", browser.extension.getURL("test_script.js"));
     document.head.appendChild(testScriptElement);
 
     window.addEventListener("message", event => {
