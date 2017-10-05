@@ -8,7 +8,6 @@
 
 #include "Intervals.h"
 #include "MediaData.h"
-#include "MediaPrefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
