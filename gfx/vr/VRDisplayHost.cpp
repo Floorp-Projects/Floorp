@@ -8,6 +8,7 @@
 #include "ipc/VRLayerParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
+#include "VRThread.h"
 
 #if defined(XP_WIN)
 
@@ -345,7 +346,6 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
   }
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-
   /**
    * Trigger the next VSync immediately after we are successfully
    * submitting frames.  As SubmitFrame is responsible for throttling
@@ -356,9 +356,13 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
    * frames to continue at a lower refresh rate until frame submission
    * succeeds again.
    */
-  VRManager *vm = VRManager::Get();
-  MOZ_ASSERT(vm);
-  vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  VRManager* vm = VRManager::Get();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
+
+  loop->PostTask(NewRunnableMethod<const uint32_t>(
+    "gfx::VRLayerParent::SubmitFrame",
+    vm, &VRManager::NotifyVRVsync, mDisplayInfo.mDisplayID
+  ));
 #endif
 }
 
