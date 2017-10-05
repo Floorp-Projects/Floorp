@@ -445,11 +445,11 @@ class RectifierFrameLayout : public JitFrameLayout
     }
 };
 
-class WasmFrameLayout : public JitFrameLayout
+class WasmToJSJitFrameLayout : public JitFrameLayout
 {
   public:
     static inline size_t Size() {
-        return sizeof(WasmFrameLayout);
+        return sizeof(WasmToJSJitFrameLayout);
     }
 };
 
