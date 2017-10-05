@@ -27,8 +27,8 @@
 #include "TextureD3D11.h"
 
 #include "gfxVROculus.h"
+#include "VRThread.h"
 
-#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/Telemetry.h"
@@ -1385,9 +1385,9 @@ VRControllerOculus::VibrateHapticComplete(ovrSession aSession, uint32_t aPromise
   VRManager *vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>(
-                                             "VRManager::NotifyVibrateHapticCompleted",
-                                             vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
+  VRListenerThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>(
+                                           "VRManager::NotifyVibrateHapticCompleted",
+                                           vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
 }
 
 void
