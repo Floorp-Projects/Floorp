@@ -67,7 +67,11 @@ public:
   void SetCharset(const nsAString& aCharset, ErrorResult& rv);
   void SetDefer(bool aDefer, ErrorResult& rv);
   bool Defer();
-  void SetSrc(const nsAString& aSrc, ErrorResult& rv);
+  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& rv);
+  void GetSrc(nsString& aSrc, nsIPrincipal&)
+  {
+    GetSrc(aSrc);
+  };
   void SetType(const nsAString& aType, ErrorResult& rv);
   void SetHtmlFor(const nsAString& aHtmlFor, ErrorResult& rv);
   void SetEvent(const nsAString& aEvent, ErrorResult& rv);
