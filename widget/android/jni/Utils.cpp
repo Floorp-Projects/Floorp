@@ -211,6 +211,15 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
     result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
             NS_LITERAL_CSTRING("JavaStackTrace"),
             String::Ref::From(aStack)->ToCString()));
+
+    auto appNotes = java::GeckoAppShell::GetAppNotes();
+    if (NS_WARN_IF(aEnv->ExceptionCheck())) {
+        aEnv->ExceptionDescribe();
+        aEnv->ExceptionClear();
+    } else if (appNotes) {
+        CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("\n") +
+                                                   appNotes->ToCString());
+    }
 #endif // MOZ_CRASHREPORTER
 
     if (sOOMErrorClass && aEnv->IsInstanceOf(aExc, sOOMErrorClass)) {
