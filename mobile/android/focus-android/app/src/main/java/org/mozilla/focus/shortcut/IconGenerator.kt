@@ -80,7 +80,7 @@ class IconGenerator {
          *
          * For example this method will return "f" for "http://m.facebook.com/foobar".
          */
-        @VisibleForTesting fun getRepresentativeCharacter(url: String?): String {
+        @VisibleForTesting internal fun getRepresentativeCharacter(url: String?): String {
             val firstChar = getRepresentativeSnippet(url)?.find { it.isLetterOrDigit() }?.toUpperCase()
             return (firstChar ?: DEFAULT_ICON_CHAR).toString()
         }
