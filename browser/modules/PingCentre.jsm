@@ -18,7 +18,6 @@ const PREF_BRANCH = "browser.ping-centre.";
 
 const TELEMETRY_PREF = `${PREF_BRANCH}telemetry`;
 const LOGGING_PREF = `${PREF_BRANCH}log`;
-const STAGING_ENDPOINT_PREF = `${PREF_BRANCH}staging.endpoint`;
 const PRODUCTION_ENDPOINT_PREF = `${PREF_BRANCH}production.endpoint`;
 
 const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
@@ -72,10 +71,8 @@ class PingCentre {
       this._prefs.getStringPref(overrideEndpointPref);
     if (overrideValue) {
       this._pingEndpoint = overrideValue;
-    } else if (AppConstants.MOZ_UPDATE_CHANNEL === "release") {
-      this._pingEndpoint = this._prefs.getStringPref(PRODUCTION_ENDPOINT_PREF);
     } else {
-      this._pingEndpoint = this._prefs.getStringPref(STAGING_ENDPOINT_PREF);
+      this._pingEndpoint = this._prefs.getStringPref(PRODUCTION_ENDPOINT_PREF);
     }
   }
 
