@@ -13,3 +13,5 @@
 % http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html
 % http://localhost/tests/perf-reftest-singletons/nth-index-1.html
 % http://localhost/tests/perf-reftest-singletons/nth-index-2.html
+
+% http://localhost/tests/perf-reftest-singletons/bidi-resolution-1.html

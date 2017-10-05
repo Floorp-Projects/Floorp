@@ -18,3 +18,5 @@
 & http://localhost/tests/perf-reftest/style-attr-1.html, http://localhost/tests/perf-reftest/style-attr-1-ref.html
 & http://localhost/tests/perf-reftest/stop-cascade-1.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
 & http://localhost/tests/perf-reftest/stop-cascade-2.html, http://localhost/tests/perf-reftest/stop-cascade-ref.html
+
+& http://localhost/tests/perf-reftest/bidi-resolution-1.html, http://localhost/tests/perf-reftest/bidi-resolution-1-ref.html
