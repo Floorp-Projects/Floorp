@@ -599,6 +599,24 @@ ChromiumCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
 }
 
 void
+ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
+                                     const nsAString& aMinHdcpVersion)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::GetStatusForPolicy(pid=%u) minHdcpVersion=%s",
+          aPromiseId,
+          NS_ConvertUTF16toUTF8(aMinHdcpVersion).get());
+
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in GetStatusForPolicy"));
+    return;
+  }
+}
+
+void
 ChromiumCDMProxy::Terminated()
 {
   if (!mKeys.IsNull()) {

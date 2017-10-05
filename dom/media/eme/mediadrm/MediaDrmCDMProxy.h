@@ -115,6 +115,9 @@ public:
   void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
                              nsTArray<nsCString>& aSessionIds) override;
 
+  void GetStatusForPolicy(PromiseId aPromiseId,
+                          const nsAString& aMinHdcpVersion) override;
+
 #ifdef DEBUG
   bool IsOnOwnerThread() override;
 #endif
