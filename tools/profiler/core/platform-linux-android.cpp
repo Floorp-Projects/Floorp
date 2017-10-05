@@ -75,6 +75,12 @@ Thread::GetCurrentId()
   return gettid();
 }
 
+void*
+GetStackTop(void* aGuess)
+{
+  return aGuess;
+}
+
 static void
 PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
 {
