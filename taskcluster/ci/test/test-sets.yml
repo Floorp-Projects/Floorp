@@ -66,6 +66,8 @@ talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
+    - talos-tp6
+    - talos-tp6-stylo-threads
 
 awsy:
     - awsy
@@ -144,6 +146,7 @@ linux-talos-stylo-disabled:
     - talos-tp5o-stylo-disabled
     - talos-perf-reftest-stylo-disabled
     - talos-perf-reftest-singletons-stylo-disabled
+    - talos-tp6-stylo-disabled
 
 windows-reftest-gpu:
     - reftest-gpu
