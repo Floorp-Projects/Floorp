@@ -27,12 +27,14 @@ this.LightweightThemes = {
 
   configurations: {
     noLWT: {
+      selectors: ["#navigator-toolbox"],
       async applyConfig() {
         LightweightThemeManager.currentTheme = null;
       },
     },
 
     darkLWT: {
+      selectors: ["#navigator-toolbox"],
       applyConfig() {
         LightweightThemeManager.setLocalTheme({
           id:          "black",
@@ -52,6 +54,7 @@ this.LightweightThemes = {
     },
 
     lightLWT: {
+      selectors: ["#navigator-toolbox"],
       applyConfig() {
         LightweightThemeManager.setLocalTheme({
           id:          "white",
