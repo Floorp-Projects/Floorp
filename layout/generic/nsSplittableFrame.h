@@ -114,10 +114,6 @@ protected:
    */
   LogicalSides PreReflowBlockLevelLogicalSkipSides() const;
 
-#ifdef DEBUG
-  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) override;
-#endif
-
   nsIFrame*   mPrevContinuation;
   nsIFrame*   mNextContinuation;
 };
