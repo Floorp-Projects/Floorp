@@ -707,13 +707,13 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::size, aValue, DEFAULT_COLS, aRv);
   }
 
-  void GetSrc(nsAString& aValue)
+  void GetSrc(nsAString& aValue, nsIPrincipal&)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aValue);
   }
-  void SetSrc(const nsAString& aValue, ErrorResult& aRv)
+  void SetSrc(const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
   {
-    SetHTMLAttr(nsGkAtoms::src, aValue, aRv);
+    SetHTMLAttr(nsGkAtoms::src, aValue, aTriggeringPrincipal, aRv);
   }
 
   void GetStep(nsAString& aValue)
@@ -1616,6 +1616,11 @@ protected:
    * nsTextEditorState cannot do its job.
    */
   nsTextEditorState::SelectionProperties mSelectionProperties;
+
+  /**
+   * The triggering principal for the src attribute.
+   */
+  nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 
   /*
    * InputType object created based on input type.
