@@ -28,6 +28,7 @@ this.DevTools = {
 
     panels.forEach(panel => {
       this.configurations[panel] = {};
+      this.configurations[panel].selectors = ["#toolbox-container"];
       this.configurations[panel].applyConfig = async function() {
         await gDevTools.showToolbox(getTargetForSelectedTab(), panel, "bottom");
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -37,18 +38,22 @@ this.DevTools = {
 
   configurations: {
     bottomToolbox: {
+      selectors: ["#toolbox-container"],
       async applyConfig() {
         await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "bottom");
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
     },
     sideToolbox: {
+      selectors: ["#toolbox-container"],
       async applyConfig() {
         await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "side");
         await new Promise(resolve => setTimeout(resolve, 500));
       },
     },
     undockedToolbox: {
+      selectors: ["#toolbox-container"],
+      windowType: "devtools:toolbox",
       async applyConfig() {
         await gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "window");
         await new Promise(resolve => setTimeout(resolve, 500));

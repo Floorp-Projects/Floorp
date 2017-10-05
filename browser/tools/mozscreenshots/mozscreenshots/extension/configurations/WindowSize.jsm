@@ -20,6 +20,7 @@ this.WindowSize = {
 
   configurations: {
     maximized: {
+      selectors: [":root"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, false);
@@ -36,6 +37,7 @@ this.WindowSize = {
     },
 
     normal: {
+      selectors: [":root"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, false);
@@ -47,6 +49,7 @@ this.WindowSize = {
     },
 
     fullScreen: {
+      selectors: [":root"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, true);
