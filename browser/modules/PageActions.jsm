@@ -522,6 +522,12 @@ this.PageActions = {
  *                * iframeNode: The iframe.
  *                * parentPanelNode: The panel node in which the iframe is
  *                  shown.
+ *         @param onLocationChange (function, optional)
+ *                Called after tab switch or when the current <browser>'s
+ *                location changes:
+ *                onLocationChange(browserWindow)
+ *                * browserWindow: The browser window containing the tab switch
+ *                  or changed <browser>.
  *         @param onPlacedInPanel (function, optional)
  *                Called when the action is added to the page action panel in
  *                a browser window:
@@ -566,6 +572,7 @@ function Action(options) {
     onIframeHiding: false,
     onIframeHidden: false,
     onIframeShown: false,
+    onLocationChange: false,
     onPlacedInPanel: false,
     onPlacedInUrlbar: false,
     onShowingInPanel: false,
@@ -770,6 +777,18 @@ Action.prototype = {
   onIframeShown(iframeNode, parentPanelNode) {
     if (this._onIframeShown) {
       this._onIframeShown(iframeNode, parentPanelNode);
+    }
+  },
+
+  /**
+   * Call this on tab switch or when the current <browser>'s location changes.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         The browser window containing the tab switch or changed <browser>.
+   */
+  onLocationChange(browserWindow) {
+    if (this._onLocationChange) {
+      this._onLocationChange(browserWindow);
     }
   },
 
