@@ -2233,8 +2233,12 @@ class StaticAnalysis(MachCommandBase):
                        '-checks=%s' % checks,
                        '-extra-arg=-DMOZ_CLANG_PLUGIN']
 
-        if len(header_filter):
-            common_args.append('-header-filter=%s' % header_filter)
+        # Flag header-filter is passed to 'run-clang-tidy' in order to limit
+        # the diagnostic messages only to the specified header files.
+        # When no value is specified the default value is considered to be the source
+        # in order to limit the dianostic message to the source files or folders.
+        common_args.append('-header-filter=%s' %
+                           (header_filter if len(header_filter) else ''.join(source)))
 
         if fix:
             common_args.append('-fix')
