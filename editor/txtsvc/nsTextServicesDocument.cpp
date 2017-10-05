@@ -2392,13 +2392,6 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     uint32_t childIndex = offset;
 
     if (childIndex > 0) {
-      uint32_t numChildren = parent->GetChildCount();
-      NS_ASSERTION(childIndex <= numChildren, "Invalid selection offset!");
-
-      if (childIndex > numChildren) {
-        childIndex = numChildren;
-      }
-
       childIndex -= 1;
     }
 
