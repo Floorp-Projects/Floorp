@@ -94,7 +94,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIContentViewerFile.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeOwner.h"
@@ -1201,18 +1200,15 @@ nsPrintEngine::BuildDocTree(nsIDocShell *      aParentNode,
       nsCOMPtr<nsIContentViewer>  viewer;
       childAsShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
-        nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
-        if (viewerFile) {
-          nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(childAsShell);
-          auto po = MakeUnique<nsPrintObject>();
-          po->mParent = aPO.get();
-          nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
-          if (NS_FAILED(rv))
-            NS_NOTREACHED("Init failed?");
-          aPO->mKids.AppendElement(Move(po));
-          aDocList->AppendElement(aPO->mKids.LastElement().get());
-          BuildDocTree(childAsShell, aDocList, aPO->mKids.LastElement());
-        }
+        nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(childAsShell);
+        auto po = MakeUnique<nsPrintObject>();
+        po->mParent = aPO.get();
+        nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
+        if (NS_FAILED(rv))
+          NS_NOTREACHED("Init failed?");
+        aPO->mKids.AppendElement(Move(po));
+        aDocList->AppendElement(aPO->mKids.LastElement().get());
+        BuildDocTree(childAsShell, aDocList, aPO->mKids.LastElement());
       }
     }
   }
