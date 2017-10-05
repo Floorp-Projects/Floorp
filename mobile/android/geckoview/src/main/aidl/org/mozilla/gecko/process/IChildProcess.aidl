@@ -9,7 +9,6 @@ import org.mozilla.gecko.process.IProcessManager;
 import android.os.ParcelFileDescriptor;
 
 interface IChildProcess {
-    void stop();
     int getPid();
-    void start(in IProcessManager procMan, in String[] args, in ParcelFileDescriptor crashReporterPfd, in ParcelFileDescriptor ipcPfd);
+    boolean start(in IProcessManager procMan, in String[] args, in ParcelFileDescriptor crashReporterPfd, in ParcelFileDescriptor ipcPfd);
 }
