@@ -77,6 +77,14 @@
         <item name="android:layout_marginRight">-3dp</item>
     </style>
 
+    <style name="TabsTray.AddTab" parent="TabsTray.V17.AddTab" />
+    <style name="TabsTray.V17.AddTab" parent="TabsTray.Base.AddTab">
+        <item name="android:layout_marginEnd">-3dp</item>
+    </style>
+
+    <style name="TabsTray.Menu" parent="TabsTray.V17.Menu" />
+    <style name="TabsTray.V17.Menu" parent="TabsTray.Base.Menu"/>
+
     <style name="TabStrip.Favicon" parent="TabStrip.V17.Favicon"/>
     <style name="TabStrip.V17.Favicon" parent="TabStrip.Base.Favicon">
         <item name="android:layout_marginStart">12dp</item>
