@@ -112,7 +112,8 @@ if not CONFIG['JS_STANDALONE']:
         'tools',
     ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG['COMPILE_ENVIRONMENT'] and (CONFIG['MOZ_WIDGET_TOOLKIT'] or
+                                      CONFIG['JS_STANDALONE']):
     DIRS += ['js/src']
 
 DIRS += [
