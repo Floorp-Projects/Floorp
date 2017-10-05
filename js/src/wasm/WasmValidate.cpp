@@ -60,7 +60,7 @@ Decoder::fail(size_t errorOffset, const char* msg)
 
 bool
 Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* range,
-                      const char* sectionName, bool peeking)
+                      const char* sectionName)
 {
     MOZ_ASSERT(!*range);
 
@@ -88,8 +88,6 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* r
         // skipCustomSection() assumes.
         cur_ = currentSectionStart;
         if (!skipCustomSection(env)) {
-            if (peeking)
-                goto rewind;
             return false;
         }
 
@@ -103,17 +101,12 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* r
     // Found it, now start the section.
 
     uint32_t size;
-    if (!readVarU32(&size) || bytesRemain() < size) {
-        if (peeking)
-            goto rewind;
+    if (!readVarU32(&size) || bytesRemain() < size)
         goto fail;
-    }
 
     range->emplace();
     (*range)->start = cur_ - beg_;
     (*range)->size = size;
-    if (peeking)
-        goto rewind;
     return true;
 
   rewind:
@@ -123,18 +116,6 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* r
 
   fail:
     return failf("failed to start %s section", sectionName);
-}
-
-bool
-Decoder::peekSectionSize(SectionId id, ModuleEnvironment* env, const char* sectionName, uint32_t* sectionSize)
-{
-    MaybeSectionRange range;
-    if (!startSection(id, env, &range, sectionName, /* peeking = */ true))
-        return false;
-    if (!range)
-        return false;
-    *sectionSize = range->size;
-    return true;
 }
 
 bool
@@ -1498,6 +1479,9 @@ wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env)
     if (!DecodeElemSection(d, env))
         return false;
 
+    if (!d.startSection(SectionId::Code, env, &env->codeSection, "code"))
+        return false;
+
     return true;
 }
 
@@ -1523,11 +1507,7 @@ DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env, uint32_t funcIndex)
 static bool
 DecodeCodeSection(Decoder& d, ModuleEnvironment* env)
 {
-    MaybeSectionRange range;
-    if (!d.startSection(SectionId::Code, env, &range, "code"))
-        return false;
-
-    if (!range) {
+    if (!env->codeSection) {
         if (env->numFuncDefs() != 0)
             return d.fail("expected function bodies");
         return true;
@@ -1545,7 +1525,7 @@ DecodeCodeSection(Decoder& d, ModuleEnvironment* env)
             return false;
     }
 
-    return d.finishSection(*range, "code");
+    return d.finishSection(*env->codeSection, "code");
 }
 
 static bool

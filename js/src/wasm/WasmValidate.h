@@ -69,6 +69,7 @@ struct ModuleEnvironment
     ImportVector              imports;
     ExportVector              exports;
     Maybe<uint32_t>           startFuncIndex;
+    MaybeSectionRange         codeSection;
 
     // Fields decoded as part of the wasm module tail:
     ElemSegmentVector         elemSegments;
@@ -567,14 +568,9 @@ class Decoder
     MOZ_MUST_USE bool startSection(SectionId id,
                                    ModuleEnvironment* env,
                                    MaybeSectionRange* range,
-                                   const char* sectionName,
-                                   bool peeking = false);
+                                   const char* sectionName);
     MOZ_MUST_USE bool finishSection(const SectionRange& range,
                                     const char* sectionName);
-    MOZ_MUST_USE bool peekSectionSize(SectionId id,
-                                      ModuleEnvironment* env,
-                                      const char* sectionName,
-                                      uint32_t* sectionSize);
 
     // Custom sections do not cause validation errors unless the error is in
     // the section header itself.
