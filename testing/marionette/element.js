@@ -679,13 +679,6 @@ element.isCollection = function(seq) {
   }
 };
 
-element.makeWebElement = function(uuid) {
-  return {
-    [element.Key]: uuid,
-    [element.LegacyKey]: uuid,
-  };
-};
-
 /**
  * Determines if <var>el</var> is stale.
  *

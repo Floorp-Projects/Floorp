@@ -18,7 +18,6 @@ const {
 const {
   JavaScriptError,
   ScriptTimeoutError,
-  WebDriverError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 
 const log = Log.repository.getLogger("Marionette");
