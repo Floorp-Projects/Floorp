@@ -47,33 +47,6 @@ TEST(TestNonBlockingAsyncInputStream, Simple) {
   ASSERT_TRUE(data.Equals(nsCString(buffer, read)));
 }
 
-class ReadSegmentsData
-{
-public:
-  ReadSegmentsData(nsIInputStream* aStream, char* aBuffer)
-    : mStream(aStream)
-    , mBuffer(aBuffer)
-  {}
-
-  nsIInputStream* mStream;
-  char* mBuffer;
-};
-
-nsresult
-ReadSegmentsFunction(nsIInputStream* aInStr,
-                     void* aClosure,
-                     const char* aBuffer,
-                     uint32_t aOffset,
-                     uint32_t aCount,
-                     uint32_t* aCountWritten)
-{
-  ReadSegmentsData* data = static_cast<ReadSegmentsData*>(aClosure);
-  if (aInStr != data->mStream) return NS_ERROR_FAILURE;
-  memcpy(&data->mBuffer[aOffset], aBuffer, aCount);
-  *aCountWritten = aCount;
-  return NS_OK;
-}
-
 TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
   nsCOMPtr<nsIInputStream> stream;
 
@@ -91,8 +64,7 @@ TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
   // Read works fine.
   char buffer[1024];
   uint32_t read = 0;
-  ReadSegmentsData closure(async, buffer);
-  ASSERT_EQ(NS_OK, async->ReadSegments(ReadSegmentsFunction, &closure,
+  ASSERT_EQ(NS_OK, async->ReadSegments(NS_CopySegmentToBuffer, buffer,
                                        sizeof(buffer), &read));
   ASSERT_EQ(data.Length(), read);
   ASSERT_TRUE(data.Equals(nsCString(buffer, read)));
