@@ -43,30 +43,20 @@
                   android:layout_height="match_parent"
                   android:layout_weight="1.0"/>
 
-            <ImageButton android:id="@+id/add_tab"
-                         style="@style/UrlBar.ImageButton"
-                         android:layout_width="@dimen/tabs_panel_button_width"
-                         android:padding="@dimen/browser_toolbar_button_padding"
-                         android:src="@drawable/tab_new"
-                         android:contentDescription="@string/new_tab"
-                         android:background="@drawable/action_bar_button_inverse"/>
+            <org.mozilla.gecko.toolbar.ToolbarRoundButton
+                android:id="@+id/add_tab"
+                style="@style/TabsTray.AddTab"
+                android:background="@drawable/action_bar_button_inverse"
+                android:contentDescription="@string/new_tab"
+                android:src="@drawable/tab_new"/>
 
-            <FrameLayout android:id="@+id/tabs_menu"
-                         style="@style/UrlBar.ImageButton"
-                         android:layout_width="@dimen/tabs_panel_button_width"
-                         android:background="@drawable/action_bar_button_inverse"
-                         android:contentDescription="@string/menu">
-
-                <ImageView
-                        style="@style/UrlBar.ImageButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/browser_toolbar_menu_icon_height"
-                        android:layout_gravity="center"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/menu"
-                        android:tint="@color/tabs_tray_icon_grey"/>
-
-            </FrameLayout>
+            <org.mozilla.gecko.toolbar.ToolbarRoundButton
+                android:id="@+id/tabs_menu"
+                style="@style/TabsTray.Menu"
+                android:background="@drawable/action_bar_button_inverse"
+                android:contentDescription="@string/menu"
+                android:src="@drawable/ic_overflow"
+                android:tint="@color/tabs_tray_icon_grey"/>
 
         </view>
 
