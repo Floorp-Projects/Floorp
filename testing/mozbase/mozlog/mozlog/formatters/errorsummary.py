@@ -10,7 +10,7 @@ from base import BaseFormatter
 class ErrorSummaryFormatter(BaseFormatter):
 
     def __init__(self):
-        self.groups = None
+        self.groups = {}
         self.line_count = 0
 
     def __call__(self, data):
