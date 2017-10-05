@@ -10418,9 +10418,11 @@ nsContentUtils::GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
   nsAutoString loadingStr;
   aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::loadingprincipal,
                         loadingStr);
-  if (loadingStr.IsEmpty()) {
-    // Fall back to mContent's principal (SystemPrincipal) if 'loadingprincipal'
-    // isn't specified.
+
+  // Fall back to mContent's principal if 'loadingprincipal' isn't specified,
+  // or if the doc isn't loaded by System Principal.
+  if (loadingStr.IsEmpty() ||
+      !aLoadingNode->OwnerDoc()->NodePrincipal()->GetIsSystemPrincipal()) {
     loadingPrincipal.forget(aLoadingPrincipal);
     return result;
   }
