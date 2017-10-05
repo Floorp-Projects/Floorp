@@ -112,10 +112,14 @@ def docker_worker_toolchain(config, job, taskdesc):
     taskdesc['run-on-projects'] = ['trunk', 'try']
 
     worker = taskdesc['worker']
-    worker['artifacts'] = []
     worker['chain-of-trust'] = True
 
-    docker_worker_add_public_artifacts(config, job, taskdesc)
+    # Allow the job to specify where artifacts come from, but add
+    # public/build if it's not there already.
+    artifacts = worker.setdefault('artifacts', [])
+    if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
+        docker_worker_add_public_artifacts(config, job, taskdesc)
+
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)
