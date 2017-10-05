@@ -46,17 +46,8 @@ ScopedXREEmbed::SetAppDir(const nsACString& aPath)
 void
 ScopedXREEmbed::Start()
 {
-  std::string path;
-#if defined(OS_WIN)
-  path = WideToUTF8(CommandLine::ForCurrentProcess()->program());
-#elif defined(OS_POSIX)
-  path = CommandLine::ForCurrentProcess()->argv()[0];
-#else
-#  error Sorry
-#endif
-
   nsCOMPtr<nsIFile> localFile;
-  nsresult rv = XRE_GetBinaryPath(path.c_str(), getter_AddRefs(localFile));
+  nsresult rv = XRE_GetBinaryPath(getter_AddRefs(localFile));
   if (NS_FAILED(rv))
     return;
 

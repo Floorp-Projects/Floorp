@@ -13,13 +13,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/element.js");
 const {
-  error,
   JavaScriptError,
   ScriptTimeoutError,
   WebDriverError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 
-const logger = Log.repository.getLogger("Marionette");
+const log = Log.repository.getLogger("Marionette");
 
 this.EXPORTED_SYMBOLS = ["evaluate", "sandbox", "Sandboxes"];
 
@@ -29,8 +28,6 @@ const COMPLETE = "__webDriverComplete";
 const DEFAULT_TIMEOUT = 10000; // ms
 const FINISH = "finish";
 const MARIONETTE_SCRIPT_FINISHED = "marionetteScriptFinished";
-const ELEMENT_KEY = "element";
-const W3C_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf";
 
 /** @namespace */
 this.evaluate = {};
@@ -292,7 +289,7 @@ evaluate.toJSON = function(obj, seenEls) {
       rv[prop] = evaluate.toJSON(obj[prop], seenEls);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-        logger.debug(`Skipping ${prop}: ${e.message}`);
+        log.debug(`Skipping ${prop}: ${e.message}`);
       } else {
         throw e;
       }

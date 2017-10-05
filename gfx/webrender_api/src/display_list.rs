@@ -12,7 +12,7 @@ use {LineDisplayItem, LineOrientation, LineStyle, LocalClip, MixBlendMode, Pipel
 use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
 use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity};
 use {SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, StickyFrameInfo};
-use {TextDisplayItem, TextShadow, TransformStyle, YuvColorSpace, YuvData};
+use {TextDisplayItem, Shadow, TransformStyle, YuvColorSpace, YuvData};
 use YuvImageDisplayItem;
 use bincode;
 use serde::{Deserialize, Serialize, Serializer};
@@ -986,10 +986,35 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator,
     {
+        let parent_id = self.clip_stack.last().unwrap().scroll_node_id;
+        self.define_scroll_frame_with_parent(
+            id,
+            parent_id,
+            content_rect,
+            clip_rect,
+            complex_clips,
+            image_mask,
+            scroll_sensitivity)
+    }
+
+    pub fn define_scroll_frame_with_parent<I>(
+        &mut self,
+        id: Option<ClipId>,
+        parent_id: ClipId,
+        content_rect: LayoutRect,
+        clip_rect: LayoutRect,
+        complex_clips: I,
+        image_mask: Option<ImageMask>,
+        scroll_sensitivity: ScrollSensitivity,
+    ) -> ClipId
+    where
+        I: IntoIterator<Item = ComplexClipRegion>,
+        I::IntoIter: ExactSizeIterator,
+    {
         let id = self.generate_clip_id(id);
         let item = SpecificDisplayItem::ScrollFrame(ScrollFrameDisplayItem {
             id: id,
-            parent_id: self.clip_stack.last().unwrap().scroll_node_id,
+            parent_id: parent_id,
             image_mask: image_mask,
             scroll_sensitivity,
         });
@@ -1017,10 +1042,31 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator,
     {
+        let parent_id = self.clip_stack.last().unwrap().scroll_node_id;
+        self.define_clip_with_parent(
+            id,
+            parent_id,
+            clip_rect,
+            complex_clips,
+            image_mask)
+    }
+
+    pub fn define_clip_with_parent<I>(
+        &mut self,
+        id: Option<ClipId>,
+        parent_id: ClipId,
+        clip_rect: LayoutRect,
+        complex_clips: I,
+        image_mask: Option<ImageMask>,
+    ) -> ClipId
+    where
+        I: IntoIterator<Item = ComplexClipRegion>,
+        I::IntoIter: ExactSizeIterator,
+    {
         let id = self.generate_clip_id(id);
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {
             id,
-            parent_id: self.clip_stack.last().unwrap().scroll_node_id,
+            parent_id: parent_id,
             image_mask: image_mask,
         });
 
@@ -1087,12 +1133,12 @@ impl DisplayListBuilder {
         self.push_new_empty_item(SpecificDisplayItem::PopNestedDisplayList);
     }
 
-    pub fn push_text_shadow(&mut self, info: &LayoutPrimitiveInfo, shadow: TextShadow) {
-        self.push_item(SpecificDisplayItem::PushTextShadow(shadow), info);
+    pub fn push_shadow(&mut self, info: &LayoutPrimitiveInfo, shadow: Shadow) {
+        self.push_item(SpecificDisplayItem::PushShadow(shadow), info);
     }
 
-    pub fn pop_text_shadow(&mut self) {
-        self.push_new_empty_item(SpecificDisplayItem::PopTextShadow);
+    pub fn pop_shadow(&mut self) {
+        self.push_new_empty_item(SpecificDisplayItem::PopShadow);
     }
 
     pub fn finalize(mut self) -> (PipelineId, LayoutSize, BuiltDisplayList) {

@@ -1923,14 +1923,16 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                     double advance = details->mAdvance;
 
                     if (glyphData->IsMissing()) {
-                        if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
-                            textDrawer->FoundUnsupportedFeature();
-                            return false;
-                        }
                         // Default-ignorable chars will have zero advance width;
                         // we don't have to draw the hexbox for them.
                         if (aRunParams.drawMode != DrawMode::GLYPH_PATH &&
                             advance > 0) {
+
+                            if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
+                                textDrawer->FoundUnsupportedFeature();
+                                return false;
+                            }
+
                             double glyphX = aPt->x;
                             double glyphY = aPt->y;
                             if (aRunParams.isRTL) {

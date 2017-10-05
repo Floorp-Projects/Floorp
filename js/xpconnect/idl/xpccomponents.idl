@@ -15,6 +15,7 @@ interface nsIClassInfo;
 interface nsIComponentManager;
 interface nsICycleCollectorListener;
 interface nsIFile;
+interface nsIURI;
 interface nsIJSCID;
 interface nsIJSIID;
 interface nsIPrincipal;
@@ -701,6 +702,12 @@ interface nsIXPCComponents_Utils : nsISupports
      * startup so its contents will be available the next time they're read.
      */
     ACString readFile(in nsIFile file);
+
+    /*
+     * Reads the given local file URL and returns its contents. This has the
+     * same semantics of readFile.
+     */
+    ACString readURI(in nsIURI url);
 };
 
 /**

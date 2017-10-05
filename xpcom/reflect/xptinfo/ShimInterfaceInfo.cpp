@@ -51,7 +51,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -160,7 +159,6 @@
 #include "mozilla/dom/HTMLDocumentBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
-#include "mozilla/dom/HTMLFrameElementBinding.h"
 #include "mozilla/dom/HTMLFrameSetElementBinding.h"
 #include "mozilla/dom/HTMLHtmlElementBinding.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
@@ -324,7 +322,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLDocument),
   DEFINE_SHIM(HTMLElement),
   DEFINE_SHIM(HTMLFormElement),
-  DEFINE_SHIM(HTMLFrameElement),
   DEFINE_SHIM(HTMLHtmlElement),
   DEFINE_SHIM(HTMLIFrameElement),
   DEFINE_SHIM(HTMLImageElement),

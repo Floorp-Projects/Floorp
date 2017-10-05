@@ -56,11 +56,8 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLContentElement,
                                    nsGenericHTMLElement,
                                    mMatchedNodes)
 
-NS_IMPL_ADDREF_INHERITED(HTMLContentElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLContentElement, Element)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLContentElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLContentElement,
+                                               nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLContentElement)
 

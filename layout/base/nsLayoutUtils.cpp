@@ -6144,7 +6144,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
 
     // Webrender just needs the shadow details
     if (auto* textDrawer = aContext->GetTextDrawer()) {
-      wr::TextShadow wrShadow;
+      wr::Shadow wrShadow;
 
       wrShadow.offset = {
         presCtx->AppUnitsToFloatDevPixels(shadowDetails->mXOffset),

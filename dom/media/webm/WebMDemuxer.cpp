@@ -212,12 +212,6 @@ WebMDemuxer::InitBufferedState()
   mBufferedState = new WebMBufferedState;
 }
 
-bool
-WebMDemuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return !!GetNumberTracks(aType);
-}
-
 uint32_t
 WebMDemuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {

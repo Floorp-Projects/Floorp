@@ -117,25 +117,19 @@ MediaSourceDemuxer::ScanSourceBuffersForContent()
   return !haveEmptySourceBuffer;
 }
 
-bool
-MediaSourceDemuxer::HasTrackType(TrackType aType) const
+uint32_t
+MediaSourceDemuxer::GetNumberTracks(TrackType aType) const
 {
   MonitorAutoLock mon(mMonitor);
 
   switch (aType) {
     case TrackType::kAudioTrack:
-      return mInfo.HasAudio();
+      return mInfo.HasAudio() ? 1u : 0;
     case TrackType::kVideoTrack:
-      return mInfo.HasVideo();
+      return mInfo.HasVideo() ? 1u : 0;
     default:
-      return false;
+      return 0;
   }
-}
-
-uint32_t
-MediaSourceDemuxer::GetNumberTracks(TrackType aType) const
-{
-  return HasTrackType(aType) ? 1u : 0;
 }
 
 already_AddRefed<MediaTrackDemuxer>
