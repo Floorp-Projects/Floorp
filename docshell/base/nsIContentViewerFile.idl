@@ -26,6 +26,5 @@ interface nsIContentViewerFile : nsISupports
   readonly attribute boolean printable;
 
   [noscript] void print(in boolean aSilent,
-                        in FILE    aDebugFile, 
                         in nsIPrintSettings aPrintSettings);
 };
