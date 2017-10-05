@@ -98,7 +98,6 @@ bool CanIonCompileScript(JSContext* cx, JSScript* script, bool osr);
 MOZ_MUST_USE bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc);
 
 MethodStatus CanEnter(JSContext* cx, RunState& state);
-MethodStatus CanEnterUsingFastInvoke(JSContext* cx, HandleScript script, uint32_t numActualArgs);
 
 MethodStatus
 Recompile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode* osrPc,
@@ -130,9 +129,6 @@ MOZ_MUST_USE bool SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& s
                                   MutableHandle<GCVector<Value>> vals);
 
 JitExecStatus IonCannon(JSContext* cx, RunState& state);
-
-// Used to enter Ion from C++ natives like Array.map. Called from FastInvokeGuard.
-JitExecStatus FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(TypeZone& types, FreeOp* fop,
