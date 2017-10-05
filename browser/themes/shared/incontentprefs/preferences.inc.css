@@ -703,10 +703,10 @@ button > hbox > label {
   background-color: #ffe900;
   border: 1px solid #d7b600;
   bottom: 36px;
+  opacity: .85;
 }
 
-.search-tooltip:hover,
-.search-tooltip:hover::before {
+.search-tooltip:hover {
   opacity: .1;
 }
 
