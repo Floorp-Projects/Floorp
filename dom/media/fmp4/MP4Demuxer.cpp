@@ -274,12 +274,6 @@ MP4Demuxer::Init()
   return InitPromise::CreateAndResolve(result, __func__);
 }
 
-bool
-MP4Demuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return GetNumberTracks(aType) != 0;
-}
-
 uint32_t
 MP4Demuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {

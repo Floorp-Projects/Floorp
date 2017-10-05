@@ -6,8 +6,7 @@
 
 /* global Pipe, ScriptableInputStream, uneval */
 
-const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu, results: Cr} =
-    Components;
+const {Constructor: CC, classes: Cc, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/EventEmitter.jsm");

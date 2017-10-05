@@ -25,13 +25,8 @@ HTMLSharedListElement::~HTMLSharedListElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLSharedListElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
-
-// QueryInterface implementation for nsHTMLSharedListElement
-NS_INTERFACE_MAP_BEGIN(HTMLSharedListElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
-
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLSharedListElement,
+                                               nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
 

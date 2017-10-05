@@ -330,12 +330,6 @@ ADTSDemuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-bool
-ADTSDemuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return aType == TrackInfo::kAudioTrack;
-}
-
 uint32_t
 ADTSDemuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {

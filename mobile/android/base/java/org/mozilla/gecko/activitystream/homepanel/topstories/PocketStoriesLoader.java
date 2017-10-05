@@ -8,6 +8,7 @@ package org.mozilla.gecko.activitystream.homepanel.topstories;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.AsyncTaskLoader;
 import android.text.TextUtils;
 import android.util.Log;
@@ -19,6 +20,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.activitystream.homepanel.StreamRecyclerAdapter;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ProxySelector;
 
@@ -53,6 +55,13 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
 
     public static final String POCKET_REFERRER_URI = "https://getpocket.com/recommendations";
 
+    @RobocopTarget
+    @VisibleForTesting public static final String PLACEHOLDER_TITLE = "Placeholder ";
+    private static final String DEFAULT_PLACEHOLDER_URL = "https://www.mozilla.org/#";
+    static {
+        setPlaceholderUrl(DEFAULT_PLACEHOLDER_URL);
+    }
+
     // Pocket SharedPreferences keys
     private static final String POCKET_PREFS_FILE = "PocketStories";
     private static final String CACHE_TIMESTAMP_MILLIS_PREFIX = "timestampMillis-";
@@ -72,8 +81,12 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     private static final int CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
     private static final int READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
+    private static boolean isTesting = false;
+
     private String localeLang;
     private final SharedPreferences sharedPreferences;
+
+    private static String placeholderUrl;
 
     public PocketStoriesLoader(Context context) {
         super(context);
@@ -84,7 +97,8 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
 
     @Override
     protected void onStartLoading() {
-        if (APIKEY == null) {
+        // We don't want to hit the network if we're testing.
+        if (APIKEY == null || isTesting) {
             deliverResult(makePlaceholderStories());
             return;
         }
@@ -187,11 +201,25 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
 
     private static List<TopStory> makePlaceholderStories() {
         final List<TopStory> stories = new LinkedList<>();
-        final String TITLE_PREFIX = "Placeholder ";
         for (int i = 0; i < DEFAULT_COUNT; i++) {
             // Urls must be different for bookmark/pinning UI to work properly. Assume this is true for Pocket stories.
-            stories.add(new TopStory(TITLE_PREFIX + i, "https://www.mozilla.org/#" + i, null));
+            stories.add(new TopStory(PLACEHOLDER_TITLE + i, placeholderUrl + i, null));
         }
         return stories;
+    }
+
+    private static void setPlaceholderUrl(String placeholderUrl) {
+        // See use of placeholderUrl for why suffix is necessary.
+        final String requiredSuffix = "#";
+        if (!placeholderUrl.endsWith(requiredSuffix)) {
+            placeholderUrl = placeholderUrl + requiredSuffix;
+        }
+        PocketStoriesLoader.placeholderUrl = placeholderUrl;
+    }
+
+    @RobocopTarget
+    @VisibleForTesting public static void configureForTesting(final String placeholderUrl) {
+        isTesting = true;
+        setPlaceholderUrl(placeholderUrl);
     }
 }

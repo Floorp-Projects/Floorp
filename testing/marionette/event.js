@@ -10,20 +10,11 @@ this.event = {};
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-const logger = Log.repository.getLogger("Marionette");
-
 Cu.import("chrome://marionette/content/element.js");
 const {ElementNotInteractableError} =
     Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["event"];
-
-// must be synchronised with nsIDOMWindowUtils
-const COMPOSITION_ATTR_RAWINPUT = 0x02;
-const COMPOSITION_ATTR_SELECTEDRAWTEXT = 0x03;
-const COMPOSITION_ATTR_CONVERTEDTEXT = 0x04;
-const COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
 
 // TODO(ato): Document!
 let seenEvent = false;

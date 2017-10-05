@@ -83,7 +83,7 @@ clean clobber repackage::
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/buildid.h)
 
 .PHONY: repackage
-tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
+tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) features
 	rm -rf $(dist_dest)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
 	$(MKDIR) -p $(dist_dest)/$(LPROJ)
@@ -104,3 +104,7 @@ ifdef MOZ_UPDATER
 endif
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
 endif
+
+.PHONY: features
+tools features::
+	$(PYTHON) -c 'import os, json; listing = {"system": os.listdir("$(DIST)/bin/browser/features")}; print json.dumps(listing)' > $(DIST)/bin/browser/chrome/browser/content/browser/built_in_addons.json

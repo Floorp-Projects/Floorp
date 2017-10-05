@@ -104,8 +104,8 @@ pub enum SpecificDisplayItem {
     SetGradientStops,
     PushNestedDisplayList,
     PopNestedDisplayList,
-    PushTextShadow(TextShadow),
-    PopTextShadow,
+    PushShadow(Shadow),
+    PopShadow,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -308,7 +308,7 @@ pub struct BoxShadowDisplayItem {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct TextShadow {
+pub struct Shadow {
     pub offset: LayoutVector2D,
     pub color: ColorF,
     pub blur_radius: f32,

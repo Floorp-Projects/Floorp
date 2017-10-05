@@ -4058,15 +4058,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
 dnl ========================================================
-dnl = Define default location for MOZILLA_FIVE_HOME
-dnl ========================================================
-MOZ_ARG_WITH_STRING(default-mozilla-five-home,
-[  --with-default-mozilla-five-home
-                          Set the default value for MOZILLA_FIVE_HOME],
-[ val=`echo $withval`
-  AC_DEFINE_UNQUOTED(MOZ_DEFAULT_MOZILLA_FIVE_HOME,"$val") ])
-
-dnl ========================================================
 dnl = Location of the mozilla user directory (default is ~/.mozilla).],
 dnl ========================================================
 MOZ_ARG_WITH_STRING(user-appdir,

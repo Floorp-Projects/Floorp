@@ -546,6 +546,18 @@ typedef TypedVector2D_f32__LayerPixel LayerVector2D;
 
 typedef LayerVector2D LayoutVector2D;
 
+struct Shadow {
+  LayoutVector2D offset;
+  ColorF color;
+  float blur_radius;
+
+  bool operator==(const Shadow& aOther) const {
+    return offset == aOther.offset &&
+           color == aOther.color &&
+           blur_radius == aOther.blur_radius;
+  }
+};
+
 struct WrFilterOp {
   WrFilterOpType filter_type;
   float argument;
@@ -585,18 +597,6 @@ struct GlyphOptions {
 
   bool operator==(const GlyphOptions& aOther) const {
     return render_mode == aOther.render_mode;
-  }
-};
-
-struct TextShadow {
-  LayoutVector2D offset;
-  ColorF color;
-  float blur_radius;
-
-  bool operator==(const TextShadow& aOther) const {
-    return offset == aOther.offset &&
-           color == aOther.color &&
-           blur_radius == aOther.blur_radius;
   }
 };
 
@@ -889,11 +889,11 @@ void wr_dp_pop_scroll_layer(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_pop_stacking_context(WrState *aState)
+void wr_dp_pop_shadow(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_pop_text_shadow(WrState *aState)
+void wr_dp_pop_stacking_context(WrState *aState)
 WR_FUNC;
 
 WR_INLINE
@@ -1054,6 +1054,14 @@ void wr_dp_push_scroll_layer(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_push_shadow(WrState *aState,
+                       LayoutRect aBounds,
+                       LayoutRect aClip,
+                       bool aIsBackfaceVisible,
+                       Shadow aShadow)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_push_stacking_context(WrState *aState,
                                  LayoutRect aBounds,
                                  uint64_t aAnimationId,
@@ -1077,14 +1085,6 @@ void wr_dp_push_text(WrState *aState,
                      const GlyphInstance *aGlyphs,
                      uint32_t aGlyphCount,
                      const GlyphOptions *aGlyphOptions)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_push_text_shadow(WrState *aState,
-                            LayoutRect aBounds,
-                            LayoutRect aClip,
-                            bool aIsBackfaceVisible,
-                            TextShadow aShadow)
 WR_FUNC;
 
 // Push a 2 planar NV12 image.

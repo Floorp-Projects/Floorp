@@ -11,7 +11,6 @@ Cu.import("chrome://marionette/content/atom.js");
 const {
   ElementClickInterceptedError,
   ElementNotInteractableError,
-  InvalidArgument,
   InvalidArgumentError,
   InvalidElementStateError,
   pprint,
@@ -325,7 +324,7 @@ interaction.selectOption = function(el) {
  */
 interaction.flushEventLoop = async function(win) {
   return new Promise(resolve => {
-    let handleEvent = event => {
+    let handleEvent = () => {
       win.removeEventListener("beforeunload", this);
       resolve();
     };

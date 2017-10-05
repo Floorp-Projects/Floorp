@@ -2803,14 +2803,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     buildingDisplayList.SetReferenceFrameAndCurrentOffset(outerReferenceFrame,
       GetOffsetToCrossDoc(outerReferenceFrame));
 
-    if (!aBuilder->IsForGenerateGlyphMask() &&
-        !aBuilder->IsForPaintingSelectionBG()) {
-      nsDisplayTransform *transformItem =
-        new (aBuilder) nsDisplayTransform(aBuilder, this,
-                                          &resultList, dirtyRect, 0,
-                                          allowAsyncAnimation);
-      resultList.AppendNewToTop(transformItem);
-    }
+    nsDisplayTransform *transformItem =
+      new (aBuilder) nsDisplayTransform(aBuilder, this,
+                                        &resultList, dirtyRect, 0,
+                                        allowAsyncAnimation);
+    resultList.AppendNewToTop(transformItem);
 
     if (hasPerspective) {
       if (clipCapturedBy == ContainerItemType::ePerspective) {

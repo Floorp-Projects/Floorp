@@ -872,3 +872,51 @@ nsSMILCSSValueType::PropertyFromValue(const nsSMILValue& aValue)
 
   return wrapper->mPropID;
 }
+
+// static
+void
+nsSMILCSSValueType::FinalizeValue(nsSMILValue& aValue,
+                                  const nsSMILValue& aValueToMatch)
+{
+  MOZ_ASSERT(aValue.mType == aValueToMatch.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
+             "Unexpected SMIL value type");
+
+  ValueWrapper* valueWrapper = ExtractValueWrapper(aValue);
+  // If |aValue| already has a value, there's nothing to do here.
+  if (valueWrapper) {
+    return;
+  }
+
+  const ValueWrapper* valueToMatchWrapper = ExtractValueWrapper(aValueToMatch);
+  if (!valueToMatchWrapper) {
+    MOZ_ASSERT_UNREACHABLE("Value to match is empty");
+    return;
+  }
+
+  bool isServo = !valueToMatchWrapper->mServoValues.IsEmpty();
+
+  if (isServo) {
+    ServoAnimationValues zeroValues;
+    zeroValues.SetCapacity(valueToMatchWrapper->mServoValues.Length());
+
+    for (auto& valueToMatch : valueToMatchWrapper->mServoValues) {
+      RefPtr<RawServoAnimationValue> zeroValue =
+        Servo_AnimationValues_GetZeroValue(valueToMatch).Consume();
+      if (!zeroValue) {
+        return;
+      }
+      zeroValues.AppendElement(Move(zeroValue));
+    }
+    aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
+                                      Move(zeroValues));
+  } else {
+    const StyleAnimationValue* zeroValue =
+      GetZeroValueForUnit(valueToMatchWrapper->mGeckoValue.GetUnit());
+    if (!zeroValue) {
+      return;
+    }
+    aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
+                                      *zeroValue);
+  }
+}

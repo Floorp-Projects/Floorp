@@ -1,0 +1,20 @@
+<!doctype html>
+<html class=reftest-wait>
+<script>
+window.onload = () => {
+  const div = document.createElement('div');
+
+  document.documentElement.appendChild(div);
+  const anim = div.animate([], 1000);
+
+  anim.ready.then(() => {
+    anim.pause();
+    anim.reverse();
+    anim.playbackRate = 0;
+    anim.ready.then(() => {
+      document.documentElement.className = '';
+    });
+  });
+};
+</script>
+</html>

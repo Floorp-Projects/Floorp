@@ -195,7 +195,7 @@ StreamCopier.prototype = {
     this._streamReadyCallback();
   },
 
-  _debug(msg) {
+  _debug() {
   },
 
 };

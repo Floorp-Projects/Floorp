@@ -701,15 +701,13 @@ GLBlitHelper::BlitImage(layers::PlanarYCbCrImage* const yuvImage,
         return false;
     }
 
-    const gfx::IntSize yTexSize(yuvData->mYStride, yuvData->mYSize.height);
-    const gfx::IntSize uvTexSize(yuvData->mCbCrStride, yuvData->mCbCrSize.height);
     gfx::IntSize divisors;
-    if (!GuessDivisors(yTexSize, uvTexSize, &divisors)) {
+    if (!GuessDivisors(yuvData->mYSize, yuvData->mCbCrSize, &divisors)) {
         gfxCriticalError() << "GuessDivisors failed:"
-                           << yTexSize.width << ","
-                           << yTexSize.height << ", "
-                           << uvTexSize.width << ","
-                           << uvTexSize.height;
+                           << yuvData->mYSize.width << ","
+                           << yuvData->mYSize.height << ", "
+                           << yuvData->mCbCrSize.width << ","
+                           << yuvData->mCbCrSize.height;
         return false;
     }
 
@@ -733,6 +731,8 @@ GLBlitHelper::BlitImage(layers::PlanarYCbCrImage* const yuvImage,
 
     const ScopedSaveMultiTex saveTex(mGL, 3, LOCAL_GL_TEXTURE_2D);
     const ResetUnpackState reset(mGL);
+    const gfx::IntSize yTexSize(yuvData->mYStride, yuvData->mYSize.height);
+    const gfx::IntSize uvTexSize(yuvData->mCbCrStride, yuvData->mCbCrSize.height);
 
     if (yTexSize != mYuvUploads_YSize ||
         uvTexSize != mYuvUploads_UVSize)

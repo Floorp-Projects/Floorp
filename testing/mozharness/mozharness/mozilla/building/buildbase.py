@@ -1122,8 +1122,6 @@ or run without that action (ie: --no-{action})"
             manifest_src = c.get('tooltool_manifest_src')
         if not manifest_src and not toolchains:
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
-        tooltool_manifest_path = os.path.join(dirs['abs_src_dir'],
-                                              manifest_src)
         cmd = [
             sys.executable, '-u',
             os.path.join(dirs['abs_src_dir'], 'mach'),
@@ -1131,16 +1129,19 @@ or run without that action (ie: --no-{action})"
             'toolchain',
             '-v',
             '--retry', '4',
-            '--tooltool-manifest',
-            tooltool_manifest_path,
             '--artifact-manifest',
             os.path.join(dirs['abs_src_dir'], 'toolchains.json'),
-            '--tooltool-url',
-            c['tooltool_url'],
         ]
-        auth_file = self._get_tooltool_auth_file()
-        if auth_file:
-            cmd.extend(['--authentication-file', auth_file])
+        if manifest_src:
+            cmd.extend([
+                '--tooltool-manifest',
+                os.path.join(dirs['abs_src_dir'], manifest_src),
+                '--tooltool-url',
+                c['tooltool_url'],
+            ])
+            auth_file = self._get_tooltool_auth_file()
+            if auth_file:
+                cmd.extend(['--authentication-file', auth_file])
         cache = c['env'].get('TOOLTOOL_CACHE')
         if cache:
             cmd.extend(['--cache-dir', cache])

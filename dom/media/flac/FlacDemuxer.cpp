@@ -578,12 +578,6 @@ FlacDemuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-bool
-FlacDemuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return aType == TrackInfo::kAudioTrack;
-}
-
 uint32_t
 FlacDemuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {

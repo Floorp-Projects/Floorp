@@ -8,9 +8,12 @@
 #include "SandboxInfo.h"
 #include "SandboxLogging.h"
 
+#include "mozilla/Array.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -28,6 +31,10 @@
 #include <glib.h>
 #endif
 
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 namespace mozilla {
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -38,6 +45,43 @@ static const int rdwr = rdonly | wronly;
 static const int rdwrcr = rdwr | SandboxBroker::MAY_CREATE;
 }
 #endif
+
+static void
+AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy)
+{
+  // Bug 1384178: Mesa driver loader
+  aPolicy->AddPrefix(rdonly, "/sys/dev/char/226:");
+
+  // Bug 1401666: Mesa driver loader part 2: Mesa <= 12 using libudev
+  if (auto dir = opendir("/dev/dri")) {
+    while (auto entry = readdir(dir)) {
+      if (entry->d_name[0] != '.') {
+        nsPrintfCString devPath("/dev/dri/%s", entry->d_name);
+        struct stat sb;
+        if (stat(devPath.get(), &sb) == 0 && S_ISCHR(sb.st_mode)) {
+          // For both the DRI node and its parent (the physical
+          // device), allow reading the "uevent" file.
+          static const Array<const char*, 2> kSuffixes = { "", "/device" };
+          for (const auto suffix : kSuffixes) {
+            nsPrintfCString sysPath("/sys/dev/char/%u:%u%s",
+                                    major(sb.st_rdev),
+                                    minor(sb.st_rdev),
+                                    suffix);
+            // libudev will expand the symlink but not do full
+            // canonicalization, so it will leave in ".." path
+            // components that will be realpath()ed in the
+            // broker.  To match this, allow the canonical paths.
+            UniqueFreePtr<char[]> realSysPath(realpath(sysPath.get(), nullptr));
+            if (realSysPath) {
+              nsPrintfCString ueventPath("%s/uevent", realSysPath.get());
+              aPolicy->AddPath(rdonly, ueventPath.get());
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 {
@@ -120,8 +164,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/run/host/fonts");
   policy->AddDir(rdonly, "/run/host/user-fonts");
 
-  // Bug 1384178: Mesa driver loader
-  policy->AddPrefix(rdonly, "/sys/dev/char/226:");
+  AddMesaSysfsPaths(policy);
 
   // Bug 1385715: NVIDIA PRIME support
   policy->AddPath(rdonly, "/proc/modules");
