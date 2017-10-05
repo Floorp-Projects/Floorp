@@ -488,10 +488,6 @@
                 onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerEdit);"
                 readonly="true"/>
 
-      <property name="contentViewerFile"
-                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"
-                readonly="true"/>
-
       <property name="contentDocument"
                 onget="return this.webNavigation.document;"
                 readonly="true"/>
