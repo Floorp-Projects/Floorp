@@ -60,11 +60,4 @@ describe("prerender", () => {
     assert.equal(state.App.locale, "en-PRERENDER");
     assert.equal(state.App.strings.newtab_page_title, " ");
   });
-  // # TODO: Remove when #3370 is resolved.
-  it("should render a real English string for search_web_placeholder", () => {
-    const {store} = prerender();
-
-    const state = store.getState();
-    assert.equal(state.App.strings.search_web_placeholder, "Search the Web");
-  });
 });
