@@ -40,7 +40,6 @@ static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printset
 
 // Printing
 #include "nsIWebBrowserPrint.h"
-#include "nsIDOMHTMLIFrameElement.h"
 
 // Print Preview
 #include "imgIContainer.h" // image animation mode constants
