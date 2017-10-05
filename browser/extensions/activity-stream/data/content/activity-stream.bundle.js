@@ -351,12 +351,15 @@ module.exports = {
 
 
 const { actionTypes: at } = __webpack_require__(0);
+const { Dedupe } = __webpack_require__(20);
 
 // Locales that should be displayed RTL
 const RTL_LIST = ["ar", "he", "fa", "ur"];
 
 const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
+
+const dedupe = new Dedupe(site => site && site.url);
 
 const INITIAL_STATE = {
   App: {
@@ -580,7 +583,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       }
       return newState;
     case at.SECTION_UPDATE:
-      return prevState.map(section => {
+      newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
           // If the action is updating rows, we should consider initialized to be true.
           // This can be overridden if initialized is defined in the action.data
@@ -589,6 +592,28 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
+
+      if (!action.data.dedupeConfigurations) {
+        return newState;
+      }
+
+      action.data.dedupeConfigurations.forEach(dedupeConf => {
+        newState = newState.map(section => {
+          if (section.id === dedupeConf.id) {
+            const dedupedRows = dedupeConf.dedupeFrom.reduce((rows, dedupeSectionId) => {
+              const dedupeSection = newState.find(s => s.id === dedupeSectionId);
+              const [, newRows] = dedupe.group(dedupeSection.rows, rows);
+              return newRows;
+            }, section.rows);
+
+            return Object.assign({}, section, { rows: dedupedRows });
+          }
+
+          return section;
+        });
+      });
+
+      return newState;
     case at.SECTION_UPDATE_CARD:
       return prevState.map(section => {
         if (section && section.id === action.data.id && section.rows) {
@@ -611,10 +636,12 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           // find the item within the rows that is attempted to be bookmarked
           if (item.url === action.data.url) {
             const { bookmarkGuid, bookmarkTitle, dateAdded } = action.data;
-            Object.assign(item, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded });
-            if (!item.type || item.type === "history") {
-              item.type = "bookmark";
-            }
+            return Object.assign({}, item, {
+              bookmarkGuid,
+              bookmarkTitle,
+              bookmarkDateCreated: dateAdded,
+              type: "bookmark"
+            });
           }
           return item;
         })
@@ -1099,9 +1126,9 @@ module.exports._unconnected = LinkMenu;
 const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { injectIntl, FormattedMessage } = __webpack_require__(2);
-const Card = __webpack_require__(20);
+const Card = __webpack_require__(21);
 const { PlaceholderCard } = Card;
-const Topics = __webpack_require__(22);
+const Topics = __webpack_require__(23);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 const VISIBLE = "visible";
@@ -1387,10 +1414,10 @@ module.exports.InfoIntl = InfoIntl;
 const ReactDOM = __webpack_require__(12);
 const Base = __webpack_require__(13);
 const { Provider } = __webpack_require__(3);
-const initStore = __webpack_require__(29);
+const initStore = __webpack_require__(30);
 const { reducers } = __webpack_require__(6);
-const DetectUserSessionStart = __webpack_require__(31);
-const { addSnippetsSubscriber } = __webpack_require__(32);
+const DetectUserSessionStart = __webpack_require__(32);
+const { addSnippetsSubscriber } = __webpack_require__(33);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
 
 new DetectUserSessionStart().sendEventOrAddListener();
@@ -1427,13 +1454,13 @@ const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { addLocaleData, IntlProvider } = __webpack_require__(2);
 const TopSites = __webpack_require__(14);
-const Search = __webpack_require__(23);
-const ConfirmDialog = __webpack_require__(25);
-const ManualMigration = __webpack_require__(26);
-const PreferencesPane = __webpack_require__(27);
+const Search = __webpack_require__(24);
+const ConfirmDialog = __webpack_require__(26);
+const ManualMigration = __webpack_require__(27);
+const PreferencesPane = __webpack_require__(28);
 const Sections = __webpack_require__(10);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
-const { PrerenderData } = __webpack_require__(28);
+const { PrerenderData } = __webpack_require__(29);
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
@@ -2291,12 +2318,57 @@ module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports
 
 /***/ }),
 /* 20 */
+/***/ (function(module, exports) {
+
+var Dedupe = class Dedupe {
+  constructor(createKey, compare) {
+    this.createKey = createKey || this.defaultCreateKey;
+    this.compare = compare || this.defaultCompare;
+  }
+
+  defaultCreateKey(item) {
+    return item;
+  }
+
+  defaultCompare() {
+    return false;
+  }
+
+  /**
+   * Dedupe any number of grouped elements favoring those from earlier groups.
+   *
+   * @param {Array} groups Contains an arbitrary number of arrays of elements.
+   * @returns {Array} A matching array of each provided group deduped.
+   */
+  group(...groups) {
+    const globalKeys = new Set();
+    const result = [];
+    for (const values of groups) {
+      const valueMap = new Map();
+      for (const value of values) {
+        const key = this.createKey(value);
+        if (!globalKeys.has(key) && (!valueMap.has(key) || this.compare(valueMap.get(key), value))) {
+          valueMap.set(key, value);
+        }
+      }
+      result.push(valueMap);
+      valueMap.forEach((value, key) => globalKeys.add(key));
+    }
+    return result.map(m => Array.from(m.values()));
+  }
+};
+module.exports = {
+  Dedupe
+};
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
 const LinkMenu = __webpack_require__(9);
 const { FormattedMessage } = __webpack_require__(2);
-const cardContextTypes = __webpack_require__(21);
+const cardContextTypes = __webpack_require__(22);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 // Keep track of pending image loads to only request once
@@ -2492,7 +2564,7 @@ module.exports = Card;
 module.exports.PlaceholderCard = PlaceholderCard;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -2515,7 +2587,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2566,7 +2638,7 @@ module.exports._unconnected = Topics;
 module.exports.Topic = Topic;
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2577,7 +2649,7 @@ const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac } = __webpack_require__(0);
-const { IS_NEWTAB } = __webpack_require__(24);
+const { IS_NEWTAB } = __webpack_require__(25);
 
 class Search extends React.PureComponent {
   constructor(props) {
@@ -2677,7 +2749,7 @@ module.exports = connect(state => ({ locale: state.App.locale }))(injectIntl(Sea
 module.exports._unconnected = Search;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {module.exports = {
@@ -2687,7 +2759,7 @@ module.exports._unconnected = Search;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2792,7 +2864,7 @@ module.exports._unconnected = ConfirmDialog;
 module.exports.Dialog = ConfirmDialog;
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2856,7 +2928,7 @@ module.exports = connect()(ManualMigration);
 module.exports._unconnected = ManualMigration;
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2884,7 +2956,12 @@ const PreferencesInput = props => React.createElement(
     "p",
     { className: "prefs-input-description" },
     getFormattedMessage(props.descString)
-  )
+  ),
+  React.Children.map(props.children, child => React.createElement(
+    "div",
+    { className: `options${child.props.disabled ? " disabled" : ""}` },
+    child
+  ))
 );
 
 class PreferencesPane extends React.PureComponent {
@@ -2977,21 +3054,51 @@ class PreferencesPane extends React.PureComponent {
               null,
               React.createElement(FormattedMessage, { id: "settings_pane_body2" })
             ),
-            React.createElement(PreferencesInput, { className: "showSearch", prefName: "showSearch", value: prefs.showSearch, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_search_header" }, descString: { id: "settings_pane_search_body" } }),
+            React.createElement(PreferencesInput, {
+              className: "showSearch",
+              prefName: "showSearch",
+              value: prefs.showSearch,
+              onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_search_header" },
+              descString: { id: "settings_pane_search_body" } }),
             React.createElement("hr", null),
-            React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_topsites_header" }, descString: { id: "settings_pane_topsites_body" } }),
             React.createElement(
-              "div",
-              { className: `options${prefs.showTopSites ? "" : " disabled"}` },
-              React.createElement(PreferencesInput, { className: "showMoreTopSites", prefName: "topSitesCount", disabled: !prefs.showTopSites,
-                value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH, onChange: this.handlePrefChange,
-                titleString: { id: "settings_pane_topsites_options_showmore" }, labelClassName: "icon icon-topsites" })
+              PreferencesInput,
+              {
+                className: "showTopSites",
+                prefName: "showTopSites",
+                value: prefs.showTopSites,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_header" },
+                descString: { id: "settings_pane_topsites_body" } },
+              React.createElement(PreferencesInput, {
+                className: "showMoreTopSites",
+                prefName: "topSitesCount",
+                disabled: !prefs.showTopSites,
+                value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_options_showmore" },
+                labelClassName: "icon icon-topsites" })
             ),
-            sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => React.createElement(PreferencesInput, { key: id, className: "showSection", prefName: pref && pref.feed || id,
-              value: enabled, onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
-              titleString: pref && pref.titleString || title, descString: pref && pref.descString })),
+            sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => React.createElement(
+              PreferencesInput,
+              {
+                key: id,
+                className: "showSection",
+                prefName: pref && pref.feed || id,
+                value: enabled,
+                onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
+                titleString: pref && pref.titleString || title,
+                descString: pref && pref.descString },
+              pref.nestedPrefs && pref.nestedPrefs.map(nestedPref => React.createElement(PreferencesInput, {
+                key: nestedPref.name,
+                prefName: nestedPref.name,
+                disabled: !enabled,
+                value: prefs[nestedPref.name],
+                onChange: this.handlePrefChange,
+                titleString: nestedPref.titleString,
+                labelClassName: `icon ${nestedPref.icon}` }))
+            )),
             React.createElement("hr", null),
             React.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
               value: prefs["feeds.snippets"], onChange: this.handlePrefChange,
@@ -3018,7 +3125,7 @@ module.exports.PreferencesPane = PreferencesPane;
 module.exports.PreferencesInput = PreferencesInput;
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 class _PrerenderData {
@@ -3108,12 +3215,12 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/* eslint-env mozilla/frame-script */
 
-const { createStore, combineReducers, applyMiddleware } = __webpack_require__(30);
+const { createStore, combineReducers, applyMiddleware } = __webpack_require__(31);
 const { actionTypes: at, actionCreators: ac, actionUtils: au } = __webpack_require__(0);
 
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
@@ -3223,13 +3330,13 @@ module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const { actionTypes: at } = __webpack_require__(0);
@@ -3299,7 +3406,7 @@ module.exports = class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const DATABASE_NAME = "snippets_db";
