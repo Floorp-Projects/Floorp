@@ -832,8 +832,18 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     config.SetRenderColor(true);
     break;
   case EffectTypes::YCBCR:
+  {
     config.SetYCbCr(true);
+    EffectYCbCr* effectYCbCr =
+      static_cast<EffectYCbCr*>(aEffect);
+    uint32_t pixelBits = (8 * BytesPerPixel(SurfaceFormatForAlphaBitDepth(effectYCbCr->mBitDepth)));
+    uint32_t paddingBits = pixelBits - effectYCbCr->mBitDepth;
+    // OpenGL expects values between [0,255], this range needs to be adjusted
+    // according to the bit depth.
+    // So we will scale the YUV values by this amount.
+    config.SetColorMultiplier(pow(2, paddingBits));
     break;
+  }
   case EffectTypes::NV12:
     config.SetNV12(true);
     config.SetTextureTarget(LOCAL_GL_TEXTURE_RECTANGLE_ARB);

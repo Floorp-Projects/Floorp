@@ -6,8 +6,6 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
 
@@ -17,8 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "MessageOrigin",
   "Response",
 ];
-
-const logger = Log.repository.getLogger("Marionette");
 
 /**
  * Messages may originate from either the server or the client.

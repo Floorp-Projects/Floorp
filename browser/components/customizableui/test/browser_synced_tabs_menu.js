@@ -7,6 +7,7 @@
 requestLongerTimeout(2);
 
 let {SyncedTabs} = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
+let {UIState} = Cu.import("resource://services-sync/UIState.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 
@@ -42,18 +43,16 @@ add_task(async function setup() {
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
 
-  // This test hacks some observer states to simulate a user being signed
-  // in to Sync - restore them when the test completes.
-  let initialObserverStates = {};
-  for (let id of ["sync-reauth-state", "sync-setup-state", "sync-syncnow-state"]) {
-    initialObserverStates[id] = document.getElementById(id).hidden;
-  }
+  let origNotifyStateUpdated = UIState._internal.notifyStateUpdated;
+  // Sync start-up will interfere with our tests, don't let UIState send UI updates.
+  UIState._internal.notifyStateUpdated = () => {};
+
+  // Force gSync initialization
+  gSync.init();
 
   registerCleanupFunction(() => {
+    UIState._internal.notifyStateUpdated = origNotifyStateUpdated;
     SyncedTabs._internal = oldInternal;
-    for (let [id, initial] of Object.entries(initialObserverStates)) {
-      document.getElementById(id).hidden = initial;
-    }
   });
 });
 
@@ -135,19 +134,14 @@ async function asyncCleanup() {
 
 // When Sync is not setup.
 add_task(async function() {
-  document.getElementById("sync-reauth-state").hidden = true;
-  document.getElementById("sync-setup-state").hidden = false;
-  document.getElementById("sync-syncnow-state").hidden = true;
-  await openPrefsFromMenuPanel("PanelUI-remotetabs-setupsync", "synced-tabs")
+  gSync.updateAllUI({ status: UIState.STATUS_NOT_CONFIGURED });
+  await openPrefsFromMenuPanel("PanelUI-remotetabs-setupsync", "synced-tabs");
 });
 add_task(asyncCleanup);
 
 // When Sync is configured in a "needs reauthentication" state.
 add_task(async function() {
-  // configure our broadcasters so we are in the right state.
-  document.getElementById("sync-reauth-state").hidden = false;
-  document.getElementById("sync-setup-state").hidden = true;
-  document.getElementById("sync-syncnow-state").hidden = true;
+  gSync.updateAllUI({ status: UIState.STATUS_LOGIN_FAILED, email: "foo@bar.com" });
   await openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "synced-tabs")
 });
 
@@ -157,9 +151,7 @@ add_task(async function() {
   Services.prefs.setCharPref("identity.mobilepromo.android", "http://example.com/?os=android&tail=");
   Services.prefs.setCharPref("identity.mobilepromo.ios", "http://example.com/?os=ios&tail=");
 
-  document.getElementById("sync-reauth-state").hidden = true;
-  document.getElementById("sync-setup-state").hidden = true;
-  document.getElementById("sync-syncnow-state").hidden = false;
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
 
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let links = syncPanel.querySelectorAll(".remotetabs-promo-link");
@@ -210,10 +202,7 @@ add_task(async function() {
 
 // Test the "Sync Now" button
 add_task(async function() {
-  // configure our broadcasters so we are in the right state.
-  document.getElementById("sync-reauth-state").hidden = true;
-  document.getElementById("sync-setup-state").hidden = true;
-  document.getElementById("sync-syncnow-state").hidden = false;
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
 
   await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
@@ -232,22 +221,11 @@ add_task(async function() {
   // provides them
   is(deck.selectedIndex, DECKINDEX_FETCHING, "first deck entry is visible");
 
-  let syncNowButton = document.getElementById("PanelUI-remotetabs-syncnow");
-
-  let didSync = false;
-  let oldDoSync = gSync.doSync;
-  gSync.doSync = function() {
-    didSync = true;
-    mockedInternal.hasSyncedThisSession = true;
-    gSync.doSync = oldDoSync;
-  }
-  syncNowButton.click();
-  ok(didSync, "clicking the button called the correct function");
-
   // Tell the widget there are tabs available, but with zero clients.
   mockedInternal.getTabClients = () => {
     return Promise.resolve([]);
   }
+  mockedInternal.hasSyncedThisSession = true;
   await updateTabsPanel();
   // The UI should be showing the "no clients" pane.
   is(deck.selectedIndex, DECKINDEX_NOCLIENTS, "no-clients deck entry is visible");
@@ -349,6 +327,18 @@ add_task(async function() {
   node = node.nextSibling;
   is(node, null, "no more entries");
 
+  let didSync = false;
+  let oldDoSync = gSync.doSync;
+  gSync.doSync = function() {
+    didSync = true;
+    gSync.doSync = oldDoSync;
+  }
+
+  let syncNowButton = document.getElementById("PanelUI-remotetabs-syncnow");
+  is(syncNowButton.disabled, false);
+  syncNowButton.click();
+  ok(didSync, "clicking the button called the correct function");
+
   await hideOverflow();
 });
 
@@ -375,10 +365,7 @@ add_task(async function() {
     ]);
   };
 
-  // configure our broadcasters so we are in the right state.
-  document.getElementById("sync-reauth-state").hidden = true;
-  document.getElementById("sync-setup-state").hidden = true;
-  document.getElementById("sync-syncnow-state").hidden = false;
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
 
   await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");

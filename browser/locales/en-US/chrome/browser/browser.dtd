@@ -855,7 +855,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY customizeMode.lwthemes.menuManage.accessKey "M">
 <!ENTITY customizeMode.lwthemes.menuGetMore "Get More Themes">
 <!ENTITY customizeMode.lwthemes.menuGetMore.accessKey "G">
-<!ENTITY customizeMode.overflowList.title "Overflow Panel">
+<!ENTITY customizeMode.overflowList.title2 "Overflow Menu">
 <!ENTITY customizeMode.overflowList.description "Drag and drop items here to keep them within reach but out of your toolbar…">
 <!ENTITY customizeMode.uidensity "Density">
 <!-- LOCALIZATION NOTE (customizeMode.uidensity.menuNormal.*):

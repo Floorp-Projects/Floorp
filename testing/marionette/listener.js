@@ -7,12 +7,8 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
-const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader);
 const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -49,8 +45,6 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let marionetteTestName;
-
 let listenerId = null;  // unique ID of this listener
 let curContainer = {frame: content, shadowRoot: null};
 let previousContainer = null;
@@ -71,28 +65,8 @@ let capabilities;
 
 let legacyactions = new legacyaction.Chain(checkForInterrupted);
 
-// the unload handler
-let onunload;
-
-// Flag to indicate whether an async script is currently running or not.
-let asyncTestRunning = false;
-let asyncTestCommandId;
-let asyncTestTimeoutId;
-
-let inactivityTimeoutId = null;
-
-let originalOnError;
-// Send move events about this often
-let EVENT_INTERVAL = 30; // milliseconds
 // last touch for each fingerId
 let multiLast = {};
-
-const asyncChrome = proxy.toChromeAsync({
-  addMessageListener: addMessageListenerId.bind(this),
-  removeMessageListener: removeMessageListenerId.bind(this),
-  sendAsyncMessage: sendAsyncMessage.bind(this),
-});
-const syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
 
 const logger = Log.repository.getLogger("Marionette");
 // Append only once to avoid duplicated output after listener.js gets reloaded
@@ -100,21 +74,8 @@ if (logger.ownAppenders.length == 0) {
   logger.addAppender(new Log.DumpAppender());
 }
 
-const modalHandler = function() {
-  // This gets called on the system app only since it receives the
-  // mozbrowserprompt event
-  sendSyncMessage("Marionette:switchedToFrame",
-      {frameValue: null, storePrevious: true});
-  let isLocal = sendSyncMessage("MarionetteFrame:handleModal", {})[0].value;
-  if (isLocal) {
-    previousContainer = curContainer;
-  }
-  curContainer = {frame: content, shadowRoot: null};
-};
-
 // sandbox storage and name of the current sandbox
 const sandboxes = new Sandboxes(() => curContainer.frame);
-let sandboxName = "default";
 
 const eventObservers = new ContentEventObserverService(
     content, sendAsyncMessage.bind(this));
@@ -384,7 +345,7 @@ const loadListener = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     const win = curContainer.frame;
     const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     const curWinID = win.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -454,7 +415,7 @@ const loadListener = {
     return (async () => {
       await trigger();
 
-    })().then(val => {
+    })().then(() => {
       if (!loadEventExpected) {
         sendOk(commandID);
         return;
@@ -636,7 +597,7 @@ function newSession(msg) {
  * Puts the current session to sleep, so all listeners are removed except
  * for the 'restart' listener.
  */
-function sleepSession(msg) {
+function sleepSession() {
   deleteSession();
   addMessageListener("Marionette:restart", restart);
 }
@@ -644,7 +605,7 @@ function sleepSession(msg) {
 /**
  * Restarts all our listeners after this listener was put to sleep
  */
-function restart(msg) {
+function restart() {
   removeMessageListener("Marionette:restart", restart);
   registerSelf();
 }
@@ -652,7 +613,7 @@ function restart(msg) {
 /**
  * Removes all listeners
  */
-function deleteSession(msg) {
+function deleteSession() {
   removeMessageListenerId("Marionette:newSession", newSession);
   removeMessageListenerId("Marionette:execute", executeFn);
   removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);

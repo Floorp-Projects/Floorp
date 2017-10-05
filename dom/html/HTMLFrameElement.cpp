@@ -25,27 +25,9 @@ HTMLFrameElement::~HTMLFrameElement()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLFrameElement, nsGenericHTMLFrameElement,
-                            nsIDOMHTMLFrameElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLFrameElement, nsGenericHTMLFrameElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameElement)
-
-
-NS_IMPL_STRING_ATTR(HTMLFrameElement, FrameBorder, frameborder)
-NS_IMPL_URI_ATTR(HTMLFrameElement, LongDesc, longdesc)
-NS_IMPL_STRING_ATTR(HTMLFrameElement, MarginHeight, marginheight)
-NS_IMPL_STRING_ATTR(HTMLFrameElement, MarginWidth, marginwidth)
-NS_IMPL_STRING_ATTR(HTMLFrameElement, Name, name)
-NS_IMPL_BOOL_ATTR(HTMLFrameElement, NoResize, noresize)
-NS_IMPL_STRING_ATTR(HTMLFrameElement, Scrolling, scrolling)
-NS_IMPL_URI_ATTR(HTMLFrameElement, Src, src)
-
-
-NS_IMETHODIMP
-HTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
-{
-  return nsGenericHTMLFrameElement::GetContentDocument(aContentDocument);
-}
 
 bool
 HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,

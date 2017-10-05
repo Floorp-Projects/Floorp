@@ -55,12 +55,6 @@ MP3Demuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-bool
-MP3Demuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return aType == TrackInfo::kAudioTrack;
-}
-
 uint32_t
 MP3Demuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {

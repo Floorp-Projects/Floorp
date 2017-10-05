@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Constructor: CC, interfaces: Ci, utils: Cu, classes: Cc} = Components;
+const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -64,10 +64,6 @@ const ENV_ENABLED = "MOZ_MARIONETTE";
 // something like {"port": 4444} would result in the marionette.port
 // pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
-
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-    "nsIServerSocket",
-    "initSpecialConnection");
 
 const {PREF_STRING, PREF_BOOL, PREF_INT, PREF_INVALID} = Ci.nsIPrefBranch;
 
@@ -192,7 +188,7 @@ MarionetteComponent.prototype.handle = function(cmdLine) {
   }
 };
 
-MarionetteComponent.prototype.observe = function(subject, topic, data) {
+MarionetteComponent.prototype.observe = function(subject, topic) {
   this.logger.debug(`Received observer notification "${topic}"`);
 
   switch (topic) {

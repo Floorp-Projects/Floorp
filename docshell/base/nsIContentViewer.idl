@@ -213,6 +213,18 @@ interface nsIContentViewer : nsISupports
   attribute float fullZoom;
 
   /**
+   * The actual full zoom in effect, as modified by the device context.
+   * For a requested full zoom, the device context may choose a slightly
+   * different effectiveFullZoom to accomodate integer rounding of app units
+   * per dev pixel. This property returns the actual zoom amount in use,
+   * though it may not be good user experience to report that a requested zoom
+   * of 90% is actually 89.1%, for example. This value is provided primarily to
+   * support media queries of dppx values, because those queries are matched
+   * against the actual native device pixel ratio and the actual full zoom.
+   */
+  readonly attribute float deviceFullZoom;
+
+  /**
    * The value used to override devicePixelRatio and media queries dppx.
    * Default is 0.0, that means no overriding is done (only a positive value
    * is applied).

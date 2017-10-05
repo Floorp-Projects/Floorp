@@ -572,7 +572,8 @@ class ContextMenu {
     let principal = null;
     let customMenuItems = null;
 
-    if (context.target) {
+    let targetAsCPOW = context.target;
+    if (targetAsCPOW) {
       this._cleanContext();
     }
 
@@ -621,7 +622,9 @@ class ContextMenu {
     };
 
     if (isRemote) {
-      this.global.sendAsyncMessage("contextmenu", data);
+      this.global.sendAsyncMessage("contextmenu", data, {
+        targetAsCPOW,
+      });
     } else {
       let browser = this.global.docShell.chromeEventHandler;
       let mainWin = browser.ownerGlobal;
@@ -629,6 +632,8 @@ class ContextMenu {
       data.documentURIObject = doc.documentURIObject;
       data.disableSetDesktopBackground = data.disableSetDesktopBg;
       delete data.disableSetDesktopBg;
+
+      data.context.targetAsCPOW = targetAsCPOW;
 
       mainWin.setContextMenuContentData(data);
     }

@@ -2659,7 +2659,7 @@ impl Renderer {
 
         // Draw any textrun caches for this target. For now, this
         // is only used to cache text runs that are to be blurred
-        // for text-shadow support. In the future it may be worth
+        // for shadow support. In the future it may be worth
         // considering using this for (some) other text runs, since
         // it removes the overhead of submitting many small glyphs
         // to multiple tiles in the normal text run case.

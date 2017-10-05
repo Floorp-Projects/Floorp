@@ -716,8 +716,8 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::PopNestedDisplayList => String::from("pop_nested_display_list"),
             SpecificDisplayItem::SetGradientStops => String::from("set_gradient_stops"),
             SpecificDisplayItem::PopStackingContext => String::from("pop_stacking_context"),
-            SpecificDisplayItem::PushTextShadow(..) => String::from("push_text_shadow"),
-            SpecificDisplayItem::PopTextShadow => String::from("pop_text_shadow"),
+            SpecificDisplayItem::PushShadow(..) => String::from("push_shadow"),
+            SpecificDisplayItem::PopShadow => String::from("pop_shadow"),
         }
     }
 }

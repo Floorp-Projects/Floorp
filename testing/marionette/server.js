@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {Constructor: CC, interfaces: Ci, utils: Cu} = Components;
 
-const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader);
 const ServerSocket = CC(
     "@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
@@ -460,7 +458,7 @@ server.TCPConnection = class {
    * Debugger transport callback that cleans up
    * after a connection is closed.
    */
-  onClosed(reason) {
+  onClosed() {
     this.driver.deleteSession();
     if (this.onclose) {
       this.onclose(this);

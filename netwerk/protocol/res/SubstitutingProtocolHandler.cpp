@@ -425,7 +425,27 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     rv = baseURI->GetSpec(result);
   } else {
     // Make sure we always resolve the path as file-relative to our target URI.
-    path.Insert('.', 0);
+    // When the baseURI is a nsIFileURL, and the directory it points to doesn't
+    // exist, it doesn't end with a /. In that case, a file-relative resolution
+    // is going to pick something in the parent directory, so we resolve using
+    // an absolute path derived from the full path in that case.
+    nsCOMPtr<nsIFileURL> baseDir = do_QueryInterface(baseURI);
+    if (baseDir) {
+      nsAutoCString basePath;
+      rv = baseURI->GetFilePath(basePath);
+      if (NS_SUCCEEDED(rv) && !StringEndsWith(basePath, NS_LITERAL_CSTRING("/"))) {
+        // Cf. the assertion above, path already starts with a /, so prefixing
+        // with a string that doesn't end with one will leave us wit the right
+        // amount of /.
+        path.Insert(basePath, 0);
+      } else {
+        // Allow to fall through below.
+        baseDir = nullptr;
+      }
+    }
+    if (!baseDir) {
+      path.Insert('.', 0);
+    }
     rv = baseURI->Resolve(path, result);
   }
 

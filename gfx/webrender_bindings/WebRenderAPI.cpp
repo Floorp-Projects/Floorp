@@ -1079,18 +1079,18 @@ DisplayListBuilder::PushLine(const wr::LayoutRect& aClip,
 }
 
 void
-DisplayListBuilder::PushTextShadow(const wr::LayoutRect& aRect,
-                                   const wr::LayoutRect& aClip,
-                                   bool aIsBackfaceVisible,
-                                   const wr::TextShadow& aShadow)
+DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
+                               const wr::LayoutRect& aClip,
+                               bool aIsBackfaceVisible,
+                               const wr::Shadow& aShadow)
 {
-  wr_dp_push_text_shadow(mWrState, aRect, aClip, aIsBackfaceVisible, aShadow);
+  wr_dp_push_shadow(mWrState, aRect, aClip, aIsBackfaceVisible, aShadow);
 }
 
 void
-DisplayListBuilder::PopTextShadow()
+DisplayListBuilder::PopShadow()
 {
-  wr_dp_pop_text_shadow(mWrState);
+  wr_dp_pop_shadow(mWrState);
 }
 
 void

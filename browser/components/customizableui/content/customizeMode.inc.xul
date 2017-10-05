@@ -27,7 +27,7 @@
         </box>
         <box class="panel-arrowcontent" side="top" flex="1">
           <vbox id="customization-panelHolder">
-            <description id="customization-panelHeader">&customizeMode.overflowList.title;</description>
+            <description id="customization-panelHeader">&customizeMode.overflowList.title2;</description>
             <description id="customization-panelDescription">&customizeMode.overflowList.description;</description>
           </vbox>
           <box class="panel-inner-arrowcontentfooter" hidden="true"/>

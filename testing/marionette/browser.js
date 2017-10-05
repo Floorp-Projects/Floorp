@@ -234,9 +234,7 @@ browser.Context = class {
    */
   closeWindow() {
     return new Promise(resolve => {
-      this.window.addEventListener("unload", ev => {
-        resolve();
-      }, {once: true});
+      this.window.addEventListener("unload", resolve, {once: true});
       this.window.close();
     });
   }
@@ -263,16 +261,12 @@ browser.Context = class {
     return new Promise((resolve, reject) => {
       if (this.tabBrowser.closeTab) {
         // Fennec
-        this.tabBrowser.deck.addEventListener("TabClose", ev => {
-          resolve();
-        }, {once: true});
+        this.tabBrowser.deck.addEventListener("TabClose", resolve, {once: true});
         this.tabBrowser.closeTab(this.tab);
 
       } else if (this.tabBrowser.removeTab) {
         // Firefox
-        this.tab.addEventListener("TabClose", ev => {
-          resolve();
-        }, {once: true});
+        this.tab.addEventListener("TabClose", resolve, {once: true});
         this.tabBrowser.removeTab(this.tab);
 
       } else {
