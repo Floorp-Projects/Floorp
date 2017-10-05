@@ -1,0 +1,15 @@
+<script>
+function jsfuzzer() {
+try { htmlvar00017.addEventListener("DOMSubtreeModified", eventhandler5); } catch(e) { }
+try { htmlvar00017.align = ""; } catch(e) { }
+}
+function eventhandler5() {
+try { document.execCommand("selectAll", false); } catch(e) { }
+try { document.execCommand("justifyCenter", false); } catch(e) { }
+try { document.execCommand("forwardDelete", false); } catch(e) { }
+}
+</script>
+<body onload=jsfuzzer()>
+<table contenteditable="">
+<th id="htmlvar00017"></th>
+<colgroup>
