@@ -6435,7 +6435,7 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
 
   auto* textDrawer = aParams.context->GetTextDrawer();
   if (textDrawer) {
-    wr::TextShadow wrShadow;
+    wr::Shadow wrShadow;
 
     wrShadow.offset = {
       PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mXOffset),

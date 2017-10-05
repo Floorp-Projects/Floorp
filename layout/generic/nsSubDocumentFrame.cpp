@@ -28,7 +28,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFrameSetFrame.h"
-#include "nsIDOMHTMLFrameElement.h"
 #include "nsIScrollable.h"
 #include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
@@ -42,6 +41,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/HTMLFrameElement.h"
 
 using namespace mozilla;
 using mozilla::layout::RenderFrameParent;
@@ -112,9 +112,9 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
                          nsContainerFrame* aParent,
                          nsIFrame*         aPrevInFlow)
 {
+  MOZ_ASSERT(aContent);
   // determine if we are a <frame> or <iframe>
-  nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
-  mIsInline = frameElem ? false : true;
+  mIsInline = !aContent->IsHTMLElement(nsGkAtoms::frame);
 
   static bool addedShowPreviousPage = false;
   if (!addedShowPreviousPage) {
@@ -284,9 +284,7 @@ nsSubDocumentFrame::GetSubdocumentSize()
   } else {
     nsSize docSizeAppUnits;
     nsPresContext* presContext = PresContext();
-    nsCOMPtr<nsIDOMHTMLFrameElement> frameElem =
-      do_QueryInterface(GetContent());
-    if (frameElem) {
+    if (GetContent()->IsHTMLElement(nsGkAtoms::frame)) {
       docSizeAppUnits = GetSize();
     } else {
       docSizeAppUnits = GetContentRect().Size();

@@ -45,9 +45,6 @@ uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
                                 int32_t aYStride,
                                 const gfx::IntSize& aCbCrSize,
                                 int32_t aCbCrStride);
-uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
-                                const gfx::IntSize& aCbCrSize);
-
 uint32_t ComputeYCbCrBufferSize(uint32_t aBufferSize);
 
 void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight,
@@ -61,6 +58,8 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
 Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+
+Maybe<uint32_t> BitDepthFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
 Maybe<StereoMode> StereoModeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 

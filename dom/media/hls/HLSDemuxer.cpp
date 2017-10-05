@@ -184,19 +184,6 @@ void HLSDemuxer::NotifyDataArrived()
   HLS_DEBUG("HLSDemuxer", "NotifyDataArrived");
 }
 
-bool
-HLSDemuxer::HasTrackType(TrackType aType) const
-{
-  HLS_DEBUG("HLSDemuxer", "HasTrackType(%d)", aType);
-  if (mAudioDemuxer && aType == TrackType::kAudioTrack) {
-    return mAudioDemuxer->IsTrackValid();
-  }
-  if (mVideoDemuxer && aType == TrackType::kVideoTrack) {
-    return mVideoDemuxer->IsTrackValid();
-  }
-  return false;
-}
-
 uint32_t
 HLSDemuxer::GetNumberTracks(TrackType aType) const
 {

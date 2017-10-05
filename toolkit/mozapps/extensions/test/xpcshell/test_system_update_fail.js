@@ -86,7 +86,6 @@ const TEST_CONDITIONS = {
   },
 };
 
-
 /**
  * The tests to run. Each test must define an updateList or test. The following
  * properties are used:
@@ -166,6 +165,7 @@ const TESTS = {
 
 add_task(async function setup() {
   // Initialise the profile
+  await overrideBuiltIns({ "system": [] });
   startupManager();
   await promiseShutdownManager();
 });

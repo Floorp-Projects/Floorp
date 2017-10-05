@@ -44,9 +44,6 @@ public:
   // otherwise.
   virtual RefPtr<InitPromise> Init() = 0;
 
-  // Returns true if a aType track type is available.
-  virtual bool HasTrackType(TrackInfo::TrackType aType) const = 0;
-
   // Returns the number of tracks of aType type available. A value of
   // 0 indicates that no such type is available.
   virtual uint32_t GetNumberTracks(TrackInfo::TrackType aType) const = 0;

@@ -132,8 +132,6 @@ public:
 
   RefPtr<InitPromise> Init() override;
 
-  bool HasTrackType(TrackInfo::TrackType aType) const override;
-
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
   UniquePtr<TrackInfo> GetTrackInfo(TrackInfo::TrackType aType,

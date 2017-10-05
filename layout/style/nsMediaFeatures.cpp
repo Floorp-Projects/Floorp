@@ -279,16 +279,24 @@ static void
 GetResolution(nsPresContext* aPresContext, const nsMediaFeature*,
               nsCSSValue& aResult)
 {
-  float dpi = 96; // Use 96 when resisting fingerprinting.
+  // We're returning resolution in terms of device pixels per css pixel, since
+  // that is the preferred unit for media queries of resolution. This avoids
+  // introducing precision error from conversion to and from less-used
+  // physical units like inches.
+
+  float dppx;
 
   if (!ShouldResistFingerprinting(aPresContext)) {
-    // Resolution measures device pixels per CSS (inch/cm/pixel).  We
-    // return it in device pixels per CSS inches.
-    dpi = float(nsPresContext::AppUnitsPerCSSInch()) /
-          float(aPresContext->AppUnitsPerDevPixel());
+    // Get the actual device pixel ratio, which also takes zoom into account.
+    dppx = float(nsPresContext::AppUnitsPerCSSPixel()) /
+             aPresContext->AppUnitsPerDevPixel();
+  } else {
+    // We are resisting fingerprinting, so pretend we have a device pixel ratio
+    // of 1. In that case, we simply report the zoom level.
+    dppx = aPresContext->GetDeviceFullZoom();
   }
 
-  aResult.SetFloatValue(dpi, eCSSUnit_Inch);
+  aResult.SetFloatValue(dppx, eCSSUnit_Pixel);
 }
 
 static void

@@ -92,6 +92,12 @@ add_storage_task(async function test_simple_synctombstone(storage, record) {
   Assert.equal(all.length, 1);
 
   do_check_tombstone_record(all[0]);
+
+  // a tombstone got from API should look exactly the same as it got from the
+  // disk (besides "_sync").
+  let tombstoneInDisk = Object.assign({}, storage._store.data[storage._collectionName][0]);
+  delete tombstoneInDisk._sync;
+  do_check_tombstone_record(tombstoneInDisk);
 });
 
 add_storage_task(async function test_add_tombstone(storage, record) {
@@ -108,6 +114,12 @@ add_storage_task(async function test_add_tombstone(storage, record) {
   Assert.equal(all.length, 1);
 
   do_check_tombstone_record(all[0]);
+
+  // a tombstone got from API should look exactly the same as it got from the
+  // disk (besides "_sync").
+  let tombstoneInDisk = Object.assign({}, storage._store.data[storage._collectionName][0]);
+  delete tombstoneInDisk._sync;
+  do_check_tombstone_record(tombstoneInDisk);
 });
 
 add_storage_task(async function test_add_tombstone_without_guid(storage, record) {

@@ -25,7 +25,6 @@
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -575,8 +574,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNode);
-    if (nodeAsFrame) {
+    if (content->IsHTMLElement(nsGkAtoms::frame)) {
         return OnWalkSubframe(aNode);
     }
 
@@ -1089,8 +1087,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNodeIn);
-    if (nodeAsFrame) {
+    if (content->IsHTMLElement(nsGkAtoms::frame)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");

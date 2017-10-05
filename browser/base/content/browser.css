@@ -115,9 +115,9 @@ tabbrowser {
 }
 
 #tabbrowser-tabs:not([overflow="true"]) ~ #alltabs-button,
-#tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
+#tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
-#TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
+#tabbrowser-tabs:not([hasadjacentnewtabbutton]) > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
@@ -1250,7 +1250,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 }
 
 #customization-panelHolder > #widget-overflow-fixed-list {
-  flex: 0 1 auto; /* Size to content, but allow ourselves to shrink */
+  flex: 1 1 auto; /* Grow within the available space, and allow ourselves to shrink */
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -1262,7 +1262,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 #customization-panelHolder {
   flex-direction: column;
   display: flex;
-  min-height: 0;
+  min-height: calc(174px + 8em);
 }
 
 #customization-panelWrapper {

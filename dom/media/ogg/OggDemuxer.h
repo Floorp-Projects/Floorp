@@ -23,8 +23,6 @@ public:
 
   RefPtr<InitPromise> Init() override;
 
-  bool HasTrackType(TrackInfo::TrackType aType) const override;
-
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(TrackInfo::TrackType aType,

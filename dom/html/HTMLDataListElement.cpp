@@ -22,15 +22,12 @@ HTMLDataListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLDataListElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLDataListElement, nsGenericHTMLElement,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLDataListElement,
+                                   nsGenericHTMLElement,
                                    mOptions)
 
-NS_IMPL_ADDREF_INHERITED(HTMLDataListElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLDataListElement, Element)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLDataListElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
-
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLDataListElement,
+                                               nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLDataListElement)
 

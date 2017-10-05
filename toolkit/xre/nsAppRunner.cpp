@@ -1869,9 +1869,9 @@ XRE_InitOmnijar(nsIFile* greOmni, nsIFile* appOmni)
 }
 
 nsresult
-XRE_GetBinaryPath(const char* argv0, nsIFile* *aResult)
+XRE_GetBinaryPath(nsIFile* *aResult)
 {
-  return mozilla::BinaryPath::GetFile(argv0, aResult);
+  return mozilla::BinaryPath::GetFile(aResult);
 }
 
 #ifdef XP_WIN
@@ -1910,7 +1910,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
   nsCOMPtr<nsIFile> lf;
-  nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  nsresult rv = XRE_GetBinaryPath(getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return rv;
 
@@ -2584,7 +2584,9 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 #endif
 
   if (!count) {
-    gDoMigration = true;
+    // For a fresh install, we would like to let users decide
+    // to do profile migration on their own later after using.
+    gDoMigration = false;
     gDoProfileReset = false;
 
     // create a default profile
@@ -4776,7 +4778,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   gAppData = mAppData.get();
 
   nsCOMPtr<nsIFile> binFile;
-  rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(binFile));
+  rv = XRE_GetBinaryPath(getter_AddRefs(binFile));
   NS_ENSURE_SUCCESS(rv, 1);
 
   rv = binFile->GetPath(gAbsoluteArgv0Path);
@@ -4784,7 +4786,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 
   if (!mAppData->xreDirectory) {
     nsCOMPtr<nsIFile> lf;
-    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+    rv = XRE_GetBinaryPath(getter_AddRefs(lf));
     if (NS_FAILED(rv))
       return 2;
 
@@ -4967,7 +4969,7 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
 
   // get the canonical version of the binary's path
   nsCOMPtr<nsIFile> binFile;
-  rv = XRE_GetBinaryPath(aArgv[0], getter_AddRefs(binFile));
+  rv = XRE_GetBinaryPath(getter_AddRefs(binFile));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 

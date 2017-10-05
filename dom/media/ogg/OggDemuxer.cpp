@@ -217,12 +217,6 @@ OggDemuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-bool
-OggDemuxer::HasTrackType(TrackInfo::TrackType aType) const
-{
-  return !!GetNumberTracks(aType);
-}
-
 OggCodecState*
 OggDemuxer::GetTrackCodecState(TrackInfo::TrackType aType) const
 {

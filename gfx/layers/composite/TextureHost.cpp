@@ -446,7 +446,7 @@ TextureSource::Name() const
   MOZ_CRASH("GFX: TextureSource without class name");
   return "TextureSource";
 }
-  
+
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
 : TextureHost(aFlags)
@@ -597,8 +597,8 @@ BufferTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-    wr::ImageDescriptor yDescriptor(desc.ySize(), desc.ySize().width, gfx::SurfaceFormat::A8);
-    wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrSize().width, gfx::SurfaceFormat::A8);
+    wr::ImageDescriptor yDescriptor(desc.ySize(), desc.yStride(), gfx::SurfaceFormat::A8);
+    wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrStride(), gfx::SurfaceFormat::A8);
     (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, bufferType, 0);
     (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, bufferType, 1);
     (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, bufferType, 2);
@@ -880,6 +880,16 @@ BufferTextureHost::GetYUVColorSpace() const
   return YUVColorSpace::UNKNOWN;
 }
 
+uint32_t
+BufferTextureHost::GetBitDepth() const
+{
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return desc.bitDepth();
+  }
+  return 8;
+}
+
 bool
 BufferTextureHost::UploadIfNeeded()
 {
@@ -986,19 +996,19 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 
     RefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
-                                                    desc.ySize().width,
+                                                    desc.yStride(),
                                                     desc.ySize(),
-                                                    gfx::SurfaceFormat::A8);
+                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
     RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
-                                                    desc.cbCrSize().width,
+                                                    desc.cbCrStride(),
                                                     desc.cbCrSize(),
-                                                    gfx::SurfaceFormat::A8);
+                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
     RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
-                                                    desc.cbCrSize().width,
+                                                    desc.cbCrStride(),
                                                     desc.cbCrSize(),
-                                                    gfx::SurfaceFormat::A8);
+                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
     if (!tempY ||

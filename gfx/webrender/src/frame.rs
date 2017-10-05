@@ -800,15 +800,15 @@ impl Frame {
             SpecificDisplayItem::PopStackingContext => {
                 unreachable!("Should have returned in parent method.")
             }
-            SpecificDisplayItem::PushTextShadow(shadow) => {
+            SpecificDisplayItem::PushShadow(shadow) => {
                 let mut prim_info = prim_info.clone();
                 prim_info.rect = LayerRect::zero();
                 context
                     .builder
-                    .push_text_shadow(shadow, clip_and_scroll, &prim_info);
+                    .push_shadow(shadow, clip_and_scroll, &prim_info);
             }
-            SpecificDisplayItem::PopTextShadow => {
-                context.builder.pop_text_shadow();
+            SpecificDisplayItem::PopShadow => {
+                context.builder.pop_shadow();
             }
         }
         None

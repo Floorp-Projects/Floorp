@@ -366,12 +366,12 @@ public:
                 bool aIsBackfaceVisible,
                 const wr::Line& aLine);
 
-  void PushTextShadow(const wr::LayoutRect& aBounds,
+  void PushShadow(const wr::LayoutRect& aBounds,
                       const wr::LayoutRect& aClip,
                       bool aIsBackfaceVisible,
-                      const wr::TextShadow& aShadow);
+                      const wr::Shadow& aShadow);
 
-  void PopTextShadow();
+  void PopShadow();
 
 
 

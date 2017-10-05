@@ -283,9 +283,9 @@ function sanitizeSigArray(arr) {
 }
 
 function verifySignature(key, data, derSig) {
-  if (derSig.byteLength < 70) {
-    console.log("bad sig: " + hexEncode(new Uint8Array(derSig)))
-    return Promise.reject("Invalid signature length: " + derSig.byteLength);
+  if (derSig.byteLength < 68) {
+    return Promise.reject("Invalid signature (length=" + derSig.byteLength +
+                          "): " + hexEncode(new Uint8Array(derSig)));
   }
 
   let sigAsn1 = org.pkijs.fromBER(derSig);
