@@ -49,8 +49,6 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc,
                                            aBuilder, aResourceUpdates);
 
-    aBuilder.Finalize(aContentSize, mBuiltDisplayList);
-
     // Make a "root" layer data that has everything else as descendants
     mLayerScrollData.emplace_back();
     mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
@@ -81,7 +79,6 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     RemoveUnusedAndResetWebRenderUserData();
   }
 
-  aBuilder.PushBuiltDisplayList(mBuiltDisplayList);
   mManager->WrBridge()->AddWebRenderParentCommands(mParentCommands);
 }
 

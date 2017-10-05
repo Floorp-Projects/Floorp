@@ -115,7 +115,8 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
 }
 
 void
-WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
+WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
+                                     wr::BuiltDisplayList& aDL,
                                      wr::IpcResourceUpdateQueue& aResources,
                                      const gfx::IntSize& aSize,
                                      bool aIsSync,
@@ -126,10 +127,7 @@ WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  wr::BuiltDisplayList dl;
-  wr::LayoutSize contentSize;
-  aBuilder.Finalize(contentSize, dl);
-  ByteBuffer dlData(Move(dl.dl));
+  ByteBuffer dlData(Move(aDL.dl));
 
   TimeStamp fwdTime;
 #if defined(ENABLE_FRAME_LATENCY_LOG)
@@ -144,13 +142,13 @@ WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
   if (aIsSync) {
     this->SendSetDisplayListSync(aSize, mParentCommands, mDestroyedActors,
                                  GetFwdTransactionId(), aTransactionId,
-                                 contentSize, dlData, dl.dl_desc, aScrollData,
+                                 aContentSize, dlData, aDL.dl_desc, aScrollData,
                                  Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
                                  mIdNamespace, aTxnStartTime, fwdTime);
   } else {
     this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
                              GetFwdTransactionId(), aTransactionId,
-                             contentSize, dlData, dl.dl_desc, aScrollData,
+                             aContentSize, dlData, aDL.dl_desc, aScrollData,
                              Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
                              mIdNamespace, aTxnStartTime, fwdTime);
   }
