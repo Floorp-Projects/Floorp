@@ -8,6 +8,7 @@
 #define mozilla_dom_MutableBlobStorage_h
 
 #include "mozilla/RefPtr.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "prio.h"
 
 class nsIEventTarget;
@@ -22,6 +23,8 @@ namespace dom {
 class Blob;
 class BlobImpl;
 class MutableBlobStorage;
+class TemporaryIPCBlobChild;
+class TemporaryIPCBlobChildCallback;
 
 class MutableBlobStorageCallback
 {
@@ -34,10 +37,11 @@ public:
 };
 
 // This class is main-thread only.
-class MutableBlobStorage final
+class MutableBlobStorage final : public nsIIPCBackgroundChildCreateCallback
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MutableBlobStorage);
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   enum MutableBlobStorageType
   {
@@ -59,9 +63,8 @@ public:
 
   void TemporaryFileCreated(PRFileDesc* aFD);
 
-  void  CreateBlobAndRespond(already_AddRefed<nsISupports> aParent,
-                             const nsACString& aContentType,
-                             already_AddRefed<MutableBlobStorageCallback> aCallback);
+  void AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
+                  const nsACString& aContentType);
 
   void ErrorPropagated(nsresult aRv);
 
@@ -82,7 +85,7 @@ private:
 
   bool ShouldBeTemporaryStorage(uint64_t aSize) const;
 
-  nsresult MaybeCreateTemporaryFile();
+  void MaybeCreateTemporaryFile();
 
   void DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable);
 
@@ -112,6 +115,8 @@ private:
   nsCOMPtr<nsISupports> mPendingParent;
   nsCString mPendingContentType;
   RefPtr<MutableBlobStorageCallback> mPendingCallback;
+
+  RefPtr<TemporaryIPCBlobChild> mActor;
 
   // This value is used when we go from eInMemory to eWaitingForTemporaryFile
   // and eventually eInTemporaryFile. If the size of the buffer is >=
