@@ -7,7 +7,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-Cu.import("chrome://marionette/content/element.js");
+const {
+  element,
+  WebElement,
+} = Cu.import("chrome://marionette/content/element.js", {});
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 
@@ -178,6 +181,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
 
   let pack = chain[i];
   let command = pack[0];
+  let webEl;
   let el;
   let c;
   i++;
@@ -202,7 +206,8 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       break;
 
     case "click":
-      el = this.seenEls.get(pack[1]);
+      webEl = WebElement.fromUUID(pack[1], "content");
+      el = this.seenEls.get(webEl);
       let button = pack[2];
       let clickCount = pack[3];
       c = element.coordinates(el);
@@ -233,7 +238,8 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
         this.scrolling = true;
       }
-      el = this.seenEls.get(pack[1]);
+      webEl = WebElement.fromUUID(pack[1], "content");
+      el = this.seenEls.get(webEl);
       c = element.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
@@ -252,7 +258,8 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       break;
 
     case "move":
-      el = this.seenEls.get(pack[1]);
+      webEl = WebElement.fromUUID(pack[1], "content");
+      el = this.seenEls.get(webEl);
       c = element.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
