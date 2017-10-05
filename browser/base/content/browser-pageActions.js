@@ -719,6 +719,15 @@ var BrowserPageActions = {
       }
     }
   },
+
+  /**
+   * Call this on tab switch or when the current <browser>'s location changes.
+   */
+  onLocationChange() {
+    for (let action of PageActions.actions) {
+      action.onLocationChange(window);
+    }
+  },
 };
 
 var BrowserPageActionFeedback = {
