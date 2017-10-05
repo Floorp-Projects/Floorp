@@ -381,7 +381,8 @@ private:
 } // anonymous namespace
 
 MutableBlobStorage::MutableBlobStorage(MutableBlobStorageType aType,
-                                       nsIEventTarget* aEventTarget)
+                                       nsIEventTarget* aEventTarget,
+                                       uint32_t aMaxMemory)
   : mData(nullptr)
   , mDataLen(0)
   , mDataBufferLen(0)
@@ -389,11 +390,17 @@ MutableBlobStorage::MutableBlobStorage(MutableBlobStorageType aType,
   , mFD(nullptr)
   , mErrorResult(NS_OK)
   , mEventTarget(aEventTarget)
+  , mMaxMemory(aMaxMemory)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mEventTarget) {
     mEventTarget = GetMainThreadEventTarget();
+  }
+
+  if (aMaxMemory == 0 && aType == eCouldBeInTemporaryFile) {
+    mMaxMemory = Preferences::GetUint("dom.blob.memoryToTemporaryFile",
+                                      BLOB_MEMORY_TEMPORARY_FILE);
   }
 
   MOZ_ASSERT(mEventTarget);
@@ -570,8 +577,7 @@ MutableBlobStorage::ShouldBeTemporaryStorage(uint64_t aSize) const
     return false;
   }
 
-  return bufferSize.value() >= Preferences::GetUint("dom.blob.memoryToTemporaryFile",
-                                                    BLOB_MEMORY_TEMPORARY_FILE);
+  return bufferSize.value() >= mMaxMemory;
 }
 
 nsresult
@@ -688,6 +694,13 @@ MutableBlobStorage::DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable)
 
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   mTaskQueue->Dispatch(runnable.forget());
+}
+
+size_t
+MutableBlobStorage::SizeOfCurrentMemoryBuffer() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mStorageState < eInTemporaryFile ? mDataLen : 0;
 }
 
 } // dom namespace

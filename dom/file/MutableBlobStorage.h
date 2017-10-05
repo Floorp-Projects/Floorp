@@ -45,7 +45,8 @@ public:
   };
 
   explicit MutableBlobStorage(MutableBlobStorageType aType,
-                              nsIEventTarget* aEventTarget = nullptr);
+                              nsIEventTarget* aEventTarget = nullptr,
+                              uint32_t aMaxMemory = 0);
 
   nsresult Append(const void* aData, uint32_t aLength);
 
@@ -68,6 +69,10 @@ public:
     MOZ_ASSERT(mEventTarget);
     return mEventTarget;
   }
+
+  // Returns the heap size in bytes of our internal buffers.
+  // Note that this intentionally ignores the data in the temp file.
+  size_t SizeOfCurrentMemoryBuffer() const;
 
 private:
   ~MutableBlobStorage();
@@ -106,6 +111,12 @@ private:
   nsCOMPtr<nsISupports> mPendingParent;
   nsCString mPendingContentType;
   RefPtr<MutableBlobStorageCallback> mPendingCallback;
+
+  // This value is used when we go from eInMemory to eWaitingForTemporaryFile
+  // and eventually eInTemporaryFile. If the size of the buffer is >=
+  // mMaxMemory, the creation of the temporary file will start.
+  // It's not used if mStorageState is eKeepInMemory.
+  uint32_t mMaxMemory;
 };
 
 } // namespace dom
