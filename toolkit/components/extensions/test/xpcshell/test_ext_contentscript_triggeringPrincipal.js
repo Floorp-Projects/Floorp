@@ -44,7 +44,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}`;
  * A set of tags which are automatically closed in HTML documents, and
  * do not require an explicit closing tag.
  */
-const AUTOCLOSE_TAGS = new Set(["img"]);
+const AUTOCLOSE_TAGS = new Set(["img", "source"]);
 
 /**
  * An object describing the elements to create for a specific test.
@@ -437,6 +437,10 @@ add_task(async function test_contentscript_triggeringPrincipals() {
       element: ["audio", {}],
       src: "audio.webm",
     },
+    {
+      element: ["audio", {}, ["source", {}]],
+      src: "audio-source.webm",
+    },
     // TODO: <frame> element, which requires a frameset document.
     {
       element: ["iframe", {}],
@@ -459,6 +463,10 @@ add_task(async function test_contentscript_triggeringPrincipals() {
     {
       element: ["video", {}],
       src: "video.webm",
+    },
+    {
+      element: ["video", {}, ["source", {}]],
+      src: "video-source.webm",
     },
   ];
 

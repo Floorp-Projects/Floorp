@@ -131,6 +131,9 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::media) {
     UpdateMediaList(aValue);
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
+    mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+        this, aValue ? aValue->GetStringValue() : EmptyString(),
+        aMaybeScriptedPrincipal);
     mSrcMediaSource = nullptr;
     if (aValue) {
       nsString srcStr = aValue->GetStringValue();
