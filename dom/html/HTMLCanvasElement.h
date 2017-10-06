@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/WeakPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMHTMLCanvasElement.h"
 #include "nsIObserver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -115,6 +116,7 @@ protected:
 };
 
 class HTMLCanvasElement final : public nsGenericHTMLElement,
+                                public nsIDOMHTMLCanvasElement,
                                 public CanvasRenderingContextHelper
 {
   enum {
@@ -135,6 +137,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMHTMLCanvasElement
+  NS_DECL_NSIDOMHTMLCANVASELEMENT
 
   // CC
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLCanvasElement,
