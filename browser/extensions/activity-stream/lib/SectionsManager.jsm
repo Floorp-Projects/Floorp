@@ -6,10 +6,8 @@
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
 
 /*
  * Generators for built in sections, keyed by the pref name for their feed.
@@ -23,7 +21,7 @@ const BUILT_IN_SECTIONS = {
       titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
       descString: {id: options.provider_description || "pocket_feedback_body"}
     },
-    shouldHidePref: options.hidden,
+    shouldHidePref:  options.hidden,
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
     title: {id: "header_recommended_by", values: {provider: options.provider_name}},
@@ -76,20 +74,12 @@ const SectionsManager = {
     for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS)) {
       const optionsPrefName = `${feedPrefName}.options`;
       this.addBuiltInSection(feedPrefName, prefs[optionsPrefName]);
-
-      this._dedupeConfiguration = [];
-      this.sections.forEach(section => {
-        if (section.dedupeFrom) {
-          this._dedupeConfiguration.push({
-            id: section.id,
-            dedupeFrom: section.dedupeFrom
-          });
-        }
-      });
     }
 
     Object.keys(this.CONTEXT_MENU_PREFS).forEach(k =>
       Services.prefs.addObserver(this.CONTEXT_MENU_PREFS[k], this));
+
+    this.dedupe = new Dedupe(site => site && site.url);
 
     this.initialized = true;
     this.emit(this.INIT);
@@ -139,28 +129,33 @@ const SectionsManager = {
   },
   updateSection(id, options, shouldBroadcast) {
     this.updateSectionContextMenuOptions(options);
+
     if (this.sections.has(id)) {
-      const optionsWithDedupe = Object.assign({}, options, {dedupeConfigurations: this._dedupeConfiguration});
-      this.sections.set(id, Object.assign(this.sections.get(id), options));
-      this.emit(this.UPDATE_SECTION, id, optionsWithDedupe, shouldBroadcast);
+      const dedupedOptions = this.dedupeRows(id, options);
+      this.sections.set(id, Object.assign(this.sections.get(id), dedupedOptions));
+      this.emit(this.UPDATE_SECTION, id, dedupedOptions, shouldBroadcast);
+
+      // Update any sections that dedupe from the updated section
+      this.sections.forEach(section => {
+        if (section.dedupeFrom && section.dedupeFrom.includes(id)) {
+          this.updateSection(section.id, section, shouldBroadcast);
+        }
+      });
     }
   },
-
-  updateBookmarkMetadata({url}) {
-    this.sections.forEach(section => {
-      if (section.rows) {
-        section.rows.forEach(card => {
-          if (card.url === url && card.description && card.title && card.image) {
-            PlacesUtils.history.update({
-              url: card.url,
-              title: card.title,
-              description: card.description,
-              previewImageURL: card.image
-            });
-          }
-        });
+  dedupeRows(id, options) {
+    const newOptions = Object.assign({}, options);
+    const dedupeFrom = this.sections.get(id).dedupeFrom;
+    if (dedupeFrom && dedupeFrom.length > 0 && options.rows) {
+      for (const sectionId of dedupeFrom) {
+        const section = this.sections.get(sectionId);
+        if (section && section.rows) {
+          const [, newRows] = this.dedupe.group(section.rows, options.rows);
+          newOptions.rows = newRows;
+        }
       }
-    });
+    }
+    return newOptions;
   },
 
   /**
@@ -297,9 +292,6 @@ class SectionsFeed {
         }
         break;
       }
-      case at.PLACES_BOOKMARK_ADDED:
-        SectionsManager.updateBookmarkMetadata(action.data);
-        break;
       case at.SECTION_DISABLE:
         SectionsManager.disableSection(action.data);
         break;
