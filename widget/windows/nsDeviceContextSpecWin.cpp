@@ -38,6 +38,9 @@
 #include "mozilla/gfx/PrintTargetSkPDF.h"
 #include "nsIUUIDGenerator.h"
 #include "mozilla/widget/PDFViaEMFPrintHelper.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
 #endif
 
 static mozilla::LazyLogModule kWidgetPrintingLogMod("printing-widget");
