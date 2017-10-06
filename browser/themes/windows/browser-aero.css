@@ -288,13 +288,13 @@
          (-moz-os-version: windows-win8) {
     /* Vertical toolbar border */
     #main-window[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
-    #main-window[sizemode=normal] #navigator-toolbox:-moz-lwtheme {
+    #main-window[sizemode=normal] #navigator-toolbox > toolbar:-moz-lwtheme {
       border-left: 1px solid @glassShadowColor@;
       border-right: 1px solid @glassShadowColor@;
       background-clip: padding-box;
     }
 
-    #main-window[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after {
+    #main-window[sizemode=normal] #navigator-toolbox::after {
       box-shadow: 1px 0 0 @glassShadowColor@, -1px 0 0 @glassShadowColor@;
       margin-left: 1px;
       margin-right: 1px;
