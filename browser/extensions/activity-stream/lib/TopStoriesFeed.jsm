@@ -232,8 +232,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
         // Create a new array with a spoc inserted at index 2
         // For now we're using the top scored spoc until we can support viewability based rotation
-        const position = SectionsManager.sections.get(SECTION_ID).order;
-        let rows = this.store.getState().Sections[position].rows.slice(0, this.stories.length);
+        let rows = this.stories.slice(0, this.stories.length);
         rows.splice(2, 0, this.spocs[0]);
 
         // Send a content update to the target tab
@@ -282,6 +281,14 @@ this.TopStoriesFeed = class TopStoriesFeed {
       case at.PLACES_LINK_BLOCKED:
         if (this.spocs) {
           this.spocs = this.spocs.filter(s => s.url !== action.data.url);
+        }
+
+        if (this.stories) {
+          const prevStoriesLength = this.stories.length;
+          this.stories = this.stories.filter(s => s.url !== action.data.url);
+          if (prevStoriesLength !== this.stories.length) {
+            SectionsManager.updateSection(SECTION_ID, {rows: this.stories}, true);
+          }
         }
         break;
     }

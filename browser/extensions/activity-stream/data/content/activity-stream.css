@@ -197,7 +197,7 @@ main {
 
 .section-top-bar {
   height: 16px;
-  margin-bottom: 16px; }
+  margin-bottom: 12px; }
 
 .section-title {
   font-size: 13px;
@@ -421,17 +421,11 @@ main {
       opacity: 1; }
 
 .edit-topsites-wrapper .edit-topsites-button {
-  border-right: 1px solid #D7D7DB;
-  line-height: 13px;
-  offset-inline-end: 24px;
-  opacity: 0;
-  padding: 0 10px;
   position: absolute;
-  top: 2px;
+  offset-inline-end: 21px;
+  top: -2px;
+  opacity: 0;
   transition: opacity 0.2s cubic-bezier(0.07, 0.95, 0, 1); }
-  .edit-topsites-wrapper .edit-topsites-button:dir(rtl) {
-    border-left: 1px solid #D7D7DB;
-    border-right: 0; }
   .edit-topsites-wrapper .edit-topsites-button:focus, .edit-topsites-wrapper .edit-topsites-button:active {
     opacity: 1; }
   .edit-topsites-wrapper .edit-topsites-button button {
@@ -556,38 +550,23 @@ section.top-sites:hover .edit-topsites-button {
     .section-top-bar .info-option-icon:focus, .section-top-bar .info-option-icon:active {
       opacity: 1; }
   .section-top-bar .info-option-icon[aria-expanded="true"] {
-    background-color: rgba(12, 12, 13, 0.1);
-    border-radius: 1px;
-    box-shadow: 0 0 0 5px rgba(12, 12, 13, 0.1);
     fill: rgba(12, 12, 13, 0.8); }
   .section-top-bar .section-info-option .info-option {
     visibility: hidden;
     opacity: 0;
     transition: visibility 0.2s, opacity 0.2s cubic-bezier(0.07, 0.95, 0, 1); }
-    .section-top-bar .section-info-option .info-option::after, .section-top-bar .section-info-option .info-option::before {
-      content: "";
-      offset-inline-end: 0;
-      position: absolute; }
     .section-top-bar .section-info-option .info-option::before {
-      background-image: url(chrome://global/skin/arrow/panelarrow-vertical-themed.svg), url(chrome://global/skin/arrow/panelarrow-vertical@2x.png);
-      background-position: calc(100% - 7px) bottom;
-      background-repeat: no-repeat;
-      background-size: 18px 10px;
+      content: "";
+      display: block;
       height: 32px;
-      top: -32px;
-      width: 43px; }
-    .section-top-bar .section-info-option .info-option:dir(rtl)::before {
-      background-position-x: 7px; }
-    .section-top-bar .section-info-option .info-option::after {
-      height: 10px;
-      offset-inline-start: 0;
-      top: -10px; }
+      left: 50%;
+      position: absolute;
+      right: 0;
+      top: -32px; }
   .section-top-bar .info-option-icon[aria-expanded="true"] + .info-option {
     visibility: visible;
     opacity: 1;
     transition: visibility 0.2s, opacity 0.2s cubic-bezier(0.07, 0.95, 0, 1); }
-  .section-top-bar .info-option-icon:not([aria-expanded="true"]) + .info-option {
-    pointer-events: none; }
   .section-top-bar .info-option {
     z-index: 9999;
     position: absolute;
@@ -598,7 +577,7 @@ section.top-sites:hover .edit-topsites-button {
     line-height: 120%;
     margin-inline-end: -9px;
     offset-inline-end: 0;
-    top: 26px;
+    top: 20px;
     width: 320px;
     padding: 24px;
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
@@ -779,7 +758,7 @@ section.section:hover .info-option-icon {
       background-color: rgba(12, 12, 13, 0.1);
       cursor: pointer; }
     .search-wrapper .search-button:active {
-      background-color: rgba(12, 12, 13, 0.2); }
+      background-color: rgba(12, 12, 13, 0.15); }
     .search-wrapper .search-button:dir(rtl) {
       transform: scaleX(-1); }
   .search-wrapper .contentSearchSuggestionTable {
@@ -861,7 +840,7 @@ section.section:hover .info-option-icon {
     .prefs-pane .prefs-modal-inner-wrapper section {
       margin: 20px 0; }
       .prefs-pane .prefs-modal-inner-wrapper section p {
-        margin: 5px 0 20px 30px; }
+        margin: 5px 0 5px 30px; }
       .prefs-pane .prefs-modal-inner-wrapper section label {
         display: inline-block;
         position: relative;

@@ -22,7 +22,6 @@ describe("Highlights Feed", () => {
   let filterAdultStub;
   let sectionsManagerStub;
   let shortURLStub;
-  let profileAgeCreatedStub;
 
   const fetchHighlights = async() => {
     await feed.fetchHighlights();
@@ -43,18 +42,11 @@ describe("Highlights Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_IMAGE)),
-      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot
+      maybeGetAndSetScreenshot: Screenshots.maybeGetAndSetScreenshot
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
-
-    const fakeProfileAgePromise = {};
-    const fakeProfileAge = function() { return fakeProfileAgePromise; };
-    profileAgeCreatedStub = sinon.stub().callsFake(() => Promise.resolve(42));
-    sinon.stub(fakeProfileAgePromise, "created").get(profileAgeCreatedStub);
-
     globals.set("NewTabUtils", fakeNewTabUtils);
-    globals.set("ProfileAge", fakeProfileAge);
     ({HighlightsFeed, HIGHLIGHTS_UPDATE_TIME, SECTION_ID} = injector({
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
@@ -117,7 +109,6 @@ describe("Highlights Feed", () => {
       const subscribeCallback = feed.store.subscribe.firstCall.args[0];
       await subscribeCallback();
       await firstFetch;
-      await feed._getBookmarksThreshold();
       assert.calledOnce(fakeNewTabUtils.activityStreamLinks.getHighlights);
 
       // If TopSites is initialised in the first place it shouldn't wait
@@ -126,7 +117,6 @@ describe("Highlights Feed", () => {
       fakeNewTabUtils.activityStreamLinks.getHighlights.reset();
       await feed.fetchHighlights();
       assert.notCalled(feed.store.subscribe);
-      await feed._getBookmarksThreshold();
       assert.calledOnce(fakeNewTabUtils.activityStreamLinks.getHighlights);
     });
     it("should add hostname and hasImage to each link", async () => {
@@ -225,12 +215,8 @@ describe("Highlights Feed", () => {
   describe("#fetchImage", () => {
     const FAKE_URL = "https://mozilla.org";
     const FAKE_IMAGE_URL = "https://mozilla.org/preview.jpg";
-    function fetchImage(page) {
-      return feed.fetchImage(Object.assign({__sharedCache: {updateLink() {}}},
-        page));
-    }
     it("should capture the image, if available", async () => {
-      await fetchImage({
+      await feed.fetchImage({
         preview_image_url: FAKE_IMAGE_URL,
         url: FAKE_URL
       });
@@ -239,13 +225,13 @@ describe("Highlights Feed", () => {
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_IMAGE_URL);
     });
     it("should fall back to capturing a screenshot", async () => {
-      await fetchImage({url: FAKE_URL});
+      await feed.fetchImage({url: FAKE_URL});
 
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_URL);
     });
     it("should call SectionsManager.updateSectionCard with the right arguments", async () => {
-      await fetchImage({
+      await feed.fetchImage({
         preview_image_url: FAKE_IMAGE_URL,
         url: FAKE_URL
       });
@@ -253,7 +239,7 @@ describe("Highlights Feed", () => {
       assert.calledOnce(sectionsManagerStub.updateSectionCard);
       assert.calledWith(sectionsManagerStub.updateSectionCard, "highlights", FAKE_URL, {image: FAKE_IMAGE}, true);
     });
-    it("should not update the card with the image", async () => {
+    it("should update the card with the image", async () => {
       const card = {
         preview_image_url: FAKE_IMAGE_URL,
         url: FAKE_URL
@@ -261,29 +247,7 @@ describe("Highlights Feed", () => {
 
       await feed.fetchImage(card);
 
-      assert.notProperty(card, "image");
-    });
-  });
-  describe("#_getBookmarksThreshold", () => {
-    it("should have the correct default", () => {
-      assert.equal(feed._profileAge, 0);
-    });
-    it("should not call ProfileAge if _profileAge is set", async () => {
-      feed._profileAge = 10;
-
-      await feed._getBookmarksThreshold();
-
-      assert.notCalled(profileAgeCreatedStub);
-    });
-    it("should call ProfileAge if _profileAge is not set", async () => {
-      await feed._getBookmarksThreshold();
-
-      assert.calledOnce(profileAgeCreatedStub);
-    });
-    it("should set _profileAge", async () => {
-      await feed._getBookmarksThreshold();
-
-      assert.notEqual(feed._profileAge, 0);
+      assert.propertyVal(card, "image", FAKE_IMAGE);
     });
   });
   describe("#uninit", () => {
