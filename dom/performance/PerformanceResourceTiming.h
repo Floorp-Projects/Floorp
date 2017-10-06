@@ -63,6 +63,12 @@ public:
     mNextHopProtocol = aNextHopProtocol;
   }
 
+  DOMHighResTimeStamp WorkerStart() const {
+    return mTiming && mTiming->TimingAllowed()
+        ? mTiming->WorkerStartHighRes()
+        : 0;
+  }
+
   DOMHighResTimeStamp FetchStart() const {
     return mTiming
         ? mTiming->FetchStartHighRes()
