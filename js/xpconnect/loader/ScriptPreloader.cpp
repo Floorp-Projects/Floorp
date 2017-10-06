@@ -416,13 +416,18 @@ ScriptPreloader::InitCache(const nsAString& basePath)
         return Ok();
     }
 
+    // Grab the compilation scope before initializing the URLPreloader, since
+    // it's not safe to run component loader code during its critical section.
+    AutoSafeJSAPI jsapi;
+    JS::RootedObject scope(jsapi.cx(), CompilationScope(jsapi.cx()));
+
     // Note: Code on the main thread *must not access Omnijar in any way* until
     // this AutoBeginReading guard is destroyed.
     URLPreloader::AutoBeginReading abr;
 
     MOZ_TRY(OpenCache());
 
-    return InitCacheInternal();
+    return InitCacheInternal(scope);
 }
 
 Result<Ok, nsresult>
@@ -445,7 +450,7 @@ ScriptPreloader::InitCache(const Maybe<ipc::FileDescriptor>& cacheFile, ScriptCa
 }
 
 Result<Ok, nsresult>
-ScriptPreloader::InitCacheInternal()
+ScriptPreloader::InitCacheInternal(JS::HandleObject scope)
 {
     auto size = mCacheData.size();
 
@@ -520,7 +525,7 @@ ScriptPreloader::InitCacheInternal()
         cleanup.release();
     }
 
-    DecodeNextBatch(OFF_THREAD_FIRST_CHUNK_SIZE);
+    DecodeNextBatch(OFF_THREAD_FIRST_CHUNK_SIZE, scope);
     return Ok();
 }
 
@@ -955,7 +960,7 @@ ScriptPreloader::MaybeFinishOffThreadDecode()
 }
 
 void
-ScriptPreloader::DecodeNextBatch(size_t chunkSize)
+ScriptPreloader::DecodeNextBatch(size_t chunkSize, JS::HandleObject scope)
 {
     MOZ_ASSERT(mParsingSources.length() == 0);
     MOZ_ASSERT(mParsingScripts.length() == 0);
@@ -1003,7 +1008,7 @@ ScriptPreloader::DecodeNextBatch(size_t chunkSize)
 
     AutoSafeJSAPI jsapi;
     JSContext* cx = jsapi.cx();
-    JSAutoCompartment ac(cx, CompilationScope(cx));
+    JSAutoCompartment ac(cx, scope ? scope : CompilationScope(cx));
 
     JS::CompileOptions options(cx, JSVERSION_DEFAULT);
     options.setNoScriptRval(true)
