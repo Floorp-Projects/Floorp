@@ -795,7 +795,7 @@ struct PromiseHelperTask : OffThreadPromiseTask
 
     // May be called in the absence of helper threads or off-thread promise
     // support to synchronously execute and resolve a PromiseTask.
-    void executeAndResolve(JSContext* cx);
+    void executeAndResolveAndDestroy(JSContext* cx);
 };
 
 } /* namespace js */

@@ -855,14 +855,21 @@ GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber, MutableBytes
     return true;
 }
 
-static bool
-InitCompileArgs(JSContext* cx, CompileArgs* compileArgs)
+static SharedCompileArgs
+InitCompileArgs(JSContext* cx)
 {
     ScriptedCaller scriptedCaller;
     if (!DescribeScriptedCaller(cx, &scriptedCaller))
-        return false;
+        return nullptr;
 
-    return compileArgs->initFromContext(cx, Move(scriptedCaller));
+    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
+    if (!compileArgs)
+        return nullptr;
+
+    if (!compileArgs->initFromContext(cx, Move(scriptedCaller)))
+        return nullptr;
+
+    return compileArgs;
 }
 
 /* static */ bool
@@ -885,8 +892,8 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!GetBufferSource(cx, &callArgs[0].toObject(), JSMSG_WASM_BAD_BUF_ARG, &bytecode))
         return false;
 
-    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
-    if (!compileArgs || !InitCompileArgs(cx, compileArgs.get()))
+    SharedCompileArgs compileArgs = InitCompileArgs(cx);
+    if (!compileArgs)
         return false;
 
     UniqueChars error;
@@ -1891,41 +1898,6 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
 }
 
 static bool
-ResolveCompilation(JSContext* cx, Module& module, const CompileArgs& compileArgs,
-                   Handle<PromiseObject*> promise)
-{
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-    RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
-    if (!moduleObj)
-        return false;
-
-    RootedValue resolutionValue(cx, ObjectValue(*moduleObj));
-    return PromiseObject::resolve(cx, promise, resolutionValue);
-}
-
-struct CompilePromiseTask : PromiseHelperTask
-{
-    MutableBytes      bytecode;
-    SharedCompileArgs compileArgs;
-    UniqueChars       error;
-    SharedModule      module;
-
-    CompilePromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
-      : PromiseHelperTask(cx, promise)
-    {}
-
-    void execute() override {
-        module = CompileInitialTier(*bytecode, *compileArgs, &error);
-    }
-
-    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
-        return module
-               ? ResolveCompilation(cx, *module, *compileArgs, promise)
-               : Reject(cx, *compileArgs, Move(error), promise);
-    }
-};
-
-static bool
 RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
 {
     if (!cx->isExceptionPending())
@@ -1937,6 +1909,83 @@ RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
 
     return PromiseObject::reject(cx, promise, rejectionValue);
 }
+
+static bool
+Resolve(JSContext* cx, Module& module, const CompileArgs& compileArgs,
+        Handle<PromiseObject*> promise, bool instantiate, HandleObject importObj)
+{
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+    RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
+    if (!moduleObj)
+        return RejectWithPendingException(cx, promise);
+
+    RootedValue resolutionValue(cx);
+    if (instantiate) {
+        RootedWasmInstanceObject instanceObj(cx);
+        if (!Instantiate(cx, module, importObj, &instanceObj))
+            return RejectWithPendingException(cx, promise);
+
+        RootedObject resultObj(cx, JS_NewPlainObject(cx));
+        if (!resultObj)
+            return RejectWithPendingException(cx, promise);
+
+        RootedValue val(cx, ObjectValue(*moduleObj));
+        if (!JS_DefineProperty(cx, resultObj, "module", val, JSPROP_ENUMERATE))
+            return RejectWithPendingException(cx, promise);
+
+        val = ObjectValue(*instanceObj);
+        if (!JS_DefineProperty(cx, resultObj, "instance", val, JSPROP_ENUMERATE))
+            return RejectWithPendingException(cx, promise);
+
+        resolutionValue = ObjectValue(*resultObj);
+    } else {
+        MOZ_ASSERT(!importObj);
+        resolutionValue = ObjectValue(*moduleObj);
+    }
+
+    if (!PromiseObject::resolve(cx, promise, resolutionValue))
+        return RejectWithPendingException(cx, promise);
+
+    return true;
+}
+
+struct CompileBufferTask : PromiseHelperTask
+{
+    MutableBytes           bytecode;
+    SharedCompileArgs      compileArgs;
+    UniqueChars            error;
+    SharedModule           module;
+    bool                   instantiate;
+    PersistentRootedObject importObj;
+
+    CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise, HandleObject importObj)
+      : PromiseHelperTask(cx, promise),
+        instantiate(true),
+        importObj(cx, importObj)
+    {}
+
+    CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise)
+      : PromiseHelperTask(cx, promise),
+        instantiate(false)
+    {}
+
+    bool init(JSContext* cx) {
+        compileArgs = InitCompileArgs(cx);
+        if (!compileArgs)
+            return false;
+        return PromiseHelperTask::init(cx);
+    }
+
+    void execute() override {
+        module = CompileInitialTier(*bytecode, *compileArgs, &error);
+    }
+
+    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
+        return module
+               ? Resolve(cx, *module, *compileArgs, promise, instantiate, importObj)
+               : Reject(cx, *compileArgs, Move(error), promise);
+    }
+};
 
 static bool
 RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise, CallArgs& callArgs)
@@ -1982,7 +2031,7 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!promise)
         return false;
 
-    auto task = cx->make_unique<CompilePromiseTask>(cx, promise);
+    auto task = cx->make_unique<CompileBufferTask>(cx, promise);
     if (!task || !task->init(cx))
         return false;
 
@@ -1991,72 +2040,12 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!GetBufferSource(cx, callArgs, "WebAssembly.compile", &task->bytecode))
         return RejectWithPendingException(cx, promise, callArgs);
 
-    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
-    if (!compileArgs || !InitCompileArgs(cx, compileArgs))
-        return false;
-    task->compileArgs = compileArgs;
-
     if (!StartOffThreadPromiseHelperTask(cx, Move(task)))
         return false;
 
     callArgs.rval().setObject(*promise);
     return true;
 }
-
-static bool
-ResolveInstantiation(JSContext* cx, Module& module, const CompileArgs& compileArgs,
-                     HandleObject importObj, Handle<PromiseObject*> promise)
-{
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-    RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
-    if (!moduleObj)
-        return false;
-
-    RootedWasmInstanceObject instanceObj(cx);
-    if (!Instantiate(cx, module, importObj, &instanceObj))
-        return RejectWithPendingException(cx, promise);
-
-    RootedObject resultObj(cx, JS_NewPlainObject(cx));
-    if (!resultObj)
-        return false;
-
-    RootedValue val(cx, ObjectValue(*moduleObj));
-    if (!JS_DefineProperty(cx, resultObj, "module", val, JSPROP_ENUMERATE))
-        return false;
-
-    val = ObjectValue(*instanceObj);
-    if (!JS_DefineProperty(cx, resultObj, "instance", val, JSPROP_ENUMERATE))
-        return false;
-
-    val = ObjectValue(*resultObj);
-    return PromiseObject::resolve(cx, promise, val);
-}
-
-struct InstantiatePromiseTask : PromiseHelperTask
-{
-    MutableBytes           bytecode;
-    SharedCompileArgs      compileArgs;
-    UniqueChars            error;
-    SharedModule           module;
-    PersistentRootedObject importObj;
-
-    InstantiatePromiseTask(JSContext* cx, Handle<PromiseObject*> promise,
-                           const CompileArgs& compileArgs, HandleObject importObj)
-      : PromiseHelperTask(cx, promise),
-        compileArgs(&compileArgs),
-        importObj(cx, importObj)
-    {}
-
-    void execute() override {
-        module = CompileInitialTier(*bytecode, *compileArgs, &error);
-    }
-
-    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
-        return module
-               ? ResolveInstantiation(cx, *module, *compileArgs, importObj, promise)
-               : Reject(cx, *compileArgs, Move(error), promise);
-    }
-};
 
 static bool
 GetInstantiateArgs(JSContext* cx, CallArgs callArgs, MutableHandleObject firstArg,
@@ -2102,11 +2091,7 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
         if (!PromiseObject::resolve(cx, promise, resolutionValue))
             return false;
     } else {
-        MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
-        if (!compileArgs || !InitCompileArgs(cx, compileArgs.get()))
-            return false;
-
-        auto task = cx->make_unique<InstantiatePromiseTask>(cx, promise, *compileArgs, importObj);
+        auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
         if (!task || !task->init(cx))
             return false;
 
