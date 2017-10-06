@@ -343,7 +343,6 @@ public:
     for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
       chunk->mChannelData.AppendElement(aChannelData[channel]);
     }
-    chunk->mVolume = 1.0f;
     chunk->mBufferFormat = AUDIO_FORMAT_FLOAT32;
 #ifdef MOZILLA_INTERNAL_API
     chunk->mTimeStamp = TimeStamp::Now();
@@ -359,7 +358,6 @@ public:
     for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
       chunk->mChannelData.AppendElement(aChannelData[channel]);
     }
-    chunk->mVolume = 1.0f;
     chunk->mBufferFormat = AUDIO_FORMAT_S16;
 #ifdef MOZILLA_INTERNAL_API
     chunk->mTimeStamp = TimeStamp::Now();
