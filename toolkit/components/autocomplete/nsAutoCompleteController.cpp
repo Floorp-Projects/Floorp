@@ -367,6 +367,13 @@ nsAutoCompleteController::HandleEnter(bool aIsPopupSelection,
 
   // Stop the search, and handle the enter.
   StopSearch();
+  // StopSearch() can call PostSearchCleanup() which might result
+  // in a blur event, which could null out mInput, so we need to check it
+  // again.  See bug #408463 for more details
+  if (!mInput) {
+    return NS_OK;
+  }
+
   EnterMatch(aIsPopupSelection, aEvent);
 
   return NS_OK;
