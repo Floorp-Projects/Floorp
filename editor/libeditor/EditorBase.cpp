@@ -2481,6 +2481,7 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
 nsresult
 EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
                            nsCOMPtr<nsINode>* aInOutNode,
+                           nsIContent* aChildAtOffset,
                            int32_t* aInOutOffset,
                            nsIDocument* aDoc)
 {
@@ -2510,14 +2511,15 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
 
   // If a neighboring text node already exists, use that
   if (!node->IsNodeOfType(nsINode::eTEXT)) {
-    nsIContent* child = node->GetChildAt(offset);
-    if (offset && child && child->GetPreviousSibling() &&
-        child->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
-      node = child->GetPreviousSibling();
+    if (offset && aChildAtOffset &&
+        aChildAtOffset->GetPreviousSibling() &&
+        aChildAtOffset->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
+      node = aChildAtOffset->GetPreviousSibling();
       offset = node->Length();
     } else if (offset < static_cast<int32_t>(node->Length()) &&
-               child && child->IsNodeOfType(nsINode::eTEXT)) {
-      node = child;
+               aChildAtOffset &&
+               aChildAtOffset->IsNodeOfType(nsINode::eTEXT)) {
+      node = aChildAtOffset;
       offset = 0;
     }
   }

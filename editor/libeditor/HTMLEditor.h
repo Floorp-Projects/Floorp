@@ -313,6 +313,7 @@ public:
                       uint32_t aLength);
   virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
                                   nsCOMPtr<nsINode>* aInOutNode,
+                                  nsIContent* aChildAtOffset,
                                   int32_t* aInOutOffset,
                                   nsIDocument* aDoc) override;
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode* aNode) override;

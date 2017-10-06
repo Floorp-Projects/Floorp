@@ -704,6 +704,7 @@ TextEditor::InsertLineBreak()
     // get the (collapsed) selection location
     NS_ENSURE_STATE(selection->GetRangeAt(0));
     nsCOMPtr<nsINode> selNode = selection->GetRangeAt(0)->GetStartContainer();
+    nsIContent* selChild = selection->GetRangeAt(0)->GetChildAtStartOffset();
     int32_t selOffset = selection->GetRangeAt(0)->StartOffset();
     NS_ENSURE_STATE(selNode);
 
@@ -722,7 +723,7 @@ TextEditor::InsertLineBreak()
 
     // insert a linefeed character
     rv = InsertTextImpl(NS_LITERAL_STRING("\n"), address_of(selNode),
-                        &selOffset, doc);
+                        selChild, &selOffset, doc);
     if (!selNode) {
       rv = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
     }
