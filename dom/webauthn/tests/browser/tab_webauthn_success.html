@@ -35,10 +35,10 @@ function signalCompletion(aText) {
 let gState = {};
 let makeCredentialOptions = {
   rp: {id: document.domain, name: "none", icon: "none"},
-  user: {id: "none", name: "none", icon: "none", displayName: "none"},
+  user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
   challenge: gCredentialChallenge,
   timeout: 5000, // the minimum timeout is actually 15 seconds
-  parameters: [{type: "public-key", algorithm: "ES256"}],
+  parameters: [{type: "public-key", alg: "ES256"}],
 };
 
 navigator.credentials.create({publicKey: makeCredentialOptions})
@@ -48,6 +48,7 @@ navigator.credentials.create({publicKey: makeCredentialOptions})
   return webAuthnDecodeCBORAttestation(aNewCredentialInfo.response.attestationObject);
 })
 .then(function testAssertion(aCredInfo) {
+  gState.authDataObj = aCredInfo.authDataObj;
   gState.publicKeyHandle = aCredInfo.authDataObj.publicKeyHandle;
 
   let newCredential = {
@@ -63,7 +64,18 @@ navigator.credentials.create({publicKey: makeCredentialOptions})
     allowList: [newCredential]
   };
 
-  return navigator.credentials.get({publicKey: publicKeyCredentialRequestOptions});
+  // Make sure the RP ID hash matches what we calculate.
+  return crypto.subtle.digest("SHA-256", string2buffer(document.domain))
+  .then(function(calculatedRpIdHash) {
+    let calcHashStr = bytesToBase64UrlSafe(new Uint8Array(calculatedRpIdHash));
+    let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(gState.authDataObj.rpIdHash));
+
+    if (calcHashStr != providedHashStr) {
+      return Promise.reject("Calculated RP ID hash must match what the browser derived.");
+    }
+
+    return navigator.credentials.get({publicKey: publicKeyCredentialRequestOptions});
+  });
 })
 .then(function(aAssertion) {
   let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
@@ -71,21 +83,6 @@ navigator.credentials.create({publicKey: makeCredentialOptions})
   gState.assertion = aAssertion;
 
   return webAuthnDecodeAuthDataArray(new Uint8Array(aAssertion.response.authenticatorData));
-})
-.then(function(aAttestationObj) {
-  gState.attestation = aAttestationObj;
-
-  // Make sure the RP ID hash matches what we calculate.
-  return crypto.subtle.digest("SHA-256", string2buffer(document.domain))
-  .then(function(calculatedRpIdHash) {
-    let calcHashStr = bytesToBase64UrlSafe(new Uint8Array(calculatedRpIdHash));
-    let providedHashStr = bytesToBase64UrlSafe(new Uint8Array(aAttestationObj.authDataObj.rpIdHash));
-
-    if (calcHashStr != providedHashStr) {
-      return Promise.reject("Calculated RP ID hash must match what the browser derived.");
-    }
-    return Promise.resolve(aAttestationObj);
-  });
 })
 .then(function(aAttestation) {
   if (new Uint8Array(aAttestation.flags) != flag_TUP) {
@@ -102,7 +99,7 @@ navigator.credentials.create({publicKey: makeCredentialOptions})
 .then(function(aSignedData) {
   let signature = gState.assertion.response.signature;
   console.log(gState.publicKeyHandle, aSignedData, signature);
-  return verifySignature(gState.publicKeyHandle, aSignedData, new Uint8Array(signature));
+  return verifySignature(gState.publicKeyHandle, aSignedData, signature);
 })
 .then(function(aSigVerifyResult) {
   signalCompletion("Signing signature verified: " + aSigVerifyResult);
