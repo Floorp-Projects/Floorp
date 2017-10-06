@@ -4352,10 +4352,29 @@ BitsArePropagated(const Element* aElement, uint32_t aBits, nsINode* aRestyleRoot
 #endif
 
 static inline void
-AssertNoBitsPropagatedFrom(nsINode* aRoot) {
+AssertNoBitsPropagatedFrom(nsINode* aRoot)
+{
 #ifdef DEBUG
   if (!aRoot || !aRoot->IsElement()) {
     return;
+  }
+
+  // If we are in the middle of unbinding a subtree, then the bits on elements
+  // in that subtree (and which we haven't yet unbound) could be dirty.
+  // Just skip asserting the absence of bits on those element that are in
+  // the unbinding subtree.  (The incorrect bits will only cause us to
+  // incorrectly choose a new restyle root if the newly dirty element is
+  // also within the unbinding subtree, so it is OK to leave them there.)
+  for (nsINode* n = aRoot; n; n = n->GetFlattenedTreeParentElementForStyle()) {
+    if (!n->IsInComposedDoc()) {
+      // Find the top-most element that is marked as no longer in the document,
+      // so we can start checking bits from its parent.
+      do {
+        aRoot = n;
+        n = n->GetFlattenedTreeParentElementForStyle();
+      } while (n && !n->IsInComposedDoc());
+      break;
+    }
   }
 
   auto* element = aRoot->GetFlattenedTreeParentElementForStyle();
