@@ -15,7 +15,6 @@ DEFINES.update(
     UCONFIG_NO_LEGACY_CONVERSION = True,
     UCONFIG_NO_TRANSLITERATION = True,
     UCONFIG_NO_REGULAR_EXPRESSIONS = True,
-    UCONFIG_NO_BREAK_ITERATION = True,
 
     # We don't need to pass data to and from legacy char* APIs.
     U_CHARSET_IS_UTF8 = True,
