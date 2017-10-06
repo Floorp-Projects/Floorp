@@ -32,6 +32,9 @@
   "requestErrorTitle": {
     "message": "ਖ਼ਰਾਬ ਹੈ।"
   },
+  "tourHeaderPageAction": {
+    "message": "ਸੰਭਾਲਣ ਦਾ ਨਵਾਂ ਢੰਗ"
+  },
   "tourSkip": {
     "message": "ਛੱਡੋ"
   },
