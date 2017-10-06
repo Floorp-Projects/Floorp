@@ -8,6 +8,7 @@
 
 #include "LinuxSched.h"
 #include "SandboxBrokerClient.h"
+#include "SandboxChrootProto.h"
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
@@ -42,6 +43,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "prenv.h"
+#include "base/posix/eintr_wrapper.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/linux/bpf_dsl/dump_bpf.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
@@ -300,6 +302,16 @@ SetThreadSandboxHandler(int signum)
 static void
 EnterChroot()
 {
+  if (!PR_GetEnv(kSandboxChrootEnvFlag)) {
+    return;
+  }
+  char msg = kSandboxChrootRequest;
+  ssize_t msg_len = HANDLE_EINTR(write(kSandboxChrootClientFd, &msg, 1));
+  MOZ_RELEASE_ASSERT(msg_len == 1);
+  msg_len = HANDLE_EINTR(read(kSandboxChrootClientFd, &msg, 1));
+  MOZ_RELEASE_ASSERT(msg_len == 1);
+  MOZ_RELEASE_ASSERT(msg == kSandboxChrootResponse);
+  close(kSandboxChrootClientFd);
 }
 
 static void
@@ -322,8 +334,6 @@ BroadcastSetThreadSandbox(const sock_fprog* aFilter)
     SANDBOX_LOG_ERROR("opendir /proc/self/task: %s\n", strerror(errno));
     MOZ_CRASH();
   }
-
-  EnterChroot();
 
   // In case this races with a not-yet-deprivileged thread cloning
   // itself, repeat iterating over all threads until we find none
@@ -439,11 +449,10 @@ BroadcastSetThreadSandbox(const sock_fprog* aFilter)
 static void
 ApplySandboxWithTSync(sock_fprog* aFilter)
 {
-  EnterChroot();
-  // At this point we're committed to using tsync, because the signal
-  // broadcast workaround needs to access procfs.  (Unless chroot
-  // isn't used... but this failure shouldn't happen in the first
-  // place, so let's not make extra special cases for it.)
+  // At this point we're committed to using tsync, because we'd have
+  // needed to allocate a signal and prevent it from being blocked on
+  // other threads (see SandboxHooks.cpp), so there's no attempt to
+  // fall back to the non-tsync path.
   if (!InstallSyscallFilter(aFilter, true)) {
     MOZ_CRASH();
   }
@@ -521,6 +530,12 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
   MOZ_RELEASE_ASSERT(gSandboxReporterClient != nullptr);
   SandboxLateInit();
 
+  // Auto-collect child processes -- mainly the chroot helper if
+  // present, but also anything setns()ed into the pid namespace (not
+  // yet implemented).  This process won't be able to waitpid them
+  // after the seccomp-bpf policy is applied.
+  signal(SIGCHLD, SIG_IGN);
+
   // Note: PolicyCompiler borrows the policy and registry for its
   // lifetime, but does not take ownership of them.
   sandbox::bpf_dsl::PolicyCompiler compiler(aPolicy.get(),
@@ -564,6 +579,10 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
     }
     BroadcastSetThreadSandbox(&fprog);
   }
+
+  // Now that all threads' filesystem accesses are being intercepted
+  // (if a broker is used) it's safe to chroot the process:
+  EnterChroot();
 }
 
 #ifdef MOZ_CONTENT_SANDBOX
