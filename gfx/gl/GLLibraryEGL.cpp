@@ -188,7 +188,7 @@ GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
     return display;
 }
 
-class AngleErrorReporting {
+class AngleErrorReporting: public angle::Platform {
 public:
     AngleErrorReporting()
     {
@@ -200,7 +200,7 @@ public:
       mFailureId = aFailureId;
     }
 
-    void logError(const char *errorMessage)
+    void logError(const char *errorMessage) override
     {
         if (!mFailureId) {
             return;
@@ -254,6 +254,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl, nsACString* const out_failureI
         d3d11ANGLE.UserForceEnable("User force-enabled D3D11 ANGLE on disabled hardware");
 
     gAngleErrorReporter.SetFailureId(out_failureId);
+    egl.fANGLEPlatformInitialize(&gAngleErrorReporter);
 
     auto guardShutdown = mozilla::MakeScopeExit([&] {
         gAngleErrorReporter.SetFailureId(nullptr);
@@ -455,6 +456,8 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
     if (mIsANGLE) {
         MOZ_ASSERT(IsExtensionSupported(ANGLE_platform_angle_d3d));
         const GLLibraryLoader::SymLoadStruct angleSymbols[] = {
+            { (PRFuncPtr*)&mSymbols.fANGLEPlatformInitialize, { "ANGLEPlatformInitialize", nullptr } },
+            { (PRFuncPtr*)&mSymbols.fANGLEPlatformShutdown, { "ANGLEPlatformShutdown", nullptr } },
             SYMBOL(GetPlatformDisplayEXT),
             END_OF_SYMBOLS
         };
