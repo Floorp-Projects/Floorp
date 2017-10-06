@@ -174,9 +174,6 @@
     <dimen name="tab_panel_grid_item_vpadding_compact">6dp</dimen>
 
     <!-- TabsListLayout -->
-    <dimen name="tab_panel_list_item_top_padding">6dp</dimen>
-
-
     <dimen name="tab_highlight_stroke_width">5dp</dimen>
 
     <!-- PageActionButtons dimensions -->
