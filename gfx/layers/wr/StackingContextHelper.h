@@ -30,15 +30,12 @@ class MOZ_RAII StackingContextHelper
 public:
   StackingContextHelper(const StackingContextHelper& aParentSC,
                         wr::DisplayListBuilder& aBuilder,
-                        nsDisplayListBuilder* aDisplayListBuilder,
-                        nsDisplayItem* aItem,
-                        nsDisplayList* aDisplayList,
-                        const gfx::Matrix4x4* aBoundTransform,
-                        uint64_t aAnimationsId,
-                        float* aOpacityPtr,
-                        gfx::Matrix4x4* aTransformPtr,
-                        gfx::Matrix4x4* aPerspectivePtr = nullptr,
                         const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
+                        const gfx::Matrix4x4* aBoundTransform = nullptr,
+                        uint64_t aAnimationsId = 0,
+                        float* aOpacityPtr = nullptr,
+                        gfx::Matrix4x4* aTransformPtr = nullptr,
+                        gfx::Matrix4x4* aPerspectivePtr = nullptr,
                         const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
                         bool aBackfaceVisible = true);
   // This version of the constructor should only be used at the root level
