@@ -12,6 +12,7 @@ from babel.messages import pofile, Catalog
 from termcolor import colored
 
 import convert
+from patch import read_po
 from env import resolve_locale
 
 __all__ = ('CommandError', 'ExportCommand', 'ImportCommand', 'InitCommand',)
@@ -26,7 +27,7 @@ def read_catalog(filename, **kwargs):
     """
     f = open(filename, 'r')
     try:
-        return pofile.read_po(f, **kwargs)
+        return read_po(f, **kwargs)
     finally:
         f.close()
 

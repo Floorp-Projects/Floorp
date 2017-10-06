@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
@@ -54,15 +55,47 @@ We can not simply ignore middle element in transition from android
 to Babel locale mapping.
 """
 
+MISSING_LOCALES = {
+    'cak': {
+        'name': "Kaqchikel",
+        'local_name': "Kaqchikel",
+        'plural_rule': 'az'
+    },
+    'zam': {
+        'name': "Miahuatlán Zapotec",
+        'local_name': "DíɁztè",
+        'plural_rule': 'az'
+    },
+    'trs': {
+        'name': "Chicahuaxtla Triqui",
+        'local_name': "Triqui",
+        'plural_rule': 'az'
+    },
+    'meh': {
+        'name': "Mixteco Yucuhiti",
+        'local_name': "Tu´un savi ñuu Yasi'í Yuku Iti",
+        'plural_rule': 'id'
+    },
+    'mix': {
+        'name': "Mixtepec Mixtec",
+        'local_name': "Tu'un savi",
+        'plural_rule': 'id'
+    }
+}
+
 
 class Language(object):
-    """Represents a single language.
-    """
+    """Represents a single language."""
 
     def __init__(self, code, env=None):
         self.code = code
         self.env = env
-        self.locale = Locale.parse(code, sep='-') if code else None
+        if code and code in MISSING_LOCALES:
+            self.locale = Locale.parse(MISSING_LOCALES[code]['plural_rule'], sep='-')
+        elif code:
+            self.locale = Locale.parse(code, sep='-')
+        else:
+            self.locale = None
 
     def __unicode__(self):  # pragma: no cover
         return str(self.code)
