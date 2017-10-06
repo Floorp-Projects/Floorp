@@ -510,8 +510,7 @@ AccessibleCaretManager::DragCaret(const nsPoint& aPoint)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsPoint point(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition);
-  DragCaretInternal(point);
+  DragCaretInternal(aPoint);
   UpdateCarets();
   return NS_OK;
 }
@@ -1219,7 +1218,8 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   MOZ_ASSERT(rootFrame, "We need root frame to compute caret dragging!");
 
-  nsPoint point = AdjustDragBoundary(aPoint);
+  nsPoint point = AdjustDragBoundary(
+    nsPoint(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition));
 
   // Find out which content we point to
   nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
