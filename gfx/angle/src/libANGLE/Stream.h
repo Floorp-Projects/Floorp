@@ -96,7 +96,7 @@ class Stream final : angle::NonCopyable
     bool isConsumerBoundToContext(const gl::Context *context) const;
 
     // Producer methods
-    Error validateD3D11NV12Texture(void *texture, const AttributeMap &attributes) const;
+    Error validateD3D11NV12Texture(void *texture) const;
     Error postD3D11NV12Texture(void *texture, const AttributeMap &attributes);
 
   private:

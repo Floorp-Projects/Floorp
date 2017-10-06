@@ -148,7 +148,7 @@ gl::Error FramebufferNULL::readPixels(const gl::Context *context,
 
     GLuint rowBytes = 0;
     ANGLE_TRY_RESULT(
-        glFormat.computeRowPitch(origArea.width, packState.alignment, packState.rowLength),
+        glFormat.computeRowPitch(type, origArea.width, packState.alignment, packState.rowLength),
         rowBytes);
 
     GLuint skipBytes = 0;

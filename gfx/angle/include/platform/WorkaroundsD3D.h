@@ -100,7 +100,7 @@ struct WorkaroundsD3D
     // On some Intel drivers, using clear() may not take effect. One of such situation is to clear
     // a target with width or height < 16. To work around this bug, we call clear() twice on these
     // platforms. Tracking bug: https://crbug.com/655534
-    bool callClearTwice = false;
+    bool callClearTwiceOnSmallTarget = false;
 
     // On some Intel drivers, copying from staging storage to constant buffer storage does not
     // seem to work. Work around this by keeping system memory storage as a canonical reference
