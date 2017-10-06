@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <p>Web Console test for bug 595934 - category "malformed-xml".</p>
+  </body>
