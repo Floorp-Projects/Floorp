@@ -103,7 +103,6 @@ DEFAULT_EXCLUDES = [
     r"^.*/partner-repacks.*$",
     r"^.*.checksums(\.asc)?$",
     r"^.*/logs/.*$",
-    r"^.*/jsshell.*$",
     r"^.*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",

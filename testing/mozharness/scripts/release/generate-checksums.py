@@ -136,6 +136,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
                 r"^.*Setup.*\.exe$",
                 r"^.*\.xpi$",
                 r"^.*fennec.*\.apk$",
+                r"^.*/jsshell.*$",
             ]
 
     def _get_bucket_name(self):
