@@ -256,6 +256,9 @@ public:
    *
    * @param aElement the element linking to the the stylesheet.  May be null.
    * @param aURL the URL of the sheet.
+   * @param aTriggeringPrincipal the triggering principal for the load. May be
+   *        null, in which case the NodePrincipal() of the element (or
+   *        document if aElement is null) should be used.
    * @param aTitle the title of the sheet.
    * @param aMedia the media string for the sheet.
    * @param aHasAlternateRel whether the rel for this link included
@@ -269,6 +272,7 @@ public:
    */
   nsresult LoadStyleLink(nsIContent* aElement,
                          nsIURI* aURL,
+                         nsIPrincipal* aTriggeringPrincipal,
                          const nsAString& aTitle,
                          const nsAString& aMedia,
                          bool aHasAlternateRel,

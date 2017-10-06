@@ -284,6 +284,12 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
+    mTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+        this, aValue ? aValue->GetStringValue() : EmptyString(),
+        aSubjectPrincipal);
+  }
+
   if (aValue) {
     if (aNameSpaceID == kNameSpaceID_None &&
         (aName == nsGkAtoms::href ||
@@ -401,14 +407,20 @@ HTMLLinkElement::GetHrefURI() const
 }
 
 already_AddRefed<nsIURI>
-HTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
+HTMLLinkElement::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
 {
   *aIsInline = false;
+  *aTriggeringPrincipal = nullptr;
+
   nsAutoString href;
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
   if (href.IsEmpty()) {
     return nullptr;
   }
+
+  nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
+  prin.forget(aTriggeringPrincipal);
+
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   return uri.forget();
 }
