@@ -15,6 +15,9 @@ add_task(async function setup() {
   ]});
 });
 
+// The following two tests need to be skipped for the time being, since we're
+// no longer showing the launcher options on about:home. When we remove about:home
+// and all of it's code, we can delete these tests
 add_task(async function() {
   info("Pressing Space while the Addons button is focused should activate it");
 
@@ -37,7 +40,7 @@ add_task(async function() {
     is(browser.currentURI.spec, "about:addons",
       "Should have seen the about:addons tab");
   });
-});
+}).skip();
 
 add_task(async function() {
   info("Sync button should open about:preferences#sync");
@@ -59,7 +62,7 @@ add_task(async function() {
     is(result.params.urlParams.entrypoint, "abouthome",
       "openPreferences should be called with abouthome entrypoint");
   });
-});
+}).skip();
 
 add_task(async function() {
   info("Pressing any key should focus the search box in the page, and send the key to it");

@@ -7,8 +7,8 @@
 html {
   font: message-box;
   font-size: 100%;
-  background-color: hsl(0,0%,95%);
-  color: #000;
+  background-color: #F9F9FA;
+  color: #0C0C0D;
   height: 100%;
 }
 
@@ -37,127 +37,91 @@ a {
 
 #topSection {
   text-align: center;
+  margin-top: -90px;
+  position: relative;
 }
 
 #brandLogo {
   height: 192px;
   width: 192px;
-  margin: 22px auto 31px;
+  margin: 0 auto 20px;
   background-image: url("chrome://branding/content/about-logo.png");
   background-size: 192px auto;
   background-position: center center;
   background-repeat: no-repeat;
 }
 
-#searchIconAndTextContainer,
+#searchWrapper,
 #snippets {
   width: 470px;
 }
 
-#searchIconAndTextContainer {
-  display: -moz-box;
-  height: 36px;
+#searchWrapper {
+  cursor: default;
+  display: flex;
   position: relative;
-}
-
-#searchIcon {
-  border: 1px transparent;
-  padding: 0;
-  margin: 0;
-  width: 36px;
+  margin: 0 auto;
   height: 36px;
-  background: url("chrome://browser/skin/search-indicator-magnifying-glass.svg") center center no-repeat;
-  position: absolute;
 }
 
 #searchText {
-  margin-left: 0;
-  -moz-box-flex: 1;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-inline-start: 34px;
-  padding-inline-end: 8px;
-  background: hsla(0,0%,100%,.9) padding-box;
-  border: 1px solid;
-  border-radius: 2px 0 0 2px;
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
-  box-shadow: 0 1px 0 hsla(210,65%,9%,.02) inset,
-              0 0 2px hsla(210,65%,9%,.1) inset,
-              0 1px 0 hsla(0,0%,100%,.2);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   color: inherit;
-  unicode-bidi: plaintext;
+  padding: 0;
+  padding-inline-end: 36px;
+  padding-inline-start: 35px;
+  width: 100%;
+  font-size: 15px;
 }
 
-#searchText:dir(rtl) {
-  border-radius: 0 2px 2px 0;
+#searchText:active,
+#searchText:focus {
+  border-color: #0A84FF;
+  box-shadow: 0 0 0 2px #0A84FF;
 }
 
-#searchText[aria-expanded="true"] {
-  border-radius: 2px 0 0 0;
-}
-
-#searchText[aria-expanded="true"]:dir(rtl) {
-  border-radius: 0 2px 0 0;
-}
-
-#searchText[keepfocus],
-#searchText:focus,
-#searchText[autofocus] {
-  border-color: hsla(206,100%,60%,.6) hsla(206,76%,52%,.6) hsla(204,100%,40%,.6);
+#searchIcon {
+  background: url("chrome://browser/skin/search-glass.svg") no-repeat 12px center/16px;
+  fill: rgba(12, 12, 13, 0.4);
+  -moz-context-properties: fill;
+  position: absolute;
+  offset-inline-start: 0;
+  height: 35px;
+  width: 35px;
 }
 
 #searchSubmit {
-  margin-inline-start: -1px;
-  color: transparent;
-  background: url("chrome://browser/skin/search-arrow-go.svg") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+  background: url("chrome://browser/skin/forward.svg") no-repeat center center;
+  border-radius: 0 3px 3px 0;
+  border: 0;
+  width: 36px;
+  fill: rgba(12, 12, 13, 0.4);
   -moz-context-properties: fill;
-  fill: #616366;
-  padding: 0;
-  border: 1px solid;
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2) transparent;
-  border-radius: 0 2px 2px 0;
-  box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
-              0 1px 0 hsla(0,0%,100%,.2);
+  background-size: 16px 16px;
+  height: 100%;
+  offset-inline-end: 0;
+  position: absolute;
+  color: transparent;
+}
+
+#searchSubmit:focus, #searchSubmit:hover {
+  background-color: rgba(12, 12, 13, 0.1);
   cursor: pointer;
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-  width: 50px;
+}
+
+#searchSubmit:active {
+  background-color: rgba(12, 12, 13, 0.15);
 }
 
 #searchSubmit:dir(rtl) {
   transform: scaleX(-1);
 }
 
-#searchText:focus + #searchSubmit,
-#searchText[keepfocus] + #searchSubmit,
-#searchText + #searchSubmit:hover,
-#searchText[autofocus] + #searchSubmit {
-  border-color: #59b5fc #45a3e7 #3294d5;
-}
-
-#searchText:focus + #searchSubmit,
-#searchText[keepfocus] + #searchSubmit,
-#searchText[autofocus] + #searchSubmit {
-  background-image: url("chrome://browser/skin/search-arrow-go.svg"), linear-gradient(#4cb1ff, #1793e5);
-  fill: white;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
-              0 0 0 1px hsla(0,0%,100%,.1) inset,
-              0 1px 0 hsla(210,54%,20%,.03);
-}
-
-#searchText + #searchSubmit:hover {
-  background-image: url("chrome://browser/skin/search-arrow-go.svg"), linear-gradient(#66bdff, #0d9eff);
-  fill: white;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
-              0 0 0 1px hsla(0,0%,100%,.1) inset,
-              0 1px 0 hsla(210,54%,20%,.03),
-              0 0 4px hsla(206,100%,20%,.2);
-}
-
-#searchText + #searchSubmit:hover:active {
-  box-shadow: 0 1px 1px hsla(211,79%,6%,.1) inset,
-              0 0 1px hsla(211,79%,6%,.2) inset;
-  transition-duration: 0ms;
+.contentSearchSuggestionTable {
+  border: 0;
+  transform: translateY(2px);
 }
 
 #defaultSnippet1,
@@ -203,7 +167,7 @@ a {
 }
 
 #launcher {
-  display: -moz-box;
+  display: none;
   -moz-box-align: center;
   -moz-box-pack: center;
   width: 100%;
@@ -215,7 +179,7 @@ a {
 
 #launcher:not([session]),
 body[narrow] #launcher[session] {
-  display: block; /* display separator and restore button on separate lines */
+  display: none; /* display separator and restore button on separate lines */
   text-align: center;
   white-space: nowrap; /* prevent navigational buttons from wrapping */
 }
@@ -346,28 +310,6 @@ body[narrow] #restorePreviousSession::before {
   width: 32px;
 }
 
-#aboutMozilla {
-  display: block;
-  position: relative; /* pin wordmark to edge of document, not of viewport */
-  -moz-box-ordinal-group: 0;
-  opacity: .2;
-  transition: opacity 150ms;
-}
-
-#aboutMozilla:hover {
-  opacity: .6;
-}
-
-#aboutMozilla::before {
-  content: url("chrome://browser/content/abouthome/mozilla.svg");
-  display: block;
-  position: absolute;
-  top: 12px;
-  offset-inline-end: 12px;
-  width: 67px;
-  height: 19px;
-}
-
 /* [HiDPI]
  * At resolutions above 1dppx, prefer downscaling the 2x Retina graphics
  * rather than upscaling the original-size ones (bug 818940).
@@ -436,4 +378,53 @@ body[narrow] #restorePreviousSession::before {
     transform: scale(-0.5, 0.5) translateX(24px);
     transform-origin: top center;
   }
+}
+
+/* Overrides for onboarding
+   These overrides hide the Firefox logo (since about:home has a
+   large logo already) and make the helper icon larger */
+
+#about-home #onboarding-notification-body,
+#about-home #onboarding-notification-tour-title {
+  color: #0C0C0D;
+}
+
+#about-home #onboarding-notification-body {
+  padding-inline-start: 46px;
+}
+
+#about-home #onboarding-notification-tour-message {
+  margin-bottom: 0;
+}
+
+#about-home #onboarding-notification-tour-icon {
+  display: none;
+}
+
+#about-home #onboarding-notification-tour-title::before {
+  display: block;
+  position: absolute;
+  top: 0;
+  offset-inline-start: 0;
+  height: 100%;
+  width: 42px;
+  background-size: 42px;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: #4A4A4F;
+}
+
+#about-home #onboarding-notification-bar {
+  z-index: 100;
+}
+
+/* Overrides for snippets
+   These changes make it so that snippets do not affect the height of the
+   main element, so that elements don't move around on page load. */
+#snippetContainer {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin-left: -235px;
+  width: 470px;
 }
