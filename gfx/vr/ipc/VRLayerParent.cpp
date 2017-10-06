@@ -71,7 +71,7 @@ VRLayerParent::RecvSubmitFrame(const layers::SurfaceDescriptor &aTexture,
       // Because VR compositor still shares the same graphics device with Compositor thread.
       // We have to post sumbit frame tasks to Compositor thread.
       // TODO: Move SubmitFrame to Bug 1392217.
-      loop->PostTask(NewRunnableMethod<VRDisplayHost*, const layers::SurfaceDescriptor&, uint64_t,
+      loop->PostTask(NewRunnableMethod<VRDisplayHost*, const layers::SurfaceDescriptor, uint64_t,
                                        const gfx::Rect&, const gfx::Rect&>(
                      "gfx::VRLayerParent::SubmitFrame",
                      this,
