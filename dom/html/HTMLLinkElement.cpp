@@ -77,7 +77,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
                                              nsGenericHTMLElement,
-                                             nsIDOMHTMLLinkElement,
                                              nsIStyleSheetLinkingElement,
                                              Link)
 
@@ -90,13 +89,6 @@ HTMLLinkElement::Disabled()
   return ss && ss->Disabled();
 }
 
-NS_IMETHODIMP
-HTMLLinkElement::GetMozDisabled(bool* aDisabled)
-{
-  *aDisabled = Disabled();
-  return NS_OK;
-}
-
 void
 HTMLLinkElement::SetDisabled(bool aDisabled)
 {
@@ -104,23 +96,6 @@ HTMLLinkElement::SetDisabled(bool aDisabled)
     ss->SetDisabled(aDisabled);
   }
 }
-
-NS_IMETHODIMP
-HTMLLinkElement::SetMozDisabled(bool aDisabled)
-{
-  SetDisabled(aDisabled);
-  return NS_OK;
-}
-
-
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Charset, charset)
-NS_IMPL_URI_ATTR(HTMLLinkElement, Href, href)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Hreflang, hreflang)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Media, media)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Rel, rel)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Rev, rev)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
 
 void
 HTMLLinkElement::OnDNSPrefetchRequested()
