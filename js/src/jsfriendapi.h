@@ -3077,6 +3077,12 @@ ToWindowIfWindowProxy(JSObject* obj);
 extern bool
 AddMozDateTimeFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
 
+// Create and add the Intl.RelativeTimeFormat constructor function to the provided
+// object.  This function throws if called more than once per realm/global
+// object.
+extern bool
+AddRelativeTimeFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
+
 class MOZ_STACK_CLASS JS_FRIEND_API(AutoAssertNoContentJS)
 {
   public:
