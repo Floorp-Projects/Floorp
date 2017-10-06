@@ -82,6 +82,12 @@
   "tourBodyIntro": {
     "message": "Snimite, spremite i dijelite snimke bez da napuštate Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Novi način za spremanje"
+  },
+  "tourBodyPageAction": {
+    "message": "Proširite izbornik radnji stranice u adresnoj traci svaki puta kada želite snimiti ekran."
+  },
   "tourHeaderClickAndDrag": {
     "message": "Snimite ono što želite"
   },

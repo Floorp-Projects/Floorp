@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Зображення було обрізано до $PIXELS$ пікселів.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Сталася помилка."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Робіть знімки екрану, зберігайте та діліться ними прямо в Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Новий спосіб збереження"
+  },
+  "tourBodyPageAction": {
+    "message": "Розгорніть меню дій для сторінки в панелі адреси, коли ви хочете зробити знімок екрану."
   },
   "tourHeaderClickAndDrag": {
     "message": "Робіть знімки чого завгодно"

@@ -6,10 +6,10 @@
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "Buat Tangkapan layar"
+    "message": "Buat Tangkapan Layar"
   },
   "myShotsLink": {
-    "message": "Gambar Saya"
+    "message": "Tangkapan Saya"
   },
   "screenshotInstructions": {
     "message": "Seret atau klik pada laman untuk memilih area. Tekan ESC untuk membatalkan."
@@ -36,6 +36,14 @@
     "message": "Tautan ke gambar Anda telah disalin ke papan klip. Tekan $META_KEY$-V untuk menempelkan.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Gambar ini telah dipotong menjadi $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -82,6 +90,12 @@
   "tourBodyIntro": {
     "message": "Ambil, simpan, dan bagikan tangkapan layar tanpa meninggalkan Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Cara baru untuk menyimpan"
+  },
+  "tourBodyPageAction": {
+    "message": "Bentangkan menu tindakan laman di bilah alamat setiap kali Anda ingin buat tangkapan layar."
+  },
   "tourHeaderClickAndDrag": {
     "message": "Rekam Bagian Yang Anda Inginkan"
   },
@@ -101,7 +115,7 @@
     "message": "Simpan potongan tangkapan Anda ke Web agar mudah dibagikan, atau unduh ke komputer. Anda pun dapat mengeklik pada tombol Gambar Saya untuk menemukan semua tangkapan yang pernah Anda rekam."
   },
   "tourSkip": {
-    "message": "Lewati"
+    "message": "LEWATI"
   },
   "tourNext": {
     "message": "Salindia Selanjutnya"
@@ -130,6 +144,6 @@
     "message": "Kebijakan Privasi"
   },
   "libraryLabel": {
-    "message": "Tangkapan Layar"
+    "message": "Screenshots"
   }
 }
