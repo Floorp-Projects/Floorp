@@ -677,7 +677,7 @@ class AddressRadixTree {
   void** mRoot;
 
 public:
-  static AddressRadixTree<Bits>* Create();
+  bool Init();
 
   inline void* Get(void* aAddr);
 
@@ -1069,7 +1069,7 @@ struct ArenaTreeTrait
  * Chunks.
  */
 
-static AddressRadixTree<(SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT>* gChunkRTree;
+static AddressRadixTree<(SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
 
 /* Protects chunk-related data structures. */
 static malloc_mutex_t	chunks_mtx;
@@ -1750,25 +1750,13 @@ pages_copy(void *dest, const void *src, size_t n)
 #endif
 
 template <size_t Bits>
-AddressRadixTree<Bits>*
-AddressRadixTree<Bits>::Create()
+bool
+AddressRadixTree<Bits>::Init()
 {
-  AddressRadixTree<Bits>* ret;
+  malloc_spin_init(&mLock);
 
-  ret = (AddressRadixTree<Bits>*)base_calloc(1, sizeof(AddressRadixTree<Bits>));
-  if (!ret) {
-    return nullptr;
-  }
-
-  malloc_spin_init(&ret->mLock);
-
-  ret->mRoot = (void**)base_calloc(1 << kBitsAtLevel1, sizeof(void*));
-  if (!ret->mRoot) {
-    // We leak the rtree here, since there's no generic base deallocation.
-    return nullptr;
-  }
-
-  return ret;
+  mRoot = (void**)base_calloc(1 << kBitsAtLevel1, sizeof(void*));
+  return mRoot;
 }
 
 template <size_t Bits>
@@ -2146,7 +2134,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
 RETURN:
 
 	if (ret && base == false) {
-		if (!gChunkRTree->Set(ret, ret)) {
+		if (!gChunkRTree.Set(ret, ret)) {
 			chunk_dealloc(ret, size, UNKNOWN_CHUNK);
 			return nullptr;
 		}
@@ -2278,7 +2266,7 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 	MOZ_ASSERT(size != 0);
 	MOZ_ASSERT((size & chunksize_mask) == 0);
 
-	gChunkRTree->Unset(chunk);
+	gChunkRTree.Unset(chunk);
 
 	if (CAN_RECYCLE(size)) {
 		size_t recycled_so_far = load_acquire_z(&recycled_size);
@@ -3480,7 +3468,7 @@ isalloc_validate(const void* ptr)
     return 0;
   }
 
-  if (!gChunkRTree->Get(chunk)) {
+  if (!gChunkRTree.Get(chunk)) {
     return 0;
   }
 
@@ -3568,7 +3556,7 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   }
 
   // It's not a huge allocation. Check if we have a known chunk.
-  if (!gChunkRTree->Get(chunk)) {
+  if (!gChunkRTree.Get(chunk)) {
     *aInfo = { TagUnknown, nullptr, 0 };
     return;
   }
@@ -4508,8 +4496,7 @@ MALLOC_OUT:
    */
   thread_arena.set(gMainArena);
 
-  gChunkRTree = AddressRadixTree<(SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT>::Create();
-  if (!gChunkRTree) {
+  if (!gChunkRTree.Init()) {
     return true;
   }
 
