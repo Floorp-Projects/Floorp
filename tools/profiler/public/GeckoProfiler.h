@@ -37,8 +37,6 @@
 #define PROFILER_SET_JS_CONTEXT(cx)
 #define PROFILER_CLEAR_JS_CONTEXT()
 
-#define PROFILER_FEATURE_ACTIVE(feature) false
-
 #define AUTO_PROFILER_LABEL(label, category)
 #define AUTO_PROFILER_LABEL_DYNAMIC(label, category, dynamicStr)
 
@@ -106,33 +104,30 @@ class TimeStamp;
   /* Get the JS engine to emit pseudostack entries in prologues/epilogues */ \
   macro(2, "js", JS) \
   \
-  /* Dump the layer tree with the textures. */ \
-  macro(3, "layersdump", LayersDump) \
-  \
   /* Include the C++ leaf node if not stackwalking. */ \
   /* The DevTools profiler doesn't want the native addresses. */ \
-  macro(4, "leaf", Leaf) \
+  macro(3, "leaf", Leaf) \
   \
   /* Add main thread I/O to the profile. */ \
-  macro(5, "mainthreadio", MainThreadIO) \
+  macro(4, "mainthreadio", MainThreadIO) \
   \
   /* Add memory measurements (e.g. RSS). */ \
-  macro(6, "memory", Memory) \
+  macro(5, "memory", Memory) \
   \
   /* Do not include user-identifiable information. */ \
-  macro(7, "privacy", Privacy) \
+  macro(6, "privacy", Privacy) \
   \
   /* Restyle profiling. */ \
-  macro(8, "restyle", Restyle) \
+  macro(7, "restyle", Restyle) \
   \
   /* Walk the C++ stack. Not available on all platforms. */ \
-  macro(9, "stackwalk", StackWalk) \
+  macro(8, "stackwalk", StackWalk) \
   \
   /* Start profiling with feature TaskTracer. */ \
-  macro(10, "tasktracer", TaskTracer) \
+  macro(9, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(11, "threads", Threads)
+  macro(10, "threads", Threads)
 
 struct ProfilerFeature
 {
@@ -286,7 +281,6 @@ uint32_t profiler_get_available_features();
 // active. Returns false if the profiler is inactive. Note: the return value
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
-#define PROFILER_FEATURE_ACTIVE(feature) profiler_feature_active(feature)
 bool profiler_feature_active(uint32_t aFeature);
 
 // Get the params used to start the profiler. Returns 0 and an empty vector
