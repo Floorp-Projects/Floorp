@@ -150,10 +150,6 @@ DownmixAndInterleave(const nsTArray<const SrcT*>& aChannelData,
 struct AudioChunk {
   typedef mozilla::AudioSampleFormat SampleFormat;
 
-  AudioChunk()
-    : mPrincipalHandle(PRINCIPAL_HANDLE_NONE)
-  {}
-
   // Generic methods
   void SliceTo(StreamTime aStart, StreamTime aEnd)
   {
@@ -249,18 +245,19 @@ struct AudioChunk {
 
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
 
-  StreamTime mDuration; // in frames within the buffer
+  StreamTime mDuration = 0; // in frames within the buffer
   RefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
   // one pointer per channel; empty if and only if mBuffer is null
   AutoTArray<const void*,GUESS_AUDIO_CHANNELS> mChannelData;
-  float mVolume; // volume multiplier to apply (1.0f if mBuffer is nonnull)
-  SampleFormat mBufferFormat; // format of frames in mBuffer (only meaningful if mBuffer is nonnull)
+  float mVolume = 1.0f; // volume multiplier to apply
+  // format of frames in mBuffer (or silence if mBuffer is null)
+  SampleFormat mBufferFormat = AUDIO_FORMAT_SILENCE;
 #ifdef MOZILLA_INTERNAL_API
   mozilla::TimeStamp mTimeStamp;           // time at which this has been fetched from the MediaEngine
 #endif
   // principalHandle for the data in this chunk.
   // This can be compared to an nsIPrincipal* when back on main thread.
-  PrincipalHandle mPrincipalHandle;
+  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 };
 
 /**
