@@ -316,15 +316,17 @@ SurfaceFactory::~SurfaceFactory()
 }
 
 already_AddRefed<layers::SharedSurfaceTextureClient>
-SurfaceFactory::NewTexClient(const gfx::IntSize& size)
+SurfaceFactory::NewTexClient(const gfx::IntSize& size, const layers::LayersIPCChannel* aLayersChannel)
 {
     while (!mRecycleFreePool.empty()) {
         RefPtr<layers::SharedSurfaceTextureClient> cur = mRecycleFreePool.front();
         mRecycleFreePool.pop();
 
-        if (cur->Surf()->mSize == size) {
-            cur->Surf()->WaitForBufferOwnership();
-            return cur.forget();
+        if (cur->Surf()->mSize == size){
+            if (aLayersChannel && aLayersChannel == cur->GetAllocator()) {
+                cur->Surf()->WaitForBufferOwnership();
+                return cur.forget();
+            }
         }
 
         StopRecycling(cur);
