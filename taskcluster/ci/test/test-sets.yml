@@ -101,9 +101,9 @@ reftest-stylo:
     - reftest-stylo
 
 qr-talos:
-    # - talos-chrome # fails with layers-free
+    - talos-chrome
     - talos-dromaeojs
-    # - talos-g1 # fails with layers-free
+    - talos-g1
     # - talos-g2 # doesn't work with QR yet
     - talos-g3
     - talos-g4
