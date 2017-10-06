@@ -506,6 +506,10 @@ AccessibleCaretManager::DragCaret(const nsPoint& aPoint)
   MOZ_ASSERT(mActiveCaret);
   MOZ_ASSERT(GetCaretMode() != CaretMode::None);
 
+  if (!mPresShell || !mPresShell->GetRootFrame() || !GetSelection()) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsPoint point(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition);
   DragCaretInternal(point);
   UpdateCarets();
@@ -1210,14 +1214,10 @@ AccessibleCaretManager::CompareTreePosition(nsIFrame* aStartFrame,
 nsresult
 AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 {
-  if (!mPresShell) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(mPresShell);
 
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
-  if (!rootFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(rootFrame, "We need root frame to compute caret dragging!");
 
   nsPoint point = AdjustDragBoundary(aPoint);
 
@@ -1230,9 +1230,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
   }
 
   RefPtr<nsFrameSelection> fs = GetFrameSelection();
-  if (!fs) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(fs);
 
   nsresult result;
   nsIFrame* newFrame = nullptr;
@@ -1256,9 +1254,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
   }
 
   Selection* selection = GetSelection();
-  if (!selection) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(selection);
 
   if (GetCaretMode() == CaretMode::Selection &&
       !RestrictCaretDraggingOffsets(offsets)) {
