@@ -17,7 +17,6 @@ UNIFIED_SOURCES += [
     '../common/MemoryBuffer.cpp',
     '../common/string_utils.cpp',
     '../common/system_utils_win.cpp',
-    '../common/third_party/base/anglebase/sha1.cc',
     '../common/third_party/murmurhash/MurmurHash3.cpp',
     '../common/tls.cpp',
     '../common/uniform_type_info_autogen.cpp',
@@ -32,6 +31,7 @@ UNIFIED_SOURCES += [
     '../compiler/preprocessor/MacroExpander.cpp',
     '../compiler/preprocessor/Preprocessor.cpp',
     '../compiler/preprocessor/Token.cpp',
+    '../compiler/preprocessor/Tokenizer.cpp',
     '../compiler/translator/AddAndTrueToLoopCondition.cpp',
     '../compiler/translator/AddDefaultReturnStatements.cpp',
     '../compiler/translator/ArrayReturnValueToOutParameter.cpp',
@@ -117,12 +117,12 @@ UNIFIED_SOURCES += [
     '../compiler/translator/ValidateGlobalInitializer.cpp',
     '../compiler/translator/ValidateLimitations.cpp',
     '../compiler/translator/ValidateMaxParameters.cpp',
+    '../compiler/translator/ValidateOutputs.cpp',
     '../compiler/translator/ValidateSwitch.cpp',
     '../compiler/translator/ValidateVaryingLocations.cpp',
     '../compiler/translator/VariablePacker.cpp',
     '../compiler/translator/VersionGLSL.cpp',
     '../third_party/compiler/ArrayBoundsClamper.cpp',
-    '../third_party/systeminfo/SystemInfo.cpp',
     'angletypes.cpp',
     'AttributeMap.cpp',
     'Buffer.cpp',
@@ -279,20 +279,19 @@ UNIFIED_SOURCES += [
     'WorkerThread.cpp',
 ]
 SOURCES += [
-    '../compiler/preprocessor/Tokenizer.cpp',
     '../compiler/translator/EmulateGLFragColorBroadcast.cpp',
     '../compiler/translator/glslang_lex.cpp',
     '../compiler/translator/glslang_tab.cpp',
     '../compiler/translator/RewriteTexelFetchOffset.cpp',
     '../compiler/translator/RewriteUnaryMinusOperatorInt.cpp',
     '../compiler/translator/ShaderLang.cpp',
-    '../compiler/translator/ValidateOutputs.cpp',
     '../gpu_info_util/SystemInfo.cpp',
     '../gpu_info_util/SystemInfo_win.cpp',
     '../image_util/copyimage.cpp',
     '../image_util/imageformats.cpp',
     '../image_util/loadimage.cpp',
     '../image_util/loadimage_etc.cpp',
+    '../third_party/systeminfo/SystemInfo.cpp',
     'Display.cpp',
     'renderer/d3d/DisplayD3D.cpp',
     'renderer/d3d/HLSLCompiler.cpp',
@@ -331,11 +330,11 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/Trim11.cpp',
         'renderer/d3d/d3d11/VertexArray11.cpp',
         'renderer/d3d/d3d11/VertexBuffer11.cpp',
+        'renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp',
     ]
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     SOURCES += [
         'renderer/d3d/d3d11/SwapChain11.cpp',
-        'renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp',
     ]
 
 
@@ -382,7 +381,7 @@ DEFINES['EGLAPI'] = ""
 
 
 
-LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/base', '../../src/third_party/khronos', ]
+LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/numerics', '../../src/third_party/khronos', '../../src/third_party/mrucache' ]
 
 DEFINES['LIBANGLE_IMPLEMENTATION'] = "1"
 DEFINES['ANGLE_ENABLE_HLSL'] = "1"
