@@ -381,9 +381,9 @@ private:
     GetOwner()->UpdateReadyState();
   }
 
-  virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus()
+  MediaDecoderOwner::NextFrameStatus NextFrameStatus() const
   {
-    return !IsEnded() ? mNextFrameStatus : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+    return mNextFrameStatus;
   }
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus();
