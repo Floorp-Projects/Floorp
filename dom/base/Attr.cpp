@@ -237,16 +237,12 @@ Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
 void
 Attr::GetNodeValueInternal(nsAString& aNodeValue)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
-
   GetValue(aNodeValue);
 }
 
 void
 Attr::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
-
   aError = SetValue(aNodeValue);
 }
 
@@ -280,8 +276,6 @@ void
 Attr::GetTextContentInternal(nsAString& aTextContent,
                              OOMReporter& aError)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
-
   GetValue(aTextContent);
 }
 
@@ -289,8 +283,6 @@ void
 Attr::SetTextContentInternal(const nsAString& aTextContent,
                              ErrorResult& aError)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
-
   SetNodeValueInternal(aTextContent, aError);
 }
 

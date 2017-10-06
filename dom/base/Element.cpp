@@ -1343,7 +1343,6 @@ Element::RemoveAttribute(const nsAString& aName, ErrorResult& aError)
 Attr*
 Element::GetAttributeNode(const nsAString& aName)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNode);
   return Attributes()->GetNamedItem(aName);
 }
 
@@ -1363,7 +1362,6 @@ Element::RemoveAttributeNode(Attr& aAttribute,
     return nullptr;
   }
 
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
   nsAutoString nameSpaceURI;
   aAttribute.NodeInfo()->GetNamespaceURI(nameSpaceURI);
   return Attributes()->RemoveNamedItemNS(nameSpaceURI, aAttribute.NodeInfo()->LocalName(), aError);
@@ -1435,8 +1433,6 @@ Attr*
 Element::GetAttributeNodeNS(const nsAString& aNamespaceURI,
                             const nsAString& aLocalName)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNodeNS);
-
   return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName);
 }
 
