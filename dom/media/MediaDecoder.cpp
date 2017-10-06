@@ -374,7 +374,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mHasSuspendTaint(aInit.mHasSuspendTaint)
   , mPlaybackRate(aInit.mPlaybackRate)
   , INIT_MIRROR(mBuffered, TimeIntervals())
-  , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE)
   , INIT_MIRROR(mCurrentPosition, TimeUnit::Zero())
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
   , INIT_MIRROR(mPlaybackPosition, 0)
@@ -404,7 +403,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
 
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
-  mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
   // depends on the download rate.
   mWatchManager.Watch(mBuffered, &MediaDecoder::UpdateReadyState);
@@ -452,6 +450,7 @@ MediaDecoder::Shutdown()
     mOnEncrypted.Disconnect();
     mOnWaitingForKey.Disconnect();
     mOnDecodeWarning.Disconnect();
+    mOnNextFrameStatus.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()
       ->Then(mAbstractMainThread, __func__, this,
@@ -557,6 +556,36 @@ MediaDecoder::OnDecoderDoctorEvent(DecoderDoctorEvent aEvent)
   diags.StoreEvent(doc, aEvent, __func__);
 }
 
+static const char*
+NextFrameStatusToStr(MediaDecoderOwner::NextFrameStatus aStatus)
+{
+  switch (aStatus) {
+    case MediaDecoderOwner::NEXT_FRAME_AVAILABLE:
+      return "NEXT_FRAME_AVAILABLE";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE:
+      return "NEXT_FRAME_UNAVAILABLE";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+      return "NEXT_FRAME_UNAVAILABLE_BUFFERING";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING:
+      return "NEXT_FRAME_UNAVAILABLE_SEEKING";
+    case MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED:
+      return "NEXT_FRAME_UNINITIALIZED";
+  }
+  return "UNKNOWN";
+}
+
+void
+MediaDecoder::OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus aStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  if (mNextFrameStatus != aStatus) {
+    LOG("Changed mNextFrameStatus to %s", NextFrameStatusToStr(aStatus));
+    mNextFrameStatus = aStatus;
+    UpdateReadyState();
+  }
+}
+
 void
 MediaDecoder::FinishShutdown()
 {
@@ -606,6 +635,8 @@ MediaDecoder::SetStateMachineParameters()
     mAbstractMainThread, this, &MediaDecoder::OnDecoderDoctorEvent);
   mOnMediaNotSeekable = mDecoderStateMachine->OnMediaNotSeekable().Connect(
     mAbstractMainThread, this, &MediaDecoder::OnMediaNotSeekable);
+  mOnNextFrameStatus = mDecoderStateMachine->OnNextFrameStatus().Connect(
+    mAbstractMainThread, this, &MediaDecoder::OnNextFrameStatus);
 
   mOnEncrypted = mReader->OnEncrypted().Connect(
     mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DispatchEncrypted);
@@ -1247,7 +1278,6 @@ MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
   MOZ_ASSERT(aObject);
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
   mBuffered.Connect(aObject->CanonicalBuffered());
-  mNextFrameStatus.Connect(aObject->CanonicalNextFrameStatus());
   mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
   mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
   mIsAudioDataAudible.Connect(aObject->CanonicalIsAudioDataAudible());
@@ -1259,7 +1289,6 @@ MediaDecoder::DisconnectMirrors()
   MOZ_ASSERT(NS_IsMainThread());
   mStateMachineDuration.DisconnectIfConnected();
   mBuffered.DisconnectIfConnected();
-  mNextFrameStatus.DisconnectIfConnected();
   mCurrentPosition.DisconnectIfConnected();
   mPlaybackPosition.DisconnectIfConnected();
   mIsAudioDataAudible.DisconnectIfConnected();

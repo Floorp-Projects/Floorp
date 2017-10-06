@@ -493,6 +493,8 @@ private:
     mMediaSeekable = false;
   }
 
+  void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
+
   void FinishShutdown();
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
@@ -578,6 +580,9 @@ protected:
   // disabled.
   bool mHasSuspendTaint;
 
+  MediaDecoderOwner::NextFrameStatus mNextFrameStatus =
+    MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+
   // A listener to receive metadata updates from MDSM.
   MediaEventListener mTimedMetadataListener;
 
@@ -591,6 +596,7 @@ protected:
   MediaEventListener mOnEncrypted;
   MediaEventListener mOnWaitingForKey;
   MediaEventListener mOnDecodeWarning;
+  MediaEventListener mOnNextFrameStatus;
 
 protected:
   // PlaybackRate and pitch preservation status we should start at.
@@ -598,9 +604,6 @@ protected:
 
   // Buffered range, mirrored from the reader.
   Mirror<media::TimeIntervals> mBuffered;
-
-  // NextFrameStatus, mirrored from the state machine.
-  Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
 
   // NB: Don't use mCurrentPosition directly, but rather CurrentPosition().
   Mirror<media::TimeUnit> mCurrentPosition;
