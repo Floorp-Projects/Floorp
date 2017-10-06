@@ -10,7 +10,7 @@
 #include "nsTArray.h"
 #include "WinUtils.h"
 
-static LazyLogModule sScreenLog("WidgetScreen");
+static mozilla::LazyLogModule sScreenLog("WidgetScreen");
 
 namespace mozilla {
 namespace widget {
