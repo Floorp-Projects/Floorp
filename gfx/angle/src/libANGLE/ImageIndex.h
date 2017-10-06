@@ -23,7 +23,6 @@ struct ImageIndex
     GLenum type;
     GLint mipIndex;
     GLint layerIndex;
-    GLint numLayers;
 
     ImageIndex(const ImageIndex &other);
     ImageIndex &operator=(const ImageIndex &other);
@@ -32,13 +31,10 @@ struct ImageIndex
     bool is3D() const;
 
     static ImageIndex Make2D(GLint mipIndex);
-    static ImageIndex MakeRectangle(GLint mipIndex);
     static ImageIndex MakeCube(GLenum target, GLint mipIndex);
     static ImageIndex Make2DArray(GLint mipIndex, GLint layerIndex);
-    static ImageIndex Make2DArrayRange(GLint mipIndex, GLint layerIndex, GLint numLayers);
     static ImageIndex Make3D(GLint mipIndex, GLint layerIndex = ENTIRE_LEVEL);
     static ImageIndex MakeGeneric(GLenum target, GLint mipIndex);
-    static ImageIndex Make2DMultisample();
 
     static ImageIndex MakeInvalid();
 
@@ -51,18 +47,16 @@ struct ImageIndex
   private:
     friend class ImageIndexIterator;
 
-    ImageIndex(GLenum typeIn, GLint mipIndexIn, GLint layerIndexIn, GLint numLayersIn);
+    ImageIndex(GLenum typeIn, GLint mipIndexIn, GLint layerIndexIn);
 };
 
 class ImageIndexIterator
 {
   public:
     static ImageIndexIterator Make2D(GLint minMip, GLint maxMip);
-    static ImageIndexIterator MakeRectangle(GLint minMip, GLint maxMip);
     static ImageIndexIterator MakeCube(GLint minMip, GLint maxMip);
     static ImageIndexIterator Make3D(GLint minMip, GLint maxMip, GLint minLayer, GLint maxLayer);
     static ImageIndexIterator Make2DArray(GLint minMip, GLint maxMip, const GLsizei *layerCounts);
-    static ImageIndexIterator Make2DMultisample();
 
     ImageIndex next();
     ImageIndex current() const;

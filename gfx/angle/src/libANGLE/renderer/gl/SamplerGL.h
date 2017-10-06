@@ -21,12 +21,10 @@ class StateManagerGL;
 class SamplerGL : public SamplerImpl
 {
   public:
-    SamplerGL(const gl::SamplerState &state,
-              const FunctionsGL *functions,
-              StateManagerGL *stateManager);
+    SamplerGL(const FunctionsGL *functions, StateManagerGL *stateManager);
     ~SamplerGL() override;
 
-    void syncState(const gl::Context *context) override;
+    void syncState(const gl::SamplerState &samplerState) const;
 
     GLuint getSamplerID() const;
 

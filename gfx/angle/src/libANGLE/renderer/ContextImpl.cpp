@@ -12,8 +12,7 @@
 namespace rx
 {
 
-ContextImpl::ContextImpl(const gl::ContextState &state)
-    : mState(state), mMemoryProgramCache(nullptr)
+ContextImpl::ContextImpl(const gl::ContextState &state) : mState(state)
 {
 }
 
@@ -109,11 +108,6 @@ void ContextImpl::stencilThenCoverStrokePathInstanced(const std::vector<gl::Path
                                                       const GLfloat *transformValues)
 {
     UNREACHABLE();
-}
-
-void ContextImpl::setMemoryProgramCache(gl::MemoryProgramCache *memoryProgramCache)
-{
-    mMemoryProgramCache = memoryProgramCache;
 }
 
 }  // namespace rx

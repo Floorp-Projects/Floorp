@@ -155,7 +155,7 @@ class StateManager9 final : angle::NonCopyable
         DIRTY_BIT_MAX
     };
 
-    using DirtyBits = angle::BitSet<DIRTY_BIT_MAX>;
+    typedef std::bitset<DIRTY_BIT_MAX> DirtyBits;
 
     bool mUsingZeroColorMaskWorkaround;
 

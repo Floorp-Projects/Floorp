@@ -15,16 +15,15 @@ bool FlagStd140Structs::visitBinary(Visit visit, TIntermBinary *binaryNode)
     {
         switch (binaryNode->getOp())
         {
-            case EOpIndexDirectInterfaceBlock:
-            case EOpIndexDirectStruct:
-                if (isInStd140InterfaceBlock(binaryNode->getLeft()))
-                {
-                    mFlaggedNodes.push_back(binaryNode);
-                }
-                break;
+          case EOpIndexDirectInterfaceBlock:
+          case EOpIndexDirectStruct:
+            if (isInStd140InterfaceBlock(binaryNode->getLeft()))
+            {
+                mFlaggedNodes.push_back(binaryNode);
+            }
+            break;
 
-            default:
-                break;
+          default: break;
         }
         return false;
     }
@@ -74,4 +73,5 @@ std::vector<TIntermTyped *> FlagStd140ValueStructs(TIntermNode *node)
 
     return flaggingTraversal.getFlaggedNodes();
 }
+
 }

@@ -21,30 +21,21 @@ class Framebuffer9 : public FramebufferD3D
     Framebuffer9(const gl::FramebufferState &data, Renderer9 *renderer);
     virtual ~Framebuffer9();
 
-    gl::Error discard(const gl::Context *context, size_t count, const GLenum *attachments) override;
-    gl::Error invalidate(const gl::Context *context,
-                         size_t count,
-                         const GLenum *attachments) override;
-    gl::Error invalidateSub(const gl::Context *context,
-                            size_t count,
-                            const GLenum *attachments,
-                            const gl::Rectangle &area) override;
-
-    gl::Error getSamplePosition(size_t index, GLfloat *xy) const override;
+    gl::Error discard(size_t count, const GLenum *attachments) override;
+    gl::Error invalidate(size_t count, const GLenum *attachments) override;
+    gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) override;
 
   private:
-    gl::Error clearImpl(const gl::Context *context, const ClearParameters &clearParams) override;
+    gl::Error clearImpl(ContextImpl *context, const ClearParameters &clearParams) override;
 
-    gl::Error readPixelsImpl(const gl::Context *context,
-                             const gl::Rectangle &area,
+    gl::Error readPixelsImpl(const gl::Rectangle &area,
                              GLenum format,
                              GLenum type,
                              size_t outputPitch,
                              const gl::PixelPackState &pack,
-                             uint8_t *pixels) override;
+                             uint8_t *pixels) const override;
 
-    gl::Error blitImpl(const gl::Context *context,
-                       const gl::Rectangle &sourceArea,
+    gl::Error blitImpl(const gl::Rectangle &sourceArea,
                        const gl::Rectangle &destArea,
                        const gl::Rectangle *scissor,
                        bool blitRenderTarget,

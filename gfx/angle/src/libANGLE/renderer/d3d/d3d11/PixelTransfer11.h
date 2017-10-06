@@ -11,13 +11,13 @@
 #ifndef LIBANGLE_RENDERER_D3D_D3D11_PIXELTRANSFER11_H_
 #define LIBANGLE_RENDERER_D3D_D3D11_PIXELTRANSFER11_H_
 
+#include "libANGLE/Error.h"
+
+#include "common/platform.h"
+
 #include <GLES2/gl2.h>
 
 #include <map>
-
-#include "common/platform.h"
-#include "libANGLE/Error.h"
-#include "libANGLE/renderer/d3d/d3d11/ResourceManager11.h"
 
 namespace gl
 {
@@ -45,13 +45,8 @@ class PixelTransfer11
     // destRenderTarget: individual slice/layer of a target texture
     // destinationFormat/sourcePixelsType: determines shaders + shader parameters
     // destArea: the sub-section of destRenderTarget to copy to
-    gl::Error copyBufferToTexture(const gl::Context *context,
-                                  const gl::PixelUnpackState &unpack,
-                                  unsigned int offset,
-                                  RenderTargetD3D *destRenderTarget,
-                                  GLenum destinationFormat,
-                                  GLenum sourcePixelsType,
-                                  const gl::Box &destArea);
+    gl::Error copyBufferToTexture(const gl::PixelUnpackState &unpack, unsigned int offset, RenderTargetD3D *destRenderTarget,
+                                  GLenum destinationFormat, GLenum sourcePixelsType, const gl::Box &destArea);
 
   private:
 
@@ -73,21 +68,22 @@ class PixelTransfer11
 
     gl::Error loadResources();
     gl::Error buildShaderMap();
-    const d3d11::PixelShader *findBufferToTexturePS(GLenum internalFormat) const;
+    ID3D11PixelShader *findBufferToTexturePS(GLenum internalFormat) const;
 
     Renderer11 *mRenderer;
 
     bool mResourcesLoaded;
-    std::map<GLenum, d3d11::PixelShader> mBufferToTexturePSMap;
-    d3d11::VertexShader mBufferToTextureVS;
-    d3d11::GeometryShader mBufferToTextureGS;
-    d3d11::Buffer mParamsConstantBuffer;
+    std::map<GLenum, ID3D11PixelShader *> mBufferToTexturePSMap;
+    ID3D11VertexShader *mBufferToTextureVS;
+    ID3D11GeometryShader *mBufferToTextureGS;
+    ID3D11Buffer *mParamsConstantBuffer;
     CopyShaderParams mParamsData;
 
-    d3d11::RasterizerState mCopyRasterizerState;
-    d3d11::DepthStencilState mCopyDepthStencilState;
+    ID3D11RasterizerState *mCopyRasterizerState;
+    ID3D11DepthStencilState *mCopyDepthStencilState;
+
 };
 
-}  // namespace rx
+}
 
 #endif // LIBANGLE_RENDERER_D3D_D3D11_PIXELTRANSFER11_H_

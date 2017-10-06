@@ -15,8 +15,9 @@ PbufferSurfaceEGL::PbufferSurfaceEGL(const egl::SurfaceState &state,
                                      const FunctionsEGL *egl,
                                      EGLConfig config,
                                      const std::vector<EGLint> &attribList,
+                                     EGLContext context,
                                      RendererGL *renderer)
-    : SurfaceEGL(state, egl, config, attribList, renderer)
+    : SurfaceEGL(state, egl, config, attribList, context, renderer)
 {
 }
 
@@ -24,7 +25,7 @@ PbufferSurfaceEGL::~PbufferSurfaceEGL()
 {
 }
 
-egl::Error PbufferSurfaceEGL::initialize(const egl::Display *display)
+egl::Error PbufferSurfaceEGL::initialize()
 {
     mSurface = mEGL->createPbufferSurface(mConfig, mAttribList.data());
     if (mSurface == EGL_NO_SURFACE)
@@ -32,7 +33,7 @@ egl::Error PbufferSurfaceEGL::initialize(const egl::Display *display)
         return egl::Error(mEGL->getError(), "eglCreatePbufferSurface failed");
     }
 
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 }  // namespace rx

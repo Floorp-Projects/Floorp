@@ -30,18 +30,6 @@ Renderbuffer::Renderbuffer(rx::RenderbufferImpl *impl, GLuint id)
 {
 }
 
-Error Renderbuffer::onDestroy(const Context *context)
-{
-    ANGLE_TRY(orphanImages(context));
-
-    if (mRenderbuffer)
-    {
-        ANGLE_TRY(mRenderbuffer->onDestroy(context));
-    }
-
-    return NoError();
-}
-
 Renderbuffer::~Renderbuffer()
 {
     SafeDelete(mRenderbuffer);
@@ -57,14 +45,11 @@ const std::string &Renderbuffer::getLabel() const
     return mLabel;
 }
 
-Error Renderbuffer::setStorage(const Context *context,
-                               GLenum internalformat,
-                               size_t width,
-                               size_t height)
+Error Renderbuffer::setStorage(GLenum internalformat, size_t width, size_t height)
 {
-    ANGLE_TRY(orphanImages(context));
+    orphanImages();
 
-    ANGLE_TRY(mRenderbuffer->setStorage(context, internalformat, width, height));
+    ANGLE_TRY(mRenderbuffer->setStorage(internalformat, width, height));
 
     mWidth          = static_cast<GLsizei>(width);
     mHeight         = static_cast<GLsizei>(height);
@@ -76,16 +61,11 @@ Error Renderbuffer::setStorage(const Context *context,
     return NoError();
 }
 
-Error Renderbuffer::setStorageMultisample(const Context *context,
-                                          size_t samples,
-                                          GLenum internalformat,
-                                          size_t width,
-                                          size_t height)
+Error Renderbuffer::setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height)
 {
-    ANGLE_TRY(orphanImages(context));
+    orphanImages();
 
-    ANGLE_TRY(
-        mRenderbuffer->setStorageMultisample(context, samples, internalformat, width, height));
+    ANGLE_TRY(mRenderbuffer->setStorageMultisample(samples, internalformat, width, height));
 
     mWidth          = static_cast<GLsizei>(width);
     mHeight         = static_cast<GLsizei>(height);
@@ -97,13 +77,13 @@ Error Renderbuffer::setStorageMultisample(const Context *context,
     return NoError();
 }
 
-Error Renderbuffer::setStorageEGLImageTarget(const Context *context, egl::Image *image)
+Error Renderbuffer::setStorageEGLImageTarget(egl::Image *image)
 {
-    ANGLE_TRY(orphanImages(context));
+    orphanImages();
 
-    ANGLE_TRY(mRenderbuffer->setStorageEGLImageTarget(context, image));
+    ANGLE_TRY(mRenderbuffer->setStorageEGLImageTarget(image));
 
-    setTargetImage(context, image);
+    setTargetImage(image);
 
     mWidth          = static_cast<GLsizei>(image->getWidth());
     mHeight         = static_cast<GLsizei>(image->getHeight());
@@ -171,14 +151,14 @@ GLuint Renderbuffer::getStencilSize() const
     return mFormat.info->stencilBits;
 }
 
-void Renderbuffer::onAttach(const Context *context)
+void Renderbuffer::onAttach()
 {
     addRef();
 }
 
-void Renderbuffer::onDetach(const Context *context)
+void Renderbuffer::onDetach()
 {
-    release(context);
+    release();
 }
 
 GLuint Renderbuffer::getId() const
@@ -186,7 +166,7 @@ GLuint Renderbuffer::getId() const
     return id();
 }
 
-Extents Renderbuffer::getAttachmentSize(const gl::ImageIndex & /*imageIndex*/) const
+Extents Renderbuffer::getAttachmentSize(const FramebufferAttachment::Target & /*target*/) const
 {
     return Extents(mWidth, mHeight, 1);
 }

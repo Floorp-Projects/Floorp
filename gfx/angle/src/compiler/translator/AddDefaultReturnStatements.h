@@ -10,12 +10,12 @@
 #ifndef COMPILER_TRANSLATOR_ADDDEFAULTRETURNSTATEMENTS_H_
 #define COMPILER_TRANSLATOR_ADDDEFAULTRETURNSTATEMENTS_H_
 
-class TIntermBlock;
+class TIntermNode;
 
 namespace sh
 {
 
-void AddDefaultReturnStatements(TIntermBlock *root);
+void AddDefaultReturnStatements(TIntermNode *node);
 
 }  // namespace sh
 

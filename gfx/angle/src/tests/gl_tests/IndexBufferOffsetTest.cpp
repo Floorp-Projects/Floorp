@@ -6,8 +6,8 @@
 
 // IndexBufferOffsetTest.cpp: Test glDrawElements with an offset and an index buffer
 
-#include "system_utils.h"
 #include "test_utils/ANGLETest.h"
+#include "system_utils.h"
 
 using namespace angle;
 
@@ -29,22 +29,20 @@ class IndexBufferOffsetTest : public ANGLETest
         ANGLETest::SetUp();
 
         const std::string vertexShaderSource =
-            R"(precision highp float;
-            attribute vec2 position;
+            SHADER_SOURCE(precision highp float; attribute vec2 position;
 
-            void main()
-            {
-                gl_Position = vec4(position, 0.0, 1.0);
-            })";
+                          void main()
+                          {
+                              gl_Position = vec4(position, 0.0, 1.0);
+                          });
 
         const std::string fragmentShaderSource =
-            R"(precision highp float;
-            uniform vec4 color;
+            SHADER_SOURCE(precision highp float; uniform vec4 color;
 
-            void main()
-            {
-                gl_FragColor = color;
-            })";
+                          void main()
+                          {
+                              gl_FragColor = color;
+                          });
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);
@@ -52,7 +50,13 @@ class IndexBufferOffsetTest : public ANGLETest
         mColorUniformLocation      = glGetUniformLocation(mProgram, "color");
         mPositionAttributeLocation = glGetAttribLocation(mProgram, "position");
 
-        const GLfloat vertices[] = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f};
+        const GLfloat vertices[] =
+        {
+            -1.0f, -1.0f,
+            -1.0f,  1.0f,
+             1.0f, -1.0f,
+             1.0f,  1.0f
+        };
         glGenBuffers(1, &mVertexBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
@@ -93,7 +97,7 @@ class IndexBufferOffsetTest : public ANGLETest
 
         for (int i = 0; i < 16; i++)
         {
-            glDrawElements(GL_TRIANGLES, 6, type, reinterpret_cast<void *>(indexDataWidth));
+            glDrawElements(GL_TRIANGLES, 6, type, reinterpret_cast<GLvoid *>(indexDataWidth));
             EXPECT_PIXEL_EQ(64, 64, 255, 0, 0, 255);
         }
 
@@ -101,7 +105,7 @@ class IndexBufferOffsetTest : public ANGLETest
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 2 * indexDataWidth, indexDataWidth, indexData);
 
         glUniform4f(mColorUniformLocation, 0.0f, 1.0f, 0.0f, 1.0f);
-        glDrawElements(GL_TRIANGLES, 6, type, reinterpret_cast<void *>(indexDataWidth * 2));
+        glDrawElements(GL_TRIANGLES, 6, type, reinterpret_cast<GLvoid *>(indexDataWidth * 2));
         EXPECT_PIXEL_EQ(64, 64, 0, 255, 0, 255);
 
         EXPECT_GL_NO_ERROR();
@@ -134,8 +138,7 @@ TEST_P(IndexBufferOffsetTest, UInt32Index)
 {
     if (getClientMajorVersion() < 3 && !extensionEnabled("GL_OES_element_index_uint"))
     {
-        std::cout << "Test skipped because ES3 or GL_OES_element_index_uint is not available."
-                  << std::endl;
+        std::cout << "Test skipped because ES3 or GL_OES_element_index_uint is not available." << std::endl;
         return;
     }
 

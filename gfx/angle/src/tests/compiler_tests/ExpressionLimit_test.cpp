@@ -203,7 +203,7 @@ const char* ExpressionLimitTest::kExpressionTooComplex =
 const char* ExpressionLimitTest::kCallStackTooDeep =
     "Call stack too deep";
 const char* ExpressionLimitTest::kHasRecursion =
-    "Recursive function call in the following call chain";
+    "Function recursion detected";
 const char* ExpressionLimitTest::kTooManyParameters =
     "Function has too many parameters";
 
@@ -216,8 +216,10 @@ TEST_F(ExpressionLimitTest, ExpressionComplexity)
 
     // Test expression under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithLongExpression(kMaxExpressionComplexity - 10).c_str(),
-        compileOptions, nullptr));
+        vertexCompiler,
+        GenerateShaderWithLongExpression(
+            kMaxExpressionComplexity - 10).c_str(),
+        compileOptions, NULL));
     // Test expression over the limit fails.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
@@ -226,8 +228,10 @@ TEST_F(ExpressionLimitTest, ExpressionComplexity)
         compileOptions, kExpressionTooComplex));
     // Test expression over the limit without a limit does not fail.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithLongExpression(kMaxExpressionComplexity + 10).c_str(),
-        compileOptions & ~SH_LIMIT_EXPRESSION_COMPLEXITY, nullptr));
+        vertexCompiler,
+        GenerateShaderWithLongExpression(
+            kMaxExpressionComplexity + 10).c_str(),
+        compileOptions & ~SH_LIMIT_EXPRESSION_COMPLEXITY, NULL));
     sh::Destruct(vertexCompiler);
 }
 
@@ -241,8 +245,9 @@ TEST_F(ExpressionLimitTest, UnusedExpressionComplexity)
     // Test expression under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
-        GenerateShaderWithUnusedLongExpression(kMaxExpressionComplexity - 10).c_str(),
-        compileOptions, nullptr));
+        GenerateShaderWithUnusedLongExpression(
+            kMaxExpressionComplexity - 10).c_str(),
+        compileOptions, NULL));
     // Test expression over the limit fails.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
@@ -252,8 +257,9 @@ TEST_F(ExpressionLimitTest, UnusedExpressionComplexity)
     // Test expression over the limit without a limit does not fail.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
-        GenerateShaderWithUnusedLongExpression(kMaxExpressionComplexity + 10).c_str(),
-        compileOptions & ~SH_LIMIT_EXPRESSION_COMPLEXITY, nullptr));
+        GenerateShaderWithUnusedLongExpression(
+            kMaxExpressionComplexity + 10).c_str(),
+        compileOptions & ~SH_LIMIT_EXPRESSION_COMPLEXITY, NULL));
     sh::Destruct(vertexCompiler);
 }
 
@@ -266,8 +272,10 @@ TEST_F(ExpressionLimitTest, CallStackDepth)
 
     // Test call stack under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithDeepFunctionStack(kMaxCallStackDepth - 10).c_str(),
-        compileOptions, nullptr));
+        vertexCompiler,
+        GenerateShaderWithDeepFunctionStack(
+            kMaxCallStackDepth - 10).c_str(),
+        compileOptions, NULL));
     // Test call stack over the limit fails.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
@@ -276,8 +284,10 @@ TEST_F(ExpressionLimitTest, CallStackDepth)
         compileOptions, kCallStackTooDeep));
     // Test call stack over the limit without limit does not fail.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithDeepFunctionStack(kMaxCallStackDepth + 10).c_str(),
-        compileOptions & ~SH_LIMIT_CALL_STACK_DEPTH, nullptr));
+        vertexCompiler,
+        GenerateShaderWithDeepFunctionStack(
+            kMaxCallStackDepth + 10).c_str(),
+        compileOptions & ~SH_LIMIT_CALL_STACK_DEPTH, NULL));
     sh::Destruct(vertexCompiler);
 }
 
@@ -290,8 +300,10 @@ TEST_F(ExpressionLimitTest, UnusedCallStackDepth)
 
     // Test call stack under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithUnusedDeepFunctionStack(kMaxCallStackDepth - 10).c_str(),
-        compileOptions, nullptr));
+        vertexCompiler,
+        GenerateShaderWithUnusedDeepFunctionStack(
+            kMaxCallStackDepth - 10).c_str(),
+        compileOptions, NULL));
     // Test call stack over the limit fails.
     EXPECT_TRUE(CheckShaderCompilation(
         vertexCompiler,
@@ -300,8 +312,10 @@ TEST_F(ExpressionLimitTest, UnusedCallStackDepth)
         compileOptions, kCallStackTooDeep));
     // Test call stack over the limit without limit does not fail.
     EXPECT_TRUE(CheckShaderCompilation(
-        vertexCompiler, GenerateShaderWithUnusedDeepFunctionStack(kMaxCallStackDepth + 10).c_str(),
-        compileOptions & ~SH_LIMIT_CALL_STACK_DEPTH, nullptr));
+        vertexCompiler,
+        GenerateShaderWithUnusedDeepFunctionStack(
+            kMaxCallStackDepth + 10).c_str(),
+        compileOptions & ~SH_LIMIT_CALL_STACK_DEPTH, NULL));
     sh::Destruct(vertexCompiler);
 }
 
@@ -510,11 +524,13 @@ TEST_F(ExpressionLimitTest, Recursion)
         compileOptions | SH_LIMIT_CALL_STACK_DEPTH, kHasRecursion));
 
     // Check unused recursions passes.
-    EXPECT_TRUE(
-        CheckShaderCompilation(vertexCompiler, shaderWithNoRecursion, compileOptions, nullptr));
+    EXPECT_TRUE(CheckShaderCompilation(
+        vertexCompiler, shaderWithNoRecursion,
+        compileOptions, NULL));
     // Check unused recursions passes if limiting call stack.
-    EXPECT_TRUE(CheckShaderCompilation(vertexCompiler, shaderWithNoRecursion,
-                                       compileOptions | SH_LIMIT_CALL_STACK_DEPTH, nullptr));
+    EXPECT_TRUE(CheckShaderCompilation(
+        vertexCompiler, shaderWithNoRecursion,
+        compileOptions | SH_LIMIT_CALL_STACK_DEPTH, NULL));
     sh::Destruct(vertexCompiler);
 }
 

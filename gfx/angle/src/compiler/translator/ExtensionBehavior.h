@@ -3,57 +3,41 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// ExtensionBehavior.h: Extension name enumeration and data structures for storing extension
-// behavior.
 
 #ifndef COMPILER_TRANSLATOR_EXTENSIONBEHAVIOR_H_
 #define COMPILER_TRANSLATOR_EXTENSIONBEHAVIOR_H_
 
 #include <map>
+#include <string>
 
-namespace sh
-{
-
-enum class TExtension
-{
-    UNDEFINED,  // Special value used to indicate no extension.
-
-    ARB_texture_rectangle,
-    ARM_shader_framebuffer_fetch,
-    EXT_blend_func_extended,
-    EXT_draw_buffers,
-    EXT_frag_depth,
-    EXT_shader_framebuffer_fetch,
-    EXT_shader_texture_lod,
-    EXT_YUV_target,
-    NV_EGL_stream_consumer_external,
-    NV_shader_framebuffer_fetch,
-    OES_EGL_image_external,
-    OES_EGL_image_external_essl3,
-    OES_geometry_shader,
-    OES_standard_derivatives,
-    OVR_multiview
-};
-
-enum TBehavior
+typedef enum
 {
     EBhRequire,
     EBhEnable,
     EBhWarn,
     EBhDisable,
     EBhUndefined
-};
+} TBehavior;
 
-const char *GetExtensionNameString(TExtension extension);
-TExtension GetExtensionByName(const char *extension);
+inline const char* getBehaviorString(TBehavior b)
+{
+    switch(b)
+    {
+      case EBhRequire: return "require";
+      case EBhEnable: return "enable";
+      case EBhWarn: return "warn";
+      case EBhDisable: return "disable";
+      default: return NULL;
+    }
+}
 
-const char *GetBehaviorString(TBehavior b);
+// Mapping between extension name and behavior.
+typedef std::map<std::string, TBehavior> TExtensionBehavior;
 
-// Mapping between extension id and behavior.
-typedef std::map<TExtension, TBehavior> TExtensionBehavior;
+inline bool IsExtensionEnabled(const TExtensionBehavior &extBehavior, const char *extension)
+{
+    auto iter = extBehavior.find(extension);
+    return iter != extBehavior.end() && (iter->second == EBhEnable || iter->second == EBhRequire);
+}
 
-bool IsExtensionEnabled(const TExtensionBehavior &extBehavior, TExtension extension);
-
-}  // namespace sh
-
-#endif  // COMPILER_TRANSLATOR_EXTENSIONBEHAVIOR_H_
+#endif // COMPILER_TRANSLATOR_EXTENSIONBEHAVIOR_H_

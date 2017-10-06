@@ -51,7 +51,7 @@ class TransformFeedbackTest : public testing::Test
     {
         if (mFeedback)
         {
-            mFeedback->release(nullptr);
+            mFeedback->release();
         }
 
         // Only needed because the mock is leaked if bugs are present,
@@ -72,11 +72,11 @@ TEST_F(TransformFeedbackTest, SideEffectsOfStartAndStop)
 
     EXPECT_FALSE(mFeedback->isActive());
     EXPECT_CALL(*mImpl, begin(GL_TRIANGLES));
-    mFeedback->begin(nullptr, GL_TRIANGLES, nullptr);
+    mFeedback->begin(GL_TRIANGLES, nullptr);
     EXPECT_TRUE(mFeedback->isActive());
     EXPECT_EQ(static_cast<GLenum>(GL_TRIANGLES), mFeedback->getPrimitiveMode());
     EXPECT_CALL(*mImpl, end());
-    mFeedback->end(nullptr);
+    mFeedback->end();
     EXPECT_FALSE(mFeedback->isActive());
 }
 
@@ -86,7 +86,7 @@ TEST_F(TransformFeedbackTest, SideEffectsOfPauseAndResume)
 
     EXPECT_FALSE(mFeedback->isActive());
     EXPECT_CALL(*mImpl, begin(GL_TRIANGLES));
-    mFeedback->begin(nullptr, GL_TRIANGLES, nullptr);
+    mFeedback->begin(GL_TRIANGLES, nullptr);
     EXPECT_FALSE(mFeedback->isPaused());
     EXPECT_CALL(*mImpl, pause());
     mFeedback->pause();
@@ -95,7 +95,7 @@ TEST_F(TransformFeedbackTest, SideEffectsOfPauseAndResume)
     mFeedback->resume();
     EXPECT_FALSE(mFeedback->isPaused());
     EXPECT_CALL(*mImpl, end());
-    mFeedback->end(nullptr);
+    mFeedback->end();
 }
 
 TEST_F(TransformFeedbackTest, BufferBinding)
@@ -116,11 +116,11 @@ TEST_F(TransformFeedbackTest, BufferBinding)
     EXPECT_EQ(mFeedback->getIndexedBufferCount(), mCaps.maxTransformFeedbackSeparateAttributes);
 
     EXPECT_CALL(*mImpl, bindGenericBuffer(_));
-    mFeedback->bindGenericBuffer(nullptr, buffer);
+    mFeedback->bindGenericBuffer(buffer);
     EXPECT_EQ(mFeedback->getGenericBuffer().get(), buffer);
 
     EXPECT_CALL(*mImpl, bindIndexedBuffer(_, _));
-    mFeedback->bindIndexedBuffer(nullptr, bindIndex, buffer, 0, 1);
+    mFeedback->bindIndexedBuffer(bindIndex, buffer, 0, 1);
     for (size_t i = 0; i < mFeedback->getIndexedBufferCount(); i++)
     {
         if (i == bindIndex)
@@ -137,7 +137,7 @@ TEST_F(TransformFeedbackTest, BufferBinding)
     const size_t releaseCount = mFeedback->getRefCount();
     for (size_t count = 0; count < releaseCount; ++count)
     {
-        mFeedback->release(nullptr);
+        mFeedback->release();
     }
 
     mFeedback = nullptr;

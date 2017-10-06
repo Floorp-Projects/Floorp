@@ -46,13 +46,12 @@ TEST_P(ReadPixelsTest, OutOfBounds)
     glClear(GL_COLOR_BUFFER_BIT);
     EXPECT_GL_NO_ERROR();
 
-    GLsizei pixelsWidth  = 32;
+    GLsizei pixelsWidth = 32;
     GLsizei pixelsHeight = 32;
-    GLint offset         = 16;
+    GLint offset = 16;
     std::vector<GLColor> pixels((pixelsWidth + offset) * (pixelsHeight + offset));
 
-    glReadPixels(-offset, -offset, pixelsWidth + offset, pixelsHeight + offset, GL_RGBA,
-                 GL_UNSIGNED_BYTE, &pixels[0]);
+    glReadPixels(-offset, -offset, pixelsWidth + offset, pixelsHeight + offset, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
     EXPECT_GL_NO_ERROR();
 
     // Expect that all pixels which fell within the framebuffer are red
@@ -122,7 +121,7 @@ TEST_P(ReadPixelsPBOTest, Basic)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, mPBO);
     glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-    void *mappedPtr    = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, 32, GL_MAP_READ_BIT);
+    GLvoid *mappedPtr  = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, 32, GL_MAP_READ_BIT);
     GLColor *dataColor = static_cast<GLColor *>(mappedPtr);
     EXPECT_GL_NO_ERROR();
 
@@ -174,7 +173,7 @@ TEST_P(ReadPixelsPBOTest, ArrayBufferTarget)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, mPBO);
 
-    void *mappedPtr    = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
+    GLvoid *mappedPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
     GLColor *dataColor = static_cast<GLColor *>(mappedPtr);
     EXPECT_GL_NO_ERROR();
 
@@ -209,8 +208,8 @@ TEST_P(ReadPixelsPBOTest, ExistingDataPreserved)
     EXPECT_GL_NO_ERROR();
 
     // Read 16x16 region from green backbuffer to PBO at offset 16
-    glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void *>(16));
-    void *mappedPtr    = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, 32, GL_MAP_READ_BIT);
+    glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid*>(16));
+    GLvoid *mappedPtr  = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, 32, GL_MAP_READ_BIT);
     GLColor *dataColor = static_cast<GLColor *>(mappedPtr);
     EXPECT_GL_NO_ERROR();
 
@@ -234,13 +233,13 @@ TEST_P(ReadPixelsPBOTest, SubDataPreservesContents)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, mPBO);
     glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-    unsigned char data[4] = {1, 2, 3, 4};
+    unsigned char data[4] = { 1, 2, 3, 4 };
 
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, mPBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, 4, data);
 
-    void *mappedPtr    = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
+    GLvoid *mappedPtr  = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
     GLColor *dataColor = static_cast<GLColor *>(mappedPtr);
     EXPECT_GL_NO_ERROR();
 
@@ -267,13 +266,13 @@ TEST_P(ReadPixelsPBOTest, SubDataOffsetPreservesContents)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, mPBO);
     glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-    unsigned char data[4] = {1, 2, 3, 4};
+    unsigned char data[4] = { 1, 2, 3, 4 };
 
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, mPBO);
     glBufferSubData(GL_ARRAY_BUFFER, 16, 4, data);
 
-    void *mappedPtr    = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
+    GLvoid *mappedPtr  = glMapBufferRange(GL_ARRAY_BUFFER, 0, 32, GL_MAP_READ_BIT);
     GLColor *dataColor = static_cast<GLColor *>(mappedPtr);
     EXPECT_GL_NO_ERROR();
 
@@ -314,7 +313,7 @@ class ReadPixelsPBODrawTest : public ReadPixelsPBOTest
 
         glGenBuffers(1, &mPositionVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mPositionVBO);
-        glBufferData(GL_ARRAY_BUFFER, 128, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 128, NULL, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
@@ -345,7 +344,7 @@ TEST_P(ReadPixelsPBODrawTest, DrawWithPBO)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     EXPECT_GL_NO_ERROR();
 
-    float positionData[] = {0.5f, 0.5f};
+    float positionData[] = { 0.5f, 0.5f };
 
     glUseProgram(mProgram);
     glViewport(0, 0, 1, 1);
@@ -421,9 +420,7 @@ TEST_P(ReadPixelsMultisampleTest, BasicClear)
 {
     if (getClientMajorVersion() < 3 && !extensionEnabled("GL_ANGLE_framebuffer_multisample"))
     {
-        std::cout
-            << "Test skipped because ES3 or GL_ANGLE_framebuffer_multisample is not available."
-            << std::endl;
+        std::cout << "Test skipped because ES3 or GL_ANGLE_framebuffer_multisample is not available." << std::endl;
         return;
     }
 
@@ -445,7 +442,7 @@ TEST_P(ReadPixelsMultisampleTest, BasicClear)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, mPBO);
     EXPECT_GL_NO_ERROR();
 
-    glReadPixels(0, 0, 1, 1, GL_RGBA8, GL_UNSIGNED_BYTE, nullptr);
+    glReadPixels(0, 0, 1, 1, GL_RGBA8, GL_UNSIGNED_BYTE, NULL);
     EXPECT_GL_ERROR(GL_INVALID_OPERATION);
 }
 
@@ -556,7 +553,7 @@ class ReadPixelsTextureTest : public ANGLETest
             for (GLint layer = 0; layer < layers; ++layer)
             {
                 GLuint colorValue = getColorValue(level, layer);
-                size_t offset     = (layer * layerSize);
+                size_t offset = (layer * layerSize);
                 std::fill(textureData.begin() + offset, textureData.begin() + offset + layerSize,
                           colorValue);
             }
@@ -716,8 +713,7 @@ TEST_P(ReadPixelsErrorTest, ReadBufferIsNone)
 
 }  // anonymous namespace
 
-// Use this to select which configurations (e.g. which renderer, which GLES major version) these
-// tests should be run against.
+// Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(ReadPixelsTest, ES2_D3D11(), ES2_OPENGL(), ES2_OPENGLES());
 ANGLE_INSTANTIATE_TEST(ReadPixelsPBOTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(ReadPixelsPBODrawTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());

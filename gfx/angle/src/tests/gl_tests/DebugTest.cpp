@@ -280,7 +280,7 @@ TEST_P(DebugTest, MessageControl1)
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     // Setup of the default active debug group: Filter everything in
-    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 
     // Generate a debug marker debug output message
     glDebugMessageInsertKHR(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 100,
@@ -290,7 +290,7 @@ TEST_P(DebugTest, MessageControl1)
     glPushDebugGroupKHR(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Message 2");
 
     // Setup of the debug group 1: Filter everything out
-    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
 
     // This message won't appear in the debug output log of
     glDebugMessageInsertKHR(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 100,
@@ -332,8 +332,8 @@ TEST_P(DebugTest, MessageControl2)
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     // Setup the control of de debug output for the default debug group
-    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
-    glDebugMessageControlKHR(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr,
+    glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
+    glDebugMessageControlKHR(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL,
                              GL_FALSE);
     std::vector<GLuint> ids0 = {1234, 2345, 3456, 4567};
     glDebugMessageControlKHR(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE,
@@ -348,7 +348,7 @@ TEST_P(DebugTest, MessageControl2)
 
     // In this section of the code, we are interested in performances.
     glDebugMessageControlKHR(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PERFORMANCE, GL_DONT_CARE,
-                             0, nullptr, GL_TRUE);
+                             0, NULL, GL_TRUE);
     // But we already identify that some messages are not really useful for us.
     std::vector<GLuint> ids1 = {5678, 6789};
     glDebugMessageControlKHR(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE,

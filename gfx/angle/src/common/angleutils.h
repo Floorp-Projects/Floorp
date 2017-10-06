@@ -23,23 +23,21 @@
 namespace angle
 {
 
-#if defined(ANGLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
+#if defined(ANBLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
 using Microsoft::WRL::ComPtr;
-#endif  // defined(ANGLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
+#endif  // defined(ANBLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
 
 class NonCopyable
 {
-  protected:
+  public:
     NonCopyable() = default;
     ~NonCopyable() = default;
-
-  private:
+  protected:
     NonCopyable(const NonCopyable&) = delete;
     void operator=(const NonCopyable&) = delete;
 };
 
 extern const uintptr_t DirtyPointer;
-
 }  // namespace angle
 
 template <typename T, size_t N>
@@ -47,34 +45,6 @@ constexpr inline size_t ArraySize(T (&)[N])
 {
     return N;
 }
-
-template <typename T>
-class WrappedArray final : angle::NonCopyable
-{
-  public:
-    template <size_t N>
-    constexpr WrappedArray(const T (&data)[N]) : mArray(&data[0]), mSize(N)
-    {
-    }
-
-    constexpr WrappedArray() : mArray(nullptr), mSize(0) {}
-    constexpr WrappedArray(const T *data, size_t size) : mArray(data), mSize(size) {}
-
-    WrappedArray(WrappedArray &&other) : WrappedArray()
-    {
-        std::swap(mArray, other.mArray);
-        std::swap(mSize, other.mSize);
-    }
-
-    ~WrappedArray() {}
-
-    constexpr const T *get() const { return mArray; }
-    constexpr size_t size() const { return mSize; }
-
-  private:
-    const T *mArray;
-    size_t mSize;
-};
 
 template <typename T, unsigned int N>
 void SafeRelease(T (&resourceBlock)[N])
@@ -91,7 +61,7 @@ void SafeRelease(T& resource)
     if (resource)
     {
         resource->Release();
-        resource = nullptr;
+        resource = NULL;
     }
 }
 
@@ -99,7 +69,7 @@ template <typename T>
 void SafeDelete(T *&resource)
 {
     delete resource;
-    resource = nullptr;
+    resource = NULL;
 }
 
 template <typename T>
@@ -116,7 +86,7 @@ template <typename T>
 void SafeDeleteArray(T*& resource)
 {
     delete[] resource;
-    resource = nullptr;
+    resource = NULL;
 }
 
 // Provide a less-than function for comparing structs
@@ -203,61 +173,19 @@ std::string ToString(const T &value)
 #define snprintf _snprintf
 #endif
 
-#define GL_BGRX8_ANGLEX 0x6ABA
 #define GL_BGR565_ANGLEX 0x6ABB
 #define GL_BGRA4_ANGLEX 0x6ABC
 #define GL_BGR5_A1_ANGLEX 0x6ABD
 #define GL_INT_64_ANGLEX 0x6ABE
+#define GL_STRUCT_ANGLEX 0x6ABF
 
 // Hidden enum for the NULL D3D device type.
 #define EGL_PLATFORM_ANGLE_DEVICE_TYPE_NULL_ANGLE 0x6AC0
 
-// TODO(jmadill): Clean this up at some point.
-#define EGL_PLATFORM_ANGLE_PLATFORM_METHODS_ANGLEX 0x9999
-
-#define ANGLE_TRY_CHECKED_MATH(result)                     \
-    if (!result.IsValid())                                 \
-    {                                                      \
-        return gl::InternalError() << "Integer overflow."; \
+#define ANGLE_TRY_CHECKED_MATH(result)                               \
+    if (!result.IsValid())                                           \
+    {                                                                \
+        return gl::Error(GL_INVALID_OPERATION, "Integer overflow."); \
     }
-
-// The below inlining code lifted from V8.
-#if defined(__clang__) || (defined(__GNUC__) && defined(__has_attribute))
-#define ANGLE_HAS_ATTRIBUTE_ALWAYS_INLINE (__has_attribute(always_inline))
-#define ANGLE_HAS___FORCEINLINE 0
-#elif defined(_MSC_VER)
-#define ANGLE_HAS_ATTRIBUTE_ALWAYS_INLINE 0
-#define ANGLE_HAS___FORCEINLINE 1
-#else
-#define ANGLE_HAS_ATTRIBUTE_ALWAYS_INLINE 0
-#define ANGLE_HAS___FORCEINLINE 0
-#endif
-
-#if defined(NDEBUG) && ANGLE_HAS_ATTRIBUTE_ALWAYS_INLINE
-#define ANGLE_INLINE inline __attribute__((always_inline))
-#elif defined(NDEBUG) && ANGLE_HAS___FORCEINLINE
-#define ANGLE_INLINE __forceinline
-#else
-#define ANGLE_INLINE inline
-#endif
-
-#ifndef ANGLE_STRINGIFY
-#define ANGLE_STRINGIFY(x) #x
-#endif
-
-#ifndef ANGLE_MACRO_STRINGIFY
-#define ANGLE_MACRO_STRINGIFY(x) ANGLE_STRINGIFY(x)
-#endif
-
-// Detect support for C++17 [[nodiscard]]
-#if !defined(__has_cpp_attribute)
-#define __has_cpp_attribute(name) 0
-#endif  // !defined(__has_cpp_attribute)
-
-#if __has_cpp_attribute(nodiscard)
-#define ANGLE_NO_DISCARD [[nodiscard]]
-#else
-#define ANGLE_NO_DISCARD
-#endif  // __has_cpp_attribute(nodiscard)
 
 #endif // COMMON_ANGLEUTILS_H_

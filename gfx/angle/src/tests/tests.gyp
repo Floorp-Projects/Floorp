@@ -179,19 +179,6 @@
                     ],
                 },
                 {
-                    'target_name': 'angle_white_box_tests',
-                    'type': 'executable',
-                    'includes':
-                    [
-                        '../../gyp/common_defines.gypi',
-                        'angle_white_box_tests.gypi',
-                    ],
-                    'sources':
-                    [
-                        'angle_white_box_tests_main.cpp',
-                    ],
-                },
-                {
                     'target_name': 'angle_perftests',
                     'type': 'executable',
                     'includes':

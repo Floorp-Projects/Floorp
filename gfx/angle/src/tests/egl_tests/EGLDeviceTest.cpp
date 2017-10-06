@@ -494,7 +494,7 @@ class EGLDeviceQueryTest : public ANGLETest
             mQueryDisplayAttribEXT(getEGLWindow()->getDisplay(), EGL_DEVICE_EXT, &angleDevice));
         extensionString = static_cast<const char *>(
             mQueryDeviceStringEXT(reinterpret_cast<EGLDeviceEXT>(angleDevice), EGL_EXTENSIONS));
-        if (strstr(extensionString, "EGL_ANGLE_device_d3d") == nullptr)
+        if (strstr(extensionString, "EGL_ANGLE_device_d3d") == NULL)
         {
             FAIL() << "ANGLE extension EGL_ANGLE_device_d3d was not found";
         }

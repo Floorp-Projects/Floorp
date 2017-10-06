@@ -17,21 +17,14 @@
         [
             '<(angle_path)/src/tests/perf_tests/ANGLEPerfTest.cpp',
             '<(angle_path)/src/tests/perf_tests/ANGLEPerfTest.h',
-            '<(angle_path)/src/tests/perf_tests/BlitFramebufferPerf.cpp',
-            '<(angle_path)/src/tests/perf_tests/BindingPerf.cpp',
-            '<(angle_path)/src/tests/perf_tests/BitSetIteratorPerf.cpp',
             '<(angle_path)/src/tests/perf_tests/BufferSubData.cpp',
             '<(angle_path)/src/tests/perf_tests/DrawCallPerf.cpp',
-            '<(angle_path)/src/tests/perf_tests/DrawCallPerfParams.cpp',
-            '<(angle_path)/src/tests/perf_tests/DrawCallPerfParams.h',
-            '<(angle_path)/src/tests/perf_tests/DrawElementsPerf.cpp',
             '<(angle_path)/src/tests/perf_tests/DynamicPromotionPerfTest.cpp',
             '<(angle_path)/src/tests/perf_tests/EGLInitializePerf.cpp',
             '<(angle_path)/src/tests/perf_tests/IndexConversionPerf.cpp',
             '<(angle_path)/src/tests/perf_tests/InstancingPerf.cpp',
             '<(angle_path)/src/tests/perf_tests/InterleavedAttributeData.cpp',
             '<(angle_path)/src/tests/perf_tests/LinkProgramPerfTest.cpp',
-            '<(angle_path)/src/tests/perf_tests/MultiviewPerf.cpp',
             '<(angle_path)/src/tests/perf_tests/PointSprites.cpp',
             '<(angle_path)/src/tests/perf_tests/TexSubImage.cpp',
             '<(angle_path)/src/tests/perf_tests/TextureSampling.cpp',
@@ -43,8 +36,6 @@
             '<(angle_path)/src/tests/test_utils/angle_test_configs.h',
             '<(angle_path)/src/tests/test_utils/angle_test_instantiate.cpp',
             '<(angle_path)/src/tests/test_utils/angle_test_instantiate.h',
-            '<(angle_path)/src/tests/test_utils/draw_call_perf_utils.cpp',
-            '<(angle_path)/src/tests/test_utils/draw_call_perf_utils.h',
         ],
         'angle_perf_tests_win_sources':
         [
@@ -56,11 +47,11 @@
     'dependencies':
     [
         '<(angle_path)/src/angle.gyp:angle_common',
-        '<(angle_path)/src/angle.gyp:libANGLE',
-        '<(angle_path)/src/angle.gyp:libGLESv2_static',
-        '<(angle_path)/src/angle.gyp:libEGL_static',
+        '<(angle_path)/src/angle.gyp:libANGLE', # for unit testing
+        '<(angle_path)/src/angle.gyp:libGLESv2',
+        '<(angle_path)/src/angle.gyp:libEGL',
         '<(angle_path)/src/tests/tests.gyp:angle_test_support',
-        '<(angle_path)/util/util.gyp:angle_util_static',
+        '<(angle_path)/util/util.gyp:angle_util',
     ],
     'include_dirs':
     [

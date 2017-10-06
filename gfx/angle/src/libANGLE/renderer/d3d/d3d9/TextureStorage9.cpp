@@ -43,7 +43,7 @@ DWORD TextureStorage9::GetTextureUsage(GLenum internalformat, bool renderTarget)
 {
     DWORD d3dusage = 0;
 
-    const gl::InternalFormat &formatInfo     = gl::GetSizedInternalFormatInfo(internalformat);
+    const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalformat);
     const d3d9::TextureFormat &d3dFormatInfo = d3d9::GetTextureFormatInfo(internalformat);
     if (formatInfo.depthBits > 0 || formatInfo.stencilBits > 0)
     {
@@ -93,16 +93,11 @@ int TextureStorage9::getLevelCount() const
     return static_cast<int>(mMipLevels) - mTopLevel;
 }
 
-gl::Error TextureStorage9::setData(const gl::Context *context,
-                                   const gl::ImageIndex &index,
-                                   ImageD3D *image,
-                                   const gl::Box *destBox,
-                                   GLenum type,
-                                   const gl::PixelUnpackState &unpack,
-                                   const uint8_t *pixelData)
+gl::Error TextureStorage9::setData(const gl::ImageIndex &index, ImageD3D *image, const gl::Box *destBox, GLenum type,
+                                   const gl::PixelUnpackState &unpack, const uint8_t *pixelData)
 {
     UNREACHABLE();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 TextureStorage9_2D::TextureStorage9_2D(Renderer9 *renderer, SwapChain9 *swapchain)
@@ -126,7 +121,7 @@ TextureStorage9_2D::TextureStorage9_2D(Renderer9 *renderer, SwapChain9 *swapchai
 TextureStorage9_2D::TextureStorage9_2D(Renderer9 *renderer, GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, int levels)
     : TextureStorage9(renderer, GetTextureUsage(internalformat, renderTarget))
 {
-    mTexture = nullptr;
+    mTexture = NULL;
 
     mInternalFormat = internalformat;
 
@@ -152,16 +147,15 @@ TextureStorage9_2D::~TextureStorage9_2D()
 
 // Increments refcount on surface.
 // caller must Release() the returned surface
-gl::Error TextureStorage9_2D::getSurfaceLevel(const gl::Context *context,
-                                              GLenum target,
+gl::Error TextureStorage9_2D::getSurfaceLevel(GLenum target,
                                               int level,
                                               bool dirty,
                                               IDirect3DSurface9 **outSurface)
 {
     ASSERT(target == GL_TEXTURE_2D);
 
-    IDirect3DBaseTexture9 *baseTexture = nullptr;
-    gl::Error error                    = getBaseTexture(context, &baseTexture);
+    IDirect3DBaseTexture9 *baseTexture = NULL;
+    gl::Error error = getBaseTexture(&baseTexture);
     if (error.isError())
     {
         return error;
@@ -174,36 +168,33 @@ gl::Error TextureStorage9_2D::getSurfaceLevel(const gl::Context *context,
     ASSERT(SUCCEEDED(result));
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to get the surface from a texture, result: 0x%X.", result);
     }
 
     // With managed textures the driver needs to be informed of updates to the lower mipmap levels
     if (level + mTopLevel != 0 && isManaged() && dirty)
     {
-        texture->AddDirtyRect(nullptr);
+        texture->AddDirtyRect(NULL);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_2D::getRenderTarget(const gl::Context *context,
-                                              const gl::ImageIndex &index,
-                                              RenderTargetD3D **outRT)
+gl::Error TextureStorage9_2D::getRenderTarget(const gl::ImageIndex &index, RenderTargetD3D **outRT)
 {
     ASSERT(index.mipIndex < getLevelCount());
 
     if (!mRenderTargets[index.mipIndex] && isRenderTarget())
     {
-        IDirect3DBaseTexture9 *baseTexture = nullptr;
-        gl::Error error                    = getBaseTexture(context, &baseTexture);
+        IDirect3DBaseTexture9 *baseTexture = NULL;
+        gl::Error error = getBaseTexture(&baseTexture);
         if (error.isError())
         {
             return error;
         }
 
-        IDirect3DSurface9 *surface = nullptr;
-        error = getSurfaceLevel(context, GL_TEXTURE_2D, index.mipIndex, false, &surface);
+        IDirect3DSurface9 *surface = NULL;
+        error = getSurfaceLevel(GL_TEXTURE_2D, index.mipIndex, false, &surface);
         if (error.isError())
         {
             return error;
@@ -221,22 +212,20 @@ gl::Error TextureStorage9_2D::getRenderTarget(const gl::Context *context,
 
     ASSERT(outRT);
     *outRT = mRenderTargets[index.mipIndex];
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_2D::generateMipmap(const gl::Context *context,
-                                             const gl::ImageIndex &sourceIndex,
-                                             const gl::ImageIndex &destIndex)
+gl::Error TextureStorage9_2D::generateMipmap(const gl::ImageIndex &sourceIndex, const gl::ImageIndex &destIndex)
 {
-    IDirect3DSurface9 *upper = nullptr;
-    gl::Error error = getSurfaceLevel(context, GL_TEXTURE_2D, sourceIndex.mipIndex, false, &upper);
+    IDirect3DSurface9 *upper = NULL;
+    gl::Error error = getSurfaceLevel(GL_TEXTURE_2D, sourceIndex.mipIndex, false, &upper);
     if (error.isError())
     {
         return error;
     }
 
-    IDirect3DSurface9 *lower = nullptr;
-    error = getSurfaceLevel(context, GL_TEXTURE_2D, destIndex.mipIndex, true, &lower);
+    IDirect3DSurface9 *lower = NULL;
+    error = getSurfaceLevel(GL_TEXTURE_2D, destIndex.mipIndex, true, &lower);
     if (error.isError())
     {
         SafeRelease(upper);
@@ -252,34 +241,32 @@ gl::Error TextureStorage9_2D::generateMipmap(const gl::Context *context,
     return error;
 }
 
-gl::Error TextureStorage9_2D::getBaseTexture(const gl::Context *context,
-                                             IDirect3DBaseTexture9 **outTexture)
+gl::Error TextureStorage9_2D::getBaseTexture(IDirect3DBaseTexture9 **outTexture)
 {
     // if the width or height is not positive this should be treated as an incomplete texture
     // we handle that here by skipping the d3d texture creation
-    if (mTexture == nullptr && mTextureWidth > 0 && mTextureHeight > 0)
+    if (mTexture == NULL && mTextureWidth > 0 && mTextureHeight > 0)
     {
         ASSERT(mMipLevels > 0);
 
         IDirect3DDevice9 *device = mRenderer->getDevice();
-        HRESULT result           = device->CreateTexture(static_cast<unsigned int>(mTextureWidth),
+        HRESULT result = device->CreateTexture(static_cast<unsigned int>(mTextureWidth),
                                                static_cast<unsigned int>(mTextureHeight),
                                                static_cast<unsigned int>(mMipLevels), getUsage(),
-                                               mTextureFormat, getPool(), &mTexture, nullptr);
+                                               mTextureFormat, getPool(), &mTexture, NULL);
 
         if (FAILED(result))
         {
             ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-            return gl::OutOfMemory()
-                   << "Failed to create 2D storage texture, " << gl::FmtHR(result);
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to create 2D storage texture, result: 0x%X.", result);
         }
     }
 
     *outTexture = mTexture;
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_2D::copyToStorage(const gl::Context *context, TextureStorage *destStorage)
+gl::Error TextureStorage9_2D::copyToStorage(TextureStorage *destStorage)
 {
     ASSERT(destStorage);
 
@@ -288,15 +275,15 @@ gl::Error TextureStorage9_2D::copyToStorage(const gl::Context *context, TextureS
     int levels = getLevelCount();
     for (int i = 0; i < levels; ++i)
     {
-        IDirect3DSurface9 *srcSurf = nullptr;
-        gl::Error error            = getSurfaceLevel(context, GL_TEXTURE_2D, i, false, &srcSurf);
+        IDirect3DSurface9 *srcSurf = NULL;
+        gl::Error error = getSurfaceLevel(GL_TEXTURE_2D, i, false, &srcSurf);
         if (error.isError())
         {
             return error;
         }
 
-        IDirect3DSurface9 *dstSurf = nullptr;
-        error = dest9->getSurfaceLevel(context, GL_TEXTURE_2D, i, true, &dstSurf);
+        IDirect3DSurface9 *dstSurf = NULL;
+        error = dest9->getSurfaceLevel(GL_TEXTURE_2D, i, true, &dstSurf);
         if (error.isError())
         {
             SafeRelease(srcSurf);
@@ -314,7 +301,7 @@ gl::Error TextureStorage9_2D::copyToStorage(const gl::Context *context, TextureS
         }
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 TextureStorage9_EGLImage::TextureStorage9_EGLImage(Renderer9 *renderer,
@@ -334,8 +321,7 @@ TextureStorage9_EGLImage::~TextureStorage9_EGLImage()
 {
 }
 
-gl::Error TextureStorage9_EGLImage::getSurfaceLevel(const gl::Context *context,
-                                                    GLenum target,
+gl::Error TextureStorage9_EGLImage::getSurfaceLevel(GLenum target,
                                                     int level,
                                                     bool,
                                                     IDirect3DSurface9 **outSurface)
@@ -344,7 +330,7 @@ gl::Error TextureStorage9_EGLImage::getSurfaceLevel(const gl::Context *context,
     ASSERT(level == 0);
 
     RenderTargetD3D *renderTargetD3D = nullptr;
-    gl::Error error                  = mImage->getRenderTarget(context, &renderTargetD3D);
+    gl::Error error = mImage->getRenderTarget(&renderTargetD3D);
     if (error.isError())
     {
         return error;
@@ -353,24 +339,22 @@ gl::Error TextureStorage9_EGLImage::getSurfaceLevel(const gl::Context *context,
     RenderTarget9 *renderTarget9 = GetAs<RenderTarget9>(renderTargetD3D);
 
     *outSurface = renderTarget9->getSurface();
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_EGLImage::getRenderTarget(const gl::Context *context,
-                                                    const gl::ImageIndex &index,
+gl::Error TextureStorage9_EGLImage::getRenderTarget(const gl::ImageIndex &index,
                                                     RenderTargetD3D **outRT)
 {
     ASSERT(!index.hasLayer());
     ASSERT(index.mipIndex == 0);
 
-    return mImage->getRenderTarget(context, outRT);
+    return mImage->getRenderTarget(outRT);
 }
 
-gl::Error TextureStorage9_EGLImage::getBaseTexture(const gl::Context *context,
-                                                   IDirect3DBaseTexture9 **outTexture)
+gl::Error TextureStorage9_EGLImage::getBaseTexture(IDirect3DBaseTexture9 **outTexture)
 {
     RenderTargetD3D *renderTargetD3D = nullptr;
-    gl::Error error                  = mImage->getRenderTarget(context, &renderTargetD3D);
+    gl::Error error = mImage->getRenderTarget(&renderTargetD3D);
     if (error.isError())
     {
         return error;
@@ -380,19 +364,16 @@ gl::Error TextureStorage9_EGLImage::getBaseTexture(const gl::Context *context,
     *outTexture = renderTarget9->getTexture();
     ASSERT(*outTexture != nullptr);
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_EGLImage::generateMipmap(const gl::Context *context,
-                                                   const gl::ImageIndex &,
-                                                   const gl::ImageIndex &)
+gl::Error TextureStorage9_EGLImage::generateMipmap(const gl::ImageIndex &, const gl::ImageIndex &)
 {
     UNREACHABLE();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
-                                                  TextureStorage *destStorage)
+gl::Error TextureStorage9_EGLImage::copyToStorage(TextureStorage *destStorage)
 {
     ASSERT(destStorage);
     ASSERT(getLevelCount() == 1);
@@ -400,7 +381,7 @@ gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
     TextureStorage9 *dest9 = GetAs<TextureStorage9>(destStorage);
 
     IDirect3DBaseTexture9 *destBaseTexture9 = nullptr;
-    gl::Error error                         = dest9->getBaseTexture(context, &destBaseTexture9);
+    gl::Error error = dest9->getBaseTexture(&destBaseTexture9);
     if (error.isError())
     {
         return error;
@@ -412,12 +393,12 @@ gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
     HRESULT result = destTexture9->GetSurfaceLevel(destStorage->getTopLevel(), &destSurface);
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to get the surface from a texture, result: 0x%X.", result);
     }
 
     RenderTargetD3D *sourceRenderTarget = nullptr;
-    error                               = mImage->getRenderTarget(context, &sourceRenderTarget);
+    error = mImage->getRenderTarget(&sourceRenderTarget);
     if (error.isError())
     {
         SafeRelease(destSurface);
@@ -439,16 +420,16 @@ gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
     }
 
     SafeRelease(destSurface);
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 TextureStorage9_Cube::TextureStorage9_Cube(Renderer9 *renderer, GLenum internalformat, bool renderTarget, int size, int levels, bool hintLevelZeroOnly)
     : TextureStorage9(renderer, GetTextureUsage(internalformat, renderTarget))
 {
-    mTexture = nullptr;
-    for (size_t i = 0; i < gl::CUBE_FACE_COUNT; ++i)
+    mTexture = NULL;
+    for (size_t i = 0; i < CUBE_FACE_COUNT; ++i)
     {
-        mRenderTarget[i] = nullptr;
+        mRenderTarget[i] = NULL;
     }
 
     mInternalFormat = internalformat;
@@ -467,7 +448,7 @@ TextureStorage9_Cube::~TextureStorage9_Cube()
 {
     SafeRelease(mTexture);
 
-    for (size_t i = 0; i < gl::CUBE_FACE_COUNT; ++i)
+    for (size_t i = 0; i < CUBE_FACE_COUNT; ++i)
     {
         SafeDelete(mRenderTarget[i]);
     }
@@ -475,14 +456,13 @@ TextureStorage9_Cube::~TextureStorage9_Cube()
 
 // Increments refcount on surface.
 // caller must Release() the returned surface
-gl::Error TextureStorage9_Cube::getSurfaceLevel(const gl::Context *context,
-                                                GLenum target,
+gl::Error TextureStorage9_Cube::getSurfaceLevel(GLenum target,
                                                 int level,
                                                 bool dirty,
                                                 IDirect3DSurface9 **outSurface)
 {
-    IDirect3DBaseTexture9 *baseTexture = nullptr;
-    gl::Error error                    = getBaseTexture(context, &baseTexture);
+    IDirect3DBaseTexture9 *baseTexture = NULL;
+    gl::Error error = getBaseTexture(&baseTexture);
     if (error.isError())
     {
         return error;
@@ -496,38 +476,35 @@ gl::Error TextureStorage9_Cube::getSurfaceLevel(const gl::Context *context,
     ASSERT(SUCCEEDED(result));
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to get the surface from a texture, result: 0x%X.", result);
     }
 
     // With managed textures the driver needs to be informed of updates to the lower mipmap levels
     if (level != 0 && isManaged() && dirty)
     {
-        texture->AddDirtyRect(face, nullptr);
+        texture->AddDirtyRect(face, NULL);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_Cube::getRenderTarget(const gl::Context *context,
-                                                const gl::ImageIndex &index,
-                                                RenderTargetD3D **outRT)
+gl::Error TextureStorage9_Cube::getRenderTarget(const gl::ImageIndex &index, RenderTargetD3D **outRT)
 {
     ASSERT(outRT);
     ASSERT(index.mipIndex == 0);
-    ASSERT(index.layerIndex >= 0 && static_cast<size_t>(index.layerIndex) < gl::CUBE_FACE_COUNT);
+    ASSERT(index.layerIndex >= 0 && static_cast<size_t>(index.layerIndex) < CUBE_FACE_COUNT);
 
-    if (mRenderTarget[index.layerIndex] == nullptr && isRenderTarget())
+    if (mRenderTarget[index.layerIndex] == NULL && isRenderTarget())
     {
-        IDirect3DBaseTexture9 *baseTexture = nullptr;
-        gl::Error error                    = getBaseTexture(context, &baseTexture);
+        IDirect3DBaseTexture9 *baseTexture = NULL;
+        gl::Error error = getBaseTexture(&baseTexture);
         if (error.isError())
         {
             return error;
         }
 
-        IDirect3DSurface9 *surface = nullptr;
-        error = getSurfaceLevel(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + index.layerIndex,
+        IDirect3DSurface9 *surface = NULL;
+        error = getSurfaceLevel(GL_TEXTURE_CUBE_MAP_POSITIVE_X + index.layerIndex,
                                 mTopLevel + index.mipIndex, false, &surface);
         if (error.isError())
         {
@@ -541,23 +518,20 @@ gl::Error TextureStorage9_Cube::getRenderTarget(const gl::Context *context,
     }
 
     *outRT = mRenderTarget[index.layerIndex];
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_Cube::generateMipmap(const gl::Context *context,
-                                               const gl::ImageIndex &sourceIndex,
-                                               const gl::ImageIndex &destIndex)
+gl::Error TextureStorage9_Cube::generateMipmap(const gl::ImageIndex &sourceIndex, const gl::ImageIndex &destIndex)
 {
-    IDirect3DSurface9 *upper = nullptr;
-    gl::Error error =
-        getSurfaceLevel(context, sourceIndex.type, sourceIndex.mipIndex, false, &upper);
+    IDirect3DSurface9 *upper = NULL;
+    gl::Error error = getSurfaceLevel(sourceIndex.type, sourceIndex.mipIndex, false, &upper);
     if (error.isError())
     {
         return error;
     }
 
-    IDirect3DSurface9 *lower = nullptr;
-    error = getSurfaceLevel(context, destIndex.type, destIndex.mipIndex, true, &lower);
+    IDirect3DSurface9 *lower = NULL;
+    error = getSurfaceLevel(destIndex.type, destIndex.mipIndex, true, &lower);
     if (error.isError())
     {
         SafeRelease(upper);
@@ -573,56 +547,52 @@ gl::Error TextureStorage9_Cube::generateMipmap(const gl::Context *context,
     return error;
 }
 
-gl::Error TextureStorage9_Cube::getBaseTexture(const gl::Context *context,
-                                               IDirect3DBaseTexture9 **outTexture)
+gl::Error TextureStorage9_Cube::getBaseTexture(IDirect3DBaseTexture9 **outTexture)
 {
     // if the size is not positive this should be treated as an incomplete texture
     // we handle that here by skipping the d3d texture creation
-    if (mTexture == nullptr && mTextureWidth > 0 && mTextureHeight > 0)
+    if (mTexture == NULL && mTextureWidth > 0 && mTextureHeight > 0)
     {
         ASSERT(mMipLevels > 0);
         ASSERT(mTextureWidth == mTextureHeight);
 
         IDirect3DDevice9 *device = mRenderer->getDevice();
-        HRESULT result           = device->CreateCubeTexture(
+        HRESULT result = device->CreateCubeTexture(
             static_cast<unsigned int>(mTextureWidth), static_cast<unsigned int>(mMipLevels),
-            getUsage(), mTextureFormat, getPool(), &mTexture, nullptr);
+            getUsage(), mTextureFormat, getPool(), &mTexture, NULL);
 
         if (FAILED(result))
         {
             ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-            return gl::OutOfMemory()
-                   << "Failed to create cube storage texture, " << gl::FmtHR(result);
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to create cube storage texture, result: 0x%X.", result);
         }
     }
 
     *outTexture = mTexture;
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error TextureStorage9_Cube::copyToStorage(const gl::Context *context,
-                                              TextureStorage *destStorage)
+gl::Error TextureStorage9_Cube::copyToStorage(TextureStorage *destStorage)
 {
     ASSERT(destStorage);
 
     TextureStorage9_Cube *dest9 = GetAs<TextureStorage9_Cube>(destStorage);
 
     int levels = getLevelCount();
-    for (int f = 0; f < static_cast<int>(gl::CUBE_FACE_COUNT); f++)
+    for (int f = 0; f < static_cast<int>(CUBE_FACE_COUNT); f++)
     {
         for (int i = 0; i < levels; i++)
         {
-            IDirect3DSurface9 *srcSurf = nullptr;
+            IDirect3DSurface9 *srcSurf = NULL;
             gl::Error error =
-                getSurfaceLevel(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i, false, &srcSurf);
+                getSurfaceLevel(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i, false, &srcSurf);
             if (error.isError())
             {
                 return error;
             }
 
-            IDirect3DSurface9 *dstSurf = nullptr;
-            error = dest9->getSurfaceLevel(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i, true,
-                                           &dstSurf);
+            IDirect3DSurface9 *dstSurf = NULL;
+            error = dest9->getSurfaceLevel(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i, true, &dstSurf);
             if (error.isError())
             {
                 SafeRelease(srcSurf);
@@ -641,7 +611,7 @@ gl::Error TextureStorage9_Cube::copyToStorage(const gl::Context *context,
         }
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 }

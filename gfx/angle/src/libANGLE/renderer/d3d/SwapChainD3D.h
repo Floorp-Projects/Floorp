@@ -12,25 +12,13 @@
 
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 #include "common/angleutils.h"
 #include "common/platform.h"
-#include "libANGLE/Error.h"
 
 #if !defined(ANGLE_FORCE_VSYNC_OFF)
 #define ANGLE_FORCE_VSYNC_OFF 0
 #endif
-
-namespace gl
-{
-class Context;
-}  // namespace gl
-
-namespace egl
-{
-class Display;
-}  // namespace egl
 
 namespace rx
 {
@@ -45,18 +33,9 @@ class SwapChainD3D : angle::NonCopyable
                  GLenum depthBufferFormat);
     virtual ~SwapChainD3D();
 
-    virtual EGLint resize(const gl::Context *context,
-                          EGLint backbufferWidth,
-                          EGLint backbufferSize) = 0;
-    virtual EGLint reset(const gl::Context *context,
-                         EGLint backbufferWidth,
-                         EGLint backbufferHeight,
-                         EGLint swapInterval) = 0;
-    virtual EGLint swapRect(const gl::Context *context,
-                            EGLint x,
-                            EGLint y,
-                            EGLint width,
-                            EGLint height) = 0;
+    virtual EGLint resize(EGLint backbufferWidth, EGLint backbufferSize) = 0;
+    virtual EGLint reset(EGLint backbufferWidth, EGLint backbufferHeight, EGLint swapInterval) = 0;
+    virtual EGLint swapRect(EGLint x, EGLint y, EGLint width, EGLint height) = 0;
     virtual void recreate() = 0;
 
     virtual RenderTargetD3D *getColorRenderTarget() = 0;
@@ -67,8 +46,6 @@ class SwapChainD3D : angle::NonCopyable
 
     HANDLE getShareHandle() { return mShareHandle; }
     virtual void *getKeyedMutex() = 0;
-
-    virtual egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) = 0;
 
   protected:
     const GLenum mOffscreenRenderTargetFormat;

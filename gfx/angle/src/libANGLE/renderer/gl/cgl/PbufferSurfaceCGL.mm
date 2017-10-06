@@ -55,7 +55,7 @@ PbufferSurfaceCGL::~PbufferSurfaceCGL()
     }
 }
 
-egl::Error PbufferSurfaceCGL::initialize(const egl::Display *display)
+egl::Error PbufferSurfaceCGL::initialize()
 {
     mFunctions->genRenderbuffers(1, &mColorRenderbuffer);
     mStateManager->bindRenderbuffer(GL_RENDERBUFFER, mColorRenderbuffer);
@@ -72,44 +72,40 @@ egl::Error PbufferSurfaceCGL::initialize(const egl::Display *display)
     mFunctions->framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                                         GL_RENDERBUFFER, mDSRenderbuffer);
 
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error PbufferSurfaceCGL::makeCurrent()
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error PbufferSurfaceCGL::swap(const gl::Context *context)
+egl::Error PbufferSurfaceCGL::swap()
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error PbufferSurfaceCGL::postSubBuffer(const gl::Context *context,
-                                            EGLint x,
-                                            EGLint y,
-                                            EGLint width,
-                                            EGLint height)
+egl::Error PbufferSurfaceCGL::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error PbufferSurfaceCGL::querySurfacePointerANGLE(EGLint attribute, void **value)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error PbufferSurfaceCGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error PbufferSurfaceCGL::releaseTexImage(EGLint buffer)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 void PbufferSurfaceCGL::setSwapInterval(EGLint interval)
@@ -141,8 +137,7 @@ FramebufferImpl *PbufferSurfaceCGL::createDefaultFramebuffer(const gl::Framebuff
 {
     // TODO(cwallez) assert it happens only once?
     return new FramebufferGL(mFramebuffer, state, mFunctions, mRenderer->getWorkarounds(),
-                             mRenderer->getBlitter(), mRenderer->getMultiviewClearer(),
-                             mStateManager);
+                             mRenderer->getBlitter(), mStateManager);
 }
 
-}  // namespace rx
+}

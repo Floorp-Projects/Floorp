@@ -25,19 +25,24 @@ class LineLoopTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vsSource =
-            R"(attribute highp vec4 position;
+        const std::string vsSource = SHADER_SOURCE
+        (
+            attribute highp vec4 position;
+
             void main(void)
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string fsSource =
-            R"(uniform highp vec4 color;
+        const std::string fsSource = SHADER_SOURCE
+        (
+            uniform highp vec4 color;
             void main(void)
             {
                 gl_FragColor = color;
-            })";
+            }
+        );
 
         mProgram = CompileProgram(vsSource, fsSource);
         if (mProgram == 0)
@@ -46,7 +51,7 @@ class LineLoopTest : public ANGLETest
         }
 
         mPositionLocation = glGetAttribLocation(mProgram, "position");
-        mColorLocation    = glGetUniformLocation(mProgram, "color");
+        mColorLocation = glGetUniformLocation(mProgram, "color");
 
         glBlendFunc(GL_ONE, GL_ONE);
         glEnable(GL_BLEND);
@@ -62,17 +67,35 @@ class LineLoopTest : public ANGLETest
         ANGLETest::TearDown();
     }
 
-    void runTest(GLenum indexType, GLuint indexBuffer, const void *indexPtr)
+    void runTest(GLenum indexType, GLuint indexBuffer, const GLvoid *indexPtr)
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        static const GLfloat loopPositions[] = {0.0f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,  0.0f,
-                                                0.0f,  0.0f, 0.0f, 0.0f, 0.0f, -0.5f, -0.5f,
-                                                -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f};
+        static const GLfloat loopPositions[] =
+        {
+             0.0f,  0.0f,
+             0.0f,  0.0f,
+             0.0f,  0.0f,
+             0.0f,  0.0f,
+             0.0f,  0.0f,
+             0.0f,  0.0f,
+            -0.5f, -0.5f,
+            -0.5f,  0.5f,
+             0.5f,  0.5f,
+             0.5f, -0.5f
+        };
 
-        static const GLfloat stripPositions[] = {-0.5f, -0.5f, -0.5f, 0.5f,
-                                                 0.5f,  0.5f,  0.5f,  -0.5f};
-        static const GLubyte stripIndices[] = {1, 0, 3, 2, 1};
+        static const GLfloat stripPositions[] =
+        {
+            -0.5f, -0.5f,
+            -0.5f,  0.5f,
+             0.5f,  0.5f,
+             0.5f, -0.5f
+        };
+        static const GLubyte stripIndices[] =
+        {
+            1, 0, 3, 2, 1
+        };
 
         glUseProgram(mProgram);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -87,8 +110,7 @@ class LineLoopTest : public ANGLETest
         glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_BYTE, stripIndices);
 
         std::vector<GLubyte> pixels(getWindowWidth() * getWindowHeight() * 4);
-        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE,
-                     &pixels[0]);
+        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
 
         ASSERT_GL_NO_ERROR();
 
@@ -96,7 +118,7 @@ class LineLoopTest : public ANGLETest
         {
             for (int x = 0; x < getWindowWidth(); x++)
             {
-                const GLubyte *pixel = &pixels[0] + ((y * getWindowWidth() + x) * 4);
+                const GLubyte* pixel = &pixels[0] + ((y * getWindowWidth() + x) * 4);
 
                 EXPECT_EQ(pixel[0], 0);
                 EXPECT_EQ(pixel[1], pixel[2]);
@@ -117,7 +139,7 @@ TEST_P(LineLoopTest, LineLoopUByteIndices)
     // This doesn't occur on Windows 10 (Version 1511) though.
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLubyte indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLubyte indices[] = { 0, 7, 6, 9, 8, 0 };
     runTest(GL_UNSIGNED_BYTE, 0, indices + 1);
 }
 
@@ -126,7 +148,7 @@ TEST_P(LineLoopTest, LineLoopUShortIndices)
     // Disable D3D11 SDK Layers warnings checks, see ANGLE issue 667 for details
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLushort indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLushort indices[] = { 0, 7, 6, 9, 8, 0 };
     runTest(GL_UNSIGNED_SHORT, 0, indices + 1);
 }
 
@@ -140,7 +162,7 @@ TEST_P(LineLoopTest, LineLoopUIntIndices)
     // Disable D3D11 SDK Layers warnings checks, see ANGLE issue 667 for details
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLuint indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLuint indices[] = { 0, 7, 6, 9, 8, 0 };
     runTest(GL_UNSIGNED_INT, 0, indices + 1);
 }
 
@@ -149,7 +171,7 @@ TEST_P(LineLoopTest, LineLoopUByteIndexBuffer)
     // Disable D3D11 SDK Layers warnings checks, see ANGLE issue 667 for details
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLubyte indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLubyte indices[] = { 0, 7, 6, 9, 8, 0 };
 
     GLuint buf;
     glGenBuffers(1, &buf);
@@ -166,7 +188,7 @@ TEST_P(LineLoopTest, LineLoopUShortIndexBuffer)
     // Disable D3D11 SDK Layers warnings checks, see ANGLE issue 667 for details
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLushort indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLushort indices[] = { 0, 7, 6, 9, 8, 0 };
 
     GLuint buf;
     glGenBuffers(1, &buf);
@@ -188,7 +210,7 @@ TEST_P(LineLoopTest, LineLoopUIntIndexBuffer)
     // Disable D3D11 SDK Layers warnings checks, see ANGLE issue 667 for details
     ignoreD3D11SDKLayersWarnings();
 
-    static const GLuint indices[] = {0, 7, 6, 9, 8, 0};
+    static const GLuint indices[] = { 0, 7, 6, 9, 8, 0 };
 
     GLuint buf;
     glGenBuffers(1, &buf);
@@ -200,6 +222,5 @@ TEST_P(LineLoopTest, LineLoopUIntIndexBuffer)
     glDeleteBuffers(1, &buf);
 }
 
-// Use this to select which configurations (e.g. which renderer, which GLES major version) these
-// tests should be run against.
+// Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(LineLoopTest, ES2_D3D9(), ES2_D3D11(), ES2_OPENGL(), ES2_OPENGLES());

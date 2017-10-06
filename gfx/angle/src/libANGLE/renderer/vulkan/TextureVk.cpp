@@ -22,8 +22,7 @@ TextureVk::~TextureVk()
 {
 }
 
-gl::Error TextureVk::setImage(const gl::Context *context,
-                              GLenum target,
+gl::Error TextureVk::setImage(GLenum target,
                               size_t level,
                               GLenum internalFormat,
                               const gl::Extents &size,
@@ -33,11 +32,10 @@ gl::Error TextureVk::setImage(const gl::Context *context,
                               const uint8_t *pixels)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setSubImage(const gl::Context *context,
-                                 GLenum target,
+gl::Error TextureVk::setSubImage(GLenum target,
                                  size_t level,
                                  const gl::Box &area,
                                  GLenum format,
@@ -46,11 +44,10 @@ gl::Error TextureVk::setSubImage(const gl::Context *context,
                                  const uint8_t *pixels)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setCompressedImage(const gl::Context *context,
-                                        GLenum target,
+gl::Error TextureVk::setCompressedImage(GLenum target,
                                         size_t level,
                                         GLenum internalFormat,
                                         const gl::Extents &size,
@@ -59,11 +56,10 @@ gl::Error TextureVk::setCompressedImage(const gl::Context *context,
                                         const uint8_t *pixels)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setCompressedSubImage(const gl::Context *context,
-                                           GLenum target,
+gl::Error TextureVk::setCompressedSubImage(GLenum target,
                                            size_t level,
                                            const gl::Box &area,
                                            GLenum format,
@@ -72,103 +68,83 @@ gl::Error TextureVk::setCompressedSubImage(const gl::Context *context,
                                            const uint8_t *pixels)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::copyImage(const gl::Context *context,
-                               GLenum target,
+gl::Error TextureVk::copyImage(GLenum target,
                                size_t level,
                                const gl::Rectangle &sourceArea,
                                GLenum internalFormat,
                                const gl::Framebuffer *source)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::copySubImage(const gl::Context *context,
-                                  GLenum target,
+gl::Error TextureVk::copySubImage(GLenum target,
                                   size_t level,
                                   const gl::Offset &destOffset,
                                   const gl::Rectangle &sourceArea,
                                   const gl::Framebuffer *source)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setStorage(const gl::Context *context,
-                                GLenum target,
+gl::Error TextureVk::setStorage(GLenum target,
                                 size_t levels,
                                 GLenum internalFormat,
                                 const gl::Extents &size)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setEGLImageTarget(const gl::Context *context, GLenum target, egl::Image *image)
+gl::Error TextureVk::setEGLImageTarget(GLenum target, egl::Image *image)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setImageExternal(const gl::Context *context,
-                                      GLenum target,
+gl::Error TextureVk::setImageExternal(GLenum target,
                                       egl::Stream *stream,
                                       const egl::Stream::GLTextureDescription &desc)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::generateMipmap(const gl::Context *context)
+gl::Error TextureVk::generateMipmap()
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
-gl::Error TextureVk::setBaseLevel(const gl::Context *context, GLuint baseLevel)
+void TextureVk::setBaseLevel(GLuint baseLevel)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
 }
 
-gl::Error TextureVk::bindTexImage(const gl::Context *context, egl::Surface *surface)
+void TextureVk::bindTexImage(egl::Surface *surface)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
 }
 
-gl::Error TextureVk::releaseTexImage(const gl::Context *context)
+void TextureVk::releaseTexImage()
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
 }
 
-gl::Error TextureVk::getAttachmentRenderTarget(const gl::Context *context,
-                                               GLenum binding,
-                                               const gl::ImageIndex &imageIndex,
+gl::Error TextureVk::getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
                                                FramebufferAttachmentRenderTarget **rtOut)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 void TextureVk::syncState(const gl::Texture::DirtyBits &dirtyBits)
 {
     UNIMPLEMENTED();
-}
-
-gl::Error TextureVk::setStorageMultisample(const gl::Context *context,
-                                           GLenum target,
-                                           GLsizei samples,
-                                           GLint internalformat,
-                                           const gl::Extents &size,
-                                           GLboolean fixedSampleLocations)
-{
-    UNIMPLEMENTED();
-    return gl::InternalError() << "setStorageMultisample is unimplemented.";
 }
 
 }  // namespace rx

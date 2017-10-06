@@ -22,14 +22,46 @@
 
 namespace rx
 {
+static gl::ImageIndex GetImageIndex(GLenum target, size_t mip, size_t layer)
+{
+    if (target == GL_TEXTURE_3D)
+    {
+        return gl::ImageIndex::Make3D(static_cast<GLint>(mip), static_cast<GLint>(layer));
+    }
+    else
+    {
+        ASSERT(layer == 0);
+        return gl::ImageIndex::MakeGeneric(target, static_cast<GLint>(mip));
+    }
+}
 
-EGLImageD3D::EGLImageD3D(const egl::ImageState &state,
+EGLImageD3D::EGLImageD3D(RendererD3D *renderer,
                          EGLenum target,
-                         const egl::AttributeMap &attribs,
-                         RendererD3D *renderer)
-    : ImageImpl(state), mRenderer(renderer), mRenderTarget(nullptr)
+                         egl::ImageSibling *buffer,
+                         const egl::AttributeMap &attribs)
+    : mRenderer(renderer), mBuffer(buffer), mAttachmentBuffer(nullptr), mRenderTarget(nullptr)
 {
     ASSERT(renderer != nullptr);
+    ASSERT(buffer != nullptr);
+
+    if (egl::IsTextureTarget(target))
+    {
+        mAttachmentBuffer = GetImplAs<TextureD3D>(GetAs<gl::Texture>(buffer));
+        mAttachmentTarget = gl::FramebufferAttachment::Target(
+            GL_NONE, GetImageIndex(egl_gl::EGLImageTargetToGLTextureTarget(target),
+                                   attribs.get(EGL_GL_TEXTURE_LEVEL_KHR, 0),
+                                   attribs.get(EGL_GL_TEXTURE_ZOFFSET_KHR, 0)));
+    }
+    else if (egl::IsRenderbufferTarget(target))
+    {
+        mAttachmentBuffer = GetImplAs<RenderbufferD3D>(GetAs<gl::Renderbuffer>(buffer));
+        mAttachmentTarget =
+            gl::FramebufferAttachment::Target(GL_NONE, gl::ImageIndex::MakeInvalid());
+    }
+    else
+    {
+        UNREACHABLE();
+    }
 }
 
 EGLImageD3D::~EGLImageD3D()
@@ -39,49 +71,65 @@ EGLImageD3D::~EGLImageD3D()
 
 egl::Error EGLImageD3D::initialize()
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-gl::Error EGLImageD3D::orphan(const gl::Context *context, egl::ImageSibling *sibling)
+gl::Error EGLImageD3D::orphan(egl::ImageSibling *sibling)
 {
-    if (sibling == mState.source.get())
+    if (sibling == mBuffer)
     {
-        ANGLE_TRY(copyToLocalRendertarget(context));
+        gl::Error error = copyToLocalRendertarget();
+        if (error.isError())
+        {
+            return error;
+        }
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error EGLImageD3D::getRenderTarget(const gl::Context *context, RenderTargetD3D **outRT) const
+gl::Error EGLImageD3D::getRenderTarget(RenderTargetD3D **outRT) const
 {
-    if (mState.source.get())
+    if (mAttachmentBuffer)
     {
-        ASSERT(!mRenderTarget);
         FramebufferAttachmentRenderTarget *rt = nullptr;
-        ANGLE_TRY(
-            mState.source->getAttachmentRenderTarget(context, GL_NONE, mState.imageIndex, &rt));
+        gl::Error error = mAttachmentBuffer->getAttachmentRenderTarget(mAttachmentTarget, &rt);
+        if (error.isError())
+        {
+            return error;
+        }
+
         *outRT = static_cast<RenderTargetD3D *>(rt);
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
     else
     {
         ASSERT(mRenderTarget);
         *outRT = mRenderTarget;
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
-gl::Error EGLImageD3D::copyToLocalRendertarget(const gl::Context *context)
+gl::Error EGLImageD3D::copyToLocalRendertarget()
 {
-    ASSERT(mState.source.get() != nullptr);
+    ASSERT(mBuffer != nullptr);
+    ASSERT(mAttachmentBuffer != nullptr);
     ASSERT(mRenderTarget == nullptr);
 
     RenderTargetD3D *curRenderTarget = nullptr;
-    ANGLE_TRY(getRenderTarget(context, &curRenderTarget));
+    gl::Error error = getRenderTarget(&curRenderTarget);
+    if (error.isError())
+    {
+        return error;
+    }
 
     // This only currently applies do D3D11, where it invalidates FBOs with this Image attached.
-    curRenderTarget->signalDirty(context);
+    curRenderTarget->signalDirty();
+
+    // Clear the source image buffers
+    mBuffer           = nullptr;
+    mAttachmentBuffer = nullptr;
 
     return mRenderer->createRenderTargetCopy(curRenderTarget, &mRenderTarget);
 }
-}  // namespace rx
+}

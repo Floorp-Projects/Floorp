@@ -23,7 +23,8 @@ class DirectiveHandler
   public:
     virtual ~DirectiveHandler();
 
-    virtual void handleError(const SourceLocation &loc, const std::string &msg) = 0;
+    virtual void handleError(const SourceLocation &loc,
+                             const std::string &msg) = 0;
 
     // Handle pragma of form: #pragma name[(value)]
     virtual void handlePragma(const SourceLocation &loc,
@@ -35,7 +36,8 @@ class DirectiveHandler
                                  const std::string &name,
                                  const std::string &behavior) = 0;
 
-    virtual void handleVersion(const SourceLocation &loc, int version) = 0;
+    virtual void handleVersion(const SourceLocation &loc,
+                               int version) = 0;
 };
 
 }  // namespace pp

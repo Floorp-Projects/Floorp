@@ -134,7 +134,7 @@ void DynamicPromotionPerfTest::initializeBenchmark()
 
     glVertexAttribPointer(positionLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glVertexAttribPointer(colorLocation, 3, GL_FLOAT, GL_FALSE, 0,
-                          reinterpret_cast<const void *>(positionArraySize));
+                          reinterpret_cast<const GLvoid *>(positionArraySize));
 
     glEnableVertexAttribArray(positionLocation);
     glEnableVertexAttribArray(colorLocation);

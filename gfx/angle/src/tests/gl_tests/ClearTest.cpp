@@ -75,22 +75,26 @@ class ClearTestBase : public ANGLETest
 
     void setupDefaultProgram()
     {
-        const std::string vertexShaderSource =
-            R"(precision highp float;
+        const std::string vertexShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
             attribute vec4 position;
 
             void main()
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string fragmentShaderSource =
-            R"(precision highp float;
+        const std::string fragmentShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
 
             void main()
             {
                 gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-            })";
+            }
+        );
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);
@@ -351,11 +355,9 @@ TEST_P(ClearTestES3, MixedSRGBClear)
 // flush or finish after ClearBufferfv or each draw.
 TEST_P(ClearTestES3, RepeatedClear)
 {
-    if (IsD3D11() && IsIntel())
+    if (IsD3D11() && (IsNVIDIA() || IsIntel()))
     {
-        // Note that there's been a bug affecting this test on NVIDIA drivers as well, until fall
-        // 2016 driver releases.
-        std::cout << "Test skipped on Intel D3D11." << std::endl;
+        std::cout << "Test skipped on Nvidia and Intel D3D11." << std::endl;
         return;
     }
 

@@ -25,19 +25,23 @@ class CubeMapTextureTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vsSource =
-            R"(attribute highp vec4 position;
+        const std::string vsSource = SHADER_SOURCE
+        (
+            attribute highp vec4 position;
             void main(void)
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string fsSource =
-            R"(uniform highp vec4 color;
+        const std::string fsSource = SHADER_SOURCE
+        (
+            uniform highp vec4 color;
             void main(void)
             {
                 gl_FragColor = color;
-            })";
+            }
+        );
 
         mProgram = CompileProgram(vsSource, fsSource);
         if (mProgram == 0)
@@ -86,11 +90,7 @@ TEST_P(CubeMapTextureTest, RenderToFacesConsecutively)
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
-    for (GLenum face = 0; face < 6; face++)
-    {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGBA, 1, 1, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, nullptr);
-    }
+    glTexStorage2DEXT(GL_TEXTURE_CUBE_MAP, 1, GL_RGBA8_OES, 1, 1);
     EXPECT_GL_NO_ERROR();
 
     GLuint fbo = 0;

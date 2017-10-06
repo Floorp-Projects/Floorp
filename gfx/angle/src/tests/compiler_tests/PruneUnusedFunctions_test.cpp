@@ -69,7 +69,7 @@ TEST_F(PruneUnusedFunctionsTest, UnimplementedPrototype)
     EXPECT_TRUE(foundInCode("main(", 1));
 }
 
-// Check that used functions are not pruned (duh)
+// Check that used functions are not prunued (duh)
 TEST_F(PruneUnusedFunctionsTest, UsedFunction)
 {
     const std::string &shaderString =

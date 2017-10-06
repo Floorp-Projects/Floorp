@@ -33,16 +33,22 @@ class Thread
     void setAPI(EGLenum api);
     EGLenum getAPI() const;
 
-    void setCurrent(gl::Context *context);
-    Surface *getCurrentDrawSurface() const;
-    Surface *getCurrentReadSurface() const;
+    void setCurrent(Display *display,
+                    Surface *drawSurface,
+                    Surface *readSurface,
+                    gl::Context *context);
+    Display *getDisplay() const;
+    Surface *getDrawSurface() const;
+    Surface *getReadSurface() const;
     gl::Context *getContext() const;
     gl::Context *getValidContext() const;
-    Display *getCurrentDisplay() const;
 
   private:
     EGLint mError;
     EGLenum mAPI;
+    egl::Display *mDisplay;
+    egl::Surface *mDrawSurface;
+    egl::Surface *mReadSurface;
     gl::Context *mContext;
 };
 

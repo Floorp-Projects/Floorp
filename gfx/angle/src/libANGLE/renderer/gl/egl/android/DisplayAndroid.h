@@ -21,62 +21,56 @@ namespace rx
 class DisplayAndroid : public DisplayEGL
 {
   public:
-    DisplayAndroid(const egl::DisplayState &state);
+    DisplayAndroid();
     ~DisplayAndroid() override;
 
     egl::Error initialize(egl::Display *display) override;
     void terminate() override;
 
     SurfaceImpl *createWindowSurface(const egl::SurfaceState &state,
+                                     const egl::Config *configuration,
                                      EGLNativeWindowType window,
                                      const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPbufferSurface(const egl::SurfaceState &state,
+                                      const egl::Config *configuration,
                                       const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPbufferFromClientBuffer(const egl::SurfaceState &state,
+                                               const egl::Config *configuration,
                                                EGLenum buftype,
                                                EGLClientBuffer clientBuffer,
                                                const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPixmapSurface(const egl::SurfaceState &state,
+                                     const egl::Config *configuration,
                                      NativePixmapType nativePixmap,
                                      const egl::AttributeMap &attribs) override;
 
-    ImageImpl *createImage(const egl::ImageState &state,
-                           EGLenum target,
+    ImageImpl *createImage(EGLenum target,
+                           egl::ImageSibling *buffer,
                            const egl::AttributeMap &attribs) override;
 
     egl::ConfigSet generateConfigs() override;
 
     bool testDeviceLost() override;
-    egl::Error restoreLostDevice(const egl::Display *display) override;
+    egl::Error restoreLostDevice() override;
 
     bool isValidNativeWindow(EGLNativeWindowType window) const override;
 
     egl::Error getDevice(DeviceImpl **device) override;
 
-    egl::Error waitClient(const gl::Context *context) const override;
-    egl::Error waitNative(const gl::Context *context, EGLint engine) const override;
+    egl::Error waitClient() const override;
+    egl::Error waitNative(EGLint engine,
+                          egl::Surface *drawSurface,
+                          egl::Surface *readSurface) const override;
 
-    egl::Error makeCurrent(egl::Surface *drawSurface,
-                           egl::Surface *readSurface,
-                           gl::Context *context) override;
+    egl::Error getDriverVersion(std::string *version) const override;
 
   private:
-    egl::Error makeCurrentSurfaceless(gl::Context *context) override;
-
     template <typename T>
     void getConfigAttrib(EGLConfig config, EGLint attribute, T *value) const;
-
-    template <typename T, typename U>
-    void getConfigAttribIfExtension(EGLConfig config,
-                                    EGLint attribute,
-                                    T *value,
-                                    const char *extension,
-                                    const U &defaultValue) const;
 
     std::vector<EGLint> mConfigAttribList;
     std::map<EGLint, EGLint> mConfigIds;
     EGLSurface mDummyPbuffer;
-    EGLSurface mCurrentSurface;
 };
 
 }  // namespace rx

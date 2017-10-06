@@ -11,7 +11,7 @@
 #define COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUITAST_H_
 
 #include "common/angleutils.h"
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/IntermNode.h"
 
 namespace sh
 {
@@ -23,7 +23,10 @@ namespace sh
 class UnfoldShortCircuitAST : public TIntermTraverser
 {
   public:
-    UnfoldShortCircuitAST() : TIntermTraverser(true, false, false) {}
+    UnfoldShortCircuitAST()
+        : TIntermTraverser(true, false, false)
+    {
+    }
 
     bool visitBinary(Visit visit, TIntermBinary *) override;
 };

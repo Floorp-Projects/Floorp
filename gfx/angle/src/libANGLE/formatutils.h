@@ -10,7 +10,6 @@
 #define LIBANGLE_FORMATUTILS_H_
 
 #include <cstddef>
-#include <ostream>
 #include <stdint.h>
 
 #include "angle_gl.h"
@@ -21,7 +20,6 @@
 
 namespace gl
 {
-struct VertexAttribute;
 
 struct FormatType final
 {
@@ -46,58 +44,41 @@ struct Type
 };
 const Type &GetTypeInfo(GLenum type);
 
-// Information about an OpenGL internal format.  Can be keyed on the internalFormat and type
-// members.
 struct InternalFormat
 {
     InternalFormat();
 
-    GLuint computePixelBytes(GLenum formatType) const;
-
-    ErrorOrResult<GLuint> computeRowPitch(GLenum formatType,
-                                          GLsizei width,
+    ErrorOrResult<GLuint> computeRowPitch(GLsizei width,
                                           GLint alignment,
                                           GLint rowLength) const;
-    ErrorOrResult<GLuint> computeDepthPitch(GLsizei height,
-                                            GLint imageHeight,
-                                            GLuint rowPitch) const;
-    ErrorOrResult<GLuint> computeDepthPitch(GLenum formatType,
-                                            GLsizei width,
+    static ErrorOrResult<GLuint> computeDepthPitch(GLsizei height,
+                                                   GLint imageHeight,
+                                                   GLuint rowPitch);
+    ErrorOrResult<GLuint> computeDepthPitch(GLsizei width,
                                             GLsizei height,
                                             GLint alignment,
                                             GLint rowLength,
                                             GLint imageHeight) const;
 
-    ErrorOrResult<GLuint> computeCompressedImageSize(GLenum formatType,
-                                                     const Extents &size) const;
+    ErrorOrResult<GLuint> computeCompressedImageSize(const Extents &size) const;
 
     ErrorOrResult<GLuint> computeSkipBytes(GLuint rowPitch,
                                            GLuint depthPitch,
                                            const PixelStoreStateBase &state,
                                            bool is3D) const;
 
-    ErrorOrResult<GLuint> computePackUnpackEndByte(GLenum formatType,
-                                                       const Extents &size,
-                                                       const PixelStoreStateBase &state,
-                                                       bool is3D) const;
+    ErrorOrResult<GLuint> computePackUnpackEndByte(const Extents &size,
+                                                   const PixelStoreStateBase &state,
+                                                   bool is3D) const;
 
     bool isLUMA() const;
     GLenum getReadPixelsFormat() const;
-    GLenum getReadPixelsType(const Version &version) const;
-
-    // Return true if the format is a required renderbuffer format in the given version of the core
-    // spec. Note that it isn't always clear whether all the rules that apply to core required
-    // renderbuffer formats also apply to additional formats added by extensions. Because of this
-    // extension formats are conservatively not included.
-    bool isRequiredRenderbufferFormat(const Version &version) const;
+    GLenum getReadPixelsType() const;
 
     bool operator==(const InternalFormat &other) const;
     bool operator!=(const InternalFormat &other) const;
 
     GLenum internalFormat;
-
-    bool sized;
-    GLenum sizedInternalFormat;
 
     GLuint redBits;
     GLuint greenBits;
@@ -131,39 +112,35 @@ struct InternalFormat
     SupportCheckFunction filterSupport;
 };
 
-// A "Format" wraps an InternalFormat struct, querying it from either a sized internal format or
-// unsized internal format and type.
-// TODO(geofflang): Remove this, it doesn't add any more information than the InternalFormat object.
+// A "Format" is either a sized format, or an {unsized format, type} combination.
 struct Format
 {
     // Sized types only.
     explicit Format(GLenum internalFormat);
+    explicit Format(const InternalFormat &internalFormat);
 
     // Sized or unsized types.
-    explicit Format(const InternalFormat &internalFormat);
-    Format(GLenum internalFormat, GLenum type);
+    Format(GLenum internalFormat, GLenum format, GLenum type);
 
     Format(const Format &other);
     Format &operator=(const Format &other);
 
+    GLenum asSized() const;
     bool valid() const;
 
     static Format Invalid();
     static bool SameSized(const Format &a, const Format &b);
-    static bool EquivalentForBlit(const Format &a, const Format &b);
-
-    friend std::ostream &operator<<(std::ostream &os, const Format &fmt);
 
     // This is the sized info.
     const InternalFormat *info;
+    GLenum format;
+    GLenum type;
+    bool sized;
 };
 
-const InternalFormat &GetSizedInternalFormatInfo(GLenum internalFormat);
-const InternalFormat &GetInternalFormatInfo(GLenum internalFormat, GLenum type);
+const InternalFormat &GetInternalFormatInfo(GLenum internalFormat);
 
-// Strip sizing information from an internal format.  Doesn't necessarily validate that the internal
-// format is valid.
-GLenum GetUnsizedFormat(GLenum internalFormat);
+GLenum GetSizedInternalFormat(GLenum internalFormat, GLenum type);
 
 typedef std::set<GLenum> FormatSet;
 const FormatSet &GetAllSizedInternalFormats();
@@ -296,7 +273,7 @@ enum VertexFormatType
 
 typedef std::vector<VertexFormatType> InputLayout;
 
-struct VertexFormat : private angle::NonCopyable
+struct VertexFormat : angle::NonCopyable
 {
     VertexFormat(GLenum typeIn, GLboolean normalizedIn, GLuint componentsIn, bool pureIntegerIn);
 
@@ -310,11 +287,6 @@ VertexFormatType GetVertexFormatType(GLenum type, GLboolean normalized, GLuint c
 VertexFormatType GetVertexFormatType(const VertexAttribute &attrib);
 VertexFormatType GetVertexFormatType(const VertexAttribute &attrib, GLenum currentValueType);
 const VertexFormat &GetVertexFormatFromType(VertexFormatType vertexFormatType);
-size_t GetVertexFormatTypeSize(VertexFormatType vertexFormatType);
-
-// Check if an internal format is ever valid in ES3.  Makes no checks about support for a specific
-// context.
-bool ValidES3InternalFormat(GLenum internalFormat);
 
 // Implemented in format_map_autogen.cpp
 bool ValidES3Format(GLenum format);

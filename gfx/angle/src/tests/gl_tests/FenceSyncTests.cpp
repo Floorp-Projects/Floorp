@@ -145,7 +145,7 @@ TEST_P(FenceNVTest, BasicOperations)
     EXPECT_PIXEL_EQ(0, 0, 255, 0, 255, 255);
 }
 
-// Sync objects should respond true to IsSync after they are created with glFenceSync
+// FenceSync objects should respond true to IsSync after they are created with glFenceSync
 TEST_P(FenceSyncTest, IsSync)
 {
     GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -155,7 +155,7 @@ TEST_P(FenceSyncTest, IsSync)
     EXPECT_EQ(GL_FALSE, glIsSync(reinterpret_cast<GLsync>(40)));
 }
 
-// Test error cases for all Sync function
+// Test error cases for all FenceSync function
 TEST_P(FenceSyncTest, Errors)
 {
     GLsync sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);

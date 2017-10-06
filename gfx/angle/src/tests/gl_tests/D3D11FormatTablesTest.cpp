@@ -54,8 +54,7 @@ TEST_P(D3D11FormatTablesTest, TestFormatSupport)
         const auto &textureInfo = textureCaps.get(internalFormat);
 
         // Bits for texturing
-        const gl::InternalFormat &internalFormatInfo =
-            gl::GetSizedInternalFormatInfo(internalFormat);
+        const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(internalFormat);
 
         UINT texSupportMask = D3D11_FORMAT_SUPPORT_TEXTURE2D;
         if (internalFormatInfo.depthBits == 0 && internalFormatInfo.stencilBits == 0)

@@ -47,7 +47,7 @@ void BufferD3D::updateSerial()
     mSerial = mNextSerial++;
 }
 
-void BufferD3D::updateD3DBufferUsage(const gl::Context *context, GLenum usage)
+void BufferD3D::updateD3DBufferUsage(GLenum usage)
 {
     switch (usage)
     {
@@ -55,7 +55,7 @@ void BufferD3D::updateD3DBufferUsage(const gl::Context *context, GLenum usage)
         case GL_STATIC_READ:
         case GL_STATIC_COPY:
             mUsage = D3DBufferUsage::STATIC;
-            initializeStaticData(context);
+            initializeStaticData();
             break;
 
         case GL_STREAM_DRAW:
@@ -71,7 +71,7 @@ void BufferD3D::updateD3DBufferUsage(const gl::Context *context, GLenum usage)
     }
 }
 
-void BufferD3D::initializeStaticData(const gl::Context *context)
+void BufferD3D::initializeStaticData()
 {
     if (mStaticVertexBuffers.empty())
     {
@@ -90,8 +90,7 @@ StaticIndexBufferInterface *BufferD3D::getStaticIndexBuffer()
     return mStaticIndexBuffer;
 }
 
-StaticVertexBufferInterface *BufferD3D::getStaticVertexBuffer(const gl::VertexAttribute &attribute,
-                                                              const gl::VertexBinding &binding)
+StaticVertexBufferInterface *BufferD3D::getStaticVertexBuffer(const gl::VertexAttribute &attribute)
 {
     if (mStaticVertexBuffers.empty())
     {
@@ -112,7 +111,7 @@ StaticVertexBufferInterface *BufferD3D::getStaticVertexBuffer(const gl::VertexAt
     // If there is a cached static buffer that already contains the attribute, then return it
     for (const auto &staticBuffer : mStaticVertexBuffers)
     {
-        if (staticBuffer->matchesAttribute(attribute, binding))
+        if (staticBuffer->matchesAttribute(attribute))
         {
             return staticBuffer.get();
         }
@@ -135,12 +134,12 @@ StaticVertexBufferInterface *BufferD3D::getStaticVertexBuffer(const gl::VertexAt
 
     // At this point, we must create a new static buffer for the attribute data.
     auto newStaticBuffer = new StaticVertexBufferInterface(mFactory);
-    newStaticBuffer->setAttribute(attribute, binding);
+    newStaticBuffer->setAttribute(attribute);
     mStaticVertexBuffers.push_back(std::unique_ptr<StaticVertexBufferInterface>(newStaticBuffer));
     return newStaticBuffer;
 }
 
-void BufferD3D::invalidateStaticData(const gl::Context *context)
+void BufferD3D::invalidateStaticData()
 {
     emptyStaticBufferCache();
 
@@ -153,14 +152,14 @@ void BufferD3D::invalidateStaticData(const gl::Context *context)
     // buffers so that they are populated the next time we use this buffer.
     if (mUsage == D3DBufferUsage::STATIC)
     {
-        initializeStaticData(context);
+        initializeStaticData();
     }
 
     mUnmodifiedDataUse = 0;
 }
 
 // Creates static buffers if sufficient used data has been left unmodified
-void BufferD3D::promoteStaticUsage(const gl::Context *context, int dataSize)
+void BufferD3D::promoteStaticUsage(int dataSize)
 {
     if (mUsage == D3DBufferUsage::DYNAMIC)
     {
@@ -168,23 +167,22 @@ void BufferD3D::promoteStaticUsage(const gl::Context *context, int dataSize)
 
         if (mUnmodifiedDataUse > 3 * getSize())
         {
-            updateD3DBufferUsage(context, GL_STATIC_DRAW);
+            updateD3DBufferUsage(GL_STATIC_DRAW);
         }
     }
 }
 
-gl::Error BufferD3D::getIndexRange(const gl::Context *context,
-                                   GLenum type,
+gl::Error BufferD3D::getIndexRange(GLenum type,
                                    size_t offset,
                                    size_t count,
                                    bool primitiveRestartEnabled,
                                    gl::IndexRange *outRange)
 {
     const uint8_t *data = nullptr;
-    ANGLE_TRY(getData(context, &data));
+    ANGLE_TRY(getData(&data));
 
     *outRange = gl::ComputeIndexRange(type, data + offset, count, primitiveRestartEnabled);
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 }  // namespace rx

@@ -13,14 +13,12 @@
 #include "libANGLE/Error.h"
 #include "libANGLE/Version.h"
 #include "libANGLE/renderer/gl/WorkaroundsGL.h"
-#include "libANGLE/renderer/gl/renderergl_utils.h"
 
 namespace gl
 {
 class ContextState;
 struct IndexRange;
 class Path;
-struct Workarounds;
 }
 
 namespace egl
@@ -36,7 +34,6 @@ struct BlockMemberInfo;
 namespace rx
 {
 class BlitGL;
-class ClearMultiviewGL;
 class ContextImpl;
 class FunctionsGL;
 class StateManagerGL;
@@ -52,36 +49,34 @@ class RendererGL : angle::NonCopyable
     gl::Error flush();
     gl::Error finish();
 
-    gl::Error drawArrays(const gl::Context *context, GLenum mode, GLint first, GLsizei count);
-    gl::Error drawArraysInstanced(const gl::Context *context,
+    gl::Error drawArrays(const gl::ContextState &data, GLenum mode, GLint first, GLsizei count);
+    gl::Error drawArraysInstanced(const gl::ContextState &data,
                                   GLenum mode,
                                   GLint first,
                                   GLsizei count,
                                   GLsizei instanceCount);
 
-    gl::Error drawElements(const gl::Context *context,
+    gl::Error drawElements(const gl::ContextState &data,
                            GLenum mode,
                            GLsizei count,
                            GLenum type,
-                           const void *indices);
-    gl::Error drawElementsInstanced(const gl::Context *context,
+                           const GLvoid *indices,
+                           const gl::IndexRange &indexRange);
+    gl::Error drawElementsInstanced(const gl::ContextState &data,
                                     GLenum mode,
                                     GLsizei count,
                                     GLenum type,
-                                    const void *indices,
-                                    GLsizei instances);
-    gl::Error drawRangeElements(const gl::Context *context,
+                                    const GLvoid *indices,
+                                    GLsizei instances,
+                                    const gl::IndexRange &indexRange);
+    gl::Error drawRangeElements(const gl::ContextState &data,
                                 GLenum mode,
                                 GLuint start,
                                 GLuint end,
                                 GLsizei count,
                                 GLenum type,
-                                const void *indices);
-    gl::Error drawArraysIndirect(const gl::Context *context, GLenum mode, const void *indirect);
-    gl::Error drawElementsIndirect(const gl::Context *context,
-                                   GLenum mode,
-                                   GLenum type,
-                                   const void *indirect);
+                                const GLvoid *indices,
+                                const gl::IndexRange &indexRange);
 
     // CHROMIUM_path_rendering implementation
     void stencilFillPath(const gl::ContextState &state,
@@ -160,19 +155,11 @@ class RendererGL : angle::NonCopyable
     StateManagerGL *getStateManager() const { return mStateManager; }
     const WorkaroundsGL &getWorkarounds() const { return mWorkarounds; }
     BlitGL *getBlitter() const { return mBlitter; }
-    ClearMultiviewGL *getMultiviewClearer() const { return mMultiviewClearer; }
 
-    MultiviewImplementationTypeGL getMultiviewImplementationType() const;
     const gl::Caps &getNativeCaps() const;
     const gl::TextureCapsMap &getNativeTextureCaps() const;
     const gl::Extensions &getNativeExtensions() const;
     const gl::Limitations &getNativeLimitations() const;
-    void applyNativeWorkarounds(gl::Workarounds *workarounds) const;
-
-    gl::Error dispatchCompute(const gl::Context *context,
-                              GLuint numGroupsX,
-                              GLuint numGroupsY,
-                              GLuint numGroupsZ);
 
   private:
     void ensureCapsInitialized() const;
@@ -187,11 +174,10 @@ class RendererGL : angle::NonCopyable
     StateManagerGL *mStateManager;
 
     BlitGL *mBlitter;
-    ClearMultiviewGL *mMultiviewClearer;
 
     WorkaroundsGL mWorkarounds;
 
-    bool mUseDebugOutput;
+    bool mHasDebugOutput;
 
     // For performance debugging
     bool mSkipDrawCalls;
@@ -201,9 +187,8 @@ class RendererGL : angle::NonCopyable
     mutable gl::TextureCapsMap mNativeTextureCaps;
     mutable gl::Extensions mNativeExtensions;
     mutable gl::Limitations mNativeLimitations;
-    mutable MultiviewImplementationTypeGL mMultiviewImplementationType;
 };
 
 }  // namespace rx
 
-#endif  // LIBANGLE_RENDERER_GL_RENDERERGL_H_
+#endif // LIBANGLE_RENDERER_GL_RENDERERGL_H_

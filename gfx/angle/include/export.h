@@ -9,7 +9,6 @@
 #ifndef LIBGLESV2_EXPORT_H_
 #define LIBGLESV2_EXPORT_H_
 
-#if !defined(ANGLE_EXPORT)
 #if defined(_WIN32)
 #if defined(LIBGLESV2_IMPLEMENTATION) || defined(LIBANGLE_IMPLEMENTATION) || \
     defined(LIBANGLE_UTIL_IMPLEMENTATION)
@@ -27,6 +26,5 @@
 #else
 #   define ANGLE_EXPORT
 #endif
-#endif  // !defined(ANGLE_EXPORT)
 
 #endif // LIBGLESV2_EXPORT_H_

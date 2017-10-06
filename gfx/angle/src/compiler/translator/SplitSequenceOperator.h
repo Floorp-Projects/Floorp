@@ -20,7 +20,8 @@ class TSymbolTable;
 
 void SplitSequenceOperator(TIntermNode *root,
                            int patternsToSplitMask,
-                           TSymbolTable *symbolTable,
+                           unsigned int *temporaryIndex,
+                           const TSymbolTable &symbolTable,
                            int shaderVersion);
 
 }  // namespace sh

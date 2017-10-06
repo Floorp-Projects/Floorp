@@ -25,49 +25,49 @@ QueryVk::~QueryVk()
 gl::Error QueryVk::begin()
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::end()
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::queryCounter()
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::getResult(GLint *params)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::getResult(GLuint *params)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::getResult(GLint64 *params)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::getResult(GLuint64 *params)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 gl::Error QueryVk::isResultAvailable(bool *available)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 }  // namespace rx

@@ -8,8 +8,8 @@
 //   version, D3D feature level, and is sometimes guaranteed or optional.
 //
 
-#ifndef LIBANGLE_RENDERER_D3D_D3D11_DXGI_SUPPORT_TABLE_H_
-#define LIBANGLE_RENDERER_D3D_D3D11_DXGI_SUPPORT_TABLE_H_
+#ifndef LIBANGLE_RENDERER_D3D_D3D11_DXGISUPPORTTABLE_H_
+#define LIBANGLE_RENDERER_D3D_D3D11_DXGISUPPORTTABLE_H_
 
 #include "common/platform.h"
 
@@ -46,4 +46,4 @@ const DXGISupport &GetDXGISupport(DXGI_FORMAT dxgiFormat, D3D_FEATURE_LEVEL feat
 
 } // namespace rx
 
-#endif  // LIBANGLE_RENDERER_D3D_D3D11_DXGI_SUPPORT_TABLE_H_
+#endif // LIBANGLE_RENDERER_D3D_D3D11_DXGISUPPORTTABLE_H_

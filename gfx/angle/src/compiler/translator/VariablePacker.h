@@ -3,30 +3,38 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// Check whether variables fit within packing limits according to the packing rules from the GLSL ES
-// 1.00.17 spec, Appendix A, section 7.
 
 #ifndef COMPILER_TRANSLATOR_VARIABLEPACKER_H_
 #define COMPILER_TRANSLATOR_VARIABLEPACKER_H_
 
 #include <vector>
+#include "compiler/translator/VariableInfo.h"
 
-#include <GLSLANG/ShaderLang.h>
+class VariablePacker {
+ public:
+   // Returns true if the passed in variables pack in maxVectors following
+   // the packing rules from the GLSL 1.017 spec, Appendix A, section 7.
+   bool CheckVariablesWithinPackingLimits(unsigned int maxVectors,
+                                          const std::vector<sh::ShaderVariable> &in_variables);
 
-namespace sh
-{
+   // Gets how many components in a row a data type takes.
+   static int GetNumComponentsPerRow(sh::GLenum type);
 
-// Gets how many components in a row a data type takes.
-int GetVariablePackingComponentsPerRow(sh::GLenum type);
+   // Gets how many rows a data type takes.
+   static int GetNumRows(sh::GLenum type);
 
-// Gets how many rows a data type takes.
-int GetVariablePackingRows(sh::GLenum type);
+ private:
+   static const int kNumColumns      = 4;
+   static const unsigned kColumnMask = (1 << kNumColumns) - 1;
 
-// Returns true if the passed in variables pack in maxVectors.
-// T should be ShaderVariable or one of the subclasses of ShaderVariable.
-template <typename T>
-bool CheckVariablesInPackingLimits(unsigned int maxVectors, const std::vector<T> &variables);
+   unsigned makeColumnFlags(int column, int numComponentsPerRow);
+   void fillColumns(int topRow, int numRows, int column, int numComponentsPerRow);
+   bool searchColumn(int column, int numRows, int *destRow, int *destSize);
 
-}  // namespace sh
+   int topNonFullRow_;
+   int bottomNonFullRow_;
+   int maxRows_;
+   std::vector<unsigned> rows_;
+};
 
-#endif  // COMPILER_TRANSLATOR_VARIABLEPACKER_H_
+#endif // COMPILER_TRANSLATOR_VARIABLEPACKER_H_

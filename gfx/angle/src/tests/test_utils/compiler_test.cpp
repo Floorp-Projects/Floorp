@@ -10,7 +10,6 @@
 
 #include "angle_gl.h"
 #include "compiler/translator/Compiler.h"
-#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -18,19 +17,46 @@ namespace sh
 namespace
 {
 
+class ShaderVariableFinder : public TIntermTraverser
+{
+  public:
+    ShaderVariableFinder(const TString &variableName, TBasicType basicType)
+        : TIntermTraverser(true, false, false),
+          mVariableName(variableName),
+          mNodeFound(nullptr),
+          mBasicType(basicType)
+    {
+    }
+
+    void visitSymbol(TIntermSymbol *node)
+    {
+        if (node->getBasicType() == mBasicType && node->getSymbol() == mVariableName)
+        {
+            mNodeFound = node;
+        }
+    }
+
+    bool isFound() const { return mNodeFound != nullptr; }
+    const TIntermSymbol *getNode() const { return mNodeFound; }
+
+  private:
+    TString mVariableName;
+    TIntermSymbol *mNodeFound;
+    TBasicType mBasicType;
+};
+
 class FunctionCallFinder : public TIntermTraverser
 {
   public:
-    FunctionCallFinder(const TString &functionMangledName)
-        : TIntermTraverser(true, false, false),
-          mFunctionMangledName(functionMangledName),
-          mNodeFound(nullptr)
+    FunctionCallFinder(const TString &functionName)
+        : TIntermTraverser(true, false, false), mFunctionName(functionName), mNodeFound(nullptr)
     {
     }
 
     bool visitAggregate(Visit visit, TIntermAggregate *node) override
     {
-        if (node->isFunctionCall() && node->getSymbolTableMangledName() == mFunctionMangledName)
+        if (node->getOp() == EOpFunctionCall &&
+            node->getFunctionSymbolInfo()->getName() == mFunctionName)
         {
             mNodeFound = node;
             return false;
@@ -42,7 +68,7 @@ class FunctionCallFinder : public TIntermTraverser
     const TIntermAggregate *getNode() const { return mNodeFound; }
 
   private:
-    TString mFunctionMangledName;
+    TString mFunctionName;
     TIntermAggregate *mNodeFound;
 };
 
@@ -140,19 +166,14 @@ bool MatchOutputCodeTest::compileWithSettings(ShShaderOutput output,
 
 bool MatchOutputCodeTest::foundInCode(ShShaderOutput output, const char *stringToFind) const
 {
-    return findInCode(output, stringToFind) != std::string::npos;
-}
-
-size_t MatchOutputCodeTest::findInCode(ShShaderOutput output, const char *stringToFind) const
-{
     const auto code = mOutputCode.find(output);
     EXPECT_NE(mOutputCode.end(), code);
     if (code == mOutputCode.end())
     {
-        return std::string::npos;
+        return false;
     }
 
-    return code->second.find(stringToFind);
+    return code->second.find(stringToFind) != std::string::npos;
 }
 
 bool MatchOutputCodeTest::foundInCode(ShShaderOutput output,
@@ -216,9 +237,18 @@ bool MatchOutputCodeTest::notFoundInCode(const char *stringToFind) const
     return true;
 }
 
-const TIntermAggregate *FindFunctionCallNode(TIntermNode *root, const TString &functionMangledName)
+const TIntermSymbol *FindSymbolNode(TIntermNode *root,
+                                    const TString &symbolName,
+                                    TBasicType basicType)
 {
-    FunctionCallFinder finder(functionMangledName);
+    ShaderVariableFinder finder(symbolName, basicType);
+    root->traverse(&finder);
+    return finder.getNode();
+}
+
+const TIntermAggregate *FindFunctionCallNode(TIntermNode *root, const TString &functionName)
+{
+    FunctionCallFinder finder(functionName);
     root->traverse(&finder);
     return finder.getNode();
 }

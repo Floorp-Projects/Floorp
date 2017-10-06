@@ -68,7 +68,7 @@ TEST_P(D3D11InputLayoutCacheTest, StressTest)
     gl::Context *context = reinterpret_cast<gl::Context *>(getEGLWindow()->getContext());
     rx::Context11 *context11               = rx::GetImplAs<rx::Context11>(context);
     rx::Renderer11 *renderer11             = context11->getRenderer();
-    rx::InputLayoutCache *inputLayoutCache = renderer11->getStateManager()->getInputLayoutCache();
+    rx::InputLayoutCache *inputLayoutCache = renderer11->getInputLayoutCache();
 
     // Clamp the cache size to something tiny
     inputLayoutCache->setCacheSize(4);
