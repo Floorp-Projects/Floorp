@@ -146,6 +146,7 @@ class GlobalHelperThreadState
     size_t maxIonCompilationThreads() const;
     size_t maxWasmCompilationThreads() const;
     size_t maxWasmTier2GeneratorThreads() const;
+    size_t maxPromiseHelperThreads() const;
     size_t maxParseThreads() const;
     size_t maxCompressionThreads() const;
     size_t maxGCHelperThreads() const;
