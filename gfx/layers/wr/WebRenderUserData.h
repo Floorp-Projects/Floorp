@@ -123,6 +123,8 @@ public:
   nsRect GetBounds() { return mBounds; }
   void SetBounds(const nsRect& aRect) { mBounds = aRect; }
   void SetInvalid(bool aInvalid) { mInvalid = aInvalid; }
+  void SetScale(gfx::Size aScale) { mScale = aScale; }
+  gfx::Size GetScale() { return mScale; }
   bool IsInvalid() { return mInvalid; }
 
   RefPtr<BasicLayerManager> mBasicLayerManager;
@@ -130,6 +132,7 @@ protected:
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;
   bool mInvalid;
+  gfx::Size mScale;
 };
 
 class WebRenderAnimationData : public WebRenderUserData
