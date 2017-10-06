@@ -64,7 +64,7 @@ public:
   void SetPointerId(uint16_t aPointerId);
   void ClearPointerId();
 
-  static StaticAutoPtr<InkCollector> sInkCollector;
+  static mozilla::StaticAutoPtr<InkCollector> sInkCollector;
 
 protected:
   void Initialize();

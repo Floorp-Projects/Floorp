@@ -34,6 +34,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "WinUtils.h"
 #include "mozilla/LazyIdleThread.h"
