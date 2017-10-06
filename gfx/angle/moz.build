@@ -15,7 +15,7 @@ UNIFIED_SOURCES += [
     'src/common/mathutil.cpp',
     'src/common/MemoryBuffer.cpp',
     'src/common/string_utils.cpp',
-    'src/common/third_party/base/anglebase/sha1.cc',
+    'src/common/third_party/murmurhash/MurmurHash3.cpp',
     'src/common/tls.cpp',
     'src/common/uniform_type_info_autogen.cpp',
     'src/common/utilities.cpp',
@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'src/compiler/preprocessor/MacroExpander.cpp',
     'src/compiler/preprocessor/Preprocessor.cpp',
     'src/compiler/preprocessor/Token.cpp',
+    'src/compiler/preprocessor/Tokenizer.cpp',
     'src/compiler/translator/AddAndTrueToLoopCondition.cpp',
     'src/compiler/translator/AddDefaultReturnStatements.cpp',
     'src/compiler/translator/ArrayReturnValueToOutParameter.cpp',
@@ -114,6 +115,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/ValidateGlobalInitializer.cpp',
     'src/compiler/translator/ValidateLimitations.cpp',
     'src/compiler/translator/ValidateMaxParameters.cpp',
+    'src/compiler/translator/ValidateOutputs.cpp',
     'src/compiler/translator/ValidateSwitch.cpp',
     'src/compiler/translator/ValidateVaryingLocations.cpp',
     'src/compiler/translator/VariablePacker.cpp',
@@ -121,14 +123,12 @@ UNIFIED_SOURCES += [
     'src/third_party/compiler/ArrayBoundsClamper.cpp',
 ]
 SOURCES += [
-    'src/compiler/preprocessor/Tokenizer.cpp',
     'src/compiler/translator/EmulateGLFragColorBroadcast.cpp',
     'src/compiler/translator/glslang_lex.cpp',
     'src/compiler/translator/glslang_tab.cpp',
     'src/compiler/translator/RewriteTexelFetchOffset.cpp',
     'src/compiler/translator/RewriteUnaryMinusOperatorInt.cpp',
     'src/compiler/translator/ShaderLang.cpp',
-    'src/compiler/translator/ValidateOutputs.cpp',
 ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
@@ -194,7 +194,7 @@ DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 EXPORTS.angle += [ 'include/GLSLANG/ShaderLang.h', 'include/GLSLANG/ShaderVars.h', 'include/platform/Platform.h' ]
 EXPORTS.angle.KHR += [ 'include/KHR/khrplatform.h' ]
 
-LOCAL_INCLUDES += [ 'include', 'src', 'src/common/third_party/base']
+LOCAL_INCLUDES += [ 'include', 'src', 'src/common/third_party/numerics' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
