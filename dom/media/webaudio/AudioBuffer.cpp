@@ -222,7 +222,6 @@ AudioBuffer::SetSharedChannels(
     mSharedChannels.mChannelData[i] = buffer->GetData(i);
   }
   mSharedChannels.mBuffer = buffer.forget();
-  mSharedChannels.mVolume = 1.0f;
   mSharedChannels.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
