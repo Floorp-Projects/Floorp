@@ -356,19 +356,6 @@ describe("Reducers", () => {
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.propertyVal(updatedSection, "initialized", false);
     });
-    it("should dedupe based on dedupeConfigurations", () => {
-      const site = {url: "foo.com"};
-      const highlights = {rows: [site], id: "highlights"};
-      const topstories = {rows: [site], id: "topstories"};
-      const dedupeConfigurations = [{id: "topstories", dedupeFrom: ["highlights"]}];
-      const action = {data: {dedupeConfigurations}, type: "SECTION_UPDATE"};
-      const state = [highlights, topstories];
-
-      const nextState = Sections(state, action);
-
-      assert.equal(nextState.find(s => s.id === "highlights").rows.length, 1);
-      assert.equal(nextState.find(s => s.id === "topstories").rows.length, 0);
-    });
     it("should remove blocked and deleted urls from all rows in all sections", () => {
       const blockAction = {type: at.PLACES_LINK_BLOCKED, data: {url: "www.foo.bar"}};
       const deleteAction = {type: at.PLACES_LINKS_DELETED, data: ["www.foo.bar"]};

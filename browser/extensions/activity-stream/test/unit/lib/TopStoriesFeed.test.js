@@ -40,7 +40,7 @@ describe("Top Stories Feed", () => {
       enableSection: sinon.spy(),
       disableSection: sinon.spy(),
       updateSection: sinon.spy(),
-      sections: new Map([["topstories", {order: 0, options: FAKE_OPTIONS}]])
+      sections: new Map([["topstories", {options: FAKE_OPTIONS}]])
     };
 
     class FakeUserDomainAffinityProvider {}
@@ -377,7 +377,7 @@ describe("Top Stories Feed", () => {
 
       const response = {
         "settings": {"spocsPerNewTabs": 2},
-        "recommendations": [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -387,12 +387,9 @@ describe("Top Stories Feed", () => {
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchStories();
 
-      instance.store.getState = () => ({Sections: [{rows: response.recommendations}]});
-
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
       let action = instance.store.dispatch.firstCall.args[0];
-
       assert.equal(at.SECTION_UPDATE, action.type);
       assert.equal(true, action.meta.skipMain);
       assert.equal(action.data.rows[0].guid, "rec1");
@@ -431,8 +428,6 @@ describe("Top Stories Feed", () => {
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.notCalled(instance.store.dispatch);
       assert.equal(instance.contentUpdateQueue.length, 1);
-
-      instance.store.getState = () => ({Sections: [{rows: response.recommendations}]});
 
       await instance.fetchStories();
       assert.equal(instance.contentUpdateQueue.length, 0);
@@ -543,11 +538,15 @@ describe("Top Stories Feed", () => {
       assert.equal(instance.topicsLastUpdated, 0);
       assert.equal(instance.affinityLastUpdated, 0);
     });
-    it("should filter spocs when link is blocked", () => {
+    it("should filter recs and spocs when link is blocked", () => {
+      instance.stories = [{"url": "not_blocked"}, {"url": "blocked"}];
       instance.spocs = [{"url": "not_blocked"}, {"url": "blocked"}];
       instance.onAction({type: at.PLACES_LINK_BLOCKED, data: {url: "blocked"}});
 
+      assert.deepEqual(instance.stories, [{"url": "not_blocked"}]);
       assert.deepEqual(instance.spocs, [{"url": "not_blocked"}]);
+      assert.calledOnce(sectionsManagerStub.updateSection);
+      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: instance.stories});
     });
   });
 });

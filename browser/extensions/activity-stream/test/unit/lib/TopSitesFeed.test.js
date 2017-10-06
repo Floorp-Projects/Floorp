@@ -61,7 +61,7 @@ describe("Top Sites Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT)),
-      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot
+      maybeGetAndSetScreenshot: Screenshots.maybeGetAndSetScreenshot
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url);
@@ -94,10 +94,6 @@ describe("Top Sites Feed", () => {
     globals.restore();
     clock.restore();
   });
-
-  function stubFaviconsToUseScreenshots() {
-    fakeNewTabUtils.activityStreamProvider._addFavicons = sandbox.stub();
-  }
 
   describe("#refreshDefaults", () => {
     it("should add defaults on PREFS_INITIAL_VALUES", () => {
@@ -140,7 +136,7 @@ describe("Top Sites Feed", () => {
 
     describe("general", () => {
       beforeEach(() => {
-        sandbox.stub(fakeScreenshot, "maybeCacheScreenshot");
+        sandbox.stub(fakeScreenshot, "maybeGetAndSetScreenshot");
       });
       it("should get the links from NewTabUtils", async () => {
         const result = await feed.getLinksWithDefaults();
@@ -245,7 +241,8 @@ describe("Top Sites Feed", () => {
         assert.calledTwice(global.NewTabUtils.activityStreamLinks.getTopSites);
       });
       it("should migrate frecent screenshot data without getting screenshots again", async () => {
-        stubFaviconsToUseScreenshots();
+        // Don't add favicons so we fall back to screenshots
+        fakeNewTabUtils.activityStreamProvider._addFavicons = sandbox.stub();
         await feed.getLinksWithDefaults();
         const {callCount} = fakeScreenshot.getScreenshotForURL;
         feed.frecentCache.expire();
@@ -273,36 +270,6 @@ describe("Top Sites Feed", () => {
 
         const internal = Object.keys(result[0]).filter(key => key.startsWith("__"));
         assert.equal(internal.join(""), "");
-      });
-      describe("concurrency", () => {
-        let resolvers;
-        beforeEach(() => {
-          stubFaviconsToUseScreenshots();
-          resolvers = [];
-          fakeScreenshot.getScreenshotForURL = sandbox.spy(() => new Promise(
-            resolve => resolvers.push(resolve)));
-        });
-
-        const getTwice = () => Promise.all([feed.getLinksWithDefaults(), feed.getLinksWithDefaults()]);
-        const resolveAll = () => resolvers.forEach(resolve => resolve(FAKE_SCREENSHOT));
-
-        it("should call the backing data once", async () => {
-          await getTwice();
-
-          assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
-        });
-        it("should get screenshots once per link", async () => {
-          await getTwice();
-
-          assert.callCount(fakeScreenshot.getScreenshotForURL, FAKE_LINKS.length);
-        });
-        it("should dispatch once per link screenshot fetched", async () => {
-          await getTwice();
-
-          await resolveAll();
-
-          assert.callCount(feed.store.dispatch, FAKE_LINKS.length);
-        });
       });
     });
     describe("deduping", () => {
@@ -409,26 +376,26 @@ describe("Top Sites Feed", () => {
       assert.propertyVal(link, "screenshot", "reuse.png");
     });
     it("should reuse existing fetching screenshot on the link", async () => {
-      const link = {__sharedCache: {fetchingScreenshot: Promise.resolve("fetching.png")}};
+      const link = {__fetchingScreenshot: Promise.resolve("fetching.png")};
 
       await feed._fetchIcon(link);
 
       assert.notCalled(fakeScreenshot.getScreenshotForURL);
+      assert.propertyVal(link, "screenshot", "fetching.png");
     });
     it("should get a screenshot if the link is missing it", () => {
-      feed._fetchIcon(Object.assign({__sharedCache: {}}, FAKE_LINKS[0]));
+      feed._fetchIcon(FAKE_LINKS[0]);
 
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_LINKS[0].url);
     });
-    it("should update the link's cache with a screenshot", async () => {
-      const updateLink = sandbox.stub();
-      const link = {__sharedCache: {updateLink}};
+    it("should update the link's cache if it can be updated", () => {
+      const link = {__updateCache: sandbox.stub()};
 
-      await feed._fetchIcon(link);
+      feed._fetchIcon(link);
 
-      assert.calledOnce(updateLink);
-      assert.calledWith(updateLink, "screenshot", FAKE_SCREENSHOT);
+      assert.calledOnce(link.__updateCache);
+      assert.calledWith(link.__updateCache, "__fetchingScreenshot");
     });
     it("should skip getting a screenshot if there is a tippy top icon", () => {
       feed._tippyTopProvider.processSite = site => {

@@ -19,21 +19,19 @@ this.LinksCache = class LinksCache {
    *
    * @param {object} linkObject Object containing the link property
    * @param {string} linkProperty Name of property on object to access
-   * @param {array} properties Optional properties list to migrate to new links.
+   * @param {function} migrator Optional callback receiving the old and new link
+   *                            to allow custom migrating data from old to new.
    * @param {function} shouldRefresh Optional callback receiving the old and new
    *                                 options to refresh even when not expired.
    */
-  constructor(linkObject, linkProperty, properties = [], shouldRefresh = () => {}) {
+  constructor(linkObject, linkProperty, migrator = () => {}, shouldRefresh = () => {}) {
     this.clear();
-
     // Allow getting links from both methods and array properties
     this.linkGetter = options => {
       const ret = linkObject[linkProperty];
       return typeof ret === "function" ? ret.call(linkObject, options) : ret;
     };
-
-    // Always migrate the shared cache data in addition to any custom properties
-    this.migrateProperties = ["__sharedCache", ...properties];
+    this.migrator = migrator;
     this.shouldRefresh = shouldRefresh;
   }
 
@@ -80,38 +78,37 @@ this.LinksCache = class LinksCache {
           }
         }
 
-        // Update the cache with migrated links without modifying source objects
-        resolve((await this.linkGetter(options)).map(link => {
-          // Keep original array hole positions
-          if (!link) {
-            return link;
-          }
+        // Make a shallow copy of each resulting link to allow direct edits
+        const copied = (await this.linkGetter(options)).map(link => link &&
+          Object.assign({}, link));
 
-          // Migrate data to the new link copy if we have an old link
-          const newLink = Object.assign({}, link);
-          const oldLink = toMigrate.get(newLink.url);
-          if (oldLink) {
-            for (const property of this.migrateProperties) {
-              const oldValue = oldLink[property];
-              if (oldValue) {
-                newLink[property] = oldValue;
-              }
+        // Migrate data to the new link if we have an old link
+        for (const newLink of copied) {
+          if (newLink) {
+            const oldLink = toMigrate.get(newLink.url);
+            if (oldLink) {
+              this.migrator(oldLink, newLink);
             }
-          } else {
-            // Share data among link copies and new links from future requests
-            newLink.__sharedCache = {
-              // Provide a helper to update the cached link
-              updateLink(property, value) {
-                newLink[property] = value;
+
+            // Add a method that can be copied to cloned links that will update
+            // the original cached link's property with the current one
+            newLink.__updateCache = function(prop) {
+              const val = this[prop];
+              if (val === undefined) {
+                delete newLink[prop];
+              } else {
+                newLink[prop] = val;
               }
             };
           }
-          return newLink;
-        }));
+        }
+
+        // Update cache with the copied links migrated
+        resolve(copied);
       });
     }
 
-    // Provide a shallow copy of the cached link objects for callers to modify
-    return (await this.cache).map(link => link && Object.assign({}, link));
+    // Return the promise of the links array
+    return this.cache;
   }
 };
