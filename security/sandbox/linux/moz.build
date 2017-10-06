@@ -65,7 +65,6 @@ SOURCES += [
     '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
     '../chromium/sandbox/linux/services/syscall_wrappers.cc',
     'broker/SandboxBrokerCommon.cpp',
-    'LinuxCapabilities.cpp',
     'Sandbox.cpp',
     'SandboxBrokerClient.cpp',
     'SandboxFilter.cpp',

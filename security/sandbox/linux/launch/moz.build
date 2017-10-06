@@ -9,6 +9,7 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
+    'LinuxCapabilities.cpp',
     'SandboxLaunch.cpp',
 ]
 
