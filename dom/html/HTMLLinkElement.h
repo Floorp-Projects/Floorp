@@ -87,9 +87,13 @@ public:
   {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
   }
-  void SetHref(const nsAString& aHref, ErrorResult& aRv)
+  void GetHref(nsString& aValue, nsIPrincipal&)
   {
-    SetHTMLAttr(nsGkAtoms::href, aHref, aRv);
+    GetHref(aValue);
+  }
+  void SetHref(const nsAString& aHref, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::href, aHref, aTriggeringPrincipal, aRv);
   }
   void GetCrossOrigin(nsAString& aResult)
   {
@@ -204,7 +208,7 @@ protected:
   virtual ~HTMLLinkElement();
 
   // nsStyleLinkElement
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) override;
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) override;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
