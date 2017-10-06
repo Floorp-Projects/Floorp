@@ -334,6 +334,12 @@ public:
     EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device)
         WRAP(   fReleaseDeviceANGLE(device) )
 
+    void           fANGLEPlatformInitialize(angle::Platform* platform) const
+        VOID_WRAP( fANGLEPlatformInitialize(platform) )
+
+    void fANGLEPlatformShutdown() const
+        VOID_WRAP( fANGLEPlatformShutdown() )
+
 #undef WRAP
 #undef VOID_WRAP
 #undef PROFILE_CALL
@@ -495,6 +501,8 @@ private:
                                                         const EGLAttrib* attrib_list);
         EGLBoolean (GLAPIENTRY * fReleaseDeviceANGLE) (EGLDeviceEXT device);
 
+        void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
+        void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
 
 private:
