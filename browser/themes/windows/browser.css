@@ -1061,21 +1061,25 @@ notification[value="translation"] {
 
 /* Private browsing and accessibility indicators */
 
-:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator),
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator) {
+:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .private-browsing-indicator,
+:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .accessibility-indicator,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .private-browsing-indicator,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .accessibility-indicator {
   margin-top: calc(-1 * var(--space-above-tabbar));
 }
 
 /* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator),
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar :-moz-any(.private-browsing-indicator, .accessibility-indicator) {
+  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .private-browsing-indicator,
+  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .accessibility-indicator,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .private-browsing-indicator,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .accessibility-indicator {
     margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
   }
 }
 
 :root:not([privatebrowsingmode=temporary]) .accessibility-indicator,
-:root .private-browsing-indicator {
+.private-browsing-indicator {
   margin-inline-end: 12px;
 }
 
