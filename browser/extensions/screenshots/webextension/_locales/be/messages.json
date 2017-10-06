@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Гэта выява была абрэзана да $PIXELS$пікселяў.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Адбылася памылка."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Рабіце здымкі экрана, захоўвайце і дзяліцеся імі не выходзячы з Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Новы спосаб захаваць"
+  },
+  "tourBodyPageAction": {
+    "message": "Разгарніце меню Дзеянні старонкі ў адрасным радку, калі жадаеце зрабіць скрыншот."
   },
   "tourHeaderClickAndDrag": {
     "message": "Рабіце скрыншоты чаго заўгодна"

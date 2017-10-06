@@ -76,6 +76,9 @@
   "tourBodyIntro": {
     "message": "Maki, gwoki, ki nywak cal me wang kio labongo weko Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Yoo manyen me gwoko"
+  },
   "tourHeaderClickAndDrag": {
     "message": "Mak ngo ma imito keken"
   },

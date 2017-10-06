@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Resim $PIXELS$ piksele kırpıldı.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Arıza var."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Firefox'tan çıkmadan ekran görüntüleri alın, kaydedin ve paylaşın."
+  },
+  "tourHeaderPageAction": {
+    "message": "Kaydetmenin yeni yolu"
+  },
+  "tourBodyPageAction": {
+    "message": "Ekran görüntüsü almak istediğiniz zaman adres çubuğundaki sayfa eylemleri menüsünü açabilirsiniz."
   },
   "tourHeaderClickAndDrag": {
     "message": "İstediğini yakala"

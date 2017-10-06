@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "ইমেজটিকে $PIXELS$পিক্সেলে ক্রপ করা হয়েছে।",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "বিকল।"
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Firefox ত্যাগ করা ছাড়াই স্ক্রিনশট তোল, সংরক্ষণ কর এবং শেয়ার কর।"
+  },
+  "tourHeaderPageAction": {
+    "message": "সংরক্ষণ করার এক নতুন পদ্ধতি"
+  },
+  "tourBodyPageAction": {
+    "message": "আপনি যখন কোন স্ক্রিনশট নিবেন, এড্রেস বার থেকে একশন মেনু খুলে নিন।"
   },
   "tourHeaderClickAndDrag": {
     "message": "ক্যাপচার করুন আপনি যা চান"
