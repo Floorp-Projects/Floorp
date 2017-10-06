@@ -44,7 +44,6 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
                 r"^.*/partner-repacks.*$",
                 r"^.*.checksums(\.asc)?$",
                 r"^.*/logs/.*$",
-                r"^.*/jsshell.*$",
                 r"^.*json$",
                 r"^.*/host.*$",
                 r"^.*/mar-tools/.*$",
