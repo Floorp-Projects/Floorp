@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" height="48" width="48">
+  <circle id="compassbackground" r="6" cx="8" cy="8" fill="#f9f9fa" fill-opacity=".8"/>
+  <circle id="compassborder" r="7" cx="8" cy="8" fill="none" stroke="#0c0c0d" stroke-width="2" stroke-linejoin="round" stroke-miterlimit="0" stroke-opacity=".8"/>
+  <circle id="compasscenter" cx="8" cy="8" r="1" fill="#0c0c0d" fill-opacity=".8"/>
+  <g id="northsouth" fill="none" fill-opacity=".8" stroke="#0c0c0d" stroke-opacity=".8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 4.5l1-1 1 1"/>
+    <path d="M7 11.5l1 1 1-1"/>
+  </g>
+</svg>
