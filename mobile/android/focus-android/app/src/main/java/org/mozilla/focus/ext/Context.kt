@@ -13,5 +13,3 @@ val Context.appVersionName: String?
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         return packageInfo.versionName
     }
-
-fun Context.dp(px: Int): Int = (px * resources.displayMetrics.density).toInt()
