@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head><meta charset="utf-8">
+    <title>Web Console test for bug 859170 - very long strings hang the browser</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+<script type="application/javascript">
+(function() {
+var longString = "abbababazomglolztest";
+for (var i = 0; i < 10; i++) {
+  longString += longString + longString;
+}
+
+longString = "foobar" + (new Array(9000)).join("a") + "foobaz" +
+             longString + "boom!";
+console.log(longString);
+})();
+</script>
+  </head>
+  <body>
+    <p>Web Console test for bug 859170 - very long strings hang the browser.</p>
+  </body>
+</html>

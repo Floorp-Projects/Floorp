@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <title>Test the web console output - 03</title>
+  <!--
+  - Any copyright is dedicated to the Public Domain.
+  - http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+</head>
+<body>
+  <p>hello world!</p>
+  <script type="text/javascript">
+function testBodyClassName() {
+  document.body.className = "test1 tezt2";
+  return document.body;
+}
+
+function testBodyID() {
+  document.body.id = 'foobarid';
+  return document.body;
+}
+
+function testBodyDataset() {
+  document.body.dataset.preview = 'zuzu"<a>foo';
+  return document.body;
+}
+  </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <!--
+      Any copyright is dedicated to the Public Domain.
+      http://creativecommons.org/publicdomain/zero/1.0/
+    -->
+    <meta charset="utf-8">
+    <title>console.assert() test</title>
+    <script type="text/javascript">
+      function test() {
+        console.log("start");
+        console.assert(false, "false assert");
+        console.assert(0, "falsy assert");
+        console.assert(true, "true assert");
+        console.log("end");
+      }
+    </script>
+  </head>
+  <body>
+    <p>test console.assert()</p>
+  </body>
+</html>
