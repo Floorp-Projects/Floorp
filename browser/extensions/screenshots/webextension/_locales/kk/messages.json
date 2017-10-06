@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Бұл сурет $PIXELS$ пиксельге дейін қиылды.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Жұмыс істемейді."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Firefox ішінен скриншоттарды түсіру, сақтау және олармен бөлісу."
+  },
+  "tourHeaderPageAction": {
+    "message": "Сақтаудың жаңа жолы"
+  },
+  "tourBodyPageAction": {
+    "message": "Скриншотты жасағыңыз келген уақытта адрестік жолақтың бет әрекеттері мәзірін ашыңыз."
   },
   "tourHeaderClickAndDrag": {
     "message": "Тек керек нәрсені түсіріңіз"
