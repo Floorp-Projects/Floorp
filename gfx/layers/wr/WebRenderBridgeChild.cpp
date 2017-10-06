@@ -72,7 +72,7 @@ WebRenderBridgeChild::AddWebRenderParentCommands(const nsTArray<WebRenderParentC
 }
 
 bool
-WebRenderBridgeChild::BeginTransaction(const gfx::IntSize& aSize)
+WebRenderBridgeChild::BeginTransaction()
 {
   MOZ_ASSERT(!mDestroyed);
 
