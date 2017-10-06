@@ -18,14 +18,14 @@ ShaderExecutable9::ShaderExecutable9(const void *function, size_t length, IDirec
     : ShaderExecutableD3D(function, length)
 {
     mPixelExecutable = executable;
-    mVertexExecutable = nullptr;
+    mVertexExecutable = NULL;
 }
 
 ShaderExecutable9::ShaderExecutable9(const void *function, size_t length, IDirect3DVertexShader9 *executable)
     : ShaderExecutableD3D(function, length)
 {
     mVertexExecutable = executable;
-    mPixelExecutable  = nullptr;
+    mPixelExecutable = NULL;
 }
 
 ShaderExecutable9::~ShaderExecutable9()

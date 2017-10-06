@@ -7,12 +7,7 @@
 #  Code generation for the DXGI support tables. Determines which formats
 #  are natively support in D3D10+.
 #
-#  TODO: The "never supported" formats should not be combined with the
-#  "supported" and "optional" ones. At the moment, this does not cause
-#  any issues as ANGLE does not internally check for "never supported".
-#
 # MSDN links:
-#  10Level9 9_3: https://msdn.microsoft.com/en-us/library/windows/desktop/mt790740.aspx
 #  10_0: https://msdn.microsoft.com/en-us/library/windows/desktop/cc627090.aspx
 #  10_1: https://msdn.microsoft.com/en-us/library/windows/desktop/cc627091.aspx
 #  11_0: https://msdn.microsoft.com/en-us/library/windows/desktop/ff471325.aspx
@@ -119,19 +114,6 @@ const DXGISupport &GetDXGISupport_11_0(DXGI_FORMAT dxgiFormat)
     // clang-format on
 }}
 
-const DXGISupport &GetDXGISupport_11_1(DXGI_FORMAT dxgiFormat)
-{{
-    // clang-format off
-    switch (dxgiFormat)
-    {{
-{table_data_11_1}
-        default:
-            UNREACHABLE();
-            return GetDefaultSupport();
-    }}
-    // clang-format on
-}}
-
 }}
 
 #undef {prefix}2D
@@ -155,8 +137,6 @@ const DXGISupport &GetDXGISupport(DXGI_FORMAT dxgiFormat, D3D_FEATURE_LEVEL feat
             return GetDXGISupport_10_1(dxgiFormat);
         case D3D_FEATURE_LEVEL_11_0:
             return GetDXGISupport_11_0(dxgiFormat);
-        case D3D_FEATURE_LEVEL_11_1:
-            return GetDXGISupport_11_1(dxgiFormat);
         default:
             return GetDefaultSupport();
     }}
@@ -170,7 +150,7 @@ const DXGISupport &GetDXGISupport(DXGI_FORMAT dxgiFormat, D3D_FEATURE_LEVEL feat
 table_init = ""
 
 def do_format(format_data):
-    table_data = {'9_3': '', '10_0': '', '10_1': '', '11_0': '', '11_1': ''}
+    table_data = {'9_3': '', '10_0': '', '10_1': '', '11_0': ''}
 
     json_flag_to_d3d = {
         'texture2D': macro_prefix + '2D',
@@ -194,7 +174,6 @@ def do_format(format_data):
         fl_10_1_supported = set()
         fl_11_0_supported = set()
         fl_11_0_check = set()
-        fl_11_1_supported = set()
         fl_10_0_check_10_1_supported = set()
         fl_10_0_check_11_0_supported = set()
 
@@ -215,7 +194,8 @@ def do_format(format_data):
             elif support == '11_0':
                 fl_11_0_supported.update(d3d_flag)
             elif support == '11_1':
-                fl_11_1_supported.update(d3d_flag)
+                # TODO(jmadill): D3D 11.1 handling
+                never_supported.update(d3d_flag)
             elif support == 'dxgi1_2':
                 # TODO(jmadill): DXGI 1.2 handling.
                 always_supported.update(d3d_flag)
@@ -235,7 +215,7 @@ def do_format(format_data):
                 print("Data specification error: " + support)
                 sys.exit(1)
 
-        for feature_level in ['9_3', '10_0', '10_1', '11_0', '11_1']:
+        for feature_level in ['9_3', '10_0', '10_1', '11_0']:
             always_for_fl = always_supported
             optional_for_fl = optionally_supported
             if feature_level == '9_3':
@@ -256,13 +236,6 @@ def do_format(format_data):
                 always_for_fl = fl_10_0_check_11_0_supported.union(always_for_fl)
                 always_for_fl = fl_10_1_supported.union(always_for_fl)
                 always_for_fl = fl_11_0_supported.union(always_for_fl)
-            elif feature_level == '11_1':
-                always_for_fl = fl_10_0_supported.union(always_for_fl)
-                always_for_fl = fl_10_0_check_10_1_supported.union(always_for_fl)
-                always_for_fl = fl_10_0_check_11_0_supported.union(always_for_fl)
-                always_for_fl = fl_10_1_supported.union(always_for_fl)
-                always_for_fl = fl_11_0_supported.union(always_for_fl)
-                always_for_fl = fl_11_1_supported.union(always_for_fl)
 
             always = ' | '.join(sorted(always_for_fl))
             never = ' | '.join(sorted(never_supported))
@@ -284,15 +257,14 @@ def join_table_data(table_data_1, table_data_2):
     return {'9_3':  table_data_1['9_3']  + table_data_2['9_3'],
             '10_0': table_data_1['10_0'] + table_data_2['10_0'],
             '10_1': table_data_1['10_1'] + table_data_2['10_1'],
-            '11_0': table_data_1['11_0'] + table_data_2['11_0'],
-            '11_1': table_data_1['11_1'] + table_data_2['11_1']}
+            '11_0': table_data_1['11_0'] + table_data_2['11_0']}
 
 with open('dxgi_support_data.json') as dxgi_file:
     file_data = dxgi_file.read()
     dxgi_file.close()
     json_data = json.loads(file_data)
 
-    table_data = {'9_3': '', '10_0': '', '10_1': '', '11_0': '', '11_1': ''}
+    table_data = {'9_3': '', '10_0': '', '10_1': '', '11_0': ''}
 
     for format_data in json_data:
         table_data = join_table_data(table_data, do_format(format_data))
@@ -301,8 +273,7 @@ with open('dxgi_support_data.json') as dxgi_file:
                                table_data_9_3=table_data['9_3'],
                                table_data_10_0=table_data['10_0'],
                                table_data_10_1=table_data['10_1'],
-                               table_data_11_0=table_data['11_0'],
-                               table_data_11_1=table_data['11_1'])
+                               table_data_11_0=table_data['11_0'])
 
     with open('dxgi_support_table.cpp', 'wt') as out_file:
         out_file.write(out_data)

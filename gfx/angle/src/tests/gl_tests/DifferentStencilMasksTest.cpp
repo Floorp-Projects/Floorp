@@ -32,22 +32,26 @@ class DifferentStencilMasksTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource =
-            R"(precision highp float;
+        const std::string vertexShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
             attribute vec4 position;
 
             void main()
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string fragmentShaderSource =
-            R"(precision highp float;
+        const std::string fragmentShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
 
             void main()
             {
                 gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-            })";
+            }
+        );
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);
@@ -114,22 +118,26 @@ class DifferentStencilMasksWithoutStencilBufferTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource =
-            R"(precision highp float;
+        const std::string vertexShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
             attribute vec4 position;
 
             void main()
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string fragmentShaderSource =
-            R"(precision highp float;
+        const std::string fragmentShaderSource = SHADER_SOURCE
+        (
+            precision highp float;
 
             void main()
             {
                 gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-            })";
+            }
+        );
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);

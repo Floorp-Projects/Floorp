@@ -20,10 +20,12 @@ WindowSurfaceWGL::WindowSurfaceWGL(const egl::SurfaceState &state,
                                    RendererGL *renderer,
                                    EGLNativeWindowType window,
                                    int pixelFormat,
+                                   HGLRC wglContext,
                                    const FunctionsWGL *functions,
                                    EGLint orientation)
-    : SurfaceWGL(state, renderer),
+    : SurfaceGL(state, renderer),
       mPixelFormat(pixelFormat),
+      mWGLContext(wglContext),
       mWindow(window),
       mDeviceContext(nullptr),
       mFunctionsWGL(functions),
@@ -39,14 +41,13 @@ WindowSurfaceWGL::~WindowSurfaceWGL()
     mDeviceContext = nullptr;
 }
 
-egl::Error WindowSurfaceWGL::initialize(const egl::Display *display)
+egl::Error WindowSurfaceWGL::initialize()
 {
     mDeviceContext = GetDC(mWindow);
     if (!mDeviceContext)
     {
-        return egl::EglBadNativeWindow()
-               << "Failed to get the device context from the native window, "
-               << gl::FmtErr(GetLastError());
+        return egl::Error(EGL_BAD_NATIVE_WINDOW, "Failed to get the device context from the native window, "
+                                                 "error: 0x%X.", GetLastError());
     }
 
     // Require that the pixel format for this window has not been set yet or is equal to the Display's pixel format.
@@ -56,21 +57,18 @@ egl::Error WindowSurfaceWGL::initialize(const egl::Display *display)
         PIXELFORMATDESCRIPTOR pixelFormatDescriptor = { 0 };
         if (!DescribePixelFormat(mDeviceContext, mPixelFormat, sizeof(pixelFormatDescriptor), &pixelFormatDescriptor))
         {
-            return egl::EglBadNativeWindow()
-                   << "Failed to DescribePixelFormat, " << gl::FmtErr(GetLastError());
+            return egl::Error(EGL_BAD_NATIVE_WINDOW, "Failed to DescribePixelFormat, error: 0x%X.", GetLastError());
         }
 
         if (!SetPixelFormat(mDeviceContext, mPixelFormat, &pixelFormatDescriptor))
         {
-            return egl::EglNotInitialized()
-                   << "Failed to set the pixel format on the device context, "
-                   << gl::FmtErr(GetLastError());
+            return egl::Error(EGL_NOT_INITIALIZED, "Failed to set the pixel format on the device context, "
+                                                   "error: 0x%X.", GetLastError());
         }
     }
     else if (windowPixelFormat != mPixelFormat)
     {
-        return egl::EglNotInitialized()
-               << "Pixel format of the NativeWindow and NativeDisplayType must match.";
+        return egl::Error(EGL_NOT_INITIALIZED, "Pixel format of the NativeWindow and NativeDisplayType must match.");
     }
 
     // Check for the swap behavior of this pixel format
@@ -88,51 +86,53 @@ egl::Error WindowSurfaceWGL::initialize(const egl::Display *display)
             break;
     }
 
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceWGL::makeCurrent()
 {
-    return egl::NoError();
+    if (!mFunctionsWGL->makeCurrent(mDeviceContext, mWGLContext))
+    {
+        // TODO: What error type here?
+        return egl::Error(EGL_CONTEXT_LOST, "Failed to make the WGL context current.");
+    }
+
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceWGL::swap(const gl::Context *context)
+egl::Error WindowSurfaceWGL::swap()
 {
     if (!mFunctionsWGL->swapBuffers(mDeviceContext))
     {
         // TODO: What error type here?
-        return egl::EglContextLost() << "Failed to swap buffers on the child window.";
+        return egl::Error(EGL_CONTEXT_LOST, "Failed to swap buffers on the child window.");
     }
 
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceWGL::postSubBuffer(const gl::Context *context,
-                                           EGLint x,
-                                           EGLint y,
-                                           EGLint width,
-                                           EGLint height)
+egl::Error WindowSurfaceWGL::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceWGL::querySurfacePointerANGLE(EGLint attribute, void **value)
 {
-    *value = nullptr;
-    return egl::NoError();
+    UNIMPLEMENTED();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceWGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceWGL::releaseTexImage(EGLint buffer)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 void WindowSurfaceWGL::setSwapInterval(EGLint interval)
@@ -175,8 +175,4 @@ EGLint WindowSurfaceWGL::getSwapBehavior() const
     return mSwapBehavior;
 }
 
-HDC WindowSurfaceWGL::getDC() const
-{
-    return mDeviceContext;
-}
 }

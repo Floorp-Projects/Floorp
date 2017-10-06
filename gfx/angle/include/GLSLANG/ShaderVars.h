@@ -41,17 +41,6 @@ enum BlockLayoutType
     BLOCKLAYOUT_SHARED
 };
 
-// Interface Blocks, see section 4.3.9 of the ESSL 3.10 spec
-enum class BlockType
-{
-    BLOCK_UNIFORM,
-    BLOCK_BUFFER,
-
-    // Required in OpenGL ES 3.1 extension GL_OES_shader_io_blocks.
-    // TODO(jiawei.shao@intel.com): add BLOCK_OUT.
-    BLOCK_IN
-};
-
 // Base class for all variables defined in shaders, including Varyings, Uniforms, etc
 // Note: we must override the copy constructor and assignment operator so we can
 // work around excessive GCC binary bloating:
@@ -96,8 +85,7 @@ struct ShaderVariable
 
   protected:
     bool isSameVariableAtLinkTime(const ShaderVariable &other,
-                                  bool matchPrecision,
-                                  bool matchName) const;
+                                  bool matchPrecision) const;
 
     bool operator==(const ShaderVariable &other) const;
     bool operator!=(const ShaderVariable &other) const
@@ -106,21 +94,7 @@ struct ShaderVariable
     }
 };
 
-// A variable with an integer location to pass back to the GL API: either uniform (can have location
-// in GLES3.1+), vertex shader input or fragment shader output.
-struct VariableWithLocation : public ShaderVariable
-{
-    VariableWithLocation();
-    ~VariableWithLocation();
-    VariableWithLocation(const VariableWithLocation &other);
-    VariableWithLocation &operator=(const VariableWithLocation &other);
-    bool operator==(const VariableWithLocation &other) const;
-    bool operator!=(const VariableWithLocation &other) const { return !operator==(other); }
-
-    int location;
-};
-
-struct Uniform : public VariableWithLocation
+struct Uniform : public ShaderVariable
 {
     Uniform();
     ~Uniform();
@@ -132,17 +106,28 @@ struct Uniform : public VariableWithLocation
         return !operator==(other);
     }
 
-    int binding;
-    int offset;
-
     // Decide whether two uniforms are the same at shader link time,
     // assuming one from vertex shader and the other from fragment shader.
-    // GLSL ES Spec 3.00.3, section 4.3.5.
-    // GLSL ES Spec 3.10.4, section 4.4.5
+    // See GLSL ES Spec 3.00.3, sec 4.3.5.
     bool isSameUniformAtLinkTime(const Uniform &other) const;
 };
 
-struct Attribute : public VariableWithLocation
+// An interface variable is a variable which passes data between the GL data structures and the
+// shader execution: either vertex shader inputs or fragment shader outputs. These variables can
+// have integer locations to pass back to the GL API.
+struct InterfaceVariable : public ShaderVariable
+{
+    InterfaceVariable();
+    ~InterfaceVariable();
+    InterfaceVariable(const InterfaceVariable &other);
+    InterfaceVariable &operator=(const InterfaceVariable &other);
+    bool operator==(const InterfaceVariable &other) const;
+    bool operator!=(const InterfaceVariable &other) const { return !operator==(other); }
+
+    int location;
+};
+
+struct Attribute : public InterfaceVariable
 {
     Attribute();
     ~Attribute();
@@ -152,7 +137,7 @@ struct Attribute : public VariableWithLocation
     bool operator!=(const Attribute &other) const { return !operator==(other); }
 };
 
-struct OutputVariable : public VariableWithLocation
+struct OutputVariable : public InterfaceVariable
 {
     OutputVariable();
     ~OutputVariable();
@@ -184,7 +169,7 @@ struct InterfaceBlockField : public ShaderVariable
     bool isRowMajorLayout;
 };
 
-struct Varying : public VariableWithLocation
+struct Varying : public ShaderVariable
 {
     Varying();
     ~Varying();
@@ -219,12 +204,9 @@ struct InterfaceBlock
 
     // Fields from blocks with non-empty instance names are prefixed with the block name.
     std::string fieldPrefix() const;
-    std::string fieldMappedPrefix() const;
 
     // Decide whether two interface blocks are the same at shader link time.
     bool isSameInterfaceBlockAtLinkTime(const InterfaceBlock &other) const;
-
-    bool isBuiltIn() const { return name.compare(0, 3, "gl_") == 0; }
 
     std::string name;
     std::string mappedName;
@@ -232,9 +214,7 @@ struct InterfaceBlock
     unsigned int arraySize;
     BlockLayoutType layout;
     bool isRowMajorLayout;
-    int binding;
     bool staticUse;
-    BlockType blockType;
     std::vector<InterfaceBlockField> fields;
 };
 

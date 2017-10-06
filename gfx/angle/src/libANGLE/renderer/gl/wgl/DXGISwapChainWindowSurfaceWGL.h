@@ -10,7 +10,7 @@
 #ifndef LIBANGLE_RENDERER_GL_WGL_DXGISWAPCHAINSURFACEWGL_H_
 #define LIBANGLE_RENDERER_GL_WGL_DXGISWAPCHAINSURFACEWGL_H_
 
-#include "libANGLE/renderer/gl/wgl/SurfaceWGL.h"
+#include "libANGLE/renderer/gl/SurfaceGL.h"
 
 #include <GL/wglext.h>
 
@@ -23,7 +23,7 @@ class DisplayWGL;
 class StateManagerGL;
 struct WorkaroundsGL;
 
-class DXGISwapChainWindowSurfaceWGL : public SurfaceWGL
+class DXGISwapChainWindowSurfaceWGL : public SurfaceGL
 {
   public:
     DXGISwapChainWindowSurfaceWGL(const egl::SurfaceState &state,
@@ -31,21 +31,18 @@ class DXGISwapChainWindowSurfaceWGL : public SurfaceWGL
                                   EGLNativeWindowType window,
                                   ID3D11Device *device,
                                   HANDLE deviceHandle,
+                                  HGLRC wglContext,
                                   HDC deviceContext,
                                   const FunctionsGL *functionsGL,
                                   const FunctionsWGL *functionsWGL,
                                   EGLint orientation);
     ~DXGISwapChainWindowSurfaceWGL() override;
 
-    egl::Error initialize(const egl::Display *display) override;
+    egl::Error initialize() override;
     egl::Error makeCurrent() override;
 
-    egl::Error swap(const gl::Context *context) override;
-    egl::Error postSubBuffer(const gl::Context *context,
-                             EGLint x,
-                             EGLint y,
-                             EGLint width,
-                             EGLint height) override;
+    egl::Error swap() override;
+    egl::Error postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height) override;
     egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) override;
     egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) override;
     egl::Error releaseTexImage(EGLint buffer) override;
@@ -58,8 +55,6 @@ class DXGISwapChainWindowSurfaceWGL : public SurfaceWGL
     EGLint getSwapBehavior() const override;
 
     FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &data) override;
-
-    HDC getDC() const override;
 
   private:
     egl::Error setObjectsLocked(bool locked);
@@ -79,6 +74,7 @@ class DXGISwapChainWindowSurfaceWGL : public SurfaceWGL
     HANDLE mDeviceHandle;
 
     HDC mWGLDevice;
+    HGLRC mWGLContext;
 
     DXGI_FORMAT mSwapChainFormat;
     UINT mSwapChainFlags;

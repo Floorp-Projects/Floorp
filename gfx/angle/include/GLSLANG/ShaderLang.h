@@ -25,7 +25,7 @@
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 182
+#define ANGLE_SH_VERSION 168
 
 enum ShShaderSpec
 {
@@ -61,10 +61,7 @@ enum ShShaderOutput
     // Prefer using these to specify HLSL output type:
     SH_HLSL_3_0_OUTPUT       = 0x8B48,  // D3D 9
     SH_HLSL_4_1_OUTPUT       = 0x8B49,  // D3D 11
-    SH_HLSL_4_0_FL9_3_OUTPUT = 0x8B4A,  // D3D 11 feature level 9_3
-
-    // Output specialized GLSL to be fed to glslang for Vulkan SPIR.
-    SH_GLSL_VULKAN_OUTPUT = 0x8B4B,
+    SH_HLSL_4_0_FL9_3_OUTPUT = 0x8B4A   // D3D 11 feature level 9_3
 };
 
 // Compile options.
@@ -206,45 +203,6 @@ const ShCompileOptions SH_EMULATE_ISNAN_FLOAT_FUNCTION = UINT64_C(1) << 27;
 // layout qualifier to be considered active. The uniform block itself is also considered active.
 const ShCompileOptions SH_USE_UNUSED_STANDARD_SHARED_BLOCKS = UINT64_C(1) << 28;
 
-// This flag works around a bug in unary minus operator on float numbers on Intel
-// Mac OSX 10.11 drivers. It works by translating -float into 0.0 - float.
-const ShCompileOptions SH_REWRITE_FLOAT_UNARY_MINUS_OPERATOR = UINT64_C(1) << 29;
-
-// This flag works around a bug in evaluating atan(y, x) on some NVIDIA OpenGL drivers.
-// It works by using an expression to emulate this function.
-const ShCompileOptions SH_EMULATE_ATAN2_FLOAT_FUNCTION = UINT64_C(1) << 30;
-
-// Set to 1 to translate gl_ViewID_OVR to an uniform so that the extension can be emulated.
-// "uniform highp uint ViewID_OVR".
-const ShCompileOptions SH_TRANSLATE_VIEWID_OVR_TO_UNIFORM = UINT64_C(1) << 31;
-
-// Set to initialize uninitialized local variables. Should only be used with GLSL output. In HLSL
-// output variables are initialized regardless of if this flag is set.
-const ShCompileOptions SH_INITIALIZE_UNINITIALIZED_LOCALS = UINT64_C(1) << 32;
-
-// The flag modifies the shader in the following way:
-// Every occurrence of gl_InstanceID is replaced by the global temporary variable InstanceID.
-// Every occurrence of gl_ViewID_OVR is replaced by the varying variable ViewID_OVR.
-// At the beginning of the body of main() in a vertex shader the following initializers are added:
-// ViewID_OVR = uint(gl_InstanceID) % num_views;
-// InstanceID = gl_InstanceID / num_views;
-// ViewID_OVR is added as a varying variable to both the vertex and fragment shaders.
-const ShCompileOptions SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW = UINT64_C(1) << 33;
-
-// With the flag enabled the GLSL/ESSL vertex shader is modified to include code for viewport
-// selection in the following way:
-// - Code to enable the extension NV_viewport_array2 is included.
-// - Code to select the viewport index or layer is inserted at the beginning of main after
-// ViewID_OVR's initialization.
-// - A declaration of the uniform multiviewBaseViewLayerIndex.
-// Note: The SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW flag also has to be enabled to have the
-// temporary variable ViewID_OVR declared and initialized.
-const ShCompileOptions SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER = UINT64_C(1) << 34;
-
-// If the flag is enabled, gl_PointSize is clamped to the maximum point size specified in
-// ShBuiltInResources in vertex shaders.
-const ShCompileOptions SH_CLAMP_POINT_SIZE = UINT64_C(1) << 35;
-
 // Defines alternate strategies for implementing array index clamping.
 enum ShArrayIndexClampingStrategy
 {
@@ -290,9 +248,6 @@ struct ShBuiltInResources
     int EXT_shader_framebuffer_fetch;
     int NV_shader_framebuffer_fetch;
     int ARM_shader_framebuffer_fetch;
-    int OVR_multiview;
-    int EXT_YUV_target;
-    int OES_geometry_shader;
 
     // Set to 1 to enable replacing GL_EXT_draw_buffers #extension directives
     // with GL_NV_draw_buffers in ESSL output. This flag can be used to emulate
@@ -319,9 +274,6 @@ struct ShBuiltInResources
     // GLES SL version 100 gl_MaxDualSourceDrawBuffersEXT value for EXT_blend_func_extended.
     int MaxDualSourceDrawBuffers;
 
-    // Value of GL_MAX_VIEWS_OVR.
-    int MaxViewsOVR;
-
     // Name Hashing.
     // Set a 64 bit hash function to enable user-defined name hashing.
     // Default is NULL.
@@ -343,10 +295,6 @@ struct ShBuiltInResources
 
     // GLES 3.1 constants
 
-    // texture gather offset constraints.
-    int MinProgramTextureGatherOffset;
-    int MaxProgramTextureGatherOffset;
-
     // maximum number of available image units
     int MaxImageUnits;
 
@@ -361,9 +309,6 @@ struct ShBuiltInResources
 
     // maximum total number of image uniforms in a program
     int MaxCombinedImageUniforms;
-
-    // maximum number of uniform locations
-    int MaxUniformLocations;
 
     // maximum number of ssbos and images in a shader
     int MaxCombinedShaderOutputResources;
@@ -408,29 +353,6 @@ struct ShBuiltInResources
 
     // maximum number of buffer object storage in machine units
     int MaxAtomicCounterBufferSize;
-
-    // maximum number of uniform block bindings
-    int MaxUniformBufferBindings;
-
-    // maximum number of shader storage buffer bindings
-    int MaxShaderStorageBufferBindings;
-
-    // maximum point size (higher limit from ALIASED_POINT_SIZE_RANGE)
-    float MaxPointSize;
-
-    // OES_geometry_shader constants
-    int MaxGeometryUniformComponents;
-    int MaxGeometryUniformBlocks;
-    int MaxGeometryInputComponents;
-    int MaxGeometryOutputComponents;
-    int MaxGeometryOutputVertices;
-    int MaxGeometryTotalOutputComponents;
-    int MaxGeometryTextureImageUnits;
-    int MaxGeometryAtomicCounterBuffers;
-    int MaxGeometryAtomicCounters;
-    int MaxGeometryShaderStorageBlocks;
-    int MaxGeometryShaderInvocations;
-    int MaxGeometryImageUniforms;
 };
 
 //
@@ -441,6 +363,149 @@ struct ShBuiltInResources
 // If handle creation fails, 0 will be returned.
 //
 using ShHandle = void *;
+
+//
+// Driver must call this first, once, before doing any other
+// compiler operations.
+// If the function succeeds, the return value is true, else false.
+//
+bool ShInitialize();
+//
+// Driver should call this at shutdown.
+// If the function succeeds, the return value is true, else false.
+//
+bool ShFinalize();
+
+//
+// Initialize built-in resources with minimum expected values.
+// Parameters:
+// resources: The object to initialize. Will be comparable with memcmp.
+//
+void ShInitBuiltInResources(ShBuiltInResources *resources);
+
+//
+// Returns the a concatenated list of the items in ShBuiltInResources as a
+// null-terminated string.
+// This function must be updated whenever ShBuiltInResources is changed.
+// Parameters:
+// handle: Specifies the handle of the compiler to be used.
+const std::string &ShGetBuiltInResourcesString(const ShHandle handle);
+
+//
+// Driver calls these to create and destroy compiler objects.
+//
+// Returns the handle of constructed compiler, null if the requested compiler is
+// not supported.
+// Parameters:
+// type: Specifies the type of shader - GL_FRAGMENT_SHADER or GL_VERTEX_SHADER.
+// spec: Specifies the language spec the compiler must conform to -
+//       SH_GLES2_SPEC or SH_WEBGL_SPEC.
+// output: Specifies the output code type - for example SH_ESSL_OUTPUT, SH_GLSL_OUTPUT,
+//         SH_HLSL_3_0_OUTPUT or SH_HLSL_4_1_OUTPUT. Note: Each output type may only
+//         be supported in some configurations.
+// resources: Specifies the built-in resources.
+ShHandle ShConstructCompiler(sh::GLenum type,
+                             ShShaderSpec spec,
+                             ShShaderOutput output,
+                             const ShBuiltInResources *resources);
+void ShDestruct(ShHandle handle);
+
+//
+// Compiles the given shader source.
+// If the function succeeds, the return value is true, else false.
+// Parameters:
+// handle: Specifies the handle of compiler to be used.
+// shaderStrings: Specifies an array of pointers to null-terminated strings
+//                containing the shader source code.
+// numStrings: Specifies the number of elements in shaderStrings array.
+// compileOptions: A mask containing the following parameters:
+// SH_VALIDATE: Validates shader to ensure that it conforms to the spec
+//              specified during compiler construction.
+// SH_VALIDATE_LOOP_INDEXING: Validates loop and indexing in the shader to
+//                            ensure that they do not exceed the minimum
+//                            functionality mandated in GLSL 1.0 spec,
+//                            Appendix A, Section 4 and 5.
+//                            There is no need to specify this parameter when
+//                            compiling for WebGL - it is implied.
+// SH_INTERMEDIATE_TREE: Writes intermediate tree to info log.
+//                       Can be queried by calling sh::GetInfoLog().
+// SH_OBJECT_CODE: Translates intermediate tree to glsl or hlsl shader.
+//                 Can be queried by calling sh::GetObjectCode().
+// SH_VARIABLES: Extracts attributes, uniforms, and varyings.
+//               Can be queried by calling ShGetVariableInfo().
+//
+bool ShCompile(const ShHandle handle,
+               const char *const shaderStrings[],
+               size_t numStrings,
+               ShCompileOptions compileOptions);
+
+// Clears the results from the previous compilation.
+void ShClearResults(const ShHandle handle);
+
+// Return the version of the shader language.
+int ShGetShaderVersion(const ShHandle handle);
+
+// Return the currently set language output type.
+ShShaderOutput ShGetShaderOutputType(const ShHandle handle);
+
+// Returns null-terminated information log for a compiled shader.
+// Parameters:
+// handle: Specifies the compiler
+const std::string &ShGetInfoLog(const ShHandle handle);
+
+// Returns null-terminated object code for a compiled shader.
+// Parameters:
+// handle: Specifies the compiler
+const std::string &ShGetObjectCode(const ShHandle handle);
+
+// Returns a (original_name, hash) map containing all the user defined
+// names in the shader, including variable names, function names, struct
+// names, and struct field names.
+// Parameters:
+// handle: Specifies the compiler
+const std::map<std::string, std::string> *ShGetNameHashingMap(const ShHandle handle);
+
+// Shader variable inspection.
+// Returns a pointer to a list of variables of the designated type.
+// (See ShaderVars.h for type definitions, included above)
+// Returns NULL on failure.
+// Parameters:
+// handle: Specifies the compiler
+const std::vector<sh::Uniform> *ShGetUniforms(const ShHandle handle);
+const std::vector<sh::Varying> *ShGetVaryings(const ShHandle handle);
+const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle);
+const std::vector<sh::OutputVariable> *ShGetOutputVariables(const ShHandle handle);
+const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle);
+sh::WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle);
+
+// Returns true if the passed in variables pack in maxVectors following
+// the packing rules from the GLSL 1.017 spec, Appendix A, section 7.
+// Returns false otherwise. Also look at the SH_ENFORCE_PACKING_RESTRICTIONS
+// flag above.
+// Parameters:
+// maxVectors: the available rows of registers.
+// variables: an array of variables.
+bool ShCheckVariablesWithinPackingLimits(int maxVectors,
+                                         const std::vector<sh::ShaderVariable> &variables);
+
+// Gives the compiler-assigned register for an interface block.
+// The method writes the value to the output variable "indexOut".
+// Returns true if it found a valid interface block, false otherwise.
+// Parameters:
+// handle: Specifies the compiler
+// interfaceBlockName: Specifies the interface block
+// indexOut: output variable that stores the assigned register
+bool ShGetInterfaceBlockRegister(const ShHandle handle,
+                                 const std::string &interfaceBlockName,
+                                 unsigned int *indexOut);
+
+// Gives a map from uniform names to compiler-assigned registers in the default
+// interface block. Note that the map contains also registers of samplers that
+// have been extracted from structs.
+const std::map<std::string, unsigned int> *ShGetUniformRegisterMap(const ShHandle handle);
+
+// Temporary duplicate of the scoped APIs, to be removed when we roll ANGLE and fix Chromium.
+// TODO(jmadill): Consolidate with these APIs once we roll ANGLE.
 
 namespace sh
 {
@@ -549,17 +614,10 @@ const std::map<std::string, std::string> *GetNameHashingMap(const ShHandle handl
 // handle: Specifies the compiler
 const std::vector<sh::Uniform> *GetUniforms(const ShHandle handle);
 const std::vector<sh::Varying> *GetVaryings(const ShHandle handle);
-const std::vector<sh::Varying> *GetInputVaryings(const ShHandle handle);
-const std::vector<sh::Varying> *GetOutputVaryings(const ShHandle handle);
 const std::vector<sh::Attribute> *GetAttributes(const ShHandle handle);
 const std::vector<sh::OutputVariable> *GetOutputVariables(const ShHandle handle);
 const std::vector<sh::InterfaceBlock> *GetInterfaceBlocks(const ShHandle handle);
-const std::vector<sh::InterfaceBlock> *GetUniformBlocks(const ShHandle handle);
-const std::vector<sh::InterfaceBlock> *GetShaderStorageBlocks(const ShHandle handle);
 sh::WorkGroupSize GetComputeShaderLocalGroupSize(const ShHandle handle);
-// Returns the number of views specified through the num_views layout qualifier. If num_views is
-// not set, the function returns -1.
-int GetVertexShaderNumViews(const ShHandle handle);
 
 // Returns true if the passed in variables pack in maxVectors followingthe packing rules from the
 // GLSL 1.017 spec, Appendix A, section 7.
@@ -571,18 +629,18 @@ int GetVertexShaderNumViews(const ShHandle handle);
 bool CheckVariablesWithinPackingLimits(int maxVectors,
                                        const std::vector<sh::ShaderVariable> &variables);
 
-// Gives the compiler-assigned register for a uniform block.
+// Gives the compiler-assigned register for an interface block.
 // The method writes the value to the output variable "indexOut".
-// Returns true if it found a valid uniform block, false otherwise.
+// Returns true if it found a valid interface block, false otherwise.
 // Parameters:
 // handle: Specifies the compiler
-// uniformBlockName: Specifies the uniform block
+// interfaceBlockName: Specifies the interface block
 // indexOut: output variable that stores the assigned register
-bool GetUniformBlockRegister(const ShHandle handle,
-                             const std::string &uniformBlockName,
-                             unsigned int *indexOut);
+bool GetInterfaceBlockRegister(const ShHandle handle,
+                               const std::string &interfaceBlockName,
+                               unsigned int *indexOut);
 
-// Gives a map from uniform names to compiler-assigned registers in the default uniform block.
+// Gives a map from uniform names to compiler-assigned registers in the default interface block.
 // Note that the map contains also registers of samplers that have been extracted from structs.
 const std::map<std::string, unsigned int> *GetUniformRegisterMap(const ShHandle handle);
 

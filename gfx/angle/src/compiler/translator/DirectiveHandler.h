@@ -27,8 +27,8 @@ class TDirectiveHandler : public pp::DirectiveHandler, angle::NonCopyable
                       bool debugShaderPrecisionSupported);
     ~TDirectiveHandler() override;
 
-    const TPragma &pragma() const { return mPragma; }
-    const TExtensionBehavior &extensionBehavior() const { return mExtensionBehavior; }
+    const TPragma& pragma() const { return mPragma; }
+    const TExtensionBehavior& extensionBehavior() const { return mExtensionBehavior; }
 
     void handleError(const pp::SourceLocation &loc, const std::string &msg) override;
 
@@ -45,9 +45,9 @@ class TDirectiveHandler : public pp::DirectiveHandler, angle::NonCopyable
 
   private:
     TPragma mPragma;
-    TExtensionBehavior &mExtensionBehavior;
-    TDiagnostics &mDiagnostics;
-    int &mShaderVersion;
+    TExtensionBehavior& mExtensionBehavior;
+    TDiagnostics& mDiagnostics;
+    int& mShaderVersion;
     sh::GLenum mShaderType;
     bool mDebugShaderPrecisionSupported;
 };

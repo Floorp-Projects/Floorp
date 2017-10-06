@@ -11,10 +11,9 @@
 
 #include "common/platform.h"
 
-#include "libANGLE/Error.h"
 #include "libANGLE/angletypes.h"
+#include "libANGLE/Error.h"
 #include "libANGLE/renderer/TransformFeedbackImpl.h"
-#include "libANGLE/renderer/renderer_utils.h"
 
 namespace rx
 {
@@ -32,19 +31,16 @@ class TransformFeedback11 : public TransformFeedbackImpl
     void pause() override;
     void resume() override;
 
-    void bindGenericBuffer(const gl::BindingPointer<gl::Buffer> &binding) override;
-    void bindIndexedBuffer(size_t index,
-                           const gl::OffsetBindingPointer<gl::Buffer> &binding) override;
+    void bindGenericBuffer(const BindingPointer<gl::Buffer> &binding) override;
+    void bindIndexedBuffer(size_t index, const OffsetBindingPointer<gl::Buffer> &binding) override;
 
     void onApply();
 
     bool isDirty() const;
 
     UINT getNumSOBuffers() const;
-    gl::ErrorOrResult<const std::vector<ID3D11Buffer *> *> getSOBuffers(const gl::Context *context);
+    gl::ErrorOrResult<const std::vector<ID3D11Buffer *> *> getSOBuffers();
     const std::vector<UINT> &getSOBufferOffsets() const;
-
-    Serial getSerial() const;
 
   private:
     Renderer11 *mRenderer;
@@ -52,8 +48,6 @@ class TransformFeedback11 : public TransformFeedbackImpl
     bool mIsDirty;
     std::vector<ID3D11Buffer *> mBuffers;
     std::vector<UINT> mBufferOffsets;
-
-    Serial mSerial;
 };
 }  // namespace rx
 

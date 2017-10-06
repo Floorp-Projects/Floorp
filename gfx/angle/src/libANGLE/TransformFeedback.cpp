@@ -50,26 +50,19 @@ TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, 
     ASSERT(mImplementation != nullptr);
 }
 
-Error TransformFeedback::onDestroy(const Context *context)
+TransformFeedback::~TransformFeedback()
 {
     if (mState.mProgram)
     {
-        mState.mProgram->release(context);
+        mState.mProgram->release();
         mState.mProgram = nullptr;
     }
-
-    ASSERT(!mState.mProgram);
-    mState.mGenericBuffer.set(context, nullptr);
+    mState.mGenericBuffer.set(nullptr);
     for (size_t i = 0; i < mState.mIndexedBuffers.size(); i++)
     {
-        mState.mIndexedBuffers[i].set(context, nullptr);
+        mState.mIndexedBuffers[i].set(nullptr);
     }
 
-    return NoError();
-}
-
-TransformFeedback::~TransformFeedback()
-{
     SafeDelete(mImplementation);
 }
 
@@ -83,16 +76,16 @@ const std::string &TransformFeedback::getLabel() const
     return mState.mLabel;
 }
 
-void TransformFeedback::begin(const Context *context, GLenum primitiveMode, Program *program)
+void TransformFeedback::begin(GLenum primitiveMode, Program *program)
 {
     mState.mActive        = true;
     mState.mPrimitiveMode = primitiveMode;
     mState.mPaused        = false;
     mImplementation->begin(primitiveMode);
-    bindProgram(context, program);
+    bindProgram(program);
 }
 
-void TransformFeedback::end(const Context *context)
+void TransformFeedback::end()
 {
     mState.mActive        = false;
     mState.mPrimitiveMode = GL_NONE;
@@ -100,7 +93,7 @@ void TransformFeedback::end(const Context *context)
     mImplementation->end();
     if (mState.mProgram)
     {
-        mState.mProgram->release(context);
+        mState.mProgram->release();
         mState.mProgram = nullptr;
     }
 }
@@ -132,13 +125,13 @@ GLenum TransformFeedback::getPrimitiveMode() const
     return mState.mPrimitiveMode;
 }
 
-void TransformFeedback::bindProgram(const Context *context, Program *program)
+void TransformFeedback::bindProgram(Program *program)
 {
     if (mState.mProgram != program)
     {
         if (mState.mProgram != nullptr)
         {
-            mState.mProgram->release(context);
+            mState.mProgram->release();
         }
         mState.mProgram = program;
         if (mState.mProgram != nullptr)
@@ -153,26 +146,26 @@ bool TransformFeedback::hasBoundProgram(GLuint program) const
     return mState.mProgram != nullptr && mState.mProgram->id() == program;
 }
 
-void TransformFeedback::bindGenericBuffer(const Context *context, Buffer *buffer)
+void TransformFeedback::bindGenericBuffer(Buffer *buffer)
 {
-    mState.mGenericBuffer.set(context, buffer);
+    mState.mGenericBuffer.set(buffer);
     mImplementation->bindGenericBuffer(mState.mGenericBuffer);
 }
 
-void TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
+void TransformFeedback::detachBuffer(GLuint bufferName)
 {
     for (size_t index = 0; index < mState.mIndexedBuffers.size(); index++)
     {
         if (mState.mIndexedBuffers[index].id() == bufferName)
         {
-            mState.mIndexedBuffers[index].set(context, nullptr);
+            mState.mIndexedBuffers[index].set(nullptr);
             mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
         }
     }
 
     if (mState.mGenericBuffer.id() == bufferName)
     {
-        mState.mGenericBuffer.set(context, nullptr);
+        mState.mGenericBuffer.set(nullptr);
         mImplementation->bindGenericBuffer(mState.mGenericBuffer);
     }
 }
@@ -182,14 +175,10 @@ const BindingPointer<Buffer> &TransformFeedback::getGenericBuffer() const
     return mState.mGenericBuffer;
 }
 
-void TransformFeedback::bindIndexedBuffer(const Context *context,
-                                          size_t index,
-                                          Buffer *buffer,
-                                          size_t offset,
-                                          size_t size)
+void TransformFeedback::bindIndexedBuffer(size_t index, Buffer *buffer, size_t offset, size_t size)
 {
     ASSERT(index < mState.mIndexedBuffers.size());
-    mState.mIndexedBuffers[index].set(context, buffer, offset, size);
+    mState.mIndexedBuffers[index].set(buffer, offset, size);
     mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
 }
 

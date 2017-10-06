@@ -8,20 +8,26 @@
 
 #include "libANGLE/renderer/DisplayImpl.h"
 
-#include "libANGLE/Display.h"
 #include "libANGLE/Surface.h"
 
 namespace rx
 {
 
-DisplayImpl::DisplayImpl(const egl::DisplayState &state)
-    : mState(state), mExtensionsInitialized(false), mCapsInitialized(false)
+DisplayImpl::DisplayImpl()
+    : mExtensionsInitialized(false),
+      mCapsInitialized(false)
 {
 }
 
 DisplayImpl::~DisplayImpl()
 {
-    ASSERT(mState.surfaceSet.empty());
+    ASSERT(mSurfaceSet.empty());
+}
+
+void DisplayImpl::destroySurface(egl::Surface *surface)
+{
+    mSurfaceSet.erase(surface);
+    surface->onDestroy();
 }
 
 const egl::DisplayExtensions &DisplayImpl::getExtensions() const
@@ -41,7 +47,7 @@ egl::Error DisplayImpl::validateClientBuffer(const egl::Config *configuration,
                                              const egl::AttributeMap &attribs) const
 {
     UNREACHABLE();
-    return egl::EglBadDisplay() << "DisplayImpl::validateClientBuffer unimplemented.";
+    return egl::Error(EGL_BAD_DISPLAY, "DisplayImpl::validateClientBuffer unimplemented.");
 }
 
 const egl::Caps &DisplayImpl::getCaps() const
@@ -55,4 +61,4 @@ const egl::Caps &DisplayImpl::getCaps() const
     return mCaps;
 }
 
-}  // namespace rx
+}

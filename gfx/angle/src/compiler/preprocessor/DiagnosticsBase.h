@@ -19,6 +19,11 @@ struct SourceLocation;
 class Diagnostics
 {
   public:
+    enum Severity
+    {
+        PP_ERROR,
+        PP_WARNING
+    };
     enum ID
     {
         PP_ERROR_BEGIN,
@@ -63,7 +68,6 @@ class Diagnostics
         PP_INVALID_LINE_DIRECTIVE,
         PP_NON_PP_TOKEN_BEFORE_EXTENSION_ESSL3,
         PP_UNDEFINED_SHIFT,
-        PP_TOKENIZER_ERROR,
         PP_ERROR_END,
 
         PP_WARNING_BEGIN,
@@ -79,10 +83,12 @@ class Diagnostics
     void report(ID id, const SourceLocation &loc, const std::string &text);
 
   protected:
-    bool isError(ID id);
-    const char *message(ID id);
+    Severity severity(ID id);
+    std::string message(ID id);
 
-    virtual void print(ID id, const SourceLocation &loc, const std::string &text) = 0;
+    virtual void print(ID id,
+                       const SourceLocation &loc,
+                       const std::string &text) = 0;
 };
 
 }  // namespace pp

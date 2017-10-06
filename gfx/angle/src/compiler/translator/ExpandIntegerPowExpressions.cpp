@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/IntermNode.h"
 
 namespace sh
 {
@@ -22,10 +22,10 @@ namespace
 class Traverser : public TIntermTraverser
 {
   public:
-    static void Apply(TIntermNode *root, TSymbolTable *symbolTable);
+    static void Apply(TIntermNode *root, unsigned int *tempIndex);
 
   private:
-    Traverser(TSymbolTable *symbolTable);
+    Traverser();
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
     void nextIteration();
 
@@ -33,9 +33,10 @@ class Traverser : public TIntermTraverser
 };
 
 // static
-void Traverser::Apply(TIntermNode *root, TSymbolTable *symbolTable)
+void Traverser::Apply(TIntermNode *root, unsigned int *tempIndex)
 {
-    Traverser traverser(symbolTable);
+    Traverser traverser;
+    traverser.useTemporaryIndex(tempIndex);
     do
     {
         traverser.nextIteration();
@@ -47,14 +48,14 @@ void Traverser::Apply(TIntermNode *root, TSymbolTable *symbolTable)
     } while (traverser.mFound);
 }
 
-Traverser::Traverser(TSymbolTable *symbolTable) : TIntermTraverser(true, false, false, symbolTable)
+Traverser::Traverser() : TIntermTraverser(true, false, false)
 {
 }
 
 void Traverser::nextIteration()
 {
     mFound = false;
-    nextTemporaryId();
+    nextTemporaryIndex();
 }
 
 bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
@@ -110,13 +111,13 @@ bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
     }
 
     // Potential problem case detected, apply workaround.
-    nextTemporaryId();
+    nextTemporaryIndex();
 
     TIntermTyped *lhs = sequence->at(0)->getAsTyped();
     ASSERT(lhs);
 
     TIntermDeclaration *init = createTempInitDeclaration(lhs);
-    TIntermTyped *current    = createTempSymbol(lhs->getType());
+    TIntermTyped *current  = createTempSymbol(lhs->getType());
 
     insertStatementInParentBlock(init);
 
@@ -135,19 +136,19 @@ bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
         oneVal->setFConst(1.0f);
         TIntermConstantUnion *oneNode = new TIntermConstantUnion(oneVal, node->getType());
         TIntermBinary *div            = new TIntermBinary(EOpDiv, oneNode, current);
-        current                       = div;
+        current = div;
     }
 
-    queueReplacement(current, OriginalNode::IS_DROPPED);
+    queueReplacement(node, current, OriginalNode::IS_DROPPED);
     mFound = true;
     return false;
 }
 
 }  // anonymous namespace
 
-void ExpandIntegerPowExpressions(TIntermNode *root, TSymbolTable *symbolTable)
+void ExpandIntegerPowExpressions(TIntermNode *root, unsigned int *tempIndex)
 {
-    Traverser::Apply(root, symbolTable);
+    Traverser::Apply(root, tempIndex);
 }
 
 }  // namespace sh

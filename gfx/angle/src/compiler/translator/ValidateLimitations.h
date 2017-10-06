@@ -12,16 +12,56 @@
 namespace sh
 {
 
-class TDiagnostics;
+class TInfoSinkBase;
 
-// Returns true if the given shader does not exceed the minimum functionality mandated in GLSL ES
-// 1.00 spec Appendix A.
-bool ValidateLimitations(TIntermNode *root,
-                         GLenum shaderType,
-                         TSymbolTable *symbolTable,
-                         int shaderVersion,
-                         TDiagnostics *diagnostics);
+// Traverses intermediate tree to ensure that the shader does not exceed the
+// minimum functionality mandated in GLSL 1.0 spec, Appendix A.
+class ValidateLimitations : public TIntermTraverser
+{
+  public:
+    ValidateLimitations(sh::GLenum shaderType, TInfoSinkBase *sink);
+
+    int numErrors() const { return mNumErrors; }
+
+    bool visitBinary(Visit, TIntermBinary *) override;
+    bool visitUnary(Visit, TIntermUnary *) override;
+    bool visitAggregate(Visit, TIntermAggregate *) override;
+    bool visitLoop(Visit, TIntermLoop *) override;
+
+    static bool IsLimitedForLoop(TIntermLoop *node);
+
+  private:
+    void error(TSourceLoc loc, const char *reason, const char *token);
+
+    bool withinLoopBody() const;
+    bool isLoopIndex(TIntermSymbol *symbol);
+    bool validateLoopType(TIntermLoop *node);
+
+    bool validateForLoopHeader(TIntermLoop *node);
+    // If valid, return the index symbol id; Otherwise, return -1.
+    int validateForLoopInit(TIntermLoop *node);
+    bool validateForLoopCond(TIntermLoop *node, int indexSymbolId);
+    bool validateForLoopExpr(TIntermLoop *node, int indexSymbolId);
+
+    // Returns true if none of the loop indices is used as the argument to
+    // the given function out or inout parameter.
+    bool validateFunctionCall(TIntermAggregate *node);
+    bool validateOperation(TIntermOperator *node, TIntermNode *operand);
+
+    // Returns true if indexing does not exceed the minimum functionality
+    // mandated in GLSL 1.0 spec, Appendix A, Section 5.
+    bool isConstExpr(TIntermNode *node);
+    bool isConstIndexExpr(TIntermNode *node);
+    bool validateIndexing(TIntermBinary *node);
+
+    sh::GLenum mShaderType;
+    TInfoSinkBase *mSink;
+    int mNumErrors;
+    std::vector<int> mLoopSymbolIds;
+    bool mValidateIndexing;
+    bool mValidateInnerLoops;
+};
 
 }  // namespace sh
 
-#endif  // COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_
+#endif // COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_

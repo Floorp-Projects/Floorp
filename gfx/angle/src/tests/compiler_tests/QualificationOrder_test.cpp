@@ -7,37 +7,49 @@
 //   OpenGL ES 3.1 removes the strict order of qualifiers imposed by the grammar.
 //   This file contains tests for invalid order and usage of qualifiers.
 
-#include "tests/test_utils/ShaderCompileTreeTest.h"
+#include "angle_gl.h"
+#include "gtest/gtest.h"
+#include "GLSLANG/ShaderLang.h"
+#include "compiler/translator/TranslatorESSL.h"
 
 using namespace sh;
 
-class QualificationOrderFragmentShaderTest : public ShaderCompileTreeTest
+class QualificationOrderShaderTest : public testing::Test
 {
   public:
-    QualificationOrderFragmentShaderTest() {}
+    QualificationOrderShaderTest() {}
 
   protected:
-    void initResources(ShBuiltInResources *resources) override
+    virtual void SetUp() {}
+
+    virtual void TearDown() {}
+
+    // Return true when compilation succeeds
+    bool compile(const std::string &shaderString, ::GLenum shaderType, ShShaderSpec spec)
     {
-        resources->MaxDrawBuffers = (getShaderSpec() == SH_GLES2_SPEC) ? 1 : 8;
+        ShBuiltInResources resources;
+        InitBuiltInResources(&resources);
+        resources.MaxDrawBuffers = (spec == SH_GLES2_SPEC) ? 1 : 8;
+
+        TranslatorESSL *translator = new TranslatorESSL(shaderType, spec);
+        EXPECT_TRUE(translator->Init(resources));
+
+        const char *shaderStrings[] = {shaderString.c_str()};
+        bool compilationSuccess     = translator->compile(shaderStrings, 1, SH_INTERMEDIATE_TREE);
+        TInfoSink &infoSink         = translator->getInfoSink();
+        mInfoLog                    = infoSink.info.c_str();
+
+        delete translator;
+
+        return compilationSuccess;
     }
 
-    ::GLenum getShaderType() const override { return GL_FRAGMENT_SHADER; }
-
-    ShShaderSpec getShaderSpec() const override { return SH_GLES3_1_SPEC; }
-};
-
-class QualificationOrderVertexShaderTest : public QualificationOrderFragmentShaderTest
-{
-  public:
-    QualificationOrderVertexShaderTest() {}
-
   protected:
-    ::GLenum getShaderType() const override { return GL_VERTEX_SHADER; }
+    std::string mInfoLog;
 };
 
 // Repeating centroid qualifier is invalid.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingCentroid)
+TEST_F(QualificationOrderShaderTest, RepeatingCentroid)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -46,14 +58,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingCentroid)
         "void main() {\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Repeating uniform storage qualifiers is invalid.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingUniforms)
+TEST_F(QualificationOrderShaderTest, RepeatingUniforms)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -62,14 +74,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingUniforms)
         "void main() {\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Repeating varying storage qualifiers is invalid.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingVaryings)
+TEST_F(QualificationOrderShaderTest, RepeatingVaryings)
 {
     const std::string &shaderString =
         "precision mediump float;\n"
@@ -77,14 +89,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingVaryings)
         "void main() {\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Layout qualifier should be before the storage qualifiers.
-TEST_F(QualificationOrderFragmentShaderTest, WrongOrderQualifiers)
+TEST_F(QualificationOrderShaderTest, WrongOrderQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -93,14 +105,14 @@ TEST_F(QualificationOrderFragmentShaderTest, WrongOrderQualifiers)
         "void main() {\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Centroid out is the correct order. Out centroid is incorrect.
-TEST_F(QualificationOrderVertexShaderTest, WrongOrderCentroidOut)
+TEST_F(QualificationOrderShaderTest, WrongOrderCentroidOut)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -112,14 +124,14 @@ TEST_F(QualificationOrderVertexShaderTest, WrongOrderCentroidOut)
         "gl_Position = uv;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Centroid in is the correct order. In centroid is incorrect.
-TEST_F(QualificationOrderFragmentShaderTest, WrongOrderCentroidIn)
+TEST_F(QualificationOrderShaderTest, WrongOrderCentroidIn)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -130,14 +142,14 @@ TEST_F(QualificationOrderFragmentShaderTest, WrongOrderCentroidIn)
         "colorOUT = colorIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Type cannot be before the storage qualifier.
-TEST_F(QualificationOrderFragmentShaderTest, WrongOrderTypeStorage)
+TEST_F(QualificationOrderShaderTest, WrongOrderTypeStorage)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -148,14 +160,14 @@ TEST_F(QualificationOrderFragmentShaderTest, WrongOrderTypeStorage)
         "colorOUT = colorIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have two conflicting storage qualifiers.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingDifferentStorageQualifiers)
+TEST_F(QualificationOrderShaderTest, RepeatingDifferentStorageQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -166,14 +178,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingDifferentStorageQualifiers
         "colorOUT = colorIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have two different layout qualifiers.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingLayoutQualifiers)
+TEST_F(QualificationOrderShaderTest, RepeatingLayoutQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -184,14 +196,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingLayoutQualifiers)
         "colorOUT = colorIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have repeating invariant qualifiers.
-TEST_F(QualificationOrderFragmentShaderTest, RepeatingInvariantQualifiers)
+TEST_F(QualificationOrderShaderTest, RepeatingInvariantQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -202,14 +214,14 @@ TEST_F(QualificationOrderFragmentShaderTest, RepeatingInvariantQualifiers)
         "colorOUT = colorIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have repeating storage qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, RepeatingAttributes)
+TEST_F(QualificationOrderShaderTest, RepeatingAttributes)
 {
     const std::string &shaderString =
         "precision mediump float;\n"
@@ -218,14 +230,14 @@ TEST_F(QualificationOrderVertexShaderTest, RepeatingAttributes)
         "gl_Position = positionIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Wrong order for invariant varying. It should be 'invariant varying', not 'varying invariant'.
-TEST_F(QualificationOrderVertexShaderTest, VaryingInvariantWrongOrder)
+TEST_F(QualificationOrderShaderTest, VaryingInvariantWrongOrder)
 {
     const std::string &shaderString =
         "precision mediump float;\n"
@@ -236,45 +248,42 @@ TEST_F(QualificationOrderVertexShaderTest, VaryingInvariantWrongOrder)
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have repeating storage qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, AttributeVaryingMix)
+TEST_F(QualificationOrderShaderTest, AttributeVaryingMix)
 {
-    const std::string &shaderString =
+    const std::string &shaderString1 =
         "precision mediump float;\n"
         "attribute varying vec4 positionIN;\n"
         "void main() {\n"
         "gl_Position = positionIN;\n"
         "}\n";
 
-    if (compile(shaderString))
-    {
-        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
-    }
-}
-
-// A variable cannot have repeating storage qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, VaryingAttributeMix)
-{
-    const std::string &shaderString =
+    const std::string &shaderString2 =
         "precision mediump float;\n"
         "varying attribute vec4 positionIN;\n"
         "void main() {\n"
         "gl_Position = positionIN;\n"
         "}\n";
-    if (compile(shaderString))
+
+    if (compile(shaderString1, GL_VERTEX_SHADER, SH_GLES3_SPEC))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+
+    if (compile(shaderString2, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have repeating interpolation qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, RepeatingInterpolationQualifiers)
+TEST_F(QualificationOrderShaderTest, RepeatingInterpolationQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -286,7 +295,7 @@ TEST_F(QualificationOrderVertexShaderTest, RepeatingInterpolationQualifiers)
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
@@ -294,7 +303,7 @@ TEST_F(QualificationOrderVertexShaderTest, RepeatingInterpolationQualifiers)
 
 // Wrong order for the interpolation and storage qualifier. The correct order is interpolation
 // qualifier and then storage qualifier.
-TEST_F(QualificationOrderVertexShaderTest, WrongOrderInterpolationStorageQualifiers)
+TEST_F(QualificationOrderShaderTest, WrongOrderInterpolationStorageQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -306,14 +315,14 @@ TEST_F(QualificationOrderVertexShaderTest, WrongOrderInterpolationStorageQualifi
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // The correct order is invariant, interpolation, storage.
-TEST_F(QualificationOrderVertexShaderTest, WrongOrderInvariantInterpolationStorageQualifiers)
+TEST_F(QualificationOrderShaderTest, WrongOrderInvariantInterpolationStorageQualifiers)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -325,14 +334,14 @@ TEST_F(QualificationOrderVertexShaderTest, WrongOrderInvariantInterpolationStora
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // The invariant qualifer has to be before the storage qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, WrongOrderInvariantNotFirst)
+TEST_F(QualificationOrderShaderTest, WrongOrderInvariantNotFirst)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -344,14 +353,14 @@ TEST_F(QualificationOrderVertexShaderTest, WrongOrderInvariantNotFirst)
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // The precision qualifier is after the storage qualifiers.
-TEST_F(QualificationOrderVertexShaderTest, WrongOrderPrecision)
+TEST_F(QualificationOrderShaderTest, WrongOrderPrecision)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -363,14 +372,14 @@ TEST_F(QualificationOrderVertexShaderTest, WrongOrderPrecision)
         "dataOUT = 0.5 * dataOUT + vec4(0.5);\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have multiple declarations of the 'in' storage qualifier.
-TEST_F(QualificationOrderVertexShaderTest, RepeatingInQualifier)
+TEST_F(QualificationOrderShaderTest, RepeatingInQualifier)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -380,14 +389,14 @@ TEST_F(QualificationOrderVertexShaderTest, RepeatingInQualifier)
         "gl_Position = positionIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // A variable cannot have multiple declarations of the 'attribute' storage qualifier.
-TEST_F(QualificationOrderVertexShaderTest, RepeatingAttributeQualifier)
+TEST_F(QualificationOrderShaderTest, RepeatingAttributeQualifier)
 {
     const std::string &shaderString =
         "precision mediump float;\n"
@@ -396,14 +405,14 @@ TEST_F(QualificationOrderVertexShaderTest, RepeatingAttributeQualifier)
         "gl_Position = positionIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Vertex input cannot be qualified with invariant.
-TEST_F(QualificationOrderVertexShaderTest, InvariantVertexInput)
+TEST_F(QualificationOrderShaderTest, InvariantVertexInput)
 {
     const std::string &shaderString =
         "precision mediump float;\n"
@@ -412,14 +421,14 @@ TEST_F(QualificationOrderVertexShaderTest, InvariantVertexInput)
         "gl_Position = positionIN;\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_VERTEX_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the invariant qualifier.
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersInvariant)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersInvariant)
 {
     const std::string &shaderString =
         "precision lowp float;\n"
@@ -432,14 +441,14 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersInvariant)
         "	gl_FragColor = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the attribute qualifier.
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersAttribute)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersAttribute)
 {
     const std::string &shaderString =
         "precision lowp float;\n"
@@ -452,14 +461,14 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersAttribute)
         "	gl_FragColor = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the varying qualifier.
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersVarying)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersVarying)
 {
     const std::string &shaderString =
         "precision lowp float;\n"
@@ -472,14 +481,14 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersVarying)
         "	gl_FragColor = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the layout qualifier
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersLayout)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersLayout)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -494,14 +503,14 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersLayout)
         "	colorOUT = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the centroid qualifier
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersCentroidIn)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersCentroidIn)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -516,14 +525,14 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersCentroidIn
         "	colorOUT = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
 }
 
 // Cannot have a function parameter with the flat qualifier
-TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersFlatIn)
+TEST_F(QualificationOrderShaderTest, InvalidFunctionParametersFlatIn)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -538,7 +547,7 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersFlatIn)
         "	colorOUT = vec4(foo0(value));\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure" << mInfoLog;
     }
@@ -546,7 +555,7 @@ TEST_F(QualificationOrderFragmentShaderTest, InvalidFunctionParametersFlatIn)
 
 // Output layout location qualifier can't appear more than once within a declaration.
 // GLSL ES 3.00.6 section 4.3.8.2 Output Layout Qualifiers.
-TEST_F(QualificationOrderFragmentShaderTest, TwoOutputLocations)
+TEST_F(QualificationOrderShaderTest, TwoOutputLocations)
 {
     const std::string &shaderString =
         "#version 300 es\n"
@@ -555,7 +564,7 @@ TEST_F(QualificationOrderFragmentShaderTest, TwoOutputLocations)
         "void main() {\n"
         "}\n";
 
-    if (compile(shaderString))
+    if (compile(shaderString, GL_FRAGMENT_SHADER, SH_GLES3_SPEC))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }

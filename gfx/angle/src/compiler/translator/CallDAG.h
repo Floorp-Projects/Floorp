@@ -14,6 +14,7 @@
 #include <map>
 
 #include "compiler/translator/IntermNode.h"
+#include "compiler/translator/VariableInfo.h"
 
 namespace sh
 {
@@ -25,7 +26,7 @@ namespace sh
 // can be reused by multiple analyses.
 //
 // It stores a vector of function records, with one record per function.
-// Records are accessed by index but a function symbol id can be converted
+// Records are accessed by index but a mangled function name can be converted
 // to the index of the corresponding record. The records mostly contain the
 // AST node of the function and the indices of the function's callees.
 //
@@ -54,8 +55,8 @@ class CallDAG : angle::NonCopyable
     };
 
     // Returns INITDAG_SUCCESS if it was able to create the DAG, otherwise prints
-    // the initialization error in diagnostics, if present.
-    InitResult init(TIntermNode *root, TDiagnostics *diagnostics);
+    // the initialization error in info, if present.
+    InitResult init(TIntermNode *root, TInfoSinkBase *info);
 
     // Returns InvalidIndex if the function wasn't found
     size_t findIndex(const TFunctionSymbolInfo *functionInfo) const;
@@ -66,7 +67,6 @@ class CallDAG : angle::NonCopyable
     void clear();
 
     const static size_t InvalidIndex;
-
   private:
     std::vector<Record> mRecords;
     std::map<int, int> mFunctionIdToIndex;

@@ -21,8 +21,7 @@ TransformFeedback11::TransformFeedback11(const gl::TransformFeedbackState &state
       mRenderer(renderer),
       mIsDirty(true),
       mBuffers(state.getIndexedBuffers().size(), nullptr),
-      mBufferOffsets(state.getIndexedBuffers().size(), 0),
-      mSerial(mRenderer->generateSerial())
+      mBufferOffsets(state.getIndexedBuffers().size(), 0)
 {
 }
 
@@ -32,20 +31,6 @@ TransformFeedback11::~TransformFeedback11()
 
 void TransformFeedback11::begin(GLenum primitiveMode)
 {
-    // Reset all the cached offsets to the binding offsets
-    mIsDirty = true;
-    for (size_t bindingIdx = 0; bindingIdx < mBuffers.size(); bindingIdx++)
-    {
-        const auto &binding = mState.getIndexedBuffer(bindingIdx);
-        if (binding.get() != nullptr)
-        {
-            mBufferOffsets[bindingIdx] = static_cast<UINT>(binding.getOffset());
-        }
-        else
-        {
-            mBufferOffsets[bindingIdx] = 0;
-        }
-    }
 }
 
 void TransformFeedback11::end()
@@ -64,12 +49,12 @@ void TransformFeedback11::resume()
 {
 }
 
-void TransformFeedback11::bindGenericBuffer(const gl::BindingPointer<gl::Buffer> &binding)
+void TransformFeedback11::bindGenericBuffer(const BindingPointer<gl::Buffer> &binding)
 {
 }
 
 void TransformFeedback11::bindIndexedBuffer(size_t index,
-                                            const gl::OffsetBindingPointer<gl::Buffer> &binding)
+                                            const OffsetBindingPointer<gl::Buffer> &binding)
 {
     mIsDirty              = true;
     mBufferOffsets[index] = static_cast<UINT>(binding.getOffset());
@@ -94,8 +79,7 @@ UINT TransformFeedback11::getNumSOBuffers() const
     return static_cast<UINT>(mBuffers.size());
 }
 
-gl::ErrorOrResult<const std::vector<ID3D11Buffer *> *> TransformFeedback11::getSOBuffers(
-    const gl::Context *context)
+gl::ErrorOrResult<const std::vector<ID3D11Buffer *> *> TransformFeedback11::getSOBuffers()
 {
     for (size_t bindingIdx = 0; bindingIdx < mBuffers.size(); bindingIdx++)
     {
@@ -103,7 +87,7 @@ gl::ErrorOrResult<const std::vector<ID3D11Buffer *> *> TransformFeedback11::getS
         if (binding.get() != nullptr)
         {
             Buffer11 *storage = GetImplAs<Buffer11>(binding.get());
-            ANGLE_TRY_RESULT(storage->getBuffer(context, BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK),
+            ANGLE_TRY_RESULT(storage->getBuffer(BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK),
                              mBuffers[bindingIdx]);
         }
     }
@@ -115,10 +99,4 @@ const std::vector<UINT> &TransformFeedback11::getSOBufferOffsets() const
 {
     return mBufferOffsets;
 }
-
-Serial TransformFeedback11::getSerial() const
-{
-    return mSerial;
-}
-
 }  // namespace rx

@@ -110,14 +110,7 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 "/*" { BEGIN(COMMENT); }
 <COMMENT>[^*\r\n]+
 <COMMENT>"*"
-<COMMENT>{NEWLINE} {
-    if (yylineno == INT_MAX)
-    {
-        *yylval = "Integer overflow on line number";
-        return pp::Token::GOT_ERROR;
-    }
-    ++yylineno;
-}
+<COMMENT>{NEWLINE} { ++yylineno; }
 <COMMENT>"*/" {
     yyextra->leadingSpace = true;
     BEGIN(INITIAL);
@@ -244,15 +237,12 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 [ \t\v\f]+   { yyextra->leadingSpace = true; }
 
 {NEWLINE} {
-    if (yylineno == INT_MAX)
-    {
-        *yylval = "Integer overflow on line number";
-        return pp::Token::GOT_ERROR;
-    }
     ++yylineno;
     yylval->assign(1, '\n');
     return '\n';
 }
+
+\\{NEWLINE} { ++yylineno; }
 
 . {
     yylval->assign(1, yytext[0]);
@@ -328,18 +318,7 @@ void Tokenizer::setMaxTokenSize(size_t maxTokenSize)
 
 void Tokenizer::lex(Token *token)
 {
-    int tokenType = yylex(&token->text, &token->location, mHandle);
-
-    if (tokenType == Token::GOT_ERROR)
-    {
-        mContext.diagnostics->report(Diagnostics::PP_TOKENIZER_ERROR, token->location, token->text);
-        token->type = Token::LAST;
-    }
-    else
-    {
-        token->type = tokenType;
-    }
-
+    token->type = yylex(&token->text, &token->location, mHandle);
     if (token->text.size() > mMaxTokenSize)
     {
         mContext.diagnostics->report(Diagnostics::PP_TOKEN_TOO_LONG,

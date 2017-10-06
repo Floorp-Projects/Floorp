@@ -13,42 +13,42 @@
 namespace
 {
 
-TEST(ParseResourceName, ArrayIndex)
+TEST(ParseUniformName, ArrayIndex)
 {
     size_t index;
-    EXPECT_EQ("foo", gl::ParseResourceName("foo[123]", &index));
+    EXPECT_EQ("foo", gl::ParseUniformName("foo[123]", &index));
     EXPECT_EQ(123u, index);
 
-    EXPECT_EQ("bar", gl::ParseResourceName("bar[0]", &index));
+    EXPECT_EQ("bar", gl::ParseUniformName("bar[0]", &index));
     EXPECT_EQ(0u, index);
 }
 
-TEST(ParseResourceName, NegativeArrayIndex)
+TEST(ParseUniformName, NegativeArrayIndex)
 {
     size_t index;
-    EXPECT_EQ("foo", gl::ParseResourceName("foo[-1]", &index));
+    EXPECT_EQ("foo", gl::ParseUniformName("foo[-1]", &index));
     EXPECT_EQ(GL_INVALID_INDEX, index);
 }
 
-TEST(ParseResourceName, NoArrayIndex)
+TEST(ParseUniformName, NoArrayIndex)
 {
     size_t index;
-    EXPECT_EQ("foo", gl::ParseResourceName("foo", &index));
+    EXPECT_EQ("foo", gl::ParseUniformName("foo", &index));
     EXPECT_EQ(GL_INVALID_INDEX, index);
 }
 
-TEST(ParseResourceName, NULLArrayIndex)
+TEST(ParseUniformName, NULLArrayIndex)
 {
-    EXPECT_EQ("foo", gl::ParseResourceName("foo[10]", nullptr));
+    EXPECT_EQ("foo", gl::ParseUniformName("foo[10]", nullptr));
 }
 
-TEST(ParseResourceName, TrailingWhitespace)
+TEST(ParseUniformName, TrailingWhitespace)
 {
     size_t index;
-    EXPECT_EQ("foo ", gl::ParseResourceName("foo ", &index));
+    EXPECT_EQ("foo ", gl::ParseUniformName("foo ", &index));
     EXPECT_EQ(GL_INVALID_INDEX, index);
 
-    EXPECT_EQ("foo[10] ", gl::ParseResourceName("foo[10] ", &index));
+    EXPECT_EQ("foo[10] ", gl::ParseUniformName("foo[10] ", &index));
     EXPECT_EQ(GL_INVALID_INDEX, index);
 }
 

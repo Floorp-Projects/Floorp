@@ -5,11 +5,10 @@
 //
 
 #include "compiler/translator/ValidateLimitations.h"
-
-#include "angle_gl.h"
-#include "compiler/translator/Diagnostics.h"
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/InfoSink.h"
+#include "compiler/translator/InitializeParseContext.h"
 #include "compiler/translator/ParseContext.h"
+#include "angle_gl.h"
 
 namespace sh
 {
@@ -65,82 +64,83 @@ class ValidateConstIndexExpr : public TIntermTraverser
     const std::vector<int> mLoopSymbolIds;
 };
 
-// Traverses intermediate tree to ensure that the shader does not exceed the
-// minimum functionality mandated in GLSL 1.0 spec, Appendix A.
-class ValidateLimitationsTraverser : public TLValueTrackingTraverser
-{
-  public:
-    ValidateLimitationsTraverser(sh::GLenum shaderType,
-                                 TSymbolTable *symbolTable,
-                                 int shaderVersion,
-                                 TDiagnostics *diagnostics);
+}  // namespace anonymous
 
-    void visitSymbol(TIntermSymbol *node) override;
-    bool visitBinary(Visit, TIntermBinary *) override;
-    bool visitLoop(Visit, TIntermLoop *) override;
-
-  private:
-    void error(TSourceLoc loc, const char *reason, const char *token);
-
-    bool withinLoopBody() const;
-    bool isLoopIndex(TIntermSymbol *symbol);
-    bool validateLoopType(TIntermLoop *node);
-
-    bool validateForLoopHeader(TIntermLoop *node);
-    // If valid, return the index symbol id; Otherwise, return -1.
-    int validateForLoopInit(TIntermLoop *node);
-    bool validateForLoopCond(TIntermLoop *node, int indexSymbolId);
-    bool validateForLoopExpr(TIntermLoop *node, int indexSymbolId);
-
-    // Returns true if indexing does not exceed the minimum functionality
-    // mandated in GLSL 1.0 spec, Appendix A, Section 5.
-    bool isConstExpr(TIntermNode *node);
-    bool isConstIndexExpr(TIntermNode *node);
-    bool validateIndexing(TIntermBinary *node);
-
-    sh::GLenum mShaderType;
-    TDiagnostics *mDiagnostics;
-    std::vector<int> mLoopSymbolIds;
-};
-
-ValidateLimitationsTraverser::ValidateLimitationsTraverser(sh::GLenum shaderType,
-                                                           TSymbolTable *symbolTable,
-                                                           int shaderVersion,
-                                                           TDiagnostics *diagnostics)
-    : TLValueTrackingTraverser(true, false, false, symbolTable, shaderVersion),
+ValidateLimitations::ValidateLimitations(sh::GLenum shaderType, TInfoSinkBase *sink)
+    : TIntermTraverser(true, false, false),
       mShaderType(shaderType),
-      mDiagnostics(diagnostics)
+      mSink(sink),
+      mNumErrors(0),
+      mValidateIndexing(true),
+      mValidateInnerLoops(true)
 {
-    ASSERT(diagnostics);
 }
 
-void ValidateLimitationsTraverser::visitSymbol(TIntermSymbol *node)
+// static
+bool ValidateLimitations::IsLimitedForLoop(TIntermLoop *loop)
 {
-    if (isLoopIndex(node) && isLValueRequiredHere())
+    // The shader type doesn't matter in this case.
+    ValidateLimitations validate(GL_FRAGMENT_SHADER, nullptr);
+    validate.mValidateIndexing   = false;
+    validate.mValidateInnerLoops = false;
+    if (!validate.validateLoopType(loop))
+        return false;
+    if (!validate.validateForLoopHeader(loop))
+        return false;
+    TIntermNode *body = loop->getBody();
+    if (body != nullptr)
     {
-        error(node->getLine(),
-              "Loop index cannot be statically assigned to within the body of the loop",
-              node->getSymbol().c_str());
+        validate.mLoopSymbolIds.push_back(GetLoopSymbolId(loop));
+        body->traverse(&validate);
+        validate.mLoopSymbolIds.pop_back();
     }
+    return (validate.mNumErrors == 0);
 }
 
-bool ValidateLimitationsTraverser::visitBinary(Visit, TIntermBinary *node)
+bool ValidateLimitations::visitBinary(Visit, TIntermBinary *node)
 {
+    // Check if loop index is modified in the loop body.
+    validateOperation(node, node->getLeft());
+
     // Check indexing.
     switch (node->getOp())
     {
-        case EOpIndexDirect:
-        case EOpIndexIndirect:
-            validateIndexing(node);
-            break;
-        default:
-            break;
+      case EOpIndexDirect:
+      case EOpIndexIndirect:
+          if (mValidateIndexing)
+              validateIndexing(node);
+          break;
+      default:
+          break;
     }
     return true;
 }
 
-bool ValidateLimitationsTraverser::visitLoop(Visit, TIntermLoop *node)
+bool ValidateLimitations::visitUnary(Visit, TIntermUnary *node)
 {
+    // Check if loop index is modified in the loop body.
+    validateOperation(node, node->getOperand());
+
+    return true;
+}
+
+bool ValidateLimitations::visitAggregate(Visit, TIntermAggregate *node)
+{
+    switch (node->getOp()) {
+      case EOpFunctionCall:
+        validateFunctionCall(node);
+        break;
+      default:
+        break;
+    }
+    return true;
+}
+
+bool ValidateLimitations::visitLoop(Visit, TIntermLoop *node)
+{
+    if (!mValidateInnerLoops)
+        return true;
+
     if (!validateLoopType(node))
         return false;
 
@@ -148,7 +148,7 @@ bool ValidateLimitationsTraverser::visitLoop(Visit, TIntermLoop *node)
         return false;
 
     TIntermNode *body = node->getBody();
-    if (body != nullptr)
+    if (body != NULL)
     {
         mLoopSymbolIds.push_back(GetLoopSymbolId(node));
         body->traverse(this);
@@ -159,34 +159,43 @@ bool ValidateLimitationsTraverser::visitLoop(Visit, TIntermLoop *node)
     return false;
 }
 
-void ValidateLimitationsTraverser::error(TSourceLoc loc, const char *reason, const char *token)
+void ValidateLimitations::error(TSourceLoc loc,
+                                const char *reason, const char *token)
 {
-    mDiagnostics->error(loc, reason, token);
+    if (mSink)
+    {
+        mSink->prefix(EPrefixError);
+        mSink->location(loc);
+        (*mSink) << "'" << token << "' : " << reason << "\n";
+    }
+    ++mNumErrors;
 }
 
-bool ValidateLimitationsTraverser::withinLoopBody() const
+bool ValidateLimitations::withinLoopBody() const
 {
     return !mLoopSymbolIds.empty();
 }
 
-bool ValidateLimitationsTraverser::isLoopIndex(TIntermSymbol *symbol)
+bool ValidateLimitations::isLoopIndex(TIntermSymbol *symbol)
 {
     return std::find(mLoopSymbolIds.begin(), mLoopSymbolIds.end(), symbol->getId()) !=
            mLoopSymbolIds.end();
 }
 
-bool ValidateLimitationsTraverser::validateLoopType(TIntermLoop *node)
+bool ValidateLimitations::validateLoopType(TIntermLoop *node)
 {
     TLoopType type = node->getType();
     if (type == ELoopFor)
         return true;
 
     // Reject while and do-while loops.
-    error(node->getLine(), "This type of loop is not allowed", type == ELoopWhile ? "while" : "do");
+    error(node->getLine(),
+          "This type of loop is not allowed",
+          type == ELoopWhile ? "while" : "do");
     return false;
 }
 
-bool ValidateLimitationsTraverser::validateForLoopHeader(TIntermLoop *node)
+bool ValidateLimitations::validateForLoopHeader(TIntermLoop *node)
 {
     ASSERT(node->getType() == ELoopFor);
 
@@ -205,10 +214,10 @@ bool ValidateLimitationsTraverser::validateForLoopHeader(TIntermLoop *node)
     return true;
 }
 
-int ValidateLimitationsTraverser::validateForLoopInit(TIntermLoop *node)
+int ValidateLimitations::validateForLoopInit(TIntermLoop *node)
 {
     TIntermNode *init = node->getInit();
-    if (init == nullptr)
+    if (init == NULL)
     {
         error(node->getLine(), "Missing init declaration", "for");
         return -1;
@@ -232,28 +241,29 @@ int ValidateLimitationsTraverser::validateForLoopInit(TIntermLoop *node)
         return -1;
     }
     TIntermBinary *declInit = (*declSeq)[0]->getAsBinaryNode();
-    if ((declInit == nullptr) || (declInit->getOp() != EOpInitialize))
+    if ((declInit == NULL) || (declInit->getOp() != EOpInitialize))
     {
         error(decl->getLine(), "Invalid init declaration", "for");
         return -1;
     }
     TIntermSymbol *symbol = declInit->getLeft()->getAsSymbolNode();
-    if (symbol == nullptr)
+    if (symbol == NULL)
     {
         error(declInit->getLine(), "Invalid init declaration", "for");
         return -1;
     }
     // The loop index has type int or float.
     TBasicType type = symbol->getBasicType();
-    if ((type != EbtInt) && (type != EbtUInt) && (type != EbtFloat))
-    {
-        error(symbol->getLine(), "Invalid type for loop index", getBasicString(type));
+    if ((type != EbtInt) && (type != EbtUInt) && (type != EbtFloat)) {
+        error(symbol->getLine(),
+              "Invalid type for loop index", getBasicString(type));
         return -1;
     }
     // The loop index is initialized with constant expression.
     if (!isConstExpr(declInit->getRight()))
     {
-        error(declInit->getLine(), "Loop index cannot be initialized with non-constant expression",
+        error(declInit->getLine(),
+              "Loop index cannot be initialized with non-constant expression",
               symbol->getSymbol().c_str());
         return -1;
     }
@@ -261,10 +271,11 @@ int ValidateLimitationsTraverser::validateForLoopInit(TIntermLoop *node)
     return symbol->getId();
 }
 
-bool ValidateLimitationsTraverser::validateForLoopCond(TIntermLoop *node, int indexSymbolId)
+bool ValidateLimitations::validateForLoopCond(TIntermLoop *node,
+                                              int indexSymbolId)
 {
     TIntermNode *cond = node->getCondition();
-    if (cond == nullptr)
+    if (cond == NULL)
     {
         error(node->getLine(), "Missing condition", "for");
         return false;
@@ -274,42 +285,45 @@ bool ValidateLimitationsTraverser::validateForLoopCond(TIntermLoop *node, int in
     //     loop_index relational_operator constant_expression
     //
     TIntermBinary *binOp = cond->getAsBinaryNode();
-    if (binOp == nullptr)
+    if (binOp == NULL)
     {
         error(node->getLine(), "Invalid condition", "for");
         return false;
     }
     // Loop index should be to the left of relational operator.
     TIntermSymbol *symbol = binOp->getLeft()->getAsSymbolNode();
-    if (symbol == nullptr)
+    if (symbol == NULL)
     {
         error(binOp->getLine(), "Invalid condition", "for");
         return false;
     }
     if (symbol->getId() != indexSymbolId)
     {
-        error(symbol->getLine(), "Expected loop index", symbol->getSymbol().c_str());
+        error(symbol->getLine(),
+              "Expected loop index", symbol->getSymbol().c_str());
         return false;
     }
     // Relational operator is one of: > >= < <= == or !=.
     switch (binOp->getOp())
     {
-        case EOpEqual:
-        case EOpNotEqual:
-        case EOpLessThan:
-        case EOpGreaterThan:
-        case EOpLessThanEqual:
-        case EOpGreaterThanEqual:
-            break;
-        default:
-            error(binOp->getLine(), "Invalid relational operator",
-                  GetOperatorString(binOp->getOp()));
-            break;
+      case EOpEqual:
+      case EOpNotEqual:
+      case EOpLessThan:
+      case EOpGreaterThan:
+      case EOpLessThanEqual:
+      case EOpGreaterThanEqual:
+        break;
+      default:
+        error(binOp->getLine(),
+              "Invalid relational operator",
+              GetOperatorString(binOp->getOp()));
+        break;
     }
     // Loop index must be compared with a constant.
     if (!isConstExpr(binOp->getRight()))
     {
-        error(binOp->getLine(), "Loop index cannot be compared with non-constant expression",
+        error(binOp->getLine(),
+              "Loop index cannot be compared with non-constant expression",
               symbol->getSymbol().c_str());
         return false;
     }
@@ -317,10 +331,11 @@ bool ValidateLimitationsTraverser::validateForLoopCond(TIntermLoop *node, int in
     return true;
 }
 
-bool ValidateLimitationsTraverser::validateForLoopExpr(TIntermLoop *node, int indexSymbolId)
+bool ValidateLimitations::validateForLoopExpr(TIntermLoop *node,
+                                              int indexSymbolId)
 {
     TIntermNode *expr = node->getExpression();
-    if (expr == nullptr)
+    if (expr == NULL)
     {
         error(node->getLine(), "Missing expression", "for");
         return false;
@@ -335,58 +350,60 @@ bool ValidateLimitationsTraverser::validateForLoopExpr(TIntermLoop *node, int in
     //     --loop_index
     // The last two forms are not specified in the spec, but I am assuming
     // its an oversight.
-    TIntermUnary *unOp   = expr->getAsUnaryNode();
-    TIntermBinary *binOp = unOp ? nullptr : expr->getAsBinaryNode();
+    TIntermUnary *unOp = expr->getAsUnaryNode();
+    TIntermBinary *binOp = unOp ? NULL : expr->getAsBinaryNode();
 
-    TOperator op          = EOpNull;
-    TIntermSymbol *symbol = nullptr;
-    if (unOp != nullptr)
+    TOperator op = EOpNull;
+    TIntermSymbol *symbol = NULL;
+    if (unOp != NULL)
     {
-        op     = unOp->getOp();
+        op = unOp->getOp();
         symbol = unOp->getOperand()->getAsSymbolNode();
     }
-    else if (binOp != nullptr)
+    else if (binOp != NULL)
     {
-        op     = binOp->getOp();
+        op = binOp->getOp();
         symbol = binOp->getLeft()->getAsSymbolNode();
     }
 
     // The operand must be loop index.
-    if (symbol == nullptr)
+    if (symbol == NULL)
     {
         error(expr->getLine(), "Invalid expression", "for");
         return false;
     }
     if (symbol->getId() != indexSymbolId)
     {
-        error(symbol->getLine(), "Expected loop index", symbol->getSymbol().c_str());
+        error(symbol->getLine(),
+              "Expected loop index", symbol->getSymbol().c_str());
         return false;
     }
 
     // The operator is one of: ++ -- += -=.
     switch (op)
     {
-        case EOpPostIncrement:
-        case EOpPostDecrement:
-        case EOpPreIncrement:
-        case EOpPreDecrement:
-            ASSERT((unOp != nullptr) && (binOp == nullptr));
-            break;
-        case EOpAddAssign:
-        case EOpSubAssign:
-            ASSERT((unOp == nullptr) && (binOp != nullptr));
-            break;
-        default:
-            error(expr->getLine(), "Invalid operator", GetOperatorString(op));
-            return false;
+      case EOpPostIncrement:
+      case EOpPostDecrement:
+      case EOpPreIncrement:
+      case EOpPreDecrement:
+        ASSERT((unOp != NULL) && (binOp == NULL));
+        break;
+      case EOpAddAssign:
+      case EOpSubAssign:
+        ASSERT((unOp == NULL) && (binOp != NULL));
+        break;
+      default:
+        error(expr->getLine(), "Invalid operator", GetOperatorString(op));
+        return false;
     }
 
     // Loop index must be incremented/decremented with a constant.
-    if (binOp != nullptr)
+    if (binOp != NULL)
     {
         if (!isConstExpr(binOp->getRight()))
         {
-            error(binOp->getLine(), "Loop index cannot be modified by non-constant expression",
+            error(binOp->getLine(),
+                  "Loop index cannot be modified by non-constant expression",
                   symbol->getSymbol().c_str());
             return false;
         }
@@ -395,50 +412,102 @@ bool ValidateLimitationsTraverser::validateForLoopExpr(TIntermLoop *node, int in
     return true;
 }
 
-bool ValidateLimitationsTraverser::isConstExpr(TIntermNode *node)
+bool ValidateLimitations::validateFunctionCall(TIntermAggregate *node)
+{
+    ASSERT(node->getOp() == EOpFunctionCall);
+
+    // If not within loop body, there is nothing to check.
+    if (!withinLoopBody())
+        return true;
+
+    // List of param indices for which loop indices are used as argument.
+    typedef std::vector<size_t> ParamIndex;
+    ParamIndex pIndex;
+    TIntermSequence *params = node->getSequence();
+    for (TIntermSequence::size_type i = 0; i < params->size(); ++i)
+    {
+        TIntermSymbol *symbol = (*params)[i]->getAsSymbolNode();
+        if (symbol && isLoopIndex(symbol))
+            pIndex.push_back(i);
+    }
+    // If none of the loop indices are used as arguments,
+    // there is nothing to check.
+    if (pIndex.empty())
+        return true;
+
+    bool valid = true;
+    TSymbolTable& symbolTable = GetGlobalParseContext()->symbolTable;
+    TSymbol *symbol           = symbolTable.find(node->getFunctionSymbolInfo()->getName(),
+                                       GetGlobalParseContext()->getShaderVersion());
+    ASSERT(symbol && symbol->isFunction());
+    TFunction *function = static_cast<TFunction *>(symbol);
+    for (ParamIndex::const_iterator i = pIndex.begin();
+         i != pIndex.end(); ++i)
+    {
+        const TConstParameter &param = function->getParam(*i);
+        TQualifier qual = param.type->getQualifier();
+        if ((qual == EvqOut) || (qual == EvqInOut))
+        {
+            error((*params)[*i]->getLine(),
+                  "Loop index cannot be used as argument to a function out or inout parameter",
+                  (*params)[*i]->getAsSymbolNode()->getSymbol().c_str());
+            valid = false;
+        }
+    }
+
+    return valid;
+}
+
+bool ValidateLimitations::validateOperation(TIntermOperator *node,
+                                            TIntermNode* operand)
+{
+    // Check if loop index is modified in the loop body.
+    if (!withinLoopBody() || !node->isAssignment())
+        return true;
+
+    TIntermSymbol *symbol = operand->getAsSymbolNode();
+    if (symbol && isLoopIndex(symbol))
+    {
+        error(node->getLine(),
+              "Loop index cannot be statically assigned to within the body of the loop",
+              symbol->getSymbol().c_str());
+    }
+    return true;
+}
+
+bool ValidateLimitations::isConstExpr(TIntermNode *node)
 {
     ASSERT(node != nullptr);
     return node->getAsConstantUnion() != nullptr && node->getAsTyped()->getQualifier() == EvqConst;
 }
 
-bool ValidateLimitationsTraverser::isConstIndexExpr(TIntermNode *node)
+bool ValidateLimitations::isConstIndexExpr(TIntermNode *node)
 {
-    ASSERT(node != nullptr);
+    ASSERT(node != NULL);
 
     ValidateConstIndexExpr validate(mLoopSymbolIds);
     node->traverse(&validate);
     return validate.isValid();
 }
 
-bool ValidateLimitationsTraverser::validateIndexing(TIntermBinary *node)
+bool ValidateLimitations::validateIndexing(TIntermBinary *node)
 {
-    ASSERT((node->getOp() == EOpIndexDirect) || (node->getOp() == EOpIndexIndirect));
+    ASSERT((node->getOp() == EOpIndexDirect) ||
+           (node->getOp() == EOpIndexIndirect));
 
-    bool valid          = true;
+    bool valid = true;
     TIntermTyped *index = node->getRight();
     // The index expession must be a constant-index-expression unless
     // the operand is a uniform in a vertex shader.
     TIntermTyped *operand = node->getLeft();
-    bool skip = (mShaderType == GL_VERTEX_SHADER) && (operand->getQualifier() == EvqUniform);
+    bool skip = (mShaderType == GL_VERTEX_SHADER) &&
+                (operand->getQualifier() == EvqUniform);
     if (!skip && !isConstIndexExpr(index))
     {
         error(index->getLine(), "Index expression must be constant", "[]");
         valid = false;
     }
     return valid;
-}
-
-}  // namespace anonymous
-
-bool ValidateLimitations(TIntermNode *root,
-                         GLenum shaderType,
-                         TSymbolTable *symbolTable,
-                         int shaderVersion,
-                         TDiagnostics *diagnostics)
-{
-    ValidateLimitationsTraverser validate(shaderType, symbolTable, shaderVersion, diagnostics);
-    root->traverse(&validate);
-    return diagnostics->numErrors() == 0;
 }
 
 }  // namespace sh

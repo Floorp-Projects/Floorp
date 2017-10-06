@@ -5,7 +5,7 @@
 //
 
 #if defined(_MSC_VER)
-#pragma warning(disable : 4718)
+#pragma warning(disable: 4718)
 #endif
 
 #include "compiler/translator/Types.h"
@@ -19,68 +19,34 @@
 namespace sh
 {
 
-const char *getBasicString(TBasicType t)
+const char* getBasicString(TBasicType t)
 {
     switch (t)
     {
-        case EbtVoid:
-            return "void";
-        case EbtFloat:
-            return "float";
-        case EbtInt:
-            return "int";
-        case EbtUInt:
-            return "uint";
-        case EbtBool:
-            return "bool";
-        case EbtYuvCscStandardEXT:
-            return "yuvCscStandardEXT";
-        case EbtSampler2D:
-            return "sampler2D";
-        case EbtSampler3D:
-            return "sampler3D";
-        case EbtSamplerCube:
-            return "samplerCube";
-        case EbtSamplerExternalOES:
-            return "samplerExternalOES";
-        case EbtSamplerExternal2DY2YEXT:
-            return "__samplerExternal2DY2YEXT";
-        case EbtSampler2DRect:
-            return "sampler2DRect";
-        case EbtSampler2DArray:
-            return "sampler2DArray";
-        case EbtSampler2DMS:
-            return "sampler2DMS";
-        case EbtISampler2D:
-            return "isampler2D";
-        case EbtISampler3D:
-            return "isampler3D";
-        case EbtISamplerCube:
-            return "isamplerCube";
-        case EbtISampler2DArray:
-            return "isampler2DArray";
-        case EbtISampler2DMS:
-            return "isampler2DMS";
-        case EbtUSampler2D:
-            return "usampler2D";
-        case EbtUSampler3D:
-            return "usampler3D";
-        case EbtUSamplerCube:
-            return "usamplerCube";
-        case EbtUSampler2DArray:
-            return "usampler2DArray";
-        case EbtUSampler2DMS:
-            return "usampler2DMS";
-        case EbtSampler2DShadow:
-            return "sampler2DShadow";
-        case EbtSamplerCubeShadow:
-            return "samplerCubeShadow";
-        case EbtSampler2DArrayShadow:
-            return "sampler2DArrayShadow";
-        case EbtStruct:
-            return "structure";
-        case EbtInterfaceBlock:
-            return "interface block";
+        case EbtVoid:                 return "void";
+        case EbtFloat:                return "float";
+        case EbtInt:                  return "int";
+        case EbtUInt:                 return "uint";
+        case EbtBool:                 return "bool";
+        case EbtSampler2D:            return "sampler2D";
+        case EbtSampler3D:            return "sampler3D";
+        case EbtSamplerCube:          return "samplerCube";
+        case EbtSamplerExternalOES:   return "samplerExternalOES";
+        case EbtSampler2DRect:        return "sampler2DRect";
+        case EbtSampler2DArray:       return "sampler2DArray";
+        case EbtISampler2D:           return "isampler2D";
+        case EbtISampler3D:           return "isampler3D";
+        case EbtISamplerCube:         return "isamplerCube";
+        case EbtISampler2DArray:      return "isampler2DArray";
+        case EbtUSampler2D:           return "usampler2D";
+        case EbtUSampler3D:           return "usampler3D";
+        case EbtUSamplerCube:         return "usamplerCube";
+        case EbtUSampler2DArray:      return "usampler2DArray";
+        case EbtSampler2DShadow:      return "sampler2DShadow";
+        case EbtSamplerCubeShadow:    return "samplerCubeShadow";
+        case EbtSampler2DArrayShadow: return "sampler2DArrayShadow";
+        case EbtStruct:               return "structure";
+        case EbtInterfaceBlock:       return "interface block";
         case EbtImage2D:
             return "image2D";
         case EbtIImage2D:
@@ -105,11 +71,7 @@ const char *getBasicString(TBasicType t)
             return "iimageCube";
         case EbtUImageCube:
             return "uimageCube";
-        case EbtAtomicCounter:
-            return "atomic_uint";
-        default:
-            UNREACHABLE();
-            return "unknown type";
+        default: UNREACHABLE();       return "unknown type";
     }
 }
 
@@ -122,37 +84,18 @@ TType::TType(const TPublicType &p)
       layoutQualifier(p.layoutQualifier),
       primarySize(p.getPrimarySize()),
       secondarySize(p.getSecondarySize()),
+      array(p.array),
+      arraySize(p.arraySize),
       interfaceBlock(0),
       structure(0)
 {
-    ASSERT(primarySize <= 4);
-    ASSERT(secondarySize <= 4);
-    if (p.array)
-    {
-        makeArray(p.arraySize);
-    }
     if (p.getUserDef())
-        structure = p.getUserDef();
+        structure = p.getUserDef()->getStruct();
 }
 
 bool TStructure::equals(const TStructure &other) const
 {
     return (uniqueId() == other.uniqueId());
-}
-
-bool TType::canBeConstructed() const
-{
-    switch (type)
-    {
-        case EbtFloat:
-        case EbtInt:
-        case EbtUInt:
-        case EbtBool:
-        case EbtStruct:
-            return true;
-        default:
-            return false;
-    }
 }
 
 const char *TType::getBuiltInTypeNameString() const
@@ -281,11 +224,8 @@ TString TType::getCompleteString() const
         stream << getQualifierString() << " ";
     if (precision != EbpUndefined)
         stream << getPrecisionString() << " ";
-    for (auto arraySizeIter = mArraySizes.rbegin(); arraySizeIter != mArraySizes.rend();
-         ++arraySizeIter)
-    {
-        stream << "array[" << (*arraySizeIter) << "] of ";
-    }
+    if (array)
+        stream << "array[" << getArraySize() << "] of ";
     if (isMatrix())
         stream << getCols() << "X" << getRows() << " matrix of ";
     else if (isVector())
@@ -308,132 +248,114 @@ TString TType::buildMangledName() const
 
     switch (type)
     {
-        case EbtFloat:
-            mangledName += 'f';
-            break;
-        case EbtInt:
-            mangledName += 'i';
-            break;
-        case EbtUInt:
-            mangledName += 'u';
-            break;
-        case EbtBool:
-            mangledName += 'b';
-            break;
-        case EbtYuvCscStandardEXT:
-            mangledName += "ycs";
-            break;
-        case EbtSampler2D:
-            mangledName += "s2";
-            break;
-        case EbtSampler3D:
-            mangledName += "s3";
-            break;
-        case EbtSamplerCube:
-            mangledName += "sC";
-            break;
-        case EbtSampler2DArray:
-            mangledName += "s2a";
-            break;
-        case EbtSamplerExternalOES:
-            mangledName += "sext";
-            break;
-        case EbtSamplerExternal2DY2YEXT:
-            mangledName += "sext2y2y";
-            break;
-        case EbtSampler2DRect:
-            mangledName += "s2r";
-            break;
-        case EbtSampler2DMS:
-            mangledName += "s2ms";
-            break;
-        case EbtISampler2D:
-            mangledName += "is2";
-            break;
-        case EbtISampler3D:
-            mangledName += "is3";
-            break;
-        case EbtISamplerCube:
-            mangledName += "isC";
-            break;
-        case EbtISampler2DArray:
-            mangledName += "is2a";
-            break;
-        case EbtISampler2DMS:
-            mangledName += "is2ms";
-            break;
-        case EbtUSampler2D:
-            mangledName += "us2";
-            break;
-        case EbtUSampler3D:
-            mangledName += "us3";
-            break;
-        case EbtUSamplerCube:
-            mangledName += "usC";
-            break;
-        case EbtUSampler2DArray:
-            mangledName += "us2a";
-            break;
-        case EbtUSampler2DMS:
-            mangledName += "us2ms";
-            break;
-        case EbtSampler2DShadow:
-            mangledName += "s2s";
-            break;
-        case EbtSamplerCubeShadow:
-            mangledName += "sCs";
-            break;
-        case EbtSampler2DArrayShadow:
-            mangledName += "s2as";
-            break;
-        case EbtImage2D:
-            mangledName += "im2";
-            break;
-        case EbtIImage2D:
-            mangledName += "iim2";
-            break;
-        case EbtUImage2D:
-            mangledName += "uim2";
-            break;
-        case EbtImage3D:
-            mangledName += "im3";
-            break;
-        case EbtIImage3D:
-            mangledName += "iim3";
-            break;
-        case EbtUImage3D:
-            mangledName += "uim3";
-            break;
-        case EbtImage2DArray:
-            mangledName += "im2a";
-            break;
-        case EbtIImage2DArray:
-            mangledName += "iim2a";
-            break;
-        case EbtUImage2DArray:
-            mangledName += "uim2a";
-            break;
-        case EbtImageCube:
-            mangledName += "imc";
-            break;
-        case EbtIImageCube:
-            mangledName += "iimc";
-            break;
-        case EbtUImageCube:
-            mangledName += "uimc";
-            break;
-        case EbtAtomicCounter:
-            mangledName += "ac";
-            break;
-        case EbtStruct:
-            mangledName += structure->mangledName();
-            break;
-        case EbtInterfaceBlock:
-            mangledName += interfaceBlock->mangledName();
-            break;
-        default:
-            // EbtVoid, EbtAddress and non types
-            break;
+      case EbtFloat:
+        mangledName += 'f';
+        break;
+      case EbtInt:
+        mangledName += 'i';
+        break;
+      case EbtUInt:
+        mangledName += 'u';
+        break;
+      case EbtBool:
+        mangledName += 'b';
+        break;
+      case EbtSampler2D:
+        mangledName += "s2";
+        break;
+      case EbtSampler3D:
+        mangledName += "s3";
+        break;
+      case EbtSamplerCube:
+        mangledName += "sC";
+        break;
+      case EbtSampler2DArray:
+        mangledName += "s2a";
+        break;
+      case EbtSamplerExternalOES:
+        mangledName += "sext";
+        break;
+      case EbtSampler2DRect:
+        mangledName += "s2r";
+        break;
+      case EbtISampler2D:
+        mangledName += "is2";
+        break;
+      case EbtISampler3D:
+        mangledName += "is3";
+        break;
+      case EbtISamplerCube:
+        mangledName += "isC";
+        break;
+      case EbtISampler2DArray:
+        mangledName += "is2a";
+        break;
+      case EbtUSampler2D:
+        mangledName += "us2";
+        break;
+      case EbtUSampler3D:
+        mangledName += "us3";
+        break;
+      case EbtUSamplerCube:
+        mangledName += "usC";
+        break;
+      case EbtUSampler2DArray:
+        mangledName += "us2a";
+        break;
+      case EbtSampler2DShadow:
+        mangledName += "s2s";
+        break;
+      case EbtSamplerCubeShadow:
+        mangledName += "sCs";
+        break;
+      case EbtSampler2DArrayShadow:
+        mangledName += "s2as";
+        break;
+      case EbtImage2D:
+          mangledName += "im2";
+          break;
+      case EbtIImage2D:
+          mangledName += "iim2";
+          break;
+      case EbtUImage2D:
+          mangledName += "uim2";
+          break;
+      case EbtImage3D:
+          mangledName += "im3";
+          break;
+      case EbtIImage3D:
+          mangledName += "iim3";
+          break;
+      case EbtUImage3D:
+          mangledName += "uim3";
+          break;
+      case EbtImage2DArray:
+          mangledName += "im2a";
+          break;
+      case EbtIImage2DArray:
+          mangledName += "iim2a";
+          break;
+      case EbtUImage2DArray:
+          mangledName += "uim2a";
+          break;
+      case EbtImageCube:
+          mangledName += "imc";
+          break;
+      case EbtIImageCube:
+          mangledName += "iimc";
+          break;
+      case EbtUImageCube:
+          mangledName += "uimc";
+          break;
+      case EbtStruct:
+        mangledName += structure->mangledName();
+        break;
+      case EbtInterfaceBlock:
+        mangledName += interfaceBlock->mangledName();
+        break;
+      default:
+        // EbtVoid, EbtAddress and non types
+        break;
     }
 
     if (isMatrix())
@@ -447,7 +369,7 @@ TString TType::buildMangledName() const
         mangledName += static_cast<char>('0' + getNominalSize());
     }
 
-    for (unsigned int arraySize : mArraySizes)
+    if (isArray())
     {
         char buf[20];
         snprintf(buf, sizeof(buf), "%d", arraySize);
@@ -467,120 +389,25 @@ size_t TType::getObjectSize() const
     else
         totalSize = primarySize * secondarySize;
 
-    if (totalSize == 0)
-        return 0;
-
-    for (size_t arraySize : mArraySizes)
+    if (isArray())
     {
-        if (arraySize > INT_MAX / totalSize)
+        if (totalSize == 0)
+            return 0;
+
+        size_t currentArraySize = getArraySize();
+        if (currentArraySize > INT_MAX / totalSize)
             totalSize = INT_MAX;
         else
-            totalSize *= arraySize;
+            totalSize *= currentArraySize;
     }
 
     return totalSize;
 }
 
-int TType::getLocationCount() const
-{
-    int count = 1;
-
-    if (getBasicType() == EbtStruct)
-    {
-        count = structure->getLocationCount();
-    }
-
-    if (count == 0)
-    {
-        return 0;
-    }
-
-    for (unsigned int arraySize : mArraySizes)
-    {
-        if (arraySize > static_cast<unsigned int>(std::numeric_limits<int>::max() / count))
-        {
-            count = std::numeric_limits<int>::max();
-        }
-        else
-        {
-            count *= static_cast<int>(arraySize);
-        }
-    }
-
-    return count;
-}
-
-unsigned int TType::getArraySizeProduct() const
-{
-    unsigned int product = 1u;
-    for (unsigned int arraySize : mArraySizes)
-    {
-        product *= arraySize;
-    }
-    return product;
-}
-
-bool TType::isUnsizedArray() const
-{
-    for (unsigned int arraySize : mArraySizes)
-    {
-        if (arraySize == 0u)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool TType::sameNonArrayType(const TType &right) const
-{
-    return (type == right.type && primarySize == right.primarySize &&
-            secondarySize == right.secondarySize && structure == right.structure);
-}
-
-bool TType::isElementTypeOf(const TType &arrayType) const
-{
-    if (!sameNonArrayType(arrayType))
-    {
-        return false;
-    }
-    if (arrayType.mArraySizes.size() != mArraySizes.size() + 1u)
-    {
-        return false;
-    }
-    for (size_t i = 0; i < mArraySizes.size(); ++i)
-    {
-        if (mArraySizes[i] != arrayType.mArraySizes[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-void TType::sizeUnsizedArrays(const TVector<unsigned int> &arraySizes)
-{
-    for (size_t i = 0u; i < mArraySizes.size(); ++i)
-    {
-        if (mArraySizes[i] == 0)
-        {
-            if (i < arraySizes.size())
-            {
-                mArraySizes[i] = arraySizes[i];
-            }
-            else
-            {
-                mArraySizes[i] = 1u;
-            }
-        }
-    }
-    invalidateMangledName();
-}
-
-TStructure::TStructure(TSymbolTable *symbolTable, const TString *name, TFieldList *fields)
+TStructure::TStructure(const TString *name, TFieldList *fields)
     : TFieldListCollection(name, fields),
       mDeepestNesting(0),
-      mUniqueId(symbolTable->nextUniqueId()),
+      mUniqueId(TSymbolTable::nextUniqueId()),
       mAtGlobalScope(false)
 {
 }
@@ -618,58 +445,84 @@ bool TStructure::containsSamplers() const
     return false;
 }
 
-void TType::createSamplerSymbols(const TString &namePrefix,
-                                 const TString &apiNamePrefix,
-                                 TVector<TIntermSymbol *> *outputSymbols,
-                                 TMap<TIntermSymbol *, TString> *outputSymbolsToAPINames) const
+bool TStructure::containsImages() const
 {
-    if (isStructureContainingSamplers())
+    for (size_t i = 0; i < mFields->size(); ++i)
     {
-        if (isArray())
-        {
-            TType elementType(*this);
-            elementType.toArrayElementType();
-            for (unsigned int arrayIndex = 0u; arrayIndex < getOutermostArraySize(); ++arrayIndex)
-            {
-                TStringStream elementName;
-                elementName << namePrefix << "_" << arrayIndex;
-                TStringStream elementApiName;
-                elementApiName << apiNamePrefix << "[" << arrayIndex << "]";
-                elementType.createSamplerSymbols(elementName.str(), elementApiName.str(),
-                                                 outputSymbols, outputSymbolsToAPINames);
-            }
-        }
-        else
-        {
-            structure->createSamplerSymbols(namePrefix, apiNamePrefix, outputSymbols,
-                                            outputSymbolsToAPINames);
-        }
-        return;
+        const TType *fieldType = (*mFields)[i]->type();
+        if (IsImage(fieldType->getBasicType()) || fieldType->isStructureContainingImages())
+            return true;
     }
-    ASSERT(IsSampler(type));
-    TIntermSymbol *symbol = new TIntermSymbol(0, namePrefix, *this);
-    outputSymbols->push_back(symbol);
-    if (outputSymbolsToAPINames)
-    {
-        (*outputSymbolsToAPINames)[symbol] = apiNamePrefix;
-    }
+    return false;
 }
 
-void TStructure::createSamplerSymbols(const TString &namePrefix,
-                                      const TString &apiNamePrefix,
+void TStructure::createSamplerSymbols(const TString &structName,
+                                      const TString &structAPIName,
+                                      const unsigned int arrayOfStructsSize,
                                       TVector<TIntermSymbol *> *outputSymbols,
                                       TMap<TIntermSymbol *, TString> *outputSymbolsToAPINames) const
 {
-    ASSERT(containsSamplers());
     for (auto &field : *mFields)
     {
         const TType *fieldType = field->type();
-        if (IsSampler(fieldType->getBasicType()) || fieldType->isStructureContainingSamplers())
+        if (IsSampler(fieldType->getBasicType()))
         {
-            TString fieldName    = namePrefix + "_" + field->name();
-            TString fieldApiName = apiNamePrefix + "." + field->name();
-            fieldType->createSamplerSymbols(fieldName, fieldApiName, outputSymbols,
-                                            outputSymbolsToAPINames);
+            if (arrayOfStructsSize > 0u)
+            {
+                for (unsigned int arrayIndex = 0u; arrayIndex < arrayOfStructsSize; ++arrayIndex)
+                {
+                    TStringStream name;
+                    name << structName << "_" << arrayIndex << "_" << field->name();
+                    TIntermSymbol *symbol = new TIntermSymbol(0, name.str(), *fieldType);
+                    outputSymbols->push_back(symbol);
+
+                    if (outputSymbolsToAPINames)
+                    {
+                        TStringStream apiName;
+                        apiName << structAPIName << "[" << arrayIndex << "]." << field->name();
+                        (*outputSymbolsToAPINames)[symbol] = apiName.str();
+                    }
+                }
+            }
+            else
+            {
+                TString symbolName    = structName + "_" + field->name();
+                TIntermSymbol *symbol = new TIntermSymbol(0, symbolName, *fieldType);
+                outputSymbols->push_back(symbol);
+
+                if (outputSymbolsToAPINames)
+                {
+                    TString apiName = structAPIName + "." + field->name();
+                    (*outputSymbolsToAPINames)[symbol] = apiName;
+                }
+            }
+        }
+        else if (fieldType->isStructureContainingSamplers())
+        {
+            unsigned int nestedArrayOfStructsSize =
+                fieldType->isArray() ? fieldType->getArraySize() : 0u;
+            if (arrayOfStructsSize > 0)
+            {
+                for (unsigned int arrayIndex = 0u; arrayIndex < arrayOfStructsSize; ++arrayIndex)
+                {
+                    TStringStream fieldName;
+                    fieldName << structName << "_" << arrayIndex << "_" << field->name();
+                    TStringStream fieldAPIName;
+                    if (outputSymbolsToAPINames)
+                    {
+                        fieldAPIName << structAPIName << "[" << arrayIndex << "]." << field->name();
+                    }
+                    fieldType->createSamplerSymbols(fieldName.str(), fieldAPIName.str(),
+                                                    nestedArrayOfStructsSize, outputSymbols,
+                                                    outputSymbolsToAPINames);
+                }
+            }
+            else
+            {
+                fieldType->createSamplerSymbols(
+                    structName + "_" + field->name(), structAPIName + "." + field->name(),
+                    nestedArrayOfStructsSize, outputSymbols, outputSymbolsToAPINames);
+            }
         }
     }
 }
@@ -689,33 +542,15 @@ TString TFieldListCollection::buildMangledName(const TString &mangledNamePrefix)
 size_t TFieldListCollection::calculateObjectSize() const
 {
     size_t size = 0;
-    for (const TField *field : *mFields)
+    for (size_t i = 0; i < mFields->size(); ++i)
     {
-        size_t fieldSize = field->type()->getObjectSize();
+        size_t fieldSize = (*mFields)[i]->type()->getObjectSize();
         if (fieldSize > INT_MAX - size)
             size = INT_MAX;
         else
             size += fieldSize;
     }
     return size;
-}
-
-int TFieldListCollection::getLocationCount() const
-{
-    int count = 0;
-    for (const TField *field : *mFields)
-    {
-        int fieldCount = field->type()->getLocationCount();
-        if (fieldCount > std::numeric_limits<int>::max() - count)
-        {
-            count = std::numeric_limits<int>::max();
-        }
-        else
-        {
-            count += fieldCount;
-        }
-    }
-    return count;
 }
 
 int TStructure::calculateDeepestNesting() const

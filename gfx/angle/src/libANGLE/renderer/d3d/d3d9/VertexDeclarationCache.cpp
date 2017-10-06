@@ -21,7 +21,7 @@ VertexDeclarationCache::VertexDeclarationCache() : mMaxLru(0)
 {
     for (int i = 0; i < NUM_VERTEX_DECL_CACHE_ENTRIES; i++)
     {
-        mVertexDeclCache[i].vertexDeclaration = nullptr;
+        mVertexDeclCache[i].vertexDeclaration = NULL;
         mVertexDeclCache[i].lruCount = 0;
     }
 
@@ -30,7 +30,7 @@ VertexDeclarationCache::VertexDeclarationCache() : mMaxLru(0)
         mAppliedVBs[i].serial = 0;
     }
 
-    mLastSetVDecl      = nullptr;
+    mLastSetVDecl = NULL;
     mInstancingEnabled = true;
 }
 
@@ -111,7 +111,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
         if (attributes[i].active)
         {
             // Directly binding the storage buffer is not supported for d3d9
-            ASSERT(attributes[i].storage == nullptr);
+            ASSERT(attributes[i].storage == NULL);
 
             int stream = static_cast<int>(i);
 
@@ -165,8 +165,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
                 mAppliedVBs[stream].offset = offset;
             }
 
-            gl::VertexFormatType vertexformatType =
-                gl::GetVertexFormatType(*attributes[i].attribute, GL_FLOAT);
+            gl::VertexFormatType vertexformatType = gl::GetVertexFormatType(*attributes[i].attribute, GL_FLOAT);
             const d3d9::VertexFormat &d3d9VertexInfo = d3d9::GetVertexFormatInfo(caps.DeclTypes, vertexformatType);
 
             element->Stream = static_cast<WORD>(stream);
@@ -207,7 +206,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
                 mLastSetVDecl = entry->vertexDeclaration;
             }
 
-            return gl::NoError();
+            return gl::Error(GL_NO_ERROR);
         }
     }
 
@@ -221,7 +220,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
         }
     }
 
-    if (lastCache->vertexDeclaration != nullptr)
+    if (lastCache->vertexDeclaration != NULL)
     {
         SafeRelease(lastCache->vertexDeclaration);
         // mLastSetVDecl is set to the replacement, so we don't have to worry
@@ -232,15 +231,14 @@ gl::Error VertexDeclarationCache::applyDeclaration(
     HRESULT result = device->CreateVertexDeclaration(elements, &lastCache->vertexDeclaration);
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to create internal vertex declaration, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to create internal vertex declaration, result: 0x%X.", result);
     }
 
     device->SetVertexDeclaration(lastCache->vertexDeclaration);
     mLastSetVDecl = lastCache->vertexDeclaration;
     lastCache->lruCount = ++mMaxLru;
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 void VertexDeclarationCache::markStateDirty()
@@ -250,7 +248,7 @@ void VertexDeclarationCache::markStateDirty()
         mAppliedVBs[i].serial = 0;
     }
 
-    mLastSetVDecl      = nullptr;
+    mLastSetVDecl = NULL;
     mInstancingEnabled = true;   // Forces it to be disabled when not used
 }
 

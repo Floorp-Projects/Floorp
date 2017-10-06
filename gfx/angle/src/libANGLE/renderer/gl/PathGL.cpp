@@ -27,7 +27,7 @@ gl::Error PathGL::setCommands(GLsizei numCommands,
                               const void *coords)
 {
     mFunctions->pathCommandsNV(mPathID, numCommands, commands, numCoords, coordType, coords);
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 void PathGL::setPathParameter(GLenum pname, GLfloat value)

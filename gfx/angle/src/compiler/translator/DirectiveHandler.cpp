@@ -15,21 +15,17 @@
 namespace sh
 {
 
-static TBehavior getBehavior(const std::string &str)
+static TBehavior getBehavior(const std::string& str)
 {
     const char kRequire[] = "require";
-    const char kEnable[]  = "enable";
+    const char kEnable[] = "enable";
     const char kDisable[] = "disable";
-    const char kWarn[]    = "warn";
+    const char kWarn[] = "warn";
 
-    if (str == kRequire)
-        return EBhRequire;
-    else if (str == kEnable)
-        return EBhEnable;
-    else if (str == kDisable)
-        return EBhDisable;
-    else if (str == kWarn)
-        return EBhWarn;
+    if (str == kRequire) return EBhRequire;
+    else if (str == kEnable) return EBhEnable;
+    else if (str == kDisable) return EBhDisable;
+    else if (str == kWarn) return EBhWarn;
     return EBhUndefined;
 }
 
@@ -50,29 +46,30 @@ TDirectiveHandler::~TDirectiveHandler()
 {
 }
 
-void TDirectiveHandler::handleError(const pp::SourceLocation &loc, const std::string &msg)
+void TDirectiveHandler::handleError(const pp::SourceLocation& loc,
+                                    const std::string& msg)
 {
-    mDiagnostics.error(loc, msg.c_str(), "");
+    mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc, msg, "", "");
 }
 
-void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
-                                     const std::string &name,
-                                     const std::string &value,
+void TDirectiveHandler::handlePragma(const pp::SourceLocation& loc,
+                                     const std::string& name,
+                                     const std::string& value,
                                      bool stdgl)
 {
     if (stdgl)
     {
         const char kInvariant[] = "invariant";
-        const char kAll[]       = "all";
+        const char kAll[] = "all";
 
         if (name == kInvariant && value == kAll)
         {
             if (mShaderVersion == 300 && mShaderType == GL_FRAGMENT_SHADER)
             {
                 // ESSL 3.00.4 section 4.6.1
-                mDiagnostics.error(
-                    loc, "#pragma STDGL invariant(all) can not be used in fragment shader",
-                    name.c_str());
+                mDiagnostics.writeInfo(
+                    pp::Diagnostics::PP_ERROR, loc,
+                    "#pragma STDGL invariant(all) can not be used in fragment shader", name, value);
             }
             mPragma.stdgl.invariantAll = true;
         }
@@ -83,39 +80,30 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
     }
     else
     {
-        const char kOptimize[]             = "optimize";
-        const char kDebug[]                = "debug";
+        const char kOptimize[] = "optimize";
+        const char kDebug[] = "debug";
         const char kDebugShaderPrecision[] = "webgl_debug_shader_precision";
-        const char kOn[]                   = "on";
-        const char kOff[]                  = "off";
+        const char kOn[] = "on";
+        const char kOff[] = "off";
 
         bool invalidValue = false;
         if (name == kOptimize)
         {
-            if (value == kOn)
-                mPragma.optimize = true;
-            else if (value == kOff)
-                mPragma.optimize = false;
-            else
-                invalidValue = true;
+            if (value == kOn) mPragma.optimize = true;
+            else if (value == kOff) mPragma.optimize = false;
+            else invalidValue = true;
         }
         else if (name == kDebug)
         {
-            if (value == kOn)
-                mPragma.debug = true;
-            else if (value == kOff)
-                mPragma.debug = false;
-            else
-                invalidValue = true;
+            if (value == kOn) mPragma.debug = true;
+            else if (value == kOff) mPragma.debug = false;
+            else invalidValue = true;
         }
         else if (name == kDebugShaderPrecision && mDebugShaderPrecisionSupported)
         {
-            if (value == kOn)
-                mPragma.debugShaderPrecision = true;
-            else if (value == kOff)
-                mPragma.debugShaderPrecision = false;
-            else
-                invalidValue = true;
+            if (value == kOn) mPragma.debugShaderPrecision = true;
+            else if (value == kOff) mPragma.debugShaderPrecision = false;
+            else invalidValue = true;
         }
         else
         {
@@ -125,21 +113,24 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
 
         if (invalidValue)
         {
-            mDiagnostics.error(loc, "invalid pragma value - 'on' or 'off' expected", value.c_str());
+            mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
+                                   "invalid pragma value", value,
+                                   "'on' or 'off' expected");
         }
     }
 }
 
-void TDirectiveHandler::handleExtension(const pp::SourceLocation &loc,
-                                        const std::string &name,
-                                        const std::string &behavior)
+void TDirectiveHandler::handleExtension(const pp::SourceLocation& loc,
+                                        const std::string& name,
+                                        const std::string& behavior)
 {
     const char kExtAll[] = "all";
 
     TBehavior behaviorVal = getBehavior(behavior);
     if (behaviorVal == EBhUndefined)
     {
-        mDiagnostics.error(loc, "behavior invalid", name.c_str());
+        mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
+                               "behavior", name, "invalid");
         return;
     }
 
@@ -147,11 +138,15 @@ void TDirectiveHandler::handleExtension(const pp::SourceLocation &loc,
     {
         if (behaviorVal == EBhRequire)
         {
-            mDiagnostics.error(loc, "extension cannot have 'require' behavior", name.c_str());
+            mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
+                                   "extension", name,
+                                   "cannot have 'require' behavior");
         }
         else if (behaviorVal == EBhEnable)
         {
-            mDiagnostics.error(loc, "extension cannot have 'enable' behavior", name.c_str());
+            mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
+                                   "extension", name,
+                                   "cannot have 'enable' behavior");
         }
         else
         {
@@ -162,30 +157,33 @@ void TDirectiveHandler::handleExtension(const pp::SourceLocation &loc,
         return;
     }
 
-    TExtensionBehavior::iterator iter = mExtensionBehavior.find(GetExtensionByName(name.c_str()));
+    TExtensionBehavior::iterator iter = mExtensionBehavior.find(name);
     if (iter != mExtensionBehavior.end())
     {
         iter->second = behaviorVal;
         return;
     }
 
-    switch (behaviorVal)
-    {
-        case EBhRequire:
-            mDiagnostics.error(loc, "extension is not supported", name.c_str());
-            break;
-        case EBhEnable:
-        case EBhWarn:
-        case EBhDisable:
-            mDiagnostics.warning(loc, "extension is not supported", name.c_str());
-            break;
-        default:
-            UNREACHABLE();
-            break;
+    pp::Diagnostics::Severity severity = pp::Diagnostics::PP_ERROR;
+    switch (behaviorVal) {
+      case EBhRequire:
+        severity = pp::Diagnostics::PP_ERROR;
+        break;
+      case EBhEnable:
+      case EBhWarn:
+      case EBhDisable:
+        severity = pp::Diagnostics::PP_WARNING;
+        break;
+      default:
+        UNREACHABLE();
+        break;
     }
+    mDiagnostics.writeInfo(severity, loc,
+                           "extension", name, "is not supported");
 }
 
-void TDirectiveHandler::handleVersion(const pp::SourceLocation &loc, int version)
+void TDirectiveHandler::handleVersion(const pp::SourceLocation& loc,
+                                      int version)
 {
     if (version == 100 || version == 300 || version == 310)
     {
@@ -196,7 +194,8 @@ void TDirectiveHandler::handleVersion(const pp::SourceLocation &loc, int version
         std::stringstream stream;
         stream << version;
         std::string str = stream.str();
-        mDiagnostics.error(loc, "version number not supported", str.c_str());
+        mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
+                               "version number", str, "not supported");
     }
 }
 

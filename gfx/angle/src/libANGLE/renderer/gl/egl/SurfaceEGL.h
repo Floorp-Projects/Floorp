@@ -24,16 +24,13 @@ class SurfaceEGL : public SurfaceGL
                const FunctionsEGL *egl,
                EGLConfig config,
                const std::vector<EGLint> &attribList,
+               EGLContext context,
                RendererGL *renderer);
     ~SurfaceEGL() override;
 
     egl::Error makeCurrent() override;
-    egl::Error swap(const gl::Context *context) override;
-    egl::Error postSubBuffer(const gl::Context *context,
-                             EGLint x,
-                             EGLint y,
-                             EGLint width,
-                             EGLint height) override;
+    egl::Error swap() override;
+    egl::Error postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height) override;
     egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) override;
     egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) override;
     egl::Error releaseTexImage(EGLint buffer) override;
@@ -43,13 +40,14 @@ class SurfaceEGL : public SurfaceGL
     EGLint isPostSubBufferSupported() const override;
     EGLint getSwapBehavior() const override;
 
-    EGLSurface getSurface() const;
-
   protected:
     const FunctionsEGL *mEGL;
     EGLConfig mConfig;
     std::vector<EGLint> mAttribList;
     EGLSurface mSurface;
+
+  private:
+    EGLContext mContext;
 };
 
 }  // namespace rx

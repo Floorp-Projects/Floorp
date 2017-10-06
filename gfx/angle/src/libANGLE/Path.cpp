@@ -42,7 +42,7 @@ Error Path::setCommands(GLsizei numCommands,
 
     mHasData = true;
 
-    return NoError();
+    return gl::NoError();
 }
 
 void Path::setStrokeWidth(GLfloat width)

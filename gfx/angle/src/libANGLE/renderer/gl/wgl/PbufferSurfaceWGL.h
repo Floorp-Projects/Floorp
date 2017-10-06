@@ -9,7 +9,7 @@
 #ifndef LIBANGLE_RENDERER_GL_WGL_PBUFFERSURFACEWGL_H_
 #define LIBANGLE_RENDERER_GL_WGL_PBUFFERSURFACEWGL_H_
 
-#include "libANGLE/renderer/gl/wgl/SurfaceWGL.h"
+#include "libANGLE/renderer/gl/SurfaceGL.h"
 
 #include <GL/wglext.h>
 
@@ -18,7 +18,7 @@ namespace rx
 
 class FunctionsWGL;
 
-class PbufferSurfaceWGL : public SurfaceWGL
+class PbufferSurfaceWGL : public SurfaceGL
 {
   public:
     PbufferSurfaceWGL(const egl::SurfaceState &state,
@@ -30,18 +30,15 @@ class PbufferSurfaceWGL : public SurfaceWGL
                       bool largest,
                       int pixelFormat,
                       HDC deviceContext,
+                      HGLRC wglContext,
                       const FunctionsWGL *functions);
     ~PbufferSurfaceWGL() override;
 
-    egl::Error initialize(const egl::Display *display) override;
+    egl::Error initialize() override;
     egl::Error makeCurrent() override;
 
-    egl::Error swap(const gl::Context *context) override;
-    egl::Error postSubBuffer(const gl::Context *context,
-                             EGLint x,
-                             EGLint y,
-                             EGLint width,
-                             EGLint height) override;
+    egl::Error swap() override;
+    egl::Error postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height) override;
     egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) override;
     egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) override;
     egl::Error releaseTexImage(EGLint buffer) override;
@@ -53,8 +50,6 @@ class PbufferSurfaceWGL : public SurfaceWGL
     EGLint isPostSubBufferSupported() const override;
     EGLint getSwapBehavior() const override;
 
-    HDC getDC() const override;
-
   private:
     EGLint mWidth;
     EGLint mHeight;
@@ -63,6 +58,8 @@ class PbufferSurfaceWGL : public SurfaceWGL
     EGLenum mTextureTarget;
 
     int mPixelFormat;
+
+    HGLRC mShareWGLContext;
 
     HDC mParentDeviceContext;
 

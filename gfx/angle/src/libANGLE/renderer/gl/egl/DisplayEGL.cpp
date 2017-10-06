@@ -13,8 +13,8 @@ namespace rx
 
 #define EGL_NO_CONFIG ((EGLConfig)0)
 
-DisplayEGL::DisplayEGL(const egl::DisplayState &state)
-    : DisplayGL(state),
+DisplayEGL::DisplayEGL()
+    : DisplayGL(),
       mEGL(nullptr),
       mConfig(EGL_NO_CONFIG),
       mContext(EGL_NO_CONTEXT),
@@ -79,7 +79,7 @@ egl::Error DisplayEGL::initializeContext(const egl::AttributeMap &eglAttributes)
     {
         if (initializeRequested && (requestedMajor != 2 || requestedMinor != 0))
         {
-            return egl::EglBadAttribute() << "Unsupported requested context version";
+            return egl::Error(EGL_BAD_ATTRIBUTE, "Unsupported requested context version");
         }
         contextAttribLists.push_back({EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE});
     }
@@ -89,7 +89,7 @@ egl::Error DisplayEGL::initializeContext(const egl::AttributeMap &eglAttributes)
         mContext = mEGL->createContext(mConfig, EGL_NO_CONTEXT, attribList.data());
         if (mContext != EGL_NO_CONTEXT)
         {
-            return egl::NoError();
+            return egl::Error(EGL_SUCCESS);
         }
     }
 
@@ -102,12 +102,6 @@ void DisplayEGL::generateExtensions(egl::DisplayExtensions *outExtensions) const
         mEGL->hasExtension("EGL_EXT_create_context_robustness");
 
     outExtensions->postSubBuffer = false;  // Since SurfaceEGL::postSubBuffer is not implemented
-
-    // Contexts are virtualized so textures can be shared globally
-    outExtensions->displayTextureShareGroup = true;
-
-    // Surfaceless contexts are emulated even if there is no native support.
-    outExtensions->surfacelessContext = true;
 }
 
 void DisplayEGL::generateCaps(egl::Caps *outCaps) const

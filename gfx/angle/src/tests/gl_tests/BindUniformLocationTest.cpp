@@ -64,22 +64,28 @@ TEST_P(BindUniformLocationTest, Basic)
 
     ASSERT_NE(mBindUniformLocation, nullptr);
 
-    const std::string vsSource =
-        R"(attribute vec4 a_position;
+    // clang-format off
+    const std::string vsSource = SHADER_SOURCE
+    (
+        attribute vec4 a_position;
         void main()
         {
             gl_Position = a_position;
-        })";
+        }
+    );
 
-    const std::string fsSource =
-        R"(precision mediump float;
+    const std::string fsSource = SHADER_SOURCE
+    (
+        precision mediump float;
         uniform vec4 u_colorC;
         uniform vec4 u_colorB[2];
         uniform vec4 u_colorA;
         void main()
         {
             gl_FragColor = u_colorA + u_colorB[0] + u_colorB[1] + u_colorC;
-        })";
+        }
+    );
+    // clang-format on
 
     GLint colorALocation = 3;
     GLint colorBLocation = 10;
@@ -135,21 +141,27 @@ TEST_P(BindUniformLocationTest, ConflictsDetection)
 
     ASSERT_NE(nullptr, mBindUniformLocation);
 
-    const std::string vsSource =
-        R"(attribute vec4 a_position;
+    // clang-format off
+    const std::string vsSource = SHADER_SOURCE
+    (
+        attribute vec4 a_position;
         void main()
         {
             gl_Position = a_position;
-        })";
+        }
+    );
 
-    const std::string fsSource =
-        R"(precision mediump float;
+    const std::string fsSource = SHADER_SOURCE
+    (
+        precision mediump float;
         uniform vec4 u_colorA;
         uniform vec4 u_colorB;
         void main()
         {
             gl_FragColor = u_colorA + u_colorB;
-        })";
+        }
+    );
+    // clang-format on
 
     GLint colorALocation = 3;
     GLint colorBLocation = 4;
@@ -191,8 +203,10 @@ TEST_P(BindUniformLocationTest, Compositor)
 
     ASSERT_NE(nullptr, mBindUniformLocation);
 
-    const std::string vsSource =
-        R"(attribute vec4 a_position;
+    // clang-format off
+    const std::string vsSource = SHADER_SOURCE
+    (
+        attribute vec4 a_position;
         attribute vec2 a_texCoord;
         uniform mat4 matrix;
         uniform vec2 color_a[4];
@@ -204,10 +218,12 @@ TEST_P(BindUniformLocationTest, Compositor)
             v_color.zw = color_a[2] + color_a[3];
             v_color += color_b;
             gl_Position = matrix * a_position;
-        })";
+        }
+    );
 
-    const std::string fsSource =
-        R"(precision mediump float;
+    const std::string fsSource = SHADER_SOURCE
+    (
+        precision mediump float;
         varying vec4 v_color;
         uniform float alpha;
         uniform vec4 multiplier;
@@ -226,7 +242,9 @@ TEST_P(BindUniformLocationTest, Compositor)
             color_c_sum.w = alpha;
             color_c_sum *= multiplier;
             gl_FragColor = v_color + color_c_sum;
-        })";
+        }
+    );
+    // clang-format on
 
     int counter            = 6;
     int matrixLocation     = counter++;
@@ -301,22 +319,28 @@ TEST_P(BindUniformLocationTest, UnusedUniformUpdate)
 
     ASSERT_NE(nullptr, mBindUniformLocation);
 
-    const std::string vsSource =
-        R"(attribute vec4 a_position;
+    // clang-format off
+    const std::string vsSource = SHADER_SOURCE
+    (
+        attribute vec4 a_position;
         void main()
         {
             gl_Position = a_position;
-        })";
+        }
+    );
 
-    const std::string fsSource =
-        R"(precision mediump float;
+    const std::string fsSource = SHADER_SOURCE
+    (
+        precision mediump float;
         uniform vec4 u_colorA;
         uniform float u_colorU;
         uniform vec4 u_colorC;
         void main()
         {
             gl_FragColor = u_colorA + u_colorC;
-        })";
+        }
+    );
+    // clang-format on
 
     const GLint colorULocation      = 1;
     const GLint nonexistingLocation = 5;
@@ -406,18 +430,24 @@ TEST_P(BindUniformLocationTest, UseSamplerWhenUnusedUniforms)
 
     ASSERT_NE(nullptr, mBindUniformLocation);
 
-    const std::string vsSource =
-        R"(void main()
+    // clang-format off
+    const std::string vsSource = SHADER_SOURCE
+    (
+        void main()
         {
             gl_Position = vec4(0);
-        })";
+        }
+    );
 
-    const std::string fsSource =
-        R"(uniform sampler2D tex;
+    const std::string fsSource = SHADER_SOURCE
+    (
+        uniform sampler2D tex;
         void main()
         {
             gl_FragColor = texture2D(tex, vec2(1));
-        })";
+        }
+    );
+    // clang-format on
 
     const GLuint texLocation = 54;
 
@@ -442,216 +472,6 @@ TEST_P(BindUniformLocationTest, UseSamplerWhenUnusedUniforms)
     EXPECT_GL_NO_ERROR();
 }
 
-// Test for binding a statically used uniform to the same location as a non-statically used uniform.
-// This is valid according to the extension spec.
-TEST_P(BindUniformLocationTest, SameLocationForUsedAndUnusedUniform)
-{
-    if (!extensionEnabled("GL_CHROMIUM_bind_uniform_location"))
-    {
-        std::cout << "Test skipped because GL_CHROMIUM_bind_uniform_location is not available."
-                  << std::endl;
-        return;
-    }
-
-    ASSERT_NE(nullptr, mBindUniformLocation);
-
-    const std::string vsSource =
-        R"(void main()
-        {
-            gl_Position = vec4(0);
-        })";
-
-    const std::string fsSource =
-        R"(precision mediump float;
-        uniform vec4 a;
-        uniform vec4 b;
-        void main()
-        {
-            gl_FragColor = a;
-        })";
-
-    const GLuint location = 54;
-
-    GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
-    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fsSource);
-
-    mProgram = glCreateProgram();
-    mBindUniformLocation(mProgram, location, "a");
-    mBindUniformLocation(mProgram, location, "b");
-
-    glAttachShader(mProgram, vs);
-    glDeleteShader(vs);
-    glAttachShader(mProgram, fs);
-    glDeleteShader(fs);
-
-    glLinkProgram(mProgram);
-
-    GLint linked = GL_FALSE;
-    glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
-    ASSERT_GL_TRUE(linked);
-    glUseProgram(mProgram);
-    glUniform4f(location, 0.0, 1.0, 0.0, 1.0);
-    EXPECT_GL_NO_ERROR();
-}
-
-class BindUniformLocationES31Test : public BindUniformLocationTest
-{
-  protected:
-    BindUniformLocationES31Test() : BindUniformLocationTest() {}
-
-    void linkProgramWithUniformLocation(GLuint vs,
-                                        GLuint fs,
-                                        const char *uniformName,
-                                        GLint uniformLocation)
-    {
-        mProgram = glCreateProgram();
-        mBindUniformLocation(mProgram, uniformLocation, uniformName);
-
-        glAttachShader(mProgram, vs);
-        glDeleteShader(vs);
-        glAttachShader(mProgram, fs);
-        glDeleteShader(fs);
-
-        glLinkProgram(mProgram);
-    }
-};
-
-// Test for when the shader specifies an explicit uniform location with a layout qualifier and the
-// bindUniformLocation API sets a consistent location.
-TEST_P(BindUniformLocationES31Test, ConsistentWithLocationLayoutQualifier)
-{
-    if (!extensionEnabled("GL_CHROMIUM_bind_uniform_location"))
-    {
-        std::cout << "Test skipped because GL_CHROMIUM_bind_uniform_location is not available."
-                  << std::endl;
-        return;
-    }
-
-    const std::string vsSource =
-        "#version 310 es\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vec4(0);\n"
-        "}\n";
-
-    const std::string fsSource =
-        "#version 310 es\n"
-        "uniform layout(location=2) highp sampler2D tex;\n"
-        "out highp vec4 my_FragColor;\n"
-        "void main()\n"
-        "{\n"
-        "    my_FragColor = texture(tex, vec2(1));\n"
-        "}\n";
-
-    const GLuint texLocation = 2;
-
-    GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
-    EXPECT_NE(0u, vs);
-    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fsSource);
-    EXPECT_NE(0u, fs);
-    linkProgramWithUniformLocation(vs, fs, "tex", texLocation);
-
-    GLint linked = GL_FALSE;
-    glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
-    ASSERT_GL_TRUE(linked);
-
-    EXPECT_EQ(static_cast<GLint>(texLocation), glGetUniformLocation(mProgram, "tex"));
-    glUseProgram(mProgram);
-    glUniform1i(texLocation, 0);
-    EXPECT_GL_NO_ERROR();
-}
-
-// Test for when the shader specifies an explicit uniform location with a layout qualifier and the
-// bindUniformLocation API sets a conflicting location for the same variable. The shader-set
-// location should prevail.
-TEST_P(BindUniformLocationES31Test, LocationLayoutQualifierOverridesAPIBinding)
-{
-    if (!extensionEnabled("GL_CHROMIUM_bind_uniform_location"))
-    {
-        std::cout << "Test skipped because GL_CHROMIUM_bind_uniform_location is not available."
-                  << std::endl;
-        return;
-    }
-
-    const std::string vsSource =
-        "#version 310 es\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vec4(0);\n"
-        "}\n";
-
-    const std::string fsSource =
-        "#version 310 es\n"
-        "uniform layout(location=2) highp sampler2D tex;\n"
-        "out highp vec4 my_FragColor;\n"
-        "void main()\n"
-        "{\n"
-        "    my_FragColor = texture(tex, vec2(1));\n"
-        "}\n";
-
-    const GLuint shaderTexLocation = 2;
-    const GLuint texLocation       = 3;
-
-    GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
-    EXPECT_NE(0u, vs);
-    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fsSource);
-    EXPECT_NE(0u, fs);
-    linkProgramWithUniformLocation(vs, fs, "tex", texLocation);
-
-    GLint linked = GL_FALSE;
-    glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
-    ASSERT_GL_TRUE(linked);
-
-    EXPECT_EQ(static_cast<GLint>(shaderTexLocation), glGetUniformLocation(mProgram, "tex"));
-    glUseProgram(mProgram);
-    glUniform1i(shaderTexLocation, 1);
-    EXPECT_GL_NO_ERROR();
-    glUniform1i(texLocation, 2);
-    EXPECT_GL_NO_ERROR();
-}
-
-// Test for when the shader specifies an explicit uniform location with a layout qualifier and the
-// bindUniformLocation API sets a conflicting location for a different variable. Linking should
-// fail.
-TEST_P(BindUniformLocationES31Test, LocationLayoutQualifierConflictsWithAPIBinding)
-{
-    if (!extensionEnabled("GL_CHROMIUM_bind_uniform_location"))
-    {
-        std::cout << "Test skipped because GL_CHROMIUM_bind_uniform_location is not available."
-                  << std::endl;
-        return;
-    }
-
-    const std::string vsSource =
-        "#version 310 es\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vec4(0);\n"
-        "}\n";
-
-    const std::string fsSource =
-        "#version 310 es\n"
-        "uniform layout(location=2) highp sampler2D tex;\n"
-        "uniform highp sampler2D tex2;\n"
-        "out highp vec4 my_FragColor;\n"
-        "void main()\n"
-        "{\n"
-        "    my_FragColor = texture(tex2, vec2(1));\n"
-        "}\n";
-
-    const GLuint tex2Location = 2;
-
-    GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
-    EXPECT_NE(0u, vs);
-    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fsSource);
-    EXPECT_NE(0u, fs);
-    linkProgramWithUniformLocation(vs, fs, "tex2", tex2Location);
-
-    GLint linked = GL_FALSE;
-    glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
-    ASSERT_GL_FALSE(linked);
-}
-
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these
 // tests should be run against.
 ANGLE_INSTANTIATE_TEST(BindUniformLocationTest,
@@ -660,7 +480,5 @@ ANGLE_INSTANTIATE_TEST(BindUniformLocationTest,
                        ES2_D3D11_FL9_3(),
                        ES2_OPENGL(),
                        ES2_OPENGLES());
-
-ANGLE_INSTANTIATE_TEST(BindUniformLocationES31Test, ES31_D3D11(), ES31_OPENGL(), ES31_OPENGLES())
 
 }  // namespace

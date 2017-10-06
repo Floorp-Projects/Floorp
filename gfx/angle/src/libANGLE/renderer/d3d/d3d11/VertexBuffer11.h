@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include "libANGLE/renderer/d3d/VertexBuffer.h"
-#include "libANGLE/renderer/d3d/d3d11/ResourceManager11.h"
 
 namespace rx
 {
@@ -25,10 +24,7 @@ class VertexBuffer11 : public VertexBuffer
 
     gl::Error initialize(unsigned int size, bool dynamicUsage) override;
 
-    // Warning: you should ensure binding really matches attrib.bindingIndex before using this
-    // function.
     gl::Error storeVertexAttributes(const gl::VertexAttribute &attrib,
-                                    const gl::VertexBinding &binding,
                                     GLenum currentValueType,
                                     GLint start,
                                     GLsizei count,
@@ -42,7 +38,7 @@ class VertexBuffer11 : public VertexBuffer
 
     void hintUnmapResource() override;
 
-    const d3d11::Buffer &getBuffer() const;
+    ID3D11Buffer *getBuffer() const;
 
   private:
     ~VertexBuffer11() override;
@@ -50,7 +46,7 @@ class VertexBuffer11 : public VertexBuffer
 
     Renderer11 *const mRenderer;
 
-    d3d11::Buffer mBuffer;
+    ID3D11Buffer *mBuffer;
     unsigned int mBufferSize;
     bool mDynamicUsage;
 

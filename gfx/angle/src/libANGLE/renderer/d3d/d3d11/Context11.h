@@ -47,17 +47,14 @@ class Context11 : public ContextImpl
     // Query and Fence creation
     QueryImpl *createQuery(GLenum type) override;
     FenceNVImpl *createFenceNV() override;
-    SyncImpl *createSync() override;
+    FenceSyncImpl *createFenceSync() override;
 
     // Transform Feedback creation
     TransformFeedbackImpl *createTransformFeedback(
         const gl::TransformFeedbackState &state) override;
 
     // Sampler object creation
-    SamplerImpl *createSampler(const gl::SamplerState &state) override;
-
-    // Program Pipeline object creation
-    ProgramPipelineImpl *createProgramPipeline(const gl::ProgramPipelineState &data) override;
+    SamplerImpl *createSampler() override;
 
     // Path object creation.
     std::vector<PathImpl *> createPaths(GLsizei) override;
@@ -67,41 +64,30 @@ class Context11 : public ContextImpl
     gl::Error finish() override;
 
     // Drawing methods.
-    gl::Error drawArrays(const gl::Context *context,
-                         GLenum mode,
-                         GLint first,
-                         GLsizei count) override;
-    gl::Error drawArraysInstanced(const gl::Context *context,
-                                  GLenum mode,
+    gl::Error drawArrays(GLenum mode, GLint first, GLsizei count) override;
+    gl::Error drawArraysInstanced(GLenum mode,
                                   GLint first,
                                   GLsizei count,
                                   GLsizei instanceCount) override;
 
-    gl::Error drawElements(const gl::Context *context,
-                           GLenum mode,
+    gl::Error drawElements(GLenum mode,
                            GLsizei count,
                            GLenum type,
-                           const void *indices) override;
-    gl::Error drawElementsInstanced(const gl::Context *context,
-                                    GLenum mode,
+                           const GLvoid *indices,
+                           const gl::IndexRange &indexRange) override;
+    gl::Error drawElementsInstanced(GLenum mode,
                                     GLsizei count,
                                     GLenum type,
-                                    const void *indices,
-                                    GLsizei instances) override;
-    gl::Error drawRangeElements(const gl::Context *context,
-                                GLenum mode,
+                                    const GLvoid *indices,
+                                    GLsizei instances,
+                                    const gl::IndexRange &indexRange) override;
+    gl::Error drawRangeElements(GLenum mode,
                                 GLuint start,
                                 GLuint end,
                                 GLsizei count,
                                 GLenum type,
-                                const void *indices) override;
-    gl::Error drawArraysIndirect(const gl::Context *context,
-                                 GLenum mode,
-                                 const void *indirect) override;
-    gl::Error drawElementsIndirect(const gl::Context *context,
-                                   GLenum mode,
-                                   GLenum type,
-                                   const void *indirect) override;
+                                const GLvoid *indices,
+                                const gl::IndexRange &indexRange) override;
 
     // Device loss
     GLenum getResetStatus() override;
@@ -116,14 +102,14 @@ class Context11 : public ContextImpl
     void popGroupMarker() override;
 
     // State sync with dirty bits.
-    void syncState(const gl::Context *context, const gl::State::DirtyBits &dirtyBits) override;
+    void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) override;
 
     // Disjoint timer queries
     GLint getGPUDisjoint() override;
     GLint64 getTimestamp() override;
 
     // Context switching
-    void onMakeCurrent(const gl::Context *context) override;
+    void onMakeCurrent(const gl::ContextState &data) override;
 
     // Caps queries
     const gl::Caps &getNativeCaps() const override;
@@ -133,16 +119,7 @@ class Context11 : public ContextImpl
 
     Renderer11 *getRenderer() const { return mRenderer; }
 
-    gl::Error dispatchCompute(const gl::Context *context,
-                              GLuint numGroupsX,
-                              GLuint numGroupsY,
-                              GLuint numGroupsZ) override;
-
-    gl::Error triggerDrawCallProgramRecompilation(const gl::Context *context, GLenum drawMode);
-
   private:
-    gl::Error prepareForDrawCall(const gl::Context *context, GLenum drawMode);
-
     Renderer11 *mRenderer;
 };
 

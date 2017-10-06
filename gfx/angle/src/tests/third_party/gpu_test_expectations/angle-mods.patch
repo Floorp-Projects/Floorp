@@ -1,7 +1,7 @@
-diff -u -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/angle_config.h
+diff -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/angle_config.h
 --- gpu_test_expectations_reverted/angle_config.h	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/angle_config.h	2017-09-07 13:19:49.903835490 -0400
-@@ -0,0 +1,73 @@
++++ gpu_test_expectations/angle_config.h	2016-08-23 13:50:18.282742505 -0400
+@@ -0,0 +1,66 @@
 +//
 +// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
@@ -11,8 +11,8 @@ diff -u -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectation
 +//   Helpers for importing the gpu test expectations package from Chrome.
 +//
 +
-+#ifndef ANGLE_GPU_TEST_EXPECTATIONS_ANGLE_CONFIG_H_
-+#define ANGLE_GPU_TEST_EXPECTATIONS_ANGLE_CONFIG_H_
++#ifndef GPU_TEST_EXPECTATIONS_ANGLE_CONFIG_H_
++#define GPU_TEST_EXPECTATIONS_ANGLE_CONFIG_H_
 +
 +#include <stdint.h>
 +
@@ -24,12 +24,16 @@ diff -u -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectation
 +#define DCHECK_EQ(A,B) ASSERT((A) == (B))
 +#define DCHECK_NE(A,B) ASSERT((A) != (B))
 +#define DCHECK(X) ASSERT(X)
-+#define DLOG(X) std::cerr
 +#define LOG(X) std::cerr
 +
 +#define GPU_EXPORT
 +
-+// Shim Chromium's types by importing symbols in the correct namespaces
++typedef int32_t int32;
++typedef uint32_t uint32;
++typedef int64_t int64;
++typedef uint64_t uint64;
++
++// Shim Chromium's base by importing functions in the base namespace.
 +namespace base
 +{
 +    using angle::kWhitespaceASCII;
@@ -42,22 +46,11 @@ diff -u -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectation
 +    using angle::HexStringToUInt;
 +    using angle::ReadFileToString;
 +
-+    using TimeDelta = int;
-+}  // namespace base
-+
-+namespace gfx
-+{
-+    class Size
-+    {
-+      public:
-+        int width() const { return 0; }
-+        int height() const { return 0; }
-+    };
-+}  // namespace gfx
-+
-+struct DxDiagNode
-+{
-+};
++    // StringPrintf is called differently in ANGLE but using cannot change
++    // the name of the imported function. Use a define to change the name.
++    using ::FormatString;
++    #define StringPrintf FormatString
++}
 +
 +// TODO(jmadill): other platforms
 +// clang-format off
@@ -75,45 +68,126 @@ diff -u -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectation
 +// clang-format on
 +
 +#endif
-diff -u -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_info.cc
---- gpu_test_expectations_reverted/gpu_info.cc	2017-09-06 11:43:12.749280785 -0400
-+++ gpu_test_expectations/gpu_info.cc	2017-09-07 13:17:55.282894551 -0400
-@@ -4,7 +4,7 @@
- 
- #include <stdint.h>
+diff -rupN gpu_test_expectations_reverted/gpu_info.cc gpu_test_expectations/gpu_info.cc
+--- gpu_test_expectations_reverted/gpu_info.cc	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_info.cc	2015-11-30 21:54:30.239267635 -0500
+@@ -2,7 +2,7 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
  
 -#include "gpu/config/gpu_info.h"
 +#include "gpu_info.h"
  
  namespace {
  
-@@ -100,7 +100,7 @@ const GPUInfo::GPUDevice& GPUInfo::activ
-     if (secondary_gpu.active)
-       return secondary_gpu;
-   }
--  DLOG(ERROR) << "No active GPU found, returning primary GPU.";
-+  DLOG(ERROR) << "No active GPU found, returning primary GPU.\n";
-   return gpu;
+@@ -17,31 +17,6 @@ void EnumerateGPUDevice(const gpu::GPUIn
+   enumerator->EndGPUDevice();
  }
  
-diff -u -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_info.h
---- gpu_test_expectations_reverted/gpu_info.h	2017-09-06 11:43:16.229309773 -0400
-+++ gpu_test_expectations/gpu_info.h	2017-09-07 13:18:25.187140020 -0400
-@@ -2,8 +2,8 @@
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
+-void EnumerateVideoDecodeAcceleratorSupportedProfile(
+-    const gpu::VideoDecodeAcceleratorSupportedProfile& profile,
+-    gpu::GPUInfo::Enumerator* enumerator) {
+-  enumerator->BeginVideoDecodeAcceleratorSupportedProfile();
+-  enumerator->AddInt("profile", profile.profile);
+-  enumerator->AddInt("maxResolutionWidth", profile.max_resolution.width());
+-  enumerator->AddInt("maxResolutionHeight", profile.max_resolution.height());
+-  enumerator->AddInt("minResolutionWidth", profile.min_resolution.width());
+-  enumerator->AddInt("minResolutionHeight", profile.min_resolution.height());
+-  enumerator->EndVideoDecodeAcceleratorSupportedProfile();
+-}
+-
+-void EnumerateVideoEncodeAcceleratorSupportedProfile(
+-    const gpu::VideoEncodeAcceleratorSupportedProfile& profile,
+-    gpu::GPUInfo::Enumerator* enumerator) {
+-  enumerator->BeginVideoEncodeAcceleratorSupportedProfile();
+-  enumerator->AddInt("profile", profile.profile);
+-  enumerator->AddInt("maxResolutionWidth", profile.max_resolution.width());
+-  enumerator->AddInt("maxResolutionHeight", profile.max_resolution.height());
+-  enumerator->AddInt("maxFramerateNumerator", profile.max_framerate_numerator);
+-  enumerator->AddInt("maxFramerateDenominator",
+-                     profile.max_framerate_denominator);
+-  enumerator->EndVideoEncodeAcceleratorSupportedProfile();
+-}
+-
+ }  // namespace
  
--#ifndef GPU_CONFIG_GPU_INFO_H_
--#define GPU_CONFIG_GPU_INFO_H_
-+#ifndef ANGLE_GPU_CONFIG_GPU_INFO_H_
-+#define ANGLE_GPU_CONFIG_GPU_INFO_H_
+ namespace gpu {
+@@ -68,9 +43,6 @@ GPUInfo::GPUInfo()
+       in_process_gpu(true),
+       basic_info_state(kCollectInfoNone),
+       context_info_state(kCollectInfoNone),
+-#if defined(OS_WIN)
+-      dx_diagnostics_info_state(kCollectInfoNone),
+-#endif
+       jpeg_decode_accelerator_supported(false) {
+ }
  
- // Provides access to the GPU information for the system
- // on which chrome is currently running.
-@@ -13,12 +13,7 @@
+@@ -78,11 +50,9 @@ GPUInfo::~GPUInfo() { }
+ 
+ void GPUInfo::EnumerateFields(Enumerator* enumerator) const {
+   struct GPUInfoKnownFields {
+-    base::TimeDelta initialization_time;
+     bool optimus;
+     bool amd_switchable;
+     bool lenovo_dcute;
+-    Version display_link_version;
+     GPUDevice gpu;
+     std::vector<GPUDevice> secondary_gpus;
+     uint64 adapter_luid;
+@@ -110,14 +80,6 @@ void GPUInfo::EnumerateFields(Enumerator
+     bool in_process_gpu;
+     CollectInfoResult basic_info_state;
+     CollectInfoResult context_info_state;
+-#if defined(OS_WIN)
+-    CollectInfoResult dx_diagnostics_info_state;
+-    DxDiagNode dx_diagnostics;
+-#endif
+-    VideoDecodeAcceleratorSupportedProfiles
+-        video_decode_accelerator_supported_profiles;
+-    VideoEncodeAcceleratorSupportedProfiles
+-        video_encode_accelerator_supported_profiles;
+     bool jpeg_decode_accelerator_supported;
+   };
+ 
+@@ -136,15 +98,9 @@ void GPUInfo::EnumerateFields(Enumerator
+     EnumerateGPUDevice(secondary_gpu, enumerator);
+ 
+   enumerator->BeginAuxAttributes();
+-  enumerator->AddTimeDeltaInSecondsF("initializationTime",
+-                                     initialization_time);
+   enumerator->AddBool("optimus", optimus);
+   enumerator->AddBool("amdSwitchable", amd_switchable);
+   enumerator->AddBool("lenovoDcute", lenovo_dcute);
+-  if (display_link_version.IsValid()) {
+-    enumerator->AddString("displayLinkVersion",
+-                          display_link_version.GetString());
+-  }
+   enumerator->AddInt64("adapterLuid", adapter_luid);
+   enumerator->AddString("driverVendor", driver_vendor);
+   enumerator->AddString("driverVersion", driver_version);
+@@ -171,14 +127,7 @@ void GPUInfo::EnumerateFields(Enumerator
+   enumerator->AddBool("inProcessGpu", in_process_gpu);
+   enumerator->AddInt("basicInfoState", basic_info_state);
+   enumerator->AddInt("contextInfoState", context_info_state);
+-#if defined(OS_WIN)
+-  enumerator->AddInt("DxDiagnosticsInfoState", dx_diagnostics_info_state);
+-#endif
+   // TODO(kbr): add dx_diagnostics on Windows.
+-  for (const auto& profile : video_decode_accelerator_supported_profiles)
+-    EnumerateVideoDecodeAcceleratorSupportedProfile(profile, enumerator);
+-  for (const auto& profile : video_encode_accelerator_supported_profiles)
+-    EnumerateVideoEncodeAcceleratorSupportedProfile(profile, enumerator);
+   enumerator->AddBool("jpegDecodeAcceleratorSupported",
+       jpeg_decode_accelerator_supported);
+   enumerator->EndAuxAttributes();
+diff -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_info.h
+--- gpu_test_expectations_reverted/gpu_info.h	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_info.h	2015-11-30 21:54:30.239267635 -0500
+@@ -11,13 +11,7 @@
  #include <string>
  #include <vector>
  
+-#include "base/basictypes.h"
 -#include "base/time/time.h"
 -#include "base/version.h"
 -#include "build/build_config.h"
@@ -122,26 +196,92 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gp
 -#include "ui/gfx/geometry/size.h"
 +#include "angle_config.h"
  
- #if defined(USE_X11)
- typedef unsigned long VisualID;
-@@ -301,4 +296,4 @@ struct GPU_EXPORT GPUInfo {
+ namespace gpu {
  
- }  // namespace gpu
+@@ -54,25 +48,6 @@ enum VideoCodecProfile {
+   VIDEO_CODEC_PROFILE_MAX = VP9PROFILE_ANY,
+ };
  
--#endif  // GPU_CONFIG_GPU_INFO_H_
-+#endif  // ANGLE_GPU_CONFIG_GPU_INFO_H_
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectations/gpu_test_config.cc
---- gpu_test_expectations_reverted/gpu_test_config.cc	2017-09-06 11:43:27.173400936 -0400
-+++ gpu_test_expectations/gpu_test_config.cc	2017-09-07 13:17:55.282894551 -0400
-@@ -2,21 +2,53 @@
+-// Specification of a decoding profile supported by a hardware decoder.
+-struct GPU_EXPORT VideoDecodeAcceleratorSupportedProfile {
+-  VideoCodecProfile profile;
+-  gfx::Size max_resolution;
+-  gfx::Size min_resolution;
+-};
+-using VideoDecodeAcceleratorSupportedProfiles =
+-    std::vector<VideoDecodeAcceleratorSupportedProfile>;
+-
+-// Specification of an encoding profile supported by a hardware encoder.
+-struct GPU_EXPORT VideoEncodeAcceleratorSupportedProfile {
+-  VideoCodecProfile profile;
+-  gfx::Size max_resolution;
+-  uint32 max_framerate_numerator;
+-  uint32 max_framerate_denominator;
+-};
+-using VideoEncodeAcceleratorSupportedProfiles =
+-    std::vector<VideoEncodeAcceleratorSupportedProfile>;
+-
+ struct GPU_EXPORT GPUInfo {
+   struct GPU_EXPORT GPUDevice {
+     GPUDevice();
+@@ -104,10 +79,6 @@ struct GPU_EXPORT GPUInfo {
+     return !can_lose_context && !software_rendering;
+   }
+ 
+-  // The amount of time taken to get from the process starting to the message
+-  // loop being pumped.
+-  base::TimeDelta initialization_time;
+-
+   // Computer has NVIDIA Optimus
+   bool optimus;
+ 
+@@ -117,10 +88,6 @@ struct GPU_EXPORT GPUInfo {
+   // Lenovo dCute is installed. http://crbug.com/181665.
+   bool lenovo_dcute;
+ 
+-  // Version of DisplayLink driver installed. Zero if not installed.
+-  // http://crbug.com/177611.
+-  Version display_link_version;
+-
+   // Primary GPU, for exmaple, the discrete GPU in a dual GPU machine.
+   GPUDevice gpu;
+ 
+@@ -213,17 +180,7 @@ struct GPU_EXPORT GPUInfo {
+   // if the collection fails or not.
+   CollectInfoResult basic_info_state;
+   CollectInfoResult context_info_state;
+-#if defined(OS_WIN)
+-  CollectInfoResult dx_diagnostics_info_state;
+ 
+-  // The information returned by the DirectX Diagnostics Tool.
+-  DxDiagNode dx_diagnostics;
+-#endif
+-
+-  VideoDecodeAcceleratorSupportedProfiles
+-      video_decode_accelerator_supported_profiles;
+-  VideoEncodeAcceleratorSupportedProfiles
+-      video_encode_accelerator_supported_profiles;
+   bool jpeg_decode_accelerator_supported;
+ 
+   // Note: when adding new members, please remember to update EnumerateFields
+@@ -243,8 +200,6 @@ struct GPU_EXPORT GPUInfo {
+     virtual void AddInt(const char* name, int value) = 0;
+     virtual void AddString(const char* name, const std::string& value) = 0;
+     virtual void AddBool(const char* name, bool value) = 0;
+-    virtual void AddTimeDeltaInSecondsF(const char* name,
+-                                        const base::TimeDelta& value) = 0;
+ 
+     // Markers indicating that a GPUDevice is being described.
+     virtual void BeginGPUDevice() = 0;
+diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectations/gpu_test_config.cc
+--- gpu_test_expectations_reverted/gpu_test_config.cc	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_test_config.cc	2016-09-09 16:40:05.597864465 -0400
+@@ -2,20 +2,205 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
 -#include "gpu/config/gpu_test_config.h"
 +#include "gpu_test_config.h"
- 
- #include <stddef.h>
- #include <stdint.h>
  
 -#include "base/logging.h"
 -#include "base/sys_info.h"
@@ -150,20 +290,26 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expecta
 -#include "gpu/config/gpu_test_expectations_parser.h"
 +#include "gpu_info.h"
 +#include "gpu_test_expectations_parser.h"
++
++#if defined(OS_LINUX)
++extern "C" {
++#   include <pci/pci.h>
++}
++#endif
  
--#if defined(OS_WIN)
+ #if defined(OS_MACOSX)
+-#include "base/mac/mac_util.h"
+-#elif defined(OS_WIN)
 -#include "base/win/windows_version.h"
-+#if defined(OS_MACOSX)
 +#include "gpu_test_config_mac.h"
 +#endif
 +
-+#if !defined(OS_ANDROID)
-+#include "gpu_info_util/SystemInfo.h"
- #endif
- 
++using namespace gpu;
++
 +#if defined(OS_WIN)
 +
 +namespace base {
++
 +namespace {
 +
 +// Disable the deprecated function warning for GetVersionEx
@@ -173,12 +319,12 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expecta
 +{
 +  public:
 +    static void OperatingSystemVersionNumbers(
-+        int32_t *major_version, int32_t *minor_version, int32_t *bugfix_version);
++        int32 *major_version, int32 *minor_version, int32 *bugfix_version);
 +};
 +
 +// static
 +void SysInfo::OperatingSystemVersionNumbers(
-+    int32_t *major_version, int32_t *minor_version, int32_t *bugfix_version)
++    int32 *major_version, int32 *minor_version, int32 *bugfix_version)
 +{
 +  OSVERSIONINFOEX version_info = { sizeof version_info };
 +  ::GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&version_info));
@@ -188,92 +334,278 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expecta
 +}
 +
 +} // anonymous namespace
++
 +} // namespace base
 +
++void DeviceIDToVendorAndDevice(const std::string& id,
++                               uint32* vendor_id,
++                               uint32* device_id) {
++  *vendor_id = 0;
++  *device_id = 0;
++  if (id.length() < 21)
++    return;
++  std::string vendor_id_string = id.substr(8, 4);
++  std::string device_id_string = id.substr(17, 4);
++  base::HexStringToUInt(vendor_id_string, vendor_id);
++  base::HexStringToUInt(device_id_string, device_id);
++}
++
++CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
++  DCHECK(vendor_id && device_id);
++  *vendor_id = 0;
++  *device_id = 0;
++
++  // Taken from http://developer.nvidia.com/object/device_ids.html
++  DISPLAY_DEVICEA dd;
++  dd.cb = sizeof(DISPLAY_DEVICEA);
++  std::string id;
++  for (int i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); ++i) {
++    if (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
++      id = dd.DeviceID;
++      break;
++    }
++  }
++
++  if (id.length() > 20) {
++    DeviceIDToVendorAndDevice(id, vendor_id, device_id);
++    if (*vendor_id != 0 && *device_id != 0)
++      return kCollectInfoSuccess;
++  }
++  return kCollectInfoNonFatalFailure;
++}
++
 +#endif // defined(OS_WIN)
++
++#if defined(OS_LINUX)
++
++const uint32 kVendorIDIntel = 0x8086;
++const uint32 kVendorIDNVidia = 0x10de;
++const uint32 kVendorIDAMD = 0x1002;
++
++CollectInfoResult CollectPCIVideoCardInfo(GPUInfo* gpu_info) {
++  DCHECK(gpu_info);
++
++  struct pci_access* access = pci_alloc();
++  DCHECK(access != NULL);
++  pci_init(access);
++  pci_scan_bus(access);
++
++  bool primary_gpu_identified = false;
++  for (pci_dev* device = access->devices;
++       device != NULL; device = device->next) {
++    pci_fill_info(device, 33);
++    bool is_gpu = false;
++    switch (device->device_class) {
++      case PCI_CLASS_DISPLAY_VGA:
++      case PCI_CLASS_DISPLAY_XGA:
++      case PCI_CLASS_DISPLAY_3D:
++        is_gpu = true;
++        break;
++      case PCI_CLASS_DISPLAY_OTHER:
++      default:
++        break;
++    }
++    if (!is_gpu)
++      continue;
++    if (device->vendor_id == 0 || device->device_id == 0)
++      continue;
++
++    GPUInfo::GPUDevice gpu;
++    gpu.vendor_id = device->vendor_id;
++    gpu.device_id = device->device_id;
++
++    if (!primary_gpu_identified) {
++      primary_gpu_identified = true;
++      gpu_info->gpu = gpu;
++    } else {
++      // TODO(zmo): if there are multiple GPUs, we assume the non Intel
++      // one is primary. Revisit this logic because we actually don't know
++      // which GPU we are using at this point.
++      if (gpu_info->gpu.vendor_id == kVendorIDIntel &&
++          gpu.vendor_id != kVendorIDIntel) {
++        gpu_info->secondary_gpus.push_back(gpu_info->gpu);
++        gpu_info->gpu = gpu;
++      } else {
++        gpu_info->secondary_gpus.push_back(gpu);
++      }
++    }
++  }
++
++  // Detect Optimus or AMD Switchable GPU.
++  if (gpu_info->secondary_gpus.size() == 1 &&
++      gpu_info->secondary_gpus[0].vendor_id == kVendorIDIntel) {
++    if (gpu_info->gpu.vendor_id == kVendorIDNVidia)
++      gpu_info->optimus = true;
++    if (gpu_info->gpu.vendor_id == kVendorIDAMD)
++      gpu_info->amd_switchable = true;
++  }
++
++  pci_cleanup(access);
++  if (!primary_gpu_identified)
++    return kCollectInfoNonFatalFailure;
++  return kCollectInfoSuccess;
++}
++
++CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
++  DCHECK(vendor_id && device_id);
++  *vendor_id = 0;
++  *device_id = 0;
++
++  GPUInfo gpu_info;
++  CollectInfoResult result = CollectPCIVideoCardInfo(&gpu_info);
++  if (result == kCollectInfoSuccess) {
++    *vendor_id = gpu_info.gpu.vendor_id;
++    *device_id = gpu_info.gpu.device_id;
++  }
++  return result;
++}
++
++#endif // defined(OS_LINUX)
++
++#if defined(OS_MACOSX)
++
++CollectInfoResult CollectGpuID(uint32* vendor_id, uint32* device_id) {
++  DCHECK(vendor_id && device_id);
++
++  GPUInfo::GPUDevice gpu = GetActiveGPU();
++  *vendor_id = gpu.vendor_id;
++  *device_id = gpu.device_id;
++
++  if (*vendor_id != 0 && *device_id != 0)
++    return kCollectInfoSuccess;
++  return kCollectInfoNonFatalFailure;
++}
++
+ #endif
+ 
++#if defined(OS_ANDROID)
++CollectInfoResult CollectGpuID(uint32 *vendor_id, uint32 *device_id)
++{
++    DCHECK(vendor_id && device_id);
++    *vendor_id = 0;
++    *device_id = 0;
++    return kCollectInfoNonFatalFailure;
++}
++#endif  // defined(OS_ANDROID)
 +
  namespace gpu {
  
  namespace {
-@@ -74,6 +106,26 @@ GPUTestConfig::OS GetCurrentOS() {
-   return GPUTestConfig::kOsUnknown;
+@@ -245,33 +430,41 @@ bool GPUTestBotConfig::Matches(const std
+   return Matches(config);
  }
  
-+#if !defined(OS_ANDROID)
-+CollectInfoResult CollectBasicGraphicsInfo(GPUInfo* gpu_info) {
-+  angle::SystemInfo info;
-+  if (!angle::GetSystemInfo(&info)) {
-+    return kCollectInfoFatalFailure;
-+  }
-+  const angle::GPUDeviceInfo& gpu = info.gpus[info.primaryGPUIndex];
-+  gpu_info->gpu.vendor_id = gpu.vendorId;
-+  gpu_info->gpu.device_id = gpu.deviceId;
-+  gpu_info->gpu.active = true;
-+  return kCollectInfoSuccess;
-+}
-+#else
-+CollectInfoResult CollectBasicGraphicsInfo(GPUInfo* gpu_info) {
-+  gpu_info->gpu.vendor_id = 0;
-+  gpu_info->gpu.device_id = 0;
-+  gpu_info->gpu.active = true;
-+  return kCollectInfoNonFatalFailure;
-+}
-+#endif  // defined(OS_ANDROID)
- }  // namespace anonymous
- 
- GPUTestConfig::GPUTestConfig()
-@@ -257,7 +309,7 @@ bool GPUTestBotConfig::LoadCurrentConfig
-     GPUInfo my_gpu_info;
-     CollectInfoResult result = CollectBasicGraphicsInfo(&my_gpu_info);
-     if (result != kCollectInfoSuccess) {
+-bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo* gpu_info) {
+-  bool rt;
+-  if (gpu_info == NULL) {
+-    GPUInfo my_gpu_info;
+-    CollectInfoResult result = CollectGpuID(
+-        &my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
+-    if (result != kCollectInfoSuccess) {
 -      LOG(ERROR) << "Fail to identify GPU";
-+      LOG(ERROR) << "Fail to identify GPU\n";
-       DisableGPUInfoValidation();
-       rt = true;
-     } else {
-@@ -268,7 +320,7 @@ bool GPUTestBotConfig::LoadCurrentConfig
-   }
-   set_os(GetCurrentOS());
-   if (os() == kOsUnknown) {
+-      DisableGPUInfoValidation();
+-      rt = true;
+-    } else {
+-      rt = SetGPUInfo(my_gpu_info);
++bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo *gpu_info)
++{
++    bool rt;
++    if (gpu_info == NULL)
++    {
++        GPUInfo my_gpu_info;
++        CollectInfoResult result =
++            CollectGpuID(&my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
++        if (result != kCollectInfoSuccess)
++        {
++            LOG(ERROR) << "Fail to identify GPU\n";
++            DisableGPUInfoValidation();
++            rt = true;
++        }
++        else
++        {
++            rt = SetGPUInfo(my_gpu_info);
++        }
++    }
++    else
++    {
++        rt = SetGPUInfo(*gpu_info);
++    }
++    set_os(GetCurrentOS());
++    if (os() == kOsUnknown)
++    {
++        LOG(ERROR) << "Unknown OS\n";
++        rt = false;
+     }
+-  } else {
+-    rt = SetGPUInfo(*gpu_info);
+-  }
+-  set_os(GetCurrentOS());
+-  if (os() == kOsUnknown) {
 -    LOG(ERROR) << "Unknown OS";
-+    LOG(ERROR) << "Unknown OS\n";
-     rt = false;
-   }
+-    rt = false;
+-  }
  #if defined(NDEBUG)
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_config.h gpu_test_expectations/gpu_test_config.h
---- gpu_test_expectations_reverted/gpu_test_config.h	2017-09-06 11:43:24.205376213 -0400
-+++ gpu_test_expectations/gpu_test_config.h	2017-09-07 13:18:46.207312571 -0400
-@@ -2,16 +2,15 @@
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
+-  set_build_type(kBuildTypeRelease);
++    set_build_type(kBuildTypeRelease);
+ #else
+-  set_build_type(kBuildTypeDebug);
++    set_build_type(kBuildTypeDebug);
+ #endif
+-  return rt;
++    return rt;
+ }
  
--#ifndef GPU_CONFIG_GPU_TEST_CONFIG_H_
--#define GPU_CONFIG_GPU_TEST_CONFIG_H_
-+#ifndef ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
-+#define ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
+ // static
+@@ -295,21 +488,5 @@ bool GPUTestBotConfig::CurrentConfigMatc
+   return false;
+ }
  
- #include <stdint.h>
+-// static
+-bool GPUTestBotConfig::GpuBlacklistedOnBot() {
+-#if defined(OS_MACOSX)
+-  // Blacklist rule #81 disables all Gpu acceleration on Mac < 10.8 bots.
+-  if (CurrentConfigMatches("MAC VMWARE") && base::mac::IsOSLionOrEarlier()) {
+-    return true;
+-  }
+-#elif defined(OS_WIN)
+-  // Blacklist rule #79 disables all Gpu acceleration before Windows 7.
+-  if (base::win::GetVersion() <= base::win::VERSION_VISTA) {
+-    return true;
+-  }
+-#endif
+-  return false;
+-}
+-
+ }  // namespace gpu
  
+diff -rupN gpu_test_expectations_reverted/gpu_test_config.h gpu_test_expectations/gpu_test_config.h
+--- gpu_test_expectations_reverted/gpu_test_config.h	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_test_config.h	2015-11-30 21:54:30.239267635 -0500
+@@ -8,9 +8,7 @@
  #include <string>
  #include <vector>
  
+-#include "base/basictypes.h"
 -#include "base/compiler_specific.h"
 -#include "gpu/gpu_export.h"
 +#include "angle_config.h"
  
  namespace gpu {
  
-@@ -144,5 +143,5 @@ class GPU_EXPORT GPUTestBotConfig : publ
+@@ -134,9 +132,6 @@ class GPU_EXPORT GPUTestBotConfig : publ
+   // Check if this bot's config matches |config_data| or any of the |configs|.
+   static bool CurrentConfigMatches(const std::string& config_data);
+   static bool CurrentConfigMatches(const std::vector<std::string>& configs);
+-
+-  // Check if the bot has blacklisted all GPU features.
+-  static bool GpuBlacklistedOnBot();
+ };
  
  }  // namespace gpu
- 
--#endif  // GPU_CONFIG_GPU_TEST_CONFIG_H_
-+#endif  // ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
- 
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expectations/gpu_test_config_mac.h
+diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expectations/gpu_test_config_mac.h
 --- gpu_test_expectations_reverted/gpu_test_config_mac.h	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/gpu_test_config_mac.h	2017-09-07 13:19:06.823481813 -0400
-@@ -0,0 +1,27 @@
++++ gpu_test_expectations/gpu_test_config_mac.h	2015-11-30 21:54:30.239267635 -0500
+@@ -0,0 +1,28 @@
 +//
 +// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
@@ -283,8 +615,8 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expe
 +//   Helper functions for gpu_test_config that have to be compiled in ObjectiveC++
 +//
 +
-+#ifndef ANGLE_GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
-+#define ANGLE_GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
++#ifndef GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
++#define GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
 +
 +#include "gpu_info.h"
 +
@@ -293,18 +625,19 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.h gpu_test_expe
 +class SysInfo
 +{
 +  public:
-+    static void OperatingSystemVersionNumbers(int32_t *major_version,
-+                                              int32_t *minor_version,
-+                                              int32_t *bugfix_version);
++    static void OperatingSystemVersionNumbers(
++        int32 *major_version, int32 *minor_version, int32 *bugfix_version);
 +};
 +
 +} // namespace base
 +
-+#endif // ANGLE_GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_expectations/gpu_test_config_mac.mm
++gpu::GPUInfo::GPUDevice GetActiveGPU();
++
++#endif // GPU_TEST_EXPECTATIONS_GPU_TEST_CONFIG_MAC_H_
+diff -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_expectations/gpu_test_config_mac.mm
 --- gpu_test_expectations_reverted/gpu_test_config_mac.mm	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/gpu_test_config_mac.mm	2017-09-07 13:17:55.282894551 -0400
-@@ -0,0 +1,38 @@
++++ gpu_test_expectations/gpu_test_config_mac.mm	2015-11-30 21:54:30.239267635 -0500
+@@ -0,0 +1,67 @@
 +// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -318,17 +651,8 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_exp
 +
 +namespace base {
 +
-+// OSX 10.8 deprecates Gestalt but doesn't make the operatingSystemVersion property part of the
-+// public interface of NSProcessInfo until 10.10. Add a forward declaration.
-+#if !defined(MAC_OS_X_VERSION_10_10) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_10
-+@interface NSProcessInfo (YosemiteSDK)
-+@property(readonly) NSOperatingSystemVersion operatingSystemVersion;
-+@end
-+#endif
-+
-+void SysInfo::OperatingSystemVersionNumbers(int32_t *major_version,
-+                                            int32_t *minor_version,
-+                                            int32_t *bugfix_version)
++void SysInfo::OperatingSystemVersionNumbers(
++    int32 *major_version, int32 *minor_version, int32 *bugfix_version)
 +{
 +#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
 +  Gestalt(gestaltSystemVersionMajor, reinterpret_cast<SInt32*>(major_version));
@@ -343,18 +667,53 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_config_mac.mm gpu_test_exp
 +}
 +
 +} // namespace base
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_test_expectations/gpu_test_expectations_parser.cc
---- gpu_test_expectations_reverted/gpu_test_expectations_parser.cc	2017-09-06 11:43:34.317460444 -0400
-+++ gpu_test_expectations/gpu_test_expectations_parser.cc	2017-09-07 13:17:55.282894551 -0400
-@@ -2,17 +2,47 @@
++
++UInt32 GetEntryProperty(io_registry_entry_t entry, CFStringRef property_name) {
++  CFTypeRef type = IORegistryEntrySearchCFProperty(entry,
++                                                   kIOServicePlane,
++                                                   property_name,
++                                                   kCFAllocatorDefault,
++                                                   kIORegistryIterateRecursively | kIORegistryIterateParents);
++  CFDataRef data = reinterpret_cast<CFDataRef>(type);
++  if (!data) {
++    CFRelease(data);
++    return 0;
++  }
++
++  UInt32 value = 0;
++  const uint32_t* valuePointer = reinterpret_cast<const uint32_t*>(CFDataGetBytePtr(data));
++  if (valuePointer != NULL) {
++    value = *valuePointer;
++  }
++  CFRelease(data);
++  return value;
++}
++
++gpu::GPUInfo::GPUDevice GetActiveGPU() {
++  gpu::GPUInfo::GPUDevice gpu;
++
++  // Ignore the fact that CGDisplayIOServicePort is deprecated as Apple
++  // did not provide a good replacement for it as of 10.10.
++  // TODO(cwallez) revisit with later systems
++  #pragma clang diagnostic push
++  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    io_registry_entry_t dsp_port = CGDisplayIOServicePort(kCGDirectMainDisplay);
++  #pragma clang diagnostic pop
++
++  gpu.vendor_id = GetEntryProperty(dsp_port, CFSTR("vendor-id"));
++  gpu.device_id = GetEntryProperty(dsp_port, CFSTR("device-id"));
++  return gpu;
++}
++
+diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu_test_expectations/gpu_test_expectations_parser.cc
+--- gpu_test_expectations_reverted/gpu_test_expectations_parser.cc	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_test_expectations_parser.cc	2015-11-30 21:54:30.239267635 -0500
+@@ -2,14 +2,43 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  
 -#include "gpu/config/gpu_test_expectations_parser.h"
 +#include "gpu_test_expectations_parser.h"
- 
- #include <stddef.h>
- #include <stdint.h>
  
 -#include "base/files/file_util.h"
 -#include "base/logging.h"
@@ -362,7 +721,6 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu
 -#include "base/strings/string_split.h"
 -#include "base/strings/string_util.h"
 -#include "base/strings/stringprintf.h"
-+#include "angle_config.h"
 +#include "common/angleutils.h"
 +
 +namespace base {
@@ -401,7 +759,7 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu
  
  namespace gpu {
  
-@@ -151,9 +181,9 @@ const char* kErrorMessage[] = {
+@@ -146,9 +175,9 @@ const char* kErrorMessage[] = {
  };
  
  Token ParseToken(const std::string& word) {
@@ -412,8 +770,23 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu
 +  if (base::StartsWithASCII(word, "0x", false))
      return kConfigGPUDeviceID;
  
-   for (int32_t i = 0; i < kNumberOfExactMatchTokens; ++i) {
-@@ -209,8 +239,8 @@ bool GPUTestExpectationsParser::LoadTest
+   for (int32 i = 0; i < kNumberOfExactMatchTokens; ++i) {
+@@ -176,10 +205,10 @@ bool NamesMatching(const std::string& re
+ 
+ GPUTestExpectationsParser::GPUTestExpectationsParser() {
+   // Some sanity check.
+-  DCHECK_EQ(static_cast<unsigned int>(kNumberOfExactMatchTokens),
+-            sizeof(kTokenData) / sizeof(kTokenData[0]));
+-  DCHECK_EQ(static_cast<unsigned int>(kNumberOfErrors),
+-            sizeof(kErrorMessage) / sizeof(kErrorMessage[0]));
++  static_assert(static_cast<unsigned int>(kNumberOfExactMatchTokens) ==
++                sizeof(kTokenData) / sizeof(kTokenData[0]), "sanity check");
++  static_assert(static_cast<unsigned int>(kNumberOfErrors) ==
++                sizeof(kErrorMessage) / sizeof(kErrorMessage[0]), "sanity check");
+ }
+ 
+ GPUTestExpectationsParser::~GPUTestExpectationsParser() {
+@@ -204,8 +233,8 @@ bool GPUTestExpectationsParser::LoadTest
    return rt;
  }
  
@@ -424,50 +797,32 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.cc gpu
    entries_.clear();
    error_messages_.clear();
  
-@@ -537,20 +567,17 @@ bool GPUTestExpectationsParser::DetectCo
- 
- void GPUTestExpectationsParser::PushErrorMessage(
-     const std::string& message, size_t line_number) {
--  error_messages_.push_back(
--      base::StringPrintf("Line %d : %s",
--                         static_cast<int>(line_number), message.c_str()));
-+  error_messages_.push_back("Line " + ToString(line_number) +
-+                            " : " + message.c_str());
- }
- 
- void GPUTestExpectationsParser::PushErrorMessage(
-     const std::string& message,
-     size_t entry1_line_number,
-     size_t entry2_line_number) {
--  error_messages_.push_back(
--      base::StringPrintf("Line %d and %d : %s",
--                         static_cast<int>(entry1_line_number),
--                         static_cast<int>(entry2_line_number),
--                         message.c_str()));
-+  error_messages_.push_back("Line " + ToString(entry1_line_number) +
-+                            " and " + ToString(entry2_line_number) +
-+                            " : " + message.c_str());
- }
- 
- GPUTestExpectationsParser:: GPUTestExpectationEntry::GPUTestExpectationEntry()
-diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_test_expectations/gpu_test_expectations_parser.h
---- gpu_test_expectations_reverted/gpu_test_expectations_parser.h	2017-09-06 11:43:37.229484701 -0400
-+++ gpu_test_expectations/gpu_test_expectations_parser.h	2017-09-07 13:19:27.383650602 -0400
-@@ -2,8 +2,8 @@
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
--#ifndef GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
--#define GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
-+#ifndef ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
-+#define ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
- 
- #include <stddef.h>
- #include <stdint.h>
-@@ -11,9 +11,8 @@
+@@ -399,7 +428,7 @@ bool GPUTestExpectationsParser::ParseLin
+           stage++;
+         break;
+       default:
+-        DCHECK(false);
++        UNREACHABLE();
+         break;
+     }
+   }
+@@ -488,7 +517,7 @@ bool GPUTestExpectationsParser::UpdateTe
+       config->set_api(config->api() | kTokenData[token].flag);
+       break;
+     default:
+-      DCHECK(false);
++      UNREACHABLE();
+       break;
+   }
+   return true;
+diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_test_expectations/gpu_test_expectations_parser.h
+--- gpu_test_expectations_reverted/gpu_test_expectations_parser.h	2016-08-12 21:23:54.884132405 -0400
++++ gpu_test_expectations/gpu_test_expectations_parser.h	2015-11-30 21:54:30.239267635 -0500
+@@ -8,10 +8,8 @@
  #include <string>
  #include <vector>
  
+-#include "base/basictypes.h"
 -#include "base/files/file_path.h"
 -#include "gpu/config/gpu_test_config.h"
 -#include "gpu/gpu_export.h"
@@ -476,7 +831,7 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_
  
  namespace gpu {
  
-@@ -34,7 +33,7 @@ class GPU_EXPORT GPUTestExpectationsPars
+@@ -32,7 +30,7 @@ class GPU_EXPORT GPUTestExpectationsPars
    // save all the entries. Otherwise, generate error messages.
    // Return true if parsing succeeds.
    bool LoadTestExpectations(const std::string& data);
@@ -485,16 +840,9 @@ diff -u -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_
  
    // Query error messages from the last LoadTestExpectations() call.
    const std::vector<std::string>& GetErrorMessages() const;
-@@ -87,5 +86,5 @@ class GPU_EXPORT GPUTestExpectationsPars
- 
- }  // namespace gpu
- 
--#endif  // GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
-+#endif  // ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
- 
-diff -u -rupN gpu_test_expectations_reverted/HowToMakeChanges.md gpu_test_expectations/HowToMakeChanges.md
+diff -rupN gpu_test_expectations_reverted/HowToMakeChanges.md gpu_test_expectations/HowToMakeChanges.md
 --- gpu_test_expectations_reverted/HowToMakeChanges.md	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/HowToMakeChanges.md	2017-09-06 11:40:47.432070186 -0400
++++ gpu_test_expectations/HowToMakeChanges.md	2016-09-09 16:27:56.575809921 -0400
 @@ -0,0 +1,22 @@
 +Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config```
 +directory, we want to keep a patch of the changes added to make it compile with ANGLE. This

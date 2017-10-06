@@ -179,12 +179,4 @@ bool EndsWith(const std::string &str, const char *suffix)
     return memcmp(end, suffix, len) == 0;
 }
 
-void ToLower(std::string *str)
-{
-    for (auto &ch : *str)
-    {
-        ch = static_cast<char>(::tolower(ch));
-    }
-}
-
 }  // namespace angle

@@ -22,22 +22,21 @@ namespace
 class UnrollFlattenTest : public testing::Test
 {
   public:
-    UnrollFlattenTest() : mInputSpec(SH_GLES2_SPEC) {}
-    UnrollFlattenTest(ShShaderSpec inputSpec) : mInputSpec(inputSpec) {}
+    UnrollFlattenTest() {}
 
   protected:
     void compile(const std::string &shaderString)
     {
         std::string infoLog;
         bool compilationSuccess =
-            compileTestShader(GL_FRAGMENT_SHADER, mInputSpec, SH_HLSL_4_1_OUTPUT, shaderString,
+            compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_HLSL_4_1_OUTPUT, shaderString,
                               SH_VARIABLES, &mTranslatedSource, &infoLog);
         if (!compilationSuccess)
         {
             FAIL() << "Shader compilation failed " << infoLog;
         }
         // Ignore the beginning of the shader to avoid the definitions of LOOP and FLATTEN
-        mCurrentPosition = static_cast<int>(mTranslatedSource.find("cbuffer DriverConstants"));
+        mCurrentPosition = static_cast<int>(mTranslatedSource.find("GL_USES_FRAG_COLOR"));
     }
 
     void expect(const char *patterns[], size_t count)
@@ -72,7 +71,6 @@ class UnrollFlattenTest : public testing::Test
     static const char *FLATTEN;
 
   private:
-    ShShaderSpec mInputSpec;
     std::string mTranslatedSource;
 
     int mCurrentPosition;
@@ -208,31 +206,4 @@ TEST_F(UnrollFlattenTest, GradientInDiscont)
     expect(expectations, ArraySize(expectations));
 }
 
-class UnrollFlattenTest_ES3 : public UnrollFlattenTest
-{
-  public:
-    UnrollFlattenTest_ES3() : UnrollFlattenTest(SH_GLES3_SPEC) {}
-};
-
-// Check that we correctly detect the ES3 builtin "texture" function as a gradient operation.
-TEST_F(UnrollFlattenTest_ES3, TextureBuiltin)
-{
-    const std::string &shaderString =
-        "#version 300 es\n"
-        "precision mediump float;\n"
-        "uniform sampler2D tex;"
-        "out float fragColor;\n"
-        "void main() {\n"
-        "    float a = 0.0;"
-        "    for (int i = 0; i < 10; i++) {\n"
-        "        if (a > 1.0) {break;}\n"
-        "        a += texture(tex, vec2(a, 0.0)).x;"
-        "    }\n"
-        "    fragColor = a;\n"
-        "}\n";
-
-    compile(shaderString);
-    const char *expectations[] = {"main(", "LOOP", "Lod0("};
-    expect(expectations, ArraySize(expectations));
-}
 }

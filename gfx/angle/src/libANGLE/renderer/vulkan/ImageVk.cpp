@@ -14,7 +14,7 @@
 namespace rx
 {
 
-ImageVk::ImageVk(const egl::ImageState &state) : ImageImpl(state)
+ImageVk::ImageVk() : ImageImpl()
 {
 }
 
@@ -25,13 +25,13 @@ ImageVk::~ImageVk()
 egl::Error ImageVk::initialize()
 {
     UNIMPLEMENTED();
-    return egl::EglBadAccess();
+    return egl::Error(EGL_BAD_ACCESS);
 }
 
-gl::Error ImageVk::orphan(const gl::Context *context, egl::ImageSibling *sibling)
+gl::Error ImageVk::orphan(egl::ImageSibling *sibling)
 {
     UNIMPLEMENTED();
-    return gl::InternalError();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 }  // namespace rx

@@ -25,7 +25,7 @@ DeviceNULL::~DeviceNULL()
 egl::Error DeviceNULL::getDevice(void **outValue)
 {
     UNIMPLEMENTED();
-    return egl::EglBadAccess();
+    return egl::Error(EGL_BAD_ACCESS);
 }
 
 EGLint DeviceNULL::getType()

@@ -38,33 +38,19 @@ class Image9 : public ImageD3D
 
     virtual bool isDirty() const;
 
-    gl::Error setManagedSurface2D(const gl::Context *context,
-                                  TextureStorage *storage,
-                                  int level) override;
-    gl::Error setManagedSurfaceCube(const gl::Context *context,
-                                    TextureStorage *storage,
-                                    int face,
-                                    int level) override;
-    gl::Error copyToStorage(const gl::Context *context,
-                            TextureStorage *storage,
-                            const gl::ImageIndex &index,
-                            const gl::Box &region) override;
+    virtual gl::Error setManagedSurface2D(TextureStorage *storage, int level);
+    virtual gl::Error setManagedSurfaceCube(TextureStorage *storage, int face, int level);
+    virtual gl::Error copyToStorage(TextureStorage *storage, const gl::ImageIndex &index, const gl::Box &region);
 
-    gl::Error loadData(const gl::Context *context,
-                       const gl::Box &area,
+    gl::Error loadData(const gl::Box &area,
                        const gl::PixelUnpackState &unpack,
                        GLenum type,
                        const void *input,
                        bool applySkipImages) override;
-    gl::Error loadCompressedData(const gl::Context *context,
-                                 const gl::Box &area,
-                                 const void *input) override;
+    gl::Error loadCompressedData(const gl::Box &area, const void *input) override;
 
-    gl::Error copyFromTexStorage(const gl::Context *context,
-                                 const gl::ImageIndex &imageIndex,
-                                 TextureStorage *source) override;
-    gl::Error copyFromFramebuffer(const gl::Context *context,
-                                  const gl::Offset &destOffset,
+    gl::Error copyFromTexStorage(const gl::ImageIndex &imageIndex, TextureStorage *source) override;
+    gl::Error copyFromFramebuffer(const gl::Offset &destOffset,
                                   const gl::Rectangle &sourceArea,
                                   const gl::Framebuffer *source) override;
 

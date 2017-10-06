@@ -26,7 +26,6 @@ class GLImplFactory;
 namespace gl
 {
 class Buffer;
-class Context;
 
 class BufferState final : angle::NonCopyable
 {
@@ -40,7 +39,7 @@ class BufferState final : angle::NonCopyable
     GLbitfield getAccessFlags() const { return mAccessFlags; }
     GLenum getAccess() const { return mAccess; }
     GLboolean isMapped() const { return mMapped; }
-    void *getMapPointer() const { return mMapPointer; }
+    GLvoid *getMapPointer() const { return mMapPointer; }
     GLint64 getMapOffset() const { return mMapOffset; }
     GLint64 getMapLength() const { return mMapLength; }
     GLint64 getSize() const { return mSize; }
@@ -55,7 +54,7 @@ class BufferState final : angle::NonCopyable
     GLbitfield mAccessFlags;
     GLenum mAccess;
     GLboolean mMapped;
-    void *mMapPointer;
+    GLvoid *mMapPointer;
     GLint64 mMapOffset;
     GLint64 mMapLength;
 };
@@ -65,35 +64,21 @@ class Buffer final : public RefCountObject, public LabeledObject
   public:
     Buffer(rx::GLImplFactory *factory, GLuint id);
     ~Buffer() override;
-    Error onDestroy(const Context *context) override;
 
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
 
-    Error bufferData(const Context *context,
-                     GLenum target,
-                     const void *data,
-                     GLsizeiptr size,
-                     GLenum usage);
-    Error bufferSubData(const Context *context,
-                        GLenum target,
-                        const void *data,
-                        GLsizeiptr size,
-                        GLintptr offset);
-    Error copyBufferSubData(const Context *context,
-                            Buffer *source,
-                            GLintptr sourceOffset,
-                            GLintptr destOffset,
-                            GLsizeiptr size);
-    Error map(const Context *context, GLenum access);
-    Error mapRange(const Context *context, GLintptr offset, GLsizeiptr length, GLbitfield access);
-    Error unmap(const Context *context, GLboolean *result);
+    Error bufferData(GLenum target, const void *data, GLsizeiptr size, GLenum usage);
+    Error bufferSubData(GLenum target, const void *data, GLsizeiptr size, GLintptr offset);
+    Error copyBufferSubData(Buffer* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size);
+    Error map(GLenum access);
+    Error mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access);
+    Error unmap(GLboolean *result);
 
     void onTransformFeedback();
     void onPixelUnpack();
 
-    Error getIndexRange(const gl::Context *context,
-                        GLenum type,
+    Error getIndexRange(GLenum type,
                         size_t offset,
                         size_t count,
                         bool primitiveRestartEnabled,
@@ -103,7 +88,7 @@ class Buffer final : public RefCountObject, public LabeledObject
     GLbitfield getAccessFlags() const { return mState.mAccessFlags; }
     GLenum getAccess() const { return mState.mAccess; }
     GLboolean isMapped() const { return mState.mMapped; }
-    void *getMapPointer() const { return mState.mMapPointer; }
+    GLvoid *getMapPointer() const { return mState.mMapPointer; }
     GLint64 getMapOffset() const { return mState.mMapOffset; }
     GLint64 getMapLength() const { return mState.mMapLength; }
     GLint64 getSize() const { return mState.mSize; }
@@ -117,6 +102,6 @@ class Buffer final : public RefCountObject, public LabeledObject
     mutable IndexRangeCache mIndexRangeCache;
 };
 
-}  // namespace gl
+}
 
-#endif  // LIBANGLE_BUFFER_H_
+#endif   // LIBANGLE_BUFFER_H_

@@ -12,7 +12,6 @@
 #include <deque>
 
 #include "libANGLE/renderer/QueryImpl.h"
-#include "libANGLE/renderer/d3d/d3d11/ResourceManager11.h"
 
 namespace rx
 {
@@ -37,14 +36,14 @@ class Query11 : public QueryImpl
     gl::Error resume();
 
   private:
-    struct QueryState final : private angle::NonCopyable
+    struct QueryState final : public angle::NonCopyable
     {
         QueryState();
         ~QueryState();
 
-        d3d11::Query query;
-        d3d11::Query beginTimestamp;
-        d3d11::Query endTimestamp;
+        ID3D11Query *query;
+        ID3D11Query *beginTimestamp;
+        ID3D11Query *endTimestamp;
         bool finished;
     };
 

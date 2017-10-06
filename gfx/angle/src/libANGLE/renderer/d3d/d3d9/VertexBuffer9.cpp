@@ -19,7 +19,7 @@ namespace rx
 
 VertexBuffer9::VertexBuffer9(Renderer9 *renderer) : mRenderer(renderer)
 {
-    mVertexBuffer = nullptr;
+    mVertexBuffer = NULL;
     mBufferSize = 0;
     mDynamicUsage = false;
 }
@@ -47,18 +47,16 @@ gl::Error VertexBuffer9::initialize(unsigned int size, bool dynamicUsage)
 
         if (FAILED(result))
         {
-            return gl::OutOfMemory()
-                   << "Failed to allocate internal vertex buffer of size " << size;
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal vertex buffer of size, %lu.", size);
         }
     }
 
     mBufferSize = size;
     mDynamicUsage = dynamicUsage;
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib,
-                                               const gl::VertexBinding &binding,
                                                GLenum currentValueType,
                                                GLint start,
                                                GLsizei count,
@@ -68,17 +66,17 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
 {
     if (!mVertexBuffer)
     {
-        return gl::OutOfMemory() << "Internal vertex buffer is not initialized.";
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
     }
 
-    int inputStride = static_cast<int>(gl::ComputeVertexAttributeStride(attrib, binding));
+    int inputStride = static_cast<int>(gl::ComputeVertexAttributeStride(attrib));
     int elementSize = static_cast<int>(gl::ComputeVertexAttributeTypeSize(attrib));
 
     DWORD lockFlags = mDynamicUsage ? D3DLOCK_NOOVERWRITE : 0;
 
     uint8_t *mapPtr = nullptr;
 
-    auto errorOrMapSize = mRenderer->getVertexSpaceRequired(attrib, binding, count, instances);
+    auto errorOrMapSize = mRenderer->getVertexSpaceRequired(attrib, count, instances);
     if (errorOrMapSize.isError())
     {
         return errorOrMapSize.getError();
@@ -89,12 +87,12 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
     HRESULT result = mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void**>(&mapPtr), lockFlags);
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to lock internal vertex buffer, " << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal vertex buffer, HRESULT: 0x%08x.", result);
     }
 
     const uint8_t *input = sourceData;
 
-    if (instances == 0 || binding.getDivisor() == 0)
+    if (instances == 0 || attrib.divisor == 0)
     {
         input += inputStride * start;
     }
@@ -115,7 +113,7 @@ gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib
 
     mVertexBuffer->Unlock();
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 unsigned int VertexBuffer9::getBufferSize() const
@@ -131,7 +129,7 @@ gl::Error VertexBuffer9::setBufferSize(unsigned int size)
     }
     else
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
@@ -139,7 +137,7 @@ gl::Error VertexBuffer9::discard()
 {
     if (!mVertexBuffer)
     {
-        return gl::OutOfMemory() << "Internal vertex buffer is not initialized.";
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
     }
 
     void *dummy;
@@ -148,18 +146,16 @@ gl::Error VertexBuffer9::discard()
     result = mVertexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to lock internal buffer for discarding, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal buffer for discarding, HRESULT: 0x%08x", result);
     }
 
     result = mVertexBuffer->Unlock();
     if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to unlock internal buffer for discarding, "
-                                 << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to unlock internal buffer for discarding, HRESULT: 0x%08x", result);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 IDirect3DVertexBuffer9 * VertexBuffer9::getBuffer() const

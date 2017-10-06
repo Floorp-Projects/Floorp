@@ -10,6 +10,7 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <iostream>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -294,7 +295,7 @@ uint32_t DisplayOzone::Buffer::getDRMFB()
         uint32_t offsets[4] = {0};
         if (drmModeAddFB2(fd, mWidth, mHeight, mDRMFormatFB, handles, pitches, offsets, &mDRMFB, 0))
         {
-            WARN() << "drmModeAddFB2 failed: " << errno << " " << strerror(errno);
+            std::cerr << "drmModeAddFB2 failed" << std::endl;
         }
         else
         {
@@ -309,8 +310,7 @@ FramebufferGL *DisplayOzone::Buffer::framebufferGL(const gl::FramebufferState &s
 {
     return new FramebufferGL(
         mGLFB, state, mDisplay->mFunctionsGL, mDisplay->getRenderer()->getWorkarounds(),
-        mDisplay->getRenderer()->getBlitter(), mDisplay->getRenderer()->getMultiviewClearer(),
-        mDisplay->getRenderer()->getStateManager());
+        mDisplay->getRenderer()->getBlitter(), mDisplay->getRenderer()->getStateManager());
 }
 
 void DisplayOzone::Buffer::present()
@@ -325,8 +325,8 @@ void DisplayOzone::Buffer::present()
     }
 }
 
-DisplayOzone::DisplayOzone(const egl::DisplayState &state)
-    : DisplayEGL(state),
+DisplayOzone::DisplayOzone()
+    : DisplayEGL(),
       mSwapControl(SwapControl::ABSENT),
       mMinSwapInterval(0),
       mMaxSwapInterval(0),
@@ -336,8 +336,8 @@ DisplayOzone::DisplayOzone(const egl::DisplayState &state)
       mMode(nullptr),
       mCRTC(nullptr),
       mSetCRTC(true),
-      mWidth(1280),
-      mHeight(1024),
+      mWidth(0),
+      mHeight(0),
       mScanning(nullptr),
       mPending(nullptr),
       mDrawing(nullptr),
@@ -358,21 +358,47 @@ DisplayOzone::~DisplayOzone()
 {
 }
 
-bool DisplayOzone::hasUsableScreen(int fd)
+egl::Error DisplayOzone::initialize(egl::Display *display)
 {
-    drmModeResPtr resources = drmModeGetResources(fd);
+    int fd;
+    char deviceName[30];
+    drmModeResPtr resources = nullptr;
+
+    for (int i = 0; i < 9; ++i)
+    {
+        snprintf(deviceName, sizeof(deviceName), "/dev/dri/card%d", i);
+        fd = open(deviceName, O_RDWR | O_CLOEXEC);
+        if (fd >= 0)
+        {
+            resources = drmModeGetResources(fd);
+            if (resources)
+            {
+                if (resources->count_connectors > 0)
+                {
+                    break;
+                }
+                drmModeFreeResources(resources);
+                resources = nullptr;
+            }
+            close(fd);
+        }
+    }
     if (!resources)
     {
-        return false;
-    }
-    if (resources->count_connectors < 1)
-    {
-        drmModeFreeResources(resources);
-        return false;
+        return egl::Error(EGL_NOT_INITIALIZED, "Could not open drm device.");
     }
 
-    mConnector = nullptr;
-    for (int i = 0; i < resources->count_connectors; ++i)
+    mGBM = gbm_create_device(fd);
+    if (!mGBM)
+    {
+        close(fd);
+        drmModeFreeResources(resources);
+        return egl::Error(EGL_NOT_INITIALIZED, "Could not create gbm device.");
+    }
+
+    mConnector            = nullptr;
+    bool monitorConnected = false;
+    for (int i = 0; !mCRTC && i < resources->count_connectors; ++i)
     {
         drmModeFreeConnector(mConnector);
         mConnector = drmModeGetConnector(fd, resources->connectors[i]);
@@ -380,6 +406,7 @@ bool DisplayOzone::hasUsableScreen(int fd)
         {
             continue;
         }
+        monitorConnected = true;
         mMode = ChooseMode(mConnector);
         if (!mMode)
         {
@@ -391,68 +418,25 @@ bool DisplayOzone::hasUsableScreen(int fd)
             continue;
         }
         mCRTC = drmModeGetCrtc(fd, resources->crtcs[n]);
-        if (mCRTC)
-        {
-            // found a screen
-            mGBM = gbm_create_device(fd);
-            if (mGBM)
-            {
-                mWidth  = mMode->hdisplay;
-                mHeight = mMode->vdisplay;
-                drmModeFreeResources(resources);
-                return true;
-            }
-            // can't use this screen
-            drmModeFreeCrtc(mCRTC);
-            mCRTC = nullptr;
-        }
     }
-
     drmModeFreeResources(resources);
-    return false;
-}
 
-egl::Error DisplayOzone::initialize(egl::Display *display)
-{
-    int fd;
-    char deviceName[30];
-
-    for (int i = 0; i < 64; ++i)
+    if (mCRTC)
     {
-        snprintf(deviceName, sizeof(deviceName), "/dev/dri/card%d", i);
-        fd = open(deviceName, O_RDWR | O_CLOEXEC);
-        if (fd >= 0)
-        {
-            if (hasUsableScreen(fd))
-            {
-                break;
-            }
-            close(fd);
-        }
+        mWidth  = mMode->hdisplay;
+        mHeight = mMode->vdisplay;
     }
-
-    if (!mGBM)
+    else if (!monitorConnected)
     {
-        // there's no usable screen so try to proceed without one
-        for (int i = 128; i < 192; ++i)
-        {
-            snprintf(deviceName, sizeof(deviceName), "/dev/dri/renderD%d", i);
-            fd = open(deviceName, O_RDWR | O_CLOEXEC);
-            if (fd >= 0)
-            {
-                mGBM = gbm_create_device(fd);
-                if (mGBM)
-                {
-                    break;
-                }
-                close(fd);
-            }
-        }
+        // Even though there is no monitor to show it, we still do
+        // everything the same as if there were one, so we need an
+        // arbitrary size for our buffers.
+        mWidth  = 1280;
+        mHeight = 1024;
     }
-
-    if (!mGBM)
+    else
     {
-        return egl::EglNotInitialized() << "Could not open drm device.";
+        return egl::Error(EGL_NOT_INITIALIZED, "Failed to choose mode/crtc.");
     }
 
     // ANGLE builds its executables with an RPATH so they pull in ANGLE's libGL and libEGL.
@@ -471,7 +455,7 @@ egl::Error DisplayOzone::initialize(egl::Display *display)
     {
         if (!mEGL->hasExtension(ext))
         {
-            return egl::EglNotInitialized() << "need " << ext;
+            return egl::Error(EGL_NOT_INITIALIZED, "need %s", ext);
         }
     }
 
@@ -498,7 +482,7 @@ egl::Error DisplayOzone::initialize(egl::Display *display)
         EGLConfig config[1];
         if (!mEGL->chooseConfig(attrib, config, 1, &numConfig) || numConfig < 1)
         {
-            return egl::EglNotInitialized() << "Could not get EGL config.";
+            return egl::Error(EGL_NOT_INITIALIZED, "Could not get EGL config.");
         }
         mConfig = config[0];
     }
@@ -507,7 +491,7 @@ egl::Error DisplayOzone::initialize(egl::Display *display)
 
     if (!mEGL->makeCurrent(EGL_NO_SURFACE, mContext))
     {
-        return egl::EglNotInitialized() << "Could not make context current.";
+        return egl::Error(EGL_NOT_INITIALIZED, "Could not make context current.");
     }
 
     mFunctionsGL = mEGL->makeFunctionsGL();
@@ -552,7 +536,7 @@ void DisplayOzone::presentScreen()
         pfd.events = POLLIN;
         if (poll(&pfd, 1, 0) < 0)
         {
-            WARN() << "poll failed: " << errno << " " << strerror(errno);
+            std::cerr << "poll failed: " << errno << " " << strerror(errno) << std::endl;
         }
         if (pfd.revents & POLLIN)
         {
@@ -572,14 +556,14 @@ void DisplayOzone::presentScreen()
             if (drmModeSetCrtc(fd, mCRTC->crtc_id, mDrawing->getDRMFB(), 0, 0,
                                &mConnector->connector_id, 1, mMode))
             {
-                WARN() << "set crtc failed: " << errno << " " << strerror(errno);
+                std::cerr << "set crtc failed: " << errno << " " << strerror(errno) << std::endl;
             }
             mSetCRTC = false;
         }
         if (drmModePageFlip(fd, mCRTC->crtc_id, mDrawing->getDRMFB(), DRM_MODE_PAGE_FLIP_EVENT,
                             this))
         {
-            WARN() << "page flip failed: " << errno << " " << strerror(errno);
+            std::cerr << "page flip failed: " << errno << " " << strerror(errno) << std::endl;
         }
         mPending = mDrawing;
         mDrawing = nullptr;
@@ -600,7 +584,8 @@ GLuint DisplayOzone::makeShader(GLuint type, const char *src)
     gl->getShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if (compiled != GL_TRUE)
     {
-        WARN() << "DisplayOzone shader compilation error: " << buf;
+        ANGLEPlatformCurrent()->logError("DisplayOzone shader compilation error:");
+        ANGLEPlatformCurrent()->logError(buf);
     }
 
     return shader;
@@ -655,11 +640,7 @@ void DisplayOzone::drawWithTexture(Buffer *buffer)
         gl->linkProgram(mProgram);
         GLint linked;
         gl->getProgramiv(mProgram, GL_LINK_STATUS, &linked);
-        if (!linked)
-        {
-            WARN() << "shader link failed: cannot display buffer";
-            return;
-        }
+        ASSERT(linked);
         mCenterUniform     = gl->getUniformLocation(mProgram, "center");
         mWindowSizeUniform = gl->getUniformLocation(mProgram, "windowSize");
         mBorderSizeUniform = gl->getUniformLocation(mProgram, "borderSize");
@@ -832,15 +813,11 @@ void DisplayOzone::terminate()
 
     if (mEGL)
     {
-        ANGLE_SWALLOW_ERR(mEGL->terminate());
+        mEGL->terminate();
         SafeDelete(mEGL);
     }
 
-    drmModeFreeConnector(mConnector);
-    mConnector = nullptr;
-    mMode      = nullptr;
     drmModeFreeCrtc(mCRTC);
-    mCRTC = nullptr;
 
     if (mGBM)
     {
@@ -852,6 +829,7 @@ void DisplayOzone::terminate()
 }
 
 SurfaceImpl *DisplayOzone::createWindowSurface(const egl::SurfaceState &state,
+                                               const egl::Config *configuration,
                                                EGLNativeWindowType window,
                                                const egl::AttributeMap &attribs)
 {
@@ -865,6 +843,7 @@ SurfaceImpl *DisplayOzone::createWindowSurface(const egl::SurfaceState &state,
 }
 
 SurfaceImpl *DisplayOzone::createPbufferSurface(const egl::SurfaceState &state,
+                                                const egl::Config *configuration,
                                                 const egl::AttributeMap &attribs)
 {
     EGLAttrib width  = attribs.get(EGL_WIDTH, 0);
@@ -879,6 +858,7 @@ SurfaceImpl *DisplayOzone::createPbufferSurface(const egl::SurfaceState &state,
 }
 
 SurfaceImpl *DisplayOzone::createPbufferFromClientBuffer(const egl::SurfaceState &state,
+                                                         const egl::Config *configuration,
                                                          EGLenum buftype,
                                                          EGLClientBuffer clientBuffer,
                                                          const egl::AttributeMap &attribs)
@@ -888,6 +868,7 @@ SurfaceImpl *DisplayOzone::createPbufferFromClientBuffer(const egl::SurfaceState
 }
 
 SurfaceImpl *DisplayOzone::createPixmapSurface(const egl::SurfaceState &state,
+                                               const egl::Config *configuration,
                                                NativePixmapType nativePixmap,
                                                const egl::AttributeMap &attribs)
 {
@@ -898,7 +879,7 @@ SurfaceImpl *DisplayOzone::createPixmapSurface(const egl::SurfaceState &state,
 egl::Error DisplayOzone::getDevice(DeviceImpl **device)
 {
     UNIMPLEMENTED();
-    return egl::EglBadDisplay();
+    return egl::Error(EGL_BAD_DISPLAY);
 }
 
 egl::ConfigSet DisplayOzone::generateConfigs()
@@ -915,8 +896,6 @@ egl::ConfigSet DisplayOzone::generateConfigs()
     config.bindToTextureRGBA = EGL_TRUE;
     config.renderableType    = EGL_OPENGL_ES2_BIT;
     config.surfaceType       = EGL_WINDOW_BIT | EGL_PBUFFER_BIT;
-    config.renderTargetFormat = GL_RGBA8;
-    config.depthStencilFormat = GL_DEPTH24_STENCIL8;
 
     configs.add(config);
     return configs;
@@ -927,10 +906,10 @@ bool DisplayOzone::testDeviceLost()
     return false;
 }
 
-egl::Error DisplayOzone::restoreLostDevice(const egl::Display *display)
+egl::Error DisplayOzone::restoreLostDevice()
 {
     UNIMPLEMENTED();
-    return egl::EglBadDisplay();
+    return egl::Error(EGL_BAD_DISPLAY);
 }
 
 bool DisplayOzone::isValidNativeWindow(EGLNativeWindowType window) const
@@ -938,27 +917,29 @@ bool DisplayOzone::isValidNativeWindow(EGLNativeWindowType window) const
     return true;
 }
 
-egl::Error DisplayOzone::waitClient(const gl::Context *context) const
+egl::Error DisplayOzone::getDriverVersion(std::string *version) const
 {
-    // TODO(fjhenigman) Implement this.
-    return egl::NoError();
+    *version = "";
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error DisplayOzone::waitNative(const gl::Context *context, EGLint engine) const
+egl::Error DisplayOzone::waitClient() const
 {
     // TODO(fjhenigman) Implement this.
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
+}
+
+egl::Error DisplayOzone::waitNative(EGLint engine,
+                                    egl::Surface *drawSurface,
+                                    egl::Surface *readSurface) const
+{
+    // TODO(fjhenigman) Implement this.
+    return egl::Error(EGL_SUCCESS);
 }
 
 void DisplayOzone::setSwapInterval(EGLSurface drawable, SwapControlData *data)
 {
     ASSERT(data != nullptr);
-}
-
-egl::Error DisplayOzone::makeCurrentSurfaceless(gl::Context *context)
-{
-    // Nothing to do, handled in the GL layers
-    return egl::NoError();
 }
 
 }  // namespace rx

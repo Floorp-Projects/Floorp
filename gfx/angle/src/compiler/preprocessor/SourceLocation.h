@@ -12,8 +12,16 @@ namespace pp
 
 struct SourceLocation
 {
-    SourceLocation() : file(0), line(0) {}
-    SourceLocation(int f, int l) : file(f), line(l) {}
+    SourceLocation()
+        : file(0),
+          line(0)
+    {
+    }
+    SourceLocation(int f, int l)
+        : file(f),
+          line(l)
+    {
+    }
 
     bool equals(const SourceLocation &other) const
     {

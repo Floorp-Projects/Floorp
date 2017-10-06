@@ -24,12 +24,14 @@ CompilerVk::~CompilerVk()
 
 gl::Error CompilerVk::release()
 {
-    return gl::NoError();
+    UNIMPLEMENTED();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 ShShaderOutput CompilerVk::getTranslatorOutputType() const
 {
-    return SH_GLSL_VULKAN_OUTPUT;
+    UNIMPLEMENTED();
+    return ShShaderOutput();
 }
 
 }  // namespace rx

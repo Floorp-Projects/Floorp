@@ -1,4 +1,4 @@
-# This is the official list of people who can contribute
+﻿# This is the official list of people who can contribute
 # (and who have contributed) code to the ANGLE project
 # repository.
 # The AUTHORS file lists the copyright holders; this file
@@ -71,7 +71,6 @@ Intel Corporation
  Bryan Bernhart
  Yunchao He
  Xinghua Cao
- Brandon Jones
 
 Klarälvdalens Datakonsult AB
  Milian Wolff
@@ -96,8 +95,6 @@ Tibor den Ouden
 Régis Fénéon
 Sebastian Bergstein
 James Ross-Gowan
-Andrei Volykhin
-Jérôme Duval
 
 Microsoft Corporation
  Cooper Partin

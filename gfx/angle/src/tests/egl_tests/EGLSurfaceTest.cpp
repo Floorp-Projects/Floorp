@@ -14,14 +14,6 @@
 #include "OSWindow.h"
 #include "test_utils/ANGLETest.h"
 
-#if defined(ANGLE_ENABLE_D3D11)
-#define INITGUID
-#include <guiddef.h>
-
-#include <d3d11.h>
-#include <dcomp.h>
-#endif
-
 namespace
 {
 
@@ -117,17 +109,6 @@ class EGLSurfaceTest : public testing::Test
         ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
     }
 
-    void initializeContext()
-    {
-        EGLint contextAttibutes[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-
-        mContext = eglCreateContext(mDisplay, mConfig, nullptr, contextAttibutes);
-        ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
-
-        mSecondContext = eglCreateContext(mDisplay, mConfig, nullptr, contextAttibutes);
-        ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
-    }
-
     void initializeSurface(EGLConfig config)
     {
         mConfig = config;
@@ -141,7 +122,18 @@ class EGLSurfaceTest : public testing::Test
         ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
 
         mPbufferSurface = eglCreatePbufferSurface(mDisplay, mConfig, &surfaceAttributes[0]);
-        initializeContext();
+
+        EGLint contextAttibutes[] =
+        {
+            EGL_CONTEXT_CLIENT_VERSION, 2,
+            EGL_NONE
+        };
+
+        mContext = eglCreateContext(mDisplay, mConfig, nullptr, contextAttibutes);
+        ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
+
+        mSecondContext = eglCreateContext(mDisplay, mConfig, nullptr, contextAttibutes);
+        ASSERT_TRUE(eglGetError() == EGL_SUCCESS);
     }
 
     void initializeSurfaceWithDefaultConfig()
@@ -167,19 +159,23 @@ class EGLSurfaceTest : public testing::Test
 
     GLuint createProgram()
     {
-        const std::string testVertexShaderSource =
-            R"(attribute highp vec4 position;
+        const std::string testVertexShaderSource = SHADER_SOURCE
+        (
+            attribute highp vec4 position;
 
             void main(void)
             {
                 gl_Position = position;
-            })";
+            }
+        );
 
-        const std::string testFragmentShaderSource =
-            R"(void main(void)
+        const std::string testFragmentShaderSource = SHADER_SOURCE
+        (
+            void main(void)
             {
                 gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-            })";
+            }
+        );
 
         return CompileProgram(testVertexShaderSource, testFragmentShaderSource);
     }
@@ -210,7 +206,7 @@ class EGLSurfaceTest : public testing::Test
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glDisableVertexAttribArray(positionLocation);
-        glVertexAttribPointer(positionLocation, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttribPointer(positionLocation, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 
         EXPECT_PIXEL_EQ(mOSWindow->getWidth() / 2, mOSWindow->getHeight() / 2, 255, 0, 0, 255);
     }
@@ -321,9 +317,7 @@ TEST_F(EGLSurfaceTest, ResizeD3DWindow)
 
     initializeDisplay(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
     initializeSurfaceWithDefaultConfig();
-    initializeContext();
 
-    eglMakeCurrent(mDisplay, mWindowSurface, mWindowSurface, mContext);
     eglSwapBuffers(mDisplay, mWindowSurface);
     ASSERT_EGL_SUCCESS();
 
@@ -520,83 +514,4 @@ TEST_F(EGLSurfaceTest, CreateWithEGLConfig8880Support)
     EXPECT_GL_NO_ERROR();
     glDeleteProgram(program);
 }
-
-#if defined(ANGLE_ENABLE_D3D11)
-// Test that rendering to an IDCompositionSurface using a pbuffer works.
-TEST_F(EGLSurfaceTest, CreateDirectCompositionSurface)
-{
-    if (!ANGLETest::eglDisplayExtensionEnabled(EGL_NO_DISPLAY, "EGL_ANGLE_platform_angle_d3d"))
-    {
-        std::cout << "D3D Platform not supported in ANGLE" << std::endl;
-        return;
-    }
-    initializeDisplay(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE);
-
-    EGLAttrib device       = 0;
-    EGLAttrib newEglDevice = 0;
-    ASSERT_EGL_TRUE(eglQueryDisplayAttribEXT(mDisplay, EGL_DEVICE_EXT, &newEglDevice));
-    ASSERT_EGL_TRUE(eglQueryDeviceAttribEXT(reinterpret_cast<EGLDeviceEXT>(newEglDevice),
-                                            EGL_D3D11_DEVICE_ANGLE, &device));
-    angle::ComPtr<ID3D11Device> d3d11Device(reinterpret_cast<ID3D11Device *>(device));
-    ASSERT_TRUE(!!d3d11Device);
-
-    HMODULE dcompLibrary = LoadLibraryA("dcomp.dll");
-    if (!dcompLibrary)
-    {
-        std::cout << "DirectComposition not supported" << std::endl;
-        return;
-    }
-    typedef HRESULT(WINAPI * PFN_DCOMPOSITION_CREATE_DEVICE2)(IUnknown * dxgiDevice, REFIID iid,
-                                                              void **dcompositionDevice);
-    PFN_DCOMPOSITION_CREATE_DEVICE2 createDComp = reinterpret_cast<PFN_DCOMPOSITION_CREATE_DEVICE2>(
-        GetProcAddress(dcompLibrary, "DCompositionCreateDevice2"));
-    if (!createDComp)
-    {
-        std::cout << "DirectComposition2 not supported" << std::endl;
-        FreeLibrary(dcompLibrary);
-        return;
-    }
-
-    angle::ComPtr<IDCompositionDevice> dcompDevice;
-    HRESULT hr = createDComp(d3d11Device.Get(), IID_PPV_ARGS(dcompDevice.GetAddressOf()));
-    ASSERT_TRUE(SUCCEEDED(hr));
-
-    angle::ComPtr<IDCompositionSurface> dcompSurface;
-    hr = dcompDevice->CreateSurface(100, 100, DXGI_FORMAT_B8G8R8A8_UNORM,
-                                    DXGI_ALPHA_MODE_PREMULTIPLIED, dcompSurface.GetAddressOf());
-    ASSERT_TRUE(SUCCEEDED(hr));
-
-    angle::ComPtr<ID3D11Texture2D> texture;
-    POINT updateOffset;
-    hr = dcompSurface->BeginDraw(nullptr, IID_PPV_ARGS(texture.GetAddressOf()), &updateOffset);
-    ASSERT_TRUE(SUCCEEDED(hr));
-
-    const EGLint configAttributes[] = {
-        EGL_RED_SIZE,   8, EGL_GREEN_SIZE,   8, EGL_BLUE_SIZE,      8, EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 0, EGL_STENCIL_SIZE, 0, EGL_SAMPLE_BUFFERS, 0, EGL_NONE};
-
-    EGLConfig config;
-    ASSERT_EGL_TRUE(EGLWindow::FindEGLConfig(mDisplay, configAttributes, &config));
-
-    const EGLint surfaceAttributes[] = {EGL_WIDTH, 64, EGL_HEIGHT, 64, EGL_NONE};
-
-    EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(texture.Get());
-    mPbufferSurface = eglCreatePbufferFromClientBuffer(mDisplay, EGL_D3D_TEXTURE_ANGLE, buffer,
-                                                       config, surfaceAttributes);
-    ASSERT_EGL_SUCCESS();
-
-    mConfig = config;
-    initializeContext();
-
-    eglMakeCurrent(mDisplay, mPbufferSurface, mPbufferSurface, mContext);
-    ASSERT_EGL_SUCCESS();
-
-    GLuint program = createProgram();
-    ASSERT_NE(0u, program);
-    drawWithProgram(program);
-    EXPECT_GL_NO_ERROR();
-    glDeleteProgram(program);
-}
-
-#endif
 }

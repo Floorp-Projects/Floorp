@@ -25,18 +25,19 @@ ShaderVk::~ShaderVk()
 ShCompileOptions ShaderVk::prepareSourceAndReturnOptions(std::stringstream *sourceStream,
                                                          std::string *sourcePath)
 {
-    *sourceStream << mData.getSource();
-    return 0;
+    UNIMPLEMENTED();
+    return int();
 }
 
 bool ShaderVk::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog)
 {
-    // No work to do here.
-    return true;
+    UNIMPLEMENTED();
+    return bool();
 }
 
 std::string ShaderVk::getDebugInfo() const
 {
+    UNIMPLEMENTED();
     return std::string();
 }
 

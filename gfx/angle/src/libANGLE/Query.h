@@ -29,7 +29,6 @@ class Query final : public RefCountObject, public LabeledObject
 {
   public:
     Query(rx::QueryImpl *impl, GLuint id);
-    void destroy(const gl::Context *context) {}
     virtual ~Query();
 
     void setLabel(const std::string &label) override;

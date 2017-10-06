@@ -184,14 +184,14 @@ TEST_F(IntermNodeTest, DeepCopyUnaryNode)
 // original. Child nodes also need to be copies with the same attributes as the original children.
 TEST_F(IntermNodeTest, DeepCopyAggregateNode)
 {
-    TIntermSequence *originalSeq = new TIntermSequence();
-    originalSeq->push_back(createTestSymbol());
-    originalSeq->push_back(createTestSymbol());
-    originalSeq->push_back(createTestSymbol());
-    TIntermAggregate *original =
-        TIntermAggregate::Create(originalSeq->at(0)->getAsTyped()->getType(), EOpMix, originalSeq);
-    original->setLine(getTestSourceLoc());
+    TType type(EbtFloat, EbpHigh);
 
+    TIntermAggregate *original = new TIntermAggregate(EOpMix);
+    original->setLine(getTestSourceLoc());
+    TIntermSequence *originalSeq = original->getSequence();
+    originalSeq->push_back(createTestSymbol());
+    originalSeq->push_back(createTestSymbol());
+    originalSeq->push_back(createTestSymbol());
     TIntermTyped *copyTyped = original->deepCopy();
     TIntermAggregate *copy = copyTyped->getAsAggregate();
     ASSERT_NE(nullptr, copy);
@@ -203,7 +203,7 @@ TEST_F(IntermNodeTest, DeepCopyAggregateNode)
     TIntermSequence::size_type i = 0;
     for (auto *copyChild : *copy->getSequence())
     {
-        TIntermNode *originalChild = original->getSequence()->at(i);
+        TIntermNode *originalChild = originalSeq->at(i);
         checkSymbolCopy(originalChild, copyChild);
         ++i;
     }

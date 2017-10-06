@@ -16,8 +16,9 @@ WindowSurfaceEGL::WindowSurfaceEGL(const egl::SurfaceState &state,
                                    EGLConfig config,
                                    EGLNativeWindowType window,
                                    const std::vector<EGLint> &attribList,
+                                   EGLContext context,
                                    RendererGL *renderer)
-    : SurfaceEGL(state, egl, config, attribList, renderer), mWindow(window)
+    : SurfaceEGL(state, egl, config, attribList, context, renderer), mWindow(window)
 {
 }
 
@@ -25,7 +26,7 @@ WindowSurfaceEGL::~WindowSurfaceEGL()
 {
 }
 
-egl::Error WindowSurfaceEGL::initialize(const egl::Display *display)
+egl::Error WindowSurfaceEGL::initialize()
 {
     mSurface = mEGL->createWindowSurface(mConfig, mWindow, mAttribList.data());
     if (mSurface == EGL_NO_SURFACE)
@@ -33,7 +34,7 @@ egl::Error WindowSurfaceEGL::initialize(const egl::Display *display)
         return egl::Error(mEGL->getError(), "eglCreateWindowSurface failed");
     }
 
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 }  // namespace rx

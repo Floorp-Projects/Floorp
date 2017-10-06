@@ -24,7 +24,7 @@ class DrawBuffersTest : public ANGLETest
         mMaxDrawBuffers = 0;
     }
 
-    void SetUp() override
+    virtual void SetUp()
     {
         ANGLETest::SetUp();
 
@@ -43,41 +43,29 @@ class DrawBuffersTest : public ANGLETest
                          GL_UNSIGNED_BYTE, nullptr);
         }
 
-        if (checkSupport())
+        GLfloat data[] =
         {
-            glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mMaxDrawBuffers);
-        }
+            -1.0f, 1.0f,
+            -1.0f, -2.0f,
+            2.0f, 1.0f
+        };
+
+        glGenBuffers(1, &mBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6, data, GL_STATIC_DRAW);
+
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mMaxDrawBuffers);
 
         ASSERT_GL_NO_ERROR();
     }
 
-    void TearDown() override
+    virtual void TearDown()
     {
         glDeleteFramebuffers(1, &mFBO);
         glDeleteTextures(4, mTextures);
+        glDeleteBuffers(1, &mBuffer);
 
         ANGLETest::TearDown();
-    }
-
-    // We must call a different DrawBuffers method depending on extension support. Use this
-    // method instead of calling on directly.
-    void setDrawBuffers(GLsizei n, const GLenum *drawBufs)
-    {
-        if (extensionEnabled("GL_EXT_draw_buffers"))
-        {
-            glDrawBuffersEXT(n, drawBufs);
-        }
-        else
-        {
-            ASSERT_GE(getClientMajorVersion(), 3);
-            glDrawBuffers(n, drawBufs);
-        }
-    }
-
-    // Use this method to filter if we can support these tests.
-    bool checkSupport()
-    {
-        return (getClientMajorVersion() >= 3 || extensionEnabled("GL_EXT_draw_buffers"));
     }
 
     void setupMRTProgramESSL3(bool bufferEnabled[8], GLuint *programOut)
@@ -127,6 +115,14 @@ class DrawBuffersTest : public ANGLETest
         {
             FAIL() << "shader compilation failed.";
         }
+
+        glUseProgram(*programOut);
+
+        GLint location = glGetAttribLocation(*programOut, "position");
+        ASSERT_NE(location, -1);
+        glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+        glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 8, NULL);
+        glEnableVertexAttribArray(location);
     }
 
     void setupMRTProgramESSL1(bool bufferEnabled[8], GLuint *programOut)
@@ -165,6 +161,14 @@ class DrawBuffersTest : public ANGLETest
         {
             FAIL() << "shader compilation failed.";
         }
+
+        glUseProgram(*programOut);
+
+        GLint location = glGetAttribLocation(*programOut, "position");
+        ASSERT_NE(location, -1);
+        glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+        glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 8, NULL);
+        glEnableVertexAttribArray(location);
     }
 
     void setupMRTProgram(bool bufferEnabled[8], GLuint *programOut)
@@ -215,6 +219,7 @@ class DrawBuffersTest : public ANGLETest
 
     GLuint mFBO;
     GLuint mTextures[4];
+    GLuint mBuffer;
     GLint mMaxDrawBuffers;
 };
 
@@ -244,7 +249,7 @@ TEST_P(DrawBuffersTest, VerifyD3DLimits)
 
 TEST_P(DrawBuffersTest, Gaps)
 {
-    if (!checkSupport())
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
                   << std::endl;
@@ -271,8 +276,9 @@ TEST_P(DrawBuffersTest, Gaps)
         GL_NONE,
         GL_COLOR_ATTACHMENT1
     };
-    setDrawBuffers(2, bufs);
-    drawQuad(program, "position", 0.5);
+    glUseProgram(program);
+    glDrawBuffersEXT(2, bufs);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     verifyAttachment2D(1, mTextures[0], GL_TEXTURE_2D, 0);
 
@@ -281,7 +287,7 @@ TEST_P(DrawBuffersTest, Gaps)
 
 TEST_P(DrawBuffersTest, FirstAndLast)
 {
-    if (!checkSupport())
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
                   << std::endl;
@@ -314,8 +320,9 @@ TEST_P(DrawBuffersTest, FirstAndLast)
         GL_COLOR_ATTACHMENT3
     };
 
-    setDrawBuffers(4, bufs);
-    drawQuad(program, "position", 0.5);
+    glUseProgram(program);
+    glDrawBuffersEXT(4, bufs);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     verifyAttachment2D(0, mTextures[0], GL_TEXTURE_2D, 0);
     verifyAttachment2D(3, mTextures[1], GL_TEXTURE_2D, 0);
@@ -327,7 +334,7 @@ TEST_P(DrawBuffersTest, FirstAndLast)
 
 TEST_P(DrawBuffersTest, FirstHalfNULL)
 {
-    if (!checkSupport())
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
                   << std::endl;
@@ -357,8 +364,9 @@ TEST_P(DrawBuffersTest, FirstHalfNULL)
     GLuint program;
     setupMRTProgram(flags, &program);
 
-    setDrawBuffers(mMaxDrawBuffers, bufs);
-    drawQuad(program, "position", 0.5);
+    glUseProgram(program);
+    glDrawBuffersEXT(mMaxDrawBuffers, bufs);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     for (GLuint texIndex = 0; texIndex < halfMaxDrawBuffers; texIndex++)
     {
@@ -372,7 +380,7 @@ TEST_P(DrawBuffersTest, FirstHalfNULL)
 
 TEST_P(DrawBuffersTest, UnwrittenOutputVariablesShouldNotCrash)
 {
-    if (!checkSupport())
+    if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
     {
         std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
                   << std::endl;
@@ -399,10 +407,11 @@ TEST_P(DrawBuffersTest, UnwrittenOutputVariablesShouldNotCrash)
         GL_NONE,
     };
 
-    setDrawBuffers(4, bufs);
+    glUseProgram(program);
+    glDrawBuffersEXT(4, bufs);
 
     // This call should not crash when we dynamically generate the HLSL code.
-    drawQuad(program, "position", 0.5);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     verifyAttachment2D(0, mTextures[0], GL_TEXTURE_2D, 0);
 
@@ -411,66 +420,15 @@ TEST_P(DrawBuffersTest, UnwrittenOutputVariablesShouldNotCrash)
     glDeleteProgram(program);
 }
 
-TEST_P(DrawBuffersTest, BroadcastGLFragColor)
+// Test that binding multiple layers of a 3D texture works correctly
+TEST_P(DrawBuffersTest, 3DTextures)
 {
-    if (!extensionEnabled("GL_EXT_draw_buffers"))
+    if (getClientMajorVersion() < 3)
     {
-        std::cout << "Test skipped because EGL_EXT_draw_buffers is not enabled." << std::endl;
+        std::cout << "Test skipped because ES3 is not available." << std::endl;
         return;
     }
 
-    // Bind two render targets. gl_FragColor should be broadcast to both.
-    glBindTexture(GL_TEXTURE_2D, mTextures[0]);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextures[0], 0);
-
-    glBindTexture(GL_TEXTURE_2D, mTextures[1]);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mTextures[1], 0);
-
-    const GLenum bufs[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-
-    const std::string vertexShaderSource =
-        "attribute vec4 position;\n"
-        "void main() {\n"
-        "    gl_Position = position;\n"
-        "}\n";
-
-    const std::string fragmentShaderSource =
-        "#extension GL_EXT_draw_buffers : enable\n"
-        "precision highp float;\n"
-        "uniform float u_zero;\n"
-        "void main()\n"
-        "{\n"
-        "    gl_FragColor = vec4(1, 0, 0, 1);\n"
-        "    if (u_zero < 1.0)\n"
-        "    {\n"
-        "        return;\n"
-        "    }\n"
-        "}\n";
-
-    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
-    if (program == 0)
-    {
-        FAIL() << "shader compilation failed.";
-    }
-
-    setDrawBuffers(2, bufs);
-    drawQuad(program, "position", 0.5);
-
-    verifyAttachment2D(0, mTextures[0], GL_TEXTURE_2D, 0);
-    verifyAttachment2D(0, mTextures[1], GL_TEXTURE_2D, 0);
-
-    EXPECT_GL_NO_ERROR();
-
-    glDeleteProgram(program);
-}
-
-class DrawBuffersTestES3 : public DrawBuffersTest
-{
-};
-
-// Test that binding multiple layers of a 3D texture works correctly
-TEST_P(DrawBuffersTestES3, 3DTextures)
-{
     GLTexture texture;
     glBindTexture(GL_TEXTURE_3D, texture.get());
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, getWindowWidth(), getWindowHeight(), getWindowWidth(),
@@ -490,8 +448,10 @@ TEST_P(DrawBuffersTestES3, 3DTextures)
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
     };
 
-    glDrawBuffers(4, bufs);
-    drawQuad(program, "position", 0.5);
+    glUseProgram(program);
+    glDrawBuffersEXT(4, bufs);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     verifyAttachmentLayer(0, texture.get(), 0, 0);
     verifyAttachmentLayer(1, texture.get(), 0, 1);
@@ -504,8 +464,14 @@ TEST_P(DrawBuffersTestES3, 3DTextures)
 }
 
 // Test that binding multiple layers of a 2D array texture works correctly
-TEST_P(DrawBuffersTestES3, 2DArrayTextures)
+TEST_P(DrawBuffersTest, 2DArrayTextures)
 {
+    if (getClientMajorVersion() < 3)
+    {
+        std::cout << "Test skipped because ES3 is not available." << std::endl;
+        return;
+    }
+
     GLTexture texture;
     glBindTexture(GL_TEXTURE_2D_ARRAY, texture.get());
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, getWindowWidth(), getWindowHeight(),
@@ -525,8 +491,10 @@ TEST_P(DrawBuffersTestES3, 2DArrayTextures)
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
     };
 
-    glDrawBuffers(4, bufs);
-    drawQuad(program, "position", 0.5);
+    glUseProgram(program);
+    glDrawBuffersEXT(4, bufs);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     verifyAttachmentLayer(0, texture.get(), 0, 0);
     verifyAttachmentLayer(1, texture.get(), 0, 1);
@@ -547,5 +515,3 @@ ANGLE_INSTANTIATE_TEST(DrawBuffersTest,
                        ES3_OPENGL(),
                        ES2_OPENGLES(),
                        ES3_OPENGLES());
-
-ANGLE_INSTANTIATE_TEST(DrawBuffersTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());

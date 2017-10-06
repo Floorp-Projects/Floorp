@@ -15,19 +15,13 @@
 
 namespace rx
 {
-class ContextImpl;
 
 class VertexArrayImpl : angle::NonCopyable
 {
   public:
     VertexArrayImpl(const gl::VertexArrayState &data) : mData(data) {}
-    virtual void syncState(const gl::Context *context, const gl::VertexArray::DirtyBits &dirtyBits)
-    {
-    }
-
-    virtual void destroy(const gl::Context *context) {}
-    virtual ~VertexArrayImpl() {}
-
+    virtual ~VertexArrayImpl() { }
+    virtual void syncState(const gl::VertexArray::DirtyBits &dirtyBits) {}
   protected:
     const gl::VertexArrayState &mData;
 };
