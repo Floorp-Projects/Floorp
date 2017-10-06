@@ -3651,6 +3651,16 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
         mAllRedirectsPassTimingAllowCheck &&
         oldTimedChannel->TimingAllowCheck(principal));
     }
+
+    // Propagate service worker measurements across redirects.  The
+    // PeformanceResourceTiming.workerStart API expects to see the
+    // worker start time after a redirect.
+    newTimedChannel->SetLaunchServiceWorkerStart(mLaunchServiceWorkerStart);
+    newTimedChannel->SetLaunchServiceWorkerEnd(mLaunchServiceWorkerEnd);
+    newTimedChannel->SetDispatchFetchEventStart(mDispatchFetchEventStart);
+    newTimedChannel->SetDispatchFetchEventEnd(mDispatchFetchEventEnd);
+    newTimedChannel->SetHandleFetchEventStart(mHandleFetchEventStart);
+    newTimedChannel->SetHandleFetchEventEnd(mHandleFetchEventEnd);
   }
 
   // Pass the preferred alt-data type on to the new channel.
