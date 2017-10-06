@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf8">
+    <!--
+    - Any copyright is dedicated to the Public Domain.
+    - http://creativecommons.org/publicdomain/zero/1.0/
+    -->
+    <title>Test for bug 920116 - stacktraces for console API messages</title>
+    <script>
+      function firstCall() {
+        secondCall();
+      }
+
+      function secondCall() {
+        thirdCall();
+      }
+
+      function thirdCall() {
+        console.log("foo-log");
+        console.error("foo-error");
+        console.exception("foo-exception");
+        console.assert("red" == "blue", "foo-assert");
+      }
+
+      window.onload = firstCall;
+    </script>
+  </head>
+  <body>
+    <p>Hello world!</p>
+  </body>
+</html>
