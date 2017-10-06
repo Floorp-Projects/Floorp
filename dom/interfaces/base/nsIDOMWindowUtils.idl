@@ -34,6 +34,7 @@ interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMElement;
+interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsIPreloadedStyleSheet;
 interface nsITransferable;
@@ -927,8 +928,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * This method requires chrome privileges.
    */
-  uint32_t compareCanvases(in nsISupports aCanvas1,
-                           in nsISupports aCanvas2,
+  uint32_t compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+                           in nsIDOMHTMLCanvasElement aCanvas2,
                            out unsigned long aMaxDifference);
 
   /**
