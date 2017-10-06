@@ -14,6 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1016960
 
   var chromeWindow = window.open("chrome://mochitests/content/chrome/dom/base/test/file_empty.html", "1016960", "chrome");
   ok(chromeWindow instanceof ChromeWindow, "A chrome window should return true for |instanceof ChromeWindow|.");
+  ok(chromeWindow.isChromeWindow, "A chrome window should return true for |instanceof ChromeWindow|.");
   chromeWindow.close();
 
   </script>

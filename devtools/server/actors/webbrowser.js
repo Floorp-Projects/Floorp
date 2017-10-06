@@ -328,7 +328,7 @@ BrowserTabList.prototype.getTab = function ({ outerWindowID, tabId }) {
     // First look for in-process frames with this ID
     let window = Services.wm.getOuterWindowWithId(outerWindowID);
     // Safety check to prevent debugging top level window via getTab
-    if (window instanceof Ci.nsIDOMChromeWindow) {
+    if (window && window.isChromeWindow) {
       return promise.reject({
         error: "forbidden",
         message: "Window with outerWindowID '" + outerWindowID + "' is chrome"

@@ -1640,7 +1640,7 @@ var PlacesControllerDragHelper = {
       if (flavor != TAB_DROP_TYPE) {
         nodes = PlacesUtils.unwrapNodes(data, flavor);
       } else if (data instanceof XULElement && data.localName == "tab" &&
-               data.ownerGlobal instanceof ChromeWindow) {
+               data.ownerGlobal.isChromeWindow) {
         let uri = data.linkedBrowser.currentURI;
         let spec = uri ? uri.spec : "about:blank";
         nodes = [{ uri: spec,
