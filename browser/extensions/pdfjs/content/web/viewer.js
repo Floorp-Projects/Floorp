@@ -4441,7 +4441,7 @@ class PDFHistory {
     this._blockHashChange = 0;
     this._currentHash = getCurrentHash();
     this._numPositionUpdates = 0;
-    this._currentUid = this._uid = 0;
+    this._uid = this._maxUid = 0;
     this._destination = null;
     this._position = null;
     if (!this._isValidState(state) || resetHistory) {
@@ -4526,7 +4526,7 @@ class PDFHistory {
       return;
     }
     let state = window.history.state;
-    if (this._isValidState(state) && state.uid < this._uid - 1) {
+    if (this._isValidState(state) && state.uid < this._maxUid) {
       window.history.forward();
     }
   }
@@ -4537,13 +4537,14 @@ class PDFHistory {
     let shouldReplace = forceReplace || !this._destination;
     let newState = {
       fingerprint: this.fingerprint,
-      uid: shouldReplace ? this._currentUid : this._uid,
+      uid: shouldReplace ? this._uid : this._uid + 1,
       destination
     };
     this._updateInternalState(destination, newState.uid);
     if (shouldReplace) {
       window.history.replaceState(newState, '');
     } else {
+      this._maxUid = this._uid;
       window.history.pushState(newState, '');
     }
   }
@@ -4603,8 +4604,7 @@ class PDFHistory {
       delete destination.temporary;
     }
     this._destination = destination;
-    this._currentUid = uid;
-    this._uid = this._currentUid + 1;
+    this._uid = uid;
     this._numPositionUpdates = 0;
   }
   _updateViewarea({ location }) {
@@ -4638,7 +4638,7 @@ class PDFHistory {
         hashChanged = this._currentHash !== newHash;
     this._currentHash = newHash;
     if (!state || false) {
-      this._currentUid = this._uid;
+      this._uid++;
       let { hash, page, rotation } = parseCurrentHash(this.linkService);
       this._pushOrReplaceState({
         hash,
