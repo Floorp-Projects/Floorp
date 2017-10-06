@@ -56,7 +56,7 @@ DEFINES['EGLAPI'] = ""
 
 
 
-LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/base', '../../src/third_party/khronos' ]
+LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/third_party/khronos' ]
 USE_LIBS += [ 'libGLESv2' ]
 
 DEFINES['LIBANGLE_IMPLEMENTATION'] = "1"
