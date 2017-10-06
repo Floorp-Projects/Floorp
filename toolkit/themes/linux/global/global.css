@@ -287,18 +287,18 @@ popupnotificationcontent {
   border: none;
   margin: -14px;
   padding: 0;
-  background-image: url("chrome://global/skin/icons/autoscroll.png");
+  background-image: url("chrome://global/skin/icons/autoscroll.svg");
+  background-size: contain;
   background-color: transparent;
-  background-position: right top;
   -moz-appearance: none;
 }
 
 .autoscroller[scrolldir="NS"] {
-  background-position: right center;
+  background-image: url("chrome://global/skin/icons/autoscroll-vertical.svg");
 }
 
 .autoscroller[scrolldir="EW"] {
-  background-position: right bottom;
+  background-image: url("chrome://global/skin/icons/autoscroll-horizontal.svg");
 }
 
 /* :::::: Close button icons ::::: */
