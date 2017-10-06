@@ -584,4 +584,4 @@ if __name__ == "__main__":
         package_name = "clang-tidy"
 
     ext = "bz2" if is_darwin() or is_windows() else "xz"
-    build_tar_package("tar", "%.tar.%s" % (package_name, ext), final_stage_dir, "clang")
+    build_tar_package("tar", "%s.tar.%s" % (package_name, ext), final_stage_dir, "clang")
