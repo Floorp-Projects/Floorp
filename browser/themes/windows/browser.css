@@ -79,14 +79,14 @@
 
 :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
 :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-  margin-top: var(--space-above-tabbar);
+  padding-top: var(--space-above-tabbar);
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
   :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-    margin-top: calc(var(--space-above-tabbar) + 4px);
+    padding-top: calc(var(--space-above-tabbar) + 4px);
   }
 }
 
