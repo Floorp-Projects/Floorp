@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "სურათი მოიჭრა $PIXELS$ პიქსელამდე.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "გაფუჭებულია."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "გადაიღეთ, შეინახეთ და გააზიარეთ ეკრანის სურათები Firefox-იდან გაუსვლელად."
+  },
+  "tourHeaderPageAction": {
+    "message": "შენახვის ახალი ხერხი"
+  },
+  "tourBodyPageAction": {
+    "message": "როცა მოგესურვებათ ეკრანისთვის სურათის გადაღება, ჩამოშალეთ გვერდზე მოქმედებების მენიუ, რომელიც მდებარეობს მისამართების ველში."
   },
   "tourHeaderClickAndDrag": {
     "message": "გადაუღეთ სურათი რასაც გინდათ"

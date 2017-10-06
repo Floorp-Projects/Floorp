@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "הבחירה שלך קטנה מידי"
   },
+  "privateWindowErrorTitle": {
+    "message": "‏Screenshots מנוטרל במצב גלישה פרטית"
+  },
+  "privateWindowErrorDetails": {
+    "message": "מצטערים על אי הנוחות. אנחנו עובדים על תכונה זו בגרסאות עתידיות."
+  },
   "genericErrorTitle": {
     "message": "אויש! Firefox Screenshots ירד מהפסים."
   },
@@ -75,6 +81,9 @@
   },
   "tourBodyIntro": {
     "message": "צילום, שמירה ושיתוף של צילומי מסך מבלי לעזוב את Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "דרך חדשה לשמירה"
   },
   "tourHeaderClickAndDrag": {
     "message": "לצלם רק את מה שנחוץ לך"
@@ -106,13 +115,24 @@
   "tourDone": {
     "message": "סיום"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "מעצם השימוש ב־Firefox Screenshots הכללים של שירותי הענן של Firefox‏ {termsAndPrivacyNoticeTermsLink} ו{termsAndPrivacyNoticePrivacyLink} מוסכמים עליך."
+  "termsAndPrivacyNotice2": {
+    "message": "השימוש ב־Firefox Screenshots מהווה הסכמה ל$TERMSANDPRIVACYNOTICETERMSLINK$ ול$TERMSANDPRIVACYNOTICEPRIVACYLINK$ שלנו.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "תנאים"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "הצהרת פרטיות"
+  },
+  "libraryLabel": {
+    "message": "צילומי מסך"
   }
 }

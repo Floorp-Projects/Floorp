@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "این تصویر برید شده است به $PIXELS$ پیکسل.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "خارج از سرویس."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "بدون خارج شدن از فایرفاکس، عکس بگیرید، ذخیره کنید و به اشتراک بگذارید."
+  },
+  "tourHeaderPageAction": {
+    "message": "روش جدیدی برای ذخیره کردن"
+  },
+  "tourBodyPageAction": {
+    "message": "بازکردن صفحه اقدامات فهرست در آدرس بار هر زمانی که شما تمایل داشته باشید از صفحه عکس بگیرید."
   },
   "tourHeaderClickAndDrag": {
     "message": "ضبط آنچه شما می‌خواهید"
