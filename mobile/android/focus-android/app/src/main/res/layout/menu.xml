@@ -12,6 +12,8 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:layout_width="250dp"
         android:layout_height="wrap_content" />
 

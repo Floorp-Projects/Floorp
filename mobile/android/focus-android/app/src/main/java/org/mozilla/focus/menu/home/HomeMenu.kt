@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.PopupWindow
 import kotlinx.android.synthetic.main.menu.view.*
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.dp
 import org.mozilla.focus.utils.ViewUtils
 
 class HomeMenu(
@@ -27,7 +26,6 @@ class HomeMenu(
         with(contentView.list) {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             adapter = HomeMenuAdapter(context, this@HomeMenu)
-            setPadding(0, context.dp(8), 0, 0)
         }
 
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
