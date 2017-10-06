@@ -252,6 +252,9 @@ public:
   MediaEventSource<DecoderDoctorEvent>&
   OnDecoderDoctorEvent() { return mOnDecoderDoctorEvent; }
 
+  MediaEventSource<NextFrameStatus>&
+  OnNextFrameStatus() { return mOnNextFrameStatus; }
+
   size_t SizeOfVideoQueue() const;
 
   size_t SizeOfAudioQueue() const;
@@ -275,7 +278,6 @@ private:
   class ShutdownState;
 
   static const char* ToStateStr(State aState);
-  static const char* ToStr(NextFrameStatus aStatus);
   const char* ToStateStr();
 
   nsCString GetDebugInfo();
@@ -382,8 +384,6 @@ protected:
 
   // Returns true if we have less than aThreshold of buffered data available.
   bool HasLowBufferedData(const media::TimeUnit& aThreshold);
-
-  void UpdateNextFrameStatus(NextFrameStatus aStatus);
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
@@ -661,6 +661,8 @@ private:
 
   MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;
 
+  MediaEventProducer<NextFrameStatus> mOnNextFrameStatus;
+
   const bool mIsMSE;
 
 private:
@@ -692,10 +694,6 @@ private:
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
 
-  // The status of our next frame. Mirrored on the main thread and used to
-  // compute ready state.
-  Canonical<NextFrameStatus> mNextFrameStatus;
-
   // The time of the current frame, corresponding to the "current
   // playback position" in HTML5. This is referenced from 0, which is the initial
   // playback position.
@@ -713,10 +711,6 @@ public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration()
   {
     return &mDuration;
-  }
-  AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus()
-  {
-    return &mNextFrameStatus;
   }
   AbstractCanonical<media::TimeUnit>* CanonicalCurrentPosition()
   {
