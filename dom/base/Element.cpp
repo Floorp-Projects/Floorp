@@ -4194,13 +4194,6 @@ Element::ClearDataset()
   slots->mDataset = nullptr;
 }
 
-nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>*
-Element::RegisteredIntersectionObservers()
-{
-  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-  return &slots->mRegisteredIntersectionObservers;
-}
-
 enum nsPreviousIntersectionThreshold {
   eUninitialized = -2,
   eNonIntersecting = -1
@@ -4209,7 +4202,20 @@ enum nsPreviousIntersectionThreshold {
 void
 Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  RegisteredIntersectionObservers()->LookupForAdd(aObserver).OrInsert([]() {
+  IntersectionObserverList* observers =
+    static_cast<IntersectionObserverList*>(
+      GetProperty(nsGkAtoms::intersectionobserverlist)
+    );
+
+  if (!observers) {
+    observers = new IntersectionObserverList();
+    observers->Put(aObserver, eUninitialized);
+    SetProperty(nsGkAtoms::intersectionobserverlist, observers,
+                nsINode::DeleteProperty<IntersectionObserverList>);
+    return;
+  }
+
+  observers->LookupForAdd(aObserver).OrInsert([]() {
     // Value can be:
     //   -2:   Makes sure next calculated threshold always differs, leading to a
     //         notification task being scheduled.
@@ -4222,14 +4228,44 @@ Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 void
 Element::UnregisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  RegisteredIntersectionObservers()->Remove(aObserver);
+  IntersectionObserverList* observers =
+    static_cast<IntersectionObserverList*>(
+      GetProperty(nsGkAtoms::intersectionobserverlist)
+    );
+  if (observers) {
+    observers->Remove(aObserver);
+  }
+}
+
+void
+Element::UnlinkIntersectionObservers()
+{
+  IntersectionObserverList* observers =
+    static_cast<IntersectionObserverList*>(
+      GetProperty(nsGkAtoms::intersectionobserverlist)
+    );
+  if (!observers) {
+    return;
+  }
+  for (auto iter = observers->Iter(); !iter.Done(); iter.Next()) {
+    DOMIntersectionObserver* observer = iter.Key();
+    observer->UnlinkTarget(*this);
+  }
+  observers->Clear();
 }
 
 bool
 Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t aThreshold)
 {
+  IntersectionObserverList* observers =
+    static_cast<IntersectionObserverList*>(
+      GetProperty(nsGkAtoms::intersectionobserverlist)
+    );
+  if (!observers) {
+    return false;
+  }
   bool updated = false;
-  if (auto entry = RegisteredIntersectionObservers()->Lookup(aObserver)) {
+  if (auto entry = observers->Lookup(aObserver)) {
     updated = entry.Data() != aThreshold;
     entry.Data() = aThreshold;
   }

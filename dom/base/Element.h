@@ -73,6 +73,8 @@ namespace dom {
   class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
   enum class CallerType : uint32_t;
+  typedef nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
+    IntersectionObserverList;
 } // namespace dom
 } // namespace mozilla
 
@@ -1436,6 +1438,7 @@ public:
 
   void RegisterIntersectionObserver(DOMIntersectionObserver* aObserver);
   void UnregisterIntersectionObserver(DOMIntersectionObserver* aObserver);
+  void UnlinkIntersectionObservers();
   bool UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t threshold);
 
 protected:
@@ -1720,9 +1723,6 @@ protected:
 
   nsDOMTokenList* GetTokenList(nsIAtom* aAtom,
                                const DOMTokenListSupportedTokenArray aSupportedTokens = nullptr);
-
-  nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>*
-    RegisteredIntersectionObservers();
 
 private:
   /**
