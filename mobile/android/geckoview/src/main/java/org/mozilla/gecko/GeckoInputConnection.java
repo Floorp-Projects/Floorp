@@ -8,16 +8,16 @@ package org.mozilla.gecko;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
@@ -217,7 +217,7 @@ class GeckoInputConnection
         return InputMethods.getInputMethodManager(context);
     }
 
-    private void showSoftInput() {
+    private void showSoftInputWithToolbar(final boolean showToolbar) {
         if (mSoftInputReentrancyGuard) {
             return;
         }
@@ -237,7 +237,7 @@ class GeckoInputConnection
                     v.requestFocus();
                 }
                 final GeckoView view = getView();
-                if (view != null) {
+                if (view != null && showToolbar) {
                     view.getDynamicToolbarAnimator().showToolbar(/*immediately*/ true);
                 }
                 mSoftInputReentrancyGuard = true;
@@ -651,8 +651,14 @@ class GeckoInputConnection
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
 
+        // context is from previous "getView().getContext()" so it should be activity context
+        final boolean isFullScreen = ActivityUtils.isFullScreen((Activity) context);
         if (mIsUserAction) {
-            showSoftInput();
+            if (isFullScreen) {
+                showSoftInputWithToolbar(false);
+            } else {
+                showSoftInputWithToolbar(true);
+            }
         }
 
         return this;
@@ -940,7 +946,7 @@ class GeckoInputConnection
                 break;
 
             case NOTIFY_IME_OPEN_VKB:
-                showSoftInput();
+                showSoftInputWithToolbar(false);
                 break;
 
             case GeckoEditableListener.NOTIFY_IME_TO_COMMIT_COMPOSITION: {
