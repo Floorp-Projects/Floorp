@@ -354,7 +354,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
       }
 
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(aDisplayListBuilder, aManager);
+      layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
       layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
       aManager->BeginTransactionWithTarget(context);
