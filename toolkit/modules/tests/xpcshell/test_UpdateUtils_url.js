@@ -9,7 +9,11 @@ Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://testing-common/AppInfo.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 const PREF_APP_UPDATE_CHANNEL     = "app.update.channel";
 const PREF_APP_PARTNER_BRANCH     = "app.partner.";
@@ -71,7 +75,8 @@ function getServicePack() {
       throw ("Failure in GetVersionEx (returned 0)");
     }
 
-    return winVer.wServicePackMajor + "." + winVer.wServicePackMinor;
+    return winVer.wServicePackMajor + "." + winVer.wServicePackMinor + "." +
+           winVer.dwBuildNumber;
   } finally {
     kernel32.close();
   }
@@ -282,9 +287,8 @@ add_task(async function test_platform_version() {
 // url constructed with %OS_VERSION%
 add_task(async function test_os_version() {
   let url = URL_PREFIX + "%OS_VERSION%/";
-  let osVersion;
-  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+  let osVersion = Services.sysinfo.getProperty("name") + " " +
+                  Services.sysinfo.getProperty("version");
 
   if (AppConstants.platform == "win") {
     try {
@@ -294,20 +298,24 @@ add_task(async function test_os_version() {
       do_throw("Failure obtaining service pack: " + e);
     }
 
-    if ("5.0" === sysInfo.getProperty("version")) { // Win2K
-      osVersion += " (unknown)";
-    } else {
-      try {
-        osVersion += " (" + getProcArchitecture() + ")";
-      } catch (e) {
-        do_throw("Failed to obtain processor architecture: " + e);
-      }
+    if (Services.vc.compare(Services.sysinfo.getProperty("version"), "10") >= 0) {
+      const WINDOWS_UBR_KEY_PATH = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+      let ubr = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                           WINDOWS_UBR_KEY_PATH, "UBR",
+                                           Ci.nsIWindowsRegKey.WOW64_64);
+      osVersion += (ubr !== undefined) ? "." + ubr : ".unknown";
+    }
+
+    try {
+      osVersion += " (" + getProcArchitecture() + ")";
+    } catch (e) {
+      do_throw("Failed to obtain processor architecture: " + e);
     }
   }
 
   if (osVersion) {
     try {
-      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+      osVersion += " (" + Services.sysinfo.getProperty("secondaryLibrary") + ")";
     } catch (e) {
       // Not all platforms have a secondary widget library, so an error is
       // nothing to worry about.
