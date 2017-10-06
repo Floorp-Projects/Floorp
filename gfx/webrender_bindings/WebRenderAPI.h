@@ -208,6 +208,10 @@ public:
 
   ~DisplayListBuilder();
 
+  void Save();
+  void Restore();
+  void ClearSave();
+
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
