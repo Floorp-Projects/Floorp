@@ -24,5 +24,5 @@ dictionary CredentialRequestOptions {
 };
 
 dictionary CredentialCreationOptions {
-  MakeCredentialOptions publicKey;
+  MakePublicKeyCredentialOptions publicKey;
 };

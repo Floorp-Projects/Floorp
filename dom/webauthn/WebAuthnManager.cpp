@@ -282,7 +282,7 @@ WebAuthnManager::Get()
 
 already_AddRefed<Promise>
 WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
-                                const MakeCredentialOptions& aOptions)
+                                const MakePublicKeyCredentialOptions& aOptions)
 {
   MOZ_ASSERT(aParent);
 
@@ -302,6 +302,18 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(rv);
     return promise.forget();
+  }
+
+  // Enforce 4.4.3 User Account Parameters for Credential Generation
+  if (aOptions.mUser.mId.WasPassed()) {
+    // When we add UX, we'll want to do more with this value, but for now
+    // we just have to verify its correctness.
+    CryptoBuffer userId;
+    userId.Assign(aOptions.mUser.mId.Value());
+    if (userId.Length() > 64) {
+      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      return promise.forget();
+    }
   }
 
   // If timeoutSeconds was specified, check if its value lies within a
@@ -371,7 +383,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     // element in cryptoParameters.
 
     nsString algName;
-    if (NS_FAILED(GetAlgorithmName(aOptions.mParameters[a].mAlgorithm,
+    if (NS_FAILED(GetAlgorithmName(aOptions.mParameters[a].mAlg,
                                    algName))) {
       continue;
     }
@@ -381,7 +393,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     // normalizedAlgorithm.
     PublicKeyCredentialParameters normalizedObj;
     normalizedObj.mType = aOptions.mParameters[a].mType;
-    normalizedObj.mAlgorithm.SetAsString().Assign(algName);
+    normalizedObj.mAlg.SetAsString().Assign(algName);
 
     if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
       promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
@@ -411,8 +423,8 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
 
   for (size_t a = 0; a < normalizedParams.Length(); ++a) {
     if (normalizedParams[a].mType == PublicKeyCredentialType::Public_key &&
-        normalizedParams[a].mAlgorithm.IsString() &&
-        normalizedParams[a].mAlgorithm.GetAsString().EqualsLiteral(
+        normalizedParams[a].mAlg.IsString() &&
+        normalizedParams[a].mAlg.GetAsString().EqualsLiteral(
           JWK_ALG_ECDSA_P_256)) {
       isValidCombination = true;
       break;
@@ -464,14 +476,12 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   }
 
   nsTArray<WebAuthnScopedCredentialDescriptor> excludeList;
-  if (aOptions.mExcludeList.WasPassed()) {
-    for (const auto& s: aOptions.mExcludeList.Value()) {
-      WebAuthnScopedCredentialDescriptor c;
-      CryptoBuffer cb;
-      cb.Assign(s.mId);
-      c.id() = cb;
-      excludeList.AppendElement(c);
-    }
+  for (const auto& s: aOptions.mExcludeList) {
+    WebAuthnScopedCredentialDescriptor c;
+    CryptoBuffer cb;
+    cb.Assign(s.mId);
+    c.id() = cb;
+    excludeList.AppendElement(c);
   }
 
   // TODO: Add extension list building

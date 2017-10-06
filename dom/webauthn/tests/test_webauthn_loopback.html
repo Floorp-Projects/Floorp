@@ -108,6 +108,7 @@ function() {
 
     ok(aAssertion.response.authenticatorData === aAssertion.response.authenticatorData, "AuthenticatorAssertionResponse.AuthenticatorData is SameObject");
     ok(aAssertion.response.signature === aAssertion.response.signature, "AuthenticatorAssertionResponse.Signature is SameObject");
+    isnot(aAssertion.response.userId, undefined, "AuthenticatorAssertionResponse.UserId is defined")
 
     ok(aAssertion.response.authenticatorData.byteLength > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
@@ -136,8 +137,8 @@ function() {
 
   function testMakeCredential() {
     let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
-    let param = {type: "public-key", algorithm: "ES256"};
+    let user = {name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", alg: "ES256"};
     let makeCredentialOptions = {
       rp: rp,
       user: user,
@@ -155,8 +156,8 @@ function() {
 
   function testMakeDuplicate(aCredInfo) {
     let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
-    let param = {type: "public-key", algorithm: "ES256"};
+    let user = {name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", alg: "ES256"};
     let makeCredentialOptions = {
       rp: rp,
       user: user,
