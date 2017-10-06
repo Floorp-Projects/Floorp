@@ -63,10 +63,6 @@ nsPrintingProxy::GetInstance()
 nsresult
 nsPrintingProxy::Init()
 {
-  ContentChild::GetSingleton()->SetEventTargetForActor(this,
-    SystemGroup::EventTargetFor(mozilla::TaskCategory::Other));
-  MOZ_ASSERT(this->GetActorEventTarget());
-
   mozilla::Unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
   return NS_OK;
 }
