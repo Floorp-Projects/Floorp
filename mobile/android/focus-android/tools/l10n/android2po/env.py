@@ -59,27 +59,32 @@ MISSING_LOCALES = {
     'cak': {
         'name': "Kaqchikel",
         'local_name': "Kaqchikel",
-        'plural_rule': 'az'
+        'plural_rule': 'az',
+        'team': 'cak <LL@li.org>\n'
     },
     'zam': {
         'name': "Miahuatlán Zapotec",
         'local_name': "DíɁztè",
-        'plural_rule': 'az'
+        'plural_rule': 'az',
+        'team': 'zam <LL@li.org>\n'
     },
     'trs': {
         'name': "Chicahuaxtla Triqui",
         'local_name': "Triqui",
-        'plural_rule': 'az'
+        'plural_rule': 'az',
+        'team': 'trs <LL@li.org>\n'
     },
     'meh': {
         'name': "Mixteco Yucuhiti",
         'local_name': "Tu´un savi ñuu Yasi'í Yuku Iti",
-        'plural_rule': 'id'
+        'plural_rule': 'id',
+        'team': 'meh <LL@li.org>\n'
     },
     'mix': {
         'name': "Mixtepec Mixtec",
         'local_name': "Tu'un savi",
-        'plural_rule': 'id'
+        'plural_rule': 'id',
+        'team': 'mix <LL@li.org>\n'
     }
 }
 

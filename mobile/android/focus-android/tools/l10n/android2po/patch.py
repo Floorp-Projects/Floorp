@@ -8,9 +8,36 @@ from babel._compat import number_types
 from babel.dates import format_datetime
 from babel.messages import pofile, Catalog
 from babel.messages.catalog import _parse_datetime_header
+from babel.util import LOCALTZ
 
 
 class PatchedCatalog(Catalog):
+    def __init__(self, original_locale=None, **kwargs):
+        super(PatchedCatalog, self).__init__(**kwargs)
+        self.original_locale = original_locale
+
+    def _get_header_comment(self):
+        comment = self._header_comment
+        year = datetime.now(LOCALTZ).strftime('%Y')
+        if hasattr(self.revision_date, 'strftime'):
+            year = self.revision_date.strftime('%Y')
+        comment = comment.replace('PROJECT', self.project) \
+                         .replace('VERSION', self.version) \
+                         .replace('YEAR', year) \
+                         .replace('ORGANIZATION', self.copyright_holder)
+        if self.original_locale:
+            comment = comment.replace(
+                'Translations template', '%s translations' % MISSING_LOCALES[self.original_locale]['name']
+            )
+        elif self.locale:
+            comment = comment.replace('Translations template', '%s translations' % self.locale.english_name)
+        return comment
+
+    def _set_header_comment(self, string):
+        self._header_comment = string
+
+    header_comment = property(_get_header_comment, _set_header_comment)
+
     def _get_mime_headers(self):
         headers = []
         headers.append(('Project-Id-Version',
@@ -27,11 +54,14 @@ class PatchedCatalog(Catalog):
             headers.append(('PO-Revision-Date', self.revision_date))
         headers.append(('Last-Translator', self.last_translator))
         if self.locale is not None:
-            headers.append(('Language', str(self.locale)))
-        if (self.locale is not None) and ('LANGUAGE' in self.language_team):
-            headers.append(('Language-Team',
-                            self.language_team.replace('LANGUAGE',
-                                                       str(self.locale))))
+            if self.original_locale:
+                headers.append(('Language', self.original_locale))
+            else:
+                headers.append(('Language', str(self.locale)))
+        if (self.locale is not None) and ('LANGUAGE' in self.language_team) and not self.original_locale:
+            headers.append(('Language-Team', self.language_team.replace('LANGUAGE', str(self.locale))))
+        elif self.original_locale:
+            headers.append(('Language-Team', MISSING_LOCALES[self.original_locale]['team']))
         else:
             headers.append(('Language-Team', self.language_team))
         if self.locale is not None:
@@ -80,7 +110,14 @@ class PatchedCatalog(Catalog):
 
 
 def read_po(fileobj, locale=None, domain=None, ignore_obsolete=False, charset=None):
-    catalog = PatchedCatalog(locale=locale, domain=domain, charset=charset)
+    if locale in MISSING_LOCALES:
+        catalog = PatchedCatalog(
+            locale=MISSING_LOCALES[locale]['plural_rule'], domain=domain,
+            charset=charset, original_locale=locale,
+            copyright_holder="Mozilla", project="Focus for Android"
+        )
+    else:
+        catalog = PatchedCatalog(locale=locale, domain=domain, charset=charset)
     parser = pofile.PoFileParser(catalog, ignore_obsolete)
     parser.parse(fileobj)
     return catalog
