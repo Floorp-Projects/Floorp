@@ -658,7 +658,7 @@ class AddressRadixTree {
   malloc_spinlock_t mLock;
   void** mRoot;
   unsigned mHeight;
-  unsigned mLevel2Bits[1]; // Dynamically sized.
+  unsigned mLevel2Bits[2];
 
 public:
   static AddressRadixTree* Create(unsigned aBits);
@@ -1737,13 +1737,12 @@ AddressRadixTree*
 AddressRadixTree::Create(unsigned aBits)
 {
   AddressRadixTree* ret;
-  unsigned bits_per_level, height, i;
+  unsigned bits_per_level, height;
 
   bits_per_level = AddressRadixTree::kNodeSize2Pow - SIZEOF_PTR_2POW;
   height = (aBits + bits_per_level - 1) / bits_per_level;
 
-  ret = (AddressRadixTree*)base_calloc(1, sizeof(AddressRadixTree) +
-      (sizeof(unsigned) * (height - 1)));
+  ret = (AddressRadixTree*)base_calloc(1, sizeof(AddressRadixTree));
   if (!ret) {
     return nullptr;
   }
@@ -1755,9 +1754,7 @@ AddressRadixTree::Create(unsigned aBits)
   } else {
     ret->mLevel2Bits[0] = bits_per_level;
   }
-  for (i = 1; i < height; i++) {
-    ret->mLevel2Bits[i] = bits_per_level;
-  }
+  ret->mLevel2Bits[1] = bits_per_level;
 
   ret->mRoot = (void**)base_calloc(1 << ret->mLevel2Bits[0], sizeof(void*));
   if (!ret->mRoot) {
@@ -1780,11 +1777,11 @@ AddressRadixTree::GetSlot(void* aKey, bool aCreate)
   for (i = lshift = 0, height = mHeight, node = mRoot;
        i < height - 1;
        i++, lshift += bits, node = child) {
-    bits = mLevel2Bits[i];
+    bits = mLevel2Bits[i ? 1 : 0];
     subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
     child = (void**) node[subkey];
     if (!child && aCreate) {
-      child = (void**) base_calloc(1 << mLevel2Bits[i + 1], sizeof(void*));
+      child = (void**) base_calloc(1 << mLevel2Bits[1], sizeof(void*));
       if (child) {
         node[subkey] = child;
       }
@@ -1798,7 +1795,7 @@ AddressRadixTree::GetSlot(void* aKey, bool aCreate)
    * node is a leaf, so it contains values rather than node
    * pointers.
    */
-  bits = mLevel2Bits[i];
+  bits = mLevel2Bits[i ? 1 : 0];
   subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
   return &node[subkey];
 }
