@@ -552,7 +552,7 @@ nsCSPParser::keywordSource()
       return nullptr;
     }
     mStrictDynamic = true;
-    return new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
+    return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE)) {
@@ -571,7 +571,8 @@ nsCSPParser::keywordSource()
     }
     // cache if we encounter 'unsafe-inline' so we can invalidate (ignore) it in
     // case that script-src directive also contains hash- or nonce-.
-    mUnsafeInlineKeywordSrc = new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
+    mUnsafeInlineKeywordSrc =
+      new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
     return mUnsafeInlineKeywordSrc;
   }
 
@@ -581,7 +582,7 @@ nsCSPParser::keywordSource()
     if (doc) {
       doc->SetHasUnsafeEvalCSP(true);
     }
-    return new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
+    return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
   return nullptr;
 }
@@ -665,7 +666,8 @@ nsCSPParser::nonceSource()
                NS_ConvertUTF16toUTF8(mCurValue).get()));
 
   // Check if mCurToken begins with "'nonce-" and ends with "'"
-  if (!StringBeginsWith(mCurToken, NS_ConvertUTF8toUTF16(CSP_EnumToKeyword(CSP_NONCE)),
+  if (!StringBeginsWith(mCurToken,
+                        nsDependentString(CSP_EnumToUTF16Keyword(CSP_NONCE)),
                         nsASCIICaseInsensitiveStringComparator()) ||
       mCurToken.Last() != SINGLEQUOTE) {
     return nullptr;
@@ -861,8 +863,7 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
     }
     // Otherwise, we ignore 'none' and report a warning
     else {
-      NS_ConvertUTF8toUTF16 unicodeNone(CSP_EnumToKeyword(CSP_NONE));
-      const char16_t* params[] = { unicodeNone.get() };
+      const char16_t* params[] = { CSP_EnumToUTF16Keyword(CSP_NONE) };
       logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringUnknownOption",
                                params, ArrayLength(params));
     }
@@ -1252,10 +1253,10 @@ nsCSPParser::directive()
       // Even though we invalidate all of the srcs internally, we don't want to log
       // messages for the srcs: (1) strict-dynamic, (2) unsafe-inline,
       // (3) nonces, and (4) hashes
-      if (!srcStr.EqualsASCII(CSP_EnumToKeyword(CSP_STRICT_DYNAMIC)) &&
-          !srcStr.EqualsASCII(CSP_EnumToKeyword(CSP_UNSAFE_EVAL)) &&
-          !StringBeginsWith(NS_ConvertUTF16toUTF8(srcStr), NS_LITERAL_CSTRING("'nonce-")) &&
-          !StringBeginsWith(NS_ConvertUTF16toUTF8(srcStr), NS_LITERAL_CSTRING("'sha")))
+      if (!srcStr.EqualsASCII(CSP_EnumToUTF8Keyword(CSP_STRICT_DYNAMIC)) &&
+          !srcStr.EqualsASCII(CSP_EnumToUTF8Keyword(CSP_UNSAFE_EVAL)) &&
+          !StringBeginsWith(srcStr, nsDependentString(CSP_EnumToUTF16Keyword(CSP_NONCE))) &&
+          !StringBeginsWith(srcStr, NS_LITERAL_STRING("'sha")))
       {
         const char16_t* params[] = { srcStr.get() };
         logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringSrcForStrictDynamic",
