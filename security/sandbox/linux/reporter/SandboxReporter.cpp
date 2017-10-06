@@ -199,6 +199,7 @@ SubmitToTelemetry(const SandboxReport& aReport)
 
     ARG_HEX(clone, 0); // flags
     ARG_DECIMAL(prctl, 0); // option
+    ARG_HEX(ioctl, 1); // request
     ARG_DECIMAL(madvise, 2); // advice
     ARG_CLOCKID(clock_gettime, 0); // clk_id
 
