@@ -62,6 +62,13 @@
     #main-window {
       background: transparent !important;
     }
+
+    /* Remove lwtheme borders from toolbars in non-maximized windows. */
+    #toolbar-menubar,
+    #TabsToolbar {
+      border-left-style: none !important;
+      border-right-style: none !important;
+    }
   }
 
   /* Always show full-height tab separators on tabs with borders. */
@@ -126,13 +133,6 @@
   /* These are !important to avoid specificity-wars with the selectors that add borders here. */
   background-image: none !important;
   border-top: none !important;
-}
-
-#navigator-toolbox {
-  /* The side borders on the toolbox also look out-of-place because we don't paint over
-   * the native background color at all, and these are !important for the same reason as above. */
-  border-left: none !important;
-  border-right: none !important;
 }
 
 @media (-moz-os-version: windows-win10) {
