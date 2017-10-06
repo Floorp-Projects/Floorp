@@ -14,6 +14,5 @@
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
 == checkbox-baseline.html checkbox-baseline-ref.html
 == checkbox-radio-color.html checkbox-radio-color-ref.html
-skip-if(OSX) == checkbox-radio-auto-sized.html checkbox-radio-auto-sized-ref.html
 fails-if(gtkWidget) == checkbox-clamp.html checkbox-clamp-ref.html
 fails-if(OSX) == checkbox-minimum-size.html checkbox-minimum-size-ref.html
