@@ -706,9 +706,6 @@ var Util = function UtilClosure() {
     }
     return result;
   };
-  Util.sign = function Util_sign(num) {
-    return num < 0 ? -1 : 1;
-  };
   var ROMAN_NUMBER_MAP = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM', '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
   Util.toRoman = function Util_toRoman(number, lowerCase) {
     assert(Number.isInteger(number) && number > 0, 'The number should be a positive integer.');
@@ -1365,8 +1362,31 @@ MessageHandler.prototype = {
       this.comObj.postMessage(message);
     }
   },
-  destroy() {
+  close(reason) {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
+    for (let i in this.callbacksCapabilities) {
+      const callbackCapability = this.callbacksCapabilities[i];
+      callbackCapability.reject(reason);
+    }
+    for (let i in this.streamSinks) {
+      const sink = this.streamSinks[i];
+      sink.sinkCapability.reject(reason);
+    }
+    for (let i in this.streamControllers) {
+      const controller = this.streamControllers[i];
+      if (!controller.isClosed) {
+        controller.controller.error(reason);
+      }
+      if (controller.startCall) {
+        controller.startCall.reject(reason);
+      }
+      if (controller.pullCall) {
+        controller.pullCall.reject(reason);
+      }
+      if (controller.cancelCall) {
+        controller.cancelCall.reject(reason);
+      }
+    }
   }
 };
 function loadJpegStream(id, imageUrl, objs) {
@@ -1993,7 +2013,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '1.9.607';
+  let apiVersion = '1.9.628';
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
   source.chunkedViewerLoading = !!pdfDataRangeTransport;
@@ -2559,7 +2579,7 @@ var PDFWorker = function PDFWorkerClosure() {
           var messageHandler = new _util.MessageHandler('main', 'worker', worker);
           var terminateEarly = () => {
             worker.removeEventListener('error', onWorkerError);
-            messageHandler.destroy();
+            messageHandler.close(new Error('Worker was terminated'));
             worker.terminate();
             if (this.destroyed) {
               this._readyCapability.reject(new Error('Worker was destroyed'));
@@ -2592,7 +2612,7 @@ var PDFWorker = function PDFWorkerClosure() {
               messageHandler.send('configure', { verbosity: (0, _util.getVerbosityLevel)() });
             } else {
               this._setupFakeWorker();
-              messageHandler.destroy();
+              messageHandler.close(new Error('Worker was terminated'));
               worker.terminate();
             }
           });
@@ -2663,7 +2683,7 @@ var PDFWorker = function PDFWorkerClosure() {
       pdfWorkerPorts.delete(this._port);
       this._port = null;
       if (this._messageHandler) {
-        this._messageHandler.destroy();
+        this._messageHandler.close(new _util.AbortException('Worker was destroyed'));
         this._messageHandler = null;
       }
     }
@@ -2723,7 +2743,7 @@ var WorkerTransport = function WorkerTransportClosure() {
           this._networkStream.cancelAllRequests();
         }
         if (this.messageHandler) {
-          this.messageHandler.destroy();
+          this.messageHandler.close(new _util.AbortException('Worker was destroyed'));
           this.messageHandler = null;
         }
         this.destroyCapability.resolve();
@@ -3314,8 +3334,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.607';
-  exports.build = build = 'b3f84112';
+  exports.version = version = '1.9.628';
+  exports.build = build = '460c4e38';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -5054,8 +5074,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '1.9.607';
-var pdfjsBuild = 'b3f84112';
+var pdfjsVersion = '1.9.628';
+var pdfjsBuild = '460c4e38';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -8153,7 +8173,7 @@ if (isReadableStreamSupported) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.PDFJS = exports.isWorker = exports.globalScope = undefined;
+exports.PDFJS = exports.globalScope = undefined;
 
 var _api = __w_pdfjs_require__(3);
 
@@ -8175,14 +8195,13 @@ var _svg = __w_pdfjs_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var isWorker = typeof window === 'undefined';
 if (!_global_scope2.default.PDFJS) {
   _global_scope2.default.PDFJS = {};
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.607';
-  PDFJS.build = 'b3f84112';
+  PDFJS.version = '1.9.628';
+  PDFJS.build = '460c4e38';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -8260,7 +8279,6 @@ PDFJS.Metadata = _metadata.Metadata;
 PDFJS.SVGGraphics = _svg.SVGGraphics;
 PDFJS.UnsupportedManager = _api._UnsupportedManager;
 exports.globalScope = _global_scope2.default;
-exports.isWorker = isWorker;
 exports.PDFJS = PDFJS;
 
 /***/ }),
