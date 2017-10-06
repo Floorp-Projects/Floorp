@@ -545,6 +545,64 @@ preferences:
     release_channel_collection: opt-in
     record_in_processes:
       - main
+  browser_home_page_change:
+    bug_numbers:
+      - 1392951
+    description: >-
+      The number of times the home page has been changed.
+      Recorded when a user changes his/her home page successfully.
+    expires: "62"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+  browser_home_page_count:
+    bug_numbers:
+      - 1392951
+    description: >-
+      Each key is the number of home page urls when users change their home page,
+      multiple home pages can be set (delineated with a "|"),
+      and each value is the number of times that key is recorded.
+      The telemetry data will be recorded if a user changes his/her home page successfully.
+    expires: "62"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+  use_current_page:
+    bug_numbers:
+      - 1392951
+    description: >-
+      The number of times the Use Current Page button has been clicked.
+      Recorded when a a user clicks the "Use Current Page" button.
+    expires: "62"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+  use_bookmark:
+    bug_numbers:
+      - 1392951
+    description: >-
+      The number of times the "Use Bookmark..." button has been clicked.
+      Recorded when a a user clicks the "Use Bookmark..." button.
+    expires: "62"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
