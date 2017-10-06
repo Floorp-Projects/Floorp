@@ -496,16 +496,17 @@ gl::Error Image9::copyToSurface(IDirect3DSurface9 *destSurface, const gl::Box &a
 gl::Error Image9::loadData(const gl::Context *context,
                            const gl::Box &area,
                            const gl::PixelUnpackState &unpack,
-                           GLenum inputType,
+                           GLenum type,
                            const void *input,
                            bool applySkipImages)
 {
     // 3D textures are not supported by the D3D9 backend.
     ASSERT(area.z == 0 && area.depth == 1);
+
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLuint inputRowPitch                 = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeRowPitch(area.width, unpack.alignment, unpack.rowLength),
+        formatInfo.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
         inputRowPitch);
     ASSERT(!applySkipImages);
     ASSERT(unpack.skipPixels == 0);
@@ -545,7 +546,7 @@ gl::Error Image9::loadCompressedData(const gl::Context *context,
 
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch                = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(area.width, 1, 0), inputRowPitch);
+    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0), inputRowPitch);
     GLsizei inputDepthPitch = 0;
     ANGLE_TRY_RESULT(formatInfo.computeDepthPitch(area.height, 0, inputDepthPitch),
                      inputDepthPitch);

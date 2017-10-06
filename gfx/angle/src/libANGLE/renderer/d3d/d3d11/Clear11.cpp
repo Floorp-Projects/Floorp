@@ -597,19 +597,25 @@ gl::Error Clear11::clearFramebuffer(const gl::Context *context,
                 ASSERT(!scissorRects.empty());
                 deviceContext1->ClearView(framebufferRTV.get(), clearValues, scissorRects.data(),
                                           static_cast<UINT>(scissorRects.size()));
-                if (mRenderer->getWorkarounds().callClearTwice)
+                if (mRenderer->getWorkarounds().callClearTwiceOnSmallTarget)
                 {
-                    deviceContext1->ClearView(framebufferRTV.get(), clearValues,
-                                              scissorRects.data(),
-                                              static_cast<UINT>(scissorRects.size()));
+                    if (clearParams.scissor.width <= 16 || clearParams.scissor.height <= 16)
+                    {
+                        deviceContext1->ClearView(framebufferRTV.get(), clearValues,
+                                                  scissorRects.data(),
+                                                  static_cast<UINT>(scissorRects.size()));
+                    }
                 }
             }
             else
             {
                 deviceContext->ClearRenderTargetView(framebufferRTV.get(), clearValues);
-                if (mRenderer->getWorkarounds().callClearTwice)
+                if (mRenderer->getWorkarounds().callClearTwiceOnSmallTarget)
                 {
-                    deviceContext->ClearRenderTargetView(framebufferRTV.get(), clearValues);
+                    if (framebufferSize.width <= 16 || framebufferSize.height <= 16)
+                    {
+                        deviceContext->ClearRenderTargetView(framebufferRTV.get(), clearValues);
+                    }
                 }
             }
         }
