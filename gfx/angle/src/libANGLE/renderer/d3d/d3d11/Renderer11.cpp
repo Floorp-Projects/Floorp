@@ -777,18 +777,6 @@ egl::Error Renderer11::initializeD3DDevice()
                                        D3D11_SDK_VERSION, &mDevice,
                                        &(mRenderer11DeviceCaps.featureLevel), &mDeviceContext);
 
-            if (result == E_INVALIDARG &&
-                mAvailableFeatureLevels[0] == D3D_FEATURE_LEVEL_11_1)
-            {
-                // In some older Windows platform, D3D11.1 is not supported which returns E_INVALIDARG
-                // so we omit the 11.1 feature level flag and try again
-                result = D3D11CreateDevice(nullptr, mRequestedDriverType, nullptr,
-                                           D3D11_CREATE_DEVICE_DEBUG, mAvailableFeatureLevels.data()+1,
-                                           static_cast<unsigned int>(mAvailableFeatureLevels.size())-1,
-                                           D3D11_SDK_VERSION, &mDevice,
-                                           &(mRenderer11DeviceCaps.featureLevel), &mDeviceContext);
-            }
-
             if (!mDevice || FAILED(result))
             {
                 WARN() << "Failed creating Debug D3D11 device - falling back to release runtime.";
@@ -804,17 +792,6 @@ egl::Error Renderer11::initializeD3DDevice()
                 nullptr, mRequestedDriverType, nullptr, 0, mAvailableFeatureLevels.data(),
                 static_cast<unsigned int>(mAvailableFeatureLevels.size()), D3D11_SDK_VERSION,
                 &mDevice, &(mRenderer11DeviceCaps.featureLevel), &mDeviceContext);
-
-            if (result == E_INVALIDARG &&
-                mAvailableFeatureLevels[0] == D3D_FEATURE_LEVEL_11_1)
-            {
-                // In some older Windows platform, D3D11.1 is not supported which returns E_INVALIDARG
-                // so we omit the 11.1 feature level flag and try again
-                result = D3D11CreateDevice(
-                    nullptr, mRequestedDriverType, nullptr, 0, mAvailableFeatureLevels.data()+1,
-                    static_cast<unsigned int>(mAvailableFeatureLevels.size())-1, D3D11_SDK_VERSION,
-                    &mDevice, &(mRenderer11DeviceCaps.featureLevel), &mDeviceContext);
-            }
 
             // Cleanup done by destructor
             if (!mDevice || FAILED(result))
