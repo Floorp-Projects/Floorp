@@ -797,6 +797,8 @@ private:
   mozilla::UniquePtr<mozilla::JsepSession> mJsepSession;
   std::string mPreviousIceUfrag; // used during rollback of ice restart
   std::string mPreviousIcePwd; // used during rollback of ice restart
+  unsigned long mIceRestartCount;
+  unsigned long mIceRollbackCount;
 
   // Start time of ICE, used for telemetry
   mozilla::TimeStamp mIceStartTime;
