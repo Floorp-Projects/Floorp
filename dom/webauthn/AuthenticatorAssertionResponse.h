@@ -47,11 +47,18 @@ public:
   nsresult
   SetSignature(CryptoBuffer& aBuffer);
 
+  void
+  GetUserId(DOMString& aRetVal);
+
+  nsresult
+  SetUserId(const nsAString& aUserId);
+
 private:
   CryptoBuffer mAuthenticatorData;
   JS::Heap<JSObject*> mAuthenticatorDataCachedObj;
   CryptoBuffer mSignature;
   JS::Heap<JSObject*> mSignatureCachedObj;
+  nsString mUserId;
 };
 
 } // namespace dom

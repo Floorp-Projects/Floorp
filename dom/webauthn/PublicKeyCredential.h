@@ -46,6 +46,9 @@ public:
   void
   SetResponse(RefPtr<AuthenticatorResponse>);
 
+  static already_AddRefed<Promise>
+  IsPlatformAuthenticatorAvailable(GlobalObject& aGlobal);
+
 private:
   CryptoBuffer mRawId;
   JS::Heap<JSObject*> mRawIdCachedObj;

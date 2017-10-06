@@ -92,5 +92,20 @@ AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer)
   return NS_OK;
 }
 
+void
+AuthenticatorAssertionResponse::GetUserId(DOMString& aRetVal)
+{
+  // This requires mUserId to not be re-set for the life of the caller's in-var.
+  aRetVal.SetOwnedString(mUserId);
+}
+
+nsresult
+AuthenticatorAssertionResponse::SetUserId(const nsAString& aUserId)
+{
+  MOZ_ASSERT(mUserId.IsEmpty(), "We already have a UserID?");
+  mUserId.Assign(aUserId);
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla

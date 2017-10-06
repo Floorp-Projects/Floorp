@@ -60,8 +60,8 @@
       let chall = new Uint8Array(16);
       window.crypto.getRandomValues(chall);
 
-      let user = {id: "none", name: "none", icon: "none", displayName: "none"};
-      let param = {type: "public-key", algorithm: "Es256"};
+      let user = {id: new Uint8Array(16), name: "none", icon: "none", displayName: "none"};
+      let param = {type: "public-key", alg: "Es256"};
 
       var testFuncs = [
         function() {
