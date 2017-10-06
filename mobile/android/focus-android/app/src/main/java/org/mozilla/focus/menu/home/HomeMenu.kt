@@ -16,6 +16,9 @@ import kotlinx.android.synthetic.main.menu.view.*
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.ViewUtils
 
+/**
+ * The overflow menu shown on the start/home screen.
+ */
 class HomeMenu(
         val context: Context,
         val listener: View.OnClickListener

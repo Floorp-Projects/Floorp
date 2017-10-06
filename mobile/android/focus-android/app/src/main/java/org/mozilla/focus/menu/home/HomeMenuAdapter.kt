@@ -13,6 +13,11 @@ import android.widget.TextView
 import org.mozilla.focus.R
 import org.mozilla.focus.whatsnew.WhatsNew
 
+/**
+ * Adapter implementation to be used with the HomeMenu class.
+ *
+ * The menu structure is hard-coded in the init block of the class.
+ */
 class HomeMenuAdapter(
         private val context: Context,
         private val listener: View.OnClickListener
@@ -52,6 +57,9 @@ class HomeMenuAdapter(
 
     override fun getItemViewType(position: Int): Int = items[position].viewType
 
+    /**
+     * ViewHolder implementation for regular menu items with just a label.
+     */
     private class MenuItemViewHolder(
             val labelView: TextView,
             val listener: View.OnClickListener) : RecyclerView.ViewHolder(labelView) {
@@ -68,6 +76,10 @@ class HomeMenuAdapter(
         }
     }
 
+    /**
+     * ViewHolder implementation for the "What's New" menu item. The item looks differently based
+     * on whether the app was updated recently.
+     */
     private class WhatsNewViewHolder(
             itemView: View,
             val listener: View.OnClickListener) : RecyclerView.ViewHolder(itemView) {
@@ -90,6 +102,9 @@ class HomeMenuAdapter(
         }
     }
 
+    /**
+     * Simple data class for describing menu items.
+     */
     private class MenuItem(
             val id: Int,
             val viewType: Int,

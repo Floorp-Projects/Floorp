@@ -9,6 +9,10 @@ import android.preference.PreferenceManager
 import android.support.annotation.VisibleForTesting
 import org.mozilla.focus.ext.appVersionName
 
+/**
+ * Helper class tracking whether the application was recently updated in order to show "What's new"
+ * menu items and indicators in the application UI.
+ */
 class WhatsNew {
     companion object {
         // TODO: Update to final URL
@@ -20,6 +24,11 @@ class WhatsNew {
 
         @VisibleForTesting var wasUpdatedRecently: Boolean? = null
 
+        /**
+         * Has this app been updated recently. Either this is the first start of the application
+         * since it was updated or this is a later start but still recent enough to consider the
+         * app to be updated recently.
+         */
         fun wasUpdatedRecently(context: Context): Boolean {
             if (wasUpdatedRecently == null) {
                 wasUpdatedRecently = when {
@@ -34,6 +43,9 @@ class WhatsNew {
             return wasUpdatedRecently!!
         }
 
+        /**
+         * Reset the "updated" state and continue as if the app was not updated recently.
+         */
         @JvmStatic
         fun reset(context: Context) {
             wasUpdatedRecently = false

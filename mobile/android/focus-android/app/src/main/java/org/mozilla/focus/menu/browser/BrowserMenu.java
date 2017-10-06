@@ -22,6 +22,9 @@ import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.ViewUtils;
 
+/**
+ * The overflow menu shown in the BrowserFragment containing page actions like "Refresh", "Share" etc.
+ */
 public class BrowserMenu extends PopupWindow {
     private BrowserMenuAdapter adapter;
 

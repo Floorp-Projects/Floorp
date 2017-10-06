@@ -29,6 +29,9 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 
+/**
+ * The context menu shown when long pressing a URL or an image inside the WebView.
+ */
 public class WebContextMenu {
 
     private static View createTitleView(final @NonNull Context context, final @NonNull String title) {
