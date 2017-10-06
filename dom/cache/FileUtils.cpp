@@ -804,14 +804,42 @@ LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
     rv = db::FindOverallPaddingSize(aConn, &currentPaddingSize);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   } else {
+    bool shouldRevise = false;
     if (aIncreaseSize > 0) {
-      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - currentPaddingSize >= aIncreaseSize);
-      currentPaddingSize += aIncreaseSize;
+      if (INT64_MAX - currentPaddingSize < aDecreaseSize) {
+        shouldRevise = true;
+      } else {
+        currentPaddingSize += aIncreaseSize;
+      }
     }
 
     if (aDecreaseSize > 0) {
-      MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= aDecreaseSize);
-      currentPaddingSize -= aDecreaseSize;
+      if (currentPaddingSize < aDecreaseSize) {
+        shouldRevise = true;
+      } else if(!shouldRevise) {
+        currentPaddingSize -= aDecreaseSize;
+      }
+    }
+
+    if (shouldRevise) {
+      // If somehow runing into this condition, the tracking padding size is
+      // incorrect.
+      // Delete padding file to indicate the padding size is incorrect for
+      // avoiding error happening in the following lines.
+      rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      int64_t paddingSizeFromDB = 0;
+      rv = db::FindOverallPaddingSize(aConn, &paddingSizeFromDB);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+      currentPaddingSize = paddingSizeFromDB;
+
+      // XXXtt: we should have an easy way to update (increase or recalulate)
+      // padding size in the QM. For now, only correct the padding size in
+      // padding file and make QM be able to get the correct size in the next QM
+      // initialization.
+      // We still want to catch this in the debug build.
+      MOZ_ASSERT(false, "The padding size is unsync with QM");
     }
 
 #ifdef DEBUG
