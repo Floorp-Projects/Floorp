@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+    <meta charset="utf-8">
+    <title>Console HTTP test page</title>
+    <script type="text/javascript">
+      function test() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('get', 'test-data.json', false);
+        xmlhttp.send(null);
+      }
+    </script>
+  </head>
+  <body onload="test();">
+    <h1>Heads Up Display HTTP & AJAX Test Page</h1>
+    <h2>This page fires an ajax request so we can see the http logging of the console</h2>
+  </body>
+</html>
