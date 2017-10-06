@@ -12,14 +12,27 @@ import org.mozilla.focus.ext.appVersionName
 /**
  * Helper class tracking whether the application was recently updated in order to show "What's new"
  * menu items and indicators in the application UI.
+ *
+ * The application is considered updated when the application's version name changes (versionName
+ * in the manifest). The applications version code would be a good candidates too, but it might
+ * change more often (RC builds) without the application actually changing from the user's point
+ * of view.
+ *
+ * Whenever the application was updated we still consider the application to be "recently updated"
+ * for the next couple of (process) starts.
  */
 class WhatsNew {
     companion object {
         // TODO: Update to final URL
         const val SUMO_URL = "https://support.mozilla.org/en-US/products/focus-firefox/firefox-focus-android"
 
-        @VisibleForTesting const val PREFERENCE_KEY_APP_NAME = "lastKnownAppVersionName"
-        private const val PREFERENCE_KEY_SESSION_COUNTER = "updateSessionCounter"
+        @VisibleForTesting const val PREFERENCE_KEY_APP_NAME = "whatsnew-lastKnownAppVersionName"
+        private const val PREFERENCE_KEY_SESSION_COUNTER = "whatsnew-updateSessionCounter"
+
+        /**
+         * How many "sessions" do we consider the app to be updated? In this case a session means
+         * process creations.
+         */
         private const val SESSIONS_PER_UPDATE = 3
 
         @VisibleForTesting var wasUpdatedRecently: Boolean? = null
@@ -30,17 +43,30 @@ class WhatsNew {
          * app to be updated recently.
          */
         fun wasUpdatedRecently(context: Context): Boolean {
-            if (wasUpdatedRecently == null) {
-                wasUpdatedRecently = when {
-                    hasBeenUpdated(context) -> {
-                        rememberAppVersionName(context)
-                        setSessionCounter(context)
+            var recentlyUpdated = wasUpdatedRecently
+
+            if (recentlyUpdated == null) {
+                recentlyUpdated = when {
+                    hasAppBeenUpdated(context) -> {
+                        // The app has just been updated. Remember the new app version name and
+                        // reset the session counter so that we will still consider the app to be
+                        // updated for the next app starts.
+                        saveAppVersionName(context)
+                        setSessionCounter(context, SESSIONS_PER_UPDATE)
                         true
                     }
-                    else -> hasBeenUpdatedInRecentSession(context)
+                    else -> {
+                        // If the app has been updated recently then decrement our session
+                        // counter. If the counter reaches 0 we will not consider the app to
+                        // be updated anymore (until the app version name changes again)
+                        decrementSessionCounter(context)
+                        hasBeenUpdatedInRecentSession(context)
+                    }
                 }
+                // Cache the value for the lifetime of this process (or until reset() is called)
+                wasUpdatedRecently = recentlyUpdated
             }
-            return wasUpdatedRecently!!
+            return recentlyUpdated
         }
 
         /**
@@ -52,10 +78,10 @@ class WhatsNew {
             setSessionCounter(context, 0)
         }
 
-        private fun hasBeenUpdated(context: Context): Boolean {
+        private fun hasAppBeenUpdated(context: Context): Boolean {
             val lastKnownAppVersionName = getLastKnownAppVersionName(context)
             if (lastKnownAppVersionName.isNullOrEmpty()) {
-                rememberAppVersionName(context)
+                saveAppVersionName(context)
                 return false
             }
 
@@ -67,30 +93,32 @@ class WhatsNew {
                     .getString(PREFERENCE_KEY_APP_NAME, null)
         }
 
-        private fun rememberAppVersionName(context: Context) {
+        private fun saveAppVersionName(context: Context) {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .edit()
                     .putString(PREFERENCE_KEY_APP_NAME, context.appVersionName)
                     .apply()
         }
 
-        private fun setSessionCounter(context: Context, count: Int = SESSIONS_PER_UPDATE) {
+        private fun setSessionCounter(context: Context, count: Int) {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .edit()
                     .putInt(PREFERENCE_KEY_SESSION_COUNTER, count)
                     .apply()
         }
 
+        private fun decrementSessionCounter(context: Context) {
+            val sessionCounter = PreferenceManager.getDefaultSharedPreferences(context)
+                    .getInt(PREFERENCE_KEY_SESSION_COUNTER, 0)
+
+            setSessionCounter(context, maxOf(sessionCounter - 1, 0))
+        }
+
         private fun hasBeenUpdatedInRecentSession(context: Context): Boolean {
             val sessionCounter = PreferenceManager.getDefaultSharedPreferences(context)
                     .getInt(PREFERENCE_KEY_SESSION_COUNTER, 0)
 
-            if (sessionCounter > 0) {
-                setSessionCounter(context, sessionCounter - 1)
-                return true
-            }
-
-            return false
+            return sessionCounter > 0
         }
     }
 }
