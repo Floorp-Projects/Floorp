@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.23 */
+/* Generated with cbindgen:0.1.25 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -762,6 +762,8 @@ struct FontInstancePlatformOptions {
 extern void gfx_critical_note(const char *aMsg);
 
 extern bool gfx_use_wrench();
+
+extern const char *gfx_wr_resource_path_override();
 
 extern bool is_glcontext_egl(void *aGlcontextPtr);
 
