@@ -672,5 +672,9 @@ module.exports = {
 
   getSavedEnvironmentItems(environment) {
     return require("./environments/saved-globals.json").environments[environment];
+  },
+
+  getSavedRuleData(rule) {
+    return require("./rules/saved-rules-data.json").rulesData[rule];
   }
 };
