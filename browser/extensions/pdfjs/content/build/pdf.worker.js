@@ -706,9 +706,6 @@ var Util = function UtilClosure() {
     }
     return result;
   };
-  Util.sign = function Util_sign(num) {
-    return num < 0 ? -1 : 1;
-  };
   var ROMAN_NUMBER_MAP = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM', '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
   Util.toRoman = function Util_toRoman(number, lowerCase) {
     assert(Number.isInteger(number) && number > 0, 'The number should be a positive integer.');
@@ -1365,8 +1362,31 @@ MessageHandler.prototype = {
       this.comObj.postMessage(message);
     }
   },
-  destroy() {
+  close(reason) {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
+    for (let i in this.callbacksCapabilities) {
+      const callbackCapability = this.callbacksCapabilities[i];
+      callbackCapability.reject(reason);
+    }
+    for (let i in this.streamSinks) {
+      const sink = this.streamSinks[i];
+      sink.sinkCapability.reject(reason);
+    }
+    for (let i in this.streamControllers) {
+      const controller = this.streamControllers[i];
+      if (!controller.isClosed) {
+        controller.controller.error(reason);
+      }
+      if (controller.startCall) {
+        controller.startCall.reject(reason);
+      }
+      if (controller.pullCall) {
+        controller.pullCall.reject(reason);
+      }
+      if (controller.cancelCall) {
+        controller.cancelCall.reject(reason);
+      }
+    }
   }
 };
 function loadJpegStream(id, imageUrl, objs) {
@@ -23826,8 +23846,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '1.9.607';
-var pdfjsBuild = 'b3f84112';
+var pdfjsVersion = '1.9.628';
+var pdfjsBuild = '460c4e38';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -24022,7 +24042,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '1.9.607';
+    let workerVersion = '1.9.628';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -24385,7 +24405,7 @@ var WorkerMessageHandler = {
         task.terminate();
       });
       return Promise.all(waitOn).then(function () {
-        handler.destroy();
+        handler.close(new _util.AbortException('Worker was terminated'));
         handler = null;
       });
     });
