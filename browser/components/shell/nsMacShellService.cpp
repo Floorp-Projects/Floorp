@@ -5,7 +5,6 @@
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"

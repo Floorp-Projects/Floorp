@@ -12,7 +12,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMWindow.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDOMCSSValue.h"

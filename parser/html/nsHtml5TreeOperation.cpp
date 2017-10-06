@@ -579,7 +579,7 @@ void
 nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDOMHTMLImageElement> domImageElement = do_QueryInterface(aNode);
+  RefPtr<dom::HTMLImageElement> domImageElement = dom::HTMLImageElement::FromContentOrNull(aNode);
   // NS_ASSERTION(formControl, "Form-associated element did not implement nsIFormControl.");
   // TODO: uncomment the above line when <keygen> (bug 101019) is supported by Gecko
   nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(aParent));
@@ -589,10 +589,7 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
       !aNode->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
     formControl->SetForm(formElement);
   } else if (domImageElement) {
-    RefPtr<dom::HTMLImageElement> imageElement =
-      static_cast<dom::HTMLImageElement*>(domImageElement.get());
-    MOZ_ASSERT(imageElement);
-    imageElement->SetForm(formElement);
+    domImageElement->SetForm(formElement);
   }
 }
 

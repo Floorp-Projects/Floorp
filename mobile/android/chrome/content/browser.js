@@ -2528,7 +2528,7 @@ var NativeWindow = {
 
     imageLocationCopyableContext: {
       matches: function imageLinkCopyableContextMatches(aElement) {
-        if (aElement instanceof Ci.nsIDOMHTMLImageElement) {
+        if (ChromeUtils.getClassName(aElement) === "HTMLImageElement") {
           // The image is blocked by Tap-to-load Images
           if (aElement.hasAttribute("data-ctv-src") && !aElement.hasAttribute("data-ctv-show")) {
             return false;
@@ -2540,7 +2540,7 @@ var NativeWindow = {
 
     imageSaveableContext: {
       matches: function imageSaveableContextMatches(aElement) {
-        if (aElement instanceof Ci.nsIDOMHTMLImageElement) {
+        if (ChromeUtils.getClassName(aElement) === "HTMLImageElement") {
           // The image is blocked by Tap-to-load Images
           if (aElement.hasAttribute("data-ctv-src") && !aElement.hasAttribute("data-ctv-show")) {
             return false;
@@ -2558,7 +2558,7 @@ var NativeWindow = {
     imageShareableContext: {
       matches: aElement => {
         let imgSrc = '';
-        if (aElement instanceof Ci.nsIDOMHTMLImageElement) {
+        if (ChromeUtils.getClassName(aElement) === "HTMLImageElement") {
           imgSrc = aElement.src;
         } else if (aElement instanceof Ci.nsIImageLoadingContent &&
             aElement.currentURI &&
@@ -2588,7 +2588,8 @@ var NativeWindow = {
 
     imageBlockingPolicyContext: {
       matches: function imageBlockingPolicyContextMatches(aElement) {
-        if (aElement instanceof Ci.nsIDOMHTMLImageElement && aElement.getAttribute("data-ctv-src")) {
+        if (ChromeUtils.getClassName(aElement) === "HTMLImageElement" &&
+            aElement.getAttribute("data-ctv-src")) {
           // Only show the menuitem if we are blocking the image
           if (aElement.getAttribute("data-ctv-show") == "true") {
             return false;
