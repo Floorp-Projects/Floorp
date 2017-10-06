@@ -858,11 +858,12 @@ var ActivityStreamProvider = {
     ) AS bookmarkGuid`,
 
   /**
-   * Shared WHERE expression filtering out undesired pages, e.g., hidden
-   * and non-http/s urls. Assumes moz_places is in FROM / JOIN.
+   * Shared WHERE expression filtering out undesired pages, e.g., hidden,
+   * unvisited, and non-http/s urls. Assumes moz_places is in FROM / JOIN.
    */
   _commonPlacesWhere: `
     AND hidden = 0
+    AND last_visit_date > 0
     AND (SUBSTR(url, 1, 6) == "https:"
       OR SUBSTR(url, 1, 5) == "http:")
   `,
@@ -1040,7 +1041,6 @@ var ActivityStreamProvider = {
       FROM moz_places h
       WHERE description NOTNULL
         AND preview_image_url NOTNULL
-        AND last_visit_date > 0
         ${this._commonPlacesWhere}
       ORDER BY last_visit_date DESC
       LIMIT :limit
@@ -1087,7 +1087,6 @@ var ActivityStreamProvider = {
         url
       FROM moz_places h
       WHERE frecency >= :frecencyThreshold
-        AND last_visit_date > 0
         ${this._commonPlacesWhere}
       ORDER BY frecency DESC
       LIMIT :limit
