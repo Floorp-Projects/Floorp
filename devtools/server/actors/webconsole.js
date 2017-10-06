@@ -810,8 +810,8 @@ WebConsoleActor.prototype =
           }
 
           // See `window` definition. It isn't always a DOM Window.
-          let requestStartTime = this.window && this.window.performance ?
-            this.window.performance.timing.requestStart : 0;
+          let winStartTime = this.window && this.window.performance ?
+            this.window.performance.timing.navigationStart : 0;
 
           let cache = this.consoleAPIListener
                       .getCachedMessages(!this.parentActor.isRootActor);
@@ -819,7 +819,7 @@ WebConsoleActor.prototype =
             // Filter out messages that came from a ServiceWorker but happened
             // before the page was requested.
             if (cachedMessage.innerID === "ServiceWorker" &&
-                requestStartTime > cachedMessage.timeStamp) {
+                winStartTime > cachedMessage.timeStamp) {
               return;
             }
 
