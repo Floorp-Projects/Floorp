@@ -389,7 +389,6 @@ public:
 
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
-                           ServoStyleContext* aParentContext,
                            nsPresContext* aPresContext,
                            nsIAtom* aPseudoTag,
                            CSSPseudoElementType aPseudoType,
@@ -560,7 +559,6 @@ private:
     ResolveStyleLazilyInternal(dom::Element* aElement,
                                CSSPseudoElementType aPseudoType,
                                nsIAtom* aPseudoTag,
-                               const ServoStyleContext* aParentContext,
                                StyleRuleInclusion aRules =
                                  StyleRuleInclusion::All,
                                bool aIgnoreExistingStyles = false);
