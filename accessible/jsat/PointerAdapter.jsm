@@ -91,8 +91,7 @@ var PointerRelay = { // jshint ignore:line
 
   handleEvent: function PointerRelay_handleEvent(aEvent) {
     // Don't bother with chrome mouse events.
-    if (Utils.MozBuildApp === "browser" &&
-      aEvent.view.top instanceof Ci.nsIDOMChromeWindow) {
+    if (Utils.MozBuildApp === "browser" && aEvent.view.top.isChromeWindow) {
       return;
     }
     if (aEvent.mozInputSource === Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN ||

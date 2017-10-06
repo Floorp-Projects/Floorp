@@ -50,7 +50,7 @@ function test() {
         // Reopen the closed window and ensure its integrity.
         let newWin2 = ss.undoCloseWindow(0);
 
-        ok(newWin2 instanceof ChromeWindow,
+        ok(newWin2.isChromeWindow,
            "undoCloseWindow actually returned a window");
         is(ss.getClosedWindowCount(), 0,
            "The reopened window was removed from Recently Closed Windows");

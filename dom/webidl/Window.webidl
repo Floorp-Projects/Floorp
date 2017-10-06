@@ -446,6 +446,12 @@ interface ChromeWindow {
   void beginWindowMove(Event mouseDownEvent, optional Element? panel = null);
 };
 
+// Mozilla extensions for Chrome windows.
+partial interface Window {
+  [Func="IsChromeOrXBL"]
+  readonly attribute boolean isChromeWindow;
+};
+
 partial interface Window {
   [Pref="dom.vr.enabled"]
   attribute EventHandler onvrdisplayconnect;
