@@ -23,7 +23,6 @@
         "id": "ProfilerFeature",
         "type": "string",
         "enum": [
-          "gpu",
           "java",
           "js",
           "leaf",

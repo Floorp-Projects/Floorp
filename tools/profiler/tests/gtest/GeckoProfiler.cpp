@@ -40,7 +40,7 @@ InactiveFeaturesAndParamsCheck()
   StrVec filters;
 
   ASSERT_TRUE(!profiler_is_active());
-  ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+  ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -85,7 +85,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
                    features, filters, MOZ_ARRAY_LENGTH(filters));
 
     ASSERT_TRUE(profiler_is_active());
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -99,14 +99,15 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
   // Try some different features and filters.
   {
-    uint32_t features = ProfilerFeature::GPU | ProfilerFeature::Privacy;
+    uint32_t features = ProfilerFeature::MainThreadIO |
+                        ProfilerFeature::Privacy;
     const char* filters[] = { "GeckoMain", "Foo", "Bar" };
 
     profiler_start(999999, 3,
                    features, filters, MOZ_ARRAY_LENGTH(filters));
 
     ASSERT_TRUE(profiler_is_active());
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -129,7 +130,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
                    availableFeatures, filters, MOZ_ARRAY_LENGTH(filters));
 
     ASSERT_TRUE(profiler_is_active());
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -150,7 +151,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
                    features, filters, MOZ_ARRAY_LENGTH(filters));
 
     ASSERT_TRUE(profiler_is_active());
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -270,7 +271,7 @@ TEST(GeckoProfiler, DifferentThreads)
       NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(profiler_is_active());
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
@@ -299,7 +300,7 @@ TEST(GeckoProfiler, DifferentThreads)
         "GeckoProfiler_DifferentThreads_Test::TestBody",
         [&]() {
           ASSERT_TRUE(profiler_is_active());
-          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
           ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
           ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
