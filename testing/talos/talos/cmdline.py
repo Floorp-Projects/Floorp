@@ -73,9 +73,6 @@ def create_parser(mach_interface=False):
             help="disable e10s")
     add_arg('--noChrome', action='store_true',
             help="do not run tests as chrome")
-    add_arg('--rss', action='store_true',
-            help="Collect RSS counters from pageloader instead of the"
-                 " operating system")
     add_arg('--mainthread', action='store_true',
             help="Collect mainthread IO data from the browser by setting"
                  " an environment variable")

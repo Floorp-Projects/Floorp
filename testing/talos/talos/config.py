@@ -35,7 +35,6 @@ DEFAULTS = dict(
         gecko_profile_interval=1,
         gecko_profile_entries=100000,
         resolution=1,
-        rss=False,
         mainthread=False,
         shutdown=False,
         timeout=3600,
@@ -217,7 +216,6 @@ GLOBAL_OVERRIDES = (
     'gecko_profile',
     'gecko_profile_interval',
     'gecko_profile_entries',
-    'rss',
     'shutdown',
     'tpcycles',
     'tpdelay',
@@ -316,8 +314,6 @@ def fix_init_url(config):
 
 def get_counters(config):
     counters = set()
-    if config['rss']:
-        counters.add('Main_RSS')
     return counters
 
 

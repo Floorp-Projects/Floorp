@@ -51,7 +51,6 @@
   <script type="application/x-javascript" src="report.js"></script>
   <script type="application/x-javascript" src="pageloader.js"></script>
   <script type="application/x-javascript" src="quit.js"></script>
-  <script type="application/x-javascript" src="memory.js"></script>
 
   <browser id="contentPageloader" src="about:blank" 
     type="content" flex="1"/>
