@@ -195,6 +195,7 @@ var suppressedMediaQueryCSSLine = function (key, color, suppressed) {
 // expected value, then the element will be colored green.
 var generateCSSLines = function (resisting) {
   let lines = ".spoof { background-color: red;}\n";
+  let is_chrome_window = window.location.protocol === "chrome:";
   expected_values.forEach(
     function ([key, offVal, onVal]) {
       lines += mediaQueryCSSLine(key, resisting ? onVal : offVal, "green");
@@ -202,8 +203,12 @@ var generateCSSLines = function (resisting) {
   lines += ".suppress { background-color: " + (resisting ? "green" : "red") + ";}\n";
   suppressed_toggles.forEach(
     function (key) {
-      let color = resisting ? "red" : "green";
-      lines += suppressedMediaQueryCSSLine(key, color);
+      if (toggles_enabled_in_content.indexOf(key) === -1 && !resisting && !is_chrome_window) {
+        lines += "#" + key + " { background-color: green; }\n";
+      } else {
+        let color = resisting ? "red" : "green";
+        lines += suppressedMediaQueryCSSLine(key, color);
+      }
     });
   if (OS === "WINNT") {
     lines += ".windows { background-color: green; }\n";
