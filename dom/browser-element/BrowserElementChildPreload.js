@@ -865,7 +865,7 @@ BrowserElementChild.prototype = {
     if (elem instanceof Ci.nsIImageLoadingContent && elem.currentURI) {
       return {uri: elem.currentURI.spec, documentURI: documentURI};
     }
-    if (elem instanceof Ci.nsIDOMHTMLImageElement) {
+    if (ChromeUtils.getClassName(elem) === "HTMLImageElement") {
       return {uri: elem.src, documentURI: documentURI};
     }
     if (elem instanceof Ci.nsIDOMHTMLMediaElement) {

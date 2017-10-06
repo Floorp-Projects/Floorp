@@ -13,7 +13,6 @@
 
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsDisplayList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"

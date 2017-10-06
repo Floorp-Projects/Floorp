@@ -11,8 +11,8 @@
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "nsIContent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIOutputStream.h"
 #include "nsIPrefService.h"
@@ -579,30 +579,29 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
                                             int32_t aPosition,
                                             const nsACString& aImageName)
 {
-  nsresult rv;
-
-  nsCOMPtr<imgIContainer> container;
-  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(aElement));
-  if (!imgElement) {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  if (!content || !content->IsHTMLElement(nsGkAtoms::img)) {
     // XXX write background loading stuff!
     return NS_ERROR_NOT_AVAILABLE;
   }
-  else {
-    nsCOMPtr<nsIImageLoadingContent> imageContent =
-      do_QueryInterface(aElement, &rv);
-    if (!imageContent)
-      return rv;
 
-    // get the image container
-    nsCOMPtr<imgIRequest> request;
-    rv = imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                  getter_AddRefs(request));
-    if (!request)
-      return rv;
-    rv = request->GetImage(getter_AddRefs(container));
-    if (!container)
-      return NS_ERROR_FAILURE;
-  }
+  nsresult rv;
+  nsCOMPtr<nsIImageLoadingContent> imageContent =
+    do_QueryInterface(aElement, &rv);
+  if (!imageContent)
+    return rv;
+
+  // get the image container
+  nsCOMPtr<imgIRequest> request;
+  rv = imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                getter_AddRefs(request));
+  if (!request)
+    return rv;
+
+  nsCOMPtr<imgIContainer> container;
+  rv = request->GetImage(getter_AddRefs(container));
+  if (!container)
+    return NS_ERROR_FAILURE;
 
   // get the file name from localized strings
   nsCOMPtr<nsIStringBundleService>
