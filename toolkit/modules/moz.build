@@ -44,7 +44,7 @@ with Files('tests/xpcshell/test_NewTabUtils.js'):
     BUG_COMPONENT = ('Firefox', 'New Tab Page')
 
 with Files('tests/xpcshell/test_UpdateUtils*.js'):
-    BUG_COMPONENT = ('Toolkit', 'General')
+    BUG_COMPONENT = ('Toolkit', 'Application Update')
 
 with Files('tests/xpcshell/test_client_id.js'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
@@ -143,7 +143,7 @@ with Files('Sqlite.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Storage')
 
 with Files('UpdateUtils.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'Add-ons Manager')
+    BUG_COMPONENT = ('Toolkit', 'Application Update')
 
 with Files('WindowsRegistry.jsm'):
     BUG_COMPONENT = ('Toolkit', 'General')
