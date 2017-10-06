@@ -103,6 +103,8 @@ public:
 
   virtual void SetTransform(const Matrix &aTransform) override;
 
+  virtual bool SupportsRegionClipping() const override { return mRefDT->SupportsRegionClipping(); }
+
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
