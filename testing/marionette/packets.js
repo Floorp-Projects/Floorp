@@ -85,8 +85,8 @@ Packet.prototype = {
 
   set length(length) {
     if (length > PACKET_LENGTH_MAX) {
-      throw Error("Packet length " + length + " exceeds the max length of " +
-                  PACKET_LENGTH_MAX);
+      throw new Error("Packet length " + length +
+                      " exceeds the max length of " + PACKET_LENGTH_MAX);
     }
     this._length = length;
   },
