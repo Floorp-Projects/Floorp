@@ -1740,11 +1740,7 @@ AddressRadixTree::Create(unsigned aBits)
   unsigned bits_per_level, height, i;
 
   bits_per_level = AddressRadixTree::kNodeSize2Pow - SIZEOF_PTR_2POW;
-  height = aBits / bits_per_level;
-  if (height * bits_per_level != aBits) {
-    height++;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(height * bits_per_level >= aBits);
+  height = (aBits + bits_per_level - 1) / bits_per_level;
 
   ret = (AddressRadixTree*)base_calloc(1, sizeof(AddressRadixTree) +
       (sizeof(unsigned) * (height - 1)));
