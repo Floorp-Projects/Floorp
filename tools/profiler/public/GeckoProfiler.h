@@ -97,45 +97,42 @@ class TimeStamp;
 // Any changes to this list should also be applied to the feature list in
 // browser/components/extensions/schemas/geckoProfiler.json.
 #define PROFILER_FOR_EACH_FEATURE(macro) \
-  /* Dump the display list with the textures. */ \
-  macro(0, "displaylistdump", DisplayListDump) \
-  \
   /* GPU Profiling (may not be supported by the GL). */ \
-  macro(1, "gpu", GPU) \
+  macro(0, "gpu", GPU) \
   \
   /* Profile Java code (Android only). */ \
-  macro(2, "java", Java) \
+  macro(1, "java", Java) \
   \
   /* Get the JS engine to emit pseudostack entries in prologues/epilogues */ \
-  macro(3, "js", JS) \
+  macro(2, "js", JS) \
   \
   /* Dump the layer tree with the textures. */ \
-  macro(4, "layersdump", LayersDump) \
+  macro(3, "layersdump", LayersDump) \
   \
   /* Include the C++ leaf node if not stackwalking. */ \
   /* The DevTools profiler doesn't want the native addresses. */ \
-  macro(5, "leaf", Leaf) \
+  macro(4, "leaf", Leaf) \
   \
   /* Add main thread I/O to the profile. */ \
-  macro(6, "mainthreadio", MainThreadIO) \
+  macro(5, "mainthreadio", MainThreadIO) \
   \
   /* Add memory measurements (e.g. RSS). */ \
-  macro(7, "memory", Memory) \
+  macro(6, "memory", Memory) \
   \
   /* Do not include user-identifiable information. */ \
-  macro(8, "privacy", Privacy) \
+  macro(7, "privacy", Privacy) \
   \
   /* Restyle profiling. */ \
-  macro(9, "restyle", Restyle) \
+  macro(8, "restyle", Restyle) \
   \
   /* Walk the C++ stack. Not available on all platforms. */ \
-  macro(10, "stackwalk", StackWalk) \
+  macro(9, "stackwalk", StackWalk) \
   \
   /* Start profiling with feature TaskTracer. */ \
-  macro(11, "tasktracer", TaskTracer) \
+  macro(10, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(12, "threads", Threads)
+  macro(11, "threads", Threads)
 
 struct ProfilerFeature
 {
