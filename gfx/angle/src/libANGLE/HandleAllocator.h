@@ -14,6 +14,8 @@
 
 #include "angle_gl.h"
 
+#include <stack>
+
 namespace gl
 {
 
@@ -22,7 +24,7 @@ class HandleAllocator final : angle::NonCopyable
   public:
     // Maximum handle = MAX_UINT-1
     HandleAllocator();
-    // Specify maximum handle value. Used for testing.
+    // Specify maximum handle value
     HandleAllocator(GLuint maximumHandleValue);
 
     ~HandleAllocator();
@@ -32,7 +34,6 @@ class HandleAllocator final : angle::NonCopyable
     GLuint allocate();
     void release(GLuint handle);
     void reserve(GLuint handle);
-    void reset();
 
   private:
     GLuint mBaseValue;
@@ -53,7 +54,7 @@ class HandleAllocator final : angle::NonCopyable
 
     // The freelist consists of never-allocated handles, stored
     // as ranges, and handles that were previously allocated and
-    // released, stored in a heap.
+    // released, stored in a stack.
     std::vector<HandleRange> mUnallocatedList;
     std::vector<GLuint> mReleasedList;
 };

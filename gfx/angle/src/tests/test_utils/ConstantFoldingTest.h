@@ -13,8 +13,9 @@
 #include <vector>
 
 #include "common/mathutil.h"
-#include "compiler/translator/IntermTraverse.h"
-#include "tests/test_utils/ShaderCompileTreeTest.h"
+#include "compiler/translator/IntermNode.h"
+#include "compiler/translator/PoolAlloc.h"
+#include "gtest/gtest.h"
 
 namespace sh
 {
@@ -131,14 +132,20 @@ class ConstantFinder : public TIntermTraverser
     bool mFound;
 };
 
-class ConstantFoldingTest : public ShaderCompileTreeTest
+class ConstantFoldingTest : public testing::Test
 {
   public:
     ConstantFoldingTest() {}
 
   protected:
-    ::GLenum getShaderType() const override { return GL_FRAGMENT_SHADER; }
-    ShShaderSpec getShaderSpec() const override { return SH_GLES3_1_SPEC; }
+    void SetUp() override;
+
+    void TearDown() override;
+
+    void compile(const std::string &shaderString);
+
+    // Must be called after compile()
+    bool hasWarning();
 
     template <typename T>
     bool constantFoundInAST(T constant)
@@ -169,6 +176,12 @@ class ConstantFoldingTest : public ShaderCompileTreeTest
         mASTRoot->traverse(&finder);
         return finder.found();
     }
+
+  private:
+    TranslatorESSL *mTranslatorESSL;
+    TIntermNode *mASTRoot;
+
+    TPoolAllocator allocator;
 };
 
 class ConstantFoldingExpressionTest : public ConstantFoldingTest
@@ -177,8 +190,6 @@ class ConstantFoldingExpressionTest : public ConstantFoldingTest
     ConstantFoldingExpressionTest() {}
 
     void evaluateFloat(const std::string &floatExpression);
-    void evaluateInt(const std::string &intExpression);
-    void evaluateUint(const std::string &uintExpression);
 };
 
 }  // namespace sh

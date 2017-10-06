@@ -18,11 +18,11 @@ namespace rx
 class ImageNULL : public ImageImpl
 {
   public:
-    ImageNULL(const egl::ImageState &state);
+    ImageNULL();
     ~ImageNULL() override;
     egl::Error initialize() override;
 
-    gl::Error orphan(const gl::Context *context, egl::ImageSibling *sibling) override;
+    gl::Error orphan(egl::ImageSibling *sibling) override;
 };
 
 }  // namespace rx

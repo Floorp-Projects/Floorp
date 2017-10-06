@@ -21,20 +21,14 @@ class RenderbufferVk : public RenderbufferImpl
     RenderbufferVk();
     ~RenderbufferVk() override;
 
-    gl::Error setStorage(const gl::Context *context,
-                         GLenum internalformat,
-                         size_t width,
-                         size_t height) override;
-    gl::Error setStorageMultisample(const gl::Context *context,
-                                    size_t samples,
+    gl::Error setStorage(GLenum internalformat, size_t width, size_t height) override;
+    gl::Error setStorageMultisample(size_t samples,
                                     GLenum internalformat,
                                     size_t width,
                                     size_t height) override;
-    gl::Error setStorageEGLImageTarget(const gl::Context *context, egl::Image *image) override;
+    gl::Error setStorageEGLImageTarget(egl::Image *image) override;
 
-    gl::Error getAttachmentRenderTarget(const gl::Context *context,
-                                        GLenum binding,
-                                        const gl::ImageIndex &imageIndex,
+    gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
                                         FramebufferAttachmentRenderTarget **rtOut) override;
 };
 

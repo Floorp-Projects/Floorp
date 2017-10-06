@@ -30,6 +30,7 @@ class DirectiveParser : public Lexer
     void lex(Token *token) override;
 
   private:
+
     void parseDirective(Token *token);
     void parseDefine(Token *token);
     void parseUndef(Token *token);
@@ -60,14 +61,16 @@ class DirectiveParser : public Lexer
         bool foundElseGroup;
 
         ConditionalBlock()
-            : skipBlock(false), skipGroup(false), foundValidGroup(false), foundElseGroup(false)
+            : skipBlock(false),
+              skipGroup(false),
+              foundValidGroup(false),
+              foundElseGroup(false)
         {
         }
     };
     bool mPastFirstStatement;
-    bool mSeenNonPreprocessorToken;  // Tracks if a non-preprocessor token has been seen yet.  Some
-                                     // macros, such as
-                                     // #extension must be declared before all shader code.
+    bool mSeenNonPreprocessorToken; // Tracks if a non-preprocessor token has been seen yet.  Some macros, such as
+                                    // #extension must be declared before all shader code.
     std::vector<ConditionalBlock> mConditionalStack;
     Tokenizer *mTokenizer;
     MacroSet *mMacroSet;

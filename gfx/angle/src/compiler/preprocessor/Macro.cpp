@@ -14,7 +14,9 @@ namespace pp
 
 bool Macro::equals(const Macro &other) const
 {
-    return (type == other.type) && (name == other.name) && (parameters == other.parameters) &&
+    return (type == other.type) &&
+           (name == other.name) &&
+           (parameters == other.parameters) &&
            (replacements == other.replacements);
 }
 
@@ -24,13 +26,14 @@ void PredefineMacro(MacroSet *macroSet, const char *name, int value)
     token.type = Token::CONST_INT;
     token.text = ToString(value);
 
-    std::shared_ptr<Macro> macro = std::make_shared<Macro>();
-    macro->predefined            = true;
-    macro->type                  = Macro::kTypeObj;
-    macro->name                  = name;
-    macro->replacements.push_back(token);
+    Macro macro;
+    macro.predefined = true;
+    macro.type       = Macro::kTypeObj;
+    macro.name = name;
+    macro.replacements.push_back(token);
 
     (*macroSet)[name] = macro;
 }
 
 }  // namespace pp
+

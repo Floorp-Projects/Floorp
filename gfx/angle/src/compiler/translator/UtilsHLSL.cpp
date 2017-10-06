@@ -53,8 +53,6 @@ HLSLTextureSamplerGroup TextureGroup(const TBasicType type)
             return HLSL_TEXTURE_2D_ARRAY;
         case EbtSampler3D:
             return HLSL_TEXTURE_3D;
-        case EbtSampler2DMS:
-            return HLSL_TEXTURE_2D_MS;
         case EbtISampler2D:
             return HLSL_TEXTURE_2D_INT4;
         case EbtISampler3D:
@@ -63,8 +61,6 @@ HLSLTextureSamplerGroup TextureGroup(const TBasicType type)
             return HLSL_TEXTURE_2D_ARRAY_INT4;
         case EbtISampler2DArray:
             return HLSL_TEXTURE_2D_ARRAY_INT4;
-        case EbtISampler2DMS:
-            return HLSL_TEXTURE_2D_MS_INT4;
         case EbtUSampler2D:
             return HLSL_TEXTURE_2D_UINT4;
         case EbtUSampler3D:
@@ -73,8 +69,6 @@ HLSLTextureSamplerGroup TextureGroup(const TBasicType type)
             return HLSL_TEXTURE_2D_ARRAY_UINT4;
         case EbtUSampler2DArray:
             return HLSL_TEXTURE_2D_ARRAY_UINT4;
-        case EbtUSampler2DMS:
-            return HLSL_TEXTURE_2D_MS_UINT4;
         case EbtSampler2DShadow:
             return HLSL_TEXTURE_2D_COMPARISON;
         case EbtSamplerCubeShadow:
@@ -99,24 +93,18 @@ TString TextureString(const HLSLTextureSamplerGroup type)
             return "Texture2DArray";
         case HLSL_TEXTURE_3D:
             return "Texture3D";
-        case HLSL_TEXTURE_2D_MS:
-            return "Texture2DMS<float4>";
         case HLSL_TEXTURE_2D_INT4:
             return "Texture2D<int4>";
         case HLSL_TEXTURE_3D_INT4:
             return "Texture3D<int4>";
         case HLSL_TEXTURE_2D_ARRAY_INT4:
             return "Texture2DArray<int4>";
-        case HLSL_TEXTURE_2D_MS_INT4:
-            return "Texture2DMS<int4>";
         case HLSL_TEXTURE_2D_UINT4:
             return "Texture2D<uint4>";
         case HLSL_TEXTURE_3D_UINT4:
             return "Texture3D<uint4>";
         case HLSL_TEXTURE_2D_ARRAY_UINT4:
             return "Texture2DArray<uint4>";
-        case HLSL_TEXTURE_2D_MS_UINT4:
-            return "Texture2DMS<uint4>";
         case HLSL_TEXTURE_2D_COMPARISON:
             return "Texture2D";
         case HLSL_TEXTURE_CUBE_COMPARISON:
@@ -147,24 +135,18 @@ TString TextureGroupSuffix(const HLSLTextureSamplerGroup type)
             return "2DArray";
         case HLSL_TEXTURE_3D:
             return "3D";
-        case HLSL_TEXTURE_2D_MS:
-            return "2DMS";
         case HLSL_TEXTURE_2D_INT4:
             return "2D_int4_";
         case HLSL_TEXTURE_3D_INT4:
             return "3D_int4_";
         case HLSL_TEXTURE_2D_ARRAY_INT4:
             return "2DArray_int4_";
-        case HLSL_TEXTURE_2D_MS_INT4:
-            return "2DMS_int4_";
         case HLSL_TEXTURE_2D_UINT4:
             return "2D_uint4_";
         case HLSL_TEXTURE_3D_UINT4:
             return "3D_uint4_";
         case HLSL_TEXTURE_2D_ARRAY_UINT4:
             return "2DArray_uint4_";
-        case HLSL_TEXTURE_2D_MS_UINT4:
-            return "2DMS_uint4_";
         case HLSL_TEXTURE_2D_COMPARISON:
             return "2D_comparison";
         case HLSL_TEXTURE_CUBE_COMPARISON:
@@ -199,6 +181,11 @@ TString TextureTypeSuffix(const TBasicType type)
     }
 }
 
+TString DecorateUniform(const TName &name, const TType &type)
+{
+    return DecorateIfNeeded(name);
+}
+
 TString DecorateField(const TString &string, const TStructure &structure)
 {
     if (structure.name().compare(0, 3, "gl_") != 0)
@@ -224,13 +211,10 @@ TString Decorate(const TString &string)
     return string;
 }
 
-TString DecorateVariableIfNeeded(const TName &name)
+TString DecorateIfNeeded(const TName &name)
 {
     if (name.isInternal())
     {
-        // The name should not have a prefix reserved for user-defined variables or functions.
-        ASSERT(name.getString().compare(0, 2, "f_") != 0);
-        ASSERT(name.getString().compare(0, 1, "_") != 0);
         return name.getString();
     }
     else
@@ -243,29 +227,25 @@ TString DecorateFunctionIfNeeded(const TName &name)
 {
     if (name.isInternal())
     {
-        // The name should not have a prefix reserved for user-defined variables or functions.
-        ASSERT(name.getString().compare(0, 2, "f_") != 0);
-        ASSERT(name.getString().compare(0, 1, "_") != 0);
-        return name.getString();
+        return TFunction::unmangleName(name.getString());
     }
-    ASSERT(name.getString().compare(0, 3, "gl_") != 0);
-    // Add an additional f prefix to functions so that they're always disambiguated from variables.
-    // This is necessary in the corner case where a variable declaration hides a function that it
-    // uses in its initializer.
-    return "f_" + name.getString();
+    else
+    {
+        return Decorate(TFunction::unmangleName(name.getString()));
+    }
 }
 
 TString TypeString(const TType &type)
 {
-    const TStructure *structure = type.getStruct();
+    const TStructure* structure = type.getStruct();
     if (structure)
     {
-        const TString &typeName = structure->name();
+        const TString& typeName = structure->name();
         if (typeName != "")
         {
             return StructNameString(*structure);
         }
-        else  // Nameless structure, define in place
+        else   // Nameless structure, define in place
         {
             return StructureHLSL::defineNameless(*structure);
         }
@@ -280,73 +260,55 @@ TString TypeString(const TType &type)
     {
         switch (type.getBasicType())
         {
-            case EbtFloat:
-                switch (type.getNominalSize())
-                {
-                    case 1:
-                        return "float";
-                    case 2:
-                        return "float2";
-                    case 3:
-                        return "float3";
-                    case 4:
-                        return "float4";
-                }
-            case EbtInt:
-                switch (type.getNominalSize())
-                {
-                    case 1:
-                        return "int";
-                    case 2:
-                        return "int2";
-                    case 3:
-                        return "int3";
-                    case 4:
-                        return "int4";
-                }
-            case EbtUInt:
-                switch (type.getNominalSize())
-                {
-                    case 1:
-                        return "uint";
-                    case 2:
-                        return "uint2";
-                    case 3:
-                        return "uint3";
-                    case 4:
-                        return "uint4";
-                }
-            case EbtBool:
-                switch (type.getNominalSize())
-                {
-                    case 1:
-                        return "bool";
-                    case 2:
-                        return "bool2";
-                    case 3:
-                        return "bool3";
-                    case 4:
-                        return "bool4";
-                }
-            case EbtVoid:
-                return "void";
-            case EbtSampler2D:
-            case EbtISampler2D:
-            case EbtUSampler2D:
-            case EbtSampler2DArray:
-            case EbtISampler2DArray:
-            case EbtUSampler2DArray:
-                return "sampler2D";
-            case EbtSamplerCube:
-            case EbtISamplerCube:
-            case EbtUSamplerCube:
-                return "samplerCUBE";
-            case EbtSamplerExternalOES:
-                return "sampler2D";
-            case EbtAtomicCounter:
-                return "atomic_uint";
-            default:
-                break;
+          case EbtFloat:
+            switch (type.getNominalSize())
+            {
+              case 1: return "float";
+              case 2: return "float2";
+              case 3: return "float3";
+              case 4: return "float4";
+            }
+          case EbtInt:
+            switch (type.getNominalSize())
+            {
+              case 1: return "int";
+              case 2: return "int2";
+              case 3: return "int3";
+              case 4: return "int4";
+            }
+          case EbtUInt:
+            switch (type.getNominalSize())
+            {
+              case 1: return "uint";
+              case 2: return "uint2";
+              case 3: return "uint3";
+              case 4: return "uint4";
+            }
+          case EbtBool:
+            switch (type.getNominalSize())
+            {
+              case 1: return "bool";
+              case 2: return "bool2";
+              case 3: return "bool3";
+              case 4: return "bool4";
+            }
+          case EbtVoid:
+            return "void";
+          case EbtSampler2D:
+          case EbtISampler2D:
+          case EbtUSampler2D:
+          case EbtSampler2DArray:
+          case EbtISampler2DArray:
+          case EbtUSampler2DArray:
+            return "sampler2D";
+          case EbtSamplerCube:
+          case EbtISamplerCube:
+          case EbtUSamplerCube:
+            return "samplerCUBE";
+          case EbtSamplerExternalOES:
+            return "sampler2D";
+          default:
+            break;
         }
     }
 
@@ -371,8 +333,7 @@ TString StructNameString(const TStructure &structure)
     return "ss" + str(structure.uniqueId()) + "_" + structure.name();
 }
 
-TString QualifiedStructNameString(const TStructure &structure,
-                                  bool useHLSLRowMajorPacking,
+TString QualifiedStructNameString(const TStructure &structure, bool useHLSLRowMajorPacking,
                                   bool useStd140Packing)
 {
     if (structure.name() == "")
@@ -402,28 +363,17 @@ TString InterpolationString(TQualifier qualifier)
 {
     switch (qualifier)
     {
-        case EvqVaryingIn:
-            return "";
-        case EvqFragmentIn:
-            return "";
-        case EvqSmoothIn:
-            return "linear";
-        case EvqFlatIn:
-            return "nointerpolation";
-        case EvqCentroidIn:
-            return "centroid";
-        case EvqVaryingOut:
-            return "";
-        case EvqVertexOut:
-            return "";
-        case EvqSmoothOut:
-            return "linear";
-        case EvqFlatOut:
-            return "nointerpolation";
-        case EvqCentroidOut:
-            return "centroid";
-        default:
-            UNREACHABLE();
+      case EvqVaryingIn:           return "";
+      case EvqFragmentIn:          return "";
+      case EvqSmoothIn:            return "linear";
+      case EvqFlatIn:              return "nointerpolation";
+      case EvqCentroidIn:          return "centroid";
+      case EvqVaryingOut:          return "";
+      case EvqVertexOut:           return "";
+      case EvqSmoothOut:           return "linear";
+      case EvqFlatOut:             return "nointerpolation";
+      case EvqCentroidOut:         return "centroid";
+      default: UNREACHABLE();
     }
 
     return "";
@@ -433,17 +383,11 @@ TString QualifierString(TQualifier qualifier)
 {
     switch (qualifier)
     {
-        case EvqIn:
-            return "in";
-        case EvqOut:
-            return "inout";  // 'out' results in an HLSL error if not all fields are written, for
-                             // GLSL it's undefined
-        case EvqInOut:
-            return "inout";
-        case EvqConstReadOnly:
-            return "const";
-        default:
-            UNREACHABLE();
+      case EvqIn:            return "in";
+      case EvqOut:           return "inout"; // 'out' results in an HLSL error if not all fields are written, for GLSL it's undefined
+      case EvqInOut:         return "inout";
+      case EvqConstReadOnly: return "const";
+      default: UNREACHABLE();
     }
 
     return "";
@@ -455,21 +399,12 @@ TString DisambiguateFunctionName(const TIntermSequence *parameters)
     for (auto parameter : *parameters)
     {
         const TType &paramType = parameter->getAsTyped()->getType();
-        // Parameter types are only added to function names if they are ambiguous according to the
-        // native HLSL compiler. Other parameter types are not added to function names to avoid
-        // making function names longer.
+        // Disambiguation is needed for float2x2 and float4 parameters. These are the only parameter
+        // types that HLSL thinks are identical. float2x3 and float3x2 are different types, for
+        // example. Other parameter types are not added to function names to avoid making function
+        // names longer.
         if (paramType.getObjectSize() == 4 && paramType.getBasicType() == EbtFloat)
         {
-            // Disambiguation is needed for float2x2 and float4 parameters. These are the only
-            // built-in types that HLSL thinks are identical. float2x3 and float3x2 are different
-            // types, for example.
-            disambiguatingString += "_" + TypeString(paramType);
-        }
-        else if (paramType.getBasicType() == EbtStruct)
-        {
-            // Disambiguation is needed for struct parameters, since HLSL thinks that structs with
-            // the same fields but a different name are identical.
-            ASSERT(paramType.getStruct()->name() != "");
             disambiguatingString += "_" + TypeString(paramType);
         }
     }

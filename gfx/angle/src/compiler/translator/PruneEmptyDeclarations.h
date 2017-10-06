@@ -3,8 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// The PruneEmptyDeclarations function prunes unnecessary empty declarations and declarators from
-// the AST.
+// The PruneEmptyDeclarations function prunes unnecessary empty declarations and declarators from the AST.
 
 #ifndef COMPILER_TRANSLATOR_PRUNEEMPTYDECLARATIONS_H_
 #define COMPILER_TRANSLATOR_PRUNEEMPTYDECLARATIONS_H_

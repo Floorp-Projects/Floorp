@@ -144,13 +144,13 @@
 
     WindowSurfaceCGL::WindowSurfaceCGL(const egl::SurfaceState &state,
                                        RendererGL *renderer,
-                                       EGLNativeWindowType layer,
+                                       CALayer *layer,
                                        const FunctionsGL *functions,
                                        CGLContextObj context)
         : SurfaceGL(state, renderer),
           mSwapLayer(nil),
           mCurrentSwapId(0),
-          mLayer(reinterpret_cast<CALayer *>(layer)),
+          mLayer(layer),
           mContext(context),
           mFunctions(functions),
           mStateManager(renderer->getStateManager()),
@@ -194,7 +194,7 @@ WindowSurfaceCGL::~WindowSurfaceCGL()
     }
 }
 
-egl::Error WindowSurfaceCGL::initialize(const egl::Display *display)
+egl::Error WindowSurfaceCGL::initialize()
 {
     unsigned width  = getWidth();
     unsigned height = getHeight();
@@ -237,7 +237,7 @@ egl::Error WindowSurfaceCGL::makeCurrent()
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceCGL::swap(const gl::Context *context)
+egl::Error WindowSurfaceCGL::swap()
 {
     mFunctions->flush();
     mSwapState.beingRendered->swapId = ++mCurrentSwapId;
@@ -272,11 +272,7 @@ egl::Error WindowSurfaceCGL::swap(const gl::Context *context)
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceCGL::postSubBuffer(const gl::Context *context,
-                                           EGLint x,
-                                           EGLint y,
-                                           EGLint width,
-                                           EGLint height)
+egl::Error WindowSurfaceCGL::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
     UNIMPLEMENTED();
     return egl::Error(EGL_SUCCESS);
@@ -330,7 +326,7 @@ FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::Framebuffe
 {
     // TODO(cwallez) assert it happens only once?
     return new FramebufferGL(mFramebuffer, state, mFunctions, mWorkarounds, mRenderer->getBlitter(),
-                             mRenderer->getMultiviewClearer(), mStateManager);
+                             mStateManager);
 }
 
-}  // namespace rx
+}

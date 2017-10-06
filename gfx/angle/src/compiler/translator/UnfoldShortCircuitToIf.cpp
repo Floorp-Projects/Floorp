@@ -3,16 +3,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// UnfoldShortCircuitToIf is an AST traverser to convert short-circuiting operators to if-else
-// statements.
+// UnfoldShortCircuitToIf is an AST traverser to convert short-circuiting operators to if-else statements.
 // The results are assigned to s# temporaries, which are used by the main translator instead of
 // the original expression.
 //
 
 #include "compiler/translator/UnfoldShortCircuitToIf.h"
 
+#include "compiler/translator/IntermNode.h"
 #include "compiler/translator/IntermNodePatternMatcher.h"
-#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -24,7 +23,7 @@ namespace
 class UnfoldShortCircuitTraverser : public TIntermTraverser
 {
   public:
-    UnfoldShortCircuitTraverser(TSymbolTable *symbolTable);
+    UnfoldShortCircuitTraverser();
 
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitTernary(Visit visit, TIntermTernary *node) override;
@@ -40,8 +39,8 @@ class UnfoldShortCircuitTraverser : public TIntermTraverser
     IntermNodePatternMatcher mPatternToUnfoldMatcher;
 };
 
-UnfoldShortCircuitTraverser::UnfoldShortCircuitTraverser(TSymbolTable *symbolTable)
-    : TIntermTraverser(true, false, true, symbolTable),
+UnfoldShortCircuitTraverser::UnfoldShortCircuitTraverser()
+    : TIntermTraverser(true, false, true),
       mFoundShortCircuit(false),
       mPatternToUnfoldMatcher(IntermNodePatternMatcher::kUnfoldedShortCircuitExpression)
 {
@@ -67,59 +66,58 @@ bool UnfoldShortCircuitTraverser::visitBinary(Visit visit, TIntermBinary *node)
 
     switch (node->getOp())
     {
-        case EOpLogicalOr:
-        {
-            // "x || y" is equivalent to "x ? true : y", which unfolds to "bool s; if(x) s = true;
-            // else s = y;",
-            // and then further simplifies down to "bool s = x; if(!s) s = y;".
+      case EOpLogicalOr:
+      {
+          // "x || y" is equivalent to "x ? true : y", which unfolds to "bool s; if(x) s = true;
+          // else s = y;",
+          // and then further simplifies down to "bool s = x; if(!s) s = y;".
 
-            TIntermSequence insertions;
-            TType boolType(EbtBool, EbpUndefined, EvqTemporary);
+          TIntermSequence insertions;
+          TType boolType(EbtBool, EbpUndefined, EvqTemporary);
 
-            ASSERT(node->getLeft()->getType() == boolType);
-            insertions.push_back(createTempInitDeclaration(node->getLeft()));
+          ASSERT(node->getLeft()->getType() == boolType);
+          insertions.push_back(createTempInitDeclaration(node->getLeft()));
 
-            TIntermBlock *assignRightBlock = new TIntermBlock();
-            ASSERT(node->getRight()->getType() == boolType);
-            assignRightBlock->getSequence()->push_back(createTempAssignment(node->getRight()));
+          TIntermBlock *assignRightBlock = new TIntermBlock();
+          ASSERT(node->getRight()->getType() == boolType);
+          assignRightBlock->getSequence()->push_back(createTempAssignment(node->getRight()));
 
-            TIntermUnary *notTempSymbol =
-                new TIntermUnary(EOpLogicalNot, createTempSymbol(boolType));
-            TIntermIfElse *ifNode = new TIntermIfElse(notTempSymbol, assignRightBlock, nullptr);
-            insertions.push_back(ifNode);
+          TIntermUnary *notTempSymbol = new TIntermUnary(EOpLogicalNot, createTempSymbol(boolType));
+          TIntermIfElse *ifNode       = new TIntermIfElse(notTempSymbol, assignRightBlock, nullptr);
+          insertions.push_back(ifNode);
 
-            insertStatementsInParentBlock(insertions);
+          insertStatementsInParentBlock(insertions);
 
-            queueReplacement(createTempSymbol(boolType), OriginalNode::IS_DROPPED);
-            return false;
-        }
-        case EOpLogicalAnd:
-        {
-            // "x && y" is equivalent to "x ? y : false", which unfolds to "bool s; if(x) s = y;
-            // else s = false;",
-            // and then further simplifies down to "bool s = x; if(s) s = y;".
-            TIntermSequence insertions;
-            TType boolType(EbtBool, EbpUndefined, EvqTemporary);
+          queueReplacement(node, createTempSymbol(boolType), OriginalNode::IS_DROPPED);
+          return false;
+      }
+      case EOpLogicalAnd:
+      {
+          // "x && y" is equivalent to "x ? y : false", which unfolds to "bool s; if(x) s = y;
+          // else s = false;",
+          // and then further simplifies down to "bool s = x; if(s) s = y;".
+          TIntermSequence insertions;
+          TType boolType(EbtBool, EbpUndefined, EvqTemporary);
 
-            ASSERT(node->getLeft()->getType() == boolType);
-            insertions.push_back(createTempInitDeclaration(node->getLeft()));
+          ASSERT(node->getLeft()->getType() == boolType);
+          insertions.push_back(createTempInitDeclaration(node->getLeft()));
 
-            TIntermBlock *assignRightBlock = new TIntermBlock();
-            ASSERT(node->getRight()->getType() == boolType);
-            assignRightBlock->getSequence()->push_back(createTempAssignment(node->getRight()));
+          TIntermBlock *assignRightBlock = new TIntermBlock();
+          ASSERT(node->getRight()->getType() == boolType);
+          assignRightBlock->getSequence()->push_back(createTempAssignment(node->getRight()));
 
-            TIntermIfElse *ifNode =
-                new TIntermIfElse(createTempSymbol(boolType), assignRightBlock, nullptr);
-            insertions.push_back(ifNode);
+          TIntermIfElse *ifNode =
+              new TIntermIfElse(createTempSymbol(boolType), assignRightBlock, nullptr);
+          insertions.push_back(ifNode);
 
-            insertStatementsInParentBlock(insertions);
+          insertStatementsInParentBlock(insertions);
 
-            queueReplacement(createTempSymbol(boolType), OriginalNode::IS_DROPPED);
-            return false;
-        }
-        default:
-            UNREACHABLE();
-            return true;
+          queueReplacement(node, createTempSymbol(boolType), OriginalNode::IS_DROPPED);
+          return false;
+      }
+      default:
+          UNREACHABLE();
+          return true;
     }
 }
 
@@ -157,7 +155,7 @@ bool UnfoldShortCircuitTraverser::visitTernary(Visit visit, TIntermTernary *node
     insertStatementsInParentBlock(insertions);
 
     TIntermSymbol *ternaryResult = createTempSymbol(node->getType());
-    queueReplacement(ternaryResult, OriginalNode::IS_DROPPED);
+    queueReplacement(node, ternaryResult, OriginalNode::IS_DROPPED);
 
     return false;
 }
@@ -165,14 +163,16 @@ bool UnfoldShortCircuitTraverser::visitTernary(Visit visit, TIntermTernary *node
 void UnfoldShortCircuitTraverser::nextIteration()
 {
     mFoundShortCircuit = false;
-    nextTemporaryId();
+    nextTemporaryIndex();
 }
 
-}  // namespace
+} // namespace
 
-void UnfoldShortCircuitToIf(TIntermNode *root, TSymbolTable *symbolTable)
+void UnfoldShortCircuitToIf(TIntermNode *root, unsigned int *temporaryIndex)
 {
-    UnfoldShortCircuitTraverser traverser(symbolTable);
+    UnfoldShortCircuitTraverser traverser;
+    ASSERT(temporaryIndex != nullptr);
+    traverser.useTemporaryIndex(temporaryIndex);
     // Unfold one operator at a time, and reset the traverser between iterations.
     do
     {
@@ -180,7 +180,8 @@ void UnfoldShortCircuitToIf(TIntermNode *root, TSymbolTable *symbolTable)
         root->traverse(&traverser);
         if (traverser.foundShortCircuit())
             traverser.updateTree();
-    } while (traverser.foundShortCircuit());
+    }
+    while (traverser.foundShortCircuit());
 }
 
 }  // namespace sh

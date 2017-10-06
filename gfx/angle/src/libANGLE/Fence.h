@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-// Fence.h: Defines the gl::FenceNV and gl::Sync classes, which support the GL_NV_fence
+// Fence.h: Defines the gl::FenceNV and gl::FenceSync classes, which support the GL_NV_fence
 // extension and GLES3 sync objects.
 
 #ifndef LIBANGLE_FENCE_H_
@@ -19,7 +19,7 @@
 namespace rx
 {
 class FenceNVImpl;
-class SyncImpl;
+class FenceSyncImpl;
 }
 
 namespace gl
@@ -48,13 +48,11 @@ class FenceNV final : angle::NonCopyable
     GLenum mCondition;
 };
 
-class Sync final : public RefCountObject, public LabeledObject
+class FenceSync final : public RefCountObject, public LabeledObject
 {
   public:
-    Sync(rx::SyncImpl *impl, GLuint id);
-    virtual ~Sync();
-
-    Error onDestroy(const Context *context) override { return NoError(); }
+    FenceSync(rx::FenceSyncImpl *impl, GLuint id);
+    virtual ~FenceSync();
 
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
@@ -68,7 +66,7 @@ class Sync final : public RefCountObject, public LabeledObject
     GLbitfield getFlags() const { return mFlags; }
 
   private:
-    rx::SyncImpl *mFence;
+    rx::FenceSyncImpl *mFence;
 
     std::string mLabel;
 
@@ -76,6 +74,6 @@ class Sync final : public RefCountObject, public LabeledObject
     GLbitfield mFlags;
 };
 
-}  // namespace gl
+}
 
 #endif   // LIBANGLE_FENCE_H_

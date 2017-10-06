@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 // UniformHLSL.h:
-//   Methods for GLSL to HLSL translation for uniforms and uniform blocks.
+//   Methods for GLSL to HLSL translation for uniforms and interface blocks.
 //
 
 #ifndef COMPILER_TRANSLATOR_UNIFORMHLSL_H_
@@ -20,12 +20,10 @@ class StructureHLSL;
 class UniformHLSL : angle::NonCopyable
 {
   public:
-    UniformHLSL(StructureHLSL *structureHLSL,
-                ShShaderOutput outputType,
-                const std::vector<Uniform> &uniforms);
+    UniformHLSL(StructureHLSL *structureHLSL, ShShaderOutput outputType, const std::vector<Uniform> &uniforms);
 
     void reserveUniformRegisters(unsigned int registerCount);
-    void reserveUniformBlockRegisters(unsigned int registerCount);
+    void reserveInterfaceBlockRegisters(unsigned int registerCount);
     void uniformsHeader(TInfoSinkBase &out,
                         ShShaderOutput outputType,
                         const ReferencedSymbols &referencedUniforms);
@@ -33,15 +31,14 @@ class UniformHLSL : angle::NonCopyable
     // Must be called after uniformsHeader
     void samplerMetadataUniforms(TInfoSinkBase &out, const char *reg);
 
-    TString uniformBlocksHeader(const ReferencedSymbols &referencedInterfaceBlocks);
+    TString interfaceBlocksHeader(const ReferencedSymbols &referencedInterfaceBlocks);
 
     // Used for direct index references
-    static TString uniformBlockInstanceString(const TInterfaceBlock &interfaceBlock,
-                                              unsigned int arrayIndex);
+    static TString interfaceBlockInstanceString(const TInterfaceBlock& interfaceBlock, unsigned int arrayIndex);
 
-    const std::map<std::string, unsigned int> &getUniformBlockRegisterMap() const
+    const std::map<std::string, unsigned int> &getInterfaceBlockRegisterMap() const
     {
-        return mUniformBlockRegisterMap;
+        return mInterfaceBlockRegisterMap;
     }
     const std::map<std::string, unsigned int> &getUniformRegisterMap() const
     {
@@ -49,12 +46,9 @@ class UniformHLSL : angle::NonCopyable
     }
 
   private:
-    TString uniformBlockString(const TInterfaceBlock &interfaceBlock,
-                               unsigned int registerIndex,
-                               unsigned int arrayIndex);
-    TString uniformBlockMembersString(const TInterfaceBlock &interfaceBlock,
-                                      TLayoutBlockStorage blockStorage);
-    TString uniformBlockStructString(const TInterfaceBlock &interfaceBlock);
+    TString interfaceBlockString(const TInterfaceBlock &interfaceBlock, unsigned int registerIndex, unsigned int arrayIndex);
+    TString interfaceBlockMembersString(const TInterfaceBlock &interfaceBlock, TLayoutBlockStorage blockStorage);
+    TString interfaceBlockStructString(const TInterfaceBlock &interfaceBlock);
     const Uniform *findUniformByName(const TString &name) const;
 
     void outputHLSL4_0_FL9_3Sampler(TInfoSinkBase &out,
@@ -83,15 +77,16 @@ class UniformHLSL : angle::NonCopyable
         unsigned int *groupTextureRegisterIndex);
 
     unsigned int mUniformRegister;
-    unsigned int mUniformBlockRegister;
+    unsigned int mInterfaceBlockRegister;
     unsigned int mSamplerRegister;
     StructureHLSL *mStructureHLSL;
     ShShaderOutput mOutputType;
 
     const std::vector<Uniform> &mUniforms;
-    std::map<std::string, unsigned int> mUniformBlockRegisterMap;
+    std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
     std::map<std::string, unsigned int> mUniformRegisterMap;
 };
+
 }
 
-#endif  // COMPILER_TRANSLATOR_UNIFORMHLSL_H_
+#endif // COMPILER_TRANSLATOR_UNIFORMHLSL_H_

@@ -9,9 +9,6 @@
 #ifndef LIBANGLE_RENDERER_SURFACEIMPL_H_
 #define LIBANGLE_RENDERER_SURFACEIMPL_H_
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include "common/angleutils.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
@@ -27,7 +24,6 @@ namespace egl
 class Display;
 struct Config;
 struct SurfaceState;
-class Thread;
 }
 
 namespace rx
@@ -39,21 +35,15 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
   public:
     SurfaceImpl(const egl::SurfaceState &surfaceState);
     virtual ~SurfaceImpl();
-    virtual void destroy(const egl::Display *display) {}
 
-    virtual egl::Error initialize(const egl::Display *display)                           = 0;
+    virtual egl::Error initialize() = 0;
     virtual FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) = 0;
-    virtual egl::Error swap(const gl::Context *context)                                  = 0;
-    virtual egl::Error swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects);
-    virtual egl::Error postSubBuffer(const gl::Context *context,
-                                     EGLint x,
-                                     EGLint y,
-                                     EGLint width,
-                                     EGLint height) = 0;
+    virtual egl::Error swap() = 0;
+    virtual egl::Error swapWithDamage(EGLint *rects, EGLint n_rects);
+    virtual egl::Error postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height) = 0;
     virtual egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) = 0;
     virtual egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) = 0;
     virtual egl::Error releaseTexImage(EGLint buffer) = 0;
-    virtual egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) = 0;
     virtual void setSwapInterval(EGLint interval) = 0;
 
     // width and height can change with client window resizing

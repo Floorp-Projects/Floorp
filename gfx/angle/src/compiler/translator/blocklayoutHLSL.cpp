@@ -15,8 +15,9 @@
 namespace sh
 {
 
-HLSLBlockEncoder::HLSLBlockEncoder(HLSLBlockEncoderStrategy strategy, bool transposeMatrices)
-    : mEncoderStrategy(strategy), mTransposeMatrices(transposeMatrices)
+HLSLBlockEncoder::HLSLBlockEncoder(HLSLBlockEncoderStrategy strategy)
+    : mEncoderStrategy(strategy),
+      mTransposeMatrices(false)
 {
 }
 
@@ -29,11 +30,7 @@ void HLSLBlockEncoder::exitAggregateType()
 {
 }
 
-void HLSLBlockEncoder::getBlockLayoutInfo(GLenum typeIn,
-                                          unsigned int arraySize,
-                                          bool isRowMajorMatrix,
-                                          int *arrayStrideOut,
-                                          int *matrixStrideOut)
+void HLSLBlockEncoder::getBlockLayoutInfo(GLenum typeIn, unsigned int arraySize, bool isRowMajorMatrix, int *arrayStrideOut, int *matrixStrideOut)
 {
     GLenum type = (mTransposeMatrices ? gl::TransposeMatrixType(typeIn) : typeIn);
 
@@ -41,12 +38,14 @@ void HLSLBlockEncoder::getBlockLayoutInfo(GLenum typeIn,
     ASSERT(gl::VariableComponentSize(gl::VariableComponentType(type)) == BytesPerComponent);
 
     int matrixStride = 0;
-    int arrayStride  = 0;
+    int arrayStride = 0;
 
     // if variables are not to be packed, or we're about to
     // pack a matrix or array, skip to the start of the next
     // register
-    if (!isPacked() || gl::IsMatrixType(type) || arraySize > 0)
+    if (!isPacked() ||
+        gl::IsMatrixType(type) ||
+        arraySize > 0)
     {
         nextRegister();
     }
@@ -58,7 +57,7 @@ void HLSLBlockEncoder::getBlockLayoutInfo(GLenum typeIn,
         if (arraySize > 0)
         {
             const int numRegisters = gl::MatrixRegisterCount(type, isRowMajorMatrix);
-            arrayStride            = ComponentsPerRegister * numRegisters;
+            arrayStride = ComponentsPerRegister * numRegisters;
         }
     }
     else if (arraySize > 0)
@@ -75,14 +74,10 @@ void HLSLBlockEncoder::getBlockLayoutInfo(GLenum typeIn,
     }
 
     *matrixStrideOut = matrixStride;
-    *arrayStrideOut  = arrayStride;
+    *arrayStrideOut = arrayStride;
 }
 
-void HLSLBlockEncoder::advanceOffset(GLenum typeIn,
-                                     unsigned int arraySize,
-                                     bool isRowMajorMatrix,
-                                     int arrayStride,
-                                     int matrixStride)
+void HLSLBlockEncoder::advanceOffset(GLenum typeIn, unsigned int arraySize, bool isRowMajorMatrix, int arrayStride, int matrixStride)
 {
     GLenum type = (mTransposeMatrices ? gl::TransposeMatrixType(typeIn) : typeIn);
 
@@ -94,7 +89,7 @@ void HLSLBlockEncoder::advanceOffset(GLenum typeIn,
     if (gl::IsMatrixType(type))
     {
         ASSERT(matrixStride == ComponentsPerRegister);
-        const int numRegisters  = gl::MatrixRegisterCount(type, isRowMajorMatrix);
+        const int numRegisters = gl::MatrixRegisterCount(type, isRowMajorMatrix);
         const int numComponents = gl::MatrixComponentCount(type, isRowMajorMatrix);
         mCurrentOffset += ComponentsPerRegister * (numRegisters - 1);
         mCurrentOffset += numComponents;
@@ -114,8 +109,7 @@ void HLSLBlockEncoder::skipRegisters(unsigned int numRegisters)
     mCurrentOffset += (numRegisters * ComponentsPerRegister);
 }
 
-HLSLBlockEncoder::HLSLBlockEncoderStrategy HLSLBlockEncoder::GetStrategyFor(
-    ShShaderOutput outputType)
+HLSLBlockEncoder::HLSLBlockEncoderStrategy HLSLBlockEncoder::GetStrategyFor(ShShaderOutput outputType)
 {
     switch (outputType)
     {
@@ -154,13 +148,24 @@ void HLSLVariableRegisterCount(const ShaderVarType &variable, HLSLBlockEncoder *
     }
 }
 
-unsigned int HLSLVariableRegisterCount(const Uniform &variable, ShShaderOutput outputType)
+unsigned int HLSLVariableRegisterCount(const Varying &variable, bool transposeMatrices)
 {
-    HLSLBlockEncoder encoder(HLSLBlockEncoder::GetStrategyFor(outputType), true);
+    HLSLBlockEncoder encoder(HLSLBlockEncoder::ENCODE_PACKED);
+    encoder.setTransposeMatrices(transposeMatrices);
     HLSLVariableRegisterCount(variable, &encoder);
 
     const size_t registerBytes = (encoder.BytesPerComponent * encoder.ComponentsPerRegister);
-    return static_cast<unsigned int>(rx::roundUp<size_t>(encoder.getBlockSize(), registerBytes) /
-                                     registerBytes);
+    return static_cast<unsigned int>(rx::roundUp<size_t>(encoder.getBlockSize(), registerBytes) / registerBytes);
 }
-}  // namespace sh
+
+unsigned int HLSLVariableRegisterCount(const Uniform &variable, ShShaderOutput outputType)
+{
+    HLSLBlockEncoder encoder(HLSLBlockEncoder::GetStrategyFor(outputType));
+    encoder.setTransposeMatrices(true);
+    HLSLVariableRegisterCount(variable, &encoder);
+
+    const size_t registerBytes = (encoder.BytesPerComponent * encoder.ComponentsPerRegister);
+    return static_cast<unsigned int>(rx::roundUp<size_t>(encoder.getBlockSize(), registerBytes) / registerBytes);
+}
+
+}

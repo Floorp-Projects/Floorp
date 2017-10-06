@@ -16,13 +16,12 @@
 #ifndef COMPILER_TRANSLATOR_EXPANDINTEGERPOWEXPRESSIONS_H_
 #define COMPILER_TRANSLATOR_EXPANDINTEGERPOWEXPRESSIONS_H_
 
+class TIntermNode;
+
 namespace sh
 {
 
-class TIntermNode;
-class TSymbolTable;
-
-void ExpandIntegerPowExpressions(TIntermNode *root, TSymbolTable *symbolTable);
+void ExpandIntegerPowExpressions(TIntermNode *root, unsigned int *tempIndex);
 
 }  // namespace sh
 

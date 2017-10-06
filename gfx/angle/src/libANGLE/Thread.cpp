@@ -16,6 +16,9 @@ namespace egl
 Thread::Thread()
     : mError(EGL_SUCCESS),
       mAPI(EGL_OPENGL_ES_API),
+      mDisplay(static_cast<egl::Display *>(EGL_NO_DISPLAY)),
+      mDrawSurface(static_cast<egl::Surface *>(EGL_NO_SURFACE)),
+      mReadSurface(static_cast<egl::Surface *>(EGL_NO_SURFACE)),
       mContext(static_cast<gl::Context *>(EGL_NO_CONTEXT))
 {
 }
@@ -40,27 +43,30 @@ EGLenum Thread::getAPI() const
     return mAPI;
 }
 
-void Thread::setCurrent(gl::Context *context)
+void Thread::setCurrent(Display *display,
+                        Surface *drawSurface,
+                        Surface *readSurface,
+                        gl::Context *context)
 {
-    mContext = context;
+    mDisplay     = display;
+    mDrawSurface = drawSurface;
+    mReadSurface = readSurface;
+    mContext     = context;
 }
 
-Surface *Thread::getCurrentDrawSurface() const
+Display *Thread::getDisplay() const
 {
-    if (mContext)
-    {
-        return mContext->getCurrentDrawSurface();
-    }
-    return nullptr;
+    return mDisplay;
 }
 
-Surface *Thread::getCurrentReadSurface() const
+Surface *Thread::getDrawSurface() const
 {
-    if (mContext)
-    {
-        return mContext->getCurrentReadSurface();
-    }
-    return nullptr;
+    return mDrawSurface;
+}
+
+Surface *Thread::getReadSurface() const
+{
+    return mReadSurface;
 }
 
 gl::Context *Thread::getContext() const
@@ -72,20 +78,11 @@ gl::Context *Thread::getValidContext() const
 {
     if (mContext && mContext->isContextLost())
     {
-        mContext->handleError(gl::OutOfMemory() << "Context has been lost.");
+        mContext->handleError(gl::Error(GL_OUT_OF_MEMORY, "Context has been lost."));
         return nullptr;
     }
 
     return mContext;
-}
-
-Display *Thread::getCurrentDisplay() const
-{
-    if (mContext)
-    {
-        return mContext->getCurrentDisplay();
-    }
-    return nullptr;
 }
 
 }  // namespace egl

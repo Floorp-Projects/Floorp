@@ -50,7 +50,7 @@ Thread *AllocateCurrentThread()
     Thread *thread = new Thread();
     if (!SetTLSValue(threadTLS, thread))
     {
-        ERR() << "Could not set thread local storage.";
+        ERR("Could not set thread local storage.");
         return nullptr;
     }
 

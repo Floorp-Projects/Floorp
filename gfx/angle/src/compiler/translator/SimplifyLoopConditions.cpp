@@ -10,9 +10,8 @@
 
 #include "compiler/translator/SimplifyLoopConditions.h"
 
+#include "compiler/translator/IntermNode.h"
 #include "compiler/translator/IntermNodePatternMatcher.h"
-#include "compiler/translator/IntermNode_util.h"
-#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -20,26 +19,35 @@ namespace sh
 namespace
 {
 
+TIntermConstantUnion *CreateBoolConstantNode(bool value)
+{
+    TConstantUnion *u = new TConstantUnion;
+    u->setBConst(value);
+    TIntermConstantUnion *node =
+        new TIntermConstantUnion(u, TType(EbtBool, EbpUndefined, EvqConst, 1));
+    return node;
+}
+
 class SimplifyLoopConditionsTraverser : public TLValueTrackingTraverser
 {
   public:
     SimplifyLoopConditionsTraverser(unsigned int conditionsToSimplifyMask,
-                                    TSymbolTable *symbolTable,
+                                    const TSymbolTable &symbolTable,
                                     int shaderVersion);
 
     void traverseLoop(TIntermLoop *node) override;
 
-    bool visitUnary(Visit visit, TIntermUnary *node) override;
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
     bool visitTernary(Visit visit, TIntermTernary *node) override;
     bool visitDeclaration(Visit visit, TIntermDeclaration *node) override;
 
+    void nextIteration();
     bool foundLoopToChange() const { return mFoundLoopToChange; }
 
   protected:
-    // Marked to true once an operation that needs to be hoisted out of a loop expression has been
-    // found.
+    // Marked to true once an operation that needs to be hoisted out of the expression has been
+    // found. After that, no more AST updates are performed on that traversal.
     bool mFoundLoopToChange;
     bool mInsideLoopInitConditionOrExpression;
     IntermNodePatternMatcher mConditionsToSimplify;
@@ -47,7 +55,7 @@ class SimplifyLoopConditionsTraverser : public TLValueTrackingTraverser
 
 SimplifyLoopConditionsTraverser::SimplifyLoopConditionsTraverser(
     unsigned int conditionsToSimplifyMask,
-    TSymbolTable *symbolTable,
+    const TSymbolTable &symbolTable,
     int shaderVersion)
     : TLValueTrackingTraverser(true, false, false, symbolTable, shaderVersion),
       mFoundLoopToChange(false),
@@ -56,31 +64,29 @@ SimplifyLoopConditionsTraverser::SimplifyLoopConditionsTraverser(
 {
 }
 
-// If we're inside a loop initialization, condition, or expression, we check for expressions that
-// should be moved out of the loop condition or expression. If one is found, the loop is
-// transformed.
-// If we're not inside loop initialization, condition, or expression, we only need to traverse nodes
-// that may contain loops.
-
-bool SimplifyLoopConditionsTraverser::visitUnary(Visit visit, TIntermUnary *node)
+void SimplifyLoopConditionsTraverser::nextIteration()
 {
-    if (!mInsideLoopInitConditionOrExpression)
-        return false;
-
-    if (mFoundLoopToChange)
-        return false;  // Already decided to change this loop.
-
-    mFoundLoopToChange = mConditionsToSimplify.match(node);
-    return !mFoundLoopToChange;
+    mFoundLoopToChange               = false;
+    mInsideLoopInitConditionOrExpression = false;
+    nextTemporaryIndex();
 }
 
+// The visit functions operate in three modes:
+// 1. If a matching expression has already been found, we return early since only one loop can
+//    be transformed on one traversal.
+// 2. We try to find loops. In case a node is not inside a loop and can not contain loops, we
+//    stop traversing the subtree.
+// 3. If we're inside a loop initialization, condition or expression, we check for expressions
+//    that should be moved out of the loop condition or expression. If one is found, the loop
+//    is processed.
 bool SimplifyLoopConditionsTraverser::visitBinary(Visit visit, TIntermBinary *node)
 {
-    if (!mInsideLoopInitConditionOrExpression)
-        return false;
 
     if (mFoundLoopToChange)
-        return false;  // Already decided to change this loop.
+        return false;
+
+    if (!mInsideLoopInitConditionOrExpression)
+        return false;
 
     mFoundLoopToChange = mConditionsToSimplify.match(node, getParentNode(), isLValueRequiredHere());
     return !mFoundLoopToChange;
@@ -88,11 +94,11 @@ bool SimplifyLoopConditionsTraverser::visitBinary(Visit visit, TIntermBinary *no
 
 bool SimplifyLoopConditionsTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    if (!mInsideLoopInitConditionOrExpression)
+    if (mFoundLoopToChange)
         return false;
 
-    if (mFoundLoopToChange)
-        return false;  // Already decided to change this loop.
+    if (!mInsideLoopInitConditionOrExpression)
+        return false;
 
     mFoundLoopToChange = mConditionsToSimplify.match(node, getParentNode());
     return !mFoundLoopToChange;
@@ -100,11 +106,11 @@ bool SimplifyLoopConditionsTraverser::visitAggregate(Visit visit, TIntermAggrega
 
 bool SimplifyLoopConditionsTraverser::visitTernary(Visit visit, TIntermTernary *node)
 {
-    if (!mInsideLoopInitConditionOrExpression)
+    if (mFoundLoopToChange)
         return false;
 
-    if (mFoundLoopToChange)
-        return false;  // Already decided to change this loop.
+    if (!mInsideLoopInitConditionOrExpression)
+        return false;
 
     mFoundLoopToChange = mConditionsToSimplify.match(node);
     return !mFoundLoopToChange;
@@ -112,11 +118,11 @@ bool SimplifyLoopConditionsTraverser::visitTernary(Visit visit, TIntermTernary *
 
 bool SimplifyLoopConditionsTraverser::visitDeclaration(Visit visit, TIntermDeclaration *node)
 {
-    if (!mInsideLoopInitConditionOrExpression)
+    if (mFoundLoopToChange)
         return false;
 
-    if (mFoundLoopToChange)
-        return false;  // Already decided to change this loop.
+    if (!mInsideLoopInitConditionOrExpression)
+        return false;
 
     mFoundLoopToChange = mConditionsToSimplify.match(node);
     return !mFoundLoopToChange;
@@ -124,13 +130,17 @@ bool SimplifyLoopConditionsTraverser::visitDeclaration(Visit visit, TIntermDecla
 
 void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
 {
-    // Mark that we're inside a loop condition or expression, and determine if the loop needs to be
-    // transformed.
+    if (mFoundLoopToChange)
+        return;
 
-    ScopedNodeInTraversalPath addToPath(this, node);
+    // Mark that we're inside a loop condition or expression, and transform the loop if needed.
+
+    incrementDepth(node);
+
+    // Note: No need to traverse the loop init node.
 
     mInsideLoopInitConditionOrExpression = true;
-    mFoundLoopToChange                   = false;
+    TLoopType loopType                   = node->getType();
 
     if (!mFoundLoopToChange && node->getInit())
     {
@@ -147,14 +157,9 @@ void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
         node->getExpression()->traverse(this);
     }
 
-    mInsideLoopInitConditionOrExpression = false;
-
     if (mFoundLoopToChange)
     {
-        nextTemporaryId();
-
         // Replace the loop condition with a boolean variable that's updated on each iteration.
-        TLoopType loopType = node->getType();
         if (loopType == ELoopWhile)
         {
             // Transform:
@@ -175,8 +180,8 @@ void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
                 createTempAssignment(node->getCondition()->deepCopy()));
 
             // Can't use queueReplacement to replace old body, since it may have been nullptr.
-            // It's safe to do the replacements in place here - the new body will still be
-            // traversed, but that won't create any problems.
+            // It's safe to do the replacements in place here - this node won't be traversed
+            // further.
             node->setBody(newBody);
             node->setCondition(createTempSymbol(node->getCondition()->getType()));
         }
@@ -193,7 +198,7 @@ void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
             //     s0 = expr;
             //   } while (s0);
             TIntermSequence tempInitSeq;
-            tempInitSeq.push_back(createTempInitDeclaration(CreateBoolNode(true)));
+            tempInitSeq.push_back(createTempInitDeclaration(CreateBoolConstantNode(true)));
             insertStatementsInParentBlock(tempInitSeq);
 
             TIntermBlock *newBody = new TIntermBlock();
@@ -205,8 +210,8 @@ void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
                 createTempAssignment(node->getCondition()->deepCopy()));
 
             // Can't use queueReplacement to replace old body, since it may have been nullptr.
-            // It's safe to do the replacements in place here - the new body will still be
-            // traversed, but that won't create any problems.
+            // It's safe to do the replacements in place here - this node won't be traversed
+            // further.
             node->setBody(newBody);
             node->setCondition(createTempSymbol(node->getCondition()->getType()));
         }
@@ -219,82 +224,63 @@ void SimplifyLoopConditionsTraverser::traverseLoop(TIntermLoop *node)
             //   {
             //     init;
             //     bool s0 = expr;
-            //     while (s0) {
-            //       { body; }
-            //       exprB;
-            //       s0 = expr;
-            //     }
+            //     while (s0) { { body; } exprB; s0 = expr; }
             //   }
-            TIntermBlock *loopScope            = new TIntermBlock();
-            TIntermSequence *loopScopeSequence = loopScope->getSequence();
-
-            // Insert "init;"
+            TIntermBlock *loopScope = new TIntermBlock();
             if (node->getInit())
             {
-                loopScopeSequence->push_back(node->getInit());
+                loopScope->getSequence()->push_back(node->getInit());
             }
+            loopScope->getSequence()->push_back(
+                createTempInitDeclaration(node->getCondition()->deepCopy()));
 
-            // Insert "bool s0 = expr;" if applicable, "bool s0 = true;" otherwise
-            TIntermTyped *conditionInitializer = nullptr;
-            if (node->getCondition())
-            {
-                conditionInitializer = node->getCondition()->deepCopy();
-            }
-            else
-            {
-                conditionInitializer = CreateBoolNode(true);
-            }
-            loopScopeSequence->push_back(createTempInitDeclaration(conditionInitializer));
-
-            // Insert "{ body; }" in the while loop
             TIntermBlock *whileLoopBody = new TIntermBlock();
             if (node->getBody())
             {
                 whileLoopBody->getSequence()->push_back(node->getBody());
             }
-            // Insert "exprB;" in the while loop
             if (node->getExpression())
             {
                 whileLoopBody->getSequence()->push_back(node->getExpression());
             }
-            // Insert "s0 = expr;" in the while loop
-            if (node->getCondition())
-            {
-                whileLoopBody->getSequence()->push_back(
-                    createTempAssignment(node->getCondition()->deepCopy()));
-            }
-
-            // Create "while(s0) { whileLoopBody }"
+            whileLoopBody->getSequence()->push_back(
+                createTempAssignment(node->getCondition()->deepCopy()));
             TIntermLoop *whileLoop = new TIntermLoop(
-                ELoopWhile, nullptr, createTempSymbol(conditionInitializer->getType()), nullptr,
+                ELoopWhile, nullptr, createTempSymbol(node->getCondition()->getType()), nullptr,
                 whileLoopBody);
             loopScope->getSequence()->push_back(whileLoop);
-            queueReplacement(loopScope, OriginalNode::IS_DROPPED);
-
-            // After this the old body node will be traversed and loops inside it may be
-            // transformed. This is fine, since the old body node will still be in the AST after the
-            // transformation that's queued here, and transforming loops inside it doesn't need to
-            // know the exact post-transform path to it.
+            queueReplacementWithParent(getAncestorNode(1), node, loopScope,
+                                       OriginalNode::IS_DROPPED);
         }
     }
 
-    mFoundLoopToChange = false;
+    mInsideLoopInitConditionOrExpression = false;
 
-    // We traverse the body of the loop even if the loop is transformed.
-    if (node->getBody())
+    if (!mFoundLoopToChange && node->getBody())
         node->getBody()->traverse(this);
+
+    decrementDepth();
 }
 
 }  // namespace
 
 void SimplifyLoopConditions(TIntermNode *root,
                             unsigned int conditionsToSimplifyMask,
-                            TSymbolTable *symbolTable,
+                            unsigned int *temporaryIndex,
+                            const TSymbolTable &symbolTable,
                             int shaderVersion)
 {
     SimplifyLoopConditionsTraverser traverser(conditionsToSimplifyMask, symbolTable, shaderVersion);
-    root->traverse(&traverser);
-    traverser.updateTree();
+    ASSERT(temporaryIndex != nullptr);
+    traverser.useTemporaryIndex(temporaryIndex);
+    // Process one loop at a time, and reset the traverser between iterations.
+    do
+    {
+        traverser.nextIteration();
+        root->traverse(&traverser);
+        if (traverser.foundLoopToChange())
+            traverser.updateTree();
+    } while (traverser.foundLoopToChange());
 }
 
 }  // namespace sh

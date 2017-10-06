@@ -9,17 +9,14 @@
 #include "libANGLE/renderer/gl/ProgramGL.h"
 
 #include "common/angleutils.h"
-#include "common/bitset_utils.h"
 #include "common/debug.h"
 #include "common/string_utils.h"
 #include "common/utilities.h"
-#include "libANGLE/Context.h"
-#include "libANGLE/Uniform.h"
-#include "libANGLE/renderer/gl/ContextGL.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
 #include "libANGLE/renderer/gl/ShaderGL.h"
 #include "libANGLE/renderer/gl/StateManagerGL.h"
 #include "libANGLE/renderer/gl/WorkaroundsGL.h"
+#include "libANGLE/Uniform.h"
 #include "platform/Platform.h"
 
 namespace rx
@@ -35,7 +32,6 @@ ProgramGL::ProgramGL(const gl::ProgramState &data,
       mWorkarounds(workarounds),
       mStateManager(stateManager),
       mEnablePathRendering(enablePathRendering),
-      mMultiviewBaseViewLayerIndexUniformLocation(-1),
       mProgramID(0)
 {
     ASSERT(mFunctions);
@@ -50,9 +46,7 @@ ProgramGL::~ProgramGL()
     mProgramID = 0;
 }
 
-gl::LinkResult ProgramGL::load(const gl::Context *context,
-                               gl::InfoLog &infoLog,
-                               gl::BinaryInputStream *stream)
+LinkResult ProgramGL::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
 {
     preLink();
 
@@ -72,12 +66,11 @@ gl::LinkResult ProgramGL::load(const gl::Context *context,
     }
 
     postLink();
-    reapplyUBOBindingsIfNeeded(context);
 
     return true;
 }
 
-void ProgramGL::save(const gl::Context *context, gl::BinaryOutputStream *stream)
+gl::Error ProgramGL::save(gl::BinaryOutputStream *stream)
 {
     GLint binaryLength = 0;
     mFunctions->getProgramiv(mProgramID, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
@@ -91,21 +84,7 @@ void ProgramGL::save(const gl::Context *context, gl::BinaryOutputStream *stream)
     stream->writeInt(binaryLength);
     stream->writeBytes(&binary[0], binaryLength);
 
-    reapplyUBOBindingsIfNeeded(context);
-}
-
-void ProgramGL::reapplyUBOBindingsIfNeeded(const gl::Context *context)
-{
-    // Re-apply UBO bindings to work around driver bugs.
-    const WorkaroundsGL &workaroundsGL = GetImplAs<ContextGL>(context)->getWorkaroundsGL();
-    if (workaroundsGL.reapplyUBOBindingsAfterUsingBinaryProgram)
-    {
-        const auto &blocks = mState.getUniformBlocks();
-        for (size_t blockIndex : mState.getActiveUniformBlockBindingsMask())
-        {
-            setUniformBlockBinding(static_cast<GLuint>(blockIndex), blocks[blockIndex].binding);
-        }
-    }
+    return gl::Error(GL_NO_ERROR);
 }
 
 void ProgramGL::setBinaryRetrievableHint(bool retrievable)
@@ -118,14 +97,7 @@ void ProgramGL::setBinaryRetrievableHint(bool retrievable)
     }
 }
 
-void ProgramGL::setSeparable(bool separable)
-{
-    mFunctions->programParameteri(mProgramID, GL_PROGRAM_SEPARABLE, separable ? GL_TRUE : GL_FALSE);
-}
-
-gl::LinkResult ProgramGL::link(const gl::Context *context,
-                               const gl::VaryingPacking &packing,
-                               gl::InfoLog &infoLog)
+LinkResult ProgramGL::link(const gl::ContextState &data, gl::InfoLog &infoLog)
 {
     preLink();
 
@@ -144,16 +116,13 @@ gl::LinkResult ProgramGL::link(const gl::Context *context,
     else
     {
         // Set the transform feedback state
-        std::vector<std::string> transformFeedbackVaryingMappedNames;
+        std::vector<const GLchar *> transformFeedbackVaryings;
         for (const auto &tfVarying : mState.getTransformFeedbackVaryingNames())
         {
-            std::string tfVaryingMappedName =
-                mState.getAttachedVertexShader()->getTransformFeedbackVaryingMappedName(tfVarying,
-                                                                                        context);
-            transformFeedbackVaryingMappedNames.push_back(tfVaryingMappedName);
+            transformFeedbackVaryings.push_back(tfVarying.c_str());
         }
 
-        if (transformFeedbackVaryingMappedNames.empty())
+        if (transformFeedbackVaryings.empty())
         {
             if (mFunctions->transformFeedbackVaryings)
             {
@@ -164,13 +133,8 @@ gl::LinkResult ProgramGL::link(const gl::Context *context,
         else
         {
             ASSERT(mFunctions->transformFeedbackVaryings);
-            std::vector<const GLchar *> transformFeedbackVaryings;
-            for (const auto &varying : transformFeedbackVaryingMappedNames)
-            {
-                transformFeedbackVaryings.push_back(varying.c_str());
-            }
             mFunctions->transformFeedbackVaryings(
-                mProgramID, static_cast<GLsizei>(transformFeedbackVaryingMappedNames.size()),
+                mProgramID, static_cast<GLsizei>(transformFeedbackVaryings.size()),
                 &transformFeedbackVaryings[0], mState.getTransformFeedbackBufferMode());
         }
 
@@ -189,8 +153,7 @@ gl::LinkResult ProgramGL::link(const gl::Context *context,
                 continue;
             }
 
-            mFunctions->bindAttribLocation(mProgramID, attribute.location,
-                                           attribute.mappedName.c_str());
+            mFunctions->bindAttribLocation(mProgramID, attribute.location, attribute.name.c_str());
         }
 
         // Link and verify
@@ -285,6 +248,18 @@ void ProgramGL::setUniform1iv(GLint location, GLsizei count, const GLint *v)
     {
         mStateManager->useProgram(mProgramID);
         mFunctions->uniform1iv(uniLoc(location), count, v);
+    }
+
+    const gl::VariableLocation &locationEntry = mState.getUniformLocations()[location];
+
+    size_t samplerIndex = mUniformIndexToSamplerIndex[locationEntry.index];
+    if (samplerIndex != GL_INVALID_INDEX)
+    {
+        std::vector<GLuint> &boundTextureUnits = mSamplerBindings[samplerIndex].boundTextureUnits;
+
+        size_t copyCount =
+            std::min<size_t>(count, boundTextureUnits.size() - locationEntry.element);
+        std::copy(v, v + copyCount, boundTextureUnits.begin() + locationEntry.element);
     }
 }
 
@@ -508,11 +483,10 @@ void ProgramGL::setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformB
     if (mUniformBlockRealLocationMap.empty())
     {
         mUniformBlockRealLocationMap.reserve(mState.getUniformBlocks().size());
-        for (const gl::InterfaceBlock &uniformBlock : mState.getUniformBlocks())
+        for (const gl::UniformBlock &uniformBlock : mState.getUniformBlocks())
         {
-            const std::string &mappedNameWithIndex = uniformBlock.mappedNameWithArrayIndex();
-            GLuint blockIndex =
-                mFunctions->getUniformBlockIndex(mProgramID, mappedNameWithIndex.c_str());
+            const std::string &nameWithIndex = uniformBlock.nameWithArrayIndex();
+            GLuint blockIndex = mFunctions->getUniformBlockIndex(mProgramID, nameWithIndex.c_str());
             mUniformBlockRealLocationMap.push_back(blockIndex);
         }
     }
@@ -529,13 +503,16 @@ GLuint ProgramGL::getProgramID() const
     return mProgramID;
 }
 
-bool ProgramGL::getUniformBlockSize(const std::string & /* blockName */,
-                                    const std::string &blockMappedName,
-                                    size_t *sizeOut) const
+const std::vector<SamplerBindingGL> &ProgramGL::getAppliedSamplerUniforms() const
+{
+    return mSamplerBindings;
+}
+
+bool ProgramGL::getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const
 {
     ASSERT(mProgramID != 0u);
 
-    GLuint blockIndex = mFunctions->getUniformBlockIndex(mProgramID, blockMappedName.c_str());
+    GLuint blockIndex = mFunctions->getUniformBlockIndex(mProgramID, blockName.c_str());
     if (blockIndex == GL_INVALID_INDEX)
     {
         *sizeOut = 0;
@@ -549,12 +526,11 @@ bool ProgramGL::getUniformBlockSize(const std::string & /* blockName */,
     return true;
 }
 
-bool ProgramGL::getUniformBlockMemberInfo(const std::string & /* memberUniformName */,
-                                          const std::string &memberUniformMappedName,
+bool ProgramGL::getUniformBlockMemberInfo(const std::string &memberUniformName,
                                           sh::BlockMemberInfo *memberInfoOut) const
 {
     GLuint uniformIndex;
-    const GLchar *memberNameGLStr = memberUniformMappedName.c_str();
+    const GLchar *memberNameGLStr = memberUniformName.c_str();
     mFunctions->getUniformIndices(mProgramID, 1, &memberNameGLStr, &uniformIndex);
 
     if (uniformIndex == GL_INVALID_INDEX)
@@ -587,7 +563,7 @@ void ProgramGL::setPathFragmentInputGen(const std::string &inputName,
 
     for (const auto &input : mPathRenderingFragmentInputs)
     {
-        if (input.mappedName == inputName)
+        if (input.name == inputName)
         {
             mFunctions->programPathFragmentInputGenNV(mProgramID, input.location, genMode,
                                                       components, coeffs);
@@ -603,9 +579,9 @@ void ProgramGL::preLink()
     // Reset the program state
     mUniformRealLocationMap.clear();
     mUniformBlockRealLocationMap.clear();
+    mSamplerBindings.clear();
+    mUniformIndexToSamplerIndex.clear();
     mPathRenderingFragmentInputs.clear();
-
-    mMultiviewBaseViewLayerIndexUniformLocation = -1;
 }
 
 bool ProgramGL::checkLinkStatus(gl::InfoLog &infoLog)
@@ -617,6 +593,8 @@ bool ProgramGL::checkLinkStatus(gl::InfoLog &infoLog)
         // Linking failed, put the error into the info log
         GLint infoLogLength = 0;
         mFunctions->getProgramiv(mProgramID, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+        std::string warning;
 
         // Info log length includes the null terminator, so 1 means that the info log is an empty
         // string.
@@ -630,12 +608,14 @@ bool ProgramGL::checkLinkStatus(gl::InfoLog &infoLog)
 
             infoLog << buf.data();
 
-            WARN() << "Program link failed unexpectedly: " << buf.data();
+            warning = FormatString("Program link failed unexpectedly: %s", buf.data());
         }
         else
         {
-            WARN() << "Program link failed unexpectedly with no info log.";
+            warning = "Program link failed unexpectedly with no info log.";
         }
+        ANGLEPlatformCurrent()->logWarning(warning.c_str());
+        TRACE("\n%s", warning.c_str());
 
         // TODO, return GL_OUT_OF_MEMORY or just fail the link? This is an unexpected case
         return false;
@@ -654,7 +634,7 @@ void ProgramGL::postLink()
     for (size_t uniformLocation = 0; uniformLocation < uniformLocations.size(); uniformLocation++)
     {
         const auto &entry = uniformLocations[uniformLocation];
-        if (!entry.used())
+        if (!entry.used)
         {
             continue;
         }
@@ -663,7 +643,7 @@ void ProgramGL::postLink()
         // "Locations for sequential array indices are not required to be sequential."
         const gl::LinkedUniform &uniform = uniforms[entry.index];
         std::stringstream fullNameStr;
-        fullNameStr << uniform.mappedName;
+        fullNameStr << uniform.name;
         if (uniform.isArray())
         {
             fullNameStr << "[" << entry.element << "]";
@@ -674,11 +654,22 @@ void ProgramGL::postLink()
         mUniformRealLocationMap[uniformLocation] = realLocation;
     }
 
-    if (mState.usesMultiview())
+    mUniformIndexToSamplerIndex.resize(mState.getUniforms().size(), GL_INVALID_INDEX);
+
+    for (size_t uniformId = 0; uniformId < uniforms.size(); ++uniformId)
     {
-        mMultiviewBaseViewLayerIndexUniformLocation =
-            mFunctions->getUniformLocation(mProgramID, "multiviewBaseViewLayerIndex");
-        ASSERT(mMultiviewBaseViewLayerIndexUniformLocation != -1);
+        const gl::LinkedUniform &linkedUniform = uniforms[uniformId];
+
+        if (!linkedUniform.isSampler() || !linkedUniform.staticUse)
+            continue;
+
+        mUniformIndexToSamplerIndex[uniformId] = mSamplerBindings.size();
+
+        // If uniform is a sampler type, insert it into the mSamplerBindings array
+        SamplerBindingGL samplerBinding;
+        samplerBinding.textureType = gl::SamplerTypeToTextureType(linkedUniform.type);
+        samplerBinding.boundTextureUnits.resize(linkedUniform.elementCount(), 0);
+        mSamplerBindings.push_back(samplerBinding);
     }
 
     // Discover CHROMIUM_path_rendering fragment inputs if enabled.
@@ -698,16 +689,16 @@ void ProgramGL::postLink()
 
     for (GLint i = 0; i < numFragmentInputs; ++i)
     {
-        std::string mappedName;
-        mappedName.resize(maxNameLength);
+        std::string name;
+        name.resize(maxNameLength);
 
         GLsizei nameLen = 0;
         mFunctions->getProgramResourceName(mProgramID, GL_FRAGMENT_INPUT_NV, i, maxNameLength,
-                                           &nameLen, &mappedName[0]);
-        mappedName.resize(nameLen);
+                                           &nameLen, &name[0]);
+        name.resize(nameLen);
 
         // Ignore built-ins
-        if (angle::BeginsWith(mappedName, "gl_"))
+        if (angle::BeginsWith(name, "gl_"))
             continue;
 
         const GLenum kQueryProperties[] = {GL_LOCATION, GL_ARRAY_SIZE};
@@ -722,16 +713,16 @@ void ProgramGL::postLink()
         ASSERT(queryLength == static_cast<GLsizei>(ArraySize(kQueryProperties)));
 
         PathRenderingFragmentInput baseElementInput;
-        baseElementInput.mappedName = mappedName;
+        baseElementInput.name     = name;
         baseElementInput.location = queryResults[0];
         mPathRenderingFragmentInputs.push_back(std::move(baseElementInput));
 
         // If the input is an array it's denoted by [0] suffix on the variable
         // name. We'll then create an entry per each array index where index > 0
-        if (angle::EndsWith(mappedName, "[0]"))
+        if (angle::EndsWith(name, "[0]"))
         {
             // drop the suffix
-            mappedName.resize(mappedName.size() - 3);
+            name.resize(name.size() - 3);
 
             const auto arraySize    = queryResults[1];
             const auto baseLocation = queryResults[0];
@@ -739,63 +730,10 @@ void ProgramGL::postLink()
             for (GLint arrayIndex = 1; arrayIndex < arraySize; ++arrayIndex)
             {
                 PathRenderingFragmentInput arrayElementInput;
-                arrayElementInput.mappedName = mappedName + "[" + ToString(arrayIndex) + "]";
+                arrayElementInput.name     = name + "[" + ToString(arrayIndex) + "]";
                 arrayElementInput.location = baseLocation + arrayIndex;
                 mPathRenderingFragmentInputs.push_back(std::move(arrayElementInput));
             }
-        }
-    }
-}
-
-void ProgramGL::enableSideBySideRenderingPath() const
-{
-    ASSERT(mState.usesMultiview());
-    ASSERT(mMultiviewBaseViewLayerIndexUniformLocation != -1);
-
-    ASSERT(mFunctions->programUniform1i != nullptr);
-    mFunctions->programUniform1i(mProgramID, mMultiviewBaseViewLayerIndexUniformLocation, -1);
-}
-
-void ProgramGL::enableLayeredRenderingPath(int baseViewIndex) const
-{
-    ASSERT(mState.usesMultiview());
-    ASSERT(mMultiviewBaseViewLayerIndexUniformLocation != -1);
-
-    ASSERT(mFunctions->programUniform1i != nullptr);
-    mFunctions->programUniform1i(mProgramID, mMultiviewBaseViewLayerIndexUniformLocation,
-                                 baseViewIndex);
-}
-
-void ProgramGL::getUniformfv(const gl::Context *context, GLint location, GLfloat *params) const
-{
-    mFunctions->getUniformfv(mProgramID, uniLoc(location), params);
-}
-
-void ProgramGL::getUniformiv(const gl::Context *context, GLint location, GLint *params) const
-{
-    mFunctions->getUniformiv(mProgramID, uniLoc(location), params);
-}
-
-void ProgramGL::getUniformuiv(const gl::Context *context, GLint location, GLuint *params) const
-{
-    mFunctions->getUniformuiv(mProgramID, uniLoc(location), params);
-}
-
-void ProgramGL::markUnusedUniformLocations(std::vector<gl::VariableLocation> *uniformLocations,
-                                           std::vector<gl::SamplerBinding> *samplerBindings)
-{
-    GLint maxLocation = static_cast<GLint>(uniformLocations->size());
-    for (GLint location = 0; location < maxLocation; ++location)
-    {
-        if (uniLoc(location) == -1)
-        {
-            auto &locationRef = (*uniformLocations)[location];
-            if (mState.isSamplerUniformIndex(locationRef.index))
-            {
-                GLuint samplerIndex = mState.getSamplerIndexFromUniformIndex(locationRef.index);
-                (*samplerBindings)[samplerIndex].unreferenced = true;
-            }
-            locationRef.markUnused();
         }
     }
 }

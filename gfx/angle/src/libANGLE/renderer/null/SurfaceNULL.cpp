@@ -24,7 +24,7 @@ SurfaceNULL::~SurfaceNULL()
 {
 }
 
-egl::Error SurfaceNULL::initialize(const egl::Display *display)
+egl::Error SurfaceNULL::initialize()
 {
     return egl::NoError();
 }
@@ -34,16 +34,12 @@ FramebufferImpl *SurfaceNULL::createDefaultFramebuffer(const gl::FramebufferStat
     return new FramebufferNULL(state);
 }
 
-egl::Error SurfaceNULL::swap(const gl::Context *context)
+egl::Error SurfaceNULL::swap()
 {
     return egl::NoError();
 }
 
-egl::Error SurfaceNULL::postSubBuffer(const gl::Context *context,
-                                      EGLint x,
-                                      EGLint y,
-                                      EGLint width,
-                                      EGLint height)
+egl::Error SurfaceNULL::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
     return egl::NoError();
 }
@@ -62,12 +58,6 @@ egl::Error SurfaceNULL::bindTexImage(gl::Texture *texture, EGLint buffer)
 egl::Error SurfaceNULL::releaseTexImage(EGLint buffer)
 {
     return egl::NoError();
-}
-
-egl::Error SurfaceNULL::getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc)
-{
-    UNIMPLEMENTED();
-    return egl::EglBadAccess();
 }
 
 void SurfaceNULL::setSwapInterval(EGLint interval)

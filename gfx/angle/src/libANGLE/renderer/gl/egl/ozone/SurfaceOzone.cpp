@@ -26,9 +26,9 @@ SurfaceOzone::~SurfaceOzone()
     delete mBuffer;
 }
 
-egl::Error SurfaceOzone::initialize(const egl::Display *display)
+egl::Error SurfaceOzone::initialize()
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 FramebufferImpl *SurfaceOzone::createDefaultFramebuffer(const gl::FramebufferState &state)
@@ -38,40 +38,36 @@ FramebufferImpl *SurfaceOzone::createDefaultFramebuffer(const gl::FramebufferSta
 
 egl::Error SurfaceOzone::makeCurrent()
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error SurfaceOzone::swap(const gl::Context *context)
+egl::Error SurfaceOzone::swap()
 {
     mBuffer->present();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error SurfaceOzone::postSubBuffer(const gl::Context *context,
-                                       EGLint x,
-                                       EGLint y,
-                                       EGLint width,
-                                       EGLint height)
+egl::Error SurfaceOzone::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error SurfaceOzone::querySurfacePointerANGLE(EGLint attribute, void **value)
 {
     UNIMPLEMENTED();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error SurfaceOzone::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     mBuffer->bindTexImage();
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error SurfaceOzone::releaseTexImage(EGLint buffer)
 {
-    return egl::NoError();
+    return egl::Error(EGL_SUCCESS);
 }
 
 void SurfaceOzone::setSwapInterval(EGLint interval)

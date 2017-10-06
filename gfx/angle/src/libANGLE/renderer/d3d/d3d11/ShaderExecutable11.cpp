@@ -13,107 +13,85 @@
 namespace rx
 {
 
-ShaderExecutable11::ShaderExecutable11(const void *function,
-                                       size_t length,
-                                       d3d11::PixelShader &&executable)
-    : ShaderExecutableD3D(function, length),
-      mPixelExecutable(std::move(executable)),
-      mVertexExecutable(),
-      mGeometryExecutable(),
-      mStreamOutExecutable(),
-      mComputeExecutable()
+ShaderExecutable11::ShaderExecutable11(const void *function, size_t length, ID3D11PixelShader *executable)
+    : ShaderExecutableD3D(function, length)
 {
+    mPixelExecutable = executable;
+    mVertexExecutable = NULL;
+    mGeometryExecutable = NULL;
+    mStreamOutExecutable = NULL;
 }
 
-ShaderExecutable11::ShaderExecutable11(const void *function,
-                                       size_t length,
-                                       d3d11::VertexShader &&executable,
-                                       d3d11::GeometryShader &&streamOut)
-    : ShaderExecutableD3D(function, length),
-      mPixelExecutable(),
-      mVertexExecutable(std::move(executable)),
-      mGeometryExecutable(),
-      mStreamOutExecutable(std::move(streamOut)),
-      mComputeExecutable()
+ShaderExecutable11::ShaderExecutable11(const void *function, size_t length, ID3D11VertexShader *executable, ID3D11GeometryShader *streamOut)
+    : ShaderExecutableD3D(function, length)
 {
+    mVertexExecutable = executable;
+    mPixelExecutable = NULL;
+    mGeometryExecutable = NULL;
+    mStreamOutExecutable = streamOut;
 }
 
-ShaderExecutable11::ShaderExecutable11(const void *function,
-                                       size_t length,
-                                       d3d11::GeometryShader &&executable)
-    : ShaderExecutableD3D(function, length),
-      mPixelExecutable(),
-      mVertexExecutable(),
-      mGeometryExecutable(std::move(executable)),
-      mStreamOutExecutable(),
-      mComputeExecutable()
+ShaderExecutable11::ShaderExecutable11(const void *function, size_t length, ID3D11GeometryShader *executable)
+    : ShaderExecutableD3D(function, length)
 {
-}
-
-ShaderExecutable11::ShaderExecutable11(const void *function,
-                                       size_t length,
-                                       d3d11::ComputeShader &&executable)
-    : ShaderExecutableD3D(function, length),
-      mPixelExecutable(),
-      mVertexExecutable(),
-      mGeometryExecutable(),
-      mStreamOutExecutable(),
-      mComputeExecutable(std::move(executable))
-{
+    mGeometryExecutable = executable;
+    mVertexExecutable = NULL;
+    mPixelExecutable = NULL;
+    mStreamOutExecutable = NULL;
 }
 
 ShaderExecutable11::~ShaderExecutable11()
 {
+    SafeRelease(mVertexExecutable);
+    SafeRelease(mPixelExecutable);
+    SafeRelease(mGeometryExecutable);
+    SafeRelease(mStreamOutExecutable);
 }
 
-const d3d11::VertexShader &ShaderExecutable11::getVertexShader() const
+ID3D11VertexShader *ShaderExecutable11::getVertexShader() const
 {
     return mVertexExecutable;
 }
 
-const d3d11::PixelShader &ShaderExecutable11::getPixelShader() const
+ID3D11PixelShader *ShaderExecutable11::getPixelShader() const
 {
     return mPixelExecutable;
 }
 
-const d3d11::GeometryShader &ShaderExecutable11::getGeometryShader() const
+ID3D11GeometryShader *ShaderExecutable11::getGeometryShader() const
 {
     return mGeometryExecutable;
 }
 
-const d3d11::GeometryShader &ShaderExecutable11::getStreamOutShader() const
+ID3D11GeometryShader *ShaderExecutable11::getStreamOutShader() const
 {
     return mStreamOutExecutable;
 }
 
-const d3d11::ComputeShader &ShaderExecutable11::getComputeShader() const
+UniformStorage11::UniformStorage11(Renderer11 *renderer, size_t initialSize)
+    : UniformStorageD3D(initialSize),
+      mConstantBuffer(NULL)
 {
-    return mComputeExecutable;
-}
+    ID3D11Device *d3d11Device = renderer->getDevice();
 
-UniformStorage11::UniformStorage11(size_t initialSize)
-    : UniformStorageD3D(initialSize), mConstantBuffer()
-{
+    if (initialSize > 0)
+    {
+        D3D11_BUFFER_DESC constantBufferDescription = {0};
+        constantBufferDescription.ByteWidth           = static_cast<unsigned int>(initialSize);
+        constantBufferDescription.Usage = D3D11_USAGE_DYNAMIC;
+        constantBufferDescription.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constantBufferDescription.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        constantBufferDescription.MiscFlags = 0;
+        constantBufferDescription.StructureByteStride = 0;
+
+        HRESULT result = d3d11Device->CreateBuffer(&constantBufferDescription, NULL, &mConstantBuffer);
+        ASSERT(SUCCEEDED(result));
+    }
 }
 
 UniformStorage11::~UniformStorage11()
 {
+    SafeRelease(mConstantBuffer);
 }
 
-gl::Error UniformStorage11::getConstantBuffer(Renderer11 *renderer, const d3d11::Buffer **bufferOut)
-{
-    if (size() > 0 && !mConstantBuffer.valid())
-    {
-        D3D11_BUFFER_DESC desc = {0};
-        desc.ByteWidth         = static_cast<unsigned int>(size());
-        desc.Usage             = D3D11_USAGE_DEFAULT;
-        desc.BindFlags         = D3D11_BIND_CONSTANT_BUFFER;
-
-        ANGLE_TRY(renderer->allocateResource(desc, &mConstantBuffer));
-    }
-
-    *bufferOut = &mConstantBuffer;
-    return gl::NoError();
 }
-
-}  // namespace rx

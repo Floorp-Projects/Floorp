@@ -14,7 +14,7 @@
 
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/signal_utils.h"
 
 namespace gl
 {
@@ -35,8 +35,6 @@ enum BufferUsage
     BUFFER_USAGE_STAGING,
     BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK,
     BUFFER_USAGE_INDEX,
-    // TODO: possibly share this buffer type with shader storage buffers.
-    BUFFER_USAGE_INDIRECT,
     BUFFER_USAGE_PIXEL_UNPACK,
     BUFFER_USAGE_PIXEL_PACK,
     BUFFER_USAGE_UNIFORM,
@@ -53,62 +51,45 @@ class Buffer11 : public BufferD3D
     Buffer11(const gl::BufferState &state, Renderer11 *renderer);
     virtual ~Buffer11();
 
-    gl::ErrorOrResult<ID3D11Buffer *> getBuffer(const gl::Context *context, BufferUsage usage);
-    gl::ErrorOrResult<ID3D11Buffer *> getEmulatedIndexedBuffer(const gl::Context *context,
-                                                               SourceIndexData *indexInfo,
+    gl::ErrorOrResult<ID3D11Buffer *> getBuffer(BufferUsage usage);
+    gl::ErrorOrResult<ID3D11Buffer *> getEmulatedIndexedBuffer(SourceIndexData *indexInfo,
                                                                const TranslatedAttribute &attribute,
                                                                GLint startVertex);
-    gl::Error getConstantBufferRange(const gl::Context *context,
-                                     GLintptr offset,
+    gl::Error getConstantBufferRange(GLintptr offset,
                                      GLsizeiptr size,
-                                     const d3d11::Buffer **bufferOut,
+                                     ID3D11Buffer **bufferOut,
                                      UINT *firstConstantOut,
                                      UINT *numConstantsOut);
-    gl::ErrorOrResult<const d3d11::ShaderResourceView *> getSRV(const gl::Context *context,
-                                                                DXGI_FORMAT srvFormat);
+    gl::ErrorOrResult<ID3D11ShaderResourceView *> getSRV(DXGI_FORMAT srvFormat);
     bool isMapped() const { return mMappedStorage != nullptr; }
-    gl::Error packPixels(const gl::Context *context,
-                         const gl::FramebufferAttachment &readAttachment,
+    gl::Error packPixels(const gl::FramebufferAttachment &readAttachment,
                          const PackPixelsParams &params);
     size_t getTotalCPUBufferMemoryBytes() const;
 
     // BufferD3D implementation
     size_t getSize() const override { return mSize; }
     bool supportsDirectBinding() const override;
-    gl::Error getData(const gl::Context *context, const uint8_t **outData) override;
-    void initializeStaticData(const gl::Context *context) override;
-    void invalidateStaticData(const gl::Context *context) override;
+    gl::Error getData(const uint8_t **outData) override;
+    void initializeStaticData() override;
+    void invalidateStaticData() override;
 
     // BufferImpl implementation
-    gl::Error setData(const gl::Context *context,
-                      GLenum target,
-                      const void *data,
-                      size_t size,
-                      GLenum usage) override;
-    gl::Error setSubData(const gl::Context *context,
-                         GLenum target,
-                         const void *data,
-                         size_t size,
-                         size_t offset) override;
-    gl::Error copySubData(const gl::Context *context,
-                          BufferImpl *source,
+    gl::Error setData(GLenum target, const void *data, size_t size, GLenum usage) override;
+    gl::Error setSubData(GLenum target, const void *data, size_t size, size_t offset) override;
+    gl::Error copySubData(BufferImpl *source,
                           GLintptr sourceOffset,
                           GLintptr destOffset,
                           GLsizeiptr size) override;
-    gl::Error map(const gl::Context *context, GLenum access, void **mapPtr) override;
-    gl::Error mapRange(const gl::Context *context,
-                       size_t offset,
-                       size_t length,
-                       GLbitfield access,
-                       void **mapPtr) override;
-    gl::Error unmap(const gl::Context *context, GLboolean *result) override;
-    gl::Error markTransformFeedbackUsage(const gl::Context *context) override;
+    gl::Error map(GLenum access, GLvoid **mapPtr) override;
+    gl::Error mapRange(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr) override;
+    gl::Error unmap(GLboolean *result) override;
+    gl::Error markTransformFeedbackUsage() override;
 
     // We use two set of dirty events. Static buffers are marked dirty whenever
     // data changes, because they must be re-translated. Direct buffers only need to be
     // updated when the underlying ID3D11Buffer pointer changes - hopefully far less often.
-    OnBufferDataDirtyChannel *getStaticBroadcastChannel();
-    OnBufferDataDirtyChannel *getDirectBroadcastChannel();
+    angle::BroadcastChannel *getStaticBroadcastChannel();
+    angle::BroadcastChannel *getDirectBroadcastChannel();
 
   private:
     class BufferStorage;
@@ -119,35 +100,29 @@ class Buffer11 : public BufferD3D
 
     struct ConstantBufferCacheEntry
     {
-        ConstantBufferCacheEntry() : storage(nullptr), lruCount(0) {}
+        ConstantBufferCacheEntry() : storage(nullptr), lruCount(0) { }
 
         BufferStorage *storage;
         unsigned int lruCount;
     };
 
-    void markBufferUsage(BufferUsage usage);
-    gl::Error garbageCollection(const gl::Context *context, BufferUsage currentUsage);
-    gl::ErrorOrResult<NativeStorage *> getStagingStorage(const gl::Context *context);
-    gl::ErrorOrResult<PackStorage *> getPackStorage(const gl::Context *context);
-    gl::ErrorOrResult<SystemMemoryStorage *> getSystemMemoryStorage(const gl::Context *context);
+    gl::Error markBufferUsage(BufferUsage usage);
+    gl::ErrorOrResult<NativeStorage *> getStagingStorage();
+    gl::ErrorOrResult<PackStorage *> getPackStorage();
+    gl::ErrorOrResult<SystemMemoryStorage *> getSystemMemoryStorage();
 
-    gl::Error updateBufferStorage(const gl::Context *context,
-                                  BufferStorage *storage,
-                                  size_t sourceOffset,
-                                  size_t storageSize);
-    gl::ErrorOrResult<BufferStorage *> getBufferStorage(const gl::Context *context,
-                                                        BufferUsage usage);
-    gl::ErrorOrResult<BufferStorage *> getLatestBufferStorage(const gl::Context *context) const;
+    gl::Error updateBufferStorage(BufferStorage *storage, size_t sourceOffset, size_t storageSize);
+    gl::ErrorOrResult<BufferStorage *> getBufferStorage(BufferUsage usage);
+    gl::ErrorOrResult<BufferStorage *> getLatestBufferStorage() const;
 
-    gl::ErrorOrResult<BufferStorage *> getConstantBufferRangeStorage(const gl::Context *context,
-                                                                     GLintptr offset,
+    gl::ErrorOrResult<BufferStorage *> getConstantBufferRangeStorage(GLintptr offset,
                                                                      GLsizeiptr size);
 
     BufferStorage *allocateStorage(BufferUsage usage);
     void updateDeallocThreshold(BufferUsage usage);
 
     // Free the storage if we decide it isn't being used very often.
-    gl::Error checkForDeallocation(const gl::Context *context, BufferUsage usage);
+    gl::Error checkForDeallocation(BufferUsage usage);
 
     // For some cases of uniform buffer storage, we can't deallocate system memory storage.
     bool canDeallocateSystemMemory() const;
@@ -171,10 +146,10 @@ class Buffer11 : public BufferD3D
     size_t mConstantBufferStorageAdditionalSize;
     unsigned int mMaxConstantBufferLruCount;
 
-    OnBufferDataDirtyChannel mStaticBroadcastChannel;
-    OnBufferDataDirtyChannel mDirectBroadcastChannel;
+    angle::BroadcastChannel mStaticBroadcastChannel;
+    angle::BroadcastChannel mDirectBroadcastChannel;
 };
 
 }  // namespace rx
 
-#endif  // LIBANGLE_RENDERER_D3D_D3D11_BUFFER11_H_
+#endif // LIBANGLE_RENDERER_D3D_D3D11_BUFFER11_H_

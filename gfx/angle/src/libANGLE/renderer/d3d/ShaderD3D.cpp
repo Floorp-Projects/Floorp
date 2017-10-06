@@ -9,12 +9,11 @@
 #include "libANGLE/renderer/d3d/ShaderD3D.h"
 
 #include "common/utilities.h"
-#include "libANGLE/Caps.h"
 #include "libANGLE/Compiler.h"
 #include "libANGLE/Shader.h"
 #include "libANGLE/features.h"
-#include "libANGLE/renderer/d3d/ProgramD3D.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
+#include "libANGLE/renderer/d3d/ProgramD3D.h"
 
 // Definitions local to the translation unit
 namespace
@@ -30,9 +29,6 @@ const char *GetShaderTypeString(GLenum type)
         case GL_FRAGMENT_SHADER:
             return "FRAGMENT";
 
-        case GL_COMPUTE_SHADER:
-            return "COMPUTE";
-
         default:
             UNREACHABLE();
             return "";
@@ -44,9 +40,7 @@ const char *GetShaderTypeString(GLenum type)
 namespace rx
 {
 
-ShaderD3D::ShaderD3D(const gl::ShaderState &data,
-                     const angle::WorkaroundsD3D &workarounds,
-                     const gl::Extensions &extensions)
+ShaderD3D::ShaderD3D(const gl::ShaderState &data, const WorkaroundsD3D &workarounds)
     : ShaderImpl(data), mAdditionalOptions(0)
 {
     uncompile();
@@ -73,10 +67,6 @@ ShaderD3D::ShaderD3D(const gl::ShaderState &data,
     {
         mAdditionalOptions |= SH_EMULATE_ISNAN_FLOAT_FUNCTION;
     }
-    if (extensions.multiview)
-    {
-        mAdditionalOptions |= SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW;
-    }
 }
 
 ShaderD3D::~ShaderD3D()
@@ -85,11 +75,6 @@ ShaderD3D::~ShaderD3D()
 
 std::string ShaderD3D::getDebugInfo() const
 {
-    if (mDebugInfo.empty())
-    {
-        return "";
-    }
-
     return mDebugInfo + std::string("\n// ") + GetShaderTypeString(mData.getShaderType()) +
            " SHADER END\n";
 }
@@ -109,8 +94,6 @@ void ShaderD3D::uncompile()
     mUsesPointCoord = false;
     mUsesDepthRange = false;
     mUsesFragDepth = false;
-    mHasANGLEMultiviewEnabled    = false;
-    mUsesViewID                  = false;
     mUsesDiscardRewriting = false;
     mUsesNestedBreak = false;
     mRequiresIEEEStrictCompiling = false;
@@ -118,7 +101,7 @@ void ShaderD3D::uncompile()
     mDebugInfo.clear();
 }
 
-void ShaderD3D::generateWorkarounds(angle::CompilerWorkaroundsD3D *workarounds) const
+void ShaderD3D::generateWorkarounds(D3DCompilerWorkarounds *workarounds) const
 {
     if (mUsesDiscardRewriting)
     {
@@ -147,10 +130,10 @@ unsigned int ShaderD3D::getUniformRegister(const std::string &uniformName) const
     return mUniformRegisterMap.find(uniformName)->second;
 }
 
-unsigned int ShaderD3D::getUniformBlockRegister(const std::string &blockName) const
+unsigned int ShaderD3D::getInterfaceBlockRegister(const std::string &blockName) const
 {
-    ASSERT(mUniformBlockRegisterMap.count(blockName) > 0);
-    return mUniformBlockRegisterMap.find(blockName)->second;
+    ASSERT(mInterfaceBlockRegisterMap.count(blockName) > 0);
+    return mInterfaceBlockRegisterMap.find(blockName)->second;
 }
 
 ShShaderOutput ShaderD3D::getCompilerOutputType() const
@@ -209,10 +192,7 @@ bool ShaderD3D::postTranslateCompile(gl::Compiler *compiler, std::string *infoLo
     mUsesPointSize             = translatedSource.find("GL_USES_POINT_SIZE") != std::string::npos;
     mUsesPointCoord            = translatedSource.find("GL_USES_POINT_COORD") != std::string::npos;
     mUsesDepthRange            = translatedSource.find("GL_USES_DEPTH_RANGE") != std::string::npos;
-    mUsesFragDepth             = translatedSource.find("GL_USES_FRAG_DEPTH") != std::string::npos;
-    mHasANGLEMultiviewEnabled =
-        translatedSource.find("GL_ANGLE_MULTIVIEW_ENABLED") != std::string::npos;
-    mUsesViewID = translatedSource.find("GL_USES_VIEW_ID") != std::string::npos;
+    mUsesFragDepth = translatedSource.find("GL_USES_FRAG_DEPTH") != std::string::npos;
     mUsesDiscardRewriting =
         translatedSource.find("ANGLE_USES_DISCARD_REWRITING") != std::string::npos;
     mUsesNestedBreak  = translatedSource.find("ANGLE_USES_NESTED_BREAK") != std::string::npos;
@@ -223,16 +203,16 @@ bool ShaderD3D::postTranslateCompile(gl::Compiler *compiler, std::string *infoLo
 
     mUniformRegisterMap = GetUniformRegisterMap(sh::GetUniformRegisterMap(compilerHandle));
 
-    for (const sh::InterfaceBlock &interfaceBlock : mData.getUniformBlocks())
+    for (const sh::InterfaceBlock &interfaceBlock : mData.getInterfaceBlocks())
     {
         if (interfaceBlock.staticUse)
         {
             unsigned int index = static_cast<unsigned int>(-1);
             bool blockRegisterResult =
-                sh::GetUniformBlockRegister(compilerHandle, interfaceBlock.name, &index);
+                sh::GetInterfaceBlockRegister(compilerHandle, interfaceBlock.name, &index);
             ASSERT(blockRegisterResult);
 
-            mUniformBlockRegisterMap[interfaceBlock.name] = index;
+            mInterfaceBlockRegisterMap[interfaceBlock.name] = index;
         }
     }
 

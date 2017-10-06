@@ -12,12 +12,13 @@
 #include <cmath>
 #include <sstream>
 
-namespace pp
-{
+namespace pp {
 
 inline std::ios::fmtflags numeric_base_int(const std::string &str)
 {
-    if ((str.size() >= 2) && (str[0] == '0') && (str[1] == 'x' || str[1] == 'X'))
+    if ((str.size() >= 2) &&
+        (str[0] == '0') &&
+        (str[1] == 'x' || str[1] == 'X'))
     {
         return std::ios::hex;
     }
@@ -33,7 +34,7 @@ inline std::ios::fmtflags numeric_base_int(const std::string &str)
 // of the correct form. They can only fail if the parsed value is too big,
 // in which case false is returned.
 
-template <typename IntType>
+template<typename IntType>
 bool numeric_lex_int(const std::string &str, IntType *value)
 {
     std::istringstream stream(str);
@@ -45,7 +46,7 @@ bool numeric_lex_int(const std::string &str, IntType *value)
     return !stream.fail();
 }
 
-template <typename FloatType>
+template<typename FloatType>
 bool numeric_lex_float(const std::string &str, FloatType *value)
 {
 // On 64-bit Intel Android, istringstream is broken.  Until this is fixed in
@@ -67,6 +68,6 @@ bool numeric_lex_float(const std::string &str, FloatType *value)
 #endif
 }
 
-}  // namespace pp.
+} // namespace pp.
 
-#endif  // COMPILER_PREPROCESSOR_NUMERICLEX_H_
+#endif // COMPILER_PREPROCESSOR_NUMERICLEX_H_

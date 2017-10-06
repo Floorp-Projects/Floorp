@@ -52,7 +52,7 @@ TEST_P(DebugMarkerTest, BasicValidation)
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glPushGroupMarkerEXT(0, nullptr);
+    glPushGroupMarkerEXT(0, NULL);
     glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

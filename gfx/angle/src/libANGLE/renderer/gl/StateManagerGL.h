@@ -22,7 +22,6 @@ namespace gl
 struct Caps;
 class ContextState;
 class State;
-class FramebufferState;
 }
 
 namespace rx
@@ -31,15 +30,12 @@ namespace rx
 class FramebufferGL;
 class FunctionsGL;
 class TransformFeedbackGL;
-class VertexArrayGL;
 class QueryGL;
 
 class StateManagerGL final : angle::NonCopyable
 {
   public:
-    StateManagerGL(const FunctionsGL *functions,
-                   const gl::Caps &rendererCaps,
-                   const gl::Extensions &extensions);
+    StateManagerGL(const FunctionsGL *functions, const gl::Caps &rendererCaps);
 
     void deleteProgram(GLuint program);
     void deleteVertexArray(GLuint vao);
@@ -60,13 +56,6 @@ class StateManagerGL final : angle::NonCopyable
     void activeTexture(size_t unit);
     void bindTexture(GLenum type, GLuint texture);
     void bindSampler(size_t unit, GLuint sampler);
-    void bindImageTexture(GLuint unit,
-                          GLuint texture,
-                          GLint level,
-                          GLboolean layered,
-                          GLint layer,
-                          GLenum access,
-                          GLenum format);
     void bindFramebuffer(GLenum type, GLuint framebuffer);
     void bindRenderbuffer(GLenum type, GLuint renderbuffer);
     void bindTransformFeedback(GLenum type, GLuint transformFeedback);
@@ -78,15 +67,9 @@ class StateManagerGL final : angle::NonCopyable
 
     void setScissorTestEnabled(bool enabled);
     void setScissor(const gl::Rectangle &scissor);
-    void setScissorIndexed(GLuint index, const gl::Rectangle &scissor);
-    void setScissorArrayv(GLuint first, const std::vector<gl::Rectangle> &viewports);
 
     void setViewport(const gl::Rectangle &viewport);
-    void setViewportArrayv(GLuint first, const std::vector<gl::Rectangle> &viewports);
     void setDepthRange(float near, float far);
-
-    void setViewportOffsets(const std::vector<gl::Offset> &kviewportOffsets);
-    void setSideBySide(bool isSideBySide);
 
     void setBlendEnabled(bool enabled);
     void setBlendColor(const gl::ColorF &blendColor);
@@ -99,8 +82,6 @@ class StateManagerGL final : angle::NonCopyable
     void setSampleAlphaToCoverageEnabled(bool enabled);
     void setSampleCoverageEnabled(bool enabled);
     void setSampleCoverage(float value, bool invert);
-    void setSampleMaskEnabled(bool enabled);
-    void setSampleMaski(GLuint maskNumber, GLbitfield mask);
 
     void setDepthTestEnabled(bool enabled);
     void setDepthFunc(GLenum depthFunc);
@@ -142,10 +123,8 @@ class StateManagerGL final : angle::NonCopyable
                            GLint skipPixels,
                            GLuint packBuffer);
 
-    void setFramebufferSRGBEnabled(const gl::Context *context, bool enabled);
-    void setFramebufferSRGBEnabledForFramebuffer(const gl::Context *context,
-                                                 bool enabled,
-                                                 const FramebufferGL *framebuffer);
+    void setFramebufferSRGBEnabled(bool enabled);
+    void setFramebufferSRGBEnabledForFramebuffer(bool enabled, const FramebufferGL *framebuffer);
 
     void setDitherEnabled(bool enabled);
 
@@ -160,56 +139,32 @@ class StateManagerGL final : angle::NonCopyable
 
     void onDeleteQueryObject(QueryGL *query);
 
-    gl::Error setDrawArraysState(const gl::Context *context,
+    gl::Error setDrawArraysState(const gl::ContextState &data,
                                  GLint first,
                                  GLsizei count,
                                  GLsizei instanceCount);
-    gl::Error setDrawElementsState(const gl::Context *context,
+    gl::Error setDrawElementsState(const gl::ContextState &data,
                                    GLsizei count,
                                    GLenum type,
-                                   const void *indices,
+                                   const GLvoid *indices,
                                    GLsizei instanceCount,
-                                   const void **outIndices);
-    gl::Error setDrawIndirectState(const gl::Context *context, GLenum type);
-
-    gl::Error setDispatchComputeState(const gl::Context *context);
+                                   const GLvoid **outIndices);
 
     void pauseTransformFeedback();
-    gl::Error pauseAllQueries();
-    gl::Error pauseQuery(GLenum type);
-    gl::Error resumeAllQueries();
-    gl::Error resumeQuery(GLenum type);
-    gl::Error onMakeCurrent(const gl::Context *context);
+    void pauseAllQueries();
+    void pauseQuery(GLenum type);
+    void resumeAllQueries();
+    void resumeQuery(GLenum type);
+    gl::Error onMakeCurrent(const gl::ContextState &data);
 
-    void syncState(const gl::Context *context, const gl::State::DirtyBits &glDirtyBits);
+    void syncState(const gl::State &state, const gl::State::DirtyBits &glDirtyBits);
 
-    void updateMultiviewBaseViewLayerIndexUniform(
-        const gl::Program *program,
-        const gl::FramebufferState &drawFramebufferState) const;
+    GLuint getBoundBuffer(GLenum type);
 
   private:
-    // Set state that's common among draw commands and compute invocations.
-    void setGenericShaderState(const gl::Context *context);
-
-    // Set state that's common among draw commands.
-    gl::Error setGenericDrawState(const gl::Context *context);
+    gl::Error setGenericDrawState(const gl::ContextState &data);
 
     void setTextureCubemapSeamlessEnabled(bool enabled);
-
-    void applyViewportOffsetsAndSetScissors(const gl::Rectangle &scissor,
-                                            const gl::Framebuffer &drawFramebuffer);
-    void applyViewportOffsetsAndSetViewports(const gl::Rectangle &viewport,
-                                             const gl::Framebuffer &drawFramebuffer);
-    void propagateNumViewsToVAO(const gl::Program *program, VertexArrayGL *vao);
-
-    void updateProgramTextureAndSamplerBindings(const gl::Context *context);
-
-    enum MultiviewDirtyBitType
-    {
-        MULTIVIEW_DIRTY_BIT_SIDE_BY_SIDE_LAYOUT,
-        MULTIVIEW_DIRTY_BIT_VIEWPORT_OFFSETS,
-        MULTIVIEW_DIRTY_BIT_MAX
-    };
 
     const FunctionsGL *mFunctions;
 
@@ -234,29 +189,13 @@ class StateManagerGL final : angle::NonCopyable
     std::map<GLenum, std::vector<GLuint>> mTextures;
     std::vector<GLuint> mSamplers;
 
-    struct ImageUnitBinding
-    {
-        ImageUnitBinding()
-            : texture(0), level(0), layered(false), layer(0), access(GL_READ_ONLY), format(GL_R32UI)
-        {
-        }
-
-        GLuint texture;
-        GLint level;
-        GLboolean layered;
-        GLint layer;
-        GLenum access;
-        GLenum format;
-    };
-    std::vector<ImageUnitBinding> mImages;
-
     GLuint mTransformFeedback;
 
     std::map<GLenum, GLuint> mQueries;
 
     TransformFeedbackGL *mPrevDrawTransformFeedback;
     std::set<QueryGL *> mCurrentQueries;
-    gl::ContextID mPrevDrawContext;
+    uintptr_t mPrevDrawContext;
 
     GLint mUnpackAlignment;
     GLint mUnpackRowLength;
@@ -275,9 +214,9 @@ class StateManagerGL final : angle::NonCopyable
     GLuint mRenderbuffer;
 
     bool mScissorTestEnabled;
-    std::vector<gl::Rectangle> mScissors;
-    std::vector<gl::Rectangle> mViewports;
-    std::vector<gl::Offset> mViewportOffsets;
+    gl::Rectangle mScissor;
+
+    gl::Rectangle mViewport;
     float mNear;
     float mFar;
 
@@ -297,8 +236,6 @@ class StateManagerGL final : angle::NonCopyable
     bool mSampleCoverageEnabled;
     float mSampleCoverageValue;
     bool mSampleCoverageInvert;
-    bool mSampleMaskEnabled;
-    std::array<GLbitfield, gl::MAX_SAMPLE_MASK_WORDS> mSampleMaskValues;
 
     bool mDepthTestEnabled;
     GLenum mDepthFunc;
@@ -349,16 +286,9 @@ class StateManagerGL final : angle::NonCopyable
     GLint mPathStencilRef;
     GLuint mPathStencilMask;
 
-    bool mIsSideBySideDrawFramebuffer;
-    const bool mIsMultiviewEnabled;
-
     gl::State::DirtyBits mLocalDirtyBits;
-
-    // ANGLE_multiview dirty bits.
-    angle::BitSet<MULTIVIEW_DIRTY_BIT_MAX> mMultiviewDirtyBits;
-
-    bool mProgramTexturesAndSamplersDirty;
 };
+
 }
 
-#endif  // LIBANGLE_RENDERER_GL_STATEMANAGERGL_H_
+#endif // LIBANGLE_RENDERER_GL_STATEMANAGERGL_H_

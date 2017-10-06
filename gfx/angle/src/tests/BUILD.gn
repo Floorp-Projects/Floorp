@@ -92,68 +92,17 @@ if (is_win || is_linux || is_mac || is_android) {
       "//base/test:test_support",
       "//testing/gmock",
       "//testing/gtest",
-      "//third_party/angle:angle_image_util",
       "//third_party/angle:angle_util",
+      "//third_party/angle:libANGLE",
       "//third_party/angle:libEGL",
       "//third_party/angle:libGLESv2",
       "//third_party/angle:preprocessor",
       "//third_party/angle:translator",
     ]
   }
-
-  white_box_gypi = exec_script("//build/gypi_to_gn.py",
-                               [
-                                 rebase_path("angle_white_box_tests.gypi"),
-                                 "--replace=<(angle_path)=.",
-                               ],
-                               "scope",
-                               [ "angle_white_box_tests.gypi" ])
-
-  test("angle_white_box_tests") {
-    include_dirs = [
-      "testing/gtest/include",
-      "../../src/tests",
-      "../../util",
-    ]
-
-    if (is_android) {
-      use_native_activity = true
-    }
-
-    sources =
-        rebase_path(white_box_gypi.angle_white_box_tests_sources, ".", "../..")
-
-    if (is_win) {
-      sources += rebase_path(white_box_gypi.angle_white_box_tests_win_sources,
-                             ".",
-                             "../..")
-    }
-
-    # Share the same main file as end2end_tests.
-    # TODO(jmadill): Probably should rename this if we're sharing.
-    sources += [ "//gpu/angle_end2end_tests_main.cc" ]
-
-    configs += [
-      "//third_party/angle:internal_config",
-      "//third_party/angle:libANGLE_config",
-    ]
-
-    deps = [
-      "//base",
-      "//base/test:test_support",
-      "//testing/gmock",
-      "//testing/gtest",
-      "//third_party/angle:angle_util_static",
-      "//third_party/angle:libANGLE",
-      "//third_party/angle:libEGL_static",
-      "//third_party/angle:libGLESv2_static",
-      "//third_party/angle:preprocessor",
-      "//third_party/angle:translator",
-    ]
-  }
 }
 
-if (is_win || is_linux) {
+if (is_win) {
   perftests_gypi = exec_script("//build/gypi_to_gn.py",
                                [
                                  rebase_path("angle_perftests.gypi"),
@@ -171,10 +120,8 @@ if (is_win || is_linux) {
 
     sources = rebase_path(perftests_gypi.angle_perf_tests_sources, ".", "../..")
 
-    if (is_win) {
-      sources +=
-          rebase_path(perftests_gypi.angle_perf_tests_win_sources, ".", "../..")
-    }
+    sources +=
+        rebase_path(perftests_gypi.angle_perf_tests_win_sources, ".", "../..")
 
     sources += [ "//gpu/angle_perftests_main.cc" ]
 
@@ -188,10 +135,10 @@ if (is_win || is_linux) {
       "//base/test:test_support",
       "//testing/gmock",
       "//testing/gtest",
-      "//third_party/angle:angle_util_static",
+      "//third_party/angle:angle_util",
       "//third_party/angle:libANGLE",
-      "//third_party/angle:libEGL_static",
-      "//third_party/angle:libGLESv2_static",
+      "//third_party/angle:libEGL",
+      "//third_party/angle:libGLESv2",
     ]
   }
 }
@@ -235,7 +182,7 @@ if (build_angle_deqp_tests) {
       # This has to be GNU_SOURCE as on Linux dEQP uses syscall()
       defines += [ "_GNU_SOURCE" ]
     }
-    if (is_android || is_mac) {
+    if (is_android) {
       # _XOPEN_SOURCE=600 is what is used in deqp/src/Android.mk
       defines += [ "_XOPEN_SOURCE=600" ]
     }
@@ -254,7 +201,7 @@ if (build_angle_deqp_tests) {
     ]
   }
 
-  if (is_linux || is_android || is_mac) {
+  if (is_linux || is_android) {
     deqp_undefine_configs += [ "//build/config/gcc:no_exceptions" ]
   }
 
@@ -280,7 +227,6 @@ if (build_angle_deqp_tests) {
   static_library("angle_deqp_libtester") {
     public_deps = [
       ":angle_deqp_decpp",
-      "//third_party/angle:angle_common",
       "//third_party/angle:angle_util",
       "//third_party/angle:libEGL",
       "//third_party/libpng:libpng",
@@ -291,7 +237,7 @@ if (build_angle_deqp_tests) {
     if (is_win) {
       sources += rebase_path(deqp_gypi.deqp_libtester_sources_win, ".", "../..")
     }
-    if (is_linux || is_android || is_mac) {
+    if (is_linux || is_android) {
       sources +=
           rebase_path(deqp_gypi.deqp_libtester_sources_unix, ".", "../..")
     }
@@ -319,8 +265,10 @@ if (build_angle_deqp_tests) {
     sources = deqp_gypi.deqp_gpu_test_expectations_sources
     sources += [ "//gpu/angle_deqp_tests_main.cc" ]
 
-    if (!is_android) {
-      public_deps += ["//third_party/angle:angle_gpu_info_util"]
+    # Taken from gpu/BUILD.gn
+    # TODO(jmadill): this should be in a shared location
+    if (is_linux && !is_chromecast) {
+      libs = [ "pci" ]
     }
   }
 
@@ -360,14 +308,10 @@ if (build_angle_deqp_tests) {
     shared_library(shared_library_name) {
       deps = [
         ":angle_deqp_libtester",
-        "//build/config:exe_and_shlib_deps",
         "//third_party/angle:angle_util",
       ]
 
       configs -= deqp_undefine_configs
-      if (is_android) {
-        configs -= [ "//build/config/android:hide_all_but_jni_onload" ]
-      }
       public_configs = [ ":${config_name}" ]
 
       sources = rebase_path(target_sources[index], ".", "../..")

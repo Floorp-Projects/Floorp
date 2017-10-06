@@ -10,16 +10,20 @@
 #ifndef COMMON_OPTIONAL_H_
 #define COMMON_OPTIONAL_H_
 
-#include <utility>
-
 template <class T>
 struct Optional
 {
-    Optional() : mValid(false), mValue(T()) {}
+    Optional()
+        : mValid(false),
+          mValue(T())
+    {}
 
     Optional(const T &valueIn) : mValid(true), mValue(valueIn) {}
 
-    Optional(const Optional &other) : mValid(other.mValid), mValue(other.mValue) {}
+    Optional(const Optional &other)
+        : mValid(other.mValid),
+          mValue(other.mValue)
+    {}
 
     Optional &operator=(const Optional &other)
     {
@@ -42,7 +46,10 @@ struct Optional
         return *this;
     }
 
-    void reset() { mValid = false; }
+    void reset()
+    {
+        mValid = false;
+    }
 
     static Optional Invalid() { return Optional(); }
 
@@ -54,15 +61,14 @@ struct Optional
         return ((mValid == other.mValid) && (!mValid || (mValue == other.mValue)));
     }
 
-    bool operator!=(const Optional &other) const { return !(*this == other); }
-
-    bool operator==(const T &value) const { return mValid && (mValue == value); }
-
-    bool operator!=(const T &value) const { return !(*this == value); }
+    bool operator!=(const Optional &other) const
+    {
+        return !(*this == other);
+    }
 
   private:
     bool mValid;
     T mValue;
 };
 
-#endif  // COMMON_OPTIONAL_H_
+#endif // COMMON_OPTIONAL_H_

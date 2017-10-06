@@ -27,25 +27,12 @@ RenderbufferD3D::~RenderbufferD3D()
     mImage = nullptr;
 }
 
-gl::Error RenderbufferD3D::onDestroy(const gl::Context *context)
+gl::Error RenderbufferD3D::setStorage(GLenum internalformat, size_t width, size_t height)
 {
-    deleteRenderTarget(context);
-    return gl::NoError();
+    return setStorageMultisample(0, internalformat, width, height);
 }
 
-gl::Error RenderbufferD3D::setStorage(const gl::Context *context,
-                                      GLenum internalformat,
-                                      size_t width,
-                                      size_t height)
-{
-    return setStorageMultisample(context, 0, internalformat, width, height);
-}
-
-gl::Error RenderbufferD3D::setStorageMultisample(const gl::Context *context,
-                                                 size_t samples,
-                                                 GLenum internalformat,
-                                                 size_t width,
-                                                 size_t height)
+gl::Error RenderbufferD3D::setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height)
 {
     // If the renderbuffer parameters are queried, the calling function
     // will expect one of the valid renderbuffer formats for use in
@@ -64,36 +51,34 @@ gl::Error RenderbufferD3D::setStorageMultisample(const gl::Context *context,
     const gl::TextureCaps &formatCaps = mRenderer->getNativeTextureCaps().get(creationFormat);
     if (samples > formatCaps.getMaxSamples())
     {
-        return gl::OutOfMemory() << "Renderbuffer format does not support " << samples
-                                 << " samples, " << formatCaps.getMaxSamples()
-                                 << " is the maximum.";
+        return gl::Error(GL_OUT_OF_MEMORY, "Renderbuffer format does not support %u samples, %u is the maximum.",
+                         samples, formatCaps.getMaxSamples());
     }
 
-    RenderTargetD3D *newRT = nullptr;
+    RenderTargetD3D *newRT = NULL;
     ANGLE_TRY(mRenderer->createRenderTarget(static_cast<int>(width), static_cast<int>(height),
                                             creationFormat, static_cast<GLsizei>(samples), &newRT));
 
-    deleteRenderTarget(context);
+    SafeDelete(mRenderTarget);
     mImage        = nullptr;
     mRenderTarget = newRT;
 
     return gl::NoError();
 }
 
-gl::Error RenderbufferD3D::setStorageEGLImageTarget(const gl::Context *context, egl::Image *image)
+gl::Error RenderbufferD3D::setStorageEGLImageTarget(egl::Image *image)
 {
     mImage = GetImplAs<EGLImageD3D>(image);
-    deleteRenderTarget(context);
+    SafeDelete(mRenderTarget);
 
     return gl::NoError();
 }
 
-gl::Error RenderbufferD3D::getRenderTarget(const gl::Context *context,
-                                           RenderTargetD3D **outRenderTarget)
+gl::Error RenderbufferD3D::getRenderTarget(RenderTargetD3D **outRenderTarget)
 {
     if (mImage)
     {
-        return mImage->getRenderTarget(context, outRenderTarget);
+        return mImage->getRenderTarget(outRenderTarget);
     }
     else
     {
@@ -102,20 +87,10 @@ gl::Error RenderbufferD3D::getRenderTarget(const gl::Context *context,
     }
 }
 
-gl::Error RenderbufferD3D::getAttachmentRenderTarget(const gl::Context *context,
-                                                     GLenum /*binding*/,
-                                                     const gl::ImageIndex & /*imageIndex*/,
+gl::Error RenderbufferD3D::getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
                                                      FramebufferAttachmentRenderTarget **rtOut)
 {
-    return getRenderTarget(context, reinterpret_cast<RenderTargetD3D **>(rtOut));
+    return getRenderTarget(reinterpret_cast<RenderTargetD3D **>(rtOut));
 }
 
-void RenderbufferD3D::deleteRenderTarget(const gl::Context *context)
-{
-    if (mRenderTarget)
-    {
-        mRenderTarget->signalDirty(context);
-        SafeDelete(mRenderTarget);
-    }
 }
-}  // namespace rx

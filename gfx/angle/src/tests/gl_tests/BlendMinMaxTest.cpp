@@ -123,19 +123,24 @@ class BlendMinMaxTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string testVertexShaderSource =
-            R"(attribute highp vec4 aPosition;
+        const std::string testVertexShaderSource = SHADER_SOURCE
+        (
+            attribute highp vec4 aPosition;
+
             void main(void)
             {
                 gl_Position = aPosition;
-            })";
+            }
+        );
 
-        const std::string testFragmentShaderSource =
-            R"(uniform highp vec4 color;
+        const std::string testFragmentShaderSource = SHADER_SOURCE
+        (
+            uniform highp vec4 color;
             void main(void)
             {
                 gl_FragColor = color;
-            })";
+            }
+        );
 
         mProgram = CompileProgram(testVertexShaderSource, testFragmentShaderSource);
         if (mProgram == 0)

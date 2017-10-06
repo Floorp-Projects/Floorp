@@ -15,12 +15,6 @@
 #include <stdint.h>
 #include <vector>
 
-namespace gl
-{
-struct VertexAttribute;
-class VertexBinding;
-}
-
 namespace rx
 {
 class BufferFactoryD3D;
@@ -43,22 +37,18 @@ class BufferD3D : public BufferImpl
 
     virtual size_t getSize() const = 0;
     virtual bool supportsDirectBinding() const = 0;
-    virtual gl::Error markTransformFeedbackUsage(const gl::Context *context) = 0;
-    virtual gl::Error getData(const gl::Context *context, const uint8_t **outData) = 0;
+    virtual gl::Error markTransformFeedbackUsage() = 0;
+    virtual gl::Error getData(const uint8_t **outData) = 0;
 
-    // Warning: you should ensure binding really matches attrib.bindingIndex before using this
-    // function.
-    StaticVertexBufferInterface *getStaticVertexBuffer(const gl::VertexAttribute &attribute,
-                                                       const gl::VertexBinding &binding);
+    StaticVertexBufferInterface *getStaticVertexBuffer(const gl::VertexAttribute &attribute);
     StaticIndexBufferInterface *getStaticIndexBuffer();
 
-    virtual void initializeStaticData(const gl::Context *context);
-    virtual void invalidateStaticData(const gl::Context *context);
+    virtual void initializeStaticData();
+    virtual void invalidateStaticData();
 
-    void promoteStaticUsage(const gl::Context *context, int dataSize);
+    void promoteStaticUsage(int dataSize);
 
-    gl::Error getIndexRange(const gl::Context *context,
-                            GLenum type,
+    gl::Error getIndexRange(GLenum type,
                             size_t offset,
                             size_t count,
                             bool primitiveRestartEnabled,
@@ -69,7 +59,7 @@ class BufferD3D : public BufferImpl
 
   protected:
     void updateSerial();
-    void updateD3DBufferUsage(const gl::Context *context, GLenum usage);
+    void updateD3DBufferUsage(GLenum usage);
     void emptyStaticBufferCache();
 
     BufferFactoryD3D *mFactory;

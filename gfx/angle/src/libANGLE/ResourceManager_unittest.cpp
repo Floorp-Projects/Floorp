@@ -25,30 +25,24 @@ class ResourceManagerTest : public testing::Test
   protected:
     void SetUp() override
     {
-        mTextureManager      = new TextureManager();
-        mBufferManager       = new BufferManager();
-        mRenderbuffermanager = new RenderbufferManager();
+        mResourceManager = new ResourceManager();
     }
 
     void TearDown() override
     {
-        mTextureManager->release(nullptr);
-        mBufferManager->release(nullptr);
-        mRenderbuffermanager->release(nullptr);
+        SafeDelete(mResourceManager);
     }
 
     MockGLFactory mMockFactory;
-    TextureManager *mTextureManager;
-    BufferManager *mBufferManager;
-    RenderbufferManager *mRenderbuffermanager;
+    ResourceManager *mResourceManager;
 };
 
 TEST_F(ResourceManagerTest, ReallocateBoundTexture)
 {
     EXPECT_CALL(mMockFactory, createTexture(_)).Times(1).RetiresOnSaturation();
 
-    mTextureManager->checkTextureAllocation(&mMockFactory, 1, GL_TEXTURE_2D);
-    GLuint newTexture = mTextureManager->createTexture();
+    mResourceManager->checkTextureAllocation(&mMockFactory, 1, GL_TEXTURE_2D);
+    GLuint newTexture = mResourceManager->createTexture();
     EXPECT_NE(1u, newTexture);
 }
 
@@ -56,8 +50,8 @@ TEST_F(ResourceManagerTest, ReallocateBoundBuffer)
 {
     EXPECT_CALL(mMockFactory, createBuffer(_)).Times(1).RetiresOnSaturation();
 
-    mBufferManager->checkBufferAllocation(&mMockFactory, 1);
-    GLuint newBuffer = mBufferManager->createBuffer();
+    mResourceManager->checkBufferAllocation(&mMockFactory, 1);
+    GLuint newBuffer = mResourceManager->createBuffer();
     EXPECT_NE(1u, newBuffer);
 }
 
@@ -65,8 +59,8 @@ TEST_F(ResourceManagerTest, ReallocateBoundRenderbuffer)
 {
     EXPECT_CALL(mMockFactory, createRenderbuffer()).Times(1).RetiresOnSaturation();
 
-    mRenderbuffermanager->checkRenderbufferAllocation(&mMockFactory, 1);
-    GLuint newRenderbuffer = mRenderbuffermanager->createRenderbuffer();
+    mResourceManager->checkRenderbufferAllocation(&mMockFactory, 1);
+    GLuint newRenderbuffer = mResourceManager->createRenderbuffer();
     EXPECT_NE(1u, newRenderbuffer);
 }
 

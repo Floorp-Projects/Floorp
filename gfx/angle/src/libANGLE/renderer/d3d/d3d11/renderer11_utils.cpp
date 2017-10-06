@@ -21,9 +21,8 @@
 #include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
 #include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
+#include "libANGLE/renderer/d3d/WorkaroundsD3D.h"
 #include "libANGLE/renderer/driver_utils.h"
-#include "platform/Platform.h"
-#include "platform/WorkaroundsD3D.h"
 
 namespace rx
 {
@@ -32,19 +31,6 @@ namespace d3d11_gl
 {
 namespace
 {
-// Standard D3D sample positions from
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ff476218.aspx
-using SamplePositionsArray = std::array<float, 32>;
-static constexpr std::array<SamplePositionsArray, 5> kSamplePositions = {
-    {{{0.5f, 0.5f}},
-     {{0.75f, 0.75f, 0.25f, 0.25f}},
-     {{0.375f, 0.125f, 0.875f, 0.375f, 0.125f, 0.625f, 0.625f, 0.875f}},
-     {{0.5625f, 0.3125f, 0.4375f, 0.6875f, 0.8125f, 0.5625f, 0.3125f, 0.1875f, 0.1875f, 0.8125f,
-       0.0625f, 0.4375f, 0.6875f, 0.9375f, 0.9375f, 0.0625f}},
-     {{0.5625f, 0.5625f, 0.4375f, 0.3125f, 0.3125f, 0.625f,  0.75f,   0.4375f,
-       0.1875f, 0.375f,  0.625f,  0.8125f, 0.8125f, 0.6875f, 0.6875f, 0.1875f,
-       0.375f,  0.875f,  0.5f,    0.0625f, 0.25f,   0.125f,  0.125f,  0.75f,
-       0.0f,    0.5f,    0.9375f, 0.25f,   0.875f,  0.9375f, 0.0625f, 0.0f}}}};
 
 // Helper functor for querying DXGI support. Saves passing the parameters repeatedly.
 class DXGISupportHelper : angle::NonCopyable
@@ -74,7 +60,7 @@ class DXGISupportHelper : angle::NonCopyable
             else
             {
                 // TODO(jmadill): find out why we fail this call sometimes in FL9_3
-                // ERR() << "Error checking format support for format 0x" << std::hex << dxgiFormat;
+                // ERR("Error checking format support for format 0x%x", dxgiFormat);
             }
         }
 
@@ -96,7 +82,7 @@ gl::TextureCaps GenerateTextureFormatCaps(gl::Version maxClientVersion,
     DXGISupportHelper support(device, renderer11DeviceCaps.featureLevel);
     const d3d11::Format &formatInfo = d3d11::Format::Get(internalFormat, renderer11DeviceCaps);
 
-    const gl::InternalFormat &internalFormatInfo = gl::GetSizedInternalFormatInfo(internalFormat);
+    const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(internalFormat);
 
     UINT texSupportMask = D3D11_FORMAT_SUPPORT_TEXTURE2D;
     if (internalFormatInfo.depthBits == 0 && internalFormatInfo.stencilBits == 0)
@@ -843,84 +829,6 @@ size_t GetMaximumPixelTextureUnits(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 
-std::array<GLuint, 3> GetMaxComputeWorkGroupCount(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return {{D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
-                     D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
-                     D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION}};
-            break;
-        default:
-            return {{0, 0, 0}};
-    }
-}
-
-std::array<GLuint, 3> GetMaxComputeWorkGroupSize(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return {{D3D11_CS_THREAD_GROUP_MAX_X, D3D11_CS_THREAD_GROUP_MAX_Y,
-                     D3D11_CS_THREAD_GROUP_MAX_Z}};
-            break;
-        default:
-            return {{0, 0, 0}};
-    }
-}
-
-size_t GetMaxComputeWorkGroupInvocations(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP;
-        default:
-            return 0;
-    }
-}
-
-size_t GetMaximumComputeUniformVectors(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT;
-        default:
-            return 0;
-    }
-}
-
-size_t GetMaximumComputeUniformBlocks(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT -
-                   d3d11::RESERVED_CONSTANT_BUFFER_SLOT_COUNT;
-        default:
-            return 0;
-    }
-}
-
-size_t GetMaximumComputeTextureUnits(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT;
-        default:
-            return 0;
-    }
-}
-
 int GetMinimumTexelOffset(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
@@ -1071,43 +979,6 @@ size_t GetMaximumStreamOutputSeparateComponents(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 
-size_t GetMaximumRenderToBufferWindowSize(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_REQ_RENDER_TO_BUFFER_WINDOW_WIDTH;
-        case D3D_FEATURE_LEVEL_10_1:
-        case D3D_FEATURE_LEVEL_10_0:
-            return D3D10_REQ_RENDER_TO_BUFFER_WINDOW_WIDTH;
-
-        // REQ_RENDER_TO_BUFFER_WINDOW_WIDTH not supported on D3D11 Feature Level 9,
-        // use the maximum texture sizes
-        case D3D_FEATURE_LEVEL_9_3:
-            return D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION;
-        case D3D_FEATURE_LEVEL_9_2:
-        case D3D_FEATURE_LEVEL_9_1:
-            return D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION;
-
-        default:
-            UNREACHABLE();
-            return 0;
-    }
-}
-
-IntelDriverVersion GetIntelDriverVersion(const Optional<LARGE_INTEGER> driverVersion)
-{
-    if (!driverVersion.valid())
-        return IntelDriverVersion(0);
-
-    // According to http://www.intel.com/content/www/us/en/support/graphics-drivers/000005654.html,
-    // only the fourth part is necessary since it stands for the driver specific unique version
-    // number.
-    WORD part = LOWORD(driverVersion.value().LowPart);
-    return IntelDriverVersion(part);
-}
-
 }  // anonymous namespace
 
 unsigned int GetReservedVertexUniformVectors(D3D_FEATURE_LEVEL featureLevel)
@@ -1174,52 +1045,23 @@ gl::Version GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 
-unsigned int GetMaxViewportAndScissorRectanglesPerPipeline(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
-        case D3D_FEATURE_LEVEL_10_1:
-        case D3D_FEATURE_LEVEL_10_0:
-        case D3D_FEATURE_LEVEL_9_3:
-        case D3D_FEATURE_LEVEL_9_2:
-        case D3D_FEATURE_LEVEL_9_1:
-            return 1;
-        default:
-            UNREACHABLE();
-            return 0;
-    }
-}
-
-bool IsMultiviewSupported(D3D_FEATURE_LEVEL featureLevel)
-{
-    // The ANGLE_multiview extension can always be supported in D3D11 through geometry shaders.
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            return true;
-        default:
-            return false;
-    }
-}
-
 void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, const Renderer11DeviceCaps &renderer11DeviceCaps, gl::Caps *caps,
                   gl::TextureCapsMap *textureCapsMap, gl::Extensions *extensions, gl::Limitations *limitations)
 {
+    GLuint maxSamples = 0;
     D3D_FEATURE_LEVEL featureLevel = renderer11DeviceCaps.featureLevel;
     const gl::FormatSet &allFormats = gl::GetAllSizedInternalFormats();
-    for (GLenum internalFormat : allFormats)
+    for (gl::FormatSet::const_iterator internalFormat = allFormats.begin(); internalFormat != allFormats.end(); ++internalFormat)
     {
         gl::TextureCaps textureCaps = GenerateTextureFormatCaps(
-            GetMaximumClientVersion(featureLevel), internalFormat, device, renderer11DeviceCaps);
-        textureCapsMap->insert(internalFormat, textureCaps);
+            GetMaximumClientVersion(featureLevel), *internalFormat, device, renderer11DeviceCaps);
+        textureCapsMap->insert(*internalFormat, textureCaps);
 
-        if (gl::GetSizedInternalFormatInfo(internalFormat).compressed)
+        maxSamples = std::max(maxSamples, textureCaps.getMaxSamples());
+
+        if (gl::GetInternalFormatInfo(*internalFormat).compressed)
         {
-            caps->compressedTextureFormats.push_back(internalFormat);
+            caps->compressedTextureFormats.push_back(*internalFormat);
         }
     }
 
@@ -1292,14 +1134,6 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     caps->maxVertexTextureImageUnits =
         static_cast<GLuint>(GetMaximumVertexTextureUnits(featureLevel));
 
-    // Vertex Attribute Bindings are emulated on D3D11.
-    caps->maxVertexAttribBindings = caps->maxVertexAttributes;
-    // Experimental testing confirmed there is no explicit limit on maximum buffer offset in D3D11.
-    caps->maxVertexAttribRelativeOffset = std::numeric_limits<GLint>::max();
-    // Experimental testing confirmed 2048 is the maximum stride that D3D11 can support on all
-    // platforms.
-    caps->maxVertexAttribStride = 2048;
-
     // Fragment shader limits
     caps->maxFragmentUniformComponents =
         static_cast<GLuint>(GetMaximumPixelUniformVectors(featureLevel)) * 4;
@@ -1313,24 +1147,9 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     caps->minProgramTexelOffset = GetMinimumTexelOffset(featureLevel);
     caps->maxProgramTexelOffset = GetMaximumTexelOffset(featureLevel);
 
-    // Compute shader limits
-    caps->maxComputeWorkGroupCount = GetMaxComputeWorkGroupCount(featureLevel);
-    caps->maxComputeWorkGroupSize  = GetMaxComputeWorkGroupSize(featureLevel);
-    caps->maxComputeWorkGroupInvocations =
-        static_cast<GLuint>(GetMaxComputeWorkGroupInvocations(featureLevel));
-    caps->maxComputeUniformComponents =
-        static_cast<GLuint>(GetMaximumComputeUniformVectors(featureLevel)) * 4;
-    caps->maxComputeUniformBlocks =
-        static_cast<GLuint>(GetMaximumComputeUniformBlocks(featureLevel));
-    caps->maxComputeTextureImageUnits =
-        static_cast<GLuint>(GetMaximumComputeTextureUnits(featureLevel));
-
     // Aggregate shader limits
     caps->maxUniformBufferBindings = caps->maxVertexUniformBlocks + caps->maxFragmentUniformBlocks;
     caps->maxUniformBlockSize = GetMaximumConstantBufferSize(featureLevel);
-
-    // TODO(oetuaho): Get a more accurate limit. For now using the minimum requirement for GLES 3.1.
-    caps->maxUniformLocations = 1024;
 
     // With DirectX 11.1, constant buffer offset and size must be a multiple of 16 constants of 16 bytes each.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/hh404649%28v=vs.85%29.aspx
@@ -1343,9 +1162,6 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
                                                static_cast<GLint64>(caps->maxVertexUniformComponents);
     caps->maxCombinedFragmentUniformComponents = (static_cast<GLint64>(caps->maxFragmentUniformBlocks) * static_cast<GLint64>(caps->maxUniformBlockSize / 4)) +
                                                  static_cast<GLint64>(caps->maxFragmentUniformComponents);
-    caps->maxCombinedComputeUniformComponents =
-        static_cast<GLuint>(caps->maxComputeUniformBlocks * (caps->maxUniformBlockSize / 4) +
-                            caps->maxComputeUniformComponents);
     caps->maxVaryingComponents =
         static_cast<GLuint>(GetMaximumVertexOutputVectors(featureLevel)) * 4;
     caps->maxVaryingVectors            = static_cast<GLuint>(GetMaximumVertexOutputVectors(featureLevel));
@@ -1359,18 +1175,8 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     caps->maxTransformFeedbackSeparateComponents =
         static_cast<GLuint>(GetMaximumStreamOutputSeparateComponents(featureLevel));
 
-    // Defer the computation of multisample limits to Context::updateCaps() where max*Samples values
-    // are determined according to available sample counts for each individual format.
-    caps->maxSamples             = std::numeric_limits<GLint>::max();
-    caps->maxColorTextureSamples = std::numeric_limits<GLint>::max();
-    caps->maxDepthTextureSamples = std::numeric_limits<GLint>::max();
-    caps->maxIntegerSamples      = std::numeric_limits<GLint>::max();
-
-    // Framebuffer limits
-    caps->maxFramebufferSamples = std::numeric_limits<GLint>::max();
-    caps->maxFramebufferWidth =
-        static_cast<GLuint>(GetMaximumRenderToBufferWindowSize(featureLevel));
-    caps->maxFramebufferHeight = caps->maxFramebufferWidth;
+    // Multisample limits
+    caps->maxSamples = maxSamples;
 
     // GL extension support
     extensions->setTextureExtensionSupport(*textureCapsMap);
@@ -1394,10 +1200,6 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     extensions->queryCounterBitsTimestamp =
         0;  // Timestamps cannot be supported due to D3D11 limitations
     extensions->robustness = true;
-    // Direct3D guarantees to return zero for any resource that is accessed out of bounds.
-    // See https://msdn.microsoft.com/en-us/library/windows/desktop/ff476332(v=vs.85).aspx
-    // and https://msdn.microsoft.com/en-us/library/windows/desktop/ff476900(v=vs.85).aspx
-    extensions->robustBufferAccessBehavior = true;
     extensions->blendMinMax = true;
     extensions->framebufferBlit = GetFramebufferBlitSupport(featureLevel);
     extensions->framebufferMultisample = GetFramebufferMultisampleSupport(featureLevel);
@@ -1406,14 +1208,6 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     extensions->standardDerivatives = GetDerivativeInstructionSupport(featureLevel);
     extensions->shaderTextureLOD = GetShaderTextureLODSupport(featureLevel);
     extensions->fragDepth = true;
-    extensions->multiview              = IsMultiviewSupported(featureLevel);
-    if (extensions->multiview)
-    {
-        extensions->maxViews =
-            std::min(static_cast<GLuint>(gl::IMPLEMENTATION_ANGLE_MULTIVIEW_MAX_VIEWS),
-                     std::min(static_cast<GLuint>(GetMaximum2DTextureArraySize(featureLevel)),
-                              GetMaxViewportAndScissorRectanglesPerPipeline(featureLevel)));
-    }
     extensions->textureUsage = true; // This could be false since it has no effect in D3D11
     extensions->discardFramebuffer = true;
     extensions->translatedShaderSource = true;
@@ -1456,16 +1250,6 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     // We allow non-zero divisors on attribute zero if the Client Version >= 3, since devices affected by this issue don't support ES3+.
     limitations->attributeZeroRequiresZeroDivisorInEXT = true;
 #endif
-}
-
-void GetSamplePosition(GLsizei sampleCount, size_t index, GLfloat *xy)
-{
-    size_t indexKey = static_cast<size_t>(ceil(log(sampleCount)));
-    ASSERT(indexKey < kSamplePositions.size() &&
-           (2 * index + 1) < kSamplePositions[indexKey].size());
-
-    xy[0] = kSamplePositions[indexKey][2 * index];
-    xy[1] = kSamplePositions[indexKey][2 * index + 1];
 }
 
 }  // namespace d3d11_gl
@@ -1798,13 +1582,6 @@ D3D11_QUERY ConvertQueryType(GLenum queryType)
     }
 }
 
-// Get the D3D11 write mask covering all color channels of a given format
-UINT8 GetColorMask(const gl::InternalFormat &format)
-{
-    return ConvertColorMask(format.redBits > 0, format.greenBits > 0, format.blueBits > 0,
-                            format.alphaBits > 0);
-}
-
 }  // namespace gl_d3d11
 
 namespace d3d11
@@ -1892,10 +1669,7 @@ void MakeValidSize(bool isImage, DXGI_FORMAT format, GLsizei *requestWidth, GLsi
             upsampleCount++;
         }
     }
-    if (levelOffset)
-    {
-        *levelOffset = upsampleCount;
-    }
+    *levelOffset = upsampleCount;
 }
 
 void GenerateInitialTextureData(GLint internalFormat,
@@ -1908,7 +1682,7 @@ void GenerateInitialTextureData(GLint internalFormat,
                                 std::vector<std::vector<BYTE>> *outData)
 {
     const d3d11::Format &d3dFormatInfo = d3d11::Format::Get(internalFormat, renderer11DeviceCaps);
-    ASSERT(d3dFormatInfo.dataInitializerFunction != nullptr);
+    ASSERT(d3dFormatInfo.dataInitializerFunction != NULL);
 
     const d3d11::DXGIFormatSize &dxgiFormatInfo =
         d3d11::GetDXGIFormatSizeInfo(d3dFormatInfo.texFormat);
@@ -1958,36 +1732,6 @@ void SetPositionLayerTexCoord3DVertex(PositionLayerTexCoord3DVertex* vertex, flo
     vertex->s = s;
 }
 
-BlendStateKey::BlendStateKey()
-{
-    memset(this, 0, sizeof(BlendStateKey));
-}
-
-bool operator==(const BlendStateKey &a, const BlendStateKey &b)
-{
-    return memcmp(&a, &b, sizeof(BlendStateKey)) == 0;
-}
-
-bool operator!=(const BlendStateKey &a, const BlendStateKey &b)
-{
-    return !(a == b);
-}
-
-RasterizerStateKey::RasterizerStateKey()
-{
-    memset(this, 0, sizeof(RasterizerStateKey));
-}
-
-bool operator==(const RasterizerStateKey &a, const RasterizerStateKey &b)
-{
-    return memcmp(&a, &b, sizeof(RasterizerStateKey)) == 0;
-}
-
-bool operator!=(const RasterizerStateKey &a, const RasterizerStateKey &b)
-{
-    return !(a == b);
-}
-
 HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 {
 #if defined(_DEBUG)
@@ -2026,9 +1770,33 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 #endif
 }
 
-gl::Error LazyInputLayout::resolve(Renderer11 *renderer)
+LazyInputLayout::LazyInputLayout(const D3D11_INPUT_ELEMENT_DESC *inputDesc,
+                                 size_t inputDescLen,
+                                 const BYTE *byteCode,
+                                 size_t byteCodeLen,
+                                 const char *debugName)
+    : mInputDesc(inputDescLen),
+      mByteCodeLen(byteCodeLen),
+      mByteCode(byteCode),
+      mDebugName(debugName)
 {
-    return resolveImpl(renderer, mInputDesc, &mByteCode, mDebugName);
+    memcpy(&mInputDesc[0], inputDesc, sizeof(D3D11_INPUT_ELEMENT_DESC) * inputDescLen);
+}
+
+ID3D11InputLayout *LazyInputLayout::resolve(ID3D11Device *device)
+{
+    checkAssociatedDevice(device);
+
+    if (mResource == nullptr)
+    {
+        HRESULT result =
+            device->CreateInputLayout(&mInputDesc[0], static_cast<UINT>(mInputDesc.size()),
+                                      mByteCode, mByteCodeLen, &mResource);
+        ASSERT(SUCCEEDED(result));
+        d3d11::SetDebugName(mResource, mDebugName);
+    }
+
+    return mResource;
 }
 
 LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugName)
@@ -2036,17 +1804,26 @@ LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugNa
 {
 }
 
-gl::Error LazyBlendState::resolve(Renderer11 *renderer)
+ID3D11BlendState *LazyBlendState::resolve(ID3D11Device *device)
 {
-    return resolveImpl(renderer, mDesc, nullptr, mDebugName);
+    checkAssociatedDevice(device);
+
+    if (mResource == nullptr)
+    {
+        HRESULT result = device->CreateBlendState(&mDesc, &mResource);
+        ASSERT(SUCCEEDED(result));
+        d3d11::SetDebugName(mResource, mDebugName);
+    }
+
+    return mResource;
 }
 
-angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps,
-                                          const DXGI_ADAPTER_DESC &adapterDesc)
+WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps,
+                                   const DXGI_ADAPTER_DESC &adapterDesc)
 {
     bool is9_3 = (deviceCaps.featureLevel <= D3D_FEATURE_LEVEL_9_3);
 
-    angle::WorkaroundsD3D workarounds;
+    WorkaroundsD3D workarounds;
     workarounds.mrtPerfWorkaround = true;
     workarounds.setDataFasterThanImageUpload = true;
     workarounds.zeroMaxLodWorkaround             = is9_3;
@@ -2075,28 +1852,15 @@ angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps
     workarounds.flushAfterEndingTransformFeedback = IsNvidia(adapterDesc.VendorId);
     workarounds.getDimensionsIgnoresBaseLevel     = IsNvidia(adapterDesc.VendorId);
 
-    if (IsIntel(adapterDesc.VendorId))
-    {
-        workarounds.preAddTexelFetchOffsets           = true;
-        workarounds.useSystemMemoryForConstantBuffers = true;
-        workarounds.disableB5G6R5Support =
-            d3d11_gl::GetIntelDriverVersion(deviceCaps.driverVersion) < IntelDriverVersion(4539);
-        if (IsSkylake(adapterDesc.DeviceId))
-        {
-            workarounds.callClearTwiceOnSmallTarget =
-                d3d11_gl::GetIntelDriverVersion(deviceCaps.driverVersion) <
-                IntelDriverVersion(4771);
-            workarounds.emulateIsnanFloat =
-                d3d11_gl::GetIntelDriverVersion(deviceCaps.driverVersion) <
-                IntelDriverVersion(4542);
-        }
-        else if (IsBroadwell(adapterDesc.DeviceId) || IsHaswell(adapterDesc.DeviceId))
-        {
-            workarounds.rewriteUnaryMinusOperator =
-                d3d11_gl::GetIntelDriverVersion(deviceCaps.driverVersion) <
-                IntelDriverVersion(4624);
-        }
-    }
+    workarounds.preAddTexelFetchOffsets = IsIntel(adapterDesc.VendorId);
+    workarounds.disableB5G6R5Support    = IsIntel(adapterDesc.VendorId);
+    workarounds.rewriteUnaryMinusOperator =
+        IsIntel(adapterDesc.VendorId) &&
+        (IsBroadwell(adapterDesc.DeviceId) || IsHaswell(adapterDesc.DeviceId));
+    workarounds.emulateIsnanFloat =
+        IsIntel(adapterDesc.VendorId) && IsSkylake(adapterDesc.DeviceId);
+    workarounds.callClearTwice =
+        IsIntel(adapterDesc.VendorId) && IsSkylake(adapterDesc.DeviceId);
 
     // TODO(jmadill): Disable when we have a fixed driver version.
     workarounds.emulateTinyStencilTextures = IsAMD(adapterDesc.VendorId);
@@ -2110,14 +1874,7 @@ angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps
         workarounds.emulateTinyStencilTextures = false;
     }
 
-    // If the VPAndRTArrayIndexFromAnyShaderFeedingRasterizer feature is not available, we have to
-    // select the viewport / RT array index in the geometry shader.
-    workarounds.selectViewInGeometryShader =
-        (deviceCaps.supportsVpRtIndexWriteFromVertexShader == false);
-
-    // Call platform hooks for testing overrides.
-    auto *platform = ANGLEPlatformCurrent();
-    platform->overrideWorkaroundsD3D(platform, &workarounds);
+    workarounds.useSystemMemoryForConstantBuffers = IsIntel(adapterDesc.VendorId);
 
     return workarounds;
 }
@@ -2134,80 +1891,196 @@ void InitConstantBufferDesc(D3D11_BUFFER_DESC *constantBufferDescription, size_t
 
 }  // namespace d3d11
 
-// TextureHelper11 implementation.
-TextureHelper11::TextureHelper11() : mFormatSet(nullptr), mSampleCount(0)
+TextureHelper11::TextureHelper11()
+    : mTextureType(GL_NONE),
+      mFormat(DXGI_FORMAT_UNKNOWN),
+      mFormatSet(nullptr),
+      mSampleCount(0),
+      mTexture2D(nullptr),
+      mTexture3D(nullptr)
 {
 }
 
-TextureHelper11::TextureHelper11(TextureHelper11 &&toCopy) : TextureHelper11()
+TextureHelper11::TextureHelper11(TextureHelper11 &&toCopy)
+    : mTextureType(toCopy.mTextureType),
+      mExtents(toCopy.mExtents),
+      mFormat(toCopy.mFormat),
+      mFormatSet(toCopy.mFormatSet),
+      mSampleCount(toCopy.mSampleCount),
+      mTexture2D(toCopy.mTexture2D),
+      mTexture3D(toCopy.mTexture3D)
 {
-    *this = std::move(toCopy);
+    toCopy.reset();
 }
 
-TextureHelper11::TextureHelper11(const TextureHelper11 &other)
-    : mFormatSet(other.mFormatSet), mExtents(other.mExtents), mSampleCount(other.mSampleCount)
+// static
+TextureHelper11 TextureHelper11::MakeAndReference(ID3D11Resource *genericResource,
+                                                  const d3d11::Format &formatSet)
 {
-    mData = other.mData;
+    TextureHelper11 newHelper;
+    newHelper.mFormatSet   = &formatSet;
+    newHelper.mTexture2D   = d3d11::DynamicCastComObject<ID3D11Texture2D>(genericResource);
+    newHelper.mTexture3D   = d3d11::DynamicCastComObject<ID3D11Texture3D>(genericResource);
+    newHelper.mTextureType = newHelper.mTexture2D ? GL_TEXTURE_2D : GL_TEXTURE_3D;
+    newHelper.initDesc();
+    return newHelper;
+}
+
+// static
+TextureHelper11 TextureHelper11::MakeAndPossess2D(ID3D11Texture2D *texToOwn,
+                                                  const d3d11::Format &formatSet)
+{
+    TextureHelper11 newHelper;
+    newHelper.mFormatSet   = &formatSet;
+    newHelper.mTexture2D   = texToOwn;
+    newHelper.mTextureType = GL_TEXTURE_2D;
+    newHelper.initDesc();
+    return newHelper;
+}
+
+// static
+TextureHelper11 TextureHelper11::MakeAndPossess3D(ID3D11Texture3D *texToOwn,
+                                                  const d3d11::Format &formatSet)
+{
+    TextureHelper11 newHelper;
+    newHelper.mFormatSet   = &formatSet;
+    newHelper.mTexture3D   = texToOwn;
+    newHelper.mTextureType = GL_TEXTURE_3D;
+    newHelper.initDesc();
+    return newHelper;
+}
+
+void TextureHelper11::initDesc()
+{
+    if (mTextureType == GL_TEXTURE_2D)
+    {
+        ASSERT(!mTexture3D);
+        D3D11_TEXTURE2D_DESC desc2D;
+        mTexture2D->GetDesc(&desc2D);
+
+        mExtents.width  = static_cast<int>(desc2D.Width);
+        mExtents.height = static_cast<int>(desc2D.Height);
+        mExtents.depth  = 1;
+        mFormat         = desc2D.Format;
+        mSampleCount    = desc2D.SampleDesc.Count;
+    }
+    else
+    {
+        ASSERT(mTexture3D && mTextureType == GL_TEXTURE_3D);
+        D3D11_TEXTURE3D_DESC desc3D;
+        mTexture3D->GetDesc(&desc3D);
+
+        mExtents.width  = static_cast<int>(desc3D.Width);
+        mExtents.height = static_cast<int>(desc3D.Height);
+        mExtents.depth  = static_cast<int>(desc3D.Depth);
+        mFormat         = desc3D.Format;
+        mSampleCount    = 1;
+    }
+    ASSERT(mFormatSet && mFormat == mFormatSet->texFormat);
 }
 
 TextureHelper11::~TextureHelper11()
 {
+    SafeRelease(mTexture2D);
+    SafeRelease(mTexture3D);
 }
 
-void TextureHelper11::getDesc(D3D11_TEXTURE2D_DESC *desc) const
+ID3D11Resource *TextureHelper11::getResource() const
 {
-    static_cast<ID3D11Texture2D *>(mData->object)->GetDesc(desc);
+    return mTexture2D ? static_cast<ID3D11Resource *>(mTexture2D)
+                      : static_cast<ID3D11Resource *>(mTexture3D);
 }
 
-void TextureHelper11::getDesc(D3D11_TEXTURE3D_DESC *desc) const
+TextureHelper11 &TextureHelper11::operator=(TextureHelper11 &&texture)
 {
-    static_cast<ID3D11Texture3D *>(mData->object)->GetDesc(desc);
-}
+    SafeRelease(mTexture2D);
+    SafeRelease(mTexture3D);
 
-void TextureHelper11::initDesc(const D3D11_TEXTURE2D_DESC &desc2D)
-{
-    mData->resourceType = ResourceType::Texture2D;
-    mExtents.width      = static_cast<int>(desc2D.Width);
-    mExtents.height     = static_cast<int>(desc2D.Height);
-    mExtents.depth      = 1;
-    mSampleCount        = desc2D.SampleDesc.Count;
-}
-
-void TextureHelper11::initDesc(const D3D11_TEXTURE3D_DESC &desc3D)
-{
-    mData->resourceType = ResourceType::Texture3D;
-    mExtents.width      = static_cast<int>(desc3D.Width);
-    mExtents.height     = static_cast<int>(desc3D.Height);
-    mExtents.depth      = static_cast<int>(desc3D.Depth);
-    mSampleCount        = 1;
-}
-
-TextureHelper11 &TextureHelper11::operator=(TextureHelper11 &&other)
-{
-    std::swap(mData, other.mData);
-    std::swap(mExtents, other.mExtents);
-    std::swap(mFormatSet, other.mFormatSet);
-    std::swap(mSampleCount, other.mSampleCount);
+    mTextureType = texture.mTextureType;
+    mExtents     = texture.mExtents;
+    mFormat      = texture.mFormat;
+    mFormatSet   = texture.mFormatSet;
+    mSampleCount = texture.mSampleCount;
+    mTexture2D   = texture.mTexture2D;
+    mTexture3D   = texture.mTexture3D;
+    texture.reset();
     return *this;
 }
 
-TextureHelper11 &TextureHelper11::operator=(const TextureHelper11 &other)
+void TextureHelper11::reset()
 {
-    mData        = other.mData;
-    mExtents     = other.mExtents;
-    mFormatSet   = other.mFormatSet;
-    mSampleCount = other.mSampleCount;
-    return *this;
+    mTextureType = GL_NONE;
+    mExtents     = gl::Extents();
+    mFormat      = DXGI_FORMAT_UNKNOWN;
+    mFormatSet   = nullptr;
+    mSampleCount = 0;
+    mTexture2D   = nullptr;
+    mTexture3D   = nullptr;
 }
 
-bool TextureHelper11::operator==(const TextureHelper11 &other) const
+bool TextureHelper11::valid() const
 {
-    return mData->object == other.mData->object;
+    return (mTextureType != GL_NONE);
 }
 
-bool TextureHelper11::operator!=(const TextureHelper11 &other) const
+gl::ErrorOrResult<TextureHelper11> CreateStagingTexture(GLenum textureType,
+                                                        const d3d11::Format &formatSet,
+                                                        const gl::Extents &size,
+                                                        StagingAccess readAndWriteAccess,
+                                                        ID3D11Device *device)
 {
-    return mData->object != other.mData->object;
+    if (textureType == GL_TEXTURE_2D)
+    {
+        D3D11_TEXTURE2D_DESC stagingDesc;
+        stagingDesc.Width              = size.width;
+        stagingDesc.Height             = size.height;
+        stagingDesc.MipLevels          = 1;
+        stagingDesc.ArraySize          = 1;
+        stagingDesc.Format             = formatSet.texFormat;
+        stagingDesc.SampleDesc.Count   = 1;
+        stagingDesc.SampleDesc.Quality = 0;
+        stagingDesc.Usage              = D3D11_USAGE_STAGING;
+        stagingDesc.BindFlags          = 0;
+        stagingDesc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ;
+        stagingDesc.MiscFlags          = 0;
+
+        if (readAndWriteAccess == StagingAccess::READ_WRITE)
+        {
+            stagingDesc.CPUAccessFlags |= D3D11_CPU_ACCESS_WRITE;
+        }
+
+        ID3D11Texture2D *stagingTex = nullptr;
+        HRESULT result = device->CreateTexture2D(&stagingDesc, nullptr, &stagingTex);
+        if (FAILED(result))
+        {
+            return gl::Error(GL_OUT_OF_MEMORY, "CreateStagingTextureFor failed, HRESULT: 0x%X.",
+                             result);
+        }
+
+        return TextureHelper11::MakeAndPossess2D(stagingTex, formatSet);
+    }
+    ASSERT(textureType == GL_TEXTURE_3D);
+
+    D3D11_TEXTURE3D_DESC stagingDesc;
+    stagingDesc.Width          = size.width;
+    stagingDesc.Height         = size.height;
+    stagingDesc.Depth          = 1;
+    stagingDesc.MipLevels      = 1;
+    stagingDesc.Format         = formatSet.texFormat;
+    stagingDesc.Usage          = D3D11_USAGE_STAGING;
+    stagingDesc.BindFlags      = 0;
+    stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    stagingDesc.MiscFlags      = 0;
+
+    ID3D11Texture3D *stagingTex = nullptr;
+    HRESULT result = device->CreateTexture3D(&stagingDesc, nullptr, &stagingTex);
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "CreateStagingTextureFor failed, HRESULT: 0x%X.",
+                         result);
+    }
+
+    return TextureHelper11::MakeAndPossess3D(stagingTex, formatSet);
 }
 
 bool UsePresentPathFast(const Renderer11 *renderer,

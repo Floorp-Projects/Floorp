@@ -18,7 +18,7 @@ namespace rx
 class SamplerVk : public SamplerImpl
 {
   public:
-    SamplerVk(const gl::SamplerState &state);
+    SamplerVk();
     ~SamplerVk() override;
 };
 

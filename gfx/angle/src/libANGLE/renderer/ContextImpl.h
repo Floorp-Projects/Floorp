@@ -18,9 +18,7 @@
 
 namespace gl
 {
-class MemoryProgramCache;
 class Path;
-struct Workarounds;
 }
 
 namespace rx
@@ -34,46 +32,34 @@ class ContextImpl : public GLImplFactory
     virtual gl::Error initialize() = 0;
 
     // Flush and finish.
-    virtual gl::Error flush()  = 0;
+    virtual gl::Error flush() = 0;
     virtual gl::Error finish() = 0;
 
     // Drawing methods.
-    virtual gl::Error drawArrays(const gl::Context *context,
-                                 GLenum mode,
-                                 GLint first,
-                                 GLsizei count) = 0;
-    virtual gl::Error drawArraysInstanced(const gl::Context *context,
-                                          GLenum mode,
+    virtual gl::Error drawArrays(GLenum mode, GLint first, GLsizei count) = 0;
+    virtual gl::Error drawArraysInstanced(GLenum mode,
                                           GLint first,
                                           GLsizei count,
                                           GLsizei instanceCount) = 0;
 
-    virtual gl::Error drawElements(const gl::Context *context,
-                                   GLenum mode,
+    virtual gl::Error drawElements(GLenum mode,
                                    GLsizei count,
                                    GLenum type,
-                                   const void *indices) = 0;
-    virtual gl::Error drawElementsInstanced(const gl::Context *context,
-                                            GLenum mode,
+                                   const GLvoid *indices,
+                                   const gl::IndexRange &indexRange) = 0;
+    virtual gl::Error drawElementsInstanced(GLenum mode,
                                             GLsizei count,
                                             GLenum type,
-                                            const void *indices,
-                                            GLsizei instances) = 0;
-    virtual gl::Error drawRangeElements(const gl::Context *context,
-                                        GLenum mode,
+                                            const GLvoid *indices,
+                                            GLsizei instances,
+                                            const gl::IndexRange &indexRange) = 0;
+    virtual gl::Error drawRangeElements(GLenum mode,
                                         GLuint start,
                                         GLuint end,
                                         GLsizei count,
                                         GLenum type,
-                                        const void *indices) = 0;
-
-    virtual gl::Error drawArraysIndirect(const gl::Context *context,
-                                         GLenum mode,
-                                         const void *indirect) = 0;
-    virtual gl::Error drawElementsIndirect(const gl::Context *context,
-                                           GLenum mode,
-                                           GLenum type,
-                                           const void *indirect) = 0;
+                                        const GLvoid *indices,
+                                        const gl::IndexRange &indexRange) = 0;
 
     // CHROMIUM_path_rendering path drawing methods.
     virtual void stencilFillPath(const gl::Path *path, GLenum fillMode, GLuint mask);
@@ -125,36 +111,29 @@ class ContextImpl : public GLImplFactory
     virtual GLenum getResetStatus() = 0;
 
     // Vendor and description strings.
-    virtual std::string getVendorString() const        = 0;
+    virtual std::string getVendorString() const = 0;
     virtual std::string getRendererDescription() const = 0;
 
     // Debug markers.
     virtual void insertEventMarker(GLsizei length, const char *marker) = 0;
-    virtual void pushGroupMarker(GLsizei length, const char *marker)   = 0;
+    virtual void pushGroupMarker(GLsizei length, const char *marker) = 0;
     virtual void popGroupMarker() = 0;
 
     // State sync with dirty bits.
-    virtual void syncState(const gl::Context *context, const gl::State::DirtyBits &dirtyBits) = 0;
+    virtual void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) = 0;
 
     // Disjoint timer queries
     virtual GLint getGPUDisjoint() = 0;
     virtual GLint64 getTimestamp() = 0;
 
     // Context switching
-    virtual void onMakeCurrent(const gl::Context *context) = 0;
+    virtual void onMakeCurrent(const gl::ContextState &data) = 0;
 
     // Native capabilities, unmodified by gl::Context.
-    virtual const gl::Caps &getNativeCaps() const                  = 0;
+    virtual const gl::Caps &getNativeCaps() const = 0;
     virtual const gl::TextureCapsMap &getNativeTextureCaps() const = 0;
-    virtual const gl::Extensions &getNativeExtensions() const      = 0;
-    virtual const gl::Limitations &getNativeLimitations() const    = 0;
-
-    virtual void applyNativeWorkarounds(gl::Workarounds *workarounds) const {}
-
-    virtual gl::Error dispatchCompute(const gl::Context *context,
-                                      GLuint numGroupsX,
-                                      GLuint numGroupsY,
-                                      GLuint numGroupsZ) = 0;
+    virtual const gl::Extensions &getNativeExtensions() const = 0;
+    virtual const gl::Limitations &getNativeLimitations() const = 0;
 
     const gl::ContextState &getContextState() { return mState; }
     int getClientMajorVersion() const { return mState.getClientMajorVersion(); }
@@ -165,14 +144,8 @@ class ContextImpl : public GLImplFactory
     const gl::Extensions &getExtensions() const { return mState.getExtensions(); }
     const gl::Limitations &getLimitations() const { return mState.getLimitations(); }
 
-    // A common GL driver behaviour is to trigger dynamic shader recompilation on a draw call,
-    // based on the current render states. We store a mutable pointer to the program cache so
-    // on draw calls we can store the refreshed shaders in the cache.
-    void setMemoryProgramCache(gl::MemoryProgramCache *memoryProgramCache);
-
   protected:
     const gl::ContextState &mState;
-    gl::MemoryProgramCache *mMemoryProgramCache;
 };
 
 }  // namespace rx

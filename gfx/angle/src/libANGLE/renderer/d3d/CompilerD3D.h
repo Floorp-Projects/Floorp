@@ -21,7 +21,7 @@ class CompilerD3D : public CompilerImpl
     CompilerD3D(ShShaderOutput translatorOutputType);
     ~CompilerD3D() override {}
 
-    gl::Error release() override { return gl::NoError(); }
+    gl::Error release() override { return gl::Error(GL_NO_ERROR); }
     ShShaderOutput getTranslatorOutputType() const override { return mTranslatorOutputType; }
 
   private:

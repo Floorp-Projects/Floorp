@@ -16,10 +16,7 @@ UNIFIED_SOURCES += [
     '../common/mathutil.cpp',
     '../common/MemoryBuffer.cpp',
     '../common/string_utils.cpp',
-    '../common/system_utils_win.cpp',
-    '../common/third_party/murmurhash/MurmurHash3.cpp',
     '../common/tls.cpp',
-    '../common/uniform_type_info_autogen.cpp',
     '../common/utilities.cpp',
     '../compiler/preprocessor/DiagnosticsBase.cpp',
     '../compiler/preprocessor/DirectiveHandlerBase.cpp',
@@ -44,55 +41,44 @@ UNIFIED_SOURCES += [
     '../compiler/translator/BuiltInFunctionEmulatorHLSL.cpp',
     '../compiler/translator/Cache.cpp',
     '../compiler/translator/CallDAG.cpp',
-    '../compiler/translator/ClampPointSize.cpp',
     '../compiler/translator/CodeGen.cpp',
-    '../compiler/translator/CollectVariables.cpp',
     '../compiler/translator/Compiler.cpp',
     '../compiler/translator/ConstantUnion.cpp',
-    '../compiler/translator/DeclareAndInitBuiltinsForInstancedMultiview.cpp',
     '../compiler/translator/DeferGlobalInitializers.cpp',
     '../compiler/translator/Diagnostics.cpp',
     '../compiler/translator/DirectiveHandler.cpp',
-    '../compiler/translator/emulated_builtin_functions_hlsl_autogen.cpp',
     '../compiler/translator/EmulatePrecision.cpp',
     '../compiler/translator/ExpandIntegerPowExpressions.cpp',
-    '../compiler/translator/ExtensionBehavior.cpp',
     '../compiler/translator/ExtensionGLSL.cpp',
-    '../compiler/translator/FindMain.cpp',
-    '../compiler/translator/FindSymbolNode.cpp',
     '../compiler/translator/FlagStd140Structs.cpp',
-    '../compiler/translator/HashNames.cpp',
     '../compiler/translator/InfoSink.cpp',
     '../compiler/translator/Initialize.cpp',
     '../compiler/translator/InitializeDll.cpp',
+    '../compiler/translator/InitializeParseContext.cpp',
     '../compiler/translator/InitializeVariables.cpp',
+    '../compiler/translator/Intermediate.cpp',
     '../compiler/translator/IntermNode.cpp',
-    '../compiler/translator/IntermNode_util.cpp',
     '../compiler/translator/IntermNodePatternMatcher.cpp',
+    '../compiler/translator/intermOut.cpp',
     '../compiler/translator/IntermTraverse.cpp',
-    '../compiler/translator/IsASTDepthBelowLimit.cpp',
     '../compiler/translator/Operator.cpp',
     '../compiler/translator/OutputESSL.cpp',
     '../compiler/translator/OutputGLSL.cpp',
     '../compiler/translator/OutputGLSLBase.cpp',
     '../compiler/translator/OutputHLSL.cpp',
-    '../compiler/translator/OutputTree.cpp',
     '../compiler/translator/ParseContext.cpp',
     '../compiler/translator/PoolAlloc.cpp',
     '../compiler/translator/PruneEmptyDeclarations.cpp',
-    '../compiler/translator/PrunePureLiteralStatements.cpp',
     '../compiler/translator/QualifierTypes.cpp',
     '../compiler/translator/RecordConstantPrecision.cpp',
     '../compiler/translator/RegenerateStructNames.cpp',
-    '../compiler/translator/RemoveArrayLengthMethod.cpp',
     '../compiler/translator/RemoveDynamicIndexing.cpp',
     '../compiler/translator/RemoveInvariantDeclaration.cpp',
     '../compiler/translator/RemovePow.cpp',
     '../compiler/translator/RemoveSwitchFallThrough.cpp',
     '../compiler/translator/RewriteDoWhile.cpp',
     '../compiler/translator/RewriteElseBlocks.cpp',
-    '../compiler/translator/RewriteUnaryMinusOperatorFloat.cpp',
-    '../compiler/translator/RunAtTheEndOfShader.cpp',
+    '../compiler/translator/RewriteUnaryMinusOperatorInt.cpp',
     '../compiler/translator/ScalarizeVecAndMatConstructorArgs.cpp',
     '../compiler/translator/SearchSymbol.cpp',
     '../compiler/translator/SeparateArrayInitialization.cpp',
@@ -119,10 +105,16 @@ UNIFIED_SOURCES += [
     '../compiler/translator/ValidateMaxParameters.cpp',
     '../compiler/translator/ValidateOutputs.cpp',
     '../compiler/translator/ValidateSwitch.cpp',
-    '../compiler/translator/ValidateVaryingLocations.cpp',
+    '../compiler/translator/VariableInfo.cpp',
     '../compiler/translator/VariablePacker.cpp',
     '../compiler/translator/VersionGLSL.cpp',
+    '../image_util/copyimage.cpp',
+    '../image_util/imageformats.cpp',
+    '../image_util/loadimage.cpp',
+    '../image_util/loadimage_etc.cpp',
     '../third_party/compiler/ArrayBoundsClamper.cpp',
+    '../third_party/murmurhash/MurmurHash3.cpp',
+    '../third_party/systeminfo/SystemInfo.cpp',
     'angletypes.cpp',
     'AttributeMap.cpp',
     'Buffer.cpp',
@@ -145,13 +137,9 @@ UNIFIED_SOURCES += [
     'Image.cpp',
     'ImageIndex.cpp',
     'IndexRangeCache.cpp',
-    'LoggingAnnotator.cpp',
-    'MemoryProgramCache.cpp',
-    'params.cpp',
     'Path.cpp',
     'Platform.cpp',
     'Program.cpp',
-    'ProgramPipeline.cpp',
     'Query.cpp',
     'queryconversions.cpp',
     'queryutils.cpp',
@@ -183,6 +171,7 @@ UNIFIED_SOURCES += [
     'renderer/d3d/DynamicHLSL.cpp',
     'renderer/d3d/EGLImageD3D.cpp',
     'renderer/d3d/FramebufferD3D.cpp',
+    'renderer/d3d/hlsl/VaryingPacking.cpp',
     'renderer/d3d/ImageD3D.cpp',
     'renderer/d3d/IndexBuffer.cpp',
     'renderer/d3d/IndexDataManager.cpp',
@@ -204,16 +193,16 @@ UNIFIED_SOURCES += [
     'renderer/Format_table_autogen.cpp',
     'renderer/gl/BlitGL.cpp',
     'renderer/gl/BufferGL.cpp',
-    'renderer/gl/ClearMultiviewGL.cpp',
     'renderer/gl/CompilerGL.cpp',
     'renderer/gl/ContextGL.cpp',
     'renderer/gl/DisplayGL.cpp',
     'renderer/gl/FenceNVGL.cpp',
+    'renderer/gl/FenceSyncGL.cpp',
     'renderer/gl/formatutilsgl.cpp',
+    'renderer/gl/FramebufferGL.cpp',
     'renderer/gl/FunctionsGL.cpp',
     'renderer/gl/PathGL.cpp',
     'renderer/gl/ProgramGL.cpp',
-    'renderer/gl/ProgramPipelineGL.cpp',
     'renderer/gl/QueryGL.cpp',
     'renderer/gl/RenderbufferGL.cpp',
     'renderer/gl/RendererGL.cpp',
@@ -222,7 +211,6 @@ UNIFIED_SOURCES += [
     'renderer/gl/ShaderGL.cpp',
     'renderer/gl/StateManagerGL.cpp',
     'renderer/gl/SurfaceGL.cpp',
-    'renderer/gl/SyncGL.cpp',
     'renderer/gl/TextureGL.cpp',
     'renderer/gl/TransformFeedbackGL.cpp',
     'renderer/gl/VertexArrayGL.cpp',
@@ -240,26 +228,45 @@ UNIFIED_SOURCES += [
     'renderer/null/DeviceNULL.cpp',
     'renderer/null/DisplayNULL.cpp',
     'renderer/null/FenceNVNULL.cpp',
+    'renderer/null/FenceSyncNULL.cpp',
     'renderer/null/FramebufferNULL.cpp',
     'renderer/null/ImageNULL.cpp',
     'renderer/null/PathNULL.cpp',
     'renderer/null/ProgramNULL.cpp',
-    'renderer/null/ProgramPipelineNULL.cpp',
     'renderer/null/QueryNULL.cpp',
     'renderer/null/RenderbufferNULL.cpp',
     'renderer/null/SamplerNULL.cpp',
     'renderer/null/ShaderNULL.cpp',
     'renderer/null/SurfaceNULL.cpp',
-    'renderer/null/SyncNULL.cpp',
     'renderer/null/TextureNULL.cpp',
     'renderer/null/TransformFeedbackNULL.cpp',
     'renderer/null/VertexArrayNULL.cpp',
     'renderer/renderer_utils.cpp',
     'renderer/SurfaceImpl.cpp',
     'renderer/TextureImpl.cpp',
+    'renderer/vulkan/BufferVk.cpp',
+    'renderer/vulkan/CompilerVk.cpp',
+    'renderer/vulkan/ContextVk.cpp',
+    'renderer/vulkan/DeviceVk.cpp',
+    'renderer/vulkan/DisplayVk.cpp',
+    'renderer/vulkan/FenceNVVk.cpp',
+    'renderer/vulkan/FenceSyncVk.cpp',
+    'renderer/vulkan/FramebufferVk.cpp',
+    'renderer/vulkan/ImageVk.cpp',
+    'renderer/vulkan/ProgramVk.cpp',
+    'renderer/vulkan/QueryVk.cpp',
+    'renderer/vulkan/RenderbufferVk.cpp',
+    'renderer/vulkan/RendererVk.cpp',
+    'renderer/vulkan/SamplerVk.cpp',
+    'renderer/vulkan/ShaderVk.cpp',
+    'renderer/vulkan/SurfaceVk.cpp',
+    'renderer/vulkan/TextureVk.cpp',
+    'renderer/vulkan/TransformFeedbackVk.cpp',
+    'renderer/vulkan/VertexArrayVk.cpp',
     'ResourceManager.cpp',
     'Sampler.cpp',
     'Shader.cpp',
+    'signal_utils.cpp',
     'State.cpp',
     'Stream.cpp',
     'Surface.cpp',
@@ -267,13 +274,11 @@ UNIFIED_SOURCES += [
     'Thread.cpp',
     'TransformFeedback.cpp',
     'Uniform.cpp',
-    'UniformLinker.cpp',
     'validationEGL.cpp',
     'validationES.cpp',
     'validationES2.cpp',
     'validationES3.cpp',
     'validationES31.cpp',
-    'VaryingPacking.cpp',
     'VertexArray.cpp',
     'VertexAttribute.cpp',
     'WorkerThread.cpp',
@@ -283,19 +288,10 @@ SOURCES += [
     '../compiler/translator/glslang_lex.cpp',
     '../compiler/translator/glslang_tab.cpp',
     '../compiler/translator/RewriteTexelFetchOffset.cpp',
-    '../compiler/translator/RewriteUnaryMinusOperatorInt.cpp',
     '../compiler/translator/ShaderLang.cpp',
-    '../gpu_info_util/SystemInfo.cpp',
-    '../gpu_info_util/SystemInfo_win.cpp',
-    '../image_util/copyimage.cpp',
-    '../image_util/imageformats.cpp',
-    '../image_util/loadimage.cpp',
-    '../image_util/loadimage_etc.cpp',
-    '../third_party/systeminfo/SystemInfo.cpp',
     'Display.cpp',
     'renderer/d3d/DisplayD3D.cpp',
     'renderer/d3d/HLSLCompiler.cpp',
-    'renderer/gl/FramebufferGL.cpp',
 ]
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     UNIFIED_SOURCES += [
@@ -313,13 +309,11 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/IndexBuffer11.cpp',
         'renderer/d3d/d3d11/InputLayoutCache.cpp',
         'renderer/d3d/d3d11/PixelTransfer11.cpp',
-        'renderer/d3d/d3d11/ProgramPipeline11.cpp',
         'renderer/d3d/d3d11/Query11.cpp',
         'renderer/d3d/d3d11/Renderer11.cpp',
         'renderer/d3d/d3d11/renderer11_utils.cpp',
         'renderer/d3d/d3d11/RenderStateCache.cpp',
         'renderer/d3d/d3d11/RenderTarget11.cpp',
-        'renderer/d3d/d3d11/ResourceManager11.cpp',
         'renderer/d3d/d3d11/ShaderExecutable11.cpp',
         'renderer/d3d/d3d11/StateManager11.cpp',
         'renderer/d3d/d3d11/StreamProducerNV12.cpp',
@@ -330,13 +324,14 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/Trim11.cpp',
         'renderer/d3d/d3d11/VertexArray11.cpp',
         'renderer/d3d/d3d11/VertexBuffer11.cpp',
-        'renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp',
     ]
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     SOURCES += [
         'renderer/d3d/d3d11/SwapChain11.cpp',
+        'renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp',
     ]
 
+CXXFLAGS += CONFIG['SSE2_FLAGS']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
@@ -357,6 +352,12 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
+if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-wd4018', # '>' : signed/unsigned mismatch
+        '-wd4530', # C++ exception handler used, without /EHsc
+    ]
+
 if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     LOCAL_INCLUDES += ['%' + '%s/include/' % CONFIG['MOZ_DIRECTX_SDK_PATH']]
 
@@ -366,9 +367,9 @@ DEFINES['_HAS_EXCEPTIONS'] = 0
 if not CONFIG['MOZ_DEBUG']:
     DEFINES['_SECURE_SCL'] = 0
 
+DEFINES['ANGLE_ENABLE_D3D9'] = True
 DEFINES['ANGLE_SKIP_DXGI_1_2_CHECK'] = True
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
-    DEFINES['ANGLE_ENABLE_D3D9'] = True
     DEFINES['ANGLE_ENABLE_D3D11'] = True
 
 DEFINES['ANGLE_COMPILE_OPTIMIZATION_LEVEL'] = 'D3DCOMPILE_OPTIMIZATION_LEVEL1'
@@ -379,25 +380,24 @@ DEFINES['GL_APICALL'] = ""
 DEFINES['GL_GLEXT_PROTOTYPES'] = ""
 DEFINES['EGLAPI'] = ""
 
+# Enable asserts for UNIMPLEMENTED()
+DEFINES['NOASSERT_UNIMPLEMENTED'] = '0'
 
-
-LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/numerics', '../../src/third_party/khronos', '../../src/third_party/mrucache' ]
+LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/numerics', '../../src/third_party/khronos' ]
 
 DEFINES['LIBANGLE_IMPLEMENTATION'] = "1"
 DEFINES['ANGLE_ENABLE_HLSL'] = "1"
+DEFINES['ANGLE_ENABLE_GLSL'] = "1"
+DEFINES['ANGLE_ENABLE_ESSL'] = "1"
 DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 DEFINES['ANGLE_DEFAULT_D3D11'] = "0"
 
-DEFINES['GPU_INFO_USE_SETUPAPI'] = True
-DEFINES['NTDDI_VERSION'] = 0x06020000
-
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
-  OS_LIBS += [ 'd3d9', 'dxguid', 'setupapi' ]
+  OS_LIBS += [ 'd3d9', 'dxguid' ]
 else:
   EXTRA_DSO_LDOPTS += [
     '\'%s/lib/%s/d3d9.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
     '\'%s/lib/%s/dxguid.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
-    '\'%s/lib/%s/setupapi.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
   ]
 
 Library('libANGLE')

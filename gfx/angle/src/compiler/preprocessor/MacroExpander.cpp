@@ -22,7 +22,7 @@ const size_t kMaxContextTokens = 10000;
 
 class TokenLexer : public Lexer
 {
-  public:
+ public:
     typedef std::vector<Token> TokenVector;
 
     TokenLexer(TokenVector *tokens)
@@ -44,7 +44,7 @@ class TokenLexer : public Lexer
         }
     }
 
-  private:
+ private:
     TokenVector mTokens;
     TokenVector::const_iterator mIter;
 };
@@ -70,11 +70,8 @@ MacroExpander::ScopedMacroReenabler::ScopedMacroReenabler(MacroExpander *expande
 MacroExpander::ScopedMacroReenabler::~ScopedMacroReenabler()
 {
     mExpander->mDeferReenablingMacros = false;
-    for (auto macro : mExpander->mMacrosToReenable)
+    for (auto *macro : mExpander->mMacrosToReenable)
     {
-        // Copying the string here by using substr is a check for use-after-free. It detects
-        // use-after-free more reliably than just toggling the disabled flag.
-        ASSERT(macro->name.substr() != "");
         macro->disabled = false;
     }
     mExpander->mMacrosToReenable.clear();
@@ -118,8 +115,8 @@ void MacroExpander::lex(Token *token)
         if (iter == mMacroSet->end())
             break;
 
-        std::shared_ptr<Macro> macro = iter->second;
-        if (macro->disabled)
+        const Macro& macro = iter->second;
+        if (macro.disabled)
         {
             // If a particular token is not expanded, it is never expanded.
             token->setExpansionDisabled(true);
@@ -128,12 +125,12 @@ void MacroExpander::lex(Token *token)
 
         // Bump the expansion count before peeking if the next token is a '('
         // otherwise there could be a #undef of the macro before the next token.
-        macro->expansionCount++;
-        if ((macro->type == Macro::kTypeFunc) && !isNextTokenLeftParen())
+        macro.expansionCount++;
+        if ((macro.type == Macro::kTypeFunc) && !isNextTokenLeftParen())
         {
             // If the token immediately after the macro name is not a '(',
             // this macro should not be expanded.
-            macro->expansionCount--;
+            macro.expansionCount--;
             break;
         }
 
@@ -193,22 +190,22 @@ bool MacroExpander::isNextTokenLeftParen()
     return lparen;
 }
 
-bool MacroExpander::pushMacro(std::shared_ptr<Macro> macro, const Token &identifier)
+bool MacroExpander::pushMacro(const Macro &macro, const Token &identifier)
 {
-    ASSERT(!macro->disabled);
+    ASSERT(!macro.disabled);
     ASSERT(!identifier.expansionDisabled());
     ASSERT(identifier.type == Token::IDENTIFIER);
-    ASSERT(identifier.text == macro->name);
+    ASSERT(identifier.text == macro.name);
 
     std::vector<Token> replacements;
-    if (!expandMacro(*macro, identifier, &replacements))
+    if (!expandMacro(macro, identifier, &replacements))
         return false;
 
     // Macro is disabled for expansion until it is popped off the stack.
-    macro->disabled = true;
+    macro.disabled = true;
 
     MacroContext *context = new MacroContext;
-    context->macro        = macro;
+    context->macro = &macro;
     context->replacements.swap(replacements);
     mContextStack.push_back(context);
     mTotalTokensInContexts += context->replacements.size();
@@ -251,7 +248,8 @@ bool MacroExpander::expandMacro(const Macro &macro,
     SourceLocation replacementLocation = identifier.location;
     if (macro.type == Macro::kTypeObj)
     {
-        replacements->assign(macro.replacements.begin(), macro.replacements.end());
+        replacements->assign(macro.replacements.begin(),
+                             macro.replacements.end());
 
         if (macro.predefined)
         {
@@ -259,7 +257,7 @@ bool MacroExpander::expandMacro(const Macro &macro,
             const char kFile[] = "__FILE__";
 
             ASSERT(replacements->size() == 1);
-            Token &repl = replacements->front();
+            Token& repl = replacements->front();
             if (macro.name == kLine)
             {
                 repl.text = ToString(identifier.location.line);
@@ -283,7 +281,7 @@ bool MacroExpander::expandMacro(const Macro &macro,
 
     for (std::size_t i = 0; i < replacements->size(); ++i)
     {
-        Token &repl = replacements->at(i);
+        Token& repl = replacements->at(i);
         if (i == 0)
         {
             // The first token in the replacement list inherits the padding
@@ -319,36 +317,36 @@ bool MacroExpander::collectMacroArgs(const Macro &macro,
 
         if (token.type == Token::LAST)
         {
-            mDiagnostics->report(Diagnostics::PP_MACRO_UNTERMINATED_INVOCATION, identifier.location,
-                                 identifier.text);
+            mDiagnostics->report(Diagnostics::PP_MACRO_UNTERMINATED_INVOCATION,
+                                 identifier.location, identifier.text);
             // Do not lose EOF token.
             ungetToken(token);
             return false;
         }
 
-        bool isArg = false;  // True if token is part of the current argument.
+        bool isArg = false; // True if token is part of the current argument.
         switch (token.type)
         {
-            case '(':
-                ++openParens;
-                isArg = true;
-                break;
-            case ')':
-                --openParens;
-                isArg                       = openParens != 0;
-                *closingParenthesisLocation = token.location;
-                break;
-            case ',':
-                // The individual arguments are separated by comma tokens, but
-                // the comma tokens between matching inner parentheses do not
-                // seperate arguments.
-                if (openParens == 1)
-                    args->push_back(MacroArg());
-                isArg = openParens != 1;
-                break;
-            default:
-                isArg = true;
-                break;
+          case '(':
+            ++openParens;
+            isArg = true;
+            break;
+          case ')':
+            --openParens;
+            isArg = openParens != 0;
+            *closingParenthesisLocation = token.location;
+            break;
+          case ',':
+            // The individual arguments are separated by comma tokens, but
+            // the comma tokens between matching inner parentheses do not
+            // seperate arguments.
+            if (openParens == 1)
+                args->push_back(MacroArg());
+            isArg = openParens != 1;
+            break;
+          default:
+            isArg = true;
+            break;
         }
         if (isArg)
         {
@@ -369,9 +367,9 @@ bool MacroExpander::collectMacroArgs(const Macro &macro,
     // Validate the number of arguments.
     if (args->size() != params.size())
     {
-        Diagnostics::ID id = args->size() < macro.parameters.size()
-                                 ? Diagnostics::PP_MACRO_TOO_FEW_ARGS
-                                 : Diagnostics::PP_MACRO_TOO_MANY_ARGS;
+        Diagnostics::ID id = args->size() < macro.parameters.size() ?
+            Diagnostics::PP_MACRO_TOO_FEW_ARGS :
+            Diagnostics::PP_MACRO_TOO_MANY_ARGS;
         mDiagnostics->report(id, identifier.location, identifier.text);
         return false;
     }
@@ -432,15 +430,15 @@ void MacroExpander::replaceMacroParams(const Macro &macro,
         // TODO(alokp): Optimize this.
         // There is no need to search for macro params every time.
         // The param index can be cached with the replacement token.
-        Macro::Parameters::const_iterator iter =
-            std::find(macro.parameters.begin(), macro.parameters.end(), repl.text);
+        Macro::Parameters::const_iterator iter = std::find(
+            macro.parameters.begin(), macro.parameters.end(), repl.text);
         if (iter == macro.parameters.end())
         {
             replacements->push_back(repl);
             continue;
         }
 
-        std::size_t iArg    = std::distance(macro.parameters.begin(), iter);
+        std::size_t iArg = std::distance(macro.parameters.begin(), iter);
         const MacroArg &arg = args[iArg];
         if (arg.empty())
         {
@@ -475,3 +473,4 @@ void MacroExpander::MacroContext::unget()
 }
 
 }  // namespace pp
+

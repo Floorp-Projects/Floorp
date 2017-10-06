@@ -12,12 +12,8 @@
 
 namespace sh
 {
-
 class TIntermNode;
-class TSymbolTable;
-
-void RewriteDoWhile(TIntermNode *root, TSymbolTable *symbolTable);
-
+void RewriteDoWhile(TIntermNode *root, unsigned int *temporaryIndex);
 }  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_REWRITEDOWHILE_H_

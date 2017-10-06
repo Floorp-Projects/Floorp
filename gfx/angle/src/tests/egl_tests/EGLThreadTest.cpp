@@ -3,11 +3,11 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-typedef EGLDisplay EGLAPIENTRY EGLGetDisplay(EGLNativeDisplayType display_id);
-typedef EGLBoolean EGLAPIENTRY EGLInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor);
-typedef EGLContext EGLAPIENTRY EGLGetCurrentContext(void);
-typedef EGLSurface EGLAPIENTRY EGLGetCurrentSurface(EGLint readdraw);
-typedef EGLBoolean EGLAPIENTRY EGLTerminate(EGLDisplay dpy);
+typedef EGLAPI EGLDisplay EGLAPIENTRY EGLGetDisplay(EGLNativeDisplayType display_id);
+typedef EGLAPI EGLBoolean EGLAPIENTRY EGLInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor);
+typedef EGLAPI EGLContext EGLAPIENTRY EGLGetCurrentContext(void);
+typedef EGLAPI EGLSurface EGLAPIENTRY EGLGetCurrentSurface(EGLint readdraw);
+typedef EGLAPI EGLBoolean EGLAPIENTRY EGLTerminate(EGLDisplay dpy);
 
 class EGLThreadTest : public testing::Test
 {
@@ -43,33 +43,32 @@ void EGLThreadTest::ThreadingTest()
     mEGL = LoadLibrary(TEXT("libEGL.dll"));
     mGLESv2 = LoadLibrary(TEXT("libGLESv2.dll"));
 
-    EXPECT_TRUE(mEGL != nullptr);
-    EXPECT_TRUE(mGLESv2 != nullptr);
+    EXPECT_TRUE(mEGL != NULL);
+    EXPECT_TRUE(mGLESv2 != NULL);
 
     mGetDisplay = (EGLGetDisplay *)GetProcAddress(mEGL, "eglGetDisplay");
     mInitialize = (EGLInitialize *)GetProcAddress(mEGL, "eglInitialize");
     mGetCurrentContext = (EGLGetCurrentContext *)GetProcAddress(mEGL, "eglGetCurrentContext");
     mGetCurrentSurface = (EGLGetCurrentSurface *)GetProcAddress(mEGL, "eglGetCurrentSurface");
 
-    EXPECT_TRUE(mGetDisplay != nullptr);
-    EXPECT_TRUE(mInitialize != nullptr);
-    EXPECT_TRUE(mGetCurrentContext != nullptr);
-    EXPECT_TRUE(mGetCurrentSurface != nullptr);
+    EXPECT_TRUE(mGetDisplay != NULL);
+    EXPECT_TRUE(mInitialize != NULL);
+    EXPECT_TRUE(mGetCurrentContext != NULL);
+    EXPECT_TRUE(mGetCurrentSurface != NULL);
 
     mDisplay = mGetDisplay(EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
 
     EXPECT_TRUE(mDisplay!= EGL_NO_DISPLAY);
 
-    mInitialize(mDisplay, nullptr, nullptr);
+    mInitialize(mDisplay, NULL, NULL);
     mGetCurrentContext();
 }
 
 TEST_F(EGLThreadTest, thread_init_crash)
 {
     DWORD threadId;
-    HANDLE threadHandle =
-        CreateThread(nullptr, 0, EGLThreadTest::ThreadingTestEntryPoint, this, 0, &threadId);
-    EXPECT_TRUE(threadHandle != nullptr);
+    HANDLE threadHandle = CreateThread(NULL, 0, EGLThreadTest::ThreadingTestEntryPoint, this, 0, &threadId);
+    EXPECT_TRUE(threadHandle != NULL);
 
     // wait for signal from thread
     DWORD waitResult = WaitForSingleObject(threadHandle, 1000);

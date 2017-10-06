@@ -13,7 +13,10 @@
 namespace rx
 {
 
-FenceNV9::FenceNV9(Renderer9 *renderer) : FenceNVImpl(), mRenderer(renderer), mQuery(nullptr)
+FenceNV9::FenceNV9(Renderer9 *renderer)
+    : FenceNVImpl(),
+      mRenderer(renderer),
+      mQuery(NULL)
 {
 }
 
@@ -38,10 +41,10 @@ gl::Error FenceNV9::set(GLenum condition)
     {
         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
         SafeRelease(mQuery);
-        return gl::OutOfMemory() << "Failed to end event query, " << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to end event query, result: 0x%X.", result);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error FenceNV9::test(GLboolean *outFinished)
@@ -63,7 +66,7 @@ gl::Error FenceNV9::finish()
         Sleep(0);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error FenceNV9::testHelper(bool flushCommandBuffer, GLboolean *outFinished)
@@ -71,21 +74,21 @@ gl::Error FenceNV9::testHelper(bool flushCommandBuffer, GLboolean *outFinished)
     ASSERT(mQuery);
 
     DWORD getDataFlags = (flushCommandBuffer ? D3DGETDATA_FLUSH : 0);
-    HRESULT result     = mQuery->GetData(nullptr, 0, getDataFlags);
+    HRESULT result = mQuery->GetData(NULL, 0, getDataFlags);
 
     if (d3d9::isDeviceLostError(result))
     {
         mRenderer->notifyDeviceLost();
-        return gl::OutOfMemory() << "Device was lost while querying result of an event query.";
+        return gl::Error(GL_OUT_OF_MEMORY, "Device was lost while querying result of an event query.");
     }
     else if (FAILED(result))
     {
-        return gl::OutOfMemory() << "Failed to get query data, " << gl::FmtHR(result);
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to get query data, result: 0x%X.", result);
     }
 
     ASSERT(result == S_OK || result == S_FALSE);
     *outFinished = ((result == S_OK) ? GL_TRUE : GL_FALSE);
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 }
