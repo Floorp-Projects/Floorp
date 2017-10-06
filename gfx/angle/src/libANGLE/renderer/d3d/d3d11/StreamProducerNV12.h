@@ -21,7 +21,7 @@ class StreamProducerNV12 : public StreamProducerImpl
     StreamProducerNV12(Renderer11 *renderer);
     ~StreamProducerNV12() override;
 
-    egl::Error validateD3DNV12Texture(void *pointer, const egl::AttributeMap &attributes) const override;
+    egl::Error validateD3DNV12Texture(void *pointer) const override;
     void postD3DNV12Texture(void *pointer, const egl::AttributeMap &attributes) override;
     egl::Stream::GLTextureDescription getGLFrameDescription(int planeIndex) override;
 
@@ -36,7 +36,8 @@ class StreamProducerNV12 : public StreamProducerImpl
 
     ID3D11Texture2D *mTexture;
     UINT mArraySlice;
-    UINT mPlaneOffset;
+    UINT mTextureWidth;
+    UINT mTextureHeight;
 };
 }  // namespace rx
 

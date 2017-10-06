@@ -452,7 +452,7 @@ Error FramebufferGL::readPixels(const gl::Context *context,
         const gl::InternalFormat &glFormat = gl::GetInternalFormatInfo(readFormat, readType);
 
         GLuint rowBytes = 0;
-        ANGLE_TRY_RESULT(glFormat.computeRowPitch(origArea.width, packState.alignment,
+        ANGLE_TRY_RESULT(glFormat.computeRowPitch(readType, origArea.width, packState.alignment,
                                                   packState.rowLength),
                          rowBytes);
         pixels += leftClip * glFormat.pixelBytes + topClip * rowBytes;
@@ -839,8 +839,9 @@ gl::Error FramebufferGL::readPixelsRowByRow(const gl::Context *context,
 {
 
     const gl::InternalFormat &glFormat = gl::GetInternalFormatInfo(format, type);
+
     GLuint rowBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, pack.alignment, pack.rowLength),
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, pack.alignment, pack.rowLength),
                      rowBytes);
     GLuint skipBytes = 0;
     ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, 0, pack, false), skipBytes);
@@ -881,7 +882,7 @@ gl::Error FramebufferGL::readPixelsAllAtOnce(const gl::Context *context,
         const gl::InternalFormat &glFormat = gl::GetInternalFormatInfo(format, type);
 
         GLuint rowBytes = 0;
-        ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, pack.alignment, pack.rowLength),
+        ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, pack.alignment, pack.rowLength),
                          rowBytes);
         GLuint skipBytes = 0;
         ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, 0, pack, false), skipBytes);
