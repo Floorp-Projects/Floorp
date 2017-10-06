@@ -47,9 +47,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     mLastAsr = nullptr;
 
     {
-      StackingContextHelper pageRootSc(sc, aBuilder, aDisplayListBuilder,
-                                       nullptr, aDisplayList, nullptr, 0,
-                                       nullptr, nullptr);
+      StackingContextHelper pageRootSc(sc, aBuilder);
       CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder,
                                              pageRootSc, aBuilder, aResourceUpdates);
     }
