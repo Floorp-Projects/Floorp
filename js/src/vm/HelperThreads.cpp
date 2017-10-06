@@ -1178,6 +1178,14 @@ GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const
 }
 
 size_t
+GlobalHelperThreadState::maxPromiseHelperThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM))
+        return 1;
+    return cpuCount;
+}
+
+size_t
 GlobalHelperThreadState::maxParseThreads() const
 {
     if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PARSE))
@@ -1268,7 +1276,11 @@ GlobalHelperThreadState::canStartWasmTier2Generator(const AutoLockHelperThreadSt
 bool
 GlobalHelperThreadState::canStartPromiseHelperTask(const AutoLockHelperThreadState& lock)
 {
-    return !promiseHelperTasks(lock).empty();
+    // PromiseHelperTasks can be wasm compilation tasks that in turn block on
+    // wasm compilation so set isMaster = true.
+    return !promiseHelperTasks(lock).empty() &&
+           checkTaskThreadLimit<PromiseHelperTask*>(maxPromiseHelperThreads(),
+                                                    /*isMaster=*/true);
 }
 
 static bool
