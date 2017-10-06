@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "此图片已裁剪为 $PIXELS$px。",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "出故障了。"
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
+  },
+  "tourHeaderPageAction": {
+    "message": "新的保存方法"
+  },
+  "tourBodyPageAction": {
+    "message": "随时可以展开地址栏中的页面操作菜单来截图。"
   },
   "tourHeaderClickAndDrag": {
     "message": "截取你所需"

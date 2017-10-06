@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Это изображение было обрезано до $PIXELS$ пикселей.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Произошла ошибка."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Делайте, сохраняйте и делитесь скриншотами прямо в Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Новый способ сохранения"
+  },
+  "tourBodyPageAction": {
+    "message": "Раскройте меню действий на странице в адресной строке в любой момент, когда вы захотите сделать снимок экрана."
   },
   "tourHeaderClickAndDrag": {
     "message": "Делайте снимки чего угодно"

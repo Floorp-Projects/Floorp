@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Esta imagem foi recortada para $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Oops! Fora do ar."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Capture, salve e compartilhe telas sem sair do Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Um novo jeito de salvar"
+  },
+  "tourBodyPageAction": {
+    "message": "Expandir o menu de ações de página na barra de endereços sempre que você quiser fazer uma captura de tela."
   },
   "tourHeaderClickAndDrag": {
     "message": "Capture apenas o que você quer"

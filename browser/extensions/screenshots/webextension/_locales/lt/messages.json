@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Ši nuotrauka buvo apkirpta iki $PIXELS$ taškų.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Neveikia."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Darykite, įrašykite ir dalinkitės ekrano nuotraukomis nepalikdami „Firefox“."
+  },
+  "tourHeaderPageAction": {
+    "message": "Naujas būdas įrašyti"
+  },
+  "tourBodyPageAction": {
+    "message": "Išskleiskite tinklalapio veiksmų meniu, esantį adreso juostoje, bet kada, kai norite padaryti ekrano nuotrauką."
   },
   "tourHeaderClickAndDrag": {
     "message": "Užfiksuokite būtent tai, ką norite"

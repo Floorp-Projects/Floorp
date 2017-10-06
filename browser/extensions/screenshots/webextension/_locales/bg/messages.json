@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Изображението е отрязано до $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Повреда."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Създавайте, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Нов начин за запазване"
+  },
+  "tourBodyPageAction": {
+    "message": "Отворете менюто за действия със страницата, което се намира в адресната лента, когато желаете да направите снимка на екрана."
   },
   "tourHeaderClickAndDrag": {
     "message": "Уловете само нужното"
