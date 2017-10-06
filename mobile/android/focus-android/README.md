@@ -19,6 +19,8 @@ Getting Involved
 
 We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any kind of positive contribution. Please read the [Community Participation Guidelines](https://www.mozilla.org/en-US/about/governance/policies/participation/).
 
+* Overview to contributing (**new contributors start here!**): https://github.com/mozilla-mobile/focus-android/wiki/Contributing
+
 * Issues: [https://github.com/mozilla-mobile/focus-android/issues](https://github.com/mozilla-mobile/focus-android/issues)
 
 * IRC: [#focus (irc.mozilla.org)](https://wiki.mozilla.org/IRC)
