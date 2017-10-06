@@ -14,13 +14,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.widget.PopupMenu;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -284,16 +281,6 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
             case R.id.settings:
                 ((LocaleAwareAppCompatActivity) getActivity()).openPreferences();
-                break;
-
-            case R.id.about:
-                final Intent aboutIntent = InfoActivity.getAboutIntent(getActivity());
-                startActivity(aboutIntent);
-                break;
-
-            case R.id.rights:
-                final Intent rightsIntent = InfoActivity.getRightsIntent(getActivity());
-                startActivity(rightsIntent);
                 break;
 
             case R.id.help:

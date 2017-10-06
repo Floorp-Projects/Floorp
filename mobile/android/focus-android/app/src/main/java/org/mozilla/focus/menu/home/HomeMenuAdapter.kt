@@ -25,9 +25,7 @@ class HomeMenuAdapter(
 
         with(items) {
             add(MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)))
-            add(MenuItem(R.id.about, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_about)))
             add(MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)))
-            add(MenuItem(R.id.rights, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_rights)))
             add(MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings)))
         }
     }
