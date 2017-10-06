@@ -56,7 +56,7 @@
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-#include "mozilla/SandboxReporter.h"
+#include "mozilla/SandboxLaunch.h"
 #endif
 
 #include "nsTArray.h"
@@ -228,6 +228,10 @@ GeckoChildProcessHost::PrepareLaunch()
   if (CrashReporter::GetEnabled()) {
     CrashReporter::OOPInit();
   }
+#endif
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  SandboxLaunchPrepare(mProcessType, mLaunchOptions.get());
 #endif
 
 #ifdef XP_WIN
@@ -708,27 +712,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   FilePath exePath;
   BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
-# if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  // Preload libmozsandbox.so so that sandbox-related interpositions
-  // can be defined there instead of in the executable.
-  // (This could be made conditional on intent to use sandboxing, but
-  // it's harmless for non-sandboxed processes.)
-  {
-    nsAutoCString preload;
-    // Prepend this, because people can and do preload libpthread.
-    // (See bug 1222500.)
-    preload.AssignLiteral("libmozsandbox.so");
-    if (const char* oldPreload = PR_GetEnv("LD_PRELOAD")) {
-      // Doesn't matter if oldPreload is ""; extra separators are ignored.
-      preload.Append(' ');
-      preload.Append(oldPreload);
-    }
-    // Explicitly construct the std::string to make it clear that this
-    // isn't retaining a pointer to the nsCString's buffer.
-    mLaunchOptions->environ["LD_PRELOAD"] = std::string(preload.get());
-  }
-# endif // defined(XP_LINUX) && defined(MOZ_SANDBOX)
-
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
   int srcChannelFd, dstChannelFd;
@@ -804,15 +787,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #  endif  // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
 # endif // defined(MOZ_CRASHREPORTER)
-
-# if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  {
-    int srcFd, dstFd;
-    SandboxReporter::Singleton()
-      ->GetClientFileDescriptorMapping(&srcFd, &dstFd);
-    mLaunchOptions->fds_to_remap.push_back(std::make_pair(srcFd, dstFd));
-  }
-# endif // defined(XP_LINUX) && defined(MOZ_SANDBOX)
 
 # ifdef MOZ_WIDGET_COCOA
   // Add a mach port to the command line so the child can communicate its
