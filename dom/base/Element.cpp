@@ -4216,7 +4216,7 @@ Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
   }
 
   observers->LookupForAdd(aObserver).OrInsert([]() {
-    // Value can be:
+    // If element is being observed, value can be:
     //   -2:   Makes sure next calculated threshold always differs, leading to a
     //         notification task being scheduled.
     //   -1:   Non-intersecting.
@@ -4249,7 +4249,7 @@ Element::UnlinkIntersectionObservers()
   }
   for (auto iter = observers->Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Key();
-    observer->UnlinkTarget(*this);
+    observer->UnlinkElement(*this);
   }
   observers->Clear();
 }
