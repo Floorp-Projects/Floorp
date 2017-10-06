@@ -139,10 +139,10 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
               case MIRType::Int64: {
                 Register sp = masm.getStackPointer();
 #if JS_BITS_PER_WORD == 32
-                masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
-                masm.store32(scratch, Address(sp, iter->offsetFromArgBase() + INT64LOW_OFFSET));
-                masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
-                masm.store32(scratch, Address(sp, iter->offsetFromArgBase() + INT64HIGH_OFFSET));
+                masm.load32(LowWord(src), scratch);
+                masm.store32(scratch, LowWord(Address(sp, iter->offsetFromArgBase())));
+                masm.load32(HighWord(src), scratch);
+                masm.store32(scratch, HighWord(Address(sp, iter->offsetFromArgBase())));
 #else
                 Register64 scratch64(scratch);
                 masm.load64(src, scratch64);
@@ -384,10 +384,10 @@ StackCopy(MacroAssembler& masm, MIRType type, Register scratch, Address src, Add
         masm.store32(scratch, dst);
     } else if (type == MIRType::Int64) {
 #if JS_BITS_PER_WORD == 32
-        masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
-        masm.store32(scratch, Address(dst.base, dst.offset + INT64LOW_OFFSET));
-        masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
-        masm.store32(scratch, Address(dst.base, dst.offset + INT64HIGH_OFFSET));
+        masm.load32(LowWord(src), scratch);
+        masm.store32(scratch, LowWord(dst));
+        masm.load32(HighWord(src), scratch);
+        masm.store32(scratch, HighWord(dst));
 #else
         Register64 scratch64(scratch);
         masm.load64(src, scratch64);

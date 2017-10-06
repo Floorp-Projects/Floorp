@@ -2521,9 +2521,9 @@ class BaseCompiler
                 masm.movq(scratch, Operand(StackPointer, argLoc.offsetFromArgBase()));
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
                 loadI64Low(scratch, arg);
-                masm.store32(scratch, Address(StackPointer, argLoc.offsetFromArgBase() + INT64LOW_OFFSET));
+                masm.store32(scratch, LowWord(Address(StackPointer, argLoc.offsetFromArgBase())));
                 loadI64High(scratch, arg);
-                masm.store32(scratch, Address(StackPointer, argLoc.offsetFromArgBase() + INT64HIGH_OFFSET));
+                masm.store32(scratch, HighWord(Address(StackPointer, argLoc.offsetFromArgBase())));
 #else
                 MOZ_CRASH("BaseCompiler platform hook: passArg I64");
 #endif
