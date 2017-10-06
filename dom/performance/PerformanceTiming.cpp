@@ -178,7 +178,7 @@ PerformanceTiming::TimingAllowed() const
   return mTimingAllowed;
 }
 
-uint16_t
+uint8_t
 PerformanceTiming::GetRedirectCount() const
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
