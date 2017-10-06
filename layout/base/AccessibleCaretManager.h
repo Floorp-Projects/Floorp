@@ -191,6 +191,12 @@ protected:
 
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
+
+  // Start the selection scroll timer if the caret is being dragged out of
+  // the scroll port.
+  void StartSelectionAutoScrollTimer(const nsPoint& aPoint) const;
+  void StopSelectionAutoScrollTimer() const;
+
   void ClearMaintainedSelection() const;
 
   // Caller is responsible to use IsTerminated() to check whether PresShell is
