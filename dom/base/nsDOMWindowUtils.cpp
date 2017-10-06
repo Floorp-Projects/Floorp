@@ -50,6 +50,7 @@
 
 #include "nsViewManager.h"
 
+#include "nsIDOMHTMLCanvasElement.h"
 #include "nsLayoutUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsIPresShell.h"
@@ -105,7 +106,6 @@
 #include "nsNetUtil.h"
 #include "nsDocument.h"
 #include "HTMLImageElement.h"
-#include "HTMLCanvasElement.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/layers/APZCTreeManager.h" // for layers::ZoomToRectBehavior
 #include "mozilla/dom/Promise.h"
@@ -1624,19 +1624,26 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
 }
 
 static already_AddRefed<DataSourceSurface>
-CanvasToDataSourceSurface(HTMLCanvasElement* aCanvas)
+CanvasToDataSourceSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
-  MOZ_ASSERT(aCanvas);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);
+  if (!node) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(node->IsElement(),
+             "An nsINode that implements nsIDOMHTMLCanvasElement should "
+             "be an element.");
   nsLayoutUtils::SurfaceFromElementResult result =
-    nsLayoutUtils::SurfaceFromElement(aCanvas);
+    nsLayoutUtils::SurfaceFromElement(node->AsElement());
 
   MOZ_ASSERT(result.GetSourceSurface());
   return result.GetSourceSurface()->GetDataSurface();
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::CompareCanvases(nsISupports *aCanvas1,
-                                  nsISupports *aCanvas2,
+nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
+                                  nsIDOMHTMLCanvasElement *aCanvas2,
                                   uint32_t* aMaxDifference,
                                   uint32_t* retVal)
 {
@@ -1645,17 +1652,8 @@ nsDOMWindowUtils::CompareCanvases(nsISupports *aCanvas1,
       retVal == nullptr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> contentCanvas1 = do_QueryInterface(aCanvas1);
-  nsCOMPtr<nsIContent> contentCanvas2 = do_QueryInterface(aCanvas2);
-  auto canvas1 = HTMLCanvasElement::FromContentOrNull(contentCanvas1);
-  auto canvas2 = HTMLCanvasElement::FromContentOrNull(contentCanvas2);
-
-  if (!canvas1 || !canvas2) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(canvas1);
-  RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(canvas2);
+  RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(aCanvas1);
+  RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(aCanvas2);
 
   DataSourceSurface::ScopedMap map1(img1, DataSourceSurface::READ);
   DataSourceSurface::ScopedMap map2(img2, DataSourceSurface::READ);

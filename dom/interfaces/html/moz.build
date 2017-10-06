@@ -9,6 +9,7 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMHTMLBaseElement.idl',
+    'nsIDOMHTMLCanvasElement.idl',
     'nsIDOMHTMLCollection.idl',
     'nsIDOMHTMLDocument.idl',
     'nsIDOMHTMLElement.idl',
