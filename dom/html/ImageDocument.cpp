@@ -13,7 +13,6 @@
 #include "nsDocShell.h"
 #include "nsIDocumentInlines.h"
 #include "nsDOMTokenList.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"

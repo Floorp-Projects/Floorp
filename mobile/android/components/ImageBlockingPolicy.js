@@ -52,7 +52,7 @@ ImageBlockingPolicy.prototype = {
           return Ci.nsIContentPolicy.ACCEPT;
         }
 
-        if (node instanceof Ci.nsIDOMHTMLImageElement) {
+        if (ChromeUtils.getClassName(node) === "HTMLImageElement") {
           // Accept if the user has asked to view the image
           if (node.getAttribute("data-ctv-show") == "true") {
             sendImageSizeTelemetry(node.getAttribute("data-ctv-src"));

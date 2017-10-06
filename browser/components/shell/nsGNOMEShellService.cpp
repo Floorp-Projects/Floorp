@@ -23,7 +23,7 @@
 #include "nsIProcess.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMElement.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
