@@ -238,9 +238,6 @@
     <color name="panel_icon_item_title_background">#32000000</color>
     <color name="panel_tab_text_normal">#FFBFBFBF</color>
 
-    <!-- Remote tabs setup -->
-    <color name="remote_tabs_setup_button_background_hit">#D95300</color>
-
     <!-- Button toast colors. -->
     <color name="toast_background">#DD222222</color>
     <color name="toast_button_background">#00000000</color>
