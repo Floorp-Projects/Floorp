@@ -427,6 +427,11 @@ public:
    */
   void ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges);
 
+  /**
+   * Notify the selection listeners after a range has been modified.
+   */
+  void NotifySelectionListenersAfterRangeSet();
+
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
 

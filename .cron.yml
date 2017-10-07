@@ -102,7 +102,13 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Nfile
-          target-tasks-method: nightly_file_update
+          target-tasks-method: file_update
       run-on-projects:
           - mozilla-central
-      when: []  # don't run for now due to unforeseen issues
+      when:
+          by-project:
+              # No default branch
+              mozilla-central:
+                  # Buildbot start time is 10:02am UTC, until we are able to
+                  # disable buildbot scheduling, use +12h
+                  - {hour: 22, minute: 0}
