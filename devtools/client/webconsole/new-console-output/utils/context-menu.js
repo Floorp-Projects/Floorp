@@ -27,6 +27,8 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
  * @param {Object} options
  *        - {String} actor (optional) actor id to use for context menu actions
  *        - {String} clipboardText (optional) text to "Copy" if no selection is available
+ *        - {String} variableText (optional) which is the textual frontend
+ *            representation of the variable
  *        - {Object} message (optional) message object containing metadata such as:
  *          - {String} source
  *          - {String} request
@@ -34,6 +36,7 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 function createContextMenu(jsterm, parentNode, {
   actor,
   clipboardText,
+  variableText,
   message,
   serviceContainer
 }) {
@@ -116,8 +119,8 @@ function createContextMenu(jsterm, parentNode, {
   // Copy message or grip.
   menu.append(new MenuItem({
     id: "console-menu-copy",
-    label: l10n.getStr("webconsole.menu.copy.label"),
-    accesskey: l10n.getStr("webconsole.menu.copy.accesskey"),
+    label: l10n.getStr("webconsole.menu.copyMessage.label"),
+    accesskey: l10n.getStr("webconsole.menu.copyMessage.accesskey"),
     // Disabled if there is no selection and no message element available to copy.
     disabled: selection.isCollapsed && !clipboardText,
     click: () => {
@@ -127,6 +130,25 @@ function createContextMenu(jsterm, parentNode, {
         clipboardHelper.copyString(clipboardText);
       } else {
         clipboardHelper.copyString(selection.toString());
+      }
+    },
+  }));
+
+  // Copy message object.
+  menu.append(new MenuItem({
+    id: "console-menu-copy-object",
+    label: l10n.getStr("webconsole.menu.copyObject.label"),
+    accesskey: l10n.getStr("webconsole.menu.copyObject.accesskey"),
+    // Disabled if there is no actor and no variable text associated.
+    disabled: (!actor && !variableText),
+    click: () => {
+      if (actor) {
+        // The Debugger.Object of the OA will be bound to |_self| during evaluation,
+        jsterm.copyObject(`_self`, { selectedObjectActor: actor }).then((res) => {
+          clipboardHelper.copyString(res.helperResult.value);
+        });
+      } else {
+        clipboardHelper.copyString(variableText);
       }
     },
   }));

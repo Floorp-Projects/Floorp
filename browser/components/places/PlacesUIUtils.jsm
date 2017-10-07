@@ -5,35 +5,28 @@
 
 this.EXPORTED_SYMBOLS = ["PlacesUIUtils"];
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-var Cu = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-
-// PlacesUtils exposes multiple symbols, so we can't use defineLazyModuleGetter.
+// PlacesUtils exposes multiple symbols, so we can't use defineLazyModuleGetter
+// until we remove legacy transactions (Bug 1131491).
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTransactions",
-                                  "resource://gre/modules/PlacesTransactions.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PluralForm: "resource://gre/modules/PluralForm.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  RecentWindow: "resource:///modules/RecentWindow.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
+  Weave: "resource://services-sync/main.js",
+});
 
-XPCOMUtils.defineLazyModuleGetter(this, "Weave",
-                                  "resource://services-sync/main.js");
+XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+  return Services.strings.createBundle("chrome://browser/locale/places/places.properties");
+});
 
 const gInContentProcess = Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 const FAVICON_REQUEST_TIMEOUT = 60 * 1000;
@@ -62,8 +55,6 @@ function IsLivemark(aItemId) {
     let obs = Object.freeze({
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver]),
 
-      // Ci.nsINavBookmarkObserver items.
-
       onItemChanged(itemId, property, isAnnoProperty, newValue, lastModified,
                     itemType, parentId, guid) {
         if (isAnnoProperty && property == LIVEMARK_ANNO) {
@@ -85,7 +76,7 @@ function IsLivemark(aItemId) {
       onPageAnnotationSet() { },
       onPageAnnotationRemoved() { },
       skipDescendantsOnItemRemoval: false,
-      skipTags: false,
+      skipTags: true,
     });
 
     PlacesUtils.bookmarks.addObserver(obs);
@@ -280,7 +271,7 @@ this.PlacesUIUtils = {
    * @return A URI object for the spec.
    */
   createFixedURI: function PUIU_createFixedURI(aSpec) {
-    return URIFixup.createFixupURI(aSpec, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+    return Services.uriFixup.createFixupURI(aSpec, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
   },
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
@@ -436,7 +427,7 @@ this.PlacesUIUtils = {
         root.containerOpen = false;
         for (let { uri } of urls) {
           transactions.push(
-            new PlacesTagURITransaction(NetUtil.newURI(uri), [aData.title])
+            new PlacesTagURITransaction(Services.io.newURI(uri), [aData.title])
           );
         }
       }
@@ -676,10 +667,6 @@ this.PlacesUIUtils = {
     }
 
     return performed;
-  },
-
-  _getTopBrowserWin: function PUIU__getTopBrowserWin() {
-    return RecentWindow.getMostRecentBrowserWindow();
   },
 
   /**
@@ -961,7 +948,7 @@ this.PlacesUIUtils = {
     var browserWindow = null;
     browserWindow =
       aWindow && aWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ?
-      aWindow : this._getTopBrowserWin();
+      aWindow : RecentWindow.getMostRecentBrowserWindow();
 
     var urls = [];
     let skipMarking = browserWindow && PrivateBrowsingUtils.isWindowPrivate(browserWindow);
@@ -1095,7 +1082,7 @@ this.PlacesUIUtils = {
       if (aWhere == "current" && isBookmark) {
         if (PlacesUtils.annotations
                        .itemHasAnnotation(aNode.itemId, this.LOAD_IN_SIDEBAR_ANNO)) {
-          let browserWin = this._getTopBrowserWin();
+          let browserWin = RecentWindow.getMostRecentBrowserWindow();
           if (browserWin) {
             browserWin.openWebPanel(aNode.title, aNode.uri);
             return;
@@ -1590,203 +1577,16 @@ PlacesUIUtils.URI_FLAVORS = [PlacesUtils.TYPE_X_MOZ_URL,
 PlacesUIUtils.SUPPORTED_FLAVORS = [...PlacesUIUtils.PLACES_FLAVORS,
                                    ...PlacesUIUtils.URI_FLAVORS];
 
-XPCOMUtils.defineLazyServiceGetter(PlacesUIUtils, "RDF",
-                                   "@mozilla.org/rdf/rdf-service;1",
-                                   "nsIRDFService");
-
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
   return Services.prefs.getComplexValue("intl.ellipsis",
                                         Ci.nsIPrefLocalizedString).data;
 });
 
-XPCOMUtils.defineLazyGetter(PlacesUIUtils, "useAsyncTransactions", function() {
-  try {
-    return Services.prefs.getBoolPref("browser.places.useAsyncTransactions");
-  } catch (ex) { }
-  return false;
-});
-
+XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "useAsyncTransactions",
+                                      "browser.places.useAsyncTransactions", false);
 XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInBackground",
                                       PREF_LOAD_BOOKMARKS_IN_BACKGROUND, false);
 XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInTabs",
                                       PREF_LOAD_BOOKMARKS_IN_TABS, false);
 XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "openInTabClosesMenu",
   "browser.bookmarks.openInTabClosesMenu", false);
-
-XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
-                                   "@mozilla.org/docshell/urifixup;1",
-                                   "nsIURIFixup");
-
-XPCOMUtils.defineLazyGetter(this, "bundle", function() {
-  const PLACES_STRING_BUNDLE_URI =
-    "chrome://browser/locale/places/places.properties";
-  return Cc["@mozilla.org/intl/stringbundle;1"].
-         getService(Ci.nsIStringBundleService).
-         createBundle(PLACES_STRING_BUNDLE_URI);
-});
-
-/**
- * This is a compatibility shim for old PUIU.ptm users.
- *
- * If you're looking for transactions and writing new code using them, directly
- * use the transactions objects exported by the PlacesUtils.jsm module.
- *
- * This object will be removed once enough users are converted to the new API.
- */
-XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
-  // Ensure PlacesUtils is imported in scope.
-  PlacesUtils;
-
-  return {
-    aggregateTransactions: (aName, aTransactions) =>
-      new PlacesAggregatedTransaction(aName, aTransactions),
-
-    createFolder: (aName, aContainer, aIndex, aAnnotations,
-                   aChildItemsTransactions) =>
-      new PlacesCreateFolderTransaction(aName, aContainer, aIndex, aAnnotations,
-                                        aChildItemsTransactions),
-
-    createItem: (aURI, aContainer, aIndex, aTitle, aKeyword,
-                 aAnnotations, aChildTransactions) =>
-      new PlacesCreateBookmarkTransaction(aURI, aContainer, aIndex, aTitle,
-                                          aKeyword, aAnnotations,
-                                          aChildTransactions),
-
-    createSeparator: (aContainer, aIndex) =>
-      new PlacesCreateSeparatorTransaction(aContainer, aIndex),
-
-    createLivemark: (aFeedURI, aSiteURI, aName, aContainer, aIndex,
-                     aAnnotations) =>
-      new PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName, aContainer,
-                                          aIndex, aAnnotations),
-
-    moveItem: (aItemId, aNewContainer, aNewIndex) =>
-      new PlacesMoveItemTransaction(aItemId, aNewContainer, aNewIndex),
-
-    removeItem: (aItemId) =>
-      new PlacesRemoveItemTransaction(aItemId),
-
-    editItemTitle: (aItemId, aNewTitle) =>
-      new PlacesEditItemTitleTransaction(aItemId, aNewTitle),
-
-    editBookmarkURI: (aItemId, aNewURI) =>
-      new PlacesEditBookmarkURITransaction(aItemId, aNewURI),
-
-    setItemAnnotation: (aItemId, aAnnotationObject) =>
-      new PlacesSetItemAnnotationTransaction(aItemId, aAnnotationObject),
-
-    setPageAnnotation: (aURI, aAnnotationObject) =>
-      new PlacesSetPageAnnotationTransaction(aURI, aAnnotationObject),
-
-    editBookmarkKeyword: (aItemId, aNewKeyword) =>
-      new PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword),
-
-    editLivemarkSiteURI: (aLivemarkId, aSiteURI) =>
-      new PlacesEditLivemarkSiteURITransaction(aLivemarkId, aSiteURI),
-
-    editLivemarkFeedURI: (aLivemarkId, aFeedURI) =>
-      new PlacesEditLivemarkFeedURITransaction(aLivemarkId, aFeedURI),
-
-    editItemDateAdded: (aItemId, aNewDateAdded) =>
-      new PlacesEditItemDateAddedTransaction(aItemId, aNewDateAdded),
-
-    editItemLastModified: (aItemId, aNewLastModified) =>
-      new PlacesEditItemLastModifiedTransaction(aItemId, aNewLastModified),
-
-    sortFolderByName: (aFolderId) =>
-      new PlacesSortFolderByNameTransaction(aFolderId),
-
-    tagURI: (aURI, aTags) =>
-      new PlacesTagURITransaction(aURI, aTags),
-
-    untagURI: (aURI, aTags) =>
-      new PlacesUntagURITransaction(aURI, aTags),
-
-    /**
-     * Transaction for setting/unsetting Load-in-sidebar annotation.
-     *
-     * @param aBookmarkId
-     *        id of the bookmark where to set Load-in-sidebar annotation.
-     * @param aLoadInSidebar
-     *        boolean value.
-     * @return nsITransaction object.
-     */
-    setLoadInSidebar(aItemId, aLoadInSidebar) {
-      let annoObj = { name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
-                      type: Ci.nsIAnnotationService.TYPE_INT32,
-                      flags: 0,
-                      value: aLoadInSidebar,
-                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-      return new PlacesSetItemAnnotationTransaction(aItemId, annoObj);
-    },
-
-   /**
-    * Transaction for editing the description of a bookmark or a folder.
-    *
-    * @param aItemId
-    *        id of the item to edit.
-    * @param aDescription
-    *        new description.
-    * @return nsITransaction object.
-    */
-    editItemDescription(aItemId, aDescription) {
-      let annoObj = { name: PlacesUIUtils.DESCRIPTION_ANNO,
-                      type: Ci.nsIAnnotationService.TYPE_STRING,
-                      flags: 0,
-                      value: aDescription,
-                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-      return new PlacesSetItemAnnotationTransaction(aItemId, annoObj);
-    },
-
-    // nsITransactionManager forwarders.
-
-    beginBatch: () =>
-      PlacesUtils.transactionManager.beginBatch(null),
-
-    endBatch: () =>
-      PlacesUtils.transactionManager.endBatch(false),
-
-    doTransaction: (txn) =>
-      PlacesUtils.transactionManager.doTransaction(txn),
-
-    undoTransaction: () =>
-      PlacesUtils.transactionManager.undoTransaction(),
-
-    redoTransaction: () =>
-      PlacesUtils.transactionManager.redoTransaction(),
-
-    get numberOfUndoItems() {
-      return PlacesUtils.transactionManager.numberOfUndoItems;
-    },
-    get numberOfRedoItems() {
-      return PlacesUtils.transactionManager.numberOfRedoItems;
-    },
-    get maxTransactionCount() {
-      return PlacesUtils.transactionManager.maxTransactionCount;
-    },
-    set maxTransactionCount(val) {
-      PlacesUtils.transactionManager.maxTransactionCount = val;
-    },
-
-    clear: () =>
-      PlacesUtils.transactionManager.clear(),
-
-    peekUndoStack: () =>
-      PlacesUtils.transactionManager.peekUndoStack(),
-
-    peekRedoStack: () =>
-      PlacesUtils.transactionManager.peekRedoStack(),
-
-    getUndoStack: () =>
-      PlacesUtils.transactionManager.getUndoStack(),
-
-    getRedoStack: () =>
-      PlacesUtils.transactionManager.getRedoStack(),
-
-    AddListener: (aListener) =>
-      PlacesUtils.transactionManager.AddListener(aListener),
-
-    RemoveListener: (aListener) =>
-      PlacesUtils.transactionManager.RemoveListener(aListener)
-  }
-});

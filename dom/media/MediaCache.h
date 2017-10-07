@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
+class nsIEventTarget;
 class nsIPrincipal;
 
 namespace mozilla {
@@ -209,6 +210,8 @@ public:
   // Exactly one of InitAsClone or Init must be called before any other method
   // on this class.
   void InitAsClone(MediaCacheStream* aOriginal);
+
+  nsIEventTarget* OwnerThread() const;
 
   // These are called on the main thread.
   // Tell us whether the stream is seekable or not. Non-seekable streams

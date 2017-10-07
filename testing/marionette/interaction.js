@@ -462,8 +462,7 @@ interaction.isElementEnabled = function(el, strict = false) {
   if (element.isXULElement(el)) {
     // check if XUL element supports disabled attribute
     if (DISABLED_ATTRIBUTE_SUPPORTED_XUL.has(el.tagName.toUpperCase())) {
-      let disabled = atom.getElementAttribute(el, "disabled", win);
-      if (disabled && disabled === "true") {
+      if (el.hasAttribute("disabled") && el.getAttribute("disabled") === "true") {
         enabled = false;
       }
     }

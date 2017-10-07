@@ -154,8 +154,7 @@ var pageActionsHelper = {
 
 function ensureScreenshotsEnabled() {
   SpecialPowers.pushPrefEnv({ set: [
-    [ "extensions.screenshots.disabled", false ],
-    [ "extensions.screenshots.system-disabled", false ]
+    [ "extensions.screenshots.disabled", false ]
   ]});
   return BrowserTestUtils.waitForCondition(() => {
     return PageActions.actionForID("screenshots");

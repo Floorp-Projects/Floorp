@@ -4974,12 +4974,6 @@ public:
       aOutFrames->AppendElement(mFrame);
     }
   }
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override;
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) override;
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
@@ -5055,7 +5049,6 @@ public:
 #endif
   }
 
-  RefPtr<TextDrawTarget> mTextDrawer;
   nsRect mBounds;
   float mOpacity;
 };
@@ -5131,46 +5124,6 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
   mBounds.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
-LayerState
-nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
-                             LayerManager* aManager,
-                             const ContainerLayerParameters& aParameters)
-{
-
-  // Are we doing text layers or webrender?
-  if (!(gfxPrefs::LayersAllowTextLayers() &&
-      CanUseAdvancedLayer(aBuilder->GetWidgetLayerManager()))) {
-    return mozilla::LAYER_NONE;
-  }
-
-  // If we haven't yet, compute the layout/style of the text by running
-  // the painting algorithm with a TextDrawTarget (doesn't actually paint).
-  if (!mTextDrawer) {
-    mTextDrawer = new TextDrawTarget();
-    RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(mTextDrawer);
-
-    // TODO: Paint() checks mDisableSubpixelAA, we should too.
-    RenderToContext(captureCtx, aBuilder, true);
-  }
-
-  if (!mTextDrawer->CanSerializeFonts()) {
-    return mozilla::LAYER_NONE;
-  }
-
-  // If we're using the webrender backend, then we're good to go!
-  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-    return mozilla::LAYER_ACTIVE;
-  }
-
-  // If we're using the TextLayer backend, then we need to make sure
-  // the input is plain enough for it to handle
-  if (!mTextDrawer->ContentsAreSimple()) {
-    return mozilla::LAYER_NONE;
-  }
-
-  return mozilla::LAYER_ACTIVE;
-}
-
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) {
@@ -5188,8 +5141,7 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
                                        WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+  if (!gfxPrefs::LayersAllowTextLayers()) {
     return false;
   }
 
@@ -5197,67 +5149,13 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     return true;
   }
 
-  mTextDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, mBounds);
+  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aSc);
+  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
-  return true;
-}
+  // TODO: Paint() checks mDisableSubpixelAA, we should too.
+  RenderToContext(captureCtx, aDisplayListBuilder, true);
 
-already_AddRefed<layers::Layer>
-nsDisplayText::BuildLayer(nsDisplayListBuilder* aBuilder,
-                          LayerManager* aManager,
-                          const ContainerLayerParameters& aContainerParameters)
-{
-  // If we're using webrender, we want layerless rendering, so emit a dummy.
-  // See CreateWebRenderCommands for actual drawing code.
-  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-  }
-
-  // We should have all the glyphs recorded now, build
-  // the TextLayer.
-  RefPtr<layers::TextLayer> layer = static_cast<layers::TextLayer*>
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
-  if (!layer) {
-    layer = aManager->CreateTextLayer();
-  }
-
-  // GetLayerState has guaranteed to us that we have exactly one font
-  // so this will be overwritten by the time we use it.
-  ScaledFont* font = nullptr;
-
-  nsTArray<GlyphArray> allGlyphs;
-  size_t totalLength = 0;
-  for (auto& part : mTextDrawer->GetParts()) {
-    totalLength += part.text.Length();
-  }
-  allGlyphs.SetCapacity(totalLength);
-
-  for (auto& part : mTextDrawer->GetParts()) {
-    for (const mozilla::layout::TextRunFragment& text : part.text) {
-      if (!font) {
-        font = text.font;
-      }
-
-      GlyphArray* glyphs = allGlyphs.AppendElement();
-      glyphs->glyphs() = text.glyphs;
-      glyphs->color() = text.color;
-    }
-  }
-
-  MOZ_ASSERT(font);
-
-  layer->SetGlyphs(Move(allGlyphs));
-  layer->SetScaledFont(font);
-
-  auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
-  bool dummy;
-  const LayoutDeviceIntRect destBounds =
-          LayoutDeviceIntRect::FromAppUnitsToOutside(GetBounds(aBuilder, &dummy), A2D);
-  layer->SetBounds(IntRect(destBounds.x, destBounds.y, destBounds.width, destBounds.height));
-
-  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
-                                                      aContainerParameters.mOffset.y, 0));
-  return layer.forget();
+  return textDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, mBounds);
 }
 
 void

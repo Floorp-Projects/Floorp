@@ -47,6 +47,8 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
+XPCOMUtils.defineLazyPreferenceGetter(this, "gCosmeticAnimationsEnabled",
+                                      "toolkit.cosmeticAnimations.enabled");
 
 let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -578,10 +580,38 @@ CustomizeMode.prototype = {
     return null;
   },
 
-  addToToolbar(aNode) {
+  _promiseWidgetAnimationOut(aNode) {
+    if (!gCosmeticAnimationsEnabled ||
+        aNode.getAttribute("cui-anchorid") == "nav-bar-overflow-button" ||
+        (aNode.tagName != "toolbaritem" && aNode.tagName != "toolbarbutton") ||
+        (aNode.id == "downloads-button" && aNode.hidden)) {
+      return null;
+    }
+    let animationNode;
+    if (aNode.parentNode.id.startsWith("wrapper-")) {
+      animationNode = aNode.parentNode;
+    } else {
+      animationNode = aNode;
+    }
+    return new Promise(resolve => {
+      animationNode.classList.add("animate-out");
+      animationNode.addEventListener("animationend", function cleanupWidgetAnimationEnd(e) {
+        if (e.animationName == "widget-animate-out" && e.target.id == animationNode.id) {
+          animationNode.removeEventListener("animationend", cleanupWidgetAnimationEnd);
+          resolve();
+        }
+      });
+    });
+  },
+
+  async addToToolbar(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
+    }
+    let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    if (widgetAnimationPromise) {
+      await widgetAnimationPromise;
     }
 
     let widgetToAdd = aNode.id;
@@ -601,12 +631,24 @@ CustomizeMode.prototype = {
         this._showDownloadsAutoHidePanel();
       }
     }
+
+    if (widgetAnimationPromise) {
+      if (aNode.parentNode.id.startsWith("wrapper-")) {
+        aNode.parentNode.classList.remove("animate-out");
+      } else {
+        aNode.classList.remove("animate-out")
+      }
+    }
   },
 
-  addToPanel(aNode) {
+  async addToPanel(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
+    }
+    let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    if (widgetAnimationPromise) {
+      await widgetAnimationPromise;
     }
 
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
@@ -623,7 +665,14 @@ CustomizeMode.prototype = {
       }
     }
 
-    if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+    if (widgetAnimationPromise) {
+      if (aNode.parentNode.id.startsWith("wrapper-")) {
+        aNode.parentNode.classList.remove("animate-out");
+      } else {
+        aNode.classList.remove("animate-out")
+      }
+    }
+    if (gCosmeticAnimationsEnabled) {
       let overflowButton = this.document.getElementById("nav-bar-overflow-button");
       BrowserUtils.setToolbarButtonHeightProperty(overflowButton).then(() => {
         overflowButton.setAttribute("animate", "true");
@@ -640,11 +689,16 @@ CustomizeMode.prototype = {
     }
   },
 
-  removeFromArea(aNode) {
+  async removeFromArea(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
+    let widgetAnimationPromise = this._promiseWidgetAnimationOut(aNode);
+    if (widgetAnimationPromise) {
+      await widgetAnimationPromise;
+    }
+
     CustomizableUI.removeWidgetFromArea(aNode.id);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
@@ -655,6 +709,13 @@ CustomizeMode.prototype = {
       Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
       if (this._customizing) {
         this._showDownloadsAutoHidePanel();
+      }
+    }
+    if (widgetAnimationPromise) {
+      if (aNode.parentNode.id.startsWith("wrapper-")) {
+        aNode.parentNode.classList.remove("animate-out");
+      } else {
+        aNode.classList.remove("animate-out")
       }
     }
   },
@@ -1358,9 +1419,10 @@ CustomizeMode.prototype = {
           tbb.setAttribute("tooltiptext", aTheme.description);
         tbb.setAttribute("tabindex", "0");
         tbb.classList.add("customization-lwtheme-menu-theme");
-        tbb.setAttribute("aria-checked", aTheme.isActive);
+        let isActive = activeThemeID == aTheme.id;
+        tbb.setAttribute("aria-checked", isActive);
         tbb.setAttribute("role", "menuitemradio");
-        if (aTheme.isActive) {
+        if (isActive) {
           tbb.setAttribute("active", "true");
         }
         tbb.addEventListener("focus", previewTheme);
@@ -1374,12 +1436,8 @@ CustomizeMode.prototype = {
       let themes = [aDefaultTheme];
       let lwts = LightweightThemeManager.usedThemes;
       let currentLwt = LightweightThemeManager.currentTheme;
-      // The lwts besides the builtin themes don't have an isActive property:
-      for (let lwt of lwts) {
-        if (!lwt.hasOwnProperty("isActive")) {
-          lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
-        }
-      }
+
+      let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
 
       // Move the current theme (if any) and the light/dark themes to the start:
       let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];

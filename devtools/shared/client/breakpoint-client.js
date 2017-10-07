@@ -7,8 +7,8 @@
 const { Cu } = require("chrome");
 const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
-const eventSource = require("./event-source");
-const {DebuggerClient} = require("./debugger-client");
+const eventSource = require("devtools/shared/client/event-source");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * Breakpoint clients are used to remove breakpoints that are no longer used.

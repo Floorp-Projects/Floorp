@@ -236,8 +236,8 @@ nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
 {
   if (aWidgetType == NS_THEME_RADIO || aWidgetType == NS_THEME_CHECKBOX) {
     // 9px + (1px padding + 1px border) * 2
-    aResult->width = 13;
-    aResult->height = 13;
+    aResult->width = aPresContext->CSSPixelsToDevPixels(13);
+    aResult->height = aPresContext->CSSPixelsToDevPixels(13);
   }
 
   return NS_OK;

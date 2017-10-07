@@ -45,7 +45,7 @@ protected:
   const PluginModuleSet* mAudioNotificationSet;
 };
 
-class AudioNotification : public IMMNotificationClient
+class AudioNotification final : public IMMNotificationClient
 {
 public:
   AudioNotification() :
@@ -68,15 +68,6 @@ public:
     }
 
     mIsRegistered = true;
-  }
-
-  ~AudioNotification()
-  {
-    MOZ_ASSERT(!mIsRegistered,
-      "Destroying AudioNotification without first calling Unregister");
-    if (mDeviceEnum) {
-      mDeviceEnum->Release();
-    }
   }
 
   // IMMNotificationClient Implementation
@@ -195,6 +186,15 @@ private:
   // Set of plugin modules that have registered to be notified when the audio device
   // changes.
   PluginModuleSet mAudioNotificationSet;
+
+  ~AudioNotification()
+  {
+    MOZ_ASSERT(!mIsRegistered,
+      "Destroying AudioNotification without first calling Unregister");
+    if (mDeviceEnum) {
+      mDeviceEnum->Release();
+    }
+  }
 };  // class AudioNotification
 
 // callback that gets notified of audio device events, or NULL

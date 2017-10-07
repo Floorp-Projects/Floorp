@@ -11,7 +11,11 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils/l10n");
-const { formDataURI, getUrlBaseName } = require("../utils/request-utils");
+const {
+  decodeUnicodeBase64,
+  formDataURI,
+  getUrlBaseName,
+} = require("../utils/request-utils");
 
 // Components
 const PropertiesView = createFactory(require("./properties-view"));
@@ -23,6 +27,8 @@ const RESPONSE_IMG_NAME = L10N.getStr("netmonitor.response.name");
 const RESPONSE_IMG_DIMENSIONS = L10N.getStr("netmonitor.response.dimensions");
 const RESPONSE_IMG_MIMETYPE = L10N.getStr("netmonitor.response.mime");
 const RESPONSE_PAYLOAD = L10N.getStr("responsePayload");
+
+const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 
 /*
  * Response panel component
@@ -144,6 +150,11 @@ const ResponsePanel = createClass({
           ),
         )
       );
+    }
+
+    // Decode response if it's coming from JSONView.
+    if (mimeType.includes(JSON_VIEW_MIME_TYPE) && encoding === "base64") {
+      text = decodeUnicodeBase64(text);
     }
 
     // Display Properties View

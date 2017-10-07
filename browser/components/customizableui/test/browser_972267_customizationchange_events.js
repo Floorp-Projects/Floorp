@@ -20,7 +20,7 @@ add_task(async function() {
   gNavToolbox.addEventListener("customizationchange", handler);
   otherToolbox.addEventListener("customizationchange", handler);
 
-  gCustomizeMode.addToPanel(homeButton);
+  await gCustomizeMode.addToPanel(homeButton);
 
   is(handlerCalledCount, 2, "Should be called for both windows.");
 

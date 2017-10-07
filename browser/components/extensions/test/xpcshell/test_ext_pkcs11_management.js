@@ -96,7 +96,7 @@ add_task(async function test_pkcs11() {
       let isInstalled = await browser.pkcs11.isModuleInstalled("testmodule");
       browser.test.assertFalse(isInstalled, "PKCS#11 module is not installed before we install it");
       await browser.pkcs11.installModule("testmodule", 0);
-      isInstalled = browser.pkcs11.isModuleInstalled("testmodule");
+      isInstalled = await browser.pkcs11.isModuleInstalled("testmodule");
       browser.test.assertTrue(isInstalled, "PKCS#11 module is installed after we install it");
       let slots = await browser.pkcs11.getModuleSlots("testmodule");
       browser.test.assertEq("Test PKCS11 Slot", slots[0].name, "The first slot name matches the expected name");

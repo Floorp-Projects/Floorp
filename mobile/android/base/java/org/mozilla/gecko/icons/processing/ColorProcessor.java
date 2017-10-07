@@ -21,7 +21,7 @@ import org.mozilla.gecko.util.HardwareUtils;
  */
 public class ColorProcessor implements Processor {
     private static final String LOGTAG = "GeckoColorProcessor";
-    private static final int DEFAULT_COLOR = 0; // 0 == No color
+    private static final int DEFAULT_COLOR = 0xFFB1B1B3; // 0 == No color, here we use photon color
 
     @Override
     public void process(IconRequest request, IconResponse response) {

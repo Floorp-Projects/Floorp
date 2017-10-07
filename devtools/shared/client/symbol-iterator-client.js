@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("./debugger-client");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * A SymbolIteratorClient provides a way to access to symbols

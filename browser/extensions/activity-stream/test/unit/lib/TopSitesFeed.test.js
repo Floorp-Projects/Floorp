@@ -3,7 +3,6 @@ const injector = require("inject!lib/TopSitesFeed.jsm");
 const {Screenshots} = require("lib/Screenshots.jsm");
 const {UPDATE_TIME} = require("lib/TopSitesFeed.jsm");
 const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
-const action = {meta: {fromTarget: {}}};
 const {actionTypes: at} = require("common/Actions.jsm");
 const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
 
@@ -61,7 +60,7 @@ describe("Top Sites Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT)),
-      maybeGetAndSetScreenshot: Screenshots.maybeGetAndSetScreenshot
+      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url);
@@ -94,6 +93,10 @@ describe("Top Sites Feed", () => {
     globals.restore();
     clock.restore();
   });
+
+  function stubFaviconsToUseScreenshots() {
+    fakeNewTabUtils.activityStreamProvider._addFavicons = sandbox.stub();
+  }
 
   describe("#refreshDefaults", () => {
     it("should add defaults on PREFS_INITIAL_VALUES", () => {
@@ -136,7 +139,7 @@ describe("Top Sites Feed", () => {
 
     describe("general", () => {
       beforeEach(() => {
-        sandbox.stub(fakeScreenshot, "maybeGetAndSetScreenshot");
+        sandbox.stub(fakeScreenshot, "maybeCacheScreenshot");
       });
       it("should get the links from NewTabUtils", async () => {
         const result = await feed.getLinksWithDefaults();
@@ -214,7 +217,7 @@ describe("Top Sites Feed", () => {
       it("should not throw if NewTabUtils returns null", () => {
         links = null;
         assert.doesNotThrow(() => {
-          feed.getLinksWithDefaults(action);
+          feed.getLinksWithDefaults();
         });
       });
       it("should get more if the user has asked for more", async () => {
@@ -241,8 +244,7 @@ describe("Top Sites Feed", () => {
         assert.calledTwice(global.NewTabUtils.activityStreamLinks.getTopSites);
       });
       it("should migrate frecent screenshot data without getting screenshots again", async () => {
-        // Don't add favicons so we fall back to screenshots
-        fakeNewTabUtils.activityStreamProvider._addFavicons = sandbox.stub();
+        stubFaviconsToUseScreenshots();
         await feed.getLinksWithDefaults();
         const {callCount} = fakeScreenshot.getScreenshotForURL;
         feed.frecentCache.expire();
@@ -270,6 +272,36 @@ describe("Top Sites Feed", () => {
 
         const internal = Object.keys(result[0]).filter(key => key.startsWith("__"));
         assert.equal(internal.join(""), "");
+      });
+      describe("concurrency", () => {
+        let resolvers;
+        beforeEach(() => {
+          stubFaviconsToUseScreenshots();
+          resolvers = [];
+          fakeScreenshot.getScreenshotForURL = sandbox.spy(() => new Promise(
+            resolve => resolvers.push(resolve)));
+        });
+
+        const getTwice = () => Promise.all([feed.getLinksWithDefaults(), feed.getLinksWithDefaults()]);
+        const resolveAll = () => resolvers.forEach(resolve => resolve(FAKE_SCREENSHOT));
+
+        it("should call the backing data once", async () => {
+          await getTwice();
+
+          assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
+        });
+        it("should get screenshots once per link", async () => {
+          await getTwice();
+
+          assert.callCount(fakeScreenshot.getScreenshotForURL, FAKE_LINKS.length);
+        });
+        it("should dispatch once per link screenshot fetched", async () => {
+          await getTwice();
+
+          await resolveAll();
+
+          assert.callCount(feed.store.dispatch, FAKE_LINKS.length);
+        });
       });
     });
     describe("deduping", () => {
@@ -334,7 +366,7 @@ describe("Top Sites Feed", () => {
     it("should call _fetchIcon for each link", async () => {
       sinon.spy(feed, "_fetchIcon");
 
-      const results = await feed.getLinksWithDefaults(action);
+      const results = await feed.getLinksWithDefaults();
 
       assert.callCount(feed._fetchIcon, results.length);
       results.forEach(link => {
@@ -348,11 +380,27 @@ describe("Top Sites Feed", () => {
     });
     it("should initialise _tippyTopProvider if it's not already initialised", async () => {
       feed._tippyTopProvider.initialized = false;
-      await feed.refresh(action);
+      await feed.refresh();
       assert.ok(feed._tippyTopProvider.initialized);
     });
+    it("should broadcast with no target", async () => {
+      sinon.stub(feed, "getLinksWithDefaults").returns(Promise.resolve([]));
+
+      await feed.refresh();
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.notProperty(feed.store.dispatch.firstCall.args[0].meta, "toTarget");
+    });
+    it("should respond to a specific target", async () => {
+      sinon.stub(feed, "getLinksWithDefaults").returns(Promise.resolve([]));
+
+      await feed.refresh({meta: {fromTarget: {}}});
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.property(feed.store.dispatch.firstCall.args[0].meta, "toTarget");
+    });
     it("should dispatch an action with the links returned", async () => {
-      await feed.refresh(action);
+      await feed.refresh();
       const reference = links.map(site => Object.assign({}, site, {hostname: shortURLStub(site)}));
 
       assert.calledOnce(feed.store.dispatch);
@@ -362,7 +410,7 @@ describe("Top Sites Feed", () => {
     it("should handle empty slots in the resulting top sites array", async () => {
       links = [FAKE_LINKS[0]];
       fakeNewTabUtils.pinnedLinks.links = [null, null, FAKE_LINKS[1], null, null, null, null, null, FAKE_LINKS[2]];
-      await feed.refresh(action);
+      await feed.refresh();
       assert.calledOnce(feed.store.dispatch);
     });
   });
@@ -376,26 +424,26 @@ describe("Top Sites Feed", () => {
       assert.propertyVal(link, "screenshot", "reuse.png");
     });
     it("should reuse existing fetching screenshot on the link", async () => {
-      const link = {__fetchingScreenshot: Promise.resolve("fetching.png")};
+      const link = {__sharedCache: {fetchingScreenshot: Promise.resolve("fetching.png")}};
 
       await feed._fetchIcon(link);
 
       assert.notCalled(fakeScreenshot.getScreenshotForURL);
-      assert.propertyVal(link, "screenshot", "fetching.png");
     });
     it("should get a screenshot if the link is missing it", () => {
-      feed._fetchIcon(FAKE_LINKS[0]);
+      feed._fetchIcon(Object.assign({__sharedCache: {}}, FAKE_LINKS[0]));
 
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
       assert.calledWith(fakeScreenshot.getScreenshotForURL, FAKE_LINKS[0].url);
     });
-    it("should update the link's cache if it can be updated", () => {
-      const link = {__updateCache: sandbox.stub()};
+    it("should update the link's cache with a screenshot", async () => {
+      const updateLink = sandbox.stub();
+      const link = {__sharedCache: {updateLink}};
 
-      feed._fetchIcon(link);
+      await feed._fetchIcon(link);
 
-      assert.calledOnce(link.__updateCache);
-      assert.calledWith(link.__updateCache, "__fetchingScreenshot");
+      assert.calledOnce(updateLink);
+      assert.calledWith(updateLink, "screenshot", FAKE_SCREENSHOT);
     });
     it("should skip getting a screenshot if there is a tippy top icon", () => {
       feed._tippyTopProvider.processSite = site => {
@@ -577,6 +625,35 @@ describe("Top Sites Feed", () => {
       feed.pin({data: {index: 2, site}});
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+  });
+  describe("integration", () => {
+    let resolvers = [];
+    beforeEach(() => {
+      feed.store.dispatch = sandbox.stub().callsFake(() => {
+        resolvers.shift()();
+      });
+      fakeScreenshot.getScreenshotForURL = sandbox.spy();
+    });
+
+    const forDispatch = action => new Promise(resolve => {
+      resolvers.push(resolve);
+      feed.onAction(action);
+    });
+
+    it("should add a pinned site and remove it", async () => {
+      const url = "pin.me";
+      fakeNewTabUtils.pinnedLinks.pin = sandbox.stub().callsFake(link => {
+        fakeNewTabUtils.pinnedLinks.links.push(link);
+      });
+
+      await forDispatch({type: at.TOP_SITES_ADD, data: {site: {url}}});
+      fakeNewTabUtils.pinnedLinks.links.pop();
+      await forDispatch({type: at.PLACES_LINK_BLOCKED});
+
+      assert.calledTwice(feed.store.dispatch);
+      assert.equal(feed.store.dispatch.firstCall.args[0].data[0].url, url);
+      assert.equal(feed.store.dispatch.secondCall.args[0].data[0].url, FAKE_LINKS[0].url);
     });
   });
 });

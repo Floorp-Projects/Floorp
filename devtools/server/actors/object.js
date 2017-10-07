@@ -871,13 +871,13 @@ PropertyIteratorActor.prototype.requestTypes = {
 
 function enumArrayProperties(objectActor, options) {
   let length = DevToolsUtils.getProperty(objectActor.obj, "length");
-  if (!isSafePositiveInteger(length)) {
+  if (!isUint32(length)) {
     // Pseudo arrays are flagged as ArrayLike if they have
     // subsequent indexed properties without having any length attribute.
     length = 0;
     let names = objectActor.obj.getOwnPropertyNames();
     for (let key of names) {
-      if (!isSafeIndex(key) || key != length++) {
+      if (!isArrayIndex(key) || key != length++) {
         break;
       }
     }
@@ -908,22 +908,22 @@ function enumObjectProperties(objectActor, options) {
     let sliceIndex;
 
     const isLengthTrustworthy =
-      isSafePositiveInteger(length)
-      && (length > 0 && isSafeIndex(names[length - 1]))
-      && !isSafeIndex(names[length]);
+      isUint32(length)
+      && (!length || isArrayIndex(names[length - 1]))
+      && !isArrayIndex(names[length]);
 
     if (!isLengthTrustworthy) {
       // The length property may not reflect what the object looks like, let's find
       // where indexed properties end.
 
-      if (!isSafeIndex(names[0])) {
+      if (!isArrayIndex(names[0])) {
         // If the first item is not a number, this means there is no indexed properties
         // in this object.
         sliceIndex = 0;
       } else {
         sliceIndex = names.length;
         while (sliceIndex > 0) {
-          if (isSafeIndex(names[sliceIndex - 1])) {
+          if (isArrayIndex(names[sliceIndex - 1])) {
             break;
           }
           sliceIndex--;
@@ -2532,28 +2532,30 @@ function isArray(object) {
 }
 
 /**
- * Returns true if the parameter is a safe positive integer.
+ * Returns true if the parameter can be stored as a 32-bit unsigned integer.
+ * If so, it will be suitable for use as the length of an array object.
  *
  * @param num Number
  *        The number to test.
  * @return Boolean
  */
-function isSafePositiveInteger(num) {
-  return Number.isSafeInteger(num) && 1 / num > 0;
+function isUint32(num) {
+  return num >>> 0 === num;
 }
 
 /**
  * Returns true if the parameter is suitable to be an array index.
  *
- * @param num Any
+ * @param str String
  * @return Boolean
  */
-function isSafeIndex(str) {
-  // Transform the parameter to a number using the Unary operator.
-  let num = +str;
-  return isSafePositiveInteger(num) &&
-    // Check the string since unary can transform non number (boolean, null, …).
-    num + "" === str;
+function isArrayIndex(str) {
+  // Transform the parameter to a 32-bit unsigned integer.
+  let num = str >>> 0;
+  // Check that the parameter is a canonical Uint32 index.
+  return num + "" === str &&
+    // Array indices cannot attain the maximum Uint32 value.
+    num != -1 >>> 0;
 }
 
 exports.ObjectActor = ObjectActor;

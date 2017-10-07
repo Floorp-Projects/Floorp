@@ -923,6 +923,20 @@
         <item name="android:layout_marginRight">-3dp</item>
     </style>
 
+    <style name="TabsTray.AddTab" parent="TabsTray.V15.AddTab"/>
+    <style name="TabsTray.V15.AddTab" parent="TabsTray.Base.AddTab">
+        <item name="android:layout_marginRight">-3dp</item>
+    </style>
+    <style name="TabsTray.Base.AddTab" parent="UrlBar.ImageButton">
+        <item name="drawableTintList">@null</item>
+    </style>
+
+    <style name="TabsTray.Menu" parent="TabsTray.V15.Menu"/>
+    <style name="TabsTray.V15.Menu" parent="TabsTray.Base.Menu"/>
+    <style name="TabsTray.Base.Menu" parent="UrlBar.ImageButton">
+        <item name="drawableTintList">@null</item>
+    </style>
+
     <!-- TabStrip -->
     <style name="TabStrip"/>
 

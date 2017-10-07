@@ -153,6 +153,50 @@ static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.
 // SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
 #define SHARED_MEMORY_DEFAULT 1
 
+// Code to support GCOV code coverage measurements on standalone shell
+#ifdef MOZ_CODE_COVERAGE
+#if defined(__GNUC__) && !defined(__clang__)
+extern "C" void __gcov_dump();
+extern "C" void __gcov_reset();
+
+void counters_dump(int) {
+    __gcov_dump();
+}
+
+void counters_reset(int) {
+    __gcov_reset();
+}
+#else
+void counters_dump(int) {
+    /* Do nothing */
+}
+
+void counters_reset(int) {
+    /* Do nothing */
+}
+#endif
+
+static void
+InstallCoverageSignalHandlers()
+{
+    fprintf(stderr, "[CodeCoverage] Setting handlers for process %d.\n", getpid());
+
+    struct sigaction dump_sa;
+    dump_sa.sa_handler = counters_dump;
+    dump_sa.sa_flags = SA_RESTART;
+    sigemptyset(&dump_sa.sa_mask);
+    mozilla::DebugOnly<int> r1 = sigaction(SIGUSR1, &dump_sa, nullptr);
+    MOZ_ASSERT(r1 == 0, "Failed to install GCOV SIGUSR1 handler");
+
+    struct sigaction reset_sa;
+    reset_sa.sa_handler = counters_reset;
+    reset_sa.sa_flags = SA_RESTART;
+    sigemptyset(&reset_sa.sa_mask);
+    mozilla::DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
+    MOZ_ASSERT(r2 == 0, "Failed to install GCOV SIGUSR2 handler");
+}
+#endif
+
 bool
 OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource)
 {
@@ -8251,6 +8295,10 @@ SetWorkerContextOptions(JSContext* cx)
 static int
 Shell(JSContext* cx, OptionParser* op, char** envp)
 {
+#ifdef MOZ_CODE_COVERAGE
+    InstallCoverageSignalHandlers();
+#endif
+
     Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op->getBoolOption("no-ggc"))
         noggc.emplace(cx);

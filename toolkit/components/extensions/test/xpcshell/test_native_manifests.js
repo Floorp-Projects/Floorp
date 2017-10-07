@@ -69,11 +69,12 @@ let PYTHON;
 add_task(async function setup() {
   await Schemas.load(BASE_SCHEMA);
 
-  PYTHON = await Subprocess.pathSearch("python2.7");
-  if (PYTHON == null) {
-    PYTHON = await Subprocess.pathSearch("python");
+  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  try {
+    PYTHON = await Subprocess.pathSearch(env.get("PYTHON"));
+  } catch (e) {
+    notEqual(PYTHON, null, `Can't find a suitable python interpreter ${e.message}`);
   }
-  notEqual(PYTHON, null, "Found a suitable python interpreter");
 });
 
 let global = this;

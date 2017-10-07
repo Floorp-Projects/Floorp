@@ -7,6 +7,7 @@ package org.mozilla.gecko.media;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 
 import android.media.MediaCodec;
+import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Bundle;
@@ -149,6 +150,13 @@ import java.nio.ByteBuffer;
     @Override
     public boolean isAdaptivePlaybackSupported(final String mimeType) {
         return HardwareCodecCapabilityUtils.checkSupportsAdaptivePlayback(mCodec, mimeType);
+    }
+
+    @Override
+    public boolean isTunneledPlaybackSupported(final String mimeType) {
+        return mCodec.getCodecInfo()
+                     .getCapabilitiesForType(mimeType)
+                     .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
     }
 
     @Override

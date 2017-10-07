@@ -14,30 +14,6 @@
 interface nsIBrowserHistory : nsISupports
 {
     /**
-     * Removes a page from global history.
-     *
-     * @note It is preferrable to use this one rather then RemovePages when
-     *       removing less than 10 pages, since it won't start a full batch
-     *       operation.
-     * @deprecated Use PlacesUtils.history.remove() API instead.
-     */
-    void removePage(in nsIURI aURI);
-
-    /**
-     * Removes a list of pages from global history.
-     *
-     * @param aURIs
-     *        Array of URIs to be removed.
-     * @param aLength
-     *        Length of the array.
-     *
-     * @note the removal happens in a batch.
-     * @deprecated Use PlacesUtils.history.remove() API instead.
-     */
-    void removePages([array, size_is(aLength)] in nsIURI aURIs,
-                     in unsigned long aLength);
-
-    /**
      * Removes all global history information about pages for a given host.
      *
      * @param aHost

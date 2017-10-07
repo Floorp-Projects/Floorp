@@ -1315,3 +1315,17 @@ def select_linker(linker, c_compiler, developer_options, build_env, toolchain_fl
 
 set_config('LD_IS_BFD', depends(select_linker.KIND)(lambda x: x == 'bfd' or None))
 set_config('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
+
+# Code Coverage
+# ==============================================================
+
+js_option('--enable-coverage', env='MOZ_CODE_COVERAGE',
+       help='Enable code coverage')
+
+@depends('--enable-coverage')
+def code_coverage(value):
+    if value:
+        return True
+
+set_config('MOZ_CODE_COVERAGE', code_coverage)
+set_define('MOZ_CODE_COVERAGE', code_coverage)
