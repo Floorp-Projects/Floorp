@@ -6,13 +6,18 @@ package org.mozilla.gecko.toolbar;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 
 import org.mozilla.gecko.R;
 
 class ToolbarRoundButton extends ShapedButton {
+
+    private Drawable mBackgroundDrawable;
 
     public ToolbarRoundButton(Context context) {
         this(context, null);
@@ -24,6 +29,14 @@ class ToolbarRoundButton extends ShapedButton {
 
     public ToolbarRoundButton(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        final TypedArray a = context.obtainStyledAttributes(attrs, new int[] { android.R.attr.background });
+        mBackgroundDrawable = a.getDrawable(0);
+        if (mBackgroundDrawable == null) {
+            // Use default value if no background specified.
+            mBackgroundDrawable = ContextCompat.getDrawable(context, R.drawable.url_bar_action_button);
+        }
+        a.recycle();
 
         setPrivateMode(false);
     }
@@ -45,11 +58,11 @@ class ToolbarRoundButton extends ShapedButton {
 
     @Override
     public void onLightweightThemeChanged() {
-        setBackgroundResource(R.drawable.url_bar_action_button);
+        setBackground(mBackgroundDrawable);
     }
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.url_bar_action_button);
+        setBackground(mBackgroundDrawable);
     }
 }

@@ -29,7 +29,7 @@ class PDFViaEMFPrintHelper
 {
 public:
   PDFViaEMFPrintHelper();
-  ~PDFViaEMFPrintHelper();
+  virtual ~PDFViaEMFPrintHelper();
 
   /** Loads the specified PDF file. */
   NS_IMETHOD OpenDocument(nsIFile *aFile);

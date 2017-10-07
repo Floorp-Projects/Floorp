@@ -883,6 +883,7 @@ function createAddonDetails(id, aAddon) {
     runInSafeMode: aAddon.runInSafeMode,
     dependencies: aAddon.dependencies,
     hasEmbeddedWebExtension: aAddon.hasEmbeddedWebExtension,
+    startupData: aAddon.startupData,
   };
 }
 
@@ -1135,6 +1136,7 @@ const JSON_FIELDS = Object.freeze([
   "lastModifiedTime",
   "path",
   "runInSafeMode",
+  "startupData",
   "type",
   "version",
 ]);
@@ -1274,6 +1276,9 @@ class XPIState {
       json.runInSafeMode = this.runInSafeMode;
       json.hasEmbeddedWebExtension = this.hasEmbeddedWebExtension;
     }
+    if (this.startupData) {
+      json.startupData = this.startupData;
+    }
     return json;
   }
 
@@ -1326,6 +1331,7 @@ class XPIState {
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
     this.enableShims = this.type == "extension" && !aDBAddon.multiprocessCompatible;
+    this.startupData = aDBAddon.startupData;
 
     this.bootstrapped = !!aDBAddon.bootstrap;
     if (this.bootstrapped) {
@@ -4477,6 +4483,10 @@ this.XPIProvider = {
         resourceURI: getURIForResourceInFile(aFile, "")
       };
 
+      if (aMethod == "startup" && aAddon.startupData) {
+        params.startupData = aAddon.startupData;
+      }
+
       if (aExtraParams) {
         for (let key in aExtraParams) {
           params[key] = aExtraParams[key];
@@ -4922,6 +4932,7 @@ AddonInternal.prototype = {
   foreignInstall: false,
   seen: true,
   skinnable: false,
+  startupData: null,
 
   /**
    * @property {Array<string>} dependencies

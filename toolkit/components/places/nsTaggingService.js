@@ -10,8 +10,6 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-                                  "resource://gre/modules/Deprecated.jsm");
 
 const TOPIC_SHUTDOWN = "places-shutdown";
 
@@ -221,8 +219,8 @@ TaggingService.prototype = {
 
     let isAnyTagNotTrimmed = tags.some(tag => /^\s|\s$/.test(tag.name));
     if (isAnyTagNotTrimmed) {
-      Deprecated.warning("At least one tag passed to untagURI was not trimmed",
-                         "https://bugzilla.mozilla.org/show_bug.cgi?id=967196");
+      throw Components.Exception("At least one tag passed to untagURI was not trimmed",
+                                 Cr.NS_ERROR_INVALID_ARG);
     }
 
     for (let tag of tags) {
@@ -244,8 +242,8 @@ TaggingService.prototype = {
     }
 
     if (/^\s|\s$/.test(aTagName)) {
-      Deprecated.warning("Tag passed to getURIsForTag was not trimmed",
-                         "https://bugzilla.mozilla.org/show_bug.cgi?id=967196");
+      throw Components.Exception("Tag passed to getURIsForTag was not trimmed",
+                                 Cr.NS_ERROR_INVALID_ARG);
     }
 
     let uris = [];

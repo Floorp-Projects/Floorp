@@ -56,6 +56,8 @@
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
 
+  skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
+
   skin/classic/browser/notification-icons/camera-blocked.svg                (../shared/notification-icons/camera-blocked.svg)
   skin/classic/browser/notification-icons/camera.svg                        (../shared/notification-icons/camera.svg)
   skin/classic/browser/notification-icons/default-info.svg                  (../shared/notification-icons/default-info.svg)
@@ -91,7 +93,7 @@
   skin/classic/browser/panel-icon-magnifier.svg                (../shared/panel-icon-magnifier.svg)
 #endif
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
-  skin/classic/browser/preferences/in-content/critters-postcard.png       (../shared/incontentprefs/critters-postcard.png)
+  skin/classic/browser/preferences/in-content/critters-postcard.jpg       (../shared/incontentprefs/critters-postcard.jpg)
   skin/classic/browser/preferences/in-content/face-sad.svg     (../shared/incontentprefs/face-sad.svg)
   skin/classic/browser/preferences/in-content/face-smile.svg   (../shared/incontentprefs/face-smile.svg)
   skin/classic/browser/preferences/in-content/fxa-avatar.svg   (../shared/incontentprefs/fxa-avatar.svg)
@@ -189,7 +191,6 @@
   skin/classic/browser/search-indicator-badge-add@2x.png       (../shared/search/search-indicator-badge-add@2x.png)
   skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
-  skin/classic/browser/gear.svg                                (../shared/search/gear.svg)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
@@ -212,7 +213,6 @@
   skin/classic/browser/warning-white.svg                       (../shared/warning-white.svg)
   skin/classic/browser/cert-error.svg                          (../shared/incontent-icons/cert-error.svg)
   skin/classic/browser/wifi.svg                                (../shared/incontent-icons/wifi.svg)
-  skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/favicon-search-16.svg                   (../shared/favicon-search-16.svg)
   skin/classic/browser/icon-search-64.svg                      (../shared/incontent-icons/icon-search-64.svg)

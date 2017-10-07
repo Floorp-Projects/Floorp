@@ -679,6 +679,11 @@ class RefTest(object):
             'processOutputLine': [outputHandler],
         }
 
+        if mozinfo.isWin:
+            # Prevents log interleaving on Windows at the expense of losing
+            # true log order. See bug 798300 and bug 1324961 for more details.
+            kp_kwargs['processStderrLine'] = [outputHandler]
+
         if interactive:
             # If an interactive debugger is attached,
             # don't use timeouts, and don't capture ctrl-c.

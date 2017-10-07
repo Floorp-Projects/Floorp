@@ -10,28 +10,45 @@ const {utils: Cu, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AboutNewTab",
                                   "resource:///modules/AboutNewTab.jsm");
 
 const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 
-const ACTIVITY_STREAM_URL = "resource://activity-stream/data/content/activity-stream.html";
-
-const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/data/content/activity-stream-prerendered.html";
+// Debug versions are only available in Nightly
+const ACTIVITY_STREAM_URLS = {
+  "": "resource://activity-stream/data/content/activity-stream.html",
+  "debug": "resource://activity-stream/data/content/activity-stream-debug.html",
+  "prerender": "resource://activity-stream/data/content/activity-stream-prerendered.html",
+  "prerenderdebug": "resource://activity-stream/data/content/activity-stream-prerendered-debug.html",
+};
 
 const ABOUT_URL = "about:newtab";
 
 const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
+const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
+
 // Pref that tells if activity stream is enabled
 const PREF_ACTIVITY_STREAM_ENABLED = "browser.newtabpage.activity-stream.enabled";
 const PREF_ACTIVITY_STREAM_PRERENDER_ENABLED = "browser.newtabpage.activity-stream.prerender";
+const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
+
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, "quit-application-granted");
   Services.prefs.addObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
   Services.prefs.addObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
+  if (!IS_RELEASE_OR_BETA) {
+    Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
+  }
+
+  // More initialization happens here
   this.toggleActivityStream();
+  this.initialized = true;
+
   if (IS_MAIN_PROCESS) {
     AboutNewTab.init();
   }
@@ -76,6 +93,7 @@ AboutNewTabService.prototype = {
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
   _activityStreamPrerender: false,
+  _activityStreamDebug: false,
   _overridden: false,
 
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
@@ -97,12 +115,13 @@ AboutNewTabService.prototype = {
         } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
           this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
           Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
+        } else if (!IS_RELEASE_OR_BETA && data === PREF_ACTIVITY_STREAM_DEBUG) {
+          this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
+          Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
         }
         break;
       case "quit-application-granted":
-        Services.obs.removeObserver(this, "quit-application-granted");
-        Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
-        Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
+        this.uninit();
         if (IS_MAIN_PROCESS) {
           AboutNewTab.uninit();
         }
@@ -137,6 +156,9 @@ AboutNewTabService.prototype = {
       this._activityStreamEnabled = false;
     }
     this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
+    if (!IS_RELEASE_OR_BETA) {
+      this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
+    }
     this._newtabURL = ABOUT_URL;
     return true;
   },
@@ -151,7 +173,9 @@ AboutNewTabService.prototype = {
    */
   get defaultURL() {
     if (this.activityStreamEnabled) {
-      return this.activityStreamPrerender ? this.activityStreamPrerenderURL : this.activityStreamURL;
+      const prerender = this.activityStreamPrerender ? "prerender" : "";
+      const debug = this.activityStreamDebug ? "debug" : "";
+      return ACTIVITY_STREAM_URLS[prerender + debug];
     }
     return LOCAL_NEWTAB_URL;
   },
@@ -188,12 +212,8 @@ AboutNewTabService.prototype = {
     return this._activityStreamPrerender;
   },
 
-  get activityStreamURL() {
-    return ACTIVITY_STREAM_URL;
-  },
-
-  get activityStreamPrerenderURL() {
-    return ACTIVITY_STREAM_PRERENDER_URL;
+  get activityStreamDebug() {
+    return this._activityStreamDebug;
   },
 
   resetNewTabURL() {
@@ -201,6 +221,19 @@ AboutNewTabService.prototype = {
     this._newTabURL = ABOUT_URL;
     this.toggleActivityStream(undefined, true);
     Services.obs.notifyObservers(null, "newtab-url-changed", this._newTabURL);
+  },
+
+  uninit() {
+    if (!this.initialized) {
+      return;
+    }
+    Services.obs.removeObserver(this, "quit-application-granted");
+    Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_ENABLED, this);
+    Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
+    if (!IS_RELEASE_OR_BETA) {
+      Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
+    }
+    this.initialized = false;
   }
 };
 

@@ -43,7 +43,7 @@ exports.items = [
     runAt: "client",
     name: "resize toggle",
     buttonId: "command-button-responsive",
-    buttonClass: "command-button command-button-invertable",
+    buttonClass: "command-button",
     tooltipText: l10n.lookupFormat(
       "resizeModeToggleTooltip2",
       [(osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M")]

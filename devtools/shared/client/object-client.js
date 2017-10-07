@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("./debugger-client");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 loader.lazyRequireGetter(this, "PropertyIteratorClient", "devtools/shared/client/property-iterator-client");
 loader.lazyRequireGetter(this, "SymbolIteratorClient", "devtools/shared/client/symbol-iterator-client");
 

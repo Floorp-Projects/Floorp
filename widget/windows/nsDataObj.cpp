@@ -439,7 +439,7 @@ STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 }
 
 namespace {
-class RemoveTempFileHelper : public nsIObserver
+class RemoveTempFileHelper final : public nsIObserver
 {
 public:
   explicit RemoveTempFileHelper(nsIFile* aTempFile)

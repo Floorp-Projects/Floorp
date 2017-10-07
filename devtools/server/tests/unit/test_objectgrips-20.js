@@ -93,6 +93,10 @@ async function run_test_with_server(server) {
     expectedIndexedProperties: [["1", 1]],
     expectedNonIndexedProperties: [],
   }, {
+    evaledObject: { a: 1, [2 ** 32 - 2]: 2, [2 ** 32 - 1]: 3 },
+    expectedIndexedProperties: [["4294967294", 2]],
+    expectedNonIndexedProperties: [["a", 1], ["4294967295", 3]],
+  }, {
     evaledObject: `(() => {
       x = [12, 42];
       x.foo = 90;
