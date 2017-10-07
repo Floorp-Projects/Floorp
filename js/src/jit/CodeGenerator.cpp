@@ -4241,10 +4241,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     // Argument fixed needed. Load the ArgumentsRectifier.
     masm.bind(&thunk);
     {
-        MOZ_ASSERT(ArgumentsRectifierReg != objreg);
         masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
         masm.loadPtr(Address(objreg, JitCode::offsetOfCode()), objreg);
-        masm.move32(Imm32(call->numActualArgs()), ArgumentsRectifierReg);
     }
 
     // Finally call the function in objreg.
@@ -4674,10 +4672,8 @@ CodeGenerator::emitApplyGeneric(T* apply)
             // Hardcode the address of the argumentsRectifier code.
             JitCode* argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier();
 
-            MOZ_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
             masm.loadPtr(Address(objreg, JitCode::offsetOfCode()), objreg);
-            masm.movePtr(argcreg, ArgumentsRectifierReg);
         }
 
         masm.bind(&rejoin);
