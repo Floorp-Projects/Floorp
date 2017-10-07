@@ -2256,6 +2256,7 @@ GK_ATOM(forcemessagemanager, "forcemessagemanager")
 GK_ATOM(isPreloadBrowser, "isPreloadBrowser")
 
 // Names for system metrics
+GK_ATOM(color_picker_available, "color-picker-available")
 GK_ATOM(scrollbar_start_backward, "scrollbar-start-backward")
 GK_ATOM(scrollbar_start_forward, "scrollbar-start-forward")
 GK_ATOM(scrollbar_end_backward, "scrollbar-end-backward")
@@ -2285,6 +2286,7 @@ GK_ATOM(windows_theme_zune, "windows-theme-zune")
 GK_ATOM(windows_theme_generic, "windows-theme-generic")
 
 // And the same again, as media query keywords.
+GK_ATOM(_moz_color_picker_available, "-moz-color-picker-available")
 GK_ATOM(_moz_scrollbar_start_backward, "-moz-scrollbar-start-backward")
 GK_ATOM(_moz_scrollbar_start_forward, "-moz-scrollbar-start-forward")
 GK_ATOM(_moz_scrollbar_end_backward, "-moz-scrollbar-end-backward")
