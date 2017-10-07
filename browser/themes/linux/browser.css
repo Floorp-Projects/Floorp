@@ -548,10 +548,15 @@ html|span.ac-emphasize-text-url {
   color: -moz-menubartext;
 }
 
-#nav-bar,
-#toolbar-menubar:not([autohide="true"]):not(:-moz-lwtheme):-moz-system-metric(menubar-drag),
-#TabsToolbar:not(:-moz-lwtheme):-moz-system-metric(menubar-drag) {
+#nav-bar {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
+}
+
+@media (-moz-menubar-drag) {
+  #toolbar-menubar:not([autohide="true"]):not(:-moz-lwtheme),
+  #TabsToolbar:not(:-moz-lwtheme) {
+    -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
+  }
 }
 
 .tabbrowser-tab:focus > .tab-stack > .tab-content {

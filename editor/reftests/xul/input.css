@@ -12,9 +12,11 @@
   padding-inline-start: 5px;
 }
 
-#win html|input:-moz-system-metric(windows-default-theme) {
-  padding: 1px 2px 2px;
-  padding-inline-start: 4px;
+@media (-moz-windows-default-theme) {
+  #win html|input {
+    padding: 1px 2px 2px;
+    padding-inline-start: 4px;
+  }
 }
 
 #linux html|input, #linux html|textarea {
@@ -42,8 +44,10 @@ html|input.empty {
   color: graytext;
 }
 
-:root:not(.winxp) html|input.empty:-moz-system-metric(windows-default-theme) {
-  font-style: italic;
+@media (-moz-windows-default-theme) {
+  :root:not(.winxp) html|input.empty {
+    font-style: italic;
+  }
 }
 
 html|input.num {
