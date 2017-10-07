@@ -1,9 +1,8 @@
 reftest.jar:
-% content reftest %content/ contentaccessible=yes
+% content reftest %content/
   content/reftest-content.js (reftest-content.js)
   content/AsyncSpellCheckTestHelper.jsm (../../../editor/AsyncSpellCheckTestHelper.jsm)
   content/httpd.jsm (../../../netwerk/test/httpserver/httpd.js)
   content/StructuredLog.jsm (../../../testing/modules/StructuredLog.jsm)
-  content/input.css (../../../editor/reftests/xul/input.css)
 *  content/reftest.jsm (reftest.jsm)
   content/reftest.xul (reftest.xul)
