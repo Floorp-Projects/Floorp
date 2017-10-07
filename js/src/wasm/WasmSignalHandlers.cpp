@@ -1617,7 +1617,7 @@ ProcessHasSignalHandlers()
 
     // Allow handling OOB with signals on all architectures
     struct sigaction faultHandler;
-    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
+    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     faultHandler.sa_sigaction = WasmFaultHandler<Signal::SegFault>;
     sigemptyset(&faultHandler.sa_mask);
     if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
@@ -1626,7 +1626,7 @@ ProcessHasSignalHandlers()
 #  if defined(JS_CODEGEN_ARM)
     // On Arm Handle Unaligned Accesses
     struct sigaction busHandler;
-    busHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
+    busHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     busHandler.sa_sigaction = WasmFaultHandler<Signal::BusError>;
     sigemptyset(&busHandler.sa_mask);
     if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler))
