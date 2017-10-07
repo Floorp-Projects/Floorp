@@ -566,7 +566,7 @@ PreferenceServiceReporter::CollectReports(
   for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const auto& pref = prefBranch->getPrefName(callback->GetDomain().get());
+    const auto& pref = prefBranch->GetPrefName(callback->GetDomain().get());
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
