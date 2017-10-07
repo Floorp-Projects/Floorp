@@ -118,8 +118,7 @@ ObjectActor.prototype = {
     // when there is a bunch.
     if (isTypedArray(g)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
-      let length = DevToolsUtils.getProperty(this.obj, "length");
-      g.ownPropertyLength = length;
+      g.ownPropertyLength = getArrayLength(this.obj);
     } else if (g.class != "Proxy") {
       g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
     }
@@ -870,21 +869,8 @@ PropertyIteratorActor.prototype.requestTypes = {
 };
 
 function enumArrayProperties(objectActor, options) {
-  let length = DevToolsUtils.getProperty(objectActor.obj, "length");
-  if (!isUint32(length)) {
-    // Pseudo arrays are flagged as ArrayLike if they have
-    // subsequent indexed properties without having any length attribute.
-    length = 0;
-    let names = objectActor.obj.getOwnPropertyNames();
-    for (let key of names) {
-      if (!isArrayIndex(key) || key != length++) {
-        break;
-      }
-    }
-  }
-
   return {
-    size: length,
+    size: getArrayLength(objectActor.obj),
     propertyName(index) {
       return index;
     },
@@ -1319,10 +1305,7 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   Array: [function ({obj, hooks}, grip) {
-    let length = DevToolsUtils.getProperty(obj, "length");
-    if (typeof length != "number") {
-      return false;
-    }
+    let length = getArrayLength(obj);
 
     grip.preview = {
       kind: "ArrayLike",
@@ -1636,14 +1619,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       return false;
     }
 
-    let length = DevToolsUtils.getProperty(obj, "length");
-    if (typeof length != "number") {
-      return false;
-    }
-
     grip.preview = {
       kind: "ArrayLike",
-      length: length,
+      length: getArrayLength(obj),
     };
 
     if (hooks.getGripDepth() > 1) {
@@ -2529,6 +2507,32 @@ function isTypedArray(object) {
  */
 function isArray(object) {
   return isTypedArray(object) || object.class === "Array";
+}
+
+/**
+ * Returns the length of an array (or typed array).
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object of the array.
+ * @return Number
+ * @throws if the object is not an array.
+ */
+function getArrayLength(object) {
+  if (!isArray(object)) {
+    throw new Error("Expected an array, got a " + object.class);
+  }
+
+  // Real arrays have a reliable `length` own property.
+  if (object.class === "Array") {
+    return DevToolsUtils.getProperty(object, "length");
+  }
+
+  // For typed arrays, `DevToolsUtils.getProperty` is not reliable because the `length`
+  // getter could be shadowed by an own property, and `getOwnPropertyNames` is
+  // unnecessarily slow. Obtain the `length` getter safely and call it manually.
+  let typedProto = Object.getPrototypeOf(Uint8Array.prototype);
+  let getter = Object.getOwnPropertyDescriptor(typedProto, "length").get;
+  return getter.call(object.unsafeDereference());
 }
 
 /**
