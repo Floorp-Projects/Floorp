@@ -209,7 +209,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                        "-DLLVM_ENABLE_THREADS=OFF",
                        "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % libcxx_include_dir,
                        "-DCMAKE_OSX_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
-                       "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")),
+                       "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")), # noqa
                        "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER",
                        "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY",
                        "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY",
@@ -391,7 +391,8 @@ if __name__ == "__main__":
     if "build_type" in config:
         build_type = config["build_type"]
         if build_type not in ("Release", "Debug", "RelWithDebInfo", "MinSizeRel"):
-            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or MinSizeRel builds")
+            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or "
+                             "MinSizeRel builds")
     build_libcxx = False
     if "build_libcxx" in config:
         build_libcxx = config["build_libcxx"]
@@ -503,7 +504,8 @@ if __name__ == "__main__":
         extra_ldflags = []
 
         if 'LD_LIBRARY_PATH' in os.environ:
-            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH'])
+            os.environ['LD_LIBRARY_PATH'] = ('%s/lib64/:%s' %
+                                             (gcc_dir, os.environ['LD_LIBRARY_PATH']))
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
     elif is_windows():
