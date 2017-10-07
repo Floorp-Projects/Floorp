@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::{mem, slice};
 use std::path::PathBuf;
 use std::ptr;
@@ -415,6 +415,7 @@ extern "C" {
     // be disabled in WebRenderBridgeParent::ProcessWebRenderCommands
     // by commenting out the path that adds an external image ID
     fn gfx_use_wrench() -> bool;
+    fn gfx_wr_resource_path_override() -> *const c_char;
     fn gfx_critical_note(msg: *const c_char);
 }
 
@@ -644,6 +645,17 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),
         enable_render_on_scroll: false,
+        resource_override_path: unsafe {
+            let override_charptr = gfx_wr_resource_path_override();
+            if override_charptr.is_null() {
+                None
+            } else {
+                match CStr::from_ptr(override_charptr).to_str() {
+                    Ok(override_str) => Some(PathBuf::from(override_str)),
+                    _ => None
+                }
+            }
+        },
         ..Default::default()
     };
 

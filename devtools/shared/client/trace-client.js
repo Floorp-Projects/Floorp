@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("./debugger-client");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * Creates a tracing profiler client for the remote debugging protocol

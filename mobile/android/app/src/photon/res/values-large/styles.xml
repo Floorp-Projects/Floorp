@@ -207,4 +207,12 @@
         <item name="android:paddingRight">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 
+    <style name="TabsTray.AddTab" parent="TabsTray.V15.AddTab"/>
+    <style name="TabsTray.V15.AddTab" parent="TabsTray.Base.AddTab"/>
+
+    <style name="TabsTray.Menu" parent="TabsTray.V15.Menu"/>
+    <style name="TabsTray.V15.Menu" parent="TabsTray.Base.Menu">
+        <item name="android:layout_marginRight">6dp</item>
+    </style>
+
 </resources>

@@ -90,12 +90,16 @@ const PREFS_CONFIG = new Map([
     value: true
   }],
   ["showSearch", {
-    title: "Show the Search bar on the New Tab page",
+    title: "Show the Search bar",
     value: true
   }],
   ["showTopSites", {
-    title: "Show the Top Sites section on the New Tab page",
+    title: "Show the Top Sites section",
     value: true
+  }],
+  ["collapseTopSites", {
+    title: "Collapse the Top Sites section",
+    value: false
   }],
   ["topSitesCount", {
     title: "Number of Top Sites to display",
@@ -121,6 +125,14 @@ const PREFS_CONFIG = new Map([
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
     value: "https://tiles.services.mozilla.com/v4/links/activity-stream"
+  }],
+  ["section.highlights.collapsed", {
+    title: "Collapse the Highlights section",
+    value: false
+  }],
+  ["section.topstories.collapsed", {
+    title: "Collapse the Top Stories section",
+    value: false
   }]
 ]);
 

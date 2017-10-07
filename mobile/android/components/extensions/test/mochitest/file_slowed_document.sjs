@@ -7,7 +7,9 @@
 
 /* eslint-disable no-unused-vars */
 
-const DELAY = 1 * 1000; // Delay one second before completing the request.
+const URL = "file_slowed_document.sjs";
+
+const DELAY = 2 * 1000; // Delay one second before completing the request.
 
 const Ci = Components.interfaces;
 
@@ -32,10 +34,10 @@ function handleRequest(request, response) {
   // Note: We need to store a reference to the timer to prevent it from being
   // canceled when it's GCed.
   timer = new nsTimer(() => {
-    response.write(`
-        <iframe src="/"></iframe>
-      </body>
-      </html>`);
+    if (request.queryString.includes("with-iframe")) {
+      response.write(`<iframe src="${URL}?r=${Math.random()}"></iframe>`);
+    }
+    response.write(`</body></html>`);
     response.finish();
   }, DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
 }

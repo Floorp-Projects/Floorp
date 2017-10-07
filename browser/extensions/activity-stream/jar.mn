@@ -9,6 +9,10 @@
   content/vendor/Redux.jsm (./vendor/Redux.jsm)
   content/vendor/react.js (./vendor/react.js)
   content/vendor/react-dom.js (./vendor/react-dom.js)
+#ifndef RELEASE_OR_BETA
+  content/vendor/react-dev.js (./vendor/react-dev.js)
+  content/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
+#endif
   content/vendor/react-intl.js (./vendor/react-intl.js)
   content/vendor/redux.js (./vendor/redux.js)
   content/vendor/react-redux.js (./vendor/react-redux.js)

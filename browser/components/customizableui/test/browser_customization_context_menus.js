@@ -151,7 +151,7 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
 
   let searchbar = document.getElementById("searchbar");
-  gCustomizeMode.addToPanel(searchbar);
+  await gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
 
@@ -167,7 +167,7 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   gCustomizeMode.addToToolbar(searchbar);
   placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
-  gCustomizeMode.removeFromArea(searchbar);
+  await gCustomizeMode.removeFromArea(searchbar);
   placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement, null, "Should be in palette");
   CustomizableUI.reset();

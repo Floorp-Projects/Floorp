@@ -7,7 +7,10 @@
 
 const { EVENTS } = require("../constants");
 const { CurlUtils } = require("devtools/client/shared/curl");
-const { fetchHeaders, formDataURI } = require("../utils/request-utils");
+const {
+  fetchHeaders,
+  formDataURI,
+} = require("../utils/request-utils");
 
 /**
  * This object is responsible for fetching additional HTTP
@@ -27,7 +30,7 @@ class FirefoxDataProvider {
     this.updateRequest = this.updateRequest.bind(this);
 
     // Internals
-    this.fetchImage = this.fetchImage.bind(this);
+    this.fetchResponseBody = this.fetchResponseBody.bind(this);
     this.fetchRequestHeaders = this.fetchRequestHeaders.bind(this);
     this.fetchResponseHeaders = this.fetchResponseHeaders.bind(this);
     this.fetchPostData = this.fetchPostData.bind(this);
@@ -112,7 +115,7 @@ class FirefoxDataProvider {
       requestCookiesObj,
       responseCookiesObj,
     ] = await Promise.all([
-      this.fetchImage(mimeType, responseContent),
+      this.fetchResponseBody(mimeType, responseContent),
       this.fetchRequestHeaders(requestHeaders),
       this.fetchResponseHeaders(responseHeaders),
       this.fetchPostData(requestPostData),
@@ -137,7 +140,7 @@ class FirefoxDataProvider {
     }
   }
 
-  async fetchImage(mimeType, responseContent) {
+  async fetchResponseBody(mimeType, responseContent) {
     let payload = {};
     if (mimeType && responseContent && responseContent.content) {
       let { encoding, text } = responseContent.content;

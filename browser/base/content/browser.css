@@ -524,10 +524,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   background-image: var(--lwt-footer-image);
 }
 
-.menuitem-iconic-tooltip {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
-}
-
 /* Hide menu elements intended for keyboard access support */
 #main-menubar[openedwithkey=false] .show-only-for-keyboard {
   display: none;

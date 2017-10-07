@@ -173,7 +173,8 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   background-size: 16px;
   width: 24px;
   height: 40px;
-  filter: var(--theme-icon-filter);
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
 }
 
 .disabled > .stylesheet-enabled {
@@ -181,8 +182,8 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
 }
 
 /* Invert the toggle icon in the active row for light theme */
-.theme-light .splitview-nav > li.splitview-active .stylesheet-enabled {
-  filter: invert(1);
+.splitview-nav > li.splitview-active .stylesheet-enabled {
+  fill: var(--theme-toolbar-selected-color);
 }
 
 .splitview-nav > li > .stylesheet-enabled:focus,

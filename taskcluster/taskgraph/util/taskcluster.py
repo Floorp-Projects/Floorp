@@ -10,12 +10,18 @@ import datetime
 import functools
 import yaml
 import requests
+import logging
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
 _TC_ARTIFACT_LOCATION = \
         'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/public/build/{postfix}'
+
+logger = logging.getLogger(__name__)
+
+# this is set to true for `mach taskgraph action-callback --test`
+testing = False
 
 
 @memoize
@@ -137,6 +143,15 @@ def get_task_url(task_id, use_proxy=False):
 def get_task_definition(task_id, use_proxy=False):
     response = _do_request(get_task_url(task_id, use_proxy))
     return response.json()
+
+
+def cancel_task(task_id, use_proxy=False):
+    """Cancels a task given a task_id. In testing mode, just logs that it would
+    have cancelled."""
+    if testing:
+        logger.info('Would have cancelled {}.'.format(task_id))
+    else:
+        _do_request(get_task_url(task_id, use_proxy) + '/cancel', content={})
 
 
 def get_taskcluster_artifact_prefix(task_id, postfix='', locale=None):

@@ -10,7 +10,6 @@
 #include "gfxContext.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
-#include "nsIDOMHTMLIFrameElement.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsSVGIntegrationUtils.h"
@@ -928,14 +927,13 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
 
     if (window) {
       nsCOMPtr<nsIDOMElement> frameElement = window->GetFrameElement();
-      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(frameElement);
-      nsCOMPtr<nsIDOMHTMLIFrameElement> iframeElement =
-        do_QueryInterface(frameElement);
-      if (olc || iframeElement) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(frameElement);
+      if (content && content->IsAnyOfHTMLElements(nsGkAtoms::object,
+                                                  nsGkAtoms::embed,
+                                                  nsGkAtoms::iframe)) {
         // Our document is inside an HTML 'object', 'embed' or 'iframe' element
         if (aEmbeddingFrame) {
-          nsCOMPtr<nsIContent> element = do_QueryInterface(frameElement);
-          *aEmbeddingFrame = element->GetPrimaryFrame();
+          *aEmbeddingFrame = content->GetPrimaryFrame();
           NS_ASSERTION(*aEmbeddingFrame, "Yikes, no embedding frame!");
         }
         return true;

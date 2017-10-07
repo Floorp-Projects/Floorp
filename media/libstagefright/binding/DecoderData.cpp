@@ -12,6 +12,7 @@
 #include "media/stagefright/Utils.h"
 #include "mozilla/ArrayUtils.h"
 #include "include/ESDS.h"
+#include "VideoUtils.h"
 
 // OpusDecoder header is really needed only by MP4 in rust
 #include "OpusDecoder.h"

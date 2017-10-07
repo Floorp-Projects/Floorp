@@ -184,7 +184,7 @@ exports.items = [
     manual: l10n.lookup("screenshotManual"),
     returnType: "imageSummary",
     buttonId: "command-button-screenshot",
-    buttonClass: "command-button command-button-invertable",
+    buttonClass: "command-button",
     tooltipText: l10n.lookup("screenshotTooltipPage"),
     params: [
       filenameParam,

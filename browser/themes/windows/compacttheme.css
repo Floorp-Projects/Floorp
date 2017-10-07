@@ -62,21 +62,43 @@
     #main-window {
       background: transparent !important;
     }
+
+    /* Remove lwtheme borders from toolbars in non-maximized windows. */
+    #toolbar-menubar,
+    #TabsToolbar {
+      border-left-style: none !important;
+      border-right-style: none !important;
+    }
   }
 
   /* Always show full-height tab separators on tabs with borders. */
-  .tabbrowser-tab::before {
+  .tabbrowser-tab::before,
+  .tabbrowser-tab::after {
     border-image: none !important;
   }
 
-  /* Show the tabs toolbar background color inside tabs on Win 7. */
-  .tab-background:not([selected=true]) {
+  /* Show border on tabs with background colors and
+   * show the tabs toolbar background color inside tabs. */
+  .tabbrowser-tab {
     background-color: var(--chrome-background-color) !important;
+    border-top: 1px solid var(--tabs-border);
+    background-clip: padding-box;
   }
 
-  /* Show border on tabs with background colors in Windows 7. */
+  /* The top border on top of the tab background is replaced
+   * by the slightly transparent outside tabs-border. */
   .tab-background {
-    border-top: 1px solid var(--tabs-border);
+    border-top-style: none !important;
+  }
+
+  /* The border at the end of the tab strip is replaced
+   * by the slightly transparent outside tabs-border. */
+  .tabbrowser-tab[last-visible-tab] {
+    border-inline-end: 1px solid var(--tabs-border);
+  }
+
+  .tabbrowser-tab[last-visible-tab]::after {
+    display: none !important;
   }
 
   /* Use default window colors when in non-maximized mode */
@@ -111,13 +133,6 @@
   /* These are !important to avoid specificity-wars with the selectors that add borders here. */
   background-image: none !important;
   border-top: none !important;
-}
-
-#navigator-toolbox {
-  /* The side borders on the toolbox also look out-of-place because we don't paint over
-   * the native background color at all, and these are !important for the same reason as above. */
-  border-left: none !important;
-  border-right: none !important;
 }
 
 @media (-moz-os-version: windows-win10) {

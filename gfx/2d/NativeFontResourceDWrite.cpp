@@ -81,7 +81,7 @@ private:
   static IDWriteFontFileLoader* mInstance;
 };
 
-class DWriteFontFileStream : public IDWriteFontFileStream
+class DWriteFontFileStream final : public IDWriteFontFileStream
 {
 public:
   /**
@@ -93,7 +93,6 @@ public:
     * @param aData Font data
     */
   DWriteFontFileStream(uint8_t *aData, uint32_t aSize, uint64_t aFontFileKey);
-  ~DWriteFontFileStream();
 
   // IUnknown interface
   IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject)
@@ -139,6 +138,8 @@ private:
   std::vector<uint8_t> mData;
   Atomic<uint32_t> mRefCnt;
   uint64_t mFontFileKey;
+
+  ~DWriteFontFileStream();
 };
 
 IDWriteFontFileLoader* DWriteFontFileLoader::mInstance = nullptr;

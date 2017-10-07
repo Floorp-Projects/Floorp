@@ -156,81 +156,6 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
-    @SubCommand('taskgraph', 'action-task',
-                description="Run the add-tasks task. DEPRECATED! Use 'add-tasks' instead.")
-    @CommandArgument('--root', '-r',
-                     default='taskcluster/ci',
-                     help="root of the taskgraph definition relative to topsrcdir")
-    @CommandArgument('--decision-id',
-                     required=True,
-                     help="Decision Task ID of the reference decision task")
-    @CommandArgument('--task-labels',
-                     required=True,
-                     help='Comma separated list of task labels to be scheduled')
-    def taskgraph_action(self, **options):
-        """Run the action task: Generates a task graph using the set of labels
-        provided in the task-labels parameter. It uses the full-task file of
-        the gecko decision task."""
-
-        import taskgraph.action
-        try:
-            self.setup_logging()
-            return taskgraph.action.add_tasks(options['decision_id'],
-                                              options['task_labels'].split(','))
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
-
-    @SubCommand('taskgraph', 'add-tasks',
-                description="Run the add-tasks task")
-    @CommandArgument('--root', '-r',
-                     default='taskcluster/ci',
-                     help="root of the taskgraph definition relative to topsrcdir")
-    @CommandArgument('--decision-id',
-                     required=True,
-                     help="Decision Task ID of the reference decision task")
-    @CommandArgument('--task-labels',
-                     required=True,
-                     help='Comma separated list of task labels to be scheduled')
-    def taskgraph_add_tasks(self, **options):
-        """Run the action task: Generates a task graph using the set of labels
-        provided in the task-labels parameter. It uses the full-task file of
-        the gecko decision task."""
-
-        import taskgraph.action
-        try:
-            self.setup_logging()
-            return taskgraph.action.add_tasks(options['decision_id'],
-                                              options['task_labels'].split(','))
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
-
-    @SubCommand('taskgraph', 'backfill',
-                description="Run the backfill task")
-    @CommandArgument('--root', '-r',
-                     default='taskcluster/ci',
-                     help="root of the taskgraph definition relative to topsrcdir")
-    @CommandArgument('--project',
-                     required=True,
-                     help="Project of the jobs that need to be backfilled.")
-    @CommandArgument('--job-id',
-                     required=True,
-                     help="Id of the job to be backfilled.")
-    def taskgraph_backfill(self, **options):
-        """Run the backfill task: Given a job in a project, it will
-        add that job type to any previous revisions in treeherder
-        until either a hard limit is met or a green version of that
-        job is found."""
-
-        import taskgraph.action
-        try:
-            self.setup_logging()
-            return taskgraph.action.backfill(options['project'], options['job_id'])
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
-
     @SubCommand('taskgraph', 'cron',
                 description="Run the cron task")
     @CommandArgument('--base-repository',
@@ -263,30 +188,6 @@ class MachCommands(MachCommandBase):
         try:
             self.setup_logging()
             return taskgraph.cron.taskgraph_cron(options)
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
-
-    @SubCommand('taskgraph', 'add-talos',
-                description="Run the add-talos task")
-    @CommandArgument('--root', '-r',
-                     default='taskcluster/ci',
-                     help="root of the taskgraph definition relative to topsrcdir")
-    @CommandArgument('--decision-task-id',
-                     required=True,
-                     help="Id of the decision task that is part of the push to be talos'd")
-    @CommandArgument('--times',
-                     required=False,
-                     default=1,
-                     type=int,
-                     help="Number of times to add each job.")
-    def taskgraph_add_talos(self, **options):
-        """Add all talos jobs for a push."""
-
-        import taskgraph.action
-        try:
-            self.setup_logging()
-            return taskgraph.action.add_talos(options['decision_task_id'], options['times'])
         except Exception:
             traceback.print_exc()
             sys.exit(1)
