@@ -11,8 +11,9 @@ treechildren::-moz-tree-image(title) {
 }
 
 treechildren:-moz-tree-image {
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: -moz-FieldText;
+  fill-opacity: 0.7;
 }
 
 treechildren::-moz-tree-image(title, livemarkItem) {
