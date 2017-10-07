@@ -97,7 +97,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7a94196db222"
+        "revision": "be84e9954df8"
     }, 
     "bn-IN": {
         "platforms": [
@@ -337,7 +337,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0aca581b2978"
+        "revision": "b22eee1ddd0c"
     }, 
     "fy-NL": {
         "platforms": [
@@ -397,7 +397,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "547e1b8bae27"
+        "revision": "fde59e0638e8"
     }, 
     "he": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "cb55ccf23893"
+        "revision": "c113d68bb93e"
     }, 
     "hy-AM": {
         "platforms": [
@@ -477,7 +477,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0d16bfb76356"
+        "revision": "bf686a5dd634"
     }, 
     "it": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e3a09b52f570"
+        "revision": "6e48c2e2b103"
     }, 
     "ja": {
         "platforms": [
@@ -532,7 +532,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a216c342037b"
+        "revision": "38e0c2d0a2d0"
     }, 
     "km": {
         "platforms": [
@@ -582,7 +582,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6619fac826aa"
+        "revision": "36ce7bfa21e3"
     }, 
     "lv": {
         "platforms": [
@@ -682,7 +682,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "4fb80bb2fa1d"
+        "revision": "8d9577daa698"
     }, 
     "or": {
         "platforms": [
@@ -822,7 +822,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "106743782157"
+        "revision": "089052c512b7"
     }, 
     "sv-SE": {
         "platforms": [
@@ -832,7 +832,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b56108831057"
+        "revision": "66537619aa3a"
     }, 
     "ta": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "88c98f072c2a"
+        "revision": "0232ba6432ab"
     }, 
     "tr": {
         "platforms": [
@@ -872,7 +872,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e64e1112fbab"
+        "revision": "3f3985130eb4"
     }, 
     "uk": {
         "platforms": [
