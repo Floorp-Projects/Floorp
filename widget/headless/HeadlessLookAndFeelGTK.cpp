@@ -263,6 +263,9 @@ HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SwipeAnimationEnabled:
       aResult = 0;
       break;
+    case eIntID_ColorPickerAvailable:
+      aResult = 1;
+      break;
     case eIntID_PhysicalHomeButton:
       aResult = 0;
       break;

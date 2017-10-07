@@ -288,7 +288,7 @@ xul|menulist:active {
 }
 
 button:active:hover,
-input[type="color"]:active:hover,
+input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
