@@ -34,9 +34,7 @@ var expected_values = [
                                 "landscape" : "portrait"]
 ];
 
-// These media queries return value 0 or 1 when the pref is off, or never match
-// due to they being not available in non-chrome / UA pages.
-//
+// These media queries return value 0 or 1 when the pref is off.
 // When the pref is on, they should not match.
 var suppressed_toggles = [
   "-moz-mac-graphite-theme",
@@ -51,11 +49,6 @@ var suppressed_toggles = [
   "-moz-windows-compositor",
   "-moz-windows-default-theme",
   "-moz-windows-glass",
-];
-
-// The toggles enabled in content pages, which would actually test to 0 or 1.
-const toggles_enabled_in_content = [
-  "-moz-touch-enabled",
 ];
 
 // Possible values for '-moz-os-version'
@@ -111,7 +104,7 @@ var testToggles = function (resisting) {
   suppressed_toggles.forEach(
     function (key) {
       var exists = keyValMatches(key, 0) || keyValMatches(key, 1);
-      if (resisting || toggles_enabled_in_content.indexOf(key) === -1) {
+      if (resisting) {
          ok(!exists, key + " should not exist.");
       } else {
          ok(exists, key + " should exist.");
@@ -128,7 +121,12 @@ var testWindowsSpecific = function (resisting, queryName, possibleValues) {
       foundValue = val;
     }
   });
-  ok(!foundValue, queryName + " should have no match");
+  if (resisting) {
+    ok(!foundValue, queryName + " should have no match");
+  } else {
+    ok(foundValue, foundValue ? ("Match found: '" + queryName + ":" + foundValue + "'")
+                              : "Should have a match for '" + queryName + "'");
+  }
 };
 
 // __generateHtmlLines(resisting)__.
@@ -195,7 +193,6 @@ var suppressedMediaQueryCSSLine = function (key, color, suppressed) {
 // expected value, then the element will be colored green.
 var generateCSSLines = function (resisting) {
   let lines = ".spoof { background-color: red;}\n";
-  let is_chrome_window = window.location.protocol === "chrome:";
   expected_values.forEach(
     function ([key, offVal, onVal]) {
       lines += mediaQueryCSSLine(key, resisting ? onVal : offVal, "green");
@@ -203,19 +200,14 @@ var generateCSSLines = function (resisting) {
   lines += ".suppress { background-color: " + (resisting ? "green" : "red") + ";}\n";
   suppressed_toggles.forEach(
     function (key) {
-      if (toggles_enabled_in_content.indexOf(key) === -1 && !resisting && !is_chrome_window) {
-        lines += "#" + key + " { background-color: green; }\n";
-      } else {
-        let color = resisting ? "red" : "green";
-        lines += suppressedMediaQueryCSSLine(key, color);
-      }
+      lines += suppressedMediaQueryCSSLine(key, resisting ? "red" : "green");
     });
   if (OS === "WINNT") {
-    lines += ".windows { background-color: green; }\n";
+    lines += ".windows { background-color: " + (resisting ? "green" : "red") + ";}\n";
     lines += windows_versions.map(val => "(-moz-os-version: " + val + ")").join(", ") +
-             " { #-moz-os-version { background-color: red; } }\n";
+             " { #-moz-os-version { background-color: " + (resisting ? "red" : "green") + ";} }\n";
     lines += windows_themes.map(val => "(-moz-windows-theme: " + val + ")").join(",") +
-             " { #-moz-windows-theme { background-color: red; }\n";
+             " { #-moz-windows-theme { background-color: " + (resisting ? "red" : "green") + ";} }\n";
   }
   return lines;
 };

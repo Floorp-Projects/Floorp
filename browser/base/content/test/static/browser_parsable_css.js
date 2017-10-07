@@ -38,10 +38,6 @@ let whitelist = [
   {sourceName: /responsive-ua\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i,
    isFromDevTools: true},
-  // UA-only media features.
-  {sourceName: /\b(autocomplete-item|svg)\.css$/,
-   errorMessage: /Expected media feature name but found \u2018-moz.*/i,
-   isFromDevTools: false},
 
   {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
    errorMessage: /Unknown pseudo-class.*-moz-/i,
