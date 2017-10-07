@@ -125,6 +125,16 @@ public:
   inline bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
+  /**
+   * Returns true if this principal's CSP should override a document's CSP for
+   * loads that it triggers. Currently true only for expanded principals which
+   * subsume the document principal.
+   */
+  bool OverridesCSP(nsIPrincipal* aDocumentPrincipal)
+  {
+    return mKind == eExpandedPrincipal && FastSubsumes(aDocumentPrincipal);
+  }
+
 protected:
   virtual ~BasePrincipal();
 
