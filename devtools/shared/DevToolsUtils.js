@@ -204,6 +204,38 @@ exports.getProperty = function (object, key) {
 };
 
 /**
+ * Removes all the non-opaque security wrappers of a debuggee object.
+ * Returns null if some wrapper can't be removed.
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object to be unwrapped.
+ * @return Debugger.Object|null
+ *        The unwrapped object, or null if some wrapper couldn't be removed.
+ */
+exports.unwrap = function unwrap(obj) {
+  // Check if `obj` has an opaque wrapper.
+  if (obj.class === "Opaque") {
+    return obj;
+  }
+
+  // Attempt to unwrap. If this operation is not allowed, it may return null or throw.
+  let unwrapped;
+  try {
+    unwrapped = obj.unwrap();
+  } catch (err) {
+    unwrapped = null;
+  }
+
+  // Check if further unwrapping is not possible.
+  if (!unwrapped || unwrapped === obj) {
+    return unwrapped;
+  }
+
+  // Recursively remove additional security wrappers.
+  return unwrap(unwrapped);
+};
+
+/**
  * Determines if a descriptor has a getter which doesn't call into JavaScript.
  *
  * @param Object desc
@@ -214,13 +246,9 @@ exports.getProperty = function (object, key) {
 exports.hasSafeGetter = function (desc) {
   // Scripted functions that are CCWs will not appear scripted until after
   // unwrapping.
-  try {
-    let fn = desc.get.unwrap();
-    return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
-  } catch (e) {
-    // Avoid exception 'Object in compartment marked as invisible to Debugger'
-    return false;
-  }
+  let fn = desc.get;
+  fn = fn && exports.unwrap(fn);
+  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
 };
 
 /**
