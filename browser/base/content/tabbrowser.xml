@@ -5399,10 +5399,6 @@
                 onget="return this.mCurrentBrowser.contentViewerEdit;"
                 readonly="true"/>
 
-      <property name="contentViewerFile"
-                onget="return this.mCurrentBrowser.contentViewerFile;"
-                readonly="true"/>
-
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
                 readonly="true"/>

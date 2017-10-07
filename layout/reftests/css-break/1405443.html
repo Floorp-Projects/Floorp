@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<style>
+  #float { page-break-inside: avoid; float: left }
+  span { padding-left: 1px; }
+  #columns { columns: 0px; column-gap: 0; )
+</style>
+<body>
+  There word 'Hello' should appear below.
+  <div id="columns">
+    H
+    <div id="float">
+      <span> <!-- Just need an inline with nonzero width -->
+        <div style="padding-left: 1ch">&nbsp;ello</div>
+      </span>
+    </div>
+  </div>
+</body>

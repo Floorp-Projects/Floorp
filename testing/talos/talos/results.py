@@ -285,9 +285,6 @@ class BrowserLogResults(object):
     RESULTS_REGEX_FAIL = re.compile('__FAIL(.*?)__FAIL',
                                     re.DOTALL | re.MULTILINE)
 
-    # regular expression for RSS results
-    RSS_REGEX = re.compile('RSS:\s+([a-zA-Z0-9]+):\s+([0-9]+)$')
-
     # regular expression for responsiveness results
     RESULTS_RESPONSIVENESS_REGEX = re.compile(
         'MOZ_EVENT_TRACE\ssample\s\d*?\s(\d*\.?\d*)$',
@@ -403,9 +400,6 @@ class BrowserLogResults(object):
     def counters(self, counter_results=None, global_counters=None):
         """accumulate all counters"""
 
-        if counter_results is not None:
-            self.rss(counter_results)
-
         if global_counters is not None:
             if 'shutdown' in global_counters:
                 self.shutdown(global_counters)
@@ -491,23 +485,6 @@ class BrowserLogResults(object):
                         counter_results.setdefault(mainthread_counter, [])\
                             .append([int(values[mainthread_counter_keys[i]]),
                                      values['filename']])
-
-    def rss(self, counter_results):
-        """record rss counters in counter_results dictionary"""
-
-        counters = ['Main', 'Content']
-        if not set(['%s_RSS' % i for i in counters])\
-                .intersection(counter_results.keys()):
-            # no RSS counters to accumulate
-            return
-        for line in self.results_raw.split('\n'):
-            rssmatch = self.RSS_REGEX.search(line)
-            if rssmatch:
-                (type, value) = (rssmatch.group(1), rssmatch.group(2))
-                # type will be 'Main' or 'Content'
-                counter_name = '%s_RSS' % type
-                if counter_name in counter_results:
-                    counter_results[counter_name].append(value)
 
     def mainthread_io(self, counter_results):
         """record mainthread IO counters in counter_results dictionary"""

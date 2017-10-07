@@ -81,11 +81,11 @@ GetTempDir(nsIFile** aTempDir)
 }
 
 nsresult
-NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
+NS_OpenAnonymousTemporaryNsIFile(nsIFile** aFile)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (NS_WARN_IF(!aOutFileDesc)) {
+  if (NS_WARN_IF(!aFile)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -111,6 +111,19 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   }
 
   rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  tmpFile.forget(aFile);
+  return NS_OK;
+}
+
+nsresult
+NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
+{
+  nsCOMPtr<nsIFile> tmpFile;
+  nsresult rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(tmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

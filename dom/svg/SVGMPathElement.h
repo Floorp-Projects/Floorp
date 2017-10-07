@@ -66,10 +66,18 @@ public:
   already_AddRefed<SVGAnimatedString> Href();
 
 protected:
-  class PathReference : public mozilla::dom::IDTracker {
+  /**
+   * Helper that provides a reference to the 'path' element with the ID that is
+   * referenced by the 'mpath' element's 'href' attribute, and that will
+   * invalidate the parent of the 'mpath' and update mutation observers to the
+   * new path element if the element that that ID identifies changes to a
+   * different element (or none).
+   */
+  class PathElementTracker final : public IDTracker {
   public:
-    explicit PathReference(SVGMPathElement* aMpathElement) :
-      mMpathElement(aMpathElement) {}
+    explicit PathElementTracker(SVGMPathElement* aMpathElement)
+      : mMpathElement(aMpathElement)
+    {}
   protected:
     // We need to be notified when target changes, in order to request a sample
     // (which will clear animation effects that used the old target-path
@@ -101,7 +109,7 @@ protected:
   enum { HREF, XLINK_HREF };
   nsSVGString        mStringAttributes[2];
   static StringInfo  sStringInfo[2];
-  PathReference      mHrefTarget;
+  PathElementTracker mPathTracker;
 };
 
 } // namespace dom

@@ -74,6 +74,8 @@ public:
   void UnlinkHostObjectURIs();
   void TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb);
 
+  virtual bool IsInSyncOperation() { return false; }
+
 protected:
   virtual ~nsIGlobalObject();
 

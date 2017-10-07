@@ -38,6 +38,7 @@ class nsSMILTimeValueSpec
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::IDTracker IDTracker;
 
   nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, bool aIsBegin);
   ~nsSMILTimeValueSpec();
@@ -86,10 +87,22 @@ protected:
                                           // the target.
   nsSMILTimeValueSpecParams     mParams;
 
-  class TimeReferenceElement : public mozilla::dom::IDTracker
+  /**
+   * If our nsSMILTimeValueSpec exists for a 'begin' or 'end' attribute with a
+   * value that specifies a time that is relative to the animation of some
+   * other element, it will create an instance of this class to reference and
+   * track that other element.  For example, if the nsSMILTimeValueSpec is for
+   * end='a.end+2s', an instance of this class will be created to track the
+   * element associated with the element ID "a".  This class will notify the
+   * nsSMILTimeValueSpec if the element that that ID identifies changes to a
+   * different element (or none).
+   */
+  class TimeReferenceTracker final : public IDTracker
   {
   public:
-    explicit TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    explicit TimeReferenceTracker(nsSMILTimeValueSpec* aOwner)
+      : mSpec(aOwner)
+    {}
     void ResetWithElement(Element* aTo) {
       RefPtr<Element> from = get();
       Unlink();
@@ -107,7 +120,7 @@ protected:
     nsSMILTimeValueSpec* mSpec;
   };
 
-  TimeReferenceElement mReferencedElement;
+  TimeReferenceTracker mReferencedElement;
 
   class EventListener final : public nsIDOMEventListener
   {

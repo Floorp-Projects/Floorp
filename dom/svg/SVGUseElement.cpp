@@ -62,7 +62,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGUseElement,
                                                   SVGUseElementBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginal)
-  tmp->mSource.Traverse(&cb);
+  tmp->mReferencedElementTracker.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGUseElement,
@@ -73,7 +73,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGUseElement,
 // Implementation
 
 SVGUseElement::SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGUseElementBase(aNodeInfo), mSource(this)
+  : SVGUseElementBase(aNodeInfo)
+  , mReferencedElementTracker(this)
 {
 }
 
@@ -210,12 +211,12 @@ SVGUseElement::NodeWillBeDestroyed(const nsINode *aNode)
 already_AddRefed<nsIContent>
 SVGUseElement::CreateAnonymousContent()
 {
-  if (mSource.get()) {
-    mSource.get()->RemoveMutationObserver(this);
+  if (mReferencedElementTracker.get()) {
+    mReferencedElementTracker.get()->RemoveMutationObserver(this);
   }
 
   LookupHref();
-  nsIContent* targetContent = mSource.get();
+  nsIContent* targetContent = mReferencedElementTracker.get();
   if (!targetContent)
     return nullptr;
 
@@ -300,7 +301,7 @@ SVGUseElement::CreateAnonymousContent()
 nsIURI*
 SVGUseElement::GetSourceDocURI()
 {
-  nsIContent* targetContent = mSource.get();
+  nsIContent* targetContent = mReferencedElementTracker.get();
   if (!targetContent)
     return nullptr;
 
@@ -378,7 +379,7 @@ SVGUseElement::LookupHref()
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
-  mSource.Reset(this, targetURI);
+  mReferencedElementTracker.Reset(this, targetURI);
 }
 
 void
@@ -396,10 +397,10 @@ SVGUseElement::TriggerReclone()
 void
 SVGUseElement::UnlinkSource()
 {
-  if (mSource.get()) {
-    mSource.get()->RemoveMutationObserver(this);
+  if (mReferencedElementTracker.get()) {
+    mReferencedElementTracker.get()->RemoveMutationObserver(this);
   }
-  mSource.Unlink();
+  mReferencedElementTracker.Unlink();
 }
 
 //----------------------------------------------------------------------

@@ -564,13 +564,25 @@ NullHttpChannel::SetTimingEnabled(bool aTimingEnabled)
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRedirectCount(uint16_t *aRedirectCount)
+NullHttpChannel::GetRedirectCount(uint8_t *aRedirectCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRedirectCount(uint16_t aRedirectCount)
+NullHttpChannel::SetRedirectCount(uint8_t aRedirectCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetInternalRedirectCount(uint8_t *aRedirectCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetInternalRedirectCount(uint8_t aRedirectCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

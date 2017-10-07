@@ -227,6 +227,14 @@ auto GeckoAppShell::EnableSensor(int32_t a0) -> void
     return mozilla::jni::Method<EnableSensor_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
+constexpr char GeckoAppShell::GetAppNotes_t::name[];
+constexpr char GeckoAppShell::GetAppNotes_t::signature[];
+
+auto GeckoAppShell::GetAppNotes() -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetAppNotes_t>::Call(GeckoAppShell::Context(), nullptr);
+}
+
 constexpr char GeckoAppShell::GetApplicationContext_t::name[];
 constexpr char GeckoAppShell::GetApplicationContext_t::signature[];
 

@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PChildToParentStream;
+include protocol PFileDescriptorSet;
+include protocol PIPCBlobInputStream;
+include protocol PParentToChildStream;
+
+include IPCBlob;
+
+namespace mozilla {
+namespace ipc {
+
+union IPCBlobOrError
+{
+  IPCBlob;
+  nsresult;
+};
+
+protocol PTemporaryIPCBlob
+{
+  manager PBackground;
+
+  // When this actor is created on the child side, the parent will send
+  // immediatelly back a FileDescriptor or a __delete__ in case of error.
+  // When the FileDescriptor is received, the child has to call
+  // OperationDone(). When OperationDone() is received on the parent side, the
+  // parent actor will send a __delete__.
+
+child:
+  async FileDesc(FileDescriptor aFD);
+  async __delete__(IPCBlobOrError aBlobOrError);
+
+parent:
+  async OperationDone(bool aSuccess, nsCString aContentType);
+};
+
+} // namespace dom
+} // namespace mozilla

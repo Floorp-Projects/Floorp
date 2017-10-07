@@ -898,6 +898,10 @@ public:
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsINode** aEndContainer,
                                       int32_t* aEndOffset);
+
+  static nsresult GetEndChildNode(Selection* aSelection,
+                                  nsIContent** aEndNode);
+
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode* aNode, int32_t indent = 0);
 #endif

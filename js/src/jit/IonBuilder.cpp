@@ -9642,7 +9642,7 @@ IonBuilder::jsop_checkobjcoercible()
 }
 
 uint32_t
-IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed)
+IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, jsid id, uint32_t* pnfixed)
 {
     if (!types || types->unknownObject() || !types->objectOrSentinel()) {
         trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
@@ -9666,7 +9666,7 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_
             return UINT32_MAX;
         }
 
-        HeapTypeSetKey property = key->property(NameToId(name));
+        HeapTypeSetKey property = key->property(id);
         if (!property.maybeTypes() ||
             !property.maybeTypes()->definiteProperty() ||
             property.nonData(constraints()))
@@ -9696,7 +9696,7 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_
 }
 
 uint32_t
-IonBuilder::getUnboxedOffset(TemporaryTypeSet* types, PropertyName* name, JSValueType* punboxedType)
+IonBuilder::getUnboxedOffset(TemporaryTypeSet* types, jsid id, JSValueType* punboxedType)
 {
     if (!types || types->unknownObject() || !types->objectOrSentinel()) {
         trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
@@ -9726,7 +9726,7 @@ IonBuilder::getUnboxedOffset(TemporaryTypeSet* types, PropertyName* name, JSValu
             return UINT32_MAX;
         }
 
-        const UnboxedLayout::Property* property = layout->lookup(name);
+        const UnboxedLayout::Property* property = layout->lookup(id);
         if (!property) {
             trackOptimizationOutcome(TrackedOutcome::StructNoField);
             return UINT32_MAX;
@@ -10711,7 +10711,7 @@ IonBuilder::getPropTryDefiniteSlot(bool* emitted, MDefinition* obj, PropertyName
     MOZ_ASSERT(*emitted == false);
 
     uint32_t nfixed;
-    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name, &nfixed);
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), NameToId(name), &nfixed);
     if (slot == UINT32_MAX)
         return Ok();
 
@@ -10859,7 +10859,7 @@ IonBuilder::getPropTryUnboxed(bool* emitted, MDefinition* obj, PropertyName* nam
     MOZ_ASSERT(*emitted == false);
 
     JSValueType unboxedType;
-    uint32_t offset = getUnboxedOffset(obj->resultTypeSet(), name, &unboxedType);
+    uint32_t offset = getUnboxedOffset(obj->resultTypeSet(), NameToId(name), &unboxedType);
     if (offset == UINT32_MAX)
         return Ok();
 
@@ -11721,7 +11721,7 @@ IonBuilder::setPropTryDefiniteSlot(bool* emitted, MDefinition* obj,
     }
 
     uint32_t nfixed;
-    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name, &nfixed);
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), NameToId(name), &nfixed);
     if (slot == UINT32_MAX)
         return Ok();
 
@@ -11839,7 +11839,7 @@ IonBuilder::setPropTryUnboxed(bool* emitted, MDefinition* obj,
     }
 
     JSValueType unboxedType;
-    uint32_t offset = getUnboxedOffset(obj->resultTypeSet(), name, &unboxedType);
+    uint32_t offset = getUnboxedOffset(obj->resultTypeSet(), NameToId(name), &unboxedType);
     if (offset == UINT32_MAX)
         return Ok();
 
@@ -12730,6 +12730,10 @@ IonBuilder::jsop_in()
         MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ false));
         if (emitted)
             return Ok();
+
+        MOZ_TRY(hasTryDefiniteSlotOrUnboxed(&emitted, obj, id));
+        if (emitted)
+            return Ok();
     }
 
     MInCache* ins = MInCache::New(alloc(), id, obj);
@@ -12817,6 +12821,43 @@ IonBuilder::hasTryNotDefined(bool* emitted, MDefinition* obj, MDefinition* id, b
 }
 
 AbortReasonOr<Ok>
+IonBuilder::hasTryDefiniteSlotOrUnboxed(bool* emitted, MDefinition* obj, MDefinition* id)
+{
+    // Fold |id in obj| to |true|, when obj definitely contains a property with
+    // that name.
+    MOZ_ASSERT(!*emitted);
+
+    if (obj->type() != MIRType::Object)
+        return Ok();
+
+    MConstant* idConst = id->maybeConstantValue();
+    jsid propId;
+    if (!idConst || !ValueToIdPure(idConst->toJSValue(), &propId))
+        return Ok();
+
+    if (propId != IdToTypeId(propId))
+        return Ok();
+
+    // Try finding a native definite slot first.
+    uint32_t nfixed;
+    uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), propId, &nfixed);
+    if (slot == UINT32_MAX) {
+        // Check for unboxed object properties next.
+        JSValueType unboxedType;
+        uint32_t offset = getUnboxedOffset(obj->resultTypeSet(), propId, &unboxedType);
+        if (offset == UINT32_MAX)
+            return Ok();
+    }
+
+    *emitted = true;
+
+    pushConstant(BooleanValue(true));
+    obj->setImplicitlyUsedUnchecked();
+    id->setImplicitlyUsedUnchecked();
+    return Ok();
+}
+
+AbortReasonOr<Ok>
 IonBuilder::jsop_hasown()
 {
     MDefinition* obj = convertUnboxedObjects(current->pop());
@@ -12824,7 +12865,12 @@ IonBuilder::jsop_hasown()
 
     if (!forceInlineCaches()) {
         bool emitted = false;
+
         MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ true));
+        if (emitted)
+            return Ok();
+
+        MOZ_TRY(hasTryDefiniteSlotOrUnboxed(&emitted, obj, id));
         if (emitted)
             return Ok();
     }

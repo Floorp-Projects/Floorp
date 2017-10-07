@@ -54,8 +54,6 @@ public class LauncherActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        GeckoAppShell.ensureCrashHandling();
-
         final SafeIntent safeIntent = new SafeIntent(getIntent());
 
         // Is this deep link?

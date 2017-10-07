@@ -2389,20 +2389,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     // If the parent has children, position the iterator
     // on the child that is to the left of the offset.
 
-    uint32_t childIndex = offset;
-
-    if (childIndex > 0) {
-      uint32_t numChildren = parent->GetChildCount();
-      NS_ASSERTION(childIndex <= numChildren, "Invalid selection offset!");
-
-      if (childIndex > numChildren) {
-        childIndex = numChildren;
-      }
-
-      childIndex -= 1;
+    nsIContent* content = range->GetChildAtStartOffset();
+    if (content && parent->GetFirstChild() != content) {
+      content = content->GetPreviousSibling();
     }
-
-    nsIContent* content = parent->GetChildAt(childIndex);
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
     rv = iter->PositionAt(content);

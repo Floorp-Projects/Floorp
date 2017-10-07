@@ -11,7 +11,6 @@
 #include "MultipartBlobImpl.h"
 #include "nsIInputStream.h"
 #include "nsPIDOMWindow.h"
-#include "TemporaryBlobImpl.h"
 #include "StreamBlobImpl.h"
 #include "StringBlobImpl.h"
 
@@ -90,17 +89,6 @@ Blob::CreateMemoryBlob(nsISupports* aParent, void* aMemoryBuffer,
 {
   RefPtr<Blob> blob = Blob::Create(aParent,
     new MemoryBlobImpl(aMemoryBuffer, aLength, aContentType));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::CreateTemporaryBlob(nsISupports* aParent, PRFileDesc* aFD,
-                          uint64_t aStartPos, uint64_t aLength,
-                          const nsAString& aContentType)
-{
-  RefPtr<Blob> blob = Blob::Create(aParent,
-    new TemporaryBlobImpl(aFD, aStartPos, aLength, aContentType));
   MOZ_ASSERT(!blob->mImpl->IsFile());
   return blob.forget();
 }

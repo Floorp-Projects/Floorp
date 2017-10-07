@@ -1313,6 +1313,11 @@ public:
 
   void UpdateTopInnerWindow();
 
+  virtual bool IsInSyncOperation() override
+  {
+    return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
+  }
+
 protected:
   // Web IDL helpers
 

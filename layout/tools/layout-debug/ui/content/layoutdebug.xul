@@ -6,15 +6,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE window [
-  <!ENTITY % layoutdebugDTD
-           SYSTEM "chrome://layoutdebug/locale/layoutdebug.dtd">
-  %layoutdebugDTD;
-
-  <!ENTITY W3C_RDFNS "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <!ENTITY NC_RDFNS "http://home.netscape.com/NC-rdf#">
-  <!ENTITY LDB_RDFNS "http://mozilla.org/newlayout/LDB-rdf#">
-]>
+<!DOCTYPE window SYSTEM "chrome://layoutdebug/locale/layoutdebug.dtd">
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css" ?>
 
@@ -31,7 +23,6 @@
 -->
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:rdf="&W3C_RDFNS;"
         id="main-window"
         align="stretch"
         title="&ldb.MainWindow.title;"
@@ -66,59 +57,6 @@
           <menupopup id="menu_FilePopup">
             <menuitem id="menu_open" label="&ldb.Open.label;" accesskey="&ldb.Open.accesskey;" key="openFileKb" oncommand="openFile()"/>
             <menuitem id="menu_close" label="Close" accesskey="C" oncommand="window.close();"/>
-          </menupopup>
-        </menu>
-        <menu label="&ldb.RegressionTestMenu.label;"
-              accesskey="&ldb.RegressionTestMenu.accesskey;">
-          <menupopup>
-            <menuitem type="checkbox" id="menu_RTestPrintMode" label="&ldb.RegressionPrintMode.label;" accesskey="&ldb.RegressionPrintMode.accesskey;"/>
-            <menu label="&ldb.RunBaselineMenu.label;"
-                  accesskey="&ldb.RunBaselineMenu.accesskey;"
-                  id="menu_RTest_baseline"
-                  datasources="rdf:null"
-                  containment="&NC_RDFNS;child"
-                  ref="&LDB_RDFNS;Root">
-              <template>
-                <menupopup>
-                  <menuitem uri="rdf:*"
-                            label="rdf:&NC_RDFNS;name"
-                            name="rdf:&NC_RDFNS;name"
-                            oncommand="RunRTest(this.getAttribute('name'), true, document.getElementById('menu_RTestPrintMode').getAttribute('checked'));" />
-                </menupopup>
-              </template>
-            </menu>
-            <menu label="&ldb.RunVerifyMenu.label;"
-                  accesskey="&ldb.RunVerifyMenu.accesskey;"
-                  id="menu_RTest_verify"
-                  datasources="rdf:null"
-                  containment="&NC_RDFNS;child"
-                  ref="&LDB_RDFNS;Root">
-              <template>
-                <menupopup>
-                  <menuitem uri="rdf:*"
-                            label="rdf:&NC_RDFNS;name"
-                            name="rdf:&NC_RDFNS;name"
-                            oncommand="RunRTest(this.getAttribute('name'), false, document.getElementById('menu_RTestPrintMode').getAttribute('checked'));" />
-                </menupopup>
-              </template>
-            </menu>
-            <menuseparator />
-            <menuitem id="menu_AddNewList" label="&ldb.AddNewList.label;" accesskey="&ldb.AddNewList.accesskey;" oncommand="gRTestIndexList.add();" />
-            <menu label="&ldb.RemoveListMenu.label;"
-                  accesskey="&ldb.RemoveListMenu.accesskey;"
-                  id="menu_RTest_remove"
-                  datasources="rdf:null"
-                  containment="&NC_RDFNS;child"
-                  ref="&LDB_RDFNS;Root">
-              <template>
-                <menupopup>
-                  <menuitem uri="rdf:*"
-                            label="rdf:&NC_RDFNS;name"
-                            name="rdf:&NC_RDFNS;name"
-                            oncommand="gRTestIndexList.remove(this.getAttribute('name'));" />
-                </menupopup>
-              </template>
-            </menu>
           </menupopup>
         </menu>
         <menu label="&ldb.ToggleMenu.label;"

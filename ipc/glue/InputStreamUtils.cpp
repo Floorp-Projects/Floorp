@@ -20,7 +20,6 @@
 #include "nsMultiplexInputStream.h"
 #include "nsNetCID.h"
 #include "nsStringStream.h"
-#include "nsTemporaryFileInputStream.h"
 #include "nsXULAppAPI.h"
 #include "SlicedInputStream.h"
 
@@ -83,10 +82,6 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
 
     case InputStreamParams::TFileInputStreamParams:
       serializable = do_CreateInstance(kFileInputStreamCID);
-      break;
-
-    case InputStreamParams::TTemporaryFileInputStreamParams:
-      serializable = new nsTemporaryFileInputStream();
       break;
 
     case InputStreamParams::TBufferedInputStreamParams:

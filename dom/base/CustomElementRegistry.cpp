@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CustomElementRegistry.h"
 
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/WebComponentsBinding.h"

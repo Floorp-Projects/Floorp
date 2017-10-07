@@ -197,6 +197,37 @@ public:
   // Queue an async microtask to the current main or worker thread.
   virtual void DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable);
 
+  // Call EnterMicroTask when you're entering JS execution.
+  // Usually the best way to do this is to use nsAutoMicroTask.
+  void EnterMicroTask()
+  {
+    ++mMicroTaskLevel;
+  }
+
+  void LeaveMicroTask()
+  {
+    if (--mMicroTaskLevel == 0) {
+      PerformMainThreadMicroTaskCheckpoint();
+    }
+  }
+
+  bool IsInMicroTask()
+  {
+    return mMicroTaskLevel != 0;
+  }
+
+  uint32_t MicroTaskLevel()
+  {
+    return mMicroTaskLevel;
+  }
+
+  void SetMicroTaskLevel(uint32_t aLevel)
+  {
+    mMicroTaskLevel = aLevel;
+  }
+
+  void PerformMainThreadMicroTaskCheckpoint();
+
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
   // Promises in this list have been rejected in the last turn of the
@@ -237,6 +268,27 @@ private:
   bool mDoingStableStates;
 
   bool mDisableMicroTaskCheckpoint;
+
+  uint32_t mMicroTaskLevel;
+};
+
+class MOZ_STACK_CLASS nsAutoMicroTask
+{
+public:
+  nsAutoMicroTask()
+  {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    if (ccjs) {
+      ccjs->EnterMicroTask();
+    }
+  }
+  ~nsAutoMicroTask()
+  {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    if (ccjs) {
+      ccjs->LeaveMicroTask();
+    }
+  }
 };
 
 } // namespace mozilla

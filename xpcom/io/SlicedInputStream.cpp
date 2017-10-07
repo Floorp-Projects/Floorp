@@ -28,7 +28,7 @@ NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
+SlicedInputStream::SlicedInputStream(already_AddRefed<nsIInputStream> aInputStream,
                                      uint64_t aStart, uint64_t aLength)
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
@@ -41,8 +41,8 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
   , mAsyncWaitFlags(0)
   , mAsyncWaitRequestedCount(0)
 {
-  MOZ_ASSERT(aInputStream);
-  SetSourceStream(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = mozilla::Move(aInputStream);
+  SetSourceStream(inputStream.forget());
 }
 
 SlicedInputStream::SlicedInputStream()
@@ -62,35 +62,34 @@ SlicedInputStream::~SlicedInputStream()
 {}
 
 void
-SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
+SlicedInputStream::SetSourceStream(already_AddRefed<nsIInputStream> aInputStream)
 {
   MOZ_ASSERT(!mInputStream);
-  MOZ_ASSERT(aInputStream);
 
-  mInputStream = aInputStream;
+  mInputStream = mozilla::Move(aInputStream);
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
-    do_QueryInterface(aInputStream);
-  if (cloneableStream && SameCOMIdentity(aInputStream, cloneableStream)) {
+    do_QueryInterface(mInputStream);
+  if (cloneableStream && SameCOMIdentity(mInputStream, cloneableStream)) {
     mWeakCloneableInputStream = cloneableStream;
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializableStream =
-    do_QueryInterface(aInputStream);
+    do_QueryInterface(mInputStream);
   if (serializableStream &&
-      SameCOMIdentity(aInputStream, serializableStream)) {
+      SameCOMIdentity(mInputStream, serializableStream)) {
     mWeakIPCSerializableInputStream = serializableStream;
   }
 
   nsCOMPtr<nsISeekableStream> seekableStream =
-    do_QueryInterface(aInputStream);
-  if (seekableStream && SameCOMIdentity(aInputStream, seekableStream)) {
+    do_QueryInterface(mInputStream);
+  if (seekableStream && SameCOMIdentity(mInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-    do_QueryInterface(aInputStream);
-  if (asyncInputStream && SameCOMIdentity(aInputStream, asyncInputStream)) {
+    do_QueryInterface(mInputStream);
+  if (asyncInputStream && SameCOMIdentity(mInputStream, asyncInputStream)) {
     mWeakAsyncInputStream = asyncInputStream;
   }
 }
@@ -101,7 +100,7 @@ SlicedInputStream::Close()
   NS_ENSURE_STATE(mInputStream);
 
   mClosed = true;
-  return NS_OK;
+  return mInputStream->Close();
 }
 
 // nsIInputStream interface
@@ -226,7 +225,7 @@ SlicedInputStream::Clone(nsIInputStream** aResult)
   }
 
   nsCOMPtr<nsIInputStream> sis =
-    new SlicedInputStream(clonedStream, mStart, mLength);
+    new SlicedInputStream(clonedStream.forget(), mStart, mLength);
 
   sis.forget(aResult);
   return NS_OK;
@@ -240,6 +239,7 @@ SlicedInputStream::CloseWithStatus(nsresult aStatus)
   NS_ENSURE_STATE(mInputStream);
   NS_ENSURE_STATE(mWeakAsyncInputStream);
 
+  mClosed = true;
   return mWeakAsyncInputStream->CloseWithStatus(aStatus);
 }
 
@@ -384,7 +384,7 @@ SlicedInputStream::Deserialize(const mozilla::ipc::InputStreamParams& aParams,
     return false;
   }
 
-  SetSourceStream(stream);
+  SetSourceStream(stream.forget());
 
   mStart = params.start();
   mLength = params.length();

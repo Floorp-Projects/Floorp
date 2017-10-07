@@ -21,7 +21,8 @@ interface nsITimedChannel : nsISupports {
   attribute boolean timingEnabled;
 
   // The number of redirects
-  attribute uint16_t redirectCount;
+  attribute uint8_t redirectCount;
+  attribute uint8_t internalRedirectCount;
 
   [noscript] readonly attribute TimeStamp channelCreation;
   [noscript] readonly attribute TimeStamp asyncOpen;

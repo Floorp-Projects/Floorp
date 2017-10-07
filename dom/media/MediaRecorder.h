@@ -26,16 +26,17 @@ class GlobalObject;
 namespace dom {
 
 class AudioNode;
+class Blob;
 class DOMException;
 
 /**
  * Implementation of https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-capture/MediaRecorder.html
  * The MediaRecorder accepts a mediaStream as input source passed from UA. When recorder starts,
  * a MediaEncoder will be created and accept the mediaStream as input source.
- * Encoder will get the raw data by track data changes, encode it by selected MIME Type, then store the encoded in EncodedBufferCache object.
+ * Encoder will get the raw data by track data changes, encode it by selected MIME Type, then store the encoded in a MutableBlobStorage object.
  * The encoded data will be extracted on every timeslice passed from Start function call or by RequestData function.
  * Thread model:
- * When the recorder starts, it creates a "Media Encoder" thread to read data from MediaEncoder object and store buffer in EncodedBufferCache object.
+ * When the recorder starts, it creates a "Media Encoder" thread to read data from MediaEncoder object and store buffer in MutableBlobStorage object.
  * Also extract the encoded data and create blobs on every timeslice passed from start function or RequestData function called by UA.
  */
 
@@ -72,7 +73,7 @@ public:
   void Pause(ErrorResult& aResult);
   // Resume a paused recording.
   void Resume(ErrorResult& aResult);
-  // Extract encoded data Blob from EncodedBufferCache.
+  // Extract encoded data Blob from MutableBlobStorage.
   void RequestData(ErrorResult& aResult);
   // Return the The DOMMediaStream passed from UA.
   DOMMediaStream* Stream() const { return mDOMStream; }
@@ -121,7 +122,7 @@ protected:
 
   MediaRecorder& operator = (const MediaRecorder& x) = delete;
   // Create dataavailable event with Blob data and it runs in main thread
-  nsresult CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob);
+  nsresult CreateAndDispatchBlobEvent(Blob* aBlob);
   // Creating a simple event to notify UA simple event.
   void DispatchSimpleEvent(const nsAString & aStr);
   // Creating a error event with message.

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://w3c-test.org/webperf/specs/ResourceTiming/#performanceresourcetiming
+ * https://w3c.github.io/resource-timing/#performanceresourcetiming
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -12,14 +12,10 @@
 
 interface PerformanceResourceTiming : PerformanceEntry
 {
-  // A string with the name of that element that initiated the load.
-  // If the initiator is a CSS resource, the initiatorType attribute must return
-  // the string "css".
-  // If the initiator is an XMLHttpRequest object, the initiatorType attribute
-  // must return the string "xmlhttprequest".
   readonly attribute DOMString initiatorType;
   readonly attribute DOMString nextHopProtocol;
 
+  readonly attribute DOMHighResTimeStamp workerStart;
   readonly attribute DOMHighResTimeStamp redirectStart;
   readonly attribute DOMHighResTimeStamp redirectEnd;
   readonly attribute DOMHighResTimeStamp fetchStart;

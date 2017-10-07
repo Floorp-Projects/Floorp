@@ -71,8 +71,22 @@ PerformanceResourceTiming::~PerformanceResourceTiming()
 DOMHighResTimeStamp
 PerformanceResourceTiming::StartTime() const
 {
-  DOMHighResTimeStamp startTime = mTiming->RedirectStartHighRes();
-  return startTime ? startTime : mTiming->FetchStartHighRes();
+  // Force the start time to be the earliest of:
+  //  - RedirectStart
+  //  - WorkerStart
+  //  - AsyncOpen
+  // Ignore zero values.  The RedirectStart and WorkerStart values
+  // can come from earlier redirected channels prior to the AsyncOpen
+  // time being recorded.
+  DOMHighResTimeStamp redirect = mTiming->RedirectStartHighRes();
+  redirect = redirect ? redirect : DBL_MAX;
+
+  DOMHighResTimeStamp worker = mTiming->WorkerStartHighRes();
+  worker = worker ? worker : DBL_MAX;
+
+  DOMHighResTimeStamp asyncOpen = mTiming->AsyncOpenHighRes();
+
+  return std::min(asyncOpen, std::min(redirect, worker));
 }
 
 JSObject*

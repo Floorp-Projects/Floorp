@@ -4726,6 +4726,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
                                : nullptr;
     NS_ENSURE_STATE(parent);
     int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
+    nsIContent* child = aSelection.GetRangeAt(0)->GetChildAtStartOffset();
 
     rv = SplitAsNeeded(*nsGkAtoms::div, parent, offset);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -4737,8 +4738,10 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       // Making use of html structure... if next node after where we are
       // putting our div is not a block, then the br we found is in same block
       // we are, so it's safe to consume it.
-      nsCOMPtr<nsIContent> sibling = htmlEditor->GetNextHTMLSibling(parent,
-                                                                    offset);
+      nsCOMPtr<nsIContent> sibling;
+      if (child) {
+        sibling = htmlEditor->GetNextHTMLSibling(child);
+      }
       if (sibling && !IsBlockNode(*sibling)) {
         rv = htmlEditor->DeleteNode(brContent);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -6382,8 +6385,10 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
     NS_ENSURE_SUCCESS(rv, rv);
     // Layout tells the caret to blink in a weird place if we don't place a
     // break after the header.
-    nsCOMPtr<nsIContent> sibling =
-      htmlEditor->GetNextHTMLSibling(headerParent, offset + 1);
+    nsCOMPtr<nsIContent> sibling;
+    if (aHeader.GetNextSibling()) {
+      sibling = htmlEditor->GetNextHTMLSibling(aHeader.GetNextSibling());
+    }
     if (!sibling || !sibling->IsHTMLElement(nsGkAtoms::br)) {
       ClearCachedStyles();
       htmlEditor->mTypeInState->ClearAllProps();
@@ -7494,7 +7499,11 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
   }
 
   // Are we before a block?  If so try set caret to prior content
-  node = htmlEditor->GetNextHTMLSibling(selNode, selOffset);
+  if (child) {
+    node = htmlEditor->GetNextHTMLSibling(child);
+  } else {
+    node = nullptr;
+  }
   if (node && IsBlockNode(*node)) {
     aSelection.SetInterlinePosition(false);
   }
