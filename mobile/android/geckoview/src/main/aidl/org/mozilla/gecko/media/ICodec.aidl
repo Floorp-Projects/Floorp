@@ -15,6 +15,7 @@ interface ICodec {
     void setCallbacks(in ICodecCallbacks callbacks);
     boolean configure(in FormatParam format, in GeckoSurface surface, in int flags, in String drmStubId);
     boolean isAdaptivePlaybackSupported();
+    boolean isTunneledPlaybackSupported();
     void start();
     void stop();
     void flush();

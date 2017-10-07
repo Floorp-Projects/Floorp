@@ -77,9 +77,7 @@ function init_all() {
   window.addEventListener("hashchange", onHashChange);
   gotoPref();
 
-  init_dynamic_padding();
-
-  let helpButton = document.querySelector(".help-button");
+  let helpButton = document.querySelector(".help-button > .text-link");
   let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
   helpButton.setAttribute("href", helpUrl);
 
@@ -87,39 +85,6 @@ function init_all() {
     "bubbles": true,
     "cancelable": true
   }));
-}
-
-// Make the space above the categories list shrink on low window heights
-function init_dynamic_padding() {
-  let categories = document.getElementById("categories");
-  let catPadding = Number.parseInt(getComputedStyle(categories)
-                                     .getPropertyValue("padding-top"));
-  let helpButton = document.querySelector(".help-button");
-  let helpButtonCS = getComputedStyle(helpButton);
-  let helpHeight = Number.parseInt(helpButtonCS.height);
-  let helpBottom = Number.parseInt(helpButtonCS.bottom);
-  // Reduce the padding to account for less space, but due
-  // to bug 1357841, the status panel will overlap the link.
-  const reducedHelpButtonBottomFactor = .75;
-  let reducedHelpButtonBottom = helpBottom * reducedHelpButtonBottomFactor;
-  let fullHelpHeight = helpHeight + reducedHelpButtonBottom;
-  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom +
-                   fullHelpHeight;
-  let mediaRule = `
-  @media (max-height: ${fullHeight}px) {
-    #categories {
-      padding-top: calc(100vh - ${fullHeight - catPadding}px);
-      padding-bottom: ${fullHelpHeight}px;
-    }
-    .help-button {
-      bottom: ${reducedHelpButtonBottom / 2}px;
-    }
-  }
-  `;
-  let mediaStyle = document.createElementNS("http://www.w3.org/1999/xhtml", "html:style");
-  mediaStyle.setAttribute("type", "text/css");
-  mediaStyle.appendChild(document.createCDATASection(mediaRule));
-  document.documentElement.appendChild(mediaStyle);
 }
 
 function telemetryBucketForCategory(category) {

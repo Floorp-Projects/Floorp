@@ -322,8 +322,7 @@ async function test_contextmenu(selector, menuItems, options = {}) {
     }
 
     if (options.maybeScreenshotsPresent &&
-        !Services.prefs.getBoolPref("extensions.screenshots.disabled", false) &&
-        !Services.prefs.getBoolPref("extensions.screenshots.system-disabled", false)) {
+        !Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
       let screenshotItems = [
         "---", null,
         "screenshots_mozilla_org_create-screenshot", true

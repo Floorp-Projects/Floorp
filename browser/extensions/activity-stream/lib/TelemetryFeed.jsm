@@ -28,7 +28,9 @@ const ACTIVITY_STREAM_ENDPOINT_PREF = "browser.newtabpage.activity-stream.teleme
 const USER_PREFS_ENCODING = {
   "showSearch": 1 << 0,
   "showTopSites": 1 << 1,
-  "feeds.section.topstories": 1 << 2
+  "feeds.section.topstories": 1 << 2,
+  "feeds.section.highlights": 1 << 3,
+  "feeds.snippets": 1 << 4
 };
 
 const IMPRESSION_STATS_RESET_TIME = 60 * 60 * 1000; // 60 minutes

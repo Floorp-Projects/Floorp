@@ -8,7 +8,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import json
 import logging
-import re
 
 import time
 import yaml
@@ -20,13 +19,6 @@ from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .actions import render_actions_json
 from taskgraph.util.partials import populate_release_history
-from . import GECKO
-
-from taskgraph.util.templates import Templates
-from taskgraph.util.time import (
-    json_time_from_now,
-    current_json_time,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -113,9 +105,6 @@ def taskgraph_decision(options):
 
     # write out the parameters used to generate this graph
     write_artifact('parameters.yml', dict(**parameters))
-
-    # write out the yml file for action tasks
-    write_artifact('action.yml', get_action_yml(parameters))
 
     # write out the public/actions.json file
     write_artifact('actions.json', render_actions_json(parameters))
@@ -249,24 +238,3 @@ def write_artifact(filename, data):
             json.dump(data, f, sort_keys=True, indent=2, separators=(',', ': '))
     else:
         raise TypeError("Don't know how to write to {}".format(filename))
-
-
-def get_action_yml(parameters):
-    # NOTE: when deleting this function, delete taskcluster/taskgraph/util/templates.py too
-    templates = Templates(os.path.join(GECKO, "taskcluster/taskgraph"))
-    action_parameters = parameters.copy()
-
-    match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', action_parameters['head_repository'])
-    if not match:
-        raise Exception('Unrecognized head_repository')
-    repo_scope = 'assume:repo:{}/{}:*'.format(
-        match.group(1), match.group(2))
-
-    action_parameters.update({
-        "action": "{{action}}",
-        "action_args": "{{action_args}}",
-        "repo_scope": repo_scope,
-        "from_now": json_time_from_now,
-        "now": current_json_time()
-    })
-    return templates.load('action.yml', action_parameters)

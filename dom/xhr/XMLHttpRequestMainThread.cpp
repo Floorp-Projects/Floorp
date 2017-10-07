@@ -573,6 +573,11 @@ XMLHttpRequestMainThread::AppendToResponseText(const char * aSrcBuffer,
   MOZ_ASSERT(written <= destBufferLen.value());
   Unused << hadErrors;
   helper.AddLength(written);
+
+  if (aLast) {
+    mDecoder = nullptr;
+  }
+
   return NS_OK;
 }
 

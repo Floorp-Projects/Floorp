@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_media_CloneableWithRangeMediaResource_h
 #define mozilla_dom_media_CloneableWithRangeMediaResource_h
 
-#include "MediaResource.h"
+#include "BaseMediaResource.h"
 #include "nsICloneableInputStream.h"
 
 namespace mozilla {

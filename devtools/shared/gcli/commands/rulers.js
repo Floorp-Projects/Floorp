@@ -28,7 +28,7 @@ exports.items = [
     description: l10n.lookup("rulersDesc"),
     manual: l10n.lookup("rulersManual"),
     buttonId: "command-button-rulers",
-    buttonClass: "command-button command-button-invertable",
+    buttonClass: "command-button",
     tooltipText: l10n.lookup("rulersTooltip"),
     state: {
       isChecked: (target) => CommandState.isEnabledForTarget(target, "rulers"),

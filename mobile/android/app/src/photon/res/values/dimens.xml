@@ -29,7 +29,6 @@
     <dimen name="browser_toolbar_height_flipper">@dimen/browser_toolbar_height</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
-    <dimen name="browser_toolbar_menu_icon_height">16dp</dimen>
     <dimen name="browser_toolbar_menu_radius">2dp</dimen>
 
     <dimen name="browser_toolbar_url_height">32dp</dimen>
@@ -175,9 +174,6 @@
     <dimen name="tab_panel_grid_item_vpadding_compact">6dp</dimen>
 
     <!-- TabsListLayout -->
-    <dimen name="tab_panel_list_item_top_padding">6dp</dimen>
-
-
     <dimen name="tab_highlight_stroke_width">5dp</dimen>
 
     <!-- PageActionButtons dimensions -->

@@ -3437,6 +3437,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mFarendObserverRef(nullptr)
 #endif
   , mSelfRef(this)
+  , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif

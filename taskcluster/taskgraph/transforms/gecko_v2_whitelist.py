@@ -127,6 +127,7 @@ JOB_NAME_WHITELIST = set([
     'win64-asan-debug',
     'win64-asan-opt',
     'win64-dmd-opt',
+    'win32-mingw32-debug',
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\

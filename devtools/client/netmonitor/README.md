@@ -1,6 +1,6 @@
 # Network Monitor
 
-The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [MDN](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor) to learn how to use the tool.
+The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [MDN](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor) to learn all the features and how to use the tool.
 
 ## Prerequisite
 
@@ -8,22 +8,14 @@ If you want to build the Network Monitor inside of the DevTools toolbox (Firefox
 
 If you would like to run the Network Monitor in the browser tab (experimental), you need following packages:
 
-* [node](https://nodejs.org/) >= 6.9.x
-* [npm](https://docs.npmjs.com/getting-started/installing-node) >= 3.x
-* [yarn](https://yarnpkg.com/docs/install) >= 0.21.x
-* [Firefox](https://www.mozilla.org/firefox/new/) either the released version or build from the source code.
-
-Once `node` (`npm` included) is installed, use the following command to install `yarn`.
-
-```
-$ npm install -g yarn
-```
+* [node](https://nodejs.org/) >= 6.9.x JavaScript runtime.
+* [yarn](https://yarnpkg.com/docs/install) >= 0.21.x the pacakage dependency management tool.
+* [Firefox](https://www.mozilla.org/firefox/new/) any version or build from the source code.
 
 ## Quick Setup
 
 Navigate to the `mozilla-central/devtools/client/netmonitor` folder with your terminal.
-Note that this folder is available after `mozilla-central` was cloned in order to get
-a local copy of the repository. Then run the following commands:
+Note that this folder is available after `mozilla-central` was cloned in order to get a local copy of the repository. Then run the following commands:
 
 ```bash
 # Install packages
@@ -40,9 +32,13 @@ Then open `localhost:8000` in any browser to see all tabs in Firefox.
 
 ### More detailed setup
 
-If you have an opened Firefox browser, you can manually configure Firefox as well.
+Instead of running command to open a new Firefox window like
 
-Type `about:config` in Firefox URL field, grant the warning to access preferences. We need to set two preferences:
+```
+firefox http://localhost:8000 --start-debugger-server 6080
+```
+
+If you have an opened Firefox browser, you can manually configure Firefox via type `about:config` in Firefox URL field, grant the warning to access preferences. And set these two preferences:
 
 * disable `devtools.debugger.prompt-connection` to remove the connection prompt.
 * enable `devtools.debugger.remote-enabled` to allow remote debugging a browser tab via the Mozilla remote debugging protocol (RDP)
@@ -53,13 +49,17 @@ Go to the Web Developer menu in Firefox and select [Developer Toolbar](https://d
 
 The command will make Firefox act as a remote debugging server.
 
-Then run the command
+Run the command
 
 `yarn start`
+
+Then open `localhost:8000` in any browser to see all tabs in Firefox.
 
 ### How it works
 
 The Network Monitor uses [webpack](https://webpack.js.org/) and several packages from [devtools-core](https://github.com/devtools-html/devtools-core) to run the Network Monitor as a normal web page. The Network Monitor uses [Mozilla remote debugging protocol](http://searchfox.org/mozilla-central/source/devtools/docs/backend/protocol.md) to fetch result and execute commands from Firefox browser.
+
+![](https://hacks.mozilla.org/files/2017/06/image4.png)
 
 Open `localhost:8000` in any browser to see the [launchpad](https://github.com/devtools-html/devtools-core/tree/master/packages/devtools-launchpad) interface. Devtools Launchpad will communicate with Firefox (the remote debugging server) and list all opened tabs from Firefox. Click one of the browser tab entry, now you can see the Network Monitor runs in a browser tab.
 
@@ -71,7 +71,7 @@ When working on make the Network Monitor running in the browser tab, you may nee
 * [devtools-launchpad](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-launchpad/#readme) provide the dev server, landing page and the bootstrap functions to run devtools in the browser tab.
 * [devtools-modules](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-modules/#readme) Devtools shared and shim modules.
 * [devtools-source-editor](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-source-editor/#readme) Source Editor component.
-* [devtools-reps](https://github.com/devtools-html/reps/#readme) remote object formatter for variables representation.
+* [devtools-reps](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-reps/#readme) remote object formatter for variables representation.
 
 Do `yarn link` modules in related module directory, then do `yarn link [module-name]` after `yarn install` modules.
 
@@ -87,7 +87,7 @@ Files used to run the Network Monitor inside of the DevTools toolbox.
 
 * `panel.js` called by devtools toolbox to launch the Network Monitor panel.
 * `index.html` panel UI and launch scripts.
-* `src/utils/firefox/` wrap function call for Firefox specific API. Files in this folder should provide alias in `webpack.config.js` to mock or polyfill those function call. Therefore run the Network Monitor in the browser tab would work.
+* `src/connector/` wrap function call for Browser specific API. Current support Firefox and Chrome(experimental).
 
 ### Run in the browser tab (experimental)
 
@@ -110,11 +110,14 @@ The Network Monitor UI is built using [React](http://searchfox.org/mozilla-centr
   - **Toolbar** Panel related functions.
   - **RequestList** Show each request information.
   - **NetworkDetailsPanel** Show detailed infomation per request.
+  - **StatusBar** Show statistics while loading.
 * `src/assets` Styles that affect the Network Monitor panel.
 
 We prefer stateless component (define by function) instead of stateful component (define by class) unless the component has to maintain its internal state.
 
 ### State
+
+![](https://hacks.mozilla.org/files/2017/06/image8.png)
 
 Besides the UI, the Network Monitor manages the app state via [Redux](http://searchfox.org/mozilla-central/source/devtools/docs/frontend/redux.md). The following locations define the app state:
 
@@ -123,4 +126,4 @@ Besides the UI, the Network Monitor manages the app state via [Redux](http://sea
 * `src/reducers/` for all reducers that change the state.
 * `src/selectors/` functions that return a formatted version of parts of the app state.
 
-We use [immutable.js](http://facebook.github.io/immutable-js/) and [reselect](https://github.com/reactjs/reselect) libraries to return new a state object efficiently.
+We use [immutable.js](http://facebook.github.io/immutable-js/) and [reselect](https://github.com/reactjs/reselect) libraries to return a new state object efficiently.

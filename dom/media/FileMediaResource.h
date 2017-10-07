@@ -6,7 +6,8 @@
 #ifndef mozilla_dom_media_FileMediaResource_h
 #define mozilla_dom_media_FileMediaResource_h
 
-#include "MediaResource.h"
+#include "BaseMediaResource.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 

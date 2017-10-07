@@ -10,8 +10,8 @@
     <color name="photon_text_main_private">#FFFFFF</color>
     <color name="photon_text_secondary">#B2B2B2</color>
     <color name="photon_text_secondary_private">#737373</color>
-    <color name="photon_text_placeholder">#737373</color>
-    <color name="photon_text_placeholder_private">#B2B2B2</color>
+    <color name="photon_text_placeholder">#B2B2B2</color>
+    <color name="photon_text_placeholder_private">#737373</color>
     <color name="photon_text_selected_highlight">#4D0A84FF</color>
     <color name="photon_text_selected_highlight_private">#4DAC39FF</color>
 
@@ -59,8 +59,6 @@
     <color name="photon_toolbar_text_color_private">#FFFFFF</color>
     <color name="photon_toolbar_image_tint">@color/photon_toolbar_text_color</color>
     <color name="photon_toolbar_image_tint_private">@color/photon_toolbar_text_color_private</color>
-    <color name="photon_toolbar_bg">#F7FAFC</color>
-    <color name="photon_toolbar_bg_private">#38383D</color>
 
     <color name="photon_search_item_text">@color/photon_text_main</color>
     <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
@@ -100,8 +98,8 @@
     <color name="tab_strip_title_lwt">#272727</color>
 
     <!-- Status bar background color -->
-    <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
-    <color name="status_bar_bg_color_private">@color/photon_toolbar_bg_private</color>
+    <color name="status_bar_bg_color">#F9F9FA</color>
+    <color name="status_bar_bg_color_private">#38383D</color>
     <color name="status_bar_bg_color_tabs_tray">@color/photon_tabs_tray_bg</color>
     <color name="status_bar_bg_color_tablet">@color/photon_tabs_tray_bg</color>
 
@@ -239,9 +237,6 @@
     <color name="panel_image_item_background">#D1D9E1</color>
     <color name="panel_icon_item_title_background">#32000000</color>
     <color name="panel_tab_text_normal">#FFBFBFBF</color>
-
-    <!-- Remote tabs setup -->
-    <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 
     <!-- Button toast colors. -->
     <color name="toast_background">#DD222222</color>
