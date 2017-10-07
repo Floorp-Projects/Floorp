@@ -2814,6 +2814,7 @@ Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
 void
 Gecko_AddBufferToCrashReport(const void* addr, size_t len)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   NS_ENSURE_TRUE_VOID(cr);
