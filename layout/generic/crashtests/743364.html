@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html style="width: 1px;">
+<head>
+<style>
+p:first-letter { }
+</style>
+<script>
+function boom()
+{
+  var p = document.querySelector("p");
+  document.documentElement.offsetHeight;
+  p.style.direction = "ltr";
+  document.documentElement.offsetHeight;
+  p.style.letterSpacing = "-56px";
+  document.documentElement.offsetHeight;
+}
+</script>
+</head>
+<body onload="boom();">
+<p style="direction: rtl; -moz-column-count: 3; white-space: pre-line;">x y
+
+</p>
+</body>
+</html>
