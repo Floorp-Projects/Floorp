@@ -3313,6 +3313,7 @@ EditorBase::GetPriorNode(nsINode* aParentNode,
 nsIContent*
 EditorBase::GetNextNode(nsINode* aParentNode,
                         int32_t aOffset,
+                        nsINode* aChildAtOffset,
                         bool aEditableNode,
                         bool aNoBlockCrossing)
 {
@@ -3327,15 +3328,16 @@ EditorBase::GetNextNode(nsINode* aParentNode,
   }
 
   // look at the child at 'aOffset'
-  nsIContent* child = aParentNode->GetChildAt(aOffset);
-  if (child) {
-    if (aNoBlockCrossing && IsBlockNode(child)) {
-      return child;
+  if (aChildAtOffset) {
+    if (aNoBlockCrossing && IsBlockNode(aChildAtOffset)) {
+      MOZ_ASSERT(aChildAtOffset->IsContent());
+      return aChildAtOffset->AsContent();
     }
 
-    nsIContent* resultNode = GetLeftmostChild(child, aNoBlockCrossing);
+    nsIContent* resultNode = GetLeftmostChild(aChildAtOffset, aNoBlockCrossing);
     if (!resultNode) {
-      return child;
+      MOZ_ASSERT(aChildAtOffset->IsContent());
+      return aChildAtOffset->AsContent();
     }
 
     if (!IsDescendantOfEditorRoot(resultNode)) {
@@ -4660,7 +4662,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   if (aAction == ePrevious) {
     selectedNode = GetPriorNode(node, offset, child, true);
   } else if (aAction == eNext) {
-    selectedNode = GetNextNode(node, offset, true);
+    selectedNode = GetNextNode(node, offset, child, true);
   }
 
   while (selectedNode &&
