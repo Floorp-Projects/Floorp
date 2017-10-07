@@ -198,7 +198,7 @@ def format_manifest(manifest):
 
 def write_zip(zip_path, prefix=None):
     """Write toolchain data to a zip file."""
-    if isinstance(prefix, unicode):
+    if isinstance(prefix, unicode): # noqa Special case for Python 2
         prefix = prefix.encode('utf-8')
 
     with JarWriter(file=zip_path, optimize=False, compress=5) as zip:

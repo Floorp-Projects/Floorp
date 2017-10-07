@@ -106,7 +106,9 @@ CATEGORIES = {
     },
     'disabled': {
         'short': 'Disabled',
-        'long': 'The disabled commands are hidden by default. Use -v to display them. These commands are unavailable for your current context, run "mach <command>" to see why.',
+        'long': 'The disabled commands are hidden by default. Use -v to display them. '
+        'These commands are unavailable for your current context, '
+        'run "mach <command>" to see why.',
         'priority': 0,
     }
 }
@@ -206,7 +208,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             dist = list(platform.linux_distribution())
             data['system']['linux_distribution'] = dist
         elif platform.system() == 'Windows':
-            win32_ver=list((platform.win32_ver())),
+            win32_ver = list((platform.win32_ver())),
             data['system']['win32_ver'] = win32_ver
         elif platform.system() == 'Darwin':
             # mac version is a special Cupertino snowflake
@@ -260,7 +262,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                               os.path.join(topsrcdir, 'build',
                                            'submit_telemetry_data.py'),
                               get_state_dir()[0]],
-                              stdout=devnull, stderr=devnull)
+                             stdout=devnull, stderr=devnull)
 
     def populate_context(context, key=None):
         if key is None:
@@ -311,7 +313,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     for category, meta in CATEGORIES.items():
         driver.define_category(category, meta['short'], meta['long'],
-            meta['priority'])
+                               meta['priority'])
 
     repo = resolve_repository()
 
