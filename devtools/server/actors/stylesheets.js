@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "addPseudoClassLock",
   "devtools/server/actors/highlighters/utils/markup", true);
 loader.lazyRequireGetter(this, "removePseudoClassLock",
   "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
 
 loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
@@ -31,12 +32,15 @@ var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
 var TRANSITION_RULE_SELECTOR =
 `:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
-var TRANSITION_RULE = `${TRANSITION_RULE_SELECTOR} {
-  transition-duration: ${TRANSITION_DURATION_MS}ms !important;
-  transition-delay: 0ms !important;
-  transition-timing-function: ease-out !important;
-  transition-property: all !important;
-}`;
+
+var TRANSITION_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
+  ${TRANSITION_RULE_SELECTOR} {
+    transition-duration: ${TRANSITION_DURATION_MS}ms !important;
+    transition-delay: 0ms !important;
+    transition-timing-function: ease-out !important;
+    transition-property: all !important;
+  }
+`);
 
 // The possible kinds of style-applied events.
 // UPDATE_PRESERVING_RULES means that the update is guaranteed to
@@ -725,7 +729,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     this._notifyPropertyChanged("ruleCount");
 
     if (transition) {
-      this._insertTransistionRule(kind);
+      this._startTransition(kind);
     } else {
       this.emit("style-applied", kind, this);
     }
@@ -736,14 +740,19 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   },
 
   /**
-   * Insert a catch-all transition rule into the document. Set a timeout
-   * to remove the rule after a certain time.
+   * Insert a catch-all transition sheet into the document. Set a timeout
+   * to remove the transition after a certain time.
    */
-  _insertTransistionRule: function (kind) {
-    addPseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
+  _startTransition: function (kind) {
+    if (!this._transitionSheetLoaded) {
+      this._transitionSheetLoaded = true;
+      // We don't remove this sheet. It uses an internal selector that
+      // we only apply via locks, so there's no need to load and unload
+      // it all the time.
+      loadSheet(this.window, TRANSITION_SHEET);
+    }
 
-    // We always add the rule since we've just reset all the rules
-    this.rawSheet.insertRule(TRANSITION_RULE, this.rawSheet.cssRules.length);
+    addPseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
 
     // Set up clean up and commit after transition duration (+buffer)
     // @see _onTransitionEnd
@@ -760,13 +769,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   _onTransitionEnd: function (kind) {
     this._transitionTimeout = null;
     removePseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
-
-    let index = this.rawSheet.cssRules.length - 1;
-    let rule = this.rawSheet.cssRules[index];
-    if (rule.selectorText == TRANSITION_RULE_SELECTOR) {
-      this.rawSheet.deleteRule(index);
-    }
-
     this.emit("style-applied", kind, this);
   }
 });
@@ -804,6 +806,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this._onNewStyleSheetActor = this._onNewStyleSheetActor.bind(this);
     this._onSheetAdded = this._onSheetAdded.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
+    this._transitionSheetLoaded = false;
 
     this.parentActor.on("stylesheet-added", this._onNewStyleSheetActor);
     this.parentActor.on("window-ready", this._onWindowReady);

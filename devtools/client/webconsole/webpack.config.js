@@ -26,17 +26,23 @@ let webpackConfig = {
         loader: "file-loader?name=[path][name].[ext]",
       },
       {
-        /*
-         * The version of webpack used in the launchpad seems to have trouble
-         * with the require("raw!${file}") that we use for the properties
-         * file in l10.js.
-         * This loader goes through the whole code and remove the "raw!" prefix
-         * so the raw-loader declared in devtools-launchpad config can load
-         * those files.
-         */
-        test: /\.js/,
-        loader: "rewrite-raw",
-      },
+        test: /\.js$/,
+        loaders: [
+          /*
+          * The version of webpack used in the launchpad seems to have trouble
+          * with the require("raw!${file}") that we use for the properties
+          * file in l10.js.
+          * This loader goes through the whole code and remove the "raw!" prefix
+          * so the raw-loader declared in devtools-launchpad config can load
+          * those files.
+          */
+          "rewrite-raw",
+          // Replace all references to this.browserRequire() by require()
+          "rewrite-browser-require",
+          // Replace all references to loader.lazyRequire() by require()
+          "rewrite-lazy-require",
+        ],
+      }
     ]
   },
 
@@ -89,7 +95,7 @@ webpackConfig.resolve = {
 
     "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
     "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
-    "devtools/shared/client/object-client": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
+    "devtools/shared/client/debugger-client": path.join(__dirname, "new-console-output/test/fixtures/DebuggerClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../client/shared/webpack/shims/platform-clipboard-stub"),
     "devtools/shared/platform/stack": path.join(__dirname, "../../client/shared/webpack/shims/platform-stack-stub"),
 

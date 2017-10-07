@@ -311,6 +311,10 @@ pref("mathml.scale_stretchy_operators.enabled", true);
 
 pref("media.dormant-on-pause-timeout-ms", 5000);
 
+// Used by ChannelMediaResource to run data callbacks from HTTP channel
+// off the main thread.
+pref("media.omt_data_delivery.enabled", false);
+
 // File-backed MediaCache size in kilobytes
 pref("media.cache_size", 512000);
 // When a network connection is suspended, don't resume it until the

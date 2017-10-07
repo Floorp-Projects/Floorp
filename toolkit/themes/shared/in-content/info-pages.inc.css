@@ -122,3 +122,10 @@ button {
 tree {
   width: 100%;
 }
+
+/* Illustrated Info Pages */
+
+.illustrated .title {
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+}

@@ -10,19 +10,14 @@ module.exports = createClass({
   displayName: "ToolboxTab",
 
   renderIcon(definition, isHighlighted) {
-    const {icon, highlightedicon} = definition;
+    const {icon} = definition;
     if (!icon) {
       return [];
     }
     return [
       img({
-        className: "default-icon",
         src: icon
       }),
-      img({
-        className: "highlighted-icon",
-        src: highlightedicon || icon
-      })
     ];
   },
 
@@ -34,11 +29,6 @@ module.exports = createClass({
 
     const className = [
       "devtools-tab",
-      panelDefinition.invertIconForLightTheme || panelDefinition.invertIconForDarkTheme
-        ? "icon-invertable"
-        : "",
-      panelDefinition.invertIconForLightTheme ? "icon-invertable-light-theme" : "",
-      panelDefinition.invertIconForDarkTheme ? "icon-invertable-dark-theme" : "",
       currentToolId === id ? "selected" : "",
       highlightedTool === id ? "highlighted" : "",
       iconOnly ? "devtools-tab-icon-only" : ""

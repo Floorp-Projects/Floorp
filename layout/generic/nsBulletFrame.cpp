@@ -521,11 +521,24 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
       LayoutDeviceRect::FromAppUnits(
           aItem->GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
+  wr::LayoutRect wrDestRect = aSc.ToRelativeLayoutRect(destRect);
 
-  for (layers::GlyphArray& glyphs : mGlyphs) {
-    aManager->WrBridge()->PushGlyphs(aBuilder, glyphs.glyphs(), mFont,
-                                     glyphs.color().value(),
-                                     aSc, destRect, destRect, !aItem->BackfaceIsHidden());
+  nsTArray<wr::GlyphInstance> wrGlyphs;
+
+  for (layers::GlyphArray& glyphArray : mGlyphs) {
+    const auto& glyphs = glyphArray.glyphs();
+    wrGlyphs.SetLength(glyphs.Length());
+
+    for (size_t j = 0; j < glyphs.Length(); j++) {
+      wrGlyphs[j].index = glyphs[j].mIndex;
+      wrGlyphs[j].point = aSc.ToRelativeLayoutPoint(
+              LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
+    }
+
+    aManager->WrBridge()->PushGlyphs(aBuilder, wrGlyphs, mFont,
+                                     wr::ToColorF(glyphArray.color().value()),
+                                     aSc, wrDestRect, wrDestRect,
+                                     !aItem->BackfaceIsHidden());
   }
 }
 

@@ -265,6 +265,10 @@ static const char contentSandboxRules[] = R"(
       (home-regex "/Library/Application Support/[^/]+/Extensions/")
       (regex "^/Library/Application Support/[^/]+/Extensions/"))
 
+; bug 1393805
+  (allow file-read*
+      (home-subpath "/Library/Application Support/Mozilla/SystemExtensionsDev"))
+
 ; The following rules impose file access restrictions which get
 ; more restrictive in higher levels. When file-origin-specific
 ; content processes are used for file:// origin browsing, the

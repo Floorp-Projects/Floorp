@@ -8,9 +8,9 @@ const { Cu } = require("chrome");
 const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const {arg, DebuggerClient} = require("./debugger-client");
-const eventSource = require("./event-source");
-const {ThreadStateTypes} = require("./constants");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const eventSource = require("devtools/shared/client/event-source");
+const {ThreadStateTypes} = require("devtools/shared/client/constants");
 
 loader.lazyRequireGetter(this, "ArrayBufferClient", "devtools/shared/client/array-buffer-client");
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/environment-client");

@@ -200,7 +200,7 @@ Object.defineProperty(GeckoDriver.prototype, "currentURL", {
         return new URL(this.curBrowser.currentURI.spec);
 
       default:
-        throw TypeError(`Unknown context: ${this.context}`);
+        throw new TypeError(`Unknown context: ${this.context}`);
     }
   },
 });
@@ -216,7 +216,7 @@ Object.defineProperty(GeckoDriver.prototype, "title", {
         return this.curBrowser.currentTitle;
 
       default:
-        throw TypeError(`Unknown context: ${this.context}`);
+        throw new TypeError(`Unknown context: ${this.context}`);
     }
   },
 });
@@ -2701,7 +2701,7 @@ GeckoDriver.prototype.deleteCookie = function(cmd) {
     }
   }
 
-  throw UnknownError("Unable to find cookie");
+  throw new UnknownError("Unable to find cookie");
 };
 
 /**
@@ -3316,7 +3316,7 @@ GeckoDriver.prototype.installAddon = function(cmd) {
   let temp = cmd.parameters.temporary || false;
   if (typeof path == "undefined" || typeof path != "string" ||
       typeof temp != "boolean") {
-    throw InvalidArgumentError();
+    throw new InvalidArgumentError();
   }
 
   return addon.install(path, temp);

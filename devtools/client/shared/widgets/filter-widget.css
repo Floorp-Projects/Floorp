@@ -231,9 +231,10 @@
 #filter-container .add,
 #filter-container .remove-button,
 #toggle-presets {
-  filter: var(--theme-icon-filter);
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
 }
 
 .show-presets #toggle-presets {
-  filter: var(--theme-icon-checked-filter);
+  fill: var(--theme-toolbar-checked-color);
 }

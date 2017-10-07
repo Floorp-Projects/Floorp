@@ -118,6 +118,7 @@
   height: 16px;
   vertical-align: sub;
   margin-inline-start: 5px;
-  filter: var(--theme-icon-filter);
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-color);
   opacity: 0.6;
 }

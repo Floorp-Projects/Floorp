@@ -19,7 +19,7 @@ mapping:
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.txt
     jsshell:
       artifact: {{ artifact_base_url }}/target.jsshell.zip
-      s3_key: {{ s3_prefix }}jsshell-{{ platform }}.zip
+      s3_key: {{ s3_prefix }}jsshell/jsshell-{{ platform }}.zip
     mozharness_package:
       artifact: {{ artifact_base_url }}/mozharness.zip
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/mozharness.zip

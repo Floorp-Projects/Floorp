@@ -9,6 +9,7 @@
 
 #include "MediaDecoder.h"
 #include "MediaResourceCallback.h"
+#include "MediaChannelStatistics.h"
 
 class nsIChannel;
 class nsIStreamListener;
