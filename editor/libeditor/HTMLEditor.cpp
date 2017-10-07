@@ -3892,6 +3892,7 @@ HTMLEditor::GetPriorHTMLNode(nsIDOMNode* aNode,
 nsIContent*
 HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
                              int32_t aOffset,
+                             nsINode* aChildAtOffset,
                              bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aParent);
