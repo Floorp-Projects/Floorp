@@ -786,6 +786,7 @@ protected:
   nsresult GetNextHTMLNode(nsIDOMNode* inNode, nsCOMPtr<nsIDOMNode>* outNode,
                            bool bNoBlockCrossing = false);
   nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
+                              nsINode* aChildAtOffset,
                               bool aNoBlockCrossing = false);
 
   bool IsFirstEditableChild(nsINode* aNode);

@@ -400,7 +400,7 @@ protected:
                            nsIEditor::EDirection aAction);
   nsresult FindNearSelectableNode(nsINode* aSelNode,
                                   int32_t aSelOffset,
-                                  nsIContent* aChildAtOffset,
+                                  nsINode* aChildAtOffset,
                                   nsIEditor::EDirection& aDirection,
                                   nsCOMPtr<nsIContent>* outSelectableNode);
   /**

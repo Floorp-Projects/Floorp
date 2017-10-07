@@ -3943,6 +3943,7 @@ HTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode,
 nsIContent*
 HTMLEditor::GetNextHTMLNode(nsINode* aParent,
                             int32_t aOffset,
+                            nsINode* aChildAtOffset,
                             bool aNoBlockCrossing)
 {
   nsIContent* content = GetNextNode(aParent, aOffset, true, aNoBlockCrossing);
