@@ -23,4 +23,17 @@ function run_test() {
   // Neither scripted getter should be considered safe.
   assert(!DevToolsUtils.hasSafeGetter(gw.getOwnPropertyDescriptor("bar")));
   assert(!DevToolsUtils.hasSafeGetter(gw.getOwnPropertyDescriptor("foo")));
+
+  // Create an object in a less privileged sandbox.
+  let obj = gw.makeDebuggeeValue(Cu.waiveXrays(Cu.Sandbox(null).eval(`
+    Object.defineProperty({}, "bar", {
+      get: function() { return "bar"; },
+      configurable: true,
+      enumerable: true
+    });
+  `)));
+
+  // After waiving Xrays, the object has 2 wrappers. Both must be removed
+  // in order to detect that the getter is not safe.
+  assert(!DevToolsUtils.hasSafeGetter(obj.getOwnPropertyDescriptor("bar")));
 }
