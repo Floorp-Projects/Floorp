@@ -41,6 +41,21 @@ add_task(async function test_contentscript_xrays() {
     browser.test.assertEq(node.wrappedJSObject.expando, undefined,
                           "Adoption should really not change expandos (2)");
 
+    // Repeat once more, now with an expando that refers to the object itself.
+    node = window.document.createElement("div");
+    node.expando = node;
+
+    browser.test.assertEq(node.expando, node,
+                          "We should be able to see our self-referential expando (3)");
+    browser.test.assertEq(node.wrappedJSObject.expando, undefined,
+                          "Underlying object should not have our self-referential expando (3)");
+
+    window.frames[0].document.adoptNode(node);
+    browser.test.assertEq(node.expando, node,
+                          "Adoption should not change self-referential expando (3)");
+    browser.test.assertEq(node.wrappedJSObject.expando, undefined,
+                          "Adoption should really not change self-referential expando (3)");
+
     // And test what happens if we now set document.domain and cause
     // wrapper remapping.
     let doc = window.frames[0].document;
