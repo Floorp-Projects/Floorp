@@ -6,7 +6,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 import gzip
 import io
@@ -37,6 +36,7 @@ def timed():
     function was called.
     '''
     start = time.time()
+
     def elapsed():
         return time.time() - start
     yield elapsed
@@ -76,10 +76,13 @@ def upload_worker(queue, event, bucket, session_args):
                 'ContentEncoding': 'gzip',
                 'ContentType': 'text/plain',
             }
-            log.info('Uploading "{}" ({} bytes)'.format(pathname, len(compressed.getvalue())))
+            log.info('Uploading "{}" ({} bytes)'.format(
+                pathname, len(compressed.getvalue())))
             with timed() as elapsed:
-                s3.upload_fileobj(compressed, bucket, pathname, ExtraArgs=extra_args)
-                log.info('Finished uploading "{}" in {:0.3f}s'.format(pathname, elapsed()))
+                s3.upload_fileobj(compressed, bucket,
+                                  pathname, ExtraArgs=extra_args)
+                log.info('Finished uploading "{}" in {:0.3f}s'.format(
+                    pathname, elapsed()))
             queue.task_done()
     except Exception:
         log.exception('Thread encountered exception:')
@@ -91,8 +94,10 @@ def do_work(artifact, region, bucket):
     session = requests.Session()
     if 'TASK_ID' in os.environ:
         level = os.environ.get('MOZ_SCM_LEVEL', '1')
-        secrets_url = 'http://taskcluster/secrets/v1/secret/project/releng/gecko/build/level-{}/gecko-generated-sources-upload'.format(level)
-        log.info('Using AWS credentials from the secrets service: "{}"'.format(secrets_url))
+        secrets_url = 'http://taskcluster/secrets/v1/secret/project/releng/gecko/build/level-{}/gecko-generated-sources-upload'.format( # noqa
+            level)
+        log.info(
+            'Using AWS credentials from the secrets service: "{}"'.format(secrets_url))
         res = session.get(secrets_url)
         res.raise_for_status()
         secret = res.json()
@@ -103,12 +108,12 @@ def do_work(artifact, region, bucket):
     else:
         log.info('Trying to use your AWS credentials..')
 
-
     # First, fetch the artifact containing the sources.
     log.info('Fetching generated sources artifact: "{}"'.format(artifact))
     with timed() as elapsed:
         res = session.get(artifact)
-        log.info('Fetch HTTP status: {}, {} bytes downloaded in {:0.3f}s'.format(res.status_code, len(res.content), elapsed()))
+        log.info('Fetch HTTP status: {}, {} bytes downloaded in {:0.3f}s'.format(
+            res.status_code, len(res.content), elapsed()))
     res.raise_for_status()
     # Create a queue and worker threads for uploading.
     q = Queue()
@@ -136,7 +141,7 @@ def do_work(artifact, region, bucket):
 def main(argv):
     logging.basicConfig(format='%(levelname)s - %(threadName)s - %(message)s')
     parser = argparse.ArgumentParser(
-    description='Upload generated source files in ARTIFACT to BUCKET in S3.')
+        description='Upload generated source files in ARTIFACT to BUCKET in S3.')
     parser.add_argument('artifact',
                         help='generated-sources artifact from build task')
     args = parser.parse_args(argv)

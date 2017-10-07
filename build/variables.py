@@ -11,6 +11,7 @@ from datetime import datetime
 
 SOURCESTAMP_FILENAME = 'sourcestamp.txt'
 
+
 def buildid_header(output):
     buildid = os.environ.get('MOZ_BUILD_DATE')
     if buildid and len(buildid) != 14:
@@ -45,6 +46,7 @@ def get_hg_info(workdir):
 def get_hg_changeset(path):
     return get_program_output('hg', '-R', path, 'parent', '--template={node}')
 
+
 def get_info_from_sourcestamp(sourcestamp_path):
     """Read the repository and changelog information from the sourcestamp
     file. This assumes that the file exists and returns the results as a list
@@ -66,6 +68,7 @@ def get_info_from_sourcestamp(sourcestamp_path):
     # Return the repo and the changeset.
     return lines[1].split('/rev/')
 
+
 def source_repo_header(output):
     # We allow the source repo and changeset to be specified via the
     # environment (see configure)
@@ -75,7 +78,8 @@ def source_repo_header(output):
     source = ''
 
     if not repo:
-        sourcestamp_path = os.path.join(buildconfig.topsrcdir, SOURCESTAMP_FILENAME)
+        sourcestamp_path = os.path.join(
+            buildconfig.topsrcdir, SOURCESTAMP_FILENAME)
         if os.path.exists(os.path.join(buildconfig.topsrcdir, '.hg')):
             repo, changeset = get_hg_info(buildconfig.topsrcdir)
         elif os.path.exists(sourcestamp_path):
