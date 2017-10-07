@@ -2845,6 +2845,17 @@ HTMLMediaElement::Seek(double aTime,
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (!mDecoder->IsMetadataLoaded()) {
+    // This is for debugging bug 1402584.
+    // We should reach here only after metadata loaded by the decoder.
+    MOZ_CRASH_UNSAFE_PRINTF(
+      "Metadata not loaded! readyState=%d networkState=%d",
+      static_cast<int>(mReadyState.Ref()),
+      static_cast<int>(mNetworkState));
+  }
+#endif
+
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
   LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) starting seek", this, aTime));
@@ -6042,6 +6053,16 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplaythrough"));
   }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA && mDecoder &&
+      !mDecoder->IsMetadataLoaded()) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+      "Metadata not loaded! readyState=%d networkState=%d",
+      static_cast<int>(mReadyState.Ref()),
+      static_cast<int>(mNetworkState));
+  }
+#endif
 }
 
 static const char* const gNetworkStateToString[] = {
