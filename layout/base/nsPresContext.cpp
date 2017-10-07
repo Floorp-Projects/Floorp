@@ -1868,16 +1868,17 @@ nsPresContext::SysColorChangedInternal()
 void
 nsPresContext::RefreshSystemMetrics()
 {
-  // This will force the system metrics to be generated the next time they're used
+  // This will force the system metrics to be generated the next time they're
+  // used.
   nsCSSRuleProcessor::FreeSystemMetrics();
 
-  // Changes to system metrics can change media queries on them, or
-  // :-moz-system-metric selectors (which requires eRestyle_Subtree).
+  // Changes to system metrics can change media queries on them.
+  //
   // Changes in theme can change system colors (whose changes are
   // properly reflected in computed style data), system fonts (whose
   // changes are not), and -moz-appearance (whose changes likewise are
-  // not), so we need to reflow.
-  MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
+  // not), so we need to recascade for the first, and reflow for the rest.
+  MediaFeatureValuesChanged(eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW);
 }
 
 void
