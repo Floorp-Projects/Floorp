@@ -17,50 +17,6 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
-.search-go-container,
-.searchbar-search-button-container {
-  -moz-box-align: center;
-}
-
-.searchbar-search-button {
-  list-style-image: url("chrome://browser/skin/search-indicator.png");
-  -moz-image-region: rect(0, 20px, 20px, 0);
-  margin-inline-start: 3px;
-  margin-inline-end: 1px;
-}
-
-.searchbar-search-button[addengines="true"] {
-  list-style-image: url("chrome://browser/skin/search-indicator-badge-add.png");
-}
-
-.searchbar-search-button:hover {
-  -moz-image-region: rect(0, 40px, 20px, 20px);
-}
-
-.searchbar-search-button:hover:active {
-  -moz-image-region: rect(0, 60px, 20px, 40px);
-}
-
-@media (min-resolution: 2dppx) {
-  .searchbar-search-button {
-    list-style-image: url("chrome://browser/skin/search-indicator@2x.png");
-    width: 20px;
-    -moz-image-region: rect(0, 40px, 40px, 0);
-  }
-
-  .searchbar-search-button[addengines="true"] {
-    list-style-image: url("chrome://browser/skin/search-indicator-badge-add@2x.png");
-  }
-
-  .searchbar-search-button:hover {
-    -moz-image-region: rect(0, 80px, 40px, 40px);
-  }
-
-  .searchbar-search-button:hover:active {
-    -moz-image-region: rect(0, 120px, 40px, 80px);
-  }
-}
-
 .search-panel-current-engine {
   border-radius: 4px 4px 0 0;
 }
