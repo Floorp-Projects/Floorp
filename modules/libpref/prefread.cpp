@@ -55,7 +55,7 @@ static const char kFalse[] = "false";
 // This function will increase the size of the buffer owned by the given pref
 // parse state. We currently use a simple doubling algorithm, but the only hard
 // requirement is that it increase the buffer by at least the size of the
-// aPS->esctmp buffer used for escape processing (currently 6 bytes).
+// aPS->mEscTmp buffer used for escape processing (currently 6 bytes).
 //
 // The buffer is used to store partial pref lines. It is freed when the parse
 // state is destroyed.
@@ -63,8 +63,8 @@ static const char kFalse[] = "false";
 // @param aPS
 //        parse state instance
 //
-// This function updates all pointers that reference an address within lb since
-// realloc may relocate the buffer.
+// This function updates all pointers that reference an address within mLb
+// since realloc may relocate the buffer.
 //
 // @return false if insufficient memory.
 static bool
@@ -72,9 +72,9 @@ pref_GrowBuf(PrefParseState* aPS)
 {
   int bufLen, curPos, valPos;
 
-  bufLen = aPS->lbend - aPS->lb;
-  curPos = aPS->lbcur - aPS->lb;
-  valPos = aPS->vb - aPS->lb;
+  bufLen = aPS->mLbEnd - aPS->mLb;
+  curPos = aPS->mLbCur - aPS->mLb;
+  valPos = aPS->mVb - aPS->mLb;
 
   if (bufLen == 0) {
     bufLen = 128; // default buffer size
@@ -86,14 +86,14 @@ pref_GrowBuf(PrefParseState* aPS)
   fprintf(stderr, ">>> realloc(%d)\n", bufLen);
 #endif
 
-  aPS->lb = (char*)realloc(aPS->lb, bufLen);
-  if (!aPS->lb) {
+  aPS->mLb = (char*)realloc(aPS->mLb, bufLen);
+  if (!aPS->mLb) {
     return false;
   }
 
-  aPS->lbcur = aPS->lb + curPos;
-  aPS->lbend = aPS->lb + bufLen;
-  aPS->vb = aPS->lb + valPos;
+  aPS->mLbCur = aPS->mLb + curPos;
+  aPS->mLbEnd = aPS->mLb + bufLen;
+  aPS->mVb = aPS->mLb + valPos;
 
   return true;
 }
@@ -105,8 +105,8 @@ pref_ReportParseProblem(PrefParseState& aPS,
                         int aLine,
                         bool aError)
 {
-  if (aPS.reporter) {
-    aPS.reporter(aMessage, aLine, aError);
+  if (aPS.mReporter) {
+    aPS.mReporter(aMessage, aLine, aError);
   } else {
     printf_stderr("**** Preference parsing %s (line %d) = %s **\n",
                   (aError ? "error" : "warning"),
@@ -127,34 +127,34 @@ pref_DoCallback(PrefParseState* aPS)
 {
   PrefValue value;
 
-  switch (aPS->vtype) {
+  switch (aPS->mVtype) {
     case PrefType::String:
-      value.stringVal = aPS->vb;
+      value.mStringVal = aPS->mVb;
       break;
 
     case PrefType::Int:
-      if ((aPS->vb[0] == '-' || aPS->vb[0] == '+') && aPS->vb[1] == '\0') {
+      if ((aPS->mVb[0] == '-' || aPS->mVb[0] == '+') && aPS->mVb[1] == '\0') {
         pref_ReportParseProblem(*aPS, "invalid integer value", 0, true);
         NS_WARNING("malformed integer value");
         return false;
       }
-      value.intVal = atoi(aPS->vb);
+      value.mIntVal = atoi(aPS->mVb);
       break;
 
     case PrefType::Bool:
-      value.boolVal = (aPS->vb == kTrue);
+      value.mBoolVal = (aPS->mVb == kTrue);
       break;
 
     default:
       break;
   }
 
-  (*aPS->reader)(aPS->closure,
-                 aPS->lb,
-                 value,
-                 aPS->vtype,
-                 aPS->fdefault,
-                 aPS->fstickydefault);
+  (*aPS->mReader)(aPS->mClosure,
+                  aPS->mLb,
+                  value,
+                  aPS->mVtype,
+                  aPS->mIsDefault,
+                  aPS->mIsStickyDefault);
   return true;
 }
 
@@ -165,16 +165,16 @@ PREF_InitParseState(PrefParseState* aPS,
                     void* aClosure)
 {
   memset(aPS, 0, sizeof(*aPS));
-  aPS->reader = aReader;
-  aPS->closure = aClosure;
-  aPS->reporter = aReporter;
+  aPS->mReader = aReader;
+  aPS->mClosure = aClosure;
+  aPS->mReporter = aReporter;
 }
 
 void
 PREF_FinalizeParseState(PrefParseState* aPS)
 {
-  if (aPS->lb) {
-    free(aPS->lb);
+  if (aPS->mLb) {
+    free(aPS->mLb);
   }
 }
 
@@ -209,7 +209,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
   // The line number is currently only used for the error/warning reporting.
   int lineNum = 0;
 
-  state = aPS->state;
+  state = aPS->mState;
   for (end = aBuf + aBufLen; aBuf != end; ++aBuf) {
     c = *aBuf;
     if (c == '\r' || c == '\n' || c == 0x1A) {
@@ -219,12 +219,12 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
     switch (state) {
       // initial state
       case PREF_PARSE_INIT:
-        if (aPS->lbcur != aPS->lb) { // reset state
-          aPS->lbcur = aPS->lb;
-          aPS->vb = nullptr;
-          aPS->vtype = PrefType::Invalid;
-          aPS->fdefault = false;
-          aPS->fstickydefault = false;
+        if (aPS->mLbCur != aPS->mLb) { // reset state
+          aPS->mLbCur = aPS->mLb;
+          aPS->mVb = nullptr;
+          aPS->mVtype = PrefType::Invalid;
+          aPS->mIsDefault = false;
+          aPS->mIsStickyDefault = false;
         }
         switch (c) {
           case '/': // begin comment block or line?
@@ -237,14 +237,14 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
           case 's': // indicating sticky_pref
           case 'p': // indicating pref
             if (c == 'u') {
-              aPS->smatch = kUserPref;
+              aPS->mStrMatch = kUserPref;
             } else if (c == 's') {
-              aPS->smatch = kPrefSticky;
+              aPS->mStrMatch = kPrefSticky;
             } else {
-              aPS->smatch = kPref;
+              aPS->mStrMatch = kPref;
             }
-            aPS->sindex = 1;
-            aPS->nextstate = PREF_PARSE_UNTIL_OPEN_PAREN;
+            aPS->mStrIndex = 1;
+            aPS->mNextState = PREF_PARSE_UNTIL_OPEN_PAREN;
             state = PREF_PARSE_MATCH_STRING;
             break;
             // else skip char
@@ -253,11 +253,11 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
 
       // string matching
       case PREF_PARSE_MATCH_STRING:
-        if (c == aPS->smatch[aPS->sindex++]) {
+        if (c == aPS->mStrMatch[aPS->mStrIndex++]) {
           // If we've matched all characters, then move to next state.
-          if (aPS->smatch[aPS->sindex] == '\0') {
-            state = aPS->nextstate;
-            aPS->nextstate = PREF_PARSE_INIT; // reset next state
+          if (aPS->mStrMatch[aPS->mStrIndex] == '\0') {
+            state = aPS->mNextState;
+            aPS->mNextState = PREF_PARSE_INIT; // reset next state
           }
           // else wait for next char
         } else {
@@ -270,30 +270,31 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       // quoted string parsing
       case PREF_PARSE_QUOTED_STRING:
         // we assume that the initial quote has already been consumed
-        if (aPS->lbcur == aPS->lbend && !pref_GrowBuf(aPS)) {
+        if (aPS->mLbCur == aPS->mLbEnd && !pref_GrowBuf(aPS)) {
           return false; // out of memory
         }
         if (c == '\\') {
           state = PREF_PARSE_ESC_SEQUENCE;
-        } else if (c == aPS->quotechar) {
-          *aPS->lbcur++ = '\0';
-          state = aPS->nextstate;
-          aPS->nextstate = PREF_PARSE_INIT; // reset next state
+        } else if (c == aPS->mQuoteChar) {
+          *aPS->mLbCur++ = '\0';
+          state = aPS->mNextState;
+          aPS->mNextState = PREF_PARSE_INIT; // reset next state
         } else {
-          *aPS->lbcur++ = c;
+          *aPS->mLbCur++ = c;
         }
         break;
 
       // name parsing
       case PREF_PARSE_UNTIL_NAME:
         if (c == '\"' || c == '\'') {
-          aPS->fdefault = (aPS->smatch == kPref || aPS->smatch == kPrefSticky);
-          aPS->fstickydefault = (aPS->smatch == kPrefSticky);
-          aPS->quotechar = c;
-          aPS->nextstate = PREF_PARSE_UNTIL_COMMA; // return here when done
+          aPS->mIsDefault =
+            (aPS->mStrMatch == kPref || aPS->mStrMatch == kPrefSticky);
+          aPS->mIsStickyDefault = (aPS->mStrMatch == kPrefSticky);
+          aPS->mQuoteChar = c;
+          aPS->mNextState = PREF_PARSE_UNTIL_COMMA; // return here when done
           state = PREF_PARSE_QUOTED_STRING;
-        } else if (c == '/') {    // allow embedded comment
-          aPS->nextstate = state; // return here when done with comment
+        } else if (c == '/') {     // allow embedded comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -306,10 +307,10 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       // parse until we find a comma separating name and value
       case PREF_PARSE_UNTIL_COMMA:
         if (c == ',') {
-          aPS->vb = aPS->lbcur;
+          aPS->mVb = aPS->mLbCur;
           state = PREF_PARSE_UNTIL_VALUE;
-        } else if (c == '/') {    // allow embedded comment
-          aPS->nextstate = state; // return here when done with comment
+        } else if (c == '/') {     // allow embedded comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -324,27 +325,27 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         // The pref value type is unknown. So, we scan for the first character
         // of the value, and determine the type from that.
         if (c == '\"' || c == '\'') {
-          aPS->vtype = PrefType::String;
-          aPS->quotechar = c;
-          aPS->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+          aPS->mVtype = PrefType::String;
+          aPS->mQuoteChar = c;
+          aPS->mNextState = PREF_PARSE_UNTIL_CLOSE_PAREN;
           state = PREF_PARSE_QUOTED_STRING;
         } else if (c == 't' || c == 'f') {
-          aPS->vb = (char*)(c == 't' ? kTrue : kFalse);
-          aPS->vtype = PrefType::Bool;
-          aPS->smatch = aPS->vb;
-          aPS->sindex = 1;
-          aPS->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+          aPS->mVb = (char*)(c == 't' ? kTrue : kFalse);
+          aPS->mVtype = PrefType::Bool;
+          aPS->mStrMatch = aPS->mVb;
+          aPS->mStrIndex = 1;
+          aPS->mNextState = PREF_PARSE_UNTIL_CLOSE_PAREN;
           state = PREF_PARSE_MATCH_STRING;
         } else if (isdigit(c) || (c == '-') || (c == '+')) {
-          aPS->vtype = PrefType::Int;
+          aPS->mVtype = PrefType::Int;
           // write c to line buffer...
-          if (aPS->lbcur == aPS->lbend && !pref_GrowBuf(aPS)) {
+          if (aPS->mLbCur == aPS->mLbEnd && !pref_GrowBuf(aPS)) {
             return false; // out of memory
           }
-          *aPS->lbcur++ = c;
+          *aPS->mLbCur++ = c;
           state = PREF_PARSE_INT_VALUE;
-        } else if (c == '/') {    // allow embedded comment
-          aPS->nextstate = state; // return here when done with comment
+        } else if (c == '/') {     // allow embedded comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -356,17 +357,17 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
 
       case PREF_PARSE_INT_VALUE:
         // grow line buffer if necessary...
-        if (aPS->lbcur == aPS->lbend && !pref_GrowBuf(aPS)) {
+        if (aPS->mLbCur == aPS->mLbEnd && !pref_GrowBuf(aPS)) {
           return false; // out of memory
         }
         if (isdigit(c)) {
-          *aPS->lbcur++ = c;
+          *aPS->mLbCur++ = c;
         } else {
-          *aPS->lbcur++ = '\0'; // stomp null terminator; we are done.
+          *aPS->mLbCur++ = '\0'; // stomp null terminator; we are done.
           if (c == ')') {
             state = PREF_PARSE_UNTIL_SEMICOLON;
           } else if (c == '/') { // allow embedded comment
-            aPS->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+            aPS->mNextState = PREF_PARSE_UNTIL_CLOSE_PAREN;
             state = PREF_PARSE_COMMENT_MAYBE_START;
           } else if (isspace(c)) {
             state = PREF_PARSE_UNTIL_CLOSE_PAREN;
@@ -406,8 +407,8 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       case PREF_PARSE_COMMENT_BLOCK_MAYBE_END:
         switch (c) {
           case '/':
-            state = aPS->nextstate;
-            aPS->nextstate = PREF_PARSE_INIT;
+            state = aPS->mNextState;
+            aPS->mNextState = PREF_PARSE_INIT;
             break;
           case '*': // stay in this state
             break;
@@ -435,10 +436,10 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
             break;
           case 'x': // hex escape -- always interpreted as Latin-1
           case 'u': // UTF16 escape
-            aPS->esctmp[0] = c;
-            aPS->esclen = 1;
-            aPS->utf16[0] = aPS->utf16[1] = 0;
-            aPS->sindex =
+            aPS->mEscTmp[0] = c;
+            aPS->mEscLen = 1;
+            aPS->mUtf16[0] = aPS->mUtf16[1] = 0;
+            aPS->mStrIndex =
               (c == 'x') ? HEX_ESC_NUM_DIGITS : UTF16_ESC_NUM_DIGITS;
             state = PREF_PARSE_HEX_ESCAPE;
             continue;
@@ -448,17 +449,17 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
             NS_WARNING("preserving unexpected JS escape sequence");
             // Invalid escape sequence so we do have to write more than one
             // character. Grow line buffer if necessary...
-            if ((aPS->lbcur + 1) == aPS->lbend && !pref_GrowBuf(aPS)) {
+            if ((aPS->mLbCur + 1) == aPS->mLbEnd && !pref_GrowBuf(aPS)) {
               return false; // out of memory
             }
-            *aPS->lbcur++ = '\\'; // preserve the escape sequence
+            *aPS->mLbCur++ = '\\'; // preserve the escape sequence
             break;
         }
-        *aPS->lbcur++ = c;
+        *aPS->mLbCur++ = c;
         state = PREF_PARSE_QUOTED_STRING;
         break;
 
-      // parsing a hex (\xHH) or utf16 escape (\uHHHH)
+      // parsing a hex (\xHH) or mUtf16 escape (\uHHHH)
       case PREF_PARSE_HEX_ESCAPE:
         if (c >= '0' && c <= '9') {
           udigit = (c - '0');
@@ -473,12 +474,13 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
                                   lineNum,
                                   false);
           NS_WARNING("preserving invalid or incomplete hex escape");
-          *aPS->lbcur++ = '\\'; // original escape slash
-          if ((aPS->lbcur + aPS->esclen) >= aPS->lbend && !pref_GrowBuf(aPS)) {
+          *aPS->mLbCur++ = '\\'; // original escape slash
+          if ((aPS->mLbCur + aPS->mEscLen) >= aPS->mLbEnd &&
+              !pref_GrowBuf(aPS)) {
             return false;
           }
-          for (int i = 0; i < aPS->esclen; ++i) {
-            *aPS->lbcur++ = aPS->esctmp[i];
+          for (int i = 0; i < aPS->mEscLen; ++i) {
+            *aPS->mLbCur++ = aPS->mEscTmp[i];
           }
 
           // Push the non-hex character back for re-parsing. (++aBuf at the top
@@ -489,58 +491,58 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         }
 
         // have a digit
-        aPS->esctmp[aPS->esclen++] = c; // preserve it
-        aPS->utf16[1] <<= BITS_PER_HEX_DIGIT;
-        aPS->utf16[1] |= udigit;
-        aPS->sindex--;
-        if (aPS->sindex == 0) {
+        aPS->mEscTmp[aPS->mEscLen++] = c; // preserve it
+        aPS->mUtf16[1] <<= BITS_PER_HEX_DIGIT;
+        aPS->mUtf16[1] |= udigit;
+        aPS->mStrIndex--;
+        if (aPS->mStrIndex == 0) {
           // we have the full escape, convert to UTF8
           int utf16len = 0;
-          if (aPS->utf16[0]) {
+          if (aPS->mUtf16[0]) {
             // already have a high surrogate, this is a two char seq
             utf16len = 2;
-          } else if (0xD800 == (0xFC00 & aPS->utf16[1])) {
+          } else if (0xD800 == (0xFC00 & aPS->mUtf16[1])) {
             // a high surrogate, can't convert until we have the low
-            aPS->utf16[0] = aPS->utf16[1];
-            aPS->utf16[1] = 0;
+            aPS->mUtf16[0] = aPS->mUtf16[1];
+            aPS->mUtf16[1] = 0;
             state = PREF_PARSE_UTF16_LOW_SURROGATE;
             break;
           } else {
-            // a single utf16 character
-            aPS->utf16[0] = aPS->utf16[1];
+            // a single mUtf16 character
+            aPS->mUtf16[0] = aPS->mUtf16[1];
             utf16len = 1;
           }
 
           // The actual conversion.
           // Make sure there's room, 6 bytes is max utf8 len (in theory; 4
-          // bytes covers the actual utf16 range).
-          if (aPS->lbcur + 6 >= aPS->lbend && !pref_GrowBuf(aPS)) {
+          // bytes covers the actual mUtf16 range).
+          if (aPS->mLbCur + 6 >= aPS->mLbEnd && !pref_GrowBuf(aPS)) {
             return false;
           }
 
-          ConvertUTF16toUTF8 converter(aPS->lbcur);
-          converter.write(aPS->utf16, utf16len);
-          aPS->lbcur += converter.Size();
+          ConvertUTF16toUTF8 converter(aPS->mLbCur);
+          converter.write(aPS->mUtf16, utf16len);
+          aPS->mLbCur += converter.Size();
           state = PREF_PARSE_QUOTED_STRING;
         }
         break;
 
-      // looking for beginning of utf16 low surrogate
+      // looking for beginning of mUtf16 low surrogate
       case PREF_PARSE_UTF16_LOW_SURROGATE:
-        if (aPS->sindex == 0 && c == '\\') {
-          ++aPS->sindex;
-        } else if (aPS->sindex == 1 && c == 'u') {
+        if (aPS->mStrIndex == 0 && c == '\\') {
+          ++aPS->mStrIndex;
+        } else if (aPS->mStrIndex == 1 && c == 'u') {
           // escape sequence is correct, now parse hex
-          aPS->sindex = UTF16_ESC_NUM_DIGITS;
-          aPS->esctmp[0] = 'u';
-          aPS->esclen = 1;
+          aPS->mStrIndex = UTF16_ESC_NUM_DIGITS;
+          aPS->mEscTmp[0] = 'u';
+          aPS->mEscLen = 1;
           state = PREF_PARSE_HEX_ESCAPE;
         } else {
           // Didn't find expected low surrogate. Ignore high surrogate (it
           // would just get converted to nothing anyway) and start over with
           // this character.
           --aBuf;
-          if (aPS->sindex == 1) {
+          if (aPS->mStrIndex == 1) {
             state = PREF_PARSE_ESC_SEQUENCE;
           } else {
             state = PREF_PARSE_QUOTED_STRING;
@@ -555,7 +557,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         if (c == '(') {
           state = PREF_PARSE_UNTIL_NAME;
         } else if (c == '/') {
-          aPS->nextstate = state; // return here when done with comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -570,7 +572,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         if (c == ')') {
           state = PREF_PARSE_UNTIL_SEMICOLON;
         } else if (c == '/') {
-          aPS->nextstate = state; // return here when done with comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -589,7 +591,7 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
           }
           state = PREF_PARSE_INIT;
         } else if (c == '/') {
-          aPS->nextstate = state; // return here when done with comment
+          aPS->mNextState = state; // return here when done with comment
           state = PREF_PARSE_COMMENT_MAYBE_START;
         } else if (!isspace(c)) {
           pref_ReportParseProblem(
@@ -604,13 +606,13 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
         // Need to handle mac, unix, or dos line endings. PREF_PARSE_INIT will
         // eat the next \n in case we have \r\n.
         if (c == '\r' || c == '\n' || c == 0x1A) {
-          state = aPS->nextstate;
-          aPS->nextstate = PREF_PARSE_INIT; // reset next state
+          state = aPS->mNextState;
+          aPS->mNextState = PREF_PARSE_INIT; // reset next state
         }
         break;
     }
   }
-  aPS->state = state;
+  aPS->mState = state;
   return true;
 }
 
@@ -626,13 +628,13 @@ pref_reader(void* aClosure,
   printf("%spref(\"%s\", ", aDefPref ? "" : "user_", aPref);
   switch (aType) {
     case PREF_STRING:
-      printf("\"%s\");\n", aVal.stringVal);
+      printf("\"%s\");\n", aVal.mStringVal);
       break;
     case PREF_INT:
-      printf("%i);\n", aVal.intVal);
+      printf("%i);\n", aVal.mIntVal);
       break;
     case PREF_BOOL:
-      printf("%s);\n", aVal.boolVal == false ? "false" : "true");
+      printf("%s);\n", aVal.mBoolVal == false ? "false" : "true");
       break;
   }
 }
