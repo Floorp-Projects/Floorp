@@ -57,6 +57,7 @@
 
 .customizationmode-button {
   border: 1px solid #b1b1b1;
+  border-radius: 2px;
   background-color: #fcfcfd;
   -moz-appearance: none;
 }
