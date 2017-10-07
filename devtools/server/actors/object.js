@@ -80,7 +80,7 @@ ObjectActor.prototype = {
 
     // Check if the object has a wrapper which denies access. It may be a CPOW or a
     // security wrapper. Change the class so that this will be visible in the UI.
-    let unwrapped = unwrap(this.obj);
+    let unwrapped = DevToolsUtils.unwrap(this.obj);
     if (!unwrapped) {
       if (DevToolsUtils.isCPOW(this.obj)) {
         g.class = "CPOW: " + g.class;
@@ -286,7 +286,7 @@ ObjectActor.prototype = {
     let ownSymbols = [];
 
     // Inaccessible, proxy and dead objects should not be accessed.
-    let unwrapped = unwrap(this.obj);
+    let unwrapped = DevToolsUtils.unwrap(this.obj);
     if (!unwrapped || unwrapped.isProxy || this.obj.class == "DeadObject") {
       return { from: this.actorID,
                prototype: this.hooks.createValueGrip(null),
@@ -335,7 +335,7 @@ ObjectActor.prototype = {
     let level = 0, i = 0;
 
     // Do not search safe getters in inaccessible nor proxy objects.
-    let unwrapped = unwrap(obj);
+    let unwrapped = DevToolsUtils.unwrap(obj);
     if (!unwrapped || unwrapped.isProxy) {
       return safeGetterValues;
     }
@@ -351,7 +351,7 @@ ObjectActor.prototype = {
 
     while (obj) {
       // Stop iterating when an inaccessible or a proxy object is found.
-      unwrapped = unwrap(obj);
+      unwrapped = DevToolsUtils.unwrap(obj);
       if (!unwrapped || unwrapped.isProxy) {
         break;
       }
@@ -2451,36 +2451,6 @@ function arrayBufferGrip(buffer, pool) {
   pool.addActor(actor);
   pool.arrayBufferActors.set(buffer, actor);
   return actor.grip();
-}
-
-/**
- * Removes all the non-opaque security wrappers of a debuggee object.
- * Returns null if some wrapper can't be removed.
- *
- * @param obj Debugger.Object
- *        The debuggee object to be unwrapped.
- */
-function unwrap(obj) {
-  // Check if `obj` has an opaque wrapper.
-  if (obj.class === "Opaque") {
-    return obj;
-  }
-
-  // Attempt to unwrap. If this operation is not allowed, it may return null or throw.
-  let unwrapped;
-  try {
-    unwrapped = obj.unwrap();
-  } catch (err) {
-    unwrapped = null;
-  }
-
-  // Check if further unwrapping is not possible.
-  if (!unwrapped || unwrapped === obj) {
-    return unwrapped;
-  }
-
-  // Recursively remove additional security wrappers.
-  return unwrap(unwrapped);
 }
 
 const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
