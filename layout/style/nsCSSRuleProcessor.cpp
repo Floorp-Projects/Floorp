@@ -1750,15 +1750,6 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
       }
       break;
 
-    case CSSPseudoClassType::mozSystemMetric:
-      {
-        RefPtr<nsAtom> metric = NS_Atomize(aString);
-        if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
-          return false;
-        }
-      }
-      break;
-
     case CSSPseudoClassType::dir:
       {
         if (aDependence) {
