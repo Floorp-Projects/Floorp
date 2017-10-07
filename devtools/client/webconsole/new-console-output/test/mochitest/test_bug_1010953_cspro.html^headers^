@@ -1,2 +1,0 @@
-Content-Security-Policy: default-src 'self'; img-src 'self'; script-src some.example.com;
-Content-Security-Policy-Report-Only: default-src 'self'; img-src some.example.com; script-src 'self'; report-uri https://example.com/ignored/;
