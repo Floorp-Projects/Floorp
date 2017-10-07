@@ -51,11 +51,12 @@
         children differently)
         -->
         <xul:box>
-          <xul:hbox class="searchbar-search-button-container">
-            <xul:image class="searchbar-search-button"
-                       anonid="searchbar-search-button"
-                       xbl:inherits="addengines"
-                       tooltiptext="&searchIcon.tooltip;"/>
+          <xul:hbox class="searchbar-search-button"
+                    anonid="searchbar-search-button"
+                    xbl:inherits="addengines"
+                    tooltiptext="&searchIcon.tooltip;">
+            <xul:image class="searchbar-search-icon"/>
+            <xul:image class="searchbar-search-icon-overlay"/>
           </xul:hbox>
         </xul:box>
         <xul:hbox class="search-go-container">
