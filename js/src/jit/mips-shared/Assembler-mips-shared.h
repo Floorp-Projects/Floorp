@@ -80,7 +80,6 @@ struct SecondScratchRegisterScope : public AutoRegisterScope
 
 // Use arg reg from EnterJIT function as OsrFrameReg.
 static constexpr Register OsrFrameReg = a3;
-static constexpr Register ArgumentsRectifierReg = s3;
 static constexpr Register CallTempReg0 = t0;
 static constexpr Register CallTempReg1 = t1;
 static constexpr Register CallTempReg2 = t2;
