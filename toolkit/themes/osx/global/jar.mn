@@ -69,7 +69,6 @@ toolkit.jar:
   skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                              (dirListing/up.png)
-  skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
   skin/classic/global/icons/blacklist_favicon.png                    (icons/blacklist_favicon.png)
   skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
