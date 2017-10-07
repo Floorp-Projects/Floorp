@@ -7,7 +7,6 @@
 UNIFIED_SOURCES += [
     'TestHeaders.cpp',
     'TestHttpAuthUtils.cpp',
-    'TestMozURL.cpp',
     'TestPartiallySeekableInputStream.cpp',
     'TestProtocolProxyService.cpp',
     'TestStandardURL.cpp',
