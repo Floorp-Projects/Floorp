@@ -128,6 +128,53 @@ add_task(async function should_recheck_if_interval_expired() {
   do_check_true(metadata.searchDefaultExpir < date + (kYearInSeconds + 3600) * 1000);
 });
 
+add_task(async function should_recheck_if_appversion_changed() {
+  let data = await promiseCacheData();
+
+  do_check_eq(data.appVersion, Services.appinfo.version);
+
+  // Set app version to something old
+  data.appVersion = "1";
+  await promiseSaveCacheData(data);
+
+  await asyncReInit();
+  checkRequest();
+  await promiseAfterCache();
+
+  // Check that the appVersion has been updated
+  data = await promiseCacheData();
+  do_check_eq(data.appVersion, Services.appinfo.version);
+});
+
+add_task(async function should_recheck_if_appversion_changed_sync() {
+  let data = await promiseCacheData();
+
+  do_check_eq(data.appVersion, Services.appinfo.version);
+
+  // Set app version to something old
+  data.appVersion = "1";
+  await promiseSaveCacheData(data);
+
+  let commitPromise = promiseAfterCache();
+  let unInitPromise = waitForSearchNotification("uninit-complete");
+  let reInitPromise = asyncReInit();
+  await unInitPromise;
+
+  // Synchronously check the current default engine, to force a sync init.
+  // The hash is wrong, so we should fallback to the default engine from prefs.
+  do_check_false(Services.search.isInitialized);
+  Services.search.getEngines();
+  do_check_true(Services.search.isInitialized);
+
+  await reInitPromise;
+  checkRequest();
+  await commitPromise;
+
+  // Check that the appVersion has been updated
+  data = await promiseCacheData();
+  do_check_eq(data.appVersion, Services.appinfo.version);
+});
+
 add_task(async function should_recheck_when_broken_hash() {
   // This test verifies both that we ignore saved geo-defaults if the
   // hash is invalid, and that we keep the local preferences-based

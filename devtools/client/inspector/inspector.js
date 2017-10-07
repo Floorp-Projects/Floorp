@@ -1250,9 +1250,9 @@ Inspector.prototype = {
     }));
     menu.append(new MenuItem({
       id: "node-menu-collapse",
-      label: INSPECTOR_L10N.getStr("inspectorCollapseNode.label"),
+      label: INSPECTOR_L10N.getStr("inspectorCollapseAll.label"),
       disabled: !isNodeWithChildren || !markupContainer.expanded,
-      click: () => this.collapseNode(),
+      click: () => this.collapseAll(),
     }));
 
     menu.append(new MenuItem({
@@ -1981,8 +1981,8 @@ Inspector.prototype = {
     this.markup.expandAll(this.selection.nodeFront);
   },
 
-  collapseNode: function () {
-    this.markup.collapseNode(this.selection.nodeFront);
+  collapseAll: function () {
+    this.markup.collapseAll(this.selection.nodeFront);
   },
 
   /**

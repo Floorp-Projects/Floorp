@@ -36,7 +36,7 @@ CompositorManagerChild::InitSameProcess(uint32_t aNamespace,
                                         uint64_t aProcessToken)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(IsInitialized(base::GetCurrentProcId()))) {
+  if (NS_WARN_IF(IsInitialized(aProcessToken))) {
     MOZ_ASSERT_UNREACHABLE("Already initialized same process");
     return;
   }

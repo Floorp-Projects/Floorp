@@ -27,7 +27,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFactory.h"
-#include "nsIFrameUtil.h"
 #include "nsIIdleService.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsILayoutDebugger.h"
@@ -342,7 +341,6 @@ Shutdown()
 }
 
 #ifdef DEBUG
-nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
@@ -411,7 +409,6 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 }
 
 #ifdef DEBUG
-MAKE_CTOR(CreateNewFrameUtil,             nsIFrameUtil,                NS_NewFrameUtil)
 MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLayoutDebugger)
 #endif
 
@@ -568,7 +565,6 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 }
 
 #ifdef DEBUG
-NS_DEFINE_NAMED_CID(NS_FRAME_UTIL_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
@@ -827,7 +823,6 @@ nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
-  { &kNS_FRAME_UTIL_CID, false, nullptr, CreateNewFrameUtil },
   { &kNS_LAYOUT_DEBUGGER_CID, false, nullptr, CreateNewLayoutDebugger },
 #endif
   { &kNS_FRAMETRAVERSAL_CID, false, nullptr, CreateNewFrameTraversal },

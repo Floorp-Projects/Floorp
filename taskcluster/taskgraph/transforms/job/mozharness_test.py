@@ -59,7 +59,7 @@ VARIANTS = [
     'pgo',
     'asan',
     'stylo',
-    'stylo disabled',
+    'stylo-disabled',
     'stylo-sequential',
     'qr',
     'ccov',

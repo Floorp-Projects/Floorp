@@ -496,17 +496,6 @@ public:
 
   static void XMLQuote(nsString& aString);
 
-  /**
-   * Dump out the "base classes" regression data. This should dump
-   * out the interior data, not the "frame" XML container. And it
-   * should call the base classes same named method before doing
-   * anything specific in a derived class. This means that derived
-   * classes need not override DumpRegressionData unless they need
-   * some custom behavior that requires changing how the outer "frame"
-   * XML container is dumped.
-   */
-  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent);
-
   // Display Reflow Debugging
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
@@ -743,17 +732,6 @@ public:
    * is, those bits which indicate a real difference when they differ
    */
   nsFrameState GetDebugStateBits() const override;
-  /**
-   * Called to dump out regression data that describes the layout
-   * of the frame and its children, and so on. The format of the
-   * data is dictated to be XML (using a specific DTD); the
-   * specific kind of data dumped is up to the frame itself, with
-   * the caveat that some base types are defined.
-   * For more information, see XXX.
-   */
-  nsresult DumpRegressionData(nsPresContext* aPresContext,
-                              FILE* out, int32_t aIndent) override;
-
   /**
    * See if style tree verification is enabled. To enable style tree
    * verification add "styleverifytree:1" to your MOZ_LOG

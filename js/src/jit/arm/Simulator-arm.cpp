@@ -1735,40 +1735,34 @@ T compareExchangeRelaxed(SharedMem<T*> addr, T oldval, T newval)
 int
 Simulator::readExW(int32_t addr, SimInstruction* instr)
 {
+    if (addr & 3)
+        MOZ_CRASH("Unaligned exclusive read");
+
     if (handleWasmFault(addr, 4))
         return -1;
 
-    // The regexp engine emits unaligned loads, so we don't check for them here
-    // like most of the other methods do.
-    if ((addr & 3) == 0 || !HasAlignmentFault()) {
-        SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
-        int32_t value = loadRelaxed(ptr);
-        exclusiveMonitorSet(value);
-        return value;
-    }
-
-    printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
-    MOZ_CRASH();
+    SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
+    int32_t value = loadRelaxed(ptr);
+    exclusiveMonitorSet(value);
+    return value;
 }
 
 int32_t
 Simulator::writeExW(int32_t addr, int value, SimInstruction* instr)
 {
+    if (addr & 3)
+        MOZ_CRASH("Unaligned exclusive write");
+
     if (handleWasmFault(addr, 4))
         return -1;
 
-    if ((addr & 3) == 0) {
-        SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
-        bool held;
-        int32_t expected = int32_t(exclusiveMonitorGetAndClear(&held));
-        if (!held)
-            return 1;
-        int32_t old = compareExchangeRelaxed(ptr, expected, int32_t(value));
-        return old != expected;
-    }
-
-    printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
-    MOZ_CRASH();
+    SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
+    bool held;
+    int32_t expected = int32_t(exclusiveMonitorGetAndClear(&held));
+    if (!held)
+        return 1;
+    int32_t old = compareExchangeRelaxed(ptr, expected, int32_t(value));
+    return old != expected;
 }
 
 uint16_t
@@ -1870,41 +1864,34 @@ Simulator::writeH(int32_t addr, int16_t value, SimInstruction* instr)
 uint16_t
 Simulator::readExHU(int32_t addr, SimInstruction* instr)
 {
+    if (addr & 1)
+        MOZ_CRASH("Unaligned exclusive read");
+
     if (handleWasmFault(addr, 2))
         return UINT16_MAX;
 
-    // The regexp engine emits unaligned loads, so we don't check for them here
-    // like most of the other methods do.
-    if ((addr & 1) == 0 || !HasAlignmentFault()) {
-        SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
-        uint16_t value = loadRelaxed(ptr);
-        exclusiveMonitorSet(value);
-        return value;
-    }
-
-    printf("Unaligned atomic unsigned halfword read at 0x%08x, pc=%p\n", addr, instr);
-    MOZ_CRASH();
-    return 0;
+    SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
+    uint16_t value = loadRelaxed(ptr);
+    exclusiveMonitorSet(value);
+    return value;
 }
 
 int32_t
 Simulator::writeExH(int32_t addr, uint16_t value, SimInstruction* instr)
 {
+    if (addr & 1)
+        MOZ_CRASH("Unaligned exclusive write");
+
     if (handleWasmFault(addr, 2))
         return -1;
 
-    if ((addr & 1) == 0) {
-        SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
-        bool held;
-        uint16_t expected = uint16_t(exclusiveMonitorGetAndClear(&held));
-        if (!held)
-            return 1;
-        uint16_t old = compareExchangeRelaxed(ptr, expected, value);
-        return old != expected;
-    }
-
-    printf("Unaligned atomic unsigned halfword write at 0x%08x, pc=%p\n", addr, instr);
-    MOZ_CRASH();
+    SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
+    bool held;
+    uint16_t expected = uint16_t(exclusiveMonitorGetAndClear(&held));
+    if (!held)
+        return 1;
+    uint16_t old = compareExchangeRelaxed(ptr, expected, value);
+    return old != expected;
 }
 
 uint8_t
@@ -2009,49 +1996,45 @@ Simulator::writeDW(int32_t addr, int32_t value1, int32_t value2)
 int32_t
 Simulator::readExDW(int32_t addr, int32_t* hibits)
 {
+    if (addr & 3)
+        MOZ_CRASH("Unaligned exclusive read");
+
     if (handleWasmFault(addr, 8))
         return -1;
 
-    if ((addr & 3) == 0) {
-        SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
-        // The spec says that the low part of value shall be read from addr and
-        // the high part shall be read from addr+4.  On a little-endian system
-        // where we read a 64-bit quadword the low part of the value will be in
-        // the low part of the quadword, and the high part of the value in the
-        // high part of the quadword.
-        uint64_t value = loadRelaxed(ptr);
-        exclusiveMonitorSet(value);
-        *hibits = int32_t(value >> 32);
-        return int32_t(value);
-    }
-
-    printf("Unaligned read at 0x%08x\n", addr);
-    MOZ_CRASH();
+    SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
+    // The spec says that the low part of value shall be read from addr and
+    // the high part shall be read from addr+4.  On a little-endian system
+    // where we read a 64-bit quadword the low part of the value will be in
+    // the low part of the quadword, and the high part of the value in the
+    // high part of the quadword.
+    uint64_t value = loadRelaxed(ptr);
+    exclusiveMonitorSet(value);
+    *hibits = int32_t(value >> 32);
+    return int32_t(value);
 }
 
 int32_t
 Simulator::writeExDW(int32_t addr, int32_t value1, int32_t value2)
 {
+    if (addr & 3)
+        MOZ_CRASH("Unaligned exclusive write");
+
     if (handleWasmFault(addr, 8))
         return -1;
 
-    if ((addr & 3) == 0) {
-        SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
-        // The spec says that value1 shall be stored at addr and value2 at
-        // addr+4.  On a little-endian system that means constructing a 64-bit
-        // value where value1 is in the low half of a 64-bit quadword and value2
-        // is in the high half of the quadword.
-        uint64_t value = (uint64_t(value2) << 32) | uint32_t(value1);
-        bool held;
-        uint64_t expected = exclusiveMonitorGetAndClear(&held);
-        if (!held)
-            return 1;
-        uint64_t old = compareExchangeRelaxed(ptr, expected, value);
-        return old != expected;
-    }
-
-    printf("Unaligned write at 0x%08x\n", addr);
-    MOZ_CRASH();
+    SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
+    // The spec says that value1 shall be stored at addr and value2 at
+    // addr+4.  On a little-endian system that means constructing a 64-bit
+    // value where value1 is in the low half of a 64-bit quadword and value2
+    // is in the high half of the quadword.
+    uint64_t value = (uint64_t(value2) << 32) | uint32_t(value1);
+    bool held;
+    uint64_t expected = exclusiveMonitorGetAndClear(&held);
+    if (!held)
+        return 1;
+    uint64_t old = compareExchangeRelaxed(ptr, expected, value);
+    return old != expected;
 }
 
 uintptr_t

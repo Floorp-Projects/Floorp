@@ -8,28 +8,23 @@
 #include "mozilla/ModuleUtils.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsRegressionTester.h"
 #include "nsLayoutDebuggingTools.h"
 #include "nsLayoutDebugCLH.h"
 #include "nsIServiceManager.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegressionTester)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLayoutDebuggingTools)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLayoutDebugCLH)
 
-NS_DEFINE_NAMED_CID(NS_REGRESSION_TESTER_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGINGTOOLS_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUTDEBUGCLH_CID);
 
 static const mozilla::Module::CIDEntry kLayoutDebugCIDs[] = {
-  { &kNS_REGRESSION_TESTER_CID, false, nullptr, nsRegressionTesterConstructor },
   { &kNS_LAYOUT_DEBUGGINGTOOLS_CID, false, nullptr, nsLayoutDebuggingToolsConstructor },
   { &kNS_LAYOUTDEBUGCLH_CID, false, nullptr, nsLayoutDebugCLHConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kLayoutDebugContracts[] = {
-  { "@mozilla.org/layout-debug/regressiontester;1", &kNS_REGRESSION_TESTER_CID },
   { NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID, &kNS_LAYOUT_DEBUGGINGTOOLS_CID },
   { "@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug", &kNS_LAYOUTDEBUGCLH_CID },
   { nullptr }

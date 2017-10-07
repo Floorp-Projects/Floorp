@@ -33,7 +33,6 @@
  * - a memory buffer: MemoryBlobImpl
  * - a string: StringBlobImpl
  * - a real OS file: FileBlobImpl
- * - a temporary OS file: TemporaryBlobImpl
  * - a generic nsIInputStream: StreamBlobImpl
  * - an empty blob: EmptyBlobImpl
  * - more blobs combined together: MultipartBlobImpl

@@ -26,6 +26,7 @@
 #include "nsIDocument.h"
 #include "mozilla/dom/Animation.h"
 #include "nsIAnimationObserver.h"
+#include "nsGlobalWindow.h"
 
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
@@ -609,11 +610,7 @@ protected:
 
   bool Suppressed()
   {
-    if (mOwner) {
-      nsCOMPtr<nsIDocument> d = mOwner->GetExtantDoc();
-      return d && d->IsInSyncOperation();
-    }
-    return false;
+    return mOwner && nsGlobalWindow::Cast(mOwner)->IsInSyncOperation();
   }
 
   static void HandleMutationsInternal();

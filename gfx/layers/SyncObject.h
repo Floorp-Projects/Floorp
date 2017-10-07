@@ -41,7 +41,7 @@ protected:
   SyncObjectHost() { }
 };
 
-class SyncObjectClient : public RefCounted<SyncObjectClient>
+class SyncObjectClient : public external::AtomicRefCounted<SyncObjectClient>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObjectClient)

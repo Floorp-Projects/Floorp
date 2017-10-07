@@ -101,7 +101,6 @@ PageLoaderCmdLineHandler.prototype =
       args.loadnocache = cmdLine.handleFlag("tploadnocache", false);
       args.scrolltest = cmdLine.handleFlag("tpscrolltest", false);
       args.disableE10s = cmdLine.handleFlag("tpdisable_e10s", false);
-      args.rss = cmdLine.handleFlag("rss", false);
     } catch (e) {
       return;
     }
@@ -136,9 +135,7 @@ PageLoaderCmdLineHandler.prototype =
   "  -tpmozafterpaint       Measure Time after recieving MozAfterPaint event instead of load event\n" +
   "  -fnbpaint  Measure time after a first non-blank paint has occurred\n" +
   "  -tpscrolltest          Unknown\n" +
-  "  -tpdisable_e10s        disable pageloader e10s code path\n" +
-  "  -rss                   Dump RSS after each page is loaded\n"
-
+  "  -tpdisable_e10s        disable pageloader e10s code path\n"
 };
 
 

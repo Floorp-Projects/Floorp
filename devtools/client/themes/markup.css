@@ -3,10 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
+  --markup-hidden-attr-name-color: #CA60AC;
+  --markup-hidden-attr-value-color: #5C6D87;
+  --markup-hidden-punctuation-color: #909090;
+  --markup-hidden-tag-color: #97A4B3;
   --markup-outline: var(--theme-splitter-color);
 }
 
 .theme-dark:root {
+  --markup-hidden-attr-name-color: #CC8EC8;
+  --markup-hidden-attr-value-color: #9893A3;
+  --markup-hidden-punctuation-color: #909090;
+  --markup-hidden-tag-color: #AFB5BF;
   --markup-outline: var(--theme-selection-background);
 }
 
@@ -332,6 +340,22 @@ ul.children + .tag-line::before {
   z-index: 1;
 }
 
+.not-displayed {
+  color: var(--markup-hidden-punctuation-color);
+}
+
+.not-displayed .attr-name {
+  color: var(--markup-hidden-attr-name-color);
+}
+
+.not-displayed .attr-value {
+  color: var(--markup-hidden-attr-value-color);
+}
+
+.not-displayed .tag {
+  color: var(--markup-hidden-tag-color);
+}
+
 /* Firebug Theme */
 
 .theme-firebug .theme-fg-color3 {
@@ -351,6 +375,12 @@ ul.children + .tag-line::before {
 
 .theme-firebug .markupview-events {
   font-size: var(--theme-toolbar-font-size);
+}
+
+/* In case a node isn't displayed in the page, we fade the syntax highlighting */
+.theme-firebug .not-displayed .open,
+.theme-firebug .not-displayed .close {
+  opacity: .5;
 }
 
 /* Selected nodes in the tree should have light selected text.
@@ -381,12 +411,6 @@ ul.children + .tag-line::before {
 
 .theme-firebug .doctype {
   color: #787878;
-}
-
-/* In case a node isn't displayed in the page, we fade the syntax highlighting */
-.not-displayed .open,
-.not-displayed .close {
-  opacity: .5;
 }
 
 /* Events */

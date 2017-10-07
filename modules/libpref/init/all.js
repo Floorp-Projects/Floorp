@@ -2979,7 +2979,7 @@ pref("layout.css.float-logical-values.enabled", true);
 pref("layout.css.image-orientation.enabled", true);
 
 // Is support for the font-display @font-face descriptor enabled?
-pref("layout.css.font-display.enabled", false);
+pref("layout.css.font-display.enabled", true);
 
 // Is support for variation fonts enabled?
 pref("layout.css.font-variations.enabled", false);

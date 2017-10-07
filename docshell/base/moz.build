@@ -41,7 +41,6 @@ XPIDL_SOURCES += [
     'nsIContentViewer.idl',
     'nsIContentViewerContainer.idl',
     'nsIContentViewerEdit.idl',
-    'nsIContentViewerFile.idl',
     'nsIContextMenuListener.idl',
     'nsIContextMenuListener2.idl',
     'nsIDocCharset.idl',

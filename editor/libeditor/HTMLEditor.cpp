@@ -3855,40 +3855,6 @@ HTMLEditor::GetNextHTMLSibling(nsIDOMNode* inNode,
 }
 
 /**
- * GetNextHTMLSibling() returns the next editable sibling, if there is
- * one within the parent.  just like above routine but takes a parent/offset
- * instead of a node.
- */
-nsIContent*
-HTMLEditor::GetNextHTMLSibling(nsINode* aParent,
-                               int32_t aOffset)
-{
-  MOZ_ASSERT(aParent);
-
-  nsIContent* node = aParent->GetChildAt(aOffset + 1);
-  if (!node || IsEditable(node)) {
-    return node;
-  }
-
-  return GetNextHTMLSibling(node);
-}
-
-nsresult
-HTMLEditor::GetNextHTMLSibling(nsIDOMNode* inParent,
-                               int32_t inOffset,
-                               nsCOMPtr<nsIDOMNode>* outNode)
-{
-  NS_ENSURE_TRUE(outNode, NS_ERROR_NULL_POINTER);
-  *outNode = nullptr;
-
-  nsCOMPtr<nsINode> parent = do_QueryInterface(inParent);
-  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-
-  *outNode = do_QueryInterface(GetNextHTMLSibling(parent, inOffset));
-  return NS_OK;
-}
-
-/**
  * GetPriorHTMLNode() returns the previous editable leaf node, if there is
  * one within the <body>.
  */

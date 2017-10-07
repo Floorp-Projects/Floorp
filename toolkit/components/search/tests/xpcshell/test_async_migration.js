@@ -22,5 +22,5 @@ add_task(async function test_async_metadata_migration() {
   do_check_eq(metadata.engine.alias, "foo");
 
   metadata = await promiseGlobalMetadata();
-  do_check_eq(metadata.searchDefaultExpir, 1471013469846);
+  do_check_false(metadata.searchDefaultExpir);
 });

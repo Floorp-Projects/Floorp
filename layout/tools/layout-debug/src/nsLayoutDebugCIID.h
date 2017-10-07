@@ -10,10 +10,6 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_REGRESSION_TESTER_CID \
-{ 0x698c54f4, 0x4ea9, 0x11d7, \
-{ 0x85, 0x9f, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
-
 #define NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID \
   "@mozilla.org/layout-debug/layout-debuggingtools;1"
 // 3f4c3b63-e640-4712-abbf-fff1301ceb60

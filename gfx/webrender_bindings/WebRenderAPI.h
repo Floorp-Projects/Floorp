@@ -236,8 +236,6 @@ public:
   void PushStickyFrame(const wr::WrStickyId& aStickyId);
   void PopStickyFrame();
 
-  void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
-
   bool IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const;
   void DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
                          const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects

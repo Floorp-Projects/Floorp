@@ -216,20 +216,14 @@ class Output(object):
     @classmethod
     def shortName(cls, name):
         """short name for counters"""
-        names = {"Working Set": "memset",
-                 "% Processor Time": "%cpu",
-                 "Private Bytes": "pbytes",
-                 "RSS": "rss",
-                 "XRes": "xres",
-                 "Modified Page List Bytes": "modlistbytes",
-                 "Main_RSS": "main_rss"}
+        names = {"% Processor Time": "%cpu",
+                 "XRes": "xres"}
         return names.get(name, name)
 
     @classmethod
     def isMemoryMetric(cls, resultName):
         """returns if the result is a memory metric"""
-        memory_metric = ['memset', 'rss', 'pbytes', 'xres', 'modlistbytes',
-                         'main_rss', 'content_rss']  # measured in bytes
+        memory_metric = ['xres']  # measured in bytes
         return bool([i for i in memory_metric if i in resultName])
 
     @classmethod

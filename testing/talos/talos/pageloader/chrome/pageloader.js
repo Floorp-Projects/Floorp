@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from memory.js */
 /* import-globals-from report.js */
 /* eslint mozilla/avoid-Date-timing: "off" */
 
@@ -40,7 +39,6 @@ var timeout = -1;
 var delay = 250;
 var running = false;
 var forceCC = true;
-var reportRSS = true;
 
 var useMozAfterPaint = false;
 var useFNBPaint = false;
@@ -154,7 +152,6 @@ function plInit() {
     if (args.delay) delay = parseInt(args.delay);
     if (args.mozafterpaint) useMozAfterPaint = true;
     if (args.fnbpaint) useFNBPaint = true;
-    if (args.rss) reportRSS = true;
     if (args.loadnocache) loadNoCache = true;
     if (args.scrolltest) scrollTest = true;
     if (args.disableE10S) gDisableE10S = true;
@@ -329,11 +326,7 @@ function plInit() {
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/tscroll.js", false, true);
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/Profiler.js", false, true);
 
-        if (reportRSS) {
-          initializeMemoryCollector(plLoadPage, 100);
-        } else {
-          setTimeout(plLoadPage, 100);
-        }
+        setTimeout(plLoadPage, 100);
       }, 500);
     };
 
@@ -404,11 +397,7 @@ function plLoadPage() {
   // record which page we are about to open
   TalosParentProfiler.mark("Opening " + pages[pageIndex].url.pathQueryRef);
 
-  if (reportRSS) {
-    collectMemory(startAndLoadURI, pageName);
-  } else {
-    startAndLoadURI(pageName);
-  }
+  startAndLoadURI(pageName);
 }
 
 function startAndLoadURI(pageName) {
@@ -816,11 +805,7 @@ function runRenderTest() {
 }
 
 function plStop(force) {
-  if (reportRSS) {
-    collectMemory(plStopAll, force);
-  } else {
-    plStopAll(force);
-  }
+  plStopAll(force);
 }
 
 function plStopAll(force) {
@@ -841,10 +826,6 @@ function plStopAll(force) {
     }
   } catch (e) {
     dumpLine(e);
-  }
-
-  if (reportRSS) {
-    stopMemCollector();
   }
 
   if (content) {

@@ -29,3 +29,12 @@
 nsresult
 NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc);
 
+/**
+ * OpenAnonymousTemporaryNsIFile
+ *
+ * Similar to the previous function, it returns a nsIFile. Note that the nsIFile
+ * will not be deleted automagically. The callee has to call aFile->Remove() in
+ * order to remove the temporary file.
+ */
+nsresult
+NS_OpenAnonymousTemporaryNsIFile(nsIFile** aFile);

@@ -5663,18 +5663,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
-      nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(newChannel);
-      if (timedChannel) {
-        timedChannel->SetLaunchServiceWorkerStart(mLaunchServiceWorkerStart);
-        timedChannel->SetLaunchServiceWorkerEnd(mLaunchServiceWorkerEnd);
-        timedChannel->SetDispatchFetchEventStart(mDispatchFetchEventStart);
-        timedChannel->SetDispatchFetchEventEnd(mDispatchFetchEventEnd);
-        timedChannel->SetHandleFetchEventStart(mHandleFetchEventStart);
-        timedChannel->SetHandleFetchEventEnd(mHandleFetchEventEnd);
-      }
-    }
-
     return NS_OK;
 }
 
@@ -5696,7 +5684,7 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
     if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf))
         location = locationBuf;
 
-    if (mRedirectionLimit == 0) {
+    if (mRedirectCount >= mRedirectionLimit || mInternalRedirectCount >= mRedirectionLimit) {
         LOG(("redirection limit reached!\n"));
         return NS_ERROR_REDIRECT_LOOP;
     }

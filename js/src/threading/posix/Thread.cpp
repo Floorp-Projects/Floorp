@@ -101,13 +101,13 @@ js::Thread::create(void* (*aMain)(void*), void* aArg)
     r = pthread_attr_setstacksize(&attrs, options_.stackSize());
     MOZ_RELEASE_ASSERT(!r);
   }
+  id_.platformData()->hasThread = true;
   r = pthread_create(&id_.platformData()->ptThread, &attrs, aMain, aArg);
   if (r) {
     // |pthread_create| may leave id_ in an undefined state.
     id_ = Id();
     return false;
   }
-  id_.platformData()->hasThread = true;
   return true;
 }
 

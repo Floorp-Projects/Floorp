@@ -451,28 +451,8 @@ nsFileInputStream::Open(nsIFile* aFile, int32_t aIOFlags, int32_t aPerm)
     if (aPerm == -1)
         aPerm = 0;
 
-    rv = MaybeOpen(aFile, aIOFlags, aPerm,
-                   mBehaviorFlags & nsIFileInputStream::DEFER_OPEN);
-
-    if (NS_FAILED(rv)) return rv;
-
-    // if defer open is set, do not remove the file here.
-    // remove the file while Close() is called.
-    if ((mBehaviorFlags & DELETE_ON_CLOSE) &&
-        !(mBehaviorFlags & nsIFileInputStream::DEFER_OPEN)) {
-      // POSIX compatible filesystems allow a file to be unlinked while a
-      // file descriptor is still referencing the file.  since we've already
-      // opened the file descriptor, we'll try to remove the file.  if that
-      // fails, then we'll just remember the nsIFile and remove it after we
-      // close the file descriptor.
-      rv = aFile->Remove(false);
-      if (NS_SUCCEEDED(rv)) {
-        // No need to remove it later. Clear the flag.
-        mBehaviorFlags &= ~DELETE_ON_CLOSE;
-      }
-    }
-
-    return NS_OK;
+    return MaybeOpen(aFile, aIOFlags, aPerm,
+                     mBehaviorFlags & nsIFileInputStream::DEFER_OPEN);
 }
 
 NS_IMETHODIMP
@@ -506,17 +486,7 @@ nsFileInputStream::Close()
 
     // null out mLineBuffer in case Close() is called again after failing
     mLineBuffer = nullptr;
-    nsresult rv = nsFileStreamBase::Close();
-    if (NS_FAILED(rv)) return rv;
-    if (mFile && (mBehaviorFlags & DELETE_ON_CLOSE)) {
-        rv = mFile->Remove(false);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
-        // If we don't need to save the file for reopening, free it up
-        if (!(mBehaviorFlags & REOPEN_ON_REWIND)) {
-          mFile = nullptr;
-        }
-    }
-    return rv;
+    return nsFileStreamBase::Close();
 }
 
 NS_IMETHODIMP

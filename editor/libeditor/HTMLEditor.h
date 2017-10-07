@@ -774,9 +774,6 @@ protected:
   nsIContent* GetNextHTMLSibling(nsINode* aNode);
   nsresult GetNextHTMLSibling(nsIDOMNode* inNode,
                               nsCOMPtr<nsIDOMNode>* outNode);
-  nsIContent* GetNextHTMLSibling(nsINode* aParent, int32_t aOffset);
-  nsresult GetNextHTMLSibling(nsIDOMNode* inParent, int32_t inOffset,
-                              nsCOMPtr<nsIDOMNode>* outNode);
 
   nsIContent* GetPriorHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
   nsresult GetPriorHTMLNode(nsIDOMNode* inNode, nsCOMPtr<nsIDOMNode>* outNode,

@@ -1948,17 +1948,6 @@ public:
    */
   static nsISerialEventTarget* GetStableStateEventTarget();
 
-  // Call EnterMicroTask when you're entering JS execution.
-  // Usually the best way to do this is to use nsAutoMicroTask.
-  static void EnterMicroTask();
-  static void LeaveMicroTask();
-
-  static bool IsInMicroTask();
-  static uint32_t MicroTaskLevel();
-  static void SetMicroTaskLevel(uint32_t aLevel);
-
-  static void PerformMainThreadMicroTaskCheckpoint();
-
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -3331,7 +3320,7 @@ private:
   static bool sInitialized;
   static uint32_t sScriptBlockerCount;
   static uint32_t sDOMNodeRemovedSuppressCount;
-  static uint32_t sMicroTaskLevel;
+
   // Not an nsCOMArray because removing elements from those is slower
   static AutoTArray<nsCOMPtr<nsIRunnable>, 8>* sBlockedScriptRunners;
   static uint32_t sRunnersCountAtFirstBlocker;
@@ -3490,19 +3479,6 @@ public:
   }
   ~nsAutoScriptBlockerSuppressNodeRemoved() {
     --nsContentUtils::sDOMNodeRemovedSuppressCount;
-  }
-};
-
-class MOZ_STACK_CLASS nsAutoMicroTask
-{
-public:
-  nsAutoMicroTask()
-  {
-    nsContentUtils::EnterMicroTask();
-  }
-  ~nsAutoMicroTask()
-  {
-    nsContentUtils::LeaveMicroTask();
   }
 };
 

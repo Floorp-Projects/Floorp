@@ -201,8 +201,7 @@ private:
                         wr::ResourceUpdateQueue& aResources);
 
   uint64_t GetLayersId() const;
-  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
-                                      wr::ResourceUpdateQueue& aResources);
+  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands);
 
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }

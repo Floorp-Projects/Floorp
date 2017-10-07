@@ -172,7 +172,8 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
 
   // Now it's the right time to apply a slice if needed.
   if (aStart > 0 || aLength < size) {
-    clonedStream = new SlicedInputStream(clonedStream, aStart, aLength);
+    clonedStream =
+      new SlicedInputStream(clonedStream.forget(), aStart, aLength);
   }
 
   clonedStream.forget(aInputStream);
