@@ -1678,8 +1678,6 @@ var CustomizableUIInternal = {
     let inItem = false;
     // whether the current menuitem has a valid closemenu attribute
     let menuitemCloseMenu = "auto";
-    // whether the toolbarbutton/item has a valid closemenu attribute.
-    let closemenu = "auto";
 
     // While keeping track of that, we go from the original target back up,
     // to the panel if we have to. We bail as soon as we find an input,
@@ -1705,11 +1703,6 @@ var CustomizableUIInternal = {
       inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
       let isMenuItem = tagName == "menuitem";
       inMenu = inMenu || isMenuItem;
-      if (inItem && target.hasAttribute("closemenu")) {
-        let closemenuVal = target.getAttribute("closemenu");
-        closemenu = (closemenuVal == "single" || closemenuVal == "none") ?
-                    closemenuVal : "auto";
-      }
 
       if (isMenuItem && target.hasAttribute("closemenu")) {
         let closemenuVal = target.getAttribute("closemenu");
@@ -1751,17 +1744,6 @@ var CustomizableUIInternal = {
     // If we're not in a menu, and we *are* in a type="menu" toolbarbutton,
     // we'll now interact with the menu
     if (inItem && target.getAttribute("type") == "menu") {
-      return true;
-    }
-    // If we're not in a menu, and we *are* in a type="menu-button" toolbarbutton,
-    // it depends whether we're in the dropmarker or the 'real' button:
-    if (inItem && target.getAttribute("type") == "menu-button") {
-      // 'real' button (which has a single action):
-      if (target.getAttribute("anonid") == "button") {
-        return closemenu != "none";
-      }
-      // otherwise, this is the outer button, and the user will now
-      // interact with the menu:
       return true;
     }
     return inInput || !inItem;
