@@ -12,6 +12,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.importGlobalProperties(["fetch"]); /* globals fetch */
 
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
+
 const FILE_UPDATE_LOCALE                  = "update.locale";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION       = "distribution.version";
@@ -361,7 +364,8 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
 
             if (0 !== GetVersionEx(winVer.address())) {
               osVersion += "." + winVer.wServicePackMajor +
-                           "." + winVer.wServicePackMinor;
+                           "." + winVer.wServicePackMinor +
+                           "." + winVer.dwBuildNumber;
             } else {
               Cu.reportError("Unknown failure in GetVersionEX (returned 0)");
               osVersion += ".unknown";
@@ -369,6 +373,14 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
           } catch (e) {
             Cu.reportError("Error getting service pack information. Exception: " + e);
             osVersion += ".unknown";
+          }
+
+          if (Services.vc.compare(Services.sysinfo.getProperty("version"), "10") >= 0) {
+            const WINDOWS_UBR_KEY_PATH = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+            let ubr = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                                 WINDOWS_UBR_KEY_PATH, "UBR",
+                                                 Ci.nsIWindowsRegKey.WOW64_64);
+            osVersion += (ubr !== undefined) ? "." + ubr : ".unknown";
           }
         } finally {
           kernel32.close();

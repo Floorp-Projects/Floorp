@@ -1052,8 +1052,12 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
     RootedObject reactions(cx, &reactionsVal.toObject());
     RootedObject reaction(cx);
 
-    if (reactions->is<PromiseReactionRecord>() || IsWrapper(reactions))
+    if (reactions->is<PromiseReactionRecord>() ||
+        IsWrapper(reactions) ||
+        JS_IsDeadWrapper(reactions))
+    {
         return EnqueuePromiseReactionJob(cx, reactions, valueOrReason, state);
+    }
 
     RootedNativeObject reactionsList(cx, &reactions->as<NativeObject>());
     size_t reactionsCount = reactionsList->getDenseInitializedLength();
