@@ -9,7 +9,7 @@ const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
-const eventSource = require("./event-source");
+const eventSource = require("devtools/shared/client/event-source");
 const {
   ThreadStateTypes,
   UnsolicitedNotifications,

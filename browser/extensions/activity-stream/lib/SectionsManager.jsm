@@ -21,7 +21,7 @@ const BUILT_IN_SECTIONS = {
       titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
       descString: {id: options.provider_description || "pocket_feedback_body"}
     },
-    shouldHidePref:  options.hidden,
+    shouldHidePref: options.hidden,
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
     title: {id: "header_recommended_by", values: {provider: options.provider_name}},

@@ -45,7 +45,7 @@
       "search_for_something_with": " ",
       "search_button": " ",
       "search_header": " ",
-      "search_web_placeholder": "Search the Web",
+      "search_web_placeholder": " ",
       "search_settings": " ",
       "section_info_option": " ",
       "section_info_send_feedback": " ",

@@ -19,11 +19,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/ioctl.h>
 #include <linux/ipc.h>
 #include <linux/net.h>
 #include <linux/prctl.h>
 #include <linux/sched.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
@@ -319,7 +321,7 @@ public:
       // ASAN's error reporter wants to know if stderr is a tty.
     case __NR_ioctl: {
       Arg<int> fd(0);
-      return If(fd == STDERR_FILENO, Allow())
+      return If(fd == STDERR_FILENO, Error(ENOTTY))
         .Else(InvalidSyscall());
     }
 
@@ -712,11 +714,31 @@ public:
 #endif
       return Allow();
 
-    case __NR_ioctl:
-      // ioctl() is for GL. Remove when GL proxy is implemented.
-      // Additionally ioctl() might be a place where we want to have
-      // argument filtering
-      return Allow();
+    case __NR_ioctl: {
+      static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
+      static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
+      // On some older architectures (but not x86 or ARM), ioctls are
+      // assigned type fields differently, and the TIOC/TC/FIO group
+      // isn't all the same type.  If/when we support those archs,
+      // this would need to be revised (but really this should be a
+      // default-deny policy; see below).
+      static_assert(kTtyIoctls == (TCSETA & kTypeMask) &&
+                    kTtyIoctls == (FIOASYNC & kTypeMask),
+                    "tty-related ioctls use the same type");
+
+      Arg<unsigned long> request(1);
+      auto shifted_type = request & kTypeMask;
+
+      // Rust's stdlib seems to use FIOCLEX instead of equivalent fcntls.
+      return If(request == FIOCLEX, Allow())
+        // ffmpeg, and anything else that calls isatty(), will be told
+        // that nothing is a typewriter:
+        .ElseIf(request == TCGETS, Error(ENOTTY))
+        // Allow anything that isn't a tty ioctl, for now; bug 1302711
+        // will cover changing this to a default-deny policy.
+        .ElseIf(shifted_type != kTtyIoctls, Allow())
+        .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
+    }
 
     CASES_FOR_fcntl:
       // Some fcntls have significant side effects like sending

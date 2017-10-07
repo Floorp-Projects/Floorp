@@ -16,8 +16,11 @@ const TEST_URI =
 add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
 
-  hud.jsterm.clearOutput();
   let inputNode = hud.jsterm.inputNode;
+  info("Focus after console is opened");
+  ok(hasFocus(inputNode), "input node is focused after console is opened");
+
+  hud.jsterm.clearOutput();
   ok(hasFocus(inputNode), "input node is focused after output is cleared");
 
   info("Focus during message logging");

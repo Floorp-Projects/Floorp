@@ -33,11 +33,11 @@ this.TopSitesFeed = class TopSitesFeed {
     this._tippyTopProvider = new TippyTopProvider();
     this.dedupe = new Dedupe(this._dedupeKey);
     this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
-      "getTopSites", this.getLinkMigrator(), (oldOptions, newOptions) =>
+      "getTopSites", ["screenshot"], (oldOptions, newOptions) =>
         // Refresh if no old options or requesting more items
         !(oldOptions.numItems >= newOptions.numItems));
-    this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks,
-      "links", this.getLinkMigrator(["favicon", "faviconSize"]));
+    this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links",
+      ["favicon", "faviconSize", "screenshot"]);
   }
   _dedupeKey(site) {
     return site && site.hostname;
@@ -59,22 +59,6 @@ this.TopSitesFeed = class TopSitesFeed {
     }
   }
 
-  /**
-   * Make a cached link data migrator by copying over screenshots and others.
-   *
-   * @param others {array} Optional extra properties to copy
-   */
-  getLinkMigrator(others = []) {
-    const properties = ["__fetchingScreenshot", "screenshot", ...others];
-    return (oldLink, newLink) => {
-      for (const property of properties) {
-        const oldValue = oldLink[property];
-        if (oldValue) {
-          newLink[property] = oldValue;
-        }
-      }
-    };
-  }
   async getLinksWithDefaults(action) {
     // Get at least SHOWMORE amount so toggling between 1 and 2 rows has sites
     const numItems = Math.max(this.store.getState().Prefs.values.topSitesCount,
@@ -107,8 +91,8 @@ this.TopSitesFeed = class TopSitesFeed {
         try {
           NewTabUtils.activityStreamProvider._faviconBytesToDataURI(await
             NewTabUtils.activityStreamProvider._addFavicons([copy]));
-          copy.__updateCache("favicon");
-          copy.__updateCache("faviconSize");
+          copy.__sharedCache.updateLink("favicon", copy.favicon);
+          copy.__sharedCache.updateLink("faviconSize", copy.faviconSize);
         } catch (e) {
           // Some issue with favicon, so just continue without one
         }
@@ -134,9 +118,8 @@ this.TopSitesFeed = class TopSitesFeed {
       if (link) {
         this._fetchIcon(link);
 
-        // Remove any internal properties
-        delete link.__fetchingScreenshot;
-        delete link.__updateCache;
+        // Remove internal properties that might be updated after dispatch
+        delete link.__sharedCache;
       }
     }
 
@@ -176,12 +159,11 @@ this.TopSitesFeed = class TopSitesFeed {
         (!link.favicon || link.faviconSize < MIN_FAVICON_SIZE) &&
         !link.screenshot) {
       const {url} = link;
-      Screenshots.maybeGetAndSetScreenshot(link, url, "screenshot", screenshot => {
-        this.store.dispatch(ac.BroadcastToContent({
+      await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
+        screenshot => this.store.dispatch(ac.BroadcastToContent({
           data: {screenshot, url},
           type: at.SCREENSHOT_UPDATED
-        }));
-      });
+        })));
     }
   }
 
@@ -264,9 +246,13 @@ this.TopSitesFeed = class TopSitesFeed {
       // All these actions mean we need new top sites
       case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
-      case at.PLACES_LINK_BLOCKED:
       case at.PLACES_LINKS_DELETED:
         this.frecentCache.expire();
+        this.refresh();
+        break;
+      case at.PLACES_LINK_BLOCKED:
+        this.frecentCache.expire();
+        this.pinnedCache.expire();
         this.refresh();
         break;
       case at.PREF_CHANGED:

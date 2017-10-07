@@ -21,7 +21,7 @@ add_task(async function testExecuteScript() {
     let tab;
 
     const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
-    const URL = BASE + "file_iframe_document.sjs";
+    const URL = BASE + "file_slowed_document.sjs";
 
     const MAX_TRIES = 10;
 
@@ -41,7 +41,7 @@ add_task(async function testExecuteScript() {
 
       let success = false;
       for (let tries = 0; !success && tries < MAX_TRIES; tries++) {
-        let url = `${URL}?r=${Math.random()}`;
+        let url = `${URL}?with-iframe&r=${Math.random()}`;
 
         let loadingPromise = onUpdatedPromise(tab.id, url, "loading");
         let completePromise = onUpdatedPromise(tab.id, url, "complete");

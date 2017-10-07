@@ -17,6 +17,17 @@ var gTreeData;
 // Page initialization
 
 window.onload = function() {
+  let toggleTabs = document.getElementById("tabsToggle");
+  if (toggleTabs) {
+    let treeContainer = document.querySelector(".tree-container");
+
+    let toggleHiddenTabs = () => {
+      toggleTabs.classList.toggle("show-tabs");
+      treeContainer.classList.toggle("expanded");
+    }
+    toggleTabs.onclick = toggleHiddenTabs;
+  }
+
   // pages used by this script may have a link that needs to be updated to
   // the in-product link.
   let anchor = document.getElementById("linkMoreTroubleshooting");

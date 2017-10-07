@@ -363,6 +363,7 @@ async function loadManifestFromWebManifest(aUri) {
   addon.optionsType = null;
   addon.aboutURL = null;
   addon.dependencies = Object.freeze(Array.from(extension.dependencies));
+  addon.startupData = extension.startupData;
 
   if (manifest.options_ui) {
     // Store just the relative path here, the AddonWrapper getURL

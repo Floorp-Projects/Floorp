@@ -1094,19 +1094,11 @@ module.exports._unconnected = LinkMenu;
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { injectIntl, FormattedMessage } = __webpack_require__(2);
-const Card = __webpack_require__(20);
-const { PlaceholderCard } = Card;
-const Topics = __webpack_require__(22);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
-
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange";
-const CARDS_PER_ROW = 3;
+const { injectIntl, FormattedMessage } = __webpack_require__(2);
 
 function getFormattedMessage(message) {
   return typeof message === "string" ? React.createElement(
@@ -1202,182 +1194,91 @@ class Info extends React.PureComponent {
 
 const InfoIntl = injectIntl(Info);
 
-class Section extends React.PureComponent {
-  _dispatchImpressionStats() {
-    const { props } = this;
-    const maxCards = 3 * props.maxRows;
-    const cards = props.rows.slice(0, maxCards);
-
-    if (this.needsImpressionStats(cards)) {
-      props.dispatch(ac.ImpressionStats({
-        source: props.eventSource,
-        tiles: cards.map(link => ({ id: link.guid })),
-        incognito: props.options && props.options.personalized
-      }));
-      this.impressionCardGuids = cards.map(link => link.guid);
+class CollapsibleSection extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onInfoEnter = this.onInfoEnter.bind(this);
+    this.onInfoLeave = this.onInfoLeave.bind(this);
+    this.onHeaderClick = this.onHeaderClick.bind(this);
+    this.onTransitionEnd = this.onTransitionEnd.bind(this);
+    this.state = { enableAnimation: false, isAnimating: false, infoActive: false };
+  }
+  componentDidUpdate(prevProps, prevState) {
+    // Enable animations once we get prefs loaded in to avoid animations running during loading.
+    if (prevProps.Prefs.values[this.props.prefName] === undefined && this.props.Prefs.values[this.props.prefName] !== undefined) {
+      setTimeout(() => this.setState({ enableAnimation: true }), 0);
     }
   }
-
-  // This sends an event when a user sees a set of new content. If content
-  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
-  // only send the event if the page becomes visible again.
-  sendImpressionStatsOrAddListener() {
-    const { props } = this;
-
-    if (!props.shouldSendImpressionStats || !props.dispatch) {
-      return;
-    }
-
-    if (props.document.visibilityState === VISIBLE) {
-      this._dispatchImpressionStats();
-    } else {
-      // We should only ever send the latest impression stats ping, so remove any
-      // older listeners.
-      if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      }
-
-      // When the page becoems visible, send the impression stats ping.
-      this._onVisibilityChange = () => {
-        if (props.document.visibilityState === VISIBLE) {
-          this._dispatchImpressionStats();
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-        }
-      };
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+  _setInfoState(nextActive) {
+    // Take a truthy value to conditionally change the infoActive state.
+    const infoActive = !!nextActive;
+    if (infoActive !== this.state.infoActive) {
+      this.setState({ infoActive });
     }
   }
-
-  componentDidMount() {
-    if (this.props.rows.length) {
-      this.sendImpressionStatsOrAddListener();
-    }
+  onInfoEnter() {
+    // We're getting focus or hover, so info state should be true if not yet.
+    this._setInfoState(true);
   }
-
-  componentDidUpdate(prevProps) {
-    const { props } = this;
-    if (
-    // Don't send impression stats for the empty state
-    props.rows.length &&
-    // We only want to send impression stats if the content of the cards has changed
-    props.rows !== prevProps.rows) {
-      this.sendImpressionStatsOrAddListener();
-    }
+  onInfoLeave(event) {
+    // We currently have an active (true) info state, so keep it true only if we
+    // have a related event target that is contained "within" the current target
+    // (section-info-option) as itself or a descendant. Set to false otherwise.
+    this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
-
-  needsImpressionStats(cards) {
-    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
-      return true;
-    }
-
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].guid !== this.impressionCardGuids[i]) {
-        return true;
-      }
-    }
-
-    return false;
+  onHeaderClick() {
+    this.setState({ isAnimating: true });
+    this.props.dispatch(ac.SetPref(this.props.prefName, !this.props.Prefs.values[this.props.prefName]));
   }
-
-  numberOfPlaceholders(items) {
-    if (items === 0) {
-      return CARDS_PER_ROW;
-    }
-    const remainder = items % CARDS_PER_ROW;
-    if (remainder === 0) {
-      return 0;
-    }
-    return CARDS_PER_ROW - remainder;
+  onTransitionEnd() {
+    this.setState({ isAnimating: false });
   }
-
+  renderIcon() {
+    const icon = this.props.icon;
+    if (icon && icon.startsWith("moz-extension://")) {
+      return React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } });
+    }
+    return React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` });
+  }
   render() {
-    const {
-      id, eventSource, title, icon, rows,
-      infoOption, emptyState, dispatch, maxRows,
-      contextMenuOptions, initialized
-    } = this.props;
-    const maxCards = CARDS_PER_ROW * maxRows;
+    const isCollapsed = this.props.Prefs.values[this.props.prefName];
+    const { enableAnimation, isAnimating } = this.state;
+    const infoOption = this.props.infoOption;
 
-    // Show topics only for top stories and if it's not initialized yet (so
-    // content doesn't shift when it is loaded) or has loaded with topics
-    const shouldShowTopics = id === "topstories" && (!this.props.topics || this.props.topics.length > 0);
-
-    const realRows = rows.slice(0, maxCards);
-    const placeholders = this.numberOfPlaceholders(realRows.length);
-
-    // The empty state should only be shown after we have initialized and there is no content.
-    // Otherwise, we should show placeholders.
-    const shouldShowEmptyState = initialized && !rows.length;
-
-    // <Section> <-- React component
-    // <section> <-- HTML5 element
     return React.createElement(
       "section",
-      { className: "section" },
+      { className: `collapsible-section ${this.props.className}${isCollapsed ? " collapsed" : ""}` },
       React.createElement(
         "div",
         { className: "section-top-bar" },
         React.createElement(
           "h3",
           { className: "section-title" },
-          icon && icon.startsWith("moz-extension://") ? React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } }) : React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` }),
-          getFormattedMessage(title)
-        ),
-        infoOption && React.createElement(InfoIntl, { infoOption: infoOption, dispatch: dispatch })
-      ),
-      !shouldShowEmptyState && React.createElement(
-        "ul",
-        { className: "section-list", style: { padding: 0 } },
-        realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
-          eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats })),
-        placeholders > 0 && [...new Array(placeholders)].map((_, i) => React.createElement(PlaceholderCard, { key: i }))
-      ),
-      shouldShowEmptyState && React.createElement(
-        "div",
-        { className: "section-empty-state" },
-        React.createElement(
-          "div",
-          { className: "empty-state" },
-          emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? React.createElement("img", { className: "empty-state-icon icon", style: { "background-image": `url('${emptyState.icon}')` } }) : React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
           React.createElement(
-            "p",
-            { className: "empty-state-message" },
-            getFormattedMessage(emptyState.message)
+            "span",
+            { className: "click-target", onClick: this.onHeaderClick },
+            this.renderIcon(),
+            this.props.title,
+            React.createElement("span", { className: `icon ${isCollapsed ? "icon-arrowhead-forward" : "icon-arrowhead-down"}` })
           )
-        )
+        ),
+        infoOption && React.createElement(InfoIntl, { infoOption: infoOption, dispatch: this.props.dispatch })
       ),
-      shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
+      React.createElement(
+        "div",
+        { className: `section-body${enableAnimation ? " animation-enabled" : ""}${isAnimating ? " animating" : ""}`, onTransitionEnd: this.onTransitionEnd },
+        this.props.children
+      )
     );
   }
 }
 
-Section.defaultProps = {
-  document: global.document,
-  rows: [],
-  emptyState: {},
-  title: ""
-};
+CollapsibleSection.defaultProps = { Prefs: { values: {} } };
 
-const SectionIntl = injectIntl(Section);
-
-class Sections extends React.PureComponent {
-  render() {
-    const sections = this.props.Sections;
-    return React.createElement(
-      "div",
-      { className: "sections-list" },
-      sections.filter(section => section.enabled).map(section => React.createElement(SectionIntl, _extends({ key: section.id }, section, { dispatch: this.props.dispatch })))
-    );
-  }
-}
-
-module.exports = connect(state => ({ Sections: state.Sections }))(Sections);
-module.exports._unconnected = Sections;
-module.exports.SectionIntl = SectionIntl;
-module.exports._unconnectedSection = Section;
+module.exports = injectIntl(CollapsibleSection);
+module.exports._unconnected = CollapsibleSection;
 module.exports.Info = Info;
 module.exports.InfoIntl = InfoIntl;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
 /* 11 */
@@ -1387,10 +1288,10 @@ module.exports.InfoIntl = InfoIntl;
 const ReactDOM = __webpack_require__(12);
 const Base = __webpack_require__(13);
 const { Provider } = __webpack_require__(3);
-const initStore = __webpack_require__(29);
+const initStore = __webpack_require__(30);
 const { reducers } = __webpack_require__(6);
-const DetectUserSessionStart = __webpack_require__(31);
-const { addSnippetsSubscriber } = __webpack_require__(32);
+const DetectUserSessionStart = __webpack_require__(32);
+const { addSnippetsSubscriber } = __webpack_require__(33);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
 
 new DetectUserSessionStart().sendEventOrAddListener();
@@ -1427,13 +1328,13 @@ const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { addLocaleData, IntlProvider } = __webpack_require__(2);
 const TopSites = __webpack_require__(14);
-const Search = __webpack_require__(23);
-const ConfirmDialog = __webpack_require__(25);
-const ManualMigration = __webpack_require__(26);
-const PreferencesPane = __webpack_require__(27);
-const Sections = __webpack_require__(10);
+const Search = __webpack_require__(20);
+const ConfirmDialog = __webpack_require__(22);
+const ManualMigration = __webpack_require__(23);
+const PreferencesPane = __webpack_require__(24);
+const Sections = __webpack_require__(25);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
-const { PrerenderData } = __webpack_require__(28);
+const { PrerenderData } = __webpack_require__(29);
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
@@ -1545,7 +1446,7 @@ const { FormattedMessage } = __webpack_require__(2);
 const TopSitesPerfTimer = __webpack_require__(15);
 const TopSitesEdit = __webpack_require__(16);
 const { TopSite, TopSitePlaceholder } = __webpack_require__(8);
-const { InfoIntl } = __webpack_require__(10);
+const CollapsibleSection = __webpack_require__(10);
 
 const TopSites = props => {
   const realTopSites = props.TopSites.rows.slice(0, props.TopSitesCount);
@@ -1558,19 +1459,8 @@ const TopSites = props => {
     TopSitesPerfTimer,
     null,
     React.createElement(
-      "section",
-      { className: "section top-sites" },
-      React.createElement(
-        "div",
-        { className: "section-top-bar" },
-        React.createElement(
-          "h3",
-          { className: "section-title" },
-          React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-          React.createElement(FormattedMessage, { id: "header_top_sites" })
-        ),
-        React.createElement(InfoIntl, { infoOption: infoOption, dispatch: props.dispatch })
-      ),
+      CollapsibleSection,
+      { className: "top-sites", icon: "topsites", title: React.createElement(FormattedMessage, { id: "header_top_sites" }), infoOption: infoOption, prefName: "collapseTopSites", Prefs: props.Prefs, dispatch: props.dispatch },
       React.createElement(
         "ul",
         { className: "top-sites-list" },
@@ -1587,7 +1477,7 @@ const TopSites = props => {
   );
 };
 
-module.exports = connect(state => ({ TopSites: state.TopSites, TopSitesCount: state.Prefs.values.topSitesCount }))(TopSites);
+module.exports = connect(state => ({ TopSites: state.TopSites, Prefs: state.Prefs, TopSitesCount: state.Prefs.values.topSitesCount }))(TopSites);
 module.exports._unconnected = TopSites;
 
 /***/ }),
@@ -2293,10 +2183,701 @@ module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+/* globals ContentSearchUIController */
+
+
+const React = __webpack_require__(1);
+const { connect } = __webpack_require__(3);
+const { FormattedMessage, injectIntl } = __webpack_require__(2);
+const { actionCreators: ac } = __webpack_require__(0);
+const { IS_NEWTAB } = __webpack_require__(21);
+
+class Search extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+    this.onInputMount = this.onInputMount.bind(this);
+  }
+
+  handleEvent(event) {
+    // Also track search events with our own telemetry
+    if (event.detail.type === "Search") {
+      this.props.dispatch(ac.UserEvent({ event: "SEARCH" }));
+    }
+  }
+  onClick(event) {
+    window.gContentSearchController.search(event);
+  }
+  componentWillUnmount() {
+    delete window.gContentSearchController;
+  }
+  onInputMount(input) {
+    if (input) {
+      // The "healthReportKey" and needs to be "newtab" or "abouthome" so that
+      // BrowserUsageTelemetry.jsm knows to handle events with this name, and
+      // can add the appropriate telemetry probes for search. Without the correct
+      // name, certain tests like browser_UsageTelemetry_content.js will fail
+      // (See github ticket #2348 for more details)
+      const healthReportKey = IS_NEWTAB ? "newtab" : "abouthome";
+
+      // The "searchSource" needs to be "newtab" or "homepage" and is sent with
+      // the search data and acts as context for the search request (See
+      // nsISearchEngine.getSubmission). It is necessary so that search engine
+      // plugins can correctly atribute referrals. (See github ticket #3321 for
+      // more details)
+      const searchSource = IS_NEWTAB ? "newtab" : "homepage";
+
+      // gContentSearchController needs to exist as a global so that tests for
+      // the existing about:home can find it; and so it allows these tests to pass.
+      // In the future, when activity stream is default about:home, this can be renamed
+      window.gContentSearchController = new ContentSearchUIController(input, input.parentNode, healthReportKey, searchSource);
+      addEventListener("ContentSearchClient", this);
+
+      // Focus the search box if we are on about:home
+      if (!IS_NEWTAB) {
+        input.focus();
+      }
+    } else {
+      window.gContentSearchController = null;
+      removeEventListener("ContentSearchClient", this);
+    }
+  }
+
+  /*
+   * Do not change the ID on the input field, as legacy newtab code
+   * specifically looks for the id 'newtab-search-text' on input fields
+   * in order to execute searches in various tests
+   */
+  render() {
+    return React.createElement(
+      "div",
+      { className: "search-wrapper" },
+      React.createElement(
+        "label",
+        { htmlFor: "newtab-search-text", className: "search-label" },
+        React.createElement(
+          "span",
+          { className: "sr-only" },
+          React.createElement(FormattedMessage, { id: "search_web_placeholder" })
+        )
+      ),
+      React.createElement("input", {
+        id: "newtab-search-text",
+        maxLength: "256",
+        placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+        ref: this.onInputMount,
+        title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+        type: "search" }),
+      React.createElement(
+        "button",
+        {
+          id: "searchSubmit",
+          className: "search-button",
+          onClick: this.onClick,
+          title: this.props.intl.formatMessage({ id: "search_button" }) },
+        React.createElement(
+          "span",
+          { className: "sr-only" },
+          React.createElement(FormattedMessage, { id: "search_button" })
+        )
+      )
+    );
+  }
+}
+
+// initialized is passed to props so that Search will rerender when it receives strings
+module.exports = connect(state => ({ locale: state.App.locale }))(injectIntl(Search));
+module.exports._unconnected = Search;
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {module.exports = {
+  // constant to know if the page is about:newtab or about:home
+  IS_NEWTAB: global.document && global.document.documentURI === "about:newtab"
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const React = __webpack_require__(1);
+const { connect } = __webpack_require__(3);
+const { FormattedMessage } = __webpack_require__(2);
+const { actionTypes, actionCreators: ac } = __webpack_require__(0);
+
+/**
+ * ConfirmDialog component.
+ * One primary action button, one cancel button.
+ *
+ * Content displayed is controlled by `data` prop the component receives.
+ * Example:
+ * data: {
+ *   // Any sort of data needed to be passed around by actions.
+ *   payload: site.url,
+ *   // Primary button SendToMain action.
+ *   action: "DELETE_HISTORY_URL",
+ *   // Primary button USerEvent action.
+ *   userEvent: "DELETE",
+ *   // Array of locale ids to display.
+ *   message_body: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+ *   // Text for primary button.
+ *   confirm_button_string_id: "menu_action_delete"
+ * },
+ */
+const ConfirmDialog = React.createClass({
+  displayName: "ConfirmDialog",
+
+  getDefaultProps() {
+    return {
+      visible: false,
+      data: {}
+    };
+  },
+
+  _handleCancelBtn() {
+    this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
+    this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
+  },
+
+  _handleConfirmBtn() {
+    this.props.data.onConfirm.forEach(this.props.dispatch);
+  },
+
+  _renderModalMessage() {
+    const message_body = this.props.data.body_string_id;
+
+    if (!message_body) {
+      return null;
+    }
+
+    return React.createElement(
+      "span",
+      null,
+      message_body.map(msg => React.createElement(
+        "p",
+        { key: msg },
+        React.createElement(FormattedMessage, { id: msg })
+      ))
+    );
+  },
+
+  render() {
+    if (!this.props.visible) {
+      return null;
+    }
+
+    return React.createElement(
+      "div",
+      { className: "confirmation-dialog" },
+      React.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
+      React.createElement(
+        "div",
+        { className: "modal" },
+        React.createElement(
+          "section",
+          { className: "modal-message" },
+          this._renderModalMessage()
+        ),
+        React.createElement(
+          "section",
+          { className: "actions" },
+          React.createElement(
+            "button",
+            { onClick: this._handleCancelBtn },
+            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
+          ),
+          React.createElement(
+            "button",
+            { className: "done", onClick: this._handleConfirmBtn },
+            React.createElement(FormattedMessage, { id: this.props.data.confirm_button_string_id })
+          )
+        )
+      )
+    );
+  }
+});
+
+module.exports = connect(state => state.Dialog)(ConfirmDialog);
+module.exports._unconnected = ConfirmDialog;
+module.exports.Dialog = ConfirmDialog;
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const React = __webpack_require__(1);
+const { connect } = __webpack_require__(3);
+const { FormattedMessage } = __webpack_require__(2);
+const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
+
+/**
+ * Manual migration component used to start the profile import wizard.
+ * Message is presented temporarily and will go away if:
+ * 1.  User clicks "No Thanks"
+ * 2.  User completed the data import
+ * 3.  After 3 active days
+ * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
+ */
+class ManualMigration extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onLaunchTour = this.onLaunchTour.bind(this);
+    this.onCancelTour = this.onCancelTour.bind(this);
+  }
+  onLaunchTour() {
+    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_START }));
+    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_START }));
+  }
+
+  onCancelTour() {
+    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_CANCEL }));
+    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_CANCEL }));
+  }
+
+  render() {
+    return React.createElement(
+      "div",
+      { className: "manual-migration-container" },
+      React.createElement(
+        "p",
+        null,
+        React.createElement("span", { className: "icon icon-import" }),
+        React.createElement(FormattedMessage, { id: "manual_migration_explanation2" })
+      ),
+      React.createElement(
+        "div",
+        { className: "manual-migration-actions actions" },
+        React.createElement(
+          "button",
+          { className: "dismiss", onClick: this.onCancelTour },
+          React.createElement(FormattedMessage, { id: "manual_migration_cancel_button" })
+        ),
+        React.createElement(
+          "button",
+          { onClick: this.onLaunchTour },
+          React.createElement(FormattedMessage, { id: "manual_migration_import_button" })
+        )
+      )
+    );
+  }
+}
+
+module.exports = connect()(ManualMigration);
+module.exports._unconnected = ManualMigration;
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const React = __webpack_require__(1);
+const { connect } = __webpack_require__(3);
+const { injectIntl, FormattedMessage } = __webpack_require__(2);
+const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
+const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
+
+const getFormattedMessage = message => typeof message === "string" ? React.createElement(
+  "span",
+  null,
+  message
+) : React.createElement(FormattedMessage, message);
+
+const PreferencesInput = props => React.createElement(
+  "section",
+  null,
+  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, disabled: props.disabled, onChange: props.onChange, className: props.className }),
+  React.createElement(
+    "label",
+    { htmlFor: props.prefName, className: props.labelClassName },
+    getFormattedMessage(props.titleString)
+  ),
+  props.descString && React.createElement(
+    "p",
+    { className: "prefs-input-description" },
+    getFormattedMessage(props.descString)
+  ),
+  React.Children.map(props.children, child => React.createElement(
+    "div",
+    { className: `options${child.props.disabled ? " disabled" : ""}` },
+    child
+  ))
+);
+
+class PreferencesPane extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handlePrefChange = this.handlePrefChange.bind(this);
+    this.handleSectionChange = this.handleSectionChange.bind(this);
+    this.togglePane = this.togglePane.bind(this);
+    this.onWrapperMount = this.onWrapperMount.bind(this);
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.PreferencesPane.visible !== this.props.PreferencesPane.visible) {
+      // While the sidebar is open, listen for all document clicks.
+      if (this.isSidebarOpen()) {
+        document.addEventListener("click", this.handleClickOutside);
+      } else {
+        document.removeEventListener("click", this.handleClickOutside);
+      }
+    }
+  }
+  isSidebarOpen() {
+    return this.props.PreferencesPane.visible;
+  }
+  handleClickOutside(event) {
+    // if we are showing the sidebar and there is a click outside, close it.
+    if (this.isSidebarOpen() && !this.wrapper.contains(event.target)) {
+      this.togglePane();
+    }
+  }
+  handlePrefChange(event) {
+    const target = event.target;
+    const { name, checked } = target;
+    let value = checked;
+    if (name === "topSitesCount") {
+      value = checked ? TOP_SITES_SHOWMORE_LENGTH : TOP_SITES_DEFAULT_LENGTH;
+    }
+    this.props.dispatch(ac.SetPref(name, value));
+  }
+  handleSectionChange(event) {
+    const target = event.target;
+    const id = target.name;
+    const type = target.checked ? at.SECTION_ENABLE : at.SECTION_DISABLE;
+    this.props.dispatch(ac.SendToMain({ type, data: id }));
+  }
+  togglePane() {
+    if (this.isSidebarOpen()) {
+      this.props.dispatch({ type: at.SETTINGS_CLOSE });
+      this.props.dispatch(ac.UserEvent({ event: "CLOSE_NEWTAB_PREFS" }));
+    } else {
+      this.props.dispatch({ type: at.SETTINGS_OPEN });
+      this.props.dispatch(ac.UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
+    }
+  }
+  onWrapperMount(wrapper) {
+    this.wrapper = wrapper;
+  }
+  render() {
+    const props = this.props;
+    const prefs = props.Prefs.values;
+    const sections = props.Sections;
+    const isVisible = this.isSidebarOpen();
+    return React.createElement(
+      "div",
+      { className: "prefs-pane-wrapper", ref: this.onWrapperMount },
+      React.createElement(
+        "div",
+        { className: "prefs-pane-button" },
+        React.createElement("button", {
+          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
+          title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
+          onClick: this.togglePane })
+      ),
+      React.createElement(
+        "div",
+        { className: "prefs-pane" },
+        React.createElement(
+          "div",
+          { className: `sidebar ${isVisible ? "" : "hidden"}` },
+          React.createElement(
+            "div",
+            { className: "prefs-modal-inner-wrapper" },
+            React.createElement(
+              "h1",
+              null,
+              React.createElement(FormattedMessage, { id: "settings_pane_header" })
+            ),
+            React.createElement(
+              "p",
+              null,
+              React.createElement(FormattedMessage, { id: "settings_pane_body2" })
+            ),
+            React.createElement(PreferencesInput, {
+              className: "showSearch",
+              prefName: "showSearch",
+              value: prefs.showSearch,
+              onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_search_header" },
+              descString: { id: "settings_pane_search_body" } }),
+            React.createElement("hr", null),
+            React.createElement(
+              PreferencesInput,
+              {
+                className: "showTopSites",
+                prefName: "showTopSites",
+                value: prefs.showTopSites,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_header" },
+                descString: { id: "settings_pane_topsites_body" } },
+              React.createElement(PreferencesInput, {
+                className: "showMoreTopSites",
+                prefName: "topSitesCount",
+                disabled: !prefs.showTopSites,
+                value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH,
+                onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_options_showmore" },
+                labelClassName: "icon icon-topsites" })
+            ),
+            sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => React.createElement(
+              PreferencesInput,
+              {
+                key: id,
+                className: "showSection",
+                prefName: pref && pref.feed || id,
+                value: enabled,
+                onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
+                titleString: pref && pref.titleString || title,
+                descString: pref && pref.descString },
+              pref.nestedPrefs && pref.nestedPrefs.map(nestedPref => React.createElement(PreferencesInput, {
+                key: nestedPref.name,
+                prefName: nestedPref.name,
+                disabled: !enabled,
+                value: prefs[nestedPref.name],
+                onChange: this.handlePrefChange,
+                titleString: nestedPref.titleString,
+                labelClassName: `icon ${nestedPref.icon}` }))
+            )),
+            React.createElement("hr", null),
+            React.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
+              value: prefs["feeds.snippets"], onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_snippets_header" },
+              descString: { id: "settings_pane_snippets_body" } })
+          ),
+          React.createElement(
+            "section",
+            { className: "actions" },
+            React.createElement(
+              "button",
+              { className: "done", onClick: this.togglePane },
+              React.createElement(FormattedMessage, { id: "settings_pane_done_button" })
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+module.exports = connect(state => ({ Prefs: state.Prefs, PreferencesPane: state.PreferencesPane, Sections: state.Sections }))(injectIntl(PreferencesPane));
+module.exports.PreferencesPane = PreferencesPane;
+module.exports.PreferencesInput = PreferencesInput;
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+const React = __webpack_require__(1);
+const { connect } = __webpack_require__(3);
+const { injectIntl, FormattedMessage } = __webpack_require__(2);
+const Card = __webpack_require__(26);
+const { PlaceholderCard } = Card;
+const Topics = __webpack_require__(28);
+const { actionCreators: ac } = __webpack_require__(0);
+const CollapsibleSection = __webpack_require__(10);
+
+const VISIBLE = "visible";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+const CARDS_PER_ROW = 3;
+
+function getFormattedMessage(message) {
+  return typeof message === "string" ? React.createElement(
+    "span",
+    null,
+    message
+  ) : React.createElement(FormattedMessage, message);
+}
+
+class Section extends React.PureComponent {
+  _dispatchImpressionStats() {
+    const { props } = this;
+    const maxCards = 3 * props.maxRows;
+    const cards = props.rows.slice(0, maxCards);
+
+    if (this.needsImpressionStats(cards)) {
+      props.dispatch(ac.ImpressionStats({
+        source: props.eventSource,
+        tiles: cards.map(link => ({ id: link.guid })),
+        incognito: props.options && props.options.personalized
+      }));
+      this.impressionCardGuids = cards.map(link => link.guid);
+    }
+  }
+
+  // This sends an event when a user sees a set of new content. If content
+  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
+  // only send the event if the page becomes visible again.
+  sendImpressionStatsOrAddListener() {
+    const { props } = this;
+
+    if (!props.shouldSendImpressionStats || !props.dispatch) {
+      return;
+    }
+
+    if (props.document.visibilityState === VISIBLE) {
+      this._dispatchImpressionStats();
+    } else {
+      // We should only ever send the latest impression stats ping, so remove any
+      // older listeners.
+      if (this._onVisibilityChange) {
+        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      }
+
+      // When the page becoems visible, send the impression stats ping if the section isn't collapsed.
+      this._onVisibilityChange = () => {
+        if (props.document.visibilityState === VISIBLE) {
+          const { id, Prefs } = this.props;
+          const isCollapsed = Prefs.values[`section.${id}.collapsed`];
+          if (!isCollapsed) {
+            this._dispatchImpressionStats();
+          }
+          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        }
+      };
+      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
+  componentDidMount() {
+    const { id, rows, Prefs } = this.props;
+    const isCollapsed = Prefs.values[`section.${id}.collapsed`];
+    if (rows.length && !isCollapsed) {
+      this.sendImpressionStatsOrAddListener();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const { props } = this;
+    const { id, Prefs } = props;
+    const isCollapsedPref = `section.${id}.collapsed`;
+    const isCollapsed = Prefs.values[isCollapsedPref];
+    const wasCollapsed = prevProps.Prefs.values[isCollapsedPref];
+    if (
+    // Don't send impression stats for the empty state
+    props.rows.length && (
+    // We only want to send impression stats if the content of the cards has changed
+    // and the section is not collapsed...
+    props.rows !== prevProps.rows && !isCollapsed ||
+    // or if we are expanding a section that was collapsed.
+    wasCollapsed && !isCollapsed)) {
+      this.sendImpressionStatsOrAddListener();
+    }
+  }
+
+  needsImpressionStats(cards) {
+    if (!this.impressionCardGuids || this.impressionCardGuids.length !== cards.length) {
+      return true;
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].guid !== this.impressionCardGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  numberOfPlaceholders(items) {
+    if (items === 0) {
+      return CARDS_PER_ROW;
+    }
+    const remainder = items % CARDS_PER_ROW;
+    if (remainder === 0) {
+      return 0;
+    }
+    return CARDS_PER_ROW - remainder;
+  }
+
+  render() {
+    const {
+      id, eventSource, title, icon, rows,
+      infoOption, emptyState, dispatch, maxRows,
+      contextMenuOptions, initialized
+    } = this.props;
+    const maxCards = CARDS_PER_ROW * maxRows;
+
+    // Show topics only for top stories and if it's not initialized yet (so
+    // content doesn't shift when it is loaded) or has loaded with topics
+    const shouldShowTopics = id === "topstories" && (!this.props.topics || this.props.topics.length > 0);
+
+    const realRows = rows.slice(0, maxCards);
+    const placeholders = this.numberOfPlaceholders(realRows.length);
+
+    // The empty state should only be shown after we have initialized and there is no content.
+    // Otherwise, we should show placeholders.
+    const shouldShowEmptyState = initialized && !rows.length;
+
+    // <Section> <-- React component
+    // <section> <-- HTML5 element
+    return React.createElement(
+      CollapsibleSection,
+      { className: "section", icon: icon, title: getFormattedMessage(title), infoOption: infoOption, prefName: `section.${id}.collapsed`, Prefs: this.props.Prefs, dispatch: this.props.dispatch },
+      !shouldShowEmptyState && React.createElement(
+        "ul",
+        { className: "section-list", style: { padding: 0 } },
+        realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
+          eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats })),
+        placeholders > 0 && [...new Array(placeholders)].map((_, i) => React.createElement(PlaceholderCard, { key: i }))
+      ),
+      shouldShowEmptyState && React.createElement(
+        "div",
+        { className: "section-empty-state" },
+        React.createElement(
+          "div",
+          { className: "empty-state" },
+          emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? React.createElement("img", { className: "empty-state-icon icon", style: { "background-image": `url('${emptyState.icon}')` } }) : React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
+          React.createElement(
+            "p",
+            { className: "empty-state-message" },
+            getFormattedMessage(emptyState.message)
+          )
+        )
+      ),
+      shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
+    );
+  }
+}
+
+Section.defaultProps = {
+  document: global.document,
+  rows: [],
+  emptyState: {},
+  title: ""
+};
+
+const SectionIntl = injectIntl(Section);
+
+class Sections extends React.PureComponent {
+  render() {
+    const sections = this.props.Sections;
+    return React.createElement(
+      "div",
+      { className: "sections-list" },
+      sections.filter(section => section.enabled).map(section => React.createElement(SectionIntl, _extends({ key: section.id }, section, { Prefs: this.props.Prefs, dispatch: this.props.dispatch })))
+    );
+  }
+}
+
+module.exports = connect(state => ({ Sections: state.Sections, Prefs: state.Prefs }))(Sections);
+module.exports._unconnected = Sections;
+module.exports.SectionIntl = SectionIntl;
+module.exports._unconnectedSection = Section;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
 const React = __webpack_require__(1);
 const LinkMenu = __webpack_require__(9);
 const { FormattedMessage } = __webpack_require__(2);
-const cardContextTypes = __webpack_require__(21);
+const cardContextTypes = __webpack_require__(27);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 // Keep track of pending image loads to only request once
@@ -2492,7 +3073,7 @@ module.exports = Card;
 module.exports.PlaceholderCard = PlaceholderCard;
 
 /***/ }),
-/* 21 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -2515,7 +3096,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 22 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2566,459 +3147,7 @@ module.exports._unconnected = Topics;
 module.exports.Topic = Topic;
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* globals ContentSearchUIController */
-
-
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { FormattedMessage, injectIntl } = __webpack_require__(2);
-const { actionCreators: ac } = __webpack_require__(0);
-const { IS_NEWTAB } = __webpack_require__(24);
-
-class Search extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onClick = this.onClick.bind(this);
-    this.onInputMount = this.onInputMount.bind(this);
-  }
-
-  handleEvent(event) {
-    // Also track search events with our own telemetry
-    if (event.detail.type === "Search") {
-      this.props.dispatch(ac.UserEvent({ event: "SEARCH" }));
-    }
-  }
-  onClick(event) {
-    window.gContentSearchController.search(event);
-  }
-  componentWillUnmount() {
-    delete window.gContentSearchController;
-  }
-  onInputMount(input) {
-    if (input) {
-      // The "healthReportKey" and needs to be "newtab" or "abouthome" so that
-      // BrowserUsageTelemetry.jsm knows to handle events with this name, and
-      // can add the appropriate telemetry probes for search. Without the correct
-      // name, certain tests like browser_UsageTelemetry_content.js will fail
-      // (See github ticket #2348 for more details)
-      const healthReportKey = IS_NEWTAB ? "newtab" : "abouthome";
-
-      // The "searchSource" needs to be "newtab" or "homepage" and is sent with
-      // the search data and acts as context for the search request (See
-      // nsISearchEngine.getSubmission). It is necessary so that search engine
-      // plugins can correctly atribute referrals. (See github ticket #3321 for
-      // more details)
-      const searchSource = IS_NEWTAB ? "newtab" : "homepage";
-
-      // gContentSearchController needs to exist as a global so that tests for
-      // the existing about:home can find it; and so it allows these tests to pass.
-      // In the future, when activity stream is default about:home, this can be renamed
-      window.gContentSearchController = new ContentSearchUIController(input, input.parentNode, healthReportKey, searchSource);
-      addEventListener("ContentSearchClient", this);
-
-      // Focus the search box if we are on about:home
-      if (!IS_NEWTAB) {
-        input.focus();
-      }
-    } else {
-      window.gContentSearchController = null;
-      removeEventListener("ContentSearchClient", this);
-    }
-  }
-
-  /*
-   * Do not change the ID on the input field, as legacy newtab code
-   * specifically looks for the id 'newtab-search-text' on input fields
-   * in order to execute searches in various tests
-   */
-  render() {
-    return React.createElement(
-      "div",
-      { className: "search-wrapper" },
-      React.createElement(
-        "label",
-        { htmlFor: "newtab-search-text", className: "search-label" },
-        React.createElement(
-          "span",
-          { className: "sr-only" },
-          React.createElement(FormattedMessage, { id: "search_web_placeholder" })
-        )
-      ),
-      React.createElement("input", {
-        id: "newtab-search-text",
-        maxLength: "256",
-        placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        ref: this.onInputMount,
-        title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        type: "search" }),
-      React.createElement(
-        "button",
-        {
-          id: "searchSubmit",
-          className: "search-button",
-          onClick: this.onClick,
-          title: this.props.intl.formatMessage({ id: "search_button" }) },
-        React.createElement(
-          "span",
-          { className: "sr-only" },
-          React.createElement(FormattedMessage, { id: "search_button" })
-        )
-      )
-    );
-  }
-}
-
-// initialized is passed to props so that Search will rerender when it receives strings
-module.exports = connect(state => ({ locale: state.App.locale }))(injectIntl(Search));
-module.exports._unconnected = Search;
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {module.exports = {
-  // constant to know if the page is about:newtab or about:home
-  IS_NEWTAB: global.document && global.document.documentURI === "about:newtab"
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { FormattedMessage } = __webpack_require__(2);
-const { actionTypes, actionCreators: ac } = __webpack_require__(0);
-
-/**
- * ConfirmDialog component.
- * One primary action button, one cancel button.
- *
- * Content displayed is controlled by `data` prop the component receives.
- * Example:
- * data: {
- *   // Any sort of data needed to be passed around by actions.
- *   payload: site.url,
- *   // Primary button SendToMain action.
- *   action: "DELETE_HISTORY_URL",
- *   // Primary button USerEvent action.
- *   userEvent: "DELETE",
- *   // Array of locale ids to display.
- *   message_body: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
- *   // Text for primary button.
- *   confirm_button_string_id: "menu_action_delete"
- * },
- */
-const ConfirmDialog = React.createClass({
-  displayName: "ConfirmDialog",
-
-  getDefaultProps() {
-    return {
-      visible: false,
-      data: {}
-    };
-  },
-
-  _handleCancelBtn() {
-    this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
-    this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
-  },
-
-  _handleConfirmBtn() {
-    this.props.data.onConfirm.forEach(this.props.dispatch);
-  },
-
-  _renderModalMessage() {
-    const message_body = this.props.data.body_string_id;
-
-    if (!message_body) {
-      return null;
-    }
-
-    return React.createElement(
-      "span",
-      null,
-      message_body.map(msg => React.createElement(
-        "p",
-        { key: msg },
-        React.createElement(FormattedMessage, { id: msg })
-      ))
-    );
-  },
-
-  render() {
-    if (!this.props.visible) {
-      return null;
-    }
-
-    return React.createElement(
-      "div",
-      { className: "confirmation-dialog" },
-      React.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
-      React.createElement(
-        "div",
-        { className: "modal" },
-        React.createElement(
-          "section",
-          { className: "modal-message" },
-          this._renderModalMessage()
-        ),
-        React.createElement(
-          "section",
-          { className: "actions" },
-          React.createElement(
-            "button",
-            { onClick: this._handleCancelBtn },
-            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
-          ),
-          React.createElement(
-            "button",
-            { className: "done", onClick: this._handleConfirmBtn },
-            React.createElement(FormattedMessage, { id: this.props.data.confirm_button_string_id })
-          )
-        )
-      )
-    );
-  }
-});
-
-module.exports = connect(state => state.Dialog)(ConfirmDialog);
-module.exports._unconnected = ConfirmDialog;
-module.exports.Dialog = ConfirmDialog;
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { FormattedMessage } = __webpack_require__(2);
-const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
-
-/**
- * Manual migration component used to start the profile import wizard.
- * Message is presented temporarily and will go away if:
- * 1.  User clicks "No Thanks"
- * 2.  User completed the data import
- * 3.  After 3 active days
- * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
- */
-class ManualMigration extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.onLaunchTour = this.onLaunchTour.bind(this);
-    this.onCancelTour = this.onCancelTour.bind(this);
-  }
-  onLaunchTour() {
-    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_START }));
-    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_START }));
-  }
-
-  onCancelTour() {
-    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_CANCEL }));
-    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_CANCEL }));
-  }
-
-  render() {
-    return React.createElement(
-      "div",
-      { className: "manual-migration-container" },
-      React.createElement(
-        "p",
-        null,
-        React.createElement("span", { className: "icon icon-import" }),
-        React.createElement(FormattedMessage, { id: "manual_migration_explanation2" })
-      ),
-      React.createElement(
-        "div",
-        { className: "manual-migration-actions actions" },
-        React.createElement(
-          "button",
-          { className: "dismiss", onClick: this.onCancelTour },
-          React.createElement(FormattedMessage, { id: "manual_migration_cancel_button" })
-        ),
-        React.createElement(
-          "button",
-          { onClick: this.onLaunchTour },
-          React.createElement(FormattedMessage, { id: "manual_migration_import_button" })
-        )
-      )
-    );
-  }
-}
-
-module.exports = connect()(ManualMigration);
-module.exports._unconnected = ManualMigration;
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { injectIntl, FormattedMessage } = __webpack_require__(2);
-const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
-const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
-
-const getFormattedMessage = message => typeof message === "string" ? React.createElement(
-  "span",
-  null,
-  message
-) : React.createElement(FormattedMessage, message);
-
-const PreferencesInput = props => React.createElement(
-  "section",
-  null,
-  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, disabled: props.disabled, onChange: props.onChange, className: props.className }),
-  React.createElement(
-    "label",
-    { htmlFor: props.prefName, className: props.labelClassName },
-    getFormattedMessage(props.titleString)
-  ),
-  props.descString && React.createElement(
-    "p",
-    { className: "prefs-input-description" },
-    getFormattedMessage(props.descString)
-  )
-);
-
-class PreferencesPane extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.handleClickOutside = this.handleClickOutside.bind(this);
-    this.handlePrefChange = this.handlePrefChange.bind(this);
-    this.handleSectionChange = this.handleSectionChange.bind(this);
-    this.togglePane = this.togglePane.bind(this);
-    this.onWrapperMount = this.onWrapperMount.bind(this);
-  }
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.PreferencesPane.visible !== this.props.PreferencesPane.visible) {
-      // While the sidebar is open, listen for all document clicks.
-      if (this.isSidebarOpen()) {
-        document.addEventListener("click", this.handleClickOutside);
-      } else {
-        document.removeEventListener("click", this.handleClickOutside);
-      }
-    }
-  }
-  isSidebarOpen() {
-    return this.props.PreferencesPane.visible;
-  }
-  handleClickOutside(event) {
-    // if we are showing the sidebar and there is a click outside, close it.
-    if (this.isSidebarOpen() && !this.wrapper.contains(event.target)) {
-      this.togglePane();
-    }
-  }
-  handlePrefChange(event) {
-    const target = event.target;
-    const { name, checked } = target;
-    let value = checked;
-    if (name === "topSitesCount") {
-      value = checked ? TOP_SITES_SHOWMORE_LENGTH : TOP_SITES_DEFAULT_LENGTH;
-    }
-    this.props.dispatch(ac.SetPref(name, value));
-  }
-  handleSectionChange(event) {
-    const target = event.target;
-    const id = target.name;
-    const type = target.checked ? at.SECTION_ENABLE : at.SECTION_DISABLE;
-    this.props.dispatch(ac.SendToMain({ type, data: id }));
-  }
-  togglePane() {
-    if (this.isSidebarOpen()) {
-      this.props.dispatch({ type: at.SETTINGS_CLOSE });
-      this.props.dispatch(ac.UserEvent({ event: "CLOSE_NEWTAB_PREFS" }));
-    } else {
-      this.props.dispatch({ type: at.SETTINGS_OPEN });
-      this.props.dispatch(ac.UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
-    }
-  }
-  onWrapperMount(wrapper) {
-    this.wrapper = wrapper;
-  }
-  render() {
-    const props = this.props;
-    const prefs = props.Prefs.values;
-    const sections = props.Sections;
-    const isVisible = this.isSidebarOpen();
-    return React.createElement(
-      "div",
-      { className: "prefs-pane-wrapper", ref: this.onWrapperMount },
-      React.createElement(
-        "div",
-        { className: "prefs-pane-button" },
-        React.createElement("button", {
-          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
-          title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
-          onClick: this.togglePane })
-      ),
-      React.createElement(
-        "div",
-        { className: "prefs-pane" },
-        React.createElement(
-          "div",
-          { className: `sidebar ${isVisible ? "" : "hidden"}` },
-          React.createElement(
-            "div",
-            { className: "prefs-modal-inner-wrapper" },
-            React.createElement(
-              "h1",
-              null,
-              React.createElement(FormattedMessage, { id: "settings_pane_header" })
-            ),
-            React.createElement(
-              "p",
-              null,
-              React.createElement(FormattedMessage, { id: "settings_pane_body2" })
-            ),
-            React.createElement(PreferencesInput, { className: "showSearch", prefName: "showSearch", value: prefs.showSearch, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_search_header" }, descString: { id: "settings_pane_search_body" } }),
-            React.createElement("hr", null),
-            React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_topsites_header" }, descString: { id: "settings_pane_topsites_body" } }),
-            React.createElement(
-              "div",
-              { className: `options${prefs.showTopSites ? "" : " disabled"}` },
-              React.createElement(PreferencesInput, { className: "showMoreTopSites", prefName: "topSitesCount", disabled: !prefs.showTopSites,
-                value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH, onChange: this.handlePrefChange,
-                titleString: { id: "settings_pane_topsites_options_showmore" }, labelClassName: "icon icon-topsites" })
-            ),
-            sections.filter(section => !section.shouldHidePref).map(({ id, title, enabled, pref }) => React.createElement(PreferencesInput, { key: id, className: "showSection", prefName: pref && pref.feed || id,
-              value: enabled, onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
-              titleString: pref && pref.titleString || title, descString: pref && pref.descString })),
-            React.createElement("hr", null),
-            React.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
-              value: prefs["feeds.snippets"], onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_snippets_header" },
-              descString: { id: "settings_pane_snippets_body" } })
-          ),
-          React.createElement(
-            "section",
-            { className: "actions" },
-            React.createElement(
-              "button",
-              { className: "done", onClick: this.togglePane },
-              React.createElement(FormattedMessage, { id: "settings_pane_done_button" })
-            )
-          )
-        )
-      )
-    );
-  }
-}
-
-module.exports = connect(state => ({ Prefs: state.Prefs, PreferencesPane: state.PreferencesPane, Sections: state.Sections }))(injectIntl(PreferencesPane));
-module.exports.PreferencesPane = PreferencesPane;
-module.exports.PreferencesInput = PreferencesInput;
-
-/***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 class _PrerenderData {
@@ -3108,12 +3237,12 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/* eslint-env mozilla/frame-script */
 
-const { createStore, combineReducers, applyMiddleware } = __webpack_require__(30);
+const { createStore, combineReducers, applyMiddleware } = __webpack_require__(31);
 const { actionTypes: at, actionCreators: ac, actionUtils: au } = __webpack_require__(0);
 
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
@@ -3223,13 +3352,13 @@ module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const { actionTypes: at } = __webpack_require__(0);
@@ -3299,7 +3428,7 @@ module.exports = class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const DATABASE_NAME = "snippets_db";

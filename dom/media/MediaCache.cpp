@@ -36,6 +36,14 @@ LazyLogModule gMediaCacheLog("MediaCache");
 #define LOG(...) MOZ_LOG(gMediaCacheLog, LogLevel::Debug, (__VA_ARGS__))
 #define LOGI(...) MOZ_LOG(gMediaCacheLog, LogLevel::Info, (__VA_ARGS__))
 
+// For HTTP seeking, if number of bytes needing to be
+// seeked forward is less than this value then a read is
+// done rather than a byte range request.
+//
+// If we assume a 100Mbit connection, and assume reissuing an HTTP seek causes
+// a delay of 200ms, then in that 200ms we could have simply read ahead 2MB. So
+// setting SEEK_VS_READ_THRESHOLD to 1MB sounds reasonable.
+static const int64_t SEEK_VS_READ_THRESHOLD = 1 * 1024 * 1024;
 
 // Readahead blocks for non-seekable streams will be limited to this
 // fraction of the cache space. We don't normally evict such blocks
@@ -142,6 +150,8 @@ public:
   // with memory backing will be given. Otherwise the one MediaCache with
   // file backing will be provided.
   static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength);
+
+  nsIEventTarget* OwnerThread() const { return mThread; }
 
   // Brutally flush the cache contents. Main thread only.
   void Flush();
@@ -269,6 +279,10 @@ protected:
     NS_ASSERTION(NS_IsMainThread(), "Only construct MediaCache on main thread");
     MOZ_COUNT_CTOR(MediaCache);
     MediaCacheFlusher::RegisterMediaCache(this);
+    nsresult rv = NS_NewNamedThread("MediaCache", getter_AddRefs(mThread));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to create a thread for MediaCache.");
+    }
   }
 
   ~MediaCache()
@@ -299,6 +313,11 @@ protected:
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
+
+    nsCOMPtr<nsIThread> thread = mThread.forget();
+    if (thread) {
+      thread->Shutdown();
+    }
 
     MOZ_COUNT_DTOR(MediaCache);
   }
@@ -428,6 +447,9 @@ protected:
 #endif
   // A list of resource IDs to notify about the change in suspended status.
   nsTArray<int64_t> mSuspendedStatusToNotify;
+  // The thread on which we will run data callbacks from the channels.
+  // Could be null if failing to create the thread.
+  nsCOMPtr<nsIThread> mThread;
 };
 
 // Initialized to nullptr by non-local static initialization.
@@ -1931,11 +1953,6 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
       aSize,
       aLoadID);
 
-  // TODO: For now NotifyDataReceived() always runs on the main thread. This
-  // assertion is to make sure our load ID algorithm doesn't go wrong. Remove it
-  // when OMT data delievery is enabled.
-  MOZ_DIAGNOSTIC_ASSERT(mLoadID == aLoadID);
-
   if (mLoadID != aLoadID) {
     // mChannelOffset is updated to a new position when loading a new channel.
     // We should discard the data coming from the old channel so it won't be
@@ -2652,6 +2669,12 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     // stream offset is zero
     mMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
   }
+}
+
+nsIEventTarget*
+MediaCacheStream::OwnerThread() const
+{
+  return mMediaCache->OwnerThread();
 }
 
 nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)

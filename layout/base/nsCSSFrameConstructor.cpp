@@ -1698,6 +1698,17 @@ nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
   nsFrameManager::NotifyDestroyingFrame(aFrame);
 }
 
+static bool
+HasGeneratedContent(const nsIContent* aChild)
+{
+  if (!aChild->MayHaveAnonymousChildren()) {
+    return false;
+  }
+
+  return nsLayoutUtils::GetBeforeFrame(aChild) ||
+         nsLayoutUtils::GetAfterFrame(aChild);
+}
+
 struct nsGenConInitializer {
   nsAutoPtr<nsGenConNode> mNode;
   nsGenConList*           mList;
@@ -8682,15 +8693,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   MOZ_ASSERT(!childFrame || !GetDisplayContentsStyleFor(aChild),
              "display:contents nodes shouldn't have a frame");
   if (!childFrame && GetDisplayContentsStyleFor(aChild)) {
-    nsIContent* ancestor = aChild->GetFlattenedTreeParent();
-    MOZ_ASSERT(ancestor, "display: contents on the root?");
-    while (!ancestor->GetPrimaryFrame()) {
-      ancestor = ancestor->GetFlattenedTreeParent();
-      MOZ_ASSERT(ancestor, "we can't have a display: contents subtree root!");
-    }
+    if (HasGeneratedContent(aChild)) {
+      nsIContent* ancestor = aChild->GetFlattenedTreeParent();
+      MOZ_ASSERT(ancestor, "display: contents on the root?");
+      while (!ancestor->GetPrimaryFrame()) {
+        ancestor = ancestor->GetFlattenedTreeParent();
+        MOZ_ASSERT(ancestor, "we can't have a display: contents subtree root!");
+      }
 
-    nsIFrame* ancestorFrame = ancestor->GetPrimaryFrame();
-    if (ancestorFrame->GetProperty(nsIFrame::GenConProperty())) {
       // XXXmats Can we recreate frames only for the ::after/::before content?
       // XXX Perhaps even only those that belong to the aChild sub-tree?
       LAYOUT_PHASE_TEMP_EXIT();

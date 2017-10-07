@@ -36,7 +36,7 @@ class TestL10n(PuppeteerMixin, MarionetteTestCase):
         self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
         self.marionette.navigate('about:support')
 
-        elm = self.marionette.find_element(By.TAG_NAME, 'title')
+        elm = self.marionette.find_element(By.TAG_NAME, 'h1')
         self.assertEqual(value, elm.text)
 
     def test_properties(self):

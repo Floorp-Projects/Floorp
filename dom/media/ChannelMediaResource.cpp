@@ -10,10 +10,12 @@
 #include "nsICachingChannel.h"
 #include "nsIClassOfService.h"
 #include "nsIInputStream.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsNetUtil.h"
 
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
 static const uint32_t HTTP_OK_CODE = 200;
+static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
 // Debug logging macro with object pointer and class name.
@@ -297,6 +299,16 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
 
   // Fires an initial progress event.
   owner->DownloadProgressed();
+
+  // TODO: Don't turn this on until we fix all data races.
+  nsCOMPtr<nsIThreadRetargetableRequest> retarget;
+  if (Preferences::GetBool("media.omt_data_delivery.enabled", false) &&
+      (retarget = do_QueryInterface(aRequest)) && mCacheStream.OwnerThread()) {
+    // Note this will not always succeed. We need to handle the case where
+    // all resources sharing the same cache might run their data callbacks
+    // on different threads.
+    retarget->RetargetDeliveryTo(mCacheStream.OwnerThread());
+  }
 
   return NS_OK;
 }

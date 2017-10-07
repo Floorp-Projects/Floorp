@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {DebuggerClient} = require("./debugger-client");
+const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 function AddonClient(client, actor) {
   this._client = client;

@@ -79,14 +79,14 @@
 
 :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
 :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-  margin-top: var(--space-above-tabbar);
+  padding-top: var(--space-above-tabbar);
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
   :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-    margin-top: calc(var(--space-above-tabbar) + 4px);
+    padding-top: calc(var(--space-above-tabbar) + 4px);
   }
 }
 
@@ -122,18 +122,33 @@
     }
 
     /* Always show full-height tab separators on tabs with borders. */
-    .tabbrowser-tab:not(:-moz-lwtheme)::before {
+    .tabbrowser-tab:not(:-moz-lwtheme)::before,
+    .tabbrowser-tab:not(:-moz-lwtheme)::after {
       border-image: none !important;
     }
 
-    /* Show the tabs toolbar background color inside tabs on Win 7. */
-    .tab-background:not(:-moz-lwtheme):not([selected=true]) {
+    /* Show border on tabs with background colors and
+     * show the tabs toolbar background color inside tabs. */
+    .tabbrowser-tab:not(:-moz-lwtheme) {
       background-color: hsl(235,33%,19%) !important;
+      border-top: 1px solid var(--tabs-border);
+      background-clip: padding-box;
     }
 
-    /* Show border on tabs with background colors in Windows 7. */
+    /* The top border on top of the tab background is replaced
+     * by the slightly transparent outside tabs-border. */
     .tab-background:not(:-moz-lwtheme) {
-      border-top: 1px solid var(--tabs-border);
+      border-top-style: none !important;
+    }
+
+    /* The border at the end of the tab strip is replaced
+     * by the slightly transparent outside tabs-border. */
+    .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme) {
+      border-inline-end: 1px solid var(--tabs-border);
+    }
+
+    .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme)::after {
+      display: none !important;
     }
   }
 }

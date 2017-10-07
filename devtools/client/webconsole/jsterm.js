@@ -549,6 +549,21 @@ JSTerm.prototype = {
   },
 
   /**
+   * Copy the object/variable by invoking the server
+   * which invokes the `copy(variable)` command and makes it
+   * available in the clipboard
+   * @param evalString - string which has the evaluation string to be copied
+   * @param options - object - Options for evaluation
+   * @return object
+   *         A promise object that is resolved when the server response is
+   *         received.
+   */
+  copyObject: function (evalString, evalOptions) {
+    return this.webConsoleClient.evaluateJSAsync(`copy(${evalString})`,
+      null, evalOptions);
+  },
+
+  /**
    * Retrieve the FrameActor ID given a frame depth.
    *
    * @param number frame

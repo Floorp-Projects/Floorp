@@ -13,7 +13,7 @@
 
 #define MOZ_WM_PEN_LEAVES_HOVER_OF_DIGITIZER  WM_USER + 0x83
 
-class InkCollectorEvent : public _IInkCollectorEvents
+class InkCollectorEvent final : public _IInkCollectorEvents
 {
 public:
   // IUnknown
@@ -46,6 +46,8 @@ protected:
 
 private:
   uint32_t  mRefCount = 0;
+
+  ~InkCollectorEvent() = default;
 };
 
 class InkCollector

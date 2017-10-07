@@ -23,8 +23,8 @@ module.exports = {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": "error",
     "mozilla/no-aArgs": "error",
-    "mozilla/no-cpows-in-tests": "warn",
-    "mozilla/var-only-at-top-level": "warn",
+    "mozilla/no-cpows-in-tests": "error",
+    "mozilla/var-only-at-top-level": "error",
 
     "valid-jsdoc": ["error", {
       "prefer": {
@@ -75,7 +75,7 @@ module.exports = {
     // Disallow use of multiple spaces (sometimes used to align const values,
     // array or object items, etc.). It's hard to maintain and doesn't add that
     // much benefit.
-    "no-multi-spaces": "warn",
+    "no-multi-spaces": "error",
 
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
@@ -93,7 +93,7 @@ module.exports = {
     "space-before-function-paren": ["error", {"anonymous": "never", "named": "never"}],
 
     // ++ and -- should not need spacing
-    "space-unary-ops": ["warn", {"nonwords": false, "words": true, "overrides": {"typeof": false}}],
+    "space-unary-ops": ["error", {"nonwords": false, "words": true, "overrides": {"typeof": false}}],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
@@ -188,7 +188,7 @@ module.exports = {
     "no-labels": ["error", {"allowLoop": true}],
 
     // Disallow use of multiline strings (use template strings instead).
-    "no-multi-str": "warn",
+    "no-multi-str": "error",
 
     // Disallow multiple empty lines.
     "no-multiple-empty-lines": [1, {"max": 2}],
@@ -256,7 +256,7 @@ module.exports = {
     "one-var": "off",
 
     // Disallow padding within blocks.
-    "padded-blocks": ["warn", "never"],
+    "padded-blocks": ["error", "never"],
 
     // Don't require quotes around object literal property names.
     "quote-props": "off",
