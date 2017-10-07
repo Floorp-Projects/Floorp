@@ -782,7 +782,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "5dcafe04f982"
+        "revision": "501787d14cdb"
     }, 
     "sl": {
         "platforms": [
@@ -822,7 +822,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "3b7e484be546"
+        "revision": "106743782157"
     }, 
     "sv-SE": {
         "platforms": [
@@ -872,7 +872,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6617d1db76af"
+        "revision": "e64e1112fbab"
     }, 
     "uk": {
         "platforms": [
@@ -942,6 +942,6 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f2e617abdc47"
+        "revision": "3148e0d2aa4f"
     }
 }
