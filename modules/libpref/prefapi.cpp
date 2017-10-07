@@ -38,18 +38,18 @@ static void
 ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   auto pref = static_cast<PrefHashEntry*>(aEntry);
-  if (pref->prefFlags.IsTypeString()) {
-    if (pref->defaultPref.stringVal) {
-      PL_strfree(pref->defaultPref.stringVal);
+  if (pref->mPrefFlags.IsTypeString()) {
+    if (pref->mDefaultPref.mStringVal) {
+      PL_strfree(pref->mDefaultPref.mStringVal);
     }
-    if (pref->userPref.stringVal) {
-      PL_strfree(pref->userPref.stringVal);
+    if (pref->mUserPref.mStringVal) {
+      PL_strfree(pref->mUserPref.mStringVal);
     }
   }
 
   // Don't need to free this because it's allocated in memory owned by
   // gPrefNameArena.
-  pref->key = nullptr;
+  pref->mKey = nullptr;
   memset(aEntry, 0, aTable->EntrySize());
 }
 
@@ -58,16 +58,16 @@ MatchPrefEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   auto prefEntry = static_cast<const PrefHashEntry*>(aEntry);
 
-  if (prefEntry->key == aKey) {
+  if (prefEntry->mKey == aKey) {
     return true;
   }
 
-  if (!prefEntry->key || !aKey) {
+  if (!prefEntry->mKey || !aKey) {
     return false;
   }
 
   auto otherKey = static_cast<const char*>(aKey);
-  return (strcmp(prefEntry->key, otherKey) == 0);
+  return (strcmp(prefEntry->mKey, otherKey) == 0);
 }
 
 struct CallbackNode
@@ -259,7 +259,7 @@ PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
   }
 
   PrefValue pref;
-  pref.stringVal = const_cast<char*>(aValue);
+  pref.mStringVal = const_cast<char*>(aValue);
 
   return pref_HashPref(
     aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
@@ -269,7 +269,7 @@ nsresult
 PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
 {
   PrefValue pref;
-  pref.intVal = aValue;
+  pref.mIntVal = aValue;
 
   return pref_HashPref(
     aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
@@ -279,7 +279,7 @@ nsresult
 PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
 {
   PrefValue pref;
-  pref.boolVal = aValue;
+  pref.mBoolVal = aValue;
 
   return pref_HashPref(
     aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
@@ -356,31 +356,33 @@ pref_savePrefs(PLDHashTable* aTable)
     // where we're getting our pref from
     PrefValue* sourcePref;
 
-    if (pref->prefFlags.HasUserValue() &&
-        (pref_ValueChanged(
-           pref->defaultPref, pref->userPref, pref->prefFlags.GetPrefType()) ||
-         !pref->prefFlags.HasDefault() || pref->prefFlags.HasStickyDefault())) {
-      sourcePref = &pref->userPref;
+    if (pref->mPrefFlags.HasUserValue() &&
+        (pref_ValueChanged(pref->mDefaultPref,
+                           pref->mUserPref,
+                           pref->mPrefFlags.GetPrefType()) ||
+         !pref->mPrefFlags.HasDefault() ||
+         pref->mPrefFlags.HasStickyDefault())) {
+      sourcePref = &pref->mUserPref;
     } else {
       // do not save default prefs that haven't changed
       continue;
     }
 
     // strings are in quotes!
-    if (pref->prefFlags.IsTypeString()) {
+    if (pref->mPrefFlags.IsTypeString()) {
       prefValue = '\"';
-      StrEscape(sourcePref->stringVal, prefValue);
+      StrEscape(sourcePref->mStringVal, prefValue);
       prefValue += '\"';
 
-    } else if (pref->prefFlags.IsTypeInt()) {
-      prefValue.AppendInt(sourcePref->intVal);
+    } else if (pref->mPrefFlags.IsTypeInt()) {
+      prefValue.AppendInt(sourcePref->mIntVal);
 
-    } else if (pref->prefFlags.IsTypeBool()) {
-      prefValue = (sourcePref->boolVal) ? "true" : "false";
+    } else if (pref->mPrefFlags.IsTypeBool()) {
+      prefValue = (sourcePref->mBoolVal) ? "true" : "false";
     }
 
     nsAutoCString prefName;
-    StrEscape(pref->key, prefName);
+    StrEscape(pref->mKey, prefName);
 
     savedPrefs.AppendElement()->reset(
       ToNewCString(prefPrefix + prefName + NS_LITERAL_CSTRING("\", ") +
@@ -393,20 +395,20 @@ pref_savePrefs(PLDHashTable* aTable)
 bool
 pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 {
-  if (aHashEntry->prefFlags.GetPrefType() != PrefType::String) {
+  if (aHashEntry->mPrefFlags.GetPrefType() != PrefType::String) {
     return true;
   }
 
   char* stringVal;
-  if (aHashEntry->prefFlags.HasDefault()) {
-    stringVal = aHashEntry->defaultPref.stringVal;
+  if (aHashEntry->mPrefFlags.HasDefault()) {
+    stringVal = aHashEntry->mDefaultPref.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
   }
 
-  if (aHashEntry->prefFlags.HasUserValue()) {
-    stringVal = aHashEntry->userPref.stringVal;
+  if (aHashEntry->mPrefFlags.HasUserValue()) {
+    stringVal = aHashEntry->mUserPref.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
       return false;
     }
@@ -423,24 +425,24 @@ GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
   PrefValue* value;
   dom::PrefValue* settingValue;
   if (aWhich == USER_VALUE) {
-    value = &aHashEntry->userPref;
+    value = &aHashEntry->mUserPref;
     aPref->userValue() = dom::PrefValue();
     settingValue = &aPref->userValue().get_PrefValue();
   } else {
-    value = &aHashEntry->defaultPref;
+    value = &aHashEntry->mDefaultPref;
     aPref->defaultValue() = dom::PrefValue();
     settingValue = &aPref->defaultValue().get_PrefValue();
   }
 
-  switch (aHashEntry->prefFlags.GetPrefType()) {
+  switch (aHashEntry->mPrefFlags.GetPrefType()) {
     case PrefType::String:
-      *settingValue = nsDependentCString(value->stringVal);
+      *settingValue = nsDependentCString(value->mStringVal);
       return;
     case PrefType::Int:
-      *settingValue = value->intVal;
+      *settingValue = value->mIntVal;
       return;
     case PrefType::Bool:
-      *settingValue = !!value->boolVal;
+      *settingValue = !!value->mBoolVal;
       return;
     default:
       MOZ_CRASH();
@@ -450,15 +452,15 @@ GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
 void
 pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
 {
-  aPref->name() = aHashEntry->key;
+  aPref->name() = aHashEntry->mKey;
 
-  if (aHashEntry->prefFlags.HasDefault()) {
+  if (aHashEntry->mPrefFlags.HasDefault()) {
     GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
   } else {
     aPref->defaultValue() = null_t();
   }
 
-  if (aHashEntry->prefFlags.HasUserValue()) {
+  if (aHashEntry->mPrefFlags.HasUserValue()) {
     GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
   } else {
     aPref->userValue() = null_t();
@@ -478,7 +480,7 @@ PREF_HasUserPref(const char* aPrefName)
   }
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->prefFlags.HasUserValue();
+  return pref && pref->mPrefFlags.HasUserValue();
 }
 
 nsresult
@@ -492,12 +494,12 @@ PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
   char* stringVal;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
 
-  if (pref && pref->prefFlags.IsTypeString()) {
-    if (aGetDefault || pref->prefFlags.IsLocked() ||
-        !pref->prefFlags.HasUserValue()) {
-      stringVal = pref->defaultPref.stringVal;
+  if (pref && pref->mPrefFlags.IsTypeString()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      stringVal = pref->mDefaultPref.mStringVal;
     } else {
-      stringVal = pref->userPref.stringVal;
+      stringVal = pref->mUserPref.mStringVal;
     }
 
     if (stringVal) {
@@ -518,18 +520,18 @@ PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (pref && pref->prefFlags.IsTypeInt()) {
-    if (aGetDefault || pref->prefFlags.IsLocked() ||
-        !pref->prefFlags.HasUserValue()) {
-      int32_t tempInt = pref->defaultPref.intVal;
+  if (pref && pref->mPrefFlags.IsTypeInt()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      int32_t tempInt = pref->mDefaultPref.mIntVal;
 
       // Check to see if we even had a default.
-      if (!pref->prefFlags.HasDefault()) {
+      if (!pref->mPrefFlags.HasDefault()) {
         return NS_ERROR_UNEXPECTED;
       }
       *aValueOut = tempInt;
     } else {
-      *aValueOut = pref->userPref.intVal;
+      *aValueOut = pref->mUserPref.mIntVal;
     }
     rv = NS_OK;
   }
@@ -547,18 +549,18 @@ PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
   nsresult rv = NS_ERROR_UNEXPECTED;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
   //NS_ASSERTION(pref, aPrefName);
-  if (pref && pref->prefFlags.IsTypeBool()) {
-    if (aGetDefault || pref->prefFlags.IsLocked() ||
-        !pref->prefFlags.HasUserValue()) {
-      bool tempBool = pref->defaultPref.boolVal;
+  if (pref && pref->mPrefFlags.IsTypeBool()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      bool tempBool = pref->mDefaultPref.mBoolVal;
 
       // Check to see if we even had a default.
-      if (pref->prefFlags.HasDefault()) {
+      if (pref->mPrefFlags.HasDefault()) {
         *aValueOut = tempBool;
         rv = NS_OK;
       }
     } else {
-      *aValueOut = pref->userPref.boolVal;
+      *aValueOut = pref->mUserPref.mBoolVal;
       rv = NS_OK;
     }
   }
@@ -596,9 +598,9 @@ PREF_DeleteBranch(const char* aBranchName)
 
     // Note: if we're deleting "ldap" then we want to delete "ldap.xxx" and
     // "ldap" (if such a leaf node exists) but not "ldap_1.xxx".
-    if (PL_strncmp(entry->key, to_delete, len) == 0 ||
-        (len - 1 == strlen(entry->key) &&
-         PL_strncmp(entry->key, to_delete, len - 1) == 0)) {
+    if (PL_strncmp(entry->mKey, to_delete, len) == 0 ||
+        (len - 1 == strlen(entry->mKey) &&
+         PL_strncmp(entry->mKey, to_delete, len - 1) == 0)) {
       iter.Remove();
     }
   }
@@ -615,10 +617,10 @@ PREF_ClearUserPref(const char* aPrefName)
   }
 
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (pref && pref->prefFlags.HasUserValue()) {
-    pref->prefFlags.SetHasUserValue(false);
+  if (pref && pref->mPrefFlags.HasUserValue()) {
+    pref->mPrefFlags.SetHasUserValue(false);
 
-    if (!pref->prefFlags.HasDefault()) {
+    if (!pref->mPrefFlags.HasDefault()) {
       gHashTable->RemoveEntry(pref);
     }
 
@@ -641,11 +643,11 @@ PREF_ClearAllUserPrefs()
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    if (pref->prefFlags.HasUserValue()) {
-      prefStrings.push_back(std::string(pref->key));
+    if (pref->mPrefFlags.HasUserValue()) {
+      prefStrings.push_back(std::string(pref->mKey));
 
-      pref->prefFlags.SetHasUserValue(false);
-      if (!pref->prefFlags.HasDefault()) {
+      pref->mPrefFlags.SetHasUserValue(false);
+      if (!pref->mPrefFlags.HasDefault()) {
         iter.Remove();
       }
     }
@@ -672,13 +674,13 @@ PREF_LockPref(const char* aKey, bool aLockIt)
   }
 
   if (aLockIt) {
-    if (!pref->prefFlags.IsLocked()) {
-      pref->prefFlags.SetLocked(true);
+    if (!pref->mPrefFlags.IsLocked()) {
+      pref->mPrefFlags.SetLocked(true);
       gIsAnyPrefLocked = true;
       pref_DoCallback(aKey);
     }
-  } else if (pref->prefFlags.IsLocked()) {
-    pref->prefFlags.SetLocked(false);
+  } else if (pref->mPrefFlags.IsLocked()) {
+    pref->mPrefFlags.SetLocked(false);
     pref_DoCallback(aKey);
   }
 
@@ -695,17 +697,17 @@ pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
   bool changed = true;
   switch (aType) {
     case PrefType::String:
-      if (aOldValue.stringVal && aNewValue.stringVal) {
-        changed = (strcmp(aOldValue.stringVal, aNewValue.stringVal) != 0);
+      if (aOldValue.mStringVal && aNewValue.mStringVal) {
+        changed = (strcmp(aOldValue.mStringVal, aNewValue.mStringVal) != 0);
       }
       break;
 
     case PrefType::Int:
-      changed = aOldValue.intVal != aNewValue.intVal;
+      changed = aOldValue.mIntVal != aNewValue.mIntVal;
       break;
 
     case PrefType::Bool:
-      changed = aOldValue.boolVal != aNewValue.boolVal;
+      changed = aOldValue.mBoolVal != aNewValue.mBoolVal;
       break;
 
     case PrefType::Invalid:
@@ -726,15 +728,15 @@ pref_SetValue(PrefValue* aExistingValue,
               PrefValue aNewValue,
               PrefType aNewType)
 {
-  if (aFlags.IsTypeString() && aExistingValue->stringVal) {
-    PL_strfree(aExistingValue->stringVal);
+  if (aFlags.IsTypeString() && aExistingValue->mStringVal) {
+    PL_strfree(aExistingValue->mStringVal);
   }
 
   aFlags.SetPrefType(aNewType);
   if (aFlags.IsTypeString()) {
-    MOZ_ASSERT(aNewValue.stringVal);
-    aExistingValue->stringVal =
-      aNewValue.stringVal ? PL_strdup(aNewValue.stringVal) : nullptr;
+    MOZ_ASSERT(aNewValue.mStringVal);
+    aExistingValue->mStringVal =
+      aNewValue.mStringVal ? PL_strdup(aNewValue.mStringVal) : nullptr;
   } else {
     *aExistingValue = aNewValue;
   }
@@ -760,9 +762,9 @@ pref_GetInitPhase()
 }
 
 void
-pref_SetWatchingPref(bool watching)
+pref_SetWatchingPref(bool aWatching)
 {
-  gWatchingPref = watching;
+  gWatchingPref = aWatching;
 }
 
 struct StringComparator
@@ -824,15 +826,15 @@ pref_HashPref(const char* aKey,
   }
 
   // New entry, need to initialize.
-  if (!pref->key) {
+  if (!pref->mKey) {
     // Initialize the pref entry.
-    pref->prefFlags.Reset().SetPrefType(aType);
-    pref->key = ArenaStrdup(aKey, gPrefNameArena);
-    memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
-    memset(&pref->userPref, 0, sizeof(pref->userPref));
+    pref->mPrefFlags.Reset().SetPrefType(aType);
+    pref->mKey = ArenaStrdup(aKey, gPrefNameArena);
+    memset(&pref->mDefaultPref, 0, sizeof(pref->mDefaultPref));
+    memset(&pref->mUserPref, 0, sizeof(pref->mUserPref));
 
-  } else if (pref->prefFlags.HasDefault() &&
-             !pref->prefFlags.IsPrefType(aType)) {
+  } else if (pref->mPrefFlags.HasDefault() &&
+             !pref->mPrefFlags.IsPrefType(aType)) {
     NS_WARNING(
       nsPrintfCString(
         "Trying to overwrite value of default pref %s with the wrong type!",
@@ -844,17 +846,17 @@ pref_HashPref(const char* aKey,
 
   bool valueChanged = false;
   if (aFlags & kPrefSetDefault) {
-    if (!pref->prefFlags.IsLocked()) {
+    if (!pref->mPrefFlags.IsLocked()) {
       // ?? change of semantics?
-      if (pref_ValueChanged(pref->defaultPref, aValue, aType) ||
-          !pref->prefFlags.HasDefault()) {
-        pref->prefFlags =
-          pref_SetValue(&pref->defaultPref, pref->prefFlags, aValue, aType)
+      if (pref_ValueChanged(pref->mDefaultPref, aValue, aType) ||
+          !pref->mPrefFlags.HasDefault()) {
+        pref->mPrefFlags =
+          pref_SetValue(&pref->mDefaultPref, pref->mPrefFlags, aValue, aType)
             .SetHasDefault(true);
         if (aFlags & kPrefStickyDefault) {
-          pref->prefFlags.SetHasStickyDefault(true);
+          pref->mPrefFlags.SetHasStickyDefault(true);
         }
-        if (!pref->prefFlags.HasUserValue()) {
+        if (!pref->mPrefFlags.HasUserValue()) {
           valueChanged = true;
         }
       }
@@ -865,25 +867,25 @@ pref_HashPref(const char* aKey,
     // If new value is same as the default value and it's not a "sticky" pref,
     // then un-set the user value. Otherwise, set the user value only if it has
     // changed.
-    if ((pref->prefFlags.HasDefault()) &&
-        !(pref->prefFlags.HasStickyDefault()) &&
-        !pref_ValueChanged(pref->defaultPref, aValue, aType) &&
+    if ((pref->mPrefFlags.HasDefault()) &&
+        !(pref->mPrefFlags.HasStickyDefault()) &&
+        !pref_ValueChanged(pref->mDefaultPref, aValue, aType) &&
         !(aFlags & kPrefForceSet)) {
-      if (pref->prefFlags.HasUserValue()) {
+      if (pref->mPrefFlags.HasUserValue()) {
         // XXX should we free a user-set string value if there is one?
-        pref->prefFlags.SetHasUserValue(false);
-        if (!pref->prefFlags.IsLocked()) {
+        pref->mPrefFlags.SetHasUserValue(false);
+        if (!pref->mPrefFlags.IsLocked()) {
           MakeDirtyCallback();
           valueChanged = true;
         }
       }
-    } else if (!pref->prefFlags.HasUserValue() ||
-               !pref->prefFlags.IsPrefType(aType) ||
-               pref_ValueChanged(pref->userPref, aValue, aType)) {
-      pref->prefFlags =
-        pref_SetValue(&pref->userPref, pref->prefFlags, aValue, aType)
+    } else if (!pref->mPrefFlags.HasUserValue() ||
+               !pref->mPrefFlags.IsPrefType(aType) ||
+               pref_ValueChanged(pref->mUserPref, aValue, aType)) {
+      pref->mPrefFlags =
+        pref_SetValue(&pref->mUserPref, pref->mPrefFlags, aValue, aType)
           .SetHasUserValue(true);
-      if (!pref->prefFlags.IsLocked()) {
+      if (!pref->mPrefFlags.IsLocked()) {
         MakeDirtyCallback();
         valueChanged = true;
       }
@@ -914,7 +916,7 @@ PREF_GetPrefType(const char* aPrefName)
   if (gHashTable) {
     PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
     if (pref) {
-      return pref->prefFlags.GetPrefType();
+      return pref->mPrefFlags.GetPrefType();
     }
   }
   return PrefType::Invalid;
@@ -926,7 +928,7 @@ PREF_PrefIsLocked(const char* aPrefName)
   bool result = false;
   if (gIsAnyPrefLocked && gHashTable) {
     PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-    if (pref && pref->prefFlags.IsLocked()) {
+    if (pref && pref->mPrefFlags.IsLocked()) {
       result = true;
     }
   }
