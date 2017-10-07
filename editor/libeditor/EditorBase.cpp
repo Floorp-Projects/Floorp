@@ -3278,6 +3278,7 @@ EditorBase::GetLengthOfDOMNode(nsIDOMNode* aNode,
 nsIContent*
 EditorBase::GetPriorNode(nsINode* aParentNode,
                          int32_t aOffset,
+                         nsINode* aChildAtOffset,
                          bool aEditableNode,
                          bool aNoBlockCrossing)
 {
@@ -3294,8 +3295,8 @@ EditorBase::GetPriorNode(nsINode* aParentNode,
   }
 
   // else look before the child at 'aOffset'
-  if (nsIContent* child = aParentNode->GetChildAt(aOffset)) {
-    return GetPriorNode(child, aEditableNode, aNoBlockCrossing);
+  if (aChildAtOffset) {
+    return GetPriorNode(aChildAtOffset, aEditableNode, aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -4544,6 +4545,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return nullptr;
   }
 
+  nsIContent* child = aRangeToDelete->GetChildAtStartOffset();
   int32_t offset = aRangeToDelete->StartOffset();
 
   // determine if the insertion point is at the beginning, middle, or end of
@@ -4656,7 +4658,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   // node to find out
   nsCOMPtr<nsINode> selectedNode;
   if (aAction == ePrevious) {
-    selectedNode = GetPriorNode(node, offset, true);
+    selectedNode = GetPriorNode(node, offset, child, true);
   } else if (aAction == eNext) {
     selectedNode = GetNextNode(node, offset, true);
   }

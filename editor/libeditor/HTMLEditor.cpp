@@ -3901,7 +3901,7 @@ HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
     return nullptr;
   }
 
-  return GetPriorNode(aParent, aOffset, true, aNoBlockCrossing);
+  return GetPriorNode(aParent, aOffset, aChildAtOffset, true, aNoBlockCrossing);
 }
 
 /**
