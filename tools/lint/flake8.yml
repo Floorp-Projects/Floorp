@@ -17,6 +17,8 @@ flake8:
         - testing/marionette/puppeteer
         - testing/mozbase
         - testing/mochitest
+        - testing/remotecppunittests.py
+        - testing/runcppunittests.py
         - testing/talos/
         - testing/xpcshell
         - tools/git
