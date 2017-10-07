@@ -225,9 +225,11 @@ menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
 
-menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic) {
-  color: GrayText;
-  text-shadow: none;
+@media (-moz-windows-classic) {
+  menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]) {
+    color: GrayText;
+    text-shadow: none;
+  }
 }
 
 menulist > menupopup > :-moz-any(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text {

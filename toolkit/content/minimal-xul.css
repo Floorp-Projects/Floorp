@@ -121,13 +121,32 @@ scale {
   -moz-user-focus: normal;
 }
 
-scrollbarbutton[sbattr="scrollbar-up-top"]:not(:-moz-system-metric(scrollbar-start-backward)),
-scrollbarbutton[sbattr="scrollbar-down-top"]:not(:-moz-system-metric(scrollbar-start-forward)),
-scrollbarbutton[sbattr="scrollbar-up-bottom"]:not(:-moz-system-metric(scrollbar-end-backward)),
-scrollbarbutton[sbattr="scrollbar-down-bottom"]:not(:-moz-system-metric(scrollbar-end-forward)) {
-  display: none;
+@media (-moz-scrollbar-start-backward: 0) {
+  scrollbarbutton[sbattr="scrollbar-up-top"] {
+    display: none;
+  }
 }
 
-thumb[sbattr="scrollbar-thumb"]:-moz-system-metric(scrollbar-thumb-proportional) {
-  -moz-box-flex: 1;
+@media (-moz-scrollbar-start-forward: 0) {
+  scrollbarbutton[sbattr="scrollbar-down-top"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-end-backward: 0) {
+  scrollbarbutton[sbattr="scrollbar-up-bottom"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-end-forward: 0) {
+  scrollbarbutton[sbattr="scrollbar-down-bottom"] {
+    display: none;
+  }
+}
+
+@media (-moz-scrollbar-thumb-proportional) {
+  thumb[sbattr="scrollbar-thumb"] {
+    -moz-box-flex: 1;
+  }
 }
