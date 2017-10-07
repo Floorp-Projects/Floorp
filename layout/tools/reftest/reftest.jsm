@@ -289,7 +289,7 @@ function getTestPlugin(aName) {
   return null;
 }
 
-this.OnRefTestLoad = function OnRefTestLoad(win)
+function OnRefTestLoad(win)
 {
     gCrashDumpDir = CC[NS_DIRECTORY_SERVICE_CONTRACTID]
                     .getService(CI.nsIProperties)
@@ -554,7 +554,6 @@ function StartTests()
         // Filter tests which will be skipped to get a more even distribution when chunking
         // tURLs is a temporary array containing all active tests
         var tURLs = new Array();
-        var tIDs = new Array();
         for (var i = 0; i < gURLs.length; ++i) {
             if (gURLs[i].expected == EXPECTED_DEATH)
                 continue;
@@ -566,13 +565,9 @@ function StartTests()
                 continue;
 
             tURLs.push(gURLs[i]);
-            tIDs.push(gURLs[i].identifier);
         }
 
-        if (gStartAfter === undefined && !gSuiteStarted) {
-            logger.suiteStart(tIDs, {"skipped": gURLs.length - tURLs.length});
-            gSuiteStarted = true
-        }
+        var numActiveTests = tURLs.length;
 
         if (gTotalChunks > 0 && gThisChunk > 0) {
             // Calculate start and end indices of this chunk if tURLs array were
@@ -580,6 +575,7 @@ function StartTests()
             var testsPerChunk = tURLs.length / gTotalChunks;
             var start = Math.round((gThisChunk-1) * testsPerChunk);
             var end = Math.round(gThisChunk * testsPerChunk);
+            numActiveTests = end - start;
 
             // Map these indices onto the gURLs array. This avoids modifying the
             // gURLs array which prevents skipped tests from showing up in the log
@@ -590,6 +586,14 @@ function StartTests()
                 "tests " + (start+1) + "-" + end + "/" + gURLs.length);
 
             gURLs = gURLs.slice(start, end);
+        }
+
+        if (gStartAfter === undefined && !gSuiteStarted) {
+            var ids = gURLs.map(function(obj) {
+                return obj.identifier;
+            });
+            logger.suiteStart(ids, {"skipped": gURLs.length - numActiveTests});
+            gSuiteStarted = true
         }
 
         if (gShuffle) {

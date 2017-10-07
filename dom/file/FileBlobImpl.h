@@ -73,7 +73,6 @@ public:
 protected:
   virtual ~FileBlobImpl() = default;
 
-private:
   // Create slice
   FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
                uint64_t aLength, const nsAString& aContentType);

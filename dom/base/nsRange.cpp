@@ -947,6 +947,23 @@ nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv)
   return result;
 }
 
+void
+nsRange::NotifySelectionListenersAfterRangeSet()
+{
+  if (mSelection) {
+    // Our internal code should not move focus with using this instance while
+    // it's calling Selection::NotifySelectionListeners() which may move focus
+    // or calls selection listeners.  So, let's set mCalledByJS to false here
+    // since non-*JS() methods don't set it to false.
+    AutoCalledByJSRestore calledByJSRestorer(*this);
+    mCalledByJS = false;
+    // Be aware, this range may be modified or stop being a range for selection
+    // after this call.  Additionally, the selection instance may have gone.
+    RefPtr<Selection> selection = mSelection;
+    selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
+  }
+}
+
 /******************************************************
  * Private helper routines
  ******************************************************/
@@ -1030,17 +1047,13 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
 
   // Notify any selection listeners. This has to occur last because otherwise the world
   // could be observed by a selection listener while the range was in an invalid state.
+  // So we run it off of a script runner to ensure it runs after the mutation observers
+  // have finished running.
   if (mSelection) {
-    // Our internal code should not move focus with using this instance while
-    // it's calling Selection::NotifySelectionListeners() which may move focus
-    // or calls selection listeners.  So, let's set mCalledByJS to false here
-    // since non-*JS() methods don't set it to false.
-    AutoCalledByJSRestore calledByJSRestorer(*this);
-    mCalledByJS = false;
-    // Be aware, this range may be modified or stop being a range for selection
-    // after this call.  Additionally, the selection instance may have gone.
-    RefPtr<Selection> selection = mSelection;
-    selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(
+                                    "NotifySelectionListenersAfterRangeSet",
+                                    this,
+                                    &nsRange::NotifySelectionListenersAfterRangeSet));
   }
 }
 

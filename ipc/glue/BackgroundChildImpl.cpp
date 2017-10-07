@@ -24,6 +24,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
+#include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
@@ -235,6 +236,21 @@ bool
 BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+PTemporaryIPCBlobChild*
+BackgroundChildImpl::AllocPTemporaryIPCBlobChild()
+{
+  MOZ_CRASH("This is not supposed to be called.");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(PTemporaryIPCBlobChild* aActor)
+{
+  RefPtr<mozilla::dom::TemporaryIPCBlobChild> actor =
+    dont_AddRef(static_cast<mozilla::dom::TemporaryIPCBlobChild*>(aActor));
   return true;
 }
 

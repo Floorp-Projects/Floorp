@@ -27,16 +27,21 @@
 namespace detail {
 
 template<typename T>
-class ProxyReleaseEvent : public mozilla::Runnable
+class ProxyReleaseEvent : public mozilla::CancelableRunnable
 {
 public:
   ProxyReleaseEvent(const char* aName, already_AddRefed<T> aDoomed)
-  : Runnable(aName), mDoomed(aDoomed.take()) {}
+  : CancelableRunnable(aName), mDoomed(aDoomed.take()) {}
 
   NS_IMETHOD Run() override
   {
     NS_IF_RELEASE(mDoomed);
     return NS_OK;
+  }
+
+  nsresult Cancel() override
+  {
+    return Run();
   }
 
   NS_IMETHOD GetName(nsACString& aName) override

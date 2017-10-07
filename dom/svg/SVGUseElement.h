@@ -81,19 +81,27 @@ public:
   URLExtraData* GetContentURLData() const { return mContentURLData; }
 
 protected:
-  class SourceReference : public mozilla::dom::IDTracker {
+  /**
+   * Helper that provides a reference to the element with the ID that is
+   * referenced by the 'use' element's 'href' attribute, and that will update
+   * the 'use' element if the element that that ID identifies changes to a
+   * different element (or none).
+   */
+  class ElementTracker final : public IDTracker {
   public:
-    explicit SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
+    explicit ElementTracker(SVGUseElement* aOwningUseElement)
+      : mOwningUseElement(aOwningUseElement)
+    {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
       IDTracker::ElementChanged(aFrom, aTo);
       if (aFrom) {
-        aFrom->RemoveMutationObserver(mContainer);
+        aFrom->RemoveMutationObserver(mOwningUseElement);
       }
-      mContainer->TriggerReclone();
+      mOwningUseElement->TriggerReclone();
     }
   private:
-    SVGUseElement* mContainer;
+    SVGUseElement* mOwningUseElement;
   };
 
   nsSVGUseFrame* GetFrame() const;
@@ -122,7 +130,7 @@ protected:
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;    // cloned tree
-  SourceReference      mSource;   // observed element
+  ElementTracker       mReferencedElementTracker;
   RefPtr<URLExtraData> mContentURLData; // URL data for its anonymous content
 };
 

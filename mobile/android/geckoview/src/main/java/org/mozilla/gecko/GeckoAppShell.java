@@ -129,6 +129,11 @@ public class GeckoAppShell
             extras.putString("BuildID", AppConstants.MOZ_APP_BUILDID);
             extras.putString("Vendor", AppConstants.MOZ_APP_VENDOR);
             extras.putString("ReleaseChannel", AppConstants.MOZ_UPDATE_CHANNEL);
+
+            final String appNotes = getAppNotes();
+            if (appNotes != null) {
+                extras.putString("Notes", appNotes);
+            }
             return extras;
         }
 
@@ -161,9 +166,24 @@ public class GeckoAppShell
         }
     };
 
+    private static String sAppNotes;
+
     public static CrashHandler ensureCrashHandling() {
         // Crash handling is automatically enabled when GeckoAppShell is loaded.
         return CRASH_HANDLER;
+    }
+
+    @WrapForJNI(exceptionMode = "ignore")
+    /* package */ static synchronized String getAppNotes() {
+        return sAppNotes;
+    }
+
+    public static synchronized void appendAppNotesToCrashReport(final String notes) {
+        if (sAppNotes == null) {
+            sAppNotes = notes;
+        } else {
+            sAppNotes += '\n' + notes;
+        }
     }
 
     private static volatile boolean locationHighAccuracyEnabled;

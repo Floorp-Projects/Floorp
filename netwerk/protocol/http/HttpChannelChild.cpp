@@ -81,6 +81,7 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   if (mOwner) {
+    mOwner->SynthesizeResponseStartTime(TimeStamp::Now());
     mOwner->DoOnStartRequest(mOwner, mContext);
   }
   return NS_OK;
@@ -139,6 +140,7 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatusCode)
 {
   if (mOwner) {
+    mOwner->SynthesizeResponseEndTime(TimeStamp::Now());
     mOwner->DoPreOnStopRequest(aStatusCode);
     mOwner->DoOnStopRequest(mOwner, aStatusCode, mContext);
   }
@@ -1074,11 +1076,6 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   mCacheReadStart = timing.cacheReadStart;
   mCacheReadEnd = timing.cacheReadEnd;
 
-  Performance* documentPerformance = GetPerformance();
-  if (documentPerformance) {
-      documentPerformance->AddEntry(this, this);
-  }
-
   DoPreOnStopRequest(channelStatus);
 
   { // We must flush the queue before we Send__delete__
@@ -1119,6 +1116,11 @@ HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
   LOG(("HttpChannelChild::DoPreOnStopRequest [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aStatus)));
   mIsPending = false;
+
+  Performance* documentPerformance = GetPerformance();
+  if (documentPerformance) {
+      documentPerformance->AddEntry(this, this);
+  }
 
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
     mStatus = aStatus;
@@ -3668,6 +3670,18 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
     nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, aMessage);
   }
   return NS_OK;
+}
+
+void
+HttpChannelChild::SynthesizeResponseStartTime(const TimeStamp& aTime)
+{
+  mTransactionTimings.responseStart = aTime;
+}
+
+void
+HttpChannelChild::SynthesizeResponseEndTime(const TimeStamp& aTime)
+{
+  mTransactionTimings.responseEnd = aTime;
 }
 
 } // namespace net

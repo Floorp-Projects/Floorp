@@ -99,6 +99,15 @@ protected:
   virtual bool
   DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor) override;
 
+  virtual PTemporaryIPCBlobParent*
+  AllocPTemporaryIPCBlobParent() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPTemporaryIPCBlobConstructor(PTemporaryIPCBlobParent* actor) override;
+
+  virtual bool
+  DeallocPTemporaryIPCBlobParent(PTemporaryIPCBlobParent* aActor) override;
+
   virtual PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const FileDescriptor& aFileDescriptor)
                                 override;

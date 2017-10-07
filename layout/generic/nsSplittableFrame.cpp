@@ -297,20 +297,3 @@ nsSplittableFrame::PreReflowBlockLevelLogicalSkipSides() const
   }
   return LogicalSides();
 }
-
-#ifdef DEBUG
-void
-nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
-{
-  nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent);
-  if (nullptr != mNextContinuation) {
-    IndentBy(out, aIndent);
-    fprintf(out, "<next-continuation va=\"%p\"/>\n", (void*)mNextContinuation);
-  }
-  if (nullptr != mPrevContinuation) {
-    IndentBy(out, aIndent);
-    fprintf(out, "<prev-continuation va=\"%p\"/>\n", (void*)mPrevContinuation);
-  }
-
-}
-#endif

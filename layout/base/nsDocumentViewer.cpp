@@ -53,7 +53,6 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsNetUtil.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIContentViewerFile.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsIInterfaceRequestor.h"
@@ -213,7 +212,6 @@ private:
 //-------------------------------------------------------------
 class nsDocumentViewer final : public nsIContentViewer,
                                public nsIContentViewerEdit,
-                               public nsIContentViewerFile,
                                public nsIDocumentViewerPrint
 
 #ifdef NS_PRINTING
@@ -236,9 +234,6 @@ public:
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
-
-  // nsIContentViewerFile
-  NS_DECL_NSICONTENTVIEWERFILE
 
 #ifdef NS_PRINTING
   // nsIWebBrowserPrint
@@ -392,9 +387,6 @@ protected:
   nsAutoPtr<AutoPrintEventDispatcher> mAutoBeforeAndAfterPrint;
 #endif // NS_PRINT_PREVIEW
 
-#ifdef DEBUG
-  FILE* mDebugFile;
-#endif // DEBUG
 #endif // NS_PRINTING
 
   /* character set member data */
@@ -500,10 +492,6 @@ void nsDocumentViewer::PrepareToStartLoad()
 #endif
   }
 
-#ifdef DEBUG
-  mDebugFile = nullptr;
-#endif
-
 #endif // NS_PRINTING
 }
 
@@ -531,9 +519,6 @@ nsDocumentViewer::nsDocumentViewer()
     mOriginalPrintPreviewScale(0.0),
     mPrintPreviewZoom(1.0),
 #endif // NS_PRINT_PREVIEW
-#ifdef DEBUG
-    mDebugFile(nullptr),
-#endif // DEBUG
 #endif // NS_PRINTING
     mHintCharsetSource(kCharsetUninitialized),
     mHintCharset(nullptr),
@@ -550,7 +535,6 @@ NS_IMPL_RELEASE(nsDocumentViewer)
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
-    NS_INTERFACE_MAP_ENTRY(nsIContentViewerFile)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerEdit)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerPrint)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentViewer)
@@ -2838,59 +2822,6 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsIDOMNode* aNode)
   return NS_OK;
 }
 
-/* ========================================================================================
- * nsIContentViewerFile
- * ======================================================================================== */
-/** ---------------------------------------------------
- *  See documentation above in the nsIContentViewerfile class definition
- *	@update 01/24/00 dwc
- */
-NS_IMETHODIMP
-nsDocumentViewer::Print(bool              aSilent,
-                          FILE *            aDebugFile,
-                          nsIPrintSettings* aPrintSettings)
-{
-#ifdef NS_PRINTING
-  nsCOMPtr<nsIPrintSettings> printSettings;
-
-#ifdef DEBUG
-  nsresult rv = NS_ERROR_FAILURE;
-
-  mDebugFile = aDebugFile;
-  // if they don't pass in a PrintSettings, then make one
-  // it will have all the default values
-  printSettings = aPrintSettings;
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc
-    = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    // if they don't pass in a PrintSettings, then make one
-    if (printSettings == nullptr) {
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
-    }
-    NS_ASSERTION(printSettings, "You can't PrintPreview without a PrintSettings!");
-  }
-  if (printSettings) printSettings->SetPrintSilent(aSilent);
-  if (printSettings) printSettings->SetShowPrintProgress(false);
-#endif
-
-
-  return Print(printSettings, nullptr);
-#else
-  return NS_ERROR_FAILURE;
-#endif
-}
-
-// nsIContentViewerFile interface
-NS_IMETHODIMP
-nsDocumentViewer::GetPrintable(bool *aPrintable)
-{
-  NS_ENSURE_ARG_POINTER(aPrintable);
-
-  *aPrintable = !GetIsPrinting();
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsIDOMNode* aNode)
 {
   NS_ENSURE_ARG(aNode);
@@ -4007,13 +3938,7 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
     rv = printEngine->Initialize(this, mContainer, mDocument,
                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                 mPageZoom,
-#ifdef DEBUG
-                                 mDebugFile
-#else
-                                 nullptr
-#endif
-                                 );
+                                 mPageZoom);
     if (NS_FAILED(rv)) {
       printEngine->Destroy();
       return rv;
@@ -4099,13 +4024,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     rv = printEngine->Initialize(this, mContainer, doc,
                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                 mPageZoom,
-#ifdef DEBUG
-                                 mDebugFile
-#else
-                                 nullptr
-#endif
-                                 );
+                                 mPageZoom);
     if (NS_FAILED(rv)) {
       printEngine->Destroy();
       return rv;

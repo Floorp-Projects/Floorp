@@ -1739,19 +1739,6 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
     *dl_descriptor = descriptor;
 }
 
-#[no_mangle]
-pub extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
-                                                dl_descriptor: BuiltDisplayListDescriptor,
-                                                dl_data: &mut WrVecU8) {
-    let dl_vec = mem::replace(dl_data, WrVecU8::from_vec(Vec::new())).to_vec();
-
-    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
-
-    state.frame_builder.dl_builder.push_nested_display_list(&dl);
-    let (data, _) = dl.into_data();
-    mem::replace(dl_data, WrVecU8::from_vec(data));
-}
-
 pub type VecU8 = Vec<u8>;
 pub type ArcVecU8 = Arc<VecU8>;
 

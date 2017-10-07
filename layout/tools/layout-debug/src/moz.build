@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsILayoutDebuggingTools.idl',
-    'nsILayoutRegressionTester.idl',
 ]
 
 XPIDL_MODULE = 'layout_debug'
@@ -19,7 +18,6 @@ UNIFIED_SOURCES += [
     'nsDebugFactory.cpp',
     'nsLayoutDebugCLH.cpp',
     'nsLayoutDebuggingTools.cpp',
-    'nsRegressionTester.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

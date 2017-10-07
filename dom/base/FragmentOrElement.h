@@ -40,7 +40,6 @@ namespace mozilla {
 class DeclarationBlock;
 namespace dom {
 struct CustomElementData;
-class DOMIntersectionObserver;
 class Element;
 } // namespace dom
 } // namespace mozilla
@@ -312,12 +311,6 @@ public:
      * Web components custom element data.
      */
     RefPtr<CustomElementData> mCustomElementData;
-
-    /**
-     * Registered Intersection Observers on the element.
-     */
-    nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
-      mRegisteredIntersectionObservers;
 
     /**
      * For XUL to hold either frameloader or opener.

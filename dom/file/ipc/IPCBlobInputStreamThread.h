@@ -9,6 +9,7 @@
 
 #include "nsIObserverService.h"
 #include "nsIEventTarget.h"
+#include "nsIObserver.h"
 
 class nsIThread;
 

@@ -754,15 +754,6 @@ DisplayListBuilder::PopStickyFrame()
   wr_dp_pop_clip(mWrState);
 }
 
-void
-DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList &dl)
-{
-  WRDL_LOG("PushBuiltDisplayList\n", mWrState);
-  wr_dp_push_built_display_list(mWrState,
-                                dl.dl_desc,
-                                &dl.dl.inner);
-}
-
 bool
 DisplayListBuilder::IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const
 {

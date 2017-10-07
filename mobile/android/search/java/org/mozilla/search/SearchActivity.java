@@ -106,8 +106,6 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        GeckoAppShell.ensureCrashHandling();
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_activity_main);
 

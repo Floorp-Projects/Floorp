@@ -59,11 +59,6 @@ public:
   CreateMemoryBlob(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aContentType);
 
-  static already_AddRefed<Blob>
-  CreateTemporaryBlob(nsISupports* aParent, PRFileDesc* aFD,
-                      uint64_t aStartPos, uint64_t aLength,
-                      const nsAString& aContentType);
-
   BlobImpl* Impl() const
   {
     return mImpl;

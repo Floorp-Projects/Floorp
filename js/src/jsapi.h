@@ -1307,6 +1307,16 @@ class JS_PUBLIC_API(ContextOptions) {
     }
 #endif
 
+    void disableOptionsForSafeMode() {
+        setBaseline(false);
+        setIon(false);
+        setAsmJS(false);
+        setWasm(false);
+        setWasmBaseline(false);
+        setWasmIon(false);
+        setNativeRegExp(false);
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;

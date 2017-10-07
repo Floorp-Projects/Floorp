@@ -197,10 +197,16 @@ public class GeckoApplication extends Application
         mInBackground = false;
     }
 
+    private static Application sApp;
+
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
+
+        final Context context = getApplicationContext();
+        GeckoAppShell.ensureCrashHandling();
+        GeckoAppShell.setApplicationContext(context);
 
         // PRNG is a pseudorandom number generator.
         // We need to apply PRNG Fixes before any use of Java Cryptography Architecture.
@@ -223,8 +229,6 @@ public class GeckoApplication extends Application
         GeckoActivityMonitor.getInstance().initialize(this);
         MemoryMonitor.getInstance().init(this);
 
-        final Context context = getApplicationContext();
-        GeckoAppShell.setApplicationContext(context);
         GeckoAppShell.setHapticFeedbackDelegate(this);
         GeckoAppShell.setGeckoInterface(new GeckoAppShell.GeckoInterface() {
             @Override
@@ -274,6 +278,15 @@ public class GeckoApplication extends Application
         NotificationHelper.getInstance(context).init();
 
         MulticastDNSManager.getInstance(context).init();
+
+        if (sApp == null) {
+            sApp = this;
+        } else {
+            GeckoAppShell.appendAppNotesToCrashReport("Bug 1401737: " +
+                    this + '/' + getPackageName() + '/' + getApplicationInfo().uid + ' ' +
+                    sApp + '/' + sApp.getPackageName() + '/' + sApp.getApplicationInfo().uid);
+            throw new IllegalStateException("Bug 1401737 diagnostic crash 2");
+        }
 
         GeckoService.register();
 

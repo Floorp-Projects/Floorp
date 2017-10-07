@@ -4447,8 +4447,6 @@ public:
 #ifdef DEBUG
 public:
   virtual nsFrameState  GetDebugStateBits() const = 0;
-  virtual nsresult  DumpRegressionData(nsPresContext* aPresContext,
-                                       FILE* out, int32_t aIndent) = 0;
 #endif
 };
 

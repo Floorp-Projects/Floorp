@@ -390,11 +390,11 @@ def target_tasks_dmd(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('nightly_file_update')
+@_target_task('file_update')
 def target_tasks_file_update(full_task_graph, parameters):
     """Select the set of tasks required to perform nightly in-tree file updates
     """
     def filter(task):
         # For now any task in the repo-update kind is ok
-        return task.kind not in ['repo-update']
+        return task.kind in ['repo-update']
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

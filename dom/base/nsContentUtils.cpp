@@ -267,7 +267,6 @@ nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
 uint32_t nsContentUtils::sScriptBlockerCount = 0;
 uint32_t nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
-uint32_t nsContentUtils::sMicroTaskLevel = 0;
 AutoTArray<nsCOMPtr<nsIRunnable>, 8>* nsContentUtils::sBlockedScriptRunners = nullptr;
 uint32_t nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nullptr;
@@ -5766,51 +5765,6 @@ nsContentUtils::GetStableStateEventTarget()
   return sStableStateEventTarget;
 }
 
-void
-nsContentUtils::EnterMicroTask()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ++sMicroTaskLevel;
-}
-
-void
-nsContentUtils::LeaveMicroTask()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (--sMicroTaskLevel == 0) {
-    PerformMainThreadMicroTaskCheckpoint();
-  }
-}
-
-bool
-nsContentUtils::IsInMicroTask()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return sMicroTaskLevel != 0;
-}
-
-uint32_t
-nsContentUtils::MicroTaskLevel()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return sMicroTaskLevel;
-}
-
-void
-nsContentUtils::SetMicroTaskLevel(uint32_t aLevel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  sMicroTaskLevel = aLevel;
-}
-
-void
-nsContentUtils::PerformMainThreadMicroTaskCheckpoint()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsDOMMutationObserver::HandleMutations();
-}
-
 /*
  * Helper function for nsContentUtils::ProcessViewportInfo.
  *
@@ -10464,9 +10418,11 @@ nsContentUtils::GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
   nsAutoString loadingStr;
   aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::loadingprincipal,
                         loadingStr);
-  if (loadingStr.IsEmpty()) {
-    // Fall back to mContent's principal (SystemPrincipal) if 'loadingprincipal'
-    // isn't specified.
+
+  // Fall back to mContent's principal if 'loadingprincipal' isn't specified,
+  // or if the doc isn't loaded by System Principal.
+  if (loadingStr.IsEmpty() ||
+      !aLoadingNode->OwnerDoc()->NodePrincipal()->GetIsSystemPrincipal()) {
     loadingPrincipal.forget(aLoadingPrincipal);
     return result;
   }

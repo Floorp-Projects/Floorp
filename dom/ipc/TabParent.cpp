@@ -973,9 +973,11 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
 #ifdef XP_WIN
     a11y::WrapperFor(doc)->SetID(aMsaaID);
     MOZ_ASSERT(!aDocCOMProxy.IsNull());
+#ifdef NIGHTLY_BUILD
     if (aDocCOMProxy.IsNull()) {
       return IPC_FAIL(this, "Constructing a top-level PDocAccessible with null COM proxy");
     }
+#endif
 
     RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
     doc->SetCOMInterface(proxy);

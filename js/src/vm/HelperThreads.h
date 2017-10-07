@@ -146,6 +146,7 @@ class GlobalHelperThreadState
     size_t maxIonCompilationThreads() const;
     size_t maxWasmCompilationThreads() const;
     size_t maxWasmTier2GeneratorThreads() const;
+    size_t maxPromiseHelperThreads() const;
     size_t maxParseThreads() const;
     size_t maxCompressionThreads() const;
     size_t maxGCHelperThreads() const;
@@ -795,7 +796,7 @@ struct PromiseHelperTask : OffThreadPromiseTask
 
     // May be called in the absence of helper threads or off-thread promise
     // support to synchronously execute and resolve a PromiseTask.
-    void executeAndResolve(JSContext* cx);
+    void executeAndResolveAndDestroy(JSContext* cx);
 };
 
 } /* namespace js */

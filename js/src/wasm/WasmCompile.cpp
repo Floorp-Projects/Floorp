@@ -54,14 +54,10 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Code, env, &sectionStart, &sectionSize, "code"))
-        return false;
-
     if (!mg.startFuncDefs())
         return false;
 
-    if (sectionStart == Decoder::NotStarted) {
+    if (!env->codeSection) {
         if (env->numFuncDefs() != 0)
             return d.fail("expected function bodies");
 
@@ -80,7 +76,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
             return false;
     }
 
-    if (!d.finishSection(sectionStart, sectionSize, "code"))
+    if (!d.finishSection(*env->codeSection, "code"))
         return false;
 
     return mg.finishFuncDefs();
@@ -403,9 +399,7 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
     if (!DecodeModuleEnvironment(d, &env))
         return nullptr;
 
-    uint32_t codeSize;
-    if (!d.peekSectionSize(SectionId::Code, &env, "code", &codeSize))
-        codeSize = 0;
+    uint32_t codeSize = env.codeSection ? env.codeSection->size : 0;
 
     CompileMode mode;
     Tier tier;

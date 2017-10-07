@@ -766,6 +766,9 @@ DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
 
     js::RunJobs(cx);
 
+    if (GetShellContext(cx)->quitting)
+        return false;
+
     args.rval().setUndefined();
     return true;
 }
@@ -5113,6 +5116,23 @@ NukeCCW(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+NukeAllCCWs(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 0) {
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "nukeAllCCWs");
+        return false;
+    }
+
+    NukeCrossCompartmentWrappers(cx, AllCompartments(), cx->compartment(),
+                                 NukeWindowReferences, NukeAllReferences);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 GetMaxArgs(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -6618,6 +6638,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
 "nukeCCW(wrapper)",
 "  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
+
+    JS_FN_HELP("nukeAllCCWs", NukeAllCCWs, 0, 0,
+"nukeAllCCWs()",
+"  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current compartment."),
 
     JS_FN_HELP("createMappedArrayBuffer", CreateMappedArrayBuffer, 1, 0,
 "createMappedArrayBuffer(filename, [offset, [size]])",
