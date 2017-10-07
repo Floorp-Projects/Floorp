@@ -854,6 +854,7 @@ HTMLEditRules::GetAlignment(bool* aMixed,
                   selection->GetRangeAt(0)->GetStartContainer());
   OwningNonNull<nsINode> parent =
     *selection->GetRangeAt(0)->GetStartContainer();
+  nsIContent* child = selection->GetRangeAt(0)->GetChildAtStartOffset();
   int32_t offset = selection->GetRangeAt(0)->StartOffset();
 
   // Is the selection collapsed?
@@ -865,7 +866,7 @@ HTMLEditRules::GetAlignment(bool* aMixed,
     nodeToExamine = parent;
   } else if (parent->IsHTMLElement(nsGkAtoms::html) && offset == rootOffset) {
     // If we have selected the body, let's look at the first editable node
-    nodeToExamine = htmlEditor->GetNextNode(parent, offset, true);
+    nodeToExamine = htmlEditor->GetNextNode(parent, offset, child, true);
   } else {
     nsTArray<RefPtr<nsRange>> arrayOfRanges;
     GetPromotedRanges(selection, arrayOfRanges, EditAction::align);
@@ -5047,8 +5048,9 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
       if (aAction == nsIEditor::eNext || aAction == nsIEditor::eNextWord ||
           aAction == nsIEditor::eToEndOfLine) {
         // Move to the start of the next node, if any
-        nsCOMPtr<nsIContent> nextNode = htmlEditor->GetNextNode(blockParent,
-                                                                offset + 1, true);
+        nsINode* child = emptyBlock->GetNextSibling();
+        nsCOMPtr<nsIContent> nextNode =
+          htmlEditor->GetNextNode(blockParent, offset + 1, child, true);
         if (nextNode) {
           EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
           nsresult rv = aSelection->Collapse(pt.node, pt.offset);
