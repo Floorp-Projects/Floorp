@@ -634,6 +634,14 @@ nsMediaFeatures::features[] = {
     GetIsResourceDocument
   },
   {
+    &nsGkAtoms::_moz_color_picker_available,
+    nsMediaFeature::eMinMaxNotAllowed,
+    nsMediaFeature::eBoolInteger,
+    nsMediaFeature::eNoRequirements,
+    { &nsGkAtoms::color_picker_available },
+    GetSystemMetric
+  },
+  {
     &nsGkAtoms::_moz_scrollbar_start_backward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,

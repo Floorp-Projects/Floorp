@@ -6,14 +6,14 @@
 .ltr, .rtl, .v-rl { border: 1px solid blue; }
 .a { -moz-appearance: none; }
 
-.ltr input[type="color"],
-.rtl input[type="color"] {
+.ltr input[type="color"]:-moz-system-metric(color-picker-available),
+.rtl input[type="color"]:-moz-system-metric(color-picker-available) {
   width: 64px;
   height: 23px;
   padding: 0px 8px;
 }
 
-.v-rl input[type="color"] {
+.v-rl input[type="color"]:-moz-system-metric(color-picker-available) {
   height: 64px;
   width: 23px;
   padding: 8px 0px;
