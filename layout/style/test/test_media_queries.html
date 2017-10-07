@@ -632,54 +632,54 @@ function run() {
   should_not_apply("(grid: 2)");
   should_not_apply("(grid: -1)");
 
-  // System metrics (internal, so none of them should be parseable from this test).
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars");
-  expression_should_not_be_parseable("-moz-windows-default-theme");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme");
-  expression_should_not_be_parseable("-moz-mac-yosemite-theme");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar");
-  expression_should_not_be_parseable("-moz-windows-compositor");
-  expression_should_not_be_parseable("-moz-windows-classic");
-  expression_should_not_be_parseable("-moz-windows-glass");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled");
+  // System metrics
+  expression_should_be_parseable("-moz-scrollbar-start-backward");
+  expression_should_be_parseable("-moz-scrollbar-start-forward");
+  expression_should_be_parseable("-moz-scrollbar-end-backward");
+  expression_should_be_parseable("-moz-scrollbar-end-forward");
+  expression_should_be_parseable("-moz-scrollbar-thumb-proportional");
+  expression_should_be_parseable("-moz-overlay-scrollbars");
+  expression_should_be_parseable("-moz-windows-default-theme");
+  expression_should_be_parseable("-moz-mac-graphite-theme");
+  expression_should_be_parseable("-moz-mac-yosemite-theme");
+  expression_should_be_parseable("-moz-windows-accent-color-in-titlebar");
+  expression_should_be_parseable("-moz-windows-compositor");
+  expression_should_be_parseable("-moz-windows-classic");
+  expression_should_be_parseable("-moz-windows-glass");
   expression_should_be_parseable("-moz-touch-enabled");
+  expression_should_be_parseable("-moz-swipe-animation-enabled");
 
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 0");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 0");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: 0");
-  expression_should_not_be_parseable("-moz-windows-default-theme: 0");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: 0");
-  expression_should_not_be_parseable("-moz-mac-yosemite-theme: 0");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: 0");
-  expression_should_not_be_parseable("-moz-windows-compositor: 0");
-  expression_should_not_be_parseable("-moz-windows-classic: 0");
-  expression_should_not_be_parseable("-moz-windows-glass: 0");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: 0");
+  expression_should_be_parseable("-moz-scrollbar-start-backward: 0");
+  expression_should_be_parseable("-moz-scrollbar-start-forward: 0");
+  expression_should_be_parseable("-moz-scrollbar-end-backward: 0");
+  expression_should_be_parseable("-moz-scrollbar-end-forward: 0");
+  expression_should_be_parseable("-moz-scrollbar-thumb-proportional: 0");
+  expression_should_be_parseable("-moz-overlay-scrollbars: 0");
+  expression_should_be_parseable("-moz-windows-default-theme: 0");
+  expression_should_be_parseable("-moz-mac-graphite-theme: 0");
+  expression_should_be_parseable("-moz-mac-yosemite-theme: 0");
+  expression_should_be_parseable("-moz-windows-accent-color-in-titlebar: 0");
+  expression_should_be_parseable("-moz-windows-compositor: 0");
+  expression_should_be_parseable("-moz-windows-classic: 0");
+  expression_should_be_parseable("-moz-windows-glass: 0");
   expression_should_be_parseable("-moz-touch-enabled: 0");
+  expression_should_be_parseable("-moz-swipe-animation-enabled: 0");
 
-  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 1");
-  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 1");
-  expression_should_not_be_parseable("-moz-overlay-scrollbars: 1");
-  expression_should_not_be_parseable("-moz-windows-default-theme: 1");
-  expression_should_not_be_parseable("-moz-mac-graphite-theme: 1");
-  expression_should_not_be_parseable("-moz-mac-yosemite-theme: 1");
-  expression_should_not_be_parseable("-moz-windows-accent-color-in-titlebar: 1");
-  expression_should_not_be_parseable("-moz-windows-compositor: 1");
-  expression_should_not_be_parseable("-moz-windows-classic: 1");
-  expression_should_not_be_parseable("-moz-windows-glass: 1");
-  expression_should_not_be_parseable("-moz-swipe-animation-enabled: 1");
+  expression_should_be_parseable("-moz-scrollbar-start-backward: 1");
+  expression_should_be_parseable("-moz-scrollbar-start-forward: 1");
+  expression_should_be_parseable("-moz-scrollbar-end-backward: 1");
+  expression_should_be_parseable("-moz-scrollbar-end-forward: 1");
+  expression_should_be_parseable("-moz-scrollbar-thumb-proportional: 1");
+  expression_should_be_parseable("-moz-overlay-scrollbars: 1");
+  expression_should_be_parseable("-moz-windows-default-theme: 1");
+  expression_should_be_parseable("-moz-mac-graphite-theme: 1");
+  expression_should_be_parseable("-moz-mac-yosemite-theme: 1");
+  expression_should_be_parseable("-moz-windows-accent-color-in-titlebar: 1");
+  expression_should_be_parseable("-moz-windows-compositor: 1");
+  expression_should_be_parseable("-moz-windows-classic: 1");
+  expression_should_be_parseable("-moz-windows-glass: 1");
   expression_should_be_parseable("-moz-touch-enabled: 1");
+  expression_should_be_parseable("-moz-swipe-animation-enabled: 1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: -1");
   expression_should_not_be_parseable("-moz-scrollbar-start-forward: -1");
@@ -713,51 +713,60 @@ function run() {
   expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
 
-  // windows theme media queries (internal too, so not parseable).
-  expression_should_not_be_parseable("-moz-windows-theme: aero");
-  expression_should_not_be_parseable("-moz-windows-theme: aero-lite");
-  expression_should_not_be_parseable("-moz-windows-theme: luna-blue");
-  expression_should_not_be_parseable("-moz-windows-theme: luna-olive");
-  expression_should_not_be_parseable("-moz-windows-theme: luna-silver");
-  expression_should_not_be_parseable("-moz-windows-theme: royale");
-  expression_should_not_be_parseable("-moz-windows-theme: generic");
-  expression_should_not_be_parseable("-moz-windows-theme: zune");
-  expression_should_not_be_parseable("-moz-windows-theme: garbage");
+  // windows theme media queries
+  expression_should_be_parseable("-moz-windows-theme: aero");
+  expression_should_be_parseable("-moz-windows-theme: aero-lite");
+  expression_should_be_parseable("-moz-windows-theme: luna-blue");
+  expression_should_be_parseable("-moz-windows-theme: luna-olive");
+  expression_should_be_parseable("-moz-windows-theme: luna-silver");
+  expression_should_be_parseable("-moz-windows-theme: royale");
+  expression_should_be_parseable("-moz-windows-theme: generic");
+  expression_should_be_parseable("-moz-windows-theme: zune");
+  expression_should_be_parseable("-moz-windows-theme: garbage");
   expression_should_not_be_parseable("-moz-windows-theme: ''");
   expression_should_not_be_parseable("-moz-windows-theme: ");
 
-  // os version media queries (currently windows only, and internal)
-  expression_should_not_be_parseable("-moz-os-version: windows-win7");
-  expression_should_not_be_parseable("-moz-os-version: windows-win8");
-  expression_should_not_be_parseable("-moz-os-version: windows-win10");
+  // os version media queries (currently windows only)
+  expression_should_be_parseable("-moz-os-version: windows-win7");
+  expression_should_be_parseable("-moz-os-version: windows-win8");
+  expression_should_be_parseable("-moz-os-version: windows-win10");
   expression_should_not_be_parseable("-moz-os-version: ");
 
   // OpenType SVG media features
-  query_should_not_be_parseable("(-moz-is-glyph)");
+  query_should_be_parseable("(-moz-is-glyph)");
   query_should_not_be_parseable("not (-moz-is-glyph)");
   query_should_not_be_parseable("only (-moz-is-glyph)");
-  query_should_not_be_parseable("all and (-moz-is-glyph)");
-  query_should_not_be_parseable("not all and (-moz-is-glyph)");
-  query_should_not_be_parseable("only all and (-moz-is-glyph)");
+  query_should_be_parseable("all and (-moz-is-glyph)");
+  query_should_be_parseable("not all and (-moz-is-glyph)");
+  query_should_be_parseable("only all and (-moz-is-glyph)");
 
-  query_should_not_be_parseable("(-moz-is-glyph:0)");
+  query_should_be_parseable("(-moz-is-glyph:0)");
   query_should_not_be_parseable("not (-moz-is-glyph:0)");
   query_should_not_be_parseable("only (-moz-is-glyph:0)");
-  query_should_not_be_parseable("all and (-moz-is-glyph:0)");
-  query_should_not_be_parseable("not all and (-moz-is-glyph:0)");
-  query_should_not_be_parseable("only all and (-moz-is-glyph:0)");
+  query_should_be_parseable("all and (-moz-is-glyph:0)");
+  query_should_be_parseable("not all and (-moz-is-glyph:0)");
+  query_should_be_parseable("only all and (-moz-is-glyph:0)");
 
-  query_should_not_be_parseable("(-moz-is-glyph:1)");
+  query_should_be_parseable("(-moz-is-glyph:1)");
   query_should_not_be_parseable("not (-moz-is-glyph:1)");
   query_should_not_be_parseable("only (-moz-is-glyph:1)");
-  query_should_not_be_parseable("all and (-moz-is-glyph:1)");
-  query_should_not_be_parseable("not all and (-moz-is-glyph:1)");
-  query_should_not_be_parseable("only all and (-moz-is-glyph:1)");
+  query_should_be_parseable("all and (-moz-is-glyph:1)");
+  query_should_be_parseable("not all and (-moz-is-glyph:1)");
+  query_should_be_parseable("only all and (-moz-is-glyph:1)");
 
   query_should_not_be_parseable("(min--moz-is-glyph:0)");
   query_should_not_be_parseable("(max--moz-is-glyph:0)");
   query_should_not_be_parseable("(min--moz-is-glyph:1)");
   query_should_not_be_parseable("(max--moz-is-glyph:1)");
+
+  should_apply("not all and (-moz-is-glyph)");
+  should_apply("(-moz-is-glyph:0)");
+  should_apply("not all and (-moz-is-glyph:1)");
+  should_apply("only all and (-moz-is-glyph:0)");
+  should_not_apply("(-moz-is-glyph)");
+  should_not_apply("(-moz-is-glyph:1)");
+  should_not_apply("not all and (-moz-is-glyph:0)");
+  should_not_apply("only all and (-moz-is-glyph:1)");
 
   // Parsing tests
   // bug 454227

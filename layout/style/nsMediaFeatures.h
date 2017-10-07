@@ -57,9 +57,7 @@ struct nsMediaFeature
     // Feature is only supported if the pref
     // "layout.css.prefixes.device-pixel-ratio-webkit" is enabled.
     // (Should only be used for -webkit-device-pixel-ratio.)
-    eWebkitDevicePixelRatioPrefEnabled = 1 << 1,
-    // Feature is only usable from UA sheets and chrome:// urls.
-    eUserAgentAndChromeOnly = 1 << 2,
+    eWebkitDevicePixelRatioPrefEnabled = 1 << 1
   };
   uint8_t mReqFlags;
 
