@@ -3946,7 +3946,8 @@ HTMLEditor::GetNextHTMLNode(nsINode* aParent,
                             nsINode* aChildAtOffset,
                             bool aNoBlockCrossing)
 {
-  nsIContent* content = GetNextNode(aParent, aOffset, true, aNoBlockCrossing);
+  nsIContent* content = GetNextNode(aParent, aOffset, aChildAtOffset,
+                                    true, aNoBlockCrossing);
   if (content && !IsDescendantOfEditorRoot(content)) {
     return nullptr;
   }
