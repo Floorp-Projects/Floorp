@@ -301,7 +301,7 @@ BookmarkImporter.prototype = {
         await PlacesUtils.bookmarks.insert(node);
       }
 
-      await PlacesUtils.bookmarks.insertTree(node);
+      await PlacesUtils.bookmarks.insertTree(node, { fixupOrSkipInvalidEntries: true });
 
       // Now add any favicons.
       try {

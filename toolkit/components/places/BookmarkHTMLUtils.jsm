@@ -920,7 +920,7 @@ BookmarkImporter.prototype = {
 
       // Give the tree the source.
       tree.source = this._source;
-      await PlacesUtils.bookmarks.insertTree(tree);
+      await PlacesUtils.bookmarks.insertTree(tree, { fixupOrSkipInvalidEntries: true });
       insertFaviconsForTree(tree);
     }
   },
