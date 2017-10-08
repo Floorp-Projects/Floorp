@@ -645,7 +645,7 @@ impl Utf8Encoder {
                         written += 1;
                         break;
                     }
-                    if unit_minus_surrogate_start <= (0xDFFF - 0xDBFF) {
+                    if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
                         // high surrogate
                         if read == src.len() {
                             // Unpaired surrogate at the end of the buffer.
@@ -943,6 +943,7 @@ mod tests {
         encode_utf8_from_utf16(&[0xFFFF], "\u{FFFF}".as_bytes());
         encode_utf8_from_utf16(&[0xD800, 0xDC00], "\u{10000}".as_bytes());
         encode_utf8_from_utf16(&[0xDBFF, 0xDFFF], "\u{10FFFF}".as_bytes());
+        encode_utf8_from_utf16(&[0xDC00, 0xDEDE], "\u{FFFD}\u{FFFD}".as_bytes());
     }
 
     #[test]

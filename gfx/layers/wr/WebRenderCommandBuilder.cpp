@@ -126,14 +126,6 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       MOZ_ASSERT(item && itemType == item->GetType());
     }
 
-    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
-    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
-      MOZ_ASSERT(childItems);
-      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
-                                             aBuilder, aResources);
-      continue;
-    }
-
     bool forceNewLayerData = false;
     size_t layerCountBeforeRecursing = mLayerScrollData.size();
     if (apzEnabled) {
@@ -198,7 +190,13 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    { // scope the ScrollingLayersHelper
+    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
+    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
+      MOZ_ASSERT(childItems);
+      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
+                                             aBuilder, aResources);
+    } else {
+      // ensure the scope of ScrollingLayersHelper is maintained
       ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, apzEnabled);
 
       // Note: this call to CreateWebRenderCommands can recurse back into
@@ -209,17 +207,30 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    if (apzEnabled && forceNewLayerData) {
-      // Pop the thing we pushed before the recursion, so the topmost item on
-      // the stack is enclosing display item's ASR (or the stack is empty)
-      mAsrStack.pop_back();
-      const ActiveScrolledRoot* stopAtAsr =
-          mAsrStack.empty() ? nullptr : mAsrStack.back();
+    if (apzEnabled) {
+      if (forceNewLayerData) {
+        // Pop the thing we pushed before the recursion, so the topmost item on
+        // the stack is enclosing display item's ASR (or the stack is empty)
+        mAsrStack.pop_back();
+        const ActiveScrolledRoot* stopAtAsr =
+            mAsrStack.empty() ? nullptr : mAsrStack.back();
 
-      int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
+        int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
 
-      mLayerScrollData.emplace_back();
-      mLayerScrollData.back().Initialize(mManager->GetScrollData(), item, descendants, stopAtAsr);
+        mLayerScrollData.emplace_back();
+        mLayerScrollData.back().Initialize(mManager->GetScrollData(), item, descendants, stopAtAsr);
+      } else if (mLayerScrollData.size() != layerCountBeforeRecursing &&
+                 !eventRegions.IsEmpty()) {
+        // We are not forcing a new layer for |item|, but we did create some
+        // layers while recursing. In this case, we need to make sure any
+        // event regions that we were carrying end up on the right layer. So we
+        // do an event region "flush" but retroactively; i.e. the event regions
+        // end up on the layer that was mLayerScrollData.back() prior to the
+        // recursion.
+        MOZ_ASSERT(layerCountBeforeRecursing > 0);
+        mLayerScrollData[layerCountBeforeRecursing - 1].AddEventRegions(eventRegions);
+        eventRegions.SetEmpty();
+      }
     }
   }
 

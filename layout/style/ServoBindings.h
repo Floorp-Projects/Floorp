@@ -675,6 +675,8 @@ bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
 // Allocator hinting.
 void Gecko_SetJemallocThreadLocalArena(bool enabled);
 
+void Gecko_AddBufferToCrashReport(const void* addr, size_t len);
+
 // Pseudo-element flags.
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
   const uint32_t SERVO_CSS_PSEUDO_ELEMENT_FLAGS_##name_ = flags_;

@@ -965,7 +965,7 @@ public:
   virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const override;
 
   // Returns base URI for style attribute.
-  already_AddRefed<nsIURI> GetBaseURIForStyleAttr() const;
+  nsIURI* GetBaseURIForStyleAttr() const;
 
   // Returns the URL data for style attribute.
   mozilla::URLExtraData* GetURLDataForStyleAttr() const;
@@ -989,9 +989,6 @@ protected:
    * called if HasID() is true.
    */
   nsIAtom* DoGetID() const;
-
-  // Returns base URI without considering xml:base.
-  inline nsIURI* GetBaseURIWithoutXMLBase() const;
 
 public:
 #ifdef DEBUG
