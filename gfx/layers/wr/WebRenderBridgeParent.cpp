@@ -66,7 +66,7 @@ bool gfx_use_wrench()
 
 const char* gfx_wr_resource_path_override()
 {
-  const char* resourcePath = PR_GetEnv("WR_RESOURCE_Path");
+  const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
   if (!resourcePath || resourcePath[0] == '\0') {
     return nullptr;
   }
