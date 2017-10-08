@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    Result<Ok, nsresult> InitCacheInternal();
+    Result<Ok, nsresult> InitCacheInternal(JS::HandleObject scope = nullptr);
 
 public:
     void Trace(JSTracer* trc);
@@ -388,7 +388,7 @@ private:
     // decodes it synchronously on the main thread, as appropriate.
     JSScript* WaitForCachedScript(JSContext* cx, CachedScript* script);
 
-    void DecodeNextBatch(size_t chunkSize);
+    void DecodeNextBatch(size_t chunkSize, JS::HandleObject scope = nullptr);
 
     static void OffThreadDecodeCallback(void* token, void* context);
     void MaybeFinishOffThreadDecode();

@@ -653,8 +653,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
     # preflight_run_tests defined in TestingMixin.
 
     def run_tests(self):
+        self.start_time = datetime.now()
         for category in SUITE_CATEGORIES:
-            self._run_category_suites(category)
+            if not self._run_category_suites(category):
+                break
 
     def get_timeout_for_category(self, suite_category):
         if suite_category == 'cppunittest':
@@ -669,8 +671,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_dir = self.query_abs_res_dir()
 
         max_verify_time = timedelta(minutes=60)
-        verify_time_exceeded = False
-        start_time = datetime.now()
 
         if suites:
             self.info('#### Running %s suites' % suite_category)
@@ -759,14 +759,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
                 for verify_args in self.query_verify_args(suite):
-                    if (datetime.now() - start_time) > max_verify_time:
+                    if (datetime.now() - self.start_time) > max_verify_time:
                         # Verification has run out of time. That is okay! Stop running
                         # tests so that a task timeout is not triggered, and so that
                         # (partial) results are made available in a timely manner.
                         self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
-                        # Signal verify time exceeded, to break out of suites loop also.
-                        verify_time_exceeded = True
-                        break
+                        # Signal verify time exceeded, to break out of suites and
+                        # suite categories loops also.
+                        return False
+
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(verify_args)
                     return_code = self.run_command(final_cmd, cwd=dirs['abs_work_dir'],
@@ -799,12 +800,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     else:
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)
-
-                if verify_time_exceeded:
-                    # Verification ran out of time, detected in inner loop.
-                    break
         else:
             self.debug('There were no suites to run for %s' % suite_category)
+        return True
 
 
 # main {{{1

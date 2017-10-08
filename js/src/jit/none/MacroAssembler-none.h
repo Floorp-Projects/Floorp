@@ -26,7 +26,6 @@ static constexpr FloatRegister ScratchSimd128Reg = { FloatRegisters::invalid_reg
 static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_reg };
 
 static constexpr Register OsrFrameReg { Registers::invalid_reg };
-static constexpr Register ArgumentsRectifierReg { Registers::invalid_reg };
 static constexpr Register PreBarrierReg { Registers::invalid_reg };
 static constexpr Register CallTempReg0 { Registers::invalid_reg };
 static constexpr Register CallTempReg1 { Registers::invalid_reg };
