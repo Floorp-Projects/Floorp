@@ -500,9 +500,6 @@ LIRGenerator::lowerCallArguments(MCall* call)
 void
 LIRGenerator::visitCall(MCall* call)
 {
-    MOZ_ASSERT(CallTempReg0 != CallTempReg1);
-    MOZ_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
-    MOZ_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
     MOZ_ASSERT(call->getFunction()->type() == MIRType::Object);
 
     // In case of oom, skip the rest of the allocations.
@@ -548,7 +545,7 @@ LIRGenerator::visitCall(MCall* call)
     } else {
         // Call anything, using the most generic code.
         lir = new(alloc()) LCallGeneric(useFixedAtStart(call->getFunction(), CallTempReg0),
-                                        tempFixed(ArgumentsRectifierReg),
+                                        tempFixed(CallTempReg1),
                                         tempFixed(CallTempReg2));
     }
     defineReturn(lir, call);
@@ -559,10 +556,6 @@ void
 LIRGenerator::visitApplyArgs(MApplyArgs* apply)
 {
     MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
-
-    // Assert if we cannot build a rectifier frame.
-    MOZ_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
-    MOZ_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
 
     // Assert if the return value is already erased.
     MOZ_ASSERT(CallTempReg2 != JSReturnReg_Type);
@@ -588,10 +581,6 @@ void
 LIRGenerator::visitApplyArray(MApplyArray* apply)
 {
     MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
-
-    // Assert if we cannot build a rectifier frame.
-    MOZ_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
-    MOZ_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
 
     // Assert if the return value is already erased.
     MOZ_ASSERT(CallTempReg2 != JSReturnReg_Type);

@@ -464,37 +464,6 @@ class MOZ_RAII AutoScratchRegister
     operator Register() const { return reg_; }
 };
 
-// Like AutoScratchRegister, but lets the caller specify a register that should
-// not be allocated here.
-class MOZ_RAII AutoScratchRegisterExcluding
-{
-    CacheRegisterAllocator& alloc_;
-    Register reg_;
-
-  public:
-    AutoScratchRegisterExcluding(CacheRegisterAllocator& alloc, MacroAssembler& masm,
-                                 Register excluding)
-      : alloc_(alloc)
-    {
-        MOZ_ASSERT(excluding != InvalidReg);
-
-        reg_ = alloc.allocateRegister(masm);
-
-        if (reg_ == excluding) {
-            // We need a different register, so try again.
-            reg_ = alloc.allocateRegister(masm);
-            MOZ_ASSERT(reg_ != excluding);
-            alloc_.releaseRegister(excluding);
-        }
-
-        MOZ_ASSERT(alloc_.currentOpRegs_.has(reg_));
-    }
-    ~AutoScratchRegisterExcluding() {
-        alloc_.releaseRegister(reg_);
-    }
-    operator Register() const { return reg_; }
-};
-
 // The FailurePath class stores everything we need to generate a failure path
 // at the end of the IC code. The failure path restores the input registers, if
 // needed, and jumps to the next stub.

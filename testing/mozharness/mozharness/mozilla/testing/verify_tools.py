@@ -56,6 +56,8 @@ class VerifyToolsMixin(object):
             return response
 
         dirs = self.query_abs_dirs()
+        mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
+
         manifests = [
             (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),
             (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'chrome'),
