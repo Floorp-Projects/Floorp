@@ -61,7 +61,6 @@ struct SecondScratchRegisterScope : public AutoRegisterScope
 };
 
 static constexpr Register OsrFrameReg = r3;
-static constexpr Register ArgumentsRectifierReg = r8;
 static constexpr Register CallTempReg0 = r5;
 static constexpr Register CallTempReg1 = r6;
 static constexpr Register CallTempReg2 = r7;
