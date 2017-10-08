@@ -35,8 +35,8 @@ interface nsIPrintSettingsWin : nsISupports
    * via the "m_pd" data member of the CPrintDialog
    * in MFC.
    */
-  [noscript] attribute wstring deviceName;
-  [noscript] attribute wstring driverName;
+  [noscript] attribute AString deviceName;
+  [noscript] attribute AString driverName;
 
   [noscript] attribute nsDevMode devMode;
 

@@ -8156,7 +8156,7 @@ nsGlobalWindow::PrintOuter(ErrorResult& aError)
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
 
         nsAutoString printerName;
-        printSettings->GetPrinterName(getter_Copies(printerName));
+        printSettings->GetPrinterName(printerName);
 
         bool shouldGetDefaultPrinterName = printerName.IsEmpty();
 #ifdef MOZ_X11
@@ -8170,10 +8170,10 @@ nsGlobalWindow::PrintOuter(ErrorResult& aError)
         }
 #endif
         if (shouldGetDefaultPrinterName) {
-          printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
-          printSettings->SetPrinterName(printerName.get());
+          printSettingsService->GetDefaultPrinterName(printerName);
+          printSettings->SetPrinterName(printerName);
         }
-        printSettingsService->InitPrintSettingsFromPrinter(printerName.get(),
+        printSettingsService->InitPrintSettingsFromPrinter(printerName,
                                                            printSettings);
         printSettingsService->InitPrintSettingsFromPrefs(printSettings,
                                                          true,
