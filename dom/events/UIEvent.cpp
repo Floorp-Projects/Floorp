@@ -124,7 +124,7 @@ UIEvent::GetMovementPoint()
   }
 
   if (!mEvent || !mEvent->AsGUIEvent()->mWidget ||
-      (mEvent->mMessage != eMouseMove && mEvent->mMessage != ePointerMove)) {
+      (mEvent->mMessage != eMouseMove)) {
     // Pointer Lock spec defines that movementX/Y must be zero for all mouse
     // events except mousemove.
     return nsIntPoint(0, 0);
