@@ -868,20 +868,6 @@ function isUsableAddon(aAddon) {
   return true;
 }
 
-function createAddonDetails(id, aAddon) {
-  return {
-    id: id || aAddon.id,
-    type: aAddon.type,
-    version: aAddon.version,
-    multiprocessCompatible: aAddon.multiprocessCompatible,
-    mpcOptedOut: aAddon.mpcOptedOut,
-    runInSafeMode: aAddon.runInSafeMode,
-    dependencies: aAddon.dependencies,
-    hasEmbeddedWebExtension: aAddon.hasEmbeddedWebExtension,
-    startupData: aAddon.startupData,
-  };
-}
-
 /**
  * Converts an internal add-on type to the type presented through the API.
  *
@@ -2236,8 +2222,7 @@ this.XPIProvider = {
             if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
                             .indexOf(addon.id) !== -1)
               reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
-            this.callBootstrapMethod(createAddonDetails(addon.id, addon),
-                                     addon.file, "startup", reason);
+            this.callBootstrapMethod(addon, addon.file, "startup", reason);
           } catch (e) {
             logger.error("Failed to load bootstrap addon " + addon.id + " from " +
                          addon.descriptor, e);
@@ -2261,8 +2246,6 @@ this.XPIProvider = {
             if (!XPIProvider.activeAddons.has(addon.id))
               continue;
 
-            let addonDetails = createAddonDetails(addon.id, addon);
-
             // If the add-on was pending disable then shut it down and remove it
             // from the persisted data.
             let reason = BOOTSTRAP_REASONS.APP_SHUTDOWN;
@@ -2277,7 +2260,7 @@ this.XPIProvider = {
                 reason = newVersionReason(addon.version, existing.version);
               }
             }
-            XPIProvider.callBootstrapMethod(addonDetails, addon.file,
+            XPIProvider.callBootstrapMethod(addon, addon.file,
                                             "shutdown", reason);
           }
           Services.obs.removeObserver(this, "quit-application-granted");
@@ -2373,8 +2356,7 @@ this.XPIProvider = {
           reason = newVersionReason(addon.version, existing.version);
         }
 
-        this.callBootstrapMethod(createAddonDetails(id, addon),
-                                 addon.file, "uninstall", reason);
+        this.callBootstrapMethod(addon, addon.file, "uninstall", reason);
         this.unloadBootstrapScope(id);
         TemporaryInstallLocation.uninstallAddon(id);
 
@@ -2384,8 +2366,7 @@ this.XPIProvider = {
           let file = new nsIFile(newAddon.path);
 
           let data = {oldVersion: addon.version};
-          this.callBootstrapMethod(createAddonDetails(id, newAddon),
-                                   file, "install", reason, data);
+          this.callBootstrapMethod(newAddon, file, "install", reason, data);
         }
       }
     }
@@ -2964,7 +2945,7 @@ this.XPIProvider = {
               let oldVersion = existingAddon;
               let uninstallReason = newVersionReason(oldVersion, newVersion);
 
-              this.callBootstrapMethod(createAddonDetails(existingAddonID, existingAddon),
+              this.callBootstrapMethod(existingAddon,
                                        file, "uninstall", uninstallReason,
                                        { newVersion });
               this.unloadBootstrapScope(existingAddonID);
@@ -2993,8 +2974,7 @@ this.XPIProvider = {
 
           if (oldBootstrap) {
             // Re-install the old add-on
-            this.callBootstrapMethod(createAddonDetails(existingAddonID, oldBootstrap),
-                                     existingAddon, "install",
+            this.callBootstrapMethod(oldBootstrap, existingAddon, "install",
                                      BOOTSTRAP_REASONS.ADDON_INSTALL);
           }
           continue;
