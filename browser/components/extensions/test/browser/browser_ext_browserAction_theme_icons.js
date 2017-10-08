@@ -46,7 +46,7 @@ async function testStaticTheme(options) {
   await extension.startup();
 
   // Confirm that the browser action has the correct default icon before a theme is loaded.
-  let expectedDefaultIcon = withDefaultIcon ? "default.png" : "light.png";
+  let expectedDefaultIcon = withDefaultIcon ? "default.png" : "dark.png";
   await testBrowserAction(extension, expectedDefaultIcon);
 
   let theme = ExtensionTestUtils.loadExtension({
@@ -164,7 +164,7 @@ add_task(async function browseraction_theme_icons_dynamic_theme() {
         "theme_icons": [{
           "light": "light.png",
           "dark": "dark.png",
-          "size": 19,
+          "size": 16,
         }],
       },
     },
