@@ -1551,7 +1551,7 @@ MacroAssembler::Pop(const ValueOperand& val)
 void
 MacroAssembler::PopStackPtr()
 {
-    asMasm().ma_load(StackPointer, Address(StackPointer, 0), SizeWord);
+    loadPtr(Address(StackPointer, 0), StackPointer);
     framePushed_ -= sizeof(intptr_t);
 }
 

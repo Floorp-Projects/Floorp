@@ -344,8 +344,10 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.And(x4, x1, Operand(CalleeToken_FunctionConstructing));
     masm.Add(x7, x6, x4);
 
+    // Copy the number of actual arguments into r8.
+    masm.mov(r0, r8);
+
     // Calculate the position that our arguments are at before sp gets modified.
-    MOZ_ASSERT(ArgumentsRectifierReg == r8, "x8 used for argc in Arguments Rectifier");
     masm.Add(x3, masm.GetStackPointer64(), Operand(x8, vixl::LSL, 3));
     masm.Add(x3, x3, Operand(sizeof(RectifierFrameLayout)));
 

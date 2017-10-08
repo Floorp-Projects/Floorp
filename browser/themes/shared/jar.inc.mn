@@ -55,6 +55,7 @@
   skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
+  skin/classic/browser/searchReset.css                         (../shared/searchReset.css)
 
   skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
 
@@ -180,17 +181,14 @@
   skin/classic/browser/zoom-out.svg                   (../shared/icons/zoom-out.svg)
 
 
-  skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
-  skin/classic/browser/search-indicator@2x.png                 (../shared/search/search-indicator@2x.png)
-  skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
-  skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
-  skin/classic/browser/searchReset.css                         (../shared/searchReset.css)
   skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
   skin/classic/browser/badge-add-engine@2x.png                 (../shared/search/badge-add-engine@2x.png)
-  skin/classic/browser/search-indicator-badge-add.png          (../shared/search/search-indicator-badge-add.png)
-  skin/classic/browser/search-indicator-badge-add@2x.png       (../shared/search/search-indicator-badge-add@2x.png)
-  skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
   skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
+  skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
+  skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
+  skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)
+  skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
+
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
@@ -202,6 +200,7 @@
   skin/classic/browser/tabbrowser/tab-audio-blocked.svg        (../shared/tabbrowser/tab-audio-blocked.svg)
   skin/classic/browser/tabbrowser/tab-audio-small.svg          (../shared/tabbrowser/tab-audio-small.svg)
   skin/classic/browser/tabbrowser/tab-overflow-indicator.png   (../shared/tabbrowser/tab-overflow-indicator.png)
+
   skin/classic/browser/toolbarbutton-dropdown-arrow.png        (../shared/toolbarbutton-dropdown-arrow.png)
   skin/classic/browser/translating-16.png                      (../shared/translation/translating-16.png)
   skin/classic/browser/translating-16@2x.png                   (../shared/translation/translating-16@2x.png)

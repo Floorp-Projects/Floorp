@@ -43,7 +43,6 @@ static constexpr Register InvalidReg { Registers::invalid_reg };
 static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_fpreg, FloatRegisters::Single };
 
 static constexpr Register OsrFrameReg { Registers::x3 };
-static constexpr Register ArgumentsRectifierReg { Registers::x8 };
 static constexpr Register CallTempReg0 { Registers::x9 };
 static constexpr Register CallTempReg1 { Registers::x10 };
 static constexpr Register CallTempReg2 { Registers::x11 };
