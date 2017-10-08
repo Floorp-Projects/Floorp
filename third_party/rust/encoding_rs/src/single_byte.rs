@@ -556,6 +556,20 @@ mod tests {
         encode_from_utf16(encoding, data, &with_zeros[..]);
     }
 
+    #[test]
+    fn test_single_byte_from_two_low_surrogates() {
+        let expectation = b"&#65533;&#65533;";
+        let mut output = [0u8; 40];
+        let mut encoder = WINDOWS_1253.new_encoder();
+        let (result, read, written, had_errors) =
+            encoder.encode_from_utf16(&[0xDC00u16, 0xDEDEu16], &mut output[..], true);
+        assert_eq!(result, CoderResult::InputEmpty);
+        assert_eq!(read, 2);
+        assert_eq!(written, expectation.len());
+        assert!(had_errors);
+        assert_eq!(&output[..written], expectation);
+    }
+
     // These tests are so self-referential that they are pretty useless.
 
     // BEGIN GENERATED CODE. PLEASE DO NOT EDIT.

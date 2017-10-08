@@ -63,17 +63,23 @@ using the C++ standard library and [GSL](https://github.com/Microsoft/GSL/) type
 For the Gecko context, there's a
 [C++ wrapper using the MFBT/XPCOM types](https://searchfox.org/mozilla-central/source/intl/Encoding.h#100).
 
+## Sample programs
+
+* [Rust](https://github.com/hsivonen/recode_rs)
+* [C](https://github.com/hsivonen/recode_c)
+* [C++](https://github.com/hsivonen/recode_cpp)
+
 ## Optional features
 
 There are currently three optional cargo features:
 
 ### `simd-accel`
 
-Enables SSE2 acceleration on x86, x86_64 and Aarch64. Requires nightly Rust.
-_Enabling this cargo feature is recommended when building for x86, x86_64 or
-Aarch64 on nightly Rust._ The intention is for the functionality enabled by
-this feature to become the normal on-by-default behavior once explicit SIMD
-becames available on all Rust release channels.
+Enables SSE2 acceleration on x86 and x86_64 and NEON acceleration on Aarch64.
+Requires nightly Rust. _Enabling this cargo feature is recommended when
+building for x86, x86_64 or Aarch64 on nightly Rust._ The intention is for the
+functionality enabled by this feature to become the normal on-by-default
+behavior once explicit SIMD becames available on all Rust release channels.
 
 Enabling this feature breaks the build unless the target is x86 with SSE2
 (Rust's default 32-bit x86 target, `i686`, has SSE2, but Linux distros may
@@ -180,12 +186,17 @@ used in Firefox.
       range per encoding.
 - [x] Replace uconv with encoding_rs in Gecko.
 - [x] Implement the rust-encoding API in terms of encoding_rs.
-- [ ] Add SIMD acceleration for Aarch64.
+- [x] Add SIMD acceleration for Aarch64.
 - [ ] Investigate the use of NEON on 32-bit ARM.
 - [ ] Investigate Björn Höhrmann's lookup table acceleration for UTF-8 as
       adapted to Rust in rust-encoding.
 
 ## Release Notes
+
+### 0.7.1
+
+* When encoding from invalid UTF-16, correctly handle U+DC00 followed by
+  another low surrogate.
 
 ### 0.7.0
 

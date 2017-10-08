@@ -34,8 +34,19 @@ function build_rule(selector, selectorRepeat, declaration, ruleRepeat) {
   return s;
 }
 
+function build_text(word, wordRepeat, paraRepeat) {
+  wordRepeat = wordRepeat || 1;
+  paraRepeat = paraRepeat || 1;
+  let para = Array(wordRepeat).fill(word).join(" ");
+  return Array(paraRepeat).fill(para).join("\n");
+}
+
 function flush_style(element) {
   getComputedStyle(element || document.documentElement).color;
+}
+
+function flush_layout(element) {
+  (element || document.documentElement).offsetHeight;
 }
 
 function perf_start() {

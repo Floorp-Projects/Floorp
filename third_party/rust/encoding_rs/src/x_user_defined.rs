@@ -139,4 +139,17 @@ mod tests {
         encode_x_user_defined("\u{F77F}\u{F800}", b"&#63359;&#63488;");
     }
 
+    #[test]
+    fn test_x_user_defined_from_two_low_surrogates() {
+        let expectation = b"&#65533;&#65533;";
+        let mut output = [0u8; 40];
+        let mut encoder = X_USER_DEFINED.new_encoder();
+        let (result, read, written, had_errors) =
+            encoder.encode_from_utf16(&[0xDC00u16, 0xDEDEu16], &mut output[..], true);
+        assert_eq!(result, CoderResult::InputEmpty);
+        assert_eq!(read, 2);
+        assert_eq!(written, expectation.len());
+        assert!(had_errors);
+        assert_eq!(&output[..written], expectation);
+    }
 }

@@ -344,7 +344,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   if (aMayCompute == LazyComputeBehavior::Allow) {
     PreTraverseSync();
     return ResolveStyleLazilyInternal(
-        aElement, CSSPseudoElementType::NotPseudo, nullptr, aParentContext);
+        aElement, CSSPseudoElementType::NotPseudo, nullptr);
   }
 
   return ResolveServoStyle(aElement);
@@ -623,7 +623,7 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement,
   AutoClearStaleData guard(aElement);
   PreTraverseSync();
   return ResolveStyleLazilyInternal(aElement, aPseudoType, aPseudoTag,
-                                    nullptr, aRuleInclusion,
+                                    aRuleInclusion,
                                     ignoreExistingStyles);
 }
 
@@ -1220,7 +1220,6 @@ ServoStyleSet::GetAnimationValues(
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetBaseContextForElement(
   Element* aElement,
-  ServoStyleContext* aParentContext,
   nsPresContext* aPresContext,
   nsIAtom* aPseudoTag,
   CSSPseudoElementType aPseudoType,
@@ -1337,7 +1336,6 @@ already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                           CSSPseudoElementType aPseudoType,
                                           nsIAtom* aPseudoTag,
-                                          const ServoStyleContext* aParentContext,
                                           StyleRuleInclusion aRuleInclusion,
                                           bool aIgnoreExistingStyles)
 {

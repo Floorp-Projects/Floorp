@@ -714,7 +714,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                      eRestyle_AllHintsWithAnimations);
           } else {
             return presContext->StyleSet()->AsServo()->
-              GetBaseContextForElement(aElement, nullptr, presContext,
+              GetBaseContextForElement(aElement, presContext,
                                        aPseudo, pseudoType, result->AsServo());
           }
         }
@@ -747,7 +747,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       return result.forget();
     }
 
-    return servoSet->GetBaseContextForElement(aElement, nullptr, presContext,
+    return servoSet->GetBaseContextForElement(aElement, presContext,
                                               aPseudo, pseudoType, result);
   }
 
