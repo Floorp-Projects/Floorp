@@ -98,6 +98,8 @@ public:
    * This function returns information about a run and is used
    * to retrieve runs in logical order.<p>
    * This is especially useful for line-breaking on a paragraph.
+   * <code>CountRuns</code> should be called before this.
+   * before the runs are retrieved.
    *
    * @param aLogicalStart is the first character of the run.
    *
@@ -105,18 +107,13 @@ public:
    *      The l-value that you point to here may be the
    *      same expression (variable) as the one for
    *      <code>aLogicalStart</code>.
-   *      This pointer can be <code>nullptr</code> if this
-   *      value is not necessary.
+   *      This pointer cannot be <code>nullptr</code>.
    *
    * @param aLevel will receive the level of the run.
-   *      This pointer can be <code>nullptr</code> if this
-   *      value is not necessary.
+   *      This pointer cannot be <code>nullptr</code>.
    */
-  void GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
-                     nsBidiLevel* aLevel)
-  {
-    ubidi_getLogicalRun(mBiDi, aLogicalStart, aLogicalLimit, aLevel);
-  }
+  void GetLogicalRun(int32_t aLogicalStart,
+                     int32_t* aLogicalLimit, nsBidiLevel* aLevel);
 
   /**
    * Get the number of runs.
@@ -128,12 +125,7 @@ public:
    *
    * @param aRunCount will receive the number of runs.
    */
-  nsresult CountRuns(int32_t* aRunCount)
-  {
-    UErrorCode errorCode = U_ZERO_ERROR;
-    *aRunCount = ubidi_countRuns(mBiDi, &errorCode);
-    return ICUUtils::UErrorToNsResult(errorCode);
-  }
+  nsresult CountRuns(int32_t* aRunCount);
 
   /**
    * Get one run's logical start, length, and directionality,
@@ -221,6 +213,9 @@ private:
   void operator=(const nsBidi&) = delete;
 
   UBiDi* mBiDi;
+  // The two fields below are updated when CountRuns is called.
+  const nsBidiLevel* mLevels = nullptr;
+  int32_t mLength = 0;
 };
 
 #endif // _nsBidi_h_

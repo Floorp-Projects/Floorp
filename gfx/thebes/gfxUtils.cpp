@@ -1483,6 +1483,7 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
 /* static */ bool
 gfxUtils::DumpDisplayList() {
   return gfxPrefs::LayoutDumpDisplayList() ||
+         (gfxPrefs::LayoutDumpDisplayListParent() && XRE_IsParentProcess()) ||
          (gfxPrefs::LayoutDumpDisplayListContent() && XRE_IsContentProcess());
 }
 
