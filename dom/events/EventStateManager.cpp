@@ -725,6 +725,13 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // into UpdateCursor().
     GenerateDragGesture(aPresContext, mouseEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
+
+    UpdateLastRefPointOfMouseEvent(mouseEvent);
+    if (sIsPointerLocked) {
+      ResetPointerToWindowCenterWhilePointerLocked(mouseEvent);
+    }
+    UpdateLastPointerPosition(mouseEvent);
+
     GenerateMouseEnterExit(mouseEvent);
     // Flush pending layout changes, so that later mouse move events
     // will go to the right nodes.
@@ -4266,6 +4273,83 @@ EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
   GenerateMouseEnterExit(&pointerEvent);
 }
 
+/* static */ void
+EventStateManager::UpdateLastRefPointOfMouseEvent(WidgetMouseEvent* aMouseEvent)
+{
+  if (aMouseEvent->mMessage != eMouseMove) {
+    return;
+  }
+
+  // Mouse movement is reported on the MouseEvent.movement{X,Y} fields.
+  // Movement is calculated in UIEvent::GetMovementPoint() as:
+  //   previous_mousemove_mRefPoint - current_mousemove_mRefPoint.
+  if (sIsPointerLocked && aMouseEvent->mWidget) {
+    // The pointer is locked. If the pointer is not located at the center of
+    // the window, dispatch a synthetic mousemove to return the pointer there.
+    // Doing this between "real" pointer moves gives the impression that the
+    // (locked) pointer can continue moving and won't stop at the screen
+    // boundary. We cancel the synthetic event so that we don't end up
+    // dispatching the centering move event to content.
+    aMouseEvent->mLastRefPoint =
+      GetWindowClientRectCenter(aMouseEvent->mWidget);
+
+  } else if (sLastRefPoint == kInvalidRefPoint) {
+    // We don't have a valid previous mousemove mRefPoint. This is either
+    // the first move we've encountered, or the mouse has just re-entered
+    // the application window. We should report (0,0) movement for this
+    // case, so make the current and previous mRefPoints the same.
+    aMouseEvent->mLastRefPoint = aMouseEvent->mRefPoint;
+  } else {
+    aMouseEvent->mLastRefPoint = sLastRefPoint;
+  }
+}
+
+/* static */ void
+EventStateManager::ResetPointerToWindowCenterWhilePointerLocked(
+                     WidgetMouseEvent* aMouseEvent)
+{
+  MOZ_ASSERT(sIsPointerLocked);
+  if (aMouseEvent->mMessage != eMouseMove || !aMouseEvent->mWidget) {
+    return;
+  }
+
+  // The pointer is locked. If the pointer is not located at the center of
+  // the window, dispatch a synthetic mousemove to return the pointer there.
+  // Doing this between "real" pointer moves gives the impression that the
+  // (locked) pointer can continue moving and won't stop at the screen
+  // boundary. We cancel the synthetic event so that we don't end up
+  // dispatching the centering move event to content.
+  LayoutDeviceIntPoint center =
+    GetWindowClientRectCenter(aMouseEvent->mWidget);
+
+  if (aMouseEvent->mRefPoint != center) {
+    // Mouse move doesn't finish at the center of the window. Dispatch a
+    // synthetic native mouse event to move the pointer back to the center
+    // of the window, to faciliate more movement. But first, record that
+    // we've dispatched a synthetic mouse movement, so we can cancel it
+    // in the other branch here.
+    sSynthCenteringPoint = center;
+    aMouseEvent->mWidget->SynthesizeNativeMouseMove(
+      center + aMouseEvent->mWidget->WidgetToScreenOffset(), nullptr);
+  } else if (aMouseEvent->mRefPoint == sSynthCenteringPoint) {
+    // This is the "synthetic native" event we dispatched to re-center the
+    // pointer. Cancel it so we don't expose the centering move to content.
+    aMouseEvent->StopPropagation();
+    // Clear sSynthCenteringPoint so we don't cancel other events
+    // targeted at the center.
+    sSynthCenteringPoint = kInvalidRefPoint;
+  }
+}
+
+/* static */ void
+EventStateManager::UpdateLastPointerPosition(WidgetMouseEvent* aMouseEvent)
+{
+  if (aMouseEvent->mMessage != eMouseMove) {
+    return;
+  }
+  sLastRefPoint = aMouseEvent->mRefPoint;
+}
+
 void
 EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
 {
@@ -4278,51 +4362,6 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
 
   switch(aMouseEvent->mMessage) {
   case eMouseMove:
-    {
-      // Mouse movement is reported on the MouseEvent.movement{X,Y} fields.
-      // Movement is calculated in UIEvent::GetMovementPoint() as:
-      //   previous_mousemove_mRefPoint - current_mousemove_mRefPoint.
-      if (sIsPointerLocked && aMouseEvent->mWidget) {
-        // The pointer is locked. If the pointer is not located at the center of
-        // the window, dispatch a synthetic mousemove to return the pointer there.
-        // Doing this between "real" pointer moves gives the impression that the
-        // (locked) pointer can continue moving and won't stop at the screen
-        // boundary. We cancel the synthetic event so that we don't end up
-        // dispatching the centering move event to content.
-        LayoutDeviceIntPoint center =
-          GetWindowClientRectCenter(aMouseEvent->mWidget);
-        aMouseEvent->mLastRefPoint = center;
-        if (aMouseEvent->mRefPoint != center) {
-          // Mouse move doesn't finish at the center of the window. Dispatch a
-          // synthetic native mouse event to move the pointer back to the center
-          // of the window, to faciliate more movement. But first, record that
-          // we've dispatched a synthetic mouse movement, so we can cancel it
-          // in the other branch here.
-          sSynthCenteringPoint = center;
-          aMouseEvent->mWidget->SynthesizeNativeMouseMove(
-            center + aMouseEvent->mWidget->WidgetToScreenOffset(), nullptr);
-        } else if (aMouseEvent->mRefPoint == sSynthCenteringPoint) {
-          // This is the "synthetic native" event we dispatched to re-center the
-          // pointer. Cancel it so we don't expose the centering move to content.
-          aMouseEvent->StopPropagation();
-          // Clear sSynthCenteringPoint so we don't cancel other events
-          // targeted at the center.
-          sSynthCenteringPoint = kInvalidRefPoint;
-        }
-      } else if (sLastRefPoint == kInvalidRefPoint) {
-        // We don't have a valid previous mousemove mRefPoint. This is either
-        // the first move we've encountered, or the mouse has just re-entered
-        // the application window. We should report (0,0) movement for this
-        // case, so make the current and previous mRefPoints the same.
-        aMouseEvent->mLastRefPoint = aMouseEvent->mRefPoint;
-      } else {
-        aMouseEvent->mLastRefPoint = sLastRefPoint;
-      }
-
-      // Update the last known mRefPoint with the current mRefPoint.
-      sLastRefPoint = aMouseEvent->mRefPoint;
-    }
-    MOZ_FALLTHROUGH;
   case ePointerMove:
   case ePointerDown:
   case ePointerGotCapture:
