@@ -1310,9 +1310,9 @@ let IconDetails = {
           this._checkURL(lightURL, extension);
           this._checkURL(darkURL, extension);
 
-          let defaultURL = result[size];
+          let defaultURL = result[size] || result[19]; // always fallback to default first
           result[size] = {
-            "default": defaultURL || lightURL, // Fallback to the light url if no default is specified.
+            "default": defaultURL || darkURL, // Fallback to the dark url if no default is specified.
             "light": lightURL,
             "dark": darkURL,
           };
