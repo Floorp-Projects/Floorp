@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+window.top.gUIDensity.update();
 
 var SidebarUtils = {
   handleTreeClick: function SU_handleTreeClick(aTree, aEvent, aGutterSelect) {
