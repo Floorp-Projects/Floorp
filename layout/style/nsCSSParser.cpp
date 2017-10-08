@@ -3502,6 +3502,11 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   nsDependentString featureString(mToken.mIdent, 0);
   uint8_t satisfiedReqFlags = 0;
 
+  if (EnabledState() & (CSSEnabledState::eInUASheets |
+                        CSSEnabledState::eInChrome)) {
+    satisfiedReqFlags |= nsMediaFeature::eUserAgentAndChromeOnly;
+  }
+
   // Strip off "-webkit-" prefix from featureString:
   if (StylePrefs::sWebkitPrefixedAliasesEnabled &&
       StringBeginsWith(featureString, NS_LITERAL_STRING("-webkit-"))) {

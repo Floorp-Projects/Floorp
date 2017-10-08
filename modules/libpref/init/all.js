@@ -3100,9 +3100,6 @@ pref("layout.css.control-characters.visible", true);
 // Is support for column-span enabled?
 pref("layout.css.column-span.enabled", false);
 
-// Is effect of xml:base disabled for style attribute?
-pref("layout.css.style-attr-with-xml-base.disabled", true);
-
 // Are inter-character ruby annotations enabled?
 pref("layout.css.ruby.intercharacter.enabled", false);
 
@@ -3129,6 +3126,7 @@ pref("layout.frame_rate", -1);
 // pref to dump the display list to the log. Useful for debugging drawing.
 pref("layout.display-list.dump", false);
 pref("layout.display-list.dump-content", false);
+pref("layout.display-list.dump-parent", false);
 
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);

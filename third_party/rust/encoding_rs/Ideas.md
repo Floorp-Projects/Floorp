@@ -7,14 +7,6 @@ The current plan for a SIMD-accelerated inner loop for handling ASCII bytes
 makes no use of the bit of information that if the buffers didn't end but the
 ASCII loop exited, the next byte will not be an ASCII byte.
 
-## The structure of handles.rs and bound checks
-
-handles.rs is designed to make it possible to avoid bound checks when writing
-to the slices. While it would be possible to omit the bound checks manually,
-it probably makes more sense to carry out an investigation to make sure that
-the compiler performs the omission. If not, it makes more sense to file a bug
-on the compiler than to omit the checks manually.
-
 ## Handling ASCII with table lookups when decoding single-byte to UTF-16
 
 Both uconv and ICU outperform encoding_rs when decoding single-byte to UTF-16.
@@ -75,3 +67,12 @@ fully Unicode-ordered. Is "mostly" good enough for encode accelelation?
 Experiment with a function that computes `(i / 94, i % 94)` more efficiently
 than generic code.
 
+## Align writes on Aarch64
+
+On [Cortex-A57](https://stackoverflow.com/questions/45714535/performance-of-unaligned-simd-load-store-on-aarch64/45938112#45938112
+), it might be a good idea to move the destination into 16-byte alignment.
+
+## Unalign UTF-8 validation on Aarch64
+
+Currently, Aarch64 runs the generic ALU UTF-8 validation code that aligns
+reads. That's probably unnecessary on Aarch64. (SIMD was slower than ALU!)
