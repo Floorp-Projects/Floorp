@@ -277,9 +277,9 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter *aParent,
   GtkWidget* header_footer_table = gtk_table_new(3, 3, FALSE); // 3x3 table
   nsString header_footer_str[3];
 
-  aSettings->GetHeaderStrLeft(getter_Copies(header_footer_str[0]));
-  aSettings->GetHeaderStrCenter(getter_Copies(header_footer_str[1]));
-  aSettings->GetHeaderStrRight(getter_Copies(header_footer_str[2]));
+  aSettings->GetHeaderStrLeft(header_footer_str[0]);
+  aSettings->GetHeaderStrCenter(header_footer_str[1]);
+  aSettings->GetHeaderStrRight(header_footer_str[2]);
 
   for (unsigned int i = 0; i < ArrayLength(header_dropdown); i++) {
     header_dropdown[i] = ConstructHeaderFooterDropdown(header_footer_str[i].get());
@@ -296,9 +296,9 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter *aParent,
                      i, (i + 1), 1, 2, (GtkAttachOptions) 0, (GtkAttachOptions) 0, 2, 2);
   }
 
-  aSettings->GetFooterStrLeft(getter_Copies(header_footer_str[0]));
-  aSettings->GetFooterStrCenter(getter_Copies(header_footer_str[1]));
-  aSettings->GetFooterStrRight(getter_Copies(header_footer_str[2]));
+  aSettings->GetFooterStrLeft(header_footer_str[0]);
+  aSettings->GetFooterStrCenter(header_footer_str[1]);
+  aSettings->GetFooterStrRight(header_footer_str[2]);
 
   for (unsigned int i = 0; i < ArrayLength(footer_dropdown); i++) {
     footer_dropdown[i] = ConstructHeaderFooterDropdown(header_footer_str[i].get());
@@ -371,22 +371,22 @@ nsPrintDialogWidgetGTK::ExportHeaderFooter(nsIPrintSettings *aNS)
 {
   const char* header_footer_str;
   header_footer_str = OptionWidgetToString(header_dropdown[0]);
-  aNS->SetHeaderStrLeft(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetHeaderStrLeft(NS_ConvertUTF8toUTF16(header_footer_str));
 
   header_footer_str = OptionWidgetToString(header_dropdown[1]);
-  aNS->SetHeaderStrCenter(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetHeaderStrCenter(NS_ConvertUTF8toUTF16(header_footer_str));
 
   header_footer_str = OptionWidgetToString(header_dropdown[2]);
-  aNS->SetHeaderStrRight(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetHeaderStrRight(NS_ConvertUTF8toUTF16(header_footer_str));
 
   header_footer_str = OptionWidgetToString(footer_dropdown[0]);
-  aNS->SetFooterStrLeft(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetFooterStrLeft(NS_ConvertUTF8toUTF16(header_footer_str));
 
   header_footer_str = OptionWidgetToString(footer_dropdown[1]);
-  aNS->SetFooterStrCenter(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetFooterStrCenter(NS_ConvertUTF8toUTF16(header_footer_str));
 
   header_footer_str = OptionWidgetToString(footer_dropdown[2]);
-  aNS->SetFooterStrRight(NS_ConvertUTF8toUTF16(header_footer_str).get());
+  aNS->SetFooterStrRight(NS_ConvertUTF8toUTF16(header_footer_str));
 }
 
 nsresult
@@ -583,10 +583,10 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsPIDOMWindowOuter *aParent,
   nsCOMPtr<nsIPrintSettingsService> psService = do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (psService) {
     nsString printName;
-    aNSSettings->GetPrinterName(getter_Copies(printName));
+    aNSSettings->GetPrinterName(printName);
     if (printName.IsVoid()) {
-      psService->GetDefaultPrinterName(getter_Copies(printName));
-      aNSSettings->SetPrinterName(printName.get());
+      psService->GetDefaultPrinterName(printName);
+      aNSSettings->SetPrinterName(printName);
     }
     psService->InitPrintSettingsFromPrefs(aNSSettings, true, nsIPrintSettings::kInitSaveAll);
   }

@@ -515,32 +515,32 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
   // Lists
   nsString sel;
 
-  mSettings->GetHeaderStrLeft(getter_Copies(sel));
+  mSettings->GetHeaderStrLeft(sel);
   mHeaderLeftList = [self headerFooterItemListWithFrame:NSMakeRect(156, 44, 100, 22)
                                            selectedItem:sel];
   [self addSubview:mHeaderLeftList];
 
-  mSettings->GetHeaderStrCenter(getter_Copies(sel));
+  mSettings->GetHeaderStrCenter(sel);
   mHeaderCenterList = [self headerFooterItemListWithFrame:NSMakeRect(256, 44, 100, 22)
                                              selectedItem:sel];
   [self addSubview:mHeaderCenterList];
 
-  mSettings->GetHeaderStrRight(getter_Copies(sel));
+  mSettings->GetHeaderStrRight(sel);
   mHeaderRightList = [self headerFooterItemListWithFrame:NSMakeRect(356, 44, 100, 22)
                                             selectedItem:sel];
   [self addSubview:mHeaderRightList];
 
-  mSettings->GetFooterStrLeft(getter_Copies(sel));
+  mSettings->GetFooterStrLeft(sel);
   mFooterLeftList = [self headerFooterItemListWithFrame:NSMakeRect(156, 0, 100, 22)
                                            selectedItem:sel];
   [self addSubview:mFooterLeftList];
 
-  mSettings->GetFooterStrCenter(getter_Copies(sel));
+  mSettings->GetFooterStrCenter(sel);
   mFooterCenterList = [self headerFooterItemListWithFrame:NSMakeRect(256, 0, 100, 22)
                                              selectedItem:sel];
   [self addSubview:mFooterCenterList];
 
-  mSettings->GetFooterStrRight(getter_Copies(sel));
+  mSettings->GetFooterStrRight(sel);
   mFooterRightList = [self headerFooterItemListWithFrame:NSMakeRect(356, 0, 100, 22)
                                             selectedItem:sel];
   [self addSubview:mFooterRightList];
@@ -570,22 +570,22 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 {
   const char* headerFooterStr;
   headerFooterStr = [self headerFooterStringForList:mHeaderLeftList];
-  mSettings->SetHeaderStrLeft(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetHeaderStrLeft(NS_ConvertUTF8toUTF16(headerFooterStr));
 
   headerFooterStr = [self headerFooterStringForList:mHeaderCenterList];
-  mSettings->SetHeaderStrCenter(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetHeaderStrCenter(NS_ConvertUTF8toUTF16(headerFooterStr));
 
   headerFooterStr = [self headerFooterStringForList:mHeaderRightList];
-  mSettings->SetHeaderStrRight(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetHeaderStrRight(NS_ConvertUTF8toUTF16(headerFooterStr));
 
   headerFooterStr = [self headerFooterStringForList:mFooterLeftList];
-  mSettings->SetFooterStrLeft(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetFooterStrLeft(NS_ConvertUTF8toUTF16(headerFooterStr));
 
   headerFooterStr = [self headerFooterStringForList:mFooterCenterList];
-  mSettings->SetFooterStrCenter(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetFooterStrCenter(NS_ConvertUTF8toUTF16(headerFooterStr));
 
   headerFooterStr = [self headerFooterStringForList:mFooterRightList];
-  mSettings->SetFooterStrRight(NS_ConvertUTF8toUTF16(headerFooterStr).get());
+  mSettings->SetFooterStrRight(NS_ConvertUTF8toUTF16(headerFooterStr));
 }
 
 // Summary

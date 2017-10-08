@@ -137,17 +137,17 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString printerName;
-  settings->GetPrinterName(getter_Copies(printerName));
+  settings->GetPrinterName(printerName);
 #ifdef MOZ_X11
   // Requesting the default printer name on Linux has been removed in the child,
   // because it was causing a sandbox violation (see Bug 1329216).
   // If no printer name is set at this point, use the print settings service
   // to get the default printer name.
   if (printerName.IsEmpty()) {
-    mPrintSettingsSvc->GetDefaultPrinterName(getter_Copies(printerName));
-    settings->SetPrinterName(printerName.get());
+    mPrintSettingsSvc->GetDefaultPrinterName(printerName);
+    settings->SetPrinterName(printerName);
   }
-  mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName.get(), settings);
+  mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
 #endif
 
   // If this is for print preview or we are printing silently then we just need
@@ -155,8 +155,7 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   if (isPrintPreview || printSilently ||
       Preferences::GetBool("print.always_print_silent", printSilently)) {
     settings->SetIsInitializedFromPrinter(false);
-    mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName.get(),
-                                                    settings);
+    mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
   } else {
     rv = pps->ShowPrintDialog(parentWin, wbp, settings);
     NS_ENSURE_SUCCESS(rv, rv);
