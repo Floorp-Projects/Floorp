@@ -889,8 +889,8 @@ public:
 nsresult
 nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  NS_PRECONDITION(STREAM_NOT_STARTED == mStreamState,
-                  "Got OnStartRequest when the stream had already started.");
+  MOZ_RELEASE_ASSERT(STREAM_NOT_STARTED == mStreamState,
+                     "Got OnStartRequest when the stream had already started.");
   NS_PRECONDITION(
     !mExecutor->HasStarted(),
     "Got OnStartRequest at the wrong stage in the executor life cycle.");
@@ -1054,8 +1054,8 @@ void
 nsHtml5StreamParser::DoStopRequest()
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
-                  "Stream ended without being open.");
+  MOZ_RELEASE_ASSERT(STREAM_BEING_READ == mStreamState,
+                     "Stream ended without being open.");
   mTokenizerMutex.AssertCurrentThreadOwns();
 
   if (IsTerminated()) {
@@ -1158,8 +1158,8 @@ void
 nsHtml5StreamParser::DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  NS_PRECONDITION(STREAM_BEING_READ == mStreamState,
-                  "DoDataAvailable called when stream not open.");
+  MOZ_RELEASE_ASSERT(STREAM_BEING_READ == mStreamState,
+                     "DoDataAvailable called when stream not open.");
   mTokenizerMutex.AssertCurrentThreadOwns();
 
   if (IsTerminated()) {

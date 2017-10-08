@@ -328,7 +328,7 @@ impl<'a> Utf16Destination<'a> {
          -> CopyAsciiResult<(DecoderResult, usize, usize), (u8, Utf16BmpHandle<'b, 'a>)> {
         let non_ascii_ret = {
             let src_remaining = &source.slice[source.pos..];
-            let mut dst_remaining = &mut self.slice[self.pos..];
+            let dst_remaining = &mut self.slice[self.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (DecoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -364,7 +364,7 @@ impl<'a> Utf16Destination<'a> {
         let non_ascii_ret = {
             let dst_len = self.slice.len();
             let src_remaining = &source.slice[source.pos..];
-            let mut dst_remaining = &mut self.slice[self.pos..];
+            let dst_remaining = &mut self.slice[self.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (DecoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -401,7 +401,7 @@ impl<'a> Utf16Destination<'a> {
     #[inline(always)]
     pub fn copy_utf8_up_to_invalid_from(&mut self, source: &mut ByteSource) {
         let src_remaining = &source.slice[source.pos..];
-        let mut dst_remaining = &mut self.slice[self.pos..];
+        let dst_remaining = &mut self.slice[self.pos..];
         let (read, written) = convert_utf8_to_utf16_up_to_invalid(src_remaining, dst_remaining);
         source.pos += read;
         self.pos += written;
@@ -623,7 +623,7 @@ impl<'a> Utf8Destination<'a> {
         let non_ascii_ret = {
             let dst_len = self.slice.len();
             let src_remaining = &source.slice[source.pos..];
-            let mut dst_remaining = &mut self.slice[self.pos..];
+            let dst_remaining = &mut self.slice[self.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (DecoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -661,7 +661,7 @@ impl<'a> Utf8Destination<'a> {
         let non_ascii_ret = {
             let dst_len = self.slice.len();
             let src_remaining = &source.slice[source.pos..];
-            let mut dst_remaining = &mut self.slice[self.pos..];
+            let dst_remaining = &mut self.slice[self.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (DecoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -694,7 +694,7 @@ impl<'a> Utf8Destination<'a> {
     #[inline(always)]
     pub fn copy_utf8_up_to_invalid_from(&mut self, source: &mut ByteSource) {
         let src_remaining = &source.slice[source.pos..];
-        let mut dst_remaining = &mut self.slice[self.pos..];
+        let dst_remaining = &mut self.slice[self.pos..];
         let min_len = ::std::cmp::min(src_remaining.len(), dst_remaining.len());
         // Validate first, then memcpy to let memcpy do its thing even for
         // non-ASCII. (And potentially do something better than SSE2 for ASCII.)
@@ -746,7 +746,7 @@ impl<'a> Utf16Source<'a> {
         if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
             return unsafe { ::std::mem::transmute(unit) };
         }
-        if unit_minus_surrogate_start <= (0xDFFF - 0xDBFF) {
+        if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
             // high surrogate
             if self.pos < self.slice.len() {
                 let second = self.slice[self.pos] as u32;
@@ -783,7 +783,7 @@ impl<'a> Utf16Source<'a> {
         if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
             return Unicode::NonAscii(NonAscii::BmpExclAscii(unit));
         }
-        if unit_minus_surrogate_start <= (0xDFFF - 0xDBFF) {
+        if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
             // high surrogate
             if self.pos < self.slice.len() {
                 let second = self.slice[self.pos] as u32;
@@ -828,7 +828,7 @@ impl<'a> Utf16Source<'a> {
         let non_ascii_ret = {
             let dst_len = dest.slice.len();
             let src_remaining = &self.slice[self.pos..];
-            let mut dst_remaining = &mut dest.slice[dest.pos..];
+            let dst_remaining = &mut dest.slice[dest.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (EncoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -855,7 +855,7 @@ impl<'a> Utf16Source<'a> {
                         let unit_minus_surrogate_start = unit.wrapping_sub(0xD800);
                         if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
                             NonAscii::BmpExclAscii(unit)
-                        } else if unit_minus_surrogate_start <= (0xDFFF - 0xDBFF) {
+                        } else if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
                             // high surrogate
                             if self.pos < self.slice.len() {
                                 let second = self.slice[self.pos] as u32;
@@ -902,7 +902,7 @@ impl<'a> Utf16Source<'a> {
         let non_ascii_ret = {
             let dst_len = dest.slice.len();
             let src_remaining = &self.slice[self.pos..];
-            let mut dst_remaining = &mut dest.slice[dest.pos..];
+            let dst_remaining = &mut dest.slice[dest.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (EncoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -929,7 +929,7 @@ impl<'a> Utf16Source<'a> {
                         let unit_minus_surrogate_start = unit.wrapping_sub(0xD800);
                         if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
                             NonAscii::BmpExclAscii(unit)
-                        } else if unit_minus_surrogate_start <= (0xDFFF - 0xDBFF) {
+                        } else if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
                             // high surrogate
                             if self.pos == self.slice.len() {
                                 // Unpaired surrogate at the end of the buffer.
@@ -1123,7 +1123,7 @@ impl<'a> Utf8Source<'a> {
          -> CopyAsciiResult<(EncoderResult, usize, usize), (NonAscii, ByteOneHandle<'b, 'a>)> {
         let non_ascii_ret = {
             let src_remaining = &self.slice[self.pos..];
-            let mut dst_remaining = &mut dest.slice[dest.pos..];
+            let dst_remaining = &mut dest.slice[dest.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (EncoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -1175,7 +1175,7 @@ impl<'a> Utf8Source<'a> {
         let non_ascii_ret = {
             let dst_len = dest.slice.len();
             let src_remaining = &self.slice[self.pos..];
-            let mut dst_remaining = &mut dest.slice[dest.pos..];
+            let dst_remaining = &mut dest.slice[dest.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (EncoderResult::OutputFull, dst_remaining.len())
             } else {
@@ -1231,7 +1231,7 @@ impl<'a> Utf8Source<'a> {
         let non_ascii_ret = {
             let dst_len = dest.slice.len();
             let src_remaining = &self.slice[self.pos..];
-            let mut dst_remaining = &mut dest.slice[dest.pos..];
+            let dst_remaining = &mut dest.slice[dest.pos..];
             let (pending, length) = if dst_remaining.len() < src_remaining.len() {
                 (EncoderResult::OutputFull, dst_remaining.len())
             } else {

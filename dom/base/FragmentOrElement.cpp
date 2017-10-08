@@ -445,7 +445,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 }
 
 nsIURI*
-nsIContent::GetBaseURIWithoutXMLBase() const
+nsIContent::GetBaseURIForStyleAttr() const
 {
   if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
     nsIContent* bindingParent = GetBindingParent();
@@ -460,26 +460,6 @@ nsIContent::GetBaseURIWithoutXMLBase() const
   return OwnerDoc()->GetDocBaseURI();
 }
 
-already_AddRefed<nsIURI>
-nsIContent::GetBaseURIForStyleAttr() const
-{
-  nsIDocument* doc = OwnerDoc();
-  nsIURI* baseWithoutXMLBase = GetBaseURIWithoutXMLBase();
-  nsCOMPtr<nsIURI> base = GetBaseURI();
-  // If eXMLBaseAttribute is not triggered in GetBaseURI() call above,
-  // we don't need to count eXMLBaseAttributeForStyleAttr either.
-  if (doc->HasWarnedAbout(nsIDocument::eXMLBaseAttribute) &&
-      !doc->HasWarnedAbout(nsIDocument::eXMLBaseAttributeForStyleAttr)) {
-    bool isEqual = false;
-    base->Equals(baseWithoutXMLBase, &isEqual);
-    if (!isEqual) {
-      doc->WarnOnceAbout(nsIDocument::eXMLBaseAttributeForStyleAttr);
-    }
-  }
-  return nsLayoutUtils::StyleAttrWithXMLBaseDisabled()
-    ? do_AddRef(baseWithoutXMLBase) : base.forget();
-}
-
 URLExtraData*
 nsIContent::GetURLDataForStyleAttr() const
 {
@@ -491,9 +471,6 @@ nsIContent::GetURLDataForStyleAttr() const
       return data;
     }
   }
-  // We are not going to support xml:base for stylo, but we want to
-  // ensure we unship that support before we enabling stylo.
-  MOZ_ASSERT(nsLayoutUtils::StyleAttrWithXMLBaseDisabled());
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.
   return OwnerDoc()->DefaultStyleAttrURLData();
