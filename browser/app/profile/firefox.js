@@ -459,6 +459,7 @@ pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.loadBookmarksInTabs", false);
 pref("browser.tabs.tabClipWidth", 140);
+pref("browser.tabs.tabMinWidth", 76);
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.tabs.drawInTitlebar", false);
 #else
@@ -486,9 +487,6 @@ pref("browser.tabs.selectOwnerOnClose", true);
 pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
-
-// The minimum tab width in pixels
-pref("browser.tabs.tabMinWidth", 50);
 
 pref("browser.ctrlTab.previews", false);
 
