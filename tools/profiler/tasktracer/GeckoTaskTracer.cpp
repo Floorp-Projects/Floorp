@@ -261,7 +261,7 @@ GenNewUniqueTaskId()
   TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE(info, 0);
 
-  Thread::tid_t tid = Thread::GetCurrentId();
+  int tid = Thread::GetCurrentId();
   uint64_t taskid = ((uint64_t)tid << 32) | ++info->mLastUniqueTaskId;
   return taskid;
 }

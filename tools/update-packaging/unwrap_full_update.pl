@@ -12,7 +12,6 @@
 # By default just assume that these tools exist on our path
 
 use Getopt::Std;
-use Cwd 'abs_path';
 
 my ($MAR, $XZ, $BZIP2, $MAR_OLD_FORMAT, $archive, @marentries, @marfiles);
 
@@ -36,18 +35,25 @@ if (defined($ENV{"XZ"})) {
 else {
     if (system("xz --version > /dev/null 2>&1") != 0) {
         # Some of the Windows build systems have xz.exe in topsrcdir/xz/.
-        my $xzwinpath = abs_path(__FILE__);
+        my $xzwinpath = __FILE__;
         $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
         $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
         $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
-        $xzwinpath = $xzwinpath . "/xz/xz.exe";
-        if (-e $xzwinpath) {
-            $XZ = $xzwinpath;
+        my $xzwin = $xzwinpath . "/xz/xz.exe";
+        if (-e $xzwin) {
+            $XZ = $xzwin;
         }
         else {
-            # If the xz executable was not found fallback to trying to execute
-            # xz and follow the normal failure path if it isn't found.
-            $XZ = "xz";
+            $xzwinpath = substr($xzwinpath, 0, rindex($xzwinpath, '/'));
+            $xzwin = $xzwinpath . "/xz/xz.exe";
+            if (-e $xzwin) {
+                $XZ = $xzwin;
+            }
+            else {
+                # If the xz executable was not found fallback to trying to execute
+                # xz and follow the normal failure path if it isn't found.
+                $XZ = "xz";
+            }
         }
     }
     else {
@@ -75,7 +81,7 @@ $archive = $ARGV[0];
 @marentries = `"$MAR" -t "$archive"`;
 $? && die("Couldn't run \"$MAR\" -t");
 
-system("$MAR -x \"$archive\"") == 0 ||
+system($MAR, "-x", $archive) == 0 ||
   die "Couldn't run $MAR -x";
 
 # Try to determine if the mar file contains bzip2 compressed files and if not
@@ -100,15 +106,15 @@ foreach (@marentries) {
 
     print "Decompressing: " . $file . "\n";
     if ($MAR_OLD_FORMAT) {
-      system("mv \"$file\" \"$file.bz2\"") == 0 ||
+      system("mv", $file, "$file.bz2") == 0 ||
         die "Couldn't mv \"$file\"";
-      system("\"$BZIP2\" -d \"$file.bz2\"") == 0 ||
+      system($BZIP2, "-d", "$file.bz2") == 0 ||
         die "Couldn't decompress \"$file\"";
     }
     else {
-      system("mv \"$file\" \"$file.xz\"") == 0 ||
+      system("mv", $file, "$file.xz") == 0 ||
         die "Couldn't mv \"$file\"";
-      system("\"$XZ\" -d \"$file.xz\"") == 0 ||
+      system($XZ, "-d", "$file.xz") == 0 ||
         die "Couldn't decompress \"$file\"";
     }
 }

@@ -23,17 +23,6 @@ textbox:not(.padded) .textbox-input-box {
   -moz-box-align: center;
 }
 
-/* ::::: history button ::::: */
-
-.autocomplete-history-dropmarker {
-  -moz-appearance: none !important;
-  border: none !important;
-  background-color: transparent !important;
-  padding: 0px;
-  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmarker.png");
-  margin: 0px;
-}
-
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete"],

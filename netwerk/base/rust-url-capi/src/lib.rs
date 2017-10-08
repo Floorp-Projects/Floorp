@@ -53,6 +53,17 @@ pub extern "C" fn rusturl_new(spec: &nsACString) -> *mut Url {
 }
 
 #[no_mangle]
+pub extern "C" fn rusturl_clone(urlptr: Option<&Url>) -> *mut Url {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
+    return ptr::null_mut();
+  };
+
+  return Box::into_raw(Box::new(url.clone()));
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn rusturl_free(urlptr: *mut Url) {
   if urlptr.is_null() {
     return;
@@ -145,6 +156,22 @@ pub extern "C" fn rusturl_get_port(urlptr: Option<&Url>, port: &mut i32) -> nsre
 }
 
 #[no_mangle]
+pub extern "C" fn rusturl_get_filepath(urlptr: Option<&Url>, cont: &mut nsACString) -> nsresult {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
+    return NS_ERROR_INVALID_ARG;
+  };
+
+  if url.cannot_be_a_base() {
+      cont.assign("");
+  } else {
+      cont.assign(&url[Position::BeforePath..Position::AfterPath]);
+  }
+  NS_OK
+}
+
+#[no_mangle]
 pub extern "C" fn rusturl_get_path(urlptr: Option<&Url>, cont: &mut nsACString) -> nsresult {
   let url = if let Some(url) = urlptr {
     url
@@ -229,7 +256,7 @@ pub extern "C" fn rusturl_set_username(urlptr: Option<&mut Url>, username: &nsAC
     Err(_) => return NS_ERROR_MALFORMED_URI, // utf-8 failed
   };
 
-  match quirks::set_protocol(url, username_) {
+  match quirks::set_username(url, username_) {
     Ok(()) => NS_OK,
     Err(()) => NS_ERROR_MALFORMED_URI,
   }
