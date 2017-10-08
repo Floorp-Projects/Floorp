@@ -297,7 +297,7 @@ var gSync = {
 
   populateSendTabToDevicesMenu(devicesPopup, url, title, createDeviceNodeFn) {
     if (!createDeviceNodeFn) {
-      createDeviceNodeFn = (clientId, name, clientType) => {
+      createDeviceNodeFn = (clientId, name, clientType, lastModified) => {
         let eltName = name ? "menuitem" : "menuseparator";
         return document.createElement(eltName);
       };
@@ -342,8 +342,8 @@ var gSync = {
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
     }
 
-    function addTargetDevice(clientId, name, clientType) {
-      const targetDevice = createDeviceNodeFn(clientId, name, clientType);
+    function addTargetDevice(clientId, name, clientType, lastModified) {
+      const targetDevice = createDeviceNodeFn(clientId, name, clientType, lastModified);
       targetDevice.addEventListener("command", onTargetDeviceCommand, true);
       targetDevice.classList.add("sync-menuitem", "sendtab-target");
       targetDevice.setAttribute("clientId", clientId);
@@ -356,7 +356,7 @@ var gSync = {
     for (let client of clients) {
       const type = client.formfactor && client.formfactor.includes("tablet") ?
                    "tablet" : client.type;
-      addTargetDevice(client.id, client.name, type);
+      addTargetDevice(client.id, client.name, type, client.serverLastModified * 1000);
     }
 
     // "Send to All Devices" menu item
