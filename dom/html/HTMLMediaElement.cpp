@@ -1913,6 +1913,12 @@ void HTMLMediaElement::QueueLoadFromSourceTask()
     return;
   }
 
+  if (mDecoder) {
+    // Reset readyState to HAVE_NOTHING since we're going to load a new decoder.
+    ShutdownDecoder();
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+  }
+
   ChangeDelayLoadStatus(true);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
   RefPtr<Runnable> r = NewRunnableMethod("HTMLMediaElement::LoadFromSourceChildren",
@@ -4856,6 +4862,7 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
+  MOZ_DIAGNOSTIC_ASSERT(mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
   MediaDecoderInit decoderInit(this,
                                mMuted ? 0.0 : mVolume,
@@ -4909,6 +4916,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                                        nsIStreamListener** aListener)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
+  MOZ_DIAGNOSTIC_ASSERT(mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
   DecoderDoctorDiagnostics diagnostics;
 
