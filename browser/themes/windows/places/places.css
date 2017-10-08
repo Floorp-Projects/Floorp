@@ -21,6 +21,11 @@
   margin: 0;
 }
 
+:root[uidensity=touch] #search-box,
+:root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+
 .sidebar-placesTreechildren::-moz-tree-cell,
 .sidebar-placesTreechildren::-moz-tree-twisty {
   padding: 0 4px;

@@ -5717,17 +5717,29 @@ var gUIDensity = {
       mode = this.getCurrentDensity().mode;
     }
 
-    let doc = document.documentElement;
-    switch (mode) {
-    case this.MODE_COMPACT:
-      doc.setAttribute("uidensity", "compact");
-      break;
-    case this.MODE_TOUCH:
-      doc.setAttribute("uidensity", "touch");
-      break;
-    default:
-      doc.removeAttribute("uidensity");
-      break;
+    let docs = [
+      document.documentElement,
+      SidebarUI.browser.contentDocument.documentElement,
+    ];
+    for (let doc of docs) {
+      switch (mode) {
+      case this.MODE_COMPACT:
+        doc.setAttribute("uidensity", "compact");
+        break;
+      case this.MODE_TOUCH:
+        doc.setAttribute("uidensity", "touch");
+        break;
+      default:
+        doc.removeAttribute("uidensity");
+        break;
+      }
+    }
+    let tree = SidebarUI.browser.contentDocument.querySelector(".sidebar-placesTree");
+    if (tree) {
+      // Tree items don't update their styles without changing some property on the
+      // parent tree element, like background-color or border. See bug 1407399.
+      tree.style.border = "1px";
+      tree.style.border = "";
     }
 
     TabsInTitlebar.updateAppearance(true);
