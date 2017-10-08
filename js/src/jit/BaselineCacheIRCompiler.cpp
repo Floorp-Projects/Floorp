@@ -530,7 +530,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
 
-    AutoScratchRegisterExcluding code(allocator, masm, ArgumentsRectifierReg);
+    AutoScratchRegister code(allocator, masm);
     AutoScratchRegister callee(allocator, masm);
     AutoScratchRegister scratch(allocator, masm);
 
@@ -571,12 +571,9 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.branch32(Assembler::Equal, callee, Imm32(0), &noUnderflow);
     {
         // Call the arguments rectifier.
-        MOZ_ASSERT(ArgumentsRectifierReg != code);
-
         JitCode* argumentsRectifier = cx_->runtime()->jitRuntime()->getArgumentsRectifier();
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, JitCode::offsetOfCode()), code);
-        masm.movePtr(ImmWord(0), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);
@@ -1630,7 +1627,7 @@ BaselineCacheIRCompiler::emitCallNativeSetter()
 bool
 BaselineCacheIRCompiler::emitCallScriptedSetter()
 {
-    AutoScratchRegisterExcluding scratch1(allocator, masm, ArgumentsRectifierReg);
+    AutoScratchRegister scratch1(allocator, masm);
     AutoScratchRegister scratch2(allocator, masm);
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1685,12 +1682,9 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     masm.branch32(Assembler::BelowOrEqual, scratch2, Imm32(1), &noUnderflow);
     {
         // Call the arguments rectifier.
-        MOZ_ASSERT(ArgumentsRectifierReg != scratch1);
-
         JitCode* argumentsRectifier = cx_->runtime()->jitRuntime()->getArgumentsRectifier();
         masm.movePtr(ImmGCPtr(argumentsRectifier), scratch1);
         masm.loadPtr(Address(scratch1, JitCode::offsetOfCode()), scratch1);
-        masm.movePtr(ImmWord(1), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);

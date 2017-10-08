@@ -411,13 +411,9 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     MacroAssembler masm(cx);
     // Caller:
     // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp
-    // '--- #r8 ---'
-
-    // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
-    // Including |this|, there are (|nargs| + 1) arguments to copy.
-    MOZ_ASSERT(ArgumentsRectifierReg == r8);
 
     // Add |this|, in the counter of known arguments.
+    masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfNumActualArgs()), r8);
     masm.addl(Imm32(1), r8);
 
     // Load |nformals| into %rcx.
@@ -461,8 +457,9 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // [undef] [undef] [undef] [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
     // '------- #rcx --------' '------ #r8 -------'
 
-    // Copy the number of actual arguments
-    masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfNumActualArgs()), rdx);
+    // Copy the number of actual arguments into rdx. Use lea to subtract 1 for
+    // |this|.
+    masm.lea(Operand(r8, -1), rdx);
 
     masm.moveValue(UndefinedValue(), ValueOperand(r10));
 

@@ -402,11 +402,9 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     MacroAssembler masm(cx);
     // Caller:
     // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- esp
-    // '-- #esi ---'
 
-    // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
-    // Including |this|, there are (|nargs| + 1) arguments to copy.
-    MOZ_ASSERT(ArgumentsRectifierReg == esi);
+    // Load argc.
+    masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfNumActualArgs()), esi);
 
     // Load the number of |undefined|s to push into %ecx.
     masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfCalleeToken()), eax);
@@ -439,8 +437,8 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.andl(Imm32(~(JitStackValueAlignment - 1)), ecx);
     masm.subl(esi, ecx);
 
-    // Copy the number of actual arguments.
-    masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfNumActualArgs()), edx);
+    // Copy the number of actual arguments into edx.
+    masm.mov(esi, edx);
 
     masm.moveValue(UndefinedValue(), ValueOperand(ebx, edi));
 
