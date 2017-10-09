@@ -314,11 +314,13 @@ namespace mips_private {
     extern uint32_t Flags;
     extern bool hasFPU;
     extern bool isLoongson;
+    extern bool hasR2;
 }
 
 inline uint32_t GetMIPSFlags() { return mips_private::Flags; }
 inline bool hasFPU() { return mips_private::hasFPU; }
 inline bool isLoongson() { return mips_private::isLoongson; }
+inline bool hasR2() { return mips_private::hasR2; }
 
 // MIPS doesn't have double registers that can NOT be treated as float32.
 inline bool

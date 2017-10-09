@@ -215,10 +215,6 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (script->baselineScript()->hasPendingIonBuilder())
         return true;
 
-    // Currently we can't rectify arguments. Therefore disable if argc is too low.
-    if (importFun->nargs() > fi.sig().args().length())
-        return true;
-
     // Ensure the argument types are included in the argument TypeSets stored in
     // the TypeScript. This is necessary for Ion, because the import will use
     // the skip-arg-checks entry point.
@@ -229,9 +225,13 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     // patched back.
     if (!TypeScript::ThisTypes(script)->hasType(TypeSet::UndefinedType()))
         return true;
-    for (uint32_t i = 0; i < importFun->nargs(); i++) {
+
+    const ValTypeVector& importArgs = fi.sig().args();
+
+    size_t numKnownArgs = Min(importArgs.length(), importFun->nargs());
+    for (uint32_t i = 0; i < numKnownArgs; i++) {
         TypeSet::Type type = TypeSet::UnknownType();
-        switch (fi.sig().args()[i]) {
+        switch (importArgs[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
           case ValType::I64:   MOZ_CRASH("can't happen because of above guard");
           case ValType::F32:   type = TypeSet::DoubleType(); break;
@@ -245,6 +245,14 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::B32x4: MOZ_CRASH("NYI");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
+            return true;
+    }
+
+    // These arguments will be filled with undefined at runtime by the
+    // arguments rectifier: check that the imported function can handle
+    // undefined there.
+    for (uint32_t i = importArgs.length(); i < importFun->nargs(); i++) {
+        if (!TypeScript::ArgTypes(script, i)->hasType(TypeSet::UndefinedType()))
             return true;
     }
 
@@ -451,6 +459,13 @@ Instance::init(JSContext* cx)
         }
     }
 
+    if (!metadata(code_->bestTier()).funcImports.empty()) {
+        JitRuntime* jitRuntime = cx->runtime()->getJitRuntime(cx);
+        if (!jitRuntime)
+            return false;
+        jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
+    }
+
     return true;
 }
 
@@ -507,6 +522,8 @@ Instance::tracePrivate(JSTracer* trc)
     // we know object_ is already marked.
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
+
+    TraceNullableEdge(trc, &jsJitArgsRectifier_, "wasm jit args rectifier");
 
     // OK to just do one tier here; though the tiers have different funcImports
     // tables, they share the tls object.

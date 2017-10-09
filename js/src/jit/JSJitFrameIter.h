@@ -297,6 +297,7 @@ class JSJitProfilingFrameIterator
                                        bool forLastCallSite);
     void fixBaselineReturnAddress();
 
+    void moveToWasmFrame(CommonFrameLayout* frame);
     void moveToNextFrame(CommonFrameLayout* frame);
 
   public:

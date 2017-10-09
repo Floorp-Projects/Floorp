@@ -1040,11 +1040,12 @@ Experiments.Experiments.prototype = {
       let result = await loadJSONAsync(path, { compression: "lz4" });
       this._populateFromCache(result);
     } catch (e) {
+      this._experiments = new Map();
       if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
         // No cached manifest yet.
-        this._experiments = new Map();
+        this._log.trace("_loadFromCache - no cached manifest yet");
       } else {
-        throw e;
+        this._log.error("_loadFromCache - caught error", e);
       }
     }
   },
