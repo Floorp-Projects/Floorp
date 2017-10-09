@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Cette image a été rognée à $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Impossible d’effectuer cette action."
   },

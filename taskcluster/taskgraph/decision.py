@@ -148,6 +148,15 @@ def get_decision_parameters(options):
         'target_tasks_method',
     ] if n in options}
 
+    for n in (
+        'comm_base_repository',
+        'comm_head_repository',
+        'comm_head_rev',
+        'comm_head_ref',
+    ):
+        if n in options and options[n] is not None:
+            parameters[n] = options[n]
+
     # Define default filter list, as most configurations shouldn't need
     # custom filters.
     parameters['filters'] = [

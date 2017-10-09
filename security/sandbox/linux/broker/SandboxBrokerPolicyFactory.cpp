@@ -81,6 +81,7 @@ AddMesaSysfsPaths(SandboxBroker::Policy* aPolicy)
         }
       }
     }
+    closedir(dir);
   }
 }
 

@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Αυτή η εικόνα έχει περικοπεί σε $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Εκτός λειτουργίας."
   },
@@ -81,6 +89,9 @@
   },
   "tourBodyIntro": {
     "message": "Λήψη, αποθήκευση και διαμοιρασμός στιγμιοτύπων μέσα από το Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Ένας νέος τρόπος αποθήκευσης"
   },
   "tourHeaderClickAndDrag": {
     "message": "Καταγράψτε αυτό που εσείς επιθυμείτε"

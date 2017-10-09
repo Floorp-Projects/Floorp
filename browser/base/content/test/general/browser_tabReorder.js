@@ -18,11 +18,6 @@ add_task(async function() {
   is(gBrowser.tabs[initialTabsLength + 1], newTab2, "newTab2 position is correct");
   is(gBrowser.tabs[initialTabsLength + 2], newTab3, "newTab3 position is correct");
 
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-  let EventUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
-
   async function dragAndDrop(tab1, tab2, copy) {
     let rect = tab2.getBoundingClientRect();
     let event = {

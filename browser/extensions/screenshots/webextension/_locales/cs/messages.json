@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Tento obrázek byl oříznutý na $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Mimo provoz."
   },

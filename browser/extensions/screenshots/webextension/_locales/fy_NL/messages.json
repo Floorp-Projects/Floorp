@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Dizze ôfbylding is ferlytse nei $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Bûten tsjinst."
   },
