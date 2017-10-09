@@ -273,9 +273,9 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
                 break;
 
             case R.id.whats_new:
-                TelemetryWrapper.openWhatsNewEvent(WhatsNew.wasUpdatedRecently(getContext()));
+                TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(getContext()));
 
-                WhatsNew.reset(getContext());
+                WhatsNew.userViewedWhatsNew(getContext());
 
                 SessionManager.getInstance()
                         .createSession(Source.MENU, WhatsNew.SUMO_URL);

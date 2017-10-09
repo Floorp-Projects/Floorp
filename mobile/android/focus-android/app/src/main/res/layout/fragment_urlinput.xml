@@ -112,8 +112,7 @@
                     android:layout_height="40dp"
                     android:visibility="gone"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/content_description_menu">
-                </org.mozilla.focus.widget.IndicatorMenuButton>
+                    android:contentDescription="@string/content_description_menu" />
 
             </LinearLayout>
 

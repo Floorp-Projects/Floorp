@@ -19,24 +19,18 @@ import org.mozilla.focus.whatsnew.WhatsNew
  * The menu structure is hard-coded in the init block of the class.
  */
 class HomeMenuAdapter(
-        private val context: Context,
+        context: Context,
         private val listener: View.OnClickListener
 ): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val items: List<MenuItem>
-
-    init {
-        items = mutableListOf()
-
-        with(items) {
-            add(MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)))
-            add(MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)))
-            add(MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings)))
-        }
-    }
+    private val items: List<MenuItem> = listOf(
+            MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)),
+            MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)),
+            MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(context).inflate(viewType, parent, false)
+        val view = LayoutInflater.from(parent!!.context).inflate(viewType, parent, false)
 
         return when (viewType) {
             WhatsNewViewHolder.LAYOUT_ID -> WhatsNewViewHolder(view, listener)
@@ -56,58 +50,58 @@ class HomeMenuAdapter(
     override fun getItemCount(): Int = items.size
 
     override fun getItemViewType(position: Int): Int = items[position].viewType
-
-    /**
-     * ViewHolder implementation for regular menu items with just a label.
-     */
-    private class MenuItemViewHolder(
-            val labelView: TextView,
-            val listener: View.OnClickListener) : RecyclerView.ViewHolder(labelView) {
-
-        companion object {
-            val LAYOUT_ID: Int = R.layout.menu_item
-        }
-
-        fun bind(item: MenuItem) {
-            labelView.id = item.id
-            labelView.text = item.label
-
-            labelView.setOnClickListener(listener)
-        }
-    }
-
-    /**
-     * ViewHolder implementation for the "What's New" menu item. The item looks differently based
-     * on whether the app was updated recently.
-     */
-    private class WhatsNewViewHolder(
-            itemView: View,
-            val listener: View.OnClickListener) : RecyclerView.ViewHolder(itemView) {
-        val dotView : View = itemView.findViewById(R.id.dot)
-
-        companion object {
-            val LAYOUT_ID: Int = R.layout.menu_whatsnew
-        }
-
-        fun bind() {
-            val updated = WhatsNew.wasUpdatedRecently(itemView.context)
-
-            if (updated) {
-                itemView.setBackgroundResource(R.drawable.menu_item_dark_background)
-            }
-
-            itemView.setOnClickListener(listener)
-
-            dotView.visibility = if (updated) View.VISIBLE else View.GONE
-        }
-    }
-
-    /**
-     * Simple data class for describing menu items.
-     */
-    private class MenuItem(
-            val id: Int,
-            val viewType: Int,
-            val label: String
-    )
 }
+
+/**
+ * ViewHolder implementation for regular menu items with just a label.
+ */
+private class MenuItemViewHolder(
+        val labelView: TextView,
+        val listener: View.OnClickListener) : RecyclerView.ViewHolder(labelView) {
+
+    companion object {
+        val LAYOUT_ID: Int = R.layout.menu_item
+    }
+
+    fun bind(item: MenuItem) {
+        labelView.id = item.id
+        labelView.text = item.label
+
+        labelView.setOnClickListener(listener)
+    }
+}
+
+/**
+ * ViewHolder implementation for the "What's New" menu item. The item looks differently based
+ * on whether the app was updated recently.
+ */
+private class WhatsNewViewHolder(
+        itemView: View,
+        val listener: View.OnClickListener) : RecyclerView.ViewHolder(itemView) {
+    val dotView : View = itemView.findViewById(R.id.dot)
+
+    companion object {
+        val LAYOUT_ID: Int = R.layout.menu_whatsnew
+    }
+
+    fun bind() {
+        val updated = WhatsNew.shouldHighlightWhatsNew(itemView.context)
+
+        if (updated) {
+            itemView.setBackgroundResource(R.drawable.menu_item_dark_background)
+        }
+
+        itemView.setOnClickListener(listener)
+
+        dotView.visibility = if (updated) View.VISIBLE else View.GONE
+    }
+}
+
+/**
+ * Simple data class for describing menu items.
+ */
+private class MenuItem(
+        val id: Int,
+        val viewType: Int,
+        val label: String
+)

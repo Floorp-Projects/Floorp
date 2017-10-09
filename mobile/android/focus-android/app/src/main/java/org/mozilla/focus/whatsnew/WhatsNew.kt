@@ -38,43 +38,43 @@ class WhatsNew {
         @VisibleForTesting internal var wasUpdatedRecently: Boolean? = null
 
         /**
-         * Has this app been updated recently. Either this is the first start of the application
-         * since it was updated or this is a later start but still recent enough to consider the
-         * app to be updated recently.
+         * Should we highlight the "What's new" menu item because this app been updated recently?
+         *
+         * This method returns true either if this is the first start of the application since it
+         * was updated or this is a later start but still recent enough to consider the app to be
+         * updated recently.
          */
         @JvmStatic
-        fun wasUpdatedRecently(context: Context): Boolean {
-            var recentlyUpdated = wasUpdatedRecently
-
-            if (recentlyUpdated == null) {
-                recentlyUpdated = when {
-                    hasAppBeenUpdated(context) -> {
-                        // The app has just been updated. Remember the new app version name and
-                        // reset the session counter so that we will still consider the app to be
-                        // updated for the next app starts.
-                        saveAppVersionName(context)
-                        setSessionCounter(context, SESSIONS_PER_UPDATE)
-                        true
-                    }
-                    else -> {
-                        // If the app has been updated recently then decrement our session
-                        // counter. If the counter reaches 0 we will not consider the app to
-                        // be updated anymore (until the app version name changes again)
-                        decrementSessionCounter(context)
-                        hasBeenUpdatedInRecentSession(context)
-                    }
-                }
-                // Cache the value for the lifetime of this process (or until reset() is called)
-                wasUpdatedRecently = recentlyUpdated
+        fun shouldHighlightWhatsNew(context: Context): Boolean {
+            // Cache the value for the lifetime of this process (or until userViewedWhatsNew() is called)
+            if (wasUpdatedRecently == null) {
+                wasUpdatedRecently = wasUpdatedRecentlyInner(context)
             }
-            return recentlyUpdated
+            return wasUpdatedRecently!!
+        }
+
+        private fun wasUpdatedRecentlyInner(context: Context): Boolean = when {
+            hasAppBeenUpdated(context) -> {
+                // The app has just been updated. Remember the new app version name and
+                // reset the session counter so that we will still consider the app to be
+                // updated for the next app starts.
+                saveAppVersionName(context)
+                setSessionCounter(context, SESSIONS_PER_UPDATE)
+                true
+            }
+            else -> {
+                // If the app has been updated recently then decrement our session
+                // counter. If the counter reaches 0 we will not consider the app to
+                // be updated anymore (until the app version name changes again)
+                decrementAndGetSessionCounter(context) > 0
+            }
         }
 
         /**
          * Reset the "updated" state and continue as if the app was not updated recently.
          */
         @JvmStatic
-        fun reset(context: Context) {
+        fun userViewedWhatsNew(context: Context) {
             wasUpdatedRecently = false
             setSessionCounter(context, 0)
         }
@@ -108,18 +108,13 @@ class WhatsNew {
                     .apply()
         }
 
-        private fun decrementSessionCounter(context: Context) {
-            val sessionCounter = PreferenceManager.getDefaultSharedPreferences(context)
+        private fun decrementAndGetSessionCounter(context: Context): Int {
+            val cachedSessionCounter = PreferenceManager.getDefaultSharedPreferences(context)
                     .getInt(PREFERENCE_KEY_SESSION_COUNTER, 0)
 
-            setSessionCounter(context, maxOf(sessionCounter - 1, 0))
-        }
-
-        private fun hasBeenUpdatedInRecentSession(context: Context): Boolean {
-            val sessionCounter = PreferenceManager.getDefaultSharedPreferences(context)
-                    .getInt(PREFERENCE_KEY_SESSION_COUNTER, 0)
-
-            return sessionCounter > 0
+            val newSessionCounter = maxOf(cachedSessionCounter - 1, 0)
+            setSessionCounter(context, newSessionCounter)
+            return newSessionCounter
         }
     }
 }

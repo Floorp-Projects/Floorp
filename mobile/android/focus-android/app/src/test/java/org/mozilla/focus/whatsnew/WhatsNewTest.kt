@@ -32,12 +32,12 @@ class WhatsNewTest {
      */
     @Test
     fun testDefault() {
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
     }
 
     @Test
     fun testWithUpdatedAppVersionName() {
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
         PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
                 .edit()
@@ -48,43 +48,37 @@ class WhatsNewTest {
         WhatsNew.wasUpdatedRecently = null
 
         // The app was updated recently
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
-        // wasUpdatedRecently() will continue to return true as long as the process is alive
+        // shouldHighlightWhatsNew() will continue to return true as long as the process is alive
         for (i in 1..10) {
-            assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+            assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
         }
     }
 
     @Test
     fun testOverMultipleSessions() {
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
         PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
                 .edit()
                 .putString(WhatsNew.PREFERENCE_KEY_APP_NAME, "2.0")
                 .apply()
 
-        // Reset cached value
-        WhatsNew.wasUpdatedRecently = null
-
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
-
-        // We simulate a new session by resetting the cached value
-        WhatsNew.wasUpdatedRecently = null
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
-
-        WhatsNew.wasUpdatedRecently = null
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        for (i in 1..3) {
+            // Reset cached value
+            WhatsNew.wasUpdatedRecently = null
+            assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
+        }
 
         // After three sessions the method will return false again
         WhatsNew.wasUpdatedRecently = null
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
     }
 
     @Test
     fun testResettingManually() {
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
         PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
                 .edit()
@@ -94,15 +88,15 @@ class WhatsNewTest {
         // Reset cached value
         WhatsNew.wasUpdatedRecently = null
 
-        assertTrue(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
         // Now we reset the state manually
-        WhatsNew.reset(RuntimeEnvironment.application)
+        WhatsNew.userViewedWhatsNew(RuntimeEnvironment.application)
 
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
         // And also the next time we will return false
         WhatsNew.wasUpdatedRecently = null
-        assertFalse(WhatsNew.wasUpdatedRecently(RuntimeEnvironment.application))
+        assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
     }
 }
