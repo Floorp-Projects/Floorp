@@ -223,7 +223,21 @@ add_test(function test_Proxy_toJSON() {
     p[`${proxy}Port`] = 42;
     expected[proxy] = "foo:42"
     deepEqual(p.toJSON(), expected);
+
+    // add brackets for IPv6 address as proxy hostname
+    p[proxy] = "2001:db8::1";
+    p[`${proxy}Port`] = 42;
+    expected[proxy] = "foo:42"
+    expected[proxy] = "[2001:db8::1]:42";
+    deepEqual(p.toJSON(), expected);
   }
+
+  // noProxy: add brackets for IPv6 address
+  p = new session.Proxy();
+  p.proxyType = "manual";
+  p.noProxy = ["2001:db8::1"];
+  let expected = {proxyType: "manual", noProxy: "[2001:db8::1]"};
+  deepEqual(p.toJSON(), expected);
 
   run_next_test();
 });
@@ -285,7 +299,7 @@ add_test(function test_Proxy_fromJSON() {
       "foo:443": {hostname: "foo", port: 443},
       "foo:65535": {hostname: "foo", port: 65535},
       "127.0.0.1:42": {hostname: "127.0.0.1", port: 42},
-      "[2001:db8::1]:42": {hostname: "[2001:db8::1]", port: "42"},
+      "[2001:db8::1]:42": {hostname: "2001:db8::1", port: "42"},
     };
 
     // valid proxy hosts with port
@@ -322,7 +336,7 @@ add_test(function test_Proxy_fromJSON() {
       {proxyType: "manual", socksProxy: "foo:1234"}),
       InvalidArgumentError);
 
-  // invalid noProxy
+  // noProxy: invalid settings
   for (let noProxy of [true, 42, {}, null, "foo",
       [true], [42], [{}], [null]]) {
     Assert.throws(() => session.Proxy.fromJSON(
@@ -330,15 +344,21 @@ add_test(function test_Proxy_fromJSON() {
         InvalidArgumentError);
   }
 
-  // valid noProxy
+  // noProxy: valid settings
   p = new session.Proxy();
   p.proxyType = "manual";
-  for (let noProxy of [[], ["foo"], ["foo", "bar"],
-      ["127.0.0.1"], ["[2001:db8::1"]]) {
+  for (let noProxy of [[], ["foo"], ["foo", "bar"], ["127.0.0.1"]]) {
     let manual = {proxyType: "manual", "noProxy": noProxy}
     p.noProxy = noProxy;
     deepEqual(p, session.Proxy.fromJSON(manual));
   }
+
+  // noProxy: IPv6 needs brackets removed
+  p = new session.Proxy();
+  p.proxyType = "manual";
+  p.noProxy = ["2001:db8::1"];
+  let manual = {proxyType: "manual", "noProxy": ["[2001:db8::1]"]}
+  deepEqual(p, session.Proxy.fromJSON(manual));
 
   run_next_test();
 });
