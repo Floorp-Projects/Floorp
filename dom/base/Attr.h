@@ -85,9 +85,13 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // XPCOM GetName() is OK
-  // XPCOM GetValue() is OK
 
-  void SetValue(const nsAString& aValue, ErrorResult& aRv);
+  void GetValue(nsString& val, nsIPrincipal&)
+  {
+    GetValue(val);
+  }
+
+  void SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv);
 
   bool Specified() const;
 

@@ -70,13 +70,10 @@ public:
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIContent
-  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
-  }
+  using nsIContent::SetAttr;
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
                            nsAtom* aPrefix, const nsAString& aValue,
+                           nsIPrincipal* aSubjectPrincipal,
                            bool aNotify) override
   {
     return NS_OK;

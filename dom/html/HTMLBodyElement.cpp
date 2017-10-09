@@ -340,11 +340,13 @@ HTMLBodyElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 nsresult
 HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue, bool aNotify)
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal,
+                              bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::AfterSetAttr(aNameSpaceID,
                                                    aName, aValue, aOldValue,
-                                                   aNotify);
+                                                   aSubjectPrincipal, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
   // if the last mapped attribute was removed, don't clear the
   // nsMappedAttributes, our style can still depend on the containing frame element

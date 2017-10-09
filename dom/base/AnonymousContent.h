@@ -43,6 +43,7 @@ public:
   void SetAttributeForElement(const nsAString& aElementId,
                               const nsAString& aName,
                               const nsAString& aValue,
+                              nsIPrincipal* aSubjectPrincipal,
                               ErrorResult& aRv);
 
   void GetAttributeForElement(const nsAString& aElementId,

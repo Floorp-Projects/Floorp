@@ -764,6 +764,7 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
 
   virtual mozilla::EventListenerManager*
@@ -808,6 +809,10 @@ protected:
   void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
   {
     mozilla::dom::Element::SetAttr(aName, aValue, aError);
+  }
+  void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, mozilla::ErrorResult& aError)
+  {
+    mozilla::dom::Element::SetAttr(aName, aValue, aTriggeringPrincipal, aError);
   }
   void UnsetHTMLAttr(nsAtom* aName, mozilla::ErrorResult& aError)
   {
@@ -1137,6 +1142,7 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
 
   virtual void BeforeSetForm(bool aBindToTree) {}
