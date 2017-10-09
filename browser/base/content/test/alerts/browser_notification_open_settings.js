@@ -25,13 +25,7 @@ add_task(async function test_settingsOpen_observer() {
 
 add_task(async function test_settingsOpen_button() {
   info("Adding notification permission");
-  await new Promise(resolve => {
-    SpecialPowers.pushPermissions([{
-      type: "desktop-notification",
-      allow: true,
-      context: notificationURL,
-    }], resolve);
-  });
+  await addNotificationPermission(notificationURL);
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
