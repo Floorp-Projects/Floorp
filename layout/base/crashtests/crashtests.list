@@ -495,6 +495,7 @@ load 1362423-1.html
 load 1381323.html
 asserts-if(!stylo,1) load 1388625-1.html # bug 1389286
 load 1390389.html
+load 1391736.html
 load 1395591-1.html
 load 1395715-1.html
 load 1397398-1.html
@@ -506,4 +507,4 @@ load 1400599-1.html
 load 1401739.html
 load 1401840.html
 load 1402476.html
-load 1391736.html
+load 1406562.html
