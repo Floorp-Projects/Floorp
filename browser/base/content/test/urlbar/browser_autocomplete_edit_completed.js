@@ -1,19 +1,19 @@
 add_task(async function() {
-  await PlacesTestUtils.clearHistory();
+  await PlacesUtils.history.clear();
 
   await PlacesTestUtils.addVisits([
     { uri: makeURI("http://example.com/foo") },
     { uri: makeURI("http://example.com/foo/bar") },
   ]);
 
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
   registerCleanupFunction(async function() {
-    await PlacesTestUtils.clearHistory();
+    await BrowserTestUtils.removeTab(tab);
+    await PlacesUtils.history.clear();
   });
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  gURLBar.focus();
-
   await promiseAutocompleteResultPopup("http://example.com");
+  await waitForAutocompleteResultAt(1);
 
   let popup = gURLBar.popup;
   let list = popup.richlistbox;
@@ -44,5 +44,4 @@ add_task(async function() {
     docLoad,
   ]);
 
-  gBrowser.removeTab(gBrowser.selectedTab);
 });
