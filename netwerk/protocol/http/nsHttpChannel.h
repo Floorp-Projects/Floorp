@@ -499,6 +499,10 @@ private:
 
     already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
+    // Start an internal redirect to a new InterceptedHttpChannel which will
+    // resolve in firing a ServiceWorker FetchEvent.
+    MOZ_MUST_USE nsresult RedirectToInterceptedChannel();
+
 private:
     // this section is for main-thread-only object
     // all the references need to be proxy released on main thread.
