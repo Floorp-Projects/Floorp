@@ -439,6 +439,8 @@ nsRange::RegisterCommonAncestor(nsINode* aNode)
   if (!ranges) {
     ranges = MakeUnique<LinkedList<nsRange>>();
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!isInList());
   ranges->insertBack(this);
   aNode->SetCommonAncestorForRangeInSelection();
 }
