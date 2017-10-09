@@ -403,12 +403,11 @@ public:
                   mPrivate(aKey->mPrivate)
             { }
 
-            Entry(Entry&& aOther)
-                : mAllowedFontSets(mozilla::Move(mAllowedFontSets)),
-                  mURI(mozilla::Move(aOther.mURI)),
-                  mPrincipal(mozilla::Move(aOther.mPrincipal)),
-                  mFontEntry(mozilla::Move(aOther.mFontEntry)),
-                  mPrivate(mozilla::Move(aOther.mPrivate))
+            Entry(const Entry& aOther)
+                : mURI(aOther.mURI),
+                  mPrincipal(aOther.mPrincipal),
+                  mFontEntry(aOther.mFontEntry),
+                  mPrivate(aOther.mPrivate)
             { }
 
             ~Entry() { }
