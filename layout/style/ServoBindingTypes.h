@@ -146,7 +146,6 @@ DECL_OWNED_REF_TYPE_FOR(RawServoAnimationValueMap)
 // it only asks Gecko to do so. In case we wish to in
 // the future, we should ensure that things being mutated
 // are protected from noalias violations by a cell type
-DECL_BORROWED_REF_TYPE_FOR(RawServoSelectorList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoNode)
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoNode)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoElement)
