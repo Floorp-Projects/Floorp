@@ -203,27 +203,6 @@ public: /* internal necko use only */
 
     using InitLocalBlockListCallback = std::function<void(bool)>;
 
-    void InternalSetUploadStream(nsIInputStream *uploadStream)
-      { mUploadStream = uploadStream; }
-    void SetUploadStreamHasHeaders(bool hasHeaders)
-      { mUploadStreamHasHeaders = hasHeaders; }
-
-    MOZ_MUST_USE nsresult
-    SetReferrerWithPolicyInternal(nsIURI *referrer, uint32_t referrerPolicy) {
-        nsAutoCString spec;
-        nsresult rv = referrer->GetAsciiSpec(spec);
-        if (NS_FAILED(rv)) return rv;
-        mReferrer = referrer;
-        mReferrerPolicy = referrerPolicy;
-        rv = mRequestHead.SetHeader(nsHttp::Referer, spec);
-        return rv;
-    }
-
-    MOZ_MUST_USE nsresult SetTopWindowURI(nsIURI* aTopWindowURI) {
-        mTopWindowURI = aTopWindowURI;
-        return NS_OK;
-    }
-
     uint32_t GetRequestTime() const
     {
         return mRequestTime;
