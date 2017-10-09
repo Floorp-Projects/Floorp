@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 382);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1284);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -261,168 +261,6 @@ function arrayMap(array, iteratee) {
 
 module.exports = arrayMap;
 
-
-/***/ }),
-
-/***/ 1123:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _getMatches = __webpack_require__(1173);
-
-var _getMatches2 = _interopRequireDefault(_getMatches);
-
-var _projectSearch = __webpack_require__(1140);
-
-var _devtoolsUtils = __webpack_require__(900);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
-
-
-self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMatches: _projectSearch.findSourceMatches });
-
-/***/ }),
-
-/***/ 1138:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = buildQuery;
-
-var _escapeRegExp = __webpack_require__(259);
-
-var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Ignore doing outline matches for less than 3 whitespaces
- *
- * @memberof utils/source-search
- * @static
- */
-function ignoreWhiteSpace(str) {
-  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
-  );
-}
-
-
-function wholeMatch(query, wholeWord) {
-  if (query === "" || !wholeWord) {
-    return query;
-  }
-
-  return `\\b${query}\\b`;
-}
-
-function buildFlags(caseSensitive, isGlobal) {
-  if (caseSensitive && isGlobal) {
-    return "g";
-  }
-
-  if (!caseSensitive && isGlobal) {
-    return "gi";
-  }
-
-  if (!caseSensitive && !isGlobal) {
-    return "i";
-  }
-
-  return;
-}
-
-function buildQuery(originalQuery, modifiers, _ref) {
-  var _ref$isGlobal = _ref.isGlobal,
-      isGlobal = _ref$isGlobal === undefined ? false : _ref$isGlobal,
-      _ref$ignoreSpaces = _ref.ignoreSpaces,
-      ignoreSpaces = _ref$ignoreSpaces === undefined ? false : _ref$ignoreSpaces;
-  var caseSensitive = modifiers.caseSensitive,
-      regexMatch = modifiers.regexMatch,
-      wholeWord = modifiers.wholeWord;
-
-
-  if (originalQuery === "") {
-    return new RegExp(originalQuery);
-  }
-
-  var query = originalQuery;
-  if (ignoreSpaces) {
-    query = ignoreWhiteSpace(query);
-  }
-
-  if (!regexMatch) {
-    query = (0, _escapeRegExp2.default)(query);
-  }
-
-  query = wholeMatch(query, wholeWord);
-  var flags = buildFlags(caseSensitive, isGlobal);
-
-  if (flags) {
-    return new RegExp(query, flags);
-  }
-
-  return new RegExp(query);
-}
-
-/***/ }),
-
-/***/ 1140:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.findSourceMatches = findSourceMatches;
-
-var _source = __webpack_require__(233);
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } // Maybe reuse file search's functions?
-
-
-function findSourceMatches(source, queryText) {
-  var _ref;
-
-  var text = source.text;
-
-  if (!(0, _source.isLoaded)(source) || !text || queryText == "") {
-    return [];
-  }
-
-  var lines = text.split("\n");
-  var result = undefined;
-  var query = new RegExp(queryText, "g");
-
-  var matches = lines.map((_text, line) => {
-    var indices = [];
-
-    while (result = query.exec(_text)) {
-      indices.push({
-        sourceId: source.id,
-        line: line + 1,
-        column: result.index,
-        match: result[0],
-        value: _text,
-        text: result.input
-      });
-    }
-    return indices;
-  }).filter(_matches => _matches.length > 0);
-
-  matches = (_ref = []).concat.apply(_ref, _toConsumableArray(matches));
-  return matches;
-}
 
 /***/ }),
 
@@ -681,44 +519,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1173:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getMatches;
-
-var _buildQuery = __webpack_require__(1138);
-
-var _buildQuery2 = _interopRequireDefault(_buildQuery);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function getMatches(query, text, modifiers) {
-  if (!query || !text || !modifiers) {
-    return [];
-  }
-  var regexQuery = (0, _buildQuery2.default)(query, modifiers, {
-    isGlobal: true
-  });
-  var matchedLocations = [];
-  var lines = text.split("\n");
-  for (var i = 0; i < lines.length; i++) {
-    var singleMatch = void 0;
-    var line = lines[i];
-    while ((singleMatch = regexQuery.exec(line)) !== null) {
-      matchedLocations.push({ line: i, ch: singleMatch.index });
-    }
-  }
-  return matchedLocations;
-}
-
-/***/ }),
-
 /***/ 121:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -808,6 +608,94 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
+
+/***/ }),
+
+/***/ 1211:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = buildQuery;
+
+var _escapeRegExp = __webpack_require__(259);
+
+var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Ignore doing outline matches for less than 3 whitespaces
+ *
+ * @memberof utils/source-search
+ * @static
+ */
+function ignoreWhiteSpace(str) {
+  return (/^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str
+  );
+}
+
+
+function wholeMatch(query, wholeWord) {
+  if (query === "" || !wholeWord) {
+    return query;
+  }
+
+  return `\\b${query}\\b`;
+}
+
+function buildFlags(caseSensitive, isGlobal) {
+  if (caseSensitive && isGlobal) {
+    return "g";
+  }
+
+  if (!caseSensitive && isGlobal) {
+    return "gi";
+  }
+
+  if (!caseSensitive && !isGlobal) {
+    return "i";
+  }
+
+  return;
+}
+
+function buildQuery(originalQuery, modifiers, _ref) {
+  var _ref$isGlobal = _ref.isGlobal,
+      isGlobal = _ref$isGlobal === undefined ? false : _ref$isGlobal,
+      _ref$ignoreSpaces = _ref.ignoreSpaces,
+      ignoreSpaces = _ref$ignoreSpaces === undefined ? false : _ref$ignoreSpaces;
+  var caseSensitive = modifiers.caseSensitive,
+      regexMatch = modifiers.regexMatch,
+      wholeWord = modifiers.wholeWord;
+
+
+  if (originalQuery === "") {
+    return new RegExp(originalQuery);
+  }
+
+  var query = originalQuery;
+  if (ignoreSpaces) {
+    query = ignoreWhiteSpace(query);
+  }
+
+  if (!regexMatch) {
+    query = (0, _escapeRegExp2.default)(query);
+  }
+
+  query = wholeMatch(query, wholeWord);
+  var flags = buildFlags(caseSensitive, isGlobal);
+
+  if (flags) {
+    return new RegExp(query, flags);
+  }
+
+  return new RegExp(query);
+}
 
 /***/ }),
 
@@ -904,6 +792,126 @@ var objectKeys = Object.keys || function (obj) {
 
 /***/ }),
 
+/***/ 1284:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(1285);
+
+
+/***/ }),
+
+/***/ 1285:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _getMatches = __webpack_require__(1286);
+
+var _getMatches2 = _interopRequireDefault(_getMatches);
+
+var _projectSearch = __webpack_require__(1287);
+
+var _devtoolsUtils = __webpack_require__(900);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
+
+
+self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMatches: _projectSearch.findSourceMatches });
+
+/***/ }),
+
+/***/ 1286:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getMatches;
+
+var _buildQuery = __webpack_require__(1211);
+
+var _buildQuery2 = _interopRequireDefault(_buildQuery);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getMatches(query, text, modifiers) {
+  if (!query || !text || !modifiers) {
+    return [];
+  }
+  var regexQuery = (0, _buildQuery2.default)(query, modifiers, {
+    isGlobal: true
+  });
+  var matchedLocations = [];
+  var lines = text.split("\n");
+  for (var i = 0; i < lines.length; i++) {
+    var singleMatch = void 0;
+    var line = lines[i];
+    while ((singleMatch = regexQuery.exec(line)) !== null) {
+      matchedLocations.push({ line: i, ch: singleMatch.index });
+    }
+  }
+  return matchedLocations;
+}
+
+/***/ }),
+
+/***/ 1287:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.findSourceMatches = findSourceMatches;
+
+var _source = __webpack_require__(233);
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } // Maybe reuse file search's functions?
+
+
+function findSourceMatches(source, queryText) {
+  var _ref;
+
+  var text = source.text;
+
+  if (!(0, _source.isLoaded)(source) || !text || queryText == "") {
+    return [];
+  }
+
+  var lines = text.split("\n");
+  var result = undefined;
+  var query = new RegExp(queryText, "g");
+
+  var matches = lines.map((_text, line) => {
+    var indices = [];
+
+    while (result = query.exec(_text)) {
+      indices.push({
+        sourceId: source.id,
+        line: line + 1,
+        column: result.index,
+        match: result[0],
+        value: _text,
+        text: result.input
+      });
+    }
+    return indices;
+  }).filter(_matches => _matches.length > 0);
+
+  matches = (_ref = []).concat.apply(_ref, _toConsumableArray(matches));
+  return matches;
+}
+
+/***/ }),
+
 /***/ 14:
 /***/ (function(module, exports) {
 
@@ -949,7 +957,7 @@ module.exports = isObjectLike;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = undefined;
+exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = undefined;
 
 var _devtoolsSourceMap = __webpack_require__(898);
 
@@ -1048,10 +1056,21 @@ function getRawSourceURL(url) {
   return url.replace(/:formatted$/, "");
 }
 
-function getFilenameFromURL(url) {
+function resolveFileURL(url) {
+  var transformUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : initialUrl => initialUrl;
+
   url = getRawSourceURL(url || "");
-  var name = (0, _path.basename)(url) || "(index)";
+  var name = transformUrl(url);
   return (0, _utils.endTruncateStr)(name, 50);
+}
+
+function getFilenameFromURL(url) {
+  return resolveFileURL(url, initialUrl => (0, _path.basename)(initialUrl) || "(index)");
+}
+
+function getFormattedSourceId(id) {
+  var sourceId = id.split("/")[1];
+  return `SOURCE${sourceId}`;
 }
 
 /**
@@ -1066,11 +1085,28 @@ function getFilename(source) {
       id = source.id;
 
   if (!url) {
-    var sourceId = id.split("/")[1];
-    return `SOURCE${sourceId}`;
+    return getFormattedSourceId(id);
   }
 
   return getFilenameFromURL(url);
+}
+
+/**
+ * Show a source url.
+ * If the source does not have a url, use the source id.
+ *
+ * @memberof utils/source
+ * @static
+ */
+function getFileURL(source) {
+  var url = source.url,
+      id = source.id;
+
+  if (!url) {
+    return getFormattedSourceId(id);
+  }
+
+  return resolveFileURL(url);
 }
 
 var contentTypeModeMap = {
@@ -1184,6 +1220,7 @@ exports.getPrettySourceURL = getPrettySourceURL;
 exports.getRawSourceURL = getRawSourceURL;
 exports.getFilename = getFilename;
 exports.getFilenameFromURL = getFilenameFromURL;
+exports.getFileURL = getFileURL;
 exports.getSourcePath = getSourcePath;
 exports.getSourceLineCount = getSourceLineCount;
 exports.getMode = getMode;
@@ -2461,14 +2498,6 @@ module.exports = {
     return arg == null;
   }
 };
-
-
-/***/ }),
-
-/***/ 382:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(1123);
 
 
 /***/ }),

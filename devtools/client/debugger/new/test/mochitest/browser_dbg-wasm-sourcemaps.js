@@ -11,6 +11,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
+  await waitForSource(dbg, "wasm-sourcemaps/average.c");
   await addBreakpoint(dbg, "wasm-sourcemaps/average.c", 12);
 
   clickElement(dbg, "resume");
