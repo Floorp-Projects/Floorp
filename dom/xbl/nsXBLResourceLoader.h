@@ -14,7 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 class nsXBLPrototypeResources;
 class nsXBLPrototypeBinding;
 struct nsXBLResource;
@@ -36,7 +36,7 @@ public:
                               nsresult aStatus) override;
 
   bool LoadResources(nsIContent* aBoundElement);
-  void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
+  void AddResource(nsAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
 
   nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,

@@ -10,7 +10,7 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSNamespaceRuleBinding.h"
 
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 namespace dom {
@@ -29,7 +29,7 @@ public:
   }
   using Rule::GetType;
 
-  virtual nsIAtom* GetPrefix() const = 0;
+  virtual nsAtom* GetPrefix() const = 0;
   virtual void GetURLSpec(nsString& aURLSpec) const = 0;
 
   // WebIDL interfaces

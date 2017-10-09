@@ -24,7 +24,7 @@ class DrawTarget;
 
 class gfxContext;
 class nsDisplaySVGGeometry;
-class nsIAtom;
+class nsAtom;
 class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
@@ -74,7 +74,7 @@ public:
   }
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
+                                     nsAtom*        aAttribute,
                                      int32_t         aModType) override;
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;

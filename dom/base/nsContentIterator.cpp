@@ -401,7 +401,7 @@ nsContentIterator::InitInternal(const RawRangeBoundary& aStart,
       // case in order to address bug 1215798.
       bool startIsContainer = true;
       if (aStart.Container()->IsHTMLElement()) {
-        nsIAtom* name = aStart.Container()->NodeInfo()->NameAtom();
+        nsAtom* name = aStart.Container()->NodeInfo()->NameAtom();
         startIsContainer =
           nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
       }
@@ -460,7 +460,7 @@ nsContentIterator::InitInternal(const RawRangeBoundary& aStart,
         // include the end node in the range).
         bool endIsContainer = true;
         if (aEnd.Container()->IsHTMLElement()) {
-          nsIAtom* name = aEnd.Container()->NodeInfo()->NameAtom();
+          nsAtom* name = aEnd.Container()->NodeInfo()->NameAtom();
           endIsContainer =
             nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
         }

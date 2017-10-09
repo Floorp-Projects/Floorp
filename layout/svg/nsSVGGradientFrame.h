@@ -15,7 +15,7 @@
 #include "nsSVGPaintServerFrame.h"
 
 class gfxPattern;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
@@ -56,7 +56,7 @@ public:
 
   // nsIFrame interface:
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -140,7 +140,7 @@ public:
 #endif
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -182,7 +182,7 @@ public:
 #endif
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP

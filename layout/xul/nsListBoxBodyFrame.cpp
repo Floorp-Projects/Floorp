@@ -233,7 +233,7 @@ nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 nsresult
 nsListBoxBodyFrame::AttributeChanged(int32_t aNameSpaceID,
-                                     nsIAtom* aAttribute,
+                                     nsAtom* aAttribute,
                                      int32_t aModType)
 {
   nsresult rv = NS_OK;

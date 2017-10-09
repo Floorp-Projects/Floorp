@@ -130,7 +130,7 @@ SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
 bool
 SVGFECompositeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                 nsIAtom* aAttribute) const
+                                                 nsAtom* aAttribute) const
 {
   return SVGFECompositeElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

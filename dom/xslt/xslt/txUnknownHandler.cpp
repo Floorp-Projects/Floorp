@@ -26,8 +26,8 @@ txUnknownHandler::~txUnknownHandler()
 }
 
 nsresult
-txUnknownHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                            nsIAtom* aLowercaseLocalName, int32_t aNsID,
+txUnknownHandler::attribute(nsAtom* aPrefix, nsAtom* aLocalName,
+                            nsAtom* aLowercaseLocalName, int32_t aNsID,
                             const nsString& aValue)
 {
     return mFlushed ?
@@ -38,7 +38,7 @@ txUnknownHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txUnknownHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
+txUnknownHandler::attribute(nsAtom* aPrefix, const nsAString& aLocalName,
                             const int32_t aNsID, const nsString& aValue)
 {
     return mFlushed ?
@@ -113,8 +113,8 @@ txUnknownHandler::startDocument()
 }
 
 nsresult
-txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                               nsIAtom* aLowercaseLocalName, int32_t aNsID)
+txUnknownHandler::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
+                               nsAtom* aLowercaseLocalName, int32_t aNsID)
 {
     if (!mFlushed) {
         // Make sure that mEs->mResultHandler == this is true, otherwise we'll
@@ -122,7 +122,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
         NS_ASSERTION(mEs->mResultHandler == this,
                      "We're leaking mEs->mResultHandler.");
 
-        RefPtr<nsIAtom> owner;
+        RefPtr<nsAtom> owner;
         if (!aLowercaseLocalName) {
             owner = TX_ToLowerCaseAtom(aLocalName);
             NS_ENSURE_TRUE(owner, NS_ERROR_OUT_OF_MEMORY);
@@ -147,7 +147,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txUnknownHandler::startElement(nsIAtom* aPrefix, const nsAString& aLocalName,
+txUnknownHandler::startElement(nsAtom* aPrefix, const nsAString& aLocalName,
                                const int32_t aNsID)
 {
     if (!mFlushed) {

@@ -100,11 +100,11 @@ protected:
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
-  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
@@ -140,7 +140,7 @@ private:
    * @param aValue the value being set or null if the value is being unset
    * @param aNotify Whether we plan to notify document observers.
    */
-  void AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+  void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                             const nsAttrValueOrString* aValue, bool aNotify);
 };
 

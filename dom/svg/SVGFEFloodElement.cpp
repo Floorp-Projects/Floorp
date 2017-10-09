@@ -57,7 +57,7 @@ SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
+SVGFEFloodElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap

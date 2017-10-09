@@ -48,32 +48,32 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
-  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
                              bool aNotify) override;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   // Element specializations
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) override;
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
 
-  const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
-  bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
-  bool HasAnimAttr(nsIAtom* aAttName) const;
+  const nsAttrValue* GetAnimAttr(nsAtom* aName) const;
+  bool GetAnimAttr(nsAtom* aAttName, nsAString& aResult) const;
+  bool HasAnimAttr(nsAtom* aAttName) const;
   Element* GetTargetElementContent();
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
-                                      nsIAtom** aLocalName) const;
+                                      nsAtom** aLocalName) const;
   nsSMILTimedElement& TimedElement();
   nsSMILTimeContainer* GetTimeContainer();
   virtual nsSMILAnimationFunction& AnimationFunction() = 0;
 
-  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   // Utility methods for within SVG
   void ActivateByHyperlink();

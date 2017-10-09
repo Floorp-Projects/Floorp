@@ -219,7 +219,7 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 
   virtual nsresult AttributeChanged(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t aModType) override;
 
   virtual nsContainerFrame* GetContentInsertionFrame() override
@@ -283,7 +283,7 @@ public:
    */
   void HandleAttributeChangeInDescendant(mozilla::dom::Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsIAtom* aAttribute);
+                                         nsAtom* aAttribute);
 
   /**
    * Schedules mPositions to be recomputed and the covered region to be

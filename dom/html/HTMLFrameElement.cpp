@@ -31,7 +31,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLFrameElement)
 
 bool
 HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {

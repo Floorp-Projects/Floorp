@@ -55,7 +55,7 @@ SVGStopElement::GetNumberInfo()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGStopElement::IsAttributeMapped(const nsIAtom* name) const
+SVGStopElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sGradientStopMap

@@ -13,7 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
-class nsIAtom;
+class nsAtom;
 class nsSMILValue;
 class nsSVGElement;
 
@@ -34,8 +34,8 @@ public:
     mIsAnimated = false;
   }
 
-  nsresult SetBaseValueAtom(const nsIAtom* aValue, nsSVGElement *aSVGElement);
-  nsIAtom* GetBaseValueAtom() const;
+  nsresult SetBaseValueAtom(const nsAtom* aValue, nsSVGElement *aSVGElement);
+  nsAtom* GetBaseValueAtom() const;
 
   void SetBaseValue(bool aValue, nsSVGElement *aSVGElement);
   bool GetBaseValue() const

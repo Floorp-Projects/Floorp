@@ -14,7 +14,7 @@
 #include "SVGMotionSMILType.h"  // for RotateType
 
 class nsAttrValue;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsISMILAttr;
 class nsSMILValue;
@@ -37,11 +37,11 @@ class SVGMotionSMILAnimationFunction final : public nsSMILAnimationFunction
 
 public:
   SVGMotionSMILAnimationFunction();
-  virtual bool SetAttr(nsIAtom* aAttribute,
+  virtual bool SetAttr(nsAtom* aAttribute,
                        const nsAString& aValue,
                        nsAttrValue& aResult,
                        nsresult* aParseResult = nullptr) override;
-  virtual bool UnsetAttr(nsIAtom* aAttribute) override;
+  virtual bool UnsetAttr(nsAtom* aAttribute) override;
 
   // Method to allow our owner-element to signal us when our <mpath>
   // has changed or been added/removed.  When that happens, we need to
@@ -76,7 +76,7 @@ protected:
   void     UnsetRotate();
 
   // Helpers for GetValues
-  void     MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute);
+  void     MarkStaleIfAttributeAffectsPath(nsAtom* aAttribute);
   void     RebuildPathAndVertices(const nsIContent* aContextElem);
   void     RebuildPathAndVerticesFromMpathElem(dom::SVGMPathElement* aMpathElem);
   void     RebuildPathAndVerticesFromPathAttr();

@@ -220,7 +220,7 @@ public:
 
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
-    bool FilterForFontList(nsIAtom* aLangGroup,
+    bool FilterForFontList(nsAtom* aLangGroup,
                            const nsACString& aGeneric) const final {
         return !IsSymbolFontFamily() &&
                SupportsLangGroup(aLangGroup) &&
@@ -271,7 +271,7 @@ protected:
         return false;
     }
 
-    bool SupportsLangGroup(nsIAtom* aLangGroup) const {
+    bool SupportsLangGroup(nsAtom* aLangGroup) const {
         if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
             return true;
         }

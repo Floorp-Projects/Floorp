@@ -17,7 +17,7 @@
 #include "mozilla/net/ReferrerPolicy.h"
 
 extern bool
-TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID);
+TX_XSLTFunctionAvailable(nsAtom* aName, int32_t aNameSpaceID);
 
 class txHandlerTable;
 class txElementContext;
@@ -124,8 +124,8 @@ public:
     nsresult addVariable(const txExpandedName& aName);
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) override;
-    nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
+    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
+    nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                  FunctionCall** aFunction) override;
     bool caseInsensitiveNameTests() override;
 
@@ -194,8 +194,8 @@ private:
 struct txStylesheetAttr
 {
     int32_t mNamespaceID;
-    RefPtr<nsIAtom> mLocalName;
-    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
+    RefPtr<nsAtom> mPrefix;
     nsString mValue;
 };
 
@@ -204,7 +204,7 @@ class txStylesheetCompiler final : private txStylesheetCompilerState,
 {
 public:
     friend class txStylesheetCompilerState;
-    friend bool TX_XSLTFunctionAvailable(nsIAtom* aName,
+    friend bool TX_XSLTFunctionAvailable(nsAtom* aName,
                                            int32_t aNameSpaceID);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
                          mozilla::net::ReferrerPolicy  aReferrerPolicy,
@@ -217,8 +217,8 @@ public:
 
     void setBaseURI(const nsString& aBaseURI);
 
-    nsresult startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
-                          nsIAtom* aPrefix, txStylesheetAttr* aAttributes,
+    nsresult startElement(int32_t aNamespaceID, nsAtom* aLocalName,
+                          nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                           int32_t aAttrCount);
     nsresult startElement(const char16_t *aName,
                           const char16_t **aAtts,
@@ -241,8 +241,8 @@ private:
     {
     }
 
-    nsresult startElementInternal(int32_t aNamespaceID, nsIAtom* aLocalName,
-                                  nsIAtom* aPrefix,
+    nsresult startElementInternal(int32_t aNamespaceID, nsAtom* aLocalName,
+                                  nsAtom* aPrefix,
                                   txStylesheetAttr* aAttributes,
                                   int32_t aAttrCount);
 

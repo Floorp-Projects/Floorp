@@ -335,8 +335,8 @@ nsXULTemplateQueryProcessorRDF::Done()
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                                              nsIDOMNode* aQueryNode,
-                                             nsIAtom* aRefVariable,
-                                             nsIAtom* aMemberVariable,
+                                             nsAtom* aRefVariable,
+                                             nsAtom* aMemberVariable,
                                              nsISupports** _retval)
 {
     RefPtr<nsRDFQuery> query = new nsRDFQuery(this);
@@ -512,8 +512,8 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
 
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorRDF::AddBinding(nsIDOMNode* aRuleNode,
-                                           nsIAtom* aVar,
-                                           nsIAtom* aRef,
+                                           nsAtom* aVar,
+                                           nsAtom* aRef,
                                            const nsAString& aExpr)
 {
     // add a <binding> to a rule. When a result is matched, the bindings are
@@ -563,7 +563,7 @@ nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasource,
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
                                                nsIXULTemplateResult* aRight,
-                                               nsIAtom* aVar,
+                                               nsAtom* aVar,
                                                uint32_t aSortHints,
                                                int32_t* aResult)
 {
@@ -1186,7 +1186,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
             nsAutoString tagstr;
             condition->GetAttr(kNameSpaceID_None, nsGkAtoms::tag, tagstr);
 
-            RefPtr<nsIAtom> tag;
+            RefPtr<nsAtom> tag;
             if (! tagstr.IsEmpty()) {
                 tag = NS_Atomize(tagstr);
             }
@@ -1220,7 +1220,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
 }
 
 nsresult
-nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
+nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsAtom* aTag,
                                                   nsRDFQuery* aQuery,
                                                   nsIContent* aCondition,
                                                   TestNode* aParentNode,
@@ -1296,7 +1296,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     nsAutoString subject;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::subject, subject);
 
-    RefPtr<nsIAtom> svar;
+    RefPtr<nsAtom> svar;
     nsCOMPtr<nsIRDFResource> sres;
     if (subject.IsEmpty()) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_SUBJECT);
@@ -1322,7 +1322,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     nsAutoString object;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::object, object);
 
-    RefPtr<nsIAtom> ovar;
+    RefPtr<nsAtom> ovar;
     nsCOMPtr<nsIRDFNode> onode;
     if (object.IsEmpty()) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_OBJECT);
@@ -1399,7 +1399,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    RefPtr<nsIAtom> containervar = NS_Atomize(container);
+    RefPtr<nsAtom> containervar = NS_Atomize(container);
 
     // child
     nsAutoString child;
@@ -1410,7 +1410,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    RefPtr<nsIAtom> childvar = NS_Atomize(child);
+    RefPtr<nsAtom> childvar = NS_Atomize(child);
 
     TestNode* testnode =
         new nsRDFConMemberTestNode(aParentNode,
@@ -1515,7 +1515,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
         int32_t attrNameSpaceID = name->NamespaceID();
         if (attrNameSpaceID == kNameSpaceID_XMLNS)
           continue;
-        nsIAtom* attr = name->LocalName();
+        nsAtom* attr = name->LocalName();
 
         nsAutoString value;
         aQueryElement->GetAttr(attrNameSpaceID, attr, value);

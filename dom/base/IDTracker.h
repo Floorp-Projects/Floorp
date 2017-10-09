@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 
@@ -185,7 +185,7 @@ private:
   };
   friend class DocumentLoadNotification;
 
-  RefPtr<nsIAtom>      mWatchID;
+  RefPtr<nsAtom>      mWatchID;
   nsCOMPtr<nsIDocument>  mWatchDocument;
   RefPtr<Element> mElement;
   RefPtr<Notification> mPendingNotification;

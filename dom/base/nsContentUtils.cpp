@@ -255,9 +255,9 @@ nsNameSpaceManager *nsContentUtils::sNameSpaceManager;
 nsIIOService *nsContentUtils::sIOService;
 nsIUUIDGenerator *nsContentUtils::sUUIDGenerator;
 nsIConsoleService *nsContentUtils::sConsoleService;
-nsDataHashtable<nsRefPtrHashKey<nsIAtom>, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
+nsDataHashtable<nsRefPtrHashKey<nsAtom>, EventNameMapping>* nsContentUtils::sAtomEventTable = nullptr;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nullptr;
-nsTArray<RefPtr<nsIAtom>>* nsContentUtils::sUserDefinedEvents = nullptr;
+nsTArray<RefPtr<nsAtom>>* nsContentUtils::sUserDefinedEvents = nullptr;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
 nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
 nsIContentPolicy *nsContentUtils::sContentPolicyService;
@@ -918,7 +918,7 @@ nsContentUtils::GetEventClassIDFromMessage(EventMessage aEventMessage)
   }
 }
 
-static nsIAtom*
+static nsAtom*
 GetEventTypeFromMessage(EventMessage aEventMessage)
 {
   switch (aEventMessage) {
@@ -958,11 +958,11 @@ nsContentUtils::InitializeEventTable() {
     { nullptr }
   };
 
-  sAtomEventTable = new nsDataHashtable<nsRefPtrHashKey<nsIAtom>, EventNameMapping>(
+  sAtomEventTable = new nsDataHashtable<nsRefPtrHashKey<nsAtom>, EventNameMapping>(
       ArrayLength(eventArray));
   sStringEventTable = new nsDataHashtable<nsStringHashKey, EventNameMapping>(
       ArrayLength(eventArray));
-  sUserDefinedEvents = new nsTArray<RefPtr<nsIAtom>>(64);
+  sUserDefinedEvents = new nsTArray<RefPtr<nsAtom>>(64);
 
   // Subtract one from the length because of the trailing null
   for (uint32_t i = 0; i < ArrayLength(eventArray) - 1; ++i) {
@@ -1396,7 +1396,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
   }
 
 bool
-nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
+nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsAtom *aName,
                                         nsAString& aValue)
 {
   aValue.Truncate();
@@ -2315,7 +2315,7 @@ nsContentUtils::CanCallerAccess(nsPIDOMWindowInner* aWindow)
 
 // static
 bool
-nsContentUtils::PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsIAtom* aPerm)
+nsContentUtils::PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsAtom* aPerm)
 {
   // Chrome gets access by default.
   if (IsSystemPrincipal(aPrincipal)) {
@@ -2328,7 +2328,7 @@ nsContentUtils::PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsIAtom* 
 
 // static
 bool
-nsContentUtils::CallerHasPermission(JSContext* aCx, const nsIAtom* aPerm)
+nsContentUtils::CallerHasPermission(JSContext* aCx, const nsAtom* aPerm)
 {
   return PrincipalHasPermission(SubjectPrincipal(aCx), aPerm);
 }
@@ -3283,7 +3283,7 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 
 // static
 bool
-nsContentUtils::IsCustomElementName(nsIAtom* aName)
+nsContentUtils::IsCustomElementName(nsAtom* aName)
 {
   // A valid custom element name is a sequence of characters name which
   // must match the PotentialCustomElementName production:
@@ -3386,7 +3386,7 @@ nsContentUtils::CheckQName(const nsAString& aQualifiedName,
 nsresult
 nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
                            const nsString& aQName,
-                           int32_t *aNamespace, nsIAtom **aLocalName)
+                           int32_t *aNamespace, nsAtom **aLocalName)
 {
   const char16_t* colon;
   nsresult rv = nsContentUtils::CheckQName(aQName, true, &colon);
@@ -3435,7 +3435,7 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     const char16_t* end;
     qName.EndReading(end);
 
-    RefPtr<nsIAtom> prefix =
+    RefPtr<nsAtom> prefix =
       NS_AtomizeMainThread(Substring(qName.get(), colon));
 
     rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
@@ -3455,8 +3455,8 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
 
 // static
 void
-nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
-                               nsIAtom **aLocalName, int32_t* aNameSpaceID)
+nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsAtom **aPrefix,
+                               nsAtom **aLocalName, int32_t* aNameSpaceID)
 {
   /**
    *  Expat can send the following:
@@ -3876,7 +3876,7 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
 
 // static
 nsresult
-nsContentUtils::QNameChanged(mozilla::dom::NodeInfo* aNodeInfo, nsIAtom* aName,
+nsContentUtils::QNameChanged(mozilla::dom::NodeInfo* aNodeInfo, nsAtom* aName,
                              mozilla::dom::NodeInfo** aResult)
 {
   nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
@@ -3947,7 +3947,7 @@ static const char *gOnErrorNames[] = {"event", "source", "lineno",
 // static
 void
 nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
-                                 nsIAtom *aEventName,
+                                 nsAtom *aEventName,
                                  bool aIsForWindow,
                                  uint32_t *aArgCount,
                                  const char*** aArgArray)
@@ -4356,7 +4356,7 @@ nsContentUtils::GetContentPolicy()
 
 // static
 bool
-nsContentUtils::IsEventAttributeName(nsIAtom* aName, int32_t aType)
+nsContentUtils::IsEventAttributeName(nsAtom* aName, int32_t aType)
 {
   const char16_t* name = aName->GetUTF16String();
   if (name[0] != 'o' || name[1] != 'n')
@@ -4368,7 +4368,7 @@ nsContentUtils::IsEventAttributeName(nsIAtom* aName, int32_t aType)
 
 // static
 EventMessage
-nsContentUtils::GetEventMessage(nsIAtom* aName)
+nsContentUtils::GetEventMessage(nsAtom* aName)
 {
   if (aName) {
     EventNameMapping mapping;
@@ -4391,7 +4391,7 @@ nsContentUtils::GetEventClassID(const nsAString& aName)
   return eBasicEventClass;
 }
 
-nsIAtom*
+nsAtom*
 nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
                                        mozilla::EventClassID aEventClassID,
                                        EventMessage* aEventMessage)
@@ -4407,14 +4407,14 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
   // If we have cached lots of user defined event names, clear some of them.
   if (sUserDefinedEvents->Length() > 127) {
     while (sUserDefinedEvents->Length() > 64) {
-      nsIAtom* first = sUserDefinedEvents->ElementAt(0);
+      nsAtom* first = sUserDefinedEvents->ElementAt(0);
       sStringEventTable->Remove(Substring(nsDependentAtomString(first), 2));
       sUserDefinedEvents->RemoveElementAt(0);
     }
   }
 
   *aEventMessage = eUnidentifiedEvent;
-  RefPtr<nsIAtom> atom =
+  RefPtr<nsAtom> atom =
     NS_AtomizeMainThread(NS_LITERAL_STRING("on") + aName);
   sUserDefinedEvents->AppendElement(atom);
   mapping.mAtom = atom;
@@ -4435,7 +4435,7 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
 // static
 EventMessage
 nsContentUtils::GetEventMessageAndAtomForListener(const nsAString& aName,
-                                                  nsIAtom** aOnName)
+                                                  nsAtom** aOnName)
 {
   // Because of SVG/SMIL sStringEventTable contains a subset of the event names
   // comparing to the sAtomEventTable. However, usually sStringEventTable
@@ -4443,7 +4443,7 @@ nsContentUtils::GetEventMessageAndAtomForListener(const nsAString& aName,
   // lookups, start from it.
   EventNameMapping mapping;
   EventMessage msg = eUnidentifiedEvent;
-  RefPtr<nsIAtom> atom;
+  RefPtr<nsAtom> atom;
   if (sStringEventTable->Get(aName, &mapping)) {
     if (mapping.mMaybeSpecialSVGorSMILEvent) {
       // Try the atom version so that we should get the right message for
@@ -4629,7 +4629,7 @@ nsContentUtils::DispatchEventOnlyToChrome(nsIDocument* aDoc,
 
 /* static */
 Element*
-nsContentUtils::MatchElementId(nsIContent *aContent, const nsIAtom* aId)
+nsContentUtils::MatchElementId(nsIContent *aContent, const nsAtom* aId)
 {
   for (nsIContent* cur = aContent;
        cur;
@@ -4649,7 +4649,7 @@ nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
   NS_PRECONDITION(!aId.IsEmpty(), "Will match random elements");
 
   // ID attrs are generally stored as atoms, so just atomize this up front
-  RefPtr<nsIAtom> id(NS_Atomize(aId));
+  RefPtr<nsAtom> id(NS_Atomize(aId));
   if (!id) {
     // OOM, so just bail
     return nullptr;
@@ -4710,7 +4710,7 @@ nsContentUtils::UnregisterShutdownObserver(nsIObserver* aObserver)
 /* static */
 bool
 nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent, int32_t aNameSpaceID,
-                                nsIAtom* aName)
+                                nsAtom* aName)
 {
   static nsIContent::AttrValuesArray strings[] = {&nsGkAtoms::_empty, nullptr};
   return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
@@ -4936,7 +4936,7 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
 
 /* static */
 bool
-nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
+nsContentUtils::IsValidNodeName(nsAtom *aLocalName, nsAtom *aPrefix,
                                 int32_t aNamespaceID)
 {
   if (aNamespaceID == kNameSpaceID_Unknown) {
@@ -5116,7 +5116,7 @@ nsContentUtils::XPCOMShutdown()
 nsresult
 nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
                                   nsIContent* aTargetNode,
-                                  nsIAtom* aContextLocalName,
+                                  nsAtom* aContextLocalName,
                                   int32_t aContextNamespace,
                                   bool aQuirks,
                                   bool aPreventScriptExecution)
@@ -5799,7 +5799,7 @@ static void ProcessViewportToken(nsIDocument *aDocument,
 
   /* Check for known keys. If we find a match, insert the appropriate
    * information into the document header. */
-  RefPtr<nsIAtom> key_atom = NS_Atomize(key);
+  RefPtr<nsAtom> key_atom = NS_Atomize(key);
   if (key_atom == nsGkAtoms::height)
     aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
   else if (key_atom == nsGkAtoms::width)
@@ -6714,7 +6714,7 @@ struct ClassMatchingInfo {
 // static
 bool
 nsContentUtils::MatchClassNames(Element* aElement, int32_t aNamespaceID,
-                                nsIAtom* aAtom, void* aData)
+                                nsAtom* aAtom, void* aData)
 {
   // We can't match if there are no class names
   const nsAttrValue* classAttr = aElement->GetClasses();
@@ -9237,7 +9237,7 @@ private:
 
     union
     {
-      nsIAtom*              mAtom;
+      nsAtom*              mAtom;
       const char*           mLiteral;
       nsAutoString*         mString;
       const nsTextFragment* mTextFragment;
@@ -9256,7 +9256,7 @@ public:
     MOZ_COUNT_DTOR(StringBuilder);
   }
 
-  void Append(nsIAtom* aAtom)
+  void Append(nsAtom* aAtom)
   {
     Unit* u = AddUnit();
     u->mAtom = aAtom;
@@ -9561,7 +9561,7 @@ AppendEncodedAttributeValue(nsAutoString* aValue, StringBuilder& aBuilder)
 static void
 StartElement(Element* aContent, StringBuilder& aBuilder)
 {
-  nsIAtom* localName = aContent->NodeInfo()->NameAtom();
+  nsAtom* localName = aContent->NodeInfo()->NameAtom();
   int32_t tagNS = aContent->GetNameSpaceID();
 
   aBuilder.Append("<");
@@ -9576,7 +9576,7 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
   for (int32_t i = 0; i < count; i++) {
     const nsAttrName* name = aContent->GetAttrNameAt(i);
     int32_t attNs = name->NamespaceID();
-    nsIAtom* attName = name->LocalName();
+    nsAtom* attName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
     nsDependentAtomString attrNameStr(attName);
@@ -9610,7 +9610,7 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
     } else if (attNs == kNameSpaceID_XLink) {
       aBuilder.Append("xlink:");
     } else {
-      nsIAtom* prefix = name->GetPrefix();
+      nsAtom* prefix = name->GetPrefix();
       if (prefix) {
         aBuilder.Append(prefix);
         aBuilder.Append(":");
@@ -9653,7 +9653,7 @@ ShouldEscape(nsIContent* aParent)
     return true;
   }
 
-  static const nsIAtom* nonEscapingElements[] = {
+  static const nsAtom* nonEscapingElements[] = {
     nsGkAtoms::style, nsGkAtoms::script, nsGkAtoms::xmp,
     nsGkAtoms::iframe, nsGkAtoms::noembed, nsGkAtoms::noframes,
     nsGkAtoms::plaintext,
@@ -9663,7 +9663,7 @@ ShouldEscape(nsIContent* aParent)
     // and Gecko hasn't traditionally done the former.
     nsGkAtoms::noscript
   };
-  static mozilla::BloomFilter<12, nsIAtom> sFilter;
+  static mozilla::BloomFilter<12, nsAtom> sFilter;
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
@@ -9672,7 +9672,7 @@ ShouldEscape(nsIContent* aParent)
     }
   }
 
-  nsIAtom* tag = aParent->NodeInfo()->NameAtom();
+  nsAtom* tag = aParent->NodeInfo()->NameAtom();
   if (sFilter.mightContain(tag)) {
     for (auto& nonEscapingElement : nonEscapingElements) {
       if (tag == nonEscapingElement) {
@@ -10094,8 +10094,8 @@ nsContentUtils::SetupCustomElement(Element* aElement,
 
 /* static */ CustomElementDefinition*
 nsContentUtils::GetElementDefinitionIfObservingAttr(Element* aCustomElement,
-                                                    nsIAtom* aExtensionType,
-                                                    nsIAtom* aAttrName)
+                                                    nsAtom* aExtensionType,
+                                                    nsAtom* aAttrName)
 {
   CustomElementDefinition* definition =
     aCustomElement->GetCustomElementDefinition();
@@ -10168,7 +10168,7 @@ nsContentUtils::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
 /* static */ void
 nsContentUtils::GetCustomPrototype(nsIDocument* aDoc,
                                    int32_t aNamespaceID,
-                                   nsIAtom* aAtom,
+                                   nsAtom* aAtom,
                                    JS::MutableHandle<JSObject*> aPrototype)
 {
   MOZ_ASSERT(aDoc);

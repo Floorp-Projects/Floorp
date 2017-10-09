@@ -204,7 +204,7 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
 }
 
 void
-Link::UpdatePreload(nsIAtom* aName, const nsAttrValue* aValue,
+Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
                     const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(mElement->IsInComposedDoc());

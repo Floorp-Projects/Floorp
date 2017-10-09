@@ -67,7 +67,7 @@ protected:
                            nsAttrValue& aResult,
                            bool aForceInDataDoc);
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult) override;
 
   friend class mozilla::dom::Element;
@@ -83,7 +83,7 @@ protected:
 
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 
-  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify) override;
 };

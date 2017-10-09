@@ -132,7 +132,7 @@ public:
 
 //==== BEGIN NSIFORMCONTROLFRAME
   virtual void SetFocus(bool aOn , bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
+  virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
 
 //==== END NSIFORMCONTROLFRAME
 
@@ -165,7 +165,7 @@ public:
 
   /** handler for attribute changes to mContent */
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
   nsresult GetText(nsString& aText);
@@ -297,7 +297,7 @@ protected:
    * @param aAtt the attribute to determine the existence of
    * @returns false if it does not exist
    */
-  bool AttributeExists(nsIAtom *aAtt) const
+  bool AttributeExists(nsAtom *aAtt) const
   { return mContent && mContent->HasAttr(kNameSpaceID_None, aAtt); }
 
   /**

@@ -18,7 +18,7 @@
 #include "nsString.h"
 
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 
 class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
  public:
@@ -41,7 +41,7 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
                                        nsIContent *aOriginalElement,
                                        nsAString& aTagPrefix,
                                        const nsAString& aTagNamespaceURI,
-                                       nsIAtom* aTagName,
+                                       nsAtom* aTagName,
                                        int32_t aNamespace,
                                        nsAString& aStr);
 

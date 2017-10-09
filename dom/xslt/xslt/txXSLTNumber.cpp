@@ -119,7 +119,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         switch (nodeType) {
             case txXPathNodeType::ELEMENT_NODE:
             {
-                RefPtr<nsIAtom> localName =
+                RefPtr<nsAtom> localName =
                     txXPathNodeUtils::getLocalName(currNode);
                 int32_t namespaceID = txXPathNodeUtils::getNamespaceID(currNode);
                 nodeTest = new txNameTest(0, localName, namespaceID,

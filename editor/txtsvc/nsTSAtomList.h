@@ -4,7 +4,7 @@
 
 /******
 
-  This file contains the list of all text services nsIAtoms and their values
+  This file contains the list of all text services nsAtoms and their values
 
   It is designed to be used as inline input to nsTextServicesDocument.cpp *only*
   through the magic of C preprocessing.

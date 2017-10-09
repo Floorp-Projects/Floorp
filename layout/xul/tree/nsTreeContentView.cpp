@@ -940,7 +940,7 @@ void
 nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
                                     dom::Element* aElement,
                                     int32_t       aNameSpaceID,
-                                    nsIAtom*      aAttribute,
+                                    nsAtom*      aAttribute,
                                     int32_t       aModType,
                                     const nsAttrValue* aOldValue)
 {
@@ -1567,7 +1567,7 @@ nsTreeContentView::UpdateParentIndexes(int32_t aIndex, int32_t aSkip, int32_t aC
 nsIContent*
 nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
 {
-  RefPtr<nsIAtom> colAtom(aCol.GetAtom());
+  RefPtr<nsAtom> colAtom(aCol.GetAtom());
   int32_t colIndex(aCol.GetIndex());
 
   // Traverse through cells, try to find the cell by "ref" attribute or by cell

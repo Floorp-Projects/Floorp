@@ -28,7 +28,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"

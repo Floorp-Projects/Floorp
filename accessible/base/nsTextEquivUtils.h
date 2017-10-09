@@ -86,7 +86,7 @@ public:
    * @param aTextEquiv   [out] result text equivalent
    */
   static nsresult GetTextEquivFromIDRefs(Accessible* aAccessible,
-                                         nsIAtom *aIDRefsAttr,
+                                         nsAtom *aIDRefsAttr,
                                          nsAString& aTextEquiv);
 
   /**

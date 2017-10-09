@@ -19,7 +19,7 @@
 
 class nsXBLPrototypeBinding;
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 class nsIDocument;
 
 namespace mozilla {
@@ -117,14 +117,14 @@ public:
   void ExecuteDetachedHandler();
   void UnhookEventHandlers();
 
-  nsIAtom* GetBaseTag(int32_t* aNameSpaceID);
+  nsAtom* GetBaseTag(int32_t* aNameSpaceID);
   nsXBLBinding* RootBinding();
 
   // Resolve all the fields for this binding and all ancestor bindings on the
   // object |obj|.  False return means a JS exception was set.
   bool ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const;
 
-  void AttributeChanged(nsIAtom* aAttribute, int32_t aNameSpaceID,
+  void AttributeChanged(nsAtom* aAttribute, int32_t aNameSpaceID,
                         bool aRemoveFlag, bool aNotify);
 
   void ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);

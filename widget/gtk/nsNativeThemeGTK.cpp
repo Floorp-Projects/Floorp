@@ -199,7 +199,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
                    aWidgetType == NS_THEME_CHECKBOX_LABEL ||
                    aWidgetType == NS_THEME_RADIO_LABEL)) {
 
-      nsIAtom* atom = nullptr;
+      nsAtom* atom = nullptr;
       if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
         if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
             aWidgetType == NS_THEME_RADIO_LABEL) {
@@ -1697,7 +1697,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                     nsIAtom* aAttribute, bool* aShouldRepaint,
+                                     nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
   // Some widget types just never change state.

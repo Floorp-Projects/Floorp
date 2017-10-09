@@ -16,7 +16,7 @@
 #include "nsIEditor.h"
 #include "nscore.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
 class nsIDOMEvent;
@@ -159,7 +159,7 @@ public:
     BeginPlaceholderTransaction(nullptr);
   }
   AutoPlaceholderBatch(EditorBase* aEditorBase,
-                       nsIAtom* aTransactionName
+                       nsAtom* aTransactionName
                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mEditorBase(aEditorBase)
   {
@@ -174,7 +174,7 @@ public:
   }
 
 private:
-  void BeginPlaceholderTransaction(nsIAtom* aTransactionName)
+  void BeginPlaceholderTransaction(nsAtom* aTransactionName)
   {
     if (mEditorBase) {
       mEditorBase->BeginPlaceholderTransaction(aTransactionName);

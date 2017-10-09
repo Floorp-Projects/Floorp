@@ -142,7 +142,7 @@ LazyLogModule XULDocument::gXULLog("XULDocument");
 
 struct BroadcastListener {
     nsWeakPtr mListener;
-    RefPtr<nsIAtom> mAttribute;
+    RefPtr<nsAtom> mAttribute;
 };
 
 struct BroadcasterMapEntry : public PLDHashEntryHdr
@@ -630,7 +630,7 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 }
 
 static bool
-CanBroadcast(int32_t aNameSpaceID, nsIAtom* aAttribute)
+CanBroadcast(int32_t aNameSpaceID, nsAtom* aAttribute)
 {
     // Don't push changes to the |id|, |ref|, |persist|, |command| or
     // |observes| attribute.
@@ -648,14 +648,14 @@ CanBroadcast(int32_t aNameSpaceID, nsIAtom* aAttribute)
 
 struct nsAttrNameInfo
 {
-  nsAttrNameInfo(int32_t aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix) :
+  nsAttrNameInfo(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix) :
     mNamespaceID(aNamespaceID), mName(aName), mPrefix(aPrefix) {}
   nsAttrNameInfo(const nsAttrNameInfo& aOther) :
     mNamespaceID(aOther.mNamespaceID), mName(aOther.mName),
     mPrefix(aOther.mPrefix) {}
   int32_t           mNamespaceID;
-  RefPtr<nsIAtom> mName;
-  RefPtr<nsIAtom> mPrefix;
+  RefPtr<nsAtom> mName;
+  RefPtr<nsAtom> mPrefix;
 };
 
 void
@@ -678,7 +678,7 @@ XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
         for (uint32_t i = 0; i < count; ++i) {
             const nsAttrName* attrName = aBroadcaster->GetAttrNameAt(i);
             int32_t nameSpaceID = attrName->NamespaceID();
-            nsIAtom* name = attrName->LocalName();
+            nsAtom* name = attrName->LocalName();
 
             // _Don't_ push the |id|, |ref|, or |persist| attribute's value!
             if (! CanBroadcast(nameSpaceID, name))
@@ -691,7 +691,7 @@ XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
         count = attributes.Length();
         while (count-- > 0) {
             int32_t nameSpaceID = attributes[count].mNamespaceID;
-            nsIAtom* name = attributes[count].mName;
+            nsAtom* name = attributes[count].mName;
             nsAutoString value;
             if (aBroadcaster->GetAttr(nameSpaceID, name, value)) {
               aListener->SetAttr(nameSpaceID, name, attributes[count].mPrefix,
@@ -710,7 +710,7 @@ XULDocument::SynchronizeBroadcastListener(Element *aBroadcaster,
     }
     else {
         // Find out if the attribute is even present at all.
-        RefPtr<nsIAtom> name = NS_Atomize(aAttr);
+        RefPtr<nsAtom> name = NS_Atomize(aAttr);
 
         nsAutoString value;
         if (aBroadcaster->GetAttr(kNameSpaceID_None, name, value)) {
@@ -791,7 +791,7 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
     }
 
     // Only add the listener if it's not there already!
-    RefPtr<nsIAtom> attr = NS_Atomize(aAttr);
+    RefPtr<nsAtom> attr = NS_Atomize(aAttr);
 
     for (size_t i = entry->mListeners.Length() - 1; i != (size_t)-1; --i) {
         BroadcastListener* bl = entry->mListeners[i];
@@ -835,7 +835,7 @@ XULDocument::RemoveBroadcastListenerFor(Element& aBroadcaster,
     auto entry = static_cast<BroadcasterMapEntry*>
                             (mBroadcasterMap->Search(&aBroadcaster));
     if (entry) {
-        RefPtr<nsIAtom> attr = NS_Atomize(aAttr);
+        RefPtr<nsAtom> attr = NS_Atomize(aAttr);
         for (size_t i = entry->mListeners.Length() - 1; i != (size_t)-1; --i) {
             BroadcastListener* bl = entry->mListeners[i];
             nsCOMPtr<Element> blListener = do_QueryReferent(bl->mListener);
@@ -856,7 +856,7 @@ XULDocument::RemoveBroadcastListenerFor(Element& aBroadcaster,
 nsresult
 XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
                                           Element* aListener,
-                                          nsIAtom* aAttr)
+                                          nsAtom* aAttr)
 {
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
@@ -915,7 +915,7 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
 void
 XULDocument::AttributeWillChange(nsIDocument* aDocument,
                                  Element* aElement, int32_t aNameSpaceID,
-                                 nsIAtom* aAttribute, int32_t aModType,
+                                 nsAtom* aAttribute, int32_t aModType,
                                  const nsAttrValue* aNewValue)
 {
     MOZ_ASSERT(aElement, "Null content!");
@@ -931,7 +931,7 @@ XULDocument::AttributeWillChange(nsIDocument* aDocument,
 }
 
 static bool
-ShouldPersistAttribute(Element* aElement, nsIAtom* aAttribute)
+ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
 {
     if (aElement->IsXULElement(nsGkAtoms::window)) {
         // This is not an element of the top document, its owner is
@@ -955,7 +955,7 @@ ShouldPersistAttribute(Element* aElement, nsIAtom* aAttribute)
 void
 XULDocument::AttributeChanged(nsIDocument* aDocument,
                               Element* aElement, int32_t aNameSpaceID,
-                              nsIAtom* aAttribute, int32_t aModType,
+                              nsAtom* aAttribute, int32_t aModType,
                               const nsAttrValue* aOldValue)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
@@ -1036,7 +1036,7 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
         // XXXldb This should check that it's a token, not just a substring.
         persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod<nsIContent*, int32_t, nsIAtom*>(
+        NewRunnableMethod<nsIContent*, int32_t, nsAtom*>(
           "dom::XULDocument::DoPersist",
           this,
           &XULDocument::DoPersist,
@@ -1206,7 +1206,7 @@ already_AddRefed<nsINodeList>
 XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                     const nsAString& aValue)
 {
-    RefPtr<nsIAtom> attrAtom(NS_Atomize(aAttribute));
+    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
     void* attrValue = new nsString(aValue);
     RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
@@ -1237,7 +1237,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                       const nsAString& aValue,
                                       ErrorResult& aRv)
 {
-    RefPtr<nsIAtom> attrAtom(NS_Atomize(aAttribute));
+    RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
     void* attrValue = new nsString(aValue);
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
@@ -1274,7 +1274,7 @@ XULDocument::Persist(const nsAString& aID,
     if (!element)
         return NS_OK;
 
-    RefPtr<nsIAtom> tag;
+    RefPtr<nsAtom> tag;
     int32_t nameSpaceID;
 
     RefPtr<mozilla::dom::NodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
@@ -1309,7 +1309,7 @@ XULDocument::Persist(const nsAString& aID,
 
 nsresult
 XULDocument::Persist(nsIContent* aElement, int32_t aNameSpaceID,
-                     nsIAtom* aAttribute)
+                     nsAtom* aAttribute)
 {
     // For non-chrome documents, persistance is simply broken
     if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()))
@@ -1630,7 +1630,7 @@ XULDocument::AddElementToDocumentPre(Element* aElement)
     // 1. Add the element to the resource-to-element map. Also add it to
     // the id map, since it seems this can be called when creating
     // elements from prototypes.
-    nsIAtom* id = aElement->GetID();
+    nsAtom* id = aElement->GetID();
     if (id) {
         // FIXME: Shouldn't BindToTree take care of this?
         nsAutoScriptBlocker scriptBlocker;
@@ -1758,7 +1758,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     // Also remove it from the id map, since we added it in
     // AddElementToDocumentPre().
     RemoveElementFromRefMap(aElement);
-    nsIAtom* id = aElement->GetID();
+    nsAtom* id = aElement->GetID();
     if (id) {
         // FIXME: Shouldn't UnbindFromTree take care of this?
         nsAutoScriptBlocker scriptBlocker;
@@ -1942,7 +1942,7 @@ XULDocument::StartLayout(void)
 bool
 XULDocument::MatchAttribute(Element* aElement,
                             int32_t aNamespaceID,
-                            nsIAtom* aAttrName,
+                            nsAtom* aAttrName,
                             void* aData)
 {
     NS_PRECONDITION(aElement, "Must have content node to work with!");
@@ -2139,7 +2139,7 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
             return rv;
         }
 
-        RefPtr<nsIAtom> attr = NS_Atomize(attrstr);
+        RefPtr<nsAtom> attr = NS_Atomize(attrstr);
         if (NS_WARN_IF(!attr)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -2792,7 +2792,7 @@ XULDocument::ResumeWalk()
                     // If we're only restoring persisted things on
                     // some elements, store the ID here to do that.
                     if (mRestrictPersistence) {
-                        nsIAtom* id = child->GetID();
+                        nsAtom* id = child->GetID();
                         if (id) {
                             mPersistenceIds.PutEntry(nsDependentAtomString(id));
                         }
@@ -3151,7 +3151,7 @@ XULDocument::MaybeBroadcast()
         if (!mHandlingDelayedAttrChange) {
             mHandlingDelayedAttrChange = true;
             for (uint32_t i = 0; i < mDelayedAttrChangeBroadcasts.Length(); ++i) {
-                nsIAtom* attrName = mDelayedAttrChangeBroadcasts[i].mAttrName;
+                nsAtom* attrName = mDelayedAttrChangeBroadcasts[i].mAttrName;
                 if (mDelayedAttrChangeBroadcasts[i].mNeedsAttrChange) {
                     nsCOMPtr<nsIContent> listener =
                         do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mListener);
@@ -3670,7 +3670,7 @@ XULDocument::CreateTemplateBuilder(Element* aElement)
     NS_ENSURE_TRUE(document, NS_OK);
 
     int32_t nameSpaceID;
-    nsIAtom* baseTag = document->BindingManager()->
+    nsAtom* baseTag = document->BindingManager()->
       ResolveTag(aElement, &nameSpaceID);
 
     if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsGkAtoms::tree)) {
@@ -3871,8 +3871,8 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         }
 
         int32_t nameSpaceID = name->NamespaceID();
-        nsIAtom* attr = name->LocalName();
-        nsIAtom* prefix = name->GetPrefix();
+        nsAtom* attr = name->LocalName();
+        nsAtom* prefix = name->GetPrefix();
 
         nsAutoString value;
         aOverlayNode->GetAttr(nameSpaceID, attr, value);
@@ -3916,7 +3916,7 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     for (i = 0; i < childCount; ++i) {
         currContent = aOverlayNode->GetFirstChild();
 
-        nsIAtom *idAtom = currContent->GetID();
+        nsAtom *idAtom = currContent->GetID();
 
         nsIContent *elementInDocument = nullptr;
         if (idAtom) {
@@ -3945,7 +3945,7 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
             nsIContent *elementParent = elementInDocument->GetParent();
 
-            nsIAtom *parentID = elementParent->GetID();
+            nsAtom *parentID = elementParent->GetID();
             if (parentID &&
                 aTargetNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
                                          nsDependentAtomString(parentID),
@@ -4067,8 +4067,8 @@ XULDocument::TemplateBuilderHookup::Resolve()
 nsresult
 XULDocument::BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
                                                  int32_t aNameSpaceID,
-                                                 nsIAtom* aAttribute,
-                                                 nsIAtom* aPrefix,
+                                                 nsAtom* aAttribute,
+                                                 nsAtom* aPrefix,
                                                  const nsAString& aValue)
 {
     nsresult rv = NS_OK;

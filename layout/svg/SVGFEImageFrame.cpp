@@ -55,7 +55,7 @@ public:
 #endif
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t  aModType) override;
 
   void OnVisibilityChange(Visibility aNewVisibility,
@@ -118,7 +118,7 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
 
 nsresult
 SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   int32_t  aModType)
 {
   SVGFEImageElement* element = static_cast<SVGFEImageElement*>(GetContent());

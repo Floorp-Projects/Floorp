@@ -56,7 +56,7 @@ CurrentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-CurrentFunctionCall::getNameAtom(nsIAtom** aAtom)
+CurrentFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     *aAtom = nsGkAtoms::current;
     NS_ADDREF(*aAtom);

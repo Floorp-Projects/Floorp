@@ -28,7 +28,7 @@
 #ifndef nsHtml5AttributeName_h
 #define nsHtml5AttributeName_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -64,16 +64,16 @@ class nsHtml5AttributeName
     static int32_t* XML_NS;
     static int32_t* XLINK_NS;
   public:
-    static nsIAtom** ALL_NO_PREFIX;
+    static nsAtom** ALL_NO_PREFIX;
   private:
-    static nsIAtom** XMLNS_PREFIX;
-    static nsIAtom** XLINK_PREFIX;
-    static nsIAtom** XML_PREFIX;
-    static nsIAtom** SVG_DIFFERENT(nsIAtom* name, nsIAtom* camel);
-    static nsIAtom** MATH_DIFFERENT(nsIAtom* name, nsIAtom* camel);
-    static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
+    static nsAtom** XMLNS_PREFIX;
+    static nsAtom** XLINK_PREFIX;
+    static nsAtom** XML_PREFIX;
+    static nsAtom** SVG_DIFFERENT(nsAtom* name, nsAtom* camel);
+    static nsAtom** MATH_DIFFERENT(nsAtom* name, nsAtom* camel);
+    static nsAtom** COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix);
   public:
-    static nsIAtom** SAME_LOCAL(nsIAtom* name);
+    static nsAtom** SAME_LOCAL(nsAtom* name);
     inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
                                                  int32_t key)
     {
@@ -106,7 +106,7 @@ class nsHtml5AttributeName
       }
       nsHtml5AttributeName* attributeName =
         nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
-      nsIAtom* name = attributeName->getLocal(0);
+      nsAtom* name = attributeName->getLocal(0);
       if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
         return nullptr;
       }
@@ -156,15 +156,15 @@ class nsHtml5AttributeName
 
   private:
     int32_t* uri;
-    nsIAtom** local;
-    nsIAtom** prefix;
+    nsAtom** local;
+    nsAtom** prefix;
     bool custom;
-    nsHtml5AttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix);
+    nsHtml5AttributeName(int32_t* uri, nsAtom** local, nsAtom** prefix);
   public:
     nsHtml5AttributeName();
     inline bool isInterned() { return !custom; }
 
-    inline void setNameForNonInterned(nsIAtom* name)
+    inline void setNameForNonInterned(nsAtom* name)
     {
       MOZ_ASSERT(custom);
       local[0] = name;
@@ -172,11 +172,11 @@ class nsHtml5AttributeName
       local[2] = name;
     }
 
-    static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
+    static nsHtml5AttributeName* createAttributeName(nsAtom* name);
     ~nsHtml5AttributeName();
     int32_t getUri(int32_t mode);
-    nsIAtom* getLocal(int32_t mode);
-    nsIAtom* getPrefix(int32_t mode);
+    nsAtom* getLocal(int32_t mode);
+    nsAtom* getPrefix(int32_t mode);
     bool equalsAnother(nsHtml5AttributeName* another);
     static nsHtml5AttributeName* ATTR_ALT;
     static nsHtml5AttributeName* ATTR_DIR;

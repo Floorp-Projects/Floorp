@@ -1913,6 +1913,12 @@ void HTMLMediaElement::QueueLoadFromSourceTask()
     return;
   }
 
+  if (mDecoder) {
+    // Reset readyState to HAVE_NOTHING since we're going to load a new decoder.
+    ShutdownDecoder();
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+  }
+
   ChangeDelayLoadStatus(true);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
   RefPtr<Runnable> r = NewRunnableMethod("HTMLMediaElement::LoadFromSourceChildren",
@@ -2844,17 +2850,6 @@ HTMLMediaElement::Seek(double aTime,
   //       MediaDecoderReaders.
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (!mDecoder->IsMetadataLoaded()) {
-    // This is for debugging bug 1402584.
-    // We should reach here only after metadata loaded by the decoder.
-    MOZ_CRASH_UNSAFE_PRINTF(
-      "Metadata not loaded! readyState=%d networkState=%d",
-      static_cast<int>(mReadyState.Ref()),
-      static_cast<int>(mNetworkState));
-  }
-#endif
 
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
@@ -4397,7 +4392,7 @@ HTMLMediaElement::OutputMediaStream::~OutputMediaStream()
 }
 
 bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
-                                      nsIAtom* aAttribute,
+                                      nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
@@ -4452,7 +4447,7 @@ int32_t HTMLMediaElement::TabIndexDefault()
 }
 
 nsresult
-HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -4504,7 +4499,7 @@ HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLMediaElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+HTMLMediaElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValueOrString& aValue,
                                          bool aNotify)
 {
@@ -4515,7 +4510,7 @@ HTMLMediaElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 void
-HTMLMediaElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLMediaElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                        bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -4867,6 +4862,7 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
+  MOZ_DIAGNOSTIC_ASSERT(mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
   MediaDecoderInit decoderInit(this,
                                mMuted ? 0.0 : mVolume,
@@ -4920,6 +4916,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                                        nsIStreamListener** aListener)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
+  MOZ_DIAGNOSTIC_ASSERT(mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
   DecoderDoctorDiagnostics diagnostics;
 
@@ -6053,16 +6050,6 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplaythrough"));
   }
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA && mDecoder &&
-      !mDecoder->IsMetadataLoaded()) {
-    MOZ_CRASH_UNSAFE_PRINTF(
-      "Metadata not loaded! readyState=%d networkState=%d",
-      static_cast<int>(mReadyState.Ref()),
-      static_cast<int>(mNetworkState));
-  }
-#endif
 }
 
 static const char* const gNetworkStateToString[] = {
@@ -7179,7 +7166,7 @@ HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
 }
 
 bool
-HTMLMediaElement::IsEventAttributeNameInternal(nsIAtom* aName)
+HTMLMediaElement::IsEventAttributeNameInternal(nsAtom* aName)
 {
   return aName == nsGkAtoms::onencrypted ||
          nsGenericHTMLElement::IsEventAttributeNameInternal(aName);

@@ -305,7 +305,7 @@ txIdPattern::txIdPattern(const nsAString& aString)
     nsWhitespaceTokenizer tokenizer(aString);
     while (tokenizer.hasMoreTokens()) {
         // this can fail, XXX move to a Init(aString) method
-        RefPtr<nsIAtom> atom = NS_Atomize(tokenizer.nextToken());
+        RefPtr<nsAtom> atom = NS_Atomize(tokenizer.nextToken());
         mIds.AppendElement(atom);
     }
 }
@@ -324,7 +324,7 @@ txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
     nsIContent* content = txXPathNativeNode::getContent(aNode);
     NS_ASSERTION(content, "a Element without nsIContent");
 
-    nsIAtom* id = content->GetID();
+    nsAtom* id = content->GetID();
     aMatched = id && mIds.IndexOf(id) != mIds.NoIndex;
 
     return NS_OK;

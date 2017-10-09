@@ -7,7 +7,7 @@
 
 #include "nsRDFXMLSerializer.h"
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIOutputStream.h"
 #include "nsIRDFService.h"
 #include "nsIRDFContainerUtils.h"
@@ -121,7 +121,7 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     mDataSource->GetURI(getter_Copies(mBaseURLSpec));
 
     // Add the ``RDF'' prefix, by default.
-    RefPtr<nsIAtom> prefix;
+    RefPtr<nsAtom> prefix;
 
     prefix = NS_Atomize("RDF");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
@@ -135,9 +135,9 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
 }
 
 NS_IMETHODIMP
-nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAString& aURI)
+nsRDFXMLSerializer::AddNameSpace(nsAtom* aPrefix, const nsAString& aURI)
 {
-    RefPtr<nsIAtom> prefix = aPrefix;
+    RefPtr<nsAtom> prefix = aPrefix;
     if (!prefix) {
         // Make up a prefix, we don't want default namespaces, so
         // that we can use QNames for elements and attributes alike.
@@ -178,11 +178,11 @@ rdf_BlockingWrite(nsIOutputStream* stream, const nsAString& s)
     return rdf_BlockingWrite(stream, utf8.get(), utf8.Length());
 }
 
-already_AddRefed<nsIAtom>
+already_AddRefed<nsAtom>
 nsRDFXMLSerializer::EnsureNewPrefix()
 {
     nsAutoString qname;
-    RefPtr<nsIAtom> prefix;
+    RefPtr<nsAtom> prefix;
     bool isNewPrefix;
     do {
         isNewPrefix = true;
@@ -233,7 +233,7 @@ nsRDFXMLSerializer::RegisterQName(nsIRDFResource* aResource)
 
     // Take whatever is to the right of the '#' or '/' and call it the
     // local name, make up a prefix.
-    RefPtr<nsIAtom> prefix = EnsureNewPrefix();
+    RefPtr<nsAtom> prefix = EnsureNewPrefix();
     mNameSpaces.Put(StringHead(uri, i+1), prefix);
     prefix->ToUTF8String(qname);
     qname.Append(':');

@@ -1074,7 +1074,7 @@ protected:
     nsTArray<ClipState> clipsAndTransforms;
 
     RefPtr<gfxFontGroup> fontGroup;
-    RefPtr<nsIAtom> fontLanguage;
+    RefPtr<nsAtom> fontLanguage;
     nsFont fontFont;
 
     EnumeratedArray<Style, Style::MAX, RefPtr<CanvasGradient>> gradientStyles;

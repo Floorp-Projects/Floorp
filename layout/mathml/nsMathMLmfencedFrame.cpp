@@ -60,7 +60,7 @@ nsMathMLmfencedFrame::SetInitialChildList(ChildListID     aListID,
 
 nsresult
 nsMathMLmfencedFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                       nsIAtom*        aAttribute,
+                                       nsAtom*        aAttribute,
                                        int32_t         aModType)
 {
   RemoveFencesAndSeparators();

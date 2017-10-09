@@ -65,7 +65,7 @@ public:
                                         uint32_t aFilter) override;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t  aModType) override;
 
   virtual mozilla::LogicalSize

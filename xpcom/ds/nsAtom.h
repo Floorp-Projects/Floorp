@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIAtom_h
-#define nsIAtom_h
+#ifndef nsAtom_h
+#define nsAtom_h
 
 #include "nsISupportsImpl.h"
 #include "nsString.h"
@@ -14,7 +14,7 @@
 // This class would be |final| if it wasn't for nsICSSAnonBoxPseudo and
 // nsICSSPseudoElement, which are trivial subclasses used to ensure only
 // certain atoms are passed to certain functions.
-class nsIAtom
+class nsAtom
 {
 public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -86,10 +86,10 @@ private:
   friend class nsHtml5AtomEntry;
 
   // Construction and destruction is done entirely by |friend|s.
-  nsIAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
-  nsIAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash);
+  nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
+  nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash);
 protected:
-  ~nsIAtom();
+  ~nsAtom();
 
 private:
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
@@ -101,10 +101,6 @@ private:
   // nsStringBuffer::FromData() calls above are valid.
   char16_t* mString;
 };
-
-// XXX: Bug 1400460 will rename nsIAtom as nsAtom, now that it no longer
-// inherits from nsISupports. Until that happens, we have this typedef.
-typedef nsIAtom nsAtom;
 
 // The four forms of NS_Atomize (for use with |RefPtr<nsAtom>|) return the
 // atom for the string given. At any given time there will always be one atom
@@ -159,4 +155,4 @@ public:
   {}
 };
 
-#endif  // nsIAtom_h
+#endif  // nsAtom_h

@@ -30,7 +30,7 @@ nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const
 bool
 nsRubyContentFrame::IsIntraLevelWhitespace() const
 {
-  nsIAtom* pseudoType = StyleContext()->GetPseudo();
+  nsAtom* pseudoType = StyleContext()->GetPseudo();
   if (pseudoType != nsCSSAnonBoxes::rubyBase &&
       pseudoType != nsCSSAnonBoxes::rubyText) {
     return false;

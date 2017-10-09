@@ -524,7 +524,7 @@
  *   conditions.  This can make the compiler ignore these pointers when validating
  *   the usage of pointers elsewhere.
  *
- *   Examples include an nsIAtom* member which is known at compile time to point to a
+ *   Examples include an nsAtom* member which is known at compile time to point to a
  *   static atom which is valid throughout the lifetime of the program, or an API which
  *   stores a pointer, but doesn't take ownership over it, instead requiring the API
  *   consumer to correctly null the value before it becomes invalid.

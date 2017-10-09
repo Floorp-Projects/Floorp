@@ -455,7 +455,7 @@ HTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue, ErrorResult
 
 bool
 HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
@@ -495,7 +495,7 @@ HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
 }
 
 nsChangeHint
-HTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLTextAreaElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                             int32_t aModType) const
 {
   nsChangeHint retval =
@@ -512,7 +512,7 @@ HTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTextAreaElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::wrap },
@@ -1011,7 +1011,7 @@ HTMLTextAreaElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-HTMLTextAreaElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLTextAreaElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                    const nsAttrValueOrString* aValue,
                                    bool aNotify)
 {
@@ -1070,7 +1070,7 @@ HTMLTextAreaElement::ContentChanged(nsIContent* aContent)
 }
 
 nsresult
-HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                   const nsAttrValue* aValue,
                                   const nsAttrValue* aOldValue, bool aNotify)
 {

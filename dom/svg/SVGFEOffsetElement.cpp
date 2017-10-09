@@ -77,7 +77,7 @@ SVGFEOffsetElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
 bool
 SVGFEOffsetElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                              nsIAtom* aAttribute) const
+                                              nsAtom* aAttribute) const
 {
   return SVGFEOffsetElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
