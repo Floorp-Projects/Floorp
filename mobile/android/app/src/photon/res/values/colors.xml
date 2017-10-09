@@ -263,6 +263,8 @@
     <color name="activity_stream_icon">#FF919191</color>
 
     <color name="tablet_tab_strip_divider_color">#737373</color>
+    <color name="tablet_tab_strip_indicator">#0060DF</color>
+    <color name="tablet_tab_strip_indicator_private">#8000D7</color>
 
     <color name="bookmark_folder_bg_color">#FCFCFC</color>
 </resources>
