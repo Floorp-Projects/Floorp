@@ -241,9 +241,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
 
-  if (!WrBridge()->BeginTransaction()) {
-    return;
-  }
+  WrBridge()->BeginTransaction();
   DiscardCompositorAnimations();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
