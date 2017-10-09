@@ -46,8 +46,11 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     mLastCanvasDatas.Clear();
     mLastAsr = nullptr;
 
-    CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc,
-                                           aBuilder, aResourceUpdates);
+    {
+      StackingContextHelper pageRootSc(sc, aBuilder);
+      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder,
+                                             pageRootSc, aBuilder, aResourceUpdates);
+    }
 
     // Make a "root" layer data that has everything else as descendants
     mLayerScrollData.emplace_back();

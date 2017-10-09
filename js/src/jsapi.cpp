@@ -7525,19 +7525,6 @@ UnhideScriptedCaller(JSContext* cx)
 
 } /* namespace JS */
 
-AutoGCRooter::AutoGCRooter(JSContext* cx, ptrdiff_t tag)
-  : AutoGCRooter(JS::RootingContext::get(cx), tag)
-{}
-
-AutoGCRooter::AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag)
-  : down(cx->autoGCRooters_),
-    tag_(tag),
-    stackTop(&cx->autoGCRooters_)
-{
-    MOZ_ASSERT(this != *stackTop);
-    *stackTop = this;
-}
-
 #ifdef JS_DEBUG
 JS_PUBLIC_API(void)
 JS::detail::AssertArgumentsAreSane(JSContext* cx, HandleValue value)

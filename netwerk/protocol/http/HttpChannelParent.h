@@ -260,7 +260,7 @@ private:
   friend class DivertStopRequestEvent;
   friend class DivertCompleteEvent;
 
-  RefPtr<nsHttpChannel>       mChannel;
+  RefPtr<HttpBaseChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;
   nsCOMPtr<nsIAssociatedContentSecurity>  mAssociatedContentSecurity;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()

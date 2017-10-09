@@ -118,12 +118,6 @@ def run_tests(config, browser_config):
     if browser_config['develop']:
         browser_config['extra_args'] = '--no-remote'
 
-    # with addon signing for production talos, we want to develop without it
-    if browser_config['develop'] or 'try' in str.lower(browser_config['branch_name']):
-        browser_config['preferences']['xpinstall.signatures.required'] = False
-
-    browser_config['preferences']['extensions.allow-non-mpc-extensions'] = True
-
     # if using firstNonBlankPaint, must turn on pref for it
     if test.get('fnbpaint', False):
         LOG.info("Using firstNonBlankPaint, so turning on pref for it")

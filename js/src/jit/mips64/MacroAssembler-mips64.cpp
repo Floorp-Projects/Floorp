@@ -2578,7 +2578,7 @@ MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
     as_truncld(ScratchDoubleReg, input);
     moveFromDoubleHi(ScratchDoubleReg, output);
     as_cfc1(ScratchRegister, Assembler::FCSR);
-    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_ext(ScratchRegister, ScratchRegister, 6, 1);
     ma_or(ScratchRegister, output);
     moveFromFloat32(ScratchDoubleReg, output);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
@@ -2592,7 +2592,7 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     as_truncls(ScratchDoubleReg, input);
     moveFromDoubleHi(ScratchDoubleReg, output);
     as_cfc1(ScratchRegister, Assembler::FCSR);
-    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_ext(ScratchRegister, ScratchRegister, 6, 1);
     ma_or(ScratchRegister, output);
     moveFromFloat32(ScratchDoubleReg, output);
     ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
