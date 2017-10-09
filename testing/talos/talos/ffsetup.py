@@ -93,10 +93,6 @@ class FFSetup(object):
         if self.test_config.get('extensions'):
             extensions.append(self.test_config['extensions'])
 
-        if self.browser_config['develop'] or \
-           'try' in str.lower(self.browser_config['branch_name']):
-            extensions = [os.path.dirname(i) for i in extensions]
-
         # downloading a profile instead of using the empty one
         if self.test_config['profile'] is not None:
             path = heavy.download_profile(self.test_config['profile'])
