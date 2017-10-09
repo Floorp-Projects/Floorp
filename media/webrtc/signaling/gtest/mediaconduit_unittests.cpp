@@ -13,7 +13,6 @@ using namespace std;
 #include <MediaConduitInterface.h>
 #include <VideoConduit.h>
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "nss.h"
 #include "runnable_utils.h"
 #include "signaling/src/common/EncodingConstraints.h"
@@ -225,7 +224,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    //Create input file with the music
    WriteWaveHeader(PLAYOUT_SAMPLE_FREQUENCY, 1, inFile);
    GenerateMusic(inbuf, SAMPLES);
-   Unused << fwrite(inbuf,1,SAMPLES*sizeof(inbuf[0])*CHANNELS,inFile);
+   fwrite(inbuf,1,SAMPLES*sizeof(inbuf[0])*CHANNELS,inFile);
    FinishWaveHeader(inFile);
    fclose(inFile);
 
