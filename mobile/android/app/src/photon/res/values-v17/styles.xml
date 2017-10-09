@@ -100,4 +100,15 @@
         <item name="android:layout_marginEnd">8dp</item>
     </style>
 
+    <style name="TabStrip.Close" parent="TabStrip.V17.Close"/>
+    <style name="TabStrip.V17.Close" parent="TabStrip.Base">
+        <item name="android:layout_alignParentEnd">true</item>
+    </style>
+
+    <style name="TabStrip.Title" parent="TabStrip.V17.Title"/>
+    <style name="TabStrip.V17.Title" parent="TabStrip.Base">
+        <item name="android:layout_toEndOf">@id/favicon</item>
+        <item name="android:layout_toStartOf">@id/close</item>
+    </style>
+
 </resources>
