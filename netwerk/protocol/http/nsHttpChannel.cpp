@@ -9479,7 +9479,9 @@ nsHttpChannel::RedirectToInterceptedChannel()
     GetCallback(controller);
 
     RefPtr<InterceptedHttpChannel> intercepted =
-      InterceptedHttpChannel::CreateForInterception();
+      InterceptedHttpChannel::CreateForInterception(mChannelCreationTime,
+                                                    mChannelCreationTimestamp,
+                                                    mAsyncOpenTime);
 
     nsresult rv =
       intercepted->Init(mURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
