@@ -399,9 +399,7 @@ XRE_InitChildProcess(int aArgc,
 
   mozilla::LogModule::Init();
 
-  char aLocal;
-  AutoProfilerInit profilerInit(&aLocal);
-
+  AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XRE_InitChildProcess", OTHER);
 
   // Ensure AbstractThread is minimally setup, so async IPC messages
@@ -772,8 +770,7 @@ XRE_InitParentProcess(int aArgc,
 
   mozilla::LogModule::Init();
 
-  char aLocal;
-  AutoProfilerInit profilerInit(&aLocal);
+  AUTO_PROFILER_INIT;
 
   ScopedXREEmbed embed;
 

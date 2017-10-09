@@ -6746,8 +6746,7 @@ HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
 
 - (void)runEventThread
 {
-  char aLocal;
-  profiler_register_thread("APZC Event Thread", &aLocal);
+  PROFILER_REGISTER_THREAD("APZC Event Thread");
   NS_SetCurrentThreadName("APZC Event Thread");
 
   mThread = [NSThread currentThread];
