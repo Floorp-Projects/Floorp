@@ -13,6 +13,7 @@
 #include "MediaResource.h"
 #include "MemoryBlockCache.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -151,7 +152,7 @@ public:
   // file backing will be provided.
   static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength);
 
-  nsIEventTarget* OwnerThread() const { return mThread; }
+  nsIEventTarget* OwnerThread() const { return sThread; }
 
   // Brutally flush the cache contents. Main thread only.
   void Flush();
@@ -266,6 +267,15 @@ public:
     uint32_t mNext;
   };
 
+  // Called during shutdown to clear sThread.
+  void operator=(std::nullptr_t)
+  {
+    nsCOMPtr<nsIThread> thread = sThread.forget();
+    if (thread) {
+      thread->Shutdown();
+    }
+  }
+
 protected:
   explicit MediaCache(MediaBlockCacheBase* aCache)
     : mNextResourceID(1)
@@ -279,9 +289,17 @@ protected:
     NS_ASSERTION(NS_IsMainThread(), "Only construct MediaCache on main thread");
     MOZ_COUNT_CTOR(MediaCache);
     MediaCacheFlusher::RegisterMediaCache(this);
-    nsresult rv = NS_NewNamedThread("MediaCache", getter_AddRefs(mThread));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to create a thread for MediaCache.");
+
+    if (!sThreadInit) {
+      sThreadInit = true;
+      nsCOMPtr<nsIThread> thread;
+      nsresult rv = NS_NewNamedThread("MediaCache", getter_AddRefs(thread));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to create a thread for MediaCache.");
+        return;
+      }
+      sThread = thread.forget();
+      ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
     }
   }
 
@@ -313,11 +331,6 @@ protected:
     NS_ASSERTION(mStreams.IsEmpty(), "Stream(s) still open!");
     Truncate();
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
-
-    nsCOMPtr<nsIThread> thread = mThread.forget();
-    if (thread) {
-      thread->Shutdown();
-    }
 
     MOZ_COUNT_DTOR(MediaCache);
   }
@@ -448,12 +461,19 @@ protected:
   // A list of resource IDs to notify about the change in suspended status.
   nsTArray<int64_t> mSuspendedStatusToNotify;
   // The thread on which we will run data callbacks from the channels.
-  // Could be null if failing to create the thread.
-  nsCOMPtr<nsIThread> mThread;
+  // Could be null if failing to create the thread. Note this thread is shared
+  // among all MediaCache instances.
+  static StaticRefPtr<nsIThread> sThread;
+  // True if we've tried to init sThread. Note we try once only so it is safe
+  // to access sThread on all threads.
+  static bool sThreadInit;
 };
 
 // Initialized to nullptr by non-local static initialization.
 /* static */ MediaCache* MediaCache::gMediaCache;
+
+/* static */ StaticRefPtr<nsIThread> MediaCache::sThread;
+/* static */ bool MediaCache::sThreadInit = false;
 
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)

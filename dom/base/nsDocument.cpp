@@ -13685,7 +13685,8 @@ nsIDocument::UpdateStyleBackendType()
     // Note that, since tests can have XUL support, we still need to
     // explicitly exclude XUL documents here.
     if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-        !IsXULDocument() && !ShouldUseGeckoBackend(mDocumentURI)) {
+        !IsXULDocument() && !ShouldUseGeckoBackend(mDocumentURI) &&
+        !nsLayoutUtils::IsInStyloBlocklist(NodePrincipal())) {
       mStyleBackendType = StyleBackendType::Servo;
     }
   }

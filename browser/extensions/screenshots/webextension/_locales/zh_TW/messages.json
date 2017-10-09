@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "已將圖片裁切為 $PIXELS$px 大小。",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "系統維護中。"
   },
@@ -104,7 +112,7 @@
     "message": "用您想要的方式分享"
   },
   "tourBodyDownloadUpload": {
-    "message": "裁切過的擷圖，可直接傳到網路上方便分享，也能下載到電腦裡。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
+    "message": "裁切過的擷圖，可直接傳到網路上方便分享，也能下載到電腦裡；也可以點擊「我的擷圖」按鈕，尋找拍過的所有擷圖。"
   },
   "tourSkip": {
     "message": "略過"
