@@ -164,9 +164,11 @@ public:
     // a stack is expensive. This is still useful if (1) you're trying to remove
     // all flushes for a particial frame or (2) the costly flush is triggered
     // near the call site where the first observer is triggered.
+#ifdef MOZ_GECKO_PROFILER
     if (!mStyleCause) {
       mStyleCause = profiler_get_backtrace();
     }
+#endif
     bool appended = mStyleFlushObservers.AppendElement(aShell) != nullptr;
     EnsureTimerStarted();
 
@@ -178,6 +180,7 @@ public:
   bool AddLayoutFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!IsLayoutFlushObserver(aShell),
                  "Double-adding layout flush observer");
+#ifdef MOZ_GECKO_PROFILER
     // We only get the cause for the first observer each frame because capturing
     // a stack is expensive. This is still useful if (1) you're trying to remove
     // all flushes for a particial frame or (2) the costly flush is triggered
@@ -185,6 +188,7 @@ public:
     if (!mReflowCause) {
       mReflowCause = profiler_get_backtrace();
     }
+#endif
     bool appended = mLayoutFlushObservers.AppendElement(aShell) != nullptr;
     EnsureTimerStarted();
     return appended;
@@ -416,8 +420,10 @@ private:
   mozilla::RefreshDriverTimer* ChooseTimer() const;
   mozilla::RefreshDriverTimer* mActiveTimer;
 
+#ifdef MOZ_GECKO_PROFILER
   UniqueProfilerBacktrace mReflowCause;
   UniqueProfilerBacktrace mStyleCause;
+#endif
 
   // nsPresContext passed in constructor and unset in Disconnect.
   mozilla::WeakPtr<nsPresContext> mPresContext;

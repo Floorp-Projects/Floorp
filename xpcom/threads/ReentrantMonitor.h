@@ -86,7 +86,7 @@ public:
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT)
   {
 #ifdef MOZILLA_INTERNAL_API
-    AutoProfilerThreadSleep sleep;
+    AUTO_PROFILER_THREAD_SLEEP;
 #endif //MOZILLA_INTERNAL_API
     return PR_Wait(mReentrantMonitor, aInterval) == PR_SUCCESS ?
       NS_OK : NS_ERROR_FAILURE;

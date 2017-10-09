@@ -34,8 +34,8 @@ public:
   size_t SizeOfExcludingThis() const;
 
 #if defined(MOZ_GECKO_PROFILER)
-    /** Clears the contents of vectors and resets the index. */
-    void Clear();
+  /** Clears the contents of vectors and resets the index. */
+  void Clear();
 #endif
 
 private:

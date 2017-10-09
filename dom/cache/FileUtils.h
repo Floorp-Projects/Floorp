@@ -121,7 +121,8 @@ nsresult
 LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir);
 
 nsresult
-LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn);
+LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn,
+                              bool aMustRestore, int64_t* aPaddingSizeOut);
 
 nsresult
 LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,

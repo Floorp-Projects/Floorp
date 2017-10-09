@@ -1540,7 +1540,7 @@ TelemetryImpl::DoStackCapture(const nsACString& aKey) {
 
 nsresult
 TelemetryImpl::CaptureStack(const nsACString& aKey) {
-#if defined(MOZ_GECKO_PROFILER)
+#ifdef MOZ_GECKO_PROFILER
   TelemetryImpl::DoStackCapture(aKey);
 #endif
   return NS_OK;
@@ -1991,7 +1991,7 @@ void RecordChromeHang(uint32_t duration,
 
 void CaptureStack(const nsACString& aKey)
 {
-#if defined(MOZ_GECKO_PROFILER)
+#ifdef MOZ_GECKO_PROFILER
   TelemetryImpl::DoStackCapture(aKey);
 #endif
 }

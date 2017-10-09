@@ -71,7 +71,7 @@ WebRenderBridgeChild::AddWebRenderParentCommands(const nsTArray<WebRenderParentC
   mParentCommands.AppendElements(aCommands);
 }
 
-bool
+void
 WebRenderBridgeChild::BeginTransaction()
 {
   MOZ_ASSERT(!mDestroyed);
@@ -80,7 +80,6 @@ WebRenderBridgeChild::BeginTransaction()
   mIsInTransaction = true;
   mReadLockSequenceNumber = 0;
   mReadLocks.AppendElement();
-  return true;
 }
 
 void

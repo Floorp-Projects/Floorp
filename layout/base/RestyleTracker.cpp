@@ -60,7 +60,9 @@ RestyleTracker::Document() const {
 
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
+#ifdef MOZ_GECKO_PROFILER
   UniqueProfilerBacktrace mBacktrace;
+#endif
 };
 
 inline void
@@ -106,6 +108,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 void
 RestyleTracker::DoProcessRestyles()
 {
+#ifdef MOZ_GECKO_PROFILER
   nsAutoCString docURL("N/A");
   if (profiler_is_active()) {
     nsIURI *uri = Document()->GetDocumentURI();
@@ -115,6 +118,7 @@ RestyleTracker::DoProcessRestyles()
   }
   AUTO_PROFILER_LABEL_DYNAMIC("RestyleTracker::DoProcessRestyles", CSS,
                               docURL.get());
+#endif
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
@@ -252,10 +256,12 @@ RestyleTracker::DoProcessRestyles()
           AutoRestyleTimelineMarker marker(
             mRestyleManager->PresContext()->GetDocShell(),
             data->mRestyleHint & eRestyle_AllHintsWithAnimations);
+#ifdef MOZ_GECKO_PROFILER
           Maybe<AutoProfilerTracing> tracing;
           if (profiler_feature_active(ProfilerFeature::Restyle)) {
             tracing.emplace("Paint", "Styles", Move(data->mBacktrace));
           }
+#endif
           ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
                             data->mRestyleHintData);
           AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
@@ -325,7 +331,9 @@ RestyleTracker::DoProcessRestyles()
           // We can move data since we'll be clearing mPendingRestyles after
           // we finish enumerating it.
           restyle->mRestyleHintData = Move(data->mRestyleHintData);
+#ifdef MOZ_GECKO_PROFILER
           restyle->mBacktrace = Move(data->mBacktrace);
+#endif
 
 #ifdef RESTYLE_LOGGING
           count++;
@@ -351,10 +359,13 @@ RestyleTracker::DoProcessRestyles()
                       index++, count);
           LOG_RESTYLE_INDENT();
 
+#ifdef MOZ_GECKO_PROFILER
           Maybe<AutoProfilerTracing> tracing;
           if (profiler_feature_active(ProfilerFeature::Restyle)) {
-            tracing.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
+            tracing.emplace("Paint", "Styles",
+                            Move(currentRestyle->mBacktrace));
           }
+#endif
 
           {
             AutoRestyleTimelineMarker marker(
