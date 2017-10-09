@@ -1182,7 +1182,7 @@ CustomElementDefinition::CustomElementDefinition(nsAtom* aType,
                                                  nsAtom* aLocalName,
                                                  Function* aConstructor,
                                                  nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                                                 JSObject* aPrototype,
+                                                 JS::Handle<JSObject*> aPrototype,
                                                  LifecycleCallbacks* aCallbacks,
                                                  uint32_t aDocOrder)
   : mType(aType),

@@ -165,7 +165,7 @@ struct CustomElementDefinition
                           nsAtom* aLocalName,
                           Function* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          JSObject* aPrototype,
+                          JS::Handle<JSObject*> aPrototype,
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
 
