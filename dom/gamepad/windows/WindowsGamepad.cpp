@@ -139,10 +139,10 @@ public:
           uint32_t aNumButtons,
           bool aHasDpad,
           GamepadType aType) :
+    type(aType),
     numAxes(aNumAxes),
     numButtons(aNumButtons),
     hasDpad(aHasDpad),
-    type(aType),
     present(true)
   {
     buttons.SetLength(numButtons);
@@ -159,8 +159,8 @@ typedef void (WINAPI *XInputEnable_func)(BOOL);
 class XInputLoader {
 public:
   XInputLoader() : module(nullptr),
-                   mXInputEnable(nullptr),
-                   mXInputGetState(nullptr) {
+                   mXInputGetState(nullptr),
+                   mXInputEnable(nullptr) {
     // xinput1_4.dll exists on Windows 8
     // xinput9_1_0.dll exists on Windows 7 and Vista
     // xinput1_3.dll shipped with the DirectX SDK
@@ -280,14 +280,14 @@ SupportedUsage(USHORT page, USHORT usage)
 
 class HIDLoader {
 public:
-  HIDLoader() : mModule(LoadLibraryW(L"hid.dll")),
-                mHidD_GetProductString(nullptr),
+  HIDLoader() : mHidD_GetProductString(nullptr),
                 mHidP_GetCaps(nullptr),
                 mHidP_GetButtonCaps(nullptr),
                 mHidP_GetValueCaps(nullptr),
                 mHidP_GetUsages(nullptr),
                 mHidP_GetUsageValue(nullptr),
-                mHidP_GetScaledUsageValue(nullptr)
+                mHidP_GetScaledUsageValue(nullptr),
+                mModule(LoadLibraryW(L"hid.dll"))
   {
     if (mModule) {
       mHidD_GetProductString = reinterpret_cast<decltype(HidD_GetProductString)*>(GetProcAddress(mModule, "HidD_GetProductString"));
