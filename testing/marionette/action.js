@@ -9,10 +9,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/assert.js");
-const {
-  element,
-  WebElement,
-} = Cu.import("chrome://marionette/content/element.js", {});
+const {element} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   InvalidArgumentError,
   MoveTargetOutOfBoundsError,
@@ -347,15 +344,15 @@ action.PointerOrigin = {
 /**
  * Look up a PointerOrigin.
  *
- * @param {(undefined|string|WebElement)} obj
- *     Origin for a pointerMove action.
+ * @param {(string|Element)=} obj
+ *     Origin for a <code>pointerMove</code> action.  Must be one of
+ *     "viewport" (default), "pointer", or a DOM element or a DOM element.
  *
  * @return {action.PointerOrigin}
- *     A pointer origin that is either "viewport" (default), "pointer", or a
- *     web-element reference.
+ *     Pointer origin.
  *
  * @throws {InvalidArgumentError}
- *     If <code>obj</code> is not a valid origin.
+ *     If <var>obj</var> is not a valid origin.
  */
 action.PointerOrigin.get = function(obj) {
   let origin = obj;
@@ -365,9 +362,10 @@ action.PointerOrigin.get = function(obj) {
     let name = capitalize(obj);
     assert.in(name, this, pprint`Unknown pointer-move origin: ${obj}`);
     origin = this[name];
-  } else if (!WebElement.isReference(obj)) {
-    throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
-      pprint`web element reference, got ${obj}`);
+  } else if (!element.isDOMElement(obj)) {
+    throw new InvalidArgumentError("Expected 'origin' to be undefined, " +
+        '"viewport", "pointer", ' +
+        pprint`or an element, got: ${obj}`);
   }
   return origin;
 };
@@ -972,21 +970,18 @@ action.Mouse = class {
  * @param {action.Chain} chain
  *     Actions grouped by tick; each element in |chain| is a sequence of
  *     actions for one tick.
- * @param {element.Store} seenEls
- *     Element store.
  * @param {WindowProxy} window
  *     Current window global.
  *
  * @return {Promise}
  *     Promise for dispatching all actions in |chain|.
  */
-action.dispatch = function(chain, seenEls, window) {
+action.dispatch = function(chain, window) {
   let chainEvents = (async () => {
     for (let tickActions of chain) {
       await action.dispatchTickActions(
           tickActions,
           action.computeTickDuration(tickActions),
-          seenEls,
           window);
     }
   })();
@@ -1008,8 +1003,6 @@ action.dispatch = function(chain, seenEls, window) {
  *     List of actions for one tick.
  * @param {number} tickDuration
  *     Duration in milliseconds of this tick.
- * @param {element.Store} seenEls
- *     Element store.
  * @param {WindowProxy} window
  *     Current window global.
  *
@@ -1017,9 +1010,8 @@ action.dispatch = function(chain, seenEls, window) {
  *     Promise for dispatching all tick-actions and pending DOM events.
  */
 action.dispatchTickActions = function(
-    tickActions, tickDuration, seenEls, window) {
-  let pendingEvents = tickActions.map(
-      toEvents(tickDuration, seenEls, window));
+    tickActions, tickDuration, window) {
+  let pendingEvents = tickActions.map(toEvents(tickDuration, window));
   return Promise.all(pendingEvents).then(
       () => interaction.flushEventLoop(window));
 };
@@ -1085,8 +1077,6 @@ action.computePointerDestination = function(
  *
  * @param {number} tickDuration
  *     Duration in milliseconds of this tick.
- * @param {element.Store} seenEls
- *     Element store.
  * @param {WindowProxy} window
  *     Current window global.
  *
@@ -1094,7 +1084,7 @@ action.computePointerDestination = function(
  *     Function that takes an action and returns a Promise for dispatching
  *     the event that corresponds to that action.
  */
-function toEvents(tickDuration, seenEls, window) {
+function toEvents(tickDuration, window) {
   return a => {
     let inputState = action.inputStateMap.get(a.id);
 
@@ -1113,7 +1103,7 @@ function toEvents(tickDuration, seenEls, window) {
 
       case action.PointerMove:
         return dispatchPointerMove(
-            a, inputState, tickDuration, seenEls, window);
+            a, inputState, tickDuration, window);
 
       case action.PointerCancel:
         throw new UnsupportedOperationError();
@@ -1293,8 +1283,8 @@ function dispatchPointerUp(a, inputState, window) {
 }
 
 /**
- * Dispatch a pointerMove action equivalent to moving pointer device in
- * a line.
+ * Dispatch a pointerMove action equivalent to moving pointer device
+ * in a line.
  *
  * If the action duration is 0, the pointer jumps immediately to the
  * target coordinates.  Otherwise, events are synthesized to mimic a
@@ -1305,8 +1295,6 @@ function dispatchPointerUp(a, inputState, window) {
  *     Action to dispatch.
  * @param {action.InputState} inputState
  *     Input state for this action's input source.
- * @param {element.Store} seenEls
- *     Element store.
  * @param {WindowProxy} window
  *     Current window global.
  *
@@ -1314,7 +1302,7 @@ function dispatchPointerUp(a, inputState, window) {
  *     Promise to dispatch at least one pointermove event, as well as
  *     mousemove events as appropriate.
  */
-function dispatchPointerMove(a, inputState, tickDuration, seenEls, window) {
+function dispatchPointerMove(a, inputState, tickDuration, window) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   // interval between pointermove increments in ms, based on common vsync
   const fps60 = 17;
