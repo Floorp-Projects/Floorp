@@ -93,7 +93,7 @@ impl SpecNewSessionParameters {
                 x @ "browserVersion" |
                 x @ "platformName" => if !value.is_string() {
                         return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       format!("{} was not a boolean", x)))
+                                                       format!("{} is not a string", x)))
                     },
                 "pageLoadStrategy" => {
                     try!(SpecNewSessionParameters::validate_page_load_strategy(value))
