@@ -318,8 +318,11 @@ struct InternalBarrierMethods<jsid>
 };
 
 // Base class of all barrier types.
+//
+// This is marked non-memmovable since post barriers added by derived classes
+// can add pointers to class instances to the store buffer.
 template <typename T>
-class BarrieredBase
+class MOZ_NON_MEMMOVABLE BarrieredBase
 {
   protected:
     // BarrieredBase is not directly instantiable.
