@@ -13,6 +13,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsPrintfCString.h"
@@ -59,7 +60,7 @@ public:
     str.AppendPrintf(aFormat, list);
     va_end(list);
     mSHA1.update(str.get(), str.Length());
-    fwrite(str.get(), 1, str.Length(), mFile);
+    Unused << fwrite(str.get(), 1, str.Length(), mFile);
   }
   void Finish(SHA1Sum::Hash& aHash)
   {
