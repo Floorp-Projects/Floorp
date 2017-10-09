@@ -318,13 +318,15 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult
 HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
-                               const nsAttrValue* aOldValue, bool aNotify)
+                               const nsAttrValue* aOldValue,
+                               nsIPrincipal* aMaybeScriptedPrincipal,
+                               bool aNotify)
 {
   nsAttrValueOrString attrVal(aValue);
 
   if (aValue) {
-    AfterMaybeChangeAttr(aNameSpaceID, aName, attrVal, aOldValue, true,
-                         aNotify);
+    AfterMaybeChangeAttr(aNameSpaceID, aName, attrVal, aOldValue,
+                         aMaybeScriptedPrincipal, true, aNotify);
   }
 
   if (aNameSpaceID == kNameSpaceID_None && mForm &&
@@ -377,7 +379,9 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
-                                            aValue, aOldValue, aNotify);
+                                            aValue, aOldValue,
+                                            aMaybeScriptedPrincipal,
+                                            aNotify);
 }
 
 nsresult
@@ -385,7 +389,7 @@ HTMLImageElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValueOrString& aValue,
                                          bool aNotify)
 {
-  AfterMaybeChangeAttr(aNamespaceID, aName, aValue, nullptr, false, aNotify);
+  AfterMaybeChangeAttr(aNamespaceID, aName, aValue, nullptr, nullptr, false, aNotify);
 
   return nsGenericHTMLElement::OnAttrSetButNotChanged(aNamespaceID, aName,
                                                       aValue, aNotify);
@@ -395,6 +399,7 @@ void
 HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                        const nsAttrValueOrString& aValue,
                                        const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                        bool aValueMaybeChanged, bool aNotify)
 {
   bool forceReload = false;
