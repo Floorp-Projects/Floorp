@@ -13,6 +13,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 #include <algorithm>
 #include "mozilla/Telemetry.h"
 #include "CubebUtils.h"
@@ -279,7 +280,7 @@ OpenDumpFile(uint32_t aChannels, uint32_t aRate)
   SetUint16LE(header + CHANNEL_OFFSET, aChannels);
   SetUint32LE(header + SAMPLE_RATE_OFFSET, aRate);
   SetUint16LE(header + BLOCK_ALIGN_OFFSET, aChannels * 2);
-  fwrite(header, sizeof(header), 1, f);
+  Unused << fwrite(header, sizeof(header), 1, f);
 
   return f;
 }
@@ -287,7 +288,7 @@ OpenDumpFile(uint32_t aChannels, uint32_t aRate)
 template <typename T>
 typename EnableIf<IsSame<T, int16_t>::value, void>::Type
 WriteDumpFileHelper(T* aInput, size_t aSamples, FILE* aFile) {
-  fwrite(aInput, sizeof(T), aSamples, aFile);
+  Unused << fwrite(aInput, sizeof(T), aSamples, aFile);
 }
 
 template <typename T>
@@ -299,7 +300,7 @@ WriteDumpFileHelper(T* aInput, size_t aSamples, FILE* aFile) {
   for (uint32_t i = 0; i < aSamples; ++i) {
     SetUint16LE(output + i*2, int16_t(aInput[i]*32767.0f));
   }
-  fwrite(output, 2, aSamples, aFile);
+  Unused << fwrite(output, 2, aSamples, aFile);
   fflush(aFile);
 }
 
