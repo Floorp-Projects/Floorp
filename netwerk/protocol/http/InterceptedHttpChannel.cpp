@@ -475,14 +475,6 @@ InterceptedHttpChannel::SetupFallbackChannel(const char*  aFallbackKey)
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::ForceIntercepted(uint64_t aInterceptionID)
-{
-  // This is a stale API call used in the old nsHttpChannel interception
-  // code when e10s is enabled.  It will be removed in the future.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 InterceptedHttpChannel::GetResponseSynthesized(bool* aResponseSynthesized)
 {
   *aResponseSynthesized = mResponseHead || mBodyReader;

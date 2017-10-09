@@ -152,9 +152,6 @@ public:
   SetupFallbackChannel(const char * aFallbackKey) override;
 
   NS_IMETHOD
-  ForceIntercepted(uint64_t aInterceptionID) override;
-
-  NS_IMETHOD
   GetResponseSynthesized(bool *aResponseSynthesized) override;
 
   NS_IMETHOD
