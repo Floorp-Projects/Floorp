@@ -814,10 +814,8 @@ NetworkMonitor.prototype = {
 
     this.interceptedChannels.add(subject);
 
-    // On e10s, we never receive http-on-examine-cached-response, so fake one.
-    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
-      this._httpResponseExaminer(channel, "http-on-examine-cached-response");
-    }
+    // Service workers never fire http-on-examine-cached-response, so fake one.
+    this._httpResponseExaminer(channel, "http-on-examine-cached-response");
   },
 
   /**

@@ -107,6 +107,7 @@
 #include "HSTSPrimerListener.h"
 #include "CacheStorageService.h"
 #include "HttpChannelParent.h"
+#include "InterceptedHttpChannel.h"
 #include "nsIBufferedStreams.h"
 #include "nsIFileStreams.h"
 #include "nsIMIMEInputStream.h"
@@ -543,6 +544,10 @@ nsHttpChannel::Connect()
     if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
         LOG(("Resuming from cache is not supported yet"));
         return NS_ERROR_DOCUMENT_NOT_CACHED;
+    }
+
+    if (ShouldIntercept()) {
+        return RedirectToInterceptedChannel();
     }
 
     bool isTrackingResource = mIsTrackingResource; // is atomic
@@ -9575,6 +9580,51 @@ nsHttpChannel::GetWarningReporter()
 {
     LOG(("nsHttpChannel [this=%p] GetWarningReporter [%p]", this, mWarningReporter.get()));
     return mWarningReporter.get();
+}
+
+nsresult
+nsHttpChannel::RedirectToInterceptedChannel()
+{
+    mInterceptCache = INTERCEPTED;
+
+    nsCOMPtr<nsINetworkInterceptController> controller;
+    GetCallback(controller);
+
+    RefPtr<InterceptedHttpChannel> intercepted =
+      InterceptedHttpChannel::CreateForInterception();
+
+    nsresult rv =
+      intercepted->Init(mURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
+                        mProxyResolveFlags, mProxyURI, mChannelId);
+
+    nsCOMPtr<nsILoadInfo> redirectLoadInfo =
+      CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
+    intercepted->SetLoadInfo(redirectLoadInfo);
+
+    rv = SetupReplacementChannel(mURI, intercepted, true,
+                                 nsIChannelEventSink::REDIRECT_INTERNAL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mRedirectChannel = intercepted;
+
+    PushRedirectAsyncFunc(
+        &nsHttpChannel::ContinueAsyncRedirectChannelToURI);
+
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, intercepted,
+                                              nsIChannelEventSink::REDIRECT_INTERNAL);
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = WaitForRedirectCallback();
+    }
+
+    if (NS_FAILED(rv)) {
+        AutoRedirectVetoNotifier notifier(this);
+
+        PopRedirectAsyncFunc(
+            &nsHttpChannel::ContinueAsyncRedirectChannelToURI);
+    }
+
+    return rv;
 }
 
 } // namespace net
