@@ -204,10 +204,10 @@ public:
   bool DrawCustomFocusRing(mozilla::dom::Element& aElement);
   void Clip(const CanvasWindingRule& aWinding);
   void Clip(const CanvasPath& aPath, const CanvasWindingRule& aWinding);
-  bool IsPointInPath(JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding);
-  bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX, double aY, const CanvasWindingRule& aWinding);
-  bool IsPointInStroke(JSContext* aCx, double aX, double aY);
-  bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX, double aY);
+  bool IsPointInPath(double aX, double aY, const CanvasWindingRule& aWinding);
+  bool IsPointInPath(const CanvasPath& aPath, double aX, double aY, const CanvasWindingRule& aWinding);
+  bool IsPointInStroke(double aX, double aY);
+  bool IsPointInStroke(const CanvasPath& aPath, double aX, double aY);
   void FillText(const nsAString& aText, double aX, double aY,
                 const Optional<double>& aMaxWidth,
                 mozilla::ErrorResult& aError);
