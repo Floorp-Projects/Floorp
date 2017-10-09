@@ -961,4 +961,15 @@
         <item name="android:layout_marginRight">8dp</item>
     </style>
 
+    <style name="TabStrip.Close" parent="TabStrip.V15.Close"/>
+    <style name="TabStrip.V15.Close" parent="TabStrip.Base">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="TabStrip.Title" parent="TabStrip.V15.Title"/>
+    <style name="TabStrip.V15.Title" parent="TabStrip.Base">
+        <item name="android:layout_toRightOf">@id/favicon</item>
+        <item name="android:layout_toLeftOf">@id/close</item>
+    </style>
+
 </resources>

@@ -11,7 +11,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
-import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
+import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
@@ -28,7 +28,7 @@ import android.view.View;
 import android.widget.Checkable;
 import android.widget.ImageView;
 
-public class TabStripItemView extends ThemedLinearLayout
+public class TabStripItemView extends ThemedRelativeLayout
                               implements Checkable {
     private static final String LOGTAG = "GeckoTabStripItem";
 
@@ -42,6 +42,7 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ImageView faviconView;
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
+    private final View indicatorView;
 
     private final int faviconSize;
     private Bitmap lastFavicon;
@@ -52,7 +53,6 @@ public class TabStripItemView extends ThemedLinearLayout
 
     public TabStripItemView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setOrientation(HORIZONTAL);
 
         final Resources res = context.getResources();
 
@@ -85,6 +85,8 @@ public class TabStripItemView extends ThemedLinearLayout
                 tabs.closeTab(tabs.getTab(id), true);
             }
         });
+
+        indicatorView = findViewById(R.id.indicator);
     }
 
     @RobocopTarget
@@ -153,6 +155,15 @@ public class TabStripItemView extends ThemedLinearLayout
         updateTitle(tab);
         updateFavicon(tab.getFavicon());
         setPrivateMode(tab.isPrivate());
+
+        if (checked) {
+            indicatorView.setBackgroundResource(isPrivateMode()
+                                                        ? R.color.tablet_tab_strip_indicator_private
+                                                        : R.color.tablet_tab_strip_indicator);
+            indicatorView.setVisibility(VISIBLE);
+        } else {
+            indicatorView.setVisibility(GONE);
+        }
     }
 
     private void updateTitle(Tab tab) {
