@@ -14,12 +14,7 @@ class nsSMILNullType : public nsISMILType
 {
 public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILNullType*
-  Singleton()
-  {
-    static nsSMILNullType sSingleton;
-    return &sSingleton;
-  }
+  static nsSMILNullType* Singleton();
 
 protected:
   // nsISMILType Methods

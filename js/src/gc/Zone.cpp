@@ -82,9 +82,12 @@ Zone::~Zone()
     js_delete(jitZone_.ref());
 
 #ifdef DEBUG
-    // Avoid assertion destroying the weak map list if the embedding leaked GC things.
-    if (!rt->gc.shutdownCollectedEverything())
+    // Avoid assertions failures warning that not everything has been destroyed
+    // if the embedding leaked GC things.
+    if (!rt->gc.shutdownCollectedEverything()) {
         gcWeakMapList().clear();
+        regExps.clear();
+    }
 #endif
 }
 

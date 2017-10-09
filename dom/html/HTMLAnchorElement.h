@@ -201,6 +201,10 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::name, aValue);
   }
+  void GetName(nsAString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
   void SetName(const nsAString& aValue, mozilla::ErrorResult& rv)
   {
     SetHTMLAttr(nsGkAtoms::name, aValue, rv);

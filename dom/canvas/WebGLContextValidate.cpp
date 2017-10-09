@@ -513,10 +513,10 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
     // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
-    gl->GetUIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
-    mGLMaxCombinedTextureImageUnits = mGLMaxTextureUnits;
+    mGLMaxCombinedTextureImageUnits = gl->GetIntAs<GLuint>(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+    mGLMaxTextureUnits = mGLMaxCombinedTextureImageUnits;
 
-    if (mGLMaxTextureUnits < 8) {
+    if (mGLMaxCombinedTextureImageUnits < 8) {
         const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %u is < 8!",
                                      mGLMaxTextureUnits);
         *out_failReason = { "FEATURE_FAILURE_WEBGL_T_UNIT", reason };

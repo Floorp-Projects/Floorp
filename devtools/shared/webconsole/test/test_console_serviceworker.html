@@ -97,11 +97,6 @@ let expectedConsoleCalls = [
       filename: /helper_serviceworker/,
       arguments: ['fetch event: ' + SCOPE_FRAME_URL2],
     },
-    {
-      level: "log",
-      filename: /helper_serviceworker/,
-      arguments: ['message event: ' + MESSAGE],
-    },
 ];
 let consoleCalls = [];
 
@@ -169,10 +164,9 @@ let onAttach = Task.async(function*(state, response) {
 
     // Now postMessage() the service worker to trigger its message event
     // handler.  This will generate 1 or 2 to console.log() statements
-    // depending on if the worker thread needs to spin up again.  Although we
-    // don't have a controlled or registering document in both cases, we still
-    // could get console calls since we only flush reports when the channel is
-    // finally destroyed.
+    // depending on if the worker thread needs to spin up again.  In either
+    // case, though, we should not get any console calls because we don't
+    // have a controlled or registering document.
     info("Completed force refresh.  Messaging service worker.");
     yield messageServiceWorker(currentFrame.contentWindow, SCOPE, MESSAGE);
 

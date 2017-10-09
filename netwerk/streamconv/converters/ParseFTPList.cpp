@@ -10,10 +10,13 @@
 #include "plstr.h"
 #include "nsDebug.h"
 #include "prprf.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 /* ==================================================================== */
+
+using mozilla::CheckedInt;
 
 static inline int ParsingFailed(struct list_state *state)
 {
@@ -1192,14 +1195,17 @@ int ParseFTPList(const char *line, struct list_state *state,
         {
           /* First try to use result->fe_size to find " -> " sequence.
              This can give proper result for cases like "aaa -> bbb -> ccc". */
-          uint32_t fe_size = atoi(result->fe_size);
+          uintptr_t fe_size = atoi(result->fe_size);
+          CheckedInt<uintptr_t> arrow_start(result->fe_fnlen);
+          arrow_start -= fe_size;
+          arrow_start -= 4;
 
-          if (result->fe_fnlen > (fe_size + 4) &&
-              PL_strncmp(result->fe_fname + result->fe_fnlen - fe_size - 4 , " -> ", 4) == 0)
+          if (arrow_start.isValid() &&
+              PL_strncmp(result->fe_fname + arrow_start.value(), " -> ", 4) == 0)
           {
             result->fe_lname = result->fe_fname + (result->fe_fnlen - fe_size);
             result->fe_lnlen = (&(line[linelen])) - (result->fe_lname);
-            result->fe_fnlen -= fe_size + 4;
+            result->fe_fnlen = arrow_start.value();
           }
           else
           {
