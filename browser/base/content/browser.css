@@ -201,6 +201,7 @@ tabbrowser {
 }
 
 /* Allow dropping a tab on buttons with associated drop actions. */
+#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #home-button,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #downloads-button,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
