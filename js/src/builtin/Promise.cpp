@@ -1465,12 +1465,11 @@ ClearResolutionFunctionSlots(JSFunction* resolutionFun)
 }
 
 // ES2016, 25.4.3.1. steps 3-7.
-static MOZ_MUST_USE PromiseObject*
+static MOZ_MUST_USE MOZ_ALWAYS_INLINE PromiseObject*
 CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
                             bool protoIsWrapped /* = false */, bool informDebugger /* = true */)
 {
     // Step 3.
-    Rooted<PromiseObject*> promise(cx);
     // Enter the unwrapped proto's compartment, if that's different from
     // the current one.
     // All state stored in a Promise's fixed slots must be created in the
@@ -1480,12 +1479,12 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
     if (protoIsWrapped)
         ac.emplace(cx, proto);
 
-    promise = NewObjectWithClassProto<PromiseObject>(cx, proto);
+    PromiseObject* promise = NewObjectWithClassProto<PromiseObject>(cx, proto);
     if (!promise)
         return nullptr;
 
     // Step 4.
-    promise->setFixedSlot(PromiseSlot_Flags, Int32Value(0));
+    promise->initFixedSlot(PromiseSlot_Flags, Int32Value(0));
 
     // Steps 5-6.
     // Omitted, we allocate our single list of reaction records lazily.
@@ -1493,20 +1492,24 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
     // Step 7.
     // Implicit, the handled flag is unset by default.
 
+    if (MOZ_LIKELY(!ShouldCaptureDebugInfo(cx)))
+        return promise;
+
     // Store an allocation stack so we can later figure out what the
     // control flow was for some unexpected results. Frightfully expensive,
     // but oh well.
-    if (ShouldCaptureDebugInfo(cx)) {
-        PromiseDebugInfo* debugInfo = PromiseDebugInfo::create(cx, promise);
-        if (!debugInfo)
-            return nullptr;
-    }
+
+    Rooted<PromiseObject*> promiseRoot(cx, promise);
+
+    PromiseDebugInfo* debugInfo = PromiseDebugInfo::create(cx, promiseRoot);
+    if (!debugInfo)
+        return nullptr;
 
     // Let the Debugger know about this Promise.
     if (informDebugger)
-        Debugger::onNewPromise(cx, promise);
+        Debugger::onNewPromise(cx, promiseRoot);
 
-    return promise;
+    return promiseRoot;
 }
 
 // ES2016, 25.4.3.1.
@@ -1588,7 +1591,7 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
         if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
             return false;
     }
-    Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto, needsWrapping));
+    PromiseObject* promise = PromiseObject::create(cx, executor, proto, needsWrapping);
     if (!promise)
         return false;
 
