@@ -238,13 +238,16 @@ assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
 void
 nsProcess::Monitor(void* aArg)
 {
-  char stackBaseGuess;
-
   RefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
 
+#ifdef MOZ_GECKO_PROFILER
+  Maybe<AutoProfilerRegisterThread> registerThread;
+  if (!process->mBlocking) {
+    registerThread.emplace("RunProcess");
+  }
+#endif
   if (!process->mBlocking) {
     NS_SetCurrentThreadName("RunProcess");
-    profiler_register_thread("RunProcess", &stackBaseGuess);
   }
 
 #if defined(PROCESSMODEL_WINAPI)
@@ -310,10 +313,6 @@ nsProcess::Monitor(void* aArg)
   } else {
     NS_DispatchToMainThread(NewRunnableMethod(
       "nsProcess::ProcessComplete", process, &nsProcess::ProcessComplete));
-  }
-
-  if (!process->mBlocking) {
-    profiler_unregister_thread();
   }
 }
 

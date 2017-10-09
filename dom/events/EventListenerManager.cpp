@@ -30,7 +30,6 @@
 
 #include "EventListenerService.h"
 #include "GeckoProfiler.h"
-#include "ProfilerMarkerPayload.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -52,6 +51,10 @@
 #include "xpcpublic.h"
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 
 namespace mozilla {
 
@@ -1262,6 +1265,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
 
             nsresult rv = NS_OK;
+#ifdef MOZ_GECKO_PROFILER
             if (profiler_is_active()) {
               // Add a profiler label and a profiler marker for the actual
               // dispatch of the event.
@@ -1285,7 +1289,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
                                                   aEvent->mTimeStamp,
                                                   startTime, endTime));
-            } else {
+            } else
+#endif
+            {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
             }
 
