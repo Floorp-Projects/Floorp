@@ -23,7 +23,7 @@
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 
-class nsIAtom;
+class nsAtom;
 struct nsCSSSelectorList;
 
 namespace mozilla {
@@ -33,7 +33,7 @@ class CSSStyleSheet;
 
 struct nsAtomList {
 public:
-  explicit nsAtomList(nsIAtom* aAtom);
+  explicit nsAtomList(nsAtom* aAtom);
   explicit nsAtomList(const nsString& aAtomValue);
   ~nsAtomList(void);
 
@@ -42,7 +42,7 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  RefPtr<nsIAtom> mAtom;
+  RefPtr<nsAtom> mAtom;
   nsAtomList*       mNext;
 private:
   nsAtomList* Clone(bool aDeep) const;
@@ -111,8 +111,8 @@ public:
   nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction,
                  const nsString& aValue,
                  ValueCaseSensitivity aValueCaseSensitivity);
-  nsAttrSelector(int32_t aNameSpace, nsIAtom* aLowercaseAttr,
-                 nsIAtom* aCasedAttr, uint8_t aFunction,
+  nsAttrSelector(int32_t aNameSpace, nsAtom* aLowercaseAttr,
+                 nsAtom* aCasedAttr, uint8_t aFunction,
                  const nsString& aValue,
                  ValueCaseSensitivity aValueCaseSensitivity);
   ~nsAttrSelector(void);
@@ -130,8 +130,8 @@ public:
 
   nsString        mValue;
   nsAttrSelector* mNext;
-  RefPtr<nsIAtom> mLowercaseAttr;
-  RefPtr<nsIAtom> mCasedAttr;
+  RefPtr<nsAtom> mLowercaseAttr;
+  RefPtr<nsAtom> mCasedAttr;
   int32_t         mNameSpace;
   uint8_t         mFunction;
   ValueCaseSensitivity mValueCaseSensitivity;
@@ -226,8 +226,8 @@ public:
   // but in case-insensitive documents (HTML) mLowercaseTag is lowercase.
   // Also, for pseudo-elements mCasedTag will be null but mLowercaseTag
   // contains their name.
-  RefPtr<nsIAtom> mLowercaseTag;
-  RefPtr<nsIAtom> mCasedTag;
+  RefPtr<nsAtom> mLowercaseTag;
+  RefPtr<nsAtom> mCasedTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
   nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for

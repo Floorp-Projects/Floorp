@@ -23,7 +23,7 @@
 #include "nsIDTD.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsParserBase.h"
 #include "mozilla/NotNull.h"
 

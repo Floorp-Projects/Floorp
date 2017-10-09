@@ -11,7 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsINode;
 
@@ -39,7 +39,7 @@ public:
    *                        child.
    */
   CreateElementTransaction(EditorBase& aEditorBase,
-                           nsIAtom& aTag,
+                           nsAtom& aTag,
                            nsINode& aParent,
                            int32_t aOffsetInParent);
 
@@ -60,7 +60,7 @@ protected:
   RefPtr<EditorBase> mEditorBase;
 
   // The tag (mapping to object type) for the new element.
-  RefPtr<nsIAtom> mTag;
+  RefPtr<nsAtom> mTag;
 
   // The node into which the new node will be inserted.
   nsCOMPtr<nsINode> mParent;

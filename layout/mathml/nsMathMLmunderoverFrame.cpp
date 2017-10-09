@@ -31,7 +31,7 @@ nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame()
 
 nsresult
 nsMathMLmunderoverFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                          nsIAtom*        aAttribute,
+                                          nsAtom*        aAttribute,
                                           int32_t         aModType)
 {
   if (nsGkAtoms::accent_ == aAttribute ||

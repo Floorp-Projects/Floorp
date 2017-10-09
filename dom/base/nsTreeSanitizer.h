@@ -92,7 +92,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @return true if the element must be replaced with its children and
      *         false if the element is to be kept
      */
-    bool MustFlatten(int32_t aNamespace, nsIAtom* aLocal);
+    bool MustFlatten(int32_t aNamespace, nsAtom* aLocal);
 
     /**
      * Queries if an element including its children must be removed.
@@ -103,7 +103,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      *         false if the element is to be kept
      */
     bool MustPrune(int32_t aNamespace,
-                     nsIAtom* aLocal,
+                     nsAtom* aLocal,
                      mozilla::dom::Element* aElement);
 
     /**
@@ -113,7 +113,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @param aLocalName the name to search on the list
      * @return true if aLocalName is on the aURLs list and false otherwise
      */
-    bool IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName);
+    bool IsURL(nsAtom*** aURLs, nsAtom* aLocalName);
 
     /**
      * Removes dangerous attributes from the element. If the style attribute
@@ -130,8 +130,8 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      *                           attribute unsanitized
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
-                            nsTHashtable<nsRefPtrHashKey<nsIAtom>>* aAllowed,
-                            nsIAtom*** aURLs,
+                            nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
+                            nsAtom*** aURLs,
                             bool aAllowXLink,
                             bool aAllowStyle,
                             bool aAllowDangerousSrc);
@@ -147,7 +147,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      */
     bool SanitizeURL(mozilla::dom::Element* aElement,
                        int32_t aNamespace,
-                       nsIAtom* aLocalName);
+                       nsAtom* aLocalName);
 
     /**
      * Checks a style rule for the presence of the 'binding' CSS property and
@@ -186,37 +186,37 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     /**
      * The whitelist of HTML elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsHTML;
 
     /**
      * The whitelist of non-presentational HTML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesHTML;
 
     /**
      * The whitelist of presentational HTML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sPresAttributesHTML;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sPresAttributesHTML;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsSVG;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsSVG;
 
     /**
      * The whitelist of SVG attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesSVG;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesSVG;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sElementsMathML;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsMathML;
 
     /**
      * The whitelist of MathML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsIAtom>>* sAttributesMathML;
+    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesMathML;
 
     /**
      * Reusable null principal for URL checks.

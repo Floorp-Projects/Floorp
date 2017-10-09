@@ -32,7 +32,7 @@ class PlaceholderTransaction final
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  PlaceholderTransaction(EditorBase& aEditorBase, nsIAtom* aName,
+  PlaceholderTransaction(EditorBase& aEditorBase, nsAtom* aName,
                          Maybe<SelectionState>&& aSelState);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaceholderTransaction,
@@ -46,7 +46,7 @@ public:
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
-  NS_IMETHOD GetTxnName(nsIAtom** aName) override;
+  NS_IMETHOD GetTxnName(nsAtom** aName) override;
 
   NS_IMETHOD StartSelectionEquals(SelectionState* aSelState,
                                   bool* aResult) override;

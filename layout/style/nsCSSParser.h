@@ -318,7 +318,7 @@ public:
   /**
    * Parses a string as a counter-style name. Returns nullptr if fails.
    */
-  already_AddRefed<nsIAtom> ParseCounterStyleName(const nsAString& aBuffer,
+  already_AddRefed<nsAtom> ParseCounterStyleName(const nsAString& aBuffer,
                                                   nsIURI* aURL);
 
   bool ParseCounterDescriptor(nsCSSCounterDesc aDescID,

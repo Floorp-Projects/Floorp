@@ -90,7 +90,7 @@ protected:
 
 already_AddRefed<mozilla::dom::DocumentType>
 NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
-                      nsIAtom *aName,
+                      nsAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset,
@@ -99,7 +99,7 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       nsNodeInfoManager* aNodeInfoManager,
-                      nsIAtom *aName,
+                      nsAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset);

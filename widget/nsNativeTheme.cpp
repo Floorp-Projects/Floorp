@@ -129,7 +129,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
 
 /* static */
 bool
-nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
+nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom)
 {
   if (!aFrame)
     return false;
@@ -150,7 +150,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 
 /* static */
 int32_t
-nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, int32_t defaultValue)
+nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsAtom* aAtom, int32_t defaultValue)
 {
   if (!aFrame)
     return defaultValue;

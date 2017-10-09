@@ -575,13 +575,13 @@ SystemUsesNegativeSign(uint8_t aSystem)
 class BuiltinCounterStyle : public CounterStyle
 {
 public:
-  constexpr BuiltinCounterStyle(int32_t aStyle, nsIAtom** aName)
+  constexpr BuiltinCounterStyle(int32_t aStyle, nsAtom** aName)
     : CounterStyle(aStyle)
     , mName(aName)
   {
   }
 
-  virtual nsIAtom* GetStyleName() const final;
+  virtual nsAtom* GetStyleName() const final;
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
@@ -613,12 +613,12 @@ protected:
 private:
   // The atom for the name of the builtin counter style.
   // Extra indirection to point to nsGkAtoms members rather than the
-  // nsIAtom, because members of nsGkAtoms are updated at runtime but
+  // nsAtom, because members of nsGkAtoms are updated at runtime but
   // we want to construct BuiltinCounterStyle at compile time.
-  nsIAtom** const mName;
+  nsAtom** const mName;
 };
 
-/* virtual */ nsIAtom*
+/* virtual */ nsAtom*
 BuiltinCounterStyle::GetStyleName() const
 {
   return *mName;
@@ -1040,7 +1040,7 @@ DependentBuiltinCounterStyle::GetFallback()
 class CustomCounterStyle final : public CounterStyle
 {
 public:
-  CustomCounterStyle(nsIAtom* aName,
+  CustomCounterStyle(nsAtom* aName,
                      CounterStyleManager* aManager,
                      nsCSSCounterStyleRule* aRule)
     : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM),
@@ -1072,7 +1072,7 @@ public:
   nsCSSCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
-  virtual nsIAtom* GetStyleName() const override;
+  virtual nsAtom* GetStyleName() const override;
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
@@ -1138,7 +1138,7 @@ private:
   CounterStyle* GetExtends();
   CounterStyle* GetExtendsRoot();
 
-  RefPtr<nsIAtom> mName;
+  RefPtr<nsAtom> mName;
 
   // CounterStyleManager should always overlive any CounterStyle as it
   // is owned by nsPresContext, and will be released after all nodes and
@@ -1229,7 +1229,7 @@ CustomCounterStyle::ResetDependentData()
   }
 }
 
-/* virtual */ nsIAtom*
+/* virtual */ nsAtom*
 CustomCounterStyle::GetStyleName() const
 {
   return mName;
@@ -1752,7 +1752,7 @@ AnonymousCounterStyle::AnonymousCounterStyle(uint8_t aSystem,
 {
 }
 
-/* virtual */ nsIAtom*
+/* virtual */ nsAtom*
 AnonymousCounterStyle::GetStyleName() const
 {
   return nullptr;
@@ -2036,7 +2036,7 @@ CounterStyleManager::Disconnect()
 }
 
 CounterStyle*
-CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
+CounterStyleManager::BuildCounterStyle(nsAtom* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   CounterStyle* data = GetCounterStyle(aName);
@@ -2081,7 +2081,7 @@ CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
   return const_cast<BuiltinCounterStyle*>(&gBuiltinStyleTable[aStyle]);
 }
 
-/* static */ nsIAtom*
+/* static */ nsAtom*
 CounterStyleManager::GetStyleNameFromType(int32_t aStyle)
 {
   MOZ_ASSERT(0 <= aStyle && size_t(aStyle) < sizeof(gBuiltinStyleTable),

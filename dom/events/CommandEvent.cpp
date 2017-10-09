@@ -36,7 +36,7 @@ NS_IMPL_RELEASE_INHERITED(CommandEvent, Event)
 NS_IMETHODIMP
 CommandEvent::GetCommand(nsAString& aCommand)
 {
-  nsIAtom* command = mEvent->AsCommandEvent()->mCommand;
+  nsAtom* command = mEvent->AsCommandEvent()->mCommand;
   if (command) {
     command->ToString(aCommand);
   } else {

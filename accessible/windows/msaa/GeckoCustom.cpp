@@ -28,7 +28,7 @@ GeckoCustom::get_DOMNodeID(BSTR* aID)
     return S_OK;
   }
 
-  nsIAtom* id = content->GetID();
+  nsAtom* id = content->GetID();
   if (id) {
     nsAutoString idStr;
     id->ToString(idStr);

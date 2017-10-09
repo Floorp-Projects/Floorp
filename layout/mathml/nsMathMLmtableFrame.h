@@ -39,7 +39,7 @@ public:
 
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
-                   nsIAtom* aAttribute,
+                   nsAtom* aAttribute,
                    int32_t  aModType) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -188,7 +188,7 @@ public:
 
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
-                   nsIAtom* aAttribute,
+                   nsAtom* aAttribute,
                    int32_t  aModType) override;
 
   virtual void
@@ -258,7 +258,7 @@ public:
 
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
-                   nsIAtom* aAttribute,
+                   nsAtom* aAttribute,
                    int32_t  aModType) override;
 
   virtual uint8_t GetVerticalAlign() const override;

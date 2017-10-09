@@ -8,7 +8,7 @@
 #ifndef nsCSSPseudoElements_h___
 #define nsCSSPseudoElements_h___
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
 
@@ -71,9 +71,9 @@ enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
 
 } // namespace mozilla
 
-// Empty class derived from nsIAtom so that function signatures can
+// Empty class derived from nsAtom so that function signatures can
 // require an atom from this atom list.
-class nsICSSPseudoElement : public nsIAtom {};
+class nsICSSPseudoElement : public nsAtom {};
 
 class nsCSSPseudoElements
 {
@@ -83,9 +83,9 @@ class nsCSSPseudoElements
 public:
   static void AddRefAtoms();
 
-  static bool IsPseudoElement(nsIAtom *aAtom);
+  static bool IsPseudoElement(nsAtom *aAtom);
 
-  static bool IsCSS2PseudoElement(nsIAtom *aAtom);
+  static bool IsCSS2PseudoElement(nsAtom *aAtom);
 
   // This must match EAGER_PSEUDO_COUNT in Rust code.
   static const size_t kEagerPseudoCount = 4;
@@ -100,15 +100,15 @@ public:
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-  static Type GetPseudoType(nsIAtom* aAtom, EnabledState aEnabledState);
+  static Type GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState);
 
   // Get the atom for a given Type. aType must be < CSSPseudoElementType::Count.
   // This only ever returns static atoms, so it's fine to return a raw pointer.
-  static nsIAtom* GetPseudoAtom(Type aType);
+  static nsAtom* GetPseudoAtom(Type aType);
 
   // Get the atom for a given pseudo-element string (e.g. "::before").  This can
   // return dynamic atoms, for unrecognized pseudo-elements.
-  static already_AddRefed<nsIAtom> GetPseudoAtom(const nsAString& aPseudoElement);
+  static already_AddRefed<nsAtom> GetPseudoAtom(const nsAString& aPseudoElement);
 
   static bool PseudoElementContainsElements(const Type aType) {
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);

@@ -495,7 +495,7 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
   if (aContext) {
     fprintf(stdout, " style: %p ", static_cast<void*>(aContext));
 
-    nsIAtom* pseudoTag = aContext->GetPseudo();
+    nsAtom* pseudoTag = aContext->GetPseudo();
     if (pseudoTag) {
       nsAutoString buffer;
       pseudoTag->ToString(buffer);

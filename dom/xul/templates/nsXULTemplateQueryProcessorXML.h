@@ -41,7 +41,7 @@ class nsXMLQuery final : public nsISupports
     nsXULTemplateQueryProcessorXML* Processor() { return mProcessor; }
 
     // return a weak reference t the member variable for the query
-    nsIAtom* GetMemberVariable() { return mMemberVariable; }
+    nsAtom* GetMemberVariable() { return mMemberVariable; }
 
     // return a weak reference to the expression used to generate results
     mozilla::dom::XPathExpression* GetResultsExpression()
@@ -52,7 +52,7 @@ class nsXMLQuery final : public nsISupports
 
     // add a required binding for the query
     void
-    AddBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr)
+    AddBinding(nsAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr)
     {
         if (!mRequiredBindings) {
             mRequiredBindings = new nsXMLBindingSet();
@@ -62,7 +62,7 @@ class nsXMLQuery final : public nsISupports
     }
 
     nsXMLQuery(nsXULTemplateQueryProcessorXML* aProcessor,
-               nsIAtom* aMemberVariable,
+               nsAtom* aMemberVariable,
                nsAutoPtr<mozilla::dom::XPathExpression>&& aResultsExpr)
         : mProcessor(aProcessor),
           mMemberVariable(aMemberVariable),
@@ -74,7 +74,7 @@ class nsXMLQuery final : public nsISupports
 
     nsXULTemplateQueryProcessorXML* mProcessor;
 
-    RefPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsAtom> mMemberVariable;
 
     nsAutoPtr<mozilla::dom::XPathExpression> mResultsExpr;
 

@@ -85,7 +85,7 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
 
 bool
 HTMLVideoElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
@@ -106,7 +106,7 @@ HTMLVideoElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLVideoElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLVideoElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::width },

@@ -35,7 +35,7 @@ class gfxContext;
 class gfxFontGroup;
 class gfxUserFontEntry;
 class gfxUserFontSet;
-class nsIAtom;
+class nsAtom;
 class nsLanguageAtomService;
 class gfxMissingFontRecorder;
 

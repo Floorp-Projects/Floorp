@@ -232,7 +232,7 @@ SVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 nsresult
-SVGScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+SVGScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -247,7 +247,7 @@ SVGScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
 bool
 SVGScriptElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {

@@ -216,7 +216,7 @@ public:
   }
 
   template<size_t N>
-  static bool MatchesLanguagePrefix(const nsIAtom* aLang,
+  static bool MatchesLanguagePrefix(const nsAtom* aLang,
                                     const char16_t (&aPrefix)[N])
   {
     MOZ_ASSERT(aLang);

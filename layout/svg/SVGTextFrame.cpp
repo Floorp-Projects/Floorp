@@ -297,7 +297,7 @@ GetNonEmptyTextFrameAndNode(nsIFrame* aFrame,
  * elements -- x, y, dx, dy or rotate.
  */
 static bool
-IsGlyphPositioningAttribute(nsIAtom* aAttribute)
+IsGlyphPositioningAttribute(nsAtom* aAttribute)
 {
   return aAttribute == nsGkAtoms::x ||
          aAttribute == nsGkAtoms::y ||
@@ -3207,7 +3207,7 @@ SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 nsresult
 SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
-                               nsIAtom* aAttribute,
+                               nsAtom* aAttribute,
                                int32_t aModType)
 {
   if (aNameSpaceID != kNameSpaceID_None)
@@ -3376,7 +3376,7 @@ SVGTextFrame::MutationObserver::AttributeChanged(
                                                 nsIDocument* aDocument,
                                                 mozilla::dom::Element* aElement,
                                                 int32_t aNameSpaceID,
-                                                nsIAtom* aAttribute,
+                                                nsAtom* aAttribute,
                                                 int32_t aModType,
                                                 const nsAttrValue* aOldValue)
 {
@@ -3396,7 +3396,7 @@ SVGTextFrame::MutationObserver::AttributeChanged(
 void
 SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
                                                 int32_t aNameSpaceID,
-                                                nsIAtom* aAttribute)
+                                                nsAtom* aAttribute)
 {
   if (aElement->IsSVGElement(nsGkAtoms::textPath)) {
     if (aNameSpaceID == kNameSpaceID_None &&

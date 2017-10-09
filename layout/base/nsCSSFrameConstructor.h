@@ -68,7 +68,7 @@ public:
 
   // get the alternate text for a content node
   static void GetAlternateTextFor(nsIContent* aContent,
-                                  nsIAtom* aTag,  // content object's tag
+                                  nsAtom* aTag,  // content object's tag
                                   nsAString& aAltText);
 
 private:
@@ -472,7 +472,7 @@ private:
   void CreateAttributeContent(nsIContent* aParentContent,
                               nsIFrame* aParentFrame,
                               int32_t aAttrNamespace,
-                              nsIAtom* aAttrName,
+                              nsAtom* aAttrName,
                               nsStyleContext* aStyleContext,
                               nsCOMArray<nsIContent>& aGeneratedContent,
                               nsIContent** aNewContent,
@@ -777,13 +777,13 @@ private:
   };
 
   /* Structure representing a mapping of an atom to a FrameConstructionData.
-     This can be used with non-static atoms, assuming that the nsIAtom* is
+     This can be used with non-static atoms, assuming that the nsAtom* is
      stored somewhere that this struct can point to (that is, a static
-     nsIAtom*) and that it's allocated before the struct is ever used. */
+     nsAtom*) and that it's allocated before the struct is ever used. */
   struct FrameConstructionDataByTag {
-    // Pointer to nsIAtom* is used because we want to initialize this
+    // Pointer to nsAtom* is used because we want to initialize this
     // statically, so before our atom tables are set up.
-    const nsIAtom * const * const mTag;
+    const nsAtom * const * const mTag;
     const FrameConstructionData mData;
   };
 
@@ -837,7 +837,7 @@ private:
      match or if the matching tag has a FrameConstructionDataGetter that
      returns null. */
   static const FrameConstructionData*
-    FindDataByTag(nsIAtom* aTag, Element* aElement,
+    FindDataByTag(nsAtom* aTag, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByTag* aDataPtr,
                   uint32_t aDataLength);
@@ -879,7 +879,7 @@ private:
     FrameConstructionItem* AppendItem(nsCSSFrameConstructor* aFCtor,
                                       const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
-                                      nsIAtom* aTag,
+                                      nsAtom* aTag,
                                       int32_t aNameSpaceID,
                                       PendingBinding* aPendingBinding,
                                       already_AddRefed<nsStyleContext>&& aStyleContext,
@@ -901,7 +901,7 @@ private:
     FrameConstructionItem* PrependItem(nsCSSFrameConstructor* aFCtor,
                                        const FrameConstructionData* aFCData,
                                        nsIContent* aContent,
-                                       nsIAtom* aTag,
+                                       nsAtom* aTag,
                                        int32_t aNameSpaceID,
                                        PendingBinding* aPendingBinding,
                                        already_AddRefed<nsStyleContext>&& aStyleContext,
@@ -1156,7 +1156,7 @@ private:
     : public mozilla::LinkedListElement<FrameConstructionItem> {
     FrameConstructionItem(const FrameConstructionData* aFCData,
                           nsIContent* aContent,
-                          nsIAtom* aTag,
+                          nsAtom* aTag,
                           int32_t aNameSpaceID,
                           PendingBinding* aPendingBinding,
                           already_AddRefed<nsStyleContext>& aStyleContext,
@@ -1245,7 +1245,7 @@ private:
     // The nsIContent node to use when initializing the new frame.
     nsIContent* mContent;
     // The XBL-resolved tag name to use for frame construction.
-    nsIAtom* mTag;
+    nsAtom* mTag;
     // The PendingBinding for this frame construction item, if any.  May be
     // null.  We maintain a list of PendingBindings in the frame construction
     // state in the order in which AddToAttachedQueue should be called on them:
@@ -1512,7 +1512,7 @@ private:
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
   static const FrameConstructionData* FindHTMLData(Element* aContent,
-                                                   nsIAtom* aTag,
+                                                   nsAtom* aTag,
                                                    int32_t aNameSpaceID,
                                                    nsIFrame* aParentFrame,
                                                    nsStyleContext* aStyleContext);
@@ -1564,7 +1564,7 @@ private:
   void AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                          nsIContent*              aContent,
                                          nsContainerFrame*        aParentFrame,
-                                         nsIAtom*                 aTag,
+                                         nsAtom*                 aTag,
                                          int32_t                  aNameSpaceID,
                                          bool                     aSuppressWhiteSpaceOptimizations,
                                          nsStyleContext*          aStyleContext,
@@ -1606,14 +1606,14 @@ private:
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not MathML.
   static const FrameConstructionData* FindMathMLData(Element* aElement,
-                                                     nsIAtom* aTag,
+                                                     nsAtom* aTag,
                                                      int32_t aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not XUL.
   static const FrameConstructionData* FindXULTagData(Element* aElement,
-                                                     nsIAtom* aTag,
+                                                     nsAtom* aTag,
                                                      int32_t aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
   // XUL data-finding helper functions and structures
@@ -1681,7 +1681,7 @@ private:
                             nsFrameItems&            aFrameItems);
 
   static const FrameConstructionData* FindSVGData(Element* aElement,
-                                                  nsIAtom* aTag,
+                                                  nsAtom* aTag,
                                                   int32_t aNameSpaceID,
                                                   nsIFrame* aParentFrame,
                                                   bool aIsWithinSVGText,
@@ -1825,7 +1825,7 @@ private:
                            nsIContent*              aContent,
                            nsStyleContext*          aContentStyle,
                            nsContainerFrame*        aParentFrame,
-                           nsIAtom*                 aScrolledPseudo,
+                           nsAtom*                 aScrolledPseudo,
                            bool                     aIsRoot,
                            nsContainerFrame*&       aNewFrame);
 

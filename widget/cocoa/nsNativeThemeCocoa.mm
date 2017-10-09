@@ -21,7 +21,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsNameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -3507,7 +3507,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
-                                       nsIAtom* aAttribute, bool* aShouldRepaint,
+                                       nsAtom* aAttribute, bool* aShouldRepaint,
                                        const nsAttrValue* aOldValue)
 {
   // Some widget types just never change state.

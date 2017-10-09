@@ -29,7 +29,7 @@ public:
 #endif
   already_AddRefed<Rule> Clone() const final;
 
-  nsIAtom* GetPrefix() const final;
+  nsAtom* GetPrefix() const final;
   void GetURLSpec(nsString& aURLSpec) const final;
 
   // WebIDL interface

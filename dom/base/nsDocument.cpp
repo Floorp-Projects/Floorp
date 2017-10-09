@@ -601,7 +601,7 @@ public:
                                         bool& aFound) override
   {
     aFound = false;
-    RefPtr<nsIAtom> name = NS_Atomize(aName);
+    RefPtr<nsAtom> name = NS_Atomize(aName);
     for (uint32_t i = 0; i < mElements.Length(); i++) {
       MOZ_DIAGNOSTIC_ASSERT(mElements[i]);
       Element* element = mElements[i]->AsElement();
@@ -617,19 +617,19 @@ public:
 
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override
   {
-    AutoTArray<nsIAtom*, 8> atoms;
+    AutoTArray<nsAtom*, 8> atoms;
     for (uint32_t i = 0; i < mElements.Length(); i++) {
       MOZ_DIAGNOSTIC_ASSERT(mElements[i]);
       Element* element = mElements[i]->AsElement();
 
-      nsIAtom* id = element->GetID();
+      nsAtom* id = element->GetID();
       MOZ_ASSERT(id != nsGkAtoms::_empty);
       if (id && !atoms.Contains(id)) {
         atoms.AppendElement(id);
       }
 
       if (element->HasName()) {
-        nsIAtom* name = element->GetParsedAttr(nsGkAtoms::name)->GetAtomValue();
+        nsAtom* name = element->GetParsedAttr(nsGkAtoms::name)->GetAtomValue();
         MOZ_ASSERT(name && name != nsGkAtoms::_empty);
         if (name && !atoms.Contains(name)) {
           atoms.AppendElement(name);
@@ -3170,7 +3170,7 @@ nsIDocument::GetLastModified(nsAString& aLastModified) const
 }
 
 void
-nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
+nsDocument::AddToNameTable(Element *aElement, nsAtom* aName)
 {
   MOZ_ASSERT(nsGenericHTMLElement::ShouldExposeNameAsHTMLDocumentProperty(aElement),
              "Only put elements that need to be exposed as document['name'] in "
@@ -3189,7 +3189,7 @@ nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
 }
 
 void
-nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
+nsDocument::RemoveFromNameTable(Element *aElement, nsAtom* aName)
 {
   // Speed up document teardown
   if (mIdentifierMap.Count() == 0)
@@ -3207,7 +3207,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 }
 
 void
-nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
+nsDocument::AddToIdTable(Element *aElement, nsAtom* aId)
 {
   nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
 
@@ -3222,7 +3222,7 @@ nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
 }
 
 void
-nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
+nsDocument::RemoveFromIdTable(Element *aElement, nsAtom* aId)
 {
   NS_ASSERTION(aId, "huhwhatnow?");
 
@@ -3956,7 +3956,7 @@ nsIDocument::GetSandboxFlagsAsString(nsAString& aFlags)
 }
 
 void
-nsDocument::GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const
+nsDocument::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const
 {
   aData.Truncate();
   const nsDocHeaderData* data = mHeaderData;
@@ -3971,7 +3971,7 @@ nsDocument::GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const
 }
 
 void
-nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
+nsDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
 {
   if (!aHeaderField) {
     NS_ERROR("null headerField");
@@ -5430,7 +5430,7 @@ nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
 }
 
 Element*
-nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+nsDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                 void* aData, bool aForImage)
 {
   nsDependentAtomString id(aID);
@@ -5446,7 +5446,7 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
 }
 
 void
-nsDocument::RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+nsDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
                                    void* aData, bool aForImage)
 {
   nsDependentAtomString id(aID);
@@ -6000,7 +6000,7 @@ GetPseudoElementType(const nsString& aString, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return CSSPseudoElementType::NotPseudo;
   }
-  RefPtr<nsIAtom> pseudo = NS_Atomize(Substring(aString, 1));
+  RefPtr<nsAtom> pseudo = NS_Atomize(Substring(aString, 1));
   return nsCSSPseudoElements::GetPseudoType(pseudo,
       nsCSSProps::EnabledState::eInUASheets);
 }
@@ -6339,7 +6339,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     return true;
   }
 
-  RefPtr<nsIAtom> typeAtom(NS_Atomize(elemName));
+  RefPtr<nsAtom> typeAtom(NS_Atomize(elemName));
   CustomElementDefinition* definition =
     registry->mCustomDefinitions.GetWeak(typeAtom);
   if (!definition) {
@@ -6965,7 +6965,7 @@ nsIDocument::GetBindingParent(nsINode& aNode)
 }
 
 static Element*
-GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
+GetElementByAttribute(nsIContent* aContent, nsAtom* aAttrName,
                       const nsAString& aAttrValue, bool aUniversalMatch)
 {
   if (aUniversalMatch ? aContent->HasAttr(kNameSpaceID_None, aAttrName) :
@@ -6989,7 +6989,7 @@ GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
 
 Element*
 nsDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
-                                           nsIAtom* aAttrName,
+                                           nsAtom* aAttrName,
                                            const nsAString& aAttrValue) const
 {
   nsINodeList* nodeList = BindingManager()->GetAnonymousNodesFor(aElement);
@@ -7034,7 +7034,7 @@ nsIDocument::GetAnonymousElementByAttribute(Element& aElement,
                                             const nsAString& aAttrName,
                                             const nsAString& aAttrValue)
 {
-  RefPtr<nsIAtom> attribute = NS_Atomize(aAttrName);
+  RefPtr<nsAtom> attribute = NS_Atomize(aAttrName);
 
   return GetAnonymousElementByAttribute(&aElement, attribute, aAttrValue);
 }
@@ -7197,7 +7197,7 @@ nsIDocument::GetHtmlElement() const
 }
 
 Element*
-nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
+nsIDocument::GetHtmlChildElement(nsAtom* aTag)
 {
   Element* html = GetHtmlElement();
   if (!html)
@@ -7440,7 +7440,7 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   }
 
   int32_t namespaceID;
-  RefPtr<nsIAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
+  RefPtr<nsAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
 #ifdef MOZ_XUL
   if (namespaceID == kNameSpaceID_XUL) {
     if (tag == nsGkAtoms::browser ||
@@ -8831,7 +8831,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       rv =
         httpChannel->GetResponseHeader(nsDependentCString(*name), headerVal);
       if (NS_SUCCEEDED(rv) && !headerVal.IsEmpty()) {
-        RefPtr<nsIAtom> key = NS_Atomize(*name);
+        RefPtr<nsAtom> key = NS_Atomize(*name);
         SetHeaderData(key, NS_ConvertASCIItoUTF16(headerVal));
       }
       ++name;
@@ -8866,7 +8866,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 }
 
 already_AddRefed<Element>
-nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix,
+nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
                        int32_t aNamespaceID, const nsAString* aIs)
 {
 #ifdef DEBUG
@@ -13398,7 +13398,7 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 }
 
 already_AddRefed<Element>
-nsIDocument::CreateHTMLElement(nsIAtom* aTag)
+nsIDocument::CreateHTMLElement(nsAtom* aTag)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,

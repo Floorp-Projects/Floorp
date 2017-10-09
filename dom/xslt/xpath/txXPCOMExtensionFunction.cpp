@@ -6,7 +6,7 @@
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDependentString.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsServiceManagerUtils.h"
 #include "txExpr.h"
@@ -106,7 +106,7 @@ public:
     txXPCOMExtensionFunctionCall(nsISupports *aHelper, const nsIID &aIID,
                                  uint16_t aMethodIndex,
 #ifdef TX_TO_STRING
-                                 nsIAtom *aName,
+                                 nsAtom *aName,
 #endif
                                  nsISupports *aState);
 
@@ -120,7 +120,7 @@ private:
     nsIID mIID;
     uint16_t mMethodIndex;
 #ifdef TX_TO_STRING
-    RefPtr<nsIAtom> mName;
+    RefPtr<nsAtom> mName;
 #endif
     nsCOMPtr<nsISupports> mState;
 };
@@ -129,7 +129,7 @@ txXPCOMExtensionFunctionCall::txXPCOMExtensionFunctionCall(nsISupports *aHelper,
                                                            const nsIID &aIID,
                                                            uint16_t aMethodIndex,
 #ifdef TX_TO_STRING
-                                                           nsIAtom *aName,
+                                                           nsAtom *aName,
 #endif
                                                            nsISupports *aState)
     : mHelper(aHelper),
@@ -160,7 +160,7 @@ private:
 };
 
 static nsresult
-LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
+LookupFunction(const char *aContractID, nsAtom* aName, nsIID &aIID,
                uint16_t &aMethodIndex, nsISupports **aHelper)
 {
     nsresult rv;
@@ -239,7 +239,7 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
 /* static */
 nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsIAtom* aName, nsISupports *aState,
+                            nsAtom* aName, nsISupports *aState,
                             FunctionCall **aFunction)
 {
     nsIID iid;
@@ -610,7 +610,7 @@ txXPCOMExtensionFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-txXPCOMExtensionFunctionCall::getNameAtom(nsIAtom** aAtom)
+txXPCOMExtensionFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     NS_ADDREF(*aAtom = mName);
 

@@ -22,7 +22,7 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
     }
 
     if (colon) {
-        RefPtr<nsIAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
+        RefPtr<nsAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
         int32_t namespaceID = aResolver->lookupNamespace(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;

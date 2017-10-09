@@ -13,7 +13,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 namespace mozilla {
 namespace ipc {
@@ -96,7 +96,7 @@ private:
   nsString mError;
 
   const uint64_t mChannelId;
-  const RefPtr<nsIAtom> mAddonId;
+  const RefPtr<nsAtom> mAddonId;
 };
 
 } // namespace extensions

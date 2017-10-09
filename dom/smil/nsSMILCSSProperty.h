@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleBackendType.h"
 #include "nsISMILAttr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 

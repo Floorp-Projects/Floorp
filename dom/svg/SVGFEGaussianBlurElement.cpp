@@ -87,7 +87,7 @@ SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance
 
 bool
 SVGFEGaussianBlurElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsIAtom* aAttribute) const
+                                                    nsAtom* aAttribute) const
 {
   return SVGFEGaussianBlurElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

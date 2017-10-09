@@ -103,7 +103,7 @@ public:
       if (mSVGView->mZoomAndPan.IsExplicitlySet()) {
         return false;
       }
-      nsIAtom* valAtom = NS_GetStaticAtom(aParams);
+      nsAtom* valAtom = NS_GetStaticAtom(aParams);
       if (!valAtom ||
           NS_FAILED(mSVGView->mZoomAndPan.SetBaseValueAtom(
                       valAtom, mRoot))) {

@@ -32,7 +32,7 @@
 #include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsRange.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Element.h"
@@ -224,7 +224,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
   *_retval = nullptr;
 
-  RefPtr<nsIAtom> pseudoElt;
+  RefPtr<nsAtom> pseudoElt;
   if (!aPseudo.IsEmpty()) {
     pseudoElt = NS_Atomize(aPseudo);
   }
@@ -1151,7 +1151,7 @@ inDOMUtils::GetContentState(nsIDOMElement* aElement,
 
 /* static */ already_AddRefed<nsStyleContext>
 inDOMUtils::GetCleanStyleContextForElement(dom::Element* aElement,
-                                           nsIAtom* aPseudo)
+                                           nsAtom* aPseudo)
 {
   MOZ_ASSERT(aElement);
 
@@ -1207,7 +1207,7 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
                 static_cast<size_t>(CSSPseudoClassType::MAX),
                 "Length of PseudoClassStates array is incorrect");
 
-  RefPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
+  RefPtr<nsAtom> atom = NS_Atomize(aStatePseudo);
   CSSPseudoClassType type = nsCSSPseudoClasses::
     GetPseudoType(atom, CSSEnabledState::eIgnoreEnabledState);
 
@@ -1225,14 +1225,14 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
 NS_IMETHODIMP
 inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
 {
-  nsTArray<nsIAtom*> array;
+  nsTArray<nsAtom*> array;
 
   const CSSPseudoElementTypeBase pseudoCount =
     static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count);
   for (CSSPseudoElementTypeBase i = 0; i < pseudoCount; ++i) {
     CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
     if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::eForAllContent)) {
-      nsIAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
+      nsAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       array.AppendElement(atom);
     }
   }

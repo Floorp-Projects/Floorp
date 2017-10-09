@@ -11,7 +11,7 @@
 #include "nsICSSLoaderObserver.h"
 
 class nsCSSRuleProcessor;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsXBLPrototypeBinding;
 class nsXBLResourceLoader;
@@ -31,7 +31,7 @@ public:
   ~nsXBLPrototypeResources();
 
   bool LoadResources(nsIContent* aBoundElement);
-  void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
+  void AddResource(nsAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();
 

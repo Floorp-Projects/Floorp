@@ -330,7 +330,7 @@ GeckoRestyleManager::ContentStateChanged(nsIContent* aContent,
 void
 GeckoRestyleManager::AttributeWillChange(Element* aElement,
                                          int32_t aNameSpaceID,
-                                         nsIAtom* aAttribute,
+                                         nsAtom* aAttribute,
                                          int32_t aModType,
                                          const nsAttrValue* aNewValue)
 {
@@ -353,7 +353,7 @@ GeckoRestyleManager::AttributeWillChange(Element* aElement,
 void
 GeckoRestyleManager::AttributeChanged(Element* aElement,
                                       int32_t aNameSpaceID,
-                                      nsIAtom* aAttribute,
+                                      nsAtom* aAttribute,
                                       int32_t aModType,
                                       const nsAttrValue* aOldValue)
 {
@@ -385,7 +385,7 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
   // happen otherwise).
   if (!primaryFrame && !reframe) {
     int32_t namespaceID;
-    nsIAtom* tag = PresContext()->Document()->BindingManager()->
+    nsAtom* tag = PresContext()->Document()->BindingManager()->
                      ResolveTag(aElement, &namespaceID);
 
     if (namespaceID == kNameSpaceID_XUL &&
@@ -1728,7 +1728,7 @@ ElementRestyler::MoveStyleContextsForContentChildren(
         // XXX Not sure if we need this?
         return false;
       }
-      nsIAtom* pseudoTag = sc->GetPseudo();
+      nsAtom* pseudoTag = sc->GetPseudo();
       if (pseudoTag && !nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
         return false;
       }
@@ -2179,7 +2179,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
   // structure.  To avoid enumerating and checking all of the cases
   // where we have this kind of inheritance, we keep restyling past
   // pseudos.
-  nsIAtom* pseudoTag = oldContext->GetPseudo();
+  nsAtom* pseudoTag = oldContext->GetPseudo();
   if (pseudoTag && !nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
     LOG_RESTYLE_CONTINUE("the old style context is for a pseudo");
     aRestyleResult = RestyleResult::eContinue;
@@ -2193,7 +2193,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
     // Also if the parent has a pseudo, as this frame's style context will
     // be inheriting from a grandparent frame's style context (or a further
     // ancestor).
-    nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
+    nsAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
     if (parentPseudoTag &&
         parentPseudoTag != nsCSSAnonBoxes::firstLetterContinuation) {
       MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::mozText,
@@ -2517,7 +2517,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     oldContext->StyleVisibility()->IsVisible() : false;
 #endif
 
-  nsIAtom* const pseudoTag = oldContext->GetPseudo();
+  nsAtom* const pseudoTag = oldContext->GetPseudo();
   const CSSPseudoElementType pseudoType = oldContext->GetPseudoType();
 
   // Get the frame providing the parent style context.  If it is a
@@ -2934,7 +2934,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     LOG_RESTYLE("extra context %d", contextIndex);
     LOG_RESTYLE_INDENT();
     RefPtr<GeckoStyleContext> newExtraContext;
-    nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
+    nsAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
     const CSSPseudoElementType extraPseudoType =
       oldExtraContext->GetPseudoType();
     NS_ASSERTION(extraPseudoTag &&

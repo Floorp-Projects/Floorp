@@ -86,7 +86,7 @@ public:
   static void InitSystemMetrics();
   static void Shutdown();
   static void FreeSystemMetrics();
-  static bool HasSystemMetric(nsIAtom* aMetric);
+  static bool HasSystemMetric(nsAtom* aMetric);
 
   /*
    * Returns true if the given aElement matches one of the
@@ -167,7 +167,7 @@ public:
                                   bool* const aDependence = nullptr);
 
   static bool LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                const nsIAtom* aOverrideLang,
+                                const nsAtom* aOverrideLang,
                                 bool aHasOverrideLang,
                                 const char16_t* aString,
                                 const nsIDocument* aDocument);
@@ -215,7 +215,7 @@ public:
                                            const nsString& aName);
 
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsPresContext* aPresContext,
-                                                 nsIAtom* aName);
+                                                 nsAtom* aName);
 
   bool AppendPageRules(nsPresContext* aPresContext,
                        nsTArray<nsCSSPageRule*>& aArray);

@@ -40,7 +40,7 @@ EventListenerChange::EventListenerChange(dom::EventTarget* aTarget) :
 }
 
 void
-EventListenerChange::AddChangedListenerName(nsIAtom* aEventName)
+EventListenerChange::AddChangedListenerName(nsAtom* aEventName)
 {
   mChangedListenerNames.AppendElement(aEventName);
 }
@@ -61,7 +61,7 @@ EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
 
   size_t length = mChangedListenerNames.Length();
   for (size_t i = 0; i < length; i++) {
-    RefPtr<nsIAtom> listenerName = mChangedListenerNames[i];
+    RefPtr<nsAtom> listenerName = mChangedListenerNames[i];
 
     // These are the event listener changes which may make an element
     // accessible or inaccessible.
@@ -371,7 +371,7 @@ EventListenerService::RemoveListenerChangeListener(nsIListenerChangeListener* aL
 
 void
 EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget,
-                                                                  nsIAtom* aName)
+                                                                  nsAtom* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTarget);

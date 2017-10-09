@@ -27,7 +27,7 @@
 #define CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME \
   (CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS | CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)
 
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 namespace dom {
@@ -58,7 +58,7 @@ class nsCSSPseudoClasses
 public:
   static void AddRefAtoms();
 
-  static Type GetPseudoType(nsIAtom* aAtom, EnabledState aEnabledState);
+  static Type GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState);
   static bool HasStringArg(Type aType);
   static bool HasNthPairArg(Type aType);
   static bool HasSelectorListArg(Type aType) {

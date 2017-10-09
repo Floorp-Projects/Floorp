@@ -36,7 +36,7 @@ struct nsSMILTargetIdentifier
   }
 
   RefPtr<mozilla::dom::Element> mElement;
-  RefPtr<nsIAtom>               mAttributeName;
+  RefPtr<nsAtom>               mAttributeName;
   int32_t                       mAttributeNamespaceID;
 };
 
@@ -75,7 +75,7 @@ public:
 
 private:
   const nsIContent* mElement;
-  const nsIAtom*    mAttributeName;
+  const nsAtom*    mAttributeName;
 };
 
 #endif // NS_SMILTARGETIDENTIFIER_H_

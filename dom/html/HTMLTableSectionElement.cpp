@@ -128,7 +128,7 @@ HTMLTableSectionElement::DeleteRow(int32_t aValue, ErrorResult& aError)
 
 bool
 HTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
-                                        nsIAtom* aAttribute,
+                                        nsAtom* aAttribute,
                                         const nsAString& aValue,
                                         nsAttrValue& aResult)
 {
@@ -179,7 +179,7 @@ HTMLTableSectionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttrib
 }
 
 NS_IMETHODIMP_(bool)
-HTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableSectionElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },

@@ -30,7 +30,7 @@ namespace mozilla {
 using namespace dom;
 
 JSEventHandler::JSEventHandler(nsISupports* aTarget,
-                               nsIAtom* aType,
+                               nsAtom* aType,
                                const TypedEventHandler& aTypedHandler)
   : mEventName(aType)
   , mTypedHandler(aTypedHandler)
@@ -235,7 +235,7 @@ using namespace mozilla;
 
 nsresult
 NS_NewJSEventHandler(nsISupports* aTarget,
-                     nsIAtom* aEventType,
+                     nsAtom* aEventType,
                      const TypedEventHandler& aTypedHandler,
                      JSEventHandler** aReturn)
 {

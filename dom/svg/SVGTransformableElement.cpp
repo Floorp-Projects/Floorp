@@ -37,7 +37,7 @@ SVGTransformableElement::Transform()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGTransformableElement::IsAttributeMapped(const nsIAtom* name) const
+SVGTransformableElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
@@ -50,7 +50,7 @@ SVGTransformableElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 nsChangeHint
-SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+SVGTransformableElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                                 int32_t aModType) const
 {
   nsChangeHint retval =
@@ -92,7 +92,7 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 bool
-SVGTransformableElement::IsEventAttributeNameInternal(nsIAtom* aName)
+SVGTransformableElement::IsEventAttributeNameInternal(nsAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }

@@ -132,7 +132,7 @@ HTMLEmbedElement::UnbindFromTree(bool aDeep,
 }
 
 nsresult
-HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue,
                                bool aNotify)
@@ -148,7 +148,7 @@ HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
 nsresult
 HTMLEmbedElement::OnAttrSetButNotChanged(int32_t aNamespaceID,
-                                         nsIAtom* aName,
+                                         nsAtom* aName,
                                          const nsAttrValueOrString& aValue,
                                          bool aNotify)
 {
@@ -161,7 +161,7 @@ HTMLEmbedElement::OnAttrSetButNotChanged(int32_t aNamespaceID,
 
 nsresult
 HTMLEmbedElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
-                                       nsIAtom* aName,
+                                       nsAtom* aName,
                                        bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -219,7 +219,7 @@ HTMLEmbedElement::TabIndexDefault()
 
 bool
 HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom *aAttribute,
+                                 nsAtom *aAttribute,
                                  const nsAString &aValue,
                                  nsAttrValue &aResult)
 {
@@ -263,7 +263,7 @@ HTMLEmbedElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLEmbedElement::IsAttributeMapped(const nsIAtom *aAttribute) const
+HTMLEmbedElement::IsAttributeMapped(const nsAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,

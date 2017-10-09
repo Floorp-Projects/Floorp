@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -68,7 +68,7 @@ nsXBLMouseEventHandler::EventMatched(nsIDOMEvent* aEvent)
   return mouse && mProtoHandler->MouseEventMatched(mouse);
 }
 
-nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase,
+nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsAtom* aEventType, uint8_t aPhase,
                                            uint8_t aType)
   : mEventType(aEventType),
     mPhase(aPhase),
@@ -166,7 +166,7 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 already_AddRefed<nsXBLEventHandler>
 NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
-                      nsIAtom* aEventType)
+                      nsAtom* aEventType)
 {
   RefPtr<nsXBLEventHandler> handler;
 

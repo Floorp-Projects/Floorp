@@ -598,14 +598,14 @@ nsDOMDataChannel::ReleaseSelf()
 }
 
 void
-nsDOMDataChannel::EventListenerAdded(nsIAtom* aType)
+nsDOMDataChannel::EventListenerAdded(nsAtom* aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   UpdateMustKeepAlive();
 }
 
 void
-nsDOMDataChannel::EventListenerRemoved(nsIAtom* aType)
+nsDOMDataChannel::EventListenerRemoved(nsAtom* aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   UpdateMustKeepAlive();

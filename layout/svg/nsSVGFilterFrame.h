@@ -12,7 +12,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
@@ -48,7 +48,7 @@ public:
                                 const nsDisplayListSet& aLists) override {}
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
 #ifdef DEBUG

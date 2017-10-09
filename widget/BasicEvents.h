@@ -12,7 +12,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsISupportsImpl.h"
 #include "nsIWidget.h"
 #include "nsString.h"
@@ -574,9 +574,9 @@ public:
   // If JS creates an event with unknown event type or known event type but
   // for different event interface, the event type is stored to this.
   // NOTE: This is always used if the instance is a WidgetCommandEvent instance.
-  RefPtr<nsIAtom> mSpecifiedEventType;
+  RefPtr<nsAtom> mSpecifiedEventType;
 
-  // nsIAtom isn't available on non-main thread due to unsafe.  Therefore,
+  // nsAtom isn't available on non-main thread due to unsafe.  Therefore,
   // mSpecifiedEventTypeString is used instead of mSpecifiedEventType if
   // the event is created in non-main thread.
   nsString mSpecifiedEventTypeString;

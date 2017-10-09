@@ -8,7 +8,6 @@
 
 use Atom;
 use cssparser::{Delimiter, Parser, ParserInput, SourcePosition, Token, TokenSerializationType};
-use parser::ParserContext;
 use precomputed_hash::PrecomputedHash;
 use properties::{CSSWideKeyword, DeclaredValue};
 use selector_map::{PrecomputedHashSet, PrecomputedDiagnosticHashMap};
@@ -246,15 +245,17 @@ impl ComputedValue {
 impl SpecifiedValue {
     /// Parse a custom property SpecifiedValue.
     pub fn parse<'i, 't>(
-        _context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Box<Self>, ParseError<'i>> {
         let mut references = PrecomputedHashSet::default();
-        let (first, css, last) = parse_self_contained_declaration_value(input, Some(&mut references))?;
+
+        let (first_token_type, css, last_token_type) =
+            parse_self_contained_declaration_value(input, Some(&mut references))?;
+
         Ok(Box::new(SpecifiedValue {
             css: css.into_owned(),
-            first_token_type: first,
-            last_token_type: last,
+            first_token_type,
+            last_token_type,
             references
         }))
     }
@@ -456,9 +457,59 @@ fn parse_var_function<'i, 't>(
     Ok(())
 }
 
+/// A struct that takes care of encapsulating the cascade process for custom
+/// properties.
+pub struct CustomPropertiesBuilder<'a> {
+    seen: PrecomputedHashSet<&'a Name>,
+    custom_properties: Option<OrderedMap<&'a Name, BorrowedSpecifiedValue<'a>>>,
+    inherited: Option<&'a Arc<CustomPropertiesMap>>,
+}
+
+impl<'a> CustomPropertiesBuilder<'a> {
+    /// Create a new builder, inheriting from a given custom properties map.
+    pub fn new(inherited: Option<&'a Arc<CustomPropertiesMap>>) -> Self {
+        Self {
+            seen: PrecomputedHashSet::default(),
+            custom_properties: None,
+            inherited,
+        }
+    }
+
+    /// Cascade a given custom property declaration.
+    pub fn cascade(
+        &mut self,
+        name: &'a Name,
+        specified_value: DeclaredValue<'a, Box<SpecifiedValue>>,
+    ) {
+        cascade(
+            &mut self.custom_properties,
+            self.inherited,
+            &mut self.seen,
+            name,
+            specified_value,
+        )
+    }
+
+    /// Returns the final map of applicable custom properties.
+    ///
+    /// If there was any specified property, we've created a new map and now we need
+    /// to remove any potential cycles, and wrap it in an arc.
+    ///
+    /// Otherwise, just use the inherited custom properties map.
+    pub fn build(mut self) -> Option<Arc<CustomPropertiesMap>> {
+        let mut map = match self.custom_properties.take() {
+            Some(map) => map,
+            None => return self.inherited.cloned(),
+        };
+
+        remove_cycles(&mut map);
+        Some(Arc::new(substitute_all(map)))
+    }
+}
+
 /// Add one custom property declaration to a map, unless another with the same
 /// name was already there.
-pub fn cascade<'a>(
+fn cascade<'a>(
     custom_properties: &mut Option<OrderedMap<&'a Name, BorrowedSpecifiedValue<'a>>>,
     inherited: Option<&'a Arc<CustomPropertiesMap>>,
     seen: &mut PrecomputedHashSet<&'a Name>,
@@ -505,24 +556,6 @@ pub fn cascade<'a>(
             CSSWideKeyword::Unset | // Custom properties are inherited by default.
             CSSWideKeyword::Inherit => {} // The inherited value is what we already have.
         }
-    }
-}
-
-/// Returns the final map of applicable custom properties.
-///
-/// If there was any specified property, we've created a new map and now we need
-/// to remove any potential cycles, and wrap it in an arc.
-///
-/// Otherwise, just use the inherited custom properties map.
-pub fn finish_cascade(
-    specified_values_map: Option<OrderedMap<&Name, BorrowedSpecifiedValue>>,
-    inherited: Option<&Arc<CustomPropertiesMap>>,
-) -> Option<Arc<CustomPropertiesMap>> {
-    if let Some(mut map) = specified_values_map {
-        remove_cycles(&mut map);
-        Some(Arc::new(substitute_all(map)))
-    } else {
-        inherited.cloned()
     }
 }
 

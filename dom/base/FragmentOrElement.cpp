@@ -29,7 +29,7 @@
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Event.h"
 #include "nsIDocumentInlines.h"
@@ -326,7 +326,7 @@ nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
     return NS_OK;
   }
 
-  RefPtr<nsIAtom> name;
+  RefPtr<nsAtom> name;
   if (!aNamespacePrefix.IsEmpty()) {
     name = NS_Atomize(aNamespacePrefix);
     NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
@@ -344,7 +344,7 @@ nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
   return NS_ERROR_FAILURE;
 }
 
-nsIAtom*
+nsAtom*
 nsIContent::GetLang() const
 {
   for (const auto* content = this; content; content = content->GetParent()) {
@@ -1099,7 +1099,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 }
 
 bool
-nsIContent::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+nsIContent::GetAttr(int32_t aNameSpaceID, nsAtom* aName,
                     nsAString& aResult) const
 {
   if (IsElement()) {
@@ -1110,14 +1110,14 @@ nsIContent::GetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 bool
-nsIContent::HasAttr(int32_t aNameSpaceID, nsIAtom* aName) const
+nsIContent::HasAttr(int32_t aNameSpaceID, nsAtom* aName) const
 {
   return IsElement() && AsElement()->HasAttr(aNameSpaceID, aName);
 }
 
 bool
 nsIContent::AttrValueIs(int32_t aNameSpaceID,
-                        nsIAtom* aName,
+                        nsAtom* aName,
                         const nsAString& aValue,
                         nsCaseTreatment aCaseSensitive) const
 {
@@ -1127,8 +1127,8 @@ nsIContent::AttrValueIs(int32_t aNameSpaceID,
 
 bool
 nsIContent::AttrValueIs(int32_t aNameSpaceID,
-                        nsIAtom* aName,
-                        nsIAtom* aValue,
+                        nsAtom* aName,
+                        nsAtom* aValue,
                         nsCaseTreatment aCaseSensitive) const
 {
   return IsElement() &&
@@ -1537,12 +1537,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     }
 
     if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsIAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
+      nsAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
         tmp->DeleteProperty(*props[i]);
       }
       if (tmp->MayHaveAnimations()) {
-        nsIAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
+        nsAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
         for (uint32_t i = 0; effectProps[i]; ++i) {
           tmp->DeleteProperty(effectProps[i]);
         }
@@ -1599,7 +1599,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FragmentOrElement)
 
 void
-FragmentOrElement::MarkUserData(void* aObject, nsIAtom* aKey, void* aChild,
+FragmentOrElement::MarkUserData(void* aObject, nsAtom* aKey, void* aChild,
                                void* aData)
 {
   uint32_t* gen = static_cast<uint32_t*>(aData);
@@ -2054,7 +2054,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     }
 
     nsAutoString id;
-    nsIAtom* idAtom = tmp->GetID();
+    nsAtom* idAtom = tmp->GetID();
     if (idAtom) {
       id.AppendLiteral(" id='");
       id.Append(nsDependentAtomString(idAtom));
@@ -2103,7 +2103,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
 
   // Check that whenever we have effect properties, MayHaveAnimations is set.
 #ifdef DEBUG
-  nsIAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
+  nsAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
   for (uint32_t i = 0; effectProps[i]; ++i) {
     MOZ_ASSERT_IF(tmp->GetProperty(effectProps[i]), tmp->MayHaveAnimations());
   }
@@ -2124,14 +2124,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       }
     }
     if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsIAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
+      nsAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
         nsISupports* property =
           static_cast<nsISupports*>(tmp->GetProperty(*props[i]));
         cb.NoteXPCOMChild(property);
       }
       if (tmp->MayHaveAnimations()) {
-        nsIAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
+        nsAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
         for (uint32_t i = 0; effectProps[i]; ++i) {
           EffectSet* effectSet =
             static_cast<EffectSet*>(tmp->GetProperty(effectProps[i]));
@@ -2306,9 +2306,9 @@ FragmentOrElement::IndexOf(const nsINode* aPossibleChild) const
 }
 
 static inline bool
-IsVoidTag(nsIAtom* aTag)
+IsVoidTag(nsAtom* aTag)
 {
-  static const nsIAtom* voidElements[] = {
+  static const nsAtom* voidElements[] = {
     nsGkAtoms::area, nsGkAtoms::base, nsGkAtoms::basefont,
     nsGkAtoms::bgsound, nsGkAtoms::br, nsGkAtoms::col,
     nsGkAtoms::embed, nsGkAtoms::frame,
@@ -2318,7 +2318,7 @@ IsVoidTag(nsIAtom* aTag)
     nsGkAtoms::wbr
   };
 
-  static mozilla::BloomFilter<12, nsIAtom> sFilter;
+  static mozilla::BloomFilter<12, nsAtom> sFilter;
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
@@ -2339,7 +2339,7 @@ IsVoidTag(nsIAtom* aTag)
 
 /* static */
 bool
-FragmentOrElement::IsHTMLVoid(nsIAtom* aLocalName)
+FragmentOrElement::IsHTMLVoid(nsAtom* aLocalName)
 {
   return aLocalName && IsVoidTag(aLocalName);
 }
@@ -2478,7 +2478,7 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
 
   nsAutoScriptLoaderDisabler sld(doc);
 
-  nsIAtom* contextLocalName = NodeInfo()->NameAtom();
+  nsAtom* contextLocalName = NodeInfo()->NameAtom();
   int32_t contextNameSpaceID = GetNameSpaceID();
 
   ShadowRoot* shadowRoot = ShadowRoot::FromNode(this);

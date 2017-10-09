@@ -391,7 +391,7 @@ nsDateTimeControlFrame::SyncDisabledState()
 
 nsresult
 nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
-                                         nsIAtom* aAttribute,
+                                         nsAtom* aAttribute,
                                          int32_t aModType)
 {
   NS_ASSERTION(mInputAreaContent, "The input area content must exist!");

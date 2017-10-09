@@ -240,9 +240,6 @@ public:
   // are buffered and playable.
   virtual media::TimeIntervals GetBuffered();
 
-  // For debugging bug 1402584.
-  bool IsMetadataLoaded() const { return !!mInfo; }
-
   // Returns the size, in bytes, of the heap memory used by the currently
   // queued decoded video and audio data.
   size_t SizeOfVideoQueue();

@@ -28,7 +28,7 @@ class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 class nsDisplayListBuilder;
 
 namespace mozilla {
@@ -240,7 +240,7 @@ public:
    * number of layer pixels (so the operation is fast and looks clean).
    */
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
-                                            nsIAtom *aOrigin = nullptr) = 0;
+                                            nsAtom *aOrigin = nullptr) = 0;
 
   /**
    * Returns the scroll position in integer CSS pixels, rounded to the nearest
@@ -263,7 +263,7 @@ public:
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow = nullptr,
-                        nsIAtom* aOrigin = nullptr,
+                        nsAtom* aOrigin = nullptr,
                         ScrollMomentum aMomentum = NOT_MOMENTUM,
                         nsIScrollbarMediator::ScrollSnapMode aSnap
                           = nsIScrollbarMediator::DISABLE_SNAP) = 0;
@@ -350,7 +350,7 @@ public:
    * nsGkAtoms::apz when the compositor's replica frame metrics includes the
    * latest instant scroll.
    */
-  virtual nsIAtom* LastScrollOrigin() = 0;
+  virtual nsAtom* LastScrollOrigin() = 0;
   /**
    * Sets a flag on the scrollframe that indicates the current scroll origin
    * has been sent over in a layers transaction, and subsequent changes to
@@ -374,7 +374,7 @@ public:
    * by an instant scroll before the smooth scroll could be started by the
    * compositor, this is set to nullptr to clear the smooth scroll.
    */
-  virtual nsIAtom* LastSmoothScrollOrigin() = 0;
+  virtual nsAtom* LastSmoothScrollOrigin() = 0;
   /**
    * Returns the current generation counter for the scroll. This counter
    * increments every time the scroll position is set.

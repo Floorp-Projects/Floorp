@@ -28,10 +28,10 @@ public:
   IMPL_EVENT_HANDLER(audioprocess)
 
   using EventTarget::EventListenerAdded;
-  void EventListenerAdded(nsIAtom* aType) override;
+  void EventListenerAdded(nsAtom* aType) override;
 
   using EventTarget::EventListenerRemoved;
-  void EventListenerRemoved(nsIAtom* aType) override;
+  void EventListenerRemoved(nsAtom* aType) override;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

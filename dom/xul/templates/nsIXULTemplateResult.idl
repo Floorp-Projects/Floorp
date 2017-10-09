@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIAtom;  // used in [noscript] methods only
+interface nsAtom;  // not a real interface; used in [noscript] methods only
 interface nsIDOMNode;
 interface nsIRDFResource;
 
@@ -80,7 +80,7 @@ interface nsIXULTemplateResult : nsISupports
    *
    * @return the value for the variable or a null string if it has no value
    */
-  [noscript] AString getBindingFor(in nsIAtom aVar);
+  [noscript] AString getBindingFor(in nsAtom aVar);
 
   /**
    * Get an object value for a variable such as ?name for this result. 
@@ -93,7 +93,7 @@ interface nsIXULTemplateResult : nsISupports
    *
    * @return the value for the variable or null if it has no value
    */
-  [noscript] nsISupports getBindingObjectFor(in nsIAtom aVar);
+  [noscript] nsISupports getBindingObjectFor(in nsAtom aVar);
 
   /**
    * Indicate that a particular rule of a query has matched and that output

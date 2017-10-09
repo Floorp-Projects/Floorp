@@ -24,7 +24,7 @@ class ServoStyleContext final : public nsStyleContext
 {
 public:
   ServoStyleContext(nsPresContext* aPresContext,
-                    nsIAtom* aPseudoTag,
+                    nsAtom* aPseudoTag,
                     CSSPseudoElementType aPseudoType,
                     ServoComputedDataForgotten aComputedValues);
 
@@ -45,9 +45,9 @@ public:
            !nsCSSPseudoElements::IsEagerlyCascadedInServo(GetPseudoType());
   }
 
-  ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsIAtom* aAnonBox) const;
+  ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const;
 
-  void SetCachedInheritedAnonBoxStyle(nsIAtom* aAnonBox,
+  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox,
                                       ServoStyleContext* aStyle)
   {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));

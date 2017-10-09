@@ -35,7 +35,7 @@ ServoElementSnapshot::~ServoElementSnapshot()
 void
 ServoElementSnapshot::AddAttrs(Element* aElement,
                                int32_t aNameSpaceID,
-                               nsIAtom* aAttribute)
+                               nsAtom* aAttribute)
 {
   MOZ_ASSERT(aElement);
 

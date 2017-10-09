@@ -444,7 +444,8 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   // nsDisplayFilter is rendered via BasicLayerManager which means the invalidate
   // region is unknown until we traverse the displaylist contained by it.
   if (geometry && !fallbackData->IsInvalid() &&
-      aItem->GetType() != DisplayItemType::TYPE_FILTER) {
+      aItem->GetType() != DisplayItemType::TYPE_FILTER &&
+      scale == fallbackData->GetScale()) {
     nsRect invalid;
     nsRegion invalidRegion;
 
@@ -516,6 +517,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     }
 
     geometry = aItem->AllocateGeometry(aDisplayListBuilder);
+    fallbackData->SetScale(scale);
     fallbackData->SetInvalid(false);
   }
 

@@ -32,7 +32,7 @@ protected:
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   // SVGGeometryElement methods:
   virtual bool IsMarkable() override { return true; }

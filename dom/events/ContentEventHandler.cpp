@@ -3013,7 +3013,7 @@ ContentEventHandler::GetStartOffset(const RawRange& aRawRange,
   nsINode* startNode = aRawRange.GetStartContainer();
   bool startIsContainer = true;
   if (startNode->IsHTMLElement()) {
-    nsIAtom* name = startNode->NodeInfo()->NameAtom();
+    nsAtom* name = startNode->NodeInfo()->NameAtom();
     startIsContainer =
       nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
   }

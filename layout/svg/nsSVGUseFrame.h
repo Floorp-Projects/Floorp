@@ -34,7 +34,7 @@ public:
             nsIFrame* aPrevInFlow) override;
 
   nsresult AttributeChanged(int32_t aNameSpaceID,
-                            nsIAtom* aAttribute,
+                            nsAtom* aAttribute,
                             int32_t aModType) override;
 
   void DestroyFrom(nsIFrame* aDestructRoot) override;

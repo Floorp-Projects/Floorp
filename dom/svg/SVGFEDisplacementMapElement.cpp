@@ -118,7 +118,7 @@ SVGFEDisplacementMapElement::GetPrimitiveDescription(nsSVGFilterInstance* aInsta
 
 bool
 SVGFEDisplacementMapElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                       nsIAtom* aAttribute) const
+                                                       nsAtom* aAttribute) const
 {
   return SVGFEDisplacementMapElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

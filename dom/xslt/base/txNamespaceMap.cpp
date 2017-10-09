@@ -18,9 +18,9 @@ txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
 }
 
 nsresult
-txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
+txNamespaceMap::mapNamespace(nsAtom* aPrefix, const nsAString& aNamespaceURI)
 {
-    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? nullptr : aPrefix;
+    nsAtom* prefix = aPrefix == nsGkAtoms::_empty ? nullptr : aPrefix;
 
     int32_t nsId;
     if (prefix && aNamespaceURI.IsEmpty()) {
@@ -66,13 +66,13 @@ txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
 }
 
 int32_t
-txNamespaceMap::lookupNamespace(nsIAtom* aPrefix)
+txNamespaceMap::lookupNamespace(nsAtom* aPrefix)
 {
     if (aPrefix == nsGkAtoms::xml) {
         return kNameSpaceID_XML;
     }
 
-    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? 0 : aPrefix;
+    nsAtom* prefix = aPrefix == nsGkAtoms::_empty ? 0 : aPrefix;
 
     int32_t index = mPrefixes.IndexOf(prefix);
     if (index >= 0) {
@@ -89,7 +89,7 @@ txNamespaceMap::lookupNamespace(nsIAtom* aPrefix)
 int32_t
 txNamespaceMap::lookupNamespaceWithDefault(const nsAString& aPrefix)
 {
-    RefPtr<nsIAtom> prefix = NS_Atomize(aPrefix);
+    RefPtr<nsAtom> prefix = NS_Atomize(aPrefix);
     if (prefix != nsGkAtoms::_poundDefault) {
         return lookupNamespace(prefix);
     }
