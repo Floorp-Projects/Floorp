@@ -64,7 +64,7 @@ function() {
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
-    is(clientData.hashAlg, "SHA-256", "Hash algorithm is correct");
+    is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
 
     return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
     .then(function(aAttestationObj) {
@@ -114,7 +114,7 @@ function() {
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
-    is(clientData.hashAlg, "SHA-256", "Hash algorithm is correct");
+    is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
 
     return webAuthnDecodeAuthDataArray(aAssertion.response.authenticatorData)
     .then(function(aAttestation) {
@@ -143,7 +143,7 @@ function() {
       rp: rp,
       user: user,
       challenge: gCredentialChallenge,
-      parameters: [param]
+      pubKeyCredParams: [param]
     };
     credm.create({publicKey: makeCredentialOptions})
     .then(decodeCreatedCredential)
@@ -162,8 +162,8 @@ function() {
       rp: rp,
       user: user,
       challenge: gCredentialChallenge,
-      parameters: [param],
-      excludeList: [{type: "public-key", id: new Uint8Array(aCredInfo.rawId),
+      pubKeyCredParams: [param],
+      excludeCredentials: [{type: "public-key", id: new Uint8Array(aCredInfo.rawId),
                      transports: ["usb"]}]
     };
     credm.create({publicKey: makeCredentialOptions})
@@ -189,7 +189,7 @@ function() {
       challenge: gAssertionChallenge,
       timeout: 5000, // the minimum timeout is actually 15 seconds
       rpId: document.domain,
-      allowList: [newCredential]
+      allowCredentials: [newCredential]
     };
     credm.get({publicKey: publicKeyCredentialRequestOptions})
     .then(function(aAssertion) {

@@ -90,7 +90,7 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
   CollectedClientData clientDataObject;
   clientDataObject.mChallenge.Assign(challengeBase64);
   clientDataObject.mOrigin.Assign(aOrigin);
-  clientDataObject.mHashAlg.AssignLiteral(u"SHA-256");
+  clientDataObject.mHashAlgorithm.AssignLiteral(u"SHA-256");
 
   nsAutoString temp;
   if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
@@ -365,14 +365,14 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   // Process each element of cryptoParameters using the following steps, to
   // produce a new sequence normalizedParameters.
   nsTArray<PublicKeyCredentialParameters> normalizedParams;
-  for (size_t a = 0; a < aOptions.mParameters.Length(); ++a) {
+  for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
     // Let current be the currently selected element of
     // cryptoParameters.
 
     // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
     // on to the next element in cryptoParameters.
-    if (aOptions.mParameters[a].mType != PublicKeyCredentialType::Public_key) {
+    if (aOptions.mPubKeyCredParams[a].mType != PublicKeyCredentialType::Public_key) {
       continue;
     }
 
@@ -383,7 +383,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     // element in cryptoParameters.
 
     nsString algName;
-    if (NS_FAILED(GetAlgorithmName(aOptions.mParameters[a].mAlg,
+    if (NS_FAILED(GetAlgorithmName(aOptions.mPubKeyCredParams[a].mAlg,
                                    algName))) {
       continue;
     }
@@ -392,7 +392,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     // normalizedParameters, with type set to current.type and algorithm set to
     // normalizedAlgorithm.
     PublicKeyCredentialParameters normalizedObj;
-    normalizedObj.mType = aOptions.mParameters[a].mType;
+    normalizedObj.mType = aOptions.mPubKeyCredParams[a].mType;
     normalizedObj.mAlg.SetAsString().Assign(algName);
 
     if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
@@ -404,7 +404,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   // If normalizedAlgorithm is empty and cryptoParameters was not empty, cancel
   // the timer started in step 2, reject promise with a DOMException whose name
   // is "NotSupportedError", and terminate this algorithm.
-  if (normalizedParams.IsEmpty() && !aOptions.mParameters.IsEmpty()) {
+  if (normalizedParams.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
@@ -476,7 +476,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   }
 
   nsTArray<WebAuthnScopedCredentialDescriptor> excludeList;
-  for (const auto& s: aOptions.mExcludeList) {
+  for (const auto& s: aOptions.mExcludeCredentials) {
     WebAuthnScopedCredentialDescriptor c;
     CryptoBuffer cb;
     cb.Assign(s.mId);
@@ -636,13 +636,13 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   // Note: we only support U2F-style authentication for now, so we effectively
   // require an AllowList.
-  if (aOptions.mAllowList.Length() < 1) {
+  if (aOptions.mAllowCredentials.Length() < 1) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return promise.forget();
   }
 
   nsTArray<WebAuthnScopedCredentialDescriptor> allowList;
-  for (const auto& s: aOptions.mAllowList) {
+  for (const auto& s: aOptions.mAllowCredentials) {
     WebAuthnScopedCredentialDescriptor c;
     CryptoBuffer cb;
     cb.Assign(s.mId);
