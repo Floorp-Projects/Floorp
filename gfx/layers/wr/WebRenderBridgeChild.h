@@ -67,7 +67,7 @@ public:
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
-  bool BeginTransaction();
+  void BeginTransaction();
   void EndTransaction(const wr::LayoutSize& aContentSize,
                       wr::BuiltDisplayList& dl,
                       wr::IpcResourceUpdateQueue& aResources,
