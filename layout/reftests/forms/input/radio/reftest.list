@@ -5,5 +5,6 @@
 != checked-native.html about:blank
 != checked-native-notref.html about:blank
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
-fails-if(gtkWidget) == radio-clamp.html radio-clamp-ref.html
+skip-if(gtkWidget) == radio-clamp-01.html radio-clamp-01-ref.html
+skip-if(OSX||winWidget) == radio-clamp-02.html radio-clamp-02-ref.html
 fails-if(OSX) == radio-minimum-size.html radio-minimum-size-ref.html
