@@ -473,6 +473,7 @@ photonpanelmultiview .panel-subview-body {
   animation-name: widget-animate-out;
   animation-fill-mode: forwards;
   animation-duration: 500ms;
+  animation-timing-function: var(--animation-easing-function);
 }
 
 @keyframes widget-animate-out {
