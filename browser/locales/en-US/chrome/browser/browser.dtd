@@ -205,7 +205,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.defaultNotificationAnchor.tooltip         "Open message panel">
 <!ENTITY urlbar.geolocationNotificationAnchor.tooltip     "Open location request panel">
 <!ENTITY urlbar.addonsNotificationAnchor.tooltip          "Open add-on installation message panel">
-<!ENTITY urlbar.canvasNotificationAnchor.tooltip          "Manage canvas extraction permission">
 <!ENTITY urlbar.indexedDBNotificationAnchor.tooltip       "Open offline storage message panel">
 <!ENTITY urlbar.passwordNotificationAnchor.tooltip        "Open save password message panel">
 <!ENTITY urlbar.pluginsNotificationAnchor.tooltip         "Manage plug-in use">

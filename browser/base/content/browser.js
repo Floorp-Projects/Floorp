@@ -1465,7 +1465,6 @@ var gBrowserInit = {
 
     BrowserOffline.init();
     IndexedDBPromptHelper.init();
-    CanvasPermissionPromptHelper.init();
 
     if (AppConstants.E10S_TESTING_ONLY)
       gRemoteTabsUI.init();
@@ -1899,7 +1898,6 @@ var gBrowserInit = {
       }
       BrowserOffline.uninit();
       IndexedDBPromptHelper.uninit();
-      CanvasPermissionPromptHelper.uninit();
       PanelUI.uninit();
       AutoShowBookmarksToolbar.uninit();
     }
@@ -6680,82 +6678,6 @@ var IndexedDBPromptHelper = {
         persistent: true,
         hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
       });
-  }
-};
-
-var CanvasPermissionPromptHelper = {
-  _permissionsPrompt: "canvas-permissions-prompt",
-  _notificationIcon: "canvas-notification-icon",
-
-  init() {
-    Services.obs.addObserver(this, this._permissionsPrompt);
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt);
-  },
-
-  // aSubject is an nsIBrowser (e10s) or an nsIDOMWindow (non-e10s).
-  // aData is an URL string.
-  observe(aSubject, aTopic, aData) {
-    if (aTopic != this._permissionsPrompt) {
-      return;
-    }
-
-    let browser;
-    if (aSubject instanceof Ci.nsIDOMWindow) {
-      let contentWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      browser = gBrowser.getBrowserForContentWindow(contentWindow);
-    } else {
-      browser = aSubject.QueryInterface(Ci.nsIBrowser);
-    }
-
-    let uri = Services.io.newURI(aData);
-    if (gBrowser.selectedBrowser !== browser) {
-      // Must belong to some other window.
-      return;
-    }
-
-    let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", [ uri.asciiHost ]);
-
-    function setCanvasPermission(aURI, aPerm, aPersistent) {
-      Services.perms.add(aURI, "canvas/extractData", aPerm,
-                          aPersistent ? Ci.nsIPermissionManager.EXPIRE_NEVER
-                                      : Ci.nsIPermissionManager.EXPIRE_SESSION);
-    }
-
-    let mainAction = {
-      label: gNavigatorBundle.getString("canvas.allow"),
-      accessKey: gNavigatorBundle.getString("canvas.allow.accesskey"),
-      callback(state) {
-        setCanvasPermission(uri, Ci.nsIPermissionManager.ALLOW_ACTION,
-                            state && state.checkboxChecked);
-      }
-    };
-
-    let secondaryActions = [{
-      label: gNavigatorBundle.getString("canvas.notAllow"),
-      accessKey: gNavigatorBundle.getString("canvas.notAllow.accesskey"),
-      callback(state) {
-        setCanvasPermission(uri, Ci.nsIPermissionManager.DENY_ACTION,
-                            state && state.checkboxChecked);
-      }
-    }];
-
-    let checkbox = {
-      // In PB mode, we don't want the "always remember" checkbox
-      show: !PrivateBrowsingUtils.isWindowPrivate(window)
-    };
-    if (checkbox.show) {
-      checkbox.checked = true;
-      checkbox.label = gBrowserBundle.GetStringFromName("canvas.remember");
-    }
-
-    let options = {
-      checkbox
-    };
-    PopupNotifications.show(browser, aTopic, message, this._notificationIcon,
-                            mainAction, secondaryActions, options);
   }
 };
 
