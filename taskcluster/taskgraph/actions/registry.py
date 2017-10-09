@@ -232,6 +232,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         'ACTION_INPUT': {'$json': {'$eval': 'input'}},
                         'ACTION_CALLBACK': cb.__name__,
                         'ACTION_PARAMETERS': {'$json': {'$eval': 'parameters'}},
+                        'TASKCLUSTER_CACHES': '/builds/worker/checkouts',
                     },
                     'artifacts': {
                         'public': {
