@@ -790,7 +790,14 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     unsigned nativeFramePushed = masm.framePushed();
     AssertStackAlignment(masm, ABIStackAlignment);
 
-    masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
+#ifdef DEBUG
+    {
+        Label ok;
+        masm.branchTestMagic(Assembler::NotEqual, JSReturnOperand, &ok);
+        masm.breakpoint();
+        masm.bind(&ok);
+    }
+#endif
 
     Label oolConvert;
     switch (fi.sig().ret()) {
@@ -882,15 +889,12 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
             masm.unboxInt32(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnReg);
             break;
           case ExprType::F64:
-            masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
-            masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-            masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
-            break;
           case ExprType::F32:
             masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
             masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
-            masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
+            if (fi.sig().ret() == ExprType::F32)
+                masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
             break;
           default:
             MOZ_CRASH("Unsupported convert type");
