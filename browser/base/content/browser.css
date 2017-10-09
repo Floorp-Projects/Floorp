@@ -10,7 +10,6 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
-  --tab-min-width: 50px;
 }
 
 :root:-moz-lwtheme {
@@ -139,6 +138,11 @@ tabbrowser {
               max-width 100ms ease-out;
 }
 
+:root[uidensity=touch] .tabbrowser-tab:not([pinned]) {
+  /* Touch mode needs additional space for the close button. */
+  min-width: calc(var(--tab-min-width) + 10px);
+}
+
 .tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 0.1px;
   min-width: 0.1px;
@@ -202,6 +206,7 @@ tabbrowser {
 }
 
 /* Allow dropping a tab on buttons with associated drop actions. */
+#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #home-button,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #downloads-button,
 #TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
@@ -372,12 +377,11 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
     list-style-image: var(--webextension-menupanel-image, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
     list-style-image: var(--webextension-menupanel-image-light, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
+  .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme-darktext,
   toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
     list-style-image: var(--webextension-menupanel-image-dark, inherit);
   }
@@ -409,12 +413,11 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
     list-style-image: var(--webextension-menupanel-image-2x, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
     list-style-image: var(--webextension-menupanel-image-2x-light, inherit);
   }
 
-  .webextension-browser-action[cui-areatype="menu-panel"],
+  .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme-darktext,
   toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
     list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
   }

@@ -153,6 +153,27 @@ async function run_test_with_server(server) {
       ["byteLength", 2],
       ["byteOffset", 0],
     ],
+  }, {
+    evaledObject: `(() => {
+      x = new Int8Array([1, 2]);
+      Object.defineProperty(x, 'length', {value: 0});
+      return x;
+    })()`,
+    expectedIndexedProperties: [["0", 1], ["1", 2]],
+    expectedNonIndexedProperties: [
+      ["length", 0],
+      ["buffer", DO_NOT_CHECK_VALUE],
+      ["byteLength", 2],
+      ["byteOffset", 0],
+    ],
+  }, {
+    evaledObject: `(() => {
+      x = new Int32Array([1, 2]);
+      Object.setPrototypeOf(x, null);
+      return x;
+    })()`,
+    expectedIndexedProperties: [["0", 1], ["1", 2]],
+    expectedNonIndexedProperties: [],
   }].forEach(async (testData) => {
     await test_object_grip(debuggee, dbgClient, threadClient, testData);
   });

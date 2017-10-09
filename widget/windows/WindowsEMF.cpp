@@ -10,8 +10,8 @@ namespace mozilla {
 namespace widget {
 
 WindowsEMF::WindowsEMF()
-  : mDC(nullptr)
-  , mEmf(nullptr)
+  : mEmf(nullptr)
+  , mDC(nullptr)
 {
 }
 

@@ -81,7 +81,10 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
   if (aFrame.IsLetterFrame()) {
     // Ditto for ::first-letter. A first-letter always arrives here via its
     // direct parent, except when it's parented to a ::first-line.
-    return parent->IsLineFrame() ? parent->GetParent() : parent;
+    if (parent->IsLineFrame()) {
+      parent = parent->GetParent();
+    }
+    return FirstContinuationOrPartOfIBSplit(parent);
   }
 
   if (parent->IsLetterFrame()) {
