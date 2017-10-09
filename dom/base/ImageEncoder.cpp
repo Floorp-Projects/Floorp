@@ -155,7 +155,6 @@ public:
                    EncodingCompleteEvent* aEncodingCompleteEvent,
                    int32_t aFormat,
                    const nsIntSize aSize,
-                   bool aUsePlaceholder,
                    bool aUsingCustomOptions)
     : Runnable("EncodingRunnable")
     , mType(aType)
@@ -166,7 +165,6 @@ public:
     , mEncodingCompleteEvent(aEncodingCompleteEvent)
     , mFormat(aFormat)
     , mSize(aSize)
-    , mUsePlaceholder(aUsePlaceholder)
     , mUsingCustomOptions(aUsingCustomOptions)
   {}
 
@@ -178,7 +176,6 @@ public:
                                                     mImageBuffer.get(),
                                                     mFormat,
                                                     mSize,
-                                                    mUsePlaceholder,
                                                     mImage,
                                                     nullptr,
                                                     nullptr,
@@ -193,7 +190,6 @@ public:
                                              mImageBuffer.get(),
                                              mFormat,
                                              mSize,
-                                             mUsePlaceholder,
                                              mImage,
                                              nullptr,
                                              nullptr,
@@ -243,7 +239,6 @@ private:
   RefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
   int32_t mFormat;
   const nsIntSize mSize;
-  bool mUsePlaceholder;
   bool mUsingCustomOptions;
 };
 
@@ -256,7 +251,6 @@ nsresult
 ImageEncoder::ExtractData(nsAString& aType,
                           const nsAString& aOptions,
                           const nsIntSize aSize,
-                          bool aUsePlaceholder,
                           nsICanvasRenderingContextInternal* aContext,
                           layers::AsyncCanvasRenderer* aRenderer,
                           nsIInputStream** aStream)
@@ -266,8 +260,7 @@ ImageEncoder::ExtractData(nsAString& aType,
     return NS_IMAGELIB_ERROR_NO_ENCODER;
   }
 
-  return ExtractDataInternal(aType, aOptions, nullptr, 0, aSize,
-                             aUsePlaceholder, nullptr,
+  return ExtractDataInternal(aType, aOptions, nullptr, 0, aSize, nullptr,
                              aContext, aRenderer, aStream, encoder);
 }
 
@@ -277,7 +270,6 @@ ImageEncoder::ExtractDataFromLayersImageAsync(nsAString& aType,
                                               const nsAString& aOptions,
                                               bool aUsingCustomOptions,
                                               layers::Image* aImage,
-                                              bool aUsePlaceholder,
                                               EncodeCompleteCallback* aEncodeCallback)
 {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
@@ -302,7 +294,6 @@ ImageEncoder::ExtractDataFromLayersImageAsync(nsAString& aType,
                                                      completeEvent,
                                                      imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                                      size,
-                                                     aUsePlaceholder,
                                                      aUsingCustomOptions);
   return sThreadPool->Dispatch(event, NS_DISPATCH_NORMAL);
 }
@@ -315,7 +306,6 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
                                UniquePtr<uint8_t[]> aImageBuffer,
                                int32_t aFormat,
                                const nsIntSize aSize,
-                               bool aUsePlaceholder,
                                EncodeCompleteCallback* aEncodeCallback)
 {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
@@ -339,7 +329,6 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
                                                      completeEvent,
                                                      aFormat,
                                                      aSize,
-                                                     aUsePlaceholder,
                                                      aUsingCustomOptions);
   return sThreadPool->Dispatch(event, NS_DISPATCH_NORMAL);
 }
@@ -370,7 +359,6 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
                                   uint8_t* aImageBuffer,
                                   int32_t aFormat,
                                   const nsIntSize aSize,
-                                  bool aUsePlaceholder,
                                   layers::Image* aImage,
                                   nsICanvasRenderingContextInternal* aContext,
                                   layers::AsyncCanvasRenderer* aRenderer,
@@ -385,7 +373,7 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
 
   // get image bytes
   nsresult rv;
-  if (aImageBuffer && !aUsePlaceholder) {
+  if (aImageBuffer) {
     if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -398,17 +386,17 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
       aEncoder,
       nsPromiseFlatString(aOptions).get(),
       getter_AddRefs(imgStream));
-  } else if (aContext && !aUsePlaceholder) {
+  } else if (aContext) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
     rv = aContext->GetInputStream(encoderType.get(),
                                   nsPromiseFlatString(aOptions).get(),
                                   getter_AddRefs(imgStream));
-  } else if (aRenderer && !aUsePlaceholder) {
+  } else if (aRenderer) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
     rv = aRenderer->GetInputStream(encoderType.get(),
                                    nsPromiseFlatString(aOptions).get(),
                                    getter_AddRefs(imgStream));
-  } else if (aImage && !aUsePlaceholder) {
+  } else if (aImage) {
     // It is safe to convert PlanarYCbCr format from YUV to RGB off-main-thread.
     // Other image formats could have problem to convert format off-main-thread.
     // So here it uses a help function GetBRGADataSourceSurfaceSync() to convert
@@ -483,10 +471,6 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     DataSourceSurface::MappedSurface map;
     if (!emptyCanvas->Map(DataSourceSurface::MapType::WRITE, &map)) {
       return NS_ERROR_INVALID_ARG;
-    }
-    if (aUsePlaceholder) {
-      // If placeholder data was requested, return all-white, opaque image data.
-      memset(map.mData, 0xFF, 4 * aSize.width * aSize.height);
     }
     rv = aEncoder->InitFromData(map.mData,
                                 aSize.width * aSize.height * 4,
