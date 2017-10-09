@@ -52,9 +52,12 @@ nsHtml5String::LowerCaseStartsWithASCII(const char* aLowerCaseLiteral) const
   const char16_t* strPtr = AsPtr();
   const char16_t* end = strPtr + Length();
   char16_t litChar;
-  while ((litChar = *litPtr) && (strPtr != end)) {
+  while ((litChar = *litPtr)) {
     MOZ_ASSERT(!(litChar >= 'A' && litChar <= 'Z'),
                "Literal isn't in lower case.");
+    if (strPtr == end) {
+      return false;
+    }
     char16_t strChar = *strPtr;
     if (strChar >= 'A' && strChar <= 'Z') {
       strChar += 0x20;
