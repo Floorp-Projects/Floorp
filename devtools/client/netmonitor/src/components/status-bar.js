@@ -23,6 +23,15 @@ const { L10N } = require("../utils/l10n");
 
 const { button, div } = DOM;
 
+const REQUESTS_COUNT_EMPTY = L10N.getStr("networkMenu.summary.requestsCountEmpty");
+const TOOLTIP_PERF = L10N.getStr("networkMenu.summary.tooltip.perf");
+const TOOLTIP_REQUESTS_COUNT = L10N.getStr("networkMenu.summary.tooltip.requestsCount");
+const TOOLTIP_TRANSFERRED = L10N.getStr("networkMenu.summary.tooltip.transferred");
+const TOOLTIP_FINISH = L10N.getStr("networkMenu.summary.tooltip.finish");
+const TOOLTIP_DOM_CONTENT_LOADED =
+        L10N.getStr("networkMenu.summary.tooltip.domContentLoaded");
+const TOOLTIP_LOAD = L10N.getStr("networkMenu.summary.tooltip.load");
+
 function StatusBar({ summary, openStatistics, timingMarkers }) {
   let { count, contentSize, transferredSize, millis } = summary;
   let {
@@ -30,7 +39,7 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     load,
   } = timingMarkers;
 
-  let countText = count === 0 ? L10N.getStr("networkMenu.summary.requestsCountEmpty") :
+  let countText = count === 0 ? REQUESTS_COUNT_EMPTY :
     PluralForm.get(
       count, L10N.getFormatStrWithNumbers("networkMenu.summary.requestsCount", count)
   );
@@ -43,34 +52,34 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     div({ className: "devtools-toolbar devtools-toolbar-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
-        title: L10N.getStr("networkMenu.summary.tooltip.perf"),
+        title: TOOLTIP_PERF,
         onClick: openStatistics,
       },
         div({ className: "summary-info-icon" }),
       ),
       div({
         className: "status-bar-label requests-list-network-summary-count",
-        title: L10N.getStr("networkMenu.summary.tooltip.requestsCount"),
+        title: TOOLTIP_REQUESTS_COUNT,
       }, countText),
       count !== 0 &&
         div({
           className: "status-bar-label requests-list-network-summary-transfer",
-          title: L10N.getStr("networkMenu.summary.tooltip.transferred"),
+          title: TOOLTIP_TRANSFERRED,
         }, transferText),
       count !== 0 &&
         div({
           className: "status-bar-label requests-list-network-summary-finish",
-          title: L10N.getStr("networkMenu.summary.tooltip.finish"),
+          title: TOOLTIP_FINISH,
         }, finishText),
       DOMContentLoaded > -1 &&
         div({
           className: "status-bar-label dom-content-loaded",
-          title: L10N.getStr("networkMenu.summary.tooltip.domContentLoaded"),
+          title: TOOLTIP_DOM_CONTENT_LOADED,
         }, `DOMContentLoaded: ${getFormattedTime(DOMContentLoaded)}`),
       load > -1 &&
         div({
           className: "status-bar-label load",
-          title: L10N.getStr("networkMenu.summary.tooltip.load"),
+          title: TOOLTIP_LOAD,
         }, `load: ${getFormattedTime(load)}`),
     )
   );
