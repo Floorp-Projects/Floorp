@@ -518,6 +518,15 @@
          <item name="android:nextFocusLeft">@+id/info</item>
     </style>
 
+    <style name="TabsLayoutItemFavicon">
+        <item name="android:layout_marginRight">4dp</item>
+    </style>
+
+    <style name="TabsListItemFavicon">
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">6dp</item>
+    </style>
+
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">

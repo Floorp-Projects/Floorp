@@ -7,15 +7,18 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.widget.FaviconView;
 import org.mozilla.gecko.widget.HoverDelegateWithReset;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 import org.mozilla.gecko.widget.TouchDelegateWithReset;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.ViewUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -25,6 +28,8 @@ import android.widget.Checkable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.concurrent.Future;
 
 public class TabsLayoutItemView extends LinearLayout
                                 implements Checkable {
@@ -38,6 +43,9 @@ public class TabsLayoutItemView extends LinearLayout
     private ImageView mCloseButton;
     private TabThumbnailWrapper mThumbnailWrapper;
     private HoverDelegateWithReset mHoverDelegate;
+
+    private FaviconView mFaviconView;
+    private Future<IconResponse> mOngoingIconLoad;
 
     public TabsLayoutItemView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -98,6 +106,7 @@ public class TabsLayoutItemView extends LinearLayout
         mThumbnail = (TabsPanelThumbnailView) findViewById(R.id.thumbnail);
         mCloseButton = (ImageView) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
+        mFaviconView = (FaviconView) findViewById(R.id.favicon);
 
         growCloseButtonHitArea();
     }
@@ -169,12 +178,27 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton.setTag(this);
 
         if (tab.isAudioPlaying()) {
-            TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mTitle, R.drawable.tab_audio_playing, 0, 0, 0);
+            mFaviconView.setImageResource(R.drawable.tab_audio_playing);
             final String tabTitleWithAudio =
                     getResources().getString(R.string.tab_title_prefix_is_playing_audio, tabTitle);
             mTitle.setContentDescription(tabTitleWithAudio);
         } else {
-            TextViewCompat.setCompoundDrawablesRelative(mTitle, null, null, null, null);
+            if (mOngoingIconLoad != null) {
+                mOngoingIconLoad.cancel(true);
+            }
+
+            final Resources resources = getResources();
+            final int iconSize = resources.getDimensionPixelSize(R.dimen.tab_favicon_size);
+            final float textSize = resources.getDimensionPixelSize(R.dimen.tab_favicon_text_size);
+
+            mOngoingIconLoad = Icons.with(getContext())
+                                       .pageUrl(tab.getURL())
+                                       .skipNetwork()
+                                       .targetSize(iconSize)
+                                       .textSize(textSize)
+                                       .build()
+                                       .execute(mFaviconView.createIconCallback());
+
             mTitle.setContentDescription(tabTitle);
         }
     }
