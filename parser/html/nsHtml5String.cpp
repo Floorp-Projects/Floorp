@@ -196,7 +196,7 @@ nsHtml5String::FromString(const nsAString& aString)
 
 // static
 nsHtml5String
-nsHtml5String::FromAtom(already_AddRefed<nsIAtom> aAtom)
+nsHtml5String::FromAtom(already_AddRefed<nsAtom> aAtom)
 {
   return nsHtml5String(reinterpret_cast<uintptr_t>(aAtom.take()) | eAtom);
 }

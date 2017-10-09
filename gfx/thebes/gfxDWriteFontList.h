@@ -60,7 +60,7 @@ public:
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontListSizes* aSizes) const final;
 
-    bool FilterForFontList(nsIAtom* aLangGroup,
+    bool FilterForFontList(nsAtom* aLangGroup,
                            const nsACString& aGeneric) const final {
         return !IsSymbolFontFamily();
     }

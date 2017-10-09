@@ -41,15 +41,15 @@ txMozillaTextOutput::~txMozillaTextOutput()
 }
 
 nsresult
-txMozillaTextOutput::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                               nsIAtom* aLowercaseLocalName,
+txMozillaTextOutput::attribute(nsAtom* aPrefix, nsAtom* aLocalName,
+                               nsAtom* aLowercaseLocalName,
                                int32_t aNsID, const nsString& aValue)
 {
     return NS_OK;
 }
 
 nsresult
-txMozillaTextOutput::attribute(nsIAtom* aPrefix, const nsAString& aName,
+txMozillaTextOutput::attribute(nsAtom* aPrefix, const nsAString& aName,
                                const int32_t aNsID,
                                const nsString& aValue)
 {
@@ -233,14 +233,14 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 }
 
 nsresult
-txMozillaTextOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                                  nsIAtom* aLowercaseLocalName, int32_t aNsID)
+txMozillaTextOutput::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
+                                  nsAtom* aLowercaseLocalName, int32_t aNsID)
 {
     return NS_OK;
 }
 
 nsresult
-txMozillaTextOutput::startElement(nsIAtom* aPrefix, const nsAString& aName,
+txMozillaTextOutput::startElement(nsAtom* aPrefix, const nsAString& aName,
                                   const int32_t aNsID)
 {
     return NS_OK;
@@ -252,7 +252,7 @@ void txMozillaTextOutput::getOutputDocument(nsIDOMDocument** aDocument)
 }
 
 nsresult
-txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
+txMozillaTextOutput::createXHTMLElement(nsAtom* aName,
                                         nsIContent** aResult)
 {
     nsCOMPtr<Element> element = mDocument->CreateHTMLElement(aName);

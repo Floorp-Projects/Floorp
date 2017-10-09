@@ -14,7 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsRuleProcessorData.h"
 #include <algorithm>
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "PLDHashTable.h"
 #include "nsICSSPseudoComparator.h"
 #include "mozilla/MemoryReporting.h"
@@ -66,7 +66,7 @@ typedef ArenaAllocator<4096, 8> CascadeAllocator;
 
 static bool gSupportVisitedPseudo = true;
 
-static nsTArray< RefPtr<nsIAtom> >* sSystemMetrics = 0;
+static nsTArray< RefPtr<nsAtom> >* sSystemMetrics = 0;
 
 #ifdef XP_WIN
 uint8_t nsCSSRuleProcessor::sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
@@ -182,13 +182,13 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
   // If you add members that have heap allocated memory be sure to change the
   // logic in RuleHash::SizeOf{In,Ex}cludingThis.
-  RefPtr<nsIAtom> mTag;
+  RefPtr<nsAtom> mTag;
 };
 
 static PLDHashNumber
 RuleHash_CIHashKey(const void *key)
 {
-  nsIAtom *atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  nsAtom *atom = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
 
   nsAutoString str;
   atom->ToString(str);
@@ -208,9 +208,9 @@ SubjectSelectorForRuleHash(const PLDHashEntryHdr *hdr)
 }
 
 static inline bool
-CIMatchAtoms(const void* key, nsIAtom *entry_atom)
+CIMatchAtoms(const void* key, nsAtom *entry_atom)
 {
-  auto match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  auto match_atom = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
 
   // Check for case-sensitive match first.
   if (match_atom == entry_atom) {
@@ -226,9 +226,9 @@ CIMatchAtoms(const void* key, nsIAtom *entry_atom)
 }
 
 static inline bool
-CSMatchAtoms(const void* key, nsIAtom *entry_atom)
+CSMatchAtoms(const void* key, nsAtom *entry_atom)
 {
-  auto match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  auto match_atom = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
   return match_atom == entry_atom;
 }
 
@@ -286,8 +286,8 @@ RuleHash_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
 static bool
 RuleHash_TagTable_MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
 {
-  nsIAtom *match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
-  nsIAtom *entry_atom = static_cast<const RuleHashTagTableEntry*>(hdr)->mTag;
+  nsAtom *match_atom = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
+  nsAtom *entry_atom = static_cast<const RuleHashTagTableEntry*>(hdr)->mTag;
 
   return match_atom == entry_atom;
 }
@@ -297,7 +297,7 @@ RuleHash_TagTable_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>(hdr);
   new (KnownNotNull, entry) RuleHashTagTableEntry();
-  entry->mTag = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  entry->mTag = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
 }
 
 static void
@@ -542,7 +542,7 @@ void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
 }
 
 static void
-AppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
+AppendRuleToTagTable(PLDHashTable* aTable, nsAtom* aKey,
                      const RuleValue& aRuleInfo)
 {
   // Get a new or exisiting entry
@@ -613,8 +613,8 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
                                  NodeMatchContext& aNodeContext)
 {
   int32_t nameSpace = aElement->GetNameSpaceID();
-  nsIAtom* tag = aElement->NodeInfo()->NameAtom();
-  nsIAtom* id = aElement->GetID();
+  nsAtom* tag = aElement->NodeInfo()->NameAtom();
+  nsAtom* id = aElement->GetID();
   const nsAttrValue* classList = aElement->GetClasses();
 
   MOZ_ASSERT(tag, "How could we not have a tag?");
@@ -776,7 +776,7 @@ struct SelectorPair
 
 // A hash table mapping atoms to lists of selectors
 struct AtomSelectorEntry : public PLDHashEntryHdr {
-  nsIAtom *mAtom;
+  nsAtom *mAtom;
   // Auto length 2, because a decent fraction of these arrays ends up
   // with 2 elements, and each entry is cheap.
   AutoTArray<SelectorPair, 2> mSelectors;
@@ -793,7 +793,7 @@ AtomSelector_InitEntry(PLDHashEntryHdr *hdr, const void *key)
 {
   AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>(hdr);
   new (KnownNotNull, entry) AtomSelectorEntry();
-  entry->mAtom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  entry->mAtom = const_cast<nsAtom*>(static_cast<const nsAtom*>(key));
 }
 
 static void
@@ -837,7 +837,7 @@ static const PLDHashTableOps AtomSelector_CIOps = {
 //--------------------------------
 
 struct RuleCascadeData {
-  RuleCascadeData(nsIAtom *aMedium, bool aQuirksMode)
+  RuleCascadeData(nsAtom *aMedium, bool aQuirksMode)
     : mRuleHash(aQuirksMode),
       mStateSelectors(),
       mSelectorDocumentStates(0),
@@ -898,12 +898,12 @@ struct RuleCascadeData {
   // The hashtable doesn't need to hold a strong reference to the name
   // atom, because nsCSSCounterStyleRule always does. If the name changes
   // we need to discard this table and rebuild it anyway.
-  nsDataHashtable<nsPtrHashKey<nsIAtom>,
+  nsDataHashtable<nsPtrHashKey<nsAtom>,
                   nsCSSCounterStyleRule*> mCounterStyleRuleTable;
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
-  nsTArray<SelectorPair>* AttributeListFor(nsIAtom* aAttribute);
+  nsTArray<SelectorPair>* AttributeListFor(nsAtom* aAttribute);
 
   nsMediaQueryResultCacheKey mCacheKey;
   RuleCascadeData*  mNext; // for a different medium
@@ -968,7 +968,7 @@ RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 nsTArray<SelectorPair>*
-RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
+RuleCascadeData::AttributeListFor(nsAtom* aAttribute)
 {
   auto entry = static_cast<AtomSelectorEntry*>
                           (mAttributeSelectors.Add(aAttribute, fallible));
@@ -1082,7 +1082,7 @@ nsCSSRuleProcessor::InitSystemMetrics()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  sSystemMetrics = new nsTArray< RefPtr<nsIAtom> >;
+  sSystemMetrics = new nsTArray< RefPtr<nsAtom> >;
 
   /***************************************************************************
    * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES IN         *
@@ -1229,7 +1229,7 @@ nsCSSRuleProcessor::Shutdown()
 }
 
 /* static */ bool
-nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
+nsCSSRuleProcessor::HasSystemMetric(nsAtom* aMetric)
 {
   nsCSSRuleProcessor::InitSystemMetrics();
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
@@ -1672,7 +1672,7 @@ StateSelectorMatches(Element* aElement,
 
 /* static */ bool
 nsCSSRuleProcessor::LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                      const nsIAtom* aOverrideLang,
+                                      const nsAtom* aOverrideLang,
                                       bool aHasOverrideLang,
                                       const char16_t* aString,
                                       const nsIDocument* aDocument)
@@ -1766,7 +1766,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
 
     case CSSPseudoClassType::mozSystemMetric:
       {
-        RefPtr<nsIAtom> metric = NS_Atomize(aString);
+        RefPtr<nsAtom> metric = NS_Atomize(aString);
         if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
           return false;
         }
@@ -1846,7 +1846,7 @@ static bool SelectorMatches(Element* aElement,
     return false;
 
   if (aSelector->mLowercaseTag) {
-    nsIAtom* selectorTag =
+    nsAtom* selectorTag =
       (aTreeMatchContext.mIsHTMLDocument && aElement->IsHTMLElement()) ?
         aSelector->mLowercaseTag : aSelector->mCasedTag;
     if (selectorTag != aElement->NodeInfo()->NameAtom()) {
@@ -1856,7 +1856,7 @@ static bool SelectorMatches(Element* aElement,
 
   nsAtomList* IDList = aSelector->mIDList;
   if (IDList) {
-    nsIAtom* id = aElement->GetID();
+    nsAtom* id = aElement->GetID();
     if (id) {
       // case sensitivity: bug 93371
       const bool isCaseSensitive =
@@ -2178,7 +2178,7 @@ static bool SelectorMatches(Element* aElement,
     }
     result = true;
     nsAttrSelector* attr = aSelector->mAttrList;
-    nsIAtom* matchAttribute;
+    nsAtom* matchAttribute;
 
     do {
       bool isHTML =
@@ -2936,7 +2936,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
   // ones we might have started matching.
   if (cascade) {
     if (aData->mAttribute == nsGkAtoms::id) {
-      nsIAtom* id = aData->mElement->GetID();
+      nsAtom* id = aData->mElement->GetID();
       if (id) {
         auto entry =
           static_cast<AtomSelectorEntry*>(cascade->mIdSelectors.Search(id));
@@ -2965,7 +2965,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
       if (elementClasses) {
         int32_t atomCount = elementClasses->GetAtomCount();
         if (atomCount > 0) {
-          nsTHashtable<nsPtrHashKey<nsIAtom>> otherClassesTable;
+          nsTHashtable<nsPtrHashKey<nsAtom>> otherClassesTable;
           if (otherClasses) {
             int32_t otherClassesCount = otherClasses->GetAtomCount();
             for (int32_t i = 0; i < otherClassesCount; ++i) {
@@ -2973,7 +2973,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
             }
           }
           for (int32_t i = 0; i < atomCount; ++i) {
-            nsIAtom* curClass = elementClasses->AtomAt(i);
+            nsAtom* curClass = elementClasses->AtomAt(i);
             if (!otherClassesTable.Contains(curClass)) {
               auto entry =
                 static_cast<AtomSelectorEntry*>
@@ -3116,7 +3116,7 @@ nsCSSRuleProcessor::KeyframesRuleForName(nsPresContext* aPresContext,
 
 nsCSSCounterStyleRule*
 nsCSSRuleProcessor::CounterStyleRuleForName(nsPresContext* aPresContext,
-                                            nsIAtom* aName)
+                                            nsAtom* aName)
 {
   RuleCascadeData* cascade = GetRuleCascade(aPresContext);
 
@@ -4039,7 +4039,7 @@ AncestorFilter::PushAncestor(Element *aElement)
   mElements.AppendElement(aElement);
 #endif
   mHashes.AppendElement(aElement->NodeInfo()->NameAtom()->hash());
-  nsIAtom *id = aElement->GetID();
+  nsAtom *id = aElement->GetID();
   if (id) {
     mHashes.AppendElement(id->hash());
   }

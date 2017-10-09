@@ -40,7 +40,7 @@ HTMLMeterElement::IntrinsicState() const
 }
 
 bool
-HTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+HTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                  const nsAString& aValue, nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {

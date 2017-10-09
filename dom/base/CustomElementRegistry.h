@@ -112,11 +112,11 @@ struct CustomElementData
     eCustom
   };
 
-  explicit CustomElementData(nsIAtom* aType);
-  CustomElementData(nsIAtom* aType, State aState);
+  explicit CustomElementData(nsAtom* aType);
+  CustomElementData(nsAtom* aType, State aState);
   // Custom element type, for <button is="x-button"> or <x-button>
   // this would be x-button.
-  RefPtr<nsIAtom> mType;
+  RefPtr<nsAtom> mType;
   // Element is being created flag as described in the custom elements spec.
   bool mElementIsBeingCreated;
   // Flag to determine if the created callback has been invoked, thus it
@@ -161,25 +161,25 @@ struct CustomElementDefinition
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CustomElementDefinition)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CustomElementDefinition)
 
-  CustomElementDefinition(nsIAtom* aType,
-                          nsIAtom* aLocalName,
+  CustomElementDefinition(nsAtom* aType,
+                          nsAtom* aLocalName,
                           Function* aConstructor,
-                          nsTArray<RefPtr<nsIAtom>>&& aObservedAttributes,
+                          nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
                           JSObject* aPrototype,
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
 
   // The type (name) for this custom element.
-  RefPtr<nsIAtom> mType;
+  RefPtr<nsAtom> mType;
 
   // The localname to (e.g. <button is=type> -- this would be button).
-  RefPtr<nsIAtom> mLocalName;
+  RefPtr<nsAtom> mLocalName;
 
   // The custom element constructor.
   RefPtr<CustomElementConstructor> mConstructor;
 
   // The list of attributes that this custom element observes.
-  nsTArray<RefPtr<nsIAtom>> mObservedAttributes;
+  nsTArray<RefPtr<nsAtom>> mObservedAttributes;
 
   // The prototype to use for new custom elements of this type.
   JS::Heap<JSObject *> mPrototype;
@@ -198,7 +198,7 @@ struct CustomElementDefinition
     return mType != mLocalName;
   }
 
-  bool IsInObservedAttributeList(nsIAtom* aName)
+  bool IsInObservedAttributeList(nsAtom* aName)
   {
     if (mObservedAttributes.IsEmpty()) {
       return false;
@@ -391,7 +391,7 @@ public:
                                        LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
                                        CustomElementDefinition* aDefinition);
 
-  void GetCustomPrototype(nsIAtom* aAtom,
+  void GetCustomPrototype(nsAtom* aAtom,
                           JS::MutableHandle<JSObject*> aPrototype);
 
   void SyncInvokeReactions(nsIDocument::ElementCallbackType aType,
@@ -422,18 +422,18 @@ private:
    * element. e.g. <button is="x-button">.
    */
   void RegisterUnresolvedElement(Element* aElement,
-                                 nsIAtom* aTypeName = nullptr);
+                                 nsAtom* aTypeName = nullptr);
 
-  void UpgradeCandidates(nsIAtom* aKey,
+  void UpgradeCandidates(nsAtom* aKey,
                          CustomElementDefinition* aDefinition,
                          ErrorResult& aRv);
 
-  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, CustomElementDefinition>
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, CustomElementDefinition>
     DefinitionMap;
-  typedef nsClassHashtable<nsRefPtrHashKey<nsIAtom>, nsTArray<nsWeakPtr>>
+  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsTArray<nsWeakPtr>>
     CandidateMap;
   typedef JS::GCHashMap<JS::Heap<JSObject*>,
-                        RefPtr<nsIAtom>,
+                        RefPtr<nsAtom>,
                         js::MovableCellHasher<JS::Heap<JSObject*>>,
                         js::SystemAllocPolicy> ConstructorMap;
 
@@ -447,7 +447,7 @@ private:
   // mCustomDefinitions again to get definitions.
   ConstructorMap mConstructors;
 
-  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIAtom>, Promise>
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, Promise>
     WhenDefinedPromiseMap;
   WhenDefinedPromiseMap mWhenDefinedPromiseMap;
 

@@ -35,7 +35,7 @@ public:
 
   // nsIFrame:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
+                                     nsAtom*        aAttribute,
                                      int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -75,7 +75,7 @@ nsSVGAFrame::Init(nsIContent*       aContent,
 
 nsresult
 nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
-                              nsIAtom*        aAttribute,
+                              nsAtom*        aAttribute,
                               int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&

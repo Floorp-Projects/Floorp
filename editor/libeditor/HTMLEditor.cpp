@@ -1954,7 +1954,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      RefPtr<nsIAtom> listAtom = NS_Atomize(aListType);
+      RefPtr<nsAtom> listAtom = NS_Atomize(aListType);
       while (!CanContainTag(*parent, *listAtom)) {
         topChild = parent;
         parent = parent->GetParent();
@@ -2091,7 +2091,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       nsCOMPtr<nsIContent> parent = node;
       nsCOMPtr<nsIContent> topChild = node;
 
-      RefPtr<nsIAtom> blockAtom = NS_Atomize(aBlockType);
+      RefPtr<nsAtom> blockAtom = NS_Atomize(aBlockType);
       while (!CanContainTag(*parent, *blockAtom)) {
         NS_ENSURE_TRUE(parent->GetParent(), NS_ERROR_FAILURE);
         topChild = parent;
@@ -2514,7 +2514,7 @@ HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   // the transaction system
 
   // New call to use instead to get proper HTML element, bug 39919
-  RefPtr<nsIAtom> realTagAtom = NS_Atomize(realTagName);
+  RefPtr<nsAtom> realTagAtom = NS_Atomize(realTagName);
   RefPtr<Element> newElement = CreateHTMLContent(realTagAtom);
   if (!newElement) {
     return nullptr;
@@ -3419,8 +3419,8 @@ HTMLEditor::EndOperation()
 }
 
 bool
-HTMLEditor::TagCanContainTag(nsIAtom& aParentTag,
-                             nsIAtom& aChildTag)
+HTMLEditor::TagCanContainTag(nsAtom& aParentTag,
+                             nsAtom& aChildTag)
 {
   int32_t childTagEnum;
   // XXX Should this handle #cdata-section too?
@@ -3522,7 +3522,7 @@ HTMLEditor::SelectAll()
 // so singleton attributes like <Table border> will not be matched!
 bool
 HTMLEditor::IsTextPropertySetByContent(nsINode* aNode,
-                                       nsIAtom* aProperty,
+                                       nsAtom* aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString* aValue,
                                        nsAString* outValue)
@@ -3536,7 +3536,7 @@ HTMLEditor::IsTextPropertySetByContent(nsINode* aNode,
 
 void
 HTMLEditor::IsTextPropertySetByContent(nsIDOMNode* aNode,
-                                       nsIAtom* aProperty,
+                                       nsAtom* aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString* aValue,
                                        bool& aIsSet,
@@ -4249,7 +4249,7 @@ HTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
 // aAttribute with its value aValue
 nsresult
 HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
-                                     nsIAtom* aAttribute,
+                                     nsAtom* aAttribute,
                                      const nsAString& aValue,
                                      bool aSuppressTransaction)
 {
@@ -4306,7 +4306,7 @@ HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
 
 nsresult
 HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
-                                        nsIAtom* aAttribute,
+                                        nsAtom* aAttribute,
                                         bool aSuppressTransaction)
 {
   MOZ_ASSERT(aElement);

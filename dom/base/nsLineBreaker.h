@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "nsILineBreaker.h"
 
-class nsIAtom;
+class nsAtom;
 class nsHyphenator;
 
 /**
@@ -148,14 +148,14 @@ public:
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
+  nsresult AppendText(nsAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
                       uint32_t aFlags, nsILineBreakSink* aSink);
   /**
    * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, uint32_t aLength,
+  nsresult AppendText(nsAtom* aHyphenationLanguage, const uint8_t* aText, uint32_t aLength,
                       uint32_t aFlags, nsILineBreakSink* aSink);
   /**
    * Reset all state. This means the current run has ended; any outstanding
@@ -199,7 +199,7 @@ private:
   // appropriate sink(s). Then we clear the current word state.
   nsresult FlushCurrentWord();
 
-  void UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage);
+  void UpdateCurrentWordLanguage(nsAtom *aHyphenationLanguage);
 
   void FindHyphenationPoints(nsHyphenator *aHyphenator,
                              const char16_t *aTextStart,
@@ -209,7 +209,7 @@ private:
   AutoTArray<char16_t,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   AutoTArray<TextItem,2>    mTextItems;
-  nsIAtom*                    mCurrentWordLanguage;
+  nsAtom*                    mCurrentWordLanguage;
   bool                        mCurrentWordContainsMixedLang;
   bool                        mCurrentWordContainsComplexChar;
 

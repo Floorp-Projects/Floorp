@@ -23,7 +23,7 @@
 #include "nsURIHashKey.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIPresShell;
 class nsIURI;
 class nsSVGClipPathFrame;

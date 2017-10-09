@@ -9,7 +9,7 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 
-nsTreeStyleCache::Transition::Transition(DFAState aState, nsIAtom* aSymbol)
+nsTreeStyleCache::Transition::Transition(DFAState aState, nsAtom* aSymbol)
   : mState(aState), mInputSymbol(aSymbol)
 {
 }

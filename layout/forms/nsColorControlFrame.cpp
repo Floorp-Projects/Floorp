@@ -119,7 +119,7 @@ nsColorControlFrame::UpdateColor()
 
 nsresult
 nsColorControlFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                      nsIAtom* aAttribute,
+                                      nsAtom* aAttribute,
                                       int32_t  aModType)
 {
   NS_ASSERTION(mColorContent, "The color div must exist");

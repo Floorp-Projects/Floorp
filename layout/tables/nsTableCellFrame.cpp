@@ -220,7 +220,7 @@ nsTableCellFrame::GetColIndex(int32_t &aColIndex) const
 
 nsresult
 nsTableCellFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                   nsIAtom*        aAttribute,
+                                   nsAtom*        aAttribute,
                                    int32_t         aModType)
 {
   // We need to recalculate in this case because of the nowrap quirk in

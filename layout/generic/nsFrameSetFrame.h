@@ -17,7 +17,7 @@ class  nsIContent;
 class  nsPresContext;
 struct nsRect;
 struct nsSize;
-class  nsIAtom;
+class  nsAtom;
 class  nsHTMLFramesetBorderFrame;
 class  nsHTMLFramesetFrame;
 

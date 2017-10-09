@@ -1064,7 +1064,7 @@ nsMathMLmoFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
 
 nsresult
 nsMathMLmoFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                  nsIAtom*        aAttribute,
+                                  nsAtom*        aAttribute,
                                   int32_t         aModType)
 {
   // check if this is an attribute that can affect the embellished hierarchy

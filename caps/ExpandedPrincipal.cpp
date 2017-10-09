@@ -172,7 +172,7 @@ ExpandedPrincipal::GetAddonId(nsAString& aAddonId)
 };
 
 bool
-ExpandedPrincipal::AddonHasPermission(const nsIAtom* aPerm)
+ExpandedPrincipal::AddonHasPermission(const nsAtom* aPerm)
 {
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (BasePrincipal::Cast(mPrincipals[i])->AddonHasPermission(aPerm)) {

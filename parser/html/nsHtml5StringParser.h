@@ -41,7 +41,7 @@ class nsHtml5StringParser : public nsParserBase
      */
     nsresult ParseFragment(const nsAString& aSourceBuffer,
                            nsIContent* aTargetNode,
-                           nsIAtom* aContextLocalName,
+                           nsAtom* aContextLocalName,
                            int32_t aContextNamespace,
                            bool aQuirks,
                            bool aPreventScriptExecution);

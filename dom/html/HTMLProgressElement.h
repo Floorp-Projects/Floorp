@@ -26,7 +26,7 @@ public:
   nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                  bool aPreallocateChildren) const override;
 
-  bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult) override;
 
   // WebIDL

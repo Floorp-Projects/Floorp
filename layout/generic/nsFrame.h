@@ -194,7 +194,7 @@ public:
 
   nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
   nsresult AttributeChanged(int32_t  aNameSpaceID,
-                            nsIAtom* aAttribute,
+                            nsAtom* aAttribute,
                             int32_t aModType) override;
   nsSplittableType GetSplittableType() const override;
   nsIFrame* GetPrevContinuation() const override;
@@ -571,7 +571,7 @@ public:
    * @param aChildPseudo the child's pseudo type, if any.
    */
   static nsIFrame*
-  CorrectStyleParentFrame(nsIFrame* aProspectiveParent, nsIAtom* aChildPseudo);
+  CorrectStyleParentFrame(nsIFrame* aProspectiveParent, nsAtom* aChildPseudo);
 
 protected:
   // Protected constructor and destructor

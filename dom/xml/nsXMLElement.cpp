@@ -35,7 +35,7 @@ nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   CSSPseudoElementType pseudoType = GetPseudoElementType();
   bool isBefore = pseudoType == CSSPseudoElementType::before;
-  nsIAtom* property = isBefore
+  nsAtom* property = isBefore
     ? nsGkAtoms::beforePseudoProperty : nsGkAtoms::afterPseudoProperty;
 
   switch (pseudoType) {

@@ -10,9 +10,9 @@
 #include "nsReadableUtils.h"
 #include "nsICollation.h"
 
-nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
+nsTemplateCondition::nsTemplateCondition(nsAtom* aSourceVariable,
                                          const nsAString& aRelation,
-                                         nsIAtom* aTargetVariable,
+                                         nsAtom* aTargetVariable,
                                          bool aIgnoreCase,
                                          bool aNegate)
     : mSourceVariable(aSourceVariable),
@@ -26,7 +26,7 @@ nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
     MOZ_COUNT_CTOR(nsTemplateCondition);
 }
 
-nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
+nsTemplateCondition::nsTemplateCondition(nsAtom* aSourceVariable,
                                          const nsAString& aRelation,
                                          const nsAString& aTargets,
                                          bool aIgnoreCase,
@@ -60,7 +60,7 @@ nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
 
 nsTemplateCondition::nsTemplateCondition(const nsAString& aSource,
                                          const nsAString& aRelation,
-                                         nsIAtom* aTargetVariable,
+                                         nsAtom* aTargetVariable,
                                          bool aIgnoreCase,
                                          bool aNegate)
     : mSource(aSource),
@@ -334,9 +334,9 @@ nsTemplateRule::CheckMatch(nsIXULTemplateResult* aResult) const
 }
 
 bool
-nsTemplateRule::HasBinding(nsIAtom* aSourceVariable,
+nsTemplateRule::HasBinding(nsAtom* aSourceVariable,
                            nsAString& aExpr,
-                           nsIAtom* aTargetVariable) const
+                           nsAtom* aTargetVariable) const
 {
     for (Binding* binding = mBindings; binding != nullptr; binding = binding->mNext) {
         if ((binding->mSourceVariable == aSourceVariable) &&
@@ -349,9 +349,9 @@ nsTemplateRule::HasBinding(nsIAtom* aSourceVariable,
 }
 
 nsresult
-nsTemplateRule::AddBinding(nsIAtom* aSourceVariable,
+nsTemplateRule::AddBinding(nsAtom* aSourceVariable,
                            nsAString& aExpr,
-                           nsIAtom* aTargetVariable)
+                           nsAtom* aTargetVariable)
 {
     NS_PRECONDITION(aSourceVariable != 0, "no source variable!");
     if (! aSourceVariable)

@@ -46,11 +46,11 @@ public:
   virtual IMEState GetDesiredIMEState() override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom *aAttribute,
+                              nsAtom *aAttribute,
                               const nsAString &aValue,
                               nsAttrValue &aResult) override;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom *aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom *aAttribute) const override;
   virtual EventStates IntrinsicState() const override;
   virtual void DestroyContent() override;
 
@@ -132,11 +132,11 @@ protected:
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
                                 bool aNotify) override;
-  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
@@ -158,7 +158,7 @@ private:
    * @param aName the localname of the attribute being set
    * @param aNotify Whether we plan to notify document observers.
    */
-  nsresult AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+  nsresult AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                 bool aNotify);
 };
 

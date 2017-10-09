@@ -70,7 +70,7 @@ HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 }
 
 bool
-HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                   const nsAString& aValue, nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {

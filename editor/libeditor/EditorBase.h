@@ -31,7 +31,7 @@
 #include "nsWeakReference.h"            // for nsSupportsWeakReference
 #include "nscore.h"                     // for nsresult, nsAString, etc.
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIDOMDocument;
 class nsIDOMEvent;
@@ -300,7 +300,7 @@ public:
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
                                  EStripWrappers aStripWrappers);
 
-  already_AddRefed<Element> DeleteSelectionAndCreateElement(nsIAtom& aTag);
+  already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
 
   /**
    * Helper routines for node/parent manipulations.
@@ -309,8 +309,8 @@ public:
   nsresult InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition);
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
-                                             nsIAtom* aNodeType,
-                                             nsIAtom* aAttribute = nullptr,
+                                             nsAtom* aNodeType,
+                                             nsAtom* aAttribute = nullptr,
                                              const nsAString* aValue = nullptr,
                                              ECloneAttributes aCloneAttributes
                                              = eDontCloneAttributes);
@@ -318,8 +318,8 @@ public:
 
   nsresult RemoveContainer(nsIContent* aNode);
   already_AddRefed<Element> InsertContainerAbove(nsIContent* aNode,
-                                                 nsIAtom* aNodeType,
-                                                 nsIAtom* aAttribute = nullptr,
+                                                 nsAtom* aNodeType,
+                                                 nsAtom* aAttribute = nullptr,
                                                  const nsAString* aValue =
                                                  nullptr);
   nsIContent* SplitNode(nsIContent& aNode, int32_t aOffset,
@@ -327,16 +327,16 @@ public:
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
-  nsresult CloneAttribute(nsIAtom* aAttribute, Element* aDestElement,
+  nsresult CloneAttribute(nsAtom* aAttribute, Element* aDestElement,
                           Element* aSourceElement);
-  nsresult RemoveAttribute(Element* aElement, nsIAtom* aAttribute);
+  nsresult RemoveAttribute(Element* aElement, nsAtom* aAttribute);
   virtual nsresult RemoveAttributeOrEquivalent(Element* aElement,
-                                               nsIAtom* aAttribute,
+                                               nsAtom* aAttribute,
                                                bool aSuppressTransaction) = 0;
-  nsresult SetAttribute(Element* aElement, nsIAtom* aAttribute,
+  nsresult SetAttribute(Element* aElement, nsAtom* aAttribute,
                         const nsAString& aValue);
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsIAtom* aAttribute,
+                                            nsAtom* aAttribute,
                                             const nsAString& aValue,
                                             bool aSuppressTransaction) = 0;
 
@@ -345,7 +345,7 @@ public:
    *
    * @param aTag        Tag you want.
    */
-  already_AddRefed<Element> CreateHTMLContent(nsIAtom* aTag);
+  already_AddRefed<Element> CreateHTMLContent(nsAtom* aTag);
 
   /**
    * Creates text node which is marked as "maybe modified frequently".
@@ -381,7 +381,7 @@ protected:
    * returns null.
    */
   already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForSetAttribute(Element& aElement, nsIAtom& aAttribute,
+    CreateTxnForSetAttribute(Element& aElement, nsAtom& aAttribute,
                              const nsAString& aValue);
 
   /**
@@ -389,17 +389,17 @@ protected:
    * null.
    */
   already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForRemoveAttribute(Element& aElement, nsIAtom& aAttribute);
+    CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
 
   /**
    * Create a transaction for creating a new child node of aParent of type aTag.
    */
   already_AddRefed<CreateElementTransaction>
-    CreateTxnForCreateElement(nsIAtom& aTag,
+    CreateTxnForCreateElement(nsAtom& aTag,
                               nsINode& aParent,
                               int32_t aPosition);
 
-  already_AddRefed<Element> CreateNode(nsIAtom* aTag, nsINode* aParent,
+  already_AddRefed<Element> CreateNode(nsAtom* aTag, nsINode* aParent,
                                        int32_t aPosition);
 
   /**
@@ -608,7 +608,7 @@ protected:
    * can later merge, if needed.  Merging is unavailable between transaction
    * manager batches.
    */
-  void BeginPlaceholderTransaction(nsIAtom* aTransactionName);
+  void BeginPlaceholderTransaction(nsAtom* aTransactionName);
   void EndPlaceholderTransaction();
 
 public:
@@ -757,7 +757,7 @@ public:
   /**
    * Returns true if aNode is of the type implied by aTag.
    */
-  static inline bool NodeIsType(nsIDOMNode* aNode, nsIAtom* aTag)
+  static inline bool NodeIsType(nsIDOMNode* aNode, nsAtom* aTag)
   {
     return GetTag(aNode) == aTag;
   }
@@ -766,9 +766,9 @@ public:
    * Returns true if aParent can contain a child of type aTag.
    */
   bool CanContain(nsINode& aParent, nsIContent& aChild);
-  bool CanContainTag(nsINode& aParent, nsIAtom& aTag);
-  bool TagCanContain(nsIAtom& aParentTag, nsIContent& aChild);
-  virtual bool TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag);
+  bool CanContainTag(nsINode& aParent, nsAtom& aTag);
+  bool TagCanContain(nsAtom& aParentTag, nsIContent& aChild);
+  virtual bool TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag);
 
   /**
    * Returns true if aNode is our root node.
@@ -871,7 +871,7 @@ public:
    * From html rules code - migration in progress.
    */
   static nsresult GetTagString(nsIDOMNode* aNode, nsAString& outString);
-  static nsIAtom* GetTag(nsIDOMNode* aNode);
+  static nsAtom* GetTag(nsIDOMNode* aNode);
 
   bool NodesSameType(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
@@ -1261,7 +1261,7 @@ protected:
   // Strong reference to placeholder for begin/end batch purposes.
   RefPtr<PlaceholderTransaction> mPlaceholderTransaction;
   // Name of placeholder transaction.
-  nsIAtom* mPlaceholderName;
+  nsAtom* mPlaceholderName;
   // Saved selection state for placeholder transaction batching.
   mozilla::Maybe<SelectionState> mSelState;
   // IME composition this is not null between compositionstart and

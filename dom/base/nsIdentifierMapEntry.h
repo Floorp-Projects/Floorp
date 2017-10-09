@@ -21,7 +21,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentList.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDocument.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -45,7 +45,7 @@ class nsIdentifierMapEntry : public PLDHashEntryHdr
 public:
   struct AtomOrString
   {
-    MOZ_IMPLICIT AtomOrString(nsIAtom* aAtom) : mAtom(aAtom) {}
+    MOZ_IMPLICIT AtomOrString(nsAtom* aAtom) : mAtom(aAtom) {}
     MOZ_IMPLICIT AtomOrString(const nsAString& aString) : mString(aString) {}
     AtomOrString(const AtomOrString& aOther)
       : mAtom(aOther.mAtom)
@@ -59,7 +59,7 @@ public:
     {
     }
 
-    RefPtr<nsIAtom> mAtom;
+    RefPtr<nsAtom> mAtom;
     const nsString mString;
   };
 

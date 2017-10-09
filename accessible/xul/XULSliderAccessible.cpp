@@ -143,7 +143,7 @@ XULSliderAccessible::GetSliderElement() const
 }
 
 nsresult
-XULSliderAccessible::GetSliderAttr(nsIAtom* aName, nsAString& aValue) const
+XULSliderAccessible::GetSliderAttr(nsAtom* aName, nsAString& aValue) const
 {
   aValue.Truncate();
 
@@ -158,7 +158,7 @@ XULSliderAccessible::GetSliderAttr(nsIAtom* aName, nsAString& aValue) const
 }
 
 nsresult
-XULSliderAccessible::SetSliderAttr(nsIAtom* aName, const nsAString& aValue)
+XULSliderAccessible::SetSliderAttr(nsAtom* aName, const nsAString& aValue)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -171,7 +171,7 @@ XULSliderAccessible::SetSliderAttr(nsIAtom* aName, const nsAString& aValue)
 }
 
 double
-XULSliderAccessible::GetSliderAttr(nsIAtom* aName) const
+XULSliderAccessible::GetSliderAttr(nsAtom* aName) const
 {
   nsAutoString attrValue;
   nsresult rv = GetSliderAttr(aName, attrValue);
@@ -184,7 +184,7 @@ XULSliderAccessible::GetSliderAttr(nsIAtom* aName) const
 }
 
 bool
-XULSliderAccessible::SetSliderAttr(nsIAtom* aName, double aValue)
+XULSliderAccessible::SetSliderAttr(nsAtom* aName, double aValue)
 {
   nsAutoString value;
   value.AppendFloat(aValue);

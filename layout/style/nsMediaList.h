@@ -14,7 +14,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCSSValue.h"
 #include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
@@ -71,7 +71,7 @@ struct nsMediaExpression {
  */
 class nsMediaQueryResultCacheKey {
 public:
-  explicit nsMediaQueryResultCacheKey(nsIAtom* aMedium)
+  explicit nsMediaQueryResultCacheKey(nsAtom* aMedium)
     : mMedium(aMedium)
   {}
 
@@ -126,7 +126,7 @@ private:
       return !(*this == aOther);
     }
   };
-  RefPtr<nsIAtom> mMedium;
+  RefPtr<nsAtom> mMedium;
   nsTArray<FeatureEntry> mFeatureCache;
 };
 
@@ -217,7 +217,7 @@ public:
   void SetHasOnly()                     { mHasOnly = true; }
   void SetTypeOmitted()                 { mTypeOmitted = true; }
   void SetHadUnknownExpression()        { mHadUnknownExpression = true; }
-  void SetType(nsIAtom* aMediaType)     {
+  void SetType(nsAtom* aMediaType)     {
                                           NS_ASSERTION(aMediaType,
                                                        "expected non-null");
                                           mMediaType = aMediaType;
@@ -243,7 +243,7 @@ private:
   bool mHasOnly; // only needed for serialization
   bool mTypeOmitted; // only needed for serialization
   bool mHadUnknownExpression;
-  RefPtr<nsIAtom> mMediaType;
+  RefPtr<nsAtom> mMediaType;
   nsTArray<nsMediaExpression> mExpressions;
 };
 

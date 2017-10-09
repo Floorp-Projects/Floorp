@@ -120,7 +120,7 @@ nsProgressMeterFrame::DoXULLayout(nsBoxLayoutState& aState)
 
 nsresult
 nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
-                                       nsIAtom* aAttribute,
+                                       nsAtom* aAttribute,
                                        int32_t aModType)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),

@@ -12,7 +12,7 @@
 #include "nsSVGString.h"
 #include "mozilla/dom/SVGTextContentElement.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
@@ -44,7 +44,7 @@ protected:
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;

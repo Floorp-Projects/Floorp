@@ -79,7 +79,7 @@ public:
     return IsRubyContentBox(type) || IsRubyContainerBox(type);
   }
 
-  static inline bool IsRubyPseudo(nsIAtom* aPseudo)
+  static inline bool IsRubyPseudo(nsAtom* aPseudo)
   {
     return aPseudo == nsCSSAnonBoxes::ruby ||
            aPseudo == nsCSSAnonBoxes::rubyBase ||

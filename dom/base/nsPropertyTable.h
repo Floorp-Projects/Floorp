@@ -8,7 +8,7 @@
  * nsPropertyTable allows a set of arbitrary key/value pairs to be stored
  * for any number of nodes, in a global hashtable rather than on the nodes
  * themselves.  Nodes can be any type of object; the hashtable keys are
- * nsIAtom pointers, and the values are void pointers.
+ * nsAtom pointers, and the values are void pointers.
  */
 
 #ifndef nsPropertyTable_h_
@@ -17,11 +17,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "nscore.h"
 
-class nsIAtom;
+class nsAtom;
 
 typedef void
 (*NSPropertyFunc)(void           *aObject,
-                  nsIAtom        *aPropertyName,
+                  nsAtom        *aPropertyName,
                   void           *aPropertyValue,
                   void           *aData);
 
@@ -61,7 +61,7 @@ class nsPropertyTable
    * |aResult|, if supplied, is filled in with a return status code.
    **/
   void* GetProperty(const nsPropertyOwner& aObject,
-                    nsIAtom    *aPropertyName,
+                    nsAtom    *aPropertyName,
                     nsresult   *aResult = nullptr)
   {
     return GetPropertyInternal(aObject, aPropertyName, false, aResult);
@@ -85,7 +85,7 @@ class nsPropertyTable
    * deleted instead.
    */
   nsresult SetProperty(const nsPropertyOwner&     aObject,
-                                   nsIAtom            *aPropertyName,
+                                   nsAtom            *aPropertyName,
                                    void               *aPropertyValue,
                                    NSPropertyDtorFunc  aDtor,
                                    void               *aDtorData,
@@ -101,7 +101,7 @@ class nsPropertyTable
    * |aObject|. The property's destructor function will be called.
    */
   nsresult DeleteProperty(nsPropertyOwner aObject,
-                                      nsIAtom    *aPropertyName);
+                                      nsAtom    *aPropertyName);
 
   /**
    * Unset the property |aPropertyName| in the global category for object
@@ -109,7 +109,7 @@ class nsPropertyTable
    * property value is returned.
    */
   void* UnsetProperty(const nsPropertyOwner& aObject,
-                      nsIAtom    *aPropertyName,
+                      nsAtom    *aPropertyName,
                       nsresult   *aStatus = nullptr)
   {
     return GetPropertyInternal(aObject, aPropertyName, true, aStatus);
@@ -163,7 +163,7 @@ class nsPropertyTable
    * XPCOM objects. The function will call NS_IF_RELASE on the value
    * to destroy it.
    */
-  static void SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,
+  static void SupportsDtorFunc(void *aObject, nsAtom *aPropertyName,
                                void *aPropertyValue, void *aData);
 
   class PropertyList;
@@ -173,13 +173,13 @@ class nsPropertyTable
 
  private:
   void DestroyPropertyList();
-  PropertyList* GetPropertyListFor(nsIAtom *aPropertyName) const;
+  PropertyList* GetPropertyListFor(nsAtom *aPropertyName) const;
   void* GetPropertyInternal(nsPropertyOwner aObject,
-                                        nsIAtom    *aPropertyName,
+                                        nsAtom    *aPropertyName,
                                         bool        aRemove,
                                         nsresult   *aStatus);
   nsresult SetPropertyInternal(nsPropertyOwner     aObject,
-                                           nsIAtom            *aPropertyName,
+                                           nsAtom            *aPropertyName,
                                            void               *aPropertyValue,
                                            NSPropertyDtorFunc  aDtor,
                                            void               *aDtorData,

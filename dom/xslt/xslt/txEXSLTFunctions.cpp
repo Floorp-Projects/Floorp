@@ -6,7 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "txExecutionState.h"
 #include "txExpr.h"
@@ -117,7 +117,7 @@ createDocFragment(txIEvalContext *aContext)
 }
 
 static nsresult
-createAndAddToResult(nsIAtom* aName, const nsAString& aValue,
+createAndAddToResult(nsAtom* aName, const nsAString& aValue,
                      txNodeSet* aResultSet, nsIContent* aResultHolder)
 {
     NS_ASSERTION(aResultHolder->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) &&
@@ -169,7 +169,7 @@ struct txEXSLTFunctionDescriptor
     int8_t mMaxParams;
     Expr::ResultType mReturnType;
     int32_t mNamespaceID;
-    nsIAtom** mName;
+    nsAtom** mName;
     const char* mNamespaceURI;
 };
 
@@ -690,7 +690,7 @@ txEXSLTFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-txEXSLTFunctionCall::getNameAtom(nsIAtom **aAtom)
+txEXSLTFunctionCall::getNameAtom(nsAtom **aAtom)
 {
     NS_ADDREF(*aAtom = *descriptTable[mType].mName);
     return NS_OK;
@@ -698,7 +698,7 @@ txEXSLTFunctionCall::getNameAtom(nsIAtom **aAtom)
 #endif
 
 extern nsresult
-TX_ConstructEXSLTFunction(nsIAtom *aName,
+TX_ConstructEXSLTFunction(nsAtom *aName,
                           int32_t aNamespaceID,
                           txStylesheetCompilerState* aState,
                           FunctionCall **aResult)

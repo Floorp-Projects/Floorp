@@ -39,7 +39,7 @@ nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
 
 nsresult
 nsSVGGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
+                                     nsAtom*        aAttribute,
                                      int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
@@ -432,7 +432,7 @@ nsSVGLinearGradientFrame::Init(nsIContent*       aContent,
 
 nsresult
 nsSVGLinearGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                           nsIAtom*        aAttribute,
+                                           nsAtom*        aAttribute,
                                            int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
@@ -534,7 +534,7 @@ nsSVGRadialGradientFrame::Init(nsIContent*       aContent,
 
 nsresult
 nsSVGRadialGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                           nsIAtom*        aAttribute,
+                                           nsAtom*        aAttribute,
                                            int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&

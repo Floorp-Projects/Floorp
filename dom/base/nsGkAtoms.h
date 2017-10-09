@@ -13,7 +13,7 @@
 #ifndef nsGkAtoms_h___
 #define nsGkAtoms_h___
 
-class nsIAtom;
+class nsAtom;
 
 class nsGkAtoms {
 public:
@@ -27,7 +27,7 @@ public:
 
      Add new atoms to nsGkAtomList and all support logic will be auto-generated
    */
-#define GK_ATOM(_name, _value) static nsIAtom* _name;
+#define GK_ATOM(_name, _value) static nsAtom* _name;
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 };

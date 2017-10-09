@@ -54,7 +54,7 @@ nsDeckFrame::nsDeckFrame(nsStyleContext* aContext)
 
 nsresult
 nsDeckFrame::AttributeChanged(int32_t         aNameSpaceID,
-                              nsIAtom*        aAttribute,
+                              nsAtom*        aAttribute,
                               int32_t         aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,

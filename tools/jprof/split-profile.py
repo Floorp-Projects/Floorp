@@ -32,7 +32,7 @@
 # The input file format looks like the following:
 #
 #   poll g_main_poll
-#   GetRuleCascade CSSRuleProcessor::GetRuleCascade(nsPresContext *, nsIAtom *)
+#   GetRuleCascade CSSRuleProcessor::GetRuleCascade(nsPresContext *, nsAtom *)
 #   RuleProcessorData RuleProcessorData::RuleProcessorData(nsPresContext *, nsIContent *, nsRuleWalker *, nsCompatibility *)
 #
 # From this input file, the script will construct a profile called

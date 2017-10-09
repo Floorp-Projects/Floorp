@@ -28,7 +28,7 @@ public:
 
   void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
 
-  void SetIdentAtomValue(nsCSSPropertyID aId, nsIAtom* aValue);
+  void SetIdentAtomValue(nsCSSPropertyID aId, nsAtom* aValue);
 
   void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue);
 

@@ -80,7 +80,7 @@ nsSMILAnimationFunction::SetAnimationElement(
 }
 
 bool
-nsSMILAnimationFunction::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
+nsSMILAnimationFunction::SetAttr(nsAtom* aAttribute, const nsAString& aValue,
                                  nsAttrValue& aResult, nsresult* aParseResult)
 {
   bool foundMatch = true;
@@ -120,7 +120,7 @@ nsSMILAnimationFunction::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
 }
 
 bool
-nsSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
+nsSMILAnimationFunction::UnsetAttr(nsAtom* aAttribute)
 {
   bool foundMatch = true;
 
@@ -705,19 +705,19 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double aProgress,
 }
 
 bool
-nsSMILAnimationFunction::HasAttr(nsIAtom* aAttName) const
+nsSMILAnimationFunction::HasAttr(nsAtom* aAttName) const
 {
   return mAnimationElement->HasAnimAttr(aAttName);
 }
 
 const nsAttrValue*
-nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName) const
+nsSMILAnimationFunction::GetAttr(nsAtom* aAttName) const
 {
   return mAnimationElement->GetAnimAttr(aAttName);
 }
 
 bool
-nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName, nsAString& aResult) const
+nsSMILAnimationFunction::GetAttr(nsAtom* aAttName, nsAString& aResult) const
 {
   return mAnimationElement->GetAnimAttr(aAttName, aResult);
 }
@@ -739,7 +739,7 @@ nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName, nsAString& aResult) const
  * Returns false if a parse error occurred, otherwise returns true.
  */
 bool
-nsSMILAnimationFunction::ParseAttr(nsIAtom* aAttName,
+nsSMILAnimationFunction::ParseAttr(nsAtom* aAttName,
                                    const nsISMILAttr& aSMILAttr,
                                    nsSMILValue& aResult,
                                    bool& aPreventCachingOfSandwich) const

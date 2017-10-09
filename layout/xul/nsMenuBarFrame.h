@@ -11,7 +11,7 @@
 #define nsMenuBarFrame_h__
 
 #include "mozilla/Attributes.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 #include "nsMenuFrame.h"

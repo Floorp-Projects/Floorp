@@ -9,7 +9,7 @@
 #include "nsString.h"
 #include "plhash.h"
 
-class nsIAtom;
+class nsAtom;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -47,7 +47,7 @@ public:
 
   // Functions for converting string or atom to id
   static nsHTMLTag StringTagToId(const nsAString& aTagName);
-  static nsHTMLTag AtomTagToId(nsIAtom* aTagName)
+  static nsHTMLTag AtomTagToId(nsAtom* aTagName)
   {
     return StringTagToId(nsDependentAtomString(aTagName));
   }
@@ -61,7 +61,7 @@ public:
 
     return tag ? (nsHTMLTag)NS_PTR_TO_INT32(tag) : eHTMLTag_userdefined;
   }
-  static nsHTMLTag CaseSensitiveAtomTagToId(nsIAtom* aTagName)
+  static nsHTMLTag CaseSensitiveAtomTagToId(nsAtom* aTagName)
   {
     NS_ASSERTION(gTagAtomTable, "no lookup table, needs addref");
     NS_ASSERTION(aTagName, "null tagname!");
@@ -76,7 +76,7 @@ public:
 #endif
 
 private:
-  static nsIAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
+  static nsAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
   static const char16_t* const sTagUnicodeTable[];
 
   static int32_t gTableRefCount;

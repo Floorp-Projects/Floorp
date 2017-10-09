@@ -630,7 +630,7 @@ inDOMView::NodeWillBeDestroyed(const nsINode* aNode)
 
 void
 inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
-                            int32_t aNameSpaceID, nsIAtom* aAttribute,
+                            int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType,
                             const nsAttrValue* aOldValue)
 {
