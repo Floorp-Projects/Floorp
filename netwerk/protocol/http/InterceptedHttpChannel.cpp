@@ -21,7 +21,9 @@ NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel,
                             nsIThreadRetargetableRequest,
                             nsIThreadRetargetableStreamListener)
 
-InterceptedHttpChannel::InterceptedHttpChannel()
+InterceptedHttpChannel::InterceptedHttpChannel(PRTime aCreationTime,
+                                               const TimeStamp& aCreationTimestamp,
+                                               const TimeStamp& aAsyncOpenTimestamp)
   : HttpAsyncAborter<InterceptedHttpChannel>(this)
   , mProgress(0)
   , mProgressReported(0)
@@ -30,8 +32,12 @@ InterceptedHttpChannel::InterceptedHttpChannel()
   , mSynthesizedOrReset(Invalid)
   , mCallingStatusAndProgress(false)
 {
-  mChannelCreationTime = PR_Now();
-  mChannelCreationTimestamp = TimeStamp::Now();
+  // Pre-set the creation and AsyncOpen times based on the original channel
+  // we are intercepting.  We don't want our extra internal redirect to mask
+  // any time spent processing the channel.
+  mChannelCreationTime = aCreationTime;
+  mChannelCreationTimestamp = aCreationTimestamp;
+  mAsyncOpenTime = aAsyncOpenTimestamp;
 }
 
 void
@@ -165,7 +171,9 @@ InterceptedHttpChannel::RedirectForOpaqueResponse(nsIURI* aResponseURI)
   nsresult rv = NS_OK;
 
   RefPtr<InterceptedHttpChannel> newChannel =
-    CreateForSynthesis(mResponseHead, mBodyReader);
+    CreateForSynthesis(mResponseHead, mBodyReader,
+                       mChannelCreationTime, mChannelCreationTimestamp,
+                       mAsyncOpenTime);
 
   rv = newChannel->Init(aResponseURI, mCaps,
                         static_cast<nsProxyInfo*>(mProxyInfo.get()),
@@ -329,18 +337,26 @@ InterceptedHttpChannel::MaybeCallStatusAndProgress()
 
 // static
 already_AddRefed<InterceptedHttpChannel>
-InterceptedHttpChannel::CreateForInterception()
+InterceptedHttpChannel::CreateForInterception(PRTime aCreationTime,
+                                              const TimeStamp& aCreationTimestamp,
+                                              const TimeStamp& aAsyncOpenTimestamp)
 {
   // Create an InterceptedHttpChannel that will trigger a FetchEvent
   // in a ServiceWorker when opened.
-  RefPtr<InterceptedHttpChannel> ref = new InterceptedHttpChannel();
+  RefPtr<InterceptedHttpChannel> ref =
+    new InterceptedHttpChannel(aCreationTime, aCreationTimestamp,
+                               aAsyncOpenTimestamp);
+
   return ref.forget();
 }
 
 // static
 already_AddRefed<InterceptedHttpChannel>
 InterceptedHttpChannel::CreateForSynthesis(const nsHttpResponseHead* aHead,
-                                           nsIInputStream* aBody)
+                                           nsIInputStream* aBody,
+                                           PRTime aCreationTime,
+                                           const TimeStamp& aCreationTimestamp,
+                                           const TimeStamp& aAsyncOpenTimestamp)
 {
   MOZ_DIAGNOSTIC_ASSERT(aHead);
   MOZ_DIAGNOSTIC_ASSERT(aBody);
@@ -348,7 +364,10 @@ InterceptedHttpChannel::CreateForSynthesis(const nsHttpResponseHead* aHead,
   // Create an InterceptedHttpChannel that already has a synthesized response.
   // The synthetic response will be processed when opened.  A FetchEvent
   // will not be triggered.
-  RefPtr<InterceptedHttpChannel> ref = new InterceptedHttpChannel();
+  RefPtr<InterceptedHttpChannel> ref =
+    new InterceptedHttpChannel(aCreationTime, aCreationTimestamp,
+                               aAsyncOpenTimestamp);
+
   ref->mBodyReader = aBody;
   ref->mResponseHead = new nsHttpResponseHead(*aHead);
 
@@ -402,7 +421,12 @@ InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aCo
     return mStatus;
   }
 
-  mAsyncOpenTime = TimeStamp::Now();
+  // We should have pre-set the AsyncOpen time based on the original channel if
+  // timings are enabled.
+  if (mTimingEnabled) {
+    MOZ_DIAGNOSTIC_ASSERT(!mAsyncOpenTime.IsNull());
+  }
+
   mIsPending = true;
   mListener = aListener;
 
