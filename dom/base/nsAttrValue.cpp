@@ -14,7 +14,7 @@
 
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindingTypes.h"
@@ -60,7 +60,7 @@ MiscContainer::GetString(nsAString& aString) const
     return true;
   }
 
-  nsIAtom* atom = static_cast<nsIAtom*>(ptr);
+  nsAtom* atom = static_cast<nsAtom*>(ptr);
   if (!atom) {
     return false;
   }
@@ -145,7 +145,7 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(nsIAtom* aValue)
+nsAttrValue::nsAttrValue(nsAtom* aValue)
     : mBits(0)
 {
   SetTo(aValue);
@@ -232,7 +232,7 @@ nsAttrValue::Reset()
     }
     case eAtomBase:
     {
-      nsIAtom* atom = GetAtomValue();
+      nsAtom* atom = GetAtomValue();
       NS_RELEASE(atom);
 
       break;
@@ -271,7 +271,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
     case eAtomBase:
     {
       ResetIfSet();
-      nsIAtom* atom = aOther.GetAtomValue();
+      nsAtom* atom = aOther.GetAtomValue();
       NS_ADDREF(atom);
       SetPtrValueAndType(atom, eAtomBase);
       return;
@@ -368,7 +368,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
         eStringBase) {
       static_cast<nsStringBuffer*>(otherPtr)->AddRef();
     } else {
-      static_cast<nsIAtom*>(otherPtr)->AddRef();
+      static_cast<nsAtom*>(otherPtr)->AddRef();
     }
     cont->mStringBits = otherCont->mStringBits;
   }
@@ -388,7 +388,7 @@ nsAttrValue::SetTo(const nsAString& aValue)
 }
 
 void
-nsAttrValue::SetTo(nsIAtom* aValue)
+nsAttrValue::SetTo(nsAtom* aValue)
 {
   ResetIfSet();
   if (aValue) {
@@ -606,7 +606,7 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eAtom:
     {
-      nsIAtom *atom = static_cast<nsIAtom*>(GetPtr());
+      nsAtom *atom = static_cast<nsAtom*>(GetPtr());
       atom->ToString(aResult);
 
       break;
@@ -745,7 +745,7 @@ nsAttrValue::ToString(nsAString& aResult) const
   }
 }
 
-already_AddRefed<nsIAtom>
+already_AddRefed<nsAtom>
 nsAttrValue::GetAsAtom() const
 {
   switch (Type()) {
@@ -754,7 +754,7 @@ nsAttrValue::GetAsAtom() const
 
     case eAtom:
       {
-        RefPtr<nsIAtom> atom = GetAtomValue();
+        RefPtr<nsAtom> atom = GetAtomValue();
         return atom.forget();
       }
 
@@ -830,7 +830,7 @@ nsAttrValue::GetAtomCount() const
   return 0;
 }
 
-nsIAtom*
+nsAtom*
 nsAttrValue::AtomAt(int32_t aIndex) const
 {
   NS_PRECONDITION(aIndex >= 0, "Index must not be negative");
@@ -913,7 +913,7 @@ nsAttrValue::HashValue() const
     {
       uint32_t hash = 0;
       uint32_t count = cont->mValue.mAtomArray->Length();
-      for (RefPtr<nsIAtom> *cur = cont->mValue.mAtomArray->Elements(),
+      for (RefPtr<nsAtom> *cur = cont->mValue.mAtomArray->Elements(),
                              *end = cur + count;
            cur != end; ++cur) {
         hash = AddToHash(hash, cur->get());
@@ -1086,10 +1086,10 @@ nsAttrValue::Equals(const nsAString& aValue,
     }
     case eAtomBase:
       if (aCaseSensitive == eCaseMatters) {
-        return static_cast<nsIAtom*>(GetPtr())->Equals(aValue);
+        return static_cast<nsAtom*>(GetPtr())->Equals(aValue);
       }
       return nsContentUtils::EqualsIgnoreASCIICase(
-          nsDependentAtomString(static_cast<nsIAtom*>(GetPtr())),
+          nsDependentAtomString(static_cast<nsAtom*>(GetPtr())),
           aValue);
     default:
       break;
@@ -1102,7 +1102,7 @@ nsAttrValue::Equals(const nsAString& aValue,
 }
 
 bool
-nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
+nsAttrValue::Equals(nsAtom* aValue, nsCaseTreatment aCaseSensitive) const
 {
   if (aCaseSensitive != eCaseMatters) {
     // Need a better way to handle this!
@@ -1124,7 +1124,7 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
     }
     case eAtomBase:
     {
-      return static_cast<nsIAtom*>(GetPtr()) == aValue;
+      return static_cast<nsAtom*>(GetPtr()) == aValue;
     }
     default:
       break;
@@ -1166,12 +1166,12 @@ nsAttrValue::EqualsAsStrings(const nsAttrValue& aOther) const
 }
 
 bool
-nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
+nsAttrValue::Contains(nsAtom* aValue, nsCaseTreatment aCaseSensitive) const
 {
   switch (BaseType()) {
     case eAtomBase:
     {
-      nsIAtom* atom = GetAtomValue();
+      nsAtom* atom = GetAtomValue();
 
       if (aCaseSensitive == eCaseMatters) {
         return aValue == atom;
@@ -1193,7 +1193,7 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
 
         nsDependentAtomString val1(aValue);
 
-        for (RefPtr<nsIAtom> *cur = array->Elements(),
+        for (RefPtr<nsAtom> *cur = array->Elements(),
                                *end = cur + array->Length();
              cur != end; ++cur) {
           // For performance reasons, don't do a full on unicode case
@@ -1212,7 +1212,7 @@ nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
 }
 
 struct AtomArrayStringComparator {
-  bool Equals(nsIAtom* atom, const nsAString& string) const {
+  bool Equals(nsAtom* atom, const nsAString& string) const {
     return atom->Equals(string);
   }
 };
@@ -1223,7 +1223,7 @@ nsAttrValue::Contains(const nsAString& aValue) const
   switch (BaseType()) {
     case eAtomBase:
     {
-      nsIAtom* atom = GetAtomValue();
+      nsAtom* atom = GetAtomValue();
       return atom->Equals(aValue);
     }
     default:
@@ -1243,7 +1243,7 @@ nsAttrValue::ParseAtom(const nsAString& aValue)
 {
   ResetIfSet();
 
-  RefPtr<nsIAtom> atom = NS_Atomize(aValue);
+  RefPtr<nsAtom> atom = NS_Atomize(aValue);
   if (atom) {
     SetPtrValueAndType(atom.forget().take(), eAtomBase);
   }
@@ -1275,7 +1275,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     ++iter;
   } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
-  RefPtr<nsIAtom> classAtom = NS_AtomizeMainThread(Substring(start, iter));
+  RefPtr<nsAtom> classAtom = NS_AtomizeMainThread(Substring(start, iter));
   if (!classAtom) {
     Reset();
     return;
@@ -1291,7 +1291,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     // we only found one classname and there was no whitespace so
     // don't bother storing a list
     ResetIfSet();
-    nsIAtom* atom = nullptr;
+    nsAtom* atom = nullptr;
     classAtom.swap(atom);
     SetPtrValueAndType(atom, eAtomBase);
     return;
@@ -1796,7 +1796,7 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
-      RefPtr<nsIAtom> atom = NS_AtomizeMainThread(*aValue);
+      RefPtr<nsAtom> atom = NS_AtomizeMainThread(*aValue);
       if (atom) {
         cont->mStringBits =
           reinterpret_cast<uintptr_t>(atom.forget().take()) | eAtomBase;
@@ -1820,7 +1820,7 @@ nsAttrValue::ResetMiscAtomOrString()
         eStringBase) {
       static_cast<nsStringBuffer*>(ptr)->Release();
     } else {
-      static_cast<nsIAtom*>(ptr)->Release();
+      static_cast<nsAtom*>(ptr)->Release();
     }
     cont->mStringBits = 0;
   }
@@ -1998,7 +1998,7 @@ nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
         // need a way to call the Servo heap_size_of function.
         //n += container->mCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
       } else if (Type() == eAtomArray && container->mValue.mAtomArray) {
-        // Don't measure each nsIAtom, they are measured separatly.
+        // Don't measure each nsAtom, they are measured separatly.
         n += container->mValue.mAtomArray->ShallowSizeOfIncludingThis(aMallocSizeOf);
       }
       break;

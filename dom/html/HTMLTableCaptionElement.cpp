@@ -38,7 +38,7 @@ static const nsAttrValue::EnumTable kCaptionAlignTable[] = {
 
 bool
 HTMLTableCaptionElement::ParseAttribute(int32_t aNamespaceID,
-                                        nsIAtom* aAttribute,
+                                        nsAtom* aAttribute,
                                         const nsAString& aValue,
                                         nsAttrValue& aResult)
 {
@@ -66,7 +66,7 @@ HTMLTableCaptionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttrib
 }
 
 NS_IMETHODIMP_(bool)
-HTMLTableCaptionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLTableCaptionElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },

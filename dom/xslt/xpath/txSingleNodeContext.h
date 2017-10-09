@@ -20,7 +20,7 @@ public:
         NS_ASSERTION(aContext, "txIMatchContext must be given");
     }
 
-    nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
+    nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
                          txAExprResult*& aResult) override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");

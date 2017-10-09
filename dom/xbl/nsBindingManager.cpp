@@ -223,13 +223,13 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
   aContent->SetXBLInsertionParent(nullptr);
 }
 
-nsIAtom*
+nsAtom*
 nsBindingManager::ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID)
 {
   nsXBLBinding *binding = aContent->GetXBLBinding();
 
   if (binding) {
-    nsIAtom* base = binding->GetBaseTag(aNameSpaceID);
+    nsAtom* base = binding->GetBaseTag(aNameSpaceID);
 
     if (base) {
       return base;

@@ -293,7 +293,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
            grandchild;
            grandchild = grandchild->GetNextSibling()) {
         mozilla::dom::NodeInfo *ni = grandchild->NodeInfo();
-        nsIAtom *localName = ni->NameAtom();
+        nsAtom *localName = ni->NameAtom();
         if (ni->NamespaceID() == kNameSpaceID_XUL &&
             (localName == nsGkAtoms::treechildren ||
              localName == nsGkAtoms::menupopup)) {
@@ -347,13 +347,13 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
     nsAutoString sortResource, sortResource2;
     aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource, sortResource);
     if (!sortResource.IsEmpty()) {
-      RefPtr<nsIAtom> sortkeyatom = NS_Atomize(sortResource);
+      RefPtr<nsAtom> sortkeyatom = NS_Atomize(sortResource);
       aSortState->sortKeys.AppendElement(sortkeyatom);
       sort.Append(sortResource);
 
       aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource2, sortResource2);
       if (!sortResource2.IsEmpty()) {
-        RefPtr<nsIAtom> sortkeyatom2 = NS_Atomize(sortResource2);
+        RefPtr<nsAtom> sortkeyatom2 = NS_Atomize(sortResource2);
         aSortState->sortKeys.AppendElement(sortkeyatom2);
         sort.Append(' ');
         sort.Append(sortResource2);
@@ -363,7 +363,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   else {
     nsWhitespaceTokenizer tokenizer(sort);
     while (tokenizer.hasMoreTokens()) {
-      RefPtr<nsIAtom> keyatom = NS_Atomize(tokenizer.nextToken());
+      RefPtr<nsAtom> keyatom = NS_Atomize(tokenizer.nextToken());
       NS_ENSURE_TRUE(keyatom, NS_ERROR_OUT_OF_MEMORY);
       aSortState->sortKeys.AppendElement(keyatom);
     }

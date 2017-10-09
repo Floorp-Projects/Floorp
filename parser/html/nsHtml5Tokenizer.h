@@ -31,7 +31,7 @@
 #ifndef nsHtml5Tokenizer_h
 #define nsHtml5Tokenizer_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsIContent.h"
@@ -283,7 +283,7 @@ class nsHtml5Tokenizer
     nsHtml5AttributeName* attributeName;
   private:
     nsHtml5AttributeName* nonInternedAttributeName;
-    nsIAtom* doctypeName;
+    nsAtom* doctypeName;
     nsHtml5String publicIdentifier;
     nsHtml5String systemIdentifier;
     nsHtml5HtmlAttributes* attributes;
@@ -301,7 +301,7 @@ class nsHtml5Tokenizer
     void setInterner(nsHtml5AtomTable* interner);
     void initLocation(nsHtml5String newPublicId, nsHtml5String newSystemId);
     bool isViewingXmlSource();
-    void setStateAndEndTagExpectation(int32_t specialTokenizerState, nsIAtom* endTagExpectation);
+    void setStateAndEndTagExpectation(int32_t specialTokenizerState, nsAtom* endTagExpectation);
     void setStateAndEndTagExpectation(int32_t specialTokenizerState, nsHtml5ElementName* endTagExpectation);
   private:
     void endTagExpectationToArray();

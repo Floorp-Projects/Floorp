@@ -9,7 +9,7 @@
 #include "txCore.h"
 
 class FunctionCall;
-class nsIAtom;
+class nsAtom;
 class txAExprResult;
 class txResultRecycler;
 class txXPathNode;
@@ -33,13 +33,13 @@ public:
     /*
      * Return a namespaceID for a given prefix.
      */
-    virtual nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) = 0;
+    virtual nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) = 0;
 
     /*
      * Create a FunctionCall, needed for extension function calls and
      * XSLT. XPath function calls are resolved by the Parser.
      */
-    virtual nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
+    virtual nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                          FunctionCall** aFunction) = 0;
 
     /**
@@ -81,7 +81,7 @@ public:
      * Return the ExprResult associated with the variable with the
      * given namespace and local name.
      */
-    virtual nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
+    virtual nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
                                  txAExprResult*& aResult) = 0;
 
     /*
@@ -105,7 +105,7 @@ public:
 };
 
 #define TX_DECL_MATCH_CONTEXT \
-    nsresult getVariable(int32_t aNamespace, nsIAtom* aLName, \
+    nsresult getVariable(int32_t aNamespace, nsAtom* aLName, \
                          txAExprResult*& aResult); \
     nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed); \
     void* getPrivateContext(); \

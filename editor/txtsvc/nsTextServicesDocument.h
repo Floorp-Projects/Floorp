@@ -17,7 +17,7 @@
 #include "nscore.h"
 
 class OffsetEntry;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIContentIterator;
 class nsIDOMCharacterData;
@@ -36,32 +36,32 @@ class nsTextServicesDocument final : public nsITextServicesDocument,
                                      public nsIEditActionListener
 {
 private:
-  static nsIAtom *sAAtom;
-  static nsIAtom *sAddressAtom;
-  static nsIAtom *sBigAtom;
-  static nsIAtom *sBAtom;
-  static nsIAtom *sCiteAtom;
-  static nsIAtom *sCodeAtom;
-  static nsIAtom *sDfnAtom;
-  static nsIAtom *sEmAtom;
-  static nsIAtom *sFontAtom;
-  static nsIAtom *sIAtom;
-  static nsIAtom *sKbdAtom;
-  static nsIAtom *sKeygenAtom;
-  static nsIAtom *sNobrAtom;
-  static nsIAtom *sSAtom;
-  static nsIAtom *sSampAtom;
-  static nsIAtom *sSmallAtom;
-  static nsIAtom *sSpacerAtom;
-  static nsIAtom *sSpanAtom;
-  static nsIAtom *sStrikeAtom;
-  static nsIAtom *sStrongAtom;
-  static nsIAtom *sSubAtom;
-  static nsIAtom *sSupAtom;
-  static nsIAtom *sTtAtom;
-  static nsIAtom *sUAtom;
-  static nsIAtom *sVarAtom;
-  static nsIAtom *sWbrAtom;
+  static nsAtom *sAAtom;
+  static nsAtom *sAddressAtom;
+  static nsAtom *sBigAtom;
+  static nsAtom *sBAtom;
+  static nsAtom *sCiteAtom;
+  static nsAtom *sCodeAtom;
+  static nsAtom *sDfnAtom;
+  static nsAtom *sEmAtom;
+  static nsAtom *sFontAtom;
+  static nsAtom *sIAtom;
+  static nsAtom *sKbdAtom;
+  static nsAtom *sKeygenAtom;
+  static nsAtom *sNobrAtom;
+  static nsAtom *sSAtom;
+  static nsAtom *sSampAtom;
+  static nsAtom *sSmallAtom;
+  static nsAtom *sSpacerAtom;
+  static nsAtom *sSpanAtom;
+  static nsAtom *sStrikeAtom;
+  static nsAtom *sStrongAtom;
+  static nsAtom *sSubAtom;
+  static nsAtom *sSupAtom;
+  static nsAtom *sTtAtom;
+  static nsAtom *sUAtom;
+  static nsAtom *sVarAtom;
+  static nsAtom *sWbrAtom;
 
   typedef enum { eIsDone=0,        // No iterator (I), or iterator doesn't point to anything valid.
                  eValid,           // I points to first text node (TN) in current block (CB).

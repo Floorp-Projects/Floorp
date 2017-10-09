@@ -115,7 +115,7 @@ nsXULTemplateResultRDF::GetType(nsAString& aType)
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultRDF::GetBindingFor(nsIAtom* aVar, nsAString& aValue)
+nsXULTemplateResultRDF::GetBindingFor(nsAtom* aVar, nsAString& aValue)
 {
     nsCOMPtr<nsIRDFNode> val;
     GetAssignment(aVar, getter_AddRefs(val));
@@ -124,7 +124,7 @@ nsXULTemplateResultRDF::GetBindingFor(nsIAtom* aVar, nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultRDF::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aValue)
+nsXULTemplateResultRDF::GetBindingObjectFor(nsAtom* aVar, nsISupports** aValue)
 {
     GetAssignment(aVar, (nsIRDFNode **)aValue);
 
@@ -166,7 +166,7 @@ nsXULTemplateResultRDF::HasBeenRemoved()
 
 
 void
-nsXULTemplateResultRDF::GetAssignment(nsIAtom* aVar, nsIRDFNode** aValue)
+nsXULTemplateResultRDF::GetAssignment(nsAtom* aVar, nsIRDFNode** aValue)
 {
     // look up a variable in the assignments map
     *aValue = nullptr;

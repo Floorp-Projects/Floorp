@@ -19,7 +19,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
 #include "nsIDOMDocument.h"
@@ -190,7 +190,7 @@ HTMLEditor::CreateShadow(nsIContent& aParentContent,
                          Element& aOriginalObject)
 {
   // let's create an image through the element factory
-  RefPtr<nsIAtom> name;
+  RefPtr<nsAtom> name;
   if (HTMLEditUtils::IsImage(&aOriginalObject)) {
     name = nsGkAtoms::img;
   } else {
@@ -224,7 +224,7 @@ HTMLEditor::SetAllResizersPosition()
   // get the size of resizers
   nsAutoString value;
   float resizerWidth, resizerHeight;
-  RefPtr<nsIAtom> dummyUnit;
+  RefPtr<nsAtom> dummyUnit;
   mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
                                      value);
   mCSSEditUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));

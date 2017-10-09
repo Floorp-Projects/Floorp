@@ -322,7 +322,7 @@ ScrollbarActivity::UnregisterFromRefreshDriver()
 }
 
 static void
-SetBooleanAttribute(nsIContent* aContent, nsIAtom* aAttribute, bool aValue)
+SetBooleanAttribute(nsIContent* aContent, nsAtom* aAttribute, bool aValue)
 {
   if (aContent) {
     if (aValue) {

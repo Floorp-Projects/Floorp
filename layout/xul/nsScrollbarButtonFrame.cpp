@@ -236,7 +236,7 @@ nsScrollbarButtonFrame::MouseClicked(WidgetGUIEvent* aEvent)
 }
 
 nsresult
-nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
+nsScrollbarButtonFrame::GetChildWithTag(nsAtom* atom, nsIFrame* start,
                                         nsIFrame*& result)
 {
   // recursively search our children
@@ -266,7 +266,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
 }
 
 nsresult
-nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start,
+nsScrollbarButtonFrame::GetParentWithTag(nsAtom* toFind, nsIFrame* start,
                                          nsIFrame*& result)
 {
    while (start)

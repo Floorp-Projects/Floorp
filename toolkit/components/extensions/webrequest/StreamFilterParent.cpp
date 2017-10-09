@@ -54,7 +54,7 @@ StreamFilterParent::Create(dom::ContentParent* aContentParent, uint64_t aChannel
 
   auto& webreq = WebRequestService::GetSingleton();
 
-  RefPtr<nsIAtom> addonId = NS_Atomize(aAddonId);
+  RefPtr<nsAtom> addonId = NS_Atomize(aAddonId);
   nsCOMPtr<nsITraceableChannel> channel = webreq.GetTraceableChannel(aChannelId, addonId, aContentParent);
 
   RefPtr<nsHttpChannel> chan = do_QueryObject(channel);

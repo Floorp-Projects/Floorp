@@ -105,7 +105,7 @@ GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
+GenerateIdFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     *aAtom = nsGkAtoms::generateId;
     NS_ADDREF(*aAtom);

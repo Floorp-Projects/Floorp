@@ -29,7 +29,7 @@ public:
     virtual nsXULTemplateQueryProcessorRDF* Processor() = 0;  // not addrefed
 
     // return the member variable for the query
-    virtual nsIAtom* GetMemberVariable() = 0; // not addrefed
+    virtual nsAtom* GetMemberVariable() = 0; // not addrefed
 
     // return the <query> node the query was compiled from
     virtual void GetQueryNode(nsIDOMNode** aQueryNode) = 0;
@@ -94,15 +94,15 @@ public:
 
     nsXULTemplateQueryProcessorRDF* Processor() override { return mProcessor; }
 
-    nsIAtom* GetMemberVariable() override { return mMemberVariable; }
+    nsAtom* GetMemberVariable() override { return mMemberVariable; }
 
     bool IsSimple() { return mSimple; }
 
     void SetSimple() { mSimple = true; }
 
     // the reference and member variables for the query
-    RefPtr<nsIAtom> mRefVariable;
-    RefPtr<nsIAtom> mMemberVariable;
+    RefPtr<nsAtom> mRefVariable;
+    RefPtr<nsAtom> mMemberVariable;
 
 protected:
 

@@ -33,7 +33,7 @@
 #include <type_traits>
 
 class imgRequestProxy;
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIDocument;
 class nsIPrincipal;
@@ -506,7 +506,7 @@ enum nsCSSUnit {
   eCSSUnit_FontFamilyList = 58,   // (SharedFontList*) value
 
   // Atom units
-  eCSSUnit_AtomIdent    = 60,     // (nsIAtom*) for its string as an identifier
+  eCSSUnit_AtomIdent    = 60,     // (nsAtom*) for its string as an identifier
 
   eCSSUnit_Integer      = 70,     // (int) simple value
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
@@ -893,7 +893,7 @@ public:
     return mValue.mFloatColor;
   }
 
-  nsIAtom* GetAtomValue() const {
+  nsAtom* GetAtomValue() const {
     MOZ_ASSERT(mUnit == eCSSUnit_AtomIdent);
     return mValue.mAtom;
   }
@@ -919,7 +919,7 @@ public:
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
-  void SetAtomIdentValue(already_AddRefed<nsIAtom> aValue);
+  void SetAtomIdentValue(already_AddRefed<nsAtom> aValue);
   void SetColorValue(nscolor aValue);
   void SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit);
   // converts the nscoord to pixels
@@ -1023,7 +1023,7 @@ protected:
     // If we're of a string type, mString is not null.
     nsStringBuffer* MOZ_OWNING_REF mString;
     nscolor    mColor;
-    nsIAtom* MOZ_OWNING_REF mAtom;
+    nsAtom* MOZ_OWNING_REF mAtom;
     Array* MOZ_OWNING_REF mArray;
     mozilla::css::URLValue* MOZ_OWNING_REF mURL;
     mozilla::css::ImageValue* MOZ_OWNING_REF mImage;

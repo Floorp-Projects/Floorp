@@ -29,7 +29,7 @@
 #ifndef nsHtml5StackNode_h
 #define nsHtml5StackNode_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -62,8 +62,8 @@ class nsHtml5StackNode
   public:
     int32_t idxInTreeBuilder;
     int32_t flags;
-    nsIAtom* name;
-    nsIAtom* popName;
+    nsAtom* name;
+    nsAtom* popName;
     int32_t ns;
     nsIContentHandle* node;
     nsHtml5HtmlAttributes* attributes;
@@ -85,9 +85,9 @@ class nsHtml5StackNode
     mozilla::dom::HTMLContentCreatorFunction getHtmlCreator();
     void setValues(int32_t flags,
                    int32_t ns,
-                   nsIAtom* name,
+                   nsAtom* name,
                    nsIContentHandle* node,
-                   nsIAtom* popName,
+                   nsAtom* popName,
                    nsHtml5HtmlAttributes* attributes,
                    mozilla::dom::HTMLContentCreatorFunction htmlCreator);
     void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node);
@@ -96,13 +96,13 @@ class nsHtml5StackNode
                    nsHtml5HtmlAttributes* attributes);
     void setValues(nsHtml5ElementName* elementName,
                    nsIContentHandle* node,
-                   nsIAtom* popName);
+                   nsAtom* popName);
     void setValues(nsHtml5ElementName* elementName,
-                   nsIAtom* popName,
+                   nsAtom* popName,
                    nsIContentHandle* node);
     void setValues(nsHtml5ElementName* elementName,
                    nsIContentHandle* node,
-                   nsIAtom* popName,
+                   nsAtom* popName,
                    bool markAsIntegrationPoint);
 
   private:

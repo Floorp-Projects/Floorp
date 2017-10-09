@@ -19,7 +19,7 @@
 #include "nsTArray.h"
 
 class nsIContent;
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 class Encoding;
@@ -65,10 +65,10 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void AfterElementEnd(nsIContent * aContent,
                                nsAString& aStr) override;
 
-  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsIAtom* aName) override;
-  virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsIAtom* aName) override;
-  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsIAtom* aName) override;
-  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aName) override;
+  virtual bool LineBreakBeforeOpen(int32_t aNamespaceID, nsAtom* aName) override;
+  virtual bool LineBreakAfterOpen(int32_t aNamespaceID, nsAtom* aName) override;
+  virtual bool LineBreakBeforeClose(int32_t aNamespaceID, nsAtom* aName) override;
+  virtual bool LineBreakAfterClose(int32_t aNamespaceID, nsAtom* aName) override;
 
   bool HasLongLines(const nsString& text, int32_t& aLastNewlineOffset);
 
@@ -81,7 +81,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                            nsIContent *aOriginalElement,
                            nsAString& aTagPrefix,
                            const nsAString& aTagNamespaceURI,
-                           nsIAtom* aTagName,
+                           nsAtom* aTagName,
                            nsAString& aStr,
                            uint32_t aSkipAttr,
                            bool aAddNSAttr) override;
@@ -91,8 +91,8 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   MOZ_MUST_USE
   bool SerializeLIValueAttribute(nsIContent* aElement,
                                  nsAString& aStr);
-  bool IsShorthandAttr(const nsIAtom* aAttrName,
-                         const nsIAtom* aElementName);
+  bool IsShorthandAttr(const nsAtom* aAttrName,
+                         const nsAtom* aElementName);
 
   MOZ_MUST_USE
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,

@@ -330,7 +330,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
 {
 #ifdef MOZ_XUL
   if (!mScrollableFrame) {
-    nsIAtom* pseudoType = aBlockFrame->StyleContext()->GetPseudo();
+    nsAtom* pseudoType = aBlockFrame->StyleContext()->GetPseudo();
     if (pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
       mScrollableFrame =
         nsLayoutUtils::GetScrollableFrameFor(aBlockFrame->GetParent());

@@ -663,7 +663,7 @@ nsHtml5Highlighter::AllocateContentHandle()
 
 nsIContent**
 nsHtml5Highlighter::CreateElement(
-  nsIAtom* aName,
+  nsAtom* aName,
   nsHtml5HtmlAttributes* aAttributes,
   nsIContent** aIntendedParent,
   mozilla::dom::HTMLContentCreatorFunction aCreator)
@@ -690,7 +690,7 @@ nsHtml5Highlighter::CurrentNode()
 }
 
 void
-nsHtml5Highlighter::Push(nsIAtom* aName,
+nsHtml5Highlighter::Push(nsAtom* aName,
                          nsHtml5HtmlAttributes* aAttributes,
                          mozilla::dom::HTMLContentCreatorFunction aCreator)
 {
@@ -779,7 +779,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId)
 
 void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
-                                         nsIAtom* aName)
+                                         nsAtom* aName)
 {
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -789,8 +789,8 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
 
 void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
-                                         nsIAtom* aName,
-                                         nsIAtom* aOther)
+                                         nsAtom* aName,
+                                         nsAtom* aOther)
 {
   NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();

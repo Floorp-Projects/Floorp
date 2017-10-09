@@ -7,7 +7,7 @@
 #ifndef nsXBLProtoImplField_h__
 #define nsXBLProtoImplField_h__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsString.h"
 #include "jsapi.h"
 #include "nsString.h"

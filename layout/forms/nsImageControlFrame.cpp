@@ -53,7 +53,7 @@ public:
                              nsIFrame::Cursor& aCursor) override;
   // nsIFormContromFrame
   virtual void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsIAtom* aName,
+  virtual nsresult SetFormProperty(nsAtom* aName,
                                    const nsAString& aValue) override;
 };
 
@@ -191,7 +191,7 @@ nsImageControlFrame::GetCursor(const nsPoint&    aPoint,
 }
 
 nsresult
-nsImageControlFrame::SetFormProperty(nsIAtom* aName,
+nsImageControlFrame::SetFormProperty(nsAtom* aName,
                                      const nsAString& aValue)
 {
   return NS_OK;

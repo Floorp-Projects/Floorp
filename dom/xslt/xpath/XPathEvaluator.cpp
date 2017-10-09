@@ -6,7 +6,7 @@
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "mozilla/dom/XPathExpression.h"
 #include "XPathResult.h"
 #include "nsContentCID.h"
@@ -26,7 +26,7 @@
 
 extern nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsIAtom *aName, nsISupports *aState,
+                            nsAtom *aName, nsISupports *aState,
                             FunctionCall **aFunction);
 
 namespace mozilla {
@@ -58,8 +58,8 @@ public:
         return mLastError;
     }
 
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID);
-    nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
+    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID);
+    nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                  FunctionCall** aFunction);
     bool caseInsensitiveNameTests();
     void SetErrorOffset(uint32_t aOffset);
@@ -199,7 +199,7 @@ XPathEvaluator::Evaluate(JSContext* aCx, const nsAString& aExpression,
  */
 
 nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
-    (nsIAtom* aPrefix, int32_t& aID)
+    (nsAtom* aPrefix, int32_t& aID)
 {
     aID = kNameSpaceID_Unknown;
 
@@ -242,7 +242,7 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
 }
 
 nsresult
-XPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
+XPathEvaluatorParseContext::resolveFunctionCall(nsAtom* aName,
                                                 int32_t aID,
                                                 FunctionCall** aFn)
 {

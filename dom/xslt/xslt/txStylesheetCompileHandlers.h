@@ -14,8 +14,8 @@ struct txStylesheetAttr;
 class txStylesheetCompilerState;
 
 typedef nsresult (*HandleStartFn) (int32_t aNamespaceID,
-                                   nsIAtom* aLocalName,
-                                   nsIAtom* aPrefix,
+                                   nsAtom* aLocalName,
+                                   nsAtom* aPrefix,
                                    txStylesheetAttr* aAttributes,
                                    int32_t aAttrCount,
                                    txStylesheetCompilerState& aState);
@@ -37,7 +37,7 @@ public:
                    const txElementHandler* aLREHandler,
                    const txElementHandler* aOtherHandler);
     nsresult init(const txElementHandler* aHandlers, uint32_t aCount);
-    const txElementHandler* find(int32_t aNamespaceID, nsIAtom* aLocalName);
+    const txElementHandler* find(int32_t aNamespaceID, nsAtom* aLocalName);
 
     const HandleTextFn mTextHandler;
     const txElementHandler* const mLREHandler;

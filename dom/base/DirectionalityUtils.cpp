@@ -411,7 +411,7 @@ WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
 class nsTextNodeDirectionalityMap
 {
   static void
-  nsTextNodeDirectionalityMapDtor(void *aObject, nsIAtom* aPropertyName,
+  nsTextNodeDirectionalityMapDtor(void *aObject, nsAtom* aPropertyName,
                                   void *aPropertyValue, void* aData)
   {
     nsINode* textNode = static_cast<nsINode * >(aObject);
@@ -441,7 +441,7 @@ public:
 
   static void
   nsTextNodeDirectionalityMapPropertyDestructor(void* aObject,
-                                                nsIAtom* aProperty,
+                                                nsAtom* aProperty,
                                                 void* aPropertyValue,
                                                 void* aData)
   {

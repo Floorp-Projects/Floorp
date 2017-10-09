@@ -80,7 +80,7 @@ protected:
   virtual ~nsXMLFragmentContentSink();
 
   virtual bool SetDocElement(int32_t aNameSpaceID,
-                               nsIAtom* aTagName,
+                               nsAtom* aTagName,
                                nsIContent* aContent) override;
   virtual nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                                  mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
@@ -192,7 +192,7 @@ nsXMLFragmentContentSink::GetTarget()
 
 bool
 nsXMLFragmentContentSink::SetDocElement(int32_t aNameSpaceID,
-                                        nsIAtom* aTagName,
+                                        nsAtom* aTagName,
                                         nsIContent *aContent)
 {
   // this is a fragment, not a document

@@ -185,7 +185,7 @@ SVGMarkerElement::SetOrientToAngle(SVGAngle& angle, ErrorResult& rv)
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
+SVGMarkerElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sFEFloodMap,
@@ -209,7 +209,7 @@ SVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 // nsSVGElement methods
 
 bool
-SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
+SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
@@ -234,7 +234,7 @@ SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-SVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsIAtom* aName,
+SVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsAtom* aName,
                             bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {

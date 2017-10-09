@@ -35,10 +35,10 @@ public:
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult,
                  bool aPreallocateChildren) const override;
 
-  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
-  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                          const nsAttrValueOrString* aValue,
                          bool aNotify) override;
 

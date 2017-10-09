@@ -193,7 +193,7 @@ HTMLOptionElement::DefaultSelected() const
 }
 
 nsChangeHint
-HTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLOptionElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                           int32_t aModType) const
 {
   nsChangeHint retval =
@@ -207,7 +207,7 @@ HTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 nsresult
-HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify)
 {
@@ -263,7 +263,7 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLOptionElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {

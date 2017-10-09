@@ -45,7 +45,7 @@ HTMLProgressElement::IntrinsicState() const
 }
 
 bool
-HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
+HTMLProgressElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                     const nsAString& aValue, nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {

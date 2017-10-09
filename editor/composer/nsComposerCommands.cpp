@@ -16,7 +16,7 @@
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::font, etc
-#include "nsIAtom.h"                    // for nsIAtom, etc
+#include "nsAtom.h"                    // for nsAtom, etc
 #include "nsIClipboard.h"               // for nsIClipboard, etc
 #include "nsICommandParams.h"           // for nsICommandParams, etc
 #include "nsID.h"
@@ -60,7 +60,7 @@ nsBaseComposerCommand::nsBaseComposerCommand()
 NS_IMPL_ISUPPORTS(nsBaseComposerCommand, nsIControllerCommand)
 
 
-nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(nsIAtom* aTagName)
+nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(nsAtom* aTagName)
 : nsBaseComposerCommand()
 , mTagName(aTagName)
 {
@@ -189,7 +189,7 @@ nsPasteNoFormattingCommand::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED, enabled);
 }
 
-nsStyleUpdatingCommand::nsStyleUpdatingCommand(nsIAtom* aTagName)
+nsStyleUpdatingCommand::nsStyleUpdatingCommand(nsAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -280,7 +280,7 @@ nsStyleUpdatingCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
   return rv;
 }
 
-nsListCommand::nsListCommand(nsIAtom* aTagName)
+nsListCommand::nsListCommand(nsAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -335,7 +335,7 @@ nsListCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
   return rv;
 }
 
-nsListItemCommand::nsListItemCommand(nsIAtom* aTagName)
+nsListItemCommand::nsListItemCommand(nsAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -1433,7 +1433,7 @@ nsInsertHTMLCommand::GetCommandStateParams(const char *aCommandName,
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsInsertTagCommand, nsBaseComposerCommand)
 
-nsInsertTagCommand::nsInsertTagCommand(nsIAtom* aTagName)
+nsInsertTagCommand::nsInsertTagCommand(nsAtom* aTagName)
 : nsBaseComposerCommand()
 , mTagName(aTagName)
 {
@@ -1596,7 +1596,7 @@ RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
   MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  RefPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
+  RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aHTMLEditor->RemoveInlineProperty(styleAtom, EmptyString());
@@ -1627,7 +1627,7 @@ SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
   MOZ_ASSERT(aHTMLEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  RefPtr<nsIAtom> styleAtom = NS_Atomize(aProp);
+  RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
   return aHTMLEditor->SetInlineProperty(styleAtom,

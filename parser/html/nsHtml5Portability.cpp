@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsString.h"
 #include "jArray.h"
 #include "nsHtml5Portability.h"
 #include "nsHtml5TreeBuilder.h"
 
-nsIAtom*
+nsAtom*
 nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {
   NS_ASSERTION(!offset, "The offset should always be zero here.");
@@ -62,7 +62,7 @@ nsHtml5Portability::newStringFromString(nsHtml5String string)
 }
 
 jArray<char16_t,int32_t>
-nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
+nsHtml5Portability::newCharArrayFromLocal(nsAtom* local)
 {
   nsAutoString temp;
   local->ToString(temp);
@@ -83,8 +83,8 @@ nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
   return arr;
 }
 
-nsIAtom*
-nsHtml5Portability::newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner)
+nsAtom*
+nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
 {
   NS_PRECONDITION(local, "Atom was null.");
   NS_PRECONDITION(interner, "Atom table was null");
@@ -97,7 +97,7 @@ nsHtml5Portability::newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner
 }
 
 bool
-nsHtml5Portability::localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t offset, int32_t length)
+nsHtml5Portability::localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t offset, int32_t length)
 {
   return local->Equals(buf + offset, length);
 }

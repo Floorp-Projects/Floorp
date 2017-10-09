@@ -7,7 +7,7 @@
 #ifndef nsStaticAtom_h__
 #define nsStaticAtom_h__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsStringBuffer.h"
 
 #define NS_STATIC_ATOM(buffer_name, atom_ptr) \
@@ -27,7 +27,7 @@ struct nsStaticAtom
   // mStringBuffer points to the string buffer for a permanent atom, and is
   // therefore safe as a non-owning reference.
   nsStringBuffer* MOZ_NON_OWNING_REF mStringBuffer;
-  nsIAtom** mAtom;
+  nsAtom** mAtom;
 };
 
 /**

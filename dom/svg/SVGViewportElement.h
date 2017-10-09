@@ -59,7 +59,7 @@ protected:
 public:
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(

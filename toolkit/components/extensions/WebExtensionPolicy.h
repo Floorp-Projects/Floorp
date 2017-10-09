@@ -41,7 +41,7 @@ public:
   static already_AddRefed<WebExtensionPolicy>
   Constructor(dom::GlobalObject& aGlobal, const WebExtensionInit& aInit, ErrorResult& aRv);
 
-  nsIAtom* Id() const { return mId; }
+  nsAtom* Id() const { return mId; }
   void GetId(nsAString& aId) const { aId = nsDependentAtomString(mId); };
 
   const nsCString& MozExtensionHostname() const { return mHostname; }
@@ -69,7 +69,7 @@ public:
     return mWebAccessiblePaths.Matches(aPath);
   }
 
-  bool HasPermission(const nsIAtom* aPermission) const
+  bool HasPermission(const nsAtom* aPermission) const
   {
     return mPermissions->Contains(aPermission);
   }
@@ -159,7 +159,7 @@ private:
 
   nsCOMPtr<nsISupports> mParent;
 
-  RefPtr<nsIAtom> mId;
+  RefPtr<nsAtom> mId;
   nsCString mHostname;
   nsCOMPtr<nsIURI> mBaseURI;
 

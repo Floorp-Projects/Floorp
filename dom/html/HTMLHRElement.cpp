@@ -28,7 +28,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 
 bool
 HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
+                              nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsAttrValue& aResult)
 {
@@ -179,7 +179,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLHRElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },

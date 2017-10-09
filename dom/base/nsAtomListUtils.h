@@ -13,12 +13,12 @@
 
 #include <stdint.h>
 
-class nsIAtom;
+class nsAtom;
 struct nsStaticAtom;
 
 class nsAtomListUtils {
 public:
-    static bool IsMember(nsIAtom *aAtom,
+    static bool IsMember(nsAtom *aAtom,
                            const nsStaticAtom* aInfo,
                            uint32_t aInfoCount);
 };

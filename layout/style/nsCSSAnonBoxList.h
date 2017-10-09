@@ -6,7 +6,7 @@
 /* atom list for CSS anonymous boxes */
 
 /*
- * This file contains the list of nsIAtoms and their values for CSS
+ * This file contains the list of nsAtoms and their values for CSS
  * pseudo-element-ish things used internally for anonymous boxes.  It is
  * designed to be used as inline input to nsCSSAnonBoxes.cpp *only* through the
  * magic of C preprocessing.  All entries must be enclosed in the macros

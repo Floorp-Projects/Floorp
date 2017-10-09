@@ -479,7 +479,7 @@ gfxPlatformFontList::UpdateFontList()
 }
 
 void
-gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
+gfxPlatformFontList::GetFontList(nsAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts)
 {
@@ -905,7 +905,7 @@ gfxPlatformFontList::ResolveGenericFontNames(
     gfxFontUtils::AppendPrefsFontList(
         NameListPref(generic, langGroupStr).get(), genericFamilies);
 
-    nsIAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
+    nsAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
     NS_ASSERTION(langGroup, "null lang group for pref lang");
 
     // lookup and add platform fonts uniquely
@@ -954,11 +954,11 @@ gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
 
 void
 gfxPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
-                                     nsIAtom* aLanguage,
+                                     nsAtom* aLanguage,
                                      nsTArray<gfxFontFamily*>& aFamilyList)
 {
     // map lang ==> langGroup
-    nsIAtom* langGroup = GetLangGroup(aLanguage);
+    nsAtom* langGroup = GetLangGroup(aLanguage);
 
     // langGroup ==> prefLang
     eFontPrefLang prefLang = GetFontPrefLangFor(langGroup);
@@ -972,10 +972,10 @@ gfxPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
     }
 }
 
-static nsIAtom* PrefLangToLangGroups(uint32_t aIndex)
+static nsAtom* PrefLangToLangGroups(uint32_t aIndex)
 {
     // static array here avoids static constructor
-    static nsIAtom* gPrefLangToLangGroups[] = {
+    static nsAtom* gPrefLangToLangGroups[] = {
         #define FONT_PREF_LANG(enum_id_, str_, atom_id_) nsGkAtoms::atom_id_
         #include "gfxFontPrefLangList.h"
         #undef FONT_PREF_LANG
@@ -1001,7 +1001,7 @@ gfxPlatformFontList::GetFontPrefLangFor(const char* aLang)
 }
 
 eFontPrefLang
-gfxPlatformFontList::GetFontPrefLangFor(nsIAtom *aLang)
+gfxPlatformFontList::GetFontPrefLangFor(nsAtom *aLang)
 {
     if (!aLang)
         return eFontPrefLang_Others;
@@ -1010,7 +1010,7 @@ gfxPlatformFontList::GetFontPrefLangFor(nsIAtom *aLang)
     return GetFontPrefLangFor(lang.get());
 }
 
-nsIAtom*
+nsAtom*
 gfxPlatformFontList::GetLangGroupForPrefLang(eFontPrefLang aLang)
 {
     // the special CJK set pref lang should be resolved into separate
@@ -1275,11 +1275,11 @@ gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
     }
 }
 
-nsIAtom*
-gfxPlatformFontList::GetLangGroup(nsIAtom* aLanguage)
+nsAtom*
+gfxPlatformFontList::GetLangGroup(nsAtom* aLanguage)
 {
     // map lang ==> langGroup
-    nsIAtom *langGroup = nullptr;
+    nsAtom *langGroup = nullptr;
     if (aLanguage) {
         langGroup = mLangService->GetLanguageGroup(aLanguage);
     }
@@ -1330,7 +1330,7 @@ gfxPlatformFontList::GetGenericName(FontFamilyType aGenericType)
 
 // mapping of moz lang groups ==> default lang
 struct MozLangGroupData {
-    nsIAtom* const& mozLangGroup;
+    nsAtom* const& mozLangGroup;
     const char *defaultLang;
 };
 
@@ -1359,7 +1359,7 @@ const MozLangGroupData MozLangGroups[] = {
 
 bool
 gfxPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
-                                       nsIAtom* aLangGroup,
+                                       nsAtom* aLangGroup,
                                        nsACString& aFcLang)
 {
     // Truncate at '.' or '@' from aOSLang, and convert '_' to '-'.
@@ -1387,12 +1387,12 @@ gfxPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
         ++pos;
     }
 
-    nsIAtom *atom = mLangService->LookupLanguage(aFcLang);
+    nsAtom *atom = mLangService->LookupLanguage(aFcLang);
     return atom == aLangGroup;
 }
 
 void
-gfxPlatformFontList::GetSampleLangForGroup(nsIAtom* aLanguage,
+gfxPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
                                              nsACString& aLangStr,
                                              bool aCheckEnvironment)
 {

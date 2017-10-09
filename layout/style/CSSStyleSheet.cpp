@@ -8,7 +8,7 @@
 
 #include "mozilla/CSSStyleSheet.h"
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"

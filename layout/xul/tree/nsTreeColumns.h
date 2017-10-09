@@ -107,7 +107,7 @@ protected:
   const nsAString& GetId() { return mId; }
 
 public:
-  nsIAtom* GetAtom() { return mAtom; }
+  nsAtom* GetAtom() { return mAtom; }
   int32_t GetIndex() { return mIndex; }
 
 protected:
@@ -137,7 +137,7 @@ private:
   nsTreeColumns* mColumns;
 
   nsString mId;
-  RefPtr<nsIAtom> mAtom;
+  RefPtr<nsAtom> mAtom;
 
   int32_t mIndex;
 

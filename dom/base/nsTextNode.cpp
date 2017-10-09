@@ -36,7 +36,7 @@ public:
 
   nsAttributeTextNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                       int32_t aNameSpaceID,
-                      nsIAtom* aAttrName) :
+                      nsAtom* aAttrName) :
     nsTextNode(aNodeInfo),
     mGrandparent(nullptr),
     mNameSpaceID(aNameSpaceID),
@@ -90,7 +90,7 @@ private:
   nsIContent* mGrandparent;
   // What attribute we're showing
   int32_t mNameSpaceID;
-  RefPtr<nsIAtom> mAttrName;
+  RefPtr<nsAtom> mAttrName;
 };
 
 nsTextNode::~nsTextNode()
@@ -207,7 +207,7 @@ nsTextNode::DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const
 
 nsresult
 NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
-                       int32_t aNameSpaceID, nsIAtom* aAttrName,
+                       int32_t aNameSpaceID, nsAtom* aAttrName,
                        nsIContent** aResult)
 {
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
@@ -270,7 +270,7 @@ void
 nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
                                       Element* aElement,
                                       int32_t aNameSpaceID,
-                                      nsIAtom* aAttribute,
+                                      nsAtom* aAttribute,
                                       int32_t aModType,
                                       const nsAttrValue* aOldValue)
 {

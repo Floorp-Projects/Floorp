@@ -11,7 +11,7 @@
 #include "nsStringFwd.h"
 #include "nscore.h"                     // for nsresult, NS_IMETHOD
 
-class nsIAtom;
+class nsAtom;
 class nsICommandParams;
 class nsISupports;
 
@@ -58,7 +58,7 @@ public:                                                 \
 class nsBaseStateUpdatingCommand : public nsBaseComposerCommand
 {
 public:
-  explicit nsBaseStateUpdatingCommand(nsIAtom* aTagName);
+  explicit nsBaseStateUpdatingCommand(nsAtom* aTagName);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -75,7 +75,7 @@ protected:
   virtual nsresult ToggleState(mozilla::HTMLEditor* aHTMLEditor) = 0;
 
 protected:
-  nsIAtom* mTagName;
+  nsAtom* mTagName;
 };
 
 
@@ -84,7 +84,7 @@ protected:
 class nsStyleUpdatingCommand final : public nsBaseStateUpdatingCommand
 {
 public:
-  explicit nsStyleUpdatingCommand(nsIAtom* aTagName);
+  explicit nsStyleUpdatingCommand(nsAtom* aTagName);
 
 protected:
 
@@ -100,7 +100,7 @@ protected:
 class nsInsertTagCommand : public nsBaseComposerCommand
 {
 public:
-  explicit nsInsertTagCommand(nsIAtom* aTagName);
+  explicit nsInsertTagCommand(nsAtom* aTagName);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -109,14 +109,14 @@ public:
 protected:
   virtual ~nsInsertTagCommand();
 
-  nsIAtom* mTagName;
+  nsAtom* mTagName;
 };
 
 
 class nsListCommand final : public nsBaseStateUpdatingCommand
 {
 public:
-  explicit nsListCommand(nsIAtom* aTagName);
+  explicit nsListCommand(nsAtom* aTagName);
 
 protected:
 
@@ -131,7 +131,7 @@ protected:
 class nsListItemCommand final : public nsBaseStateUpdatingCommand
 {
 public:
-  explicit nsListItemCommand(nsIAtom* aTagName);
+  explicit nsListItemCommand(nsAtom* aTagName);
 
 protected:
 

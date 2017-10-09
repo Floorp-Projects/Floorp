@@ -33,7 +33,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLDataListElement)
 
 bool
 HTMLDataListElement::MatchOptions(Element* aElement, int32_t aNamespaceID,
-                                  nsIAtom* aAtom, void* aData)
+                                  nsAtom* aAtom, void* aData)
 {
   return aElement->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML) &&
          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);

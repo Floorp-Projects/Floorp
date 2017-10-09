@@ -12,7 +12,7 @@
 #include "nsISupportsImpl.h"
 #include "nscore.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIDOMNode;
 class nsIDOMRange;
 class nsINode;
@@ -68,11 +68,11 @@ protected:
   nsCOMPtr<nsIContentIterator> mIterator;
   nsCOMPtr<nsIContentIterator> mPreIterator;
 
-  RefPtr<nsIAtom> mBlockQuoteAtom;
-  RefPtr<nsIAtom> mScriptAtom;
-  RefPtr<nsIAtom> mTextAreaAtom;
-  RefPtr<nsIAtom> mSelectAreaAtom;
-  RefPtr<nsIAtom> mMapAtom;
+  RefPtr<nsAtom> mBlockQuoteAtom;
+  RefPtr<nsAtom> mScriptAtom;
+  RefPtr<nsAtom> mTextAreaAtom;
+  RefPtr<nsAtom> mSelectAreaAtom;
+  RefPtr<nsAtom> mMapAtom;
 
   nsCOMPtr<nsITextServicesFilter> mFilter;
   RefPtr<nsRange>               mRange;

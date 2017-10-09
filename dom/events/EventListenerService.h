@@ -33,7 +33,7 @@ class EventListenerChange final : public nsIEventListenerChange
 public:
   explicit EventListenerChange(dom::EventTarget* aTarget);
 
-  void AddChangedListenerName(nsIAtom* aEventName);
+  void AddChangedListenerName(nsAtom* aEventName);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTLISTENERCHANGE
@@ -41,7 +41,7 @@ public:
 protected:
   virtual ~EventListenerChange();
   nsCOMPtr<dom::EventTarget> mTarget;
-  nsTArray<RefPtr<nsIAtom>> mChangedListenerNames;
+  nsTArray<RefPtr<nsAtom>> mChangedListenerNames;
 };
 
 class EventListenerInfo final : public nsIEventListenerInfo
@@ -88,7 +88,7 @@ public:
   NS_DECL_NSIEVENTLISTENERSERVICE
 
   static void NotifyAboutMainThreadListenerChange(dom::EventTarget* aTarget,
-                                                  nsIAtom* aName)
+                                                  nsAtom* aName)
   {
     if (sInstance) {
       sInstance->NotifyAboutMainThreadListenerChangeInternal(aTarget, aName);
@@ -98,7 +98,7 @@ public:
   void NotifyPendingChanges();
 private:
   void NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget,
-                                                   nsIAtom* aName);
+                                                   nsAtom* aName);
   nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>> mChangeListeners;
   nsCOMPtr<nsIMutableArray> mPendingListenerChanges;
   nsDataHashtable<nsISupportsHashKey, RefPtr<EventListenerChange>> mPendingListenerChangesSet;

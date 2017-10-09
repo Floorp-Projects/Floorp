@@ -141,7 +141,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsImageBoxFrame)
 
 nsresult
 nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   int32_t aModType)
 {
   nsresult rv = nsLeafBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
