@@ -82,7 +82,7 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  * @throws {*}
  *     If <var>func</var> throws, its error is propagated.
  */
-function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
+function PollPromise(func, timeout = 2000, interval = 10) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   return new Promise((resolve, reject) => {

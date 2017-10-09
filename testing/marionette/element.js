@@ -238,9 +238,8 @@ element.Store = class {
  *     element is not found.
  */
 element.find = function(container, strategy, selector, opts = {}) {
-  let all = !!opts.all;
-  let timeout = opts.timeout || 0;
-  let startNode = opts.startNode;
+  opts.all = !!opts.all;
+  opts.timeout = opts.timeout || 0;
 
   let searchFn;
   if (opts.all) {
@@ -251,14 +250,13 @@ element.find = function(container, strategy, selector, opts = {}) {
 
   return new Promise((resolve, reject) => {
     let findElements = new PollPromise((resolve, reject) => {
-      let res = find_(container, strategy, selector, searchFn,
-          {all, startNode});
+      let res = find_(container, strategy, selector, searchFn, opts);
       if (res.length > 0) {
         resolve(Array.from(res));
       } else {
         reject([]);
       }
-    }, {timeout});
+    }, opts.timeout);
 
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
@@ -286,11 +284,13 @@ element.find = function(container, strategy, selector, opts = {}) {
   });
 };
 
-function find_(container, strategy, selector, searchFn,
-    {startNode = null, all = false} = {}) {
+function find_(container, strategy, selector, searchFn, opts) {
   let rootNode = container.shadowRoot || container.frame.document;
+  let startNode;
 
-  if (!startNode) {
+  if (opts.startNode) {
+    startNode = opts.startNode;
+  } else {
     switch (strategy) {
       // For anonymous nodes the start node needs to be of type
       // DOMElement, which will refer to :root in case of a DOMDocument.
@@ -315,7 +315,7 @@ function find_(container, strategy, selector, searchFn,
   }
 
   if (res) {
-    if (all) {
+    if (opts.all) {
       return res;
     }
     return [res];
