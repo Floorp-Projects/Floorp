@@ -316,8 +316,7 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
     mJSChannels[i] = array;
   }
 
-  mSharedChannels.mBuffer = nullptr;
-  mSharedChannels.mChannelData.Clear();
+  mSharedChannels.SetNull(Length());
 
   return true;
 }
