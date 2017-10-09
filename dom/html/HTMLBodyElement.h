@@ -32,6 +32,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLBodyElement, body);
+
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLBodyElement.
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the shim */
@@ -109,6 +111,10 @@ public:
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
   void GetBackground(DOMString& aBackground)
+  {
+    GetHTMLAttr(nsGkAtoms::background, aBackground);
+  }
+  void GetBackground(nsAString& aBackground)
   {
     GetHTMLAttr(nsGkAtoms::background, aBackground);
   }

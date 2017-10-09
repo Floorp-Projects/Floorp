@@ -165,7 +165,6 @@ public:
     NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
-    NS_IMETHOD ForceIntercepted(uint64_t aInterceptionID) override;
     NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value) override;
@@ -202,27 +201,6 @@ public:
 public: /* internal necko use only */
 
     using InitLocalBlockListCallback = std::function<void(bool)>;
-
-    void InternalSetUploadStream(nsIInputStream *uploadStream)
-      { mUploadStream = uploadStream; }
-    void SetUploadStreamHasHeaders(bool hasHeaders)
-      { mUploadStreamHasHeaders = hasHeaders; }
-
-    MOZ_MUST_USE nsresult
-    SetReferrerWithPolicyInternal(nsIURI *referrer, uint32_t referrerPolicy) {
-        nsAutoCString spec;
-        nsresult rv = referrer->GetAsciiSpec(spec);
-        if (NS_FAILED(rv)) return rv;
-        mReferrer = referrer;
-        mReferrerPolicy = referrerPolicy;
-        rv = mRequestHead.SetHeader(nsHttp::Referer, spec);
-        return rv;
-    }
-
-    MOZ_MUST_USE nsresult SetTopWindowURI(nsIURI* aTopWindowURI) {
-        mTopWindowURI = aTopWindowURI;
-        return NS_OK;
-    }
 
     uint32_t GetRequestTime() const
     {
@@ -285,7 +263,6 @@ public: /* internal necko use only */
       uint32_t mKeep : 2;
     };
 
-    void MarkIntercepted();
     NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
     bool AwaitingCacheCallbacks();
     void SetCouldBeSynthesized();
@@ -520,6 +497,10 @@ private:
 
     already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
+    // Start an internal redirect to a new InterceptedHttpChannel which will
+    // resolve in firing a ServiceWorker FetchEvent.
+    MOZ_MUST_USE nsresult RedirectToInterceptedChannel();
+
 private:
     // this section is for main-thread-only object
     // all the references need to be proxy released on main thread.
@@ -574,20 +555,6 @@ private:
     // Total time the channel spent suspended. This value is reported to
     // telemetry in nsHttpChannel::OnStartRequest().
     uint32_t                          mSuspendTotalTime;
-
-    // States of channel interception
-    enum {
-        DO_NOT_INTERCEPT,  // no interception will occur
-        MAYBE_INTERCEPT,   // interception in progress, but can be cancelled
-        INTERCEPTED,       // a synthesized response has been provided
-    } mInterceptCache;
-    // ID of this channel for the interception purposes. Unique unless this
-    // channel is replacing an intercepted one via an redirection.
-    uint64_t mInterceptionID;
-
-    bool PossiblyIntercepted() {
-        return mInterceptCache != DO_NOT_INTERCEPT;
-    }
 
     // If the channel is associated with a cache, and the URI matched
     // a fallback namespace, this will hold the key for the fallback

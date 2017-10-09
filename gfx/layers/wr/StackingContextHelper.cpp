@@ -20,15 +20,12 @@ StackingContextHelper::StackingContextHelper()
 
 StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
                                              wr::DisplayListBuilder& aBuilder,
-                                             nsDisplayListBuilder* aDisplayListBuilder,
-                                             nsDisplayItem* aItem,
-                                             nsDisplayList* aDisplayList,
+                                             const nsTArray<wr::WrFilterOp>& aFilters,
                                              const gfx::Matrix4x4* aBoundTransform,
                                              uint64_t aAnimationsId,
                                              float* aOpacityPtr,
                                              gfx::Matrix4x4* aTransformPtr,
                                              gfx::Matrix4x4* aPerspectivePtr,
-                                             const nsTArray<wr::WrFilterOp>& aFilters,
                                              const gfx::CompositionOp& aMixBlendMode,
                                              bool aBackfaceVisible)
   : mBuilder(&aBuilder)

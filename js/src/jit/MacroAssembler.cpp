@@ -1655,6 +1655,22 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 }
 
 void
+MacroAssembler::assertRectifierFrameParentType(Register frameType)
+{
+#ifdef DEBUG
+    {
+        // Check the possible previous frame types here.
+        Label checkOk;
+        branch32(Assembler::Equal, frameType, Imm32(JitFrame_IonJS), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(JitFrame_BaselineStub), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(JitFrame_WasmToJSJit), &checkOk);
+        assumeUnreachable("Unrecognized frame type preceding RectifierFrame.");
+        bind(&checkOk);
+    }
+#endif
+}
+
+void
 MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, Label* failure)
 {
     loadPtr(Address(script, JSScript::offsetOfBaselineOrIonRaw()), dest);

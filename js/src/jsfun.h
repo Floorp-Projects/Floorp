@@ -687,20 +687,41 @@ AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp);
 
+// If enclosingEnv is null, the function will have a null environment()
+// (yes, null, not the global).  In all cases, the global will be used as the
+// parent.
+
+extern JSFunction*
+NewFunctionWithProto(JSContext* cx, JSNative native, unsigned nargs,
+                     JSFunction::Flags flags, HandleObject enclosingEnv, HandleAtom atom,
+                     HandleObject proto, gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
+                     NewObjectKind newKind = GenericObject);
+
 // Allocate a new function backed by a JSNative.  Note that by default this
 // creates a singleton object.
-extern JSFunction*
+inline JSFunction*
 NewNativeFunction(JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                   gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                  NewObjectKind newKind = SingletonObject);
+                  NewObjectKind newKind = SingletonObject)
+{
+    MOZ_ASSERT(native);
+    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN,
+                                nullptr, atom, nullptr, allocKind, newKind);
+}
 
 // Allocate a new constructor backed by a JSNative.  Note that by default this
 // creates a singleton object.
-extern JSFunction*
+inline JSFunction*
 NewNativeConstructor(JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                      gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
                      NewObjectKind newKind = SingletonObject,
-                     JSFunction::Flags flags = JSFunction::NATIVE_CTOR);
+                     JSFunction::Flags flags = JSFunction::NATIVE_CTOR)
+{
+    MOZ_ASSERT(native);
+    MOZ_ASSERT(flags & JSFunction::NATIVE_CTOR);
+    return NewFunctionWithProto(cx, native, nargs, flags, nullptr, atom,
+                                nullptr, allocKind, newKind);
+}
 
 // Allocate a new scripted function.  If enclosingEnv is null, the
 // global will be used.  In all cases the parent of the resulting object will be
@@ -711,25 +732,6 @@ NewScriptedFunction(JSContext* cx, unsigned nargs, JSFunction::Flags flags,
                     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
                     NewObjectKind newKind = GenericObject,
                     HandleObject enclosingEnv = nullptr);
-
-// By default, if proto is nullptr, Function.prototype is used instead.i
-// If protoHandling is NewFunctionExactProto, and proto is nullptr, the created
-// function will use nullptr as its [[Prototype]] instead. If
-// enclosingEnv is null, the function will have a null environment()
-// (yes, null, not the global).  In all cases, the global will be used as the
-// parent.
-
-enum NewFunctionProtoHandling {
-    NewFunctionClassProto,
-    NewFunctionGivenProto
-};
-extern JSFunction*
-NewFunctionWithProto(JSContext* cx, JSNative native, unsigned nargs,
-                     JSFunction::Flags flags, HandleObject enclosingEnv, HandleAtom atom,
-                     HandleObject proto, gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                     NewObjectKind newKind = GenericObject,
-                     NewFunctionProtoHandling protoHandling = NewFunctionClassProto);
-
 extern JSAtom*
 IdToFunctionName(JSContext* cx, HandleId id,
                  FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
