@@ -62,7 +62,6 @@ UnshareUserNamespace()
   uid_t uid = getuid();
   gid_t gid = getgid();
   char buf[80];
-  size_t len;
 
   if (syscall(__NR_unshare, CLONE_NEWUSER) != 0) {
     return false;
@@ -84,17 +83,21 @@ UnshareUserNamespace()
   // current thread.  However, CLONE_NEWUSER can be unshared only in a
   // single-threaded process, so those are equivalent if we reach this
   // point.
-  len = size_t(SprintfLiteral(buf, "%u %u 1\n", uid, uid));
-  MOZ_ASSERT(len < sizeof(buf));
-  if (!WriteStringToFile("/proc/self/uid_map", buf, len)) {
+  int len = SprintfLiteral(buf, "%u %u 1\n", uid, uid);
+  if (len >= int(sizeof(buf)) || len < 0) {
+    return false;
+  }
+  if (!WriteStringToFile("/proc/self/uid_map", buf, size_t(len))) {
     MOZ_CRASH("Failed to write /proc/self/uid_map");
   }
 
   Unused << WriteStringToFile("/proc/self/setgroups", "deny", 4);
 
-  len = size_t(SprintfLiteral(buf, "%u %u 1\n", gid, gid));
-  MOZ_ASSERT(len < sizeof(buf));
-  if (!WriteStringToFile("/proc/self/gid_map", buf, len)) {
+  len = SprintfLiteral(buf, "%u %u 1\n", gid, gid);
+  if (len >= int(sizeof(buf)) || len < 0) {
+    return false;
+  }
+  if (!WriteStringToFile("/proc/self/gid_map", buf, size_t(len))) {
     MOZ_CRASH("Failed to write /proc/self/gid_map");
   }
   return true;

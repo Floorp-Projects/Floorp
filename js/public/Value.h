@@ -1428,14 +1428,25 @@ auto
 DispatchTyped(F f, const JS::Value& val, Args&&... args)
   -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
 {
-    if (val.isString())
-        return f(val.toString(), mozilla::Forward<Args>(args)...);
-    if (val.isObject())
-        return f(&val.toObject(), mozilla::Forward<Args>(args)...);
-    if (val.isSymbol())
-        return f(val.toSymbol(), mozilla::Forward<Args>(args)...);
-    if (MOZ_UNLIKELY(val.isPrivateGCThing()))
+    if (val.isString()) {
+        JSString* str = val.toString();
+        MOZ_ASSERT(gc::IsCellPointerValid(str));
+        return f(str, mozilla::Forward<Args>(args)...);
+    }
+    if (val.isObject()) {
+        JSObject* obj = &val.toObject();
+        MOZ_ASSERT(gc::IsCellPointerValid(obj));
+        return f(obj, mozilla::Forward<Args>(args)...);
+    }
+    if (val.isSymbol()) {
+        JS::Symbol* sym = val.toSymbol();
+        MOZ_ASSERT(gc::IsCellPointerValid(sym));
+        return f(sym, mozilla::Forward<Args>(args)...);
+    }
+    if (MOZ_UNLIKELY(val.isPrivateGCThing())) {
+        MOZ_ASSERT(gc::IsCellPointerValid(val.toGCThing()));
         return DispatchTyped(f, val.toGCCellPtr(), mozilla::Forward<Args>(args)...);
+    }
     MOZ_ASSERT(!val.isGCThing());
     return F::defaultValue(val);
 }
