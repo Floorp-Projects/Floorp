@@ -3604,27 +3604,6 @@ TabParent::RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TabParent::RecvShowCanvasPermissionPrompt(const nsCString& aFirstPartyURI)
-{
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
-  if (!browser) {
-    // If the tab is being closed, the browser may not be available.
-    // In this case we can ignore the request.
-    return IPC_OK();
-  }
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (!os) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsresult rv = os->NotifyObservers(browser, "canvas-permissions-prompt",
-                                    NS_ConvertUTF8toUTF16(aFirstPartyURI).get());
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 void
 TabParent::LiveResizeStarted()
 {
