@@ -47,10 +47,10 @@ dictionary MakePublicKeyCredentialOptions {
     required PublicKeyCredentialUserEntity user;
 
     required BufferSource                            challenge;
-    required sequence<PublicKeyCredentialParameters> parameters;
+    required sequence<PublicKeyCredentialParameters> pubKeyCredParams;
 
     unsigned long                                timeout;
-    sequence<PublicKeyCredentialDescriptor>      excludeList = [];
+    sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     AuthenticatorSelectionCriteria               authenticatorSelection;
     // Extensions are not supported yet.
     // AuthenticationExtensions                  extensions; // Add in Bug 1406458
@@ -80,7 +80,7 @@ dictionary PublicKeyCredentialRequestOptions {
     required BufferSource                challenge;
     unsigned long                        timeout;
     USVString                            rpId;
-    sequence<PublicKeyCredentialDescriptor> allowList = [];
+    sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
     // Extensions are not supported yet.
     // AuthenticationExtensions             extensions; // Add in Bug 1406458
 };
@@ -90,8 +90,8 @@ typedef record<DOMString, any>       AuthenticationExtensions;
 dictionary CollectedClientData {
     required DOMString           challenge;
     required DOMString           origin;
-    required DOMString           hashAlg;
-    DOMString                    tokenBinding;
+    required DOMString           hashAlgorithm;
+    DOMString                    tokenBindingId;
     // Extensions are not supported yet.
     // AuthenticationExtensions     clientExtensions; // Add in Bug 1406458
     // AuthenticationExtensions     authenticatorExtensions; // Add in Bug 1406458
@@ -104,7 +104,7 @@ enum PublicKeyCredentialType {
 dictionary PublicKeyCredentialDescriptor {
     required PublicKeyCredentialType type;
     required BufferSource id;
-    sequence<WebAuthnTransport>   transports;
+    sequence<AuthenticatorTransport>   transports;
 };
 
 typedef (boolean or DOMString) WebAuthnAlgorithmID; // Switch to COSE in Bug 1381190
@@ -116,8 +116,7 @@ interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     readonly attribute DOMString                     userId;
 };
 
-// Renamed from "Transport" to avoid a collision with U2F
-enum WebAuthnTransport {
+enum AuthenticatorTransport {
     "usb",
     "nfc",
     "ble"
