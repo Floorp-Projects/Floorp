@@ -177,7 +177,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "8653d93fb625"
+        "revision": "fef3ff6989bd"
     }, 
     "de": {
         "platforms": [
@@ -287,7 +287,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "105fd676cef9"
+        "revision": "e2df46e81a53"
     }, 
     "eu": {
         "platforms": [
