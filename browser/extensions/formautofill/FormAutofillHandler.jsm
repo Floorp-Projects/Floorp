@@ -351,11 +351,48 @@ FormAutofillHandler.prototype = {
     }
   },
 
+  _creditCardExpDateTransformer(profile) {
+    if (!profile["cc-exp"]) {
+      return;
+    }
+
+    let detail = this.getFieldDetailByName("cc-exp");
+    if (!detail) {
+      return;
+    }
+
+    let element = detail.elementWeakRef.get();
+    if (element.tagName != "INPUT" || !element.placeholder) {
+      return;
+    }
+
+    let result,
+      ccExpMonth = profile["cc-exp-month"],
+      ccExpYear = profile["cc-exp-year"],
+      placeholder = element.placeholder;
+
+    result = /(?:[^m]|\b)(m{1,2})\s*([-/\\]*)\s*(y{2,4})(?!y)/i.exec(placeholder);
+    if (result) {
+      profile["cc-exp"] = String(ccExpMonth).padStart(result[1].length, "0") +
+                          result[2] +
+                          String(ccExpYear).substr(-1 * result[3].length);
+      return;
+    }
+
+    result = /(?:[^y]|\b)(y{2,4})\s*([-/\\]*)\s*(m{1,2})(?!m)/i.exec(placeholder);
+    if (result) {
+      profile["cc-exp"] = String(ccExpYear).substr(-1 * result[1].length) +
+                          result[2] +
+                          String(ccExpMonth).padStart(result[3].length, "0");
+    }
+  },
+
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this._addressTransformer(profile);
       this._telTransformer(profile);
       this._matchSelectOptions(profile);
+      this._creditCardExpDateTransformer(profile);
     }
     return originalProfiles;
   },
