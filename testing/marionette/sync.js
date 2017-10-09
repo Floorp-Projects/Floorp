@@ -12,7 +12,14 @@ const {
 } = Cu.import("chrome://marionette/content/error.js", {});
 
 /* exported TimedPromise */
-this.EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
+this.EXPORTED_SYMBOLS = ["wait", "TimedPromise"];
+
+/**
+ * Poll-waiting utilities.
+ *
+ * @namespace
+ */
+this.wait = {};
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
@@ -55,7 +62,7 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  * Usage:
  *
  * <pre><code>
- *     let els = new PollPromise((resolve, reject) => {
+ *     let els = wait.until((resolve, reject) => {
  *       let res = document.querySelectorAll("p");
  *       if (res.length > 0) {
  *         resolve(Array.from(res));
@@ -82,7 +89,7 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  * @throws {*}
  *     If <var>func</var> throws, its error is propagated.
  */
-function PollPromise(func, timeout = 2000, interval = 10) {
+wait.until = function(func, timeout = 2000, interval = 10) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   return new Promise((resolve, reject) => {
@@ -116,7 +123,7 @@ function PollPromise(func, timeout = 2000, interval = 10) {
     timer.cancel();
     throw err;
   });
-}
+};
 
 /**
  * The <code>TimedPromise</code> object represents the timed, eventual
