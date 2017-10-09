@@ -27,11 +27,13 @@ namespace mozilla {
 
 #undef LOG
 #undef LOGW
+#undef LOGE
 
 LazyLogModule gAudioStreamLog("AudioStream");
 // For simple logs
 #define LOG(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Debug, ("%p " x, this, ##__VA_ARGS__))
 #define LOGW(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Warning, ("%p " x, this, ##__VA_ARGS__))
+#define LOGE(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString("%p " x, this, ##__VA_ARGS__).get(), nullptr, __FILE__, __LINE__)
 
 /**
  * Keep a list of frames sent to the audio engine in each DataCallback along
@@ -352,7 +354,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate)
 
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
-    NS_WARNING("Can't get cubeb context!");
+    LOGE("Can't get cubeb context!");
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
@@ -381,7 +383,7 @@ AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
     mCubebStream.reset(stream);
     CubebUtils::ReportCubebBackendUsed();
   } else {
-    NS_WARNING(nsPrintfCString("AudioStream::OpenCubeb() %p failed to init cubeb", this).get());
+    LOGE("OpenCubeb() failed to init cubeb");
     CubebUtils::ReportCubebStreamInitFailure(aIsFirst);
     return NS_ERROR_FAILURE;
   }
@@ -401,7 +403,7 @@ AudioStream::SetVolume(double aVolume)
   MOZ_ASSERT(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
   if (cubeb_stream_set_volume(mCubebStream.get(), aVolume * CubebUtils::GetVolumeScale()) != CUBEB_OK) {
-    NS_WARNING("Could not change volume on cubeb stream.");
+    LOGE("Could not change volume on cubeb stream.");
   }
 }
 
@@ -685,7 +687,7 @@ AudioStream::StateCallback(cubeb_state aState)
     mState = DRAINED;
     mDataSource.Drained();
   } else if (aState == CUBEB_STATE_ERROR) {
-    LOG("StateCallback() state %d cubeb error", mState);
+    LOGE("StateCallback() state %d cubeb error", mState);
     mState = ERRORED;
   }
 }
