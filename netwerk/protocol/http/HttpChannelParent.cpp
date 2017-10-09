@@ -113,7 +113,7 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
   // If this is an intercepted channel, we need to make sure that any resources are
   // cleaned up to avoid leaks.
   if (mParentListener) {
-    mParentListener->ClearInterceptedChannel();
+    mParentListener->ClearInterceptedChannel(this);
   }
 
   CleanupBackgroundChannel();
@@ -1806,8 +1806,40 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
        "newChannel=%p callback=%p]\n", this, registrarId, newChannel,
        callback));
 
-  if (mIPCClosed)
+  if (mIPCClosed) {
     return NS_BINDING_ABORTED;
+  }
+
+  // If this is an internal redirect for service worker interception, then
+  // hide it from the child process.  The original e10s interception code
+  // was not designed with this in mind and its not necessary to replace
+  // the HttpChannelChild/Parent objects in this case.
+  if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+    nsCOMPtr<nsIInterceptedChannel> newIntercepted = do_QueryInterface(newChannel);
+    if (newIntercepted) {
+#ifdef DEBUG
+      // Note, InterceptedHttpChannel can also do an internal redirect
+      // for opaque response interception.  This should not actually
+      // happen here in e10s mode.
+      nsCOMPtr<nsIInterceptedChannel> oldIntercepted =
+        do_QueryInterface(static_cast<nsIChannel*>(mChannel.get()));
+      MOZ_ASSERT(!oldIntercepted);
+#endif
+
+      // Re-link the HttpChannelParent to the new InterceptedHttpChannel.
+      nsCOMPtr<nsIChannel> linkedChannel;
+      rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(linkedChannel));
+      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_ASSERT(linkedChannel == newChannel);
+
+      // We immediately store the InterceptedHttpChannel as our nested
+      // mChannel.  None of the redirect IPC messaging takes place.
+      mChannel = do_QueryObject(newChannel);
+
+      callback->OnRedirectVerifyCallback(NS_OK);
+      return NS_OK;
+    }
+  }
 
   // Sending down the original URI, because that is the URI we have
   // to construct the channel from - this is the URI we've been actually
@@ -1866,6 +1898,13 @@ HttpChannelParent::CompleteRedirect(bool succeeded)
 {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n",
        this, succeeded));
+
+  // If this was an internal redirect for a service worker interception then
+  // we will not have a redirecting channel here.  Hide this redirect from
+  // the child.
+  if (!mRedirectChannel) {
+    return NS_OK;
+  }
 
   if (succeeded && !mIPCClosed) {
     // TODO: check return value: assume child dead if failed
