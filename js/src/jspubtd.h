@@ -210,11 +210,90 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(AutoEnterCycleCollection)
 
 class RootingContext;
 
+// Our instantiations of Rooted<void*> and PersistentRooted<void*> require an
+// instantiation of MapTypeToRootKind.
+template <>
+struct MapTypeToRootKind<void*> {
+    static const RootKind kind = RootKind::Traceable;
+};
+
+using RootedListHeads = mozilla::EnumeratedArray<RootKind, RootKind::Limit,
+                                                 Rooted<void*>*>;
+
+/*
+ * This list enumerates the different types of conceptual stacks we have in
+ * SpiderMonkey. In reality, they all share the C stack, but we allow different
+ * stack limits depending on the type of code running.
+ */
+enum StackKind
+{
+    StackForSystemCode,      // C++, such as the GC, running on behalf of the VM.
+    StackForTrustedScript,   // Script running with trusted principals.
+    StackForUntrustedScript, // Script running with untrusted principals.
+    StackKindCount
+};
+
+class JS_PUBLIC_API(AutoGCRooter);
+
+// Superclass of JSContext which can be used for rooting data in use by the
+// current thread but that does not provide all the functions of a JSContext.
+class RootingContext
+{
+    // Stack GC roots for Rooted GC heap pointers.
+    RootedListHeads stackRoots_;
+    template <typename T> friend class JS::Rooted;
+
+    // Stack GC roots for AutoFooRooter classes.
+    JS::AutoGCRooter* autoGCRooters_;
+    friend class JS::AutoGCRooter;
+
+  public:
+    RootingContext();
+
+    void traceStackRoots(JSTracer* trc);
+    void checkNoGCRooters();
+
+  protected:
+    // The remaining members in this class should only be accessed through
+    // JSContext pointers. They are unrelated to rooting and are in place so
+    // that inlined API functions can directly access the data.
+
+    /* The current compartment. */
+    JSCompartment*      compartment_;
+
+    /* The current zone. */
+    JS::Zone*           zone_;
+
+  public:
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t nativeStackLimit[StackKindCount];
+
+    static const RootingContext* get(const JSContext* cx) {
+        return reinterpret_cast<const RootingContext*>(cx);
+    }
+
+    static RootingContext* get(JSContext* cx) {
+        return reinterpret_cast<RootingContext*>(cx);
+    }
+
+    friend JSCompartment* js::GetContextCompartment(const JSContext* cx);
+    friend JS::Zone* js::GetContextZone(const JSContext* cx);
+};
+
 class JS_PUBLIC_API(AutoGCRooter)
 {
   public:
-    AutoGCRooter(JSContext* cx, ptrdiff_t tag);
-    AutoGCRooter(RootingContext* cx, ptrdiff_t tag);
+    AutoGCRooter(JSContext* cx, ptrdiff_t tag)
+      : AutoGCRooter(JS::RootingContext::get(cx), tag)
+    {}
+    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag)
+      : down(cx->autoGCRooters_),
+        tag_(tag),
+        stackTop(&cx->autoGCRooters_)
+    {
+        MOZ_ASSERT(this != *stackTop);
+        *stackTop = this;
+    }
 
     ~AutoGCRooter() {
         MOZ_ASSERT(this == *stackTop);
@@ -260,74 +339,6 @@ class JS_PUBLIC_API(AutoGCRooter)
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter& ida) = delete;
     void operator=(AutoGCRooter& ida) = delete;
-};
-
-// Our instantiations of Rooted<void*> and PersistentRooted<void*> require an
-// instantiation of MapTypeToRootKind.
-template <>
-struct MapTypeToRootKind<void*> {
-    static const RootKind kind = RootKind::Traceable;
-};
-
-using RootedListHeads = mozilla::EnumeratedArray<RootKind, RootKind::Limit,
-                                                 Rooted<void*>*>;
-
-/*
- * This list enumerates the different types of conceptual stacks we have in
- * SpiderMonkey. In reality, they all share the C stack, but we allow different
- * stack limits depending on the type of code running.
- */
-enum StackKind
-{
-    StackForSystemCode,      // C++, such as the GC, running on behalf of the VM.
-    StackForTrustedScript,   // Script running with trusted principals.
-    StackForUntrustedScript, // Script running with untrusted principals.
-    StackKindCount
-};
-
-// Superclass of JSContext which can be used for rooting data in use by the
-// current thread but that does not provide all the functions of a JSContext.
-class RootingContext
-{
-    // Stack GC roots for Rooted GC heap pointers.
-    RootedListHeads stackRoots_;
-    template <typename T> friend class JS::Rooted;
-
-    // Stack GC roots for AutoFooRooter classes.
-    JS::AutoGCRooter* autoGCRooters_;
-    friend class JS::AutoGCRooter;
-
-  public:
-    RootingContext();
-
-    void traceStackRoots(JSTracer* trc);
-    void checkNoGCRooters();
-
-  protected:
-    // The remaining members in this class should only be accessed through
-    // JSContext pointers. They are unrelated to rooting and are in place so
-    // that inlined API functions can directly access the data.
-
-    /* The current compartment. */
-    JSCompartment*      compartment_;
-
-    /* The current zone. */
-    JS::Zone*           zone_;
-
-  public:
-    /* Limit pointer for checking native stack consumption. */
-    uintptr_t nativeStackLimit[StackKindCount];
-
-    static const RootingContext* get(const JSContext* cx) {
-        return reinterpret_cast<const RootingContext*>(cx);
-    }
-
-    static RootingContext* get(JSContext* cx) {
-        return reinterpret_cast<RootingContext*>(cx);
-    }
-
-    friend JSCompartment* js::GetContextCompartment(const JSContext* cx);
-    friend JS::Zone* js::GetContextZone(const JSContext* cx);
 };
 
 } /* namespace JS */

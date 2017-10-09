@@ -1580,7 +1580,7 @@ CodeGeneratorMIPSShared::visitCopySignF(LCopySignF* ins)
     masm.moveFromFloat32(rhs, rhsi);
 
     // Combine.
-    masm.as_ins(rhsi, lhsi, 0, 31);
+    masm.ma_ins(rhsi, lhsi, 0, 31);
 
     masm.moveToFloat32(rhsi, output);
 }
@@ -1600,7 +1600,7 @@ CodeGeneratorMIPSShared::visitCopySignD(LCopySignD* ins)
     masm.moveFromDoubleHi(rhs, rhsi);
 
     // Combine.
-    masm.as_ins(rhsi, lhsi, 0, 31);
+    masm.ma_ins(rhsi, lhsi, 0, 31);
 
     masm.moveToDoubleHi(rhsi, output);
 }

@@ -25,4 +25,7 @@ add_task(async function test_remove_history() {
   await BrowserTestUtils.waitForCondition(
     () => !gURLBar.popup.richlistbox.children.some(c => !c.collapsed && c.getAttribute("ac-value") == TEST_URL),
     "Waiting for the result to disappear");
+
+  gURLBar.popup.hidePopup();
+  await promisePopupHidden(gURLBar.popup);
 });

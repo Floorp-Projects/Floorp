@@ -283,7 +283,7 @@ struct InternalBarrierMethods<Value>
         DispatchTyped(PreBarrierFunctor<Value>(), v);
     }
 
-    static void postBarrier(Value* vp, const Value& prev, const Value& next) {
+    static MOZ_ALWAYS_INLINE void postBarrier(Value* vp, const Value& prev, const Value& next) {
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         MOZ_ASSERT(vp);
 
@@ -318,8 +318,11 @@ struct InternalBarrierMethods<jsid>
 };
 
 // Base class of all barrier types.
+//
+// This is marked non-memmovable since post barriers added by derived classes
+// can add pointers to class instances to the store buffer.
 template <typename T>
-class BarrieredBase
+class MOZ_NON_MEMMOVABLE BarrieredBase
 {
   protected:
     // BarrieredBase is not directly instantiable.
@@ -369,7 +372,7 @@ class WriteBarrieredBase : public BarrieredBase<T>,
 
   protected:
     void pre() { InternalBarrierMethods<T>::preBarrier(this->value); }
-    void post(const T& prev, const T& next) {
+    MOZ_ALWAYS_INLINE void post(const T& prev, const T& next) {
         InternalBarrierMethods<T>::postBarrier(&this->value, prev, next);
     }
 };

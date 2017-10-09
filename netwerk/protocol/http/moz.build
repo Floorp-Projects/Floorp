@@ -77,6 +77,7 @@ UNIFIED_SOURCES += [
     'HttpChannelParentListener.cpp',
     'HttpInfo.cpp',
     'InterceptedChannel.cpp',
+    'InterceptedHttpChannel.cpp',
     'nsCORSListenerProxy.cpp',
     'nsHttp.cpp',
     'nsHttpActivityDistributor.cpp',

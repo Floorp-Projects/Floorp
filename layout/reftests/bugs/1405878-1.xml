@@ -1,0 +1,6 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <select>
+    <script>document.documentElement.offsetHeight</script>
+    <option>Hello there</option>
+  </select>
+</html>

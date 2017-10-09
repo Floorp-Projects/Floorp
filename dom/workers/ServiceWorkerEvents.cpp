@@ -115,7 +115,7 @@ CancelChannelRunnable::Run()
   mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
   mChannel->SaveTimeStamps();
 
-  mChannel->Cancel(mStatus);
+  mChannel->CancelInterception(mStatus);
   mRegistration->MaybeScheduleUpdate();
   return NS_OK;
 }
@@ -199,7 +199,7 @@ public:
     nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
 
     if (!loadInfo || !CSPPermitsResponse(loadInfo)) {
-      mChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+      mChannel->CancelInterception(NS_ERROR_CONTENT_BLOCKED);
       return NS_OK;
     }
 
@@ -213,14 +213,14 @@ public:
     }
     rv = mChannel->SetChannelInfo(&channelInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
     }
 
     rv = mChannel->SynthesizeStatus(mInternalResponse->GetUnfilteredStatus(),
                                     mInternalResponse->GetUnfilteredStatusText());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
     }
 
@@ -235,7 +235,7 @@ public:
 
     rv = mChannel->FinishSynthesizedResponse(mResponseURLSpec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
     }
 
