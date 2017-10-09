@@ -472,30 +472,30 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 
 // ES2016, 25.4.1.3.
-static MOZ_MUST_USE bool
+static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
 CreateResolvingFunctions(JSContext* cx, HandleObject promise,
                          MutableHandleObject resolveFn,
                          MutableHandleObject rejectFn)
 {
-    RootedAtom funName(cx, cx->names().empty);
-    RootedFunction resolve(cx, NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
-                                                 gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
-    if (!resolve)
+    HandlePropertyName funName = cx->names().empty;
+    resolveFn.set(NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
+                                    gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+    if (!resolveFn)
         return false;
 
-    RootedFunction reject(cx, NewNativeFunction(cx, RejectPromiseFunction, 1, funName,
-                                                 gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
-    if (!reject)
+    rejectFn.set(NewNativeFunction(cx, RejectPromiseFunction, 1, funName,
+                                   gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+    if (!rejectFn)
         return false;
 
-    resolve->setExtendedSlot(ResolveFunctionSlot_Promise, ObjectValue(*promise));
-    resolve->setExtendedSlot(ResolveFunctionSlot_RejectFunction, ObjectValue(*reject));
+    JSFunction* resolveFun = &resolveFn->as<JSFunction>();
+    JSFunction* rejectFun = &rejectFn->as<JSFunction>();
 
-    reject->setExtendedSlot(RejectFunctionSlot_Promise, ObjectValue(*promise));
-    reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, ObjectValue(*resolve));
+    resolveFun->initExtendedSlot(ResolveFunctionSlot_Promise, ObjectValue(*promise));
+    resolveFun->initExtendedSlot(ResolveFunctionSlot_RejectFunction, ObjectValue(*rejectFun));
 
-    resolveFn.set(resolve);
-    rejectFn.set(reject);
+    rejectFun->initExtendedSlot(RejectFunctionSlot_Promise, ObjectValue(*promise));
+    rejectFun->initExtendedSlot(RejectFunctionSlot_ResolveFunction, ObjectValue(*resolveFun));
 
     return true;
 }
@@ -1642,14 +1642,16 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         return nullptr;
 
     // Need to wrap the resolution functions before storing them on the Promise.
+    MOZ_ASSERT(promise->getFixedSlot(PromiseSlot_RejectFunction).isUndefined(),
+               "Slot must be undefined so initFixedSlot can be used");
     if (needsWrapping) {
         AutoCompartment ac(cx, promise);
         RootedObject wrappedRejectFn(cx, rejectFn);
         if (!cx->compartment()->wrap(cx, &wrappedRejectFn))
             return nullptr;
-        promise->setFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*wrappedRejectFn));
+        promise->initFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*wrappedRejectFn));
     } else {
-        promise->setFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*rejectFn));
+        promise->initFixedSlot(PromiseSlot_RejectFunction, ObjectValue(*rejectFn));
     }
 
     // Step 9.
