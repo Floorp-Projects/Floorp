@@ -2,9 +2,11 @@
 
 add_task(async function setup() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: "http://example.com/?q=%s",
-                                                title: "test" });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/?q=%s",
+    title: "test"
+  });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
     await BrowserTestUtils.removeTab(tab);

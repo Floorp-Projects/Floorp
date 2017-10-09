@@ -72,11 +72,12 @@ add_task(async function click_on_focused() {
   gURLBar.blur();
   // Won't show the hint since it's not user initiated.
   gURLBar.focus();
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+  Assert.ok(gURLBar.focused, "The input field should be focused");
 
   let popupPromise = promisePopupShown(gURLBar.popup);
-  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, { button: 0, type: "mousedown" });
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
   await popupPromise;
 
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
