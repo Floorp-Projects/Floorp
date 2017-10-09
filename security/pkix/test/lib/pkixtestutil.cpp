@@ -34,6 +34,8 @@
 #include "pkixder.h"
 #include "pkixutil.h"
 
+#include "mozilla/Unused.h"
+
 using namespace std;
 
 namespace mozilla { namespace pkix { namespace test {
@@ -509,7 +511,7 @@ MaybeLogOutput(const ByteString& result, const char* suffix)
     ++counter;
     ScopedFILE file(OpenFile(logPath, filename, "wb"));
     if (file) {
-      (void) fwrite(result.data(), result.length(), 1, file.get());
+      Unused << fwrite(result.data(), result.length(), 1, file.get());
     }
   }
 }
