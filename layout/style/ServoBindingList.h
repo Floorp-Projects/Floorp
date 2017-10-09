@@ -130,7 +130,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    ServoStyleContextBorrowedOrNull parent_style,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_SelectorList_Drop, void,
-                   RawServoSelectorList* selector_list)
+                   RawServoSelectorListOwned selector_list)
 SERVO_BINDING_FUNC(Servo_SelectorList_Parse,
                    RawServoSelectorList*,
                    const nsACString* selector_list)
