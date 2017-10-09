@@ -15,7 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Assertions.h"
 
-#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 8
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 9
 #define CLANG_CRASH_BUG 1
 #endif
 
