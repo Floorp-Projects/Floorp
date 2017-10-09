@@ -49,8 +49,8 @@ class AudioNotification final : public IMMNotificationClient
 {
 public:
   AudioNotification() :
-      mRefCt(1)
-    , mIsRegistered(false)
+      mIsRegistered(false)
+    , mRefCt(1)
   {
     HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
                                   NULL, CLSCTX_INPROC_SERVER,

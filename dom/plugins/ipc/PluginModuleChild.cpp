@@ -1975,9 +1975,9 @@ class GetKeyStateTask : public Runnable
 public:
     explicit GetKeyStateTask(int aVirtKey, HANDLE aSemaphore, SHORT* aKeyState) :
         Runnable("GetKeyStateTask"),
+        mKeyState(aKeyState),
         mVirtKey(aVirtKey),
-        mSemaphore(aSemaphore),
-        mKeyState(aKeyState)
+        mSemaphore(aSemaphore)
     {}
 
     NS_IMETHOD Run() override
@@ -2049,8 +2049,10 @@ class PluginThreadTask : public Runnable
 public:
     explicit PluginThreadTask(PluginThreadTaskData* aTaskData,
                               HANDLE aSemaphore) :
-        Runnable("PluginThreadTask"), mTaskData(aTaskData),
-        mSemaphore(aSemaphore), mSuccess(false)
+        Runnable("PluginThreadTask"),
+        mSuccess(false),
+        mTaskData(aTaskData),
+        mSemaphore(aSemaphore)
     {}
 
     NS_IMETHOD Run() override

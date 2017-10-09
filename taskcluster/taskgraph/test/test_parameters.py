@@ -11,6 +11,7 @@ from taskgraph.parameters import (
     ParameterMismatch,
     load_parameters_file,
     PARAMETERS,
+    COMM_PARAMETERS,
 )
 from mozunit import main, MockedOpen
 
@@ -68,6 +69,34 @@ class TestParameters(unittest.TestCase):
             self.assertEqual(
                     load_parameters_file('params.json'),
                     {'some': 'data'})
+
+
+class TestCommParameters(unittest.TestCase):
+    vals = {n: n for n in PARAMETERS.keys() + COMM_PARAMETERS.keys()}
+
+    def test_Parameters_check(self):
+        """
+        Specifying all of the gecko and comm parameters doesn't result in an error.
+        """
+        p = Parameters(**self.vals)
+        p.check()  # should not raise
+
+    def test_Parameters_check_missing(self):
+        """
+        If any of the comm parameters are specified, all of them must be specified.
+        """
+        vals = self.vals.copy()
+        del vals[next(iter(COMM_PARAMETERS.keys()))]
+        p = Parameters(**vals)
+        self.assertRaises(Exception, p.check)
+
+    def test_Parameters_check_extra(self):
+        """
+        If parameters other than the global and comm parameters are specified,
+        an error is reported.
+        """
+        p = Parameters(extra="data", **self.vals)
+        self.assertRaises(Exception, p.check)
 
 
 if __name__ == '__main__':

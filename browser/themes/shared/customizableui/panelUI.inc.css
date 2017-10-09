@@ -416,9 +416,9 @@ photonpanelmultiview panelview {
   max-width: @wideMenuPanelWidth@;
 }
 
-/* Add 2 * 12px extra width for touch mode button padding. */
+/* Add 2 * 16px extra width for touch mode button padding. */
 #appMenu-popup[touchmode] panelview {
-  min-width: calc(@menuPanelWidth@ + 24px);
+  min-width: calc(@menuPanelWidth@ + 32px);
 }
 
 photonpanelmultiview .panel-subview-body {
@@ -473,6 +473,7 @@ photonpanelmultiview .panel-subview-body {
   animation-name: widget-animate-out;
   animation-fill-mode: forwards;
   animation-duration: 500ms;
+  animation-timing-function: var(--animation-easing-function);
 }
 
 @keyframes widget-animate-out {
@@ -726,8 +727,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 }
 
 .addon-banner-item > .toolbarbutton-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .addon-banner-item::after {
@@ -794,6 +795,10 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 #appMenu-mainView > .panel-subview-body > .panel-banner-item {
   border-bottom: 1px solid var(--panel-separator-color);
   margin-bottom: 3px;
+  padding-inline-start: 12px;
+}
+
+#appMenu-addon-banners > .addon-banner-item {
   padding-inline-start: 12px;
 }
 
@@ -901,6 +906,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   display: none;
 }
 
+.addon-banner-item > .toolbarbutton-icon,
 .panel-banner-item > .toolbarbutton-icon,
 #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-fxa-icon > .toolbarbutton-icon,
@@ -1243,6 +1249,7 @@ panelview .toolbarbutton-1,
   padding-top: 0;
 }
 
+.addon-banner-item > .toolbarbutton-text,
 .subviewbutton-iconic > .toolbarbutton-text,
 .cui-withicon > .toolbarbutton-text,
 .subviewbutton[image] > .toolbarbutton-text,
@@ -1297,6 +1304,7 @@ panelview .toolbarbutton-1,
 #widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
 #widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
 .subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text,
+.addon-banner-item > .toolbarbutton-text,
 /* Bookmark items need a more specific selector. */
 .PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-text,
 .PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-iconic-text {
@@ -1426,6 +1434,7 @@ photonpanelmultiview .toolbaritem-combined-buttons > .subviewbutton:not(.subview
   padding-inline-start: 0;
 }
 
+photonpanelmultiview .addon-banner-item::after,
 photonpanelmultiview .panel-banner-item::after {
   margin-inline-end: 12px;
   margin-inline-start: 10px;
@@ -2119,11 +2128,17 @@ photonpanelmultiview #panelMenu_pocket {
 .subviewbutton.download {
   -moz-box-align: start;
   min-height: 48px;
+  padding-inline-start: 8px;
 }
 
 .subviewbutton.download > .toolbarbutton-icon,
 .subviewbutton.download > .toolbarbutton-text > label {
   margin: 4px 0 0;
+}
+
+.subviewbutton.download > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
 }
 
 .subviewbutton.download > .toolbarbutton-text > .status-text {

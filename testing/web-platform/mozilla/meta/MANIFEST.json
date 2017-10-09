@@ -979,11 +979,11 @@
    "testharness"
   ],
   "dom/throttling/resources/test.html": [
-   "15bf447545bf4ccd8b6a71d5d2cf2e5bba303293",
+   "0898e3efa5dbcc74138bdf27ff2787d1f1a2d4d8",
    "support"
   ],
   "dom/throttling/resources/throttling.js": [
-   "2dc138ec9298d31711bc33fc47af12da1f64c4ce",
+   "e0bf1a7c5a0d2c8be2b793c786bb9484779dcbbf",
    "support"
   ],
   "dom/throttling/resources/ws.sub.js": [
@@ -991,35 +991,35 @@
    "support"
   ],
   "dom/throttling/throttling-1.window.js": [
-   "609c0d54b0aaf81b28a590217abde69c5e23f168",
+   "216ffff13da87662a1dcddbc6ab091cc0e7380ba",
    "testharness"
   ],
   "dom/throttling/throttling-2.window.js": [
-   "1c6900b823d95ee84791fb04eeae8b61311f5c58",
+   "e76ad877b617c343968211596c34e787849ef587",
    "testharness"
   ],
   "dom/throttling/throttling-3.window.js": [
-   "a9b4b0ade8a22eae9c804735513d89370311d471",
+   "c7e6a0638b216f1f314a022d166ac3d2d6b3ffbd",
    "testharness"
   ],
   "dom/throttling/throttling-4.window.js": [
-   "aeabd55bbb829c92d69bfc44f5e6fe3ad3105a84",
+   "7a6d52ee3f4077bbfc7f0ac635559abc14e0fde5",
    "testharness"
   ],
   "dom/throttling/throttling-indexeddb.window.js": [
-   "275a900b501e54cadc5ca224240489ad27464081",
+   "334beb79c9bd4fd56574b5eca2b6a3709d9057e7",
    "testharness"
   ],
   "dom/throttling/throttling-webaudio.window.js": [
-   "fd5cd3bd05b749e871e5a3e746e2cfc10a48d794",
+   "27e56f68bc041ad07b9c9c27341006d95cd90194",
    "testharness"
   ],
   "dom/throttling/throttling-webrtc.window.js": [
-   "1d832a4e14ad10c5a2143c6b0d7f5cad2c29bdcd",
+   "02e6acec2ff275e0e935cb6d903d348f98d5d437",
    "testharness"
   ],
   "dom/throttling/throttling-ws.window.js": [
-   "df9b37384c42984fe80ea8a35164089f977268b0",
+   "67a981ba2a4d08b684947ed42aba6648dcd262b4",
    "testharness"
   ],
   "fetch/api/redirect/redirect-referrer-mixed-content.js": [
