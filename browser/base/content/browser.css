@@ -10,6 +10,7 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
+  --tab-min-width: 50px;
 }
 
 :root:-moz-lwtheme {
@@ -127,6 +128,21 @@ tabbrowser {
 
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
+.tabbrowser-tab:not([pinned]) {
+  -moz-box-flex: 100;
+  max-width: 225px;
+  min-width: var(--tab-min-width);
+  width: 0;
+  transition: min-width 100ms ease-out,
+              max-width 100ms ease-out;
+}
+
+.tabbrowser-tab:not([pinned]):not([fadein]) {
+  max-width: 0.1px;
+  min-width: 0.1px;
+  visibility: hidden;
 }
 
 .tab-close-button,
