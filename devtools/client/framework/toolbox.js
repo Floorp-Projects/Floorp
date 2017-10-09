@@ -1755,7 +1755,41 @@ Toolbox.prototype = {
         node.removeAttribute("selected");
         node.removeAttribute("aria-selected");
       }
+      // The webconsole panel is in a special location due to split console
+      if (!node.id) {
+        node = this.webconsolePanel;
+      }
+
+      let iframe = node.querySelector(".toolbox-panel-iframe");
+      if (iframe) {
+        let visible = node.id == id;
+        this.setIframeVisible(iframe, visible);
+      }
     });
+  },
+
+  /**
+   * Make a privileged iframe visible/hidden.
+   *
+   * For now, XUL Iframes loading chrome documents (i.e. <iframe type!="content" />)
+   * can't be hidden at platform level. And so don't support 'visibilitychange' event.
+   *
+   * This helper workarounds that by at least being able to send these kind of events.
+   * It will help panel react differently depending on them being displayed or in
+   * background.
+   */
+  setIframeVisible: function (iframe, visible) {
+    let state = visible ? "visible" : "hidden";
+    let win = iframe.contentWindow;
+    let doc = win.document;
+    if (doc.visibilityState != state) {
+      // 1) Overload document's `visibilityState` attribute
+      // Use defineProperty, as by default `document.visbilityState` is read only.
+      Object.defineProperty(doc, "visibilityState", { value: state, configurable: true });
+
+      // 2) Fake the 'visibilitychange' event
+      win.dispatchEvent(new win.Event("visibilitychange"));
+    }
   },
 
   /**
