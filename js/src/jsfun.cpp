@@ -2037,28 +2037,6 @@ JSFunction::needsNamedLambdaEnvironment() const
 }
 
 JSFunction*
-js::NewNativeFunction(JSContext* cx, Native native, unsigned nargs, HandleAtom atom,
-                      gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                      NewObjectKind newKind /* = SingletonObject */)
-{
-    MOZ_ASSERT(native);
-    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN,
-                                nullptr, atom, nullptr, allocKind, newKind);
-}
-
-JSFunction*
-js::NewNativeConstructor(JSContext* cx, Native native, unsigned nargs, HandleAtom atom,
-                         gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                         NewObjectKind newKind /* = SingletonObject */,
-                         JSFunction::Flags flags /* = JSFunction::NATIVE_CTOR */)
-{
-    MOZ_ASSERT(native);
-    MOZ_ASSERT(flags & JSFunction::NATIVE_CTOR);
-    return NewFunctionWithProto(cx, native, nargs, flags, nullptr, atom,
-                                nullptr, allocKind, newKind);
-}
-
-JSFunction*
 js::NewScriptedFunction(JSContext* cx, unsigned nargs,
                         JSFunction::Flags flags, HandleAtom atom,
                         HandleObject proto /* = nullptr */,
@@ -2092,25 +2070,15 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
                          unsigned nargs, JSFunction::Flags flags, HandleObject enclosingEnv,
                          HandleAtom atom, HandleObject proto,
                          gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                         NewObjectKind newKind /* = GenericObject */,
-                         NewFunctionProtoHandling protoHandling /* = NewFunctionClassProto */)
+                         NewObjectKind newKind /* = GenericObject */)
 {
     MOZ_ASSERT(allocKind == AllocKind::FUNCTION || allocKind == AllocKind::FUNCTION_EXTENDED);
     MOZ_ASSERT_IF(native, !enclosingEnv);
     MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
 
-    RootedObject funobj(cx);
-    if (protoHandling == NewFunctionClassProto) {
-        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
-                                         newKind);
-    } else {
-        funobj = NewObjectWithGivenTaggedProto(cx, &JSFunction::class_, AsTaggedProto(proto),
-                                               allocKind, newKind);
-    }
-    if (!funobj)
+    JSFunction* fun = NewObjectWithClassProto<JSFunction>(cx, proto, allocKind, newKind);
+    if (!fun)
         return nullptr;
-
-    RootedFunction fun(cx, &funobj->as<JSFunction>());
 
     if (allocKind == AllocKind::FUNCTION_EXTENDED)
         flags = JSFunction::Flags(flags | JSFunction::EXTENDED);
