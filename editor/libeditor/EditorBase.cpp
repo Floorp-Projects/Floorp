@@ -2504,6 +2504,8 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
   nsCOMPtr<nsINode> node = *aInOutNode;
   int32_t offset = *aInOutOffset;
 
+  MOZ_ASSERT(node->GetChildAt(offset) == aChildAtOffset);
+
   // In some cases, the node may be the anonymous div elemnt or a mozBR
   // element.  Let's try to look for better insertion point in the nearest
   // text node if there is.
