@@ -408,7 +408,7 @@ void
 HttpChannelParentListener::ClearInterceptedChannel()
 {
   if (mInterceptedChannel) {
-    mInterceptedChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+    mInterceptedChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
     mInterceptedChannel = nullptr;
   }
 }

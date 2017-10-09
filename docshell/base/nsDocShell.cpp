@@ -15066,7 +15066,7 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
-    aChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
+    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
     return NS_OK;
   }
 
