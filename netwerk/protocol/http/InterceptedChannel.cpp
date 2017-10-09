@@ -373,7 +373,7 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
 }
 
 NS_IMETHODIMP
-InterceptedChannelChrome::Cancel(nsresult aStatus)
+InterceptedChannelChrome::CancelInterception(nsresult aStatus)
 {
   MOZ_ASSERT(NS_FAILED(aStatus));
 
@@ -541,7 +541,7 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::Cancel(nsresult aStatus)
+InterceptedChannelContent::CancelInterception(nsresult aStatus)
 {
   MOZ_ASSERT(NS_FAILED(aStatus));
 

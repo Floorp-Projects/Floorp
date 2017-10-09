@@ -190,7 +190,7 @@ public:
   NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
-  NS_IMETHOD Cancel(nsresult aStatus) override;
+  NS_IMETHOD CancelInterception(nsresult aStatus) override;
   NS_IMETHOD SetChannelInfo(mozilla::dom::ChannelInfo* aChannelInfo) override;
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
@@ -223,7 +223,7 @@ public:
   NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
-  NS_IMETHOD Cancel(nsresult aStatus) override;
+  NS_IMETHOD CancelInterception(nsresult aStatus) override;
   NS_IMETHOD SetChannelInfo(mozilla::dom::ChannelInfo* aChannelInfo) override;
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
