@@ -57,7 +57,7 @@ static const nsAttrValue::EnumTable kOldListTypeTable[] = {
 
 bool
 HTMLSharedListElement::ParseAttribute(int32_t aNamespaceID,
-                                      nsIAtom* aAttribute,
+                                      nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
@@ -96,7 +96,7 @@ HTMLSharedListElement::MapAttributesIntoRule(const nsMappedAttributes* aAttribut
 }
 
 NS_IMETHODIMP_(bool)
-HTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLSharedListElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol) ||
       mNodeInfo->Equals(nsGkAtoms::ul)) {

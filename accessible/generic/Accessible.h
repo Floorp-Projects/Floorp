@@ -24,7 +24,7 @@ struct nsRoleMapEntry;
 
 struct nsRect;
 class nsIFrame;
-class nsIAtom;
+class nsAtom;
 class nsIPersistentProperties;
 
 namespace mozilla {
@@ -232,7 +232,7 @@ public:
    * Return true if ARIA role is specified on the element.
    */
   bool HasARIARole() const;
-  bool IsARIARole(nsIAtom* aARIARole) const;
+  bool IsARIARole(nsAtom* aARIARole) const;
   bool HasStrongARIARole() const;
 
   /**
@@ -249,7 +249,7 @@ public:
   /**
    * Return a landmark role if applied.
    */
-  virtual nsIAtom* LandmarkRole() const;
+  virtual nsAtom* LandmarkRole() const;
 
   /**
    * Returns enumerated accessible role from native markup (see constants in
@@ -1109,7 +1109,7 @@ protected:
    * @param aARIAProperty  [in] the ARIA property we're using
    * @return  a numeric value
    */
-  double AttrNumericValue(nsIAtom* aARIAAttr) const;
+  double AttrNumericValue(nsAtom* aARIAAttr) const;
 
   /**
    * Return the action rule based on ARIA enum constants EActionRule

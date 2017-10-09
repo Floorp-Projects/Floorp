@@ -29,7 +29,7 @@ HTMLDivElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 bool
 HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
-                               nsIAtom* aAttribute,
+                               nsAtom* aAttribute,
                                const nsAString& aValue,
                                nsAttrValue& aResult)
 {
@@ -76,7 +76,7 @@ MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, GenericSpeci
 }
 
 NS_IMETHODIMP_(bool)
-HTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLDivElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::div)) {
     static const MappedAttributeEntry* const map[] = {

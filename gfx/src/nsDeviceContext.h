@@ -26,7 +26,7 @@ class gfxTextPerfMetrics;
 class gfxUserFontSet;
 struct nsFont;
 class nsFontCache;
-class nsIAtom;
+class nsAtom;
 class nsIDeviceContextSpec;
 class nsIScreen;
 class nsIScreenManager;

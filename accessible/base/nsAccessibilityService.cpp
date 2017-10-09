@@ -112,7 +112,7 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
   for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
     const nsAttrName* attr = aContent->GetAttrNameAt(attrIdx);
     if (attr->NamespaceEquals(kNameSpaceID_None)) {
-      nsIAtom* attrAtom = attr->Atom();
+      nsAtom* attrAtom = attr->Atom();
       nsDependentAtomString attrStr(attrAtom);
       if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
         continue; // not ARIA

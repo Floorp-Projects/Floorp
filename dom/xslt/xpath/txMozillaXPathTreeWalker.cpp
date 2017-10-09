@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txXPathTreeWalker.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIAttribute.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
@@ -140,7 +140,7 @@ txXPathTreeWalker::moveToValidAttribute(uint32_t aStartIndex)
 }
 
 bool
-txXPathTreeWalker::moveToNamedAttribute(nsIAtom* aLocalName, int32_t aNSID)
+txXPathTreeWalker::moveToNamedAttribute(nsAtom* aLocalName, int32_t aNSID)
 {
     if (!mPosition.isContent()) {
         return false;
@@ -274,7 +274,7 @@ txXPathNode::~txXPathNode()
 
 /* static */
 bool
-txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
+txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsAtom* aLocalName,
                           int32_t aNSID, nsAString& aValue)
 {
     if (aNode.isDocument() || aNode.isAttribute()) {
@@ -285,7 +285,7 @@ txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
 }
 
 /* static */
-already_AddRefed<nsIAtom>
+already_AddRefed<nsAtom>
 txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 {
     if (aNode.isDocument()) {
@@ -294,7 +294,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
-            RefPtr<nsIAtom> localName =
+            RefPtr<nsAtom> localName =
                 aNode.Content()->NodeInfo()->NameAtom();
             return localName.forget();
         }
@@ -310,13 +310,13 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         return nullptr;
     }
 
-    RefPtr<nsIAtom> localName = aNode.Content()->
+    RefPtr<nsAtom> localName = aNode.Content()->
         GetAttrNameAt(aNode.mIndex)->LocalName();
 
     return localName.forget();
 }
 
-nsIAtom*
+nsAtom*
 txXPathNodeUtils::getPrefix(const txXPathNode& aNode)
 {
     if (aNode.isDocument()) {

@@ -60,7 +60,7 @@ public:
 
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
-                   nsIAtom*        aAttribute,
+                   nsAtom*        aAttribute,
                    int32_t         aModType) override;
 
   // This method is called by the parent frame to ask <mo>

@@ -19,16 +19,16 @@
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
 
-class nsIAtom;
+class nsAtom;
 
 class XMLUtils {
 
 public:
     static nsresult splitExpatName(const char16_t *aExpatName,
-                                   nsIAtom **aPrefix, nsIAtom **aLocalName,
+                                   nsAtom **aPrefix, nsAtom **aLocalName,
                                    int32_t* aNameSpaceID);
-    static nsresult splitQName(const nsAString& aName, nsIAtom** aPrefix,
-                               nsIAtom** aLocalName);
+    static nsresult splitQName(const nsAString& aName, nsAtom** aPrefix,
+                               nsAtom** aLocalName);
 
     /*
      * Returns true if the given character is whitespace.

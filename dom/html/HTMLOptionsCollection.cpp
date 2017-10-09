@@ -281,7 +281,7 @@ HTMLOptionsCollection::NamedItem(const nsAString& aName,
 void
 HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  AutoTArray<nsIAtom*, 8> atoms;
+  AutoTArray<nsAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     HTMLOptionElement* content = mElements.ElementAt(i);
     if (content) {
@@ -289,13 +289,13 @@ HTMLOptionsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
       // which is false for options, so we don't check it here.
       const nsAttrValue* val = content->GetParsedAttr(nsGkAtoms::name);
       if (val && val->Type() == nsAttrValue::eAtom) {
-        nsIAtom* name = val->GetAtomValue();
+        nsAtom* name = val->GetAtomValue();
         if (!atoms.Contains(name)) {
           atoms.AppendElement(name);
         }
       }
       if (content->HasID()) {
-        nsIAtom* id = content->GetID();
+        nsAtom* id = content->GetID();
         if (!atoms.Contains(id)) {
           atoms.AppendElement(id);
         }

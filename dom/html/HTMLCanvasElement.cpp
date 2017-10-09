@@ -458,7 +458,7 @@ HTMLCanvasElement::GetWidthHeight()
 }
 
 nsresult
-HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -469,7 +469,7 @@ HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLCanvasElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+HTMLCanvasElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify)
 {
@@ -480,7 +480,7 @@ HTMLCanvasElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 void
-HTMLCanvasElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLCanvasElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                         bool aNotify)
 {
   if (mCurrentContext && aNamespaceID == kNameSpaceID_None &&
@@ -604,7 +604,7 @@ nsresult HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 }
 
 nsChangeHint
-HTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLCanvasElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                           int32_t aModType) const
 {
   nsChangeHint retval =
@@ -622,7 +622,7 @@ HTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 
 bool
 HTMLCanvasElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom* aAttribute,
+                                  nsAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {

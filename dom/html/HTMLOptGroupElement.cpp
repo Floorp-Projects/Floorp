@@ -96,7 +96,7 @@ HTMLOptGroupElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 nsresult
-HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                   const nsAttrValue* aValue,
                                   const nsAttrValue* aOldValue, bool aNotify)
 {

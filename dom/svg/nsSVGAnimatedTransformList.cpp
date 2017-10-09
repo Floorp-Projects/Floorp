@@ -185,7 +185,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
              "aValue should have been cleared before calling ValueFromString");
 
   const nsAttrValue* typeAttr = aSrcElement->GetAnimAttr(nsGkAtoms::type);
-  const nsIAtom* transformType = nsGkAtoms::translate; // default val
+  const nsAtom* transformType = nsGkAtoms::translate; // default val
   if (typeAttr) {
     if (typeAttr->Type() != nsAttrValue::eAtom) {
       // Recognized values of |type| are parsed as an atom -- so if we have
@@ -204,7 +204,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
 void
 nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   const nsAString& aSpec,
-  const nsIAtom* aTransformType,
+  const nsAtom* aTransformType,
   nsSMILValue& aResult)
 {
   MOZ_ASSERT(aResult.IsNull(), "Unexpected type for SMIL value");

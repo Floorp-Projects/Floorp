@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-interface nsIAtom;  // used in [noscript] methods only
+interface nsAtom;  // not a real interface; used in [noscript] methods only
 interface nsIContent;
 interface nsIXULBuilderListener;
 interface nsIXULTemplateResult;
@@ -268,7 +268,7 @@ interface nsIXULTemplateBuilder : nsISupports
      * @param aTag tag that must match
      */
     [noscript] boolean hasGeneratedContent(in nsIRDFResource aNode,
-                                           in nsIAtom aTag);
+                                           in nsAtom aTag);
 
     /**
      * Adds a rule filter for a given rule, which may be used for specialized

@@ -33,7 +33,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeNodeElement)
 
 bool
 SVGFEMergeNodeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                 nsIAtom* aAttribute) const
+                                                 nsAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::in;
 }

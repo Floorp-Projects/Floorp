@@ -40,7 +40,7 @@ public:
                                   bool* aIsOverridable) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
 

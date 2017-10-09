@@ -156,7 +156,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
     nsAutoString namespaceURI, prefixStr, localName;
     bool prefixIsNull;
-    RefPtr<nsIAtom> prefix;
+    RefPtr<nsAtom> prefix;
     for (i = 0; i < count; ++i) {
         tmp = aStream->ReadString(namespaceURI);
         if (NS_FAILED(tmp)) {
@@ -446,7 +446,7 @@ nsXULPrototypeDocument::GetStyleSheetReferences() const
 }
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAString& aData) const
+nsXULPrototypeDocument::GetHeaderData(nsAtom* aField, nsAString& aData) const
 {
     // XXX Not implemented
     aData.Truncate();
@@ -455,7 +455,7 @@ nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAString& aData) const
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsAString& aData)
+nsXULPrototypeDocument::SetHeaderData(nsAtom* aField, const nsAString& aData)
 {
     // XXX Not implemented
     return NS_OK;

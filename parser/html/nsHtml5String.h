@@ -6,7 +6,7 @@
 #define nsHtml5String_h
 
 #include "nsString.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 class nsHtml5TreeBuilder;
 
@@ -15,10 +15,10 @@ class nsHtml5TreeBuilder;
  *  * nullptr
  *  * empty string
  *  * Non-empty string as exactly-sized (capacity is length) `nsStringBuffer*`
- *  * Non-empty string as an nsIAtom*
+ *  * Non-empty string as an nsAtom*
  *
  * Holding or passing this type is as unsafe as holding or passing
- * `nsStringBuffer*`/`nsIAtom*`.
+ * `nsStringBuffer*`/`nsAtom*`.
  */
 class nsHtml5String final
 {
@@ -43,10 +43,10 @@ private:
     return reinterpret_cast<nsStringBuffer*>(mBits & kPtrMask);
   }
 
-  inline nsIAtom* AsAtom() const
+  inline nsAtom* AsAtom() const
   {
     MOZ_ASSERT(GetKind() == eAtom);
-    return reinterpret_cast<nsIAtom*>(mBits & kPtrMask);
+    return reinterpret_cast<nsAtom*>(mBits & kPtrMask);
   }
 
   inline const char16_t* AsPtr() const
@@ -96,10 +96,10 @@ public:
   inline MOZ_IMPLICIT operator bool() const { return mBits; }
 
   /**
-   * Get the underlying nsIAtom* or nullptr if this nsHtml5String
+   * Get the underlying nsAtom* or nullptr if this nsHtml5String
    * does not hold an atom.
    */
-  inline nsIAtom* MaybeAsAtom()
+  inline nsAtom* MaybeAsAtom()
   {
     if (GetKind() == eAtom) {
       return AsAtom();
@@ -131,7 +131,7 @@ public:
 
   static nsHtml5String FromString(const nsAString& aString);
 
-  static nsHtml5String FromAtom(already_AddRefed<nsIAtom> aAtom);
+  static nsHtml5String FromAtom(already_AddRefed<nsAtom> aAtom);
 
   static nsHtml5String EmptyString();
 
@@ -144,7 +144,7 @@ private:
 
   /**
    * Zero if null, one if empty, otherwise tagged pointer
-   * to either nsIAtom or nsStringBuffer. The two least-significant
+   * to either nsAtom or nsStringBuffer. The two least-significant
    * bits are tag bits.
    */
   uintptr_t mBits;

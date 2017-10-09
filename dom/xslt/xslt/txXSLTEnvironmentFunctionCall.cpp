@@ -93,7 +93,7 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case FUNCTION_AVAILABLE:
         {
-            extern bool TX_XSLTFunctionAvailable(nsIAtom* aName,
+            extern bool TX_XSLTFunctionAvailable(nsAtom* aName,
                                                    int32_t aNameSpaceID);
 
             txCoreFunctionCall::eType type;
@@ -126,7 +126,7 @@ txXSLTEnvironmentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 
 #ifdef TX_TO_STRING
 nsresult
-txXSLTEnvironmentFunctionCall::getNameAtom(nsIAtom** aAtom)
+txXSLTEnvironmentFunctionCall::getNameAtom(nsAtom** aAtom)
 {
     *aAtom = mType == SYSTEM_PROPERTY ? nsGkAtoms::systemProperty :
              mType == ELEMENT_AVAILABLE ? nsGkAtoms::elementAvailable :

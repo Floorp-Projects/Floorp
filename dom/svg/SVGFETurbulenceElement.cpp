@@ -165,7 +165,7 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
 bool
 SVGFETurbulenceElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsIAtom* aAttribute) const
+                                                    nsAtom* aAttribute) const
 {
   return SVGFETurbulenceElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

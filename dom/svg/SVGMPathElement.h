@@ -49,11 +49,11 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
-  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsIAtom* aAttribute,
+  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
                              bool aNotify) override;
   // Element specializations
   virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) override;
 

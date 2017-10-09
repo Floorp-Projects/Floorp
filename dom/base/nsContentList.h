@@ -22,7 +22,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsINodeList.h"
 #include "nsStubMutationObserver.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsNameSpaceManager.h"
 #include "nsWrapperCache.h"
@@ -281,8 +281,8 @@ public:
    */
   nsContentList(nsINode* aRootNode,
                 int32_t aMatchNameSpaceId,
-                nsIAtom* aHTMLMatchAtom,
-                nsIAtom* aXMLMatchAtom,
+                nsAtom* aHTMLMatchAtom,
+                nsAtom* aXMLMatchAtom,
                 bool aDeep = true,
                 bool aLiveList = true);
 
@@ -309,7 +309,7 @@ public:
                 nsContentListDestroyFunc aDestroyFunc,
                 void* aData,
                 bool aDeep = true,
-                nsIAtom* aMatchAtom = nullptr,
+                nsAtom* aMatchAtom = nullptr,
                 int32_t aMatchNameSpaceId = kNameSpaceID_None,
                 bool aFuncMayDependOnAttr = true,
                 bool aLiveList = true);
@@ -472,8 +472,8 @@ protected:
 
   nsINode* mRootNode; // Weak ref
   int32_t mMatchNameSpaceId;
-  RefPtr<nsIAtom> mHTMLMatchAtom;
-  RefPtr<nsIAtom> mXMLMatchAtom;
+  RefPtr<nsAtom> mHTMLMatchAtom;
+  RefPtr<nsAtom> mXMLMatchAtom;
 
   /**
    * Function to use to determine whether a piece of content matches

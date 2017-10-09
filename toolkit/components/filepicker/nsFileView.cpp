@@ -16,7 +16,7 @@
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
 #include "nsQuickSort.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsISimpleEnumerator.h"

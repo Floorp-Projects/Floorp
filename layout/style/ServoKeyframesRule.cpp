@@ -253,7 +253,7 @@ ServoKeyframesRule::UpdateRule(Func aCallback)
 NS_IMETHODIMP
 ServoKeyframesRule::GetName(nsAString& aName)
 {
-  nsIAtom* name = Servo_KeyframesRule_GetName(mRawRule);
+  nsAtom* name = Servo_KeyframesRule_GetName(mRawRule);
   aName = nsDependentAtomString(name);
   return NS_OK;
 }
@@ -261,8 +261,8 @@ ServoKeyframesRule::GetName(nsAString& aName)
 NS_IMETHODIMP
 ServoKeyframesRule::SetName(const nsAString& aName)
 {
-  RefPtr<nsIAtom> name = NS_Atomize(aName);
-  nsIAtom* oldName = Servo_KeyframesRule_GetName(mRawRule);
+  RefPtr<nsAtom> name = NS_Atomize(aName);
+  nsAtom* oldName = Servo_KeyframesRule_GetName(mRawRule);
   if (name == oldName) {
     return NS_OK;
   }

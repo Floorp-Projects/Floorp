@@ -15,7 +15,7 @@ namespace mozilla {
 using namespace dom;
 
 ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
-                                                       nsIAtom& aAttribute,
+                                                       nsAtom& aAttribute,
                                                        const nsAString* aValue)
   : EditTransactionBase()
   , mElement(&aElement)

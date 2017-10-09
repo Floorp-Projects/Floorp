@@ -32,7 +32,7 @@ namespace mozilla {
 using namespace dom;
 
 CreateElementTransaction::CreateElementTransaction(EditorBase& aEditorBase,
-                                                   nsIAtom& aTag,
+                                                   nsAtom& aTag,
                                                    nsINode& aParent,
                                                    int32_t aOffsetInParent)
   : EditTransactionBase()

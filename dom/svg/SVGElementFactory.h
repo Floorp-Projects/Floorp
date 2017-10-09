@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGElementFactory_h
 #define mozilla_dom_SVGElementFactory_h
 
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 namespace dom {

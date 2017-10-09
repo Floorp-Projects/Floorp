@@ -25,7 +25,7 @@ EventTarget::RemoveEventListener(const nsAString& aType,
 }
 
 EventHandlerNonNull*
-EventTarget::GetEventHandler(nsIAtom* aType, const nsAString& aTypeString)
+EventTarget::GetEventHandler(nsAtom* aType, const nsAString& aTypeString)
 {
   EventListenerManager* elm = GetExistingListenerManager();
   return elm ? elm->GetEventHandler(aType, aTypeString) : nullptr;
@@ -41,7 +41,7 @@ EventTarget::SetEventHandler(const nsAString& aType,
     return;
   }
   if (NS_IsMainThread()) {
-    RefPtr<nsIAtom> type = NS_Atomize(aType);
+    RefPtr<nsAtom> type = NS_Atomize(aType);
     SetEventHandler(type, EmptyString(), aHandler);
     return;
   }
@@ -51,7 +51,7 @@ EventTarget::SetEventHandler(const nsAString& aType,
 }
 
 void
-EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
+EventTarget::SetEventHandler(nsAtom* aType, const nsAString& aTypeString,
                              EventHandlerNonNull* aHandler)
 {
   GetOrCreateListenerManager()->SetEventHandler(aType, aTypeString, aHandler);

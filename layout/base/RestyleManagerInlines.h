@@ -54,7 +54,7 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
 void
 RestyleManager::AttributeWillChange(dom::Element* aElement,
                                     int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t aModType,
                                     const nsAttrValue* aNewValue)
 {
@@ -65,7 +65,7 @@ RestyleManager::AttributeWillChange(dom::Element* aElement,
 void
 RestyleManager::AttributeChanged(dom::Element* aElement,
                                  int32_t aNameSpaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  int32_t aModType,
                                  const nsAttrValue* aOldValue)
 {

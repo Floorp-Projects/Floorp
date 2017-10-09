@@ -14,7 +14,7 @@
 #include "nsISerializable.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIPrincipal;
 class nsIURI;
 class nsNodeInfoManager;
@@ -86,8 +86,8 @@ public:
      * Access HTTP header data.
      * @note Not implemented.
      */
-    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
-    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
+    NS_IMETHOD GetHeaderData(nsAtom* aField, nsAString& aData) const;
+    NS_IMETHOD SetHeaderData(nsAtom* aField, const nsAString& aData);
 
     nsIPrincipal *DocumentPrincipal();
     void SetDocumentPrincipal(nsIPrincipal *aPrincipal);

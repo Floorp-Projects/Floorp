@@ -35,14 +35,14 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
+                                    nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void UpdateAttributes(nsIAtom*         aAttribute,
+  void UpdateAttributes(nsAtom*         aAttribute,
                         bool&          aResize,
                         bool&          aRedraw);
 

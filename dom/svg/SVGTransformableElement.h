@@ -45,14 +45,14 @@ public:
                                                     ErrorResult& rv);
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
 
   // nsSVGElement overrides
-  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
 
   virtual gfxMatrix PrependLocalTransformsTo(
@@ -63,7 +63,7 @@ public:
 
   virtual nsSVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0) override;
-  virtual nsIAtom* GetTransformListAttrName() const override {
+  virtual nsAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::transform;
   }
 

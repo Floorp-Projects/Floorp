@@ -1323,7 +1323,7 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
 }
 
 nsresult
-HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValueOrString* aValue,
                                 bool aNotify)
 {
@@ -1374,7 +1374,7 @@ HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -5744,7 +5744,7 @@ HTMLInputElement::IsInputColorEnabled()
 
 bool
 HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsIAtom* aAttribute,
+                                 nsAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
@@ -5839,7 +5839,7 @@ HTMLInputElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 nsChangeHint
-HTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+HTMLInputElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                          int32_t aModType) const
 {
   nsChangeHint retval =
@@ -5868,7 +5868,7 @@ HTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLInputElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLInputElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },

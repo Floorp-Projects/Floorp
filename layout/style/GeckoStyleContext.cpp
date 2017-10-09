@@ -32,7 +32,7 @@ GeckoStyleContext::Initialize()
 #endif
 
 GeckoStyleContext::GeckoStyleContext(GeckoStyleContext* aParent,
-                                     nsIAtom* aPseudoTag,
+                                     nsAtom* aPseudoTag,
                                      CSSPseudoElementType aPseudoType,
                                      already_AddRefed<nsRuleNode> aRuleNode,
                                      bool aSkipParentDisplayBasedStyleFixup)
@@ -318,7 +318,7 @@ GeckoStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStruct
 }
 
 already_AddRefed<GeckoStyleContext>
-GeckoStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
+GeckoStyleContext::FindChildWithRules(const nsAtom* aPseudoTag,
                                    nsRuleNode* aSource,
                                    nsRuleNode* aSourceIfVisited,
                                    bool aRelevantLinkVisited)

@@ -13551,7 +13551,7 @@ nsGlobalWindow::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
 
 
 void
-nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
+nsGlobalWindow::EventListenerAdded(nsAtom* aType)
 {
   if (aType == nsGkAtoms::onvrdisplayactivate ||
       aType == nsGkAtoms::onvrdisplayconnect ||
@@ -13583,7 +13583,7 @@ nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
 }
 
 void
-nsGlobalWindow::EventListenerRemoved(nsIAtom* aType)
+nsGlobalWindow::EventListenerRemoved(nsAtom* aType)
 {
   if (aType == nsGkAtoms::onbeforeunload &&
       mTabChild &&

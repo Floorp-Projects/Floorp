@@ -94,7 +94,7 @@ HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
 }
 
 nsresult
-HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {

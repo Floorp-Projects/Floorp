@@ -22,7 +22,7 @@ uint32_t txNodeSetContext::position()
     return mPosition;
 }
 
-nsresult txNodeSetContext::getVariable(int32_t aNamespace, nsIAtom* aLName,
+nsresult txNodeSetContext::getVariable(int32_t aNamespace, nsAtom* aLName,
                                        txAExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");

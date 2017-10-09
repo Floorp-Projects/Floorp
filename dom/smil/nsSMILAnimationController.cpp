@@ -652,7 +652,7 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
 }
 
 static inline bool
-IsTransformAttribute(int32_t aNamespaceID, nsIAtom *aAttributeName)
+IsTransformAttribute(int32_t aNamespaceID, nsAtom *aAttributeName)
 {
   return aNamespaceID == kNameSpaceID_None &&
          (aAttributeName == nsGkAtoms::transform ||
@@ -676,7 +676,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // Look up target (animated) attribute
   // SMILANIM section 3.1, attributeName may
   // have an XMLNS prefix to indicate the XML namespace.
-  RefPtr<nsIAtom> attributeName;
+  RefPtr<nsAtom> attributeName;
   int32_t attributeNamespaceID;
   if (!aAnimElem->GetTargetAttributeName(&attributeNamespaceID,
                                          getter_AddRefs(attributeName)))

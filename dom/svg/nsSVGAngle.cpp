@@ -20,7 +20,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsIAtom** const unitMap[] =
+static nsAtom** const unitMap[] =
 {
   nullptr, /* SVG_ANGLETYPE_UNKNOWN */
   nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
@@ -67,7 +67,7 @@ GetUnitTypeForString(const nsAString& unitStr)
   if (unitStr.IsEmpty())
     return SVG_ANGLETYPE_UNSPECIFIED;
 
-  nsIAtom *unitAtom = NS_GetStaticAtom(unitStr);
+  nsAtom *unitAtom = NS_GetStaticAtom(unitStr);
 
   if (unitAtom) {
     for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {

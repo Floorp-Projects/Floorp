@@ -16,7 +16,7 @@
 #include "txXSLTNumber.h"
 #include "nsTArray.h"
 
-class nsIAtom;
+class nsAtom;
 class txExecutionState;
 
 class txInstruction : public txObject
@@ -191,15 +191,15 @@ public:
 class txLREAttribute : public txInstruction
 {
 public:
-    txLREAttribute(int32_t aNamespaceID, nsIAtom* aLocalName,
-                   nsIAtom* aPrefix, nsAutoPtr<Expr>&& aValue);
+    txLREAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
+                   nsAtom* aPrefix, nsAutoPtr<Expr>&& aValue);
 
     TX_DECL_TXINSTRUCTION
 
     int32_t mNamespaceID;
-    RefPtr<nsIAtom> mLocalName;
-    RefPtr<nsIAtom> mLowercaseLocalName;
-    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
+    RefPtr<nsAtom> mLowercaseLocalName;
+    RefPtr<nsAtom> mPrefix;
     nsAutoPtr<Expr> mValue;
 };
 
@@ -358,15 +358,15 @@ public:
 class txStartLREElement : public txInstruction
 {
 public:
-    txStartLREElement(int32_t aNamespaceID, nsIAtom* aLocalName,
-                      nsIAtom* aPrefix);
+    txStartLREElement(int32_t aNamespaceID, nsAtom* aLocalName,
+                      nsAtom* aPrefix);
 
     TX_DECL_TXINSTRUCTION
 
     int32_t mNamespaceID;
-    RefPtr<nsIAtom> mLocalName;
-    RefPtr<nsIAtom> mLowercaseLocalName;
-    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
+    RefPtr<nsAtom> mLowercaseLocalName;
+    RefPtr<nsAtom> mPrefix;
 };
 
 class txText : public txInstruction

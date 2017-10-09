@@ -31,7 +31,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLFontElement)
 
 bool
 HTMLFontElement::ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
@@ -100,7 +100,7 @@ HTMLFontElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+HTMLFontElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::face },

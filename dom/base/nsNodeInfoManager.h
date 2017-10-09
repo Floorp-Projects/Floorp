@@ -18,7 +18,7 @@
 #include "plhash.h"                       // for typedef PLHashNumber
 
 class nsBindingManager;
-class nsIAtom;
+class nsAtom;
 class nsIDocument;
 class nsIDOMDocumentType;
 class nsIPrincipal;
@@ -61,12 +61,12 @@ public:
    * Methods for creating nodeinfo's from atoms and/or strings.
    */
   already_AddRefed<mozilla::dom::NodeInfo>
-  GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
-              uint16_t aNodeType, nsIAtom* aExtraName = nullptr);
-  nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+  GetNodeInfo(nsAtom *aName, nsAtom *aPrefix, int32_t aNamespaceID,
+              uint16_t aNodeType, nsAtom* aExtraName = nullptr);
+  nsresult GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
                        int32_t aNamespaceID, uint16_t aNodeType,
                        mozilla::dom::NodeInfo** aNodeInfo);
-  nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+  nsresult GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
                        const nsAString& aNamespaceURI, uint16_t aNodeType,
                        mozilla::dom::NodeInfo** aNodeInfo);
 
@@ -141,7 +141,7 @@ protected:
   friend class nsXULPrototypeDocument;
   friend nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** ,
                                         nsNodeInfoManager *,
-                                        nsIAtom *,
+                                        nsAtom *,
                                         const nsAString& ,
                                         const nsAString& ,
                                         const nsAString& );

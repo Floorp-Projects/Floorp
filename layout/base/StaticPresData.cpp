@@ -71,7 +71,7 @@ enum {
 };
 
 void
-LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
+LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom)
 {
   mLangGroup = aLangGroupAtom;
 
@@ -245,11 +245,11 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
   }
 }
 
-nsIAtom*
-StaticPresData::GetLangGroup(nsIAtom* aLanguage,
+nsAtom*
+StaticPresData::GetLangGroup(nsAtom* aLanguage,
                              bool* aNeedsToCache) const
 {
-  nsIAtom* langGroupAtom = nullptr;
+  nsAtom* langGroupAtom = nullptr;
   langGroupAtom = mLangService->GetLanguageGroup(aLanguage, aNeedsToCache);
   if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
@@ -257,10 +257,10 @@ StaticPresData::GetLangGroup(nsIAtom* aLanguage,
   return langGroupAtom;
 }
 
-already_AddRefed<nsIAtom>
-StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
+already_AddRefed<nsAtom>
+StaticPresData::GetUncachedLangGroup(nsAtom* aLanguage) const
 {
-  RefPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage);
+  RefPtr<nsAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage);
   if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
   }
@@ -268,7 +268,7 @@ StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
 }
 
 const LangGroupFontPrefs*
-StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
+StaticPresData::GetFontPrefsForLangHelper(nsAtom* aLanguage,
                                           const LangGroupFontPrefs* aPrefs,
                                           bool* aNeedsToCache) const
 {
@@ -277,7 +277,7 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
   MOZ_ASSERT(mLangService);
   MOZ_ASSERT(aPrefs);
 
-  nsIAtom* langGroupAtom = GetLangGroup(aLanguage, aNeedsToCache);
+  nsAtom* langGroupAtom = GetLangGroup(aLanguage, aNeedsToCache);
 
   if (aNeedsToCache && *aNeedsToCache) {
     return nullptr;
@@ -317,7 +317,7 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
 }
 
 const nsFont*
-StaticPresData::GetDefaultFontHelper(uint8_t aFontID, nsIAtom *aLanguage,
+StaticPresData::GetDefaultFontHelper(uint8_t aFontID, nsAtom *aLanguage,
                                      const LangGroupFontPrefs* aPrefs) const
 {
   MOZ_ASSERT(aLanguage);

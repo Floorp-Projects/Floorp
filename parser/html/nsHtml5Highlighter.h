@@ -111,7 +111,7 @@ class nsHtml5Highlighter
      * @param aMsgId the id of the message in the property file
      * @param aName the atom
      */
-    void AddErrorToCurrentRun(const char* aMsgId, nsIAtom* aName);
+    void AddErrorToCurrentRun(const char* aMsgId, nsAtom* aName);
 
     /**
      * Adds an error annotation to the node that corresponds to the most
@@ -123,8 +123,8 @@ class nsHtml5Highlighter
      * @param aOther the second atom
      */
     void AddErrorToCurrentRun(const char* aMsgId,
-                              nsIAtom* aName,
-                              nsIAtom* aOther);
+                              nsAtom* aName,
+                              nsAtom* aOther);
 
     /**
      * Adds an error annotation to the node that corresponds to the most
@@ -231,7 +231,7 @@ class nsHtml5Highlighter
      * @return the handle for the element that will be created
      */
     nsIContent** CreateElement(
-      nsIAtom* aName,
+      nsAtom* aName,
       nsHtml5HtmlAttributes* aAttributes,
       nsIContent** aIntendedParent,
       mozilla::dom::HTMLContentCreatorFunction aCreator);
@@ -252,7 +252,7 @@ class nsHtml5Highlighter
      *        nullptr for no attributes
      * @param aCreator the content creator function
      */
-    void Push(nsIAtom* aName,
+    void Push(nsAtom* aName,
               nsHtml5HtmlAttributes* aAttributes,
               mozilla::dom::HTMLContentCreatorFunction aCreator);
 

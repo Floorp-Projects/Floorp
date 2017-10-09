@@ -94,7 +94,7 @@ using mozilla::layers::ScrollInputMethod;
 
 static bool IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsINode *aNode);
 
-static nsIAtom *GetTag(nsINode *aNode);
+static nsAtom *GetTag(nsINode *aNode);
 // returns the parent
 static nsINode* ParentOffset(nsINode *aNode, int32_t *aChildOffset);
 static nsINode* GetCellParent(nsINode *aDomNode);
@@ -629,7 +629,7 @@ void printRange(nsRange *aDomRange)
 #endif /* PRINT_RANGE */
 
 static
-nsIAtom *GetTag(nsINode *aNode)
+nsAtom *GetTag(nsINode *aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (!content)
@@ -668,7 +668,7 @@ GetCellParent(nsINode *aDomNode)
     // Start with current node and look for a table cell
     while (current)
     {
-      nsIAtom* tag = GetTag(current);
+      nsAtom* tag = GetTag(current);
       if (tag == nsGkAtoms::td || tag == nsGkAtoms::th)
         return current;
       current = current->GetParent();

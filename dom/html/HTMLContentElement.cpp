@@ -13,7 +13,7 @@
 #include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
@@ -207,7 +207,7 @@ IsValidContentSelectors(nsCSSSelector* aSelector)
 }
 
 nsresult
-HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValue* aValue,
                                  const nsAttrValue* aOldValue, bool aNotify)
 {

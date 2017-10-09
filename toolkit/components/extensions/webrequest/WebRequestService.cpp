@@ -53,7 +53,7 @@ WebRequestService::RegisterChannel(ChannelWrapper* aChannel)
 
 already_AddRefed<nsITraceableChannel>
 WebRequestService::GetTraceableChannel(uint64_t aChannelId,
-                                       nsIAtom* aAddonId,
+                                       nsAtom* aAddonId,
                                        nsIContentParent* aContentParent)
 {
   if (auto entry = mChannelEntries.Get(aChannelId)) {

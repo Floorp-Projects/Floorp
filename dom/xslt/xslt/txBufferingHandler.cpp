@@ -86,8 +86,8 @@ public:
 class txStartElementAtomTransaction : public txOutputTransaction
 {
 public:
-    txStartElementAtomTransaction(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                                  nsIAtom* aLowercaseLocalName, int32_t aNsID)
+    txStartElementAtomTransaction(nsAtom* aPrefix, nsAtom* aLocalName,
+                                  nsAtom* aLowercaseLocalName, int32_t aNsID)
         : txOutputTransaction(eStartElementAtomTransaction),
           mPrefix(aPrefix),
           mLocalName(aLocalName),
@@ -100,16 +100,16 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txStartElementAtomTransaction, txOutputTransaction);
     }
-    RefPtr<nsIAtom> mPrefix;
-    RefPtr<nsIAtom> mLocalName;
-    RefPtr<nsIAtom> mLowercaseLocalName;
+    RefPtr<nsAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
+    RefPtr<nsAtom> mLowercaseLocalName;
     int32_t mNsID;
 };
 
 class txStartElementTransaction : public txOutputTransaction
 {
 public:
-    txStartElementTransaction(nsIAtom* aPrefix,
+    txStartElementTransaction(nsAtom* aPrefix,
                               const nsAString& aLocalName, int32_t aNsID)
         : txOutputTransaction(eStartElementTransaction),
           mPrefix(aPrefix),
@@ -122,7 +122,7 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txStartElementTransaction, txOutputTransaction);
     }
-    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsAtom> mPrefix;
     nsString mLocalName;
     int32_t mNsID;
 };
@@ -130,7 +130,7 @@ public:
 class txAttributeTransaction : public txOutputTransaction
 {
 public:
-    txAttributeTransaction(nsIAtom* aPrefix,
+    txAttributeTransaction(nsAtom* aPrefix,
                            const nsAString& aLocalName, int32_t aNsID,
                            const nsString& aValue)
         : txOutputTransaction(eAttributeTransaction),
@@ -145,7 +145,7 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txAttributeTransaction, txOutputTransaction);
     }
-    RefPtr<nsIAtom> mPrefix;
+    RefPtr<nsAtom> mPrefix;
     nsString mLocalName;
     int32_t mNsID;
     nsString mValue;
@@ -154,8 +154,8 @@ public:
 class txAttributeAtomTransaction : public txOutputTransaction
 {
 public:
-    txAttributeAtomTransaction(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                               nsIAtom* aLowercaseLocalName,
+    txAttributeAtomTransaction(nsAtom* aPrefix, nsAtom* aLocalName,
+                               nsAtom* aLowercaseLocalName,
                                int32_t aNsID, const nsString& aValue)
         : txOutputTransaction(eAttributeAtomTransaction),
           mPrefix(aPrefix),
@@ -170,9 +170,9 @@ public:
     {
         MOZ_COUNT_DTOR_INHERITED(txAttributeAtomTransaction, txOutputTransaction);
     }
-    RefPtr<nsIAtom> mPrefix;
-    RefPtr<nsIAtom> mLocalName;
-    RefPtr<nsIAtom> mLowercaseLocalName;
+    RefPtr<nsAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
+    RefPtr<nsAtom> mLowercaseLocalName;
     int32_t mNsID;
     nsString mValue;
 };
@@ -189,8 +189,8 @@ txBufferingHandler::~txBufferingHandler()
 }
 
 nsresult
-txBufferingHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                              nsIAtom* aLowercaseLocalName, int32_t aNsID,
+txBufferingHandler::attribute(nsAtom* aPrefix, nsAtom* aLocalName,
+                              nsAtom* aLowercaseLocalName, int32_t aNsID,
                               const nsString& aValue)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -208,7 +208,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txBufferingHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
+txBufferingHandler::attribute(nsAtom* aPrefix, const nsAString& aLocalName,
                               const int32_t aNsID, const nsString& aValue)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -304,8 +304,8 @@ txBufferingHandler::startDocument()
 }
 
 nsresult
-txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
-                                 nsIAtom* aLowercaseLocalName,
+txBufferingHandler::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
+                                 nsAtom* aLowercaseLocalName,
                                  int32_t aNsID)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -319,7 +319,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txBufferingHandler::startElement(nsIAtom* aPrefix,
+txBufferingHandler::startElement(nsAtom* aPrefix,
                                  const nsAString& aLocalName,
                                  const int32_t aNsID)
 {
