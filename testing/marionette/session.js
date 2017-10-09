@@ -196,6 +196,10 @@ session.Proxy = class {
    *     When proxy configuration is invalid.
    */
   static fromJSON(json) {
+    function stripBracketsFromIpv6Hostname(hostname) {
+      return hostname.includes(":") ? hostname.replace(/[\[\]]/g, "") : hostname;
+    }
+
     // Parse hostname and optional port from host
     function fromHost(scheme, host) {
       assert.string(host);
@@ -219,6 +223,8 @@ session.Proxy = class {
         throw new InvalidArgumentError(e.message);
       }
 
+      let hostname = stripBracketsFromIpv6Hostname(url.hostname);
+
       // If the port hasn't been set, use the default port of
       // the selected scheme (except for socks which doesn't have one).
       let port = parseInt(url.port);
@@ -239,7 +245,7 @@ session.Proxy = class {
             `${host} was not of the form host[:port]`);
       }
 
-      return [url.hostname, port];
+      return [hostname, port];
     }
 
     let p = new session.Proxy();
@@ -278,10 +284,10 @@ session.Proxy = class {
         }
         if (typeof json.noProxy != "undefined") {
           let entries = assert.array(json.noProxy);
-          for (let entry of entries) {
+          p.noProxy = entries.map(entry => {
             assert.string(entry);
-          }
-          p.noProxy = entries;
+            return stripBracketsFromIpv6Hostname(entry);
+          });
         }
         break;
 
@@ -298,10 +304,17 @@ session.Proxy = class {
    *     JSON serialisation of proxy object.
    */
   toJSON() {
+    function addBracketsToIpv6Hostname(hostname) {
+      return hostname.includes(":") ? `[${hostname}]` : hostname;
+    }
+
     function toHost(hostname, port) {
       if (!hostname) {
         return null;
       }
+
+      // Add brackets around IPv6 addresses
+      hostname = addBracketsToIpv6Hostname(hostname);
 
       if (port != null) {
         return `${hostname}:${port}`;
@@ -310,11 +323,16 @@ session.Proxy = class {
       return hostname;
     }
 
+    let excludes = this.noProxy;
+    if (excludes) {
+      excludes = excludes.map(addBracketsToIpv6Hostname);
+    }
+
     return marshal({
       proxyType: this.proxyType,
       ftpProxy: toHost(this.ftpProxy, this.ftpProxyPort),
       httpProxy: toHost(this.httpProxy, this.httpProxyPort),
-      noProxy: this.noProxy,
+      noProxy: excludes,
       sslProxy: toHost(this.sslProxy, this.sslProxyPort),
       socksProxy: toHost(this.socksProxy, this.socksProxyPort),
       socksVersion: this.socksVersion,
