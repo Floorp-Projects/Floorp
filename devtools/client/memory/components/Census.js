@@ -6,7 +6,7 @@
 
 const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
-const CensusTreeItem = createFactory(require("./census-tree-item"));
+const CensusTreeItem = createFactory(require("./CensusTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 const { censusModel, diffingModel } = require("../models");
 
