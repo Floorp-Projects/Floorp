@@ -12,11 +12,11 @@ add_task(async function test_remove_history() {
 
   let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
     "onDeleteURI", uri => uri.spec == TEST_URL, "history");
+
   await promiseAutocompleteResultPopup("remove.me/from_urlbar");
-  await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.children.length > 1 &&
-          gURLBar.popup.richlistbox.children[1].getAttribute("ac-value") == TEST_URL,
-    "Waiting for the result to appear");
+  let result = await waitForAutocompleteResultAt(1);
+  Assert.equal(result.getAttribute("ac-value"), TEST_URL, "Found the expected result");
+
   EventUtils.synthesizeKey("VK_DOWN", {});
   Assert.equal(gURLBar.popup.richlistbox.selectedIndex, 1);
   let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
