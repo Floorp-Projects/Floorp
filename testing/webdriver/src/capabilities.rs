@@ -333,8 +333,10 @@ impl ToJson for SpecNewSessionParameters {
 }
 
 impl CapabilitiesMatching for SpecNewSessionParameters {
-    fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
-                                             -> WebDriverResult<Option<Capabilities>> {
+    fn match_browser<T: BrowserCapabilities>(
+        &self,
+        browser_capabilities: &mut T,
+    ) -> WebDriverResult<Option<Capabilities>> {
         let default = vec![BTreeMap::new()];
         let capabilities_list = if self.firstMatch.len() > 0 {
             &self.firstMatch
@@ -342,22 +344,26 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
             &default
         };
 
-        let merged_capabilities = try!(capabilities_list
+        let merged_capabilities = capabilities_list
             .iter()
             .map(|first_match_entry| {
-                if first_match_entry.keys().any(|k| {
-                    self.alwaysMatch.contains_key(k)
-                }) {
+                if first_match_entry.keys().any(
+                    |k| self.alwaysMatch.contains_key(k),
+                )
+                {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        "'firstMatch' key shadowed a value in 'alwaysMatch'"));
+                        "'firstMatch' key shadowed a value in 'alwaysMatch'",
+                    ));
                 }
                 let mut merged = self.alwaysMatch.clone();
                 merged.append(&mut first_match_entry.clone());
                 Ok(merged)
             })
-            .map(|merged| merged.and_then(|x| self.validate(x, browser_capabilities)))
-            .collect::<WebDriverResult<Vec<Capabilities>>>());
+            .map(|merged| {
+                merged.and_then(|x| self.validate(x, browser_capabilities))
+            })
+            .collect::<WebDriverResult<Vec<Capabilities>>>()?;
 
         let selected = merged_capabilities
             .iter()
@@ -373,9 +379,9 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .and_then(|x| x);
 
                             if value.as_string() != browserValue.as_ref().map(|x| &**x) {
-                                    return None;
+                                return None;
                             }
-                        },
+                        }
                         "browserVersion" => {
                             let browserValue = browser_capabilities
                                 .browser_version(merged)
@@ -386,13 +392,14 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             if let Some(version) = browserValue {
                                 if !browser_capabilities
                                     .compare_browser_version(&*version, version_cond)
-                                    .unwrap_or(false) {
-                                        return None;
-                                    }
+                                    .unwrap_or(false)
+                                {
+                                    return None;
+                                }
                             } else {
-                                return None
+                                return None;
                             }
-                        },
+                        }
                         "platformName" => {
                             let browserValue = browser_capabilities
                                 .platform_name(merged)
@@ -405,27 +412,30 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                         "acceptInsecureCerts" => {
                             if value.as_boolean().unwrap_or(false) &&
                                 !browser_capabilities
-                                .accept_insecure_certs(merged)
-                                .unwrap_or(false) {
+                                    .accept_insecure_certs(merged)
+                                    .unwrap_or(false)
+                            {
                                 return None;
                             }
-                        },
+                        }
                         "proxy" => {
                             let default = BTreeMap::new();
                             let proxy = value.as_object().unwrap_or(&default);
-                            if !browser_capabilities.accept_proxy(&proxy,
-                                                                  merged)
-                                .unwrap_or(false) {
-                                return None
+                            if !browser_capabilities
+                                .accept_proxy(&proxy, merged)
+                                .unwrap_or(false)
+                            {
+                                return None;
                             }
-                        },
+                        }
                         name => {
                             if name.contains(":") {
                                 if !browser_capabilities
                                     .accept_custom(name, value, merged)
-                                    .unwrap_or(false) {
-                                        return None
-                                    }
+                                    .unwrap_or(false)
+                                {
+                                    return None;
+                                }
                             } else {
                                 // Accept the capability
                             }
@@ -433,11 +443,11 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                     }
                 }
 
-                return Some(merged)
+                return Some(merged);
             })
             .next()
             .map(|x| x.clone());
-            Ok(selected)
+        Ok(selected)
     }
 }
 
