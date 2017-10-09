@@ -161,31 +161,47 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     return;
   }
 
-  // First, find the real underlying callback.
-  JSObject* realCallback = js::UncheckedUnwrap(wrappedCallback);
   nsIGlobalObject* globalObject = nullptr;
 
-  // Now get the global for this callback. Note that for the case of
-  // JS-implemented WebIDL we never have a window here.
-  nsGlobalWindow* win = mIsMainThread && !aIsJSImplementedWebIDL
-                          ? xpc::WindowGlobalOrNull(realCallback)
-                          : nullptr;
-  if (win) {
-    MOZ_ASSERT(win->IsInnerWindow());
-    // We don't want to run script in windows that have been navigated away
-    // from.
-    if (!win->AsInner()->HasActiveDocument()) {
-      aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("Refusing to execute function from window "
-                           "whose document is no longer active."));
-      return;
+  {
+    // First, find the real underlying callback.
+    JSObject* realCallback = js::UncheckedUnwrap(wrappedCallback);
+
+    // Check that it's ok to run this callback. JS-implemented WebIDL is always
+    // OK to run, since it runs with Chrome privileges anyway.
+    if (mIsMainThread && !aIsJSImplementedWebIDL) {
+      // Make sure to use realCallback to get the global of the callback
+      // object, not the wrapper.
+      if (!xpc::Scriptability::Get(realCallback).Allowed()) {
+        aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("Refusing to execute function from global in which "
+                             "script is disabled."));
+        return;
+      }
     }
-    globalObject = win;
-  } else {
-    // No DOM Window. Store the global.
-    JSObject* global = js::GetGlobalForObjectCrossCompartment(realCallback);
-    globalObject = xpc::NativeGlobal(global);
-    MOZ_ASSERT(globalObject);
+
+    // Now get the global for this callback. Note that for the case of
+    // JS-implemented WebIDL we never have a window here.
+    nsGlobalWindow* win = mIsMainThread && !aIsJSImplementedWebIDL
+                            ? xpc::WindowGlobalOrNull(realCallback)
+                            : nullptr;
+    if (win) {
+      MOZ_ASSERT(win->IsInnerWindow());
+      // We don't want to run script in windows that have been navigated away
+      // from.
+      if (!win->AsInner()->HasActiveDocument()) {
+        aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("Refusing to execute function from window "
+                             "whose document is no longer active."));
+        return;
+      }
+      globalObject = win;
+    } else {
+      // No DOM Window. Store the global.
+      JSObject* global = js::GetGlobalForObjectCrossCompartment(realCallback);
+      globalObject = xpc::NativeGlobal(global);
+      MOZ_ASSERT(globalObject);
+    }
   }
 
   // Bail out if there's no useful global. This seems to happen intermittently
@@ -226,22 +242,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   // with the cx from mAutoEntryScript, avoiding the cost of finding another
   // JSContext. (Rooted<> does not care about requests or compartments.)
   mRootedCallable.emplace(cx, aCallback->CallbackOrNull());
-
-  // JS-implemented WebIDL is always OK to run, since it runs with Chrome
-  // privileges anyway.
-  if (mIsMainThread && !aIsJSImplementedWebIDL) {
-    // Check that it's ok to run this callback at all.
-    // Make sure to use realCallback to get the global of the callback object,
-    // not the wrapper.
-    bool allowed = xpc::Scriptability::Get(realCallback).Allowed();
-
-    if (!allowed) {
-      aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        NS_LITERAL_CSTRING("Refusing to execute function from global in which "
-                           "script is disabled."));
-      return;
-    }
-  }
 
   mAsyncStack.emplace(cx, aCallback->GetCreationStack());
   if (*mAsyncStack) {
