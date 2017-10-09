@@ -509,9 +509,9 @@ def get_vc_paths(topsrcdir):
             'x86': [os.path.join(tools_path, 'x86'), os.path.join(tools_path, 'x64')],
         })
 
-option('--with-visual-studio-version', nargs=1,
-       choices=('2015', '2017'),
-       help='Select a specific Visual Studio version to use')
+js_option('--with-visual-studio-version', nargs=1,
+          choices=('2015', '2017'),
+          help='Select a specific Visual Studio version to use')
 
 @depends('--with-visual-studio-version')
 def vs_major_version(value):
