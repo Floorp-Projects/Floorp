@@ -113,12 +113,14 @@ public final class TelemetryWrapper {
         private static final String CANCEL = "cancel";
         private static final String ADD_TO_HOMESCREEN = "add_to_homescreen";
         private static final String TAB = "tab";
+        private static final String WHATS_NEW = "whats_new";
     }
 
     private static class Extra {
         private static final String TO = "to";
         private static final String TOTAL = "total";
         private static final String SELECTED = "selected";
+        private static final String HIGHLIGHTED = "highlighted";
     }
 
     public static boolean isTelemetryEnabled(Context context) {
@@ -458,6 +460,12 @@ public final class TelemetryWrapper {
 
     public static void openTabsTrayEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.TABS_TRAY).queue();
+    }
+
+    public static void openWhatsNewEvent(boolean highlighted) {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.WHATS_NEW)
+                .extra(Extra.HIGHLIGHTED, String.valueOf(highlighted))
+                .queue();
     }
 
     public static void closeTabsTrayEvent() {

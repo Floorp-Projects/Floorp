@@ -35,13 +35,14 @@ class WhatsNew {
          */
         private const val SESSIONS_PER_UPDATE = 3
 
-        @VisibleForTesting var wasUpdatedRecently: Boolean? = null
+        @VisibleForTesting internal var wasUpdatedRecently: Boolean? = null
 
         /**
          * Has this app been updated recently. Either this is the first start of the application
          * since it was updated or this is a later start but still recent enough to consider the
          * app to be updated recently.
          */
+        @JvmStatic
         fun wasUpdatedRecently(context: Context): Boolean {
             var recentlyUpdated = wasUpdatedRecently
 
