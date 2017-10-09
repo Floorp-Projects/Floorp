@@ -6,15 +6,15 @@
 
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
-const Census = createFactory(require("./census"));
-const CensusHeader = createFactory(require("./census-header"));
-const DominatorTree = createFactory(require("./dominator-tree"));
-const DominatorTreeHeader = createFactory(require("./dominator-tree-header"));
-const TreeMap = createFactory(require("./tree-map"));
+const Census = createFactory(require("./Census"));
+const CensusHeader = createFactory(require("./CensusHeader"));
+const DominatorTree = createFactory(require("./DominatorTree"));
+const DominatorTreeHeader = createFactory(require("./DominatorTreeHeader"));
+const TreeMap = createFactory(require("./TreeMap"));
 const HSplitBox = createFactory(require("devtools/client/shared/components/HSplitBox"));
-const Individuals = createFactory(require("./individuals"));
-const IndividualsHeader = createFactory(require("./individuals-header"));
-const ShortestPaths = createFactory(require("./shortest-paths"));
+const Individuals = createFactory(require("./Individuals"));
+const IndividualsHeader = createFactory(require("./IndividualsHeader"));
+const ShortestPaths = createFactory(require("./ShortestPaths"));
 const { getStatusTextFull, L10N } = require("../utils");
 const {
   snapshotState: states,
