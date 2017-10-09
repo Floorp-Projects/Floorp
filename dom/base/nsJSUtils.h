@@ -68,8 +68,10 @@ public:
 
   // ExecutionContext is used to switch compartment.
   class MOZ_STACK_CLASS ExecutionContext {
+#ifdef MOZ_GECKO_PROFILER
     // Register stack annotations for the Gecko profiler.
     mozilla::AutoProfilerLabel mAutoProfilerLabel;
+#endif
 
     JSContext* mCx;
 

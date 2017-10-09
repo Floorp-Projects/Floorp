@@ -3699,7 +3699,7 @@ void
 PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
                                   bool aFlushOnHoverChange)
 {
-  AutoProfilerTracing tracing("Paint", "DispatchSynthMouseMove");
+  AUTO_PROFILER_TRACING("Paint", "DispatchSynthMouseMove");
   RestyleManager* restyleManager = mPresContext->RestyleManager();
   uint32_t hoverGenerationBefore =
     restyleManager->GetHoverGeneration();
@@ -4033,6 +4033,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
+#ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,
                                FlushType::Count,
                                const char*> flushTypeNames = {
@@ -4048,9 +4049,9 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "Layout",
     "Display"
   };
-
   AUTO_PROFILER_LABEL_DYNAMIC("PresShell::DoFlushPendingNotifications",
                               GRAPHICS, flushTypeNames[flushType]);
+#endif
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG

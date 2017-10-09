@@ -2504,9 +2504,11 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
     RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
     MOZ_ASSERT(moduleloader);
 
+#ifdef MOZ_GECKO_PROFILER
     const nsCString& flatLocation = PromiseFlatCString(registryLocation);
     AUTO_PROFILER_LABEL_DYNAMIC("nsXPCComponents_Utils::Import", OTHER,
                                 flatLocation.get());
+#endif
 
     return moduleloader->Import(registryLocation, targetObj, cx, optionalArgc, retval);
 }

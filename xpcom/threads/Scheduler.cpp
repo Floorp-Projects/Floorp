@@ -631,7 +631,7 @@ SchedulerImpl::ThreadController::OnStartThread(size_t aIndex, const nsACString& 
   // GetCurrentVirtualThread() now returns mMainVirtual.
   nsThreadManager::get().CreateCurrentThread(mMainQueue, nsThread::MAIN_THREAD);
 
-  profiler_register_thread(aName.BeginReading(), &aStackTop);
+  PROFILER_REGISTER_THREAD(aName.BeginReading());
 
   mOldMainLoop = MessageLoop::current();
 
@@ -659,7 +659,7 @@ SchedulerImpl::ThreadController::OnStopThread(size_t aIndex)
   RefPtr<nsThread> self = static_cast<nsThread*>(NS_GetCurrentThread());
   nsThreadManager::get().UnregisterCurrentThread(*self);
 
-  profiler_unregister_thread();
+  PROFILER_UNREGISTER_THREAD();
 }
 
 void
