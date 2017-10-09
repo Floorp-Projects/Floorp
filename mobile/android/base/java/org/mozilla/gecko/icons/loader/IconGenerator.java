@@ -49,15 +49,22 @@ public class IconGenerator implements IconLoader {
             return null;
         }
 
-        return generate(request.getContext(), request.getPageUrl());
+        return generate(request.getContext(), request.getPageUrl(), request.getTargetSize(), request.getTextSize());
+    }
+
+    public static IconResponse generate(Context context, String pageURL) {
+        return generate(context, pageURL, 0, 0);
     }
 
     /**
      * Generate default favicon for the given page URL.
      */
-    public static IconResponse generate(Context context, String pageURL) {
+    public static IconResponse generate(final Context context, final String pageURL,
+                                        int widthAndHeight, float textSize) {
         final Resources resources = context.getResources();
-        final int widthAndHeight = resources.getDimensionPixelSize(R.dimen.favicon_bg);
+        if (widthAndHeight == 0) {
+            widthAndHeight = resources.getDimensionPixelSize(R.dimen.favicon_bg);
+        }
         final int roundedCorners = resources.getDimensionPixelOffset(R.dimen.favicon_corner_radius);
 
         final Bitmap favicon = Bitmap.createBitmap(widthAndHeight, widthAndHeight, Bitmap.Config.ARGB_8888);
@@ -74,9 +81,13 @@ public class IconGenerator implements IconLoader {
 
         final String character = getRepresentativeCharacter(pageURL);
 
-        // The text size is calculated dynamically based on the target icon size (1/8th). For an icon
-        // size of 112dp we'd use a text size of 14dp (112 / 8).
-        final float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, widthAndHeight / 8, context.getResources().getDisplayMetrics());
+        if (textSize == 0) {
+            // The text size is calculated dynamically based on the target icon size (1/8th). For an icon
+            // size of 112dp we'd use a text size of 14dp (112 / 8).
+            textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                                                 widthAndHeight / 8,
+                                                 resources.getDisplayMetrics());
+        }
 
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setTextSize(textSize);
