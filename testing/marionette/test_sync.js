@@ -48,7 +48,7 @@ add_task(async function test_PollPromise_noTimeout() {
   await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
-  }, {timeout: 0});
+  }, 0);
   let end = new Date().getTime();
   equal(1, nevals);
   less((end - start), DEFAULT_TIMEOUT);
@@ -60,7 +60,7 @@ add_task(async function test_PollPromise_timeout() {
   await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
-  }, {timeout: 100});
+  }, 100);
   let end = new Date().getTime();
   greater(nevals, 1);
   greaterOrEqual((end - start), 100);
@@ -71,6 +71,6 @@ add_task(async function test_PollPromise_interval() {
   await new PollPromise((resolve, reject) => {
     ++nevals;
     reject();
-  }, {timeout: 100, interval: 100});
+  }, 100, 100);
   equal(2, nevals);
 });
