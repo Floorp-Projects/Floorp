@@ -21,12 +21,30 @@ import java.nio.ByteBuffer;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class LocaleListPreference extends ListPreference {
     private static final String LOG_TAG = "GeckoLocaleList";
+
+    private static Map<String, String> languageCodeToNameMap = new HashMap<>();
+    static {
+        // Only ICU 57 actually contains the Asturian name for Asturian, even Android 7.1 is still
+        // shipping with ICU 56, so we need to override the Asturian name (otherwise displayName will
+        // be the current locales version of Asturian, see:
+        // https://github.com/mozilla-mobile/focus-android/issues/634#issuecomment-303886118
+        languageCodeToNameMap.put("ast", "Asturianu");
+        // On an Android 8.0 device those languages are not known and we need to add the names
+        // manually. Loading the resources at runtime works without problems though.
+        languageCodeToNameMap.put("cak", "Kaqchikel");
+        languageCodeToNameMap.put("meh", "Tu´un savi ñuu Yasi'í Yuku Iti");
+        languageCodeToNameMap.put("mix", "Tu'un savi");
+        languageCodeToNameMap.put("trs", "Triqui");
+        languageCodeToNameMap.put("zam", "DíɁztè");
+    }
 
     /**
      * With thanks to <http://stackoverflow.com/a/22679283/22003> for the
@@ -128,12 +146,8 @@ public class LocaleListPreference extends ListPreference {
 
             final String displayName;
 
-            if (locale.getLanguage().equals("ast")) {
-                // Only ICU 57 actually contains the Asturian name for Asturian, even Android 7.1 is still
-                // shipping with ICU 56, so we need to override the Asturian name (otherwise displayName will
-                // be the current locales version of Asturian, see:
-                // https://github.com/mozilla-mobile/focus-android/issues/634#issuecomment-303886118
-                displayName = "Asturianu";
+            if (languageCodeToNameMap.containsKey(locale.getLanguage())) {
+                displayName = languageCodeToNameMap.get(locale.getLanguage());
             } else {
                 displayName = locale.getDisplayName(locale);
             }
