@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+  <meta charset="utf-8">
+  <title>Test clamping width/height of checkbox.</title>
+  <link rel="author" title="Louis Chang" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1400050">
+  <link rel="match" href="checkbox-clamp-ref.html">
+  </head>
+    <style>
+div {
+  position: relative;
+  line-height: 0px;
+}
+input {
+  height: 113px;
+}
+    </style>
+  <body>
+  <!--
+    Default Size of checkbox is 13px * 13px on all platforms except Linux
+    (18px * 18px). So given a checkbox with height 113px, the checkbox will be
+    clamped to 13px * 13px and move to center which y is 50px ((113 - 13) / 2).
+  -->
+    <div>
+      <input type="checkbox">
+      <input type="checkbox" checked>
+    <div>
+  </body>
+</html>
