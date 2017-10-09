@@ -2,7 +2,7 @@
 
 module.exports = {
   "rules": {
-    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "indent-legacy": ["error", 2, { "SwitchCase": 1 }],
     "new-parens": "error",
     "no-inner-declarations": "error",
     "no-shadow": "error",

@@ -19,7 +19,7 @@ module.exports = {
     "comma-dangle": ["error", "never"],
     "curly": ["error", "multi-line"],
     "handle-callback-err": ["error", "er"],
-    "indent": ["error", 2, {"SwitchCase": 1}],
+    "indent-legacy": ["error", 2, {"SwitchCase": 1}],
     // Longer max-len due to AST selectors
     "max-len": ["error", 150, 2],
     "no-multiple-empty-lines": ["error", {"max": 1}],

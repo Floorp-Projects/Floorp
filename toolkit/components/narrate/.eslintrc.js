@@ -11,7 +11,7 @@ module.exports = {
     "complexity": ["error", {"max": 20}],
     "curly": "error",
     "dot-location": ["error", "property"],
-    "indent": ["error", 2, {"SwitchCase": 1}],
+    "indent-legacy": ["error", 2, {"SwitchCase": 1}],
     "max-len": ["error", 80, 2, {"ignoreUrls": true}],
     "max-nested-callbacks": ["error", 3],
     "new-cap": ["error", {"capIsNew": false}],
