@@ -142,6 +142,67 @@ add_test(function () {
 
 add_test(function () {
   certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("signed_app_sha256"),
+    check_open_result("valid with sha256 hashes in manifest", Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("signed_app_sha1_and_sha256"),
+    check_open_result("valid with sha1 and sha256 hashes in manifest", Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("signed_app_sha256_manifest"),
+    check_open_result("sha256 hashes in manifest, but only a sha1 hash in the signature file",
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("signed_app_sha256_signature_file"),
+    check_open_result("sha256 hash in the signature file, but only sha1 hashes in the manifest",
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("sha1_and_sha256_manifest_sha1_signature_file"),
+    check_open_result("sha1 and sha256 hashes in the manifest, but only sha1 hash in the signature file",
+                      Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("sha1_and_sha256_manifest_sha256_signature_file"),
+    check_open_result("sha1 and sha256 hashes in the manifest, but only sha256 hash in the signature file",
+                      Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("sha1_manifest_sha1_and_sha256_signature_file"),
+    check_open_result("only sha1 in the manifest, sha1 and sha256 hashes in the signature file",
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("sha256_manifest_sha1_and_sha256_signature_file"),
+    check_open_result("only sha256 in the manifest, sha1 and sha256 hashes in the signature file",
+                      Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("unsigned_app"),
     check_open_result("unsigned", Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED));
 });

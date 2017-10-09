@@ -46,6 +46,35 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 
 namespace {
 
+// A convenient way to pair the bytes of a digest with the algorithm that
+// purportedly produced those bytes. Only SHA-1 and SHA-256 are supported.
+struct DigestWithAlgorithm
+{
+  nsresult ValidateLength() const
+  {
+    size_t hashLen;
+    switch (mAlgorithm) {
+      case SEC_OID_SHA256:
+        hashLen = SHA256_LENGTH;
+        break;
+      case SEC_OID_SHA1:
+        hashLen = SHA1_LENGTH;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE(
+          "unsupported hash type in DigestWithAlgorithm::ValidateLength");
+        return NS_ERROR_FAILURE;
+    }
+    if (mDigest.Length() != hashLen) {
+      return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+    }
+    return NS_OK;
+  }
+
+  nsAutoCString mDigest;
+  SECOidTag mAlgorithm;
+};
+
 // The digest must have a lifetime greater than or equal to the returned string.
 inline nsDependentCSubstring
 DigestToDependentString(const Digest& digest)
@@ -112,13 +141,15 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
 // Finds exactly one (signature metadata) JAR entry that matches the given
 // search pattern, and then load it. Fails if there are no matches or if
 // there is more than one match. If bugDigest is not null then on success
-// bufDigest will contain the SHA-1 digeset of the entry.
+// bufDigest will contain the digeset of the entry using the given digest
+// algorithm.
 nsresult
-FindAndLoadOneEntry(nsIZipReader * zip,
-                    const nsACString & searchPattern,
-                    /*out*/ nsACString & filename,
-                    /*out*/ SECItem & buf,
-                    /*optional, out*/ Digest * bufDigest)
+FindAndLoadOneEntry(nsIZipReader* zip,
+                    const nsACString& searchPattern,
+                    /*out*/ nsACString& filename,
+                    /*out*/ SECItem& buf,
+                    /*optional, in*/ SECOidTag digestAlgorithm = SEC_OID_SHA1,
+                    /*optional, out*/ Digest* bufDigest = nullptr)
 {
   nsCOMPtr<nsIUTF8StringEnumerator> files;
   nsresult rv = zip->FindEntries(searchPattern, getter_AddRefs(files));
@@ -153,7 +184,7 @@ FindAndLoadOneEntry(nsIZipReader * zip,
   }
 
   if (bufDigest) {
-    rv = bufDigest->DigestBuf(SEC_OID_SHA1, buf.data, buf.len - 1);
+    rv = bufDigest->DigestBuf(digestAlgorithm, buf.data, buf.len - 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -173,14 +204,15 @@ FindAndLoadOneEntry(nsIZipReader * zip,
 //            size of our I/O.
 nsresult
 VerifyStreamContentDigest(nsIInputStream* stream,
-                          const nsCString& digestFromManifest, SECItem& buf)
+                          const DigestWithAlgorithm& digestFromManifest,
+                          SECItem& buf)
 {
   MOZ_ASSERT(buf.len > 0);
-  if (digestFromManifest.Length() != SHA1_LENGTH) {
-    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  nsresult rv = digestFromManifest.ValidateLength();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsresult rv;
   uint64_t len64;
   rv = stream->Available(&len64);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -188,7 +220,8 @@ VerifyStreamContentDigest(nsIInputStream* stream,
     return NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE;
   }
 
-  UniquePK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA1));
+  UniquePK11Context digestContext(
+    PK11_CreateDigestContext(digestFromManifest.mAlgorithm));
   if (!digestContext) {
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
@@ -224,11 +257,11 @@ VerifyStreamContentDigest(nsIInputStream* stream,
 
   // Verify that the digests match.
   Digest digest;
-  rv = digest.End(SEC_OID_SHA1, digestContext);
+  rv = digest.End(digestFromManifest.mAlgorithm, digestContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsDependentCSubstring digestStr(DigestToDependentString(digest));
-  if (!digestStr.Equals(digestFromManifest)) {
+  if (!digestStr.Equals(digestFromManifest.mDigest)) {
     return NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY;
   }
 
@@ -237,7 +270,8 @@ VerifyStreamContentDigest(nsIInputStream* stream,
 
 nsresult
 VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
-                         const nsCString& digestFromManifest, SECItem& buf)
+                         const DigestWithAlgorithm& digestFromManifest,
+                         SECItem& buf)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = zip->GetInputStream(aFilename, getter_AddRefs(stream));
@@ -255,7 +289,8 @@ VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
 // @param buf A scratch buffer that we use for doing the I/O
 nsresult
 VerifyFileContentDigest(nsIFile* aDir, const nsAString& aFilename,
-                        const nsCString& digestFromManifest, SECItem& buf)
+                        const DigestWithAlgorithm& digestFromManifest,
+                        SECItem& buf)
 {
   // Find the file corresponding to the manifest path
   nsCOMPtr<nsIFile> file;
@@ -428,11 +463,12 @@ CheckManifestVersion(const char* & nextLineStart,
   return NS_OK;
 }
 
-// Parses a signature file (SF) as defined in the JDK 8 JAR Specification.
+// Parses a signature file (SF) based on the JDK 8 JAR Specification.
 //
-// The SF file *must* contain exactly one SHA1-Digest-Manifest attribute in
-// the main section. All other sections are ignored. This means that this will
-// NOT parse old-style signature files that have separate digests per entry.
+// The SF file must contain a SHA1-Digest-Manifest (or, preferrably,
+// SHA256-Digest-Manifest) attribute in the main section. All other sections are
+// ignored. This means that this will NOT parse old-style signature files that
+// have separate digests per entry.
 // The JDK8 x-Digest-Manifest variant is better because:
 //
 //   (1) It allows us to follow the principle that we should minimize the
@@ -443,15 +479,11 @@ CheckManifestVersion(const char* & nextLineStart,
 //   (2) It is more time-efficient and space-efficient to have one
 //       x-Digest-Manifest instead of multiple x-Digest values.
 //
-// In order to get benefit (1), we do NOT implement the fallback to the older
-// mechanism as the spec requires/suggests. Also, for simplity's sake, we only
-// support exactly one SHA1-Digest-Manifest attribute, and no other
-// algorithms.
-//
 // filebuf must be null-terminated. On output, mfDigest will contain the
-// decoded value of SHA1-Digest-Manifest.
+// decoded value of SHA1-Digest-Manifest or SHA256-Digest-Manifest, if found,
+// as well as an identifier indicating which algorithm was found.
 nsresult
-ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
+ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
 {
   const char* nextLineStart = filebuf;
   nsresult rv = CheckManifestVersion(nextLineStart,
@@ -460,7 +492,9 @@ ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
     return rv;
   }
 
-  // Find SHA1-Digest-Manifest
+  nsAutoCString savedSHA1Digest;
+  // Search for SHA256-Digest-Manifest and SHA1-Digest-Manifest. Prefer the
+  // former.
   for (;;) {
     nsAutoCString curLine;
     rv = ReadLine(nextLineStart, curLine);
@@ -469,8 +503,13 @@ ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
     }
 
     if (curLine.Length() == 0) {
-      // End of main section (blank line or end-of-file), and no
-      // SHA1-Digest-Manifest found.
+      // End of main section (blank line or end-of-file). We didn't find
+      // SHA256-Digest-Manifest, but maybe we found SHA1-Digest-Manifest.
+      if (!savedSHA1Digest.IsEmpty()) {
+        mfDigest.mDigest.Assign(savedSHA1Digest);
+        mfDigest.mAlgorithm = SEC_OID_SHA1;
+        return NS_OK;
+      }
       return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
     }
 
@@ -481,21 +520,30 @@ ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
       return rv;
     }
 
-    if (attrName.LowerCaseEqualsLiteral("sha1-digest-manifest")) {
-      rv = Base64Decode(attrValue, mfDigest);
+    if (attrName.LowerCaseEqualsLiteral("sha256-digest-manifest")) {
+      rv = Base64Decode(attrValue, mfDigest.mDigest);
       if (NS_FAILED(rv)) {
         return rv;
       }
+      mfDigest.mAlgorithm = SEC_OID_SHA256;
 
-      // There could be multiple SHA1-Digest-Manifest attributes, which
+      // There could be multiple SHA*-Digest-Manifest attributes, which
       // would be an error, but it's better to just skip any erroneous
       // duplicate entries rather than trying to detect them, because:
       //
       //   (1) It's simpler, and simpler generally means more secure
       //   (2) An attacker can't make us accept a JAR we would otherwise
-      //       reject just by adding additional SHA1-Digest-Manifest
+      //       reject just by adding additional SHA*-Digest-Manifest
       //       attributes.
-      break;
+      return NS_OK;
+    }
+
+    if (attrName.LowerCaseEqualsLiteral("sha1-digest-manifest") &&
+        savedSHA1Digest.IsEmpty()) {
+      rv = Base64Decode(attrValue, savedSHA1Digest);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
 
     // ignore unrecognized attributes
@@ -506,17 +554,31 @@ ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
 
 // Parses MANIFEST.MF. The filenames of all entries will be returned in
 // mfItems. buf must be a pre-allocated scratch buffer that is used for doing
-// I/O.
+// I/O. Each file's contents are verified against the entry in the manifest with
+// the digest algorithm that matches the given one. This algorithm comes from
+// the signature file. If the signature file has a SHA-256 digest, then SHA-256
+// entries must be present in the manifest file. If the signature file only has
+// a SHA-1 digest, then only SHA-1 digests will be used in the manifest file.
 nsresult
-ParseMF(const char* filebuf, nsIZipReader * zip,
-        /*out*/ nsTHashtable<nsCStringHashKey> & mfItems,
-        ScopedAutoSECItem & buf)
+ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
+        /*out*/ nsTHashtable<nsCStringHashKey>& mfItems, ScopedAutoSECItem& buf)
 {
-  nsresult rv;
+  const char* digestNameToFind = nullptr;
+  switch (digestAlgorithm) {
+    case SEC_OID_SHA256:
+      digestNameToFind = "sha256-digest";
+      break;
+    case SEC_OID_SHA1:
+      digestNameToFind = "sha1-digest";
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("bad argument to ParseMF");
+      return NS_ERROR_FAILURE;
+  }
 
   const char* nextLineStart = filebuf;
-
-  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_MF_HEADER));
+  nsresult rv = CheckManifestVersion(nextLineStart,
+                                     NS_LITERAL_CSTRING(JAR_MF_HEADER));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -543,7 +605,9 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
   for (;;) {
     nsAutoCString curLine;
     rv = ReadLine(nextLineStart, curLine);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     if (curLine.Length() == 0) {
       // end of section (blank line or end-of-file)
@@ -567,14 +631,18 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
 
       // Verify that the entry's content digest matches the digest from this
       // MF section.
-      rv = VerifyEntryContentDigest(zip, curItemName, digest, buf);
-      if (NS_FAILED(rv))
+      DigestWithAlgorithm digestWithAlgorithm = { digest, digestAlgorithm };
+      rv = VerifyEntryContentDigest(zip, curItemName, digestWithAlgorithm, buf);
+      if (NS_FAILED(rv)) {
         return rv;
+      }
 
       mfItems.PutEntry(curItemName);
 
-      if (*nextLineStart == '\0') // end-of-file
+      if (*nextLineStart == '\0') {
+        // end-of-file
         break;
+      }
 
       // reset so we know we haven't encountered either of these for the next
       // item yet.
@@ -594,9 +662,8 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
     // Lines to look for:
 
     // (1) Digest:
-    if (attrName.LowerCaseEqualsLiteral("sha1-digest"))
-    {
-      if (!digest.IsEmpty()) { // multiple SHA1 digests in section
+    if (attrName.EqualsIgnoreCase(digestNameToFind)) {
+      if (!digest.IsEmpty()) { // multiple SHA* digests in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
@@ -609,8 +676,7 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
     }
 
     // (2) Name: associates this manifest section with a file in the jar.
-    if (attrName.LowerCaseEqualsLiteral("name"))
-    {
+    if (attrName.LowerCaseEqualsLiteral("name")) {
       if (MOZ_UNLIKELY(curItemName.Length() > 0)) // multiple names in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
 
@@ -716,7 +782,7 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
                                                         locker);
 }
 
-NS_IMETHODIMP
+nsresult
 OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
                   /*out, optional */ nsIZipReader** aZipReader,
                   /*out, optional */ nsIX509Cert** aSignerCert)
@@ -744,7 +810,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   nsAutoCString sigFilename;
   ScopedAutoSECItem sigBuffer;
   rv = FindAndLoadOneEntry(zip, nsLiteralCString(JAR_RSA_SEARCH_STRING),
-                           sigFilename, sigBuffer, nullptr);
+                           sigFilename, sigBuffer);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
   }
@@ -754,7 +820,8 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   ScopedAutoSECItem sfBuffer;
   Digest sfCalculatedDigest;
   rv = FindAndLoadOneEntry(zip, NS_LITERAL_CSTRING(JAR_SF_SEARCH_STRING),
-                           sfFilename, sfBuffer, &sfCalculatedDigest);
+                           sfFilename, sfBuffer, SEC_OID_SHA1,
+                           &sfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
@@ -767,7 +834,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     return rv;
   }
 
-  nsAutoCString mfDigest;
+  DigestWithAlgorithm mfDigest;
   rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return rv;
@@ -778,14 +845,15 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   ScopedAutoSECItem manifestBuffer;
   Digest mfCalculatedDigest;
   rv = FindAndLoadOneEntry(zip, NS_LITERAL_CSTRING(JAR_MF_SEARCH_STRING),
-                           mfFilename, manifestBuffer, &mfCalculatedDigest);
+                           mfFilename, manifestBuffer, mfDigest.mAlgorithm,
+                           &mfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsDependentCSubstring calculatedDigest(
     DigestToDependentString(mfCalculatedDigest));
-  if (!mfDigest.Equals(calculatedDigest)) {
+  if (!mfDigest.mDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
@@ -797,7 +865,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   nsTHashtable<nsCStringHashKey> items;
 
   rv = ParseMF(BitwiseCast<char*, unsigned char*>(manifestBuffer.data), zip,
-               items, buf);
+               mfDigest.mAlgorithm, items, buf);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -993,12 +1061,14 @@ FindSignatureFilename(nsIFile* aMetaDir,
 
 // Loads the signature metadata file that matches the given filename in
 // the passed-in Meta-inf directory. If bufDigest is not null then on
-// success bufDigest will contain the SHA-1 digest of the entry.
+// success bufDigest will contain the SHA1 or SHA256 digest of the entry
+// (depending on what aDigestAlgorithm is).
 nsresult
 LoadOneMetafile(nsIFile* aMetaDir,
                 const nsAString& aFilename,
                 /*out*/ SECItem& aBuf,
-                /*optional, out*/ Digest* aBufDigest)
+                /*optional, in*/ SECOidTag aDigestAlgorithm = SEC_OID_SHA1,
+                /*optional, out*/ Digest* aBufDigest = nullptr)
 {
   nsCOMPtr<nsIFile> metafile;
   nsresult rv = aMetaDir->Clone(getter_AddRefs(metafile));
@@ -1024,7 +1094,7 @@ LoadOneMetafile(nsIFile* aMetaDir,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aBufDigest) {
-    rv = aBufDigest->DigestBuf(SEC_OID_SHA1, aBuf.data, aBuf.len - 1);
+    rv = aBufDigest->DigestBuf(aDigestAlgorithm, aBuf.data, aBuf.len - 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1036,15 +1106,26 @@ LoadOneMetafile(nsIFile* aMetaDir,
 // The filenames of all entries will be returned in aMfItems. aBuf must
 // be a pre-allocated scratch buffer that is used for doing I/O.
 nsresult
-ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
+ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir, SECOidTag aDigestAlgorithm,
                 /*out*/ nsTHashtable<nsStringHashKey>& aMfItems,
                 ScopedAutoSECItem& aBuf)
 {
-  nsresult rv;
+  const char* digestNameToFind = nullptr;
+  switch (aDigestAlgorithm) {
+    case SEC_OID_SHA256:
+      digestNameToFind = "sha256-digest";
+      break;
+    case SEC_OID_SHA1:
+      digestNameToFind = "sha1-digest";
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("bad argument to ParseMF");
+      return NS_ERROR_FAILURE;
+  }
 
   const char* nextLineStart = aFilebuf;
-
-  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_MF_HEADER));
+  nsresult rv = CheckManifestVersion(nextLineStart,
+                                     NS_LITERAL_CSTRING(JAR_MF_HEADER));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1097,7 +1178,9 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
 
       // Verify that the file's content digest matches the digest from this
       // MF section.
-      rv = VerifyFileContentDigest(aDir, curItemName, digest, aBuf);
+      DigestWithAlgorithm digestWithAlgorithm = { digest, aDigestAlgorithm };
+      rv = VerifyFileContentDigest(aDir, curItemName, digestWithAlgorithm,
+                                   aBuf);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1127,9 +1210,9 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
     // Lines to look for:
 
     // (1) Digest:
-    if (attrName.LowerCaseEqualsLiteral("sha1-digest")) {
+    if (attrName.EqualsIgnoreCase(digestNameToFind)) {
       if (!digest.IsEmpty()) {
-        // multiple SHA1 digests in section
+        // multiple SHA* digests in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
@@ -1298,7 +1381,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   }
 
   ScopedAutoSECItem sigBuffer;
-  rv = LoadOneMetafile(metaDir, sigFilename, sigBuffer, nullptr);
+  rv = LoadOneMetafile(metaDir, sigFilename, sigBuffer);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
   }
@@ -1311,7 +1394,8 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   ScopedAutoSECItem sfBuffer;
   Digest sfCalculatedDigest;
-  rv = LoadOneMetafile(metaDir, sfFilename, sfBuffer, &sfCalculatedDigest);
+  rv = LoadOneMetafile(metaDir, sfFilename, sfBuffer, SEC_OID_SHA1,
+                       &sfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
@@ -1326,7 +1410,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   // Get the expected manifest hash from the signed .sf file
 
-  nsAutoCString mfDigest;
+  DigestWithAlgorithm mfDigest;
   rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
@@ -1337,14 +1421,15 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   nsAutoString mfFilename(NS_LITERAL_STRING("manifest.mf"));
   ScopedAutoSECItem manifestBuffer;
   Digest mfCalculatedDigest;
-  rv = LoadOneMetafile(metaDir, mfFilename, manifestBuffer, &mfCalculatedDigest);
+  rv = LoadOneMetafile(metaDir, mfFilename, manifestBuffer, mfDigest.mAlgorithm,
+                       &mfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
   nsDependentCSubstring calculatedDigest(
     DigestToDependentString(mfCalculatedDigest));
-  if (!mfDigest.Equals(calculatedDigest)) {
+  if (!mfDigest.mDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
@@ -1357,7 +1442,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   nsTHashtable<nsStringHashKey> items;
   rv = ParseMFUnpacked(BitwiseCast<char*, unsigned char*>(manifestBuffer.data),
-                       aDirectory, items, buf);
+                       aDirectory, mfDigest.mAlgorithm, items, buf);
   if (NS_FAILED(rv)){
     return rv;
   }
