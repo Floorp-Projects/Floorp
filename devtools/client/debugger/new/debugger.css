@@ -412,7 +412,7 @@ body {
 .modal-wrapper {
   position: fixed;
   display: flex;
-  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
   top: 0;
@@ -423,7 +423,7 @@ body {
 
 .modal {
   top: 0;
-  height: 230px;
+  margin: auto;
   width: 500px;
   background-color: var(--theme-toolbar-background);
   transform: translateY(-250px);
@@ -438,7 +438,7 @@ body {
 
 .modal.entered,
 .modal.exiting {
-  transform: translateY(30px);
+  transform: translateY(0px);
 }
 
 @media (max-width: 520px) {
@@ -490,7 +490,6 @@ body {
 }
 
 .shortcuts-modal {
-  height: fit-content;
   width: 45%;
 }
 
@@ -973,7 +972,7 @@ html .arrow.expanded svg {
   width: 15px;
   height: 15px;
   margin-right: 5px;
-  vertical-align: bottom;
+  vertical-align: sub;
 }
 
 .theme-dark .webpack {
@@ -1428,6 +1427,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   display: flex;
   overflow-x: hidden;
   overflow-y: auto;
+  padding-top: 11px;
 }
 
 .sources-list .managed-tree {
@@ -1459,6 +1459,11 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .sources-list .tree .label {
   padding: 3px 0px 3px 0px;
+  display: inline-block;
+}
+
+.sources-list .tree .node .no-arrow {
+  width: 10px;
   display: inline-block;
 }
 
@@ -1497,7 +1502,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   position: relative;
   transition: all 0.25s ease;
   overflow: hidden;
-  padding: 6.5px;
+  padding: 8px 8px 7px 8px;
   margin-bottom: 0px;
   margin-top: -1px;
   cursor: default;
@@ -2353,11 +2358,6 @@ html[dir="rtl"] .arrow svg,
   --theme-conditional-breakpoint-color: var(--theme-body-color);
 }
 
-.paused .CodeMirror-line,
-.paused .CodeMirror-linenumber {
-  opacity: 0.7;
-}
-
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
  * BUG https://github.com/devtools-html/debugger.html/issues/63
@@ -2629,6 +2629,7 @@ html .breakpoints-list .breakpoint.paused {
   overflow-x: hidden;
   text-overflow: ellipsis;
   padding: 1px 0;
+  vertical-align: bottom;
 }
 
 .breakpoints-list .pause-indicator {
@@ -3216,9 +3217,23 @@ html .command-bar > button:disabled {
   offset-inline-start: auto;
 }
 
+.welcomebox .small-size-layout {
+  display: none;
+}
+
+.welcomebox .normal-layout {
+  display: inline-block;
+}
+
 .shortcutKeys {
   text-align: right;
   float: left;
+  font-family: Courier;
+}
+
+.shortcutKey {
+  display: inline-block;
+  margin-right: 10px;
   font-family: Courier;
 }
 
@@ -3230,6 +3245,24 @@ html .command-bar > button:disabled {
 
 html .welcomebox .toggle-button-end.collapsed {
   bottom: 1px;
+}
+
+@media (max-width: 430px) {
+  .welcomebox .small-size-layout {
+    display: inline-block;
+  }
+
+  .welcomebox .normal-layout {
+    display: none;
+  }
+
+  .shortcutFunction {
+    margin-left: 0;
+  }
+
+  .shortcutKey {
+    display: block;
+  }
 }
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
