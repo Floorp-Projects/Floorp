@@ -74,6 +74,7 @@ loader.lazyRequireGetter(this, "WalkerSearch", "devtools/server/actors/utils/wal
 loader.lazyRequireGetter(this, "PageStyleActor", "devtools/server/actors/styles", true);
 loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
+loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 loader.lazyRequireGetter(this, "LayoutActor", "devtools/server/actors/layout", true);
 loader.lazyRequireGetter(this, "HighlighterActor", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
@@ -104,6 +105,16 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const IMAGE_FETCHING_TIMEOUT = 500;
+
+// Minimum delay between two "new-mutations" events.
+const MUTATIONS_THROTTLING_DELAY = 100;
+// List of mutation types that should -not- be throttled.
+const IMMEDIATE_MUTATIONS = [
+  "documentUnload",
+  "frameLoad",
+  "newRoot",
+  "pseudoClassLock",
+];
 
 // SKIP_TO_* arguments are used with the DocumentWalker, driving the strategy to use if
 // the starting node is incompatible with the filter function of the walker.
@@ -880,6 +891,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.onMutations = this.onMutations.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
+    this._throttledEmitNewMutations = throttle(this._emitNewMutations.bind(this),
+      MUTATIONS_THROTTLING_DELAY);
 
     tabActor.on("will-navigate", this.onFrameUnload);
     tabActor.on("window-ready", this.onFrameLoad);
@@ -2299,6 +2312,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   getMutations: function (options = {}) {
     let pending = this._pendingMutations || [];
     this._pendingMutations = [];
+    this._waitingForGetMutations = false;
 
     if (options.cleanup) {
       for (let node of this._orphaned) {
@@ -2317,15 +2331,42 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // We've been destroyed, don't bother queueing this mutation.
       return;
     }
-    // We only send the `new-mutations` notification once, until the client
-    // fetches mutations with the `getMutations` packet.
-    let needEvent = this._pendingMutations.length === 0;
 
+    // Add the mutation to the list of mutations to be retrieved next.
     this._pendingMutations.push(mutation);
 
-    if (needEvent) {
-      this.emit("new-mutations");
+    // Bail out if we already emitted a new-mutations event and are waiting for a client
+    // to retrieve them.
+    if (this._waitingForGetMutations) {
+      return;
     }
+
+    if (IMMEDIATE_MUTATIONS.includes(mutation.type)) {
+      this._emitNewMutations();
+    } else {
+      /**
+       * If many mutations are fired at the same time, clients might sequentially request
+       * children/siblings for updated nodes, which can be costly. By throttling the calls
+       * to getMutations, duplicated mutations will be ignored.
+       */
+      this._throttledEmitNewMutations();
+    }
+  },
+
+  _emitNewMutations: function () {
+    if (!this.actorID || this._destroyed) {
+      // Bail out if the actor was destroyed after throttling this call.
+      return;
+    }
+
+    if (this._waitingForGetMutations || this._pendingMutations.length == 0) {
+      // Bail out if we already fired the new-mutation event or if no mutations are
+      // waiting to be retrieved.
+      return;
+    }
+
+    this._waitingForGetMutations = true;
+    this.emit("new-mutations");
   },
 
   /**
