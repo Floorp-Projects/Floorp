@@ -77,6 +77,15 @@
         <item name="android:layout_marginRight">-3dp</item>
     </style>
 
+    <style name="TabsLayoutItemFavicon">
+        <item name="android:layout_marginEnd">4dp</item>
+    </style>
+
+    <style name="TabsListItemFavicon">
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">6dp</item>
+    </style>
+
     <style name="TabsTray.AddTab" parent="TabsTray.V17.AddTab" />
     <style name="TabsTray.V17.AddTab" parent="TabsTray.Base.AddTab">
         <item name="android:layout_marginEnd">-3dp</item>
