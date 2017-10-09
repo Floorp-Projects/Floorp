@@ -136,7 +136,7 @@ class FindContent {
       rangeData.push(data);
 
       if (node != range.startContainer) {
-        let node = walker.nextNode();
+        node = walker.nextNode();
         while (node) {
           nodeCountWin++;
           if (node == range.startContainer) {
@@ -149,7 +149,7 @@ class FindContent {
       data.startOffset = range.startOffset;
 
       if (range.startContainer != range.endContainer) {
-        let node = walker.nextNode();
+        node = walker.nextNode();
         while (node) {
           nodeCountWin++;
           if (node == range.endContainer) {
