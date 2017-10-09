@@ -10,7 +10,7 @@ add_task(async function() {
   });
 
   await promiseAutocompleteResultPopup("keyword search");
-  let result = gURLBar.popup.richlistbox.children[0];
+  let result = await waitForAutocompleteResultAt(0);
 
   info("Before override");
   let titleHbox = result._titleText.parentNode.parentNode;
