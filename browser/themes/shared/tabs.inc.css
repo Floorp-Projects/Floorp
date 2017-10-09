@@ -10,7 +10,6 @@
   --tabs-top-border-width: 0px;
   --tab-toolbar-navbar-overlap: 1px;
   --tab-min-height: 33px;
-  --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
 }
 
@@ -53,27 +52,10 @@ tabbrowser {
   border-width: 0;
   margin: 0;
   padding: 0;
+}
+
+.tabbrowser-tab {
   -moz-box-align: stretch;
-}
-
-.tabbrowser-tab:not([pinned]) {
-  -moz-box-flex: 100;
-  max-width: 225px;
-  min-width: var(--tab-min-width);
-  width: 0;
-  transition: min-width 100ms ease-out,
-              max-width 100ms ease-out;
-}
-
-:root[uidensity=touch] .tabbrowser-tab:not([pinned]) {
-  /* Touch mode needs additional space for the close button. */
-  min-width: calc(var(--tab-min-width) + 10px);
-}
-
-.tabbrowser-tab:not([pinned]):not([fadein]) {
-  max-width: 0.1px;
-  min-width: 0.1px;
-  visibility: hidden;
 }
 
 /* The selected tab should appear above the border between the tabs toolbar and
