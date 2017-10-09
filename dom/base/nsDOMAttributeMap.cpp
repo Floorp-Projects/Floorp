@@ -115,7 +115,7 @@ nsDOMAttributeMap::SetOwnerDocument(nsIDocument* aDocument)
 }
 
 void
-nsDOMAttributeMap::DropAttribute(int32_t aNamespaceID, nsIAtom* aLocalName)
+nsDOMAttributeMap::DropAttribute(int32_t aNamespaceID, nsAtom* aLocalName)
 {
   nsAttrKey attr(aNamespaceID, aLocalName);
   if (auto entry = mAttributeCache.Lookup(attr)) {
@@ -271,7 +271,7 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
   for (i = 0; i < count; ++i) {
     const nsAttrName* name = mContent->GetAttrNameAt(i);
     int32_t attrNS = name->NamespaceID();
-    nsIAtom* nameAtom = name->LocalName();
+    nsAtom* nameAtom = name->LocalName();
 
     // we're purposefully ignoring the prefix.
     if (aAttr.NodeInfo()->Equals(nameAtom, attrNS)) {
@@ -454,7 +454,7 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
   for (i = 0; i < count; ++i) {
     const nsAttrName* name = mContent->GetAttrNameAt(i);
     int32_t attrNS = name->NamespaceID();
-    nsIAtom* nameAtom = name->LocalName();
+    nsAtom* nameAtom = name->LocalName();
 
     // we're purposefully ignoring the prefix.
     if (nameSpaceID == attrNS &&

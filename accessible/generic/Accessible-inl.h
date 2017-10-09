@@ -35,7 +35,7 @@ Accessible::HasARIARole() const
 }
 
 inline bool
-Accessible::IsARIARole(nsIAtom* aARIARole) const
+Accessible::IsARIARole(nsAtom* aARIARole) const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->Is(aARIARole);

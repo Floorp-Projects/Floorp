@@ -51,7 +51,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextElement)
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGTextElement::IsAttributeMapped(const nsIAtom* name) const
+SVGTextElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sTextContentElementsMap,

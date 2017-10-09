@@ -94,7 +94,7 @@ nsAssignmentSet::Count() const
 }
 
 bool
-nsAssignmentSet::HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const
+nsAssignmentSet::HasAssignment(nsAtom* aVariable, nsIRDFNode* aValue) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable && assignment->mValue == aValue)
@@ -105,7 +105,7 @@ nsAssignmentSet::HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const
 }
 
 bool
-nsAssignmentSet::HasAssignmentFor(nsIAtom* aVariable) const
+nsAssignmentSet::HasAssignmentFor(nsAtom* aVariable) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable)
@@ -116,7 +116,7 @@ nsAssignmentSet::HasAssignmentFor(nsIAtom* aVariable) const
 }
 
 bool
-nsAssignmentSet::GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const
+nsAssignmentSet::GetAssignmentFor(nsAtom* aVariable, nsIRDFNode** aValue) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable) {
@@ -258,7 +258,7 @@ InstantiationSet::Erase(Iterator aIterator)
 
 
 bool
-InstantiationSet::HasAssignmentFor(nsIAtom* aVariable) const
+InstantiationSet::HasAssignmentFor(nsAtom* aVariable) const
 {
     return !Empty() ? First()->mAssignments.HasAssignmentFor(aVariable) : false;
 }

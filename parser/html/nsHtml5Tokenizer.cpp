@@ -30,7 +30,7 @@
 
 #define nsHtml5Tokenizer_cpp__
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsIContent.h"
@@ -131,7 +131,7 @@ nsHtml5Tokenizer::isViewingXmlSource()
 }
 
 void 
-nsHtml5Tokenizer::setStateAndEndTagExpectation(int32_t specialTokenizerState, nsIAtom* endTagExpectation)
+nsHtml5Tokenizer::setStateAndEndTagExpectation(int32_t specialTokenizerState, nsAtom* endTagExpectation)
 {
   this->stateSave = specialTokenizerState;
   if (specialTokenizerState == nsHtml5Tokenizer::DATA) {
@@ -293,7 +293,7 @@ void
 nsHtml5Tokenizer::strBufToElementNameString()
 {
   if (containsHyphen) {
-    nsIAtom* annotationName = nsHtml5ElementName::ELT_ANNOTATION_XML->getName();
+    nsAtom* annotationName = nsHtml5ElementName::ELT_ANNOTATION_XML->getName();
     if (nsHtml5Portability::localEqualsBuffer(
           annotationName, strBuf, 0, strBufLen)) {
       tagName = nsHtml5ElementName::ELT_ANNOTATION_XML;

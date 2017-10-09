@@ -56,7 +56,7 @@ protected:
   struct SizeInfo {
     nsString width, height;
   };
-  static void SizeInfoDtorFunc(void *aObject, nsIAtom *aPropertyName,
+  static void SizeInfoDtorFunc(void *aObject, nsAtom *aPropertyName,
                                void *aPropertyValue, void *aData);
   static void ResizeContent(nsIContent* aContent, const Direction& aDirection,
                             const SizeInfo& aSizeInfo, SizeInfo* aOriginalSizeInfo);

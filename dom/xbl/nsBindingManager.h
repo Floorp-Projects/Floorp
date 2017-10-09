@@ -22,7 +22,7 @@
 
 struct ElementDependentRuleProcessorData;
 class nsIXPConnectWrappedJS;
-class nsIAtom;
+class nsAtom;
 class nsIDOMNodeList;
 class nsIDocument;
 class nsIURI;
@@ -79,7 +79,7 @@ public:
                                    nsIDocument* aOldDocument,
                                    DestructorHandling aDestructorHandling);
 
-  nsIAtom* ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID);
+  nsAtom* ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID);
 
   /**
    * Return the nodelist of "anonymous" kids for this node.  This might

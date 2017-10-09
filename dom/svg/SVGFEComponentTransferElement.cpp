@@ -95,7 +95,7 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aIns
 
 bool
 SVGFEComponentTransferElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                         nsIAtom* aAttribute) const
+                                                         nsAtom* aAttribute) const
 {
   return SVGFEComponentTransferElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&

@@ -733,7 +733,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   ProxyAccessible* proxy = [self getProxyAccessible];
 
   // Deal with landmarks first
-  nsIAtom* landmark = nullptr;
+  nsAtom* landmark = nullptr;
   if (accWrap)
     landmark = accWrap->LandmarkRole();
   else if (proxy)
@@ -770,7 +770,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     return @"AXLandmarkRegion";
 
   // Now, deal with widget roles
-  nsIAtom* roleAtom = nullptr;
+  nsAtom* roleAtom = nullptr;
   if (accWrap && accWrap->HasARIARole()) {
     const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
     roleAtom = *roleMap->roleAtom;

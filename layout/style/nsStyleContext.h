@@ -16,7 +16,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleSet.h"
 
-class nsIAtom;
+class nsAtom;
 class nsPresContext;
 
 namespace mozilla {
@@ -79,7 +79,7 @@ public:
 
   inline nsPresContext* PresContext() const;
 
-  nsIAtom* GetPseudo() const { return mPseudoTag; }
+  nsAtom* GetPseudo() const { return mPseudoTag; }
   mozilla::CSSPseudoElementType GetPseudoType() const {
     return static_cast<mozilla::CSSPseudoElementType>(
              mBits >> NS_STYLE_CONTEXT_TYPE_SHIFT);
@@ -313,7 +313,7 @@ protected:
   ~nsStyleContext() {}
 
   // Delegated Helper constructor.
-  nsStyleContext(nsIAtom* aPseudoTag,
+  nsStyleContext(nsAtom* aPseudoTag,
                  mozilla::CSSPseudoElementType aPseudoType);
 
   // Helper functions for GetStyle* and PeekStyle*
@@ -330,7 +330,7 @@ protected:
 
   // If this style context is for a pseudo-element or anonymous box,
   // the relevant atom.
-  RefPtr<nsIAtom> mPseudoTag;
+  RefPtr<nsAtom> mPseudoTag;
 
   // mBits stores a number of things:
   //  - It records (using the style struct bits) which structs are
@@ -354,7 +354,7 @@ protected:
 
 already_AddRefed<mozilla::GeckoStyleContext>
 NS_NewStyleContext(mozilla::GeckoStyleContext* aParentContext,
-                   nsIAtom* aPseudoTag,
+                   nsAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,
                    bool aSkipParentDisplayBasedStyleFixup);

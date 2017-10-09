@@ -41,7 +41,7 @@ public:
                             const nsTArray<bool>& aInputsAreTainted,
                             nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
+          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
   virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

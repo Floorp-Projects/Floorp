@@ -46,10 +46,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLResourceLoader)
 struct nsXBLResource
 {
   nsXBLResource* mNext;
-  nsIAtom* mType;
+  nsAtom* mType;
   nsString mSrc;
 
-  nsXBLResource(nsIAtom* aType, const nsAString& aSrc)
+  nsXBLResource(nsAtom* aType, const nsAString& aSrc)
   {
     MOZ_COUNT_CTOR(nsXBLResource);
     mNext = nullptr;
@@ -200,7 +200,7 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 }
 
 void
-nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
+nsXBLResourceLoader::AddResource(nsAtom* aResourceType, const nsAString& aSrc)
 {
   nsXBLResource* res = new nsXBLResource(aResourceType, aSrc);
   if (!mResourceList)

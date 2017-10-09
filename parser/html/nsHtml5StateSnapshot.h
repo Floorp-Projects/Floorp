@@ -28,7 +28,7 @@
 #ifndef nsHtml5StateSnapshot_h
 #define nsHtml5StateSnapshot_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"

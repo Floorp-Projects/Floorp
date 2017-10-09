@@ -99,7 +99,7 @@ nsNameSpaceManager::RegisterNameSpace(const nsAString& aURI,
     return NS_OK;
   }
 
-  RefPtr<nsIAtom> atom = NS_Atomize(aURI);
+  RefPtr<nsAtom> atom = NS_Atomize(aURI);
   nsresult rv = NS_OK;
   if (!mURIToIDTable.Get(atom, &aNameSpaceID)) {
     aNameSpaceID = mURIArray.Length();
@@ -141,12 +141,12 @@ nsNameSpaceManager::GetNameSpaceID(const nsAString& aURI,
     return kNameSpaceID_None; // xmlns="", see bug 75700 for details
   }
 
-  RefPtr<nsIAtom> atom = NS_Atomize(aURI);
+  RefPtr<nsAtom> atom = NS_Atomize(aURI);
   return GetNameSpaceID(atom, aInChromeDoc);
 }
 
 int32_t
-nsNameSpaceManager::GetNameSpaceID(nsIAtom* aURI,
+nsNameSpaceManager::GetNameSpaceID(nsAtom* aURI,
                                    bool aInChromeDoc)
 {
   if (aURI == nsGkAtoms::_empty) {
@@ -231,10 +231,10 @@ nsNameSpaceManager::HasElementCreator(int32_t aNameSpaceID)
          false;
 }
 
-nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsIAtom> aURI,
+nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsAtom> aURI,
                                           const int32_t aNameSpaceID)
 {
-  RefPtr<nsIAtom> uri = aURI;
+  RefPtr<nsAtom> uri = aURI;
   if (aNameSpaceID < 0) {
     // We've wrapped...  Can't do anything else here; just bail.
     return NS_ERROR_OUT_OF_MEMORY;
@@ -248,10 +248,10 @@ nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsIAtom> aURI,
 }
 
 nsresult
-nsNameSpaceManager::AddDisabledNameSpace(already_AddRefed<nsIAtom> aURI,
+nsNameSpaceManager::AddDisabledNameSpace(already_AddRefed<nsAtom> aURI,
                                          const int32_t aNameSpaceID)
 {
-  RefPtr<nsIAtom> uri = aURI;
+  RefPtr<nsAtom> uri = aURI;
   if (aNameSpaceID < 0) {
     // We've wrapped...  Can't do anything else here; just bail.
     return NS_ERROR_OUT_OF_MEMORY;

@@ -24,7 +24,7 @@ NS_IMPL_ISUPPORTS_INHERITED(XBLChildrenElement,
 NS_IMPL_ELEMENT_CLONE(XBLChildrenElement)
 
 nsresult
-XBLChildrenElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+XBLChildrenElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                   const nsAttrValueOrString* aValue,
                                   bool aNotify)
 {

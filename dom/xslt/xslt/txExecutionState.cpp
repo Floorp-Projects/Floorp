@@ -169,7 +169,7 @@ txExecutionState::popAndDeleteEvalContextUntil(txIEvalContext* aContext)
 }
 
 nsresult
-txExecutionState::getVariable(int32_t aNamespace, nsIAtom* aLName,
+txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
                               txAExprResult*& aResult)
 {
     nsresult rv = NS_OK;

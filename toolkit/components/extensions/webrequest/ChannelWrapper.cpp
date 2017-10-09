@@ -584,7 +584,7 @@ ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITa
 }
 
 already_AddRefed<nsITraceableChannel>
-ChannelWrapper::GetTraceableChannel(nsIAtom* aAddonId, dom::nsIContentParent* aContentParent) const
+ChannelWrapper::GetTraceableChannel(nsAtom* aAddonId, dom::nsIContentParent* aContentParent) const
 {
   nsCOMPtr<nsITabParent> tabParent;
   if (mAddonEntries.Get(aAddonId, getter_AddRefs(tabParent))) {
@@ -934,13 +934,13 @@ ChannelWrapper::CheckEventListeners()
 }
 
 void
-ChannelWrapper::EventListenerAdded(nsIAtom* aType)
+ChannelWrapper::EventListenerAdded(nsAtom* aType)
 {
   CheckEventListeners();
 }
 
 void
-ChannelWrapper::EventListenerRemoved(nsIAtom* aType)
+ChannelWrapper::EventListenerRemoved(nsAtom* aType)
 {
   CheckEventListeners();
 }

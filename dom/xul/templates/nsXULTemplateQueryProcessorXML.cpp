@@ -225,8 +225,8 @@ nsXULTemplateQueryProcessorXML::Done()
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                                              nsIDOMNode* aQueryNode,
-                                             nsIAtom* aRefVariable,
-                                             nsIAtom* aMemberVariable,
+                                             nsAtom* aRefVariable,
+                                             nsAtom* aMemberVariable,
                                              nsISupports** _retval)
 {
     *_retval = nullptr;
@@ -272,7 +272,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                     return rv.StealNSResult();
                 }
 
-                RefPtr<nsIAtom> varatom = NS_Atomize(var);
+                RefPtr<nsAtom> varatom = NS_Atomize(var);
 
                 query->AddBinding(varatom, Move(compiledexpr));
             }
@@ -331,8 +331,8 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
 
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::AddBinding(nsIDOMNode* aRuleNode,
-                                           nsIAtom* aVar,
-                                           nsIAtom* aRef,
+                                           nsAtom* aVar,
+                                           nsAtom* aRef,
                                            const nsAString& aExpr)
 {
     if (mGenerationStarted)
@@ -389,7 +389,7 @@ nsXULTemplateQueryProcessorXML::TranslateRef(nsISupports* aDatasource,
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::CompareResults(nsIXULTemplateResult* aLeft,
                                                nsIXULTemplateResult* aRight,
-                                               nsIAtom* aVar,
+                                               nsAtom* aVar,
                                                uint32_t aSortHints,
                                                int32_t* aResult)
 {

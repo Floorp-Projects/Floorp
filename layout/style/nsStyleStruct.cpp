@@ -236,10 +236,10 @@ nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
   return NSToCoordTruncClamped(float(aSize) / aPresContext->EffectiveTextZoom());
 }
 
-/* static */ already_AddRefed<nsIAtom>
+/* static */ already_AddRefed<nsAtom>
 nsStyleFont::GetLanguage(const nsPresContext* aPresContext)
 {
-  RefPtr<nsIAtom> language = aPresContext->GetContentLanguage();
+  RefPtr<nsAtom> language = aPresContext->GetContentLanguage();
   if (!language) {
     // we didn't find a (usable) Content-Language, so we fall back
     // to whatever the presContext guessed from the charset
@@ -2412,13 +2412,13 @@ nsStyleImage::SetGradientData(nsStyleGradient* aGradient)
 }
 
 void
-nsStyleImage::SetElementId(already_AddRefed<nsIAtom> aElementId)
+nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId)
 {
   if (mType != eStyleImageType_Null) {
     SetNull();
   }
 
-  if (RefPtr<nsIAtom> atom = aElementId) {
+  if (RefPtr<nsAtom> atom = aElementId) {
     mElementId = atom.forget().take();
     mType = eStyleImageType_Element;
   }
@@ -3392,13 +3392,13 @@ StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
                                         CSSEnabledState::eForAllContent) ==
                aProperty,
              "property and property string should match");
-  RefPtr<nsIAtom> temp = NS_Atomize(aPropertyString);
+  RefPtr<nsAtom> temp = NS_Atomize(aPropertyString);
   SetUnknownProperty(aProperty, temp);
 }
 
 void
 StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
-                                    nsIAtom* aPropertyString)
+                                    nsAtom* aPropertyString)
 {
   MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||
              aProperty == eCSSPropertyExtra_variable,
@@ -4190,7 +4190,7 @@ nsStyleText::nsStyleText(const nsPresContext* aContext)
   , mTextShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleText);
-  RefPtr<nsIAtom> language = aContext->GetContentLanguage();
+  RefPtr<nsAtom> language = aContext->GetContentLanguage();
   mTextEmphasisPosition = language &&
     nsStyleUtil::MatchesLanguagePrefix(language, u"zh") ?
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH :

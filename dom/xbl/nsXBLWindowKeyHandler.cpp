@@ -8,7 +8,7 @@
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
@@ -255,7 +255,7 @@ nsXBLWindowKeyHandler::EnsureHandlers()
 }
 
 nsresult
-nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType)
+nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsAtom* aEventType)
 {
   bool prevent;
   aKeyEvent->AsEvent()->GetDefaultPrevented(&prevent);
@@ -443,7 +443,7 @@ nsXBLWindowKeyHandler::CollectKeyboardShortcuts()
   return KeyboardMap(mozilla::Move(shortcuts));
 }
 
-nsIAtom*
+nsAtom*
 nsXBLWindowKeyHandler::ConvertEventToDOMEventType(
                          const WidgetKeyboardEvent& aWidgetKeyboardEvent) const
 {
@@ -510,7 +510,7 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  RefPtr<nsIAtom> eventTypeAtom =
+  RefPtr<nsAtom> eventTypeAtom =
     ConvertEventToDOMEventType(*widgetKeyboardEvent);
   return WalkHandlers(keyEvent, eventTypeAtom);
 }
@@ -619,7 +619,7 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 //
 bool
 nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
-                                            nsIAtom* aEventType,
+                                            nsAtom* aEventType,
                                             nsXBLPrototypeHandler* aHandler,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
@@ -653,7 +653,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
 bool
 nsXBLWindowKeyHandler::WalkHandlersAndExecute(
                          nsIDOMKeyEvent* aKeyEvent,
-                         nsIAtom* aEventType,
+                         nsAtom* aEventType,
                          nsXBLPrototypeHandler* aFirstHandler,
                          uint32_t aCharCode,
                          const IgnoreModifierState& aIgnoreModifierState,
@@ -810,7 +810,7 @@ nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
     return false;
   }
 
-  RefPtr<nsIAtom> eventTypeAtom =
+  RefPtr<nsAtom> eventTypeAtom =
     ConvertEventToDOMEventType(*widgetKeyboardEvent);
   return WalkHandlersInternal(aEvent, eventTypeAtom, mHandler, false,
                               aOutReservedForChrome);

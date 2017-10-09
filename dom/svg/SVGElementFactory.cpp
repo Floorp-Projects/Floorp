@@ -14,7 +14,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// Hash table that maps nsIAtom* SVG tags to an offset index
+// Hash table that maps nsAtom* SVG tags to an offset index
 // within the array sSVGContentCreatorFunctions (offset by TABLE_VALUE_OFFSET)
 static PLHashTable* sTagAtomTable = nullptr;
 
@@ -62,7 +62,7 @@ enum SVGTag {
   eSVGTag_Count
 };
 
-// nsIAtom* -> id hash
+// nsAtom* -> id hash
 static PLHashNumber
 SVGTagsHashCodeAtom(const void* key)
 {
@@ -103,7 +103,7 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
 
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  nsIAtom* name = ni->NameAtom();
+  nsAtom* name = ni->NameAtom();
 
   NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),
                "Trying to create SVG elements that aren't in the SVG namespace");

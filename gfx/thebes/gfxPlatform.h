@@ -35,7 +35,7 @@ class gfxFontEntry;
 class gfxPlatformFontList;
 class gfxTextRun;
 class nsIURI;
-class nsIAtom;
+class nsAtom;
 class nsIObserver;
 class SRGBOverrideObserver;
 class gfxTextPerfMetrics;
@@ -332,7 +332,7 @@ public:
      * that correspond to the given language group or generic font family
      * (or both, or neither).
      */
-    virtual nsresult GetFontList(nsIAtom *aLangGroup,
+    virtual nsresult GetFontList(nsAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts);
 

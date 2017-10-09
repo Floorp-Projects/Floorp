@@ -12,7 +12,7 @@
 #include "txCore.h"
 #include "nsString.h"
 #include "txOwningArray.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 #ifdef DEBUG
 #define TX_TO_STRING
@@ -23,7 +23,7 @@
   Much of this code was ported from XSL:P.
 */
 
-class nsIAtom;
+class nsAtom;
 class txIMatchContext;
 class txIEvalContext;
 class txNodeSet;
@@ -141,7 +141,7 @@ public:
 #define TX_DECL_TOSTRING \
     void toString(nsAString& aDest) override;
 #define TX_DECL_GETNAMEATOM \
-    nsresult getNameAtom(nsIAtom** aAtom) override;
+    nsresult getNameAtom(nsAtom** aAtom) override;
 #else
 #define TX_DECL_TOSTRING
 #define TX_DECL_GETNAMEATOM
@@ -315,7 +315,7 @@ protected:
     /*
      * Returns the name of the function as an atom.
      */
-    virtual nsresult getNameAtom(nsIAtom** aAtom) = 0;
+    virtual nsresult getNameAtom(nsAtom** aAtom) = 0;
 #endif
 };
 
@@ -367,7 +367,7 @@ public:
 
     TX_DECL_FUNCTION
 
-    static bool getTypeFromAtom(nsIAtom* aName, eType& aType);
+    static bool getTypeFromAtom(nsAtom* aName, eType& aType);
 
 private:
     eType mType;
@@ -442,15 +442,15 @@ public:
      * Creates a new txNameTest with the given type and the given
      * principal node type
      */
-    txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
+    txNameTest(nsAtom* aPrefix, nsAtom* aLocalName, int32_t aNSID,
                uint16_t aNodeType);
 
     NodeTestType getType() override;
 
     TX_DECL_NODE_TEST
 
-    RefPtr<nsIAtom> mPrefix;
-    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
     int32_t mNamespace;
 private:
     uint16_t mNodeType;
@@ -496,7 +496,7 @@ public:
 
 private:
     NodeType mNodeType;
-    RefPtr<nsIAtom> mNodeName;
+    RefPtr<nsAtom> mNodeName;
 };
 
 /**
@@ -826,13 +826,13 @@ class VariableRefExpr : public Expr {
 
 public:
 
-    VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID);
+    VariableRefExpr(nsAtom* aPrefix, nsAtom* aLocalName, int32_t aNSID);
 
     TX_DECL_EXPR
 
 private:
-    RefPtr<nsIAtom> mPrefix;
-    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
     int32_t mNamespace;
 };
 
@@ -973,15 +973,15 @@ private:
 class txNamedAttributeStep : public Expr
 {
 public:
-    txNamedAttributeStep(int32_t aNsID, nsIAtom* aPrefix,
-                         nsIAtom* aLocalName);
+    txNamedAttributeStep(int32_t aNsID, nsAtom* aPrefix,
+                         nsAtom* aLocalName);
 
     TX_DECL_EXPR
 
 private:
     int32_t mNamespace;
-    RefPtr<nsIAtom> mPrefix;
-    RefPtr<nsIAtom> mLocalName;
+    RefPtr<nsAtom> mPrefix;
+    RefPtr<nsAtom> mLocalName;
 };
 
 /**

@@ -8,7 +8,7 @@
 #define nsXBLPrototypeHandler_h__
 
 #include "mozilla/EventForwards.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIController.h"
@@ -92,7 +92,7 @@ public:
   bool TryConvertToKeyboardShortcut(
           KeyboardShortcut* aOut) const;
 
-  bool EventTypeEquals(nsIAtom* aEventType) const
+  bool EventTypeEquals(nsAtom* aEventType) const
   {
     return mEventName == aEventType;
   }
@@ -103,7 +103,7 @@ public:
                        const IgnoreModifierState& aIgnoreModifierState);
 
   bool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
-  inline bool MouseEventMatched(nsIAtom* aEventType,
+  inline bool MouseEventMatched(nsAtom* aEventType,
                                   nsIDOMMouseEvent* aEvent)
   {
     if (!EventTypeEquals(aEventType)) {
@@ -125,8 +125,8 @@ public:
 
   nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
 
-  already_AddRefed<nsIAtom> GetEventName();
-  void SetEventName(nsIAtom* aName) { mEventName = aName; }
+  already_AddRefed<nsAtom> GetEventName();
+  void SetEventName(nsAtom* aName) { mEventName = aName; }
 
   nsXBLEventHandler* GetEventHandler()
   {
@@ -186,7 +186,7 @@ protected:
                           const IgnoreModifierState& aIgnoreModifierState);
   nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
-  nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsIAtom* aName,
+  nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsAtom* aName,
                               JS::MutableHandle<JSObject*> aHandler);
 
   Modifiers GetModifiers() const;
@@ -244,7 +244,7 @@ protected:
 
   // Prototype handlers are chained. We own the next handler in the chain.
   nsXBLPrototypeHandler* mNextHandler;
-  RefPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
+  RefPtr<nsAtom> mEventName; // The type of the event, e.g., "keypress"
   RefPtr<nsXBLEventHandler> mHandler;
   nsXBLPrototypeBinding* mPrototypeBinding; // the binding owns us
 };

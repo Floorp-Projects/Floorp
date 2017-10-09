@@ -53,7 +53,7 @@ public:
                "enumerated");
     MOZ_COUNT_DTOR(EffectSet);
   }
-  static void PropertyDtor(void* aObject, nsIAtom* aPropertyName,
+  static void PropertyDtor(void* aObject, nsAtom* aPropertyName,
                            void* aPropertyValue, void* aData);
 
   // Methods for supporting cycle-collection
@@ -192,7 +192,7 @@ public:
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
 
-  static nsIAtom** GetEffectSetPropertyAtoms();
+  static nsAtom** GetEffectSetPropertyAtoms();
 
   nsCSSPropertyIDSet& PropertiesWithImportantRules()
   {
@@ -208,7 +208,7 @@ public:
   }
 
 private:
-  static nsIAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
+  static nsAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
 
   OwningEffectSet mEffects;
 

@@ -14,7 +14,7 @@
 
 #include "nsISupports.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsIDocument;
 class nsIRDFNode;
@@ -102,7 +102,7 @@ public:
     static nsresult
     FindChildByTag(nsIContent *aElement,
                    int32_t aNameSpaceID,
-                   nsIAtom* aTag,
+                   nsAtom* aTag,
                    nsIContent **aResult);
 
     static nsresult
@@ -114,7 +114,7 @@ public:
     GetTextForNode(nsIRDFNode* aNode, nsAString& aResult);
 
     static nsresult
-    GetResource(int32_t aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
+    GetResource(int32_t aNameSpaceID, nsAtom* aAttribute, nsIRDFResource** aResult);
 
     static nsresult
     GetResource(int32_t aNameSpaceID, const nsAString& aAttribute, nsIRDFResource** aResult);

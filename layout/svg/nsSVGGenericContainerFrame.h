@@ -13,7 +13,7 @@
 #include "nsQueryFrame.h"
 #include "nsSVGContainerFrame.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
@@ -33,7 +33,7 @@ public:
 
   // nsIFrame:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
+                                     nsAtom*        aAttribute,
                                      int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP

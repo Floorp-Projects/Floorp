@@ -67,7 +67,7 @@ private:
   // Callback for property destructor, will be automatically called when the
   // document (in aObject) is being destroyed.
   static void DestroyPropertyCallback(void* aObject,
-                                      nsIAtom* aPropertyName,
+                                      nsAtom* aPropertyName,
                                       void* aPropertyValue,
                                       void* aData);
 
@@ -181,7 +181,7 @@ DecoderDoctorDocumentWatcher::RemovePropertyFromDocument()
 // static
 void
 DecoderDoctorDocumentWatcher::DestroyPropertyCallback(void* aObject,
-                                                      nsIAtom* aPropertyName,
+                                                      nsAtom* aPropertyName,
                                                       void* aPropertyValue,
                                                       void*)
 {

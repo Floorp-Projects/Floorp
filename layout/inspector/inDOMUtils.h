@@ -9,7 +9,7 @@
 
 class nsRuleNode;
 class nsStyleContext;
-class nsIAtom;
+class nsAtom;
 
 namespace mozilla {
 namespace dom {
@@ -30,7 +30,7 @@ private:
 
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(mozilla::dom::Element* aElement,
-                                   nsIAtom* aPseudo);
+                                   nsAtom* aPseudo);
 };
 
 // {0a499822-a287-4089-ad3f-9ffcd4f40263}

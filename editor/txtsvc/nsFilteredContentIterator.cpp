@@ -10,7 +10,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsFilteredContentIterator.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNode.h"

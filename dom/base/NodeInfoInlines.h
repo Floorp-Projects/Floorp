@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_NodeInfoInlines_h___
 #define mozilla_dom_NodeInfoInlines_h___
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIDOMNode.h"
 #include "nsDOMString.h"
 #include "nsGkAtoms.h"
@@ -58,7 +58,7 @@ NodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
 }
 
 inline bool
-NodeInfo::QualifiedNameEquals(nsIAtom* aNameAtom) const
+NodeInfo::QualifiedNameEquals(nsAtom* aNameAtom) const
 {
   MOZ_ASSERT(aNameAtom, "Must have name atom");
   if (!GetPrefixAtom()) {
@@ -72,8 +72,8 @@ NodeInfo::QualifiedNameEquals(nsIAtom* aNameAtom) const
 } // namespace mozilla
 
 inline void
-CheckValidNodeInfo(uint16_t aNodeType, nsIAtom *aName, int32_t aNamespaceID,
-                   nsIAtom* aExtraName)
+CheckValidNodeInfo(uint16_t aNodeType, nsAtom *aName, int32_t aNamespaceID,
+                   nsAtom* aExtraName)
 {
   MOZ_ASSERT(aNodeType == nsIDOMNode::ELEMENT_NODE ||
              aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||

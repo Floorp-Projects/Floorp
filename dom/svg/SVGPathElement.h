@@ -38,13 +38,13 @@ public:
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName) override;
+  virtual bool AttributeDefinesGeometry(const nsAtom *aName) override;
   virtual bool IsMarkable() override;
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
@@ -64,7 +64,7 @@ public:
     return &mD;
   }
 
-  virtual nsIAtom* GetPathDataAttrName() const override {
+  virtual nsAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::d;
   }
 

@@ -12,7 +12,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIAtom;  // used in [noscript] methods only
+interface nsAtom;  // not a real interface; used in [noscript] methods only
 
 // XXX Until these get scriptable. See nsIRDFXMLSink::AddNameSpace()
 [ref] native nsStringRef(nsString);
@@ -102,7 +102,7 @@ interface nsIRDFXMLSink : nsISupports
      * @param aPrefix the namespace prefix
      * @param aURI the namespace URI
      */
-    [noscript] void addNameSpace(in nsIAtom aPrefix,
+    [noscript] void addNameSpace(in nsAtom aPrefix,
                                  [const] in nsStringRef aURI);
 
     /**

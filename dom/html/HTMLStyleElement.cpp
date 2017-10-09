@@ -141,7 +141,7 @@ HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue, bool aNotify)
 {

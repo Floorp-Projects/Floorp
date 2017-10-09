@@ -35,7 +35,7 @@ nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
 
 nsresult
 nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                    nsIAtom* aAttribute,
+                                    nsAtom* aAttribute,
                                     int32_t  aModType)
 {
   // Special for <mtable>: In the frame construction code, we also use

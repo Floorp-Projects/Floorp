@@ -281,7 +281,7 @@ HTMLObjectElement::UnbindFromTree(bool aDeep,
 }
 
 nsresult
-HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue, bool aNotify)
 {
@@ -293,7 +293,7 @@ HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLObjectElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+HTMLObjectElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify)
 {
@@ -305,7 +305,7 @@ HTMLObjectElement::OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsIAtom* aName,
+HTMLObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                         bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
@@ -450,7 +450,7 @@ HTMLObjectElement::GetContentWindow(nsIPrincipal& aSubjectPrincipal)
 
 bool
 HTMLObjectElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsIAtom *aAttribute,
+                                  nsAtom *aAttribute,
                                   const nsAString &aValue,
                                   nsAttrValue &aResult)
 {
@@ -479,7 +479,7 @@ HTMLObjectElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
+HTMLObjectElement::IsAttributeMapped(const nsAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,

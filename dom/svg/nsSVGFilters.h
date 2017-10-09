@@ -79,7 +79,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   // nsSVGElement interface
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
@@ -104,7 +104,7 @@ public:
   // returns true if changes to the attribute should cause us to
   // repaint the filter
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsAtom* aAttribute) const;
 
   // Return whether this filter primitive has tainted output. A filter's
   // output is tainted if it depends on things that the web page is not
@@ -166,7 +166,7 @@ public:
   // returns true if changes to the attribute should cause us to
   // repaint the filter
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const = 0;
+          int32_t aNameSpaceID, nsAtom* aAttribute) const = 0;
 };
 
 //------------------------------------------------------------
@@ -186,12 +186,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
+          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
   virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFELightingElementBase::)
 
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
 protected:
   virtual bool OperatesOnSRGB(int32_t aInputIndex,

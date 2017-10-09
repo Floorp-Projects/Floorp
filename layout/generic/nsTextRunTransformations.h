@@ -27,7 +27,7 @@ struct nsTransformedCharStyle final {
     , mExplicitLanguage(aContext->StyleFont()->mExplicitLanguage) {}
 
   nsFont                  mFont;
-  RefPtr<nsIAtom>       mLanguage;
+  RefPtr<nsAtom>       mLanguage;
   RefPtr<nsPresContext> mPresContext;
   float                   mScriptSizeMultiplier;
   uint8_t                 mTextTransform;
@@ -104,7 +104,7 @@ public:
   static bool TransformString(const nsAString& aString,
                               nsString& aConvertedString,
                               bool aAllUppercase,
-                              const nsIAtom* aLanguage,
+                              const nsAtom* aLanguage,
                               nsTArray<bool>& aCharsToMergeArray,
                               nsTArray<bool>& aDeletedCharsArray,
                               const nsTransformedTextRun* aTextRun = nullptr,

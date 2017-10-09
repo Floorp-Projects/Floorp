@@ -45,7 +45,7 @@ AtomSet::AtomSet(const char** aElems)
   SortAndUniquify();
 }
 
-AtomSet::AtomSet(std::initializer_list<nsIAtom*> aIL)
+AtomSet::AtomSet(std::initializer_list<nsAtom*> aIL)
 {
   mElems.SetCapacity(aIL.size());
 
@@ -61,8 +61,8 @@ AtomSet::SortAndUniquify()
 {
   mElems.Sort();
 
-  nsIAtom* prev = nullptr;
-  mElems.RemoveElementsBy([&prev] (const RefPtr<nsIAtom>& aAtom) {
+  nsAtom* prev = nullptr;
+  mElems.RemoveElementsBy([&prev] (const RefPtr<nsAtom>& aAtom) {
     bool remove = aAtom == prev;
     prev = aAtom;
     return remove;
@@ -88,7 +88,7 @@ AtomSet::Intersects(const AtomSet& aOther) const
 }
 
 void
-AtomSet::Add(nsIAtom* aAtom)
+AtomSet::Add(nsAtom* aAtom)
 {
   auto index = mElems.IndexOfFirstElementGt(aAtom);
   if (index == 0 || mElems[index - 1] != aAtom) {
@@ -97,7 +97,7 @@ AtomSet::Add(nsIAtom* aAtom)
 }
 
 void
-AtomSet::Remove(nsIAtom* aAtom)
+AtomSet::Remove(nsAtom* aAtom)
 {
   auto index = mElems.BinaryIndexOf(aAtom);
   if (index != mElems.NoIndex) {
@@ -110,7 +110,7 @@ AtomSet::Remove(nsIAtom* aAtom)
  * URLInfo
  *****************************************************************************/
 
-nsIAtom*
+nsAtom*
 URLInfo::Scheme() const
 {
   if (!mScheme) {
@@ -298,7 +298,7 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, 
     return;
   }
 
-  RefPtr<nsIAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
+  RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   if (scheme == nsGkAtoms::_asterisk) {
     mSchemes = AtomSet::Get<WILDCARD_SCHEMES>();
   } else if (permittedSchemes->Contains(scheme) || scheme == nsGkAtoms::moz_extension) {

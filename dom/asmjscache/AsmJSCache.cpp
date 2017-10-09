@@ -28,7 +28,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIFile.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIPrincipal.h"

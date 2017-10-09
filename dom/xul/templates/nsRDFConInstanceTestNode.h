@@ -24,7 +24,7 @@ public:
 
     nsRDFConInstanceTestNode(TestNode* aParent,
                              nsXULTemplateQueryProcessorRDF* aProcessor,
-                             nsIAtom* aContainerVariable,
+                             nsAtom* aContainerVariable,
                              Test aContainer,
                              Test aEmpty);
 
@@ -79,7 +79,7 @@ public:
 
 protected:
     nsXULTemplateQueryProcessorRDF* mProcessor;
-    RefPtr<nsIAtom> mContainerVariable;
+    RefPtr<nsAtom> mContainerVariable;
     Test mContainer;
     Test mEmpty;
 };

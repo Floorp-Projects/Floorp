@@ -30,7 +30,7 @@ using namespace mozilla;
 // Array of nsStaticAtom for each of the pseudo-elements.
 static const nsStaticAtom CSSPseudoElements_info[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  NS_STATIC_ATOM(name_##_pseudo_element_buffer, (nsIAtom**)&nsCSSPseudoElements::name_),
+  NS_STATIC_ATOM(name_##_pseudo_element_buffer, (nsAtom**)&nsCSSPseudoElements::name_),
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 };
@@ -51,14 +51,14 @@ void nsCSSPseudoElements::AddRefAtoms()
   NS_RegisterStaticAtoms(CSSPseudoElements_info);
 }
 
-bool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)
+bool nsCSSPseudoElements::IsPseudoElement(nsAtom *aAtom)
 {
   return nsAtomListUtils::IsMember(aAtom, CSSPseudoElements_info,
                                    ArrayLength(CSSPseudoElements_info));
 }
 
 /* static */ bool
-nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
+nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom *aAtom)
 {
   // We don't implement this using PseudoElementHasFlags because callers
   // want to pass things that could be anon boxes.
@@ -78,7 +78,7 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
 }
 
 /* static */ CSSPseudoElementType
-nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom, EnabledState aEnabledState)
+nsCSSPseudoElements::GetPseudoType(nsAtom *aAtom, EnabledState aEnabledState)
 {
   for (CSSPseudoElementTypeBase i = 0;
        i < ArrayLength(CSSPseudoElements_info);
@@ -110,7 +110,7 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom, EnabledState aEnabledState)
   return Type::NotPseudo;
 }
 
-/* static */ nsIAtom*
+/* static */ nsAtom*
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
   NS_ASSERTION(aType < Type::Count, "Unexpected type");
@@ -118,7 +118,7 @@ nsCSSPseudoElements::GetPseudoAtom(Type aType)
     static_cast<CSSPseudoElementTypeBase>(aType)].mAtom;
 }
 
-/* static */ already_AddRefed<nsIAtom>
+/* static */ already_AddRefed<nsAtom>
 nsCSSPseudoElements::GetPseudoAtom(const nsAString& aPseudoElement)
 {
   if (DOMStringIsNull(aPseudoElement) || aPseudoElement.IsEmpty() ||
@@ -137,7 +137,7 @@ nsCSSPseudoElements::GetPseudoAtom(const nsAString& aPseudoElement)
     --start;
     haveTwoColons = false;
   }
-  RefPtr<nsIAtom> pseudo = NS_Atomize(Substring(start, end));
+  RefPtr<nsAtom> pseudo = NS_Atomize(Substring(start, end));
   MOZ_ASSERT(pseudo);
 
   // There aren't any non-CSS2 pseudo-elements with a single ':'

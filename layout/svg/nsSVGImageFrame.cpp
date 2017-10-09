@@ -120,7 +120,7 @@ nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 nsresult
 nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                  nsIAtom*        aAttribute,
+                                  nsAtom*        aAttribute,
                                   int32_t         aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {

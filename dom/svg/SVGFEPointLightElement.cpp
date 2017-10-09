@@ -38,7 +38,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEPointLightElement)
 
 bool
 SVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                  nsIAtom* aAttribute) const
+                                                  nsAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::x ||

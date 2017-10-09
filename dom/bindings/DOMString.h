@@ -13,7 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "nsDOMString.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 
 namespace mozilla {
 namespace dom {
@@ -172,7 +172,7 @@ public:
     eNullNotExpected
   };
 
-  void SetOwnedAtom(nsIAtom* aAtom, NullHandling aNullHandling)
+  void SetOwnedAtom(nsAtom* aAtom, NullHandling aNullHandling)
   {
     MOZ_ASSERT(mString.isNothing(), "We already have a string?");
     MOZ_ASSERT(!mIsNull, "We're already set as null");

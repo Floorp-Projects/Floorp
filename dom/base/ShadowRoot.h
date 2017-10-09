@@ -16,7 +16,7 @@
 #include "nsIdentifierMapEntry.h"
 #include "nsTHashtable.h"
 
-class nsIAtom;
+class nsAtom;
 class nsIContent;
 class nsXBLPrototypeBinding;
 
@@ -45,8 +45,8 @@ public:
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
              nsXBLPrototypeBinding* aProtoBinding);
 
-  void AddToIdTable(Element* aElement, nsIAtom* aId);
-  void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
+  void AddToIdTable(Element* aElement, nsAtom* aId);
+  void RemoveFromIdTable(Element* aElement, nsAtom* aId);
   void InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent);
   void RemoveSheet(StyleSheet* aSheet);
   bool ApplyAuthorStyles();

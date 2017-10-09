@@ -426,7 +426,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
 
 nsresult
 nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,
-                                nsIAtom* aAttribute,
+                                nsAtom* aAttribute,
                                 int32_t aModType)
 {
   nsresult rv =

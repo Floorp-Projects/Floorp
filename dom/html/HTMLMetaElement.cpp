@@ -53,7 +53,7 @@ HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument)
 }
 
 nsresult
-HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
                               const nsAttrValue* aOldValue, bool aNotify)
 {

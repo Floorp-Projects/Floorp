@@ -150,7 +150,7 @@ nsGfxButtonControlFrame::GetLabel(nsString& aLabel)
 
 nsresult
 nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
-                                          nsIAtom*        aAttribute,
+                                          nsAtom*        aAttribute,
                                           int32_t         aModType)
 {
   nsresult rv = NS_OK;

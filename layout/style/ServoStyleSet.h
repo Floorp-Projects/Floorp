@@ -21,7 +21,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsChangeHint.h"
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 
@@ -223,7 +223,7 @@ public:
   already_AddRefed<ServoStyleContext>
   ResolveStyleLazily(dom::Element* aElement,
                      CSSPseudoElementType aPseudoType,
-                     nsIAtom* aPseudoTag,
+                     nsAtom* aPseudoTag,
                      StyleRuleInclusion aRules =
                        StyleRuleInclusion::All);
 
@@ -231,14 +231,14 @@ public:
   // use and must be non-null.  It must be an anon box, and must be one that
   // inherits style from the given aParentContext.
   already_AddRefed<ServoStyleContext>
-  ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+  ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
                                      ServoStyleContext* aParentContext);
 
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
   // must be an anon box, and must be a non-inheriting one.
   already_AddRefed<ServoStyleContext>
-  ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
+  ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag);
 
   // manage the set of style sheets in the style set
   nsresult AppendStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
@@ -382,7 +382,7 @@ public:
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
-  nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
+  nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
 
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
@@ -390,7 +390,7 @@ public:
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
                            nsPresContext* aPresContext,
-                           nsIAtom* aPseudoTag,
+                           nsAtom* aPseudoTag,
                            CSSPseudoElementType aPseudoType,
                            const ServoStyleContext* aStyle);
 
@@ -452,7 +452,7 @@ public:
    * a style sheet.
    */
   bool MightHaveAttributeDependency(const dom::Element& aElement,
-                                    nsIAtom* aAttribute) const;
+                                    nsAtom* aAttribute) const;
 
   /**
    * Returns true if a change in event state on an element might require
@@ -558,7 +558,7 @@ private:
   already_AddRefed<ServoStyleContext>
     ResolveStyleLazilyInternal(dom::Element* aElement,
                                CSSPseudoElementType aPseudoType,
-                               nsIAtom* aPseudoTag,
+                               nsAtom* aPseudoTag,
                                StyleRuleInclusion aRules =
                                  StyleRuleInclusion::All,
                                bool aIgnoreExistingStyles = false);

@@ -28,7 +28,7 @@
 #ifndef nsHtml5Portability_h
 #define nsHtml5Portability_h
 
-#include "nsIAtom.h"
+#include "nsAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
@@ -57,7 +57,7 @@ class nsHtml5StateSnapshot;
 class nsHtml5Portability
 {
   public:
-    static nsIAtom* newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
+    static nsAtom* newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
     static nsHtml5String newStringFromBuffer(char16_t* buf,
                                              int32_t offset,
                                              int32_t length,
@@ -66,11 +66,11 @@ class nsHtml5Portability
     static nsHtml5String newEmptyString();
     static nsHtml5String newStringFromLiteral(const char* literal);
     static nsHtml5String newStringFromString(nsHtml5String string);
-    static jArray<char16_t,int32_t> newCharArrayFromLocal(nsIAtom* local);
+    static jArray<char16_t,int32_t> newCharArrayFromLocal(nsAtom* local);
     static jArray<char16_t, int32_t> newCharArrayFromString(
       nsHtml5String string);
-    static nsIAtom* newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner);
-    static bool localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t offset, int32_t length);
+    static nsAtom* newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner);
+    static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t offset, int32_t length);
     static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
       const char* lowerCaseLiteral,
       nsHtml5String string);

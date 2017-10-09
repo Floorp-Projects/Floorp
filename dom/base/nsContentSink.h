@@ -32,7 +32,7 @@ class nsIDocument;
 class nsIURI;
 class nsIChannel;
 class nsIDocShell;
-class nsIAtom;
+class nsAtom;
 class nsIChannel;
 class nsIContent;
 class nsNodeInfoManager;
@@ -148,7 +148,7 @@ protected:
                 nsISupports* aContainer, nsIChannel* aChannel);
 
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-  nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
+  nsresult ProcessHeaderData(nsAtom* aHeader, const nsAString& aValue,
                              nsIContent* aContent = nullptr);
   nsresult ProcessLinkHeader(const nsAString& aLinkData);
   nsresult ProcessLink(const nsAString& aAnchor,
