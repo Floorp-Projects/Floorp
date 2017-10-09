@@ -2046,6 +2046,20 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute boolean isStyledByServo;
 
+  /**
+   * Add a domain to the existing stylo blocklist.
+   *
+   * This calls nsLayoutUtils::AddToStyloBlocklist().
+   */
+  void addToStyloBlocklist(in ACString aBlockedDomain);
+
+  /**
+   * Remove a domain from the existing stylo blocklist.
+   *
+   * This calls nsLayoutUtils::RemoveFromStyloBlocklist().
+   */
+  void removeFromStyloBlocklist(in ACString aBlockedDomain);
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;

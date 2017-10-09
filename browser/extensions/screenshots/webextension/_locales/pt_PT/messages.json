@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Esta imagem foi recortada para $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Fora de serviço."
   },
@@ -80,7 +88,7 @@
     "message": "Não temos a certeza do que acabou de acontecer. Importa-se de tentar novamente ou tirar uma captura de uma página diferente?"
   },
   "tourBodyIntro": {
-    "message": "Tire, guarde, e partilhe capturas de ecrã sem sair do Firefox."
+    "message": "Tire, guarde e partilhe capturas de ecrã sem sair do Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Uma nova maneira de guardar"
@@ -89,10 +97,10 @@
     "message": "Expanda o menu de ações da página na barra de endereço sempre que quiser tirar uma captura de ecrã."
   },
   "tourHeaderClickAndDrag": {
-    "message": "Capture aquilo mesmo que pretende"
+    "message": "Capture exatamente o que quer"
   },
   "tourBodyClickAndDrag": {
-    "message": "Clique e arraste para capturar apenas uma porção de uma página. Pode também pairar para destacar a sua seleção."
+    "message": "Clique e arraste para capturar apenas uma parte de uma página. Pode também pairar para destacar a sua seleção."
   },
   "tourHeaderFullPage": {
     "message": "Capture janelas ou páginas inteiras"
@@ -101,7 +109,7 @@
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
   },
   "tourHeaderDownloadUpload": {
-    "message": "Como você gostar"
+    "message": "Como você gosta"
   },
   "tourBodyDownloadUpload": {
     "message": "Guarde as suas capturas na Web para partilhar mais facilmente, ou descarregue-as para o seu computador. Pode também clicar no botão Minhas capturas para encontrar todas as capturas que tirou."

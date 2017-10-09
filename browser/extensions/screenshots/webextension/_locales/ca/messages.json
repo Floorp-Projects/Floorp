@@ -82,6 +82,12 @@
   "tourBodyIntro": {
     "message": "Feu, deseu i compartiu captures de pantalla sense sortir del Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Una forma nova de desar les captures"
+  },
+  "tourBodyPageAction": {
+    "message": "Amplieu el menú d'accions de la pàgina de la barra d'adreces quan vulgueu fer una captura de pantalla."
+  },
   "tourHeaderClickAndDrag": {
     "message": "Captureu tot allò que vulgueu"
   },

@@ -215,6 +215,12 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
     return true;
   }
   if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
+    static const uint32_t VP8_USABLE_BUILD = 16287;
+    if (VPXDecoder::IsVP8(aTrackInfo.mMimeType) &&
+        IsWindowsBuildOrLater(VP8_USABLE_BUILD) &&
+        CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
+      return true;
+    }
     if (VPXDecoder::IsVP9(aTrackInfo.mMimeType) &&
         ((gfxPrefs::PDMWMFAMDVP9DecoderEnabled() &&
           CanCreateWMFDecoder<CLSID_AMDWebmMfVp9Dec>()) ||

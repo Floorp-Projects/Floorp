@@ -890,10 +890,12 @@ SyncEngine.prototype = {
     this._toFetch = val;
     CommonUtils.namedTimer(function() {
       try {
-        Async.promiseSpinningly(Utils.jsonSave("toFetch/" + this.name, this, val));
+        Async.promiseSpinningly(Utils.jsonSave("toFetch/" + this.name, this, this._toFetch));
       } catch (error) {
         this._log.error("Failed to read JSON records to fetch", error);
       }
+      // Notify our tests that we finished writing the file.
+      Observers.notify("sync-testing:file-saved:toFetch", null, this.name);
     }, 0, this, "_toFetchDelay");
   },
 
@@ -916,11 +918,15 @@ SyncEngine.prototype = {
     }
     this._previousFailed = val;
     CommonUtils.namedTimer(function() {
-      Utils.jsonSave("failed/" + this.name, this, val).then(() => {
+      Utils.jsonSave("failed/" + this.name, this, this._previousFailed).then(() => {
         this._log.debug("Successfully wrote previousFailed.");
       })
       .catch((error) => {
         this._log.error("Failed to set previousFailed", error);
+      })
+      .then(() => {
+        // Notify our tests that we finished writing the file.
+        Observers.notify("sync-testing:file-saved:previousFailed", null, this.name);
       });
     }, 0, this, "_previousFailedDelay");
   },
