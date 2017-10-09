@@ -279,6 +279,10 @@ class RegExpZone
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
     RegExpShared* get(JSContext* cx, HandleAtom source, JSString* maybeOpt);
 
+#ifdef DEBUG
+    void clear() { set_.clear(); }
+#endif
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
