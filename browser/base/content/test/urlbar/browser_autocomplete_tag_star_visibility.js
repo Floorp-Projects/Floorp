@@ -1,16 +1,17 @@
 add_task(async function() {
-  registerCleanupFunction(() => {
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.eraseEverything();
   });
 
   async function addTagItem(tagName) {
-    let uri = NetUtil.newURI(`http://example.com/this/is/tagged/${tagName}`);
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                         uri,
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         `test ${tagName}`);
-    PlacesUtils.tagging.tagURI(uri, [tagName]);
-    await PlacesTestUtils.addVisits([{uri, title: `Test page with tag ${tagName}`}]);
+    let url = `http://example.com/this/is/tagged/${tagName}`;
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url,
+      title: `test ${tagName}`
+    });
+    PlacesUtils.tagging.tagURI(Services.io.newURI(url), [tagName]);
+    await PlacesTestUtils.addVisits({uri: url, title: `Test page with tag ${tagName}`});
   }
 
   // We use different tags for each part of the test, as otherwise the
@@ -83,7 +84,7 @@ add_task(async function() {
     }
 
     await promiseAutocompleteResultPopup(testcase.input);
-    let result = gURLBar.popup.richlistbox.children[1];
+    let result = await waitForAutocompleteResultAt(1);
     ok(result && !result.collasped, "Should have result");
 
     is(result.getAttribute("type"), testcase.expected.type, "Result should have expected type");

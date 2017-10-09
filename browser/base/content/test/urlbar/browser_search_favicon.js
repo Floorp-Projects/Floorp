@@ -30,8 +30,7 @@ add_task(async function() {
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
   await promiseAutocompleteResultPopup("foo");
-  let result = gURLBar.popup.richlistbox.children[1];
-
+  let result = await waitForAutocompleteResultAt(1);
   isnot(result, null, "Expect a search result");
   is(result.getAttribute("type"), "searchengine", "Expect correct `type` attribute");
 
