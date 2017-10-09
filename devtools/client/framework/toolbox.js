@@ -1763,6 +1763,10 @@ Toolbox.prototype = {
       let iframe = node.querySelector(".toolbox-panel-iframe");
       if (iframe) {
         let visible = node.id == id;
+        // Prevents hiding the split-console if it is currently enabled
+        if (node == this.webconsolePanel && this.splitConsole) {
+          visible = true;
+        }
         this.setIframeVisible(iframe, visible);
       }
     });
@@ -1906,6 +1910,12 @@ Toolbox.prototype = {
     this._splitConsole = true;
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, true);
     this._refreshConsoleDisplay();
+
+    // Ensure split console is visible if console was already loaded in background
+    let iframe = this.webconsolePanel.querySelector(".toolbox-panel-iframe");
+    if (iframe) {
+      this.setIframeVisible(iframe, true);
+    }
 
     return this.loadTool("webconsole").then(() => {
       this.emit("split-console");
