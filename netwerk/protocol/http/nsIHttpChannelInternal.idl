@@ -225,13 +225,6 @@ interface nsIHttpChannelInternal : nsISupports
 
     [must_use] readonly attribute PRTime lastModifiedTime;
 
-    /**
-     * Force a channel that has not been AsyncOpen'ed to skip any check for possible
-     * interception and proceed immediately to open a previously-synthesized cache
-     * entry using the provided ID.
-     */
-    [must_use] void forceIntercepted(in uint64_t aInterceptionID);
-
     [must_use] readonly attribute boolean responseSynthesized;
 
     /**

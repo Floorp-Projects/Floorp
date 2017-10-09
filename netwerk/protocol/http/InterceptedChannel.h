@@ -166,37 +166,6 @@ public:
   SecureUpgradeChannelURI(nsIChannel* aChannel);
 };
 
-class InterceptedChannelChrome : public InterceptedChannelBase
-{
-  // The actual channel being intercepted.
-  RefPtr<nsHttpChannel> mChannel;
-
-  // Writeable cache entry for use when synthesizing a response in a parent process
-  nsCOMPtr<nsICacheEntry> mSynthesizedCacheEntry;
-
-  // When a channel is intercepted, content decoding is disabled since the
-  // ServiceWorker will have already extracted the decoded data. For parent
-  // process channels we need to preserve the earlier value in case
-  // ResetInterception is called.
-  bool mOldApplyConversion;
-public:
-  InterceptedChannelChrome(nsHttpChannel* aChannel,
-                           nsINetworkInterceptController* aController,
-                           nsICacheEntry* aEntry);
-
-  NS_IMETHOD ResetInterception() override;
-  NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
-  NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
-  NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
-  NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
-  NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
-  NS_IMETHOD CancelInterception(nsresult aStatus) override;
-  NS_IMETHOD SetChannelInfo(mozilla::dom::ChannelInfo* aChannelInfo) override;
-  NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
-
-  virtual void NotifyController() override;
-};
-
 class InterceptedChannelContent : public InterceptedChannelBase
 {
   // The actual channel being intercepted.
