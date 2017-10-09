@@ -1,0 +1,11 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <body>
+    <select>
+      <script>document.documentElement.offsetHeight</script>
+    <option>Hello there</option>
+    </select>
+    <script>
+      document.querySelector("body").style.display = "inline";
+    </script>
+  </body>
+</html>
