@@ -47,7 +47,7 @@ Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/reftest.js");
 Cu.import("chrome://marionette/content/session.js");
-const {wait, TimedPromise} = Cu.import("chrome://marionette/content/sync.js", {});
+const {wait, TimedPromise} = Cu.import("chrome://marionette/content/wait.js", {});
 
 Cu.importGlobalProperties(["URL"]);
 

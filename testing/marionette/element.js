@@ -15,7 +15,7 @@ const {
   pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/sync.js");
+Cu.import("chrome://marionette/content/wait.js");
 
 this.EXPORTED_SYMBOLS = ["element"];
 
