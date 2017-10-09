@@ -106,6 +106,28 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
       new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
 
     newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
+
+    // Ensure the channel's loadInfo's result principal URI so that it's
+    // either non-null or updated to the redirect target URI.
+    // We must do this because in case the loadInfo's result principal URI
+    // is null, it would be taken from OriginalURI of the channel.  But we
+    // overwrite it with the whole redirect chain first URI before opening
+    // the target channel, hence the information would be lost.
+    // If the protocol handler that created the channel wants to use
+    // the originalURI of the channel as the principal URI, it has left
+    // the result principal URI on the load info null.
+    nsCOMPtr<nsIURI> resultPrincipalURI;
+
+    nsCOMPtr<nsILoadInfo> existingLoadInfo = newChannel->GetLoadInfo();
+    if (existingLoadInfo) {
+      existingLoadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
+    }
+    if (!resultPrincipalURI) {
+      newChannel->GetOriginalURI(getter_AddRefs(resultPrincipalURI));
+    }
+
+    newLoadInfo->SetResultPrincipalURI(resultPrincipalURI);
+
     newChannel->SetLoadInfo(newLoadInfo);
   }
   else {
