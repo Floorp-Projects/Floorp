@@ -32,14 +32,16 @@ interface AuthenticatorAttestationResponse : AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer attestationObject;
 };
 
+[SecureContext, Pref="security.webauth.webauthn"]
+interface AuthenticatorAssertionResponse : AuthenticatorResponse {
+    [SameObject] readonly attribute ArrayBuffer      authenticatorData;
+    [SameObject] readonly attribute ArrayBuffer      signature;
+    readonly attribute DOMString                     userId;
+};
+
 dictionary PublicKeyCredentialParameters {
     required PublicKeyCredentialType  type;
     required WebAuthnAlgorithmID      alg; // Switch to COSE in Bug 1381190
-};
-
-dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
-    BufferSource   id;
-    DOMString      displayName;
 };
 
 dictionary MakePublicKeyCredentialOptions {
@@ -63,6 +65,11 @@ dictionary PublicKeyCredentialEntity {
 
 dictionary PublicKeyCredentialRpEntity : PublicKeyCredentialEntity {
     DOMString      id;
+};
+
+dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
+    BufferSource   id;
+    DOMString      displayName;
 };
 
 dictionary AuthenticatorSelectionCriteria {
@@ -107,15 +114,6 @@ dictionary PublicKeyCredentialDescriptor {
     sequence<AuthenticatorTransport>   transports;
 };
 
-typedef (boolean or DOMString) WebAuthnAlgorithmID; // Switch to COSE in Bug 1381190
-
-[SecureContext, Pref="security.webauth.webauthn"]
-interface AuthenticatorAssertionResponse : AuthenticatorResponse {
-    [SameObject] readonly attribute ArrayBuffer      authenticatorData;
-    [SameObject] readonly attribute ArrayBuffer      signature;
-    readonly attribute DOMString                     userId;
-};
-
 enum AuthenticatorTransport {
     "usb",
     "nfc",
@@ -127,3 +125,5 @@ typedef long COSEAlgorithmIdentifier;
 typedef sequence<AAGUID>      AuthenticatorSelectionList;
 
 typedef BufferSource      AAGUID;
+
+typedef (boolean or DOMString) WebAuthnAlgorithmID; // Switch to COSE in Bug 1381190
