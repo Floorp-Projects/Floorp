@@ -428,14 +428,10 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.pushReturnAddress();
     // Caller:
     // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- sp
-    // '--- s3 ---'
-
-    // ArgumentsRectifierReg contains the |nargs| pushed onto the current
-    // frame. Including |this|, there are (|nargs| + 1) arguments to copy.
-    MOZ_ASSERT(ArgumentsRectifierReg == s3);
 
     // Add |this|, in the counter of known arguments.
-    masm.addPtr(Imm32(1), ArgumentsRectifierReg);
+    masm.loadPtr(Address(StackPointer, RectifierFrameLayout::offsetOfNumActualArgs()), s3);
+    masm.addPtr(Imm32(1), s3);
 
     Register numActArgsReg = a6;
     Register calleeTokenReg = a7;

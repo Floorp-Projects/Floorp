@@ -427,21 +427,21 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     MacroAssembler masm(cx);
     masm.pushReturnAddress();
 
-    // ArgumentsRectifierReg contains the |nargs| pushed onto the current
-    // frame. Including |this|, there are (|nargs| + 1) arguments to copy.
-    MOZ_ASSERT(ArgumentsRectifierReg == s3);
-
     Register numActArgsReg = t6;
     Register calleeTokenReg = t7;
     Register numArgsReg = t5;
 
-    // Copy number of actual arguments into numActArgsReg
+    // Load the number of actual arguments into numActArgsReg
     masm.loadPtr(Address(StackPointer, RectifierFrameLayout::offsetOfNumActualArgs()),
                  numActArgsReg);
 
     // Load the number of |undefined|s to push into t1.
     masm.loadPtr(Address(StackPointer, RectifierFrameLayout::offsetOfCalleeToken()),
                  calleeTokenReg);
+
+    // Copy the number of actual arguments into s3.
+    masm.mov(numActArgsReg, s3);
+
     masm.mov(calleeTokenReg, numArgsReg);
     masm.andPtr(Imm32(CalleeTokenMask), numArgsReg);
     masm.load16ZeroExtend(Address(numArgsReg, JSFunction::offsetOfNargs()), numArgsReg);
