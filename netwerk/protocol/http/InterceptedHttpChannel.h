@@ -91,7 +91,9 @@ private:
   } mSynthesizedOrReset;
   Atomic<bool> mCallingStatusAndProgress;
 
-  InterceptedHttpChannel();
+  InterceptedHttpChannel(PRTime aCreationTime,
+                         const TimeStamp& aCreationTimestamp,
+                         const TimeStamp& aAsyncOpenTimestamp);
   ~InterceptedHttpChannel() = default;
 
   virtual void
@@ -122,10 +124,14 @@ private:
 
 public:
   static already_AddRefed<InterceptedHttpChannel>
-  CreateForInterception();
+  CreateForInterception(PRTime aCreationTime, const TimeStamp& aCreationTimestamp,
+                        const TimeStamp& aAsyncOpenTimestamp);
 
   static already_AddRefed<InterceptedHttpChannel>
-  CreateForSynthesis(const nsHttpResponseHead* aHead, nsIInputStream* aBody);
+  CreateForSynthesis(const nsHttpResponseHead* aHead, nsIInputStream* aBody,
+                     PRTime aCreationTime,
+                     const TimeStamp& aCreationTimestamp,
+                     const TimeStamp& aAsyncOpenTimestamp);
 
   NS_IMETHOD
   Cancel(nsresult aStatus) override;
