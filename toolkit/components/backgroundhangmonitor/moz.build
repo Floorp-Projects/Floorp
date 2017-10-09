@@ -39,8 +39,12 @@ UNIFIED_SOURCES += [
     'BackgroundHangMonitor.cpp',
     'HangDetails.cpp',
     'HangStack.cpp',
-    'ThreadStackHelper.cpp',
 ]
+
+if CONFIG['MOZ_GECKO_PROFILER']:
+    UNIFIED_SOURCES += [
+        'ThreadStackHelper.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '/caps', # For nsScriptSecurityManager.h

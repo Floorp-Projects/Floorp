@@ -8,7 +8,6 @@
 
 #include "GeckoProfiler.h"
 #include "nsRFPService.h"
-#include "ProfilerMarkerPayload.h"
 #include "PerformanceEntry.h"
 #include "PerformanceMainThread.h"
 #include "PerformanceMark.h"
@@ -27,6 +26,10 @@
 #include "mozilla/Preferences.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
 
@@ -266,11 +269,13 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
     new PerformanceMark(GetParentObject(), aName, Now());
   InsertUserEntry(performanceMark);
 
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     profiler_add_marker(
       "UserTiming",
       MakeUnique<UserTimingMarkerPayload>(aName, TimeStamp::Now()));
   }
+#endif
 }
 
 void
@@ -352,6 +357,7 @@ Performance::Measure(const nsAString& aName,
     new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     TimeStamp startTimeStamp = CreationTimeStamp() +
                                TimeDuration::FromMilliseconds(startTime);
@@ -361,6 +367,7 @@ Performance::Measure(const nsAString& aName,
       "UserTiming",
       MakeUnique<UserTimingMarkerPayload>(aName, startTimeStamp, endTimeStamp));
   }
+#endif
 }
 
 void

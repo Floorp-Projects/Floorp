@@ -18,7 +18,9 @@
 #include "nsIObserverService.h"
 #include "nsIGlobalObject.h"
 #include "nsIXPConnect.h"
+#ifdef MOZ_GECKO_PROFILER
 #include "GeckoProfilerReporter.h"
+#endif
 #if defined(XP_UNIX) || defined(MOZ_DMD)
 #include "nsMemoryInfoDumper.h"
 #endif

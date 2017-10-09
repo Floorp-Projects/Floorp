@@ -472,7 +472,7 @@ AutoLockWatchdog::~AutoLockWatchdog()
 static void
 WatchdogMain(void* arg)
 {
-    mozilla::AutoProfilerRegisterThread registerThread("JS Watchdog");
+    AUTO_PROFILER_REGISTER_THREAD("JS Watchdog");
     NS_SetCurrentThreadName("JS Watchdog");
 
     Watchdog* self = static_cast<Watchdog*>(arg);
@@ -601,7 +601,7 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     XPCJSContext* self = XPCJSContext::Get();
 
     // Now is a good time to turn on profiling if it's pending.
-    profiler_js_interrupt_callback();
+    PROFILER_JS_INTERRUPT_CALLBACK();
 
     // Normally we record mSlowScriptCheckpoint when we start to process an
     // event. However, we can run JS outside of event handlers. This code takes
@@ -910,7 +910,7 @@ XPCJSContext::~XPCJSContext()
     delete rtPrivate;
     JS_SetContextPrivate(Context(), nullptr);
 
-    profiler_clear_js_context();
+    PROFILER_CLEAR_JS_CONTEXT();
 
     gTlsContext.set(nullptr);
 }
@@ -1093,7 +1093,7 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
                            kStackQuota - kSystemCodeBuffer,
                            kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);
 
-    profiler_set_js_context(cx);
+    PROFILER_SET_JS_CONTEXT(cx);
 
     js::SetActivityCallback(cx, ActivityCallback, this);
     JS_AddInterruptCallback(cx, InterruptCallback);

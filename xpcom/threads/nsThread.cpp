@@ -383,8 +383,6 @@ nsThread::ThreadFunc(void* aArg)
 {
   using mozilla::ipc::BackgroundChild;
 
-  char stackTop;
-
   ThreadInitData* initData = static_cast<ThreadInitData*>(aArg);
   nsThread* self = initData->thread;  // strong reference
 
@@ -406,7 +404,7 @@ nsThread::ThreadFunc(void* aArg)
   // because that call is needed to properly set up this thread as an nsThread,
   // which profiler_register_thread() requires. See bug 1347007.
   if (!initData->name.IsEmpty()) {
-    profiler_register_thread(initData->name.BeginReading(), &stackTop);
+    PROFILER_REGISTER_THREAD(initData->name.BeginReading());
   }
 
   // Wait for and process startup event
@@ -453,7 +451,7 @@ nsThread::ThreadFunc(void* aArg)
   // Inform the threadmanager that this thread is going away
   nsThreadManager::get().UnregisterCurrentThread(*self);
 
-  profiler_unregister_thread();
+  PROFILER_UNREGISTER_THREAD();
 
   // Dispatch shutdown ACK
   NotNull<nsThreadShutdownContext*> context =

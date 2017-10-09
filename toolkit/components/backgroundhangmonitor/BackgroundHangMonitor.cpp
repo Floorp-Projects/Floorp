@@ -65,7 +65,7 @@ private:
   // Background hang monitor thread function
   static void MonitorThread(void* aData)
   {
-    AutoProfilerRegisterThread registerThread("BgHangMonitor");
+    AUTO_PROFILER_REGISTER_THREAD("BgHangMonitor");
     NS_SetCurrentThreadName("BgHangManager");
 
     /* We do not hold a reference to BackgroundHangManager here
@@ -192,8 +192,10 @@ public:
   bool mWaiting;
   // Is the thread dedicated to a single BackgroundHangMonitor
   BackgroundHangMonitor::ThreadType mThreadType;
+#ifdef MOZ_GECKO_PROFILER
   // Platform-specific helper to get hang stacks
   ThreadStackHelper mStackHelper;
+#endif
   // Stack of current hang
   HangStack mHangStack;
   // Annotations for the current hang
@@ -359,11 +361,13 @@ BackgroundHangManager::RunMonitorThread()
 
       if (MOZ_LIKELY(!currentThread->mHanging)) {
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
+#ifdef MOZ_GECKO_PROFILER
           // A hang started, collect a stack
           currentThread->mStackHelper.GetStack(
             currentThread->mHangStack,
             currentThread->mRunnableName,
             true);
+#endif
 
           // If we hang immediately on waking, then the most recently collected
           // CPU usage is going to be an average across the whole time we were

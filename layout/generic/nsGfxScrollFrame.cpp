@@ -4755,7 +4755,7 @@ ScrollFrameHelper::ScrollEvent::Run()
 void
 ScrollFrameHelper::FireScrollEvent()
 {
-  AutoProfilerTracing tracing("Paint", "FireScrollEvent");
+  AUTO_PROFILER_TRACING("Paint", "FireScrollEvent");
   MOZ_ASSERT(mScrollEvent);
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;

@@ -3252,7 +3252,7 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
 
 void
 profiler_tracing(const char* aCategory, const char* aMarkerName,
-                 UniqueProfilerBacktrace aCause, TracingKind aKind)
+                 TracingKind aKind, UniqueProfilerBacktrace aCause)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 

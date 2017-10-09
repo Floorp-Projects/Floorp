@@ -29,10 +29,15 @@ namespace {
 
 struct ObservationWithStack
 {
-  ObservationWithStack(mozilla::IOInterposeObserver::Observation& aObs,
-                       ProfilerBacktrace* aStack)
+  explicit ObservationWithStack(mozilla::IOInterposeObserver::Observation& aObs
+#ifdef MOZ_GECKO_PROFILER
+                                , ProfilerBacktrace* aStack
+#endif
+                                )
     : mObservation(aObs)
+#ifdef MOZ_GECKO_PROFILER
     , mStack(aStack)
+#endif
   {
     const char16_t* filename = aObs.Filename();
     if (filename) {
@@ -41,7 +46,9 @@ struct ObservationWithStack
   }
 
   mozilla::IOInterposeObserver::Observation mObservation;
+#ifdef MOZ_GECKO_PROFILER
   ProfilerBacktrace*                        mStack;
+#endif
   nsString                                  mFilename;
 };
 
@@ -115,7 +122,8 @@ MainThreadIOLoggerImpl::Init()
 /* static */ void
 MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg)
 {
-  AutoProfilerRegisterThread registerThread("MainThreadIOLogger");
+  AUTO_PROFILER_REGISTER_THREAD("MainThreadIOLogger");
+
   NS_SetCurrentThreadName("MainThreadIOLogger");
   MainThreadIOLoggerImpl* obj = static_cast<MainThreadIOLoggerImpl*>(aArg);
   obj->IOThreadFunc();
@@ -174,8 +182,10 @@ MainThreadIOLoggerImpl::IOThreadFunc()
                        (i->mObservation.Start() - mLogStartTime).ToMilliseconds(),
                        i->mObservation.ObservedOperationString(), durationMs,
                        i->mObservation.Reference(), nativeFilename.get()) > 0) {
+#ifdef MOZ_GECKO_PROFILER
           // TODO: Write out the callstack
           i->mStack = nullptr;
+#endif
         }
       }
     }
@@ -195,7 +205,11 @@ MainThreadIOLoggerImpl::Observe(Observation& aObservation)
     return;
   }
   // Passing nullptr as aStack parameter for now
-  mObservations.push_back(ObservationWithStack(aObservation, nullptr));
+  mObservations.push_back(ObservationWithStack(aObservation
+#ifdef MOZ_GECKO_PROFILER
+                                               , nullptr
+#endif
+                                               ));
   lock.Notify();
 }
 

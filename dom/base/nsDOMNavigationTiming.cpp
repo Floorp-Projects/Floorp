@@ -69,7 +69,7 @@ nsDOMNavigationTiming::NotifyNavigationStart(DocShellState aDocShellState)
   mNavigationStartHighRes = (double)PR_Now() / PR_USEC_PER_MSEC;
   mNavigationStart = TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart = (aDocShellState == DocShellState::eActive);
-  profiler_add_marker("Navigation::Start");
+  PROFILER_ADD_MARKER("Navigation::Start");
 }
 
 void
@@ -98,14 +98,14 @@ void
 nsDOMNavigationTiming::NotifyUnloadEventStart()
 {
   mUnloadStart = TimeStamp::Now();
-  profiler_tracing("Navigation", "Unload", TRACING_INTERVAL_START);
+  PROFILER_TRACING("Navigation", "Unload", TRACING_INTERVAL_START);
 }
 
 void
 nsDOMNavigationTiming::NotifyUnloadEventEnd()
 {
   mUnloadEnd = TimeStamp::Now();
-  profiler_tracing("Navigation", "Unload", TRACING_INTERVAL_END);
+  PROFILER_TRACING("Navigation", "Unload", TRACING_INTERVAL_END);
 }
 
 void
@@ -116,7 +116,7 @@ nsDOMNavigationTiming::NotifyLoadEventStart()
   }
   mLoadEventStart = TimeStamp::Now();
 
-  profiler_tracing("Navigation", "Load", TRACING_INTERVAL_START);
+  PROFILER_TRACING("Navigation", "Load", TRACING_INTERVAL_START);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_START_MS,
@@ -132,7 +132,7 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
   }
   mLoadEventEnd = TimeStamp::Now();
 
-  profiler_tracing("Navigation", "Load", TRACING_INTERVAL_END);
+  PROFILER_TRACING("Navigation", "Load", TRACING_INTERVAL_END);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
@@ -159,7 +159,7 @@ nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMLoading = TimeStamp::Now();
 
-  profiler_add_marker("Navigation::DOMLoading");
+  PROFILER_ADD_MARKER("Navigation::DOMLoading");
 }
 
 void
@@ -171,7 +171,7 @@ nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMInteractive = TimeStamp::Now();
 
-  profiler_add_marker("Navigation::DOMInteractive");
+  PROFILER_ADD_MARKER("Navigation::DOMInteractive");
 }
 
 void
@@ -183,7 +183,7 @@ nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMComplete = TimeStamp::Now();
 
-  profiler_add_marker("Navigation::DOMComplete");
+  PROFILER_ADD_MARKER("Navigation::DOMComplete");
 }
 
 void
@@ -196,7 +196,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMContentLoadedEventStart = TimeStamp::Now();
 
-  profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_START);
+  PROFILER_TRACING("Navigation", "DOMContentLoaded", TRACING_INTERVAL_START);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_START_MS,
@@ -214,7 +214,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
   mLoadedURI = aURI;
   mDOMContentLoadedEventEnd = TimeStamp::Now();
 
-  profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_END);
+  PROFILER_TRACING("Navigation", "DOMContentLoaded", TRACING_INTERVAL_END);
 
   if (IsTopLevelContentDocumentInContentProcess()) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,
@@ -233,9 +233,10 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
   }
 
   mNonBlankPaint = TimeStamp::Now();
-  TimeDuration elapsed = mNonBlankPaint - mNavigationStart;
 
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
+    TimeDuration elapsed = mNonBlankPaint - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
       mLoadedURI->GetSpec(spec);
@@ -245,6 +246,7 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
                            mDocShellHasBeenActiveSinceNavigationStart ? "foreground tab" : "this tab was inactive some of the time between navigation start and first non-blank paint");
     profiler_add_marker(marker.get());
   }
+#endif
 
   if (mDocShellHasBeenActiveSinceNavigationStart) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_NON_BLANK_PAINT_MS,
