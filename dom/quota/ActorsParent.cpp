@@ -3830,13 +3830,6 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-#if defined(NIGHTLY_BUILD)
-  {
-    MutexAutoLock autoLock(mQuotaMutex);
-    MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
-  }
-#endif
-
   if (aFileSizeOut) {
     *aFileSizeOut = 0;
   }
@@ -3929,13 +3922,6 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
                              int64_t* aFileSizeOut /* = nullptr */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-#if defined(NIGHTLY_BUILD)
-  {
-    MutexAutoLock autoLock(mQuotaMutex);
-    MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
-  }
-#endif
 
   if (aFileSizeOut) {
     *aFileSizeOut = 0;
@@ -5256,14 +5242,7 @@ QuotaManager::EnsureOriginIsInitializedInternal(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-#if defined(NIGHTLY_BUILD)
-  {
-    MutexAutoLock autoLock(mQuotaMutex);
     mTemporaryStorageInitialized = true;
-  }
-#else
-    mTemporaryStorageInitialized = true;
-#endif
 
     CheckTemporaryStorageLimits();
   }
@@ -5349,16 +5328,7 @@ QuotaManager::ResetOrClearCompleted()
   AssertIsOnIOThread();
 
   mInitializedOrigins.Clear();
-
-#if defined(NIGHTLY_BUILD)
-  {
-    MutexAutoLock autoLock(mQuotaMutex);
-    mTemporaryStorageInitialized = false;
-  }
-#else
-    mTemporaryStorageInitialized = false;
-#endif
-
+  mTemporaryStorageInitialized = false;
   mStorageInitialized = false;
 
   ReleaseIOThreadObjects();
