@@ -119,7 +119,6 @@ public:
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
-  virtual void Destroy() {}
   /* Start the graph, init the driver, start the thread. */
   virtual void Start() = 0;
   /* Revive this driver, as more messages just arrived. */
@@ -389,7 +388,6 @@ public:
   explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~AudioCallbackDriver();
 
-  void Destroy() override;
   void Start() override;
   void Revive() override;
   void RemoveCallback() override;

@@ -726,15 +726,6 @@ AudioCallbackDriver::Init()
   return true;
 }
 
-
-void
-AudioCallbackDriver::Destroy()
-{
-  LOG(LogLevel::Debug, ("AudioCallbackDriver destroyed."));
-  mAudioInput = nullptr;
-  mAudioStream.reset();
-}
-
 void
 AudioCallbackDriver::Start()
 {
