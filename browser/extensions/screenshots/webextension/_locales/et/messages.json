@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "See pilt on vähendatud $PIXELS$-le pikslile.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Tekkis viga."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Tee, salvesta ja jaga ekraanipilte Firefoxist lahkumata."
+  },
+  "tourHeaderPageAction": {
+    "message": "Uus viis salvestamiseks"
+  },
+  "tourBodyPageAction": {
+    "message": "Laienda lehe tegevuste menüüd aadressiribal, kui soovid ekraanipildi teha."
   },
   "tourHeaderClickAndDrag": {
     "message": "Salvesta just seda, mida soovid"

@@ -173,8 +173,8 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   , mImageSize(aConfig.mImage)
   , mVideoStride(0)
   , mImageContainer(aImageContainer)
-  , mDXVAEnabled(aDXVAEnabled)
   , mKnowsCompositor(aKnowsCompositor)
+  , mDXVAEnabled(aDXVAEnabled)
   , mAMDVP9InUse(false)
   , mFramerate(aFramerate)
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in

@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518414589664000);
+const PRTime gPreloadListExpirationTime = INT64_C(1518457357921000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -113,7 +113,6 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518414589664000);
 130.ua, 1
 132kv.ch, 1
 13318522.com, 1
-1359826938.rsc.cdn77.org, 1
 1395kj.com, 1
 1396.cc, 1
 1453914078.rsc.cdn77.org, 1
@@ -396,6 +395,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518414589664000);
 899699.com, 1
 8ack.de, 1
 8ackprotect.com, 1
+8azino777.ru, 1
 8mpay.com, 1
 8ox.ru, 0
 8pecxstudios.com, 1
@@ -570,7 +570,7 @@ acessoeducacao.com, 1
 acevik.de, 1
 acg.mn, 1
 acg.sb, 1
-acg18.us, 1
+acg18.us, 0
 acgaudio.com, 1
 achalay.org, 1
 acheconcursos.com.br, 1
@@ -872,7 +872,6 @@ ahoyconference.com, 1
 ahrq.gov, 0
 ahughes03.com, 1
 ahwah.net, 1
-ahwatukeefoothillsmontessori.com, 1
 ahxxm.com, 1
 ai-english.jp, 1
 aia.de, 1
@@ -1067,6 +1066,7 @@ alicialab.org, 1
 alienation.biz, 1
 alienstat.com, 1
 alignrs.com, 1
+alilialili.ga, 1
 alinasmusicstudio.com, 1
 alinode.com, 1
 alisonisrealestate.com, 1
@@ -2392,6 +2392,7 @@ baseballwarehouse.com, 1
 baselang.com, 1
 basementdoctor.com, 1
 basementdoctornorthwest.com, 1
+bashc.at, 1
 bashstreetband.co.uk, 1
 basilicaknights.org, 1
 basilm.co, 1
@@ -3514,6 +3515,7 @@ brightonchilli.org.uk, 1
 brightstarkids.co.uk, 0
 brightstarkids.net, 0
 brightstarkids.sg, 0
+brigidaarie.com, 1
 brilliantdecisionmaking.com, 1
 brinkhu.is, 1
 brinquedoseducativos.art.br, 1
@@ -3704,6 +3706,7 @@ busindre.com, 1
 business-garden.com, 1
 business.facebook.com, 0
 business.medbank.com.mt, 1
+businessadviceperth.com.au, 0
 businessamongus.com, 1
 businesscentermarin.ch, 1
 businessesdirectory.eu, 1
@@ -4556,7 +4559,6 @@ chrisupjohn.xyz, 1
 chriswarrick.com, 1
 chriswbarry.com, 1
 chriswells.io, 1
-chromaryu.net, 0
 chromaxa.com, 1
 chrome-devtools-frontend.appspot.com, 1
 chrome.com, 0
@@ -4699,6 +4701,7 @@ classics.io, 1
 classpoint.cz, 1
 classteaching.com.au, 1
 claudia-urio.com, 1
+claudio4.com, 1
 clauseriksen.net, 1
 clawe.de, 1
 clayandcottonkirkwood.com, 1
@@ -4777,6 +4780,7 @@ cloudia.org, 1
 cloudily.com, 1
 cloudlight.biz, 1
 cloudmigrator365.com, 1
+cloudopt.net, 1
 cloudoptimizedsmb.com, 1
 cloudoptimus.com, 1
 cloudpagesforwork.com, 1
@@ -5819,8 +5823,6 @@ danielkoster.nl, 1
 danielkratz.com, 1
 danielmarquard.com, 1
 danielmoch.com, 1
-danielmostertman.com, 1
-danielmostertman.nl, 1
 danielrozenberg.com, 1
 danielsblog.org, 1
 danielschreurs.com, 1
@@ -6348,6 +6350,8 @@ devisnow.fr, 1
 devistravaux.org, 1
 devjack.de, 1
 devkid.net, 1
+devkit.cc, 1
+devklog.net, 1
 devlamvzw.org, 1
 devlatron.net, 1
 devlogr.com, 1
@@ -7436,6 +7440,7 @@ einheizpreis.de, 1
 einmonolog.de, 1
 einsatzstellenverwaltung.de, 1
 einsatzstiefel.info, 1
+einsteinathome.org, 1
 eintageinzug.de, 1
 eintragsservice24.de, 1
 eipione.com, 1
@@ -7693,6 +7698,7 @@ energyled.com.br, 1
 enersec.co.uk, 1
 enet-navigator.de, 1
 enfantsdelarue.ch, 1
+enfield-kitchens.co.uk, 1
 enfoqueseguro.com, 1
 enfu.se, 1
 engarde.net, 1
@@ -8146,7 +8152,6 @@ exaplac.com, 1
 exceed.global, 1
 exceltobarcode.com, 1
 excessamerica.com, 1
-exchangecoordinator.com, 1
 exchangeworks.co, 1
 exe-boss.tech, 1
 exehack.net, 1
@@ -8376,7 +8381,6 @@ faretravel.co.uk, 1
 farfallapets.com.br, 1
 farfetchos.com, 1
 fargtorget.se, 1
-farhadexchange.com, 1
 farhood.org, 1
 farkas.bz, 1
 farm24.co.uk, 1
@@ -11444,7 +11448,6 @@ idexxpublicationportal.com, 1
 idgard.de, 1
 idhosts.co.id, 1
 idid.tk, 1
-idinby.dk, 1
 idiopolis.org, 1
 idiotentruppe.de, 1
 idmanagement.gov, 1
@@ -12001,6 +12004,7 @@ ipfs.ink, 1
 iphoneunlock.nu, 1
 ipintel.io, 1
 iplabs.de, 1
+iplantom.com, 1
 ipleak.net, 1
 ipledgeonline.org, 0
 iplog.info, 1
@@ -13022,7 +13026,6 @@ kanzashi.com, 1
 kanzlei-sixt.de, 1
 kap-genial.de, 1
 kapo.info, 1
-kappit.dk, 1
 kapseli.net, 1
 kaptadata.com, 1
 kaptamedia.com, 1
@@ -13691,6 +13694,7 @@ kswcosmetics.com, 1
 ktbnetbank.com, 1
 kteen.info, 1
 kthnxbai.xyz, 1
+kts-thueringen.de, 1
 ktsee.eu.org, 1
 ktube.yt, 1
 ku.io, 1
@@ -14603,7 +14607,6 @@ loenshotel.de, 1
 loforo.com, 1
 lofttravel.com, 1
 log.my, 0
-log2n.uk, 1
 logaldeveloper.com, 1
 loganmarchione.com, 1
 loganparkneighborhood.org, 1
@@ -15556,6 +15559,7 @@ mdcloudps.com, 1
 mdek.at, 1
 mdewendt.de, 1
 mdf-bis.com, 1
+mdkr.nl, 1
 mdma.net, 1
 mdmed.clinic, 1
 mdosch.de, 1
@@ -16597,7 +16601,6 @@ musthavesforreal.com, 1
 mutantmonkey.in, 1
 mutantmonkey.info, 1
 mutantmonkey.sexy, 1
-mutuals.cool, 1
 mutuelle.fr, 1
 muusikoiden.net, 1
 muwatenraqamy.org, 1
@@ -17415,7 +17418,6 @@ nikklassen.ca, 1
 nikksno.io, 1
 niklas.pw, 1
 niklasbabel.com, 1
-nikobradshaw.com, 1
 nikolaichik.photo, 1
 nikolasbradshaw.com, 1
 nikolasgrottendieck.com, 1
@@ -17542,7 +17544,6 @@ noop.ch, 1
 noordsee.de, 1
 noorsolidarity.com, 1
 nootropic.com, 1
-nootropicsource.com, 1
 nopaste.xyz, 1
 nord-sud.be, 1
 nordakademie.de, 1
@@ -18644,6 +18645,7 @@ pbscreens.com, 1
 pbytes.com, 1
 pc-rescue.me, 1
 pc-tweak.de, 1
+pccentral.nl, 1
 pcel.com, 1
 pcf92.fr, 1
 pcfeuerwehr.de, 1
@@ -19693,6 +19695,7 @@ proxybay.one, 1
 proxybay.tv, 1
 proxydesk.eu, 1
 proxyportal.me, 1
+proxyportal.org, 1
 proxyweb.us, 1
 proymaganadera.com, 1
 prstatic.com, 1
@@ -20255,6 +20258,7 @@ recruitsecuritytraining.com, 1
 rectoraudiparts.com, 1
 recuerdafilms.com, 1
 recurly.com, 1
+recyclingpromotions.us, 1
 red-t-shirt.ru, 1
 redable.hosting, 1
 redable.nl, 1
@@ -20901,6 +20905,7 @@ rss.sh, 0
 rssr.se, 1
 rstraining.co.uk, 1
 rstsecuritygroup.co.uk, 1
+rsttraining.co.uk, 1
 rsvaachen.de, 1
 rsync.eu, 0
 rtate.ca, 1
@@ -21929,6 +21934,7 @@ shansing.net, 1
 shansing.space, 1
 sharanyamunsi.net, 1
 sharedhost.de, 1
+shareeri.com, 1
 sharekey.com, 1
 shareoffice.ch, 1
 shareoine.com, 1
@@ -21977,7 +21983,6 @@ shft.cl, 1
 shgt.jp, 1
 shh-listen.com, 1
 shh.sh, 1
-shiatsu-institut.ch, 1
 shiawasedo.co.jp, 1
 shibainu.com.br, 1
 shichibukai.net, 1
@@ -22532,7 +22537,6 @@ smeetsengraas.com, 1
 smiatek.name, 1
 smileandpay.com, 1
 smileawei.com, 1
-smiledirectsales.com, 1
 smime.io, 1
 smipty.cn, 1
 smipty.com, 1
@@ -23357,6 +23361,7 @@ stuco.co, 1
 studenckiemetody.pl, 1
 student-eshop.cz, 1
 student-eshop.sk, 1
+student.andover.edu, 1
 studentforums.biz, 1
 studentite.bg, 0
 studentloans.gov, 1
@@ -23705,6 +23710,7 @@ t7e.de, 0
 ta-65.com, 1
 ta-sports.net, 1
 ta65.com, 1
+taartenfeesies.nl, 1
 tab.watch, 1
 tabelfirme.ro, 1
 tabernadovinho.com.br, 1
@@ -23730,6 +23736,7 @@ taggedpdf.com, 1
 taglioepiega.com, 1
 taglioepiega.eu, 1
 taglioepiega.it, 1
+tahakomat.cz, 1
 tahf.net, 1
 tahosa.co, 1
 tahosalodge.org, 1
@@ -23833,7 +23840,6 @@ tattvaayoga.com, 1
 tavolaquadrada.com.br, 1
 tavsys.net, 1
 taxaroo.com, 1
-taxi-24std.de, 1
 taxi-chamonix.fr, 1
 taxi-collectif.ch, 1
 taxicollectif.ch, 1
@@ -24166,7 +24172,7 @@ thaigirls.xyz, 1
 thaihomecooking.com, 1
 thailandpharmacy.net, 1
 thailandpropertylisting.com, 1
-thaimooc.org, 1
+thaimooc.org, 0
 thairehabassociation.com, 1
 thajskyraj.com, 1
 thalan.fr, 1
@@ -24632,7 +24638,6 @@ tkjg.fi, 1
 tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
-tlach.cz, 1
 tlehseasyads.com, 1
 tlo.xyz, 1
 tloxygen.com, 1
@@ -25041,7 +25046,6 @@ transparentcorp.com, 1
 transport.eu, 1
 transsexualpantyhose.com, 1
 transverify.com, 1
-trashnothing.com, 1
 trask.no, 1
 trauertexte.info, 1
 traumhuetten.de, 1
@@ -25625,6 +25629,7 @@ urbanietz-immobilien.de, 1
 urbanmelbourne.info, 1
 urbannewsservice.com, 1
 urbansparrow.in, 1
+urbanstylestaging.com, 1
 urbanwildlifealliance.org, 1
 urbexdk.nl, 1
 urcentral.com, 1
@@ -25693,10 +25698,10 @@ utilityapi.com, 1
 utitreatment.com, 1
 utonia.ch, 1
 utopialgb.org.uk, 1
-utopianconcept.com, 1
 utopians.dk, 1
 utopicestudios.com, 1
 utox.io, 1
+uttnetgroup.fr, 0
 utugnn.ru, 1
 utw.me, 1
 uvocorp.com, 1
@@ -25709,7 +25714,6 @@ v12.co.uk, 1
 v1sit0r.ru, 1
 v2bv.win, 1
 v2ex.com, 1
-v4s.ro, 1
 va-reitartikel.com, 1
 vaaddress.co, 1
 vacationscostarica.com, 1
@@ -25777,6 +25781,7 @@ vanderkrieken.org, 1
 vandermeer.frl, 1
 vanderrijt.nl, 1
 vanderziel.org, 1
+vanessabalibridal.com, 1
 vangeluwedeberlaere.be, 1
 vanhoudt-usedcars.be, 1
 vanhoutte.be, 0
@@ -26066,6 +26071,7 @@ virtubox.net, 1
 virtusaero.com, 1
 visa-shinsei.com, 1
 visaexpert.co.za, 1
+visalogy.com, 1
 visaop.com, 1
 visapourailleurs.fr, 1
 visaya.com.co, 1
@@ -26197,7 +26203,7 @@ vorm2.com, 1
 vorodevops.com, 1
 vos-fleurs.ch, 1
 vos-fleurs.com, 1
-voshod.org, 0
+voshod.org, 1
 vosky.fr, 1
 vostronet.com, 1
 voter-info.uk, 1
@@ -26292,7 +26298,6 @@ wadvisor.com, 1
 waelisch.de, 1
 waelti.xxx, 1
 wafa4hw.com, 1
-wafairhaven.com.au, 1
 waffle.at, 1
 wafni.com, 1
 wahidhasan.com, 1
@@ -26866,6 +26871,7 @@ wintermeyer-consulting.de, 1
 wintermeyer.de, 1
 winterschoen.nl, 1
 wintodoor.com, 1
+wipc.net, 1
 wipply.com, 0
 wir-bewegen.sh, 1
 wirbatz.org, 1
@@ -27799,7 +27805,6 @@ zapier.com, 1
 zappbuildapps.com, 1
 zaratan.fr, 1
 zarmarket.org, 1
-zary.me, 1
 zaufanatrzeciastrona.pl, 1
 zavetaji.lv, 1
 zawo-electric.de, 1
@@ -27882,7 +27887,6 @@ zfree.co.nz, 1
 zgrep.org, 1
 zhang-hao.com, 1
 zhangfangzhou.com, 1
-zhangge.net, 1
 zhanghao.me, 1
 zhangsidan.com, 1
 zhangsir.net, 1
@@ -27947,6 +27951,7 @@ zojadravai.com, 1
 zoki.art, 1
 zokster.net, 1
 zolokar.xyz, 1
+zolotoy-standart.com.ua, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
 zone-produkte.de, 1

@@ -40,7 +40,8 @@ PDFiumEngineShim::GetInstanceOrNull(const nsCString& aLibrary)
 }
 
 PDFiumEngineShim::PDFiumEngineShim()
-  : mFPDF_InitLibrary(nullptr)
+  : mInitialized(false)
+  , mFPDF_InitLibrary(nullptr)
   , mFPDF_DestroyLibrary(nullptr)
   , mFPDF_CloseDocument(nullptr)
   , mFPDF_GetPageCount(nullptr)
@@ -48,7 +49,6 @@ PDFiumEngineShim::PDFiumEngineShim()
   , mFPDF_ClosePage(nullptr)
   , mFPDF_RenderPage(nullptr)
   , mPRLibrary(nullptr)
-  , mInitialized(false)
 {
 }
 
