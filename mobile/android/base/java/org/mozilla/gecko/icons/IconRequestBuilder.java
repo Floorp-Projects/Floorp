@@ -107,6 +107,14 @@ public class IconRequestBuilder {
     }
 
     /**
+     * The icon will be scaled to the given size.
+     */
+    public IconRequestBuilder targetSize(final int targetSize) {
+        internal.targetSize = targetSize;
+        return this;
+    }
+
+    /**
      * The icon will be used in Activity Stream: a minimum size for the icon will be set.
      */
     public IconRequestBuilder forActivityStream() {
@@ -137,6 +145,15 @@ public class IconRequestBuilder {
     }
 
     /**
+     * The text size will be resized to the given size, and this field is only used by
+     * {@link org.mozilla.gecko.icons.loader.IconGenerator} for creating a new icon.
+     */
+    public IconRequestBuilder textSize(final float textSize) {
+        internal.textSize = textSize;
+        return this;
+    }
+
+    /**
      * Return the request built with this builder.
      */
     @CheckResult
@@ -156,6 +173,7 @@ public class IconRequestBuilder {
         request.targetSize = internal.targetSize;
         request.minimumSizePxAfterScaling = internal.minimumSizePxAfterScaling;
         request.prepareOnly = internal.prepareOnly;
+        request.textSize = internal.textSize;
         return request;
     }
 
