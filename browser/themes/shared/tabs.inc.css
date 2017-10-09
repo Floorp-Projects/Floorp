@@ -10,6 +10,7 @@
   --tabs-top-border-width: 0px;
   --tab-toolbar-navbar-overlap: 1px;
   --tab-min-height: 33px;
+  --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
 }
 
@@ -52,9 +53,6 @@ tabbrowser {
   border-width: 0;
   margin: 0;
   padding: 0;
-}
-
-.tabbrowser-tab {
   -moz-box-align: stretch;
 }
 
