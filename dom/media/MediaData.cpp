@@ -319,7 +319,8 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
   // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
   // format.
 #if XP_WIN
-  if (aAllocator && aAllocator->GetCompositorBackendType()
+  if (!XRE_IsParentProcess() &&
+      aAllocator && aAllocator->GetCompositorBackendType()
                     == layers::LayersBackend::LAYERS_D3D11) {
     RefPtr<layers::D3D11YCbCrImage> d3d11Image = new layers::D3D11YCbCrImage();
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
