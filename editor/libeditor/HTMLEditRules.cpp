@@ -1296,7 +1296,6 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   NS_ENSURE_STATE(mHTMLEditor);
   NS_ENSURE_STATE(aSelection->GetRangeAt(0));
   nsCOMPtr<nsINode> selNode = aSelection->GetRangeAt(0)->GetStartContainer();
-  nsIContent* selChild = aSelection->GetRangeAt(0)->GetChildAtStartOffset();
   int32_t selOffset = aSelection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_STATE(selNode);
 
@@ -1321,14 +1320,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     }
     if (inString->IsEmpty()) {
       rv = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode),
-                                       selChild, &selOffset, doc);
+                                       &selOffset, doc);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
       WSRunObject wsObj(mHTMLEditor, selNode, selOffset);
-      rv = wsObj.InsertText(*inString, address_of(selNode), selChild,
-                            &selOffset, doc);
+      rv = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1400,7 +1398,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           } else {
             NS_ENSURE_STATE(mHTMLEditor);
             rv = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
-                                             selChild, &curOffset, doc);
+                                             &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
           }
         }
@@ -1432,8 +1430,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           // is it a tab?
           if (subStr.Equals(tabStr)) {
             rv =
-              wsObj.InsertText(spacesStr, address_of(curNode), selChild,
-                               &curOffset, doc);
+              wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
             pos++;
           }
@@ -1445,8 +1442,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
             NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
             pos++;
           } else {
-            rv = wsObj.InsertText(subStr, address_of(curNode), selChild,
-                                  &curOffset, doc);
+            rv = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
           }
         }
