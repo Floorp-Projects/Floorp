@@ -24,6 +24,12 @@
 struct JSContext;
 
 namespace mozilla {
+
+namespace dom {
+class MediaKeySession;
+} // namespace dom
+DDLoggedTypeName(dom::MediaKeySession);
+
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
@@ -36,7 +42,9 @@ ToCString(MediaKeySessionType aType);
 nsString
 ToString(MediaKeySessionType aType);
 
-class MediaKeySession final : public DOMEventTargetHelper
+class MediaKeySession final
+  : public DOMEventTargetHelper
+  , public DecoderDoctorLifeLogger<MediaKeySession>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

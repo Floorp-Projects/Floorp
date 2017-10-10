@@ -53,6 +53,8 @@ private:
   bool mIsChannelSuspended = false;
 };
 
+DDLoggedTypeDeclNameAndBase(ChannelMediaResource, BaseMediaResource);
+
 /**
  * This is the MediaResource implementation that wraps Necko channels.
  * Much of its functionality is actually delegated to MediaCache via
@@ -61,7 +63,9 @@ private:
  * All synchronization is performed by MediaCacheStream; all off-main-
  * thread operations are delegated directly to that object.
  */
-class ChannelMediaResource : public BaseMediaResource
+class ChannelMediaResource
+  : public BaseMediaResource
+  , public DecoderDoctorLifeLogger<ChannelMediaResource>
 {
 public:
   ChannelMediaResource(MediaResourceCallback* aDecoder,
