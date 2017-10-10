@@ -250,6 +250,14 @@ InterceptedHttpChannel::OpenRedirectChannel()
 {
   nsresult rv = NS_OK;
 
+  if (NS_FAILED(mStatus)) {
+    return mStatus;
+  }
+
+  if (!mRedirectChannel) {
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
   // Make sure to do this after we received redirect veto answer,
   // i.e. after all sinks had been notified
   mRedirectChannel->SetOriginalURI(mOriginalURI);
