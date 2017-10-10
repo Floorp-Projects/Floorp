@@ -1544,14 +1544,6 @@ pref("privacy.userContext.extension", "");
 pref("browser.tabs.remote.autostart", true);
 pref("browser.tabs.remote.desktopbehavior", true);
 
-#if !defined(RELEASE_OR_BETA) || defined(MOZ_DEV_EDITION)
-// At the moment, autostart.2 is used, while autostart.1 is unused.
-// We leave it here set to false to reset users' defaults and allow
-// us to change everybody to true in the future, when desired.
-pref("browser.tabs.remote.autostart.1", false);
-pref("browser.tabs.remote.autostart.2", true);
-#endif
-
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
 // Disabled until bug 1397426 is fixed.
