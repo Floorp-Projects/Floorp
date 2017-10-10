@@ -9,9 +9,7 @@
 #include "gfxConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
-#endif
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
@@ -167,11 +165,9 @@ DriverCrashGuard::~DriverCrashGuard()
     dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(uint32_t(mType));
   }
 
-#ifdef MOZ_CRASHREPORTER
   // Remove the crash report annotation.
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
                                      NS_LITERAL_CSTRING(""));
-#endif
 }
 
 bool
@@ -210,7 +206,6 @@ DriverCrashGuard::ActivateGuard()
 {
   mGuardActivated = true;
 
-#ifdef MOZ_CRASHREPORTER
   // Anotate crash reports only if we're a real guard. Otherwise, we could
   // attribute a random parent process crash to a graphics problem in a child
   // process.
@@ -218,7 +213,6 @@ DriverCrashGuard::ActivateGuard()
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
                                        NS_LITERAL_CSTRING("1"));
   }
-#endif
 
   // If we're in the content process, the rest of the guarding is handled
   // in the parent.
