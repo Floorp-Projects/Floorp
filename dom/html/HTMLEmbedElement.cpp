@@ -135,6 +135,7 @@ nsresult
 HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValue* aValue,
                                const nsAttrValue* aOldValue,
+                               nsIPrincipal* aSubjectPrincipal,
                                bool aNotify)
 {
   if (aValue) {
@@ -143,7 +144,7 @@ HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
-                                            aOldValue, aNotify);
+                                            aOldValue, aSubjectPrincipal, aNotify);
 }
 
 nsresult

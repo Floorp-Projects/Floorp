@@ -101,7 +101,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsILayoutHistoryState.h"
 #include "nsFrameManager.h"
 #include "mozilla/ReflowInput.h"
-#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"

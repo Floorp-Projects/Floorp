@@ -8,18 +8,16 @@ var permRemoved = false;
 function test() {
   waitForExplicitFinish();
 
-  let pm = Services.perms;
   registerCleanupFunction(function() {
-    pm.remove(makeURI(notificationURL), "desktop-notification");
     gBrowser.removeTab(tab);
     window.restore();
   });
 
-  pm.add(makeURI(notificationURL), "desktop-notification", pm.ALLOW_ACTION);
-
-  tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
-  gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", onLoad, true);
+  addNotificationPermission(notificationURL).then(function openTab() {
+    tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
+    gBrowser.selectedTab = tab;
+    tab.linkedBrowser.addEventListener("load", onLoad, true);
+  });
 }
 
 function onLoad() {

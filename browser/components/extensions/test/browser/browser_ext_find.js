@@ -78,6 +78,21 @@ add_task(async function testDuplicatePinnedTab() {
     data = await browser.find.find("banana", {entireWord: true});
     browser.test.assertEq(4, data.count, "The number of matches found, should skip 2 matches, \"banaNaland\" and \"bananAland\":");
 
+    let expectedRangeData = [{framePos: 0, text: "example", startTextNodePos: 15, startOffset: 11, endTextNodePos: 15, endOffset: 18},
+                             {framePos: 0, text: "example", startTextNodePos: 15, startOffset: 25, endTextNodePos: 15, endOffset: 32},
+                             {framePos: 0, text: "example", startTextNodePos: 18, startOffset: 6, endTextNodePos: 18, endOffset: 13},
+                             {framePos: 0, text: "example", startTextNodePos: 20, startOffset: 3, endTextNodePos: 20, endOffset: 10},
+                             {framePos: 1, text: "example", startTextNodePos: 0, startOffset: 0, endTextNodePos: 0, endOffset: 7},
+                             {framePos: 2, text: "example", startTextNodePos: 0, startOffset: 0, endTextNodePos: 0, endOffset: 7}];
+
+    browser.test.log("Test that word found in the same node, different nodes and different frames returns the correct rangeData results.");
+    data = await browser.find.find("example", {includeRangeData: true});
+    for (let i = 0; i < data.rangeData.length; i++) {
+      for (let name in data.rangeData[i]) {
+        browser.test.assertEq(expectedRangeData[i][name], data.rangeData[i][name], `rangeData[${i}].${name}:`);
+      }
+    }
+
     browser.test.log("Test that `rangeData` is not returned if `includeRangeData` is false.");
     data = await browser.find.find("banana", {caseSensitive: false, includeRangeData: false});
     browser.test.assertEq(false, !!data.rangeData, "The boolean cast value of `rangeData`:");

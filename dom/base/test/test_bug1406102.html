@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1406102</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    html {
+        height: 100%;
+    }
+    body {
+        height: 2866px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406102">Mozilla Bug 1406102</a>
+<p id="display"></p>
+<div id="content">
+  <div id="target"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  let observer = new IntersectionObserver(function (changes) {
+    ok(changes[0].intersectionRatio > 0, 'intersectionRatio should be greater than zero');
+    SimpleTest.finish();
+  });
+  observer.observe(document.body);
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<div id="log">
+</div>
+</body>
+</html>
