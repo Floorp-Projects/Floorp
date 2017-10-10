@@ -627,11 +627,12 @@ struct GlyphResource {
     vec4 uv_rect;
     float layer;
     vec2 offset;
+    float scale;
 };
 
 GlyphResource fetch_glyph_resource(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return GlyphResource(data[0], data[1].x, data[1].yz);
+    return GlyphResource(data[0], data[1].x, data[1].yz, data[1].w);
 }
 
 struct ImageResource {

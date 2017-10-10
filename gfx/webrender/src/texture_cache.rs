@@ -84,7 +84,7 @@ struct CacheEntry {
     // Details specific to standalone or shared items.
     kind: EntryKind,
     // Arbitrary user data associated with this item.
-    user_data: [f32; 2],
+    user_data: [f32; 3],
     // The last frame this item was requested for rendering.
     last_access: FrameId,
     // Handle to the resource rect in the GPU cache.
@@ -101,7 +101,7 @@ impl CacheEntry {
         texture_id: CacheTextureId,
         size: DeviceUintSize,
         format: ImageFormat,
-        user_data: [f32; 2],
+        user_data: [f32; 3],
         last_access: FrameId,
     ) -> CacheEntry {
         CacheEntry {
@@ -135,7 +135,7 @@ impl CacheEntry {
                 (origin.x + self.size.width) as f32,
                 (origin.y + self.size.height) as f32,
             ]);
-            request.push([layer_index, self.user_data[0], self.user_data[1], 0.0]);
+            request.push([layer_index, self.user_data[0], self.user_data[1], self.user_data[2]]);
         }
     }
 }
@@ -275,7 +275,7 @@ impl TextureCache {
         descriptor: ImageDescriptor,
         filter: TextureFilter,
         data: ImageData,
-        user_data: [f32; 2],
+        user_data: [f32; 3],
         mut dirty_rect: Option<DeviceUintRect>,
         gpu_cache: &mut GpuCache,
     ) {
@@ -512,7 +512,7 @@ impl TextureCache {
     fn allocate_from_shared_cache(
         &mut self,
         descriptor: &ImageDescriptor,
-        user_data: [f32; 2],
+        user_data: [f32; 3],
     ) -> Option<CacheEntry> {
         // Work out which cache it goes in, based on format.
         let texture_array = match descriptor.format {
@@ -561,7 +561,7 @@ impl TextureCache {
         handle: &mut TextureCacheHandle,
         descriptor: ImageDescriptor,
         filter: TextureFilter,
-        user_data: [f32; 2],
+        user_data: [f32; 3],
     ) {
         assert!(descriptor.width > 0 && descriptor.height > 0);
 
@@ -855,7 +855,7 @@ impl TextureArray {
         &mut self,
         width: u32,
         height: u32,
-        user_data: [f32; 2],
+        user_data: [f32; 3],
         frame_id: FrameId,
     ) -> Option<CacheEntry> {
         // Lazily allocate the regions if not already created.

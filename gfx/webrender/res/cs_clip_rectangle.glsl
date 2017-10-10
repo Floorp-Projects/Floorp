@@ -27,8 +27,7 @@ struct ClipCorner {
     vec4 outer_inner_radius;
 };
 
-ClipCorner fetch_clip_corner(ivec2 address, int index) {
-    address += ivec2(2 + 2 * index, 0);
+ClipCorner fetch_clip_corner(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     return ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
@@ -45,10 +44,22 @@ ClipData fetch_clip(ivec2 address) {
     ClipData clip;
 
     clip.rect = fetch_clip_rect(address);
-    clip.top_left = fetch_clip_corner(address, 0);
-    clip.top_right = fetch_clip_corner(address, 1);
-    clip.bottom_left = fetch_clip_corner(address, 2);
-    clip.bottom_right = fetch_clip_corner(address, 3);
+
+    // Read the corners in groups of two texels, and adjust the read address
+    // before every read.
+    // The address adjustment is done inside this function, and not by passing
+    // the corner index to fetch_clip_corner and computing the correct address
+    // there, because doing so was hitting a driver bug on certain Intel macOS
+    // drivers which creates wrong results when doing arithmetic with integer
+    // variables (under certain, unknown, circumstances).
+    address.x += 2;
+    clip.top_left = fetch_clip_corner(address);
+    address.x += 2;
+    clip.top_right = fetch_clip_corner(address);
+    address.x += 2;
+    clip.bottom_left = fetch_clip_corner(address);
+    address.x += 2;
+    clip.bottom_right = fetch_clip_corner(address);
 
     return clip;
 }

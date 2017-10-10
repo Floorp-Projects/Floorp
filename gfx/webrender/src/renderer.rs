@@ -10,7 +10,7 @@
 //! [renderer]: struct.Renderer.html
 
 use api::{channel, BlobImageRenderer, FontRenderMode};
-use api::{ColorF, Epoch, PipelineId, RenderApiSender, RenderNotifier};
+use api::{ColorF, ColorU, Epoch, PipelineId, RenderApiSender, RenderNotifier};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExternalImageId, ExternalImageType, ImageFormat};
 use api::{YUV_COLOR_SPACES, YUV_FORMATS};
@@ -627,7 +627,7 @@ pub enum BlendMode {
     PremultipliedAlpha,
 
     // Use the color of the text itself as a constant color blend factor.
-    Subpixel(ColorF),
+    Subpixel(ColorU),
 }
 
 // Tracks the state of each row in the GPU cache texture.
@@ -2747,7 +2747,7 @@ impl Renderer {
                         }
                         BlendMode::Subpixel(color) => {
                             self.device.set_blend(true);
-                            self.device.set_blend_mode_subpixel(color);
+                            self.device.set_blend_mode_subpixel(color.into());
                         }
                     }
                     prev_blend_mode = batch.key.blend_mode;
