@@ -17,7 +17,7 @@ marionette.jar:
   content/cert.js (cert.js)
   content/event.js  (event.js)
   content/error.js (error.js)
-  content/wait.js (wait.js)
+  content/sync.js (sync.js)
   content/message.js (message.js)
   content/modal.js (modal.js)
   content/proxy.js (proxy.js)

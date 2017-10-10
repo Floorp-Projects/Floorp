@@ -160,7 +160,6 @@ AudioCaptureStream::MixerCallback(AudioDataValue* aMixedBuffer,
   chunk.mBuffer = new mozilla::SharedChannelArrayBuffer<AudioDataValue>(&output);
   chunk.mDuration = aFrames;
   chunk.mBufferFormat = aFormat;
-  chunk.mVolume = 1.0f;
   chunk.mChannelData.SetLength(MONO);
   for (uint32_t channel = 0; channel < aChannels; channel++) {
     chunk.mChannelData[channel] = bufferPtrs[channel];

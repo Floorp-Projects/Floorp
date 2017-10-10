@@ -438,10 +438,15 @@ var EventTargetParent = {
         return target.linkedBrowser;
       }
 
-      // Check if |target| is somewhere on the patch from the
+      // Check if |target| is somewhere on the path from the
       // <tabbrowser> up to the root element.
       let window = target.ownerGlobal;
-      if (window && target.contains(window.gBrowser)) {
+
+      // Some non-browser windows define gBrowser globals which are not elements
+      // and can't be passed to target.contains().
+      if (window &&
+          window.gBrowser instanceof Ci.nsIDOMXULElement &&
+          target.contains(window.gBrowser)) {
         return window;
       }
     }

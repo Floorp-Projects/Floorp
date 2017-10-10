@@ -24,7 +24,6 @@ extern mozilla::LogModule* GetDemuxerLog();
 namespace mp4_demuxer
 {
 
-using namespace stagefright;
 using namespace mozilla;
 
 const uint32_t kKeyIdSize = 16;

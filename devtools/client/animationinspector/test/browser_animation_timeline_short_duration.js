@@ -82,9 +82,8 @@ function checkSummaryGraph(el, state, isDetail) {
          `The x of second last segment should be ${ endX }`);
       // We use computed style of 'opacity' to create summary graph.
       // So, if currentTime is same to the duration, although progress is null
-      // opacity is 1.
-      const expectedY =
-        state.iterationCount && expectedIterationCount === index + 1 ? 1 : 0;
+      // opacity is 0.
+      const expectedY = 0;
       is(secondLastPathSeg.y, expectedY,
          `The y of second last segment should be ${ expectedY }`);
 
