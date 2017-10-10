@@ -39,6 +39,18 @@ interface nsICacheInfoChannel : nsISupports
   boolean isFromCache();
 
   /**
+   * The unique ID of the corresponding nsICacheEntry from which the response is
+   * retrieved. By comparing the returned value, we can judge whether the data
+   * of two distinct nsICacheInfoChannels is from the same nsICacheEntry. This
+   * scenario could be useful when verifying whether the alternative data from
+   * one nsICacheInfochannel matches the main data from another one.
+   *
+   * Note: NS_ERROR_NOT_AVAILABLE is thrown when a nsICacheInfoChannel has no
+   * valid corresponding nsICacheEntry.
+   */
+  uint64_t getCacheEntryId();
+
+  /**
    * Set/get the cache key... uniquely identifies the data in the cache
    * for this channel.  Holding a reference to this key does NOT prevent
    * the cached data from being removed.
