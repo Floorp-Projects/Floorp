@@ -13,7 +13,6 @@ extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
 extern crate euclid;
-extern crate fxhash;
 #[macro_use]
 extern crate heapsize;
 #[cfg(feature = "ipc")]
@@ -46,8 +45,4 @@ pub use display_item::*;
 pub use display_list::*;
 pub use font::*;
 pub use image::*;
-use std::collections::{HashMap, HashSet};
-use std::hash::BuildHasherDefault;
 pub use units::*;
-type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<fxhash::FxHasher>>;
-type FastHashSet<T> = HashSet<T, BuildHasherDefault<fxhash::FxHasher>>;

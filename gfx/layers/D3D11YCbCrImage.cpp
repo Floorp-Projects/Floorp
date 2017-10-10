@@ -297,9 +297,24 @@ D3D11YCbCrRecycleAllocator::Allocate(SurfaceFormat aFormat,
                                 1, 1);
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
+  RefPtr<ID3D10Multithread> mt;
+  HRESULT hr = mDevice->QueryInterface(
+    (ID3D10Multithread**)getter_AddRefs(mt));
+
+  if (FAILED(hr) || !mt) {
+    gfxCriticalError() << "Multithread safety interface not supported. " << hr;
+    return nullptr;
+  }
+
+  if (!mt->GetMultithreadProtected()) {
+    gfxCriticalError() << "Device used not marked as multithread-safe.";
+    return nullptr;
+  }
+
+  D3D11MTAutoEnter mtAutoEnter(mt.forget());
+
   RefPtr<ID3D11Texture2D> textureY;
-  HRESULT hr =
-    mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
+  hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   newDesc.Width = CbCrSize.width;

@@ -282,7 +282,7 @@ MemoryProtectionExceptionHandler::install()
 
     // Install our new exception handler and save the previous one.
     struct sigaction faultHandler = {};
-    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
+    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     faultHandler.sa_sigaction = UnixExceptionHandler;
     sigemptyset(&faultHandler.sa_mask);
     sExceptionHandlerInstalled = !sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler);

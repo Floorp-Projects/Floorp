@@ -34,7 +34,7 @@ html, body, #app, #memory-tool {
   --sidebar-width: 185px;
   /**
    * If --heap-tree-row-height changes, be sure to change HEAP_TREE_ROW_HEIGHT
-   * in `devtools/client/memory/components/heap.js`.
+   * in `devtools/client/memory/components/Heap.js`.
    */
   --heap-tree-row-height: 18px;
   --heap-tree-header-height: 18px;

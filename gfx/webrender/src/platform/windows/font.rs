@@ -33,6 +33,7 @@ pub struct RasterizedGlyph {
     pub left: f32,
     pub width: u32,
     pub height: u32,
+    pub scale: f32,
     pub bytes: Vec<u8>,
 }
 
@@ -304,9 +305,13 @@ impl FontContext {
         }
     }
 
-    pub fn is_bitmap_font(&mut self, _font_key: FontKey) -> bool {
+    pub fn is_bitmap_font(&mut self, _font: &FontInstance) -> bool {
         // TODO(gw): Support bitmap fonts in DWrite.
         false
+    }
+
+    pub fn has_gamma_correct_subpixel_aa() -> bool {
+        true
     }
 
     pub fn rasterize_glyph(
@@ -329,22 +334,25 @@ impl FontContext {
 
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 
-        if font.render_mode != FontRenderMode::Mono {
-            let lut_correction = match font.platform_options {
-                Some(option) => if option.force_gdi_rendering {
-                    &self.gdi_gamma_lut
-                } else {
-                    &self.gamma_lut
-                },
-                None => &self.gamma_lut,
-            };
+        match font.render_mode {
+            FontRenderMode::Mono | FontRenderMode::Bitmap => {}
+            FontRenderMode::Alpha | FontRenderMode::Subpixel => {
+                let lut_correction = match font.platform_options {
+                    Some(option) => if option.force_gdi_rendering {
+                        &self.gdi_gamma_lut
+                    } else {
+                        &self.gamma_lut
+                    },
+                    None => &self.gamma_lut,
+                };
 
-            lut_correction.preblend_rgb(
-                &mut pixels,
-                width,
-                height,
-                ColorLut::new(font.color.r, font.color.g, font.color.b, font.color.a),
-            );
+                lut_correction.preblend_rgb(
+                    &mut pixels,
+                    width,
+                    height,
+                    ColorLut::new(font.color.r, font.color.g, font.color.b, font.color.a),
+                );
+            }
         }
 
         let rgba_pixels = self.convert_to_rgba(&mut pixels, font.render_mode);
@@ -354,6 +362,7 @@ impl FontContext {
             top: -bounds.top as f32,
             width: width as u32,
             height: height as u32,
+            scale: 1.0,
             bytes: rgba_pixels,
         })
     }

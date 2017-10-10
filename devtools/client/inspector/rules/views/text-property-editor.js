@@ -295,6 +295,7 @@ TextPropertyEditor.prototype = {
         advanceChars: advanceValidate,
         contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
         property: this.prop,
+        defaultIncrement: this.prop.name === "opacity" ? 0.1 : 1,
         popup: this.popup,
         multiline: true,
         maxWidth: () => this.container.getBoundingClientRect().width,

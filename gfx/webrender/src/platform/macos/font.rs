@@ -42,6 +42,7 @@ pub struct RasterizedGlyph {
     pub left: f32,
     pub width: u32,
     pub height: u32,
+    pub scale: f32,
     pub bytes: Vec<u8>,
 }
 
@@ -52,6 +53,7 @@ impl RasterizedGlyph {
             left: 0.0,
             width: 0,
             height: 0,
+            scale: 1.0,
             bytes: vec![],
         }
     }
@@ -422,16 +424,18 @@ impl FontContext {
         }
     }
 
-    pub fn is_bitmap_font(&mut self, font_key: FontKey) -> bool {
-        match self.get_ct_font(font_key, Au(16 * 60), &[]) {
+    pub fn is_bitmap_font(&mut self, font: &FontInstance) -> bool {
+        match self.get_ct_font(font.font_key, font.size, &font.variations) {
             Some(ref ct_font) => {
                 let traits = ct_font.symbolic_traits();
                 (traits & kCTFontColorGlyphsTrait) != 0
             }
-            None => {
-                false
-            }
+            None => false,
         }
+    }
+
+    pub fn has_gamma_correct_subpixel_aa() -> bool {
+        true
     }
 
     pub fn rasterize_glyph(
@@ -585,6 +589,7 @@ impl FontContext {
             top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
+            scale: 1.0,
             bytes: rasterized_pixels,
         })
     }

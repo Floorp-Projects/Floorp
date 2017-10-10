@@ -8,8 +8,8 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
-const ResizableViewport = createFactory(require("./resizable-viewport"));
-const ViewportDimension = createFactory(require("./viewport-dimension"));
+const ResizableViewport = createFactory(require("./ResizableViewport"));
+const ViewportDimension = createFactory(require("./ViewportDimension"));
 
 module.exports = createClass({
 

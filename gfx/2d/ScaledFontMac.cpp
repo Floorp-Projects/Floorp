@@ -359,7 +359,7 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 }
 
 bool
-ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::WrFontInstanceOptions>* aOutOptions,
+ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
                                         Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                         std::vector<FontVariation>* aOutVariations)
 {

@@ -10,7 +10,7 @@ use api::{GlyphInstance, GlyphOptions, GradientStop, HitTestFlags, HitTestItem, 
 use api::{ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect};
 use api::{LayerSize, LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation};
 use api::{LineStyle, LocalClip, POINT_RELATIVE_TO_PIPELINE_VIEWPORT, PipelineId, RepeatMode};
-use api::{ScrollSensitivity, SubpixelDirection, Shadow, TileOffset, TransformStyle};
+use api::{ScrollSensitivity, Shadow, TileOffset, TransformStyle};
 use api::{WorldPixel, WorldPoint, YuvColorSpace, YuvData, device_length};
 use app_units::Au;
 use border::ImageBorderSegment;
@@ -21,12 +21,13 @@ use euclid::{SideOffsets2D, vec2, vec3};
 use frame::FrameId;
 use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, FastHashSet, HardwareCompositeOp};
+use picture::PicturePrimitive;
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{BoxShadowPrimitiveCpu, TexelRect, YuvImagePrimitiveCpu};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
-use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, ShadowPrimitiveCpu};
+use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_task::{AlphaRenderItem, ClipWorkItem, RenderTask};
 use render_task::{RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -584,11 +585,7 @@ impl FrameBuilder {
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
     ) {
-        let prim = ShadowPrimitiveCpu {
-            shadow,
-            primitives: Vec::new(),
-            render_task_id: None,
-        };
+        let prim = PicturePrimitive::new_shadow(shadow);
 
         // Create an empty shadow primitive. Insert it into
         // the draw lists immediately so that it will be drawn
@@ -598,7 +595,7 @@ impl FrameBuilder {
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Shadow(prim),
+            PrimitiveContainer::Picture(prim),
         );
 
         self.shadow_prim_stack.push(prim_index);
@@ -614,9 +611,10 @@ impl FrameBuilder {
         // safe to offset the local rect by the offset of the shadow, which
         // is then used when blitting the shadow to the final location.
         let metadata = &mut self.prim_store.cpu_metadata[prim_index.0];
-        let prim = &self.prim_store.cpu_shadows[metadata.cpu_prim_index.0];
+        let prim = &self.prim_store.cpu_pictures[metadata.cpu_prim_index.0];
+        let shadow = prim.as_shadow();
 
-        metadata.local_rect = metadata.local_rect.translate(&prim.shadow.offset);
+        metadata.local_rect = metadata.local_rect.translate(&shadow.offset);
     }
 
     pub fn add_solid_rectangle(
@@ -686,9 +684,10 @@ impl FrameBuilder {
         let mut fast_shadow_prims = Vec::new();
         for shadow_prim_index in &self.shadow_prim_stack {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
-            let shadow_prim = &self.prim_store.cpu_shadows[shadow_metadata.cpu_prim_index.0];
-            if shadow_prim.shadow.blur_radius == 0.0 {
-                fast_shadow_prims.push(shadow_prim.shadow);
+            let picture = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
+            let shadow = picture.as_shadow();
+            if shadow.blur_radius == 0.0 {
+                fast_shadow_prims.push(shadow.clone());
             }
         }
         for shadow in fast_shadow_prims {
@@ -720,18 +719,19 @@ impl FrameBuilder {
 
         for shadow_prim_index in &self.shadow_prim_stack {
             let shadow_metadata = &mut self.prim_store.cpu_metadata[shadow_prim_index.0];
-            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Shadow);
-            let shadow_prim =
-                &mut self.prim_store.cpu_shadows[shadow_metadata.cpu_prim_index.0];
+            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Picture);
+            let picture =
+                &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
+            let blur_radius = picture.as_shadow().blur_radius;
 
             // Only run real blurs here (fast path zero blurs are handled above).
-            if shadow_prim.shadow.blur_radius > 0.0 {
+            if blur_radius > 0.0 {
                 let shadow_rect = new_rect.inflate(
-                    shadow_prim.shadow.blur_radius,
-                    shadow_prim.shadow.blur_radius,
+                    blur_radius,
+                    blur_radius,
                 );
                 shadow_metadata.local_rect = shadow_metadata.local_rect.union(&shadow_rect);
-                shadow_prim.primitives.push(prim_index);
+                picture.add_primitive(prim_index, clip_and_scroll);
             }
         }
     }
@@ -1132,19 +1132,18 @@ impl FrameBuilder {
         // TODO(gw): Use a proper algorithm to select
         // whether this item should be rendered with
         // subpixel AA!
-        let mut default_render_mode = self.config
+        let mut render_mode = self.config
             .default_font_render_mode
             .limit_by(font.render_mode);
         if let Some(options) = glyph_options {
-            default_render_mode = default_render_mode.limit_by(options.render_mode);
+            render_mode = render_mode.limit_by(options.render_mode);
         }
 
         // There are some conditions under which we can't use
         // subpixel text rendering, even if enabled.
-        let mut normal_render_mode = default_render_mode;
-        if normal_render_mode == FontRenderMode::Subpixel {
+        if render_mode == FontRenderMode::Subpixel {
             if color.a != 1.0 {
-                normal_render_mode = FontRenderMode::Alpha;
+                render_mode = FontRenderMode::Alpha;
             }
 
             // text on a stacking context that has filters
@@ -1155,36 +1154,17 @@ impl FrameBuilder {
             if let Some(sc_index) = self.stacking_context_stack.last() {
                 let stacking_context = &self.stacking_context_store[sc_index.0];
                 if stacking_context.composite_ops.count() > 0 {
-                    normal_render_mode = FontRenderMode::Alpha;
+                    render_mode = FontRenderMode::Alpha;
                 }
             }
         }
 
-        let color = match font.render_mode {
-            FontRenderMode::Bitmap => ColorF::new(1.0, 1.0, 1.0, 1.0),
-            FontRenderMode::Subpixel |
-            FontRenderMode::Alpha |
-            FontRenderMode::Mono => *color,
-        };
-
-        // Shadows never use subpixel AA, but need to respect the alpha/mono flag
-        // for reftests.
-        let (shadow_render_mode, subpx_dir) = match default_render_mode {
-            FontRenderMode::Subpixel | FontRenderMode::Alpha => {
-                // TODO(gw): Expose subpixel direction in API once WR supports
-                //           vertical text runs.
-                (FontRenderMode::Alpha, font.subpx_dir)
-            }
-            FontRenderMode::Mono => (FontRenderMode::Mono, SubpixelDirection::None),
-            FontRenderMode::Bitmap => (FontRenderMode::Bitmap, font.subpx_dir),
-        };
-
         let prim_font = FontInstance::new(
             font.font_key,
             font.size,
-            color,
-            normal_render_mode,
-            subpx_dir,
+            *color,
+            render_mode,
+            font.subpx_dir,
             font.platform_options,
             font.variations.clone(),
             font.synthetic_italics,
@@ -1195,9 +1175,7 @@ impl FrameBuilder {
             glyph_count,
             glyph_gpu_blocks: Vec::new(),
             glyph_keys: Vec::new(),
-            shadow_render_mode,
             offset: run_offset,
-            color: color,
         };
 
         // Text shadows that have a blur radius of 0 need to be rendered as normal
@@ -1211,20 +1189,18 @@ impl FrameBuilder {
         let mut fast_shadow_prims = Vec::new();
         for shadow_prim_index in &self.shadow_prim_stack {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
-            let shadow_prim = &self.prim_store.cpu_shadows[shadow_metadata.cpu_prim_index.0];
-            if shadow_prim.shadow.blur_radius == 0.0 {
+            let picture_prim = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
+            let shadow = picture_prim.as_shadow();
+            if shadow.blur_radius == 0.0 {
                 let mut text_prim = prim.clone();
-                if font.render_mode != FontRenderMode::Bitmap {
-                    text_prim.font.color = shadow_prim.shadow.color.into();
-                }
+                text_prim.font.color = shadow.color.into();
                 // If we have translucent text, we need to ensure it won't go
                 // through the subpixel blend mode, which doesn't work with
                 // traditional alpha blending.
-                if shadow_prim.shadow.color.a != 1.0 {
+                if shadow.color.a != 1.0 {
                     text_prim.font.render_mode = text_prim.font.render_mode.limit_by(FontRenderMode::Alpha);
                 }
-                text_prim.color = shadow_prim.shadow.color;
-                text_prim.offset += shadow_prim.shadow.offset;
+                text_prim.offset += shadow.offset;
                 fast_shadow_prims.push(text_prim);
             }
         }
@@ -1264,18 +1240,19 @@ impl FrameBuilder {
         // the indices as sub-primitives to the shadow primitives.
         for shadow_prim_index in &self.shadow_prim_stack {
             let shadow_metadata = &mut self.prim_store.cpu_metadata[shadow_prim_index.0];
-            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Shadow);
-            let shadow_prim =
-                &mut self.prim_store.cpu_shadows[shadow_metadata.cpu_prim_index.0];
+            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Picture);
+            let picture_prim =
+                &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
 
             // Only run real blurs here (fast path zero blurs are handled above).
-            if shadow_prim.shadow.blur_radius > 0.0 {
+            let blur_radius = picture_prim.as_shadow().blur_radius;
+            if blur_radius > 0.0 {
                 let shadow_rect = rect.inflate(
-                    shadow_prim.shadow.blur_radius,
-                    shadow_prim.shadow.blur_radius,
+                    blur_radius,
+                    blur_radius,
                 );
                 shadow_metadata.local_rect = shadow_metadata.local_rect.union(&shadow_rect);
-                shadow_prim.primitives.push(prim_index);
+                picture_prim.add_primitive(prim_index, clip_and_scroll);
             }
         }
     }

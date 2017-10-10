@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageData, BlobImageResources, ResourceUpdate, ResourceUpdates};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
-use api::{ColorF, FontRenderMode, SubpixelDirection};
+use api::{ColorF, FontRenderMode};
 use api::{DevicePoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstance, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
@@ -337,29 +337,26 @@ impl ResourceCache {
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
     ) {
-        let mut requested_render_mode = FontRenderMode::Subpixel;
-        let mut subpx_dir = SubpixelDirection::Horizontal;
-        if let Some(options) = options {
-            if let Some(render_mode) = options.render_mode {
-                requested_render_mode = render_mode;
-            }
-        }
-        if self.glyph_rasterizer.is_bitmap_font(font_key) {
-            requested_render_mode = requested_render_mode.limit_by(FontRenderMode::Bitmap);
-        }
-        if requested_render_mode == FontRenderMode::Mono {
-            subpx_dir = SubpixelDirection::None;
-        }
-        let instance = FontInstance::new(
+        let FontInstanceOptions {
+            render_mode,
+            subpx_dir,
+            synthetic_italics,
+            ..
+        } = options.unwrap_or_default();
+        assert!(render_mode != FontRenderMode::Bitmap);
+        let mut instance = FontInstance::new(
             font_key,
             glyph_size,
             ColorF::new(0.0, 0.0, 0.0, 1.0),
-            requested_render_mode,
+            render_mode,
             subpx_dir,
             platform_options,
             variations,
-            options.map_or(false, |opts| opts.synthetic_italics),
+            synthetic_italics,
         );
+        if self.glyph_rasterizer.is_bitmap_font(&instance) {
+            instance.render_mode = instance.render_mode.limit_by(FontRenderMode::Bitmap);
+        }
         self.resources.font_instances.insert(instance_key, instance);
     }
 
@@ -564,12 +561,13 @@ impl ResourceCache {
 
     pub fn request_glyphs(
         &mut self,
-        font: FontInstance,
+        mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         gpu_cache: &mut GpuCache,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
 
+        self.glyph_rasterizer.prepare_font(&mut font);
         self.glyph_rasterizer.request_glyphs(
             &mut self.cached_glyphs,
             font,
@@ -585,7 +583,7 @@ impl ResourceCache {
 
     pub fn fetch_glyphs<F>(
         &self,
-        font: FontInstance,
+        mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         fetch_buffer: &mut Vec<GlyphFetchResult>,
         gpu_cache: &GpuCache,
@@ -594,17 +592,16 @@ impl ResourceCache {
         F: FnMut(SourceTexture, &[GlyphFetchResult]),
     {
         debug_assert_eq!(self.state, State::QueryResources);
+
+        self.glyph_rasterizer.prepare_font(&mut font);
         let glyph_key_cache = self.cached_glyphs.get_glyph_key_cache_for_font(&font);
 
         let mut current_texture_id = SourceTexture::Invalid;
         debug_assert!(fetch_buffer.is_empty());
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
-            let glyph = glyph_key_cache.get(key);
-            let cache_item = glyph
-                .as_ref()
-                .map(|info| self.texture_cache.get(&info.texture_cache_handle));
-            if let Some(cache_item) = cache_item {
+            if let Some(ref glyph) = *glyph_key_cache.get(key) {
+                let cache_item = self.texture_cache.get(&glyph.texture_cache_handle);
                 if current_texture_id != cache_item.texture_id {
                     if !fetch_buffer.is_empty() {
                         f(current_texture_id, fetch_buffer);
@@ -825,7 +822,7 @@ impl ResourceCache {
                 descriptor,
                 filter,
                 image_data,
-                [0.0; 2],
+                [0.0; 3],
                 image_template.dirty_rect,
                 gpu_cache,
             );
