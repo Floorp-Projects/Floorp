@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/dom/U2FTokenManager.h"
+#include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -13,6 +14,7 @@ namespace dom {
 mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aTransactionInfo)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Register(this, aTransactionInfo);
   return IPC_OK();
@@ -21,6 +23,7 @@ WebAuthnTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aT
 mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTransactionInfo)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Sign(this, aTransactionInfo);
   return IPC_OK();
@@ -29,6 +32,7 @@ WebAuthnTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTrans
 mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestCancel()
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Cancel(this);
   return IPC_OK();
@@ -37,6 +41,7 @@ WebAuthnTransactionParent::RecvRequestCancel()
 void
 WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->MaybeClearTransaction(this);
 }
