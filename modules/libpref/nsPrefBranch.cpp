@@ -81,7 +81,7 @@ nsPrefBranch::nsPrefBranch(const char* aPrefRoot, bool aDefaultBranch)
 
 nsPrefBranch::~nsPrefBranch()
 {
-  freeObserverList();
+  FreeObserverList();
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
@@ -121,7 +121,7 @@ NS_IMETHODIMP
 nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   switch (PREF_GetPrefType(pref.get())) {
     case PrefType::String:
       *aRetVal = PREF_STRING;
@@ -163,7 +163,7 @@ nsPrefBranch::GetBoolPref(const char* aPrefName, bool* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_GetBoolPref(pref.get(), aRetVal, mIsDefault);
 }
 
@@ -173,7 +173,7 @@ nsPrefBranch::SetBoolPref(const char* aPrefName, bool aValue)
   ENSURE_MAIN_PROCESS("Cannot SetBoolPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_SetBoolPref(pref.get(), aValue, mIsDefault);
 }
 
@@ -228,7 +228,7 @@ NS_IMETHODIMP
 nsPrefBranch::GetCharPref(const char* aPrefName, char** aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_CopyCharPref(pref.get(), aRetVal, mIsDefault);
 }
 
@@ -250,7 +250,7 @@ nsPrefBranch::SetCharPrefInternal(const char* aPrefName, const char* aValue)
   NS_ENSURE_ARG(aPrefName);
   NS_ENSURE_ARG(aValue);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_SetCharPref(pref.get(), aValue, mIsDefault);
 }
 
@@ -306,7 +306,7 @@ NS_IMETHODIMP
 nsPrefBranch::GetIntPref(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_GetIntPref(pref.get(), aRetVal, mIsDefault);
 }
 
@@ -315,7 +315,7 @@ nsPrefBranch::SetIntPref(const char* aPrefName, int32_t aValue)
 {
   ENSURE_MAIN_PROCESS("Cannot SetIntPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_SetIntPref(pref.get(), aValue, mIsDefault);
 }
 
@@ -337,7 +337,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
       return rv;
     }
 
-    const PrefName& pref = getPrefName(aPrefName);
+    const PrefName& pref = GetPrefName(aPrefName);
     bool bNeedDefault = false;
 
     if (mIsDefault) {
@@ -530,7 +530,7 @@ nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName,
     "should rather be written to an external file. This preference will "
     "not be sent to any content processes.",
     aLength,
-    getPrefName(aPrefName).get()));
+    GetPrefName(aPrefName).get()));
 
   rv = console->LogStringMessage(NS_ConvertUTF8toUTF16(message).get());
   if (NS_FAILED(rv)) {
@@ -669,7 +669,7 @@ nsPrefBranch::ClearUserPref(const char* aPrefName)
   ENSURE_MAIN_PROCESS("Cannot ClearUserPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_ClearUserPref(pref.get());
 }
 
@@ -679,7 +679,7 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG_POINTER(aRetVal);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   *aRetVal = PREF_HasUserPref(pref.get());
   return NS_OK;
 }
@@ -690,7 +690,7 @@ nsPrefBranch::LockPref(const char* aPrefName)
   ENSURE_MAIN_PROCESS("Cannot LockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_LockPref(pref.get(), true);
 }
 
@@ -702,7 +702,7 @@ nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal)
   NS_ENSURE_ARG_POINTER(aRetVal);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   *aRetVal = PREF_PrefIsLocked(pref.get());
   return NS_OK;
 }
@@ -713,7 +713,7 @@ nsPrefBranch::UnlockPref(const char* aPrefName)
   ENSURE_MAIN_PROCESS("Cannot UnlockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
-  const PrefName& pref = getPrefName(aPrefName);
+  const PrefName& pref = GetPrefName(aPrefName);
   return PREF_LockPref(pref.get(), false);
 }
 
@@ -729,7 +729,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
   ENSURE_MAIN_PROCESS("Cannot DeleteBranch from content process:", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);
 
-  const PrefName& pref = getPrefName(aStartingAt);
+  const PrefName& pref = GetPrefName(aStartingAt);
   return PREF_DeleteBranch(pref.get());
 }
 
@@ -753,12 +753,12 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   // This will contain a list of all the pref name strings. Allocated on the
   // stack for speed.
 
-  const PrefName& parent = getPrefName(aStartingAt);
+  const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PrefHashEntry*>(iter.Get());
-    if (strncmp(entry->key, parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(entry->key);
+    if (strncmp(entry->mKey, parent.get(), parentLen) == 0) {
+      prefArray.AppendElement(entry->mKey);
     }
   }
 
@@ -833,7 +833,7 @@ nsPrefBranch::AddObserver(const char* aDomain,
   // We must pass a fully qualified preference name to the callback
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
-  const PrefName& pref = getPrefName(aDomain);
+  const PrefName& pref = GetPrefName(aDomain);
   PREF_RegisterCallback(pref.get(), NotifyObserver, pCallback);
   return NS_OK;
 }
@@ -846,13 +846,13 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
 
   nsresult rv = NS_OK;
 
-  // If we're in the middle of a call to freeObserverList, don't process this
+  // If we're in the middle of a call to FreeObserverList, don't process this
   // RemoveObserver call -- the observer in question will be removed soon, if
   // it hasn't been already.
   //
   // It's important that we don't touch mObservers in any way -- even a Get()
   // which returns null might cause the hashtable to resize itself, which will
-  // break the iteration in freeObserverList.
+  // break the iteration in FreeObserverList.
   if (mFreeingObserverList) {
     return NS_OK;
   }
@@ -865,7 +865,7 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   mObservers.Remove(&key, &pCallback);
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above.
-    const PrefName& pref = getPrefName(aDomain);
+    const PrefName& pref = GetPrefName(aDomain);
     rv = PREF_UnregisterCallback(pref.get(), NotifyObserver, pCallback);
   }
 
@@ -880,7 +880,7 @@ nsPrefBranch::Observe(nsISupports* aSubject,
   // Watch for xpcom shutdown and free our observers to eliminate any cyclic
   // references.
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    freeObserverList();
+    FreeObserverList();
   }
   return NS_OK;
 }
@@ -917,7 +917,7 @@ nsPrefBranch::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 }
 
 void
-nsPrefBranch::freeObserverList()
+nsPrefBranch::FreeObserverList()
 {
   // We need to prevent anyone from modifying mObservers while we're iterating
   // over it. In particular, some clients will call RemoveObserver() when
@@ -927,7 +927,7 @@ nsPrefBranch::freeObserverList()
   for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const PrefName& pref = prefBranch->getPrefName(callback->GetDomain().get());
+    const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
     PREF_UnregisterCallback(pref.get(), nsPrefBranch::NotifyObserver, callback);
     iter.Remove();
   }
@@ -971,7 +971,7 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 }
 
 nsPrefBranch::PrefName
-nsPrefBranch::getPrefName(const char* aPrefName) const
+nsPrefBranch::GetPrefName(const char* aPrefName) const
 {
   NS_ASSERTION(aPrefName, "null pref name!");
 

@@ -142,21 +142,21 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
   }
-  void GetSrc(nsAString& aSrc)
+  void GetSrc(nsAString& aSrc, nsIPrincipal&)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {
-    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
-  void GetSrcset(nsAString& aSrcset)
+  void GetSrcset(nsAString& aSrcset, nsIPrincipal&)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
-  void SetSrcset(const nsAString& aSrcset, ErrorResult& aError)
+  void SetSrcset(const nsAString& aSrcset, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {
-    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aError);
+    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aTriggeringPrincipal, aError);
   }
   void GetCrossOrigin(nsAString& aResult)
   {
@@ -379,6 +379,7 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
   virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
@@ -420,10 +421,13 @@ private:
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                             const nsAttrValueOrString& aValue,
                             const nsAttrValue* aOldValue,
+                            nsIPrincipal* aMaybeScriptedPrincipal,
                             bool aValueMaybeChanged, bool aNotify);
 
   bool mInDocResponsiveContent;
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
+  nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
+  nsCOMPtr<nsIPrincipal> mSrcsetTriggeringPrincipal;
 
   // Last URL that was attempted to load by this element.
   nsCOMPtr<nsIURI> mLastSelectedSource;

@@ -93,7 +93,7 @@ protected:
 
   void UpdateStyleSheetScopedness(bool aIsNowScoped);
 
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) = 0;
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
@@ -137,6 +137,7 @@ private:
 
   RefPtr<mozilla::StyleSheet> mStyleSheet;
 protected:
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   bool mDontLoadStyle;
   bool mUpdatesEnabled;
   uint32_t mLineNumber;

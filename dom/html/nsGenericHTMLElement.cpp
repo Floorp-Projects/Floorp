@@ -699,7 +699,9 @@ nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
 nsresult
 nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                    const nsAttrValue* aValue,
-                                   const nsAttrValue* aOldValue, bool aNotify)
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aMaybeScriptedPrincipal,
+                                   bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsEventAttributeName(aName) && aValue) {
@@ -790,7 +792,9 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElementBase::AfterSetAttr(aNamespaceID, aName,
-                                                aValue, aOldValue, aNotify);
+                                                aValue, aOldValue,
+                                                aMaybeScriptedPrincipal,
+                                                aNotify);
 }
 
 EventListenerManager*
@@ -1995,7 +1999,9 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult
 nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                        const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue, bool aNotify)
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
+                                       bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     // add the control to the hashtable as needed
@@ -2044,7 +2050,9 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
-                                            aValue, aOldValue, aNotify);
+                                            aValue, aOldValue,
+                                            aMaybeScriptedPrincipal,
+                                            aNotify);
 }
 
 nsresult

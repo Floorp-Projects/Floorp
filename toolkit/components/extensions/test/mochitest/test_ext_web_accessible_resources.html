@@ -27,7 +27,9 @@ async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {
     let cleanupListeners;
     let testImage = document.createElement("img");
-    testImage.setAttribute("src", src);
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testImage.wrappedJSObject.setAttribute("src", src);
 
     let loadListener = () => {
       cleanupListeners();
@@ -110,7 +112,9 @@ add_task(async function test_web_accessible_resources() {
     browser.runtime.onMessage.addListener(([msg, url], sender, respond) => {
       if (msg == "load-iframe") {
         let iframe = document.createElement("iframe");
-        iframe.setAttribute("src", url);
+        // Set the src via wrappedJSObject so the load is triggered with the
+        // content page's principal rather than ours.
+        iframe.wrappedJSObject.setAttribute("src", url);
         iframe.addEventListener("load", () => { respond(true); });
         iframe.addEventListener("error", () => { respond(false); });
         document.body.appendChild(iframe);
@@ -205,7 +209,9 @@ add_task(async function test_web_accessible_resources_csp() {
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testScriptElement.wrappedJSObject.setAttribute("src", browser.extension.getURL("test_script.js"));
     document.head.appendChild(testScriptElement);
     browser.runtime.sendMessage("script-loaded");
   }
@@ -297,7 +303,9 @@ add_task(async function test_web_accessible_resources_mixed_content() {
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
+    // Set the src via wrappedJSObject so the load is triggered with the
+    // content page's principal rather than ours.
+    testScriptElement.wrappedJSObject.setAttribute("src", browser.extension.getURL("test_script.js"));
     document.head.appendChild(testScriptElement);
 
     window.addEventListener("message", event => {

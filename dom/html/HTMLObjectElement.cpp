@@ -283,13 +283,15 @@ HTMLObjectElement::UnbindFromTree(bool aDeep,
 nsresult
 HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue, bool aNotify)
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aSubjectPrincipal,
+                                bool aNotify)
 {
   nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsGenericHTMLFormElement::AfterSetAttr(aNamespaceID, aName, aValue,
-                                                aOldValue, aNotify);
+                                                aOldValue, aSubjectPrincipal, aNotify);
 }
 
 nsresult
