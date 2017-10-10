@@ -885,7 +885,6 @@ public:
     return aNode->NodeType() == nsIDOMNode::TEXT_NODE;
   }
 
-  static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode* aParent, int32_t aOffset);
   static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
                                                int32_t aOffset);
 
