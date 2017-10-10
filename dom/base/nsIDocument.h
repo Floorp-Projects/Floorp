@@ -466,6 +466,15 @@ public:
   }
 
   /**
+   * Get the list of ancestor outerWindowIDs for a document that correspond to
+   * the ancestor principals (see above for more details).
+   */
+  const nsTArray<uint64_t>& AncestorOuterWindowIDs() const
+  {
+    return mAncestorOuterWindowIDs;
+  }
+
+  /**
    * Return the LoadGroup for the document. May return null.
    */
   already_AddRefed<nsILoadGroup> GetDocumentLoadGroup() const
@@ -3696,6 +3705,8 @@ protected:
   // List of ancestor principals.  This is set at the point a document
   // is connected to a docshell and not mutated thereafter.
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
+  // List of ancestor outerWindowIDs that correspond to the ancestor principals.
+  nsTArray<uint64_t> mAncestorOuterWindowIDs;
 
   // Restyle root for servo's style system.
   //

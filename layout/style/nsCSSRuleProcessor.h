@@ -212,7 +212,7 @@ public:
                            nsTArray<nsFontFaceRuleContainer>& aArray);
 
   nsCSSKeyframesRule* KeyframesRuleForName(nsPresContext* aPresContext,
-                                           const nsString& aName);
+                                           const nsAtom* aName);
 
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsPresContext* aPresContext,
                                                  nsAtom* aName);

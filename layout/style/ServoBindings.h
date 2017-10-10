@@ -245,6 +245,11 @@ RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
+void Gecko_CopyAnimationNames(RawGeckoStyleAnimationListBorrowedMut aDest,
+                              RawGeckoStyleAnimationListBorrowed aSrc);
+// This function takes an already addrefed nsAtom
+void Gecko_SetAnimationName(mozilla::StyleAnimation* aStyleAnimation,
+                            nsAtom* aAtom);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
                             ServoStyleContextBorrowedOrNull aOldComputedValues,
                             ServoStyleContextBorrowedOrNull aComputedValues,

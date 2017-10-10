@@ -38,7 +38,7 @@ void main(void) {
     // Glyphs size is already in device-pixels.
     // The render task origin is in device-pixels. Offset that by
     // the glyph offset, relative to its primitive bounding rect.
-    vec2 size = res.uv_rect.zw - res.uv_rect.xy;
+    vec2 size = (res.uv_rect.zw - res.uv_rect.xy) * res.scale;
     vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
     vec2 origin = prim.task.render_target_origin +
                   uDevicePixelRatio * (local_pos + shadow.offset - shadow_geom.local_rect.p0);

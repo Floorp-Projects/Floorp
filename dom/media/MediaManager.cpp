@@ -410,7 +410,7 @@ public:
     MOZ_ASSERT(mInactiveListeners.Length() == 0);
     MOZ_ASSERT(mActiveListeners.Length() == 0);
 
-    RefPtr<MediaManager> mgr = MediaManager::GetIfExists();
+    MediaManager* mgr = MediaManager::GetIfExists();
     if (!mgr) {
       MOZ_ASSERT(false, "MediaManager should stay until everything is removed");
       return;
@@ -1289,7 +1289,10 @@ public:
           self->mOnFailure.forget())));
       NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::SendPendingGUMRequest",
                                                      []() -> void {
-        RefPtr<MediaManager> manager = MediaManager::GetInstance();
+        MediaManager* manager = MediaManager::GetIfExists();
+        if (!manager) {
+          return;
+        }
         manager->SendPendingGUMRequest();
       }));
       return NS_OK;
@@ -1356,7 +1359,6 @@ GetSources(MediaEngine *engine, MediaSourceEnum aSrcType,
 // TODO: Remove once upgraded to GCC 4.8+ on linux. Bogus error on static func:
 // error: 'this' was not captured for this lambda function
 
-static auto& MediaManager_GetInstance = MediaManager::GetInstance;
 static auto& MediaManager_ToJSArray = MediaManager::ToJSArray;
 static auto& MediaManager_AnonymizeDevices = MediaManager::AnonymizeDevices;
 
@@ -1419,7 +1421,10 @@ MediaManager::SelectSettings(
       }
     }
     NS_DispatchToMainThread(NewRunnableFrom([id, badConstraint]() mutable {
-      RefPtr<MediaManager> mgr = MediaManager_GetInstance();
+      MediaManager* mgr = MediaManager::GetIfExists();
+      if (!mgr) {
+        return NS_OK;
+      }
       RefPtr<PledgeChar> p = mgr->mOutstandingCharPledges.Remove(id);
       if (p) {
         p->Resolve(badConstraint);
@@ -1548,7 +1553,10 @@ public:
       }
       NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::SendPendingGUMRequest",
                                                      []() -> void {
-        RefPtr<MediaManager> manager = MediaManager::GetInstance();
+        MediaManager* manager = MediaManager::GetIfExists();
+        if (!manager) {
+          return;
+        }
         manager->SendPendingGUMRequest();
       }));
       return NS_OK;
@@ -1726,7 +1734,8 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       fakeBackend = new MediaEngineDefault();
     }
     if ((!fakeCams && hasVideo) || (!fakeMics && hasAudio)) {
-      RefPtr<MediaManager> manager = MediaManager_GetInstance();
+      MediaManager* manager = MediaManager::GetIfExists();
+      MOZ_RELEASE_ASSERT(manager); // Must exist while media thread is alive
       realBackend = manager->GetBackend(aWindowId);
       // We need to listen to this event even JS didn't listen to it.
       realBackend->AddDeviceChangeCallback(manager);
@@ -1755,7 +1764,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     SourceSet* handoff = result.release();
     NS_DispatchToMainThread(NewRunnableFrom([id, handoff]() mutable {
       UniquePtr<SourceSet> result(handoff); // grab result
-      RefPtr<MediaManager> mgr = MediaManager_GetInstance();
+      MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
       }
@@ -2036,7 +2045,8 @@ int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback)
 {
   bool fakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
   MediaManager::PostTask(NewTaskFrom([fakeDeviceChangeEventOn]() {
-    RefPtr<MediaManager> manager = MediaManager_GetInstance();
+    MediaManager* manager = MediaManager::GetIfExists();
+    MOZ_RELEASE_ASSERT(manager); // Must exist while media thread is alive
     if (fakeDeviceChangeEventOn)
       manager->GetBackend(0)->SetFakeDeviceChangeEvents();
   }));
@@ -2698,7 +2708,10 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
   p->Then([id, aWindowId, aVideoType, aAudioType,
            aFake](const nsCString& aOriginKey) mutable {
     MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<MediaManager> mgr = MediaManager_GetInstance();
+    MediaManager* mgr = MediaManager::GetIfExists();
+    if (!mgr) {
+      return;
+    }
 
     RefPtr<PledgeSourceSet> p = mgr->EnumerateRawDevices(aWindowId, aVideoType,
                                                          aAudioType, aFake);
@@ -2711,7 +2724,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
       UniquePtr<SourceSet> devices(aDevices); // secondary result
 
       // Only run if window is still on our active list.
-      RefPtr<MediaManager> mgr = MediaManager_GetInstance();
+      MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
       }
@@ -3942,7 +3955,10 @@ SourceListener::ApplyConstraintsToTrack(
                                                 "MozNoiseSuppressionWarning",
                                                 aWindow);
 
-  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  MediaManager* mgr = MediaManager::GetIfExists();
+  if (!mgr) {
+    return p.forget();
+  }
   uint32_t id = mgr->mOutstandingVoidPledges.Append(*p);
   uint64_t windowId = aWindow->WindowID();
   bool isChrome = (aCallerType == dom::CallerType::System);
@@ -3951,7 +3967,8 @@ SourceListener::ApplyConstraintsToTrack(
                                       audioDevice, videoDevice,
                                       c, isChrome]() mutable {
     MOZ_ASSERT(MediaManager::IsInMediaThread());
-    RefPtr<MediaManager> mgr = MediaManager::GetInstance();
+    MediaManager* mgr = MediaManager::GetIfExists();
+    MOZ_RELEASE_ASSERT(mgr); // Must exist while media thread is alive
     const char* badConstraint = nullptr;
     nsresult rv = NS_OK;
 
@@ -3975,7 +3992,7 @@ SourceListener::ApplyConstraintsToTrack(
     NS_DispatchToMainThread(NewRunnableFrom([id, windowId, rv,
                                              badConstraint]() mutable {
       MOZ_ASSERT(NS_IsMainThread());
-      RefPtr<MediaManager> mgr = MediaManager_GetInstance();
+      MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
       }

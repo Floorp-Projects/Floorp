@@ -88,7 +88,6 @@ class ParentDevToolsPanel {
       icon: icon,
       label: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
-      invertIconForLightTheme: false,
       visibilityswitch:  `devtools.webext-${this.id}.enabled`,
       isTargetSupported: target => target.isLocalTab,
       build: (window, toolbox) => {

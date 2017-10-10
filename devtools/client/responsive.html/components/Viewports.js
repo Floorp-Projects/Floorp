@@ -8,7 +8,7 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
-const Viewport = createFactory(require("./viewport"));
+const Viewport = createFactory(require("./Viewport"));
 
 module.exports = createClass({
 

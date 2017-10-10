@@ -137,6 +137,16 @@ impl FontRenderMode {
     }
 }
 
+impl SubpixelDirection {
+    // Limit the subpixel direction to what is supported by the render mode.
+    pub fn limit_by(self, render_mode: FontRenderMode) -> SubpixelDirection {
+        match render_mode {
+            FontRenderMode::Mono | FontRenderMode::Bitmap => SubpixelDirection::None,
+            FontRenderMode::Alpha | FontRenderMode::Subpixel => self,
+        }
+    }
+}
+
 #[repr(u8)]
 #[derive(Hash, Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum SubpixelOffset {
@@ -196,16 +206,101 @@ pub struct GlyphOptions {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstanceOptions {
-    pub render_mode: Option<FontRenderMode>,
+    pub render_mode: FontRenderMode,
+    pub subpx_dir: SubpixelDirection,
     pub synthetic_italics: bool,
 }
 
+impl Default for FontInstanceOptions {
+    fn default() -> FontInstanceOptions {
+        FontInstanceOptions {
+            render_mode: FontRenderMode::Subpixel,
+            subpx_dir: SubpixelDirection::Horizontal,
+            synthetic_italics: false,
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstancePlatformOptions {
-    // These are currently only used on windows for dwrite fonts.
     pub use_embedded_bitmap: bool,
     pub force_gdi_rendering: bool,
+}
+
+#[cfg(target_os = "windows")]
+impl Default for FontInstancePlatformOptions {
+    fn default() -> FontInstancePlatformOptions {
+        FontInstancePlatformOptions {
+            use_embedded_bitmap: false,
+            force_gdi_rendering: false,
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct FontInstancePlatformOptions {
+    pub unused: u32,
+}
+
+#[cfg(target_os = "macos")]
+impl Default for FontInstancePlatformOptions {
+    fn default() -> FontInstancePlatformOptions {
+        FontInstancePlatformOptions {
+            unused: 0,
+        }
+    }
+}
+
+pub const FONT_FORCE_AUTOHINT: u16  = 0b1;
+pub const FONT_NO_AUTOHINT: u16     = 0b10;
+pub const FONT_EMBEDDED_BITMAP: u16 = 0b100;
+pub const FONT_EMBOLDEN: u16        = 0b1000;
+pub const FONT_VERTICAL_LAYOUT: u16 = 0b10000;
+pub const FONT_SUBPIXEL_BGR: u16    = 0b100000;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
+pub enum FontLCDFilter {
+    None,
+    Default,
+    Light,
+    Legacy,
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
+pub enum FontHinting {
+    None,
+    Mono,
+    Light,
+    Normal,
+    LCD,
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct FontInstancePlatformOptions {
+    pub flags: u16,
+    pub lcd_filter: FontLCDFilter,
+    pub hinting: FontHinting,
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+impl Default for FontInstancePlatformOptions {
+    fn default() -> FontInstancePlatformOptions {
+        FontInstancePlatformOptions {
+            flags: 0,
+            lcd_filter: FontLCDFilter::Default,
+            hinting: FontHinting::LCD,
+        }
+    }
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
@@ -229,26 +324,13 @@ impl FontInstance {
     pub fn new(
         font_key: FontKey,
         size: Au,
-        mut color: ColorF,
+        color: ColorF,
         render_mode: FontRenderMode,
         subpx_dir: SubpixelDirection,
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
         synthetic_italics: bool,
     ) -> FontInstance {
-        // In alpha/mono mode, the color of the font is irrelevant.
-        // Forcing it to black in those cases saves rasterizing glyphs
-        // of different colors when not needed.
-        match render_mode {
-            FontRenderMode::Alpha | FontRenderMode::Mono => {
-                color = ColorF::new(0.0, 0.0, 0.0, 1.0);
-            }
-            FontRenderMode::Bitmap => {
-                color = ColorF::new(1.0, 1.0, 1.0, 1.0);
-            }
-            FontRenderMode::Subpixel => {}
-        }
-
         FontInstance {
             font_key,
             size,

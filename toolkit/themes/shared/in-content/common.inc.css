@@ -193,6 +193,8 @@ xul|menulist {
   border-radius: 2px;
   background-color: var(--in-content-page-background);
   margin: 4px 8px;
+  /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
+  font-size: 1em;
 }
 
 xul|button,

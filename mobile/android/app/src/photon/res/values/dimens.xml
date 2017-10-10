@@ -175,6 +175,8 @@
 
     <!-- TabsListLayout -->
     <dimen name="tab_highlight_stroke_width">5dp</dimen>
+    <dimen name="tab_favicon_size">16dp</dimen>
+    <dimen name="tab_favicon_text_size">12sp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">@dimen/browser_toolbar_image_button_width</dimen>

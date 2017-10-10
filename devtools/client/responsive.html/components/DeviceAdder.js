@@ -11,7 +11,7 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getFormatStr, getStr } = require("../utils/l10n");
 const Types = require("../types");
-const ViewportDimension = createFactory(require("./viewport-dimension"));
+const ViewportDimension = createFactory(require("./ViewportDimension.js"));
 
 module.exports = createClass({
   displayName: "DeviceAdder",

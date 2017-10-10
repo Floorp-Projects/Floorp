@@ -38,7 +38,7 @@ fuzzy-if(webrender,0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 == backface-visibility-1c.html about:blank
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
-fails-if(webrender) == perspective-clipping-1.html perspective-clipping-1-ref.html
+== perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
 fuzzy-if(webrender,0-1,0-3) == perspective-origin-1b.html perspective-origin-1a.html
@@ -81,7 +81,7 @@ fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 fails-if(webrender) == snap-perspective-1.html snap-perspective-1-ref.html
 == mask-layer-1.html mask-layer-ref.html
-fails-if(webrender) == mask-layer-2.html mask-layer-ref.html
+== mask-layer-2.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
 fails-if(webrender) == split-intersect1.html split-intersect1-ref.html
 fuzzy(255,150) fails-if(webrender) == split-intersect2.html split-intersect2-ref.html

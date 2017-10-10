@@ -305,7 +305,7 @@ fuzzy-if(Android,3,50) fuzzy-if(skiaContent,1,133) == 273681-1.html 273681-1-ref
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures, bug 1354406
+random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) fuzzy-if(webrender,14-14,88-88) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures, bug 1354406
 == 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -1196,10 +1196,10 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
 fails-if(Android||cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,732-732) == 456219-1c.html 456219-1-ref.html # bug 1128229
-fuzzy-if(skiaContent,1,45) fuzzy-if(webrender,43-43,8-8) == 456219-2.html 456219-2-ref.html
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
 == 457398-1.html 457398-1-ref.html

@@ -45,10 +45,10 @@ const {
 } = require("./actions/snapshot");
 const { changeViewAndRefresh, popViewAndRefresh } = require("./actions/view");
 const { resizeShortestPaths } = require("./actions/sizes");
-const Toolbar = createFactory(require("./components/toolbar"));
-const List = createFactory(require("./components/list"));
-const SnapshotListItem = createFactory(require("./components/snapshot-list-item"));
-const Heap = createFactory(require("./components/heap"));
+const Toolbar = createFactory(require("./components/Toolbar"));
+const List = createFactory(require("./components/List"));
+const SnapshotListItem = createFactory(require("./components/SnapshotListItem"));
+const Heap = createFactory(require("./components/Heap"));
 const { app: appModel } = require("./models");
 
 const MemoryApp = createClass({
