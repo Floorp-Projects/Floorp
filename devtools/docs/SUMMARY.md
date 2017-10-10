@@ -52,3 +52,4 @@
     * [DevTools mochitests](tests/mochitest-devtools.md)
   * [Writing tests](tests/writing-tests.md)
   * [Debugging intermittent failures](tests/debugging-intermittents.md)
+  * [Performance tests (DAMP)](tests/performance-tests.md)
