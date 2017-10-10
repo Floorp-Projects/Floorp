@@ -9,6 +9,7 @@
   <string name="menu_share">Partajează…</string>
   <string name="menu_open_with_default_browser">Deschide cu %1$s</string>
   <string name="menu_open_with_a_browser">Deschide cu…</string>
+  <string name="menu_add_to_home_screen">Adaugă la ecranul principal</string>
   <string name="menu_settings">Setări</string>
   <string name="menu_about">Despre</string>
   <string name="menu_help">Ajutor</string>
@@ -16,6 +17,8 @@
   <string name="menu_trackers_blocked_title">Urmăritori blocați</string>
   <string name="share_dialog_title">Partajează via</string>
   <string name="notification_erase_text">Șterge istoricul de navigare</string>
+  <string name="notification_action_open">Deschide</string>
+  <string name="notification_action_erase_and_open">Şterge şi deschide</string>
   <string name="shortcut_erase_short_label">Șterge</string>
   <string name="shortcut_erase_long_label">Șterge istoricul de navigare</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
@@ -32,16 +35,25 @@
   <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
   <string name="preference_privacy_block_content_summary">Poate afecta funcționalitatea unor videouri sau pagini web</string>
   <string name="preference_privacy_secure_mode">Discret</string>
+  <string name="preference_privacy_stealth_summary">Ascunde paginile web la schimbarea aplicațiilor</string>
   <string name="preference_category_performance">Performanță</string>
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
   <string name="preference_performance_block_webfonts_summary">Poate duce la pictograme și imagini lipsă</string>
   <string name="preference_performance_block_images">Blochează imaginile</string>
+  <string name="preference_default_browser2">Desemnează %1$s ca browser implicit</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Trimite date privind utilizarea</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se străduieşte să colecteze doar ceea ce avem nevoie ca să oferim și să îmbunătățim %1$s pentru toată lumea.</string>
+  <string name="preference_privacy_notice">Politica de confidențialitate</string>
   <string name="preference_about">Despre %1$s</string>
   <string name="content_description_clear_input">Șterge adresa introdusă</string>
   <string name="content_description_dismiss_input">Înlătură</string>
   <string name="content_description_erase">Șterge istoricul de navigare</string>
+  <string name="content_description_fab_expand">Extinde</string>
+  <string name="content_description_tab_counter">File deschise: %1$s</string>
+  <string name="content_description_open_tab">Deschide fila</string>
+  <string name="content_description_close_tab">Închide fila</string>
   <string name="content_description_lock">Conexiune securizată</string>
   <string name="accessibility_announcement_loading">Se încarcă</string>
   <string name="accessibility_announcement_loading_finished">Site web încărcat</string>
@@ -59,6 +71,12 @@
   <string name="external_app_prompt_no_app_title">Găsește o aplicație care poate deschide linkul</string>
   <string name="external_app_prompt_no_app">Niciuna dintre aplicațiile de pe dispozitiv nu poate deschide acest link. Poți părăsi %1$s ca să cauți în %2$s o aplicație care poate.</string>
   <string name="external_multiple_apps_matched_exit">Ieși din navigarea privată?</string>
+  <string name="download_snackbar_finished">%1$s s-a încheiat</string>
+  <string name="download_snackbar_open">Deschide</string>
+  <string name="download_dialog_warning"><![CDATA["Fișierele descărcate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#537;terse</b>" la ștergerea istoricului %1$s."]]></string>
+  <string name="download_dialog_title">Descarcă fișierul</string>
+  <string name="download_dialog_action_cancel">Renunță</string>
+  <string name="download_dialog_action_download">Descarcă</string>
   <string name="errorpage_title">Problemă la încărcarea paginii</string>
   <string name="errorpage_refresh">Încearcă din nou</string>
   <string name="error_connectionfailure_title">Nu se poate conecta</string>
@@ -81,9 +99,33 @@
   <string name="contextmenu_image_share">Partajează imaginea</string>
   <string name="contextmenu_image_copy">Copiază adresa imaginii</string>
   <string name="contextmenu_image_save">Salvează imaginea</string>
+  <string name="contextmenu_open_in_new_tab">Deschide într-o filă nouă</string>
   <string name="contextmenu_image_warning"><![CDATA["Imaginile salvate și partajate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nu vor fi &#238;ndep&#259;rtate</b>" când ștergi istoricul %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Consolidează-ți confidențialitatea</string>
+  <string name="firstrun_defaultbrowser_text2">Du navigarea privată la nivelul următor. Blochează reclamele şi alte tipuri de conţinut care te pot urmări pe site-uri și care îngreunează timpii de încărcare.</string>
+  <string name="firstrun_search_title">Caută în felul tău</string>
+  <string name="firstrun_search_text">Cauţi ceva diferit? Alege un alt motor de căutare implicit din Setări.</string>
+  <string name="firstrun_shortcut_title">Adaugă scurtături la ecranul principal</string>
+  <string name="firstrun_shortcut_text">Întoarce-te la site-urile tale preferate în %1$s numaidecât. Selectează pur și simplu „Adaugă la ecranul principal” din meniul %1$s.</string>
+  <string name="firstrun_privacy_title">Obișnuiește-te cu confidențialitatea</string>
+  <string name="firstrun_privacy_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi pagini web din alte aplicații.</string>
   <string name="firstrun_close_button">Ok, am înțeles!</string>
   <string name="firstrun_skip_button">Omite</string>
   <string name="firstrun_next_button">Următorul</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Adaugă la ecranul principal</string>
+  <string name="dialog_addtohomescreen_action_add">Adaugă</string>
+  <string name="dialog_addtohomescreen_action_cancel">Renunță</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Scurtătura se va deschide cu protecţia față de urmărire dezactivată</string>
+  <string name="dialog_opentab_title">Deschide linkul în fila selectată</string>
+  <string name="dialog_opentab_action_open">Deschide</string>
+  <string name="notification_browsing_session_channel_name">Sesiune de navigare privată</string>
+  <string name="notification_browsing_session_channel_description">Notificările îți permit să ştergi sesiunea %1$s cu o atingere. Nu ai nevoie să deschizi aplicaţia sau să vezi ce rulează în browser.</string>
+  <string name="tabs_tray_action_erase">Șterge istoricul de navigare</string>
+  <string name="download_firefox">Descarcă acum</string>
+  <string name="your_rights_content1">%1$s este un program gratuit şi cu sursă deschisă realizat de Mozilla și alţi contribuitori.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s este disponibil sub termenii "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;ei Publice Mozilla</a>" și alte licențe cu sursă deschisă."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Codul sursă suplimentar pentru %1$s este disponibil sub diferite alte "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#539;e</a>" gratuite și cu sursă deschisă."]]></string>
+  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc. ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>" și disponibil "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
 </resources>

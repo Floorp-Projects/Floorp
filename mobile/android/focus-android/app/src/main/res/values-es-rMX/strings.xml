@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Abrir con %1$s</string>
   <string name="menu_open_with_a_browser">Abrir con…</string>
   <string name="menu_add_to_home_screen">Agregar a la pantalla de inicio</string>
+  <string name="menu_whats_new">Novedades</string>
   <string name="menu_settings">Configuración</string>
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
@@ -40,7 +41,9 @@
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en pérdida de íconos o imágenes</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
+  <string name="preference_default_browser2">Convierte %1$s en tu navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Enviar datos de consumo</string>
   <string name="preference_mozilla_telemetry_summary">Saber más</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla lucha por recolectar solo lo necesario para brindar y mejorar %1$s para todos.</string>
   <string name="preference_privacy_notice">Aviso de privacidad</string>
@@ -124,4 +127,6 @@
   <string name="your_rights_content1">%1$s es software libre de código abierto hecho por Mozilla y por otros contribuidores.</string>
   <string name="your_rights_content2"><![CDATA["%1$s está disponible bajo los términos de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencia p&#250;blica de Mozilla</a>" y otras licencias de código abierto."]]></string>
   <string name="your_rights_content3"><![CDATA["No se le otorgan derechos o licencias a las marcas comerciales de la Fundación Mozilla o cualquier parte, incluyendo los nombres y logotipos de Mozilla, Firefox o %1$s. Se puede encontrar información adicional "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Otras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" de código abierto y gratuitas también incluyen código fuente adicional para %1$s."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s también utiliza las listas de bloqueo de DIsconnect, Inc. como trabajos separados e independientes bajo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General de GNU v3</a>" y que puedes encontrar "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
 </resources>

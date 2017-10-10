@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">เปิดด้วย %1$s</string>
   <string name="menu_open_with_a_browser">เปิดด้วย…</string>
   <string name="menu_add_to_home_screen">เพิ่มไปยังหน้าจอหลัก</string>
+  <string name="menu_whats_new">มีอะไรใหม่</string>
   <string name="menu_settings">การตั้งค่า</string>
   <string name="menu_about">เกี่ยวกับ</string>
   <string name="menu_help">ช่วยเหลือ</string>
@@ -124,4 +125,5 @@
   <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
   <string name="download_firefox">ดาวน์โหลด Firefox</string>
   <string name="your_rights_content1">%1$s เป็นซอฟต์แวร์ฟรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ</string>
+  <string name="your_rights_content2"><![CDATA["%1$s ให้คุณใช้งานภายใต้เงื่อนไขของ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" และสัญญาอนุญาตการเปิดต้นฉบับอื่น ๆ"]]></string>
 </resources>

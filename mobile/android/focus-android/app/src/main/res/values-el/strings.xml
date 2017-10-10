@@ -102,6 +102,7 @@
   <string name="contextmenu_open_in_new_tab">Άνοιγμα συνδέσμου σε νέα καρτέλα</string>
   <string name="contextmenu_image_warning"><![CDATA["Οι αποθηκευμένες και κοινόχρηστες εικόνες "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#948;&#949;&#957; &#952;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#959;&#973;&#957;</b>" όταν διαγράψετε το ιστορικού του %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Ενισχύστε το απόρρητό σας</string>
+  <string name="firstrun_defaultbrowser_text2">Εξελίξτε την ιδιωτική περιήγηση. Αποκλείστε διαφημίσεις και άλλο περιεχόμενο που μπορούν να σάς παρακολουθούν σε όλες τις ιστοσελίδες και επιβραδύνουν τη φόρτωση των σελίδων.</string>
   <string name="firstrun_search_title">Η αναζήτησή σας, με τον τρόπο σας</string>
   <string name="firstrun_search_text">Ψάχνετε κάτι διαφορετικό; Επιλέξτε μια άλλη προεπιλεγμένη μηχανή αναζήτησης στις ρυθμίσεις.</string>
   <string name="firstrun_shortcut_title">Προσθήκη συντομεύσεων στην αρχική οθόνη</string>

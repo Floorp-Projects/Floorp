@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Apri con %1$s</string>
   <string name="menu_open_with_a_browser">Apri con…</string>
   <string name="menu_add_to_home_screen">Agg. a schermata principale</string>
+  <string name="menu_whats_new">Novità</string>
   <string name="menu_settings">Impostazioni</string>
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
@@ -35,7 +36,7 @@
   <string name="preference_privacy_block_content">Blocca altri contenuti traccianti</string>
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
-  <string name="preference_privacy_stealth_summary">Nascondi le pagine web quando si scorrono le app</string>
+  <string name="preference_privacy_stealth_summary">Nascondi le pagine web nel passaggio tra le app</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
   <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>

@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
   <string name="menu_open_with_a_browser">Buka dengan …</string>
   <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
+  <string name="menu_whats_new">Yang Baru</string>
   <string name="menu_settings">Setelan</string>
   <string name="menu_about">Tentang</string>
   <string name="menu_help">Bantuan</string>
@@ -21,7 +22,7 @@
   <string name="notification_action_erase_and_open">Hapus dan Buka</string>
   <string name="shortcut_erase_short_label">Hapus</string>
   <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
-  <string name="text_selection_search_action">Mencari Secara Privat</string>
+  <string name="text_selection_search_action">Mencari Secara Pribadi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
@@ -119,11 +120,12 @@
   <string name="dialog_addtohomescreen_tracking_protection">Pintasan akan terbuka dengan Perlindungan Pelacakan dinonaktifkan</string>
   <string name="dialog_opentab_title">Buka tautan di tab yang dipilih</string>
   <string name="dialog_opentab_action_open">Buka</string>
-  <string name="notification_browsing_session_channel_name">Sesi penjelajahan privat</string>
+  <string name="notification_browsing_session_channel_name">Sesi penjelajahan pribadi</string>
   <string name="notification_browsing_session_channel_description">Notifikasi memungkinkan Anda menghapus sesi %1$s Anda dengan sekali sentuh. Anda tak perlu membuka aplikasi atau melihat apa yang berjalan di peramban Anda.</string>
   <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
   <string name="download_firefox">Unduh Firefox</string>
   <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
   <string name="your_rights_content2"><![CDATA["%1$s tersedia untuk Anda di bawah persyaratan "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lisensi Publik Mozilla</a>" dan lisensi sumber terbuka lainnya."]]></string>
   <string name="your_rights_content4"><![CDATA["Kode sumber tambahan untuk %1$s tersedia dengan berbagai "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisensi</a>" bebas dan sumber terbuka lainnya."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s juga menggunakan daftar blokir yang disediakan oleh Disconnect, Inc. sebagai pekerjaan terpisah dan independen di bawah "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", dan tersedia "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">di sini</a>.]]></string>
 </resources>

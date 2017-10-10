@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Ouvrir avec %1$s</string>
   <string name="menu_open_with_a_browser">Ouvrir avec…</string>
   <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
+  <string name="menu_whats_new">Nouveautés</string>
   <string name="menu_settings">Paramètres</string>
   <string name="menu_about">À propos</string>
   <string name="menu_help">Aide</string>
@@ -64,7 +65,7 @@
   <string name="content_description_stop">Arrêter le chargement du site web</string>
   <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
   <string name="content_description_blocking_switch">Bloquer les traqueurs</string>
-  <string name="context_menu_paste_go">Coller et aller</string>
+  <string name="context_menu_paste_go">Coller et ouvrir</string>
   <string name="your_rights">Droits de l’utilisateur</string>
   <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
   <string name="external_app_prompt">Vous allez quitter %1$s pour ouvrir ce lien dans %2$s.</string>

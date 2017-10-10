@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Открыть в %1$s</string>
   <string name="menu_open_with_a_browser">Открыть в…</string>
   <string name="menu_add_to_home_screen">Добавить на домашний экран</string>
+  <string name="menu_whats_new">Что нового</string>
   <string name="menu_settings">Параметры</string>
   <string name="menu_about">О программе</string>
   <string name="menu_help">Справка</string>
