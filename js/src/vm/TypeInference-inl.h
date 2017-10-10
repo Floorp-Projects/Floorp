@@ -646,7 +646,7 @@ TypeScript::SetThis(JSContext* cx, JSScript* script, TypeSet::Type type)
         AutoEnterAnalysis enter(cx);
 
         InferSpew(ISpewOps, "externalType: setThis %p: %s",
-                  script, TypeSet::TypeString(type).get());
+                  script, TypeSet::TypeString(type));
         types->addType(cx, type);
     }
 }
@@ -670,7 +670,7 @@ TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, TypeSet::
         AutoEnterAnalysis enter(cx);
 
         InferSpew(ISpewOps, "externalType: setArg %p %u: %s",
-                  script, arg, TypeSet::TypeString(type).get());
+                  script, arg, TypeSet::TypeString(type));
         types->addType(cx, type);
     }
 }
