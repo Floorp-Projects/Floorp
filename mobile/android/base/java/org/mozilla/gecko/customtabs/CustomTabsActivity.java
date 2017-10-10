@@ -589,15 +589,21 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadUri(final GeckoView view, final String uriStr,
+    public boolean onLoadUri(final GeckoView view, final String urlStr,
                              final TargetWindow where) {
         if (where != TargetWindow.NEW) {
             return false;
         }
 
-        final Uri uri = Uri.parse(uriStr);
+        final Uri url = Uri.parse(urlStr);
+        if (url == null) {
+            // We can't handle this, so deny it.
+            Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
+            return true;
+        }
+
         final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(uri);
+        intent.setData(url);
         startActivity(intent);
         return true;
     }
