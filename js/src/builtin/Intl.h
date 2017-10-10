@@ -587,48 +587,6 @@ intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp);
 
-/******************** RelativeTimeFormat ********************/
-
-class RelativeTimeFormatObject : public NativeObject
-{
-  public:
-    static const Class class_;
-
-    static constexpr uint32_t INTERNALS_SLOT = 0;
-    static constexpr uint32_t URELATIVE_TIME_FORMAT_SLOT = 1;
-    static constexpr uint32_t SLOT_COUNT = 2;
-
-    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
-                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
-
-  private:
-    static const ClassOps classOps_;
-
-    static void finalize(FreeOp* fop, JSObject* obj);
-};
-
-/**
- * Returns an object indicating the supported locales for relative time format
- * by having a true-valued property for each such locale with the
- * canonicalized language tag as the property name. The object has no
- * prototype.
- *
- * Usage: availableLocales = intl_RelativeTimeFormat_availableLocales()
- */
-extern MOZ_MUST_USE bool
-intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
-
-/**
- * Returns a relative time as a string formatted according to the effective
- * locale and the formatting options of the given RelativeTimeFormat.
- *
- * t should be a number representing a number to be formatted.
- * unit should be "second", "minute", "hour", "day", "week", "month", "quarter", or "year".
- *
- * Usage: formatted = intl_FormatRelativeTime(relativeTimeFormat, t, unit)
- */
-extern MOZ_MUST_USE bool
-intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp);
 
 /******************** Intl ********************/
 
