@@ -73,6 +73,10 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
 
   RefPtr<ID3D11DeviceContext> ctx;
   allocator->GetDevice()->GetImmediateContext(getter_AddRefs(ctx));
+  if (!ctx) {
+    gfxCriticalError() << "Failed to get immediate context.";
+    return false;
+  }
 
   AutoLockD3D11Texture lockY(textureY);
   AutoLockD3D11Texture lockCb(textureCb);
@@ -189,6 +193,10 @@ D3D11YCbCrImage::GetAsSourceSurface()
 
   RefPtr<ID3D11DeviceContext> ctx;
   dev->GetImmediateContext(getter_AddRefs(ctx));
+  if (!ctx) {
+    gfxCriticalError() << "Failed to get immediate context.";
+    return nullptr;
+  }
 
   {
     AutoLockD3D11Texture lockY(texY);
