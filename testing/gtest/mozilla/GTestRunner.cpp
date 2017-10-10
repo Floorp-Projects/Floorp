@@ -6,9 +6,7 @@
 #include "GTestRunner.h"
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
-#ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
-#endif
 #include "testing/TestHarness.h"
 #include "prenv.h"
 #ifdef XP_WIN
@@ -91,7 +89,6 @@ int RunGTestFunc(int* argc, char** argv)
 #ifdef XP_WIN
   mozilla::ipc::windows::InitUIThread();
 #endif
-#ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> crashreporter;
   char *crashreporterStr = PR_GetEnv("MOZ_CRASHREPORTER");
   if (crashreporterStr && !strcmp(crashreporterStr, "1")) {
@@ -112,7 +109,6 @@ int RunGTestFunc(int* argc, char** argv)
       crashreporter->SetMinidumpPath(cwd);
     }
   }
-#endif
 
   return RUN_ALL_TESTS();
 }
