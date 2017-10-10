@@ -245,9 +245,7 @@ struct ShellCompartmentPrivate {
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
-    JSContext* cx;
     explicit EnvironmentPreparer(JSContext* cx)
-      : cx(cx)
     {
         js::SetScriptEnvironmentPreparer(cx, this);
     }
@@ -561,6 +559,7 @@ SkipUTF8BOM(FILE* file)
 void
 EnvironmentPreparer::invoke(HandleObject scope, Closure& closure)
 {
+    JSContext* cx = TlsContext.get();
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
     AutoCompartment ac(cx, scope);
