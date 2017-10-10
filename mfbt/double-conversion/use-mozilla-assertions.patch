@@ -1,16 +1,16 @@
-diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
---- a/mfbt/double-conversion/source/utils.h
-+++ b/mfbt/double-conversion/source/utils.h
+diff --git a/mfbt/double-conversion/double-conversion/utils.h b/mfbt/double-conversion/double-conversion/utils.h
+--- a/mfbt/double-conversion/double-conversion/utils.h
++++ b/mfbt/double-conversion/double-conversion/utils.h
 @@ -26,38 +26,38 @@
  // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
  #ifndef DOUBLE_CONVERSION_UTILS_H_
  #define DOUBLE_CONVERSION_UTILS_H_
  
- #include <stdlib.h>
- #include <string.h>
+ #include <cstdlib>
+ #include <cstring>
  
--#include <assert.h>
+-#include <cassert>
 +#include "mozilla/Assertions.h"
  #ifndef ASSERT
  #define ASSERT(condition)         \

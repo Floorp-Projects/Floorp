@@ -1,9 +1,12 @@
-1e7bf0c636b8cca54dd83456a0f8fa219343e2a1 Bug 608195 - part 2 - extend ToPrecision to tell use whether exponential notation was used
-diff --git a/mfbt/double-conversion/source/double-conversion.cc b/mfbt/double-conversion/source/double-conversion.cc
-index febba6c..394b6a0 100644
---- a/mfbt/double-conversion/source/double-conversion.cc
-+++ b/mfbt/double-conversion/source/double-conversion.cc
-@@ -283,7 +283,9 @@ bool DoubleToStringConverter::ToExponential(
+diff --git a/mfbt/double-conversion/double-conversion/double-conversion.cc b/mfbt/double-conversion/double-conversion/double-conversion.cc
+--- a/mfbt/double-conversion/double-conversion/double-conversion.cc
++++ b/mfbt/double-conversion/double-conversion/double-conversion.cc
+@@ -279,17 +279,19 @@ bool DoubleToStringConverter::ToExponent
+                                   exponent,
+                                   result_builder);
+   return true;
+ }
+ 
  
  bool DoubleToStringConverter::ToPrecision(double value,
                                            int precision,
@@ -13,7 +16,17 @@ index febba6c..394b6a0 100644
    if (Double(value).IsSpecial()) {
      return HandleSpecialValues(value, result_builder);
    }
-@@ -325,6 +327,7 @@ bool DoubleToStringConverter::ToPrecision(double value,
+ 
+   if (precision < kMinPrecisionDigits || precision > kMaxPrecisionDigits) {
+     return false;
+   }
+ 
+@@ -321,16 +323,17 @@ bool DoubleToStringConverter::ToPrecisio
+        max_trailing_padding_zeroes_in_precision_mode_)) {
+     // Fill buffer to contain 'precision' digits.
+     // Usually the buffer is already at the correct length, but 'DoubleToAscii'
+     // is allowed to return less characters.
+     for (int i = decimal_rep_length; i < precision; ++i) {
        decimal_rep[i] = '0';
      }
  
@@ -21,11 +34,20 @@ index febba6c..394b6a0 100644
      CreateExponentialRepresentation(decimal_rep,
                                      precision,
                                      exponent,
-diff --git a/mfbt/double-conversion/source/double-conversion.h b/mfbt/double-conversion/source/double-conversion.h
-index 0900ba0..957575c 100644
---- a/mfbt/double-conversion/source/double-conversion.h
-+++ b/mfbt/double-conversion/source/double-conversion.h
-@@ -270,6 +270,7 @@ class DoubleToStringConverter {
+                                     result_builder);
+   } else {
+     CreateDecimalRepresentation(decimal_rep, decimal_rep_length, decimal_point,
+                                 Max(0, precision - decimal_point),
+                                 result_builder);
+diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion/double-conversion.h
+--- a/mfbt/double-conversion/double-conversion/double-conversion.h
++++ b/mfbt/double-conversion/double-conversion/double-conversion.h
+@@ -265,16 +265,17 @@ class DoubleToStringConverter {
+   //     been provided to the constructor,
+   //   - precision < kMinPericisionDigits
+   //   - precision > kMaxPrecisionDigits
+   // The last condition implies that the result will never contain more than
+   // kMaxPrecisionDigits + 7 characters (the sign, the decimal point, the
    // exponent character, the exponent's sign, and at most 3 exponent digits).
    MFBT_API bool ToPrecision(double value,
                     int precision,
@@ -33,3 +55,8 @@ index 0900ba0..957575c 100644
                     StringBuilder* result_builder) const;
  
    enum DtoaMode {
+     // Produce the shortest correct representation.
+     // For example the output of 0.299999999999999988897 is (the less accurate
+     // but correct) 0.3.
+     SHORTEST,
+     // Same as SHORTEST, but for single-precision floats.
