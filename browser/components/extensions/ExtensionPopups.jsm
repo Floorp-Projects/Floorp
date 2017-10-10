@@ -123,7 +123,6 @@ class BasePopup {
 
       if (this.viewNode) {
         this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
-        this.viewNode.style.maxHeight = "";
         delete this.viewNode.customRectGetter;
       }
 
@@ -331,16 +330,9 @@ class BasePopup {
       height = Math.min(height, maxHeight);
       this.browser.style.height = `${height}px`;
 
-      // Set a maximum height on the <panelview> element to our preferred
-      // maximum height, so that the PanelUI resizing code can make an accurate
-      // calculation. If we don't do this, the flex sizing logic will prevent us
-      // from ever reporting a preferred size smaller than the height currently
-      // available to us in the panel.
-      height = Math.max(height, this.viewHeight);
-      this.viewNode.style.maxHeight = `${height}px`;
       // Used by the panelmultiview code to figure out sizing without reparenting
       // (which would destroy the browser and break us).
-      this.lastCalculatedInViewHeight = height;
+      this.lastCalculatedInViewHeight = Math.max(height, this.viewHeight);
     } else {
       this.browser.style.width = `${width}px`;
       this.browser.style.minWidth = `${width}px`;
