@@ -183,6 +183,11 @@ pub fn build_shader_strings(
     vs_source.push_str(gl_version_string);
     fs_source.push_str(gl_version_string);
 
+    // Insert the shader name to make debugging easier.
+    let name_string = format!("// {}\n", base_filename);
+    vs_source.push_str(&name_string);
+    fs_source.push_str(&name_string);
+
     // Define a constant depending on whether we are compiling VS or FS.
     vs_source.push_str(SHADER_KIND_VERTEX);
     fs_source.push_str(SHADER_KIND_FRAGMENT);

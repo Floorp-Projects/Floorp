@@ -59,6 +59,25 @@ enum class ExternalImageType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class FontHinting : uint8_t {
+  None = 0,
+  Mono = 1,
+  Light = 2,
+  Normal = 3,
+  LCD = 4,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class FontLCDFilter : uint8_t {
+  None = 0,
+  Default = 1,
+  Light = 2,
+  Legacy = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class FontRenderMode : uint32_t {
   Mono = 0,
   Alpha = 1,
@@ -252,14 +271,11 @@ struct BuiltDisplayListDescriptor {
   uint64_t builder_finish_time;
   // The third IPC time stamp: just before sending
   uint64_t send_start_time;
-  // The offset where DisplayItems stop and the Glyph list starts
-  size_t glyph_offset;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
     return builder_start_time == aOther.builder_start_time &&
            builder_finish_time == aOther.builder_finish_time &&
-           send_start_time == aOther.send_start_time &&
-           glyph_offset == aOther.glyph_offset;
+           send_start_time == aOther.send_start_time;
   }
 };
 
@@ -749,6 +765,26 @@ struct FontInstancePlatformOptions {
   bool operator==(const FontInstancePlatformOptions& aOther) const {
     return use_embedded_bitmap == aOther.use_embedded_bitmap &&
            force_gdi_rendering == aOther.force_gdi_rendering;
+  }
+};
+
+struct FontInstancePlatformOptions {
+  uint32_t unused;
+
+  bool operator==(const FontInstancePlatformOptions& aOther) const {
+    return unused == aOther.unused;
+  }
+};
+
+struct FontInstancePlatformOptions {
+  uint16_t flags;
+  FontLCDFilter lcd_filter;
+  FontHinting hinting;
+
+  bool operator==(const FontInstancePlatformOptions& aOther) const {
+    return flags == aOther.flags &&
+           lcd_filter == aOther.lcd_filter &&
+           hinting == aOther.hinting;
   }
 };
 

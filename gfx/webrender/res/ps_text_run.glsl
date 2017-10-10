@@ -30,7 +30,7 @@ void main(void) {
                      vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
 
     RectWithSize local_rect = RectWithSize(local_pos,
-                                           (res.uv_rect.zw - res.uv_rect.xy) / uDevicePixelRatio);
+                                           (res.uv_rect.zw - res.uv_rect.xy) * res.scale / uDevicePixelRatio);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(local_rect,
@@ -57,7 +57,7 @@ void main(void) {
     vec2 st0 = res.uv_rect.xy / texture_size;
     vec2 st1 = res.uv_rect.zw / texture_size;
 
-    vColor = text.color;
+    vColor = vec4(text.color.rgb * text.color.a, text.color.a);
     vUv = vec3(mix(st0, st1, f), res.layer);
     vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }
@@ -71,13 +71,14 @@ void main(void) {
     oFragColor = texture(sColor0, tc);
 #else
     vec4 color = texture(sColor0, tc) * vColor;
+    float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
     float a = 0.0;
     init_transform_fs(vLocalPos, a);
-    color.a *= a;
+    alpha *= a;
 #endif
-    color.a = min(color.a, do_clip());
-    oFragColor = color;
+    alpha = min(alpha, do_clip());
+    oFragColor = color * alpha;
 #endif
 }
 #endif
