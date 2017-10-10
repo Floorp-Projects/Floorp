@@ -6,7 +6,7 @@
 
 // This test attempts to ensure that PSM doesn't deadlock or crash when shutting
 // down NSS while a background thread is attempting to use NSS.
-// Uses test_signed_apps/valid_app_1.zip from test_signed_apps.js.
+// Uses test_signed_apps/signed_app.zip from test_signed_apps.js.
 
 function startAsyncNSSOperation(certdb, appFile) {
   return new Promise((resolve, reject) => {
@@ -28,7 +28,7 @@ add_task(async function() {
               .QueryInterface(Ci.nsIObserver);
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
-  let appFile = do_get_file("test_signed_apps/valid_app_1.zip");
+  let appFile = do_get_file("test_signed_apps/signed_app.zip");
 
   let promises = [];
   for (let i = 0; i < 25; i++) {
