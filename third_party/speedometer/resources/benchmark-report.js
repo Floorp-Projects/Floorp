@@ -1,7 +1,7 @@
 // This file can be customized to report results as needed.
 
 (function () {
-    if (!window.testRunner && location.search != '?webkit' && location.hash != '#webkit')
+    if ((!window.testRunner && location.search != '?webkit' && location.hash != '#webkit') && location.search != '?gecko')
         return;
 
     if (window.testRunner)
@@ -36,10 +36,13 @@
                     name: name,
                     aggregator: aggregator};
             }
-            PerfTestRunner.prepareToMeasureValuesAsync(createTest(null, 'Total'));
+            if (window.PerfTestRunner) {
+                PerfTestRunner.prepareToMeasureValuesAsync(createTest(null, 'Total'));
+            }
         },
         didRunSuites: function (measuredValues) {
-            PerfTestRunner.measureValueAsync(measuredValues.total);
+            if (window.PerfTestRunner)
+                PerfTestRunner.measureValueAsync(measuredValues.total);
             valuesByIteration.push(measuredValues.tests);
         },
         didFinishLastIteration: function () {
@@ -70,9 +73,23 @@
             for (var fullName in measuredValuesByFullName)
                 fullNames.push(fullName);
 
-            for (var i = 0; i < fullNames.length; i++) {
-                var values = measuredValuesByFullName[fullNames[i]];
-                PerfTestRunner.reportValues(createTest(fullNames[i], values.aggregator, i + 1 == fullNames.length), values);
+            if (typeof tpRecordTime !== "undefined") {
+                var values = new Array;
+                for (var i = 0; i < fullNames.length; i++) {
+                    values.push(measuredValuesByFullName[fullNames[i]]);
+                }
+                fullNames = new Array;
+                for (var fullName in measuredValuesByFullName) {
+                    for (var count=0; count < this.iterationCount; count++) {
+                        fullNames.push(fullName);
+                    }
+                }
+                tpRecordTime(values.join(','), 0, fullNames.join(','));
+            } else {
+                for (var i = 0; i < fullNames.length; i++) {
+                    var values = measuredValuesByFullName[fullNames[i]];
+                    PerfTestRunner.reportValues(createTest(fullNames[i], values.aggregator, i + 1 == fullNames.length), values);
+                }
             }
         }
     };
