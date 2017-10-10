@@ -218,12 +218,12 @@ function setupPrintMode() {
 // Prints current page to a PDF file and calls callback when sucessfully
 // printed and written.
 function printToPdf(callback) {
-    var currentDoc = content.document;
-    var isPrintSelection = false;
-    var printRange = '';
+    let currentDoc = content.document;
+    let isPrintSelection = false;
+    let printRange = '';
 
     if (currentDoc) {
-        var contentRootElement = currentDoc.documentElement;
+        let contentRootElement = currentDoc.documentElement;
         printRange = contentRootElement.getAttribute("reftest-print-range") || '';
     }
 
@@ -236,13 +236,13 @@ function printToPdf(callback) {
         }
     }
 
-    var fileName = "reftest-print.pdf";
-    var file = Services.dirsvc.get("TmpD", CI.nsIFile);
+    let fileName = "reftest-print.pdf";
+    let file = Services.dirsvc.get("TmpD", CI.nsIFile);
     file.append(fileName);
     file.createUnique(file.NORMAL_FILE_TYPE, 0o644);
 
-    var PSSVC = CC[PRINTSETTINGS_CONTRACTID].getService(CI.nsIPrintSettingsService);
-    var ps = PSSVC.newPrintSettings;
+    let PSSVC = CC[PRINTSETTINGS_CONTRACTID].getService(CI.nsIPrintSettingsService);
+    let ps = PSSVC.newPrintSettings;
     ps.printSilent = true;
     ps.showPrintProgress = false;
     ps.printBGImages = true;
@@ -256,12 +256,12 @@ function printToPdf(callback) {
         ps.printRange = CI.nsIPrintSettings.kRangeSelection;
     } else if (printRange) {
         ps.printRange = CI.nsIPrintSettings.kRangeSpecifiedPageRange;
-        var range = printRange.split('-');
+        let range = printRange.split('-');
         ps.startPageRange = +range[0] || 1;
         ps.endPageRange = +range[1] || 1;
     }
 
-    var webBrowserPrint = content.QueryInterface(CI.nsIInterfaceRequestor)
+    let webBrowserPrint = content.QueryInterface(CI.nsIInterfaceRequestor)
                                  .getInterface(CI.nsIWebBrowserPrint);
     webBrowserPrint.print(ps, {
         onStateChange: function(webProgress, request, stateFlags, status) {
