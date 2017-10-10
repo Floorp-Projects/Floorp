@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="mySymbol" viewBox="0 0 20 20">
+      <rect fill="lime" x="50%" height="20px" width="3%"/>
+    </symbol>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <svg viewBox="0 0 20 20">
+    <rect fill="red" x="50%" height="20px" width="2%"/>
+  </svg>
+  <svg>
+    <use href="#mySymbol"/>
+  </svg>
+</svg>

@@ -438,13 +438,6 @@ js::RunScript(JSContext* cx, RunState& state)
 # pragma optimize("", on)
 #endif
 
-struct AutoGCIfRequested
-{
-    JSRuntime* runtime;
-    explicit AutoGCIfRequested(JSRuntime* rt) : runtime(rt) {}
-    ~AutoGCIfRequested() { runtime->gc.gcIfRequested(); }
-};
-
 /*
  * Find a function reference and its 'this' value implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -460,9 +453,6 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
 {
     MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
     MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
-
-    /* Perform GC if necessary on exit from the function. */
-    AutoGCIfRequested gcIfRequested(cx->runtime());
 
     unsigned skipForCallee = args.length() + 1 + (construct == CONSTRUCT);
     if (args.calleev().isPrimitive())

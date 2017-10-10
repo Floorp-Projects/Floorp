@@ -950,7 +950,7 @@ MacroAssembler::truncateFloat32ToUInt64(Address src, Address dest, Register temp
     truncateFloat32ToInt64(src, dest, temp);
 
     // For unsigned conversion the case of [INT64, UINT64] needs to get handle seperately.
-    load32(Address(dest.base, dest.offset + INT64HIGH_OFFSET), temp);
+    load32(HighWord(dest), temp);
     branch32(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
 
     // Move the value inside INT64 range.
@@ -960,9 +960,9 @@ MacroAssembler::truncateFloat32ToUInt64(Address src, Address dest, Register temp
     storeFloat32(floatTemp, dest);
     truncateFloat32ToInt64(dest, dest, temp);
 
-    load32(Address(dest.base, dest.offset + INT64HIGH_OFFSET), temp);
+    load32(HighWord(dest), temp);
     orl(Imm32(0x80000000), temp);
-    store32(temp, Address(dest.base, dest.offset + INT64HIGH_OFFSET));
+    store32(temp, HighWord(dest));
 
     bind(&done);
 }
@@ -978,7 +978,7 @@ MacroAssembler::truncateDoubleToUInt64(Address src, Address dest, Register temp,
     truncateDoubleToInt64(src, dest, temp);
 
     // For unsigned conversion the case of [INT64, UINT64] needs to get handle seperately.
-    load32(Address(dest.base, dest.offset + INT64HIGH_OFFSET), temp);
+    load32(HighWord(dest), temp);
     branch32(Assembler::Condition::NotSigned, temp, Imm32(0), &done);
 
     // Move the value inside INT64 range.
@@ -988,9 +988,9 @@ MacroAssembler::truncateDoubleToUInt64(Address src, Address dest, Register temp,
     storeDouble(floatTemp, dest);
     truncateDoubleToInt64(dest, dest, temp);
 
-    load32(Address(dest.base, dest.offset + INT64HIGH_OFFSET), temp);
+    load32(HighWord(dest), temp);
     orl(Imm32(0x80000000), temp);
-    store32(temp, Address(dest.base, dest.offset + INT64HIGH_OFFSET));
+    store32(temp, HighWord(dest));
 
     bind(&done);
 }
