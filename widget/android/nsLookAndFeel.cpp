@@ -42,15 +42,10 @@ nsLookAndFeel::~nsLookAndFeel()
 nsresult
 nsLookAndFeel::GetSystemColors()
 {
-    if (mInitializedSystemColors)
-        return NS_OK;
-
     if (!AndroidBridge::Bridge())
         return NS_ERROR_FAILURE;
 
     AndroidBridge::Bridge()->GetSystemColors(&mSystemColors);
-
-    mInitializedSystemColors = true;
 
     return NS_OK;
 }
@@ -76,9 +71,24 @@ nsLookAndFeel::CallRemoteGetSystemColors()
     // so just copy the memory block
     memcpy(&mSystemColors, colors.Elements(), sizeof(nscolor) * colorsCount);
 
-    mInitializedSystemColors = true;
-
     return NS_OK;
+}
+
+void
+nsLookAndFeel::NativeInit()
+{
+    EnsureInitSystemColors();
+    EnsureInitShowPassword();
+}
+
+/* virtual */
+void
+nsLookAndFeel::RefreshImpl()
+{
+    nsXPLookAndFeel::RefreshImpl();
+
+    mInitializedSystemColors = false;
+    mInitializedShowPassword = false;
 }
 
 nsresult
@@ -86,12 +96,11 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
     nsresult rv = NS_OK;
 
+    EnsureInitSystemColors();
     if (!mInitializedSystemColors) {
-        if (XRE_IsParentProcess())
-            rv = GetSystemColors();
-        else
-            rv = CallRemoteGetSystemColors();
-        NS_ENSURE_SUCCESS(rv, rv);
+        // Failure to initialize colors is an error condition. Return black.
+        aColor = 0;
+        return NS_ERROR_FAILURE;
     }
 
     // XXX we'll want to use context.obtainStyledAttributes on the java side to
@@ -343,7 +352,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     return rv;
 }
 
-
 nsresult
 nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 {
@@ -469,14 +477,7 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
 bool
 nsLookAndFeel::GetEchoPasswordImpl()
 {
-    if (!mInitializedShowPassword) {
-        if (XRE_IsParentProcess()) {
-            mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
-        } else {
-            ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
-        }
-        mInitializedShowPassword = true;
-    }
+    EnsureInitShowPassword();
     return mShowPassword;
 }
 
@@ -493,4 +494,31 @@ nsLookAndFeel::GetPasswordCharacterImpl()
 {
   // This value is hard-coded in Android OS's PasswordTransformationMethod.java
   return UNICODE_BULLET;
+}
+
+void
+nsLookAndFeel::EnsureInitSystemColors()
+{
+    if (!mInitializedSystemColors) {
+        nsresult rv;
+        if (XRE_IsParentProcess()) {
+            rv = GetSystemColors();
+        } else {
+            rv = CallRemoteGetSystemColors();
+        }
+        mInitializedSystemColors = NS_SUCCEEDED(rv);
+    }
+}
+
+void
+nsLookAndFeel::EnsureInitShowPassword()
+{
+    if (!mInitializedShowPassword) {
+        if (XRE_IsParentProcess()) {
+            mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
+        } else {
+            ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
+        }
+        mInitializedShowPassword = true;
+    }
 }
