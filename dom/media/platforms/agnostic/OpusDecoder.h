@@ -17,7 +17,11 @@ namespace mozilla {
 
 class OpusParser;
 
-class OpusDataDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(OpusDataDecoder, MediaDataDecoder);
+
+class OpusDataDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<OpusDataDecoder>
 {
 public:
   explicit OpusDataDecoder(const CreateDecoderParams& aParams);

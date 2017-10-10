@@ -119,7 +119,11 @@ ContainerParser::MediaSegmentRange()
   return mCompleteMediaSegmentRange;
 }
 
-class WebMContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(WebMContainerParser, ContainerParser);
+
+class WebMContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<WebMContainerParser>
 {
 public:
   explicit WebMContainerParser(const MediaContainerType& aType)
@@ -194,6 +198,7 @@ public:
       mOverlappedMapping.Clear();
       mInitData = new MediaByteBuffer();
       mResource = new SourceBufferResource();
+      DDLINKCHILD("resource", mResource.get());
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
       mCompleteMediaSegmentRange = MediaByteRange();
@@ -341,7 +346,11 @@ private:
 
 #ifdef MOZ_FMP4
 
-class MP4Stream : public ByteStream
+DDLoggedTypeDeclNameAndBase(MP4Stream, ByteStream);
+
+class MP4Stream
+  : public ByteStream
+  , public DecoderDoctorLifeLogger<MP4Stream>
 {
 public:
   explicit MP4Stream(SourceBufferResource* aResource);
@@ -365,6 +374,7 @@ MP4Stream::MP4Stream(SourceBufferResource* aResource)
 {
   MOZ_COUNT_CTOR(MP4Stream);
   MOZ_ASSERT(aResource);
+  DDLINKCHILD("resource", aResource);
 }
 
 MP4Stream::~MP4Stream()
@@ -406,7 +416,11 @@ MP4Stream::Length(int64_t* aSize)
   return true;
 }
 
-class MP4ContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(MP4ContainerParser, ContainerParser);
+
+class MP4ContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<MP4ContainerParser>
 {
 public:
   explicit MP4ContainerParser(const MediaContainerType& aType)
@@ -575,12 +589,14 @@ public:
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
       mResource = new SourceBufferResource();
+      DDLINKCHILD("resource", mResource.get());
       mStream = new MP4Stream(mResource);
       // We use a timestampOffset of 0 for ContainerParser, and require
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
       mParser = new MoofParser(mStream, 0, /* aIsAudio = */ false);
+      DDLINKCHILD("parser", mParser.get());
       mInitData = new MediaByteBuffer();
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
@@ -657,7 +673,11 @@ private:
 #endif // MOZ_FMP4
 
 #ifdef MOZ_FMP4
-class ADTSContainerParser : public ContainerParser
+DDLoggedTypeDeclNameAndBase(ADTSContainerParser, ContainerParser);
+
+class ADTSContainerParser
+  : public ContainerParser
+  , public DecoderDoctorLifeLogger<ADTSContainerParser>
 {
 public:
   explicit ADTSContainerParser(const MediaContainerType& aType)

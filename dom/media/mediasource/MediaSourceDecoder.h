@@ -21,7 +21,11 @@ class MediaSource;
 
 } // namespace dom
 
-class MediaSourceDecoder : public MediaDecoder
+DDLoggedTypeDeclNameAndBase(MediaSourceDecoder, MediaDecoder);
+
+class MediaSourceDecoder
+  : public MediaDecoder
+  , public DecoderDoctorLifeLogger<MediaSourceDecoder>
 {
 public:
   explicit MediaSourceDecoder(MediaDecoderInit& aInit);

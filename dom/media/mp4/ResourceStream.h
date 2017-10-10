@@ -12,7 +12,11 @@
 namespace mozilla
 {
 
-class ResourceStream : public ByteStream
+DDLoggedTypeDeclNameAndBase(ResourceStream, ByteStream);
+
+class ResourceStream
+  : public ByteStream
+  , public DecoderDoctorLifeLogger<ResourceStream>
 {
 public:
   explicit ResourceStream(mozilla::MediaResource* aResource);

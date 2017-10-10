@@ -42,7 +42,11 @@ private:
   RefPtr<PDMFactory> mPDM;
 };
 
-class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy
+DDLoggedTypeDeclNameAndBase(EMEMediaDataDecoderProxy, MediaDataDecoderProxy);
+
+class EMEMediaDataDecoderProxy
+  : public MediaDataDecoderProxy
+  , public DecoderDoctorLifeLogger<EMEMediaDataDecoderProxy>
 {
 public:
   EMEMediaDataDecoderProxy(

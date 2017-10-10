@@ -260,6 +260,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     return nullptr;
   }
   mSourceBuffers->Append(sourceBuffer);
+  DDLINKCHILD("sourcebuffer[]", sourceBuffer.get());
   MSE_DEBUG("sourceBuffer=%p", sourceBuffer.get());
   return sourceBuffer.forget();
 }
@@ -335,6 +336,7 @@ MediaSource::RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv)
     mActiveSourceBuffers->Remove(sourceBuffer);
   }
   mSourceBuffers->Remove(sourceBuffer);
+  DDUNLINKCHILD(sourceBuffer);
   // TODO: Free all resources associated with sourceBuffer
 }
 
