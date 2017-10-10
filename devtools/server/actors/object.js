@@ -83,7 +83,7 @@ ObjectActor.prototype = {
     let unwrapped = DevToolsUtils.unwrap(this.obj);
     if (!unwrapped) {
       if (DevToolsUtils.isCPOW(this.obj)) {
-        g.class = "CPOW: " + this.obj.class;
+        g.class = "CPOW: " + g.class;
       } else {
         g.class = "Inaccessible";
       }
