@@ -31,3 +31,8 @@ generic_template_specialization = false
 
 [enum]
 add_sentinel = true
+
+[defines]
+"target_os = windows" = "XP_WIN"
+"target_os = macos" = "XP_MACOSX"
+

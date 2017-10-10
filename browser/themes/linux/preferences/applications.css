@@ -47,7 +47,7 @@ menuitem[appHandlerIcon="feed"] {
 
 richlistitem[appHandlerIcon="plugin"],
 menuitem[appHandlerIcon="plugin"] {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric-16.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 .actionsMenu .menulist-icon {

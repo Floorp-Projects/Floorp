@@ -40,6 +40,7 @@ notification[type="critical"] {
 
 .messageText {
   margin-inline-start: 12px !important;
+  margin-bottom: 1px !important;
 }
 
 .messageText > .text-link {

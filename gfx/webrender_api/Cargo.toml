@@ -1,6 +1,6 @@
 [package]
 name = "webrender_api"
-version = "0.52.0"
+version = "0.52.1"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -15,7 +15,6 @@ bincode = "0.8"
 bitflags = "0.9"
 byteorder = "1.0"
 euclid = "0.15"
-fxhash = "0.2.1"
 heapsize = ">= 0.3.6, < 0.5"
 ipc-channel = {version = "0.8", optional = true}
 serde = { version = "1.0", features = ["rc", "derive"] }

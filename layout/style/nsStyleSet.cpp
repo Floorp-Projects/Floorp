@@ -2241,7 +2241,7 @@ nsStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 }
 
 nsCSSKeyframesRule*
-nsStyleSet::KeyframesRuleForName(const nsString& aName)
+nsStyleSet::KeyframesRuleForName(nsAtom* aName)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");

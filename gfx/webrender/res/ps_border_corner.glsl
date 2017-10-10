@@ -110,10 +110,10 @@ void write_color(vec4 color0, vec4 color1, int style, vec2 delta, int instance_k
             break;
     }
 
-    vColor00 = vec4(color0.rgb * modulate.x, color0.a);
-    vColor01 = vec4(color0.rgb * modulate.y, color0.a);
-    vColor10 = vec4(color1.rgb * modulate.z, color1.a);
-    vColor11 = vec4(color1.rgb * modulate.w, color1.a);
+    vColor00 = vec4(clamp(color0.rgb * modulate.x, vec3(0.0), vec3(1.0)), color0.a);
+    vColor01 = vec4(clamp(color0.rgb * modulate.y, vec3(0.0), vec3(1.0)), color0.a);
+    vColor10 = vec4(clamp(color1.rgb * modulate.z, vec3(0.0), vec3(1.0)), color1.a);
+    vColor11 = vec4(clamp(color1.rgb * modulate.w, vec3(0.0), vec3(1.0)), color1.a);
 }
 
 int select_style(int color_select, vec2 fstyle) {
@@ -325,8 +325,11 @@ void main(void) {
     alpha = min(alpha, do_clip());
 
     // Find the appropriate distance to apply the AA smoothstep over.
+    // Using 0.7 instead of 0.5 for the step compensates for the fact that smoothstep
+    // is smooth at its endpoints and has a steeper maximum slope than a linear ramp.
     vec2 fw = fwidth(local_pos);
-    float afwidth = length(fw);
+    float aa_step = 0.7 * length(fw);
+
     float distance_for_color;
     float color_mix_factor;
 
@@ -336,28 +339,39 @@ void main(void) {
     if (all(lessThan(local_pos * vClipSign, vClipCenter * vClipSign))) {
         vec2 p = local_pos - vClipCenter;
 
+        // The coordinate system is snapped to pixel boundaries. To sample the distance,
+        // however, we are interested in the center of the pixels which introduces an
+        // error of half a pixel towards the exterior of the curve (See issue #1750).
+        // This error is corrected by offsetting the distance by half a device pixel.
+        // This not entirely correct: it leaves an error that varries between
+        // 0 and (sqrt(2) - 1)/2 = 0.2 pixels but it is hardly noticeable and is better
+        // than the constant sqrt(2)/2 px error without the correction.
+        // To correct this exactly we would need to offset p by half a pixel in the
+        // direction of the center of the ellipse (a different offset for each corner).
+
+        // A half device pixel in css pixels (using the average of width and height in case
+        // there is any kind of transform applied).
+        float half_px = 0.25 * (fw.x + fw.y);
         // Get signed distance from the inner/outer clips.
-        float d0 = distance_to_ellipse(p, vRadii0.xy);
-        float d1 = distance_to_ellipse(p, vRadii0.zw);
-        float d2 = distance_to_ellipse(p, vRadii1.xy);
-        float d3 = distance_to_ellipse(p, vRadii1.zw);
+        float d0 = distance_to_ellipse(p, vRadii0.xy) + half_px;
+        float d1 = distance_to_ellipse(p, vRadii0.zw) + half_px;
+        float d2 = distance_to_ellipse(p, vRadii1.xy) + half_px;
+        float d3 = distance_to_ellipse(p, vRadii1.zw) + half_px;
 
         // SDF subtract main radii
-        float d_main = max(d0, 0.5 * afwidth - d1);
+        float d_main = max(d0, aa_step - d1);
 
         // SDF subtract inner radii (double style borders)
-        float d_inner = max(d2 - 0.5 * afwidth, -d3);
+        float d_inner = max(d2 - aa_step, -d3);
 
         // Select how to combine the SDF based on border style.
         float d = mix(max(d_main, -d_inner), d_main, vSDFSelect);
 
         // Only apply AA to fragments outside the signed distance field.
-        alpha = min(alpha, 1.0 - smoothstep(0.0, 0.5 * afwidth, d));
+        alpha = min(alpha, 1.0 - smoothstep(0.0, aa_step, d));
 
         // Get the groove/ridge mix factor.
-        color_mix_factor = smoothstep(-0.5 * afwidth,
-                                      0.5 * afwidth,
-                                      -d2);
+        color_mix_factor = smoothstep(-aa_step, aa_step, -d2);
     } else {
         // Handle the case where the fragment is outside the clip
         // region in a corner. This occurs when border width is
@@ -389,7 +403,7 @@ void main(void) {
     // Select color based on side of line. Get distance from the
     // reference line, and then apply AA along the edge.
     float ld = distance_to_line(vColorEdgeLine.xy, vColorEdgeLine.zw, local_pos);
-    float m = smoothstep(-0.5 * afwidth, 0.5 * afwidth, ld);
+    float m = smoothstep(-aa_step, aa_step, ld);
     vec4 color = mix(color0, color1, m);
 
     oFragColor = color * vec4(1.0, 1.0, 1.0, alpha);
