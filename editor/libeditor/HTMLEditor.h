@@ -152,8 +152,8 @@ public:
   NS_DECL_NSIHTMLINLINETABLEEDITOR
 
   // XXX Following methods are not overriding but defined here...
-  nsresult CopyLastEditableChildStyles(nsIDOMNode* aPreviousBlock,
-                                       nsIDOMNode* aNewBlock,
+  nsresult CopyLastEditableChildStyles(nsINode* aPreviousBlock,
+                                       nsINode* aNewBlock,
                                        Element** aOutBrNode);
 
   nsresult LoadHTML(const nsAString& aInputString);

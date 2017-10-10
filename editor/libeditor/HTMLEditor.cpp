@@ -4554,44 +4554,39 @@ HTMLEditor::AreNodesSameType(nsIContent* aNode1,
 }
 
 nsresult
-HTMLEditor::CopyLastEditableChildStyles(nsIDOMNode* aPreviousBlock,
-                                        nsIDOMNode* aNewBlock,
+HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
+                                        nsINode* aNewBlock,
                                         Element** aOutBrNode)
 {
   nsCOMPtr<nsINode> newBlock = do_QueryInterface(aNewBlock);
   NS_ENSURE_STATE(newBlock || !aNewBlock);
   *aOutBrNode = nullptr;
-  nsCOMPtr<nsIDOMNode> child, tmp;
+  nsCOMPtr<nsINode> child, tmp;
   // first, clear out aNewBlock.  Contract is that we want only the styles from previousBlock.
-  nsresult rv = aNewBlock->GetFirstChild(getter_AddRefs(child));
-  while (NS_SUCCEEDED(rv) && child) {
-    rv = DeleteNode(child);
+  child = aNewBlock->GetFirstChild();
+  while (child) {
+    nsresult rv = DeleteNode(child);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aNewBlock->GetFirstChild(getter_AddRefs(child));
+    child = aNewBlock->GetFirstChild();
   }
   // now find and clone the styles
   child = aPreviousBlock;
   tmp = aPreviousBlock;
   while (tmp) {
     child = tmp;
-    nsCOMPtr<nsINode> child_ = do_QueryInterface(child);
-    NS_ENSURE_STATE(child_ || !child);
-    tmp = GetAsDOMNode(GetLastEditableChild(*child_));
+    tmp = GetLastEditableChild(*child);
   }
   while (child && TextEditUtils::IsBreak(child)) {
-    nsCOMPtr<nsIDOMNode> priorNode;
-    rv = GetPriorHTMLNode(child, address_of(priorNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-    child = priorNode;
+    child = GetPriorHTMLNode(child);
   }
   nsCOMPtr<Element> newStyles, deepestStyle;
-  nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
+  nsCOMPtr<nsINode> childNode = child;
   nsCOMPtr<Element> childElement;
   if (childNode) {
     childElement = childNode->IsElement() ? childNode->AsElement()
                                           : childNode->GetParentElement();
   }
-  while (childElement && (childElement->AsDOMNode() != aPreviousBlock)) {
+  while (childElement && (childElement != aPreviousBlock)) {
     if (HTMLEditUtils::IsInlineStyle(childElement) ||
         childElement->IsHTMLElement(nsGkAtoms::span)) {
       if (newStyles) {
