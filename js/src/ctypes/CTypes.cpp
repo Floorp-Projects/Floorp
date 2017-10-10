@@ -6850,11 +6850,14 @@ CreateFunctionInfo(JSContext* cx,
                    HandleObject returnType,
                    const HandleValueArray& args)
 {
-  auto fninfo = cx->make_unique<FunctionInfo>();
+  FunctionInfo* fninfo(cx->new_<FunctionInfo>());
   if (!fninfo) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
+
+  // Stash the FunctionInfo in a reserved slot.
+  JS_SetReservedSlot(typeObj, SLOT_FNINFO, PrivateValue(fninfo));
 
   ffi_abi abi;
   if (!GetABI(cx, abiType, &abi)) {
@@ -6865,7 +6868,7 @@ CreateFunctionInfo(JSContext* cx,
 
   fninfo->mReturnType = returnType;
 
-  // Prepare the argument types.
+  // prepare the argument types
   if (!fninfo->mArgTypes.reserve(args.length()) ||
       !fninfo->mFFITypes.reserve(args.length())) {
     JS_ReportOutOfMemory(cx);
@@ -6910,12 +6913,14 @@ CreateFunctionInfo(JSContext* cx,
     fninfo->mFFITypes.infallibleAppend(ffiType);
   }
 
-  // For variadic functions, wait to PrepareCIF until the function is called.
-  if (!fninfo->mIsVariadic && !PrepareCIF(cx, fninfo.get()))
+  if (fninfo->mIsVariadic) {
+    // wait to PrepareCIF until function is called
+    return true;
+  }
+
+  if (!PrepareCIF(cx, fninfo))
     return false;
 
-  // Now the FunctionInfo has been initialized, store it in a reserved slot.
-  JS_SetReservedSlot(typeObj, SLOT_FNINFO, PrivateValue(fninfo.release()));
   return true;
 }
 
