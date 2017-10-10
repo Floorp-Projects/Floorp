@@ -55,8 +55,14 @@ var gEditItemOverlay = {
         throw new Error("Cannot use an incomplete node to initialize the edit bookmark panel");
       }
       let parent = node.parent;
-      isParentReadOnly = !PlacesUtils.nodeIsFolder(parent) ||
-                          PlacesUIUtils.isContentsReadOnly(parent);
+      isParentReadOnly = !PlacesUtils.nodeIsFolder(parent);
+      if (!isParentReadOnly) {
+        let folderId = PlacesUtils.getConcreteItemId(parent);
+        isParentReadOnly = folderId == PlacesUtils.placesRootId ||
+                           (!("get" in Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId")) &&
+                            (folderId == PlacesUIUtils.leftPaneFolderId ||
+                             folderId == PlacesUIUtils.allBookmarksFolderId));
+      }
       parentId = parent.itemId;
       parentGuid = parent.bookmarkGuid;
     }
