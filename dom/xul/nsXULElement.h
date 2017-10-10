@@ -40,6 +40,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMString.h"
+#include "mozilla/dom/FromParser.h"
 
 class nsIDocument;
 class nsXULPrototypeDocument;
@@ -799,7 +800,8 @@ protected:
     bool BoolAttrIsTrue(nsAtom* aName) const;
 
     friend nsresult
-    NS_NewXULElement(mozilla::dom::Element** aResult, mozilla::dom::NodeInfo *aNodeInfo);
+    NS_NewXULElement(mozilla::dom::Element** aResult, mozilla::dom::NodeInfo *aNodeInfo,
+                     mozilla::dom::FromParser aFromParser, const nsAString* aIs);
     friend void
     NS_TrustedNewXULElement(nsIContent** aResult, mozilla::dom::NodeInfo *aNodeInfo);
 

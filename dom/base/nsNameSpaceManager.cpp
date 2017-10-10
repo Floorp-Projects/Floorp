@@ -183,7 +183,7 @@ NS_NewElement(Element** aResult,
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
-    return NS_NewXULElement(aResult, ni.forget());
+    return NS_NewXULElement(aResult, ni.forget(), aFromParser);
   }
 #endif
   if (ns == kNameSpaceID_MathML) {
