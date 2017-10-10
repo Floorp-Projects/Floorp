@@ -29,14 +29,12 @@ GeckoStart(JNIEnv* env, char** argv, int argc, const StaticXREAppData& aAppData)
 {
     mozilla::jni::SetGeckoThreadEnv(env);
 
-#ifdef MOZ_CRASHREPORTER
     const struct mapping_info *info = getLibraryMapping();
     while (info->name) {
       CrashReporter::AddLibraryMapping(info->name, info->base,
                                        info->len, info->offset);
       info++;
     }
-#endif
 
     if (!argv) {
         LOG("Failed to get arguments for GeckoStart\n");
