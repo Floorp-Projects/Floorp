@@ -370,6 +370,13 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsTArray<PrincipalInfo> ancestorPrincipals;
+  ancestorPrincipals.SetCapacity(aLoadInfo->AncestorPrincipals().Length());
+  for (const auto& principal : aLoadInfo->AncestorPrincipals()) {
+    rv = PrincipalToPrincipalInfo(principal, ancestorPrincipals.AppendElement());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   *aOptionalLoadInfoArgs =
     LoadInfoArgs(
       loadingPrincipalInfo,
@@ -395,6 +402,8 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetOriginAttributes(),
       redirectChainIncludingInternalRedirects,
       redirectChain,
+      ancestorPrincipals,
+      aLoadInfo->AncestorOuterWindowIDs(),
       aLoadInfo->CorsUnsafeHeaders(),
       aLoadInfo->GetForcePreflight(),
       aLoadInfo->GetIsPreflight(),
@@ -467,6 +476,15 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     redirectChain.AppendElement(redirectHistoryEntry.forget());
   }
 
+  nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
+  ancestorPrincipals.SetCapacity(loadInfoArgs.ancestorPrincipals().Length());
+  for (const PrincipalInfo& principalInfo : loadInfoArgs.ancestorPrincipals()) {
+    nsCOMPtr<nsIPrincipal> ancestorPrincipal =
+      PrincipalInfoToPrincipal(principalInfo, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    ancestorPrincipals.AppendElement(ancestorPrincipal.forget());
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(loadingPrincipal,
                           triggeringPrincipal,
@@ -491,6 +509,8 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.originAttributes(),
                           redirectChainIncludingInternalRedirects,
                           redirectChain,
+                          Move(ancestorPrincipals),
+                          loadInfoArgs.ancestorOuterWindowIDs(),
                           loadInfoArgs.corsUnsafeHeaders(),
                           loadInfoArgs.forcePreflight(),
                           loadInfoArgs.isPreflight(),
