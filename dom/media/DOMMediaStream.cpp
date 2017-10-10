@@ -341,9 +341,8 @@ public:
   explicit PlaybackTrackListener(DOMMediaStream* aStream) :
     mStream(aStream) {}
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaybackTrackListener,
-                                           MediaStreamTrackConsumer)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlaybackTrackListener)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PlaybackTrackListener)
 
   void NotifyEnded(MediaStreamTrack* aTrack) override
   {
@@ -367,15 +366,9 @@ protected:
   RefPtr<DOMMediaStream> mStream;
 };
 
-NS_IMPL_ADDREF_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                         MediaStreamTrackConsumer)
-NS_IMPL_RELEASE_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                          MediaStreamTrackConsumer)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream::PlaybackTrackListener)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackConsumer)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                                   MediaStreamTrackConsumer,
-                                   mStream)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::PlaybackTrackListener, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::PlaybackTrackListener, Release)
+NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::PlaybackTrackListener, mStream)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
 
