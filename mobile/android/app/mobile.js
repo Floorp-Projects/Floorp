@@ -181,8 +181,7 @@ pref("browser.formfill.enable", true);
 pref("layout.spellcheckDefault", 0);
 
 /* new html5 forms */
-pref("dom.forms.datetime", true);
-pref("dom.forms.datetime.others", true);
+pref("dom.experimental_forms", true);
 pref("dom.forms.number", true);
 
 /* extension manager and xpinstall */
