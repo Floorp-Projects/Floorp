@@ -1203,7 +1203,7 @@ set_config('DEVELOPER_OPTIONS', developer_options)
 
 @depends(target)
 def build_not_win_mac(target):
-    if target.kernel not in ('Darwin', 'WINNT'):
+    if target.kernel not in ('Darwin', 'WINNT', 'SunOS'):
         return True
 
 

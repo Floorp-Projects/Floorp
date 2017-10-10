@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518501054306000);
+const PRTime gPreloadListExpirationTime = INT64_C(1518543721375000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -326,7 +326,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518501054306000);
 500k.nl, 1
 500p.xyz, 1
 50plusnet.nl, 1
-518maicai.com, 1
+518maicai.com, 0
 525.info, 1
 52neptune.com, 1
 5432.cc, 1
@@ -969,6 +969,7 @@ alainbaechlerphotography.ch, 1
 alainmargot.ch, 1
 alainwolf.ch, 1
 alainwolf.net, 1
+alair.cn, 0
 alamgir.works, 1
 alanhuang.name, 1
 alaninkenya.org, 1
@@ -1646,7 +1647,6 @@ aqualogy.de, 1
 aquapoint.kiev.ua, 1
 aquarium-supplement.net, 1
 aquariumaccessories.shop, 1
-aquaron.com, 1
 aquaselect.eu, 1
 aquatechnologygroup.com, 1
 aquavitaedayspa.com.au, 1
@@ -3826,7 +3826,6 @@ cadman.pw, 1
 cadooz.com, 1
 cadorama.fr, 1
 cadoth.net, 1
-cadusilva.com, 1
 caerostris.com, 1
 caesarkabalan.com, 1
 cafechesscourt.com, 1
@@ -3919,7 +3918,6 @@ canalsidehouse.be, 1
 canalsidehouse.com, 1
 canarianlegalalliance.com, 1
 canarymod.net, 0
-cancelmyprofile.com, 1
 cancerdata.nhs.uk, 1
 cancreate.nl, 1
 candicecity.com, 1
@@ -4180,6 +4178,7 @@ cefak.org.br, 1
 cegfw.com, 1
 ceilingpac.org, 1
 cejhon.cz, 0
+cekaja.com, 1
 celebphotos.blog, 1
 celebrityscope.net, 1
 celec.gob.ec, 0
@@ -4559,6 +4558,7 @@ chrisupjohn.xyz, 1
 chriswarrick.com, 1
 chriswbarry.com, 1
 chriswells.io, 1
+chromaryu.net, 0
 chromaxa.com, 1
 chrome-devtools-frontend.appspot.com, 1
 chrome.com, 0
@@ -4780,7 +4780,7 @@ cloudia.org, 1
 cloudily.com, 1
 cloudlight.biz, 1
 cloudmigrator365.com, 1
-cloudopt.net, 1
+cloudopt.net, 0
 cloudoptimizedsmb.com, 1
 cloudoptimus.com, 1
 cloudpagesforwork.com, 1
@@ -5003,7 +5003,6 @@ collbox.co, 1
 collectdocs.com, 1
 collectfood.com, 1
 collectiblebeans.com, 1
-collectosaurus.com, 1
 colleencornez.com, 1
 collegepaperworld.com, 1
 collinghammethodist.org.uk, 1
@@ -5047,6 +5046,7 @@ comfypc.com, 1
 comhack.com, 1
 comico.info, 1
 comiq.io, 1
+comiteaintriathlon.fr, 1
 comm.cx, 1
 commania.co.kr, 1
 commencepayments.com, 1
@@ -5561,6 +5561,7 @@ cubecraft.net, 1
 cubecraftstore.com, 1
 cubecraftstore.net, 1
 cubekrowd.net, 1
+cubela.tech, 1
 cubia.de, 1
 cubia3.com, 1
 cubia4.com, 1
@@ -6002,7 +6003,7 @@ davy-server.com, 1
 daw.nz, 1
 dawnbringer.eu, 1
 dawnbringer.net, 1
-dawnson.is, 0
+dawnson.is, 1
 dawnsonb.com, 1
 dawson-floridavilla.co.uk, 1
 day-peak.com, 1
@@ -6321,7 +6322,6 @@ deux.solutions, 1
 deuxsol.co, 1
 deuxsol.com, 1
 deuxsolutions.com, 1
-dev-pulse-mtn.pantheonsite.io, 1
 dev-talk.eu, 1
 dev-talk.net, 1
 dev-tek.de, 1
@@ -6658,7 +6658,7 @@ dlaspania.pl, 1
 dlde.ru, 1
 dldl.fr, 1
 dlfsymposium.nl, 1
-dlg.im, 1
+dlg.im, 0
 dlitz.net, 1
 dlld.com, 1
 dlouwrink.nl, 1
@@ -7443,6 +7443,7 @@ einheizpreis.de, 1
 einmonolog.de, 1
 einsatzstellenverwaltung.de, 1
 einsatzstiefel.info, 1
+einsteinathome.org, 1
 eintageinzug.de, 1
 eintragsservice24.de, 1
 eipione.com, 1
@@ -7547,7 +7548,6 @@ elistor6100.xyz, 1
 elite-box.com, 1
 elite-box.org, 1
 elite12.de, 1
-elitecovering.fr, 1
 elitegameservers.net, 1
 elitehosting.de, 1
 elixir.bzh, 1
@@ -8383,6 +8383,7 @@ faretravel.co.uk, 1
 farfallapets.com.br, 1
 farfetchos.com, 1
 fargtorget.se, 1
+farhadexchange.com, 1
 farhood.org, 1
 farkas.bz, 1
 farm24.co.uk, 1
@@ -9688,6 +9689,7 @@ getdigitized.net, 1
 geteckeld.nl, 1
 geterp.ru, 1
 getfedora.org, 1
+getfilterlive.org, 1
 getfittedstore.com, 1
 getflorence.co.uk, 1
 getfuturama.com, 1
@@ -10625,7 +10627,6 @@ healthcare.gov, 0
 healtheffectsofasbestos.com, 1
 healthfoam.com, 1
 healthiercompany.com, 1
-healthjoy.com, 1
 healthlabs.com, 1
 healthmatchapp.com, 1
 healththoroughfare.com, 1
@@ -12192,6 +12193,7 @@ itfaq.nl, 1
 itfh.eu, 1
 itfix.cz, 1
 itforge.nl, 1
+itilo.de, 1
 itiomassagem.com.br, 1
 itis.gov, 1
 itis4u.ch, 1
@@ -13203,7 +13205,6 @@ kenny-peck.com, 1
 keno.im, 1
 kenoschwalb.com, 1
 kenrogers.co, 1
-kentacademiestrust.org.uk, 1
 kentec.net, 1
 kenterlis.gr, 1
 kenvix.com, 1
@@ -13967,7 +13968,6 @@ latetrain.cn, 1
 lathamlabs.com, 1
 lathamlabs.net, 1
 lathamlabs.org, 1
-lathen-wahn.de, 1
 latino.dating, 1
 latinphone.com, 1
 latitude42technology.com, 1
@@ -17287,6 +17287,7 @@ newtnote.com, 1
 newtonhaus.com, 1
 newtrackon.com, 1
 nex.sx, 1
+nexgeneration-solutions.com, 1
 nexicafiles.com, 1
 nexlab.org, 1
 next-log.ru, 0
@@ -17554,7 +17555,6 @@ noop.ch, 1
 noordsee.de, 1
 noorsolidarity.com, 1
 nootropic.com, 1
-nootropicsource.com, 1
 nopaste.xyz, 1
 nord-sud.be, 1
 nordakademie.de, 1
@@ -19396,7 +19396,6 @@ postdarwinian.com, 1
 postdarwinism.com, 1
 postdeck.de, 1
 posteo.de, 0
-posterspy.com, 1
 postfinance.ch, 1
 postmatescode.com, 1
 postn.eu, 1
@@ -19733,7 +19732,6 @@ pseta.ru, 1
 psicoexpansao.com.br, 1
 psicologoforensebarcelona.com, 1
 psicologoforensemadrid.com, 1
-psicosalud.online, 1
 psm.org.ph, 1
 psncardplus.be, 1
 psncardplus.com, 1
@@ -19763,6 +19761,7 @@ psychotherapie-kp.de, 1
 psydix.org, 1
 psyk.yt, 0
 psylab.cc, 1
+psylab.re, 1
 psylab.vip, 1
 pt-server.de, 1
 ptbi.org.pl, 1
@@ -20449,6 +20448,7 @@ report-uri.io, 1
 report-url.com, 1
 report-url.io, 1
 reported.ly, 1
+reporting.gov, 0
 reporturi.com, 1
 reporturi.io, 1
 reporturl.com, 1
@@ -21567,6 +21567,7 @@ seanholcroft.co.uk, 1
 seanstrout.com, 1
 seansyardservice.com, 1
 seaplayhomes.com, 1
+search.gov, 1
 search.yahoo.com, 0
 searchbrothers.at, 1
 searchbrothers.ch, 1
@@ -21655,6 +21656,7 @@ security.google.com, 1
 security.love, 1
 security.xn--q9jyb4c, 1
 security201.co.uk, 1
+security201.com, 1
 securityarena.com, 1
 securitybrief.asia, 1
 securitybrief.co.nz, 1
@@ -21887,6 +21889,7 @@ sfg-nordholz.de, 1
 sfirat-haomer.com, 1
 sfo-fog.ch, 1
 sftool.gov, 1
+sg-elektro.de, 1
 sg.search.yahoo.com, 0
 sgcaccounts.co.uk, 1
 sgroup-hitoduma.com, 1
@@ -23030,6 +23033,7 @@ ss64.org, 1
 ssa.gov, 0
 ssbkk.ru, 1
 ssbrm.ch, 1
+sscd.no, 1
 ssenberg.nl, 1
 ssh-keys.online, 1
 ssh-vault.com, 1
@@ -23377,6 +23381,7 @@ stuco.co, 1
 studenckiemetody.pl, 1
 student-eshop.cz, 1
 student-eshop.sk, 1
+student.andover.edu, 1
 studentforums.biz, 1
 studentite.bg, 0
 studentloans.gov, 1
@@ -23482,6 +23487,7 @@ sundaycooks.com, 1
 sundayfundayjapan.com, 1
 suneilpatel.com, 1
 sunfireshop.com.br, 1
+sunflyer.cn, 0
 sunfox.cz, 1
 sunfulong.me, 1
 sungo.wtf, 1
@@ -24172,6 +24178,7 @@ tgod.co, 1
 tgui.eu, 1
 tgui.net, 1
 tgw.com, 1
+th-bl.de, 1
 th.search.yahoo.com, 0
 th3nd.com, 1
 thackbarth.net, 1
@@ -24981,6 +24988,7 @@ trackersimulator.org, 1
 trackeye.dk, 1
 trackmeet.io, 1
 tractorpumps.com, 1
+trade.gov.uk, 1
 tradedesk.co.za, 1
 tradeinvent.co.uk, 1
 trademan.ky, 1
@@ -25613,6 +25621,7 @@ upgauged.com, 1
 upitnik.rs, 1
 uplaqui.com.br, 1
 uplinklabs.net, 1
+upload.cat, 1
 upload.facebook.com, 0
 uploadbeta.com, 1
 upmchealthsecurity.us, 1
@@ -26315,6 +26324,7 @@ waelti.xxx, 1
 wafa4hw.com, 1
 waffle.at, 1
 wafni.com, 1
+wahhoi.net, 0
 wahidhasan.com, 1
 wahlman.org, 1
 wahrnehmungswelt.de, 1
@@ -26398,8 +26408,10 @@ watchstyle.com, 1
 watchweasel.com, 1
 waterfedpole.com, 1
 watermonitor.gov, 1
+watersb.org, 1
 watertrails.io, 1
 watsonwork.me, 1
+wattechweb.com, 1
 wave-ola.es, 1
 wavesboardshop.com, 1
 wavesoftime.com, 1
