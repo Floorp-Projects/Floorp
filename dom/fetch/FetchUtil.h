@@ -17,6 +17,10 @@ namespace dom {
 
 class InternalRequest;
 
+namespace workers {
+class WorkerPrivate;
+}
+
 class FetchUtil final
 {
 private:
@@ -48,6 +52,18 @@ public:
                      nsIHttpChannel* aChannel,
                      InternalRequest* aRequest);
 
+  /**
+   * Check that the given object is a Response and, if so, stream to the given
+   * JS consumer. On any failure, this function will report an error on the
+   * given JSContext before returning false. If executing in a worker, the
+   * WorkerPrivate must be given.
+   */
+  static bool
+  StreamResponseToJS(JSContext* aCx,
+                     JS::HandleObject aObj,
+                     JS::MimeType aMimeType,
+                     JS::StreamConsumer* aConsumer,
+                     workers::WorkerPrivate* aMaybeWorker);
 };
 
 } // namespace dom
