@@ -23,9 +23,9 @@ js_option('--with-android-version',
           help='android platform version',
           default=min_android_version)
 
-@depends('--with-android-version', min_android_version)
+@depends('--with-android-version', min_android_version, '--help')
 @imports(_from='__builtin__', _import='ValueError')
-def android_version(value, min_version):
+def android_version(value, min_version, _):
     if not value:
         # Someone has passed --without-android-version.
         die('--with-android-version cannot be disabled.')
@@ -43,8 +43,10 @@ def android_version(value, min_version):
 
 add_old_configure_assignment('android_version', android_version)
 
-@depends('--with-android-ndk', build_project)
-def ndk(value, build_project):
+@depends('--with-android-ndk', build_project, '--help')
+def ndk(value, build_project, help):
+    if help:
+        return
     if build_project == 'mobile/android' and not value:
         die('You must specify --with-android-ndk=/path/to/ndk when '
             'building mobile/android')
@@ -95,10 +97,10 @@ def ndk_minor_version(ndk_version):
 
 set_config('ANDROID_NDK_MINOR_VERSION', ndk_minor_version);
 
-@depends(target, android_version, ndk)
+@depends(target, android_version, ndk, '--help')
 @checking('for android platform directory')
 @imports(_from='os.path', _import='isdir')
-def android_platform(target, android_version, ndk):
+def android_platform(target, android_version, ndk, _):
     if target.os != 'Android':
         return
 
@@ -138,11 +140,11 @@ def extra_toolchain_flags(platform_dir):
     return ['-idirafter',
             os.path.join(platform_dir, 'usr', 'include')]
 
-@depends(target, host, ndk, '--with-android-toolchain')
+@depends(target, host, ndk, '--with-android-toolchain', '--help')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
 @imports(_from='mozbuild.shellutil', _import='quote')
-def android_toolchain(target, host, ndk, toolchain):
+def android_toolchain(target, host, ndk, toolchain, _):
     if not ndk:
         return
     if toolchain:
@@ -175,14 +177,74 @@ def android_toolchain(target, host, ndk, toolchain):
 
 set_config('ANDROID_TOOLCHAIN', android_toolchain)
 
-@depends(target, android_toolchain)
-def android_toolchain_prefix(target, toolchain):
+@depends(target)
+def android_toolchain_prefix_base(target):
+    if target.cpu == 'x86':
+        # Ideally, the --target should just have the right x86 variant
+        # in the first place.
+        return 'i686-linux-android'
+    return target.toolchain
+
+@depends(android_toolchain_prefix_base, android_toolchain)
+def android_toolchain_prefix(prefix_base, toolchain):
     if toolchain:
-        if target.cpu == 'x86':
-            # Ideally, the --target should just have the right x86 variant
-            # in the first place.
-            return '%s/bin/i686-linux-android-' % toolchain
-        return '%s/bin/%s-' % (toolchain, target.toolchain)
+        return '%s/bin/%s-' % (toolchain, prefix_base)
 
 imply_option('--with-toolchain-prefix', android_toolchain_prefix,
              reason='--with-android-ndk')
+
+option(env='STLPORT_CPPFLAGS',
+       nargs=1,
+       help='Options compiler should pass for standard C++ library')
+
+@depends('STLPORT_CPPFLAGS', ndk, '--help')
+@imports(_from='os.path', _import='isdir')
+def stlport_cppflags(value, ndk, _):
+    if value and len(value):
+        return value
+    if not ndk:
+        return
+
+    ndk_base = os.path.join(ndk, 'sources', 'cxx-stl')
+    cxx_base = os.path.join(ndk_base, 'llvm-libc++')
+    cxx_include = os.path.join(cxx_base, 'libcxx', 'include')
+    cxxabi_base = os.path.join(ndk_base, 'llvm-libc++abi')
+    cxxabi_include = os.path.join(cxxabi_base, 'libcxxabi', 'include')
+
+    if not isdir(cxx_include):
+        # NDK r13 removes the inner "libcxx" directory.
+        cxx_include = os.path.join(cxx_base, 'include')
+        if not isdir(cxx_include):
+            die("Couldn't find path to libc++ includes in the android ndk")
+
+    if not isdir(cxxabi_include):
+        # NDK r13 removes the inner "libcxxabi" directory.
+        cxxabi_include = os.path.join(cxxabi_base, 'include')
+        if not isdir(cxxabi_include):
+            die("Couldn't find path to libc++abi includes in the android ndk")
+
+    # Add android/support/include/ for prototyping long double math
+    # functions, locale-specific C library functions, multibyte support,
+    # etc.
+    return "-I%s -I%s -I%s" % (cxx_include,
+                               os.path.join(ndk, 'sources', 'android',
+                                            'support', 'include'),
+                               cxxabi_include)
+
+add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
+
+@depends(stlport_cppflags, android_platform, android_toolchain,
+         android_toolchain_prefix_base, '--help')
+def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
+                            toolchain_prefix, _):
+    if not stlport_cppflags:
+        return
+
+    gcc_include = os.path.join(toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
+
+    cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
+    return cflags_format % (stlport_cppflags,
+                            os.path.join(android_platform, 'usr', 'include'),
+                            toolchain,
+                            os.path.join(gcc_include, 'include'),
+                            os.path.join(gcc_include, 'include-fixed'))

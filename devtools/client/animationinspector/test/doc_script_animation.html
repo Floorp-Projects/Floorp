@@ -20,12 +20,19 @@
     height: 50px;
     background: blue;
   }
+
+  #target4 {
+    width: 50px;
+    height: 50px;
+    background: pink;
+  }
   </style>
 </head>
 <body>
   <div id="target1"></div>
   <div id="target2"></div>
   <div id="target3"></div>
+  <div id="target4"></div>
 
   <script>
     /* globals KeyframeEffect, Animation */
@@ -58,6 +65,17 @@
         iterationStart: 2.5,
         fill: "both"
       }
+    }, {
+      id: "target4",
+      frames: [{ transform: "translate(0px)", offset: 0 },
+               { transform: "translate(100px)", offset: 1 }],
+      timing: {
+        duration: 100,
+        iterations: 2,
+        iterationStart: 0.5,
+        delay: 10,
+        fill: "both"
+      }
     }];
 
     for (let {id, frames, timing} of animations) {
@@ -65,6 +83,7 @@
                                       frames, timing);
       let animation = new Animation(effect, document.timeline);
       animation.play();
+      animation.pause();
     }
   </script>
 </body>
