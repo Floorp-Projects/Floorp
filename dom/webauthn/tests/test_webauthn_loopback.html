@@ -81,7 +81,7 @@ function() {
     })
     .then(function(aAttestationObj) {
       ok(aAttestationObj.authDataObj.flags == (flag_TUP | flag_AT),
-         "User presence and Attestation Object must both be set");
+         "User presence and Attestation Object must be the only flags set");
 
       aCredInfo.clientDataObj = clientData;
       aCredInfo.publicKeyHandle = aAttestationObj.authDataObj.publicKeyHandle;
