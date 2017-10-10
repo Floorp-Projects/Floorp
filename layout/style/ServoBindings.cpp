@@ -25,6 +25,7 @@
 #include "nsDOMTokenList.h"
 #include "nsDeviceContext.h"
 #include "nsIContentInlines.h"
+#include "nsICrashReporter.h"
 #include "nsIDOMNode.h"
 #include "nsIDocumentInlines.h"
 #include "nsILoadContext.h"
@@ -73,10 +74,6 @@
 
 #if defined(MOZ_MEMORY)
 # include "mozmemory.h"
-#endif
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsICrashReporter.h"
 #endif
 
 using namespace mozilla;
@@ -2822,11 +2819,9 @@ void
 Gecko_AddBufferToCrashReport(const void* addr, size_t len)
 {
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   NS_ENSURE_TRUE_VOID(cr);
   cr->RegisterAppMemory((uint64_t) addr, len);
-#endif
 }
 
 void
@@ -2835,11 +2830,9 @@ Gecko_AnnotateCrashReport(const char* key_str, const char* value_str)
   MOZ_ASSERT(NS_IsMainThread());
   nsDependentCString key(key_str);
   nsDependentCString value(value_str);
-#ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   NS_ENSURE_TRUE_VOID(cr);
   cr->AnnotateCrashReport(key, value);
-#endif
 }
 
 void
