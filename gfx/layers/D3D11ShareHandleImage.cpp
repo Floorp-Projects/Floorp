@@ -128,6 +128,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   RefPtr<ID3D11DeviceContext> context;
   device->GetImmediateContext(getter_AddRefs(context));
   if (!context) {
+    gfxCriticalError() << "Failed to get immediate context.";
     return nullptr;
   }
 
