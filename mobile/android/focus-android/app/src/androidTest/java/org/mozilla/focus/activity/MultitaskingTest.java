@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.helpers.MainActivityWithoutFirstrunTestRule;
 import org.mozilla.focus.session.SessionManager;
-import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
 
 import okhttp3.mockwebserver.MockWebServer;
