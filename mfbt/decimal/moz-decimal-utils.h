@@ -10,7 +10,7 @@
 // of Decimal.cpp under the Mozilla source without blink core dependencies. Do
 // not include it into any file other than Decimal.cpp.
 
-#include "../double-conversion/source/double-conversion.h"
+#include "../double-conversion/double-conversion/double-conversion.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
