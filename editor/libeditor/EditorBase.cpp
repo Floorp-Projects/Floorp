@@ -4007,7 +4007,8 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
                           int32_t aSplitPointOffset,
                           EmptyContainers aEmptyContainers,
                           nsIContent** aOutLeftNode,
-                          nsIContent** aOutRightNode)
+                          nsIContent** aOutRightNode,
+                          nsCOMPtr<nsIDOMNode>* ioChildAtSplitPointOffset)
 {
   MOZ_ASSERT(&aSplitPointParent == &aNode ||
              EditorUtils::IsDescendantOf(&aSplitPointParent, &aNode));
@@ -4060,6 +4061,9 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
   }
   if (aOutRightNode) {
     rightNode.forget(aOutRightNode);
+  }
+  if (ioChildAtSplitPointOffset) {
+    *ioChildAtSplitPointOffset = do_QueryInterface(nodeToSplit);
   }
 
   return offset;

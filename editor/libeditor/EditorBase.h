@@ -952,7 +952,9 @@ public:
                         EmptyContainers aEmptyContainers =
                           EmptyContainers::yes,
                         nsIContent** outLeftNode = nullptr,
-                        nsIContent** outRightNode = nullptr);
+                        nsIContent** outRightNode = nullptr,
+                        nsCOMPtr<nsIDOMNode>* ioChildAtSplitPointOffset =
+                          nullptr);
   EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,
                               nsIContent& aRightNode);
 
