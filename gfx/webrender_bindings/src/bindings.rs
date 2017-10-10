@@ -1206,9 +1206,8 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
     let clip_id = state.frame_builder.dl_builder.define_clip(None, clip_rect, complex_iter, mask);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
-        ClipId::Clip(id, nesting_index, pipeline_id) => {
+        ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);
-            assert!(nesting_index == 0);
             id
         },
         _ => panic!("Got unexpected clip id type"),
@@ -1219,7 +1218,7 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
                                   clip_id: u64) {
     debug_assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.push_clip_id(ClipId::Clip(clip_id, 0, state.pipeline_id));
+    state.frame_builder.dl_builder.push_clip_id(ClipId::Clip(clip_id, state.pipeline_id));
 }
 
 #[no_mangle]
@@ -1244,9 +1243,8 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
             unsafe { bottom_range.as_ref() }.cloned(),
             unsafe { left_range.as_ref() }.cloned()));
     match clip_id {
-        ClipId::Clip(id, nesting_index, pipeline_id) => {
+        ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);
-            assert!(nesting_index == 0);
             id
         },
         _ => panic!("Got unexpected clip id type"),
@@ -1298,7 +1296,7 @@ pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
     let info = if let Some(&id) = unsafe { clip_id.as_ref() } {
         ClipAndScrollInfo::new(
             scroll_id,
-            ClipId::Clip(id, 0, state.pipeline_id))
+            ClipId::Clip(id, state.pipeline_id))
     } else {
         ClipAndScrollInfo::simple(scroll_id)
     };
