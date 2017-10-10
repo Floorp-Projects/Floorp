@@ -103,8 +103,45 @@ const clickedOnPoint = (x, y, pointX, pointY, radiusX, radiusY) => {
          y >= pointY - radiusY && y <= pointY + radiusY;
 };
 
+const roundTo = (value, exp) => {
+  // If the exp is undefined or zero...
+  if (typeof exp === "undefined" || +exp === 0) {
+    return Math.round(value);
+  }
+  value = +value;
+  exp = +exp;
+  // If the value is not a number or the exp is not an integer...
+  if (isNaN(value) || !(typeof exp === "number" && exp % 1 === 0)) {
+    return NaN;
+  }
+  // Shift
+  value = value.toString().split("e");
+  value = Math.round(+(value[0] + "e" + (value[1] ? (+value[1] - exp) : -exp)));
+  // Shift back
+  value = value.toString().split("e");
+  return +(value[0] + "e" + (value[1] ? (+value[1] + exp) : exp));
+};
+
+/**
+ * Scale a given x/y coordinate pair by translating, multiplying by the given factor,
+ * then translating back.
+ * @param {Number} x the x coordinate
+ * @param {Number} y the y coordinate
+ * @param {Number} transX the amount to translate the x coord by
+ * @param {Number} transY the amount ot translate the y coord by
+ * @param {Number} scale the scaling factor
+ * @returns {Array} of the form [newX, newY], containing the coord pair after scaling.
+ */
+const scalePoint = (x, y, transX, transY, scale) => {
+  let newX = (x - transX) * scale + transX;
+  let newY = (y - transY) * scale + transY;
+  return [newX, newY];
+};
+
 exports.getDistance = getDistance;
 exports.clickedOnEllipseEdge = clickedOnEllipseEdge;
 exports.distanceToLine = distanceToLine;
 exports.projection = projection;
 exports.clickedOnPoint = clickedOnPoint;
+exports.roundTo = roundTo;
+exports.scalePoint = scalePoint;
