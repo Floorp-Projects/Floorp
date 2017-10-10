@@ -367,6 +367,9 @@ private:
   DECL_GFX_PREF(Live, "dom.vr.oculus.quit.timeout",            VROculusQuitTimeout, int32_t, 30000);
   DECL_GFX_PREF(Once, "dom.vr.openvr.enabled",                 VROpenVREnabled, bool, false);
   DECL_GFX_PREF(Once, "dom.vr.osvr.enabled",                   VROSVREnabled, bool, false);
+  DECL_GFX_PREF(Live, "dom.vr.controller.enumerate.interval",  VRControllerEnumerateInterval, int32_t, 1000);
+  DECL_GFX_PREF(Live, "dom.vr.display.enumerate.interval",     VRDisplayEnumerateInterval, int32_t, 5000);
+  DECL_GFX_PREF(Live, "dom.vr.inactive.timeout",               VRInactiveTimeout, int32_t, 5000);
   DECL_GFX_PREF(Live, "dom.vr.poseprediction.enabled",         VRPosePredictionEnabled, bool, true);
   DECL_GFX_PREF(Live, "dom.vr.require-gesture",                VRRequireGesture, bool, true);
   DECL_GFX_PREF(Live, "dom.vr.puppet.enabled",                 VRPuppetEnabled, bool, false);

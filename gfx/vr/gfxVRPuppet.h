@@ -24,7 +24,6 @@ class VRDisplayPuppet : public VRDisplayHost
 {
 public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);
-  virtual void NotifyVSync() override;
   void SetSensorState(const VRHMDSensorState& aSensorState);
   void ZeroSensor() override;
 
@@ -50,6 +49,7 @@ protected:
 
 public:
   explicit VRDisplayPuppet();
+  void Refresh();
 
 protected:
   virtual ~VRDisplayPuppet();
@@ -110,7 +110,9 @@ public:
 
   virtual void Destroy() override;
   virtual void Shutdown() override;
-  virtual bool GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  virtual void Enumerate() override;
+  virtual bool ShouldInhibitEnumeration() override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
@@ -123,6 +125,7 @@ public:
                              double aDuration,
                              uint32_t aPromiseID) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
+  virtual void NotifyVSync() override;
 
 protected:
   VRSystemManagerPuppet();
