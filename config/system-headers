@@ -1327,11 +1327,13 @@ unicode/uclean.h
 unicode/ucol.h
 unicode/udat.h
 unicode/udatpg.h
+unicode/udisplaycontext.h
 unicode/uenum.h
 unicode/unistr.h
 unicode/unorm.h
 unicode/unum.h
 unicode/upluralrules.h
+unicode/ureldatefmt.h
 unicode/ustring.h
 unicode/utypes.h
 #endif

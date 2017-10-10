@@ -30,17 +30,19 @@ async function runTest(installer) {
      `addons://detail/${encodeURIComponent(id)}/preferences`,
      "Current view should scroll to preferences");
 
-  var browser = mgrWindow.document.querySelector("#detail-grid > rows > .inline-options-browser");
+  var browser = mgrWindow.document.querySelector("#detail-grid > rows > stack > .inline-options-browser");
   var rows = browser.parentNode;
 
   let url = await ContentTask.spawn(browser, {}, () => content.location.href);
 
-  ok(browser, "Grid should have a browser child");
-  is(browser.localName, "browser", "Grid should have a browser child");
+  ok(browser, "Grid should have a browser descendant");
+  is(browser.localName, "browser", "Grid should have a browser descendant");
   is(url, element.mAddon.optionsURL, "Browser has the expected options URL loaded")
 
+  is(browser.clientWidth, browser.parentNode.clientWidth,
+     "Browser should be the same width as its direct parent");
   is(browser.clientWidth, rows.clientWidth,
-     "Browser should be the same width as its parent node");
+     "Browser should be the same width as its rows ancestor");
 
   button = mgrWindow.document.getElementById("detail-prefs-btn");
   is_element_hidden(button, "Preferences button should not be visible");

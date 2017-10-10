@@ -11,15 +11,8 @@ const {
   TimeoutError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 
-/* exported TimedPromise */
-this.EXPORTED_SYMBOLS = ["wait", "TimedPromise"];
-
-/**
- * Poll-waiting utilities.
- *
- * @namespace
- */
-this.wait = {};
+/* exported PollPromise, TimedPromise */
+this.EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
@@ -39,26 +32,30 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
 /**
  * Runs a promise-like function off the main thread until it is resolved
- * through |resolve| or |rejected| callbacks.  The function is guaranteed
- * to be run at least once, irregardless of the timeout.
+ * through <code>resolve</code> or <code>rejected</code> callbacks.
+ * The function is guaranteed to be run at least once, irregardless of
+ * the timeout.
  *
- * The |func| is evaluated every |interval| for as long as its runtime
- * duration does not exceed |interval|.  Evaluations occur sequentially,
- * meaning that evaluations of |func| are queued if the runtime evaluation
- * duration of |func| is greater than |interval|.
+ * The <var>func</var> is evaluated every <var>interval</var> for as
+ * long as its runtime duration does not exceed <var>interval</var>.
+ * Evaluations occur sequentially, meaning that evaluations of
+ * <var>func</var> are queued if the runtime evaluation duration of
+ * <var>func</var> is greater than <var>interval</var>.
  *
- * |func| is given two arguments, |resolve| and |reject|, of which one
- * must be called for the evaluation to complete.  Calling |resolve| with
- * an argument indicates that the expected wait condition was met and
- * will return the passed value to the caller.  Conversely, calling
- * |reject| will evaluate |func| again until the |timeout| duration has
- * elapsed or |func| throws.  The passed value to |reject| will also be
+ * <var>func</var> is given two arguments, <code>resolve</code> and
+ * <code>reject</code>, of which one must be called for the evaluation
+ * to complete.  Calling <code>resolve</code> with an argument
+ * indicates that the expected wait condition was met and will return
+ * the passed value to the caller.  Conversely, calling
+ * <code>reject</code> will evaluate <var>func</var> again until
+ * the <var>timeout</var> duration has elapsed or <var>func</var>
+ * throws.  The passed value to <code>reject</code> will also be
  * returned to the caller once the wait has expired.
  *
  * Usage:
  *
  * <pre><code>
- *     let els = wait.until((resolve, reject) => {
+ *     let els = new PollPromise((resolve, reject) => {
  *       let res = document.querySelectorAll("p");
  *       if (res.length > 0) {
  *         resolve(Array.from(res));
@@ -70,22 +67,22 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  *
  * @param {Condition} func
  *     Function to run off the main thread.
- * @param {number=} timeout
- *     Desired timeout.  If 0 or less than the runtime evaluation time
- *     of |func|, |func| is guaranteed to run at least once.  The default
- *     is 2000 milliseconds.
- * @param {number=} interval
- *     Duration between each poll of |func| in milliseconds.  Defaults to
- *     10 milliseconds.
+ * @param {number=} [timeout=2000] timeout
+ *     Desired timeout.  If 0 or less than the runtime evaluation
+ *     time of <var>func</var>, <var>func</var> is guaranteed to run
+ *     at least once.  The default is 2000 milliseconds.
+ * @param {number=} [interval=10] interval
+ *     Duration between each poll of <var>func</var> in milliseconds.
+ *     Defaults to 10 milliseconds.
  *
  * @return {Promise.<*>}
- *     Yields the value passed to |func|'s |resolve| or |reject|
- *     callbacks.
+ *     Yields the value passed to <var>func</var>'s
+ *     <code>resolve</code> or <code>reject</code> callbacks.
  *
  * @throws {*}
- *     If |func| throws, its error is propagated.
+ *     If <var>func</var> throws, its error is propagated.
  */
-wait.until = function(func, timeout = 2000, interval = 10) {
+function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   return new Promise((resolve, reject) => {
@@ -119,7 +116,7 @@ wait.until = function(func, timeout = 2000, interval = 10) {
     timer.cancel();
     throw err;
   });
-};
+}
 
 /**
  * The <code>TimedPromise</code> object represents the timed, eventual

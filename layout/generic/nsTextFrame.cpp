@@ -4120,22 +4120,8 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
         sc->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
       mSelectionTextColor =
         sc->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
-      if (auto* geckoStyleContext = sc->GetAsGecko()) {
-        mHasSelectionShadow =
-          nsRuleNode::HasAuthorSpecifiedRules(geckoStyleContext,
-                                              NS_AUTHOR_SPECIFIED_TEXT_SHADOW,
-                                              true);
-      } else {
-        NS_WARNING("stylo: Need a way to get HasAuthorSpecifiedRules from a "
-                   "raw style context");
-        // Or at least an element and a pseudo-style, which is probably a bit
-        // more doable, since we know that, at least when not in the presence of
-        // first-line / first-letter, we're inheriting from selectionElement.
-        mHasSelectionShadow = true;
-      }
-      if (mHasSelectionShadow) {
-        mSelectionShadow = sc->StyleText()->mTextShadow;
-      }
+      mHasSelectionShadow = true;
+      mSelectionShadow = sc->StyleText()->mTextShadow;
       return true;
     }
   }

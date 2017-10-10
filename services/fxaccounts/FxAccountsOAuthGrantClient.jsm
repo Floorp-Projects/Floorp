@@ -15,11 +15,14 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-common/rest.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
 const AUTH_ENDPOINT = "/authorization";
 const DESTROY_ENDPOINT = "/destroy";
+// This is the same pref that's used by FxAccounts.jsm.
+const ALLOW_HTTP_PREF = "identity.fxaccounts.allowHttp";
 
 /**
  * Create a new FxAccountsOAuthClient for browser some service.
@@ -43,6 +46,11 @@ this.FxAccountsOAuthGrantClient = function(options) {
     this.serverURL = new URL(this.parameters.serverURL);
   } catch (e) {
     throw new Error("Invalid 'serverURL'");
+  }
+
+  let forceHTTPS = !Services.prefs.getBoolPref(ALLOW_HTTP_PREF, false);
+  if (forceHTTPS && this.serverURL.protocol != "https:") {
+    throw new Error("'serverURL' must be HTTPS");
   }
 
   log.debug("FxAccountsOAuthGrantClient Initialized");

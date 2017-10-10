@@ -148,7 +148,7 @@ TestMultiWriterQueueMT(int aWriterThreads,
   q.PopAll([&pops](const int& i) { ++pops; });
   const int pushes = aWriterThreads * loops;
   EXPECT_EQ(pushes, pops);
-  q.PopAll([&pops](const int& i) { EXPECT_TRUE(false); });
+  q.PopAll([](const int& i) { EXPECT_TRUE(false); });
 
   double duration = mozilla::ToSeconds(mozilla::DDNow()) - start - 0.1;
   printf("%s threads=%dw+%dr loops/thread=%d pushes=pops=%d duration=%fs "
