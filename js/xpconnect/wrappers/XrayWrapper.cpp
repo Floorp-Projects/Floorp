@@ -187,6 +187,12 @@ XrayTraits::getExpandoChain(HandleObject obj)
     return ObjectScope(obj)->GetExpandoChain(obj);
 }
 
+JSObject*
+XrayTraits::detachExpandoChain(HandleObject obj)
+{
+    return ObjectScope(obj)->DetachExpandoChain(obj);
+}
+
 bool
 XrayTraits::setExpandoChain(JSContext* cx, HandleObject obj, HandleObject chain)
 {

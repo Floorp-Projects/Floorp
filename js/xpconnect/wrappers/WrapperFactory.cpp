@@ -689,7 +689,7 @@ TransplantObjectRetainingXrayExpandos(JSContext* cx, JS::HandleObject origobj,
     // Save the chain of objects that carry origobj's Xray expando properties
     // (from all compartments). TransplantObject will blow this away; we'll
     // restore it manually afterwards.
-    RootedObject expandoChain(cx, GetXrayTraits(origobj)->getExpandoChain(origobj));
+    RootedObject expandoChain(cx, GetXrayTraits(origobj)->detachExpandoChain(origobj));
 
     RootedObject newIdentity(cx, TransplantObject(cx, origobj, target));
 
