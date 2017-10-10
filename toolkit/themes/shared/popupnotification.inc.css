@@ -78,7 +78,7 @@
   color: graytext;
 }
 
-.popup-notification-button[default] {
+.popup-notification-button[default]:not([alone]) {
   flex: 0 50%;
 }
 
