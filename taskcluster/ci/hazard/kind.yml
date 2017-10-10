@@ -33,7 +33,7 @@ jobs:
             symbol: SM-tc(H)
         worker:
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/hazard.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: hazard
             command: >
@@ -46,6 +46,8 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-gcc-4.9
+            - linux64-sixgill
+            - linux64-rust
 
     linux64-haz/debug:
         description: "Browser Hazard Analysis Linux"
@@ -57,7 +59,7 @@ jobs:
             symbol: tc(H)
         worker:
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/hazard.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: hazard
             mozconfig: "browser/config/mozconfigs/linux64/hazards"
@@ -67,3 +69,5 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-gcc-4.9
+            - linux64-sixgill
+            - linux64-rust
