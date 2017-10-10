@@ -79,21 +79,31 @@ function checkPath(animationEl, state) {
     if (state.delay < 0) {
       ok(delayPathEl.classList.contains("negative"),
          "The delay path should have 'negative' class");
+      const expectedY = 0;
       const startingX = state.delay;
       const endingX = 0;
       is(startingPathSeg.x, startingX,
          `The x of starting point should be ${ startingX }`);
+      is(startingPathSeg.y, expectedY,
+         `The y of starting point should be ${ expectedY }`);
       is(endingPathSeg.x, endingX,
          `The x of ending point should be ${ endingX }`);
+      is(endingPathSeg.y, expectedY,
+         `The y of ending point should be ${ expectedY }`);
     } else {
       ok(!delayPathEl.classList.contains("negative"),
          "The delay path should not have 'negative' class");
+      const expectedY = 0;
       const startingX = 0;
       const endingX = state.delay;
       is(startingPathSeg.x, startingX,
          `The x of starting point should be ${ startingX }`);
+      is(startingPathSeg.y, expectedY,
+         `The y of starting point should be ${ expectedY }`);
       is(endingPathSeg.x, endingX,
          `The x of ending point should be ${ endingX }`);
+      is(endingPathSeg.y, expectedY,
+         `The y of ending point should be ${ expectedY }`);
     }
   });
 }
