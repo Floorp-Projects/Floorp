@@ -7403,18 +7403,39 @@
 !endif
 
 /**
- * Modified version of the __NSD_SetStretchedImage macro from nsDialogs.nsh that
- * supports transparency. See nsDialogs documentation for additional info.
+ * Draws an image file (BMP, GIF, or JPG) onto a bitmap control, with scaling.
+ * Adapted from https://stackoverflow.com/a/13405711/1508094
+ *
+ * @param CONTROL bitmap control created by NSD_CreateBitmap
+ * @param IMAGE path to image file to draw to the bitmap
+ * @param HANDLE output bitmap handle which must be freed via NSD_FreeImage
+ *               after nsDialogs::Show has been called
  */
-!macro __SetStretchedTransparentImage CONTROL IMAGE HANDLE
-  Push $0
-  Push $1
-  Push $2
-  Push $R0
+!macro __SetStretchedImageOLE CONTROL IMAGE HANDLE
+  !ifndef IID_IPicture
+    !define IID_IPicture {7BF80980-BF32-101A-8BBB-00AA00300CAB}
+  !endif
+  !ifndef SRCCOPY
+    !define SRCCOPY 0xCC0020
+  !endif
+  !ifndef HALFTONE
+    !define HALFTONE 4
+  !endif
+
+  Push $0 ; HANDLE
+  Push $1 ; memory DC
+  Push $2 ; IPicture created from IMAGE
+  Push $3 ; HBITMAP obtained from $2
+  Push $4 ; BITMAPINFO obtained from $3
+  Push $5 ; width of IMAGE
+  Push $6 ; height of IMAGE
+  Push $7 ; width of CONTROL
+  Push $8 ; height of CONTROL
+  Push $R0 ; CONTROL
 
   StrCpy $R0 ${CONTROL} ; in case ${CONTROL} is $0
-  StrCpy $1 ""
-  StrCpy $2 ""
+  StrCpy $7 ""
+  StrCpy $8 ""
 
   System::Call '*(i, i, i, i) i.s'
   Pop $0
@@ -7423,25 +7444,50 @@
     System::Call 'user32::GetClientRect(i R0, i r0)'
     System::Call '*$0(i, i, i .s, i .s)'
     System::Free $0
-    Pop $1
-    Pop $2
+    Pop $7
+    Pop $8
   ${EndIf}
 
-  System::Call 'user32::LoadImageW(i 0, t s, i ${IMAGE_BITMAP}, i r1, i r2, \
-                                   i ${MOZ_LOADTRANSPARENT}) i .s' "${IMAGE}"
-  Pop $0
-  SendMessage $R0 ${STM_SETIMAGE} ${IMAGE_BITMAP} $0
-
-  SetCtlColors $R0 "" transparent
-  ${NSD_AddExStyle} $R0 ${WS_EX_TRANSPARENT}|${WS_EX_TOPMOST}
+  ${If} $7 > 0
+  ${AndIf} $8 > 0
+    System::Call 'oleaut32::OleLoadPicturePath(w"${IMAGE}",i0,i0,i0,g"${IID_IPicture}",*i.r2)i.r1'
+    ${If} $1 = 0
+      System::Call 'user32::GetDC(i0)i.s'
+      System::Call 'gdi32::CreateCompatibleDC(iss)i.r1'
+      System::Call 'gdi32::CreateCompatibleBitmap(iss,ir7,ir8)i.r0'
+      System::Call 'user32::ReleaseDC(i0,is)'
+      System::Call '$2->3(*i.r3)i.r4' ; IPicture->get_Handle
+      ${If} $4 = 0
+        System::Call 'gdi32::SetStretchBltMode(ir1,i${HALFTONE})'
+        System::Call '*(&i40,&i1024)i.r4' ; BITMAP / BITMAPINFO
+        System::Call 'gdi32::GetObject(ir3,i24,ir4)'
+        System::Call 'gdi32::SelectObject(ir1,ir0)i.s'
+        System::Call '*$4(i40,i.r5,i.r6,i0,i,i.s)' ; Grab size and bits-ptr AND init as BITMAPINFOHEADER
+        System::Call 'gdi32::GetDIBits(ir1,ir3,i0,i0,i0,ir4,i0)' ; init BITMAPINFOHEADER
+        System::Call 'gdi32::GetDIBits(ir1,ir3,i0,i0,i0,ir4,i0)' ; init BITMAPINFO
+        System::Call 'gdi32::StretchDIBits(ir1,i0,i0,ir7,ir8,i0,i0,ir5,ir6,is,ir4,i0,i${SRCCOPY})'
+        System::Call 'gdi32::SelectObject(ir1,is)'
+        System::Free $4
+        SendMessage $R0 ${STM_SETIMAGE} ${IMAGE_BITMAP} $0
+      ${EndIf}
+      System::Call 'gdi32::DeleteDC(ir1)'
+      System::Call '$2->2()' ; IPicture->release()
+    ${EndIf}
+  ${EndIf}
 
   Pop $R0
+  Pop $8
+  Pop $7
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
   Pop $2
   Pop $1
   Exch $0
   Pop ${HANDLE}
 !macroend
-!define SetStretchedTransparentImage "!insertmacro __SetStretchedTransparentImage"
+!define SetStretchedImageOLE "!insertmacro __SetStretchedImageOLE"
 
 /**
  * Removes a single style from a control.
