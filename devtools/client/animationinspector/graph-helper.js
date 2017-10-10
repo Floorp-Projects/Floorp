@@ -356,6 +356,9 @@ SummaryGraphHelper.prototype = {
     let frames = null;
     if (keyframes) {
       // Create new keyframes for opacity as computed style.
+      // The reason why we use computed value instead of computed timing progress is to
+      // include the easing in keyframes as well. Although the computed timing progress
+      // is not affected by the easing in keyframes at all, computed value reflects that.
       frames = keyframes.map(keyframe => {
         return {
           opacity: keyframe.offset,
@@ -363,6 +366,10 @@ SummaryGraphHelper.prototype = {
           easing: keyframe.easing
         };
       });
+
+      // Set the underlying opacity to zero so that if we sample the animation's output
+      // during the delay phase and it is not filling backwards, we get zero.
+      this.targetEl.style.opacity = 0;
     }
     this.animation.effect.setKeyframes(frames);
     this.hasFrames = !!frames;
