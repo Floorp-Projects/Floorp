@@ -191,13 +191,6 @@ NS_IMPL_ISUPPORTS(CacheEntry,
                   nsIRunnable,
                   CacheFileListener)
 
-/* static */
-uint64_t CacheEntry::GetNextId()
-{
-  static Atomic<uint64_t, Relaxed> id(0);
-  return ++id;
-}
-
 CacheEntry::CacheEntry(const nsACString& aStorageID,
                        const nsACString& aURI,
                        const nsACString& aEnhanceID,
@@ -224,7 +217,6 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mWriter(nullptr)
 , mPredictedDataSize(0)
 , mUseCount(0)
-, mCacheEntryId(GetNextId())
 {
   LOG(("CacheEntry::CacheEntry [this=%p]", this));
 
@@ -1053,12 +1045,6 @@ NS_IMETHODIMP CacheEntry::GetPersistent(bool *aPersistToDisk)
 NS_IMETHODIMP CacheEntry::GetKey(nsACString & aKey)
 {
   aKey.Assign(mURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP CacheEntry::GetCacheEntryId(uint64_t *aCacheEntryId)
-{
-  *aCacheEntryId = mCacheEntryId;
   return NS_OK;
 }
 
