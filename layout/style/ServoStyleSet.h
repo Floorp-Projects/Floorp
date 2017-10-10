@@ -365,7 +365,7 @@ public:
    */
   already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
 
-  bool GetKeyframesForName(const nsString& aName,
+  bool GetKeyframesForName(nsAtom* aName,
                            const nsTimingFunction& aTimingFunction,
                            nsTArray<Keyframe>& aKeyframes);
 

@@ -11,8 +11,9 @@ use rustc_serialize::json::{self, Json, ToJson};
 #[cfg(feature = "bench")]
 use self::test::Bencher;
 
-use super::{Parser, Delimiter, Token, SourceLocation, ParseError,
-            DeclarationListParser, DeclarationParser, RuleListParser, BasicParseError,
+use super::{Parser, Delimiter, Token, SourceLocation,
+            ParseError, ParseErrorKind, BasicParseError, BasicParseErrorKind,
+            DeclarationListParser, DeclarationParser, RuleListParser,
             AtRuleType, AtRuleParser, QualifiedRuleParser, ParserInput,
             parse_one_declaration, parse_one_rule, parse_important,
             stylesheet_encoding, EncodingSupport,
@@ -263,9 +264,7 @@ fn outer_block_end_consumed() {
     let mut input = Parser::new(&mut input);
     assert!(input.expect_parenthesis_block().is_ok());
     assert!(input.parse_nested_block(|input| {
-        let result: Result<_, ParseError<()>> = input.expect_function_matching("calc")
-            .map_err(|e| ParseError::Basic(e));
-        result
+        input.expect_function_matching("calc").map_err(Into::<ParseError<()>>::into)
     }).is_ok());
     println!("{:?}", input.position());
     assert!(input.next().is_err());
@@ -337,7 +336,7 @@ fn test_expect_url() {
 fn run_color_tests<F: Fn(Result<Color, ()>) -> Json>(json_data: &str, to_json: F) {
     run_json_tests(json_data, |input| {
         let result: Result<_, ParseError<()>> = input.parse_entirely(|i| {
-            Color::parse(i).map_err(|e| ParseError::Basic(e))
+            Color::parse(i).map_err(Into::into)
         });
         to_json(result.map_err(|_| ()))
     });
@@ -367,7 +366,7 @@ fn color3_keywords() {
 fn nth() {
     run_json_tests(include_str!("css-parsing-tests/An+B.json"), |input| {
         input.parse_entirely(|i| {
-            let result: Result<_, ParseError<()>> = parse_nth(i).map_err(|e| ParseError::Basic(e));
+            let result: Result<_, ParseError<()>> = parse_nth(i).map_err(Into::into);
             result
         }).ok().to_json()
     });
@@ -779,7 +778,9 @@ impl<'i> AtRuleParser<'i> for JsonParser {
         ];
         match_ignore_ascii_case! { &*name,
             "media" | "foo-with-block" => Ok(AtRuleType::WithBlock(prelude)),
-            "charset" => Err(BasicParseError::AtRuleInvalid(name.clone()).into()),
+            "charset" => {
+                Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name.clone()).into()))
+            }
             _ => Ok(AtRuleType::WithoutBlock(prelude)),
         }
     }
@@ -1016,7 +1017,10 @@ fn cdc_regression_test() {
     let mut parser = Parser::new(&mut input);
     parser.skip_cdc_and_cdo();
     assert_eq!(parser.next(), Ok(&Token::Ident("x".into())));
-    assert_eq!(parser.next(), Err(BasicParseError::EndOfInput));
+    assert_eq!(parser.next(), Err(BasicParseError {
+        kind: BasicParseErrorKind::EndOfInput,
+        location: SourceLocation { line: 0, column: 5 }
+    }));
 }
 
 #[test]
@@ -1025,8 +1029,11 @@ fn parse_entirely_reports_first_error() {
     enum E { Foo }
     let mut input = ParserInput::new("ident");
     let mut parser = Parser::new(&mut input);
-    let result: Result<(), _> = parser.parse_entirely(|_| Err(ParseError::Custom(E::Foo)));
-    assert_eq!(result, Err(ParseError::Custom(E::Foo)));
+    let result: Result<(), _> = parser.parse_entirely(|p| Err(p.new_custom_error(E::Foo)));
+    assert_eq!(result, Err(ParseError {
+        kind: ParseErrorKind::Custom(E::Foo),
+        location: SourceLocation { line: 0, column: 1 },
+    }));
 }
 
 #[test]
@@ -1140,7 +1147,7 @@ fn utf16_columns() {
         // Read all tokens.
         loop {
             match parser.next() {
-                Err(BasicParseError::EndOfInput) => { break; }
+                Err(BasicParseError { kind: BasicParseErrorKind::EndOfInput, .. }) => { break; }
                 Err(_) => { assert!(false); }
                 Ok(_) => {}
             };

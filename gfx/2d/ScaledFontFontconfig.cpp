@@ -6,6 +6,7 @@
 #include "ScaledFontFontconfig.h"
 #include "UnscaledFontFreeType.h"
 #include "Logging.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
 #include "skia/include/ports/SkTypeface_cairo.h"
@@ -14,6 +15,17 @@
 #include <fontconfig/fcfreetype.h>
 
 namespace mozilla {
+namespace wr {
+  enum {
+    FONT_FORCE_AUTOHINT  = 1 << 0,
+    FONT_NO_AUTOHINT     = 1 << 1,
+    FONT_EMBEDDED_BITMAP = 1 << 2,
+    FONT_EMBOLDEN        = 1 << 3,
+    FONT_VERTICAL_LAYOUT = 1 << 4,
+    FONT_SUBPIXEL_BGR    = 1 << 5
+  };
+}
+
 namespace gfx {
 
 // On Linux and Android our "platform" font is a cairo_scaled_font_t and we use
@@ -228,6 +240,124 @@ ScaledFontFontconfig::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBat
   InstanceData instance(GetCairoScaledFont(), mPattern);
 
   aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), nullptr, 0, aBaton);
+  return true;
+}
+
+bool
+ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                               Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                               std::vector<FontVariation>* aOutVariations)
+{
+  wr::FontInstanceOptions options;
+  options.render_mode = wr::FontRenderMode::Alpha;
+  options.subpx_dir = wr::SubpixelDirection::Horizontal;
+  options.synthetic_italics = false;
+
+  wr::FontInstancePlatformOptions platformOptions;
+  platformOptions.flags = 0;
+  platformOptions.lcd_filter = wr::FontLCDFilter::Legacy;
+  platformOptions.hinting = wr::FontHinting::Normal;
+
+  FcBool autohint;
+  if (FcPatternGetBool(mPattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch && autohint) {
+    platformOptions.flags |= wr::FONT_FORCE_AUTOHINT;
+  }
+  FcBool embolden;
+  if (FcPatternGetBool(mPattern, FC_EMBOLDEN, 0, &embolden) == FcResultMatch && embolden) {
+    platformOptions.flags |= wr::FONT_EMBOLDEN;
+  }
+  FcBool vertical;
+  if (FcPatternGetBool(mPattern, FC_VERTICAL_LAYOUT, 0, &vertical) == FcResultMatch && vertical) {
+    platformOptions.flags |= wr::FONT_VERTICAL_LAYOUT;
+  }
+
+  FcBool antialias;
+  if (FcPatternGetBool(mPattern, FC_ANTIALIAS, 0, &antialias) != FcResultMatch || antialias) {
+    int rgba;
+    if (FcPatternGetInteger(mPattern, FC_RGBA, 0, &rgba) == FcResultMatch) {
+      switch (rgba) {
+        case FC_RGBA_RGB:
+        case FC_RGBA_BGR:
+        case FC_RGBA_VRGB:
+        case FC_RGBA_VBGR:
+            options.render_mode = wr::FontRenderMode::Subpixel;
+            if (rgba == FC_RGBA_VRGB || rgba == FC_RGBA_VBGR) {
+                options.subpx_dir = wr::SubpixelDirection::Vertical;
+            }
+            platformOptions.hinting = wr::FontHinting::LCD;
+            if (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR) {
+                platformOptions.flags |= wr::FONT_SUBPIXEL_BGR;
+            }
+            break;
+        case FC_RGBA_NONE:
+        case FC_RGBA_UNKNOWN:
+        default:
+          break;
+      }
+    }
+
+    if (options.render_mode == wr::FontRenderMode::Subpixel) {
+      int filter;
+      if (FcPatternGetInteger(mPattern, FC_LCD_FILTER, 0, &filter) == FcResultMatch) {
+        switch (filter) {
+        case FC_LCD_NONE:
+          platformOptions.lcd_filter = wr::FontLCDFilter::None;
+          break;
+        case FC_LCD_DEFAULT:
+          platformOptions.lcd_filter = wr::FontLCDFilter::Default;
+          break;
+        case FC_LCD_LIGHT:
+          platformOptions.lcd_filter = wr::FontLCDFilter::Light;
+          break;
+        case FC_LCD_LEGACY:
+        default:
+          break;
+        }
+      }
+    }
+
+    // Match cairo-ft's handling of embeddedbitmap:
+    // If AA is explicitly disabled, leave bitmaps enabled.
+    // Otherwise, disable embedded bitmaps unless explicitly enabled.
+    FcBool bitmap;
+    if (FcPatternGetBool(mPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) == FcResultMatch && bitmap) {
+      platformOptions.flags |= wr::FONT_EMBEDDED_BITMAP;
+    }
+  } else {
+    options.render_mode = wr::FontRenderMode::Mono;
+    options.subpx_dir = wr::SubpixelDirection::None;
+    platformOptions.hinting = wr::FontHinting::Mono;
+    platformOptions.flags |= wr::FONT_EMBEDDED_BITMAP;
+  }
+
+  FcBool hinting;
+  int hintstyle;
+  if (FcPatternGetBool(mPattern, FC_HINTING, 0, &hinting) != FcResultMatch || hinting) {
+    if (FcPatternGetInteger(mPattern, FC_HINT_STYLE, 0, &hintstyle) != FcResultMatch) {
+        hintstyle = FC_HINT_FULL;
+    }
+  } else {
+    hintstyle = FC_HINT_NONE;
+  }
+
+  if (hintstyle == FC_HINT_NONE) {
+    platformOptions.hinting = wr::FontHinting::None;
+  } else if (options.render_mode != wr::FontRenderMode::Mono) {
+    switch (hintstyle) {
+    case FC_HINT_SLIGHT:
+      platformOptions.hinting = wr::FontHinting::Light;
+      break;
+    case FC_HINT_MEDIUM:
+      platformOptions.hinting = wr::FontHinting::Normal;
+      break;
+    case FC_HINT_FULL:
+    default:
+      break;
+    }
+  }
+
+  *aOutOptions = Some(options);
+  *aOutPlatformOptions = Some(platformOptions);
   return true;
 }
 

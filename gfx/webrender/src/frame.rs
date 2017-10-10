@@ -31,80 +31,12 @@ static DEFAULT_SCROLLBAR_COLOR: ColorF = ColorF {
     a: 0.6,
 };
 
-/// Nested display lists cause two types of replacements to ClipIds inside the nesting:
-///     1. References to the root scroll frame are replaced by the ClipIds that
-///        contained the nested display list.
-///     2. Other ClipIds (that aren't custom or reference frames) are assumed to be
-///        local to the nested display list and are converted to an id that is unique
-///        outside of the nested display list as well.
-///
-/// This structure keeps track of what ids are the "root" for one particular level of
-/// nesting as well as keeping and index, which can make ClipIds used internally unique
-/// in the full ClipScrollTree.
-#[derive(Debug)]
-struct NestedDisplayListInfo {
-    /// The index of this nested display list, which is used to generate
-    /// new ClipIds for clips that are defined inside it.
-    nest_index: u64,
-
-    /// The ClipId of the scroll frame node which contains this nested
-    /// display list. This is used to replace references to the root with
-    /// the proper ClipId.
-    scroll_node_id: ClipId,
-
-    /// The ClipId of the clip node which contains this nested display list.
-    /// This is used to replace references to the root with the proper ClipId.
-    clip_node_id: ClipId,
-}
-
-impl NestedDisplayListInfo {
-    fn convert_id_to_nested(&self, id: &ClipId) -> ClipId {
-        match *id {
-            ClipId::Clip(id, _, pipeline_id) => ClipId::Clip(id, self.nest_index, pipeline_id),
-            _ => *id,
-        }
-    }
-
-    fn convert_scroll_id_to_nested(&self, id: &ClipId) -> ClipId {
-        if id.pipeline_id() != self.scroll_node_id.pipeline_id() {
-            return *id;
-        }
-
-        if id.is_root_scroll_node() {
-            self.scroll_node_id
-        } else {
-            self.convert_id_to_nested(id)
-        }
-    }
-
-    fn convert_clip_id_to_nested(&self, id: &ClipId) -> ClipId {
-        if id.pipeline_id() != self.clip_node_id.pipeline_id() {
-            return *id;
-        }
-
-        if id.is_root_scroll_node() {
-            self.clip_node_id
-        } else {
-            self.convert_id_to_nested(id)
-        }
-    }
-
-    fn convert_new_id_to_nested(&self, id: &ClipId) -> ClipId {
-        if id.pipeline_id() != self.clip_node_id.pipeline_id() {
-            return *id;
-        }
-        self.convert_id_to_nested(id)
-    }
-}
-
 struct FlattenContext<'a> {
     scene: &'a Scene,
     builder: &'a mut FrameBuilder,
     resource_cache: &'a ResourceCache,
     tiled_image_map: TiledImageMap,
     replacements: Vec<(ClipId, ClipId)>,
-    nested_display_list_info: Vec<NestedDisplayListInfo>,
-    current_nested_display_list_index: u64,
 }
 
 impl<'a> FlattenContext<'a> {
@@ -119,47 +51,7 @@ impl<'a> FlattenContext<'a> {
             resource_cache,
             tiled_image_map: resource_cache.get_tiled_image_map(),
             replacements: Vec::new(),
-            nested_display_list_info: Vec::new(),
-            current_nested_display_list_index: 0,
         }
-    }
-
-    fn push_nested_display_list_ids(&mut self, info: ClipAndScrollInfo) {
-        self.current_nested_display_list_index += 1;
-        self.nested_display_list_info.push(NestedDisplayListInfo {
-            nest_index: self.current_nested_display_list_index,
-            scroll_node_id: info.scroll_node_id,
-            clip_node_id: info.clip_node_id(),
-        });
-    }
-
-    fn pop_nested_display_list_ids(&mut self) {
-        self.nested_display_list_info.pop();
-    }
-
-    fn convert_new_id_to_nested(&self, id: &ClipId) -> ClipId {
-        if let Some(nested_info) = self.nested_display_list_info.last() {
-            nested_info.convert_new_id_to_nested(id)
-        } else {
-            *id
-        }
-    }
-
-    fn convert_clip_scroll_info_to_nested(&self, info: &mut ClipAndScrollInfo) {
-        if let Some(nested_info) = self.nested_display_list_info.last() {
-            info.scroll_node_id = nested_info.convert_scroll_id_to_nested(&info.scroll_node_id);
-            info.clip_node_id = info.clip_node_id
-                .map(|ref id| nested_info.convert_clip_id_to_nested(id));
-        }
-
-        // We only want to produce nested ClipIds if we are in a nested display
-        // list situation.
-        debug_assert!(
-            !info.scroll_node_id.is_nested() || !self.nested_display_list_info.is_empty()
-        );
-        debug_assert!(
-            !info.clip_node_id().is_nested() || !self.nested_display_list_info.is_empty()
-        );
     }
 
     /// Since WebRender still handles fixed position and reference frame content internally
@@ -337,9 +229,8 @@ impl Frame {
         new_clip_id: &ClipId,
         clip_region: ClipRegion,
     ) {
-        let new_clip_id = context.convert_new_id_to_nested(new_clip_id);
         context.builder.add_clip_node(
-            new_clip_id,
+            *new_clip_id,
             *parent_id,
             pipeline_id,
             clip_region,
@@ -367,9 +258,8 @@ impl Frame {
             &mut self.clip_scroll_tree,
         );
 
-        let new_scroll_frame_id = context.convert_new_id_to_nested(new_scroll_frame_id);
         context.builder.add_scroll_frame(
-            new_scroll_frame_id,
+            *new_scroll_frame_id,
             clip_id,
             pipeline_id,
             &frame_rect,
@@ -555,7 +445,6 @@ impl Frame {
         reference_frame_relative_offset: LayerVector2D,
     ) -> Option<BuiltDisplayListIter<'a>> {
         let mut clip_and_scroll = item.clip_and_scroll();
-        context.convert_clip_scroll_info_to_nested(&mut clip_and_scroll);
 
         let unreplaced_scroll_id = clip_and_scroll.scroll_node_id;
         clip_and_scroll.scroll_node_id =
@@ -777,22 +666,13 @@ impl Frame {
             }
             SpecificDisplayItem::StickyFrame(ref info) => {
                 let frame_rect = item.rect().translate(&reference_frame_relative_offset);
-                let new_clip_id = context.convert_new_id_to_nested(&info.id);
                 self.clip_scroll_tree.add_sticky_frame(
-                    new_clip_id,
+                    info.id,
                     clip_and_scroll.scroll_node_id, /* parent id */
                     frame_rect,
                     info.sticky_frame_info,
                 );
             }
-            SpecificDisplayItem::PushNestedDisplayList => {
-                // Using the clip and scroll already processed for nesting here
-                // means that in the case of multiple nested display lists, we
-                // will enter the outermost ids into the table and avoid having
-                // to do a replacement for every level of nesting.
-                context.push_nested_display_list_ids(clip_and_scroll);
-            }
-            SpecificDisplayItem::PopNestedDisplayList => context.pop_nested_display_list_ids(),
 
             // Do nothing; these are dummy items for the display list parser
             SpecificDisplayItem::SetGradientStops => {}

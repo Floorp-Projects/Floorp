@@ -858,7 +858,11 @@ Function createInstall
   ${ITBL3Create}
   ${ITBL3SetProgressState} "${TBPF_INDETERMINATE}"
 
+  ; Make sure the file we're about to try to download to doesn't already exist,
+  ; so we don't end up trying to "resume" on top of the wrong file.
+  Delete "$PLUGINSDIR\download.exe"
   ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
+
   ${NSD_CreateTimer} ClearBlurb ${BlurbDisplayMS}
 
   LockWindow off
@@ -931,30 +935,38 @@ Function OnDownload
   # $2 = Remaining files
   # $3 = Number of downloaded bytes for the current file
   # $4 = Size of current file (Empty string if the size is unknown)
-  # /RESET must be used if status $0 > 299 (e.g. failure)
+  # /RESET must be used if status $0 > 299 (e.g. failure), even if resuming
   # When status is $0 =< 299 it is handled by InetBgDL
   StrCpy $DownloadServerIP "$5"
   ${If} $0 > 299
     ${NSD_KillTimer} OnDownload
     IntOp $DownloadRetryCount $DownloadRetryCount + 1
-    ${If} "$DownloadReset" != "true"
-      StrCpy $DownloadedBytes "0"
-      ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
-      SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
-                  $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
-      ${ITBL3SetProgressState} "${TBPF_INDETERMINATE}"
-    ${EndIf}
-    InetBgDL::Get /RESET /END
-    StrCpy $DownloadSizeBytes ""
-    StrCpy $DownloadReset "true"
-
     ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
       StrCpy $ExitCode "${ERR_DOWNLOAD_TOO_MANY_RETRIES}"
       ; Use a timer so the UI has a chance to update
       ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
-    ${Else}
-      ${NSD_CreateTimer} StartDownload ${DownloadRetryIntervalMS}
+      Return
     ${EndIf}
+
+    ; 1000 is a special code meaning InetBgDL lost the connection before it got
+    ; all the bytes it was expecting. We'll try to resume the transfer in that
+    ; case (assuming we aren't out of retries), so don't treat it as a reset
+    ; or clear the progress bar.
+    ${If} $0 != 1000
+      ${If} "$DownloadReset" != "true"
+        StrCpy $DownloadedBytes "0"
+        ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
+        SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
+                    $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
+        ${ITBL3SetProgressState} "${TBPF_INDETERMINATE}"
+      ${EndIf}
+      StrCpy $DownloadSizeBytes ""
+      StrCpy $DownloadReset "true"
+      Delete "$PLUGINSDIR\download.exe"
+    ${EndIf}
+
+    InetBgDL::Get /RESET /END
+    ${NSD_CreateTimer} StartDownload ${DownloadRetryIntervalMS}
     Return
   ${EndIf}
 

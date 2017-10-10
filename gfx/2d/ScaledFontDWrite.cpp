@@ -8,6 +8,7 @@
 #include "PathD2D.h"
 #include "gfxFont.h"
 #include "Logging.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 using namespace std;
 
@@ -297,6 +298,28 @@ ScaledFontDWrite::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 {
   InstanceData instance(this);
   aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), nullptr, 0, aBaton);
+  return true;
+}
+
+bool
+ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                           Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                           std::vector<FontVariation>* aOutVariations)
+{
+  AntialiasMode aaMode = GetDefaultAAMode();
+  if (aaMode != AntialiasMode::SUBPIXEL) {
+    wr::FontInstanceOptions options;
+    options.render_mode =
+      aaMode == AntialiasMode::NONE ? wr::FontRenderMode::Mono : wr::FontRenderMode::Alpha;
+    options.subpx_dir = wr::SubpixelDirection::Horizontal;
+    options.synthetic_italics = false;
+    *aOutOptions = Some(options);
+  }
+
+  wr::FontInstancePlatformOptions platformOptions;
+  platformOptions.use_embedded_bitmap = UseEmbeddedBitmaps();
+  platformOptions.force_gdi_rendering = ForceGDIMode();
+  *aOutPlatformOptions = Some(platformOptions);
   return true;
 }
 

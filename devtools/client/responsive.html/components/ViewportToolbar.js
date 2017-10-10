@@ -9,7 +9,7 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
-const DeviceSelector = createFactory(require("./device-selector"));
+const DeviceSelector = createFactory(require("./DeviceSelector"));
 
 module.exports = createClass({
   displayName: "ViewportToolbar",

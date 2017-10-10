@@ -712,8 +712,6 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::Clip(..) => String::from("clip"),
             SpecificDisplayItem::ScrollFrame(..) => String::from("scroll_frame"),
             SpecificDisplayItem::StickyFrame(..) => String::from("sticky_frame"),
-            SpecificDisplayItem::PushNestedDisplayList => String::from("push_nested_display_list"),
-            SpecificDisplayItem::PopNestedDisplayList => String::from("pop_nested_display_list"),
             SpecificDisplayItem::SetGradientStops => String::from("set_gradient_stops"),
             SpecificDisplayItem::PopStackingContext => String::from("pop_stacking_context"),
             SpecificDisplayItem::PushShadow(..) => String::from("push_shadow"),

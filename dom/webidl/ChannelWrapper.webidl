@@ -286,6 +286,18 @@ interface ChannelWrapper : EventTarget {
   [Cached, Pure]
   readonly attribute nsISupports? browserElement;
 
+  /**
+   * Returns an array of objects that combine the url and frameId from the
+   * ancestorPrincipals and ancestorOuterWindowIDs on loadInfo.
+   * The immediate parent is the first entry, the last entry is always the top
+   * level frame.  It will be an empty list for toplevel window loads and
+   * non-subdocument resource loads within a toplevel window.  For the latter,
+   * originURL will provide information on what window is doing the load.  It
+   * will be null if the request is not associated with a window (e.g. XHR with
+   * mozBackgroundRequest = true).
+   */
+  [Cached, Frozen, GetterThrows, Pure]
+  readonly attribute sequence<MozFrameAncestorInfo>? frameAncestors;
 
   /**
    * For HTTP requests, returns an array of request headers which will be, or

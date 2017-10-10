@@ -77,6 +77,15 @@
         <item name="android:layout_marginRight">-3dp</item>
     </style>
 
+    <style name="TabsLayoutItemFavicon">
+        <item name="android:layout_marginEnd">4dp</item>
+    </style>
+
+    <style name="TabsListItemFavicon">
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">6dp</item>
+    </style>
+
     <style name="TabsTray.AddTab" parent="TabsTray.V17.AddTab" />
     <style name="TabsTray.V17.AddTab" parent="TabsTray.Base.AddTab">
         <item name="android:layout_marginEnd">-3dp</item>
@@ -89,6 +98,17 @@
     <style name="TabStrip.V17.Favicon" parent="TabStrip.Base.Favicon">
         <item name="android:layout_marginStart">12dp</item>
         <item name="android:layout_marginEnd">8dp</item>
+    </style>
+
+    <style name="TabStrip.Close" parent="TabStrip.V17.Close"/>
+    <style name="TabStrip.V17.Close" parent="TabStrip.Base">
+        <item name="android:layout_alignParentEnd">true</item>
+    </style>
+
+    <style name="TabStrip.Title" parent="TabStrip.V17.Title"/>
+    <style name="TabStrip.V17.Title" parent="TabStrip.Base">
+        <item name="android:layout_toEndOf">@id/favicon</item>
+        <item name="android:layout_toStartOf">@id/close</item>
     </style>
 
 </resources>
