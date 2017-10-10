@@ -153,7 +153,7 @@ protected:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) override;
 
-  void SetParentCoordCtxProvider(SVGSVGElement *aContext);
+  void SetParentCoordCtxProvider(SVGViewportElement *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual AngleAttributesInfo GetAngleInfo() override;
@@ -180,7 +180,7 @@ protected:
   // derived properties (from 'orient') handled separately
   nsSVGOrientType                        mOrientType;
 
-  SVGSVGElement                         *mCoordCtx;
+  SVGViewportElement*                    mCoordCtx;
   nsAutoPtr<gfx::Matrix>                 mViewBoxToViewportTransform;
 };
 
