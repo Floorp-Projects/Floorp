@@ -40,9 +40,6 @@ ac_add_options --with-toolchain-prefix=i686-w64-mingw32-
 ac_add_options --enable-debug
 ac_add_options --disable-optimize
 
-# Knock this out from above
-ac_add_options --disable-js-shell
-
 # GCC compiling for Windows exposes a lot of warnings. We are tracking them in Bug 1394433
 ac_add_options --disable-warnings-as-errors
 
