@@ -655,6 +655,16 @@ JSJitProfilingFrameIterator::moveToWasmFrame(CommonFrameLayout* frame)
 }
 
 void
+JSJitProfilingFrameIterator::moveToCppEntryFrame()
+{
+    // No previous frame, set to nullptr to indicate that
+    // JSJitProfilingFrameIterator is done().
+    returnAddressToFp_ = nullptr;
+    fp_ = nullptr;
+    type_ = JitFrame_CppToJSJit;
+}
+
+void
 JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
 {
     /*
@@ -679,6 +689,8 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
      * |    ^--- Baseline Stub <---- Baseline
      * |    |
      * |    ^--- WasmToJSJit <--- (other wasm frames)
+     * |    |
+     * |    ^--- CppToJSJit
      * |
      * ^--- Entry Frame (From C++)
      *      Exit Frame (From previous JitActivation)
@@ -744,6 +756,11 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
             return;
         }
 
+        if (rectPrevType == JitFrame_CppToJSJit) {
+            moveToCppEntryFrame();
+            return;
+        }
+
         MOZ_CRASH("Bad frame type prior to rectifier frame.");
     }
 
@@ -765,11 +782,7 @@ JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
     }
 
     if (prevType == JitFrame_CppToJSJit) {
-        // No previous frame, set to null to indicate that
-        // JSJitProfilingFrameIterator is done().
-        returnAddressToFp_ = nullptr;
-        fp_ = nullptr;
-        type_ = JitFrame_CppToJSJit;
+        moveToCppEntryFrame();
         return;
     }
 

@@ -1664,6 +1664,7 @@ MacroAssembler::assertRectifierFrameParentType(Register frameType)
         branch32(Assembler::Equal, frameType, Imm32(JitFrame_IonJS), &checkOk);
         branch32(Assembler::Equal, frameType, Imm32(JitFrame_BaselineStub), &checkOk);
         branch32(Assembler::Equal, frameType, Imm32(JitFrame_WasmToJSJit), &checkOk);
+        branch32(Assembler::Equal, frameType, Imm32(JitFrame_CppToJSJit), &checkOk);
         assumeUnreachable("Unrecognized frame type preceding RectifierFrame.");
         bind(&checkOk);
     }
