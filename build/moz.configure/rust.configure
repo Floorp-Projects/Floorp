@@ -97,6 +97,37 @@ def rust_compiler(rustc_info, cargo_info):
 
     return True
 
+
+@depends(rustc, when=rust_compiler)
+def rust_supported_targets(rustc):
+    out = check_cmd_output(rustc, '--print', 'target-list').splitlines()
+    # The os in the triplets used by rust may match the same OSes, in which
+    # case we need to check the raw_os instead.
+    per_os = {}
+    ambiguous = set()
+    per_raw_os = {}
+    for t in out:
+        t = split_triplet(t, allow_unknown=True)
+        key = (t.cpu, t.os)
+        if key in per_os:
+            previous = per_os[key]
+            per_raw_os[(previous.cpu, previous.raw_os)] = previous
+            del per_os[key]
+            ambiguous.add(key)
+        if key in ambiguous:
+            raw_os = t.raw_os
+            # split_triplet will return a raw_os of 'androideabi' for
+            # rust targets in the form cpu-linux-androideabi, but what
+            # we get from the build system is linux-androideabi, so
+            # normalize.
+            if raw_os == 'androideabi':
+                raw_os = 'linux-androideabi'
+            per_raw_os[(t.cpu, raw_os)] = t
+        else:
+            per_os[key] = t
+    return namespace(per_os=per_os, per_raw_os=per_raw_os)
+
+
 @template
 def rust_triple_alias(host_or_target):
     """Template defining the alias used for rustc's --target flag.
@@ -105,14 +136,16 @@ def rust_triple_alias(host_or_target):
     """
     assert host_or_target in (host, target)
 
-    @depends(rustc, host_or_target, building_with_gcc, when=rust_compiler)
+    @depends(rustc, host_or_target, building_with_gcc, rust_supported_targets,
+             when=rust_compiler)
     @imports('os')
     @imports('subprocess')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     @imports(_from='mozbuild.shellutil', _import='quote')
     @imports(_from='tempfile', _import='mkstemp')
     @imports(_from='textwrap', _import='dedent')
-    def rust_target(rustc, host_or_target, building_with_gcc):
+    def rust_target(rustc, host_or_target, building_with_gcc,
+                    rust_supported_targets):
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
         # Rust uses distinct target triples for targetting the GNU C++ ABI
@@ -120,66 +153,31 @@ def rust_triple_alias(host_or_target):
         # triple and relies on the user to ensure that everything is
         # compiled for the appropriate ABI.  We need to perform appropriate
         # munging to get the correct option to rustc.
-        #
-        # The canonical list of targets supported can be derived from:
-        #
-        # https://github.com/rust-lang/rust/blob/master/src/librustc_back/target/mod.rs
+        # We correlate the autoconf-derived targets with the list of targets
+        # rustc gives us with --print target-list.
+        if host_or_target.kernel == 'WINNT':
+            if building_with_gcc:
+                host_or_target_os = 'windows-gnu'
+            else:
+                host_or_target_os = 'windows-msvc'
+            host_or_target_raw_os = host_or_target_os
+        else:
+            host_or_target_os = host_or_target.os
+            host_or_target_raw_os = host_or_target.raw_os
 
-        # Avoid having to write out os+kernel for all the platforms where
-        # they don't differ.
-        os_or_kernel = host_or_target.kernel if host_or_target.kernel == 'Linux' and host_or_target.os != 'Android' else host_or_target.os
-        # If we are targetting Windows but the compiler is gcc, we need to
-        # use a different rustc target
-        os_or_kernel = 'WINNT-MINGW' if building_with_gcc and host_or_target.kernel == 'WINNT' else os_or_kernel
-        rustc_target = {
-            # DragonFly
-            ('x86_64', 'DragonFly'): 'x86_64-unknown-dragonfly',
-            # FreeBSD
-            ('aarch64', 'FreeBSD'): 'aarch64-unknown-freebsd',
-            ('x86', 'FreeBSD'): 'i686-unknown-freebsd',
-            ('x86_64', 'FreeBSD'): 'x86_64-unknown-freebsd',
-            # NetBSD
-            ('sparc64', 'NetBSD'): 'sparc64-unknown-netbsd',
-            ('x86', 'NetBSD'): 'i686-unknown-netbsd',
-            ('x86_64', 'NetBSD'): 'x86_64-unknown-netbsd',
-            # OpenBSD
-            ('x86', 'OpenBSD'): 'i686-unknown-openbsd',
-            ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
-            # Linux
-            ('aarch64', 'Linux'): 'aarch64-unknown-linux-gnu',
-            ('arm', 'Linux'): 'armv7-unknown-linux-gnueabihf',
-            ('sparc64', 'Linux'): 'sparc64-unknown-linux-gnu',
-            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
-            ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
-            # OS X
-            ('x86', 'OSX'): 'i686-apple-darwin',
-            ('x86_64', 'OSX'): 'x86_64-apple-darwin',
-            # iOS
-            ('aarch64', 'iOS'): 'aarch64-apple-ios',
-            ('arm', 'iOS'): 'armv7s-apple-ios',
-            ('x86', 'iOS'): 'i386-apple-ios',
-            ('x86_64', 'iOS'): 'x86_64-apple-ios',
-            # Android
-            ('aarch64', 'Android'): 'aarch64-linux-android',
-            ('arm', 'Android'): 'armv7-linux-androideabi',
-            ('x86', 'Android'): 'i686-linux-android',
-            ('x86_64', 'Android'): 'x86_64-linux-android',
-            # Windows
-            ('x86', 'WINNT'): 'i686-pc-windows-msvc',
-            ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',
-            ('x86', 'WINNT-MINGW'): 'i686-pc-windows-gnu',
-            ('x86_64', 'WINNT-MINGW'): 'x86_64-pc-windows-gnu',
-            # Solaris
-            ('x86_64', 'SunOS'): 'x86_64-sun-solaris',
-            ('sparc64', 'SunOS'): 'sparcv9-sun-solaris',
-        }.get((host_or_target.cpu, os_or_kernel), None)
+        rustc_target = rust_supported_targets.per_os.get(
+            (host_or_target.cpu, host_or_target_os))
+
+        if rustc_target is None:
+            rustc_target = rust_supported_targets.per_raw_os.get(
+                (host_or_target.cpu, host_or_target_raw_os))
 
         if rustc_target is None:
             die("Don't know how to translate {} for rustc".format(host_or_target.alias))
 
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
-        target_arg = '--target=' + rustc_target
+        target_arg = '--target=' + rustc_target.alias
         in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs')
         out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
         os.close(out_fd)
@@ -206,7 +204,7 @@ def rust_triple_alias(host_or_target):
                 a rust std library for that target installed. Try:
 
                   rustup target add {}
-                '''.format(host_or_target.alias, rustc, rustc_target)))
+                '''.format(host_or_target.alias, rustc, rustc_target.alias)))
             check_cmd_output(*cmd, onerror=failed)
             if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
                 failed()
@@ -215,7 +213,7 @@ def rust_triple_alias(host_or_target):
             os.remove(out_path)
 
         # This target is usable.
-        return rustc_target
+        return rustc_target.alias
 
     return rust_target
 
