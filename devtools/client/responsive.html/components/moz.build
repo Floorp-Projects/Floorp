@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'browser.js',
-    'device-adder.js',
-    'device-modal.js',
-    'device-selector.js',
-    'dpr-selector.js',
-    'global-toolbar.js',
-    'network-throttling-selector.js',
-    'resizable-viewport.js',
-    'viewport-dimension.js',
-    'viewport-toolbar.js',
-    'viewport.js',
-    'viewports.js',
+    'Browser.js',
+    'DeviceAdder.js',
+    'DeviceModal.js',
+    'DeviceSelector.js',
+    'DprSelector.js',
+    'GlobalToolbar.js',
+    'NetworkThrottlingSelector.js',
+    'ResizableViewport.js',
+    'Viewport.js',
+    'ViewportDimension.js',
+    'Viewports.js',
+    'ViewportToolbar.js',
 )
