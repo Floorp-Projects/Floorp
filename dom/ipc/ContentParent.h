@@ -1283,9 +1283,8 @@ private:
   nsTHashtable<nsCStringHashKey> mActivePermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
-#ifdef MOZ_CRASHREPORTER
+
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
-#endif
 
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
