@@ -7,7 +7,10 @@
 #include "nsISupports.idl"
 #include "nsIRDFDataSource.idl"
 
-interface nsAtom;  // not a real interface; used in [noscript] methods only
+%{C++
+class nsAtom;
+%}
+[ptr] native nsAtomPtr(nsAtom);
 
 [scriptable, uuid(8ae1fbf8-1dd2-11b2-bd21-d728069cca92)]
 interface nsIRDFXMLSerializer : nsISupports
@@ -24,5 +27,5 @@ interface nsIRDFXMLSerializer : nsISupports
      * @param aPrefix the attribute namespace prefix
      * @param aURI the namespace URI
      */
-    [noscript] void addNameSpace(in nsAtom aPrefix, in DOMString aURI);
+    [noscript] void addNameSpace(in nsAtomPtr aPrefix, in DOMString aURI);
 };
