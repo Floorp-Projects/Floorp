@@ -8,7 +8,7 @@ interface XULControllers;
 interface MozRDFCompositeDataSource;
 interface MozRDFResource;
 
-[Func="IsChromeOrXBL"]
+[HTMLConstructor, Func="IsChromeOrXBL"]
 interface XULElement : Element {
   // Layout properties
   [SetterThrows]

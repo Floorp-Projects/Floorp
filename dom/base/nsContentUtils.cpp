@@ -226,6 +226,7 @@
 #include "nsPluginHost.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Encoding.h"
+#include "nsXULElement.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -10067,6 +10068,185 @@ nsContentUtils::TryToUpgradeElement(Element* aElement)
   }
 }
 
+static void
+DoCustomElementCreate(Element** aElement, nsIDocument* aDoc, NodeInfo* aNodeInfo,
+                      CustomElementConstructor* aConstructor, ErrorResult& aRv)
+{
+  RefPtr<Element> element =
+    aConstructor->Construct("Custom Element Create", aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    if (!element || !element->IsHTMLElement()) {
+      aRv.ThrowTypeError<MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE>(NS_LITERAL_STRING("HTMLElement"));
+      return;
+    }
+  } else {
+    if (!element || !element->IsXULElement()) {
+      aRv.ThrowTypeError<MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE>(NS_LITERAL_STRING("XULElement"));
+      return;
+    }
+  }
+
+  nsAtom* localName = aNodeInfo->NameAtom();
+
+  if (aDoc != element->OwnerDoc() || element->GetParentNode() ||
+      element->HasChildren() || element->GetAttrCount() ||
+      element->NodeInfo()->NameAtom() != localName) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  element.forget(aElement);
+}
+
+/* static */ nsresult
+nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* aNodeInfo,
+                                    FromParser aFromParser, const nsAString* aIs,
+                                    mozilla::dom::CustomElementDefinition* aDefinition)
+{
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
+  MOZ_ASSERT(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML) ||
+             nodeInfo->NamespaceEquals(kNameSpaceID_XUL),
+             "Can only create XUL or XHTML elements.");
+
+  nsAtom *name = nodeInfo->NameAtom();
+  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
+  RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
+
+  int32_t tag = eHTMLTag_unknown;
+  bool isCustomElementName = false;
+  if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
+    isCustomElementName = (tag == eHTMLTag_userdefined &&
+                           nsContentUtils::IsCustomElementName(name));
+  } else {
+    isCustomElementName = nsContentUtils::IsCustomElementName(name);
+  }
+  bool isCustomElement = isCustomElementName || aIs;
+  MOZ_ASSERT_IF(aDefinition, isCustomElement);
+
+  // https://dom.spec.whatwg.org/#concept-create-element
+  // We only handle the "synchronous custom elements flag is set" now.
+  // For the unset case (e.g. cloning a node), see bug 1319342 for that.
+  // Step 4.
+  CustomElementDefinition* definition = aDefinition;
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement &&
+      !definition) {
+    definition =
+      nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
+                                                    nodeInfo->LocalName(),
+                                                    nodeInfo->NamespaceID(),
+                                                    typeAtom);
+  }
+
+  // It might be a problem that parser synchronously calls constructor, so filed
+  // bug 1378079 to figure out what we should do for parser case.
+  if (definition) {
+    /*
+      * Synchronous custom elements flag is determined by 3 places in spec,
+      * 1) create an element for a token, the flag is determined by
+      *    "will execute script" which is not originally created
+      *    for the HTML fragment parsing algorithm.
+      * 2) createElement and createElementNS, the flag is the same as
+      *    NOT_FROM_PARSER.
+      * 3) clone a node, our implementation will not go into this function.
+      * For the unset case which is non-synchronous only applied for
+      * inner/outerHTML.
+      */
+    bool synchronousCustomElements = aFromParser != dom::FROM_PARSER_FRAGMENT ||
+                                     aFromParser == dom::NOT_FROM_PARSER;
+    // Per discussion in https://github.com/w3c/webcomponents/issues/635,
+    // use entry global in those places that are called from JS APIs and use the
+    // node document's global object if it is called from parser.
+    nsIGlobalObject* global;
+    if (aFromParser == dom::NOT_FROM_PARSER) {
+      global = GetEntryGlobal();
+    } else {
+      global = nodeInfo->GetDocument()->GetScopeObject();
+    }
+    if (!global) {
+      // In browser chrome code, one may have access to a document which doesn't
+      // have scope object anymore.
+      return NS_ERROR_FAILURE;
+    }
+
+    AutoEntryScript aes(global, "create custom elements");
+    JSContext* cx = aes.cx();
+    ErrorResult rv;
+
+    // Step 5.
+    if (definition->IsCustomBuiltIn()) {
+      // SetupCustomElement() should be called with an element that don't have
+      // CustomElementData setup, if not we will hit the assertion in
+      // SetCustomElementData().
+      // Built-in element
+      MOZ_ASSERT(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
+                 "Custom built-in XUL elements are not supported yet.");
+      *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
+      (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+      if (synchronousCustomElements) {
+        CustomElementRegistry::Upgrade(*aResult, definition, rv);
+        if (rv.MaybeSetPendingException(cx)) {
+          aes.ReportException();
+        }
+      } else {
+        nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
+      }
+
+      return NS_OK;
+    }
+
+    // Step 6.1.
+    if (synchronousCustomElements) {
+      DoCustomElementCreate(aResult, nodeInfo->GetDocument(), nodeInfo,
+                            definition->mConstructor, rv);
+      if (rv.MaybeSetPendingException(cx)) {
+        if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+          NS_IF_ADDREF(*aResult = NS_NewHTMLUnknownElement(nodeInfo.forget(), aFromParser));
+        } else {
+          NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+        }
+      }
+      return NS_OK;
+    }
+
+    // Step 6.2.
+    if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+      NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
+    } else {
+      NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+    }
+    (*aResult)->SetCustomElementData(new CustomElementData(definition->mType));
+    nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
+    return NS_OK;
+  }
+
+  if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    // Per the Custom Element specification, unknown tags that are valid custom
+    // element names should be HTMLElement instead of HTMLUnknownElement.
+    if (isCustomElementName) {
+      NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
+    } else {
+      *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
+    }
+  } else {
+    NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+  }
+
+  if (!*aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement) {
+    (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+  }
+
+  return NS_OK;
+}
+
 /* static */ CustomElementDefinition*
 nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
                                               const nsAString& aLocalName,
@@ -10075,7 +10255,8 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
 {
   MOZ_ASSERT(aDoc);
 
-  if (aNameSpaceID != kNameSpaceID_XHTML ||
+  if ((aNameSpaceID != kNameSpaceID_XUL &&
+       aNameSpaceID != kNameSpaceID_XHTML) ||
       !aDoc->GetDocShell()) {
     return nullptr;
   }
@@ -10176,7 +10357,8 @@ nsContentUtils::GetCustomPrototype(nsIDocument* aDoc,
 {
   MOZ_ASSERT(aDoc);
 
-  if (aNamespaceID != kNameSpaceID_XHTML ||
+  if ((aNamespaceID != kNameSpaceID_XHTML &&
+       aNamespaceID != kNameSpaceID_XUL) ||
       !aDoc->GetDocShell()) {
     return;
   }
