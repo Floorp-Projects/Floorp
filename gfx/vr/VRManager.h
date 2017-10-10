@@ -64,6 +64,9 @@ private:
   void Shutdown();
 
   void DispatchVRDisplayInfoUpdate();
+  void UpdateRequestedDevices();
+  void EnumerateVRDisplays();
+  void CheckForInactiveTimeout();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
@@ -79,9 +82,12 @@ private:
 
   Atomic<bool> mInitialized;
 
-  TimeStamp mLastRefreshTime;
+  TimeStamp mLastControllerEnumerationTime;
+  TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
   bool mVRTestSystemCreated;
+  bool mVRDisplaysRequested;
+  bool mVRControllersRequested;
 };
 
 } // namespace gfx
