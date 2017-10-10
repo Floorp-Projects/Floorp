@@ -9,15 +9,15 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.text.TextUtilsCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import org.mozilla.focus.activity.LifecycleAppCompatActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 
 import java.util.Locale;
 
 public abstract class LocaleAwareAppCompatActivity
-        extends LifecycleAppCompatActivity {
+        extends AppCompatActivity {
 
     private volatile Locale mLastLocale;
 
