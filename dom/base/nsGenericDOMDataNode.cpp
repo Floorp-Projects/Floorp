@@ -639,6 +639,7 @@ nsGenericDOMDataNode::GetChildren(uint32_t aFilter)
 nsresult
 nsGenericDOMDataNode::SetAttr(int32_t aNameSpaceID, nsAtom* aAttr,
                               nsAtom* aPrefix, const nsAString& aValue,
+                              nsIPrincipal* aContentPrincipal,
                               bool aNotify)
 {
   return NS_OK;

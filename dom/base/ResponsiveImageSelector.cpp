@@ -116,7 +116,8 @@ ResponsiveImageSelector::~ResponsiveImageSelector()
 
 // http://www.whatwg.org/specs/web-apps/current-work/#processing-the-image-candidates
 bool
-ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
+ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet,
+                                                    nsIPrincipal* aTriggeringPrincipal)
 {
   ClearSelectedCandidate();
 
@@ -168,6 +169,8 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
     ResponsiveImageCandidate candidate;
     if (candidate.ConsumeDescriptors(iter, end)) {
       candidate.SetURLSpec(urlStr);
+      candidate.SetTriggeringPrincipal(nsContentUtils::GetAttrTriggeringPrincipal(
+          Content(), urlStr, aTriggeringPrincipal));
       AppendCandidateIfUnique(candidate);
     }
   }
@@ -208,7 +211,8 @@ ResponsiveImageSelector::Document()
 }
 
 void
-ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString)
+ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString,
+                                          nsIPrincipal* aPrincipal)
 {
   ClearSelectedCandidate();
 
@@ -220,6 +224,7 @@ ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString)
   }
 
   mDefaultSourceURL = aURLString;
+  mDefaultSourceTriggeringPrincipal = aPrincipal;
 
   // Add new default to end of list
   MaybeAppendDefaultCandidate();
@@ -292,6 +297,7 @@ ResponsiveImageSelector::MaybeAppendDefaultCandidate()
   ResponsiveImageCandidate defaultCandidate;
   defaultCandidate.SetParameterDefault();
   defaultCandidate.SetURLSpec(mDefaultSourceURL);
+  defaultCandidate.SetTriggeringPrincipal(mDefaultSourceTriggeringPrincipal);
   // We don't use MaybeAppend since we want to keep this even if it can never
   // match, as it may if the source set changes.
   mCandidates.AppendElement(defaultCandidate);
@@ -328,6 +334,17 @@ ResponsiveImageSelector::GetSelectedImageDensity()
   }
 
   return mCandidates[bestIndex].Density(this);
+}
+
+nsIPrincipal*
+ResponsiveImageSelector::GetSelectedImageTriggeringPrincipal()
+{
+  int bestIndex = GetSelectedCandidateIndex();
+  if (bestIndex < 0) {
+    return nullptr;
+  }
+
+  return mCandidates[bestIndex].TriggeringPrincipal();
 }
 
 bool
@@ -458,8 +475,10 @@ ResponsiveImageCandidate::ResponsiveImageCandidate()
 }
 
 ResponsiveImageCandidate::ResponsiveImageCandidate(const nsAString& aURLString,
-                                                   double aDensity)
+                                                   double aDensity,
+                                                   nsIPrincipal* aTriggeringPrincipal)
   : mURLString(aURLString)
+  , mTriggeringPrincipal(aTriggeringPrincipal)
 {
   mType = eCandidateType_Density;
   mValue.mDensity = aDensity;
@@ -470,6 +489,12 @@ void
 ResponsiveImageCandidate::SetURLSpec(const nsAString& aURLString)
 {
   mURLString = aURLString;
+}
+
+void
+ResponsiveImageCandidate::SetTriggeringPrincipal(nsIPrincipal* aPrincipal)
+{
+  mTriggeringPrincipal = aPrincipal;
 }
 
 void
@@ -716,6 +741,12 @@ const nsAString&
 ResponsiveImageCandidate::URLString() const
 {
   return mURLString;
+}
+
+nsIPrincipal*
+ResponsiveImageCandidate::TriggeringPrincipal() const
+{
+  return mTriggeringPrincipal;
 }
 
 double

@@ -17,6 +17,16 @@ namespace dom {
 class CoalescedMouseData final : public CoalescedInputData<WidgetMouseEvent>
 {
 public:
+  CoalescedMouseData()
+  {
+    MOZ_COUNT_CTOR(mozilla::dom::CoalescedMouseData);
+  }
+
+  ~CoalescedMouseData()
+  {
+    MOZ_COUNT_DTOR(mozilla::dom::CoalescedMouseData);
+  }
+
   void Coalesce(const WidgetMouseEvent& aEvent,
                 const ScrollableLayerGuid& aGuid,
                 const uint64_t& aInputBlockId);
