@@ -54,8 +54,6 @@ public:
   NS_DECL_NSICACHEENTRY
   NS_DECL_NSIRUNNABLE
 
-  static uint64_t GetNextId();
-
   CacheEntry(const nsACString& aStorageID, const nsACString& aURI, const nsACString& aEnhanceID,
              bool aUseDisk, bool aSkipSizeCheck, bool aPin);
 
@@ -385,8 +383,6 @@ private:
   int64_t mPredictedDataSize;
   mozilla::TimeStamp mLoadStart;
   uint32_t mUseCount;
-
-  const uint64_t mCacheEntryId;
 };
 
 
