@@ -1518,6 +1518,11 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   int64_t altDataLen = chan->GetAltDataLength();
 
+  uint64_t cacheEntryId = 0;
+  if (isFromCache && mCacheEntry) {
+    chan->GetCacheEntryId(&cacheEntryId);
+  }
+
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
   nsresult rv = NS_OK;
@@ -1528,6 +1533,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           requestHead->Headers(),
                           isFromCache,
                           mCacheEntry ? true : false,
+                          cacheEntryId,
                           fetchCount, expirationTime,
                           cachedCharset, secInfoSerialization,
                           chan->GetSelfAddr(), chan->GetPeerAddr(),

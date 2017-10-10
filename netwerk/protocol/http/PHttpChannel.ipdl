@@ -99,6 +99,7 @@ child:
                        nsHttpHeaderArray   requestHeaders,
                        bool                isFromCache,
                        bool                cacheEntryAvailable,
+                       uint64_t            cacheEntryId,
                        int32_t             cacheFetchCount,
                        uint32_t            cacheExpirationTime,
                        nsCString           cachedCharset,
