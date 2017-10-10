@@ -986,10 +986,12 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
         // If any style invalidation was triggered in our siblings, then we may
         // need to post-traverse them, even if the root wasn't restyled after
         // all.
+        uint32_t existingBits = doc->GetServoRestyleRootDirtyBits();
+        // We need to propagate the existing bits to the parent.
+        parent->SetFlags(existingBits);
         doc->SetServoRestyleRoot(
             parent,
-            doc->GetServoRestyleRootDirtyBits() |
-            ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+            existingBits | ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
         postTraversalRequired = true;
       }
     }
