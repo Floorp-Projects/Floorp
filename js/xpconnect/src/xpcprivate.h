@@ -925,6 +925,9 @@ public:
     JSObject*
     GetExpandoChain(JS::HandleObject target);
 
+    JSObject*
+    DetachExpandoChain(JS::HandleObject target);
+
     bool
     SetExpandoChain(JSContext* cx, JS::HandleObject target, JS::HandleObject chain);
 
