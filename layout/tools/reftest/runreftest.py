@@ -308,7 +308,7 @@ class RefTest(object):
            '5.1' in platform.version() and options.e10s:
             prefs['layers.acceleration.disabled'] = True
 
-        sandbox_whitelist_paths = [SCRIPT_DIRECTORY] + options.sandboxReadWhitelist
+        sandbox_whitelist_paths = options.sandboxReadWhitelist
         if (platform.system() == "Linux" or
             platform.system() in ("Windows", "Microsoft")):
             # Trailing slashes are needed to indicate directories on Linux and Windows
