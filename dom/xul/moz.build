@@ -20,6 +20,7 @@ if CONFIG['MOZ_XUL']:
 
     EXPORTS += [
         'nsIXULDocument.h',
+        'nsXULElement.h',
     ]
 
     UNIFIED_SOURCES += [

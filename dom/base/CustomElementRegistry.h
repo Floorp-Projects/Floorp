@@ -174,7 +174,7 @@ struct CustomElementDefinition
   UniquePtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
 
   // A construction stack. Use nullptr to represent an "already constructed marker".
-  nsTArray<RefPtr<nsGenericHTMLElement>> mConstructionStack;
+  nsTArray<RefPtr<Element>> mConstructionStack;
 
   // The document custom element order.
   uint32_t mDocOrder;

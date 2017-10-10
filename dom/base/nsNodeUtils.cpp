@@ -458,7 +458,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
 
     if (CustomElementRegistry::IsCustomElementEnabled() &&
-        clone->IsHTMLElement()) {
+        (clone->IsHTMLElement() || clone->IsXULElement())) {
       // The cloned node may be a custom element that may require
       // enqueing upgrade reaction.
       Element* cloneElem = clone->AsElement();
