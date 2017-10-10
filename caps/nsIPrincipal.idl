@@ -42,7 +42,7 @@ interface nsIDOMDocument;
 
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
-[ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
+[ref] native PrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
 [ref] native const_OriginAttributes(const mozilla::OriginAttributes);
 
 [scriptable, builtinclass, uuid(f75f502d-79fd-48be-a079-e5a7b8f80c8b)]
@@ -340,5 +340,6 @@ interface nsIExpandedPrincipal : nsISupports
    * Note: this list is not reference counted, it is shared, so
    * should not be changed and should only be used ephemerally.
    */
-  [noscript] readonly attribute PrincipalArray whiteList;
+  [noscript, notxpcom, nostdcall]
+  PrincipalArray WhiteList();
 };

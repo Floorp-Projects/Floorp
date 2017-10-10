@@ -2494,11 +2494,9 @@ nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
   if (basePrin->Is<ExpandedPrincipal>()) {
     auto* expanded = basePrin->As<ExpandedPrincipal>();
 
-    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist;
-    MOZ_ALWAYS_SUCCEEDS(expanded->GetWhiteList(&whitelist));
-    MOZ_ASSERT(whitelist->Length() > 0);
+    MOZ_ASSERT(expanded->WhiteList().Length() > 0);
 
-    return do_AddRef(whitelist->LastElement().get());
+    return do_AddRef(expanded->WhiteList().LastElement().get());
   }
 
   if (!sChromeInContentPrefCached) {
