@@ -8,17 +8,15 @@
 #include "GLContextProvider.h"
 #include "nsUnicharUtils.h"
 #include "prenv.h"
+#include "nsExceptionHandler.h"
 #include "nsHashKeys.h"
+#include "nsICrashReporter.h"
 #include "nsVersionComparator.h"
 #include "AndroidBridge.h"
 #include "nsIWindowWatcher.h"
 #include "nsServiceManagerUtils.h"
 
-#if defined(MOZ_CRASHREPORTER)
-#include "nsExceptionHandler.h"
-#include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-#endif
 
 namespace mozilla {
 namespace widget {
@@ -350,7 +348,6 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 void
 GfxInfo::AddCrashReportAnnotations()
 {
-#if defined(MOZ_CRASHREPORTER)
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
                                      mGLStrings->Vendor());
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
@@ -364,7 +361,6 @@ GfxInfo::AddCrashReportAnnotations()
   note.AppendPrintf("AdapterDescription: '%s'\n", mAdapterDescription.get());
 
   CrashReporter::AppendAppNotesToCrashReport(note);
-#endif
 }
 
 const nsTArray<GfxDriverInfo>&
