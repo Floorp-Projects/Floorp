@@ -40,9 +40,9 @@ interface Element : Node {
   DOMString? getAttribute(DOMString name);
   [Pure]
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
-  [CEReactions, Throws]
+  [CEReactions, NeedsSubjectPrincipal, Throws]
   void setAttribute(DOMString name, DOMString value);
-  [CEReactions, Throws]
+  [CEReactions, NeedsSubjectPrincipal, Throws]
   void setAttributeNS(DOMString? namespace, DOMString name, DOMString value);
   [CEReactions, Throws]
   void removeAttribute(DOMString name);

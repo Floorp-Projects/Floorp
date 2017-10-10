@@ -691,12 +691,7 @@ public:
   already_AddRefed<mozilla::dom::NodeInfo>
   GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
-  MOZ_ALWAYS_INLINE  // Avoid a crashy hook from Avast 10 Beta (Bug 1058131)
-  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
-  }
+  using nsIContent::SetAttr;
 
   /**
    * Helper for SetAttr/SetParsedAttr. This method will return true if aNotify
@@ -758,7 +753,8 @@ public:
   nsresult SetSingleClassFromParser(nsAtom* aSingleClassName);
 
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
-                           const nsAString& aValue, bool aNotify) override;
+                           const nsAString& aValue, nsIPrincipal* aSubjectPrincipal,
+                           bool aNotify) override;
   // aParsedValue receives the old value of the attribute. That's useful if
   // either the input or output value of aParsedValue is StoresOwnData.
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
@@ -929,11 +925,18 @@ public:
                       const nsAString& aLocalName,
                       nsAString& aReturn);
   void SetAttribute(const nsAString& aName, const nsAString& aValue,
-                    ErrorResult& aError);
+                    nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError);
   void SetAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName,
                       const nsAString& aValue,
+                      nsIPrincipal* aTriggeringPrincipal,
                       ErrorResult& aError);
+  void SetAttribute(const nsAString& aName, const nsAString& aValue,
+                    ErrorResult& aError)
+  {
+    SetAttribute(aName, aValue, nullptr, aError);
+  }
+
   void RemoveAttribute(const nsAString& aName,
                        ErrorResult& aError);
   void RemoveAttributeNS(const nsAString& aNamespaceURI,
@@ -1399,6 +1402,11 @@ public:
     aError = SetAttr(kNameSpaceID_None, aAttr, aValue, true);
   }
 
+  void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  {
+    aError = nsIContent::SetAttr(kNameSpaceID_None, aAttr, aValue, &aTriggeringPrincipal, true);
+  }
+
   /**
    * Set a content attribute via a reflecting nullable string IDL
    * attribute (e.g. a CORS attribute).  If DOMStringIsNull(aValue),
@@ -1478,6 +1486,14 @@ protected:
    * @param aParsedValue  parsed new value of attribute. Replaced by the
    *                      old value of the attribute. This old value is only
    *                      useful if either it or the new value is StoresOwnData.
+   * @param aMaybeScriptedPrincipal
+   *                      the principal of the scripted caller responsible for
+   *                      setting the attribute, or null if no scripted caller
+   *                      can be determined. A null value here does not
+   *                      guarantee that there is no scripted caller, but a
+   *                      non-null value does guarantee that a scripted caller
+   *                      with the given principal is directly responsible for
+   *                      the attribute change.
    * @param aModType      nsIDOMMutationEvent::MODIFICATION or ADDITION.  Only
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
@@ -1490,6 +1506,7 @@ protected:
                             nsAtom* aPrefix,
                             const nsAttrValue* aOldValue,
                             nsAttrValue& aParsedValue,
+                            nsIPrincipal* aMaybeScriptedPrincipal,
                             uint8_t aModType,
                             bool aFireMutation,
                             bool aNotify,
@@ -1579,13 +1596,21 @@ protected:
    *        the attr was not previously set. This argument may not have the
    *        correct value for SVG elements, or other cases in which the
    *        attribute value doesn't store its own data
+   * @param aMaybeScriptedPrincipal the principal of the scripted caller
+   *        responsible for setting the attribute, or null if no scripted caller
+   *        can be determined, or the attribute is being unset. A null value
+   *        here does not guarantee that there is no scripted caller, but a
+   *        non-null value does guarantee that a scripted caller with the given
+   *        principal is directly responsible for the attribute change.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue, bool aNotify)
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
+                                bool aNotify)
   {
     return NS_OK;
   }
@@ -1968,7 +1993,7 @@ NS_IMETHOD SetAttribute(const nsAString& name,                                \
                         const nsAString& value) override                      \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  Element::SetAttribute(name, value, rv);                                     \
+  Element::SetAttribute(name, value, nullptr, rv);                            \
   return rv.StealNSResult();                                                  \
 }                                                                             \
 using Element::HasAttribute;                                                  \

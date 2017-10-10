@@ -435,10 +435,13 @@ public:
 
   MediaError* GetError() const;
 
-  // XPCOM GetSrc() is OK
-  void SetSrc(const nsAString& aSrc, ErrorResult& aRv)
+  void GetSrc(nsString& aSrc, nsIPrincipal&)
   {
-    SetHTMLAttr(nsGkAtoms::src, aSrc, aRv);
+    GetSrc(aSrc);
+  }
+  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aRv);
   }
 
   // XPCOM GetCurrentSrc() is OK
@@ -1332,6 +1335,7 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 bool aNotify) override;
   virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
@@ -1362,6 +1366,9 @@ protected:
   // Holds a reference to the DOM wrapper for the MediaStream that has been
   // set in the src attribute.
   RefPtr<DOMMediaStream> mSrcAttrStream;
+
+  // Holds the triggering principal for the src attribute.
+  nsCOMPtr<nsIPrincipal> mSrcAttrTriggeringPrincipal;
 
   // Holds a reference to the DOM wrapper for the MediaStream that we're
   // actually playing.
@@ -1473,6 +1480,9 @@ protected:
   // This is always the original URL we're trying to load --- before
   // redirects etc.
   nsCOMPtr<nsIURI> mLoadingSrc;
+
+  // The triggering principal for the current source.
+  nsCOMPtr<nsIPrincipal> mLoadingSrcTriggeringPrincipal;
 
   // Stores the current preload action for this element. Initially set to
   // PRELOAD_UNDEFINED, its value is changed by calling
