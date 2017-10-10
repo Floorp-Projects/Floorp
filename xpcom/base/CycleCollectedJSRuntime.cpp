@@ -81,6 +81,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
+#include "nsExceptionHandler.h"
 #include "nsJSUtils.h"
 #include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
@@ -88,10 +89,6 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkerPayload.h"
-#endif
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
 #endif
 
 #include "nsIException.h"
@@ -545,10 +542,9 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   JS_SetExternalStringSizeofCallback(aCx, SizeofExternalStringCallback);
   JS::SetBuildIdOp(aCx, GetBuildId);
   JS::SetWarningReporter(aCx, MozCrashWarningReporter);
-#ifdef MOZ_CRASHREPORTER
-    js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
-            CrashReporter::AnnotateOOMAllocationSize);
-#endif
+
+  js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
+    CrashReporter::AnnotateOOMAllocationSize);
 
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth
@@ -1447,7 +1443,6 @@ CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
                                                    OOMState aNewState)
 {
   *aStatePtr = aNewState;
-#ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(aStatePtr == &mOutOfMemoryState
                                      ? NS_LITERAL_CSTRING("JSOutOfMemory")
                                      : NS_LITERAL_CSTRING("JSLargeAllocationFailure"),
@@ -1456,7 +1451,6 @@ CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
                                      : aNewState == OOMState::Reported
                                      ? NS_LITERAL_CSTRING("Reported")
                                      : NS_LITERAL_CSTRING("Recovered"));
-#endif
 }
 
 void
@@ -1469,14 +1463,12 @@ CycleCollectedJSRuntime::OnGC(JSContext* aContext,
       mZonesWaitingForGC.Clear();
       break;
     case JSGC_END: {
-#ifdef MOZ_CRASHREPORTER
       if (mOutOfMemoryState == OOMState::Reported) {
         AnnotateAndSetOutOfMemory(&mOutOfMemoryState, OOMState::Recovered);
       }
       if (mLargeAllocationFailureState == OOMState::Reported) {
         AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Recovered);
       }
-#endif
 
       // Do any deferred finalization of native objects. Normally we do this
       // incrementally for an incremental GC, and immediately for a
