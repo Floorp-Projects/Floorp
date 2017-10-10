@@ -15,7 +15,7 @@ const {
   pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/wait.js");
+const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["element"];
 
@@ -238,8 +238,9 @@ element.Store = class {
  *     element is not found.
  */
 element.find = function(container, strategy, selector, opts = {}) {
-  opts.all = !!opts.all;
-  opts.timeout = opts.timeout || 0;
+  let all = !!opts.all;
+  let timeout = opts.timeout || 0;
+  let startNode = opts.startNode;
 
   let searchFn;
   if (opts.all) {
@@ -249,14 +250,15 @@ element.find = function(container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = wait.until((resolve, reject) => {
-      let res = find_(container, strategy, selector, searchFn, opts);
+    let findElements = new PollPromise((resolve, reject) => {
+      let res = find_(container, strategy, selector, searchFn,
+          {all, startNode});
       if (res.length > 0) {
         resolve(Array.from(res));
       } else {
         reject([]);
       }
-    }, opts.timeout);
+    }, {timeout});
 
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
@@ -284,13 +286,11 @@ element.find = function(container, strategy, selector, opts = {}) {
   });
 };
 
-function find_(container, strategy, selector, searchFn, opts) {
+function find_(container, strategy, selector, searchFn,
+    {startNode = null, all = false} = {}) {
   let rootNode = container.shadowRoot || container.frame.document;
-  let startNode;
 
-  if (opts.startNode) {
-    startNode = opts.startNode;
-  } else {
+  if (!startNode) {
     switch (strategy) {
       // For anonymous nodes the start node needs to be of type
       // DOMElement, which will refer to :root in case of a DOMDocument.
@@ -315,7 +315,7 @@ function find_(container, strategy, selector, searchFn, opts) {
   }
 
   if (res) {
-    if (opts.all) {
+    if (all) {
       return res;
     }
     return [res];

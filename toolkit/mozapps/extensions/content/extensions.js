@@ -6,7 +6,7 @@
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
 /* globals XMLStylesheetProcessingInstruction */
-/* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView */
+/* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView, gBrowser */
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -3651,15 +3651,15 @@ var gDetailView = {
         whenViewLoaded(async () => {
           await this._addon.startupPromise;
 
-          let browser = await this.createOptionsBrowser(rows);
+          const browserContainer = await this.createOptionsBrowser(rows);
 
           // Make sure the browser is unloaded as soon as we change views,
           // rather than waiting for the next detail view to load.
           document.addEventListener("ViewChanged", function() {
-            browser.remove();
+            browserContainer.remove();
           }, {once: true});
 
-          finish(browser);
+          finish(browserContainer);
         });
 
         if (aCallback)
@@ -3734,6 +3734,9 @@ var gDetailView = {
   },
 
   async createOptionsBrowser(parentNode) {
+    let stack = document.createElement("stack");
+    stack.setAttribute("id", "addon-options-prompts-stack");
+
     let browser = document.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
@@ -3762,7 +3765,8 @@ var gDetailView = {
       readyPromise = promiseEvent("load", browser, true);
     }
 
-    parentNode.appendChild(browser);
+    stack.appendChild(browser);
+    parentNode.appendChild(stack);
 
     // Force bindings to apply synchronously.
     browser.clientTop;
@@ -3776,7 +3780,7 @@ var gDetailView = {
           if (name === "Extension:BrowserResized")
             browser.style.height = `${data.height}px`;
           else if (name === "Extension:BrowserContentLoaded")
-            resolve(browser);
+            resolve(stack);
         },
       };
 
@@ -4130,5 +4134,20 @@ var gDragDrop = {
     }
 
     aEvent.preventDefault();
+  }
+};
+
+// Stub tabbrowser implementation for use by the tab-modal alert code
+// when an alert/prompt/confirm method is called in a WebExtensions options_ui page
+// (See Bug 1385548 for rationale).
+var gBrowser = {
+  getTabModalPromptBox(browser) {
+    const parentWindow = document.docShell.chromeEventHandler.ownerGlobal;
+
+    if (parentWindow.gBrowser) {
+      return parentWindow.gBrowser.getTabModalPromptBox(browser);
+    }
+
+    return null;
   }
 };

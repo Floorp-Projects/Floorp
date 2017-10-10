@@ -644,23 +644,53 @@ struct ExtentTreeBoundsTrait : public ExtentTreeTrait
 /******************************************************************************/
 /*
  * Radix tree data structures.
+ *
+ * The number of bits passed to the template is the number of significant bits
+ * in an address to do a radix lookup with.
+ *
+ * An address is looked up by splitting it in kBitsPerLevel bit chunks, except
+ * the most significant bits, where the bit chunk is kBitsAtLevel1 which can be
+ * different if Bits is not a multiple of kBitsPerLevel.
+ *
+ * With e.g. sizeof(void*)=4, Bits=16 and kBitsPerLevel=8, an address is split
+ * like the following:
+ * 0x12345678 -> mRoot[0x12][0x34]
  */
 
-/*
- * Size of each radix tree node (must be a power of 2).  This impacts tree
- * depth.
- */
+template <size_t Bits>
+class AddressRadixTree {
+ // Size of each radix tree node (as a power of 2).
+ // This impacts tree depth.
 #if (SIZEOF_PTR == 4)
-#  define MALLOC_RTREE_NODESIZE (1U << 14)
+  static const size_t kNodeSize2Pow = 14;
 #else
-#  define MALLOC_RTREE_NODESIZE CACHELINE
+  static const size_t kNodeSize2Pow = CACHELINE_2POW;
 #endif
+  static const size_t kBitsPerLevel = kNodeSize2Pow - SIZEOF_PTR_2POW;
+  static const size_t kBitsAtLevel1 =
+    (Bits % kBitsPerLevel) ? Bits % kBitsPerLevel : kBitsPerLevel;
+  static const size_t kHeight = (Bits + kBitsPerLevel - 1) / kBitsPerLevel;
+  static_assert(kBitsAtLevel1 + (kHeight - 1) * kBitsPerLevel == Bits,
+                "AddressRadixTree parameters don't work out");
 
-struct malloc_rtree_t {
-	malloc_spinlock_t	lock;
-	void			**root;
-	unsigned		height;
-	unsigned		level2bits[1]; /* Dynamically sized. */
+  malloc_spinlock_t mLock;
+  void** mRoot;
+
+public:
+  bool Init();
+
+  inline void* Get(void* aAddr);
+
+  // Returns whether the value was properly set
+  inline bool Set(void* aAddr, void* aValue);
+
+  inline bool Unset(void* aAddr)
+  {
+    return Set(aAddr, nullptr);
+  }
+
+private:
+  inline void** GetSlot(void* aAddr, bool aCreate = false);
 };
 
 /******************************************************************************/
@@ -1039,7 +1069,7 @@ struct ArenaTreeTrait
  * Chunks.
  */
 
-static malloc_rtree_t *chunk_rtree;
+static AddressRadixTree<(SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
 
 /* Protects chunk-related data structures. */
 static malloc_mutex_t	chunks_mtx;
@@ -1719,145 +1749,101 @@ pages_copy(void *dest, const void *src, size_t n)
 }
 #endif
 
-static inline malloc_rtree_t *
-malloc_rtree_new(unsigned bits)
+template <size_t Bits>
+bool
+AddressRadixTree<Bits>::Init()
 {
-	malloc_rtree_t *ret;
-	unsigned bits_per_level, height, i;
+  malloc_spin_init(&mLock);
 
-	bits_per_level = ffs(pow2_ceil((MALLOC_RTREE_NODESIZE /
-	    sizeof(void *)))) - 1;
-	height = bits / bits_per_level;
-	if (height * bits_per_level != bits)
-		height++;
-	MOZ_DIAGNOSTIC_ASSERT(height * bits_per_level >= bits);
-
-	ret = (malloc_rtree_t*)base_calloc(1, sizeof(malloc_rtree_t) +
-	    (sizeof(unsigned) * (height - 1)));
-	if (!ret)
-		return nullptr;
-
-	malloc_spin_init(&ret->lock);
-	ret->height = height;
-	if (bits_per_level * height > bits)
-		ret->level2bits[0] = bits % bits_per_level;
-	else
-		ret->level2bits[0] = bits_per_level;
-	for (i = 1; i < height; i++)
-		ret->level2bits[i] = bits_per_level;
-
-	ret->root = (void**)base_calloc(1, sizeof(void *) << ret->level2bits[0]);
-	if (!ret->root) {
-		/*
-		 * We leak the rtree here, since there's no generic base
-		 * deallocation.
-		 */
-		return nullptr;
-	}
-
-	return (ret);
+  mRoot = (void**)base_calloc(1 << kBitsAtLevel1, sizeof(void*));
+  return mRoot;
 }
 
-#define	MALLOC_RTREE_GET_GENERATE(f)					\
-/* The least significant bits of the key are ignored. */		\
-static inline void *							\
-f(malloc_rtree_t *rtree, uintptr_t key)					\
-{									\
-	void *ret;							\
-	uintptr_t subkey;						\
-	unsigned i, lshift, height, bits;				\
-	void **node, **child;						\
-									\
-	MALLOC_RTREE_LOCK(&rtree->lock);				\
-	for (i = lshift = 0, height = rtree->height, node = rtree->root;\
-	    i < height - 1;						\
-	    i++, lshift += bits, node = child) {			\
-		bits = rtree->level2bits[i];				\
-		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);	\
-		child = (void**)node[subkey];				\
-		if (!child) {						\
-			MALLOC_RTREE_UNLOCK(&rtree->lock);		\
-			return nullptr;					\
-		}							\
-	}								\
-									\
-	/*								\
-	 * node is a leaf, so it contains values rather than node	\
-	 * pointers.							\
-	 */								\
-	bits = rtree->level2bits[i];					\
-	subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);		\
-	ret = node[subkey];						\
-	MALLOC_RTREE_UNLOCK(&rtree->lock);				\
-									\
-	MALLOC_RTREE_GET_VALIDATE					\
-	return (ret);							\
+template <size_t Bits>
+void**
+AddressRadixTree<Bits>::GetSlot(void* aKey, bool aCreate)
+{
+  uintptr_t key = reinterpret_cast<uintptr_t>(aKey);
+  uintptr_t subkey;
+  unsigned i, lshift, height, bits;
+  void** node;
+  void** child;
+
+  for (i = lshift = 0, height = kHeight, node = mRoot;
+       i < height - 1;
+       i++, lshift += bits, node = child) {
+    bits = i ? kBitsPerLevel : kBitsAtLevel1;
+    subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
+    child = (void**) node[subkey];
+    if (!child && aCreate) {
+      child = (void**) base_calloc(1 << kBitsPerLevel, sizeof(void*));
+      if (child) {
+        node[subkey] = child;
+      }
+    }
+    if (!child) {
+      return nullptr;
+    }
+  }
+
+  /*
+   * node is a leaf, so it contains values rather than node
+   * pointers.
+   */
+  bits = i ? kBitsPerLevel : kBitsAtLevel1;
+  subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
+  return &node[subkey];
 }
 
-#ifdef MOZ_DEBUG
-#  define MALLOC_RTREE_LOCK(l)		malloc_spin_lock(l)
-#  define MALLOC_RTREE_UNLOCK(l)	malloc_spin_unlock(l)
-#  define MALLOC_RTREE_GET_VALIDATE
-MALLOC_RTREE_GET_GENERATE(malloc_rtree_get_locked)
-#  undef MALLOC_RTREE_LOCK
-#  undef MALLOC_RTREE_UNLOCK
-#  undef MALLOC_RTREE_GET_VALIDATE
-#endif
-
-#define	MALLOC_RTREE_LOCK(l)
-#define	MALLOC_RTREE_UNLOCK(l)
-#ifdef MOZ_DEBUG
-   /*
-    * Suppose that it were possible for a jemalloc-allocated chunk to be
-    * munmap()ped, followed by a different allocator in another thread re-using
-    * overlapping virtual memory, all without invalidating the cached rtree
-    * value.  The result would be a false positive (the rtree would claim that
-    * jemalloc owns memory that it had actually discarded).  I don't think this
-    * scenario is possible, but the following assertion is a prudent sanity
-    * check.
-    */
-#  define MALLOC_RTREE_GET_VALIDATE					\
-	MOZ_ASSERT(malloc_rtree_get_locked(rtree, key) == ret);
-#else
-#  define MALLOC_RTREE_GET_VALIDATE
-#endif
-MALLOC_RTREE_GET_GENERATE(malloc_rtree_get)
-#undef MALLOC_RTREE_LOCK
-#undef MALLOC_RTREE_UNLOCK
-#undef MALLOC_RTREE_GET_VALIDATE
-
-static inline bool
-malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
+template <size_t Bits>
+void*
+AddressRadixTree<Bits>::Get(void* aKey)
 {
-	uintptr_t subkey;
-	unsigned i, lshift, height, bits;
-	void **node, **child;
+  void* ret = nullptr;
 
-	malloc_spin_lock(&rtree->lock);
-	for (i = lshift = 0, height = rtree->height, node = rtree->root;
-	    i < height - 1;
-	    i++, lshift += bits, node = child) {
-		bits = rtree->level2bits[i];
-		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-		child = (void**)node[subkey];
-		if (!child) {
-			child = (void**)base_calloc(1, sizeof(void *) <<
-			    rtree->level2bits[i+1]);
-			if (!child) {
-				malloc_spin_unlock(&rtree->lock);
-				return (true);
-			}
-			node[subkey] = child;
-		}
-	}
+  void** slot = GetSlot(aKey);
 
-	/* node is a leaf, so it contains values rather than node pointers. */
-	bits = rtree->level2bits[i];
-	subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-	node[subkey] = val;
-	malloc_spin_unlock(&rtree->lock);
+  if (slot) {
+    ret = *slot;
+  }
+#ifdef MOZ_DEBUG
+  malloc_spin_lock(&mlock);
+  /*
+   * Suppose that it were possible for a jemalloc-allocated chunk to be
+   * munmap()ped, followed by a different allocator in another thread re-using
+   * overlapping virtual memory, all without invalidating the cached rtree
+   * value.  The result would be a false positive (the rtree would claim that
+   * jemalloc owns memory that it had actually discarded).  I don't think this
+   * scenario is possible, but the following assertion is a prudent sanity
+   * check.
+   */
+  if (!slot) {
+    // In case a slot has been created in the meantime.
+    slot = GetSlot(aKey);
+  }
+  if (slot) {
+    // The malloc_spin_lock call above should act as a memory barrier, forcing
+    // the compiler to emit a new read instruction for *slot.
+    MOZ_ASSERT(ret == *slot);
+  } else {
+    MOZ_ASSERT(ret == nullptr);
+  }
+  malloc_spin_unlock(&mlock);
+#endif
+  return ret;
+}
 
-	return (false);
+template <size_t Bits>
+bool
+AddressRadixTree<Bits>::Set(void* aKey, void* aValue)
+{
+  malloc_spin_lock(&mLock);
+  void** slot = GetSlot(aKey, /* create */ true);
+  if (slot) {
+    *slot = aValue;
+  }
+  malloc_spin_unlock(&mLock);
+  return slot;
 }
 
 /* pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
@@ -2148,7 +2134,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
 RETURN:
 
 	if (ret && base == false) {
-		if (malloc_rtree_set(chunk_rtree, (uintptr_t)ret, ret)) {
+		if (!gChunkRTree.Set(ret, ret)) {
 			chunk_dealloc(ret, size, UNKNOWN_CHUNK);
 			return nullptr;
 		}
@@ -2280,7 +2266,7 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 	MOZ_ASSERT(size != 0);
 	MOZ_ASSERT((size & chunksize_mask) == 0);
 
-	malloc_rtree_set(chunk_rtree, (uintptr_t)chunk, nullptr);
+	gChunkRTree.Unset(chunk);
 
 	if (CAN_RECYCLE(size)) {
 		size_t recycled_so_far = load_acquire_z(&recycled_size);
@@ -3482,7 +3468,7 @@ isalloc_validate(const void* ptr)
     return 0;
   }
 
-  if (!malloc_rtree_get(chunk_rtree, (uintptr_t)chunk)) {
+  if (!gChunkRTree.Get(chunk)) {
     return 0;
   }
 
@@ -3552,8 +3538,8 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
     return;
   }
 
-  // Look for huge allocations before looking for |chunk| in chunk_rtree.
-  // This is necessary because |chunk| won't be in chunk_rtree if it's
+  // Look for huge allocations before looking for |chunk| in gChunkRTree.
+  // This is necessary because |chunk| won't be in gChunkRTree if it's
   // the second or subsequent chunk in a huge allocation.
   extent_node_t* node;
   extent_node_t key;
@@ -3570,7 +3556,7 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   }
 
   // It's not a huge allocation. Check if we have a known chunk.
-  if (!malloc_rtree_get(chunk_rtree, (uintptr_t)chunk)) {
+  if (!gChunkRTree.Get(chunk)) {
     *aInfo = { TagUnknown, nullptr, 0 };
     return;
   }
@@ -4510,8 +4496,7 @@ MALLOC_OUT:
    */
   thread_arena.set(gMainArena);
 
-  chunk_rtree = malloc_rtree_new((SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT);
-  if (!chunk_rtree) {
+  if (!gChunkRTree.Init()) {
     return true;
   }
 

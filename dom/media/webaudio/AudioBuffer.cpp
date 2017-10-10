@@ -222,7 +222,6 @@ AudioBuffer::SetSharedChannels(
     mSharedChannels.mChannelData[i] = buffer->GetData(i);
   }
   mSharedChannels.mBuffer = buffer.forget();
-  mSharedChannels.mVolume = 1.0f;
   mSharedChannels.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
@@ -316,8 +315,7 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
     mJSChannels[i] = array;
   }
 
-  mSharedChannels.mBuffer = nullptr;
-  mSharedChannels.mChannelData.Clear();
+  mSharedChannels.SetNull(Length());
 
   return true;
 }
