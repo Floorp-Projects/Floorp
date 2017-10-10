@@ -26,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1370858
  * Test that change and input events are (not) fired for date/time inputs.
  **/
 
+const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+
 var inputTypes = ["time", "date"];
 var changeEvents = [0, 0];
 var inputEvents = [0, 0];
@@ -73,12 +75,15 @@ function test() {
     is(changeEvents[i], 2, "Change event should be dispatched (2).");
     is(inputEvents[i], 2, "Input event should be dispatched (2).");
 
-    // Test that change and input events are fired when clearing the value using
-    // the reset button.
-    synthesizeMouse(input, resetButton_X, resetButton_Y, {});
-    is(input.value, "", "Check that value was set correctly (3).");
-    is(changeEvents[i], 3, "Change event should be dispatched (3).");
-    is(inputEvents[i], 3, "Input event should be dispatched (3).");
+    // Reset button is desktop only.
+    if (isDesktop) {
+      // Test that change and input events are fired when clearing the value using
+      // the reset button.
+      synthesizeMouse(input, resetButton_X, resetButton_Y, {});
+      is(input.value, "", "Check that value was set correctly (3).");
+      is(changeEvents[i], 3, "Change event should be dispatched (3).");
+      is(inputEvents[i], 3, "Input event should be dispatched (3).");
+    }
   }
 }
 
