@@ -444,7 +444,7 @@ nsFilterInstance::BuildSourcePaints(imgDrawingParams& aImgParams)
 }
 
 void
-nsFilterInstance::BuildSourceImage(imgDrawingParams& aImgParams)
+nsFilterInstance::BuildSourceImage(DrawTarget *aDest, imgDrawingParams& aImgParams)
 {
   MOZ_ASSERT(mTargetFrame);
 
@@ -454,8 +454,7 @@ nsFilterInstance::BuildSourceImage(imgDrawingParams& aImgParams)
   }
 
   RefPtr<DrawTarget> offscreenDT =
-    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      neededRect.Size(), SurfaceFormat::B8G8R8A8);
+    aDest->CreateSimilarDrawTarget(neededRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!offscreenDT || !offscreenDT->IsValid()) {
     return;
   }
@@ -513,7 +512,7 @@ nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams)
 
   ComputeNeededBoxes();
 
-  BuildSourceImage(aImgParams);
+  BuildSourceImage(aCtx->GetDrawTarget(), aImgParams);
   BuildSourcePaints(aImgParams);
 
   FilterSupport::RenderFilterDescription(
