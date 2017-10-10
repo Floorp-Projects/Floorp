@@ -224,7 +224,6 @@ public:
   // trailingws before {aInOutParent,aInOutOffset} needs to be removed.
   nsresult InsertText(const nsAString& aStringToInsert,
                       nsCOMPtr<nsINode>* aInOutNode,
-                      nsIContent* aChildAtOffset,
                       int32_t* aInOutOffset,
                       nsIDocument* aDoc);
 

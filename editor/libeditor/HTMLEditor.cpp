@@ -3118,7 +3118,6 @@ HTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData,
 nsresult
 HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
                            nsCOMPtr<nsINode>* aInOutNode,
-                           nsIContent* aChildAtOffset,
                            int32_t* aInOutOffset,
                            nsIDocument* aDoc)
 {
@@ -3127,8 +3126,8 @@ HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode, aChildAtOffset,
-                                    aInOutOffset, aDoc);
+  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode, aInOutOffset,
+                                    aDoc);
 }
 
 void

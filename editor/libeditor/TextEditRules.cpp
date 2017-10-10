@@ -726,7 +726,6 @@ TextEditRules::WillInsertText(EditAction aAction,
   // get the (collapsed) selection location
   NS_ENSURE_STATE(aSelection->GetRangeAt(0));
   nsCOMPtr<nsINode> selNode = aSelection->GetRangeAt(0)->GetStartContainer();
-  nsIContent* selChild = aSelection->GetRangeAt(0)->GetChildAtStartOffset();
   int32_t selOffset = aSelection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_STATE(selNode);
 
@@ -754,7 +753,7 @@ TextEditRules::WillInsertText(EditAction aAction,
       selOffset = IMESelectionOffset;
     }
     rv = mTextEditor->InsertTextImpl(*outString, address_of(selNode),
-                                     selChild, &selOffset, doc);
+                                     &selOffset, doc);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // aAction == EditAction::insertText; find where we are
@@ -766,7 +765,7 @@ TextEditRules::WillInsertText(EditAction aAction,
     AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
 
     rv = mTextEditor->InsertTextImpl(*outString, address_of(curNode),
-                                     selChild, &curOffset, doc);
+                                     &curOffset, doc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (curNode) {
