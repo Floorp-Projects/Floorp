@@ -226,7 +226,7 @@ pub struct RenderTaskData {
 #[derive(Debug)]
 pub enum RenderTaskKind {
     Alpha(AlphaRenderTask),
-    CachePrimitive(PrimitiveIndex),
+    Picture(PrimitiveIndex),
     BoxShadow(PrimitiveIndex),
     CacheMask(CacheMaskTask),
     VerticalBlur(DeviceIntLength),
@@ -269,12 +269,12 @@ impl RenderTask {
         Self::new_alpha_batch(rect.origin, location, frame_output_pipeline_id)
     }
 
-    pub fn new_prim_cache(size: DeviceIntSize, prim_index: PrimitiveIndex) -> RenderTask {
+    pub fn new_picture(size: DeviceIntSize, prim_index: PrimitiveIndex) -> RenderTask {
         RenderTask {
             cache_key: None,
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, size),
-            kind: RenderTaskKind::CachePrimitive(prim_index),
+            kind: RenderTaskKind::Picture(prim_index),
         }
     }
 
@@ -329,7 +329,10 @@ impl RenderTask {
                 }
 
                 match clip_info.bounds.inner {
-                    Some(ref inner) if !inner.device_rect.is_empty() => {
+                    // Inner rects aren't valid if the item is not axis-aligned, which can
+                    // be determined by the apply_rectangles field. This is mostly a band-aid
+                    // until we have better handling of inner rectangles for transformed clips.
+                    Some(ref inner) if !work_item.apply_rectangles && !inner.device_rect.is_empty() => {
                         inner_rect = inner_rect.and_then(|r| r.intersection(&inner.device_rect));
                         !inner.device_rect.contains_rect(&task_rect)
                     }
@@ -423,7 +426,7 @@ impl RenderTask {
     pub fn as_alpha_batch_mut<'a>(&'a mut self) -> &'a mut AlphaRenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref mut task) => task,
-            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::Picture(..) |
             RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
@@ -436,7 +439,7 @@ impl RenderTask {
     pub fn as_alpha_batch<'a>(&'a self) -> &'a AlphaRenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref task) => task,
-            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::Picture(..) |
             RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
@@ -478,7 +481,7 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::CachePrimitive(..) | RenderTaskKind::BoxShadow(..) => {
+            RenderTaskKind::Picture(..) | RenderTaskKind::BoxShadow(..) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -580,7 +583,7 @@ impl RenderTask {
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
             RenderTaskKind::Alpha(..) |
-            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::Picture(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) => RenderTargetKind::Color,
@@ -604,7 +607,7 @@ impl RenderTask {
     pub fn is_shared(&self) -> bool {
         match self.kind {
             RenderTaskKind::Alpha(..) |
-            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::Picture(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) => false,

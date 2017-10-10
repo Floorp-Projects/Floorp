@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(test)]
-use api::{ColorF, FontRenderMode, IdNamespace, LayoutPoint, SubpixelDirection};
+use api::{ColorF, IdNamespace, LayoutPoint};
 use api::{DevicePoint, DeviceUintSize, FontInstance};
-use api::{FontKey, FontTemplate};
-use api::{GlyphDimensions, GlyphKey};
+use api::{FontKey, FontTemplate, FontRenderMode, ColorU};
+use api::{GlyphDimensions, GlyphKey, SubpixelDirection};
 use api::{ImageData, ImageDescriptor, ImageFormat};
 #[cfg(test)]
 use app_units::Au;
@@ -144,6 +144,29 @@ impl GlyphRasterizer {
         self.fonts_to_remove.push(font_key);
     }
 
+    pub fn prepare_font(&self, font: &mut FontInstance) {
+        // In alpha/mono mode, the color of the font is irrelevant.
+        // Forcing it to black in those cases saves rasterizing glyphs
+        // of different colors when not needed.
+        match font.render_mode {
+            FontRenderMode::Mono | FontRenderMode::Bitmap => {
+                font.color = ColorU::new(255, 255, 255, 255);
+                // Subpixel positioning is disabled in mono and bitmap modes.
+                font.subpx_dir = SubpixelDirection::None;
+            }
+            FontRenderMode::Alpha => {
+                font.color = ColorU::new(255, 255, 255, 255);
+            }
+            FontRenderMode::Subpixel => {
+                // In subpixel mode, we only actually need the color if preblending
+                // is used in the font backend.
+                if !FontContext::has_gamma_correct_subpixel_aa() {
+                    font.color = ColorU::new(255, 255, 255, 255);
+                }
+            }
+        }
+    }
+
     pub fn request_glyphs(
         &mut self,
         glyph_cache: &mut GlyphCache,
@@ -183,7 +206,7 @@ impl GlyphRasterizer {
                                 },
                                 TextureFilter::Linear,
                                 ImageData::Raw(glyph_info.glyph_bytes.clone()),
-                                [glyph_info.offset.x, glyph_info.offset.y],
+                                [glyph_info.offset.x, glyph_info.offset.y, glyph_info.scale],
                                 None,
                                 gpu_cache,
                             );
@@ -246,10 +269,10 @@ impl GlyphRasterizer {
             .get_glyph_dimensions(font, glyph_key)
     }
 
-    pub fn is_bitmap_font(&self, font_key: FontKey) -> bool {
+    pub fn is_bitmap_font(&self, font: &FontInstance) -> bool {
         self.font_contexts
             .lock_shared_context()
-            .is_bitmap_font(font_key)
+            .is_bitmap_font(font)
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
@@ -312,7 +335,7 @@ impl GlyphRasterizer {
                         },
                         TextureFilter::Linear,
                         ImageData::Raw(glyph_bytes.clone()),
-                        [glyph.left, glyph.top],
+                        [glyph.left, glyph.top, glyph.scale],
                         None,
                         gpu_cache,
                     );
@@ -321,6 +344,7 @@ impl GlyphRasterizer {
                         glyph_bytes,
                         size: DeviceUintSize::new(glyph.width, glyph.height),
                         offset: DevicePoint::new(glyph.left, glyph.top),
+                        scale: glyph.scale,
                     })
                 } else {
                     None

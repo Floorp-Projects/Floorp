@@ -13,6 +13,7 @@ pub struct CachedGlyphInfo {
     pub glyph_bytes: Arc<Vec<u8>>,
     pub size: DeviceUintSize,
     pub offset: DevicePoint,
+    pub scale: f32,
 }
 
 pub type GlyphKeyCache = ResourceClassCache<GlyphKey, Option<CachedGlyphInfo>>;
