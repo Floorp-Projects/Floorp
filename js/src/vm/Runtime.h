@@ -473,6 +473,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
   public:
     js::UnprotectedData<js::OffThreadPromiseRuntimeState> offThreadPromiseState;
+    js::UnprotectedData<JS::ConsumeStreamCallback> consumeStreamCallback;
 
     JSObject* getIncumbentGlobal(JSContext* cx);
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise,
