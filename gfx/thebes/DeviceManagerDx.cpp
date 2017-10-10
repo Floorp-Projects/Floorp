@@ -21,15 +21,12 @@
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "mozilla/layers/MLGDeviceD3D11.h"
 #include "mozilla/layers/PaintThread.h"
+#include "nsExceptionHandler.h"
 #include "nsIGfxInfo.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include <d3d11.h>
 #include <ddraw.h>
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#include "nsPrintfCString.h"
-#endif
 
 namespace mozilla {
 namespace gfx {
@@ -772,12 +769,10 @@ DeviceManagerDx::MaybeResetAndReacquireDevices()
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
   }
 
-#ifdef MOZ_CRASHREPORTER
   nsPrintfCString reasonString("%d", int(resetReason));
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("DeviceResetReason"),
     reasonString);
-#endif
 
   bool createCompositorDevice = !!mCompositorDevice;
   bool createContentDevice = !!mContentDevice;
