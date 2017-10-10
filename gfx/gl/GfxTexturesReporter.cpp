@@ -6,12 +6,9 @@
 
 #include <string>
 #include <sstream>
+#include "nsExceptionHandler.h"
 #include "GfxTexturesReporter.h"
 #include "gfxPrefs.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -76,7 +73,5 @@ GfxTexturesReporter::UpdateAmount(MemoryUse action, size_t amount)
         }
     }
 
-#ifdef MOZ_CRASHREPORTER
     CrashReporter::AnnotateTexturesSize(sAmount);
-#endif
 }
