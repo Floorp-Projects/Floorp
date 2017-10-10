@@ -478,13 +478,13 @@ var Bookmarks = Object.freeze({
                                            PlacesUtils.toPRTime(item.dateAdded), item.guid,
                                            item.parentGuid, item.source ],
                                          { isTagging: false });
-        // Remove non-enumerable properties.
-        delete item.source;
-
         // Note, annotations for livemark data are deleted from insertInfo
         // within appendInsertionInfoForInfoArray, so we won't be duplicating
         // the insertions here.
         await handleBookmarkItemSpecialData(itemId, item);
+
+        // Remove non-enumerable properties.
+        delete item.source;
 
         insertInfos[i] = Object.assign({}, item);
       }
@@ -1548,7 +1548,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
   }
   if ("tags" in item) {
     try {
-      PlacesUtils.tagging.tagURI(NetUtil.newURI(item.url), item.tags, item._source);
+      PlacesUtils.tagging.tagURI(NetUtil.newURI(item.url), item.tags, item.source);
     } catch (ex) {
       // Invalid tag child, skip it.
       Cu.reportError(`Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`);
