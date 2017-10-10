@@ -32,6 +32,7 @@ class JS_PUBLIC_API(WeakMapPtr)
 
     V lookup(const K& key);
     bool put(JSContext* cx, const K& key, const V& value);
+    V removeValue(const K& key);
 
   private:
     void* ptr;
