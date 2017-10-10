@@ -346,14 +346,14 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
   }
 
   const int64_t kSecondsPerDay = 86400;
-  const int64_t now =
+  const int64_t nowMicros =
     mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
                                          mCreationTimeStamp).ToMicroseconds());
 
   // now < mLastUpdateTime if the system time is reset between storing
   // and loading mLastUpdateTime from ServiceWorkerRegistrar.
-  if (now < mLastUpdateTime ||
-      (now - mLastUpdateTime) / PR_MSEC_PER_SEC > kSecondsPerDay) {
+  if (nowMicros < mLastUpdateTime ||
+      (nowMicros - mLastUpdateTime) / PR_USEC_PER_SEC > kSecondsPerDay) {
     return true;
   }
   return false;
