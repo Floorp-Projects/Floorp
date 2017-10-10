@@ -112,7 +112,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    mozilla::OriginFlags changed_origins)
 SERVO_BINDING_FUNC(Servo_StyleSet_GetKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
-                   const nsACString* property,
+                   nsAtom* name,
                    nsTimingFunctionBorrowed timing_function,
                    RawGeckoKeyframeListBorrowedMut keyframe_list)
 SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
