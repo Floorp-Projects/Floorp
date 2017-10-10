@@ -70,16 +70,73 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 380);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1282);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 380:
+/***/ 1282:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(964);
+module.exports = __webpack_require__(1283);
 
+
+/***/ }),
+
+/***/ 1283:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _prettyFast = __webpack_require__(802);
+
+var _prettyFast2 = _interopRequireDefault(_prettyFast);
+
+var _devtoolsUtils = __webpack_require__(900);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
+
+
+function prettyPrint(_ref) {
+  var url = _ref.url,
+      indent = _ref.indent,
+      source = _ref.source;
+
+  var prettified = (0, _prettyFast2.default)(source, {
+    url: url,
+    indent: " ".repeat(indent)
+  });
+
+  return {
+    code: prettified.code,
+    mappings: invertMappings(prettified.map._mappings)
+  };
+}
+
+function invertMappings(mappings) {
+  return mappings._array.map(m => {
+    var mapping = {
+      generated: {
+        line: m.originalLine,
+        column: m.originalColumn
+      }
+    };
+    if (m.source) {
+      mapping.source = m.source;
+      mapping.original = {
+        line: m.generatedLine,
+        column: m.generatedColumn
+      };
+      mapping.name = m.name;
+    }
+    return mapping;
+  });
+}
+
+self.onmessage = workerHandler({ prettyPrint });
 
 /***/ }),
 
@@ -7531,63 +7588,6 @@ module.exports = {
   workerHandler,
   streamingWorkerHandler
 };
-
-/***/ }),
-
-/***/ 964:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _prettyFast = __webpack_require__(802);
-
-var _prettyFast2 = _interopRequireDefault(_prettyFast);
-
-var _devtoolsUtils = __webpack_require__(900);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
-
-
-function prettyPrint(_ref) {
-  var url = _ref.url,
-      indent = _ref.indent,
-      source = _ref.source;
-
-  var prettified = (0, _prettyFast2.default)(source, {
-    url: url,
-    indent: " ".repeat(indent)
-  });
-
-  return {
-    code: prettified.code,
-    mappings: invertMappings(prettified.map._mappings)
-  };
-}
-
-function invertMappings(mappings) {
-  return mappings._array.map(m => {
-    var mapping = {
-      generated: {
-        line: m.originalLine,
-        column: m.originalColumn
-      }
-    };
-    if (m.source) {
-      mapping.source = m.source;
-      mapping.original = {
-        line: m.generatedLine,
-        column: m.generatedColumn
-      };
-      mapping.name = m.name;
-    }
-    return mapping;
-  });
-}
-
-self.onmessage = workerHandler({ prettyPrint });
 
 /***/ })
 

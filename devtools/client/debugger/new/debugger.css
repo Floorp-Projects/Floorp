@@ -412,7 +412,7 @@ body {
 .modal-wrapper {
   position: fixed;
   display: flex;
-  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
   top: 0;
@@ -423,7 +423,7 @@ body {
 
 .modal {
   top: 0;
-  height: 230px;
+  margin: auto;
   width: 500px;
   background-color: var(--theme-toolbar-background);
   transform: translateY(-250px);
@@ -438,7 +438,7 @@ body {
 
 .modal.entered,
 .modal.exiting {
-  transform: translateY(30px);
+  transform: translateY(0px);
 }
 
 @media (max-width: 520px) {
@@ -490,7 +490,6 @@ body {
 }
 
 .shortcuts-modal {
-  height: fit-content;
   width: 45%;
 }
 
@@ -973,7 +972,7 @@ html .arrow.expanded svg {
   width: 15px;
   height: 15px;
   margin-right: 5px;
-  vertical-align: bottom;
+  vertical-align: sub;
 }
 
 .theme-dark .webpack {
@@ -1428,6 +1427,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   display: flex;
   overflow-x: hidden;
   overflow-y: auto;
+  padding-top: 11px;
 }
 
 .sources-list .managed-tree {
@@ -1459,6 +1459,11 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .sources-list .tree .label {
   padding: 3px 0px 3px 0px;
+  display: inline-block;
+}
+
+.sources-list .tree .node .no-arrow {
+  width: 10px;
   display: inline-block;
 }
 
@@ -1497,7 +1502,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   position: relative;
   transition: all 0.25s ease;
   overflow: hidden;
-  padding: 6.5px;
+  padding: 8px 8px 7px 8px;
   margin-bottom: 0px;
   margin-top: -1px;
   cursor: default;
@@ -1542,14 +1547,28 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .outline-list {
   list-style-type: none;
-  padding-left: 0px;
   width: 100%;
+  padding: 10px;
+  margin: 0;
+}
+
+.outline-list__class-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-left: 10px;
+}
+
+.outline-list h2 {
+  font-weight: normal;
+  font-size: 1em;
+  margin: 10px 0;
+  color: var(--theme-body-color);
 }
 
 .outline-list__element {
   color: blue;
   padding-bottom: 0.2rem;
-  padding-left: 1rem;
   padding-right: 0.5rem;
   padding-top: 0.2rem;
   cursor: default;
@@ -1576,40 +1595,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .function-signature .comma {
   color: var(--object-color);
-}
-.conditional-breakpoint-panel {
-  cursor: initial;
-  margin: 1em 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: var(--theme-toolbar-background);
-  border-top: 1px solid var(--theme-splitter-color);
-  border-bottom: 1px solid var(--theme-splitter-color);
-}
-
-.conditional-breakpoint-panel .prompt {
-  font-size: 1.8em;
-  color: var(--theme-conditional-breakpoint-color);
-  padding-left: 3px;
-  padding-right: 3px;
-  padding-bottom: 3px;
-  text-align: right;
-  width: 30px;
-}
-
-.conditional-breakpoint-panel input {
-  margin: 5px 10px;
-  width: calc(100% - 4em);
-  border: none;
-  background: var(--theme-toolbar-background);
-  font-size: 14px;
-  color: var(--theme-conditional-breakpoint-color);
-  line-height: 30px;
-}
-
-.conditional-breakpoint-panel input:focus {
-  outline-width: 0;
 }
 .toggle-button-start,
 .toggle-button-end {
@@ -2329,6 +2314,40 @@ html[dir="rtl"] .arrow svg,
 .empty-line .CodeMirror-linenumber {
   opacity: 0.5;
 }
+.conditional-breakpoint-panel {
+  cursor: initial;
+  margin: 1em 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--theme-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.conditional-breakpoint-panel .prompt {
+  font-size: 1.8em;
+  color: var(--theme-conditional-breakpoint-color);
+  padding-left: 3px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  text-align: right;
+  width: 30px;
+}
+
+.conditional-breakpoint-panel input {
+  margin: 5px 10px;
+  width: calc(100% - 4em);
+  border: none;
+  background: var(--theme-toolbar-background);
+  font-size: 14px;
+  color: var(--theme-conditional-breakpoint-color);
+  line-height: 30px;
+}
+
+.conditional-breakpoint-panel input:focus {
+  outline-width: 0;
+}
 .editor-wrapper {
   --debug-line-border: rgb(145, 188, 219);
   --debug-expression-background: rgba(202, 227, 255, 0.5);
@@ -2351,11 +2370,6 @@ html[dir="rtl"] .arrow svg,
 
 .theme-light {
   --theme-conditional-breakpoint-color: var(--theme-body-color);
-}
-
-.paused .CodeMirror-line,
-.paused .CodeMirror-linenumber {
-  opacity: 0.7;
 }
 
 /**
@@ -2629,6 +2643,7 @@ html .breakpoints-list .breakpoint.paused {
   overflow-x: hidden;
   text-overflow: ellipsis;
   padding: 1px 0;
+  vertical-align: bottom;
 }
 
 .breakpoints-list .pause-indicator {
@@ -3029,7 +3044,6 @@ html .breakpoints-list .breakpoint.paused {
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   overflow: hidden;
-  position: sticky;
   z-index: 1;
   background-color: var(--theme-toolbar-background);
 }
@@ -3144,6 +3158,7 @@ html .command-bar > button:disabled {
   display: inline-block;
 }
 .secondary-panes {
+  overflow: scroll;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -3158,8 +3173,12 @@ html .command-bar > button:disabled {
   the wrapper.
   Ref: https://github.com/devtools-html/debugger.html/issues/3426
 */
-.secondary-panes--sticky-commandbar {
-  overflow-y: scroll;
+
+.secondary-panes-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .secondary-panes .accordion {
@@ -3216,9 +3235,23 @@ html .command-bar > button:disabled {
   offset-inline-start: auto;
 }
 
+.welcomebox .small-size-layout {
+  display: none;
+}
+
+.welcomebox .normal-layout {
+  display: inline-block;
+}
+
 .shortcutKeys {
   text-align: right;
   float: left;
+  font-family: Courier;
+}
+
+.shortcutKey {
+  display: inline-block;
+  margin-right: 10px;
   font-family: Courier;
 }
 
@@ -3230,6 +3263,24 @@ html .command-bar > button:disabled {
 
 html .welcomebox .toggle-button-end.collapsed {
   bottom: 1px;
+}
+
+@media (max-width: 430px) {
+  .welcomebox .small-size-layout {
+    display: inline-block;
+  }
+
+  .welcomebox .normal-layout {
+    display: none;
+  }
+
+  .shortcutFunction {
+    margin-left: 0;
+  }
+
+  .shortcutKey {
+    display: block;
+  }
 }
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
