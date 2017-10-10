@@ -11,7 +11,7 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getStr, getFormatStr } = require("../utils/l10n");
 const Types = require("../types");
-const DeviceAdder = createFactory(require("./device-adder"));
+const DeviceAdder = createFactory(require("./DeviceAdder"));
 
 module.exports = createClass({
   displayName: "DeviceModal",

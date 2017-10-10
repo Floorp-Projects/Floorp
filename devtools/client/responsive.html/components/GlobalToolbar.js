@@ -9,8 +9,8 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
-const DPRSelector = createFactory(require("./dpr-selector"));
-const NetworkThrottlingSelector = createFactory(require("./network-throttling-selector"));
+const DPRSelector = createFactory(require("./DprSelector"));
+const NetworkThrottlingSelector = createFactory(require("./NetworkThrottlingSelector"));
 
 module.exports = createClass({
   displayName: "GlobalToolbar",
