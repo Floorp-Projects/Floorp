@@ -87,9 +87,9 @@ WORKDIR /opt
 # Checkout source code
 RUN git clone https://github.com/mozilla-mobile/focus-android.git
 
-# Build project once to pull all dependencies
+# Build project and run gradle tasks once to pull all dependencies
 WORKDIR /opt/focus-android
-RUN ./gradlew assemble
+RUN ./gradlew assemble testFocusWebviewDebugUnitTest lint pmd checkstyle findbugs
 
 # -- Post setup -------------------------------------------------------------------------
 
