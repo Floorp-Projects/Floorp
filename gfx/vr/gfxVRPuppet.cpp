@@ -566,12 +566,10 @@ VRDisplayPuppet::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescrip
 #endif
 
 void
-VRDisplayPuppet::NotifyVSync()
+VRDisplayPuppet::Refresh()
 {
-  // We update mIsConneced once per frame.
+  // We update mIsConneced once per refresh.
   mDisplayInfo.mIsConnected = true;
-
-  VRDisplayHost::NotifyVSync();
 }
 
 VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID)
@@ -703,14 +701,45 @@ VRSystemManagerPuppet::Shutdown()
   mPuppetHMD = nullptr;
 }
 
-bool
-VRSystemManagerPuppet::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+void
+VRSystemManagerPuppet::NotifyVSync()
+{
+  VRSystemManager::NotifyVSync();
+  if (mPuppetHMD) {
+    mPuppetHMD->Refresh();
+  }
+}
+
+void
+VRSystemManagerPuppet::Enumerate()
 {
   if (mPuppetHMD == nullptr) {
     mPuppetHMD = new VRDisplayPuppet();
   }
-  aHMDResult.AppendElement(mPuppetHMD);
-  return true;
+}
+
+bool
+VRSystemManagerPuppet::ShouldInhibitEnumeration()
+{
+  if (VRSystemManager::ShouldInhibitEnumeration()) {
+    return true;
+  }
+  if (mPuppetHMD) {
+    // When we find an a VR device, don't
+    // allow any further enumeration as it
+    // may get picked up redundantly by other
+    // API's.
+    return true;
+  }
+  return false;
+}
+
+void
+VRSystemManagerPuppet::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
+{
+  if (mPuppetHMD) {
+    aHMDResult.AppendElement(mPuppetHMD);
+  }
 }
 
 bool
