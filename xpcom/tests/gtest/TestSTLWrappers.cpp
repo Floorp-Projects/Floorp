@@ -10,11 +10,9 @@
 #  error "failed to wrap <vector>"
 #endif
 
-#ifdef MOZ_CRASHREPORTER
 #include "nsCOMPtr.h"
 #include "nsICrashReporter.h"
 #include "nsServiceManagerUtils.h"
-#endif
 
 // gcc errors out if we |try ... catch| with -fno-exceptions, but we
 // can still test on windows
@@ -41,13 +39,11 @@ void ShouldAbort()
     _gdb_sleep_duration = 0;
 #endif
 
-#ifdef MOZ_CRASHREPORTER
     nsCOMPtr<nsICrashReporter> crashreporter =
         do_GetService("@mozilla.org/toolkit/crash-reporter;1");
     if (crashreporter) {
       crashreporter->SetEnabled(false);
     }
-#endif
 
     std::vector<int> v;
     int rv = 1;
