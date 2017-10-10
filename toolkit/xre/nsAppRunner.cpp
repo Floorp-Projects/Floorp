@@ -5154,31 +5154,23 @@ BrowserTabsRemoteAutostart()
     return gBrowserTabsRemoteAutostart;
   }
 
-  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
-  bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
-  bool prefEnabled = optInPref || trialPref;
-  int status;
-  if (optInPref) {
-    status = kE10sEnabledByUser;
-  } else if (trialPref) {
-    status = kE10sEnabledByDefault;
-  } else {
-    status = kE10sDisabledByUser;
-  }
+  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", true);
+  int status = kE10sEnabledByDefault;
 
-  if (prefEnabled) {
+  if (optInPref) {
     uint32_t blockPolicy = MultiprocessBlockPolicy();
     if (blockPolicy != 0) {
       status = blockPolicy;
     } else {
       gBrowserTabsRemoteAutostart = true;
     }
+  } else {
+    status = kE10sDisabledByUser;
   }
 
   // Uber override pref for manual testing purposes
   if (Preferences::GetBool(kForceEnableE10sPref, false)) {
     gBrowserTabsRemoteAutostart = true;
-    prefEnabled = true;
     status = kE10sEnabledByUser;
   }
 
@@ -5193,10 +5185,6 @@ BrowserTabsRemoteAutostart()
   gBrowserTabsRemoteStatus = status;
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STATUS, status);
-  if (prefEnabled) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
-                                    !gBrowserTabsRemoteAutostart);
-  }
   return gBrowserTabsRemoteAutostart;
 }
 
