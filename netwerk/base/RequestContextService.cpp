@@ -396,8 +396,8 @@ RequestContext::CancelTailedRequest(nsIRequestTailUnblockCallback * aRequest)
       mUntailTimer = nullptr;
     }
 
-    // Must drop to stop tailing requests
-    mUntailAt = TimeStamp();
+    // Must drop to allow re-engage of the timer
+    mTimerScheduledAt = TimeStamp();
   }
 
   return NS_OK;
