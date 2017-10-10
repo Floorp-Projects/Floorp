@@ -573,11 +573,7 @@ DuplicateHandle(HANDLE aSourceHandle,
  * Annotate the crash reporter with the error code from the most recent system
  * call. Returns the system error.
  */
-#ifdef MOZ_CRASHREPORTER
 void AnnotateSystemError();
-#else
-#define AnnotateSystemError() do { } while (0)
-#endif
 
 /**
  * An endpoint represents one end of a partially initialized IPDL channel. To
@@ -696,7 +692,7 @@ private:
     ProcessId mMyPid, mOtherPid;
 };
 
-#if defined(MOZ_CRASHREPORTER) && defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 void AnnotateCrashReportWithErrno(const char* tag, int error);
 #else
 static inline void AnnotateCrashReportWithErrno(const char* tag, int error)
