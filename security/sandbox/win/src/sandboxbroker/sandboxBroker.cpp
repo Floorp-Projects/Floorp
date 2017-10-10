@@ -7,6 +7,7 @@
 #include "sandboxBroker.h"
 
 #include <string>
+#include <vector>
 
 #include "base/win/windows_version.h"
 #include "mozilla/Assertions.h"
@@ -28,10 +29,26 @@
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
 
-// We're just blocking one DLL for the moment because of problems with the
-// Alternate Desktop. If and when we expand this we'll make this a static list
-// and add checking to see if DLL is loaded in the parent.
-#define WEBROOT_DLL L"WRusr.dll"
+// This list of DLLs have been found to cause instability in sandboxed child
+// processes and so they will be unloaded if they attempt to load.
+const std::vector<std::wstring> kDllsToUnload = {
+  // HitmanPro - SurfRight now part of Sophos (bug 1400637)
+  L"hmpalert.dll",
+
+  // K7 Computing (bug 1400637)
+  L"k7pswsen.dll",
+
+  // Symantec (bug 1400637)
+  L"prntm64.dll",
+  L"sysfer.dll",
+
+  // Avast Antivirus (bug 1400637)
+  L"snxhk64.dll",
+  L"snxhk.dll",
+
+  // Webroot SecureAnywhere (bug 1400637)
+  L"wrusr.dll",
+};
 
 namespace mozilla
 {
@@ -216,9 +233,20 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                      sandbox::TargetPolicy::FILES_ALLOW_ANY, logFileName);
   }
 
+  // Add DLLs to the policy that have been found to cause instability with the
+  // sandbox, so that they will be unloaded when they attempt to load.
+  sandbox::ResultCode result;
+  for (std::wstring dllToUnload : kDllsToUnload) {
+    // Similar to Chromium, we only add a DLL if it is loaded in this process.
+    if (::GetModuleHandleW(dllToUnload.c_str())) {
+      result = mPolicy->AddDllToUnload(dllToUnload.c_str());
+      MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                         "AddDllToUnload should never fail, what happened?");
+    }
+  }
+
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo = {0};
-  sandbox::ResultCode result;
   sandbox::ResultCode last_warning = sandbox::SBOX_ALL_OK;
   DWORD last_error = ERROR_SUCCESS;
   result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
@@ -444,12 +472,6 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     result = mPolicy->SetAlternateDesktop(false);
     MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                        "Failed to create alternate desktop for sandbox.");
-
-    // Webroot SecureAnywhere causes crashes when we use an Alternate Desktop,
-    // so block the DLL from loading in the child process. (bug 1400637)
-    result = mPolicy->AddDllToUnload(WEBROOT_DLL);
-    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
-                       "AddDllToUnload should never fail, what happened?");
 
     mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
     // If we're running from a network drive then we can't block loading from
@@ -832,12 +854,6 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
   result = mPolicy->SetAlternateDesktop(true);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Failed to create alternate desktop for sandbox.");
-
-  // Webroot SecureAnywhere causes crashes when we use an Alternate Desktop,
-  // so block the DLL from loading in the child process. (bug 1400637)
-  result = mPolicy->AddDllToUnload(WEBROOT_DLL);
-  MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
-                     "AddDllToUnload should never fail, what happened?");
 
   result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   MOZ_ASSERT(sandbox::SBOX_ALL_OK == result,
