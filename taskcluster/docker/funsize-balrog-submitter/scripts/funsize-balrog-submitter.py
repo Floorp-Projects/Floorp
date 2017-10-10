@@ -133,8 +133,6 @@ def main():
     if not balrog_username and not balrog_password:
         raise RuntimeError("BALROG_USERNAME and BALROG_PASSWORD environment "
                            "variables should be set")
-    # blob suffix used for releases only
-    suffix = os.environ.get("BALROG_BLOB_SUFFIX")
 
     s3_bucket = os.environ.get("S3_BUCKET")
     aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
@@ -171,11 +169,8 @@ def main():
             partial_info[0]["previousVersion"] = e["previousVersion"]
             partial_info[0]["previousBuildNumber"] = e["previousBuildNumber"]
             submitter = ReleaseSubmitterV4(api_root=args.api_root, auth=auth,
-                                           dummy=args.dummy, suffix=suffix)
+                                           dummy=args.dummy)
             productName = args.product or e["appName"]
-            if suffix:
-                log.warning("Not submitting complete info")
-                complete_info = None
             retry(lambda: submitter.run(
                 platform=e["platform"], productName=productName,
                 version=e["toVersion"],
