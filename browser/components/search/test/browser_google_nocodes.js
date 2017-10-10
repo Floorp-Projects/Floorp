@@ -120,6 +120,12 @@ add_task(async function tests() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
+  // Show the search bar after initializing the search service, to avoid the
+  // synchronous initialization to interfere.
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
   let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8";
 
   let url;
