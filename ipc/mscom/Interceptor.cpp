@@ -22,14 +22,11 @@
 #include "mozilla/DebugOnly.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-
-#if defined(MOZ_CRASHREPORTER)
-
-#include "nsExceptionHandler.h"
-#include "nsPrintfCString.h"
 
 #define ENSURE_HR_SUCCEEDED(hr) \
   if (FAILED((HRESULT)hr)) { \
@@ -39,15 +36,6 @@
     MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED((HRESULT)hr)); \
     return hr; \
   }
-
-#else
-
-#define ENSURE_HR_SUCCEEDED(hr) \
-  if (FAILED((HRESULT)hr)) { \
-    return hr; \
-  }
-
-#endif // defined(MOZ_CRASHREPORTER)
 
 namespace mozilla {
 namespace mscom {

@@ -16,9 +16,7 @@
 #if defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/SandboxSettings.h"
 #endif // defined(MOZ_CONTENT_SANDBOX)
-#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
-#endif // defined(MOZ_CRASHREPORTER)
 
 namespace mozilla {
 namespace mscom {
@@ -212,10 +210,8 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
 
     mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length, &env);
     if (!proxyStream.IsValid()) {
-#if defined(MOZ_CRASHREPORTER)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamValid"),
                                          NS_LITERAL_CSTRING("false"));
-#endif // defined(MOZ_CRASHREPORTER)
       return false;
     }
 
