@@ -16,10 +16,12 @@
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 #include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
+#include "gtest/BlackBox.h"
 
 namespace TestStrings {
 
 using mozilla::fallible;
+using mozilla::BlackBox;
 
 void test_assign_helper(const nsACString& in, nsACString &_retval)
 {
@@ -1393,56 +1395,64 @@ MOZ_GTEST_BENCH(Strings, PerfStripCharsCRLF, [] {
 MOZ_GTEST_BENCH(Strings, PerfIsUTF8One, [] {
     nsCString test(OneASCII);
     for (int i = 0; i < 200000; i++) {
-      IsUTF8(test);
+      bool b = IsUTF8(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsUTF8Fifteen, [] {
     nsCString test(FifteenASCII);
     for (int i = 0; i < 200000; i++) {
-      IsUTF8(test);
+      bool b = IsUTF8(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsUTF8Hundred, [] {
     nsCString test(HundredASCII);
     for (int i = 0; i < 200000; i++) {
-      IsUTF8(test);
+      bool b = IsUTF8(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsUTF8Example3, [] {
     nsCString test(TestExample3);
     for (int i = 0; i < 100000; i++) {
-      IsUTF8(test);
+      bool b = IsUTF8(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsASCII8One, [] {
     nsCString test(OneASCII);
     for (int i = 0; i < 200000; i++) {
-      IsASCII(test);
+      bool b = IsASCII(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsASCIIFifteen, [] {
     nsCString test(FifteenASCII);
     for (int i = 0; i < 200000; i++) {
-      IsASCII(test);
+      bool b = IsASCII(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsASCIIHundred, [] {
     nsCString test(HundredASCII);
     for (int i = 0; i < 200000; i++) {
-      IsASCII(test);
+      bool b = IsASCII(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH(Strings, PerfIsASCIIExample3, [] {
     nsCString test(TestExample3);
     for (int i = 0; i < 100000; i++) {
-      IsUTF8(test);
+      bool b = IsASCII(*BlackBox(&test));
+      BlackBox(&b);
     }
 });
 
