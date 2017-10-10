@@ -214,9 +214,6 @@ add_task(async function test_devtools_page_panels_create() {
   const panelDef = toolboxAdditionalTools[0];
   const panelId = panelDef.id;
 
-  is(panelDef.invertIconForLightTheme, false,
-     "devtools.panel.create set invertIconForLightTheme to false by default");
-
   await gDevTools.showToolbox(target, panelId);
   const {devtoolsPageTabId} = await extension.awaitMessage("devtools_panel_shown");
   const devtoolsPanelTabId = await extension.awaitMessage("devtools_panel_inspectedWindow_tabId");
