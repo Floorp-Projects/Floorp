@@ -224,11 +224,9 @@ GeckoChildProcessHost::GetUniqueID()
 void
 GeckoChildProcessHost::PrepareLaunch()
 {
-#ifdef MOZ_CRASHREPORTER
   if (CrashReporter::GetEnabled()) {
     CrashReporter::OOPInit();
   }
-#endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   SandboxLaunchPrepare(mProcessType, mLaunchOptions.get());
@@ -755,9 +753,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // always populated (but possibly with an empty value) for a GPU child process.
   if (mProcessType == GeckoProcessType_GPU) {
     nsCOMPtr<nsIFile> file;
-# ifdef MOZ_CRASHREPORTER
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
-# endif // MOZ_CRASHREPORTER
     nsAutoCString path;
     if (file) {
       file->GetNativePath(path);
@@ -767,26 +763,27 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   childArgv.push_back(pidstring);
 
-# if defined(MOZ_CRASHREPORTER)
-#  if defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
-  int childCrashFd, childCrashRemapFd;
-  if (!CrashReporter::CreateNotificationPipeForChild(
-        &childCrashFd, &childCrashRemapFd))
-    return false;
-  if (0 <= childCrashFd) {
-    mLaunchOptions->fds_to_remap
-      .push_back(std::pair<int,int>(childCrashFd, childCrashRemapFd));
-    // "true" == crash reporting enabled
-    childArgv.push_back("true");
+  if (!CrashReporter::IsDummy()) {
+#if defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+    int childCrashFd, childCrashRemapFd;
+    if (!CrashReporter::CreateNotificationPipeForChild(&childCrashFd,
+                                                       &childCrashRemapFd)) {
+      return false;
+    }
+
+    if (0 <= childCrashFd) {
+      mLaunchOptions->fds_to_remap
+        .push_back(std::pair<int,int>(childCrashFd, childCrashRemapFd));
+      // "true" == crash reporting enabled
+      childArgv.push_back("true");
+    } else {
+      // "false" == crash reporting disabled
+      childArgv.push_back("false");
+    }
+#elif defined(MOZ_WIDGET_COCOA) // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+    childArgv.push_back(CrashReporter::GetChildNotificationPipe());
+#endif  // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
   }
-  else {
-    // "false" == crash reporting disabled
-    childArgv.push_back("false");
-  }
-#  elif defined(MOZ_WIDGET_COCOA) // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
-  childArgv.push_back(CrashReporter::GetChildNotificationPipe());
-#  endif  // defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
-# endif // defined(MOZ_CRASHREPORTER)
 
 # ifdef MOZ_WIDGET_COCOA
   // Add a mach port to the command line so the child can communicate its
@@ -1000,9 +997,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // always populated (but possibly with an empty value) for a GPU child process.
   if (mProcessType == GeckoProcessType_GPU) {
     nsCOMPtr<nsIFile> file;
-# ifdef MOZ_CRASHREPORTER
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
-# endif // MOZ_CRASHREPORTER
     nsString path;
     if (file) {
       MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
@@ -1014,10 +1009,8 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // Process id
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
 
-# if defined(MOZ_CRASHREPORTER)
   cmdLine.AppendLooseValue(
     UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
-# endif // defined(MOZ_CRASHREPORTER)
 
   // Process type
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
