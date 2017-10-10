@@ -124,8 +124,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &NumberFormatObject::class_);
       case InlinableNative::IntlIsPluralRules:
         return inlineHasClass(callInfo, &PluralRulesObject::class_);
-      case InlinableNative::IntlIsRelativeTimeFormat:
-        return inlineHasClass(callInfo, &RelativeTimeFormatObject::class_);
 
       // Math natives.
       case InlinableNative::MathAbs:

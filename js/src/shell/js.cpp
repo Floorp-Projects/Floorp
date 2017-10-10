@@ -839,9 +839,6 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
     if (!js::AddMozDateTimeFormatConstructor(cx, intl))
         return false;
 
-    if (!js::AddRelativeTimeFormatConstructor(cx, intl))
-        return false;
-
     args.rval().setUndefined();
     return true;
 }
