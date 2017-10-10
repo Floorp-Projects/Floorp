@@ -4078,8 +4078,12 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
 
     // Get new left and right nodes, and begin anew
     parentNode = rightNodeToJoin;
-    leftNodeToJoin = parentNode->GetChildAt(length - 1);
     rightNodeToJoin = parentNode->GetChildAt(length);
+    if (rightNodeToJoin) {
+      leftNodeToJoin = rightNodeToJoin->GetPreviousSibling();
+    } else {
+      leftNodeToJoin = nullptr;
+    }
 
     // Skip over non-editable nodes
     while (leftNodeToJoin && !IsEditable(leftNodeToJoin)) {
