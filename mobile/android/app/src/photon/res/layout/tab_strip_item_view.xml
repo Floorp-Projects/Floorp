@@ -8,35 +8,29 @@
        xmlns:tools="http://schemas.android.com/tools"
        tools:layout_height="@dimen/tablet_tab_strip_item_height"
        tools:layout_width="@dimen/tablet_tab_strip_item_width"
-       tools:orientation="horizontal"
-       tools:parentTag="LinearLayout">
+       tools:parentTag="RelativeLayout">
+
+    <View
+        android:id="@+id/indicator"
+        android:layout_width="@dimen/tablet_tab_strip_item_width"
+        android:layout_height="3dp"
+        android:background="@color/tablet_tab_strip_indicator"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
     <ImageView
         android:id="@+id/favicon"
         style="@style/TabStrip.Favicon"
         android:layout_width="@dimen/browser_toolbar_favicon_size"
         android:layout_height="@dimen/browser_toolbar_favicon_size"
-        android:layout_gravity="center"
+        android:layout_centerVertical="true"
         android:duplicateParentState="true"
         android:scaleType="centerInside"
         tools:src="@drawable/toolbar_favicon_default"/>
 
-    <org.mozilla.gecko.widget.CheckableFadedSingleColorTextView
-        android:id="@+id/title"
-        android:layout_width="0dip"
-        android:layout_height="match_parent"
-        android:layout_weight="1.0"
-        android:duplicateParentState="true"
-        android:ellipsize="end"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:textColor="@color/tab_strip_item_title"
-        android:textSize="14sp"
-        gecko:fadeWidth="30dip"
-        tools:text="Mozilla"/>
-
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/close"
+        style="@style/TabStrip.Close"
         android:layout_width="35dp"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
@@ -45,5 +39,19 @@
         android:scaleType="center"
         android:src="@drawable/tab_close"
         gecko:drawableTintList="@color/tab_strip_item_title"/>
+
+    <org.mozilla.gecko.widget.CheckableFadedSingleColorTextView
+        android:id="@+id/title"
+        style="@style/TabStrip.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:duplicateParentState="true"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/tab_strip_item_title"
+        android:textSize="14sp"
+        gecko:fadeWidth="30dip"
+        tools:text="Mozilla"/>
 
 </merge>

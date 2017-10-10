@@ -646,6 +646,27 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
 }
 
 void
+Gecko_CopyAnimationNames(RawGeckoStyleAnimationListBorrowedMut aDest,
+                         RawGeckoStyleAnimationListBorrowed aSrc)
+{
+  size_t srcLength = aSrc->Length();
+  aDest->EnsureLengthAtLeast(srcLength);
+
+  for (size_t index = 0; index < srcLength; index++) {
+    (*aDest)[index].SetName((*aSrc)[index].GetName());
+  }
+}
+
+void
+Gecko_SetAnimationName(StyleAnimation* aStyleAnimation,
+                       nsAtom* aAtom)
+{
+  MOZ_ASSERT(aStyleAnimation);
+
+  aStyleAnimation->SetName(already_AddRefed<nsAtom>(aAtom));
+}
+
+void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        ServoStyleContextBorrowedOrNull aOldComputedData,
                        ServoStyleContextBorrowedOrNull aComputedData,

@@ -34,7 +34,7 @@
 }
 
 #genericAbout[addontype="plugin"] #extensionIcon {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 #genericAbout[addontype="dictionary"] #extensionIcon {

@@ -1159,15 +1159,14 @@ ServoStyleSet::AssertTreeIsClean()
 #endif
 
 bool
-ServoStyleSet::GetKeyframesForName(const nsString& aName,
+ServoStyleSet::GetKeyframesForName(nsAtom* aName,
                                    const nsTimingFunction& aTimingFunction,
                                    nsTArray<Keyframe>& aKeyframes)
 {
   UpdateStylistIfNeeded();
 
-  NS_ConvertUTF16toUTF8 name(aName);
   return Servo_StyleSet_GetKeyframesForName(mRawSet.get(),
-                                            &name,
+                                            aName,
                                             &aTimingFunction,
                                             &aKeyframes);
 }

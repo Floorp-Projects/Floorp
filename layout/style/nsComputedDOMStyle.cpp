@@ -6867,12 +6867,13 @@ nsComputedDOMStyle::DoGetAnimationName()
     const StyleAnimation *animation = &display->mAnimations[i];
     RefPtr<nsROCSSPrimitiveValue> property = new nsROCSSPrimitiveValue;
 
-    const nsString& name = animation->GetName();
-    if (name.IsEmpty()) {
+    nsAtom* name = animation->GetName();
+    if (name == nsGkAtoms::_empty) {
       property->SetIdent(eCSSKeyword_none);
     } else {
+      nsDependentAtomString nameStr(name);
       nsAutoString escaped;
-      nsStyleUtil::AppendEscapedCSSIdent(animation->GetName(), escaped);
+      nsStyleUtil::AppendEscapedCSSIdent(nameStr, escaped);
       property->SetString(escaped); // really want SetIdent
     }
     valueList->AppendCSSValue(property.forget());

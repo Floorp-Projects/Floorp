@@ -374,7 +374,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
                     struct sigaction act, oldact;
 #ifdef SA_SIGINFO
                     act.sa_sigaction = FatalSignalHandler;
-                    act.sa_flags = SA_SIGINFO;
+                    act.sa_flags = SA_SIGINFO | SA_ONSTACK;
 #else
                     act.sa_handler = FatalSignalHandler;
 #endif

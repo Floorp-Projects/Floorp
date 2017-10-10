@@ -152,10 +152,6 @@
   background-color: var(--theme-toolbar-hover-active);
 }
 
-.devtools-tab:not(.selected).highlighted {
-  background-color: var(--theme-toolbar-background-alt);
-}
-
 .devtools-tab.selected {
   color: var(--theme-toolbar-selected-color);
 }

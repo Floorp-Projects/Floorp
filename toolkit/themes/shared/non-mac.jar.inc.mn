@@ -66,7 +66,6 @@
   skin/classic/mozapps/extensions/cancel.png                 (../../windows/mozapps/extensions/cancel.png)
   skin/classic/mozapps/extensions/eula.css                   (../../windows/mozapps/extensions/eula.css)
   skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
-  skin/classic/mozapps/plugins/pluginBlocked-64.png          (../../windows/mozapps/plugins/pluginBlocked-64.png)
   skin/classic/mozapps/plugins/pluginHelp-16.png             (../../windows/mozapps/plugins/pluginHelp-16.png)
   skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
   skin/classic/mozapps/update/downloadButtons.png            (../../windows/mozapps/update/downloadButtons.png)
@@ -79,6 +78,4 @@
 #endif
 % override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif
 % override chrome://global/skin/arrow/arrow-rit-hov.gif           chrome://global/skin/arrow/arrow-rit.gif
-% override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
-% override chrome://mozapps/skin/plugins/notifyPluginGeneric.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
 % override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg

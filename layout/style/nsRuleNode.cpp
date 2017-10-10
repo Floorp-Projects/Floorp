@@ -5901,18 +5901,17 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       animation->SetName(parentDisplay->mAnimations[i].GetName());
     } else if (animName.unit == eCSSUnit_Initial ||
                animName.unit == eCSSUnit_Unset) {
-      animation->SetName(EmptyString());
+      animation->SetName(nsGkAtoms::_empty);
     } else if (animName.list) {
       switch (animName.list->mValue.GetUnit()) {
         case eCSSUnit_String:
         case eCSSUnit_Ident: {
-          nsDependentString
-            nameStr(animName.list->mValue.GetStringBufferValue());
-          animation->SetName(nameStr);
+          animation->SetName(
+            NS_Atomize(animName.list->mValue.GetStringBufferValue()));
           break;
         }
         case eCSSUnit_None: {
-          animation->SetName(EmptyString());
+          animation->SetName(nsGkAtoms::_empty);
           break;
         }
         default:

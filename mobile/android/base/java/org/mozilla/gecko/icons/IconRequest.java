@@ -31,6 +31,7 @@ public class IconRequest {
     /* package-private */ int targetSize;
     /* package-private */ int minimumSizePxAfterScaling;
     /* package-private */ boolean prepareOnly;
+    /* package-private */ float textSize;
     private IconCallback callback;
 
     /* package-private */ IconRequest(Context context) {
@@ -45,6 +46,9 @@ public class IconRequest {
         this.targetSize = context.getResources().getDimensionPixelSize(R.dimen.favicon_bg);
         this.minimumSizePxAfterScaling = 0;
         this.prepareOnly = false;
+
+        // textSize is only used in IconGenerator.java for creating a icon with specific text size.
+        this.textSize = 0;
     }
 
     /**
@@ -143,6 +147,14 @@ public class IconRequest {
      */
     public Iterator<IconDescriptor> getIconIterator() {
         return icons.iterator();
+    }
+
+    /**
+     * Get the required text size of the icon created by
+     * {@link org.mozilla.gecko.icons.loader.IconGenerator}.
+     */
+    public float getTextSize() {
+        return textSize;
     }
 
     /**

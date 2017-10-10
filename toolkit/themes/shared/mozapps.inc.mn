@@ -13,7 +13,6 @@
   skin/classic/mozapps/extensions/themeGeneric.svg           (../../shared/extensions/category-themes.svg)
   skin/classic/mozapps/extensions/category-search.svg        (../../shared/extensions/category-search.svg)
   skin/classic/mozapps/extensions/category-discover.svg      (../../shared/extensions/category-discover.svg)
-  skin/classic/mozapps/extensions/category-plugins.svg       (../../shared/extensions/category-plugins.svg)
   skin/classic/mozapps/extensions/category-service.svg       (../../shared/extensions/category-service.svg)
   skin/classic/mozapps/extensions/category-recent.svg        (../../shared/extensions/category-recent.svg)
   skin/classic/mozapps/extensions/category-available.svg     (../../shared/extensions/category-available.svg)
@@ -26,6 +25,8 @@
   skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
+  skin/classic/mozapps/plugins/pluginGeneric.svg             (../../shared/extensions/category-plugins.svg)
+  skin/classic/mozapps/plugins/pluginBlocked.svg             (../../shared/plugins/pluginBlocked.svg)
   skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
 #ifndef ANDROID
@@ -38,6 +39,7 @@
   skin/classic/mozapps/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)
   skin/classic/mozapps/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
 
+% override chrome://mozapps/skin/extensions/category-plugins.svg          chrome://mozapps/skin/plugins/pluginGeneric.svg
 % override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
 % override chrome://mozapps/skin/extensions/category-languages.svg        chrome://mozapps/skin/extensions/localeGeneric.svg
 % override chrome://mozapps/skin/extensions/category-themes.svg           chrome://mozapps/skin/extensions/themeGeneric.svg

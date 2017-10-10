@@ -3436,7 +3436,7 @@ StyleAnimation::SetInitialValues()
   mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
   mDuration = 0.0;
   mDelay = 0.0;
-  mName = EmptyString();
+  mName = nsGkAtoms::_empty;
   mDirection = dom::PlaybackDirection::Normal;
   mFillMode = dom::FillMode::None;
   mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;

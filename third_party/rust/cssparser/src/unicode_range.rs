@@ -44,10 +44,10 @@ impl UnicodeRange {
 
         let range = match parse_concatenated(concatenated_tokens.as_bytes()) {
             Ok(range) => range,
-            Err(()) => return Err(BasicParseError::UnexpectedToken(Token::Ident(concatenated_tokens.into()))),
+            Err(()) => return Err(input.new_basic_unexpected_token_error(Token::Ident(concatenated_tokens.into()))),
         };
         if range.end > char::MAX as u32 || range.start > range.end {
-            Err(BasicParseError::UnexpectedToken(Token::Ident(concatenated_tokens.into())))
+            Err(input.new_basic_unexpected_token_error(Token::Ident(concatenated_tokens.into())))
         } else {
             Ok(range)
         }
@@ -57,10 +57,11 @@ impl UnicodeRange {
 fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseError<'i>> {
     match input.next_including_whitespace()?.clone() {
         Token::Delim('+') => {
-            match *input.next_including_whitespace()? {
+            // FIXME: remove .clone() when lifetimes are non-lexical.
+            match input.next_including_whitespace()?.clone() {
                 Token::Ident(_) => {}
                 Token::Delim('?') => {}
-                ref t => return Err(BasicParseError::UnexpectedToken(t.clone()))
+                t => return Err(input.new_basic_unexpected_token_error(t))
             }
             parse_question_marks(input)
         }
@@ -76,7 +77,7 @@ fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseErro
                 _ => input.reset(&after_number)
             }
         }
-        t => return Err(BasicParseError::UnexpectedToken(t))
+        t => return Err(input.new_basic_unexpected_token_error(t))
     }
     Ok(())
 }

@@ -5,7 +5,7 @@
 use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize};
 use api::{DevicePoint, ExtendMode, FontInstance, FontRenderMode, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
-use api::{LayerSize, LayerVector2D, LineOrientation, LineStyle, Shadow};
+use api::{LayerSize, LayerVector2D, LineOrientation, LineStyle};
 use api::{TileOffset, YuvColorSpace, YuvFormat, device_length};
 use app_units::Au;
 use border::BorderCornerInstance;
@@ -14,6 +14,7 @@ use euclid::Size2D;
 use frame_builder::PrimitiveContext;
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
+use picture::PicturePrimitive;
 use render_task::{ClipWorkItem, RenderTask, RenderTaskId, RenderTaskTree};
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use resource_cache::{ImageProperties, ResourceCache};
@@ -110,8 +111,8 @@ pub enum PrimitiveKind {
     AngleGradient,
     RadialGradient,
     BoxShadow,
-    Shadow,
     Line,
+    Picture,
 }
 
 impl GpuCacheHandle {
@@ -514,13 +515,6 @@ impl RadialGradientPrimitiveCpu {
     }
 }
 
-#[derive(Debug)]
-pub struct ShadowPrimitiveCpu {
-    pub shadow: Shadow,
-    pub primitives: Vec<PrimitiveIndex>,
-    pub render_task_id: Option<RenderTaskId>,
-}
-
 #[derive(Debug, Clone)]
 pub struct TextRunPrimitiveCpu {
     pub font: FontInstance,
@@ -529,8 +523,6 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_count: usize,
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
-    pub shadow_render_mode: FontRenderMode,
-    pub color: ColorF,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -540,6 +532,23 @@ pub enum TextRunMode {
 }
 
 impl TextRunPrimitiveCpu {
+    pub fn get_font(&self,
+                    run_mode: TextRunMode,
+                    device_pixel_ratio: f32,
+    ) -> FontInstance {
+        let mut font = self.font.clone();
+        match run_mode {
+            TextRunMode::Normal => {}
+            TextRunMode::Shadow => {
+                // Shadows never use subpixel AA, but need to respect the alpha/mono flag
+                // for reftests.
+                font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
+            }
+        };
+        font.size = font.size.scale_by(device_pixel_ratio);
+        font
+    }
+
     fn prepare_for_render(
         &mut self,
         resource_cache: &mut ResourceCache,
@@ -548,33 +557,22 @@ impl TextRunPrimitiveCpu {
         run_mode: TextRunMode,
         gpu_cache: &mut GpuCache,
     ) {
-        let mut font = self.font.clone();
-        font.size = font.size.scale_by(device_pixel_ratio);
-        match run_mode {
-            TextRunMode::Shadow => {
-                font.render_mode = self.shadow_render_mode;
-            }
-            TextRunMode::Normal => {}
-        }
-
-        if run_mode == TextRunMode::Shadow {
-            font.render_mode = self.shadow_render_mode;
-        }
+        let font = self.get_font(run_mode, device_pixel_ratio);
 
         // Cache the glyph positions, if not in the cache already.
         // TODO(gw): In the future, remove `glyph_instances`
         //           completely, and just reference the glyphs
         //           directly from the display list.
         if self.glyph_keys.is_empty() {
+            let subpx_dir = font.subpx_dir.limit_by(font.render_mode);
             let src_glyphs = display_list.get(self.glyph_range);
 
             // TODO(gw): If we support chunks() on AuxIter
             //           in the future, this code below could
             //           be much simpler...
             let mut gpu_block = GpuBlockData::empty();
-
             for (i, src) in src_glyphs.enumerate() {
-                let key = GlyphKey::new(src.index, src.point, font.render_mode, font.subpx_dir);
+                let key = GlyphKey::new(src.index, src.point, font.render_mode, subpx_dir);
                 self.glyph_keys.push(key);
 
                 // Two glyphs are packed per GPU block.
@@ -600,11 +598,11 @@ impl TextRunPrimitiveCpu {
     }
 
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
-        request.push(self.color);
+        request.push(ColorF::from(self.font.color));
         request.push([
             self.offset.x,
             self.offset.y,
-            self.font.subpx_dir as u32 as f32,
+            self.font.subpx_dir.limit_by(self.font.render_mode) as u32 as f32,
             0.0,
         ]);
         request.extend_from_slice(&self.glyph_gpu_blocks);
@@ -807,7 +805,7 @@ pub enum PrimitiveContainer {
     AngleGradient(GradientPrimitiveCpu),
     RadialGradient(RadialGradientPrimitiveCpu),
     BoxShadow(BoxShadowPrimitiveCpu),
-    Shadow(ShadowPrimitiveCpu),
+    Picture(PicturePrimitive),
     Line(LinePrimitive),
 }
 
@@ -815,7 +813,7 @@ pub struct PrimitiveStore {
     /// CPU side information only.
     pub cpu_rectangles: Vec<RectanglePrimitive>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
-    pub cpu_shadows: Vec<ShadowPrimitiveCpu>,
+    pub cpu_pictures: Vec<PicturePrimitive>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
     pub cpu_yuv_images: Vec<YuvImagePrimitiveCpu>,
     pub cpu_gradients: Vec<GradientPrimitiveCpu>,
@@ -832,7 +830,7 @@ impl PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_rectangles: Vec::new(),
             cpu_text_runs: Vec::new(),
-            cpu_shadows: Vec::new(),
+            cpu_pictures: Vec::new(),
             cpu_images: Vec::new(),
             cpu_yuv_images: Vec::new(),
             cpu_gradients: Vec::new(),
@@ -848,7 +846,7 @@ impl PrimitiveStore {
             cpu_metadata: recycle_vec(self.cpu_metadata),
             cpu_rectangles: recycle_vec(self.cpu_rectangles),
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
-            cpu_shadows: recycle_vec(self.cpu_shadows),
+            cpu_pictures: recycle_vec(self.cpu_pictures),
             cpu_images: recycle_vec(self.cpu_images),
             cpu_yuv_images: recycle_vec(self.cpu_yuv_images),
             cpu_gradients: recycle_vec(self.cpu_gradients),
@@ -920,15 +918,15 @@ impl PrimitiveStore {
                 self.cpu_text_runs.push(text_cpu);
                 metadata
             }
-            PrimitiveContainer::Shadow(shadow) => {
+            PrimitiveContainer::Picture(picture) => {
                 let metadata = PrimitiveMetadata {
                     opacity: PrimitiveOpacity::translucent(),
-                    prim_kind: PrimitiveKind::Shadow,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_shadows.len()),
+                    prim_kind: PrimitiveKind::Picture,
+                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_pictures.len()),
                     ..base_metadata
                 };
 
-                self.cpu_shadows.push(shadow);
+                self.cpu_pictures.push(picture);
                 metadata
             }
             PrimitiveContainer::Image(image_cpu) => {
@@ -1035,9 +1033,9 @@ impl PrimitiveStore {
                 let box_shadow = &self.cpu_box_shadows[metadata.cpu_prim_index.0];
                 box_shadow.render_task_id
             }
-            PrimitiveKind::Shadow => {
-                let shadow = &self.cpu_shadows[metadata.cpu_prim_index.0];
-                shadow.render_task_id
+            PrimitiveKind::Picture => {
+                let picture = &self.cpu_pictures[metadata.cpu_prim_index.0];
+                picture.render_task_id
             }
             PrimitiveKind::Rectangle |
             PrimitiveKind::TextRun |
@@ -1114,8 +1112,8 @@ impl PrimitiveStore {
                 // ignore the new task if we are in a dependency context
                 box_shadow.render_task_id = render_tasks.map(|rt| rt.add(render_task));
             }
-            PrimitiveKind::Shadow => {
-                let shadow = &mut self.cpu_shadows[metadata.cpu_prim_index.0];
+            PrimitiveKind::Picture => {
+                let picture = &mut self.cpu_pictures[metadata.cpu_prim_index.0];
 
                 // This is a shadow element. Create a render task that will
                 // render the text run to a target, and then apply a gaussian
@@ -1126,14 +1124,15 @@ impl PrimitiveStore {
                 let cache_height =
                     (metadata.local_rect.size.height * prim_context.device_pixel_ratio).ceil() as i32;
                 let cache_size = DeviceIntSize::new(cache_width, cache_height);
-                let blur_radius = device_length(shadow.shadow.blur_radius, prim_context.device_pixel_ratio);
+                let blur_radius = picture.as_shadow().blur_radius;
+                let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
 
                 // ignore new tasks if we are in a dependency context
-                shadow.render_task_id = render_tasks.map(|rt| {
-                    let prim_cache_task = RenderTask::new_prim_cache(cache_size, prim_index);
-                    let prim_cache_task_id = rt.add(prim_cache_task);
+                picture.render_task_id = render_tasks.map(|rt| {
+                    let picture_task = RenderTask::new_picture(cache_size, prim_index);
+                    let picture_task_id = rt.add(picture_task);
                     let render_task =
-                        RenderTask::new_blur(blur_radius, prim_cache_task_id, rt);
+                        RenderTask::new_blur(blur_radius, picture_task_id, rt);
                     rt.add(render_task)
                 });
             }
@@ -1234,13 +1233,14 @@ impl PrimitiveStore {
                     let text = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                     text.write_gpu_blocks(&mut request);
                 }
-                PrimitiveKind::Shadow => {
-                    let prim = &self.cpu_shadows[metadata.cpu_prim_index.0];
-                    request.push(prim.shadow.color);
+                PrimitiveKind::Picture => {
+                    let picture = &self.cpu_pictures[metadata.cpu_prim_index.0];
+                    let shadow = picture.as_shadow();
+                    request.push(shadow.color);
                     request.push([
-                        prim.shadow.offset.x,
-                        prim.shadow.offset.y,
-                        prim.shadow.blur_radius,
+                        shadow.offset.x,
+                        shadow.offset.y,
+                        shadow.blur_radius,
                         0.0,
                     ]);
                 }
@@ -1374,8 +1374,8 @@ impl PrimitiveStore {
             };
 
             let dependencies = match metadata.prim_kind {
-                PrimitiveKind::Shadow =>
-                    self.cpu_shadows[metadata.cpu_prim_index.0].primitives.clone(),
+                PrimitiveKind::Picture =>
+                    self.cpu_pictures[metadata.cpu_prim_index.0].prim_runs.clone(),
                 _ => Vec::new(),
             };
             (geometry, dependencies)
@@ -1386,15 +1386,19 @@ impl PrimitiveStore {
         //           Specifically, the clone() below on the primitive list for
         //           text shadow primitives. Consider restructuring this code to
         //           avoid borrow checker issues.
-        for sub_prim_index in dependent_primitives {
-            self.prepare_prim_for_render_inner(
-                sub_prim_index,
-                prim_context,
-                resource_cache,
-                gpu_cache,
-                None,
-                TextRunMode::Shadow,
-            );
+        for run in dependent_primitives {
+            for i in 0 .. run.count {
+                let sub_prim_index = PrimitiveIndex(run.prim_index.0 + i);
+
+                self.prepare_prim_for_render_inner(
+                    sub_prim_index,
+                    prim_context,
+                    resource_cache,
+                    gpu_cache,
+                    None,
+                    TextRunMode::Shadow,
+                );
+            }
         }
 
         if !self.update_clip_task(
