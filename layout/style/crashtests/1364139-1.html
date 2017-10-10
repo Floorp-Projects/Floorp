@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('area');  } catch(e) { };
+      try { o2 = document.createElement('article');  } catch(e) { };
+      try { o3 = document.createElement('iframe');  } catch(e) { };
+      try { o4 = document.createElement('style');  } catch(e) { };
+      try { o1.className = 'c3';  } catch(e) { };
+      try { o2.className = 'c3';  } catch(e) { };
+      try { o2.innerText = "\uE4C9"; } catch(e) { };
+      try { document.documentElement.appendChild(o1); } catch(e) { };
+      try { document.documentElement.appendChild(o2); } catch(e) { };
+      try { document.documentElement.appendChild(o3);  } catch(e) { };
+      try { document.documentElement.appendChild(o4); } catch(e) { };
+      try { document.styleSheets[0].insertRule("*::first-letter, .c3 ~ .c3::first-line { float: right; font-variant-alternates: annotation(\\62 lah); }", 0); } catch(e) { };
+      try { o3.src = "data:text/html,"; } catch(e) { };
+      try { document.styleSheets[0].insertRule(".c3:last-child:nth-of-type(+3n) { }", 0); } catch(e) { };
+    </script>
+  </head>
+</html>
