@@ -194,10 +194,14 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!trc)
         return;
 
-    AutoPrepareForTracing prep(TlsContext.get(), WithAtoms);
+    JSContext* cx = TlsContext.get();
+    AutoPrepareForTracing prep(cx, WithAtoms);
 
-    for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
-        chunk->bitmap.clear();
+    {
+        AutoLockGC lock(cx->runtime());
+        for (auto chunk = allNonEmptyChunks(lock); !chunk.done(); chunk.next())
+            chunk->bitmap.clear();
+    }
 
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::TRACE_HEAP);
 

@@ -127,6 +127,15 @@ public:
 
   gfx::Matrix GetViewBoxTransform() const;
 
+  svgFloatSize GetViewportSize() const {
+    return svgFloatSize(mViewportWidth, mViewportHeight);
+  }
+
+  void SetViewportSize(const svgFloatSize& aSize) {
+    mViewportWidth  = aSize.width;
+    mViewportHeight = aSize.height;
+  }
+
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();

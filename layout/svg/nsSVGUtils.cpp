@@ -49,7 +49,7 @@
 #include "SVGGeometryElement.h"
 #include "SVGGeometryFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGViewportElement.h"
 #include "nsTextFrame.h"
 #include "SVGContentUtils.h"
 #include "SVGTextFrame.h"
@@ -290,7 +290,7 @@ nsSVGUtils::GetContextSize(const nsIFrame* aFrame)
   MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "bad cast");
   const nsSVGElement* element = static_cast<nsSVGElement*>(aFrame->GetContent());
 
-  SVGSVGElement* ctx = element->GetCtx();
+  SVGViewportElement* ctx = element->GetCtx();
   if (ctx) {
     size.width = ctx->GetLength(SVGContentUtils::X);
     size.height = ctx->GetLength(SVGContentUtils::Y);
@@ -323,7 +323,7 @@ nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
     // Multiply first to avoid precision errors:
     return axis * aLength->GetAnimValInSpecifiedUnits() / 100;
   }
-  return aLength->GetAnimValue(static_cast<SVGSVGElement*>(nullptr)) * axis;
+  return aLength->GetAnimValue(static_cast<SVGViewportElement*>(nullptr)) * axis;
 }
 
 float
