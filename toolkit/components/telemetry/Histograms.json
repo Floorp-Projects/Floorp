@@ -13726,5 +13726,15 @@
     "keyed": true,
     "bug_numbers": [1341569],
     "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form, keyed by the combination of form type and filling type."
+  },
+  "GFX_OMTP_PAINT_WAIT_TIME": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Amount of time in milliseconds the main thread spends waiting for the paint thread to complete, if the time was greater than 200us.",
+    "bug_numbers": [1386968]
   }
 }
