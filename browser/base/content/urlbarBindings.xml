@@ -1933,8 +1933,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             let identityIcon = document.getElementById("identity-icon");
             let identityRect =
               this.DOMWindowUtils.getBoundsWithoutFlushing(identityIcon);
-            this.siteIconStart = popupDirection == "rtl" ? identityRect.right
-                                                         : identityRect.left;
+            if (popupDirection == "rtl") {
+              this.siteIconStart = documentRect.right - identityRect.right;
+            } else {
+              this.siteIconStart = identityRect.left;
+            }
           } else {
             // Reset the alignment so that the site icons are positioned
             // according to whatever's in the CSS.
@@ -1989,10 +1992,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             deckIndex = 1;
 
             if (this.siteIconStart) {
-              let rect = this.DOMWindowUtils.getBoundsWithoutFlushing(window.document.documentElement);
-              let padding = popupDirection == "rtl" ? rect.right - this.siteIconStart
-                                                    : this.siteIconStart;
-              this.searchSuggestionsNotification.style.paddingInlineStart = padding + "px";
+              this.searchSuggestionsNotification.style.paddingInlineStart =
+                this.siteIconStart + "px";
             } else {
               this.searchSuggestionsNotification.style.removeProperty("padding-inline-start");
             }
