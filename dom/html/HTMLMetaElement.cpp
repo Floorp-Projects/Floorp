@@ -55,7 +55,9 @@ HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument)
 nsresult
 HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue, bool aNotify)
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal,
+                              bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     nsIDocument *document = GetUncomposedDoc();
@@ -77,7 +79,7 @@ HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aOldValue, aNotify);
+                                            aOldValue, aSubjectPrincipal, aNotify);
 }
 
 nsresult

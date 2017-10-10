@@ -436,13 +436,15 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
       }
     }
 
-    double targetArea = targetRect.Width() * targetRect.Height();
-    double intersectionArea = !intersectionRect ?
-      0 : intersectionRect->Width() * intersectionRect->Height();
+    int64_t targetArea =
+      (int64_t) targetRect.Width() * (int64_t) targetRect.Height();
+    int64_t intersectionArea = !intersectionRect ? 0 :
+      (int64_t) intersectionRect->Width() *
+      (int64_t) intersectionRect->Height();
 
     double intersectionRatio;
     if (targetArea > 0.0) {
-      intersectionRatio = intersectionArea / targetArea;
+      intersectionRatio = (double) intersectionArea / (double) targetArea;
     } else {
       intersectionRatio = intersectionRect.isSome() ? 1.0 : 0.0;
     }

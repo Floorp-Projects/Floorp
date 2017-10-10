@@ -180,6 +180,7 @@ public:
 
   uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
   nsAutoCString mURL;     // Keep the URI's filename alive during off thread parsing.
   int32_t mLineNo;

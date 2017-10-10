@@ -373,6 +373,16 @@ public:
   {
     return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
+                   const nsAString& aValue, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, aPrefix, aValue, nullptr, aNotify);
+  }
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, const nsAString& aValue,
+                   nsIPrincipal* aTriggeringPrincipal, bool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aTriggeringPrincipal, aNotify);
+  }
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -385,11 +395,18 @@ public:
    * @param aName the name of the attribute
    * @param aPrefix the prefix of the attribute
    * @param aValue the value to set
+   * @param aMaybeScriptedPrincipal the principal of the scripted caller responsible
+   *        for setting the attribute, or null if no scripted caller can be
+   *        determined. A null value here does not guarantee that there is no
+   *        scripted caller, but a non-null value does guarantee that a scripted
+   *        caller with the given principal is directly responsible for the
+   *        attribute change.
    * @param aNotify specifies how whether or not the document should be
    *        notified of the attribute change.
    */
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
                            nsAtom* aPrefix, const nsAString& aValue,
+                           nsIPrincipal* aMaybeScriptedPrincipal,
                            bool aNotify) = 0;
 
   /**

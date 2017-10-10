@@ -77,7 +77,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
                                              nsGenericHTMLElement,
-                                             nsIDOMHTMLLinkElement,
                                              nsIStyleSheetLinkingElement,
                                              Link)
 
@@ -90,13 +89,6 @@ HTMLLinkElement::Disabled()
   return ss && ss->Disabled();
 }
 
-NS_IMETHODIMP
-HTMLLinkElement::GetMozDisabled(bool* aDisabled)
-{
-  *aDisabled = Disabled();
-  return NS_OK;
-}
-
 void
 HTMLLinkElement::SetDisabled(bool aDisabled)
 {
@@ -104,23 +96,6 @@ HTMLLinkElement::SetDisabled(bool aDisabled)
     ss->SetDisabled(aDisabled);
   }
 }
-
-NS_IMETHODIMP
-HTMLLinkElement::SetMozDisabled(bool aDisabled)
-{
-  SetDisabled(aDisabled);
-  return NS_OK;
-}
-
-
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Charset, charset)
-NS_IMPL_URI_ATTR(HTMLLinkElement, Href, href)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Hreflang, hreflang)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Media, media)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Rel, rel)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Rev, rev)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
-NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
 
 void
 HTMLLinkElement::OnDNSPrefetchRequested()
@@ -292,7 +267,9 @@ HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult
 HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue, bool aNotify)
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal,
+                              bool aNotify)
 {
   // It's safe to call ResetLinkState here because our new attr value has
   // already been set or unset.  ResetLinkState needs the updated attribute
@@ -305,6 +282,12 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (IsInUncomposedDoc()) {
       CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkChanged"));
     }
+  }
+
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
+    mTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+        this, aValue ? aValue->GetStringValue() : EmptyString(),
+        aSubjectPrincipal);
   }
 
   if (aValue) {
@@ -363,7 +346,7 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
-                                            aOldValue, aNotify);
+                                            aOldValue, aSubjectPrincipal, aNotify);
 }
 
 nsresult
@@ -424,14 +407,20 @@ HTMLLinkElement::GetHrefURI() const
 }
 
 already_AddRefed<nsIURI>
-HTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
+HTMLLinkElement::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
 {
   *aIsInline = false;
+  *aTriggeringPrincipal = nullptr;
+
   nsAutoString href;
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
   if (href.IsEmpty()) {
     return nullptr;
   }
+
+  nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
+  prin.forget(aTriggeringPrincipal);
+
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   return uri.forget();
 }

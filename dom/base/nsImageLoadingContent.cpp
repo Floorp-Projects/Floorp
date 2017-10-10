@@ -897,7 +897,8 @@ nsresult
 nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
                                  bool aForce,
                                  bool aNotify,
-                                 ImageLoadType aImageLoadType)
+                                 ImageLoadType aImageLoadType,
+                                 nsIPrincipal* aTriggeringPrincipal)
 {
   // First, get a document (needed for security checks and the like)
   nsIDocument* doc = GetOurOwnerDoc();
@@ -931,7 +932,8 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
 
   NS_TryToSetImmutable(imageURI);
 
-  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, false, doc);
+  return LoadImage(imageURI, aForce, aNotify, aImageLoadType, false, doc,
+                   nsIRequest::LOAD_NORMAL, aTriggeringPrincipal);
 }
 
 nsresult
@@ -941,7 +943,8 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  ImageLoadType aImageLoadType,
                                  bool aLoadStart,
                                  nsIDocument* aDocument,
-                                 nsLoadFlags aLoadFlags)
+                                 nsLoadFlags aLoadFlags,
+                                 nsIPrincipal* aTriggeringPrincipal)
 {
   MOZ_ASSERT(!mIsStartingImageLoad, "some evil code is reentering LoadImage.");
   if (mIsStartingImageLoad) {
@@ -1039,10 +1042,10 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   bool result =
-    nsContentUtils::GetLoadingPrincipalForXULNode(content,
-                                                  getter_AddRefs(loadingPrincipal));
+    nsContentUtils::GetLoadingPrincipalForXULNode(content, aTriggeringPrincipal,
+                                                  getter_AddRefs(triggeringPrincipal));
 
   // If result is true, which means this node has specified 'loadingprincipal'
   // attribute on it, so we use favicon as the policy type.
@@ -1055,7 +1058,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   nsresult rv = nsContentUtils::LoadImage(aNewURI,
                                           thisNode,
                                           aDocument,
-                                          loadingPrincipal,
+                                          triggeringPrincipal,
                                           0,
                                           aDocument->GetDocumentURI(),
                                           referrerPolicy,

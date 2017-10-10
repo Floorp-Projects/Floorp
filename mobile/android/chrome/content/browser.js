@@ -3053,7 +3053,7 @@ var NativeWindow = {
       if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
           ((ChromeUtils.getClassName(aElement) === "HTMLAnchorElement" && aElement.href) ||
            (ChromeUtils.getClassName(aElement) === "HTMLAreaElement" && aElement.href) ||
-           aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+           ChromeUtils.getClassName(aElement) === "HTMLLinkElement" ||
            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
         try {
           let url = this._getLinkURL(aElement);
