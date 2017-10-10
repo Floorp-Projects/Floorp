@@ -18,7 +18,7 @@
 }
 
 #eula-dialog[addontype="plugin"] #icon {
-  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.svg");
 }
 
 #eula-dialog[addontype="dictionary"] #icon {

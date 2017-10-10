@@ -518,6 +518,15 @@
          <item name="android:nextFocusLeft">@+id/info</item>
     </style>
 
+    <style name="TabsLayoutItemFavicon">
+        <item name="android:layout_marginRight">4dp</item>
+    </style>
+
+    <style name="TabsListItemFavicon">
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">6dp</item>
+    </style>
+
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
@@ -950,6 +959,17 @@
     <style name="TabStrip.V15.Favicon" parent="TabStrip.Base.Favicon">
         <item name="android:layout_marginLeft">12dp</item>
         <item name="android:layout_marginRight">8dp</item>
+    </style>
+
+    <style name="TabStrip.Close" parent="TabStrip.V15.Close"/>
+    <style name="TabStrip.V15.Close" parent="TabStrip.Base">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="TabStrip.Title" parent="TabStrip.V15.Title"/>
+    <style name="TabStrip.V15.Title" parent="TabStrip.Base">
+        <item name="android:layout_toRightOf">@id/favicon</item>
+        <item name="android:layout_toLeftOf">@id/close</item>
     </style>
 
 </resources>

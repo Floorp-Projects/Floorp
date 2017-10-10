@@ -701,6 +701,13 @@ public class AndroidFxAccount {
   }
 
   public synchronized State getState() {
+    // Ensure we're working with the latest 'account' state. It might have changed underneath us.
+    // Note that this "state refresh" is inefficient for some callers, since they might have
+    // created this object (and thus fetched an account from the accounts system) just moments ago.
+    // Other callers maintain this object for a while, and thus might be out-of-sync with the world.
+    // See Bug 1407316 for higher-order improvements that will make this unnecessary.
+    account = FirefoxAccounts.getFirefoxAccount(context);
+
     String stateLabelString = getBundleData(BUNDLE_KEY_STATE_LABEL);
     String stateString = getBundleData(BUNDLE_KEY_STATE);
     if (stateLabelString == null || stateString == null) {
@@ -722,6 +729,10 @@ public class AndroidFxAccount {
    * <b>For debugging only!</b>
    */
   public void dump() {
+    // Make sure we dump using the latest 'account'. It might have changed since this object was
+    // initialized.
+    account = FirefoxAccounts.getFirefoxAccount(context);
+
     if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
       return;
     }
@@ -1046,56 +1057,74 @@ public class AndroidFxAccount {
     }
     final String email = profileJSON.getString("email");
 
-    // If primary email didn't change, there's nothing for us to do.
-    if (account.name.equals(email)) {
+    // To prevent race against a shared state, we need to hold a lock which is released after
+    // account is renamed, or it's determined that the rename isn't necessary.
+    try {
+      acquireSharedAccountStateLock(LOG_TAG);
+    } catch (InterruptedException e) {
+      Logger.error(LOG_TAG, "Could not acquire a shared account state lock.");
       callback.run();
       return;
     }
 
-    Logger.info(LOG_TAG, "Renaming Android Account.");
-    FxAccountUtils.pii(LOG_TAG, "Renaming Android account from " + account.name + " to " + email);
+    try {
+      // Update our internal state. It's possible that the account changed underneath us while
+      // we were fetching profile information. See Bug 1401318.
+      account = FirefoxAccounts.getFirefoxAccount(context);
 
-    // Then, get the currently auto-syncing authorities.
-    // We'll toggle these on once we re-add the account.
-    final Map<String, Boolean> currentAuthoritiesToSync = getAuthoritiesToSyncAutomaticallyMap();
+      // If primary email didn't change, there's nothing for us to do.
+      if (account.name.equals(email)) {
+        callback.run();
+        return;
+      }
 
-    // We also need to manually carry over current sync intervals.
-    final Map<String, List<PeriodicSync>> periodicSyncsForAuthorities = new HashMap<>();
-    for (String authority : currentAuthoritiesToSync.keySet()) {
-      periodicSyncsForAuthorities.put(authority, ContentResolver.getPeriodicSyncs(account, authority));
-    }
+      Logger.info(LOG_TAG, "Renaming Android Account.");
+      FxAccountUtils.pii(LOG_TAG, "Renaming Android account from " + account.name + " to " + email);
 
-    final Runnable migrateSyncSettings = new Runnable() {
-      @Override
-      public void run() {
-        // Set up auto-syncing for the newly added account.
-        setAuthoritiesToSyncAutomaticallyMap(currentAuthoritiesToSync);
+      // Then, get the currently auto-syncing authorities.
+      // We'll toggle these on once we re-add the account.
+      final Map<String, Boolean> currentAuthoritiesToSync = getAuthoritiesToSyncAutomaticallyMap();
 
-        // Set up all of the periodic syncs we had prior.
-        for (String authority : periodicSyncsForAuthorities.keySet()) {
-          final List<PeriodicSync> periodicSyncs = periodicSyncsForAuthorities.get(authority);
-          for (PeriodicSync periodicSync : periodicSyncs) {
-            ContentResolver.addPeriodicSync(
-                    account,
-                    periodicSync.authority,
-                    periodicSync.extras,
-                    periodicSync.period
-            );
+      // We also need to manually carry over current sync intervals.
+      final Map<String, List<PeriodicSync>> periodicSyncsForAuthorities = new HashMap<>();
+      for (String authority : currentAuthoritiesToSync.keySet()) {
+        periodicSyncsForAuthorities.put(authority, ContentResolver.getPeriodicSyncs(account, authority));
+      }
+
+      final Runnable migrateSyncSettings = new Runnable() {
+        @Override
+        public void run() {
+          // Set up auto-syncing for the newly added account.
+          setAuthoritiesToSyncAutomaticallyMap(currentAuthoritiesToSync);
+
+          // Set up all of the periodic syncs we had prior.
+          for (String authority : periodicSyncsForAuthorities.keySet()) {
+            final List<PeriodicSync> periodicSyncs = periodicSyncsForAuthorities.get(authority);
+            for (PeriodicSync periodicSync : periodicSyncs) {
+              ContentResolver.addPeriodicSync(
+                      account,
+                      periodicSync.authority,
+                      periodicSync.extras,
+                      periodicSync.period
+              );
+            }
           }
         }
+      };
+
+      // On API21+, we can simply "rename" the account, which will recreate it carrying over user data.
+      // Our regular "account was just deleted" side-effects will not run.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        doOptionalProfileRename21Plus(email, migrateSyncSettings, callback);
+
+        // Prior to API21, we have to perform this operation manually: make a copy of the user data,
+        // delete current account, and then re-create it.
+        // We also need to ensure our regular "account was just deleted" side-effects are not invoked.
+      } else {
+        doOptionalProfileRenamePre21(email, migrateSyncSettings, callback);
       }
-    };
-
-    // On API21+, we can simply "rename" the account, which will recreate it carrying over user data.
-    // Our regular "account was just deleted" side-effects will not run.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      doOptionalProfileRename21Plus(email, migrateSyncSettings, callback);
-
-    // Prior to API21, we have to perform this operation manually: make a copy of the user data,
-    // delete current account, and then re-create it.
-    // We also need to ensure our regular "account was just deleted" side-effects are not invoked.
-    } else {
-      doOptionalProfileRenamePre21(email, migrateSyncSettings, callback);
+    } finally {
+      releaseSharedAccountStateLock();
     }
   }
 

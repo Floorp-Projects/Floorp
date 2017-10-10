@@ -20,6 +20,7 @@ const TEST_URI = `
       background: none;
       transition: initial;
       z-index: 0;
+      opacity: 1;
     }
   </style>
   <div id="test"></div>
@@ -39,6 +40,7 @@ add_task(function* () {
   yield testShorthandIncrements(view);
   yield testOddCases(view);
   yield testZeroValueIncrements(view);
+  yield testOpacityIncrements(view);
 });
 
 function* testMarginIncrements(view) {
@@ -227,7 +229,29 @@ function* testZeroValueIncrements(view) {
   });
 }
 
+function* testOpacityIncrements(view) {
+  info("Testing keyboard increments on the opacity property");
+
+  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  let opacityPropEditor = idRuleEditor.rule.textProps[7].editor;
+
+  yield runIncrementTest(opacityPropEditor, view, {
+    1: {alt: true, start: "0.5", end: "0.51", selectAll: true},
+    2: {start: "0", end: "0.1", selectAll: true},
+    3: {shift: true, start: "0", end: "1", selectAll: true},
+    4: {down: true, alt: true, start: "0.1", end: "0.09", selectAll: true},
+    5: {down: true, start: "0", end: "-0.1", selectAll: true},
+    6: {down: true, shift: true, start: "0", end: "-1", selectAll: true},
+    7: {pageUp: true, shift: true, start: "0", end: "10", selectAll: true},
+    8: {pageDown: true, shift: true, start: "0", end: "-10",
+        selectAll: true},
+    9: {start: "0.7", end: "0.8", selectAll: true},
+    10: {down: true, start: "0", end: "-0.1", selectAll: true},
+  });
+}
+
 function* runIncrementTest(propertyEditor, view, tests) {
+  propertyEditor.valueSpan.scrollIntoView();
   let editor = yield focusEditableField(view, propertyEditor.valueSpan);
 
   for (let test in tests) {

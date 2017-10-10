@@ -86,13 +86,14 @@ pub use cssparser_macros::*;
 pub use tokenizer::{Token, SourcePosition, SourceLocation};
 pub use rules_and_declarations::{parse_important};
 pub use rules_and_declarations::{DeclarationParser, DeclarationListParser, parse_one_declaration};
-pub use rules_and_declarations::{RuleListParser, parse_one_rule, PreciseParseError};
+pub use rules_and_declarations::{RuleListParser, parse_one_rule};
 pub use rules_and_declarations::{AtRuleType, QualifiedRuleParser, AtRuleParser};
 pub use from_bytes::{stylesheet_encoding, EncodingSupport};
 pub use color::{RGBA, Color, parse_color_keyword};
 pub use nth::parse_nth;
 pub use serializer::{ToCss, CssStringWriter, serialize_identifier, serialize_string, TokenSerializationType};
-pub use parser::{Parser, Delimiter, Delimiters, ParserState, ParseError, BasicParseError, ParserInput};
+pub use parser::{Parser, Delimiter, Delimiters, ParserState, ParserInput};
+pub use parser::{ParseError, ParseErrorKind, BasicParseError, BasicParseErrorKind};
 pub use unicode_range::UnicodeRange;
 pub use cow_rc_str::CowRcStr;
 

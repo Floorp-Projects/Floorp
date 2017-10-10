@@ -56,6 +56,10 @@ public:
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
+  bool GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOptions,
+                                Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
+                                std::vector<FontVariation>* aOutVariations) override;
+
   AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() { return mUseEmbeddedBitmap; }

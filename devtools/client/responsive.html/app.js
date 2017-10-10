@@ -27,9 +27,9 @@ const {
   resizeViewport,
   rotateViewport,
 } = require("./actions/viewports");
-const DeviceModal = createFactory(require("./components/device-modal"));
-const GlobalToolbar = createFactory(require("./components/global-toolbar"));
-const Viewports = createFactory(require("./components/viewports"));
+const DeviceModal = createFactory(require("./components/DeviceModal"));
+const GlobalToolbar = createFactory(require("./components/GlobalToolbar"));
+const Viewports = createFactory(require("./components/Viewports"));
 const Types = require("./types");
 
 let App = createClass({

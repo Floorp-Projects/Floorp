@@ -173,17 +173,14 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   background-size: 16px;
   width: 24px;
   height: 40px;
+
+  /* The icon color should always match the text color. */
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
+  fill: currentColor;
 }
 
 .disabled > .stylesheet-enabled {
   opacity: 0.3;
-}
-
-/* Invert the toggle icon in the active row for light theme */
-.splitview-nav > li.splitview-active .stylesheet-enabled {
-  fill: var(--theme-toolbar-selected-color);
 }
 
 .splitview-nav > li > .stylesheet-enabled:focus,

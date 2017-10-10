@@ -24,7 +24,7 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                 "n-" => Ok(try!(parse_signless_b(input, a, -1))),
                 _ => match parse_n_dash_digits(&*unit) {
                     Ok(b) => Ok((a, b)),
-                    Err(()) => Err(BasicParseError::UnexpectedToken(Token::Ident(unit.clone())))
+                    Err(()) => Err(input.new_basic_unexpected_token_error(Token::Ident(unit.clone())))
                 }
             }
         }
@@ -44,7 +44,7 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                     };
                     match parse_n_dash_digits(slice) {
                         Ok(b) => Ok((a, b)),
-                        Err(()) => Err(BasicParseError::UnexpectedToken(Token::Ident(value.clone())))
+                        Err(()) => Err(input.new_basic_unexpected_token_error(Token::Ident(value.clone())))
                     }
                 }
             }
@@ -57,13 +57,13 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                     "n-" => parse_signless_b(input, 1, -1),
                     _ => match parse_n_dash_digits(&*value) {
                         Ok(b) => Ok((1, b)),
-                        Err(()) => Err(BasicParseError::UnexpectedToken(Token::Ident(value.clone())))
+                        Err(()) => Err(input.new_basic_unexpected_token_error(Token::Ident(value.clone())))
                     }
                 }
             }
-            token => Err(BasicParseError::UnexpectedToken(token)),
+            token => Err(input.new_basic_unexpected_token_error(token)),
         },
-        token => Err(BasicParseError::UnexpectedToken(token)),
+        token => Err(input.new_basic_unexpected_token_error(token)),
     }
 }
 
@@ -82,9 +82,10 @@ fn parse_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32) -> Result<(i32, i32), Bas
 }
 
 fn parse_signless_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32, b_sign: i32) -> Result<(i32, i32), BasicParseError<'i>> {
-    match *input.next()? {
+    // FIXME: remove .clone() when lifetimes are non-lexical.
+    match input.next()?.clone() {
         Token::Number { has_sign: false, int_value: Some(b), .. } => Ok((a, b_sign * b)),
-        ref token => Err(BasicParseError::UnexpectedToken(token.clone()))
+        token => Err(input.new_basic_unexpected_token_error(token))
     }
 }
 

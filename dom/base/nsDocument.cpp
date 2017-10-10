@@ -5010,6 +5010,7 @@ nsIDocument::SetContainer(nsDocShell* aContainer)
   }
 
   mAncestorPrincipals = aContainer->AncestorPrincipals();
+  mAncestorOuterWindowIDs = aContainer->AncestorOuterWindowIDs();
 }
 
 nsISupports*

@@ -4281,8 +4281,8 @@ CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
     return false;
   }
 
-  RefPtr<nsCSSKeyframesRule> rule = new nsCSSKeyframesRule(name,
-                                                             linenum, colnum);
+  RefPtr<nsCSSKeyframesRule> rule =
+    new nsCSSKeyframesRule(NS_Atomize(name), linenum, colnum);
 
   while (!ExpectSymbol('}', true)) {
     RefPtr<nsCSSKeyframeRule> kid = ParseKeyframeRule();

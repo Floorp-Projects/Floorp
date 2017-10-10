@@ -91,6 +91,16 @@ var AttributionCode = {
   },
 
   /**
+   * Return the cached attribution data synchronously without hitting
+   * the disk.
+   * @returns A dictionary with the attribution data if it's available,
+   *          null otherwise.
+   */
+  getCachedAttributionData() {
+    return gCachedAttrData;
+  },
+
+  /**
    * Deletes the attribution data file.
    * Returns a promise that resolves when the file is deleted,
    * or if the file couldn't be deleted (the promise is never rejected).

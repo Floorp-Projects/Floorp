@@ -11,8 +11,8 @@ const { DOM: dom, createClass, createFactory, PropTypes } =
 
 const Constants = require("../constants");
 const Types = require("../types");
-const Browser = createFactory(require("./browser"));
-const ViewportToolbar = createFactory(require("./viewport-toolbar"));
+const Browser = createFactory(require("./Browser"));
+const ViewportToolbar = createFactory(require("./ViewportToolbar"));
 
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;

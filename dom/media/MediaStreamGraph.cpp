@@ -1115,23 +1115,17 @@ MediaStreamGraph::NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
   }
 }
 
-void
-MediaStreamGraph::AssertOnGraphThreadOrNotRunning() const
+bool
+MediaStreamGraph::OnGraphThreadOrNotRunning() const
 {
   // either we're on the right thread (and calling CurrentDriver() is safe),
-  // or we're going to assert anyways, so don't cross-check CurrentDriver
-#ifdef DEBUG
+  // or we're going to fail the assert anyway, so don't cross-check
+  // via CurrentDriver().
   MediaStreamGraphImpl const * graph =
     static_cast<MediaStreamGraphImpl const *>(this);
   // if all the safety checks fail, assert we own the monitor
-  if (!graph->mDriver->OnThread()) {
-    if (!(graph->mDetectedNotRunning &&
-          graph->mLifecycleState > MediaStreamGraphImpl::LIFECYCLE_RUNNING &&
-          NS_IsMainThread())) {
-      graph->mMonitor.AssertCurrentThreadOwns();
-    }
-  }
-#endif
+  return graph->mDetectedNotRunning ?
+    NS_IsMainThread() : graph->mDriver->OnThread();
 }
 
 bool
@@ -1407,7 +1401,16 @@ MediaStreamGraphImpl::Process()
     }
   }
 
-  if (CurrentDriver()->AsAudioCallbackDriver() && ticksPlayed) {
+  if (CurrentDriver()->AsAudioCallbackDriver()) {
+    if (!ticksPlayed) {
+      // Nothing was played, so the mixer doesn't know how many frames were
+      // processed. We still tell it so AudioCallbackDriver knows how much has
+      // been processed. (bug 1406027)
+      mMixer.Mix(nullptr,
+                 CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
+                 mStateComputedTime - mProcessedTime,
+                 mSampleRate);
+    }
     mMixer.FinishMixing();
   }
 

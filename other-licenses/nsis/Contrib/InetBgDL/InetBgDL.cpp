@@ -13,6 +13,7 @@
 #define STATUS_ERR_GETLASTERROR 418 //HTTP: I'm a teapot: Win32 error code in $3
 #define STATUS_ERR_LOCALFILEWRITEERROR 450 //HTTP: MS parental control extension
 #define STATUS_ERR_CANCELLED 499
+#define STATUS_ERR_CONNECTION_LOST 1000
 
 typedef DWORD FILESIZE_T; // Limit to 4GB for now...
 #define FILESIZE_UNKNOWN (-1)
@@ -266,6 +267,7 @@ DWORD CALLBACK TaskThreadProc(LPVOID ThreadParam)
   NSIS::stack_t *pURL,*pFile;
   HINTERNET hInetSes = NULL, hInetFile = NULL;
   DWORD cbio = sizeof(DWORD);
+  DWORD previouslyWritten = 0, writtenThisSession = 0;
   HANDLE hLocalFile;
   bool completedFile = false;
 startnexttask:
@@ -320,6 +322,7 @@ diegle:
       //TODO? if (ERROR_INTERNET_EXTENDED_ERROR==gle) InternetGetLastResponseInfo(...)
       g_Status = STATUS_ERR_GETLASTERROR;
     }
+die:
     if (hInetSes)
     {
       InternetCloseHandle(hInetSes);
@@ -372,11 +375,19 @@ diegle:
   }
 
   DWORD ec = ERROR_SUCCESS;
-  hLocalFile = CreateFile(pFile->text, GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_DELETE,NULL,CREATE_ALWAYS, 0, NULL);
+  hLocalFile = CreateFile(pFile->text, GENERIC_READ | GENERIC_WRITE,
+                          FILE_SHARE_READ | FILE_SHARE_DELETE,
+                          NULL, OPEN_ALWAYS, 0, NULL);
   if (INVALID_HANDLE_VALUE == hLocalFile)
   {
     TRACE(_T("InetBgDl: CreateFile file handle invalid\n"));
     goto diegle;
+  }
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    // Resuming a download that was started earlier and then aborted.
+    previouslyWritten = GetFileSize(hLocalFile, NULL);
+    g_cbCurrXF = previouslyWritten;
+    SetFilePointer(hLocalFile, previouslyWritten, NULL, FILE_BEGIN);
   }
 
   const DWORD IOURedirFlags = INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP |
@@ -417,9 +428,13 @@ diegle:
     goto diegle;
   }
 
+  // Tell the server to pick up wherever we left off.
+  TCHAR headers[32] = _T("");
+  _snwprintf(headers, 32, _T("Range: bytes=%d-\r\n"), previouslyWritten);
+
   TRACE(_T("InetBgDl: calling InternetOpenUrl with url=%s\n"), pURL->text);
   hInetFile = InternetOpenUrl(hInetSes, pURL->text,
-                              NULL, 0, IOUFlags |
+                              headers, -1, IOUFlags |
                               (uc.nScheme == INTERNET_SCHEME_HTTPS ?
                                INTERNET_FLAG_SECURE : 0), 1);
   if (!hInetFile)
@@ -490,10 +505,11 @@ diegle:
       // If we haven't transferred all of the file, and we know how big the file
       // is, and we have no more data to read from the HTTP request, then set a
       // broken pipe error. Reading without StatsLock is ok in this thread.
-      if (FILESIZE_UNKNOWN != cbThisFile && g_cbCurrXF != cbThisFile)
+      if (FILESIZE_UNKNOWN != cbThisFile && writtenThisSession != cbThisFile)
       {
-        TRACE(_T("InetBgDl: downloaded file size of %d bytes doesn't equal ") \
-              _T("expected file size of %d bytes\n"), g_cbCurrXF, cbThisFile);
+        TRACE(_T("InetBgDl: expected Content-Length of %d bytes, ")
+              _T("but transferred %d bytes\n"),
+              cbThisFile, writtenThisSession);
         ec = ERROR_BROKEN_PIPE;
       }
       break;
@@ -521,6 +537,7 @@ diegle:
       if (FILESIZE_UNKNOWN != cbThisFile) {
         g_cbCurrTot = cbThisFile;
       }
+      writtenThisSession += cbXF;
       g_cbCurrXF += cbXF;
       StatsLock_ReleaseExclusive();
     }
@@ -538,6 +555,11 @@ diegle:
     StackFreeItem(pURL);
     StackFreeItem(pFile);
     ++completedFile;
+  }
+  else if (ERROR_BROKEN_PIPE == ec)
+  {
+    g_Status = STATUS_ERR_CONNECTION_LOST;
+    goto die;
   }
   else
   {

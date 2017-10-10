@@ -6,7 +6,7 @@
 
 const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
-const DominatorTreeItem = createFactory(require("./dominator-tree-item"));
+const DominatorTreeItem = createFactory(require("./DominatorTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 const models = require("../models");
 

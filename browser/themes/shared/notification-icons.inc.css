@@ -205,7 +205,7 @@ html|*#webRTC-previewVideo {
 }
 
 .popup-notification-icon[popupid="click-to-play-plugins"] {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.svg);
 }
 
 /* OFFLINE APPS */

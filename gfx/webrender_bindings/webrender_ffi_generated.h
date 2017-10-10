@@ -59,6 +59,29 @@ enum class ExternalImageType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+#if !(defined(XP_MACOSX) || defined(XP_WIN))
+enum class FontHinting : uint8_t {
+  None = 0,
+  Mono = 1,
+  Light = 2,
+  Normal = 3,
+  LCD = 4,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+#endif
+
+#if !(defined(XP_MACOSX) || defined(XP_WIN))
+enum class FontLCDFilter : uint8_t {
+  None = 0,
+  Default = 1,
+  Light = 2,
+  Legacy = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+#endif
+
 enum class FontRenderMode : uint32_t {
   Mono = 0,
   Alpha = 1,
@@ -129,6 +152,14 @@ enum class RepeatMode : uint32_t {
   Repeat = 1,
   Round = 2,
   Space = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class SubpixelDirection : uint32_t {
+  None = 0,
+  Horizontal = 1,
+  Vertical = 2,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -252,14 +283,11 @@ struct BuiltDisplayListDescriptor {
   uint64_t builder_finish_time;
   // The third IPC time stamp: just before sending
   uint64_t send_start_time;
-  // The offset where DisplayItems stop and the Glyph list starts
-  size_t glyph_offset;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
     return builder_start_time == aOther.builder_start_time &&
            builder_finish_time == aOther.builder_finish_time &&
-           send_start_time == aOther.send_start_time &&
-           glyph_offset == aOther.glyph_offset;
+           send_start_time == aOther.send_start_time;
   }
 };
 
@@ -732,16 +760,19 @@ struct FontKey {
 
 typedef FontKey WrFontKey;
 
-struct WrFontInstanceOptions {
+struct FontInstanceOptions {
   FontRenderMode render_mode;
+  SubpixelDirection subpx_dir;
   bool synthetic_italics;
 
-  bool operator==(const WrFontInstanceOptions& aOther) const {
+  bool operator==(const FontInstanceOptions& aOther) const {
     return render_mode == aOther.render_mode &&
+           subpx_dir == aOther.subpx_dir &&
            synthetic_italics == aOther.synthetic_italics;
   }
 };
 
+#if defined(XP_WIN)
 struct FontInstancePlatformOptions {
   bool use_embedded_bitmap;
   bool force_gdi_rendering;
@@ -751,6 +782,31 @@ struct FontInstancePlatformOptions {
            force_gdi_rendering == aOther.force_gdi_rendering;
   }
 };
+#endif
+
+#if defined(XP_MACOSX)
+struct FontInstancePlatformOptions {
+  uint32_t unused;
+
+  bool operator==(const FontInstancePlatformOptions& aOther) const {
+    return unused == aOther.unused;
+  }
+};
+#endif
+
+#if !(defined(XP_MACOSX) || defined(XP_WIN))
+struct FontInstancePlatformOptions {
+  uint16_t flags;
+  FontLCDFilter lcd_filter;
+  FontHinting hinting;
+
+  bool operator==(const FontInstancePlatformOptions& aOther) const {
+    return flags == aOther.flags &&
+           lcd_filter == aOther.lcd_filter &&
+           hinting == aOther.hinting;
+  }
+};
+#endif
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -1212,7 +1268,7 @@ void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
                                            WrFontInstanceKey aKey,
                                            WrFontKey aFontKey,
                                            float aGlyphSize,
-                                           const WrFontInstanceOptions *aOptions,
+                                           const FontInstanceOptions *aOptions,
                                            const FontInstancePlatformOptions *aPlatformOptions,
                                            WrVecU8 *aVariations)
 WR_FUNC;
