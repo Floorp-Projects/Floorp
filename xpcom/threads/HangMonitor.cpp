@@ -14,16 +14,13 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "nsExceptionHandler.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/StackWalk.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -110,7 +107,6 @@ Crash()
   }
 #endif
 
-#ifdef MOZ_CRASHREPORTER
   // If you change this, you must also deal with the threadsafety of AnnotateCrashReport in
   // non-chrome processes!
   if (GeckoProcessType_Default == XRE_GetProcessType()) {
@@ -118,7 +114,6 @@ Crash()
                                        NS_LITERAL_CSTRING("1"));
     CrashReporter::SetMinidumpAnalysisAllThreads();
   }
-#endif
 
   MOZ_CRASH("HangMonitor triggered");
 }
