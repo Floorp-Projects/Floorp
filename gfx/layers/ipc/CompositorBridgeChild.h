@@ -388,6 +388,9 @@ private:
   // paint thread completes. This is R/W on both the main and paint threads, and
   // must be accessed within the paint lock.
   bool mIsWaitingForPaint;
+
+  uintptr_t mSlowFlushCount;
+  uintptr_t mTotalFlushCount;
 };
 
 } // namespace layers
