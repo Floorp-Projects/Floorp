@@ -95,7 +95,7 @@ imgRequest::Init(nsIURI *aURI,
                  nsIChannel *aChannel,
                  imgCacheEntry *aCacheEntry,
                  nsISupports* aCX,
-                 nsIPrincipal* aLoadingPrincipal,
+                 nsIPrincipal* aTriggeringPrincipal,
                  int32_t aCORSMode,
                  ReferrerPolicy aReferrerPolicy)
 {
@@ -121,7 +121,7 @@ imgRequest::Init(nsIURI *aURI,
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
 
-  mLoadingPrincipal = aLoadingPrincipal;
+  mTriggeringPrincipal = aTriggeringPrincipal;
   mCORSMode = aCORSMode;
   mReferrerPolicy = aReferrerPolicy;
 

@@ -209,7 +209,9 @@ IsValidContentSelectors(nsCSSSelector* aSelector)
 nsresult
 HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValue* aValue,
-                                 const nsAttrValue* aOldValue, bool aNotify)
+                                 const nsAttrValue* aOldValue,
+                                 nsIPrincipal* aSubjectPrincipal,
+                                 bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::select) {
     if (aValue) {
@@ -263,7 +265,7 @@ HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
-                                            aOldValue, aNotify);
+                                            aOldValue, aSubjectPrincipal, aNotify);
 }
 
 bool

@@ -1297,6 +1297,7 @@ Element::GetAttribute(const nsAString& aName, DOMString& aReturn)
 void
 Element::SetAttribute(const nsAString& aName,
                       const nsAString& aValue,
+                      nsIPrincipal* aTriggeringPrincipal,
                       ErrorResult& aError)
 {
   aError = nsContentUtils::CheckQName(aName, false);
@@ -1312,12 +1313,12 @@ Element::SetAttribute(const nsAString& aName,
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
-    aError = SetAttr(kNameSpaceID_None, nameAtom, aValue, true);
+    aError = SetAttr(kNameSpaceID_None, nameAtom, aValue, aTriggeringPrincipal, true);
     return;
   }
 
   aError = SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
-                   aValue, true);
+                   aValue, aTriggeringPrincipal, true);
 }
 
 void
@@ -1343,17 +1344,12 @@ Element::RemoveAttribute(const nsAString& aName, ErrorResult& aError)
 Attr*
 Element::GetAttributeNode(const nsAString& aName)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNode);
   return Attributes()->GetNamedItem(aName);
 }
 
 already_AddRefed<Attr>
 Element::SetAttributeNode(Attr& aNewAttr, ErrorResult& aError)
 {
-  // XXXbz can we just remove this warning and the one in setAttributeNodeNS and
-  // alias setAttributeNode to setAttributeNodeNS?
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
-
   return Attributes()->SetNamedItemNS(aNewAttr, aError);
 }
 
@@ -1367,7 +1363,6 @@ Element::RemoveAttributeNode(Attr& aAttribute,
     return nullptr;
   }
 
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
   nsAutoString nameSpaceURI;
   aAttribute.NodeInfo()->GetNamespaceURI(nameSpaceURI);
   return Attributes()->RemoveNamedItemNS(nameSpaceURI, aAttribute.NodeInfo()->LocalName(), aError);
@@ -1399,6 +1394,7 @@ void
 Element::SetAttributeNS(const nsAString& aNamespaceURI,
                         const nsAString& aQualifiedName,
                         const nsAString& aValue,
+                        nsIPrincipal* aTriggeringPrincipal,
                         ErrorResult& aError)
 {
   RefPtr<mozilla::dom::NodeInfo> ni;
@@ -1412,7 +1408,7 @@ Element::SetAttributeNS(const nsAString& aNamespaceURI,
   }
 
   aError = SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),
-                   aValue, true);
+                   aValue, aTriggeringPrincipal, true);
 }
 
 void
@@ -1439,8 +1435,6 @@ Attr*
 Element::GetAttributeNodeNS(const nsAString& aNamespaceURI,
                             const nsAString& aLocalName)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eGetAttributeNodeNS);
-
   return GetAttributeNodeNSInternal(aNamespaceURI, aLocalName);
 }
 
@@ -1455,7 +1449,6 @@ already_AddRefed<Attr>
 Element::SetAttributeNodeNS(Attr& aNewAttr,
                             ErrorResult& aError)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
   return Attributes()->SetNamedItemNS(aNewAttr, aError);
 }
 
@@ -2471,6 +2464,7 @@ Element::SetSingleClassFromParser(nsAtom* aSingleClassName)
                           nullptr, // prefix
                           nullptr, // old value
                           value,
+                          nullptr,
                           static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION),
                           false, // hasListeners
                           false, // notify
@@ -2482,6 +2476,7 @@ Element::SetSingleClassFromParser(nsAtom* aSingleClassName)
 nsresult
 Element::SetAttr(int32_t aNamespaceID, nsAtom* aName,
                  nsAtom* aPrefix, const nsAString& aValue,
+                 nsIPrincipal* aSubjectPrincipal,
                  bool aNotify)
 {
   // Keep this in sync with SetParsedAttr below and SetSingleClassFromParser
@@ -2541,7 +2536,8 @@ Element::SetAttr(int32_t aNamespaceID, nsAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr,
-                          attrValue, modType, hasListeners, aNotify,
+                          attrValue, aSubjectPrincipal, modType,
+                          hasListeners, aNotify,
                           kCallAfterSetAttr, document, updateBatch);
 }
 
@@ -2586,7 +2582,7 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr,
-                          aParsedValue, modType, hasListeners, aNotify,
+                          aParsedValue, nullptr, modType, hasListeners, aNotify,
                           kCallAfterSetAttr, document, updateBatch);
 }
 
@@ -2596,6 +2592,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
                           nsAtom* aPrefix,
                           const nsAttrValue* aOldValue,
                           nsAttrValue& aParsedValue,
+                          nsIPrincipal* aSubjectPrincipal,
                           uint8_t aModType,
                           bool aFireMutation,
                           bool aNotify,
@@ -2698,7 +2695,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
   if (aCallAfterSetAttr) {
     rv = AfterSetAttr(aNamespaceID, aName, &valueForAfterSetAttr, oldValue,
-                      aNotify);
+                      aSubjectPrincipal, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
@@ -2991,7 +2988,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  rv = AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, aNotify);
+  rv = AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   UpdateState(aNotify);

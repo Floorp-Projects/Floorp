@@ -66,6 +66,12 @@ public:
     return mUri;
   }
 
+  nsIPrincipal* GetScriptURITriggeringPrincipal()
+  {
+    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    return mSrcTriggeringPrincipal;
+  }
+
   /**
    * Script source text for inline script elements.
    */
@@ -320,6 +326,11 @@ protected:
    * The effective src (or null if no src).
    */
   nsCOMPtr<nsIURI> mUri;
+
+  /**
+   * The triggering principal for the src URL.
+   */
+  nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 
   /**
    * The creator parser of a non-defer, non-async parser-inserted script.

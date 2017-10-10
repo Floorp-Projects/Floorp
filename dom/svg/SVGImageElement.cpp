@@ -156,7 +156,9 @@ SVGImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
 nsresult
 SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue, bool aNotify)
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal,
+                              bool aNotify)
 {
   if (aName == nsGkAtoms::href &&
       (aNamespaceID == kNameSpaceID_None ||
@@ -169,7 +171,8 @@ SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
   }
   return SVGImageElementBase::AfterSetAttr(aNamespaceID, aName,
-                                           aValue, aOldValue, aNotify);
+                                           aValue, aOldValue,
+                                           aSubjectPrincipal, aNotify);
 }
 
 void

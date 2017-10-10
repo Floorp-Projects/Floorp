@@ -9,6 +9,7 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/TabParent.h"
@@ -27,7 +28,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -534,11 +534,11 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkAttribute(aNode, "data");
     }
 
-    nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNode);
-    if (nodeAsLink) {
+    if (auto nodeAsLink = dom::HTMLLinkElement::FromContent(content)) {
         // Test if the link has a rel value indicating it to be a stylesheet
         nsAutoString linkRel;
-        if (NS_SUCCEEDED(nodeAsLink->GetRel(linkRel)) && !linkRel.IsEmpty()) {
+        nodeAsLink->GetRel(linkRel);
+        if (!linkRel.IsEmpty()) {
             nsReadingIterator<char16_t> start;
             nsReadingIterator<char16_t> end;
             nsReadingIterator<char16_t> current;
@@ -1069,8 +1069,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNodeIn);
-    if (nodeAsLink) {
+    if (content->IsHTMLElement(nsGkAtoms::link)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // First see if the link represents linked content

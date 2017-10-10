@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLLinkElement.h"
 #include "nsStyleLinkElement.h"
 
 namespace mozilla {
@@ -19,7 +18,6 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLLinkElement final : public nsGenericHTMLElement,
-                              public nsIDOMHTMLLinkElement,
                               public nsStyleLinkElement,
                               public Link
 {
@@ -33,8 +31,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLLinkElement,
                                            nsGenericHTMLElement)
 
-  // nsIDOMHTMLLinkElement
-  NS_DECL_NSIDOMHTMLLINKELEMENT
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLLinkElement, link);
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
@@ -64,6 +60,7 @@ public:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
+                                nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
   virtual bool IsLink(nsIURI** aURI) const override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
@@ -85,10 +82,18 @@ public:
   // WebIDL
   bool Disabled();
   void SetDisabled(bool aDisabled);
-  // XPCOM GetHref is fine.
-  void SetHref(const nsAString& aHref, ErrorResult& aRv)
+
+  void GetHref(nsAString& aValue)
   {
-    SetHTMLAttr(nsGkAtoms::href, aHref, aRv);
+    GetURIAttr(nsGkAtoms::href, nullptr, aValue);
+  }
+  void GetHref(nsString& aValue, nsIPrincipal&)
+  {
+    GetHref(aValue);
+  }
+  void SetHref(const nsAString& aHref, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::href, aHref, aTriggeringPrincipal, aRv);
   }
   void GetCrossOrigin(nsAString& aResult)
   {
@@ -101,18 +106,28 @@ public:
   {
     SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
-  // XPCOM GetRel is fine.
+  // nsAString for WebBrowserPersistLocalDocument
+  void GetRel(nsAString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::rel, aValue);
+  }
   void SetRel(const nsAString& aRel, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::rel, aRel, aRv);
   }
   nsDOMTokenList* RelList();
-  // XPCOM GetMedia is fine.
+  void GetMedia(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::media, aValue);
+  }
   void SetMedia(const nsAString& aMedia, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::media, aMedia, aRv);
   }
-  // XPCOM GetHreflang is fine.
+  void GetHreflang(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::hreflang, aValue);
+  }
   void SetHreflang(const nsAString& aHreflang, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::hreflang, aHreflang, aRv);
@@ -126,22 +141,36 @@ public:
   {
     return GetTokenList(nsGkAtoms::sizes);
   }
-  // XPCOM GetType is fine.
+  void GetType(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aValue);
+  }
   void SetType(const nsAString& aType, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
   }
-  // XPCOM GetCharset is fine.
+  // Requires nsresult return for nsStyleLinkElement override.
+  NS_IMETHODIMP GetCharset(nsAString& aValue) override
+  {
+    GetHTMLAttr(nsGkAtoms::charset, aValue);
+    return NS_OK;
+  }
   void SetCharset(const nsAString& aCharset, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::charset, aCharset, aRv);
   }
-  // XPCOM GetRev is fine.
+  void GetRev(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::rev, aValue);
+  }
   void SetRev(const nsAString& aRev, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::rev, aRev, aRv);
   }
-  // XPCOM GetTarget is fine.
+  void GetTarget(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::target, aValue);
+  }
   void SetTarget(const nsAString& aTarget, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::target, aTarget, aRv);
@@ -179,7 +208,7 @@ protected:
   virtual ~HTMLLinkElement();
 
   // nsStyleLinkElement
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) override;
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) override;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,

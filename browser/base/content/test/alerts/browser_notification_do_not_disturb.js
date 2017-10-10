@@ -21,23 +21,22 @@ function test() {
     return;
   }
 
-  let pm = Services.perms;
   registerCleanupFunction(function() {
     ALERT_SERVICE.manualDoNotDisturb = false;
-    pm.remove(makeURI(notificationURL), "desktop-notification");
     gBrowser.removeTab(tab);
     window.restore();
   });
 
-  pm.add(makeURI(notificationURL), "desktop-notification", pm.ALLOW_ACTION);
 
   // Make sure that do-not-disturb is not enabled.
   ok(!ALERT_SERVICE.manualDoNotDisturb, "Alert service should not be disabled when test starts");
   ALERT_SERVICE.manualDoNotDisturb = false;
 
-  tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
-  gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", onLoad, true);
+  addNotificationPermission(notificationURL).then(function openTab() {
+    tab = BrowserTestUtils.addTab(gBrowser, notificationURL);
+    gBrowser.selectedTab = tab;
+    tab.linkedBrowser.addEventListener("load", onLoad, true);
+  });
 }
 
 function onLoad() {

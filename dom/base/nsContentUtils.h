@@ -601,6 +601,40 @@ public:
   static bool CallerHasPermission(JSContext* aCx, const nsAtom* aPerm);
 
   /**
+   * Returns the triggering principal which should be used for the given URL
+   * attribute value with the given subject principal.
+   *
+   * If the attribute value is not an absolute URL, the subject principal will
+   * be ignored, and the node principal of aContent will be used instead.
+   * If aContent is non-null, this function will always return a principal.
+   * Otherewise, it may return null if aSubjectPrincipal is null or is rejected
+   * based on the attribute value.
+   *
+   * @param aContent The content on which the attribute is being set.
+   * @param aAttrValue The URL value of the attribute. For parsed attribute
+   *        values, such as `srcset`, this function should be called separately
+   *        for each URL value it contains.
+   * @param aSubjectPrincipal The subject principal of the scripted caller
+   *        responsible for setting the attribute, or null if no scripted caller
+   *        can be determined.
+   */
+  static nsIPrincipal* GetAttrTriggeringPrincipal(nsIContent* aContent,
+                                                  const nsAString& aAttrValue,
+                                                  nsIPrincipal* aSubjectPrincipal);
+
+  /**
+   * Returns true if the given string is guaranteed to be treated as an absolute
+   * URL, rather than a relative URL. In practice, this means any complete URL
+   * as supported by nsStandardURL, or any string beginning with a valid scheme
+   * which is known to the IO service, and has the URI_NORELATIVE flag.
+   *
+   * If the URL may be treated as absolute in some cases, but relative in others
+   * (for instance, "http:foo", which can be either an absolute or relative URL,
+   * depending on the context), this function returns false.
+   */
+  static bool IsAbsoluteURL(const nsACString& aURL);
+
+  /**
    * GetDocumentFromCaller gets its document by looking at the last called
    * function and finding the document that the function itself relates to.
    * For example, consider two windows A and B in the same origin. B has a
@@ -3059,7 +3093,15 @@ public:
    */
   static bool
   GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
-                                nsIPrincipal** aLoadingPrincipal);
+                                nsIPrincipal* aDefaultPrincipal,
+                                nsIPrincipal** aTriggeringPrincipal);
+
+  static bool
+  GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
+                                nsIPrincipal** aTriggeringPrincipal)
+  {
+    return GetLoadingPrincipalForXULNode(aLoadingNode, nullptr, aTriggeringPrincipal);
+  }
 
   /**
    * Returns the content policy type that should be used for loading images
