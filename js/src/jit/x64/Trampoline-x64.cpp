@@ -1180,10 +1180,10 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     //
     // JitFrame_Rectifier
     //
-    // The rectifier frame can be preceded by either an IonJS, a WasmToJSJit or
-    // a BaselineStub frame.
+    // The rectifier frame can be preceded by either an IonJS, a BaselineStub,
+    // or a CppToJSJit/WasmToJSJit frame.
     //
-    // Stack layout if caller of rectifier was Ion or WasmToJSJit:
+    // Stack layout if caller of rectifier was Ion or CppToJSJit/WasmToJSJit:
     //
     //              Ion-Descriptor
     //              Ion-ReturnAddr
@@ -1246,8 +1246,8 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
 
         masm.bind(&notIonFrame);
 
-        // Check for either BaselineStub or WasmToJSJit: since WasmToJSJit is
-        // just an entry, jump there if we see it.
+        // Check for either BaselineStub or a CppToJSJit/WasmToJSJit entry
+        // frame.
         masm.branch32(Assembler::NotEqual, scratch3, Imm32(JitFrame_BaselineStub), &handle_Entry);
 
         // Handle Rectifier <- BaselineStub <- BaselineJS
