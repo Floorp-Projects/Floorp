@@ -50,6 +50,9 @@ def mayUseXrayExpandoSlots(descriptor, attr):
 
 
 def toStringBool(arg):
+    """
+    Converts IDL/Python Boolean (True/False) to C++ Boolean (true/false)
+    """
     return str(not not arg).lower()
 
 
@@ -2831,6 +2834,36 @@ class PropertyArrays():
         for array in self.arrayNames():
             define += str(getattr(self, array))
         return define
+
+
+class CGConstDefinition(CGThing):
+    """
+    Given a const member of an interface, return the C++ static const definition
+    for the member. Should be part of the interface namespace in the header
+    file.
+    """
+    def __init__(self, member):
+        assert (member.isConst() and
+                member.value.type.isPrimitive() and
+                not member.value.type.nullable())
+
+        name = CppKeywords.checkMethodName(IDLToCIdentifier(member.identifier.name))
+        tag = member.value.type.tag()
+        value = member.value.value
+        if tag == IDLType.Tags.bool:
+            value = toStringBool(member.value.value)
+        self.const = "static const %s %s = %s;" % (builtinNames[tag],
+                                                   name,
+                                                   value)
+
+    def declare(self):
+        return self.const
+
+    def define(self):
+        return ""
+
+    def deps(self):
+        return []
 
 
 class CGNativeProperties(CGList):
@@ -6375,7 +6408,7 @@ def convertConstIDLValueToJSVal(value):
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:
         return "JS::CanonicalizedDoubleValue(%s)" % numericValue(tag, value.value)
     if tag == IDLType.Tags.bool:
-        return "JS::BooleanValue(true)" if value.value else "JS::BooleanValue(false)"
+        return "JS::BooleanValue(%s)" % (toStringBool(value.value))
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
         return "JS::CanonicalizedDoubleValue(%s)" % (value.value)
     raise TypeError("Const value of unhandled type: %s" % value.type)
@@ -12770,6 +12803,8 @@ class CGDescriptor(CGThing):
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
                     cgThings.append(CGMemberJITInfo(descriptor, m))
+            if m.isConst() and m.type.isPrimitive():
+                cgThings.append(CGConstDefinition(m))
 
             hasMethod = hasMethod or props.isGenericMethod
             hasPromiseReturningMethod = (hasPromiseReturningMethod or
