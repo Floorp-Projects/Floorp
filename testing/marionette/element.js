@@ -22,6 +22,25 @@ this.EXPORTED_SYMBOLS = ["element"];
 const XMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+/** XUL elements that support checked property. */
+const XUL_CHECKED_ELS = new Set([
+  "button",
+  "checkbox",
+  "listitem",
+  "toolbarbutton",
+]);
+
+/** XUL elements that support selected property. */
+const XUL_SELECTED_ELS = new Set([
+  "listitem",
+  "menu",
+  "menuitem",
+  "menuseparator",
+  "radio",
+  "richlistitem",
+  "tab",
+]);
+
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
 
@@ -666,6 +685,46 @@ element.isStale = function(el, window = undefined) {
   }
 
   return !el.isConnected;
+};
+
+/**
+ * Determine if <var>el</var> is selected or not.
+ *
+ * This operation only makes sense on
+ * <tt>&lt;input type=checkbox&gt;</tt>,
+ * <tt>&lt;input type=radio&gt;</tt>,
+ * and <tt>&gt;option&gt;</tt> elements.
+ *
+ * @param {(DOMElement|XULElement)} el
+ *     Element to test if selected.
+ *
+ * @return {boolean}
+ *     True if element is selected, false otherwise.
+ */
+element.isSelected = function(el) {
+  if (!el) {
+    return false;
+  }
+
+  if (element.isXULElement(el)) {
+    if (XUL_CHECKED_ELS.has(el.tagName)) {
+      return el.checked;
+    } else if (XUL_SELECTED_ELS.has(el.tagName)) {
+      return el.selected;
+    }
+
+  // TODO(ato): Use element.isDOMElement when bug 1400256 lands
+  } else if (typeof el == "object" &&
+      "nodeType" in el &&
+      el.nodeType == el.ELEMENT_NODE) {
+    if (el.localName == "input" && ["checkbox", "radio"].includes(el.type)) {
+      return el.checked;
+    } else if (el.localName == "option") {
+      return el.selected;
+    }
+  }
+
+  return false;
 };
 
 /**

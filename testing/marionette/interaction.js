@@ -57,25 +57,6 @@ const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([
   "TREE",
 ]);
 
-/** XUL elements that support checked property. */
-const CHECKED_PROPERTY_SUPPORTED_XUL = new Set([
-  "BUTTON",
-  "CHECKBOX",
-  "LISTITEM",
-  "TOOLBARBUTTON",
-]);
-
-/** XUL elements that support selected property. */
-const SELECTED_PROPERTY_SUPPORTED_XUL = new Set([
-  "LISTITEM",
-  "MENU",
-  "MENUITEM",
-  "MENUSEPARATOR",
-  "RADIO",
-  "RICHLISTITEM",
-  "TAB",
-]);
-
 /**
  * Common form controls that user can change the value property
  * interactively.
@@ -478,34 +459,25 @@ interaction.isElementEnabled = function(el, strict = false) {
 };
 
 /**
- * Determines if the referenced element is selected or not.
+ * Determines if the referenced element is selected or not, with
+ * an additional accessibility check if <var>strict</var> is true.
  *
- * This operation only makes sense on input elements of the Checkbox-
- * and Radio Button states, or option elements.
+ * This operation only makes sense on input elements of the checkbox-
+ * and radio button states, and option elements.
  *
- * @param {DOMElement|XULElement} el
+ * @param {(DOMElement|XULElement)} el
  *     Element to test if is selected.
  * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
  *
  * @return {boolean}
  *     True if element is selected, false otherwise.
+ *
+ * @throws {ElementNotAccessibleError}
+ *     If <var>el</var> is not accessible when <var>strict</var> is true.
  */
 interaction.isElementSelected = function(el, strict = false) {
-  let selected = true;
-  let win = getWindow(el);
-
-  if (element.isXULElement(el)) {
-    let tagName = el.tagName.toUpperCase();
-    if (CHECKED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
-      selected = el.checked;
-    }
-    if (SELECTED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
-      selected = el.selected;
-    }
-  } else {
-    selected = atom.isElementSelected(el, win);
-  }
+  let selected = element.isSelected(el);
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
