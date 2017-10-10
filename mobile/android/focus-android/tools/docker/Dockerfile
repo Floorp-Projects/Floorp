@@ -22,6 +22,7 @@ RUN apt-get install -y openjdk-8-jdk \
 					   ruby-dev \
 					   ruby-build \
 					   python \
+					   python-pip \
 					   optipng \
 					   imagemagick \
 					   locales
@@ -89,6 +90,11 @@ RUN git clone https://github.com/mozilla-mobile/focus-android.git
 # Build project once to pull all dependencies
 WORKDIR /opt/focus-android
 RUN ./gradlew assemble
+
+# -- Post setup -------------------------------------------------------------------------
+
+# Install dependencies needed to run Android2Po
+RUN pip install -r tools/l10n/android2po/requirements.txt
 
 # -- Cleanup ----------------------------------------------------------------------------
 
