@@ -6,9 +6,7 @@
 
 #include "nsWidgetsCID.h"
 #include "nsIComponentRegistrar.h"
-#ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
-#endif
 
 #ifndef TEST_NAME
 #error "Must #define TEST_NAME before including places_test_harness_tail.h"
