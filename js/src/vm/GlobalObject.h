@@ -96,7 +96,6 @@ class GlobalObject : public NativeObject
         DATE_TIME_FORMAT,
         DATE_TIME_FORMAT_PROTO,
         PLURAL_RULES_PROTO,
-        RELATIVE_TIME_FORMAT_PROTO,
         MODULE_PROTO,
         IMPORT_ENTRY_PROTO,
         EXPORT_ENTRY_PROTO,
@@ -479,11 +478,6 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, global, PLURAL_RULES_PROTO, initIntlObject);
     }
 
-    static JSObject*
-    getOrCreateRelativeTimeFormatPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        return getOrCreateObject(cx, global, RELATIVE_TIME_FORMAT_PROTO, initIntlObject);
-    }
-
     static bool ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global);
 
     JSObject* maybeGetModulePrototype() {
@@ -784,7 +778,6 @@ class GlobalObject : public NativeObject
 
     // Implemented in Intl.cpp.
     static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
-    static bool addRelativeTimeFormatConstructor(JSContext* cx, HandleObject intl);
 
     // Implemented in builtin/ModuleObject.cpp
     static bool initModuleProto(JSContext* cx, Handle<GlobalObject*> global);

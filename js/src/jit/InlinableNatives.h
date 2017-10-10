@@ -33,7 +33,6 @@
     _(IntlIsDateTimeFormat)         \
     _(IntlIsNumberFormat)           \
     _(IntlIsPluralRules)            \
-    _(IntlIsRelativeTimeFormat)     \
                                     \
     _(MathAbs)                      \
     _(MathFloor)                    \
