@@ -504,7 +504,7 @@ function stepOut(dbg) {
 function resume(dbg) {
   info("Resuming");
   dbg.actions.resume();
-  return waitForThreadEvents(dbg, "resumed");
+  return waitForState(dbg, (state) => !dbg.selectors.isPaused(state));
 }
 
 function deleteExpression(dbg, input) {
