@@ -2139,6 +2139,39 @@ js::IsTypedArrayConstructor(HandleValue v, uint32_t type)
     MOZ_CRASH("unexpected typed array type");
 }
 
+bool
+js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer, size_t* byteLength)
+{
+    if (object->is<TypedArrayObject>()) {
+        TypedArrayObject& view = object->as<TypedArrayObject>();
+        *dataPointer = view.viewDataEither().cast<uint8_t*>();
+        *byteLength = view.byteLength();
+        return true;
+    }
+
+    if (object->is<DataViewObject>()) {
+        DataViewObject& view = object->as<DataViewObject>();
+        *dataPointer = view.dataPointerEither().cast<uint8_t*>();
+        *byteLength = view.byteLength();
+    }
+
+    if (object->is<ArrayBufferObject>()) {
+        ArrayBufferObject& buffer = object->as<ArrayBufferObject>();
+        *dataPointer = buffer.dataPointerShared();
+        *byteLength = buffer.byteLength();
+        return true;
+    }
+
+    if (object->is<SharedArrayBufferObject>()) {
+        SharedArrayBufferObject& buffer = object->as<SharedArrayBufferObject>();
+        *dataPointer = buffer.dataPointerShared();
+        *byteLength = buffer.byteLength();
+        return true;
+    }
+
+    return false;
+}
+
 template <typename CharT>
 bool
 js::StringIsTypedArrayIndex(const CharT* s, size_t length, uint64_t* indexp)

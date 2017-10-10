@@ -5704,6 +5704,12 @@ JS::ShutdownAsyncTasks(JSContext* cx)
 }
 
 JS_PUBLIC_API(void)
+JS::InitConsumeStreamCallback(JSContext* cx, ConsumeStreamCallback callback)
+{
+    cx->runtime()->consumeStreamCallback = callback;
+}
+
+JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSContext* cx)
 {
     cx->requestInterrupt(JSContext::RequestInterruptUrgent);
