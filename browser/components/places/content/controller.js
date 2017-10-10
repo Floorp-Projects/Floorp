@@ -200,7 +200,7 @@ PlacesController.prototype = {
       let selectedNode = this._view.selectedNode;
       return selectedNode &&
              PlacesUtils.nodeIsFolder(selectedNode) &&
-             !PlacesUIUtils.isContentsReadOnly(selectedNode) &&
+             !PlacesUIUtils.isFolderReadOnly(selectedNode, this._view) &&
              this._view.result.sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     }
@@ -332,7 +332,7 @@ PlacesController.prototype = {
         if (nodes[i] == root)
           return false;
 
-        if (!PlacesUIUtils.canUserRemove(nodes[i]))
+        if (!PlacesUIUtils.canUserRemove(nodes[i], this._view))
           return false;
       }
     }
@@ -1550,16 +1550,31 @@ var PlacesControllerDragHelper = {
   /**
    * Determines if an unwrapped node can be moved.
    *
-   * @param   aUnwrappedNode
-   *          A node unwrapped by PlacesUtils.unwrapNodes().
+   * @param unwrappedNode
+   *        A node unwrapped by PlacesUtils.unwrapNodes().
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveUnwrappedNode(aUnwrappedNode) {
-    return aUnwrappedNode.id > 0 &&
-           !PlacesUtils.isRootItem(aUnwrappedNode.id) &&
-           (!aUnwrappedNode.parent || !PlacesUIUtils.isContentsReadOnly(aUnwrappedNode.parent)) &&
-           aUnwrappedNode.parent != PlacesUtils.tagsFolderId &&
-           aUnwrappedNode.grandParentId != PlacesUtils.tagsFolderId;
+  canMoveUnwrappedNode(unwrappedNode) {
+    if (unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
+      return false;
+    }
+    let parentId = unwrappedNode.parent;
+    if (parentId <= 0 ||
+        parentId == PlacesUtils.placesRootId ||
+        parentId == PlacesUtils.tagsFolderId ||
+        unwrappedNode.grandParentId == PlacesUtils.tagsFolderId) {
+      return false;
+    }
+    // leftPaneFolderId and allBookmarksFolderId are lazy getters running
+    // at least a synchronous DB query. Therefore we don't want to invoke
+    // them first, especially because isCommandEnabled may be called way
+    // before the left pane folder is even necessary.
+    if (typeof Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId").get != "function" &&
+        (parentId == PlacesUIUtils.leftPaneFolderId ||
+          parentId == PlacesUIUtils.allBookmarksFolderId)) {
+      return false;
+    }
+    return true;
   },
 
   /**
@@ -1567,11 +1582,13 @@ var PlacesControllerDragHelper = {
    *
    * @param   aNode
    *          A nsINavHistoryResultNode node.
+   * @param   aView
+   *          The view originating the request
    * @param   [optional] aDOMNode
    *          A XUL DOM node.
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveNode(aNode, aDOMNode) {
+  canMoveNode(aNode, aView, aDOMNode) {
     // Only bookmark items are movable.
     if (aNode.itemId == -1)
       return false;
@@ -1587,8 +1604,8 @@ var PlacesControllerDragHelper = {
 
     // Once tags and bookmarked are divorced, the tag-query check should be
     // removed.
-    return !(PlacesUtils.nodeIsFolder(parentNode) &&
-             PlacesUIUtils.isContentsReadOnly(parentNode)) &&
+    return PlacesUtils.nodeIsFolder(parentNode) &&
+           !PlacesUIUtils.isFolderReadOnly(parentNode, aView) &&
            !PlacesUtils.nodeIsTagQuery(parentNode);
   },
 
@@ -1738,13 +1755,15 @@ var PlacesControllerDragHelper = {
    * Checks if we can insert into a container.
    * @param   aContainer
    *          The container were we are want to drop
+   * @param   aView
+   *          The view generating the request
    */
-  disallowInsertion(aContainer) {
+  disallowInsertion(aContainer, aView) {
     NS_ASSERT(aContainer, "empty container");
     // Allow dropping into Tag containers and editable folders.
     return !PlacesUtils.nodeIsTagQuery(aContainer) &&
            (!PlacesUtils.nodeIsFolder(aContainer) ||
-            PlacesUIUtils.isContentsReadOnly(aContainer));
+            PlacesUIUtils.isFolderReadOnly(aContainer, aView));
   }
 };
 
