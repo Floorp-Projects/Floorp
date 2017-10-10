@@ -420,3 +420,21 @@ for (let type of ['f32', 'f64']) {
     disableGeckoProfiling();
     setJitCompilerOption("baseline.warmup.trigger", prevOptions["baseline.warmup.trigger"]);
 })();
+
+// Make sure it's possible to single-step through call through debug-enabled code.
+(function() {
+ enableGeckoProfiling();
+
+ let g = newGlobal('');
+ let dbg = new Debugger(g);
+ dbg.onEnterFrame = () => {};
+ enableSingleStepProfiling();
+ g.eval(`
+    var code = wasmTextToBinary('(module (func (export "run") (result i32) i32.const 42))');
+    var i = new WebAssembly.Instance(new WebAssembly.Module(code));
+    assertEq(i.exports.run(), 42);
+ `);
+
+ disableSingleStepProfiling();
+ disableGeckoProfiling();
+})();
