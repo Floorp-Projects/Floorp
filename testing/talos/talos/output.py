@@ -236,8 +236,24 @@ class Output(object):
     def JS_Metric(cls, val_list):
         """v8 benchmark score"""
         results = [i for i, j in val_list]
-        LOG.info("javascript benchmark")
         return sum(results)
+
+    @classmethod
+    def speedometer_score(cls, val_list):
+        """
+        speedometer_score: https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
+        """
+        correctionFactor = 3
+        results = [i for i, j in val_list]
+        # speedometer has 16 tests, each of these are made of up 9 subtests
+        # and a sum of the 9 values.  We receive 160 values, and want to use
+        # the 16 test values, not the sub test values.
+        if len(results) != 160:
+            raise Exception("Speedometer has 160 subtests, found: %s instead" % len(results))
+
+        results = results[9::10]
+        score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
+        return score
 
     @classmethod
     def CanvasMark_Metric(cls, val_list):
@@ -255,6 +271,8 @@ class Output(object):
             return self.JS_Metric(vals)
         elif testname.startswith('tcanvasmark'):
             return self.CanvasMark_Metric(vals)
+        elif testname.startswith('speedometer'):
+            return self.speedometer_score(vals)
         elif len(vals) > 1:
             return filter.geometric_mean([i for i, j in vals])
         else:
