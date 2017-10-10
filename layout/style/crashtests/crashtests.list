@@ -167,6 +167,7 @@ HTTP load 1333001-1.html
 pref(dom.animations-api.core.enabled,true) load 1340344.html
 load 1342316-1.html
 load 1356601-1.html
+load 1364139-1.html
 load 1370793-1.xhtml
 skip-if(Android) load 1371450-1.html
 load 1374175-1.html
