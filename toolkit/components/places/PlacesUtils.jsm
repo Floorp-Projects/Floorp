@@ -2330,7 +2330,8 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
         onItemVisited() {},
         onItemMoved() {},
 
-        onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid) {
+        onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid,
+                      source) {
           if (itemType != PlacesUtils.bookmarks.TYPE_BOOKMARK)
             return;
 
@@ -2344,14 +2345,14 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
             let bookmark = await PlacesUtils.bookmarks.fetch({ url: uri });
             if (!bookmark) {
               for (let keyword of keywords) {
-                await PlacesUtils.keywords.remove(keyword);
+                await PlacesUtils.keywords.remove({ keyword, source });
               }
             }
           })().catch(Cu.reportError);
         },
 
         onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid,
-                      parentGuid, oldVal) {
+                      parentGuid, oldVal, source) {
           if (gIgnoreKeywordNotifications) {
             return;
           }
@@ -2359,7 +2360,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
           if (prop == "keyword") {
             this._onKeywordChanged(guid, val, oldVal);
           } else if (prop == "uri") {
-            this._onUrlChanged(guid, val, oldVal).catch(Cu.reportError);
+            this._onUrlChanged(guid, val, oldVal, source).catch(Cu.reportError);
           }
         },
 
@@ -2376,7 +2377,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
           }
         },
 
-        async _onUrlChanged(guid, url, oldUrl) {
+        async _onUrlChanged(guid, url, oldUrl, source) {
           // Check if the old url is associated with keywords.
           let entries = [];
           await PlacesUtils.keywords.fetch({ url: oldUrl }, e => entries.push(e));
@@ -2386,9 +2387,16 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
 
           // Move the keywords to the new url.
           for (let entry of entries) {
-            await PlacesUtils.keywords.remove(entry.keyword);
-            entry.url = new URL(url);
-            await PlacesUtils.keywords.insert(entry);
+            await PlacesUtils.keywords.remove({
+              keyword: entry.keyword,
+              source,
+            });
+            await PlacesUtils.keywords.insert({
+              keyword: entry.keyword,
+              url,
+              postData: entry.postData,
+              source,
+            });
           }
         },
       };
