@@ -242,7 +242,7 @@ class PageloaderTest(Test):
             'tptimeout', 'win_counters', 'w7_counters', 'linux_counters', 'mac_counters',
             'tpscrolltest', 'xperf_counters', 'timeout', 'shutdown', 'responsiveness',
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
-            'filters', 'preferences', 'extensions', 'setup', 'cleanup',
+            'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions']
 
 
@@ -824,6 +824,21 @@ class a11yr(PageloaderTest):
     preferences = {'dom.send_after_paint_to_content': False}
     unit = 'ms'
     alert_threshold = 5.0
+
+
+@register_test()
+class speedometer(PageloaderTest):
+    """
+    Speedometer benchmark used by many browser vendors (from webkit)
+    """
+    tpmanifest = '${talos}/tests/speedometer/speedometer.manifest'
+    tpcycles = 1
+    tppagecycles = 5
+    tpmozafterpaint = False
+    tpchrome = False
+    format_pagename = False
+    lower_is_better = False
+    unit = 'score'
 
 
 @register_test()

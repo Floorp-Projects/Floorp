@@ -84,8 +84,13 @@ class TestResults(object):
         """
 
         # convert to a results class via parsing the browser log
+        format_pagename = True
+        if not self.test_config['format_pagename']:
+            format_pagename = False
+
         browserLog = BrowserLogResults(
             results,
+            format_pagename=format_pagename,
             counter_results=counter_results,
             global_counters=self.global_counters
         )
@@ -160,7 +165,7 @@ class TsResults(Results):
 
     format = 'tsformat'
 
-    def __init__(self, string, counter_results=None):
+    def __init__(self, string, counter_results=None, format_pagename=True):
         self.counter_results = counter_results
 
         string = string.strip()
@@ -213,7 +218,7 @@ class PageloaderResults(Results):
 
     format = 'tpformat'
 
-    def __init__(self, string, counter_results=None):
+    def __init__(self, string, counter_results=None, format_pagename=True):
         """
         - string : string of relevent part of browser dump
         - counter_results : counter results dictionary
@@ -243,7 +248,8 @@ class PageloaderResults(Results):
             result['runs'] = [float(i) for i in r[2:]]
 
             # fix up page
-            result['page'] = self.format_pagename(result['page'])
+            if format_pagename:
+                result['page'] = self.format_pagename(result['page'])
 
             self.results.append(result)
 
@@ -299,7 +305,7 @@ class BrowserLogResults(object):
     # xperf counters
     using_xperf = False
 
-    def __init__(self, results_raw, counter_results=None,
+    def __init__(self, results_raw, format_pagename=True, counter_results=None,
                  global_counters=None):
         """
         - shutdown : whether to record shutdown results or not
@@ -307,7 +313,7 @@ class BrowserLogResults(object):
 
         self.counter_results = counter_results
         self.global_counters = global_counters
-
+        self.format_pagename = format_pagename
         self.results_raw = results_raw
 
         # parse the results
@@ -393,7 +399,8 @@ class BrowserLogResults(object):
                 % repr(self.format)
             )
 
-        return self.classes[self.format](self.browser_results)
+        return self.classes[self.format](self.browser_results,
+                                         format_pagename=self.format_pagename)
 
     # methods for counters
 
