@@ -25,9 +25,7 @@
 
 #include <stdint.h>
 
-#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
-#endif
 #include "nsID.h"
 #include "nsIWidget.h"
 #include "nsMemory.h"
@@ -127,16 +125,12 @@ struct EnumSerializer {
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     uintParamType value;
     if (!ReadParam(aMsg, aIter, &value)) {
-#ifdef MOZ_CRASHREPORTER
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCReadErrorReason"),
                                          NS_LITERAL_CSTRING("Bad iter"));
-#endif
       return false;
     } else if (!EnumValidator::IsLegalValue(paramType(value))) {
-#ifdef MOZ_CRASHREPORTER
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCReadErrorReason"),
                                          NS_LITERAL_CSTRING("Illegal value"));
-#endif
       return false;
     }
     *aResult = paramType(value);
