@@ -531,6 +531,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 == viewBox-and-pattern-02.svg pass.svg
 == viewBox-and-pattern-03.svg pass.svg
 == viewBox-and-pattern-04.svg pass.svg
+== viewBox-and-symbol-01.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
 == viewBox-invalid-02.svg pass.svg
 == viewBox-valid-01.svg pass.svg
