@@ -37,7 +37,6 @@ SimpleTest.waitForFocus(function() {
 });
 
 const DATE_BAD_INPUT_MSG = "Please enter a valid date.";
-const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
 function checkValidity(aElement, aIsBadInput) {
   is(aElement.validity.valid, aIsBadInput ? false : true,
@@ -94,12 +93,9 @@ function test() {
   elem.blur();
   checkValidity(elem, true);
 
-  // Reset button is desktop only.
-  if (isDesktop) {
-    // Clearing all fields should clear bad input validity state as well.
-    synthesizeMouse(input, resetButton_X, resetButton_Y, {});
-    checkValidity(elem, false);
-  }
+  // Clearing all fields should clear bad input validity state as well.
+  synthesizeMouse(input, resetButton_X, resetButton_Y, {});
+  checkValidity(elem, false);
 }
 
 </script>
