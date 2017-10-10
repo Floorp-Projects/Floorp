@@ -35,6 +35,7 @@ import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.Source;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
@@ -278,7 +279,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
                 WhatsNew.userViewedWhatsNew(getContext());
 
                 SessionManager.getInstance()
-                        .createSession(Source.MENU, WhatsNew.SUMO_URL);
+                        .createSession(Source.MENU, SupportUtils.getWhatsNewUrl(getContext()));
                 break;
 
             case R.id.settings:

@@ -23,9 +23,6 @@ import org.mozilla.focus.ext.appVersionName
  */
 class WhatsNew {
     companion object {
-        // TODO: Update to final URL
-        const val SUMO_URL = "https://support.mozilla.org/en-US/products/focus-firefox/firefox-focus-android"
-
         @VisibleForTesting const val PREFERENCE_KEY_APP_NAME = "whatsnew-lastKnownAppVersionName"
         private const val PREFERENCE_KEY_SESSION_COUNTER = "whatsnew-updateSessionCounter"
 
