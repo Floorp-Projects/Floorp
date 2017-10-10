@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsExceptionHandler.h"
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
 #include "nsString.h"
@@ -59,11 +60,6 @@
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* for isatty() */
-#endif
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#include "nsICrashReporter.h"
 #endif
 
 #ifdef ENABLE_TESTS
@@ -1193,7 +1189,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             argv += 2;
         }
 
-#ifdef MOZ_CRASHREPORTER
         const char* val = getenv("MOZ_CRASHREPORTER");
         if (val && *val && !CrashReporter::IsDummy()) {
             rv = CrashReporter::SetExceptionHandler(greDir, true);
@@ -1203,7 +1198,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             }
             MOZ_ASSERT(CrashReporter::GetEnabled());
         }
-#endif
 
         if (argc > 1 && !strcmp(argv[1], "--greomni")) {
             nsCOMPtr<nsIFile> greOmni;
@@ -1395,11 +1389,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
     rv = NS_ShutdownXPCOM( nullptr );
     MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
-#ifdef MOZ_CRASHREPORTER
     // Shut down the crashreporter service to prevent leaking some strings it holds.
-    if (CrashReporter::GetEnabled())
+    if (CrashReporter::GetEnabled()) {
         CrashReporter::UnsetExceptionHandler();
-#endif
+    }
 
 #ifdef MOZ_GECKO_PROFILER
     // This must precede NS_LogTerm(), otherwise xpcshell return non-zero
