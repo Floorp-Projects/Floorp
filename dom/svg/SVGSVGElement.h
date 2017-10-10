@@ -182,15 +182,6 @@ public:
   // SVG-as-an-image documents.)
   virtual void FlushImageTransformInvalidation();
 
-  svgFloatSize GetViewportSize() const {
-    return svgFloatSize(mViewportWidth, mViewportHeight);
-  }
-
-  void SetViewportSize(const svgFloatSize& aSize) {
-    mViewportWidth  = aSize.width;
-    mViewportHeight = aSize.height;
-  }
-
 private:
   // SVGViewportElement methods:
 
