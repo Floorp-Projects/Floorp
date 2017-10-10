@@ -282,16 +282,16 @@ LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
 
 
 void
-LocaleService::OnAvailableLocalesChanged()
+LocaleService::AvailableLocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
   mAvailableLocales.Clear();
   // In the future we may want to trigger here intl:available-locales-changed
-  OnLocalesChanged();
+  LocalesChanged();
 }
 
 void
-LocaleService::OnRequestedLocalesChanged()
+LocaleService::RequestedLocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
@@ -304,12 +304,12 @@ LocaleService::OnRequestedLocalesChanged()
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
     }
-    OnLocalesChanged();
+    LocalesChanged();
   }
 }
 
 void
-LocaleService::OnLocalesChanged()
+LocaleService::LocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
@@ -532,7 +532,7 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
   if (!strcmp(aTopic, INTL_SYSTEM_LOCALES_CHANGED)) {
-    OnRequestedLocalesChanged();
+    RequestedLocalesChanged();
   } else {
     NS_ConvertUTF16toUTF8 pref(aData);
 
@@ -545,7 +545,7 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
     if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
         pref.EqualsLiteral(SELECTED_LOCALE_PREF) ||
         pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
-      OnRequestedLocalesChanged();
+      RequestedLocalesChanged();
     }
   }
 
