@@ -3789,20 +3789,6 @@ EditorBase::IsTextNode(nsIDOMNode* aNode)
   return (nodeType == nsIDOMNode::TEXT_NODE);
 }
 
-nsCOMPtr<nsIDOMNode>
-EditorBase::GetChildAt(nsIDOMNode* aParent, int32_t aOffset)
-{
-  nsCOMPtr<nsIDOMNode> resultNode;
-
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
-
-  NS_ENSURE_TRUE(parent, resultNode);
-
-  resultNode = do_QueryInterface(parent->GetChildAt(aOffset));
-
-  return resultNode;
-}
-
 /**
  * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
  * assuming that aParentOrNode is the node itself if it's a text node, or
