@@ -2806,9 +2806,8 @@ EnterIon(JSContext* cx, EnterJitData& data)
     return data.result.isMagic() ? JitExec_Error : JitExec_Ok;
 }
 
-bool
-jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state,
-                     MutableHandle<GCVector<Value>> vals)
+void
+jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state)
 {
     data.osrFrame = nullptr;
 
@@ -2819,58 +2818,30 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state,
         unsigned numFormals = state.script()->functionNonDelazifying()->nargs();
         data.constructing = state.asInvoke()->constructing();
         data.numActualArgs = args.length();
-        data.maxArgc = Max(args.length(), numFormals) + 1;
+        data.maxArgc = args.length() + 1;
+        data.maxArgv = args.array() - 1; // -1 to include |this|
         data.envChain = nullptr;
         data.calleeToken = CalleeToToken(&args.callee().as<JSFunction>(), data.constructing);
-
-        if (data.numActualArgs >= numFormals) {
-            data.maxArgv = args.array() - 1; // -1 to include |this|
-        } else {
-            MOZ_ASSERT(vals.empty());
-            unsigned numPushedArgs = Max(args.length(), numFormals);
-            if (!vals.reserve(numPushedArgs + 1 + data.constructing))
-                return false;
-
-            // Append |this| and any provided arguments.
-            for (size_t i = 1; i < args.length() + 2; ++i)
-                vals.infallibleAppend(args.base()[i]);
-
-            // Pad missing arguments with |undefined|.
-            while (vals.length() < numFormals + 1)
-                vals.infallibleAppend(UndefinedValue());
-
-            if (data.constructing)
-                vals.infallibleAppend(args.newTarget());
-
-            MOZ_ASSERT(vals.length() >= numFormals + 1 + data.constructing);
-            data.maxArgv = vals.begin();
-        }
+        if (numFormals > data.numActualArgs)
+            data.jitcode = cx->runtime()->jitRuntime()->getArgumentsRectifier()->raw();
     } else {
         data.constructing = false;
         data.numActualArgs = 0;
-        data.maxArgc = 0;
-        data.maxArgv = nullptr;
         data.envChain = state.asExecute()->environmentChain();
-
         data.calleeToken = CalleeToToken(state.script());
 
-        if (state.script()->isForEval() && state.script()->isDirectEvalInFunction()) {
-            // Push newTarget onto the stack.
-            if (!vals.reserve(1))
-                return false;
-
-            data.maxArgc = 1;
-            data.maxArgv = vals.begin();
+        if (state.script()->isDirectEvalInFunction()) {
             if (state.asExecute()->newTarget().isNull()) {
                 ScriptFrameIter iter(cx);
-                vals.infallibleAppend(iter.newTarget());
-            } else {
-                vals.infallibleAppend(state.asExecute()->newTarget());
+                state.asExecute()->setNewTarget(iter.newTarget());
             }
+            data.maxArgc = 1;
+            data.maxArgv = state.asExecute()->addressOfNewTarget();
+        } else {
+            data.maxArgc = 0;
+            data.maxArgv = nullptr;
         }
     }
-
-    return true;
 }
 
 JitExecStatus
@@ -2881,9 +2852,7 @@ jit::IonCannon(JSContext* cx, RunState& state)
     EnterJitData data(cx);
     data.jitcode = ion->method()->raw();
 
-    Rooted<GCVector<Value>> vals(cx, GCVector<Value>(cx));
-    if (!SetEnterJitData(cx, data, state, &vals))
-        return JitExec_Error;
+    SetEnterJitData(cx, data, state);
 
     JitExecStatus status = EnterIon(cx, data);
 
