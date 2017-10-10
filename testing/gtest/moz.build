@@ -10,6 +10,7 @@ EXPORTS.gtest += [
 
 if CONFIG['ENABLE_TESTS']:
     gtest_exports = [
+        'benchmark/BlackBox.h',
         'gtest/include/gtest/gtest-death-test.h',
         'gtest/include/gtest/gtest-message.h',
         'gtest/include/gtest/gtest-param-test.h',
@@ -97,6 +98,6 @@ if CONFIG['ENABLE_TESTS']:
             '/security/sandbox/chromium',
         ]
 
-    DIRS += ['mozilla']
+    DIRS += ['benchmark', 'mozilla']
 
     FINAL_LIBRARY = 'xul-gtest'
