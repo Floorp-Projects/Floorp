@@ -193,9 +193,7 @@ jit::EnterBaselineMethod(JSContext* cx, RunState& state)
     EnterJitData data(cx);
     data.jitcode = baseline->method()->raw();
 
-    Rooted<GCVector<Value>> vals(cx, GCVector<Value>(cx));
-    if (!SetEnterJitData(cx, data, state, &vals))
-        return JitExec_Error;
+    SetEnterJitData(cx, data, state);
 
     JitExecStatus status = EnterBaseline(cx, data);
     if (status != JitExec_Ok)

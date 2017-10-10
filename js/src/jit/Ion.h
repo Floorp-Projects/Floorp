@@ -125,8 +125,7 @@ IsErrorStatus(JitExecStatus status)
 
 struct EnterJitData;
 
-MOZ_MUST_USE bool SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state,
-                                  MutableHandle<GCVector<Value>> vals);
+void SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state);
 
 JitExecStatus IonCannon(JSContext* cx, RunState& state);
 
