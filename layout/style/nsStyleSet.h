@@ -315,7 +315,7 @@ class nsStyleSet final
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
   // Return the winning (in the cascade) @keyframes rule for the given name.
-  nsCSSKeyframesRule* KeyframesRuleForName(const nsString& aName);
+  nsCSSKeyframesRule* KeyframesRuleForName(nsAtom* aName);
 
   // Return the winning (in the cascade) @counter-style rule for the given name.
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
