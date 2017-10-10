@@ -1048,8 +1048,7 @@ this.PanelMultiView = class {
       case "popupshown":
         // Now that the main view is visible, we can check the height of the
         // description elements it contains.
-        if (!this.panelViews)
-          this.descriptionHeightWorkaround();
+        this.descriptionHeightWorkaround();
         break;
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
