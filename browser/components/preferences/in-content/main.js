@@ -325,10 +325,9 @@ var gMainPane = {
       let e10sCheckbox = document.getElementById("e10sAutoStart");
 
       let e10sPref = document.getElementById("browser.tabs.remote.autostart");
-      let e10sTempPref = document.getElementById("e10sTempPref");
       let e10sForceEnable = document.getElementById("e10sForceEnable");
 
-      let preffedOn = e10sPref.value || e10sTempPref.value || e10sForceEnable.value;
+      let preffedOn = e10sPref.value || e10sForceEnable.value;
 
       if (preffedOn) {
         // The checkbox is checked if e10s is preffed on and enabled.
@@ -565,7 +564,6 @@ var gMainPane = {
     if (AppConstants.E10S_TESTING_ONLY) {
       let e10sCheckbox = document.getElementById("e10sAutoStart");
       let e10sPref = document.getElementById("browser.tabs.remote.autostart");
-      let e10sTempPref = document.getElementById("e10sTempPref");
 
       let prefsToChange;
       if (e10sCheckbox.checked) {
@@ -574,9 +572,6 @@ var gMainPane = {
       } else {
         // Disabling e10s autostart
         prefsToChange = [e10sPref];
-        if (e10sTempPref.value) {
-          prefsToChange.push(e10sTempPref);
-        }
       }
 
       let buttonIndex = confirmRestartPrompt(e10sCheckbox.checked, 0,
@@ -590,7 +585,7 @@ var gMainPane = {
       }
 
       // Revert the checkbox in case we didn't quit
-      e10sCheckbox.checked = e10sPref.value || e10sTempPref.value;
+      e10sCheckbox.checked = e10sPref.value;
     }
   },
 
