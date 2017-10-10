@@ -38,16 +38,14 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsICrashReporter.h"
 #include "nsThreadSyncDispatch.h"
+#include "nsServiceManagerUtils.h"
 #include "GeckoProfiler.h"
 #include "InputEventStatistics.h"
 #include "ThreadEventTarget.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsServiceManagerUtils.h"
-#include "nsICrashReporter.h"
 #include "mozilla/dom/ContentChild.h"
-#endif
 
 #ifdef XP_LINUX
 #include <sys/time.h>
@@ -476,7 +474,6 @@ nsThread::ThreadFunc(void* aArg)
 
 //-----------------------------------------------------------------------------
 
-#ifdef MOZ_CRASHREPORTER
 // Tell the crash reporter to save a memory report if our heuristics determine
 // that an OOM failure is likely to occur soon.
 // Memory usage will not be checked more than every 30 seconds or saved more
@@ -541,7 +538,6 @@ nsThread::SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave)
 
   return recentlySavedReport;
 }
-#endif
 
 #ifdef MOZ_CANARY
 int sCanaryOutputFD = -1;
@@ -1207,11 +1203,9 @@ nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
     }
   }
 
-#ifdef MOZ_CRASHREPORTER
   if (!ShuttingDown()) {
     SaveMemoryReportNearOOM(ShouldSaveMemoryReport::kMaybeReport);
   }
-#endif
 }
 
 NS_IMETHODIMP
