@@ -1291,6 +1291,7 @@ FxAccountsInternal.prototype = {
   },
 
   requiresHttps() {
+    // Also used in FxAccountsOAuthGrantClient.jsm.
     let allowHttp = Services.prefs.getBoolPref("identity.fxaccounts.allowHttp", false);
     return allowHttp !== true;
   },
