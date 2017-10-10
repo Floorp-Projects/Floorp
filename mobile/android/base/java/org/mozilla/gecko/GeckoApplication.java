@@ -197,8 +197,6 @@ public class GeckoApplication extends Application
         mInBackground = false;
     }
 
-    private static Application sApp;
-
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.elapsedRealtime() +
@@ -278,15 +276,6 @@ public class GeckoApplication extends Application
         NotificationHelper.getInstance(context).init();
 
         MulticastDNSManager.getInstance(context).init();
-
-        if (sApp == null) {
-            sApp = this;
-        } else {
-            GeckoAppShell.appendAppNotesToCrashReport("Bug 1401737: " +
-                    this + '/' + getPackageName() + '/' + getApplicationInfo().uid + ' ' +
-                    sApp + '/' + sApp.getPackageName() + '/' + sApp.getApplicationInfo().uid);
-            throw new IllegalStateException("Bug 1401737 diagnostic crash 2");
-        }
 
         GeckoService.register();
 
