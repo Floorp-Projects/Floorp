@@ -75,8 +75,9 @@ void
 js::IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback)
 {
     AutoPrepareForTracing prep(cx, SkipAtoms);
+    AutoLockGC lock(cx->runtime());
 
-    for (auto chunk = cx->runtime()->gc.allNonEmptyChunks(); !chunk.done(); chunk.next())
+    for (auto chunk = cx->runtime()->gc.allNonEmptyChunks(lock); !chunk.done(); chunk.next())
         chunkCallback(cx->runtime(), data, chunk);
 }
 

@@ -1444,6 +1444,17 @@ OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+CheckCanSimulateOOM(JSContext* cx)
+{
+    if (js::oom::GetThreadType() != js::THREAD_TYPE_COOPERATING) {
+        JS_ReportErrorASCII(cx, "Simulated OOM failure is only supported on the main thread");
+        return false;
+    }
+
+    return true;
+}
+
+static bool
 SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1481,6 +1492,9 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
         return false;
     }
 
+    if (!CheckCanSimulateOOM(cx))
+        return false;
+
     js::oom::SimulateOOMAfter(count, targetThread, failAlways);
     args.rval().setUndefined();
     return true;
@@ -1502,6 +1516,10 @@ static bool
 ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!CheckCanSimulateOOM(cx))
+        return false;
+
     args.rval().setBoolean(js::oom::HadSimulatedOOM());
     js::oom::ResetSimulatedOOM();
     return true;
@@ -1536,6 +1554,9 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorASCII(cx, "The optional second argument to oomTest() must be a boolean.");
         return false;
     }
+
+    if (!CheckCanSimulateOOM(cx))
+        return false;
 
     bool expectExceptionOnFailure = true;
     if (args.length() == 2)
@@ -4241,10 +4262,8 @@ SetRNGState(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static ModuleEnvironmentObject*
-GetModuleEnvironment(JSContext* cx, HandleValue moduleValue)
+GetModuleEnvironment(JSContext* cx, HandleModuleObject module)
 {
-    RootedModuleObject module(cx, &moduleValue.toObject().as<ModuleObject>());
-
     // Use the initial environment so that tests can check bindings exists
     // before they have been instantiated.
     RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
@@ -4268,7 +4287,13 @@ GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, args[0]));
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    if (module->status() == MODULE_STATUS_ERRORED) {
+        JS_ReportErrorASCII(cx, "Module environment unavailable");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
     Rooted<IdVector> ids(cx, IdVector(cx));
     if (!JS_Enumerate(cx, env, &ids))
         return false;
@@ -4305,7 +4330,13 @@ GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, args[0]));
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    if (module->status() == MODULE_STATUS_ERRORED) {
+        JS_ReportErrorASCII(cx, "Module environment unavailable");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
     RootedString name(cx, args[1].toString());
     RootedId id(cx);
     if (!JS_StringToId(cx, name, &id))
