@@ -27,7 +27,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "3e7f0020caf3"
+        "revision": "a4f74e21e57e"
     }, 
     "ar": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "c113d68bb93e"
+        "revision": "57b4b9b19515"
     }, 
     "hy-AM": {
         "platforms": [
@@ -467,7 +467,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1df2c7e85c2e"
+        "revision": "fd07978a4b6e"
     }, 
     "is": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "6e48c2e2b103"
+        "revision": "def997fcd7e1"
     }, 
     "ja": {
         "platforms": [
@@ -672,7 +672,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "7676a63fee3f"
+        "revision": "e14718793bb8"
     }, 
     "nn-NO": {
         "platforms": [
@@ -752,7 +752,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "22a0f4af94b6"
+        "revision": "4c695ac06327"
     }, 
     "ru": {
         "platforms": [
@@ -882,7 +882,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f08397abdfce"
+        "revision": "bcc056151240"
     }, 
     "ur": {
         "platforms": [
