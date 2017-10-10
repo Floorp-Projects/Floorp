@@ -32,6 +32,8 @@ namespace dom {
 
 const uint8_t FLAG_TUP = 0x01; // Test of User Presence required
 const uint8_t FLAG_AT = 0x40; // Authenticator Data is provided
+const uint8_t FLAG_UV = 0x04; // User was Verified (biometrics, etc.); this
+                              // flag is not possible with U2F devices
 
 /***********************************************************************
  * Statics
