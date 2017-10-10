@@ -261,7 +261,10 @@ class ExecuteState : public RunState
         result_(result)
     { }
 
-    Value newTarget() { return newTargetValue_; }
+    Value newTarget() const { return newTargetValue_; }
+    void setNewTarget(const Value& v) { newTargetValue_ = v; }
+    Value* addressOfNewTarget() { return newTargetValue_.address(); }
+
     JSObject* environmentChain() const { return envChain_; }
     bool isDebuggerEval() const { return !!evalInFrame_; }
 
