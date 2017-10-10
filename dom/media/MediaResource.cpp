@@ -57,6 +57,7 @@ MediaResourceIndex::MediaResourceIndex(MediaResource* aResource)
   , mCachedBytes(0)
   , mCachedBlock(MakeUnique<char[]>(mCacheBlockSize))
 {
+  DDLINKCHILD("resource", aResource);
 }
 
 nsresult

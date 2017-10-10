@@ -116,6 +116,8 @@ OggDemuxer::OggDemuxer(MediaResource* aResource)
   , mOnSeekableEvent(nullptr)
 {
   MOZ_COUNT_CTOR(OggDemuxer);
+  // aResource is referenced through inner m{Audio,Video}OffState members.
+  DDLINKCHILD("resource", aResource);
 }
 
 OggDemuxer::~OggDemuxer()
@@ -284,6 +286,7 @@ OggDemuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
     return nullptr;
   }
   RefPtr<OggTrackDemuxer> e = new OggTrackDemuxer(this, aType, aTrackNumber);
+  DDLINKCHILD("track demuxer", e.get());
   mDemuxers.AppendElement(e);
 
   return e.forget();

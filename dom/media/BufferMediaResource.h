@@ -12,11 +12,15 @@
 
 namespace mozilla {
 
+DDLoggedTypeDeclNameAndBase(BufferMediaResource, MediaResource);
+
 // A simple MediaResource based on an in memory buffer.  This class accepts
 // the address and the length of the buffer, and simulates a read/seek API
 // on top of it.  The Read implementation involves copying memory, which is
 // unfortunate, but the MediaResource interface mandates that.
-class BufferMediaResource : public MediaResource
+class BufferMediaResource
+  : public MediaResource
+  , public DecoderDoctorLifeLogger<BufferMediaResource>
 {
 public:
   BufferMediaResource(const uint8_t* aBuffer, uint32_t aLength)

@@ -7,6 +7,7 @@
 #if !defined(PlatformDecoderModule_h_)
 #define PlatformDecoderModule_h_
 
+#include "DecoderDoctorLogger.h"
 #include "GMPCrashHelper.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
@@ -226,6 +227,8 @@ protected:
   CreateAudioDecoder(const CreateDecoderParams& aParams) = 0;
 };
 
+DDLoggedTypeDeclName(MediaDataDecoder);
+
 // MediaDataDecoder is the interface exposed by decoders created by the
 // PlatformDecoderModule's Create*Decoder() functions. The type of
 // media data that the decoder accepts as valid input and produces as
@@ -243,7 +246,7 @@ protected:
 // TaskQueue passed into the PlatformDecoderModules's Create*Decoder()
 // function. This may not be necessary for platforms with async APIs
 // for decoding.
-class MediaDataDecoder
+class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder>
 {
 protected:
   virtual ~MediaDataDecoder() { }

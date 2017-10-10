@@ -17,6 +17,8 @@
 
 namespace mozilla {
 
+DDLoggedTypeDeclName(MP4Metadata);
+
 // The memory owner in mIndice.indices is rust mp4 parser, so lifetime of this
 // class SHOULD NOT longer than rust parser.
 class IndiceWrapper
@@ -52,7 +54,7 @@ private:
   CheckedInt<size_t> mOffset;
 };
 
-class MP4Metadata
+class MP4Metadata : public DecoderDoctorLifeLogger<MP4Metadata>
 {
 public:
   explicit MP4Metadata(ByteStream* aSource);

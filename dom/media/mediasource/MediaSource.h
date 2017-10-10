@@ -34,6 +34,11 @@ template <typename T> class AsyncEventRunner;
 class MediaResult;
 
 namespace dom {
+class MediaSource;
+} // namespace dom
+DDLoggedTypeName(dom::MediaSource);
+
+namespace dom {
 
 class GlobalObject;
 class SourceBuffer;
@@ -44,7 +49,9 @@ template <typename T> class Optional;
   { 0x3839d699, 0x22c5, 0x439f, \
   { 0x94, 0xca, 0x0e, 0x0b, 0x26, 0xf9, 0xca, 0xbf } }
 
-class MediaSource final : public DOMEventTargetHelper
+class MediaSource final
+  : public DOMEventTargetHelper
+  , public DecoderDoctorLifeLogger<MediaSource>
 {
 public:
   /** WebIDL Methods. */

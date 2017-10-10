@@ -25,7 +25,12 @@ class AbstractThread;
 class MediaResult;
 class HLSTrackDemuxer;
 
-class HLSDemuxer final : public MediaDataDemuxer
+DDLoggedTypeDeclNameAndBase(HLSDemuxer, MediaDataDemuxer);
+DDLoggedTypeNameAndBase(HLSTrackDemuxer, MediaTrackDemuxer);
+
+class HLSDemuxer final
+  : public MediaDataDemuxer
+  , public DecoderDoctorLifeLogger<HLSDemuxer>
 {
   class HLSDemuxerCallbacksSupport;
 public:
@@ -68,7 +73,9 @@ private:
   java::GeckoHLSDemuxerWrapper::GlobalRef mHLSDemuxerWrapper;
 };
 
-class HLSTrackDemuxer : public MediaTrackDemuxer
+class HLSTrackDemuxer
+  : public MediaTrackDemuxer
+  , public DecoderDoctorLifeLogger<HLSTrackDemuxer>
 {
 public:
   HLSTrackDemuxer(HLSDemuxer* aParent,

@@ -178,6 +178,10 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource, bool aIsMediaSource)
   , mLastWebMBlockOffset(-1)
   , mIsMediaSource(aIsMediaSource)
 {
+  DDLINKCHILD("resource", aResource);
+  // Audio/video contexts hold a MediaResourceIndex.
+  DDLINKCHILD("video context", mVideoContext.GetResource());
+  DDLINKCHILD("audio context", mAudioContext.GetResource());
 }
 
 WebMDemuxer::~WebMDemuxer()
@@ -247,6 +251,7 @@ WebMDemuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
   }
   RefPtr<WebMTrackDemuxer> e =
     new WebMTrackDemuxer(this, aType, aTrackNumber);
+  DDLINKCHILD("track demuxer", e.get());
   mDemuxers.AppendElement(e);
 
   return e.forget();

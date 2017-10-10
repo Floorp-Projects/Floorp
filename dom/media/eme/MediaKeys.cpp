@@ -498,6 +498,7 @@ MediaKeys::CreateSession(JSContext* aCx,
   if (aRv.Failed()) {
     return nullptr;
   }
+  DDLINKCHILD("session", session.get());
 
   // Add session to the set of sessions awaiting their sessionId being ready.
   mPendingSessions.Put(session->Token(), session);

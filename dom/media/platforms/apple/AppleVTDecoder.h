@@ -17,7 +17,11 @@
 
 namespace mozilla {
 
-class AppleVTDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(AppleVTDecoder, MediaDataDecoder);
+
+class AppleVTDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<AppleVTDecoder>
 {
 public:
   AppleVTDecoder(const VideoInfo& aConfig,

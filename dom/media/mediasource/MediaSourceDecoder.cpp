@@ -184,12 +184,14 @@ MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
 {
   MOZ_ASSERT(!mMediaSource && !GetStateMachine() && NS_IsMainThread());
   mMediaSource = aMediaSource;
+  DDLINKCHILD("mediasource", aMediaSource);
 }
 
 void
 MediaSourceDecoder::DetachMediaSource()
 {
   MOZ_ASSERT(mMediaSource && NS_IsMainThread());
+  DDUNLINKCHILD(mMediaSource);
   mMediaSource = nullptr;
 }
 

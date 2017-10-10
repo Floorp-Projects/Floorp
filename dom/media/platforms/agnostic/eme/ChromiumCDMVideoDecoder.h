@@ -15,7 +15,11 @@ namespace mozilla {
 class CDMProxy;
 struct GMPVideoDecoderParams;
 
-class ChromiumCDMVideoDecoder : public MediaDataDecoder
+DDLoggedTypeDeclNameAndBase(ChromiumCDMVideoDecoder, MediaDataDecoder);
+
+class ChromiumCDMVideoDecoder
+  : public MediaDataDecoder
+  , public DecoderDoctorLifeLogger<ChromiumCDMVideoDecoder>
 {
 public:
   ChromiumCDMVideoDecoder(const GMPVideoDecoderParams& aParams,

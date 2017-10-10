@@ -16,7 +16,12 @@ namespace mozilla {
 
 class OggTrackDemuxer;
 
-class OggDemuxer : public MediaDataDemuxer
+DDLoggedTypeDeclNameAndBase(OggDemuxer, MediaDataDemuxer);
+DDLoggedTypeNameAndBase(OggTrackDemuxer, MediaTrackDemuxer);
+
+class OggDemuxer
+  : public MediaDataDemuxer
+  , public DecoderDoctorLifeLogger<OggDemuxer>
 {
 public:
   explicit OggDemuxer(MediaResource* aResource);
@@ -329,7 +334,9 @@ private:
   friend class OggTrackDemuxer;
 };
 
-class OggTrackDemuxer : public MediaTrackDemuxer
+class OggTrackDemuxer
+  : public MediaTrackDemuxer
+  , public DecoderDoctorLifeLogger<OggTrackDemuxer>
 {
 public:
   OggTrackDemuxer(OggDemuxer* aParent,
