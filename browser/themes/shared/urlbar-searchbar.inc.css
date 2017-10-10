@@ -402,6 +402,11 @@
   height: 11px;
 }
 
+.searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
+  margin-inline-start: -25px;
+  margin-inline-end: 14px;
+}
+
 .searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   -moz-context-properties: fill;
@@ -409,4 +414,9 @@
   margin-inline-end: 2px;
   width: 6px;
   height: 6px;
+}
+
+.searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
+  margin-inline-start: -26px;
+  margin-inline-end: 20px;
 }
