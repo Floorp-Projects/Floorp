@@ -65,6 +65,8 @@ public class GeckoApplication extends Application
 
     private RefWatcher mRefWatcher;
 
+    private final EventListener mListener = new EventListener();
+
     private static String sSessionUUID = null;
 
     public GeckoApplication() {
@@ -202,6 +204,11 @@ public class GeckoApplication extends Application
         Log.i(LOG_TAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
 
+        final Context oldContext = GeckoAppShell.getApplicationContext();
+        if (oldContext instanceof GeckoApplication) {
+            ((GeckoApplication) oldContext).onDestroy();
+        }
+
         final Context context = getApplicationContext();
         GeckoAppShell.ensureCrashHandling();
         GeckoAppShell.setApplicationContext(context);
@@ -281,18 +288,35 @@ public class GeckoApplication extends Application
 
         IntentHelper.init();
 
-        final EventListener listener = new EventListener();
-        EventDispatcher.getInstance().registerUiThreadListener(listener,
+        EventDispatcher.getInstance().registerUiThreadListener(mListener,
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
                 "Snackbar:Show",
                 "Share:Text",
                 null);
-        EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
+        EventDispatcher.getInstance().registerBackgroundThreadListener(mListener,
                 "Profile:Create",
                 null);
 
         super.onCreate();
+    }
+
+    /**
+     * May be called when a new GeckoApplication object
+     * replaces an old one due to assets change.
+     */
+    private void onDestroy() {
+        EventDispatcher.getInstance().unregisterUiThreadListener(mListener,
+                "Gecko:Exited",
+                "RuntimePermissions:Check",
+                "Snackbar:Show",
+                "Share:Text",
+                null);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(mListener,
+                "Profile:Create",
+                null);
+
+        GeckoService.unregister();
     }
 
     public void onDelayedStartup() {
