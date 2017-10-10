@@ -3805,7 +3805,6 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
 
   // Ok, now go through all the nodes and put them in a blockquote,
   // or whatever is appropriate.  Wohoo!
-  nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curList, curQuote;
   nsCOMPtr<nsIContent> sibling;
   int32_t listCount = arrayOfNodes.Length();
@@ -3820,8 +3819,12 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
       continue;
     }
 
-    curParent = curNode->GetParentNode();
-    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
+    int32_t offset;
+    nsCOMPtr<nsINode> curParent =
+      EditorBase::GetNodeLocation(curNode, &offset);
+    if (!curParent) {
+      continue;
+    }
 
     // some logic for putting list items into nested lists...
     if (HTMLEditUtils::IsList(curParent)) {
@@ -3992,7 +3995,6 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
 
   // Ok, now go through all the nodes and put them in a blockquote,
   // or whatever is appropriate.  Wohoo!
-  nsCOMPtr<nsINode> curParent;
   nsCOMPtr<nsIContent> sibling;
   nsCOMPtr<Element> curList, curQuote, indentedLI;
   int32_t listCount = arrayOfNodes.Length();
@@ -4007,8 +4009,11 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
       continue;
     }
 
-    curParent = curNode->GetParentNode();
-    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
+    int32_t offset;
+    nsCOMPtr<nsINode> curParent = EditorBase::GetNodeLocation(curNode, &offset);
+    if (!curParent) {
+      continue;
+    }
 
     // some logic for putting list items into nested lists...
     if (HTMLEditUtils::IsList(curParent)) {
@@ -4798,8 +4803,11 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       continue;
     }
 
-    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
+    int32_t offset;
+    nsCOMPtr<nsINode> curParent = EditorBase::GetNodeLocation(curNode, &offset);
+    if (!curParent) {
+      continue;
+    }
 
     // Skip insignificant formatting text nodes to prevent unnecessary
     // structure splitting!
@@ -8788,8 +8796,11 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
 
     nsCOMPtr<nsIContent> sibling;
 
-    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
+    int32_t offset;
+    nsCOMPtr<nsINode> curParent = EditorBase::GetNodeLocation(curNode, &offset);
+    if (!curParent) {
+      continue;
+    }
 
     // Some logic for putting list items into nested lists...
     if (HTMLEditUtils::IsList(curParent)) {
