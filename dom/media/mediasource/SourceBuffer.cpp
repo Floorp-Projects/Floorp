@@ -280,9 +280,9 @@ SourceBuffer::Detach()
   }
   AbortBufferAppend();
   if (mTrackBuffersManager) {
-    mTrackBuffersManager->Detach();
     mMediaSource->GetDecoder()->GetDemuxer()->DetachSourceBuffer(
       mTrackBuffersManager);
+    mTrackBuffersManager->Detach();
   }
   mTrackBuffersManager = nullptr;
   mMediaSource = nullptr;
