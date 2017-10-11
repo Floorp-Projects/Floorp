@@ -49,6 +49,18 @@ with Files('**/Makefile.in'):
     BUG_COMPONENT = ('Core', 'Build Config')
     FINAL = True
 
+with Files("**/*.js"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.html"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.xhtml"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.xul"):
+    SCHEDULES.inclusive += ['test-verification']
+
 FILES_PER_UNIFIED_FILE = 1
 
 CONFIGURE_SUBST_FILES += [

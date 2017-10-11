@@ -17,7 +17,8 @@ INCLUSIVE_COMPONENTS = [
     'yaml-lint',
     # test suites that only run when certain files have changed
     'jittest',
-    # test flavors
+    'test-verification',
+    # test flavors (narrower than suites)
     'jsreftest',
 ]
 INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
