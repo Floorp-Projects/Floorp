@@ -221,14 +221,13 @@ main {
     fill: #737373;
     vertical-align: middle; }
 
-.body-wrapper {
+.body-wrapper .sections-list .section:last-of-type,
+.body-wrapper .section-title {
   opacity: 0;
-  transition: opacity 75ms ease-in-out; }
+}
 
-@-moz-document url(about:newtab) {
-  .body-wrapper {
-    transition-delay: 125ms; } }
-  .body-wrapper.on {
+.body-wrapper.on .sections-list .section:last-of-type,
+.body-wrapper.on .section-title {
     opacity: 1; }
 
 .top-sites-list {
