@@ -2,6 +2,7 @@
 flake8:
     description: Python linter
     include:
+        - config/check_macroassembler_style.py
         - config/mozunit.py
         - layout/tools/reftest
         - python/mach
