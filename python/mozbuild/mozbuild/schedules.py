@@ -15,8 +15,10 @@ INCLUSIVE_COMPONENTS = [
     'py-lint',
     'js-lint',
     'yaml-lint',
-    # tests that only run when certain files have changed
+    # test suites that only run when certain files have changed
     'jittest',
+    # test flavors
+    'jsreftest',
 ]
 INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
 
