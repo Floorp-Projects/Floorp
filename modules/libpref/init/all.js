@@ -1457,11 +1457,7 @@ pref("javascript.options.discardSystemSource", false);
 // js/src/jsgc.cpp.  They're documented in js/src/jsapi.h.
 
 // JSGC_MAX_MALLOC_BYTES
-// This preference limits the malloc memory that javascript objects may use.
-// If you want to change these values for your device,
-// please find Bug 417052 comment 17 and Bug 456721
-// Comment 32 and Bug 613551.
-// Override the shell's default of 0xffffffff
+// How much malloc memory can be allocated before triggering a GC, in MB.
 pref("javascript.options.mem.high_water_mark", 128);
 
 // JSGC_MAX_BYTES
