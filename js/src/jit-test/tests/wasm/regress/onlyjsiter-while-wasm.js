@@ -1,5 +1,5 @@
 if (typeof evalInCooperativeThread === 'undefined')
-    return;
+    quit();
 
 try {
     evalInCooperativeThread(`
