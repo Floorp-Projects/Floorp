@@ -65,6 +65,8 @@ public class GeckoApplication extends Application
 
     private RefWatcher mRefWatcher;
 
+    private final EventListener mListener = new EventListener();
+
     private static String sSessionUUID = null;
 
     public GeckoApplication() {
@@ -197,12 +199,15 @@ public class GeckoApplication extends Application
         mInBackground = false;
     }
 
-    private static Application sApp;
-
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
+
+        final Context oldContext = GeckoAppShell.getApplicationContext();
+        if (oldContext instanceof GeckoApplication) {
+            ((GeckoApplication) oldContext).onDestroy();
+        }
 
         final Context context = getApplicationContext();
         GeckoAppShell.ensureCrashHandling();
@@ -279,31 +284,39 @@ public class GeckoApplication extends Application
 
         MulticastDNSManager.getInstance(context).init();
 
-        if (sApp == null) {
-            sApp = this;
-        } else {
-            GeckoAppShell.appendAppNotesToCrashReport("Bug 1401737: " +
-                    this + '/' + getPackageName() + '/' + getApplicationInfo().uid + ' ' +
-                    sApp + '/' + sApp.getPackageName() + '/' + sApp.getApplicationInfo().uid);
-            throw new IllegalStateException("Bug 1401737 diagnostic crash 2");
-        }
-
         GeckoService.register();
 
         IntentHelper.init();
 
-        final EventListener listener = new EventListener();
-        EventDispatcher.getInstance().registerUiThreadListener(listener,
+        EventDispatcher.getInstance().registerUiThreadListener(mListener,
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
                 "Snackbar:Show",
                 "Share:Text",
                 null);
-        EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
+        EventDispatcher.getInstance().registerBackgroundThreadListener(mListener,
                 "Profile:Create",
                 null);
 
         super.onCreate();
+    }
+
+    /**
+     * May be called when a new GeckoApplication object
+     * replaces an old one due to assets change.
+     */
+    private void onDestroy() {
+        EventDispatcher.getInstance().unregisterUiThreadListener(mListener,
+                "Gecko:Exited",
+                "RuntimePermissions:Check",
+                "Snackbar:Show",
+                "Share:Text",
+                null);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(mListener,
+                "Profile:Create",
+                null);
+
+        GeckoService.unregister();
     }
 
     public void onDelayedStartup() {

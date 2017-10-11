@@ -83,6 +83,13 @@
             "tests": ["perf_reftest_singletons"],
             "talos_options": ["--disable-stylo"]
         },
+        "speedometer-e10s": {
+            "tests": ["speedometer"]
+        },
+        "speedometer-stylo-disabled-e10s": {
+            "talos_options": ["--disable-stylo"],
+            "tests": ["speedometer"]
+        },
         "tp5o-e10s": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"

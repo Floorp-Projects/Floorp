@@ -3,7 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// UnfoldShortCircuitToIf is an AST traverser to convert short-circuiting operators to if-else statements.
+// UnfoldShortCircuitToIf is an AST traverser to convert short-circuiting operators to if-else
+// statements.
 // The results are assigned to s# temporaries, which are used by the main translator instead of
 // the original expression.
 //
@@ -13,9 +14,12 @@
 
 namespace sh
 {
-class TIntermNode;
 
-void UnfoldShortCircuitToIf(TIntermNode *root, unsigned int *temporaryIndex);
+class TIntermNode;
+class TSymbolTable;
+
+void UnfoldShortCircuitToIf(TIntermNode *root, TSymbolTable *symbolTable);
+
 }  // namespace sh
 
-#endif   // COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUIT_H_
+#endif  // COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUIT_H_

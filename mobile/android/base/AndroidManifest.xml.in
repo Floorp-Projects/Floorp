@@ -110,6 +110,7 @@
                 <data android:mimeType="text/html"/>
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
+                <data android:mimeType="image/svg+xml"/>
             </intent-filter>
 
             <meta-data android:name="com.sec.minimode.icon.portrait.normal"

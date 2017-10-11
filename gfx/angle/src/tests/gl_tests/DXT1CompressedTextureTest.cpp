@@ -5,6 +5,7 @@
 //
 
 #include "test_utils/ANGLETest.h"
+#include "test_utils/gl_raii.h"
 
 #include "media/pixel.inl"
 
@@ -27,9 +28,8 @@ class DXT1CompressedTextureTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vsSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vsSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -38,20 +38,17 @@ class DXT1CompressedTextureTest : public ANGLETest
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
                 texcoord.y = 1.0 - texcoord.y;
-            }
-        );
+            })";
 
-        const std::string textureFSSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string textureFSSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
         mTextureProgram = CompileProgram(vsSource, textureFSSource);
         if (mTextureProgram == 0)
@@ -174,6 +171,29 @@ TEST_P(DXT1CompressedTextureTest, CompressedTexStorage)
     EXPECT_GL_NO_ERROR();
 }
 
+// Test validation of glCompressedTexSubImage2D with DXT formats
+TEST_P(DXT1CompressedTextureTest, CompressedTexSubImageValidation)
+{
+    if (!extensionEnabled("GL_EXT_texture_compression_dxt1"))
+    {
+        std::cout << "Test skipped due to missing GL_EXT_texture_compression_dxt1" << std::endl;
+        return;
+    }
+
+    GLTexture texture;
+    glBindTexture(GL_TEXTURE_2D, texture.get());
+
+    // Size mip 0 to a large size
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_0_width,
+                           pixel_0_height, 0, pixel_0_size, nullptr);
+    ASSERT_GL_NO_ERROR();
+
+    // Set a sub image with an offset that isn't a multiple of the block size
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 1, 3, pixel_1_width, pixel_1_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_1_size, pixel_1_data);
+    ASSERT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
 class DXT1CompressedTextureTestES3 : public DXT1CompressedTextureTest { };
 
 class DXT1CompressedTextureTestD3D11 : public DXT1CompressedTextureTest { };
@@ -198,29 +218,39 @@ TEST_P(DXT1CompressedTextureTestES3, PBOCompressedTexImage)
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixel_0_size, NULL, GL_STREAM_DRAW);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixel_0_size, nullptr, GL_STREAM_DRAW);
     EXPECT_GL_NO_ERROR();
 
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_0_size, pixel_0_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_0_width, pixel_0_height, 0, pixel_0_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_0_width,
+                           pixel_0_height, 0, pixel_0_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_1_size, pixel_1_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 1, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_1_width, pixel_1_height, 0, pixel_1_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 1, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_1_width,
+                           pixel_1_height, 0, pixel_1_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_2_size, pixel_2_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 2, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_2_width, pixel_2_height, 0, pixel_2_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 2, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_2_width,
+                           pixel_2_height, 0, pixel_2_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_3_size, pixel_3_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 3, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_3_width, pixel_3_height, 0, pixel_3_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 3, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_3_width,
+                           pixel_3_height, 0, pixel_3_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_4_size, pixel_4_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 4, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_4_width, pixel_4_height, 0, pixel_4_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 4, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_4_width,
+                           pixel_4_height, 0, pixel_4_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_5_size, pixel_5_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 5, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_5_width, pixel_5_height, 0, pixel_5_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 5, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_5_width,
+                           pixel_5_height, 0, pixel_5_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_6_size, pixel_6_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 6, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_6_width, pixel_6_height, 0, pixel_6_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 6, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_6_width,
+                           pixel_6_height, 0, pixel_6_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_7_size, pixel_7_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 7, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_7_width, pixel_7_height, 0, pixel_7_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 7, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_7_width,
+                           pixel_7_height, 0, pixel_7_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_8_size, pixel_8_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_8_width, pixel_8_height, 0, pixel_8_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 8, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_8_width,
+                           pixel_8_height, 0, pixel_8_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_9_size, pixel_9_data);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 9, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_9_width, pixel_9_height, 0, pixel_9_size, NULL);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 9, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_9_width,
+                           pixel_9_height, 0, pixel_9_size, nullptr);
 
     EXPECT_GL_NO_ERROR();
 
@@ -272,29 +302,39 @@ TEST_P(DXT1CompressedTextureTestD3D11, PBOCompressedTexStorage)
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer);
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixel_0_size, NULL, GL_STREAM_DRAW);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixel_0_size, nullptr, GL_STREAM_DRAW);
     EXPECT_GL_NO_ERROR();
 
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_0_size, pixel_0_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixel_0_width, pixel_0_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_0_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pixel_0_width, pixel_0_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_0_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_1_size, pixel_1_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 1, 0, 0, pixel_1_width, pixel_1_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_1_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 1, 0, 0, pixel_1_width, pixel_1_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_1_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_2_size, pixel_2_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 2, 0, 0, pixel_2_width, pixel_2_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_2_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 2, 0, 0, pixel_2_width, pixel_2_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_2_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_3_size, pixel_3_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 3, 0, 0, pixel_3_width, pixel_3_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_3_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 3, 0, 0, pixel_3_width, pixel_3_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_3_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_4_size, pixel_4_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 4, 0, 0, pixel_4_width, pixel_4_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_4_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 4, 0, 0, pixel_4_width, pixel_4_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_4_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_5_size, pixel_5_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 5, 0, 0, pixel_5_width, pixel_5_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_5_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 5, 0, 0, pixel_5_width, pixel_5_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_5_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_6_size, pixel_6_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 6, 0, 0, pixel_6_width, pixel_6_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_6_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 6, 0, 0, pixel_6_width, pixel_6_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_6_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_7_size, pixel_7_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 7, 0, 0, pixel_7_width, pixel_7_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_7_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 7, 0, 0, pixel_7_width, pixel_7_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_7_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_8_size, pixel_8_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 8, 0, 0, pixel_8_width, pixel_8_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_8_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 8, 0, 0, pixel_8_width, pixel_8_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_8_size, nullptr);
     glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, pixel_9_size, pixel_9_data);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 9, 0, 0, pixel_9_width, pixel_9_height, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_9_size, NULL);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 9, 0, 0, pixel_9_width, pixel_9_height,
+                              GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, pixel_9_size, nullptr);
 
     EXPECT_GL_NO_ERROR();
 

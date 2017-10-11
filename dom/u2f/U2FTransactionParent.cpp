@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/U2FTokenManager.h"
 #include "U2FTransactionParent.h"
+#include "mozilla/dom/U2FTokenManager.h"
+#include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -13,6 +14,7 @@ namespace dom {
 mozilla::ipc::IPCResult
 U2FTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aTransactionInfo)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Register(this, aTransactionInfo);
   return IPC_OK();
@@ -21,6 +23,7 @@ U2FTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aTransa
 mozilla::ipc::IPCResult
 U2FTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTransactionInfo)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Sign(this, aTransactionInfo);
   return IPC_OK();
@@ -29,6 +32,7 @@ U2FTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTransactio
 mozilla::ipc::IPCResult
 U2FTransactionParent::RecvRequestCancel()
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->Cancel(this);
   return IPC_OK();
@@ -37,6 +41,7 @@ U2FTransactionParent::RecvRequestCancel()
 void
 U2FTransactionParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
   mgr->MaybeClearTransaction(this);
 }

@@ -18,8 +18,14 @@
 #include "angle_test_configs.h"
 #include "common/angleutils.h"
 #include "common/vector_utils.h"
+#include "platform/Platform.h"
 #include "shader_utils.h"
 #include "system_utils.h"
+
+#define ASSERT_GL_TRUE(a) ASSERT_EQ(static_cast<GLboolean>(GL_TRUE), (a))
+#define ASSERT_GL_FALSE(a) ASSERT_EQ(static_cast<GLboolean>(GL_FALSE), (a))
+#define EXPECT_GL_TRUE(a) EXPECT_EQ(static_cast<GLboolean>(GL_TRUE), (a))
+#define EXPECT_GL_FALSE(a) EXPECT_EQ(static_cast<GLboolean>(GL_FALSE), (a))
 
 #define EXPECT_GL_ERROR(err) EXPECT_EQ(static_cast<GLenum>(err), glGetError())
 #define EXPECT_GL_NO_ERROR() EXPECT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
@@ -41,6 +47,10 @@
 
 #define ASSERT_GLENUM_EQ(expected, actual) ASSERT_EQ(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
 #define EXPECT_GLENUM_EQ(expected, actual) EXPECT_EQ(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
+#define ASSERT_GLENUM_NE(expected, actual) \
+    ASSERT_NE(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
+#define EXPECT_GLENUM_NE(expected, actual) \
+    EXPECT_NE(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
 
 namespace angle
 {
@@ -78,7 +88,22 @@ struct GLColor
     static const GLColor transparentBlack;
     static const GLColor white;
     static const GLColor yellow;
+    static const GLColor magenta;
 };
+
+struct GLColor32F
+{
+    constexpr GLColor32F() : GLColor32F(0.0f, 0.0f, 0.0f, 0.0f) {}
+    constexpr GLColor32F(GLfloat r, GLfloat g, GLfloat b, GLfloat a) : R(r), G(g), B(b), A(a) {}
+
+    GLfloat R, G, B, A;
+};
+
+static constexpr GLColor32F kFloatRed   = {1.0f, 0.0f, 0.0f, 1.0f};
+static constexpr GLColor32F kFloatGreen = {0.0f, 1.0f, 0.0f, 1.0f};
+static constexpr GLColor32F kFloatBlue  = {0.0f, 0.0f, 1.0f, 1.0f};
+
+struct WorkaroundsD3D;
 
 // Useful to cast any type to GLubyte.
 template <typename TR, typename TG, typename TB, typename TA>
@@ -89,17 +114,43 @@ GLColor MakeGLColor(TR r, TG g, TB b, TA a)
 }
 
 bool operator==(const GLColor &a, const GLColor &b);
+bool operator!=(const GLColor &a, const GLColor &b);
 std::ostream &operator<<(std::ostream &ostream, const GLColor &color);
 GLColor ReadColor(GLint x, GLint y);
+
+// Useful to cast any type to GLfloat.
+template <typename TR, typename TG, typename TB, typename TA>
+GLColor32F MakeGLColor32F(TR r, TG g, TB b, TA a)
+{
+    return GLColor32F(static_cast<GLfloat>(r), static_cast<GLfloat>(g), static_cast<GLfloat>(b),
+                      static_cast<GLfloat>(a));
+}
+
+bool operator==(const GLColor32F &a, const GLColor32F &b);
+std::ostream &operator<<(std::ostream &ostream, const GLColor32F &color);
+GLColor32F ReadColor32F(GLint x, GLint y);
 
 }  // namespace angle
 
 #define EXPECT_PIXEL_EQ(x, y, r, g, b, a) \
     EXPECT_EQ(angle::MakeGLColor(r, g, b, a), angle::ReadColor(x, y))
 
+#define EXPECT_PIXEL_NE(x, y, r, g, b, a) \
+    EXPECT_NE(angle::MakeGLColor(r, g, b, a), angle::ReadColor(x, y))
+
+#define EXPECT_PIXEL_32F_EQ(x, y, r, g, b, a) \
+    EXPECT_EQ(angle::MakeGLColor32F(r, g, b, a), angle::ReadColor32F(x, y))
+
 #define EXPECT_PIXEL_ALPHA_EQ(x, y, a) EXPECT_EQ(a, angle::ReadColor(x, y).A)
 
+#define EXPECT_PIXEL_ALPHA32F_EQ(x, y, a) EXPECT_EQ(a, angle::ReadColor32F(x, y).A)
+
 #define EXPECT_PIXEL_COLOR_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor(x, y))
+#define EXPECT_PIXEL_COLOR_EQ_VEC2(vec2, angleColor) \
+    EXPECT_EQ(angleColor,                            \
+              angle::ReadColor(static_cast<GLint>(vec2.x()), static_cast<GLint>(vec2.y())))
+
+#define EXPECT_PIXEL_COLOR32F_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor32F(x, y))
 
 #define EXPECT_PIXEL_NEAR(x, y, r, g, b, a, abs_error) \
 { \
@@ -112,9 +163,24 @@ GLColor ReadColor(GLint x, GLint y);
     EXPECT_NEAR((a), pixel[3], abs_error); \
 }
 
+#define EXPECT_PIXEL32F_NEAR(x, y, r, g, b, a, abs_error)       \
+                                                                \
+    {                                                           \
+        GLfloat pixel[4];                                       \
+        glReadPixels((x), (y), 1, 1, GL_RGBA, GL_FLOAT, pixel); \
+        EXPECT_GL_NO_ERROR();                                   \
+        EXPECT_NEAR((r), pixel[0], abs_error);                  \
+        EXPECT_NEAR((g), pixel[1], abs_error);                  \
+        EXPECT_NEAR((b), pixel[2], abs_error);                  \
+        EXPECT_NEAR((a), pixel[3], abs_error);                  \
+    }
+
 // TODO(jmadill): Figure out how we can use GLColor's nice printing with EXPECT_NEAR.
 #define EXPECT_PIXEL_COLOR_NEAR(x, y, angleColor, abs_error) \
     EXPECT_PIXEL_NEAR(x, y, angleColor.R, angleColor.G, angleColor.B, angleColor.A, abs_error)
+
+#define EXPECT_PIXEL_COLOR32F_NEAR(x, y, angleColor, abs_error) \
+    EXPECT_PIXEL32F_NEAR(x, y, angleColor.R, angleColor.G, angleColor.B, angleColor.A, abs_error)
 
 #define EXPECT_COLOR_NEAR(expected, actual, abs_error) \
     \
@@ -125,15 +191,36 @@ GLColor ReadColor(GLint x, GLint y);
         EXPECT_NEAR(expected.A, actual.A, abs_error);  \
     \
 }
+#define EXPECT_PIXEL32F_NEAR(x, y, r, g, b, a, abs_error)       \
+                                                                \
+    {                                                           \
+        GLfloat pixel[4];                                       \
+        glReadPixels((x), (y), 1, 1, GL_RGBA, GL_FLOAT, pixel); \
+        EXPECT_GL_NO_ERROR();                                   \
+        EXPECT_NEAR((r), pixel[0], abs_error);                  \
+        EXPECT_NEAR((g), pixel[1], abs_error);                  \
+        EXPECT_NEAR((b), pixel[2], abs_error);                  \
+        EXPECT_NEAR((a), pixel[3], abs_error);                  \
+    }
+
+#define EXPECT_PIXEL_COLOR32F_NEAR(x, y, angleColor, abs_error) \
+    EXPECT_PIXEL32F_NEAR(x, y, angleColor.R, angleColor.G, angleColor.B, angleColor.A, abs_error)
 
 class EGLWindow;
 class OSWindow;
+class ANGLETestBase;
 
-class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
+struct TestPlatformContext final : private angle::NonCopyable
+{
+    bool ignoreMessages    = false;
+    ANGLETestBase *currentTest = nullptr;
+};
+
+class ANGLETestBase
 {
   protected:
-    ANGLETest();
-    ~ANGLETest();
+    ANGLETestBase(const angle::PlatformParameters &params);
+    virtual ~ANGLETestBase();
 
   public:
     static bool InitTestWindow();
@@ -141,14 +228,17 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     static void SetWindowVisible(bool isVisible);
     static bool eglDisplayExtensionEnabled(EGLDisplay display, const std::string &extName);
 
+    virtual void overrideWorkaroundsD3D(angle::WorkaroundsD3D *workaroundsD3D) {}
+
   protected:
-    virtual void SetUp();
-    virtual void TearDown();
+    void ANGLETestSetUp();
+    void ANGLETestTearDown();
 
     virtual void swapBuffers();
 
     void setupQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionAttribXYScale);
     void setupIndexedQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionAttribXYScale);
+    void setupIndexedQuadIndexBuffer();
 
     void drawQuad(GLuint program, const std::string &positionAttribName, GLfloat positionAttribZ);
     void drawQuad(GLuint program,
@@ -160,6 +250,13 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
                   GLfloat positionAttribZ,
                   GLfloat positionAttribXYScale,
                   bool useVertexBuffer);
+    void drawQuadInstanced(GLuint program,
+                           const std::string &positionAttribName,
+                           GLfloat positionAttribZ,
+                           GLfloat positionAttribXYScale,
+                           bool useVertexBuffer,
+                           GLuint numInstances);
+
     static std::array<angle::Vector3, 6> GetQuadVertices();
     void drawIndexedQuad(GLuint program,
                          const std::string &positionAttribName,
@@ -168,6 +265,22 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
                          const std::string &positionAttribName,
                          GLfloat positionAttribZ,
                          GLfloat positionAttribXYScale);
+    void drawIndexedQuad(GLuint program,
+                         const std::string &positionAttribName,
+                         GLfloat positionAttribZ,
+                         GLfloat positionAttribXYScale,
+                         bool useBufferObject);
+
+    void drawIndexedQuad(GLuint program,
+                         const std::string &positionAttribName,
+                         GLfloat positionAttribZ,
+                         GLfloat positionAttribXYScale,
+                         bool useBufferObject,
+                         bool restrictedRange);
+
+    void draw2DTexturedQuad(GLfloat positionAttribZ,
+                            GLfloat positionAttribXYScale,
+                            bool useVertexBuffer);
 
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
@@ -183,11 +296,21 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     void setConfigAlphaBits(int bits);
     void setConfigDepthBits(int bits);
     void setConfigStencilBits(int bits);
+    void setConfigComponentType(EGLenum componentType);
     void setMultisampleEnabled(bool enabled);
+    void setSamples(EGLint samples);
     void setDebugEnabled(bool enabled);
     void setNoErrorEnabled(bool enabled);
     void setWebGLCompatibilityEnabled(bool webglCompatibility);
+    void setRobustAccess(bool enabled);
     void setBindGeneratesResource(bool bindGeneratesResource);
+    void setDebugLayersEnabled(bool enabled);
+    void setClientArraysEnabled(bool enabled);
+    void setRobustResourceInit(bool enabled);
+    void setContextProgramCacheEnabled(bool enabled);
+
+    // Some EGL extension tests would like to defer the Context init until the test body.
+    void setDeferContextInit(bool enabled);
 
     int getClientMajorVersion() const;
     int getClientMinorVersion() const;
@@ -201,11 +324,34 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     void ignoreD3D11SDKLayersWarnings();
 
+    static OSWindow *GetOSWindow() { return mOSWindow; }
+
+    angle::PlatformMethods mPlatformMethods;
+
+    class ScopedIgnorePlatformMessages : angle::NonCopyable
+    {
+      public:
+        ScopedIgnorePlatformMessages(ANGLETestBase *test);
+        ~ScopedIgnorePlatformMessages();
+
+      private:
+        ANGLETestBase *mTest;
+    };
+
   private:
-    bool createEGLContext();
     bool destroyEGLContext();
 
     void checkD3D11SDKLayersMessages();
+
+    GLuint get2DTexturedQuadProgram();
+
+    void drawQuad(GLuint program,
+                  const std::string &positionAttribName,
+                  GLfloat positionAttribZ,
+                  GLfloat positionAttribXYScale,
+                  bool useVertexBuffer,
+                  bool useInstancedDrawCalls,
+                  GLuint numInstances);
 
     EGLWindow *mEGLWindow;
     int mWidth;
@@ -215,8 +361,32 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     // Used for indexed quad rendering
     GLuint mQuadVertexBuffer;
+    GLuint mQuadIndexBuffer;
+
+    // Used for texture rendering.
+    GLuint m2DTexturedQuadProgram;
+
+    TestPlatformContext mPlatformContext;
+
+    bool mDeferContextInit;
 
     static OSWindow *mOSWindow;
+
+    // Workaround for NVIDIA not being able to share a window with OpenGL and Vulkan.
+    static Optional<EGLint> mLastRendererType;
+
+    // For loading and freeing platform
+    static std::unique_ptr<angle::Library> mGLESLibrary;
+};
+
+class ANGLETest : public ANGLETestBase, public ::testing::TestWithParam<angle::PlatformParameters>
+{
+  protected:
+    ANGLETest();
+
+  public:
+    void SetUp() override;
+    void TearDown() override;
 };
 
 class ANGLETestEnvironment : public testing::Environment
@@ -224,10 +394,6 @@ class ANGLETestEnvironment : public testing::Environment
   public:
     void SetUp() override;
     void TearDown() override;
-
-  private:
-    // For loading and freeing platform
-    std::unique_ptr<angle::Library> mGLESLibrary;
 };
 
 // Driver vendors
@@ -247,6 +413,7 @@ bool IsD3DSM3();
 bool IsDesktopOpenGL();
 bool IsOpenGLES();
 bool IsOpenGL();
+bool IsOzone();
 bool IsNULL();
 
 // Operating systems
@@ -254,13 +421,11 @@ bool IsAndroid();
 bool IsLinux();
 bool IsOSX();
 bool IsWindows();
+bool IsVulkan();
 
 // Debug/Release
 bool IsDebug();
 bool IsRelease();
-
-// Negative tests may trigger expected errors/warnings in the ANGLE Platform.
-void IgnoreANGLEPlatformMessages();
 
 // Note: git cl format messes up this formatting.
 #define ANGLE_SKIP_TEST_IF(COND)                              \

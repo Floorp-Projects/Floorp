@@ -7,6 +7,7 @@
 #include "test_utils/ANGLETest.h"
 
 #include <vector>
+#include "test_utils/gl_raii.h"
 
 using namespace angle;
 
@@ -27,9 +28,8 @@ class IncompleteTextureTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vertexShaderSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -37,20 +37,17 @@ class IncompleteTextureTest : public ANGLETest
             {
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
-            }
-        );
+            })";
 
-        const std::string fragmentShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string fragmentShaderSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         if (mProgram == 0)
@@ -86,42 +83,44 @@ class IncompleteTextureTest : public ANGLETest
 
 TEST_P(IncompleteTextureTest, IncompleteTexture2D)
 {
-    GLuint tex;
-    glGenTextures(1, &tex);
+    GLTexture tex;
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
     glUseProgram(mProgram);
     glUniform1i(mTextureUniformLocation, 0);
 
-    const GLsizei textureWidth = 2;
-    const GLsizei textureHeight = 2;
-    std::vector<GLubyte> textureData(textureWidth * textureHeight * 4);
-    fillTextureData(textureData, 255, 0, 0, 255);
+    constexpr GLsizei kTextureSize = 2;
+    std::vector<GLColor> textureData(kTextureSize * kTextureSize, GLColor::red);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &textureData[0]);
+    // Make a complete texture.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kTextureSize, kTextureSize, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, textureData.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+    // Should be complete - expect red.
     drawQuad(mProgram, "position", 0.5f);
-    EXPECT_PIXEL_EQ(0, 0, 255, 0, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
 
+    // Make texture incomplete.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
+    // Should be incomplete - expect black.
     drawQuad(mProgram, "position", 0.5f);
-    EXPECT_PIXEL_EQ(0, 0, 0, 0, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
 
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, textureWidth >> 1, textureHeight >> 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &textureData[0]);
+    // Make texture complete by defining the second mip.
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, kTextureSize >> 1, kTextureSize >> 1, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, textureData.data());
 
+    // Should be complete - expect red.
     drawQuad(mProgram, "position", 0.5f);
-    EXPECT_PIXEL_EQ(0, 0, 255, 0, 0, 255);
-
-    glDeleteTextures(1, &tex);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
 }
 
 TEST_P(IncompleteTextureTest, UpdateTexture)
 {
-    GLuint tex;
-    glGenTextures(1, &tex);
+    GLTexture tex;
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 
@@ -158,8 +157,6 @@ TEST_P(IncompleteTextureTest, UpdateTexture)
 
     drawQuad(mProgram, "position", 0.5f);
     EXPECT_PIXEL_EQ(getWindowWidth() - greenTextureWidth, getWindowHeight() - greenTextureWidth, 0, 255, 0, 255);
-
-    glDeleteTextures(1, &tex);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.

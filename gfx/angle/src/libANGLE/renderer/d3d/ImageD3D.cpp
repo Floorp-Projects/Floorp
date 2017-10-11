@@ -33,10 +33,10 @@ ImageD3D::ImageD3D()
 GLenum
 ImageD3D::getSizedInputFormat(GLenum inputType) const
 {
-    const auto &internalFormat = gl::GetInternalFormatInfo(mInternalFormat);
+    const auto &internalFormat = gl::GetSizedInternalFormatInfo(mInternalFormat);
     const auto &unsizedInternalFormat = internalFormat.format;
-    const auto &sizedInputFormat = gl::GetSizedInternalFormat(unsizedInternalFormat, inputType);
-    return sizedInputFormat;
+    const auto &sizedIF = gl::GetInternalFormatInfo(unsizedInternalFormat, inputType);
+    return sizedIF.sizedInternalFormat;
 }
 
 }  // namespace rx

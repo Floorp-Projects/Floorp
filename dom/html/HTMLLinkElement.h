@@ -95,6 +95,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::href, aHref, aTriggeringPrincipal, aRv);
   }
+  void SetHref(const nsAString& aHref, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::href, aHref, aRv);
+  }
   void GetCrossOrigin(nsAString& aResult)
   {
     // Null for both missing and invalid defaults is ok, since we

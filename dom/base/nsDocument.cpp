@@ -111,6 +111,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "NullPrincipal.h"
 
 #include "nsIDOMWindow.h"
@@ -2484,6 +2485,20 @@ nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
 {
   if (!aPrincipal) {
     return nullptr;
+  }
+
+  // We can't load a document with an expanded principal. If we're given one,
+  // automatically downgrade it to the last principal it subsumes (which is the
+  // extension principal, in the case of extension content scripts).
+  auto* basePrin = BasePrincipal::Cast(aPrincipal);
+  if (basePrin->Is<ExpandedPrincipal>()) {
+    auto* expanded = basePrin->As<ExpandedPrincipal>();
+
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist;
+    MOZ_ALWAYS_SUCCEEDS(expanded->GetWhiteList(&whitelist));
+    MOZ_ASSERT(whitelist->Length() > 0);
+
+    return do_AddRef(whitelist->LastElement().get());
   }
 
   if (!sChromeInContentPrefCached) {

@@ -25,19 +25,19 @@ FenceNVNULL::~FenceNVNULL()
 gl::Error FenceNVNULL::set(GLenum condition)
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    return gl::InternalError();
 }
 
 gl::Error FenceNVNULL::test(GLboolean *outFinished)
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    return gl::InternalError();
 }
 
 gl::Error FenceNVNULL::finish()
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    return gl::InternalError();
 }
 
 }  // namespace rx

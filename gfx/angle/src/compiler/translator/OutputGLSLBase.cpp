@@ -6,8 +6,11 @@
 
 #include "compiler/translator/OutputGLSLBase.h"
 
+#include "angle_gl.h"
 #include "common/debug.h"
 #include "common/mathutil.h"
+#include "compiler/translator/Compiler.h"
+#include "compiler/translator/util.h"
 
 #include <cfloat>
 
@@ -16,13 +19,6 @@ namespace sh
 
 namespace
 {
-TString arrayBrackets(const TType &type)
-{
-    ASSERT(type.isArray());
-    TInfoSinkBase out;
-    out << "[" << type.getArraySize() << "]";
-    return TString(out.c_str());
-}
 
 bool isSingleStatement(TIntermNode *node)
 {
@@ -67,16 +63,52 @@ bool NeedsToWriteLayoutQualifier(const TType &type)
 
     const TLayoutQualifier &layoutQualifier = type.getLayoutQualifier();
 
-    if ((type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn) &&
+    if ((type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn ||
+         IsVarying(type.getQualifier())) &&
         layoutQualifier.location >= 0)
     {
         return true;
     }
+
+    if (type.getQualifier() == EvqFragmentOut && layoutQualifier.yuv == true)
+    {
+        return true;
+    }
+
+    if (IsOpaqueType(type.getBasicType()) && layoutQualifier.binding != -1)
+    {
+        return true;
+    }
+
     if (IsImage(type.getBasicType()) && layoutQualifier.imageInternalFormat != EiifUnspecified)
     {
         return true;
     }
     return false;
+}
+
+class CommaSeparatedListItemPrefixGenerator
+{
+  public:
+    CommaSeparatedListItemPrefixGenerator() : mFirst(true) {}
+  private:
+    bool mFirst;
+
+    friend TInfoSinkBase &operator<<(TInfoSinkBase &out,
+                                     CommaSeparatedListItemPrefixGenerator &gen);
+};
+
+TInfoSinkBase &operator<<(TInfoSinkBase &out, CommaSeparatedListItemPrefixGenerator &gen)
+{
+    if (gen.mFirst)
+    {
+        gen.mFirst = false;
+    }
+    else
+    {
+        out << ", ";
+    }
+    return out;
 }
 
 }  // namespace
@@ -85,18 +117,17 @@ TOutputGLSLBase::TOutputGLSLBase(TInfoSinkBase &objSink,
                                  ShArrayIndexClampingStrategy clampingStrategy,
                                  ShHashFunction64 hashFunction,
                                  NameMap &nameMap,
-                                 TSymbolTable &symbolTable,
+                                 TSymbolTable *symbolTable,
                                  sh::GLenum shaderType,
                                  int shaderVersion,
                                  ShShaderOutput output,
                                  ShCompileOptions compileOptions)
-    : TIntermTraverser(true, true, true),
+    : TIntermTraverser(true, true, true, symbolTable),
       mObjSink(objSink),
       mDeclaringVariables(false),
       mClampingStrategy(clampingStrategy),
       mHashFunction(hashFunction),
       mNameMap(nameMap),
-      mSymbolTable(symbolTable),
       mShaderType(shaderType),
       mShaderVersion(shaderVersion),
       mOutput(output),
@@ -125,8 +156,10 @@ void TOutputGLSLBase::writeFloat(TInfoSinkBase &out, float f)
     }
 }
 
-void TOutputGLSLBase::writeTriplet(
-    Visit visit, const char *preStr, const char *inStr, const char *postStr)
+void TOutputGLSLBase::writeTriplet(Visit visit,
+                                   const char *preStr,
+                                   const char *inStr,
+                                   const char *postStr)
 {
     TInfoSinkBase &out = objSink();
     if (visit == PreVisit && preStr)
@@ -137,12 +170,28 @@ void TOutputGLSLBase::writeTriplet(
         out << postStr;
 }
 
-void TOutputGLSLBase::writeBuiltInFunctionTriplet(
-    Visit visit, const char *preStr, bool useEmulatedFunction)
+void TOutputGLSLBase::writeBuiltInFunctionTriplet(Visit visit,
+                                                  TOperator op,
+                                                  bool useEmulatedFunction)
 {
-    TString preString = useEmulatedFunction ?
-        BuiltInFunctionEmulator::GetEmulatedFunctionName(preStr) : preStr;
-    writeTriplet(visit, preString.c_str(), ", ", ")");
+    TInfoSinkBase &out = objSink();
+    if (visit == PreVisit)
+    {
+        const char *opStr(GetOperatorString(op));
+        if (useEmulatedFunction)
+        {
+            BuiltInFunctionEmulator::WriteEmulatedFunctionName(out, opStr);
+        }
+        else
+        {
+            out << opStr;
+        }
+        out << "(";
+    }
+    else
+    {
+        writeTriplet(visit, nullptr, ", ", ")");
+    }
 }
 
 void TOutputGLSLBase::writeLayoutQualifier(const TType &type)
@@ -156,18 +205,46 @@ void TOutputGLSLBase::writeLayoutQualifier(const TType &type)
     const TLayoutQualifier &layoutQualifier = type.getLayoutQualifier();
     out << "layout(";
 
-    if (type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn)
+    CommaSeparatedListItemPrefixGenerator listItemPrefix;
+
+    if (type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn ||
+        IsVarying(type.getQualifier()))
     {
         if (layoutQualifier.location >= 0)
         {
-            out << "location = " << layoutQualifier.location;
+            out << listItemPrefix << "location = " << layoutQualifier.location;
         }
     }
 
-    if (IsImage(type.getBasicType()) && layoutQualifier.imageInternalFormat != EiifUnspecified)
+    if (type.getQualifier() == EvqFragmentOut)
     {
-        ASSERT(type.getQualifier() == EvqTemporary || type.getQualifier() == EvqUniform);
-        out << getImageInternalFormatString(layoutQualifier.imageInternalFormat);
+        if (layoutQualifier.yuv == true)
+        {
+            out << listItemPrefix << "yuv";
+        }
+    }
+
+    if (IsOpaqueType(type.getBasicType()))
+    {
+        if (layoutQualifier.binding >= 0)
+        {
+            out << listItemPrefix << "binding = " << layoutQualifier.binding;
+        }
+    }
+
+    if (IsImage(type.getBasicType()))
+    {
+        if (layoutQualifier.imageInternalFormat != EiifUnspecified)
+        {
+            ASSERT(type.getQualifier() == EvqTemporary || type.getQualifier() == EvqUniform);
+            out << listItemPrefix
+                << getImageInternalFormatString(layoutQualifier.imageInternalFormat);
+        }
+    }
+
+    if (IsAtomicCounter(type.getBasicType()))
+    {
+        out << listItemPrefix << "offset = " << layoutQualifier.offset;
     }
 
     out << ") ";
@@ -212,7 +289,7 @@ const char *TOutputGLSLBase::mapQualifierToString(TQualifier qualifier)
 void TOutputGLSLBase::writeVariableType(const TType &type)
 {
     TQualifier qualifier = type.getQualifier();
-    TInfoSinkBase &out = objSink();
+    TInfoSinkBase &out   = objSink();
     if (type.isInvariant())
     {
         writeInvariantQualifier(type);
@@ -290,11 +367,10 @@ void TOutputGLSLBase::writeVariableType(const TType &type)
 void TOutputGLSLBase::writeFunctionParameters(const TIntermSequence &args)
 {
     TInfoSinkBase &out = objSink();
-    for (TIntermSequence::const_iterator iter = args.begin();
-         iter != args.end(); ++iter)
+    for (TIntermSequence::const_iterator iter = args.begin(); iter != args.end(); ++iter)
     {
         const TIntermSymbol *arg = (*iter)->getAsSymbolNode();
-        ASSERT(arg != NULL);
+        ASSERT(arg != nullptr);
 
         const TType &type = arg->getType();
         writeVariableType(type);
@@ -302,7 +378,7 @@ void TOutputGLSLBase::writeFunctionParameters(const TIntermSequence &args)
         if (!arg->getName().getString().empty())
             out << " " << hashName(arg->getName());
         if (type.isArray())
-            out << arrayBrackets(type);
+            out << ArrayString(type);
 
         // Put a comma if this is not the last argument.
         if (iter != args.end() - 1)
@@ -310,8 +386,8 @@ void TOutputGLSLBase::writeFunctionParameters(const TIntermSequence &args)
     }
 }
 
-const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
-    const TType &type, const TConstantUnion *pConstUnion)
+const TConstantUnion *TOutputGLSLBase::writeConstantUnion(const TType &type,
+                                                          const TConstantUnion *pConstUnion)
 {
     TInfoSinkBase &out = objSink();
 
@@ -324,7 +400,7 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
         for (size_t i = 0; i < fields.size(); ++i)
         {
             const TType *fieldType = fields[i]->type();
-            ASSERT(fieldType != NULL);
+            ASSERT(fieldType != nullptr);
             pConstUnion = writeConstantUnion(*fieldType, pConstUnion);
             if (i != fields.size() - 1)
                 out << ", ";
@@ -333,7 +409,7 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
     }
     else
     {
-        size_t size = type.getObjectSize();
+        size_t size    = type.getObjectSize();
         bool writeType = size > 1;
         if (writeType)
             out << getTypeName(type) << "(";
@@ -341,19 +417,23 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
         {
             switch (pConstUnion->getType())
             {
-              case EbtFloat:
-                  writeFloat(out, pConstUnion->getFConst());
-                  break;
-              case EbtInt:
-                out << pConstUnion->getIConst();
-                break;
-              case EbtUInt:
-                out << pConstUnion->getUConst() << "u";
-                break;
-              case EbtBool:
-                out << pConstUnion->getBConst();
-                break;
-              default: UNREACHABLE();
+                case EbtFloat:
+                    writeFloat(out, pConstUnion->getFConst());
+                    break;
+                case EbtInt:
+                    out << pConstUnion->getIConst();
+                    break;
+                case EbtUInt:
+                    out << pConstUnion->getUConst() << "u";
+                    break;
+                case EbtBool:
+                    out << pConstUnion->getBConst();
+                    break;
+                case EbtYuvCscStandardEXT:
+                    out << getYuvCscStandardEXTString(pConstUnion->getYuvCscStandardEXTConst());
+                    break;
+                default:
+                    UNREACHABLE();
             }
             if (i != size - 1)
                 out << ", ";
@@ -372,7 +452,7 @@ void TOutputGLSLBase::writeConstructorTriplet(Visit visit, const TType &type)
         if (type.isArray())
         {
             out << getTypeName(type);
-            out << arrayBrackets(type);
+            out << ArrayString(type);
             out << "(";
         }
         else
@@ -392,7 +472,7 @@ void TOutputGLSLBase::visitSymbol(TIntermSymbol *node)
     out << hashVariableName(node->getName());
 
     if (mDeclaringVariables && node->getType().isArray())
-        out << arrayBrackets(node->getType());
+        out << ArrayString(node->getType());
 }
 
 void TOutputGLSLBase::visitConstantUnion(TIntermConstantUnion *node)
@@ -468,7 +548,7 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
             break;
 
         case EOpIndexDirect:
-            writeTriplet(visit, NULL, "[", "]");
+            writeTriplet(visit, nullptr, "[", "]");
             break;
         case EOpIndexIndirect:
             if (node->getAddIndexClamp())
@@ -489,7 +569,7 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
                     if (left->isArray())
                     {
                         // The shader will fail validation if the array length is not > 0.
-                        maxSize = static_cast<int>(leftType.getArraySize()) - 1;
+                        maxSize = static_cast<int>(leftType.getOutermostArraySize()) - 1;
                     }
                     else
                     {
@@ -504,7 +584,7 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
             }
             else
             {
-                writeTriplet(visit, NULL, "[", "]");
+                writeTriplet(visit, nullptr, "[", "]");
             }
             break;
         case EOpIndexDirectStruct:
@@ -521,7 +601,7 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
                 const TField *field               = structure->fields()[index->getIConst(0)];
 
                 TString fieldName = field->name();
-                if (!mSymbolTable.findBuiltIn(structure->name(), mShaderVersion))
+                if (!mSymbolTable->findBuiltIn(structure->name(), mShaderVersion))
                     fieldName = hashName(TName(fieldName));
 
                 out << fieldName;
@@ -538,7 +618,8 @@ bool TOutputGLSLBase::visitBinary(Visit visit, TIntermBinary *node)
                 const TField *field               = interfaceBlock->fields()[index->getIConst(0)];
 
                 TString fieldName = field->name();
-                ASSERT(!mSymbolTable.findBuiltIn(interfaceBlock->name(), mShaderVersion));
+                ASSERT(!mSymbolTable->findBuiltIn(interfaceBlock->name(), mShaderVersion) ||
+                       interfaceBlock->name() == "gl_PerVertex");
                 fieldName = hashName(TName(fieldName));
 
                 out << fieldName;
@@ -628,184 +709,104 @@ bool TOutputGLSLBase::visitUnary(Visit visit, TIntermUnary *node)
 
     switch (node->getOp())
     {
-      case EOpNegative: preString = "(-"; break;
-      case EOpPositive: preString = "(+"; break;
-      case EOpVectorLogicalNot: preString = "not("; break;
-      case EOpLogicalNot: preString = "(!"; break;
-      case EOpBitwiseNot: preString = "(~"; break;
+        case EOpNegative:
+            preString = "(-";
+            break;
+        case EOpPositive:
+            preString = "(+";
+            break;
+        case EOpLogicalNot:
+            preString = "(!";
+            break;
+        case EOpBitwiseNot:
+            preString = "(~";
+            break;
 
-      case EOpPostIncrement: preString = "("; postString = "++)"; break;
-      case EOpPostDecrement: preString = "("; postString = "--)"; break;
-      case EOpPreIncrement: preString = "(++"; break;
-      case EOpPreDecrement: preString = "(--"; break;
+        case EOpPostIncrement:
+            preString  = "(";
+            postString = "++)";
+            break;
+        case EOpPostDecrement:
+            preString  = "(";
+            postString = "--)";
+            break;
+        case EOpPreIncrement:
+            preString = "(++";
+            break;
+        case EOpPreDecrement:
+            preString = "(--";
+            break;
+        case EOpArrayLength:
+            preString  = "((";
+            postString = ").length())";
+            break;
 
-      case EOpRadians:
-        preString = "radians(";
-        break;
-      case EOpDegrees:
-        preString = "degrees(";
-        break;
-      case EOpSin:
-        preString = "sin(";
-        break;
-      case EOpCos:
-        preString = "cos(";
-        break;
-      case EOpTan:
-        preString = "tan(";
-        break;
-      case EOpAsin:
-        preString = "asin(";
-        break;
-      case EOpAcos:
-        preString = "acos(";
-        break;
-      case EOpAtan:
-        preString = "atan(";
-        break;
-
-      case EOpSinh:
-        preString = "sinh(";
-        break;
-      case EOpCosh:
-        preString = "cosh(";
-        break;
-      case EOpTanh:
-        preString = "tanh(";
-        break;
-      case EOpAsinh:
-        preString = "asinh(";
-        break;
-      case EOpAcosh:
-        preString = "acosh(";
-        break;
-      case EOpAtanh:
-        preString = "atanh(";
-        break;
-
-      case EOpExp:
-        preString = "exp(";
-        break;
-      case EOpLog:
-        preString = "log(";
-        break;
-      case EOpExp2:
-        preString = "exp2(";
-        break;
-      case EOpLog2:
-        preString = "log2(";
-        break;
-      case EOpSqrt:
-        preString = "sqrt(";
-        break;
-      case EOpInverseSqrt:
-        preString = "inversesqrt(";
-        break;
-
-      case EOpAbs:
-        preString = "abs(";
-        break;
-      case EOpSign:
-        preString = "sign(";
-        break;
-      case EOpFloor:
-        preString = "floor(";
-        break;
-      case EOpTrunc:
-        preString = "trunc(";
-        break;
-      case EOpRound:
-        preString = "round(";
-        break;
-      case EOpRoundEven:
-        preString = "roundEven(";
-        break;
-      case EOpCeil:
-        preString = "ceil(";
-        break;
-      case EOpFract:
-        preString = "fract(";
-        break;
-      case EOpIsNan:
-        preString = "isnan(";
-        break;
-      case EOpIsInf:
-        preString = "isinf(";
-        break;
-
-      case EOpFloatBitsToInt:
-        preString = "floatBitsToInt(";
-        break;
-      case EOpFloatBitsToUint:
-        preString = "floatBitsToUint(";
-        break;
-      case EOpIntBitsToFloat:
-        preString = "intBitsToFloat(";
-        break;
-      case EOpUintBitsToFloat:
-        preString = "uintBitsToFloat(";
-        break;
-
-      case EOpPackSnorm2x16:
-        preString = "packSnorm2x16(";
-        break;
-      case EOpPackUnorm2x16:
-        preString = "packUnorm2x16(";
-        break;
-      case EOpPackHalf2x16:
-        preString = "packHalf2x16(";
-        break;
-      case EOpUnpackSnorm2x16:
-        preString = "unpackSnorm2x16(";
-        break;
-      case EOpUnpackUnorm2x16:
-        preString = "unpackUnorm2x16(";
-        break;
-      case EOpUnpackHalf2x16:
-        preString = "unpackHalf2x16(";
-        break;
-
-      case EOpLength:
-        preString = "length(";
-        break;
-      case EOpNormalize:
-        preString = "normalize(";
-        break;
-
-      case EOpDFdx:
-        preString = "dFdx(";
-        break;
-      case EOpDFdy:
-        preString = "dFdy(";
-        break;
-      case EOpFwidth:
-        preString = "fwidth(";
-        break;
-
-      case EOpTranspose:
-        preString = "transpose(";
-        break;
-      case EOpDeterminant:
-        preString = "determinant(";
-        break;
-      case EOpInverse:
-        preString = "inverse(";
-        break;
-
-      case EOpAny:
-        preString = "any(";
-        break;
-      case EOpAll:
-        preString = "all(";
-        break;
-
-      default:
-        UNREACHABLE();
+        case EOpRadians:
+        case EOpDegrees:
+        case EOpSin:
+        case EOpCos:
+        case EOpTan:
+        case EOpAsin:
+        case EOpAcos:
+        case EOpAtan:
+        case EOpSinh:
+        case EOpCosh:
+        case EOpTanh:
+        case EOpAsinh:
+        case EOpAcosh:
+        case EOpAtanh:
+        case EOpExp:
+        case EOpLog:
+        case EOpExp2:
+        case EOpLog2:
+        case EOpSqrt:
+        case EOpInverseSqrt:
+        case EOpAbs:
+        case EOpSign:
+        case EOpFloor:
+        case EOpTrunc:
+        case EOpRound:
+        case EOpRoundEven:
+        case EOpCeil:
+        case EOpFract:
+        case EOpIsNan:
+        case EOpIsInf:
+        case EOpFloatBitsToInt:
+        case EOpFloatBitsToUint:
+        case EOpIntBitsToFloat:
+        case EOpUintBitsToFloat:
+        case EOpPackSnorm2x16:
+        case EOpPackUnorm2x16:
+        case EOpPackHalf2x16:
+        case EOpUnpackSnorm2x16:
+        case EOpUnpackUnorm2x16:
+        case EOpUnpackHalf2x16:
+        case EOpPackUnorm4x8:
+        case EOpPackSnorm4x8:
+        case EOpUnpackUnorm4x8:
+        case EOpUnpackSnorm4x8:
+        case EOpLength:
+        case EOpNormalize:
+        case EOpDFdx:
+        case EOpDFdy:
+        case EOpFwidth:
+        case EOpTranspose:
+        case EOpDeterminant:
+        case EOpInverse:
+        case EOpAny:
+        case EOpAll:
+        case EOpLogicalNotComponentWise:
+        case EOpBitfieldReverse:
+        case EOpBitCount:
+        case EOpFindLSB:
+        case EOpFindMSB:
+            writeBuiltInFunctionTriplet(visit, node->getOp(), node->getUseEmulatedFunction());
+            return true;
+        default:
+            UNREACHABLE();
     }
 
-    if (visit == PreVisit && node->getUseEmulatedFunction())
-        preString = BuiltInFunctionEmulator::GetEmulatedFunctionName(preString);
-    writeTriplet(visit, preString.c_str(), NULL, postString.c_str());
+    writeTriplet(visit, preString.c_str(), nullptr, postString.c_str());
 
     return true;
 }
@@ -835,7 +836,6 @@ bool TOutputGLSLBase::visitIfElse(Visit visit, TIntermIfElse *node)
     node->getCondition()->traverse(this);
     out << ")\n";
 
-    incrementDepth(node);
     visitCodeBlock(node->getTrueBlock());
 
     if (node->getFalseBlock())
@@ -843,7 +843,6 @@ bool TOutputGLSLBase::visitIfElse(Visit visit, TIntermIfElse *node)
         out << "else\n";
         visitCodeBlock(node->getFalseBlock());
     }
-    decrementDepth();
     return false;
 }
 
@@ -886,7 +885,6 @@ bool TOutputGLSLBase::visitBlock(Visit visit, TIntermBlock *node)
         out << "{\n";
     }
 
-    incrementDepth(node);
     for (TIntermSequence::const_iterator iter = node->getSequence()->begin();
          iter != node->getSequence()->end(); ++iter)
     {
@@ -897,7 +895,6 @@ bool TOutputGLSLBase::visitBlock(Visit visit, TIntermBlock *node)
         if (isSingleStatement(curNode))
             out << ";\n";
     }
-    decrementDepth();
 
     // Scope the blocks except when at the global scope.
     if (mDepth > 0)
@@ -909,193 +906,118 @@ bool TOutputGLSLBase::visitBlock(Visit visit, TIntermBlock *node)
 
 bool TOutputGLSLBase::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node)
 {
-    TInfoSinkBase &out = objSink();
-
-    ASSERT(visit == PreVisit);
-    {
-        const TType &type = node->getType();
-        writeVariableType(type);
-        if (type.isArray())
-            out << arrayBrackets(type);
-    }
-
-    out << " " << hashFunctionNameIfNeeded(node->getFunctionSymbolInfo()->getNameObj());
-
-    incrementDepth(node);
-
-    // Traverse function parameters.
-    TIntermAggregate *params = node->getFunctionParameters()->getAsAggregate();
-    ASSERT(params->getOp() == EOpParameters);
-    params->traverse(this);
-
-    // Traverse function body.
+    TIntermFunctionPrototype *prototype = node->getFunctionPrototype();
+    prototype->traverse(this);
     visitCodeBlock(node->getBody());
-    decrementDepth();
 
     // Fully processed; no need to visit children.
     return false;
 }
 
+bool TOutputGLSLBase::visitInvariantDeclaration(Visit visit, TIntermInvariantDeclaration *node)
+{
+    TInfoSinkBase &out = objSink();
+    ASSERT(visit == PreVisit);
+    const TIntermSymbol *symbol = node->getSymbol();
+    out << "invariant " << hashVariableName(symbol->getName());
+    return false;
+}
+
+bool TOutputGLSLBase::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node)
+{
+    TInfoSinkBase &out = objSink();
+    ASSERT(visit == PreVisit);
+
+    const TType &type = node->getType();
+    writeVariableType(type);
+    if (type.isArray())
+        out << ArrayString(type);
+
+    out << " " << hashFunctionNameIfNeeded(*node->getFunctionSymbolInfo());
+
+    out << "(";
+    writeFunctionParameters(*(node->getSequence()));
+    out << ")";
+
+    return false;
+}
+
 bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    bool visitChildren = true;
-    TInfoSinkBase &out = objSink();
-    bool useEmulatedFunction = (visit == PreVisit && node->getUseEmulatedFunction());
+    bool visitChildren       = true;
+    TInfoSinkBase &out       = objSink();
     switch (node->getOp())
     {
-      case EOpPrototype:
-        // Function declaration.
-        ASSERT(visit == PreVisit);
-        {
-            const TType &type = node->getType();
-            writeVariableType(type);
-            if (type.isArray())
-                out << arrayBrackets(type);
-        }
+        case EOpCallFunctionInAST:
+        case EOpCallInternalRawFunction:
+        case EOpCallBuiltInFunction:
+            // Function call.
+            if (visit == PreVisit)
+            {
+                if (node->getOp() == EOpCallBuiltInFunction)
+                {
+                    out << translateTextureFunction(node->getFunctionSymbolInfo()->getName());
+                }
+                else
+                {
+                    out << hashFunctionNameIfNeeded(*node->getFunctionSymbolInfo());
+                }
+                out << "(";
+            }
+            else if (visit == InVisit)
+                out << ", ";
+            else
+                out << ")";
+            break;
+        case EOpConstruct:
+            writeConstructorTriplet(visit, node->getType());
+            break;
 
-        out << " " << hashFunctionNameIfNeeded(node->getFunctionSymbolInfo()->getNameObj());
-
-        out << "(";
-        writeFunctionParameters(*(node->getSequence()));
-        out << ")";
-
-        visitChildren = false;
-        break;
-      case EOpFunctionCall:
-        // Function call.
-        if (visit == PreVisit)
-            out << hashFunctionNameIfNeeded(node->getFunctionSymbolInfo()->getNameObj()) << "(";
-        else if (visit == InVisit)
-            out << ", ";
-        else
-            out << ")";
-        break;
-      case EOpParameters:
-        // Function parameters.
-        ASSERT(visit == PreVisit);
-        out << "(";
-        writeFunctionParameters(*(node->getSequence()));
-        out << ")";
-        visitChildren = false;
-        break;
-      case EOpInvariantDeclaration:
-        // Invariant declaration.
-        ASSERT(visit == PreVisit);
-        {
-            const TIntermSequence *sequence = node->getSequence();
-            ASSERT(sequence && sequence->size() == 1);
-            const TIntermSymbol *symbol = sequence->front()->getAsSymbolNode();
-            ASSERT(symbol);
-            out << "invariant " << hashVariableName(symbol->getName());
-        }
-        visitChildren = false;
-        break;
-      case EOpConstructFloat:
-      case EOpConstructVec2:
-      case EOpConstructVec3:
-      case EOpConstructVec4:
-      case EOpConstructBool:
-      case EOpConstructBVec2:
-      case EOpConstructBVec3:
-      case EOpConstructBVec4:
-      case EOpConstructInt:
-      case EOpConstructIVec2:
-      case EOpConstructIVec3:
-      case EOpConstructIVec4:
-      case EOpConstructUInt:
-      case EOpConstructUVec2:
-      case EOpConstructUVec3:
-      case EOpConstructUVec4:
-      case EOpConstructMat2:
-      case EOpConstructMat2x3:
-      case EOpConstructMat2x4:
-      case EOpConstructMat3x2:
-      case EOpConstructMat3:
-      case EOpConstructMat3x4:
-      case EOpConstructMat4x2:
-      case EOpConstructMat4x3:
-      case EOpConstructMat4:
-      case EOpConstructStruct:
-          writeConstructorTriplet(visit, node->getType());
-          break;
-
-      case EOpOuterProduct:
-        writeBuiltInFunctionTriplet(visit, "outerProduct(", useEmulatedFunction);
-        break;
-
-      case EOpLessThan:
-        writeBuiltInFunctionTriplet(visit, "lessThan(", useEmulatedFunction);
-        break;
-      case EOpGreaterThan:
-        writeBuiltInFunctionTriplet(visit, "greaterThan(", useEmulatedFunction);
-        break;
-      case EOpLessThanEqual:
-        writeBuiltInFunctionTriplet(visit, "lessThanEqual(", useEmulatedFunction);
-        break;
-      case EOpGreaterThanEqual:
-        writeBuiltInFunctionTriplet(visit, "greaterThanEqual(", useEmulatedFunction);
-        break;
-      case EOpVectorEqual:
-        writeBuiltInFunctionTriplet(visit, "equal(", useEmulatedFunction);
-        break;
-      case EOpVectorNotEqual:
-        writeBuiltInFunctionTriplet(visit, "notEqual(", useEmulatedFunction);
-        break;
-
-      case EOpMod:
-        writeBuiltInFunctionTriplet(visit, "mod(", useEmulatedFunction);
-        break;
-      case EOpModf:
-        writeBuiltInFunctionTriplet(visit, "modf(", useEmulatedFunction);
-        break;
-      case EOpPow:
-        writeBuiltInFunctionTriplet(visit, "pow(", useEmulatedFunction);
-        break;
-      case EOpAtan:
-        writeBuiltInFunctionTriplet(visit, "atan(", useEmulatedFunction);
-        break;
-      case EOpMin:
-        writeBuiltInFunctionTriplet(visit, "min(", useEmulatedFunction);
-        break;
-      case EOpMax:
-        writeBuiltInFunctionTriplet(visit, "max(", useEmulatedFunction);
-        break;
-      case EOpClamp:
-        writeBuiltInFunctionTriplet(visit, "clamp(", useEmulatedFunction);
-        break;
-      case EOpMix:
-        writeBuiltInFunctionTriplet(visit, "mix(", useEmulatedFunction);
-        break;
-      case EOpStep:
-        writeBuiltInFunctionTriplet(visit, "step(", useEmulatedFunction);
-        break;
-      case EOpSmoothStep:
-        writeBuiltInFunctionTriplet(visit, "smoothstep(", useEmulatedFunction);
-        break;
-      case EOpDistance:
-        writeBuiltInFunctionTriplet(visit, "distance(", useEmulatedFunction);
-        break;
-      case EOpDot:
-        writeBuiltInFunctionTriplet(visit, "dot(", useEmulatedFunction);
-        break;
-      case EOpCross:
-        writeBuiltInFunctionTriplet(visit, "cross(", useEmulatedFunction);
-        break;
-      case EOpFaceForward:
-        writeBuiltInFunctionTriplet(visit, "faceforward(", useEmulatedFunction);
-        break;
-      case EOpReflect:
-        writeBuiltInFunctionTriplet(visit, "reflect(", useEmulatedFunction);
-        break;
-      case EOpRefract:
-        writeBuiltInFunctionTriplet(visit, "refract(", useEmulatedFunction);
-        break;
-      case EOpMul:
-        writeBuiltInFunctionTriplet(visit, "matrixCompMult(", useEmulatedFunction);
-        break;
-
-      default:
-        UNREACHABLE();
+        case EOpEqualComponentWise:
+        case EOpNotEqualComponentWise:
+        case EOpLessThanComponentWise:
+        case EOpGreaterThanComponentWise:
+        case EOpLessThanEqualComponentWise:
+        case EOpGreaterThanEqualComponentWise:
+        case EOpMod:
+        case EOpModf:
+        case EOpPow:
+        case EOpAtan:
+        case EOpMin:
+        case EOpMax:
+        case EOpClamp:
+        case EOpMix:
+        case EOpStep:
+        case EOpSmoothStep:
+        case EOpFrexp:
+        case EOpLdexp:
+        case EOpDistance:
+        case EOpDot:
+        case EOpCross:
+        case EOpFaceforward:
+        case EOpReflect:
+        case EOpRefract:
+        case EOpMulMatrixComponentWise:
+        case EOpOuterProduct:
+        case EOpBitfieldExtract:
+        case EOpBitfieldInsert:
+        case EOpUaddCarry:
+        case EOpUsubBorrow:
+        case EOpUmulExtended:
+        case EOpImulExtended:
+        case EOpBarrier:
+        case EOpMemoryBarrier:
+        case EOpMemoryBarrierAtomicCounter:
+        case EOpMemoryBarrierBuffer:
+        case EOpMemoryBarrierImage:
+        case EOpMemoryBarrierShared:
+        case EOpGroupMemoryBarrier:
+        case EOpEmitVertex:
+        case EOpEndPrimitive:
+            writeBuiltInFunctionTriplet(visit, node->getOp(), node->getUseEmulatedFunction());
+            break;
+        default:
+            UNREACHABLE();
     }
     return visitChildren;
 }
@@ -1130,8 +1052,6 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
 {
     TInfoSinkBase &out = objSink();
 
-    incrementDepth(node);
-
     TLoopType loopType = node->getType();
 
     if (loopType == ELoopFor)  // for loop
@@ -1154,7 +1074,7 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
     else if (loopType == ELoopWhile)  // while loop
     {
         out << "while (";
-        ASSERT(node->getCondition() != NULL);
+        ASSERT(node->getCondition() != nullptr);
         node->getCondition()->traverse(this);
         out << ")\n";
 
@@ -1168,12 +1088,10 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
         visitCodeBlock(node->getBody());
 
         out << "while (";
-        ASSERT(node->getCondition() != NULL);
+        ASSERT(node->getCondition() != nullptr);
         node->getCondition()->traverse(this);
         out << ");\n";
     }
-
-    decrementDepth();
 
     // No need to visit children. They have been already processed in
     // this function.
@@ -1184,20 +1102,20 @@ bool TOutputGLSLBase::visitBranch(Visit visit, TIntermBranch *node)
 {
     switch (node->getFlowOp())
     {
-      case EOpKill:
-        writeTriplet(visit, "discard", NULL, NULL);
-        break;
-      case EOpBreak:
-        writeTriplet(visit, "break", NULL, NULL);
-        break;
-      case EOpContinue:
-        writeTriplet(visit, "continue", NULL, NULL);
-        break;
-      case EOpReturn:
-        writeTriplet(visit, "return ", NULL, NULL);
-        break;
-      default:
-        UNREACHABLE();
+        case EOpKill:
+            writeTriplet(visit, "discard", nullptr, nullptr);
+            break;
+        case EOpBreak:
+            writeTriplet(visit, "break", nullptr, nullptr);
+            break;
+        case EOpContinue:
+            writeTriplet(visit, "continue", nullptr, nullptr);
+            break;
+        case EOpReturn:
+            writeTriplet(visit, "return ", nullptr, nullptr);
+            break;
+        default:
+            UNREACHABLE();
     }
 
     return true;
@@ -1206,7 +1124,7 @@ bool TOutputGLSLBase::visitBranch(Visit visit, TIntermBranch *node)
 void TOutputGLSLBase::visitCodeBlock(TIntermBlock *node)
 {
     TInfoSinkBase &out = objSink();
-    if (node != NULL)
+    if (node != nullptr)
     {
         node->traverse(this);
         // Single statements not part of a sequence need to be terminated
@@ -1230,55 +1148,35 @@ TString TOutputGLSLBase::getTypeName(const TType &type)
 
 TString TOutputGLSLBase::hashName(const TName &name)
 {
-    if (name.getString().empty())
-    {
-        ASSERT(!name.isInternal());
-        return name.getString();
-    }
-    if (name.isInternal())
-    {
-        // TODO(oetuaho): Would be nicer to prefix non-internal names with "_" instead, like is
-        // done in the HLSL output, but that requires fairly complex changes elsewhere in the code
-        // as well.
-        // We need to use a prefix that is reserved in WebGL in order to guarantee that the internal
-        // names don't conflict with user-defined names from WebGL.
-        return "webgl_angle_" + name.getString();
-    }
-    if (mHashFunction == nullptr)
-    {
-        return name.getString();
-    }
-    NameMap::const_iterator it = mNameMap.find(name.getString().c_str());
-    if (it != mNameMap.end())
-        return it->second.c_str();
-    TString hashedName                 = TIntermTraverser::hash(name.getString(), mHashFunction);
-    mNameMap[name.getString().c_str()] = hashedName.c_str();
-    return hashedName;
+    return HashName(name, mHashFunction, &mNameMap);
 }
 
 TString TOutputGLSLBase::hashVariableName(const TName &name)
 {
-    if (mSymbolTable.findBuiltIn(name.getString(), mShaderVersion) != NULL)
+    if (mSymbolTable->findBuiltIn(name.getString(), mShaderVersion) != nullptr ||
+        name.getString().substr(0, 3) == "gl_")
+    {
+        if (mCompileOptions & SH_TRANSLATE_VIEWID_OVR_TO_UNIFORM &&
+            name.getString() == "gl_ViewID_OVR")
+        {
+            TName uniformName(TString("ViewID_OVR"));
+            uniformName.setInternal(true);
+            return hashName(uniformName);
+        }
         return name.getString();
+    }
     return hashName(name);
 }
 
-TString TOutputGLSLBase::hashFunctionNameIfNeeded(const TName &mangledName)
+TString TOutputGLSLBase::hashFunctionNameIfNeeded(const TFunctionSymbolInfo &info)
 {
-    TString mangledStr = mangledName.getString();
-    TString name = TFunction::unmangleName(mangledStr);
-    if (mSymbolTable.findBuiltIn(mangledStr, mShaderVersion) != nullptr || name == "main")
-        return translateTextureFunction(name);
-    if (mangledName.isInternal())
+    if (info.isMain())
     {
-        // Internal function names are outputted as-is - they may refer to functions manually added
-        // to the output shader source that are not included in the AST at all.
-        return name;
+        return info.getName();
     }
     else
     {
-        TName nameObj(name);
-        return hashName(nameObj);
+        return hashName(info.getNameObj());
     }
 }
 
@@ -1306,7 +1204,7 @@ void TOutputGLSLBase::declareStruct(const TStructure *structure)
             out << " ";
         out << getTypeName(*field->type()) << " " << hashName(TName(field->name()));
         if (field->type()->isArray())
-            out << arrayBrackets(*field->type());
+            out << ArrayString(*field->type());
         out << ";\n";
     }
     out << "}";
@@ -1341,6 +1239,12 @@ void TOutputGLSLBase::declareInterfaceBlockLayout(const TInterfaceBlock *interfa
 
     out << ", ";
 
+    if (interfaceBlock->blockBinding() > 0)
+    {
+        out << "binding = " << interfaceBlock->blockBinding();
+        out << ", ";
+    }
+
     switch (interfaceBlock->matrixPacking())
     {
         case EmpUnspecified:
@@ -1374,10 +1278,58 @@ void TOutputGLSLBase::declareInterfaceBlock(const TInterfaceBlock *interfaceBloc
             out << " ";
         out << getTypeName(*field->type()) << " " << hashName(TName(field->name()));
         if (field->type()->isArray())
-            out << arrayBrackets(*field->type());
+            out << ArrayString(*field->type());
         out << ";\n";
     }
     out << "}";
+}
+
+void WriteGeometryShaderLayoutQualifiers(TInfoSinkBase &out,
+                                         sh::TLayoutPrimitiveType inputPrimitive,
+                                         int invocations,
+                                         sh::TLayoutPrimitiveType outputPrimitive,
+                                         int maxVertices)
+{
+    // Omit 'invocations = 1'
+    if (inputPrimitive != EptUndefined || invocations > 1)
+    {
+        out << "layout (";
+
+        if (inputPrimitive != EptUndefined)
+        {
+            out << getGeometryShaderPrimitiveTypeString(inputPrimitive);
+        }
+
+        if (invocations > 1)
+        {
+            if (inputPrimitive != EptUndefined)
+            {
+                out << ", ";
+            }
+            out << "invocations = " << invocations;
+        }
+        out << ") in;\n";
+    }
+
+    if (outputPrimitive != EptUndefined || maxVertices != -1)
+    {
+        out << "layout (";
+
+        if (outputPrimitive != EptUndefined)
+        {
+            out << getGeometryShaderPrimitiveTypeString(outputPrimitive);
+        }
+
+        if (maxVertices != -1)
+        {
+            if (outputPrimitive != EptUndefined)
+            {
+                out << ", ";
+            }
+            out << "max_vertices = " << maxVertices;
+        }
+        out << ") out;\n";
+    }
 }
 
 }  // namespace sh

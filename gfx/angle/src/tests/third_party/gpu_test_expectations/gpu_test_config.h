@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef GPU_CONFIG_GPU_TEST_CONFIG_H_
-#define GPU_CONFIG_GPU_TEST_CONFIG_H_
+#ifndef ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
+#define ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
+
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -29,13 +31,14 @@ class GPU_EXPORT GPUTestConfig {
     kOsMacMavericks = 1 << 8,
     kOsMacYosemite = 1 << 9,
     kOsMacElCapitan = 1 << 10,
+    kOsMacSierra = 1 << 11,
     kOsMac = kOsMacLeopard | kOsMacSnowLeopard | kOsMacLion |
              kOsMacMountainLion | kOsMacMavericks | kOsMacYosemite |
-             kOsMacElCapitan,
-    kOsLinux = 1 << 11,
-    kOsChromeOS = 1 << 12,
-    kOsAndroid = 1 << 13,
-    kOsWin10 = 1 << 14,
+             kOsMacElCapitan | kOsMacSierra,
+    kOsLinux = 1 << 12,
+    kOsChromeOS = 1 << 13,
+    kOsAndroid = 1 << 14,
+    kOsWin10 = 1 << 15,
     kOsWin = kOsWinXP | kOsWinVista | kOsWin7 | kOsWin8 | kOsWin10,
   };
 
@@ -54,20 +57,21 @@ class GPU_EXPORT GPUTestConfig {
   };
 
   GPUTestConfig();
+  GPUTestConfig(const GPUTestConfig& other);
   virtual ~GPUTestConfig();
 
-  void set_os(int32 os);
-  void set_gpu_device_id(uint32 id);
-  void set_build_type(int32 build_type);
-  void set_api(int32 api);
+  void set_os(int32_t os);
+  void set_gpu_device_id(uint32_t id);
+  void set_build_type(int32_t build_type);
+  void set_api(int32_t api);
 
-  virtual void AddGPUVendor(uint32 gpu_vendor);
+  virtual void AddGPUVendor(uint32_t gpu_vendor);
 
-  int32 os() const { return os_; }
-  const std::vector<uint32>& gpu_vendor() const { return gpu_vendor_; }
-  uint32 gpu_device_id() const { return gpu_device_id_; }
-  int32 build_type() const { return build_type_; }
-  int32 api() const { return api_; }
+  int32_t os() const { return os_; }
+  const std::vector<uint32_t>& gpu_vendor() const { return gpu_vendor_; }
+  uint32_t gpu_device_id() const { return gpu_device_id_; }
+  int32_t build_type() const { return build_type_; }
+  int32_t api() const { return api_; }
 
   // Check if the config is valid. For example, if gpu_device_id_ is set, but
   // gpu_vendor_ is unknown, then it's invalid.
@@ -89,19 +93,19 @@ class GPU_EXPORT GPUTestConfig {
 
  private:
   // operating system.
-  int32 os_;
+  int32_t os_;
 
   // GPU vendor.
-  std::vector<uint32> gpu_vendor_;
+  std::vector<uint32_t> gpu_vendor_;
 
   // GPU device id (unique to each vendor).
-  uint32 gpu_device_id_;
+  uint32_t gpu_device_id_;
 
   // Release or Debug.
-  int32 build_type_;
+  int32_t build_type_;
 
   // Back-end rendering APIs.
-  int32 api_;
+  int32_t api_;
 };
 
 class GPU_EXPORT GPUTestBotConfig : public GPUTestConfig {
@@ -110,7 +114,7 @@ class GPU_EXPORT GPUTestBotConfig : public GPUTestConfig {
   ~GPUTestBotConfig() override;
 
   // This should only be called when no gpu_vendor is added.
-  void AddGPUVendor(uint32 gpu_vendor) override;
+  void AddGPUVendor(uint32_t gpu_vendor) override;
 
   // Return false if gpu_info does not have valid vendor_id and device_id.
   bool SetGPUInfo(const GPUInfo& gpu_info);
@@ -132,9 +136,12 @@ class GPU_EXPORT GPUTestBotConfig : public GPUTestConfig {
   // Check if this bot's config matches |config_data| or any of the |configs|.
   static bool CurrentConfigMatches(const std::string& config_data);
   static bool CurrentConfigMatches(const std::vector<std::string>& configs);
+
+  // Check if the bot has blacklisted all GPU features.
+  static bool GpuBlacklistedOnBot();
 };
 
 }  // namespace gpu
 
-#endif  // GPU_CONFIG_GPU_TEST_CONFIG_H_
+#endif  // ANGLE_GPU_CONFIG_GPU_TEST_CONFIG_H_
 
