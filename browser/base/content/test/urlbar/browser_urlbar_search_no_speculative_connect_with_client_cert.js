@@ -150,17 +150,19 @@ add_task(async function popup_mousedown_no_client_cert_dialog_until_navigate_tes
   };
   info(`Searching for '${test.search}'`);
   await promiseAutocompleteResultPopup(test.search, window, true);
-  await waitForAutocompleteResultAt(1);
   let controller = gURLBar.popup.input.controller;
   // The first item should be 'Search with ...' thus we want the second.
   let value = controller.getFinalCompleteValueAt(1);
   info(`The value of the second item is ${value}`);
   is(value, test.completeValue, "The second item has the url we visited.");
 
-  let listitem = await waitForAutocompleteResultAt(1);
-  Assert.ok(is_visible(listitem), "The node is there.");
+  await BrowserTestUtils.waitForCondition(() => {
+    return !!gURLBar.popup.richlistbox.childNodes[1] &&
+           is_visible(gURLBar.popup.richlistbox.childNodes[1]);
+  }, "the node is there.");
 
   expectingChooseCertificate = false;
+  let listitem = gURLBar.popup.richlistbox.childNodes[1];
   EventUtils.synthesizeMouseAtCenter(listitem, {type: "mousedown"}, window);
   is(gURLBar.popup.richlistbox.selectedIndex, 1, "The second item is selected");
 

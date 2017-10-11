@@ -313,12 +313,3 @@ function promiseSpeculativeConnection(httpserver) {
     return false;
   }, "Waiting for connection setup");
 }
-
-async function waitForAutocompleteResultAt(index) {
-  let searchString = gURLBar.controller.searchString;
-  await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.children.length > index &&
-          gURLBar.popup.richlistbox.children[index].getAttribute("ac-text") == searchString,
-    `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
-  return gURLBar.popup.richlistbox.children[index];
-}

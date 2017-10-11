@@ -12,8 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
-                                  "resource://testing-common/TestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 this.PlacesTestUtils = Object.freeze({
   /**
@@ -55,9 +55,9 @@ this.PlacesTestUtils = Object.freeze({
       let info = {url: place.uri};
       info.title = (typeof place.title === "string") ? place.title : "test visit for " + info.url.spec ;
       if (typeof place.referrer == "string") {
-        place.referrer = Services.io.newURI(place.referrer);
+        place.referrer = NetUtil.newURI(place.referrer);
       } else if (place.referrer && place.referrer instanceof URL) {
-        place.referrer = Services.io.newURI(place.referrer.href);
+        place.referrer = NetUtil.newURI(place.referrer.href);
       }
       let visitDate = place.visitDate;
       if (visitDate) {
@@ -82,11 +82,7 @@ this.PlacesTestUtils = Object.freeze({
       }];
       infos.push(info);
     }
-    await PlacesUtils.history.insertMany(infos);
-    await TestUtils.waitForCondition(
-      () => PlacesUtils.history.fetch(infos[infos.length - 1].url),
-      "Ensure history has been updated and is visible to read-only connections"
-    );
+    return PlacesUtils.history.insertMany(infos);
   },
 
    /*
@@ -108,8 +104,8 @@ this.PlacesTestUtils = Object.freeze({
         throw new Error("URL does not exist");
       }
       faviconPromises.push(new Promise((resolve, reject) => {
-        let uri = Services.io.newURI(key);
-        let faviconURI = Services.io.newURI(val);
+        let uri = NetUtil.newURI(key);
+        let faviconURI = NetUtil.newURI(val);
         try {
           PlacesUtils.favicons.setAndFetchFaviconForPage(
             uri,
