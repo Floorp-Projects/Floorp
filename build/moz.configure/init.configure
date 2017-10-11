@@ -11,6 +11,8 @@ option(env='DIST', nargs=1, help='DIST directory')
 
 # Do not allow objdir == srcdir builds.
 # ==============================================================
+
+
 @depends('--help', 'DIST')
 @imports(_from='os.path', _import='exists')
 def check_build_environment(help, dist):
@@ -42,7 +44,7 @@ def check_build_environment(help, dist):
             '  * If you are building with a mozconfig, you will need to change your\n'
             '  * mozconfig to point to a different object directory.\n'
             '  ***'
-        )
+            )
 
     # Check for a couple representative files in the source tree
     conflict_files = [
@@ -61,9 +63,10 @@ def check_build_environment(help, dist):
             '  *     2. gmake distclean\n'
             '  ***'
             % ('\n  '.join(conflict_files), topsrcdir)
-        )
+            )
 
     return result
+
 
 set_config('TOPSRCDIR', check_build_environment.topsrcdir)
 set_config('TOPOBJDIR', check_build_environment.topobjdir)
@@ -91,10 +94,12 @@ option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
        help='External directory containing additional build files')
 
+
 @depends('--with-external-source-dir')
 def external_source_dir(value):
     if value:
         return value[0]
+
 
 set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
 add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
@@ -104,6 +109,8 @@ add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
 # Note: the dependency on --help is only there to always read the mozconfig,
 # even when --help is passed. Without this dependency, the function wouldn't
 # be called when --help is passed, and the mozconfig wouldn't be read.
+
+
 @depends('MOZ_CURRENT_PROJECT', 'MOZCONFIG', 'OLD_CONFIGURE',
          check_build_environment, '--with-external-source-dir',
          '--help')
@@ -143,6 +150,7 @@ def mozconfig(current_project, mozconfig, old_configure, build_env,
 
     return mozconfig
 
+
 set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 
 
@@ -150,6 +158,8 @@ option(env='PYTHON', nargs=1, help='Python interpreter')
 
 # Setup python virtualenv
 # ==============================================================
+
+
 @depends('PYTHON', check_build_environment, mozconfig, '--help')
 @imports('os')
 @imports('sys')
@@ -193,7 +203,8 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
         # If we're not in the virtualenv, we need the which module for
         # find_program.
         if normsep(sys.executable) != normsep(manager.python_path):
-            sys.path.append(os.path.join(topsrcdir, 'third_party', 'python', 'which'))
+            sys.path.append(os.path.join(
+                topsrcdir, 'third_party', 'python', 'which'))
         found_python = find_program(python)
         if not found_python:
             die('The PYTHON environment variable does not contain '
@@ -222,6 +233,7 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
 
     return python
 
+
 set_config('PYTHON', virtualenv_python)
 add_old_configure_assignment('PYTHON', virtualenv_python)
 
@@ -229,6 +241,8 @@ add_old_configure_assignment('PYTHON', virtualenv_python)
 # ==============================================================
 # All options defined above this point can't be injected in mozconfig_options
 # below, so collect them.
+
+
 @template
 def early_options():
     @dependable
@@ -241,7 +255,9 @@ def early_options():
         )
     return early_options
 
+
 early_options = early_options()
+
 
 @depends(mozconfig, 'MOZ_AUTOMATION', '--help')
 # This gives access to the sandbox. Don't copy this blindly.
@@ -293,6 +309,8 @@ option(env='CONFIG_SHELL', nargs=1, help='Path to a POSIX shell')
 
 # It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
 # but the end goal being that the configure script would go away...
+
+
 @depends('CONFIG_SHELL', 'MOZILLABUILD')
 @checking('for a shell')
 @imports('sys')
@@ -311,6 +329,7 @@ def shell(value, mozillabuild):
 # ========
 
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
+
 
 @depends('PYTHON3')
 @checking('for Python 3',
@@ -348,11 +367,13 @@ def python3(env_python):
         str_version='.'.join(str(v) for v in version),
     )
 
+
 set_config('PYTHON3', depends_if(python3)(lambda p: p.path))
 set_config('PYTHON3_VERSION', depends_if(python3)(lambda p: p.str_version))
 
 # Source checkout and version control integration.
 # ================================================
+
 
 @depends(check_build_environment, 'MOZ_AUTOMATION', '--help')
 @checking('for vcs source checkout')
@@ -369,11 +390,13 @@ def vcs_checkout_type(build_env, automation, _):
 
 # Resolve VCS binary for detected repository type.
 
+
 # TODO remove hg.exe once bug 1382940 addresses ambiguous executables case.
 hg = check_prog('HG', ('hg.exe', 'hg',), allow_missing=True,
                 when=depends(vcs_checkout_type)(lambda x: x == 'hg'))
 git = check_prog('GIT', ('git',), allow_missing=True,
                  when=depends(vcs_checkout_type)(lambda x: x == 'git'))
+
 
 @depends_if(hg)
 @checking('for Mercurial version')
@@ -390,7 +413,8 @@ def hg_version(hg):
     match = re.search(r'Mercurial Distributed SCM \(version ([^\)]+)', out)
 
     if not match:
-        raise FatalCheckError('unable to determine Mercurial version: %s' % out)
+        raise FatalCheckError(
+            'unable to determine Mercurial version: %s' % out)
 
     # The version string may be "unknown" for Mercurial run out of its own
     # source checkout or for bad builds. But LooseVersion handles it.
@@ -400,6 +424,8 @@ def hg_version(hg):
 # Resolve Mercurial config items so other checks have easy access.
 # Do NOT set this in the config because it may contain sensitive data
 # like API keys.
+
+
 @depends_all(check_build_environment, hg, hg_version)
 @imports('os')
 def hg_config(build_env, hg, version):
@@ -430,6 +456,7 @@ def hg_config(build_env, hg, version):
 
     return config
 
+
 @depends_if(git)
 @checking('for Git version')
 @imports('re')
@@ -446,6 +473,8 @@ def git_version(git):
 # Only set VCS_CHECKOUT_TYPE if we resolved the VCS binary.
 # Require resolved VCS info when running in automation so automation's
 # environment is more well-defined.
+
+
 @depends(vcs_checkout_type, hg_version, git_version, 'MOZ_AUTOMATION')
 def exposed_vcs_checkout_type(vcs_checkout_type, hg, git, automation):
     if vcs_checkout_type == 'hg':
@@ -464,9 +493,12 @@ def exposed_vcs_checkout_type(vcs_checkout_type, hg, git, automation):
     elif vcs_checkout_type:
         raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
 
+
 set_config('VCS_CHECKOUT_TYPE', exposed_vcs_checkout_type)
 
 # Obtain a Repository interface for the current VCS repository.
+
+
 @depends(check_build_environment, exposed_vcs_checkout_type, hg, git)
 @imports(_from='mozversioncontrol', _import='get_repository_object')
 def vcs_repository(build_env, vcs_checkout_type, hg, git):
@@ -477,10 +509,12 @@ def vcs_repository(build_env, vcs_checkout_type, hg, git):
     elif vcs_checkout_type:
         raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
 
+
 @depends_if(vcs_repository)
 @checking('for sparse checkout')
 def vcs_sparse_checkout(repo):
     return repo.sparse_checkout_present()
+
 
 set_config('VCS_SPARSE_CHECKOUT', vcs_sparse_checkout)
 
@@ -491,6 +525,7 @@ option('--host', nargs=1, help='Define the system type performing the build')
 option('--target', nargs=1,
        help='Define the system type where the resulting executables will be '
             'used')
+
 
 @imports(_from='mozbuild.configure.constants', _import='CPU')
 @imports(_from='mozbuild.configure.constants', _import='CPU_bitness')
@@ -664,6 +699,7 @@ def host(value, shell):
 
     return split_triplet(config_sub(shell, host))
 
+
 host = help_host_target | host
 
 
@@ -674,6 +710,7 @@ def target(value, host, shell):
         return host
     return split_triplet(config_sub(shell, value[0]))
 
+
 target = help_host_target | target
 
 
@@ -681,6 +718,7 @@ target = help_host_target | target
 @checking('whether cross compiling')
 def cross_compiling(host, target):
     return host != target
+
 
 set_config('CROSS_COMPILE', cross_compiling)
 set_define('CROSS_COMPILE', cross_compiling)
@@ -692,9 +730,11 @@ def have_64_bit(target):
     if target.bitness == 64:
         return True
 
+
 set_config('HAVE_64BIT_BUILD', have_64_bit)
 set_define('HAVE_64BIT_BUILD', have_64_bit)
 add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
+
 
 @depends(host)
 def host_os_kernel_major_version(host):
@@ -702,14 +742,19 @@ def host_os_kernel_major_version(host):
     version = ''.join(x for x in versions[0] if x.isdigit())
     return version
 
+
 set_config('HOST_MAJOR_VERSION', host_os_kernel_major_version)
 
 # Autoconf needs these set
+
+
 @depends(host)
 def host_for_old_configure(host):
     return '--host=%s' % host.alias
 
+
 add_old_configure_arg(host_for_old_configure)
+
 
 @depends(target)
 def target_for_old_configure(target):
@@ -719,6 +764,7 @@ def target_for_old_configure(target):
     if target.os == 'iOS':
         target_alias = target_alias.replace('-ios', '-darwin')
     return '--target=%s' % target_alias
+
 
 add_old_configure_arg(target_for_old_configure)
 
@@ -750,6 +796,7 @@ def target_variables(target):
         INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
     )
 
+
 set_config('OS_TARGET', target_variables.OS_TARGET)
 add_old_configure_assignment('OS_TARGET',
                              target_variables.OS_TARGET)
@@ -776,60 +823,75 @@ def host_variables(host):
         HOST_OS_ARCH=os_arch,
     )
 
+
 set_config('HOST_CPU_ARCH', host.cpu)
 set_config('HOST_OS_ARCH', host_variables.HOST_OS_ARCH)
 add_old_configure_assignment('HOST_OS_ARCH',
                              host_variables.HOST_OS_ARCH)
+
 
 @depends(target)
 def target_is_windows(target):
     if target.kernel == 'WINNT':
         return True
 
+
 set_define('_WINDOWS', target_is_windows)
 set_define('WIN32', target_is_windows)
 set_define('XP_WIN', target_is_windows)
 set_define('XP_WIN32', target_is_windows)
+
 
 @depends(target)
 def target_is_unix(target):
     if target.kernel != 'WINNT':
         return True
 
+
 set_define('XP_UNIX', target_is_unix)
+
 
 @depends(target)
 def target_is_darwin(target):
     if target.kernel == 'Darwin':
         return True
 
+
 set_define('XP_DARWIN', target_is_darwin)
+
 
 @depends(target)
 def target_is_ios(target):
     if target.kernel == 'Darwin' and target.os == 'iOS':
         return True
 
+
 set_define('XP_IOS', target_is_ios)
+
 
 @depends(target)
 def target_is_osx(target):
     if target.kernel == 'Darwin' and target.os == 'OSX':
         return True
 
+
 set_define('XP_MACOSX', target_is_osx)
+
 
 @depends(target)
 def target_is_linux(target):
     if target.kernel == 'Linux':
         return True
 
+
 set_define('XP_LINUX', target_is_linux)
+
 
 @depends(target)
 def target_is_solaris(target):
     if target.kernel == 'SunOS':
         return True
+
 
 set_define('XP_SOLARIS', target_is_solaris)
 
@@ -838,10 +900,12 @@ set_define('XP_SOLARIS', target_is_solaris)
 option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
        help='Application to build. Same as --enable-project.')
 
+
 @depends('--enable-application', '--help')
 def application(app, help):
     if app:
         return app
+
 
 imply_option('--enable-project', application)
 
@@ -852,8 +916,10 @@ def default_project(build_env, help):
         return 'js'
     return 'browser'
 
+
 option('--enable-project', nargs=1, default=default_project,
        help='Project to build')
+
 
 @depends('--enable-project', '--with-external-source-dir',
          check_build_environment, '--help')
@@ -877,6 +943,7 @@ def build_project(include_project_configure, build_env, help):
     ret = os.path.dirname(os.path.relpath(include_project_configure,
                                           build_env.topsrcdir))
     return ret
+
 
 set_config('MOZ_BUILD_APP', build_project)
 set_define('MOZ_BUILD_APP', build_project)
@@ -908,6 +975,7 @@ def milestone(build_env, _):
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta)
 
+
 set_config('GRE_MILESTONE', milestone.version)
 set_config('NIGHTLY_BUILD', milestone.is_nightly)
 set_define('NIGHTLY_BUILD', milestone.is_nightly)
@@ -925,11 +993,13 @@ option('--enable-update-channel',
        help='Select application update channel',
        default='default')
 
+
 @depends('--enable-update-channel')
 def update_channel(channel):
     if channel[0] == '':
         return 'default'
     return channel[0].lower()
+
 
 set_config('MOZ_UPDATE_CHANNEL', update_channel)
 set_define('MOZ_UPDATE_CHANNEL', update_channel)
@@ -949,7 +1019,8 @@ def project_flag(env=None, set_for_old_configure=False,
                  set_as_define=False, **kwargs):
 
     if not env:
-        configure_error("A project_flag must be passed a variable name to set.")
+        configure_error(
+            "A project_flag must be passed a variable name to set.")
 
     opt = option(env=env, possible_origins=('implied',), **kwargs)
 
@@ -967,12 +1038,16 @@ def project_flag(env=None, set_for_old_configure=False,
         add_old_configure_assignment(env, option_implementation)
 
 # milestone.is_nightly corresponds to cases NIGHTLY_BUILD is set.
+
+
 @depends(milestone, '--help')
 def enabled_in_nightly(milestone, _):
     return milestone.is_nightly
 
 # Set the MOZ_CONFIGURE_OPTIONS variable with all the options that
 # were passed somehow (environment, command line, mozconfig)
+
+
 @dependable
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports('__sandbox__')
@@ -1003,6 +1078,7 @@ def all_configure_options():
             result.append(__sandbox__._raw_options[option])
 
     return quote(*result)
+
 
 set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
 

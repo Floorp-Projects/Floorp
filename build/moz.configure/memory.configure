@@ -13,6 +13,7 @@ def moz_jemalloc4(value):
 option('--enable-jemalloc', env='MOZ_MEMORY',
        help='Replace memory allocator with jemalloc')
 
+
 @depends('--enable-jemalloc', target, build_project, c_compiler)
 def jemalloc(value, target, build_project, c_compiler):
     if value.origin != 'default':
@@ -48,11 +49,13 @@ add_old_configure_assignment('MOZ_MEMORY', jemalloc)
 def jemalloc_for_old_configure(jemalloc):
     return '--%s-jemalloc' % ('enable' if jemalloc else 'disable')
 
+
 add_old_configure_arg(jemalloc_for_old_configure)
 
 
 option('--enable-replace-malloc',
        help='Enable ability to dynamically replace the malloc implementation')
+
 
 @depends('--enable-replace-malloc', jemalloc, milestone, build_project)
 def replace_malloc(value, jemalloc, milestone, build_project):
@@ -63,6 +66,7 @@ def replace_malloc(value, jemalloc, milestone, build_project):
         return bool(value) or None
     if milestone.is_nightly and jemalloc and build_project != 'js':
         return True
+
 
 set_config('MOZ_REPLACE_MALLOC', replace_malloc)
 set_define('MOZ_REPLACE_MALLOC', replace_malloc)

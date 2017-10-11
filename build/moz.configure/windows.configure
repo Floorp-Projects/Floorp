@@ -8,6 +8,7 @@ option('--with-windows-version', nargs=1, default='603',
        help='Windows SDK version to target. Win 8.1 (603) is currently'
             'the minimum supported version.')
 
+
 @depends('--with-windows-version')
 @imports(_from='__builtin__', _import='ValueError')
 def valid_windows_version(value):
@@ -25,6 +26,7 @@ def valid_windows_version(value):
 
 option(env='WINDOWSSDKDIR', nargs=1,
        help='Directory containing the Windows SDK')
+
 
 @depends('WINDOWSSDKDIR', host)
 def windows_sdk_dir(value, host):
@@ -44,6 +46,8 @@ def windows_sdk_dir(value, host):
 # The $SDK/lib directories always have version subdirectories, but while the
 # versions match the one in $SDK/include for SDK 10, it's "winv6.3" for SDK
 # 8.1.
+
+
 @imports('os')
 @imports('re')
 @imports(_from='__builtin__', _import='sorted')
@@ -88,6 +92,7 @@ def get_sdk_dirs(sdk, subdir):
 def valid_windows_sdk_dir_result(value):
     if value:
         return '0x%04x in %s' % (value.version, quote(value.path))
+
 
 @depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR')
 @checking('for Windows SDK', valid_windows_sdk_dir_result)
@@ -165,6 +170,7 @@ def valid_ucrt_sdk_dir_result(value):
     if value:
         return '%s in %s' % (value.version, quote(value.path))
 
+
 @depends(windows_sdk_dir, 'WINDOWSSDKDIR')
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
 @imports('os')
@@ -226,7 +232,7 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
     if version < minimum_ucrt_version:
         raise FatalCheckError('Latest Universal CRT SDK version found %s'
                               ' and minimum required is %s.'
-                              % (version,  minimum_ucrt_version))
+                              % (version, minimum_ucrt_version))
 
     return namespace(
         path=sdk.path,
@@ -267,7 +273,8 @@ def dia_sdk_dir(vc_path, c_compiler):
         else:
             # This would be easier if we had the installationPath that
             # get_vc_paths works with, since 'DIA SDK' is relative to that.
-            path = os.path.normpath(os.path.join(vc_path, r'..\..\..\..\DIA SDK'))
+            path = os.path.normpath(os.path.join(
+                vc_path, r'..\..\..\..\DIA SDK'))
         if isdir(path):
             return path
 
@@ -305,6 +312,7 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     includes = os.pathsep.join(includes)
     os.environ['INCLUDE'] = includes
     return includes
+
 
 set_config('INCLUDE', include_path)
 
@@ -363,10 +371,12 @@ def lib_path(target, c_compiler, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk
     os.environ['LIB'] = libs
     return libs
 
+
 set_config('LIB', lib_path)
 
 
 option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
+
 
 @depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir)
 @imports(_from='os', _import='environ')
@@ -408,7 +418,7 @@ def valid_mt(path):
         out = '\n'.join(l for l in out
                         if 'Microsoft (R) Manifest Tool' in l)
         if out:
-              return path
+            return path
     except subprocess.CalledProcessError:
         pass
     raise FatalCheckError('%s is not Microsoft Manifest Tool')
@@ -433,7 +443,7 @@ def alter_path(sdk_bin_path):
     os.environ['PATH'] = path
     return path
 
+
 set_config('PATH', alter_path)
 
 check_prog('MAKECAB', ('makecab.exe',))
-

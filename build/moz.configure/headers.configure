@@ -72,7 +72,9 @@ js_option('--with-linux-headers',
           help='location where the Linux kernel headers can be found',
           nargs=1)
 
-passed_linux_header_flags = depends_if('--with-linux-headers')(lambda v: ['-I%s' % v[0]])
+passed_linux_header_flags = depends_if(
+    '--with-linux-headers')(lambda v: ['-I%s' % v[0]])
+
 
 @depends(try_compile(includes=['asm/unistd.h'],
                      body='return sizeof(__NR_perf_event_open);',
@@ -83,11 +85,14 @@ def have_perf_event_open(have_perf_event_open):
     if have_perf_event_open:
         return True
 
+
 set_config('HAVE_LINUX_PERF_EVENT_H', have_perf_event_open)
+
 
 @depends(passed_linux_header_flags, have_perf_event_open)
 def linux_headers_includes(passed_linux_header_flags, have_perf_event_open):
     if have_perf_event_open and passed_linux_header_flags:
         return passed_linux_header_flags[0]
+
 
 set_config('LINUX_HEADERS_INCLUDES', linux_headers_includes)
