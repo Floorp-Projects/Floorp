@@ -50,7 +50,6 @@ const CLIENTS_TTL_REFRESH = 604800; // 7 days
 const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
 
 const SUPPORTED_PROTOCOL_VERSIONS = [SYNC_API_VERSION];
-const LAST_MODIFIED_ON_PROCESS_COMMAND_PREF = "services.sync.clients.lastModifiedOnProcessCommands";
 
 function hasDupeCommand(commands, action) {
   if (!commands) {
@@ -92,17 +91,6 @@ ClientEngine.prototype = {
   _trackerObj: ClientsTracker,
   allowSkippedRecord: false,
   _knownStaleFxADeviceIds: null,
-
-  // These two properties allow us to avoid replaying the same commands
-  // continuously if we cannot manage to upload our own record.
-  _localClientLastModified: 0,
-  get _lastModifiedOnProcessCommands() {
-    return Services.prefs.getIntPref(LAST_MODIFIED_ON_PROCESS_COMMAND_PREF, -1);
-  },
-
-  set _lastModifiedOnProcessCommands(value) {
-    Services.prefs.setIntPref(LAST_MODIFIED_ON_PROCESS_COMMAND_PREF, value);
-  },
 
   // Always sync client data as it controls other sync behavior
   get enabled() {
@@ -404,7 +392,6 @@ ClientEngine.prototype = {
       // with the same name that haven't synced in over a week.
       // (Note we can't simply delete them, or we re-apply them next sync - see
       // bug 1287687)
-      this._localClientLastModified = Math.round(this._incomingClients[this.localID]);
       delete this._incomingClients[this.localID];
       let names = new Set([this.localName]);
       let seenDeviceIds = new Set([localFxADeviceId]);
@@ -683,11 +670,9 @@ ClientEngine.prototype = {
    */
   async processIncomingCommands() {
     return this._notify("clients:process-commands", "", async function() {
-      if (!this.localCommands ||
-          this._lastModifiedOnProcessCommands == this._localClientLastModified) {
+      if (!this.localCommands) {
         return true;
       }
-      this._lastModifiedOnProcessCommands = this._localClientLastModified;
 
       const clearedCommands = await this._readCommands()[this.localID];
       const commands = this.localCommands.filter(command => !hasDupeCommand(clearedCommands, command));
