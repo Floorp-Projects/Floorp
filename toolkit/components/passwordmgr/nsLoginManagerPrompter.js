@@ -1578,7 +1578,7 @@ LoginManagerPrompter.prototype = {
       uri = Services.io.newURI(aURI);
     }
 
-    return uri.scheme + "://" + uri.hostPort;
+    return uri.scheme + "://" + uri.displayHostPort;
   },
 
 

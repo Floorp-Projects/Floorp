@@ -219,11 +219,10 @@ public:
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style
   // context was resolved, it is not stored in the DOM. (That is, the element
-  // remains unstyled.) |aPeudoTag| and |aPseudoType| must match.
+  // remains unstyled.)
   already_AddRefed<ServoStyleContext>
   ResolveStyleLazily(dom::Element* aElement,
                      CSSPseudoElementType aPseudoType,
-                     nsAtom* aPseudoTag,
                      StyleRuleInclusion aRules =
                        StyleRuleInclusion::All);
 
@@ -390,7 +389,6 @@ public:
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
                            nsPresContext* aPresContext,
-                           nsAtom* aPseudoTag,
                            CSSPseudoElementType aPseudoType,
                            const ServoStyleContext* aStyle);
 
@@ -558,7 +556,6 @@ private:
   already_AddRefed<ServoStyleContext>
     ResolveStyleLazilyInternal(dom::Element* aElement,
                                CSSPseudoElementType aPseudoType,
-                               nsAtom* aPseudoTag,
                                StyleRuleInclusion aRules =
                                  StyleRuleInclusion::All,
                                bool aIgnoreExistingStyles = false);

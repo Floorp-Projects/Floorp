@@ -146,11 +146,6 @@
 @BINPATH@/@DLL_PREFIX@mozavcodec@DLL_SUFFIX@
 #endif
 @RESPATH@/browser/blocklist.xml
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-@RESPATH@/run-mozilla.sh
-#endif
-#endif
 #ifdef XP_WIN
 #ifdef _AMD64_
 @BINPATH@/@DLL_PREFIX@qipcap64@DLL_SUFFIX@

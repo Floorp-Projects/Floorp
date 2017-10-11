@@ -2304,7 +2304,7 @@ LayerManager::Dump(std::stringstream& aStream, const char* aPrefix,
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
-    aStream << nsPrintfCString("%s(null)", pfx.get()).get();
+    aStream << nsPrintfCString("%s(null)\n", pfx.get()).get();
     if (aDumpHtml) {
       aStream << "</li></ul>";
     }

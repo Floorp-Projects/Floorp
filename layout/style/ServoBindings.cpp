@@ -2841,3 +2841,15 @@ Gecko_AddBufferToCrashReport(const void* addr, size_t len)
   cr->RegisterAppMemory((uint64_t) addr, len);
 #endif
 }
+
+void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsDependentCString key(key_str);
+  nsDependentCString value(value_str);
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  NS_ENSURE_TRUE_VOID(cr);
+  cr->AnnotateCrashReport(key, value);
+#endif
+}

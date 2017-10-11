@@ -506,8 +506,15 @@ AccessibleCaretManager::DragCaret(const nsPoint& aPoint)
   MOZ_ASSERT(mActiveCaret);
   MOZ_ASSERT(GetCaretMode() != CaretMode::None);
 
-  nsPoint point(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition);
-  DragCaretInternal(point);
+  if (!mPresShell || !mPresShell->GetRootFrame() || !GetSelection()) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  StopSelectionAutoScrollTimer();
+  DragCaretInternal(aPoint);
+
+  // We want to scroll the page even if we failed to drag the caret.
+  StartSelectionAutoScrollTimer(aPoint);
   UpdateCarets();
   return NS_OK;
 }
@@ -1210,16 +1217,13 @@ AccessibleCaretManager::CompareTreePosition(nsIFrame* aStartFrame,
 nsresult
 AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 {
-  if (!mPresShell) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(mPresShell);
 
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
-  if (!rootFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(rootFrame, "We need root frame to compute caret dragging!");
 
-  nsPoint point = AdjustDragBoundary(aPoint);
+  nsPoint point = AdjustDragBoundary(
+    nsPoint(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition));
 
   // Find out which content we point to
   nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
@@ -1230,9 +1234,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
   }
 
   RefPtr<nsFrameSelection> fs = GetFrameSelection();
-  if (!fs) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(fs);
 
   nsresult result;
   nsIFrame* newFrame = nullptr;
@@ -1255,11 +1257,6 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
     return NS_ERROR_FAILURE;
   }
 
-  Selection* selection = GetSelection();
-  if (!selection) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   if (GetCaretMode() == CaretMode::Selection &&
       !RestrictCaretDraggingOffsets(offsets)) {
     return NS_ERROR_FAILURE;
@@ -1267,25 +1264,9 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 
   ClearMaintainedSelection();
 
-  nsIFrame* anchorFrame = nullptr;
-  selection->GetPrimaryFrameForAnchorNode(&anchorFrame);
-
-  nsIFrame* scrollable =
-    nsLayoutUtils::GetClosestFrameOfType(anchorFrame, LayoutFrameType::Scroll);
-  AutoWeakFrame weakScrollable = scrollable;
   fs->HandleClick(offsets.content, offsets.StartOffset(), offsets.EndOffset(),
                   GetCaretMode() == CaretMode::Selection, false,
                   offsets.associate);
-  if (!weakScrollable.IsAlive()) {
-    return NS_OK;
-  }
-
-  // Scroll scrolled frame.
-  nsIScrollableFrame* saf = do_QueryFrame(scrollable);
-  nsIFrame* capturingFrame = saf->GetScrolledFrame();
-  nsPoint ptInScrolled = point;
-  nsLayoutUtils::TransformPoint(rootFrame, capturingFrame, ptInScrolled);
-  fs->StartAutoScrollTimer(capturingFrame, ptInScrolled, kAutoScrollTimerDelay);
   return NS_OK;
 }
 
@@ -1377,6 +1358,51 @@ AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
   }
 
   return adjustedPoint;
+}
+
+void
+AccessibleCaretManager::StartSelectionAutoScrollTimer(
+  const nsPoint& aPoint) const
+{
+  Selection* selection = GetSelection();
+  MOZ_ASSERT(selection);
+
+  nsIFrame* anchorFrame = nullptr;
+  selection->GetPrimaryFrameForAnchorNode(&anchorFrame);
+  if (!anchorFrame) {
+    return;
+  }
+
+  nsIScrollableFrame* scrollFrame =
+    nsLayoutUtils::GetNearestScrollableFrame(
+      anchorFrame,
+      nsLayoutUtils::SCROLLABLE_SAME_DOC |
+      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!scrollFrame) {
+    return;
+  }
+
+  nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
+  if (!capturingFrame) {
+    return;
+  }
+
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  MOZ_ASSERT(rootFrame);
+  nsPoint ptInScrolled = aPoint;
+  nsLayoutUtils::TransformPoint(rootFrame, capturingFrame, ptInScrolled);
+
+  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  MOZ_ASSERT(fs);
+  fs->StartAutoScrollTimer(capturingFrame, ptInScrolled, kAutoScrollTimerDelay);
+}
+
+void
+AccessibleCaretManager::StopSelectionAutoScrollTimer() const
+{
+  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  MOZ_ASSERT(fs);
+  fs->StopAutoScrollTimer();
 }
 
 void

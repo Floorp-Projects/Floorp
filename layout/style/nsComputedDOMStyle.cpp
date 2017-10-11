@@ -715,7 +715,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
           } else {
             return presContext->StyleSet()->AsServo()->
               GetBaseContextForElement(aElement, presContext,
-                                       aPseudo, pseudoType, result->AsServo());
+                                       pseudoType, result->AsServo());
           }
         }
 
@@ -742,13 +742,13 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                ? StyleRuleInclusion::DefaultOnly
                                : StyleRuleInclusion::All;
     RefPtr<ServoStyleContext> result =
-       servoSet->ResolveStyleLazily(aElement, pseudoType, aPseudo, rules);
+       servoSet->ResolveStyleLazily(aElement, pseudoType, rules);
     if (aAnimationFlag == eWithAnimation) {
       return result.forget();
     }
 
     return servoSet->GetBaseContextForElement(aElement, presContext,
-                                              aPseudo, pseudoType, result);
+                                              pseudoType, result);
   }
 
   RefPtr<GeckoStyleContext> parentContext;
