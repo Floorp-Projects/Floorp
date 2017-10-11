@@ -3572,9 +3572,14 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
 
             // for fonts with USE_TYPO_METRICS set in the fsSelection field,
             // let the OS/2 sTypo* metrics override those from the hhea table
-            // (see http://www.microsoft.com/typography/otspec/os2.htm#fss)
+            // (see http://www.microsoft.com/typography/otspec/os2.htm#fss).
+            //
+            // We also prefer OS/2 metrics if the hhea table gave us a negative
+            // value for maxDescent, which almost certainly indicates a sign
+            // error in the font. (See bug 1402413 for an example.)
             const uint16_t kUseTypoMetricsMask = 1 << 7;
-            if (uint16_t(os2->fsSelection) & kUseTypoMetricsMask) {
+            if ((uint16_t(os2->fsSelection) & kUseTypoMetricsMask) ||
+                aMetrics.maxDescent < 0) {
                 SET_SIGNED(maxAscent, os2->sTypoAscender);
                 SET_SIGNED(maxDescent, - int16_t(os2->sTypoDescender));
                 SET_SIGNED(externalLeading, os2->sTypoLineGap);
