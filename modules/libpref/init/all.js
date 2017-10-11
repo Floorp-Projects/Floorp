@@ -2112,7 +2112,7 @@ pref("network.dir.format", 2);
 // <link rel="prefetch"> URLs).
 pref("network.prefetch-next", true);
 // enables the preloading (i.e., preloading of <link rel="preload"> URLs).
-pref("network.preload", true);
+pref("network.preload", false);
 
 // enables the predictive service
 pref("network.predictor.enabled", true);
