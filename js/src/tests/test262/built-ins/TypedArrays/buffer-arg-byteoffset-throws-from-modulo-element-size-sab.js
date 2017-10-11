@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer not yet riding the trains
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -17,7 +16,7 @@ info: >
   10. If offset modulo elementSize ≠ 0, throw a RangeError exception.
   ...
 includes: [testTypedArray.js]
-features: [SharedArrayBuffer]
+features: [SharedArrayBuffer, TypedArray]
 ---*/
 
 var buffer = new SharedArrayBuffer(8);

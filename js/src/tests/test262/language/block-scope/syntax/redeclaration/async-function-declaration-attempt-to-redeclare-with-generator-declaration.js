@@ -5,7 +5,7 @@
 /*---
 description: redeclaration with GeneratorDeclaration (AsyncFunctionDeclaration in BlockStatement)
 esid: sec-block-static-semantics-early-errors
-features: [async-functions]
+features: [generators, async-functions]
 flags: [generated]
 negative:
   phase: early
@@ -18,5 +18,7 @@ info: |
 
 ---*/
 
+
+throw "Test262: This statement should not be evaluated.";
 
 { async function f() {} function* f() {} }

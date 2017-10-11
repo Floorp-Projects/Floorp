@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-dotall is not supported
 // Copyright 2017 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -12,7 +13,7 @@ info: |
     3. Call CharacterSetMatcher(A, false) and return its Matcher result.
 
 esid: sec-atom
-features: [regexp-dotall]
+features: [regexp-dotall, u180e]
 ---*/
 
 // The behavior is the same regardless of the m flag

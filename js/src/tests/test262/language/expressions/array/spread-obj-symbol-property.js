@@ -5,7 +5,7 @@
 description: Spread operation where source object contains Symbol properties (Array initializer)
 esid: sec-runtime-semantics-arrayaccumulation
 es6id: 12.2.5.2
-features: [object-spread]
+features: [Symbol, object-spread]
 flags: [generated]
 info: |
     SpreadElement : ...AssignmentExpression

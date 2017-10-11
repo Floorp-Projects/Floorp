@@ -4,6 +4,8 @@
 /*---
 info: If B = 10xxxxxx or B = 11111xxx, throw URIError
 es5id: 15.1.3.1_A1.3_T2
+es6id: 18.2.6.2
+esid: sec-decodeuri-encodeduri
 description: Complex tests. B = 11111xxx -> B in [0xF8 - 0xFF]
 includes: [decimalToHexString.js]
 ---*/
@@ -14,31 +16,31 @@ var indexP;
 var indexO = 0;
 
 for (var index = 0xF8; index <= 0xFF; index++) {
-  count++; 
+  count++;
   var hex = decimalToPercentHexString(index);
   try {
     decodeURI(hex);
-  } catch (e) { 
-    if ((e instanceof URIError) === true) continue;                
+  } catch (e) {
+    if ((e instanceof URIError) === true) continue;
   }
-  if (indexO === 0) { 
+  if (indexO === 0) {
     indexO = index;
   } else {
-    if ((index - indexP) !== 1) {             
+    if ((index - indexP) !== 1) {
       if ((indexP - indexO) !== 0) {
         var hexP = decimalToHexString(indexP);
         var hexO = decimalToHexString(indexO);
         $ERROR('#' + hexO + '-' + hexP + ' ');
-      } 
+      }
       else {
         var hexP = decimalToHexString(indexP);
         $ERROR('#' + hexP + ' ');
-      }  
+      }
       indexO = index;
-    }         
+    }
   }
   indexP = index;
-  errorCount++;       
+  errorCount++;
 }
 
 if (errorCount > 0) {
@@ -49,7 +51,7 @@ if (errorCount > 0) {
   } else {
     var hexP = decimalToHexString(indexP);
     $ERROR('#' + hexP + ' ');
-  }     
+  }
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
 }
 

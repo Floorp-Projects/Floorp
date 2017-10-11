@@ -24,18 +24,21 @@ var ranCatch = false;
 try {
   throw o;
 } catch ({...rest}) {
-  assert.sameValue(rest.a, 3);
-  assert.sameValue(rest.b, 4);
   assert.sameValue(rest.x, undefined);
 
-  verifyEnumerable(rest, "a");
-  verifyWritable(rest, "a");
-  verifyConfigurable(rest, "a");
+  verifyProperty(rest, "a", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 3
+  });
 
-  verifyEnumerable(rest, "b");
-  verifyWritable(rest, "b");
-  verifyConfigurable(rest, "b");
-
+  verifyProperty(rest, "b", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 4
+  });
   ranCatch = true;
 }
 

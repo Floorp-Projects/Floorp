@@ -1,6 +1,7 @@
 // Copyright (C) 2015 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
+esid: sec-array.prototype.copywithin
 es6id: 22.1.3.3
 description: >
   target argument is coerced to an integer value.
@@ -78,4 +79,5 @@ assert(
   ),
   '1.5 float value coerced to integer 1'
 );
+
 reportCompare(0, 0);

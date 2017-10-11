@@ -19,10 +19,11 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(String.prototype.anchor.name, "anchor");
-
-verifyNotEnumerable(String.prototype.anchor, "name");
-verifyNotWritable(String.prototype.anchor, "name");
-verifyConfigurable(String.prototype.anchor, "name");
+verifyProperty(String.prototype.anchor, "name", {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+  value: "anchor"
+});
 
 reportCompare(0, 0);

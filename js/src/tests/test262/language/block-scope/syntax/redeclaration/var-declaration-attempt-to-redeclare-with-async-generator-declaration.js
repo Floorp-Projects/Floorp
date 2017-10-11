@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/declarations/redeclare-with-async-generator-declaration.case
 // - src/declarations/redeclare/block-attempt-to-redeclare-var-declaration.template
@@ -18,5 +18,7 @@ info: |
 
 ---*/
 
+
+throw "Test262: This statement should not be evaluated.";
 
 { var f; async function* f() {} }

@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 es6id: 23.4.3.3
+esid: sec-weakset.prototype.delete
 description: >
   Delete an entry.
 info: >
@@ -28,4 +29,5 @@ var result = s.delete(foo);
 
 assert.sameValue(s.has(foo), false);
 assert.sameValue(result, true, 'WeakSet#delete returns true');
+
 reportCompare(0, 0);

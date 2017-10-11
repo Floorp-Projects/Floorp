@@ -12,6 +12,7 @@ info: >
   21. Let srcByteOffset be typedArray.[[ByteOffset]].
   ...
 includes: [testTypedArray.js]
+features: [TypedArray]
 ---*/
 
 var getCalls = 0;

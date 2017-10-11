@@ -3,6 +3,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.exchange
 description: >
   Atomics.exchange.length is 3.
 info: >

@@ -20,6 +20,8 @@ negative:
 features: [async-functions]
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 ({
     \u0061sync m(){}
 });
