@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-getiter-async-returns-undefined-throw.case
 // - src/async-generators/default/async-declaration.template
 /*---
 description: Non object returned by [Symbol.asyncIterator]() - undefined (Async generator Function declaration)
 esid: prod-AsyncGeneratorDeclaration
-features: [Symbol.asyncIterator, async-iteration]
+features: [Symbol.iterator, Symbol.asyncIterator, async-iteration]
 flags: [generated, async]
 info: |
     Async Generator Function Definitions

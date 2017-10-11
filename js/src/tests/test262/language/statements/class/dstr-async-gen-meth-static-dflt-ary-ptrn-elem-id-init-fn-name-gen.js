@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-elem-id-init-fn-name-gen.case
 // - src/dstr-binding/default/cls-decl-async-gen-meth-static-dflt.template
 /*---
 description: SingleNameBinding assigns name to "anonymous" generator functions (static class expression async generator method (default parameter))
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
-features: [async-iteration]
+features: [generators, async-iteration]
 flags: [generated, async]
 info: |
     ClassDeclaration : class BindingIdentifier ClassTail
@@ -53,6 +52,7 @@ info: |
           [...]
     7. If environment is undefined, return PutValue(lhs, v).
     8. Return InitializeReferencedBinding(lhs, v).
+
 ---*/
 
 

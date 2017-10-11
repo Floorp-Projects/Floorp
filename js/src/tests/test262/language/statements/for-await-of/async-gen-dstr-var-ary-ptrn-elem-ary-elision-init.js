@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elem-ary-elision-init.case
-// - src/dstr-binding/default/for-await-of-async-gen-var.template
+// - src/dstr-binding-for-await/ary-ptrn-elem-ary-elision-init.case
+// - src/dstr-binding-for-await/default/for-await-of-async-gen-var.template
 /*---
 description: BindingElement with array binding pattern and initializer is used (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -35,7 +34,7 @@ info: |
 
     13.3.3.6 Runtime Semantics: IteratorBindingInitialization
 
-    BindingElement : BindingPatternInitializer opt
+    BindingElement : BindingPattern Initializer_opt
 
     [...]
     2. If iteratorRecord.[[done]] is true, let v be undefined.

@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/obj-ptrn-id-init-unresolvable.case
-// - src/dstr-binding/error/for-await-of-async-gen-const.template
+// - src/dstr-binding-for-await/obj-ptrn-id-init-unresolvable.case
+// - src/dstr-binding-for-await/error/for-await-of-async-gen-const.template
 /*---
 description: Destructuring initializer is an unresolvable reference (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -38,15 +37,14 @@ info: |
 
     13.3.3.7 Runtime Semantics: KeyedBindingInitialization
 
-    SingleNameBinding : BindingIdentifier Initializeropt
+    SingleNameBinding : BindingIdentifier Initializer_opt
 
     [...]
-    6. If Initializer is present and v is undefined, then
+    5. If Initializer is present and v is undefined, then
        a. Let defaultValue be the result of evaluating Initializer.
-       b. Let v be GetValue(defaultValue).
-       c. ReturnIfAbrupt(v).
+       b. Set v to ? GetValue(defaultValue).
 
-    6.2.3.1 GetValue (V)
+    6.2.4.1 GetValue ( V )
 
     1. ReturnIfAbrupt(V).
     2. If Type(V) is not Reference, return V.
@@ -61,6 +59,10 @@ async function * gen() {
 }
 
 gen().next()
-  .then(_ => { throw new Test262Error("Expected async function to reject, but resolved."); }, ({ constructor }) => assert.sameValue(constructor, ReferenceError))
+  .then(_ => {
+    throw new Test262Error("Expected async function to reject, but resolved.");
+  }, ({ constructor }) => {
+    assert.sameValue(constructor, ReferenceError);
+    
+  })
   .then($DONE, $DONE);
-

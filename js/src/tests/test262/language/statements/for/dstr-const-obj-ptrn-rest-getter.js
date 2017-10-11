@@ -42,13 +42,14 @@ var count = 0;
 var iterCount = 0;
 
 for (const {...x} = { get v() { count++; return 2; } }; iterCount < 1; ) {
-  assert.sameValue(x.v, 2);
   assert.sameValue(count, 1);
 
-  verifyEnumerable(x, "v");
-  verifyWritable(x, "v");
-  verifyConfigurable(x, "v");
-
+  verifyProperty(x, "v", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 2
+  });
 
   iterCount += 1;
 }

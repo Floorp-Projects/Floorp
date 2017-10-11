@@ -10,8 +10,10 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Object.prototype, '__lookupGetter__');
-verifyWritable(Object.prototype, '__lookupGetter__');
-verifyConfigurable(Object.prototype, '__lookupGetter__');
+verifyProperty(Object.prototype, "__lookupGetter__", {
+  enumerable: false,
+  writable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

@@ -1,4 +1,14 @@
 // file: detachArrayBuffer.js
+// Copyright (C) 2017 Ecma International.  All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    A function used in the process of asserting correctness of TypedArray objects.
+
+    $262.detachArrayBuffer is defined by a host.
+
+---*/
+
 function $DETACHBUFFER(buffer) {
   if (!$262 || typeof $262.detachArrayBuffer !== "function") {
     throw new Test262Error("No method available to detach an ArrayBuffer");
@@ -9,6 +19,10 @@ function $DETACHBUFFER(buffer) {
 // file: testTypedArray.js
 // Copyright (C) 2015 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    Collection of functions used to assert the correctness of TypedArray objects.
+---*/
 
 /**
  * Array containing every typed array constructor.
@@ -86,14 +100,14 @@ function testTypedArrayConversions(byteConversionValues, fn) {
 // file: byteConversionValues.js
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
-
-/**
- * Provide a list for original and expected values for different byte
- * conversions.
- * This helper is mostly used on tests for TypedArray and DataView, and each
- * array from the expected values must match the original values array on every
- * index containing its original value.
- */
+/*---
+description: |
+    Provide a list for original and expected values for different byte
+    conversions.
+    This helper is mostly used on tests for TypedArray and DataView, and each
+    array from the expected values must match the original values array on every
+    index containing its original value.
+---*/
 var byteConversionValues = {
   values: [
     127,         // 2 ** 7 - 1
@@ -531,12 +545,15 @@ var byteConversionValues = {
 };
 
 // file: nans.js
-/**
- * A collection of NaN values produced from expressions that have been observed
- * to create distinct bit representations on various platforms. These provide a
- * weak basis for assertions regarding the consistent canonicalization of NaN
- * values in Array buffers.
- */
+// Copyright (C) 2017 Ecma International.  All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    A collection of NaN values produced from expressions that have been observed
+    to create distinct bit representations on various platforms. These provide a
+    weak basis for assertions regarding the consistent canonicalization of NaN
+    values in Array buffers.
+---*/
 var distinctNaNs = [
   0/0, Infinity/Infinity, -(0/0), Math.pow(-1, 0.5), -Math.pow(-1, 0.5)
 ];

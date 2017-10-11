@@ -11,6 +11,7 @@ info: >
     14. If Type(targetName) is not String, let targetName be the empty string.
     15. Perform SetFunctionName(F, targetName, "bound").
 includes: [propertyHelper.js]
+features: [Symbol]
 ---*/
 
 var target;

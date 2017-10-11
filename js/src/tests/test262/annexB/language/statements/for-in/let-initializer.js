@@ -9,6 +9,8 @@ negative:
   phase: early
   type: SyntaxError
 ---*/
+
+throw "Test262: This statement should not be evaluated.";
 throw NotEarlyError;
 for (let a = 0 in {});
 

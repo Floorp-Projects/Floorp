@@ -12,4 +12,6 @@ negative:
   type: SyntaxError
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 var \u{74}\u{72}\u{79} = 123;
