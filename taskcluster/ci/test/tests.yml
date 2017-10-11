@@ -292,10 +292,6 @@ jittest:
                     - remove_executables.py
         extra-options:
             - --jittest-suite=jittest-chunked
-    when:
-        files-changed:
-            - js/src/**
-            - js/public/**
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
