@@ -1,24 +1,25 @@
-load 307298-1.xul
-load 309732-1.xul
-load 309732-2.xul
-load 366583-1.xul
-load 380217-1.xul
+# All stylo assertions below are bug 1397644
+asserts-if(stylo,4) load 307298-1.xul
+asserts-if(stylo,8) load 309732-1.xul
+asserts-if(stylo,8) load 309732-2.xul
+asserts-if(stylo,23) load 366583-1.xul
+asserts-if(stylo,6) load 380217-1.xul
 load 382444-1.html
 load 391178-1.xhtml
 load 391178-2.xul
 load 393665-1.xul
-load 399227-1.xul
-load 399227-2.xul
-asserts-if(stylo,3) load 399692-1.xhtml # bug 1324698
+asserts-if(stylo,12) load 399227-1.xul
+asserts-if(stylo,13) load 399227-2.xul
+asserts-if(stylo,3) load 399692-1.xhtml
 load 399715-1.xhtml
-load 409807-1.xul
-load 414170-1.xul
+asserts-if(stylo,3) load 409807-1.xul
+asserts-if(stylo,3) load 414170-1.xul
 load 430394-1.xul
-load 454186-1.xul
-asserts-if(stylo,3) load 479931-1.xhtml # bug 1324698
-load 509602-1.xul
-load 585815.html
+asserts-if(stylo,12) load 454186-1.xul
+asserts-if(stylo,3) load 479931-1.xhtml
+asserts-if(stylo,3) load 509602-1.xul
+asserts-if(stylo,27) load 585815.html
 load 601427.html
-load 730441-1.xul
-load 730441-2.xul
-load 730441-3.xul
+asserts-if(stylo,3) load 730441-1.xul
+asserts-if(stylo,3) load 730441-2.xul
+asserts-if(stylo,3) load 730441-3.xul

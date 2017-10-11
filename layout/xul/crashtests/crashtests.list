@@ -1,12 +1,12 @@
 load 131008-1.xul
 load 137216-1.xul
-asserts-if(stylo,3) load 140218-1.xml
+asserts-if(stylo,3) load 140218-1.xml # bug 1397644
 load 151826-1.xul
 load 168724-1.xul
 load 189814-1.xul
 load 237787-1.xul
 load 265161-1.xul
-load 289410-1.xul
+asserts-if(stylo,3) load 289410-1.xul # bug 1397644
 load 290743.html
 load 291702-1.xul
 load 291702-2.xul
@@ -24,12 +24,12 @@ load 329327-1.xul
 load 329407-1.xml
 load 329477-1.xhtml
 load 336962-1.xul
-load 344228-1.xul
+asserts-if(stylo,3) load 344228-1.xul # bug 1397644
 load 346083-1.xul
 load 346281-1.xul
 load 350460.xul
 load 360642-1.xul
-load 365151.xul
+asserts-if(stylo,4) load 365151.xul # bug 1397644
 load 366112-1.xul
 asserts(0-50) load 366203-1.xul # bug 1217984
 load 367185-1.xhtml
@@ -70,7 +70,7 @@ load 430356-1.xhtml
 load 431738.xhtml
 load 432058-1.xul
 load 432068-1.xul
-load 432068-2.xul
+skip-if(stylo) load 432068-2.xul # bug 1407865
 load 433296-1.xul
 load 433429.xul
 load 434458-1.xul
@@ -90,7 +90,7 @@ load 508927-1.xul
 load 508927-2.xul
 load 514300-1.xul
 load 536931-1.xhtml
-load 538308-1.xul
+asserts-if(stylo,4) load 538308-1.xul # bug 1397644
 load 557174-1.xml
 load 564705-1.xul
 load 583957-1.html

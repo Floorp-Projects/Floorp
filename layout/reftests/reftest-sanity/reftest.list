@@ -3,7 +3,7 @@
 != data:text/plain,HELLO about:blank
 
 # these tests make sure async reftests work:
-== test-async.xul test-async-ref.xul
+fails-if(styloVsGecko) == test-async.xul test-async-ref.xul # bug 1408235
 == test-async.html test-async-ref.html
 
 # test that zoom works (and really zooms, not just scales)
