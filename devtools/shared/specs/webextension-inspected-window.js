@@ -37,6 +37,10 @@ types.addDictType("webExtensionEvalOptions", {
   contextSecurityOrigin: "nullable:string",
   useContentScriptContext: "nullable:boolean",
 
+  // Return the evalResult as a grip (used by the WebExtensions
+  // devtools inspector's sidebar.setExpression API method).
+  evalResultAsGrip: "nullable:boolean",
+
   // The actor ID of the node selected in the inspector if any,
   // used to provide the '$0' binding.
   toolboxSelectedNodeActorID: "nullable:string",
@@ -73,6 +77,7 @@ types.addDictType("webExtensionEvalResult", {
   // The following properties are set if the evaluation has been
   // completed successfully.
   value: "nullable:json",
+  valueGrip: "nullable:json",
   // The following properties are set if the evalutation has been
   // completed with errors.
   exceptionInfo: "nullable:webExtensionEvalExceptionInfo",
