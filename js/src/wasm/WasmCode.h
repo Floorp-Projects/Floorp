@@ -80,6 +80,8 @@ class CodeSegment
     uint8_t*        outOfBoundsCode_;
     uint8_t*        unalignedAccessCode_;
 
+    bool            registered_;
+
     bool initialize(Tier tier,
                     UniqueCodeBytes bytes,
                     uint32_t codeLength,
@@ -103,8 +105,11 @@ class CodeSegment
         length_(0),
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
-        unalignedAccessCode_(nullptr)
+        unalignedAccessCode_(nullptr),
+        registered_(false)
     {}
+
+    ~CodeSegment();
 
     static UniqueCodeSegment create(Tier tier,
                                     jit::MacroAssembler& masm,

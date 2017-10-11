@@ -1713,7 +1713,7 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
     MOZ_ALWAYS_TRUE(wasm::StartUnwinding(*this, state, &unwindState, &ignoredUnwound));
 
     void* pc = unwindState.pc;
-    MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
+    MOZ_ASSERT(wasm::LookupCode(pc)->lookupRange(pc)->isFunction());
 
     cx_->runtime()->startWasmInterrupt(state.pc, pc);
     setWasmExitFP(unwindState.fp);
