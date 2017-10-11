@@ -180,10 +180,9 @@ js::CancelOffThreadWasmTier2Generator()
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder)
+js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder,
+                             const AutoLockHelperThreadState& lock)
 {
-    AutoLockHelperThreadState lock;
-
     if (!HelperThreadState().ionWorklist(lock).append(builder))
         return false;
 
