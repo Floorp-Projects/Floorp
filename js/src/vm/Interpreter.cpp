@@ -3101,41 +3101,41 @@ CASE(JSOP_FUNCALL)
 
         TypeMonitorCall(cx, args, construct);
 
-        mozilla::Maybe<InvokeState> state;
-        state.emplace(cx, args, construct);
+        {
+            InvokeState state(cx, args, construct);
 
-        if (createSingleton)
-            state->setCreateSingleton();
+            if (createSingleton)
+                state.setCreateSingleton();
 
-        if (!createSingleton && jit::IsIonEnabled(cx)) {
-            jit::MethodStatus status = jit::CanEnter(cx, state.ref());
-            if (status == jit::Method_Error)
-                goto error;
-            if (status == jit::Method_Compiled) {
-                jit::JitExecStatus exec = jit::IonCannon(cx, state.ref());
-                interpReturnOK = !IsErrorStatus(exec);
-                if (interpReturnOK)
-                    CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
-                goto jit_return;
+            if (!createSingleton && jit::IsIonEnabled(cx)) {
+                jit::MethodStatus status = jit::CanEnter(cx, state);
+                if (status == jit::Method_Error)
+                    goto error;
+                if (status == jit::Method_Compiled) {
+                    jit::JitExecStatus exec = jit::IonCannon(cx, state);
+                    interpReturnOK = !IsErrorStatus(exec);
+                    if (interpReturnOK)
+                        CHECK_BRANCH();
+                    REGS.sp = args.spAfterCall();
+                    goto jit_return;
+                }
+            }
+
+            if (jit::IsBaselineEnabled(cx)) {
+                jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
+                if (status == jit::Method_Error)
+                    goto error;
+                if (status == jit::Method_Compiled) {
+                    jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state);
+                    interpReturnOK = !IsErrorStatus(exec);
+                    if (interpReturnOK)
+                        CHECK_BRANCH();
+                    REGS.sp = args.spAfterCall();
+                    goto jit_return;
+                }
             }
         }
 
-        if (jit::IsBaselineEnabled(cx)) {
-            jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state.ref());
-            if (status == jit::Method_Error)
-                goto error;
-            if (status == jit::Method_Compiled) {
-                jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state.ref());
-                interpReturnOK = !IsErrorStatus(exec);
-                if (interpReturnOK)
-                    CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
-                goto jit_return;
-            }
-        }
-
-        state.reset();
         funScript = fun->nonLazyScript();
 
         if (!activation.pushInlineFrame(args, funScript, construct))
