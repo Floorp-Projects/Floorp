@@ -32,8 +32,6 @@ using mozilla::dom::Element;
 AutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
 
-nsDOMMutationObserver* nsDOMMutationObserver::sCurrentObserver = nullptr;
-
 uint32_t nsDOMMutationObserver::sMutationLevel = 0;
 uint64_t nsDOMMutationObserver::sCount = 0;
 
@@ -599,10 +597,32 @@ nsDOMMutationObserver::ScheduleForRun()
   RescheduleForRun();
 }
 
+class MutationObserverMicroTask final : public MicroTaskRunnable
+{
+public:
+  virtual void Run(AutoSlowOperation& aAso) override
+  {
+    nsDOMMutationObserver::HandleMutations(aAso);
+  }
+
+  virtual bool Suppressed() override
+  {
+    return nsDOMMutationObserver::AllScheduledMutationObserversAreSuppressed();
+  }
+};
+
 void
 nsDOMMutationObserver::RescheduleForRun()
 {
   if (!sScheduledMutationObservers) {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    if (!ccjs) {
+      return;
+    }
+
+    RefPtr<MutationObserverMicroTask> momt =
+      new MutationObserverMicroTask();
+    ccjs->DispatchMicroTaskRunnable(momt.forget());
     sScheduledMutationObservers = new AutoTArray<RefPtr<nsDOMMutationObserver>, 4>;
   }
 
@@ -864,37 +884,9 @@ nsDOMMutationObserver::HandleMutation()
   mCallback->Call(this, mutations, *this);
 }
 
-class AsyncMutationHandler : public mozilla::Runnable
-{
-public:
-  AsyncMutationHandler() : mozilla::Runnable("AsyncMutationHandler") {}
-  NS_IMETHOD Run() override
-  {
-    nsDOMMutationObserver::HandleMutations();
-    return NS_OK;
-  }
-};
-
 void
-nsDOMMutationObserver::HandleMutationsInternal()
+nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
 {
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    nsContentUtils::AddScriptRunner(new AsyncMutationHandler());
-    return;
-  }
-  static RefPtr<nsDOMMutationObserver> sCurrentObserver;
-  if (sCurrentObserver && !sCurrentObserver->Suppressed()) {
-    // In normal cases sScheduledMutationObservers will be handled
-    // after previous mutations are handled. But in case some
-    // callback calls a sync API, which spins the eventloop, we need to still
-    // process other mutations happening during that sync call.
-    // This does *not* catch all cases, but should work for stuff running
-    // in separate tabs.
-    return;
-  }
-
-  mozilla::AutoSlowOperation aso;
-
   nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
   while (sScheduledMutationObservers) {
@@ -902,20 +894,21 @@ nsDOMMutationObserver::HandleMutationsInternal()
       sScheduledMutationObservers;
     sScheduledMutationObservers = nullptr;
     for (uint32_t i = 0; i < observers->Length(); ++i) {
-      sCurrentObserver = static_cast<nsDOMMutationObserver*>((*observers)[i]);
-      if (!sCurrentObserver->Suppressed()) {
-        sCurrentObserver->HandleMutation();
+      RefPtr<nsDOMMutationObserver> currentObserver =
+        static_cast<nsDOMMutationObserver*>((*observers)[i]);
+      if (!currentObserver->Suppressed()) {
+        currentObserver->HandleMutation();
       } else {
         if (!suppressedObservers) {
           suppressedObservers = new nsTArray<RefPtr<nsDOMMutationObserver> >;
         }
-        if (!suppressedObservers->Contains(sCurrentObserver)) {
-          suppressedObservers->AppendElement(sCurrentObserver);
+        if (!suppressedObservers->Contains(currentObserver)) {
+          suppressedObservers->AppendElement(currentObserver);
         }
       }
     }
     delete observers;
-    aso.CheckForInterrupt();
+    aAso.CheckForInterrupt();
   }
 
   if (suppressedObservers) {
@@ -926,7 +919,6 @@ nsDOMMutationObserver::HandleMutationsInternal()
     delete suppressedObservers;
     suppressedObservers = nullptr;
   }
-  sCurrentObserver = nullptr;
 }
 
 nsDOMMutationRecord*
