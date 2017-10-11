@@ -706,6 +706,10 @@ this.BufferedBookmarksEngine = function BufferedBookmarksEngine() {
 BufferedBookmarksEngine.prototype = {
   __proto__: BaseBookmarksEngine.prototype,
   _storeObj: BufferedBookmarksStore,
+  // Used to override the engine name in telemetry, so that we can distinguish
+  // errors that happen when the buffered engine is enabled vs when the
+  // non-buffered engine is enabled.
+  overrideTelemetryName: "bookmarks-buffered",
 
   async getLastSync() {
     let mirror = await this._store.ensureOpenMirror();
