@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+addEventListener("DOMContentLoaded", () => {
+  [d1, d2] = document.getElementsByTagName("div");
+  [s1, s2] = document.getElementsByTagName("span")
+  d3 = document.createElement("div")
+  d4 = document.createElement("div")
+  d4.setAttribute("class", "grid")
+  d3.appendChild(d4)
+  d1.appendChild(document.createElement("span"))
+  setTimeout(() => {
+    d2.removeChild(s2)
+    setTimeout(() => {
+      d2.insertBefore(d3, s1)
+    }, 100)
+  }, 100)
+})
+</script>
+<style>
+.columns {
+  columns: 3;
+}
+.grid {
+  border:5px solid;
+  counter-reset: item;
+}
+.grid * { display:block; }
+span { display:contents; }
+span::before { content: counter(item) ":before"; }
+span::after { content: counter(item) ":after"; }
+</style>
+</head>
+<body>
+<div class=columns>
+<div class=grid>
+<c></c>
+<span><c></c></span>
+<span><c></c></span>
+</div>
+</div>
+</body>
+</html>
