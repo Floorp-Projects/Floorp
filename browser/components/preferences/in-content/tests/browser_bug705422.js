@@ -11,11 +11,8 @@ function initTest() {
     const searchTerm = "example";
     const dummyTerm = "elpmaxe";
 
-    var cm =  Components.classes["@mozilla.org/cookiemanager;1"]
-                        .getService(Components.interfaces.nsICookieManager);
-
     // delete all cookies (might be left over from other tests)
-    cm.removeAll();
+    Services.cookies.removeAll();
 
     // data for cookies
     var vals = [[searchTerm + ".com", dummyTerm, dummyTerm],           // match
@@ -29,15 +26,13 @@ function initTest() {
     // matches must correspond to above data
     const matches = 6;
 
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
     var cookieSvc = Components.classes["@mozilla.org/cookieService;1"]
                               .getService(Components.interfaces.nsICookieService);
     var v;
     // inject cookies
     for (v in vals) {
         let [host, name, value] = vals[v];
-        var cookieUri = ios.newURI("http://" + host);
+        var cookieUri = Services.io.newURI("http://" + host);
         cookieSvc.setCookieString(cookieUri, null, name + "=" + value + ";", null);
     }
 
@@ -55,13 +50,9 @@ function isDisabled(win, expectation) {
 }
 
 function runTest(win, searchTerm, cookies, matches) {
-    var cm =  Components.classes["@mozilla.org/cookiemanager;1"]
-                        .getService(Components.interfaces.nsICookieManager);
-
-
     // number of cookies should match injected cookies
     var injectedCookies = 0,
-        injectedEnumerator = cm.enumerator;
+        injectedEnumerator = Services.cookies.enumerator;
     while (injectedEnumerator.hasMoreElements()) {
         injectedCookies++;
         injectedEnumerator.getNext();
@@ -127,7 +118,7 @@ function runTest(win, searchTerm, cookies, matches) {
 
     // check that datastore is also at 0
     var remainingCookies = 0,
-        remainingEnumerator = cm.enumerator;
+        remainingEnumerator = Services.cookies.enumerator;
     while (remainingEnumerator.hasMoreElements()) {
         remainingCookies++;
         remainingEnumerator.getNext();
@@ -141,4 +132,3 @@ function runTest(win, searchTerm, cookies, matches) {
     win.close();
     finish();
 }
-

@@ -1,7 +1,5 @@
 requestLongerTimeout(2);
 
-let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-             getService(Ci.mozIJSSubScriptLoader);
 let rootDir = getRootDirectory(gTestPath);
 let jar = getJar(rootDir);
 if (jar) {
@@ -9,8 +7,8 @@ if (jar) {
   rootDir = "file://" + tmpdir.path + "/";
 }
 /* import-globals-from privacypane_tests_perwindow.js */
-loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
-let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+Services.scriptloader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
+let runtime = Services.appInfo;
 
 run_test_subset([
   test_custom_retention("acceptCookies", "remember"),

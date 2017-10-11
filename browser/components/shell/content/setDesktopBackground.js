@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var Ci = Components.interfaces;
 
@@ -32,9 +33,7 @@ var gSetBackground = {
 
     if (AppConstants.platform == "win") {
       // Hide fill + fit options if < Win7 since they don't work.
-      var version = Components.classes["@mozilla.org/system-info;1"]
-                    .getService(Ci.nsIPropertyBag2)
-                    .getProperty("version");
+      var version = Services.sysinfo.getProperty("version");
       var isWindows7OrHigher = (parseFloat(version) >= 6.1);
       if (!isWindows7OrHigher) {
         document.getElementById("fillPosition").hidden = true;
@@ -80,9 +79,7 @@ var gSetBackground = {
       document.persist("menuPosition", "value");
       this._shell.desktopBackgroundColor = this._hexStringToLong(this._backgroundColor);
     } else {
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService(Ci.nsIObserverService)
-                .addObserver(this, "shell:desktop-background-changed");
+      Services.obs.addObserver(this, "shell:desktop-background-changed");
 
       var bundle = document.getElementById("backgroundBundle");
       var setDesktopBackground = document.getElementById("setDesktopBackground");
@@ -195,9 +192,7 @@ if (AppConstants.platform != "macosx") {
       document.getElementById("setDesktopBackground").hidden = true;
       document.getElementById("showDesktopPreferences").hidden = false;
 
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService(Ci.nsIObserverService)
-                .removeObserver(this, "shell:desktop-background-changed");
+      Services.obs.removeObserver(this, "shell:desktop-background-changed");
     }
   };
 

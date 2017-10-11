@@ -48,13 +48,10 @@ add_task(async function testIndexedDB() {
   await extension.awaitMessage("indexedDBCreated");
   await extension.awaitMessage("indexedDBCreated");
 
-  let qms = SpecialPowers.Cc["@mozilla.org/dom/quota-manager-service;1"]
-             .getService(Ci.nsIQuotaManagerService);
-
   function getOrigins() {
     return new Promise(resolve => {
       let origins = [];
-      qms.getUsage(request => {
+      Services.qms.getUsage(request => {
         for (let i = 0; i < request.result.length; ++i) {
           if (request.result[i].origin.startsWith("http://mochi.test") ||
               request.result[i].origin.startsWith("http://example.com")) {
