@@ -117,7 +117,10 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
       // Compact the previous element.
       // Note there is always at least one element when we get here,
       // because we created the first element before the loop.
+// Bug 1362761 : Remove Compact from NIGHTLY build for debug purpose
+#ifndef NIGHTLY_BUILD
       mIndexDeltas.LastElement().Compact();
+#endif
       if (!mIndexDeltas.AppendElement(fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -139,9 +142,12 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
     previousItem = aPrefixes[i];
   }
 
+// Bug 1362761 : Remove Compact from NIGHTLY build for debug purpose
+#ifndef NIGHTLY_BUILD
   mIndexDeltas.LastElement().Compact();
   mIndexDeltas.Compact();
   mIndexPrefixes.Compact();
+#endif
 
   LOG(("Total number of indices: %d", aLength));
   LOG(("Total number of deltas: %d", totalDeltas));
