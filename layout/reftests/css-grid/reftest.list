@@ -249,7 +249,7 @@ fails-if(webrender) == grid-fragmentation-dyn2-020.html grid-fragmentation-020-r
 != grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html # bug 1251799
 == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
-asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html # assertion related to bug 1251799 ?
+== grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
 fails-if(webrender) == grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
 fails-if(webrender) == grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html

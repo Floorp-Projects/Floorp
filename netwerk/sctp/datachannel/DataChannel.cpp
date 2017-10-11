@@ -107,6 +107,7 @@ private:
 public:
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
+    // Note: MainThread
     if (strcmp(aTopic, "xpcom-will-shutdown") == 0) {
       LOG(("Shutting down SCTP"));
       if (sctp_initialized) {
@@ -295,12 +296,6 @@ DataChannelConnection::Destroy()
 
   MOZ_ASSERT(mSTS);
   ASSERT_WEBRTC(NS_IsMainThread());
-  // Must do this in Destroy() since we may then delete this object.
-  // Do this before dispatching to create a consistent ordering of calls to
-  // the SCTP stack.
-  usrsctp_deregister_address(static_cast<void *>(this));
-  LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
-
   // Finish Destroy on STS thread to avoid bug 876167 - once that's fixed,
   // the usrsctp_close() calls can move back here (and just proxy the
   // disconnect_all())
@@ -326,6 +321,9 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
     usrsctp_close(aSocket);
   if (aMasterSocket)
     usrsctp_close(aMasterSocket);
+
+  usrsctp_deregister_address(static_cast<void *>(this));
+  LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
 
   disconnect_all();
 }

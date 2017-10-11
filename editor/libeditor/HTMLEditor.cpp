@@ -3118,6 +3118,7 @@ HTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData,
 nsresult
 HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
                            nsCOMPtr<nsINode>* aInOutNode,
+                           nsCOMPtr<nsIContent>* aInOutChildAtOffset,
                            int32_t* aInOutOffset,
                            nsIDocument* aDoc)
 {
@@ -3126,8 +3127,9 @@ HTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode, aInOutOffset,
-                                    aDoc);
+  return EditorBase::InsertTextImpl(aStringToInsert, aInOutNode,
+                                    aInOutChildAtOffset,
+                                    aInOutOffset, aDoc);
 }
 
 void
@@ -3892,6 +3894,7 @@ HTMLEditor::GetPriorHTMLNode(nsIDOMNode* aNode,
 nsIContent*
 HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
                              int32_t aOffset,
+                             nsINode* aChildAtOffset,
                              bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aParent);
@@ -3900,7 +3903,7 @@ HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
     return nullptr;
   }
 
-  return GetPriorNode(aParent, aOffset, true, aNoBlockCrossing);
+  return GetPriorNode(aParent, aOffset, aChildAtOffset, true, aNoBlockCrossing);
 }
 
 /**
@@ -3942,9 +3945,11 @@ HTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode,
 nsIContent*
 HTMLEditor::GetNextHTMLNode(nsINode* aParent,
                             int32_t aOffset,
+                            nsINode* aChildAtOffset,
                             bool aNoBlockCrossing)
 {
-  nsIContent* content = GetNextNode(aParent, aOffset, true, aNoBlockCrossing);
+  nsIContent* content = GetNextNode(aParent, aOffset, aChildAtOffset,
+                                    true, aNoBlockCrossing);
   if (content && !IsDescendantOfEditorRoot(content)) {
     return nullptr;
   }

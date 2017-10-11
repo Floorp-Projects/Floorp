@@ -6,7 +6,8 @@
 
 const { CanvasFrameAnonymousContentHelper, getCSSStyleRules,
         createSVGNode, createNode, getComputedStyle } = require("./utils/markup");
-const { setIgnoreLayoutChanges, getCurrentZoom } = require("devtools/shared/layout/utils");
+const { setIgnoreLayoutChanges, getCurrentZoom,
+        getAdjustedQuads } = require("devtools/shared/layout/utils");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   getDistance,
@@ -173,6 +174,27 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       left: left / zoom,
       width: width / zoom,
       height: height / zoom
+    };
+  }
+
+  get frameDimensions() {
+    // In an iframe, we get the node's quads relative to the frame,
+    // instead of the parent document.
+    let dims = getAdjustedQuads(this.currentNode.ownerGlobal,
+      this.currentNode, this.referenceBox)[0].bounds;
+    let zoom = getCurrentZoom(this.win);
+
+    if (this.currentNode.getBBox &&
+        getComputedStyle(this.currentNode).stroke !== "none" && !this.useStrokeBox) {
+      dims = getObjectBoundingBox(dims.top, dims.left,
+        dims.width, dims.height, this.currentNode);
+    }
+
+    return {
+      top: dims.top / zoom,
+      left: dims.left / zoom,
+      width: dims.width / zoom,
+      height: dims.height / zoom
     };
   }
 
@@ -702,7 +724,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *          in percentages relative to the element.
    */
   convertPageCoordsToPercent(pageX, pageY) {
-    let { top, left, width, height } = this.zoomAdjustedDimensions;
+    // If the current node is in an iframe, we get dimensions relative to the frame.
+    let dims = (this.highlighterEnv.window.document === this.currentNode.ownerDocument) ?
+               this.zoomAdjustedDimensions : this.frameDimensions;
+    let { top, left, width, height } = dims;
     pageX -= left;
     pageY -= top;
     let percentX = pageX * 100 / width;

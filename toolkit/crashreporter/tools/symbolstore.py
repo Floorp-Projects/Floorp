@@ -555,9 +555,9 @@ class Dumper:
                     if line.startswith("FILE"):
                         # FILE index filename
                         (x, index, filename) = line.rstrip().split(None, 2)
-                        filename = normpath(filename)
                         # We want original file paths for the source server.
                         sourcepath = filename
+                        filename = normpath(filename)
                         if filename in self.file_mapping:
                             filename = self.file_mapping[filename]
                         if self.vcsinfo:

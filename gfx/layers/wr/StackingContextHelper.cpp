@@ -79,11 +79,5 @@ StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
                                                           PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
-wr::LayoutPoint
-StackingContextHelper::ToRelativeLayoutPoint(const LayerPoint& aPoint) const
-{
-  return wr::ToLayoutPoint(aPoint - mOrigin);
-}
-
 } // namespace layers
 } // namespace mozilla
