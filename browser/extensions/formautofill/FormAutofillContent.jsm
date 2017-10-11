@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
 
 const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);
-const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME} = FormAutofillUtils;
+const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME, FIELD_STATES} = FormAutofillUtils;
 
 // Register/unregister a constructor as a factory.
 function AutocompleteFactory() {}
@@ -101,6 +101,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let focusedInput = formFillController.focusedInput;
     let info = FormAutofillContent.getInputDetails(focusedInput);
     let isAddressField = FormAutofillUtils.isAddressField(info.fieldName);
+    let isInputAutofilled = info.state == FIELD_STATES.AUTO_FILLED;
     let handler = FormAutofillContent.getFormHandler(focusedInput);
     let allFieldNames = handler.getAllFieldNames(focusedInput);
     let filledRecordGUID = handler.getFilledRecordGUID(focusedInput);
@@ -114,7 +115,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     //   - no profile can fill the currently-focused input.
     //   - the current form has already been populated.
     //   - (address only) less than 3 inputs are covered by all saved fields in the storage.
-    if (!searchPermitted || !savedFieldNames.has(info.fieldName) || filledRecordGUID || (isAddressField &&
+    if (!searchPermitted || !savedFieldNames.has(info.fieldName) ||
+        (!isInputAutofilled && filledRecordGUID) || (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
       if (focusedInput.autocomplete == "off") {
         // Create a dummy AddressResult as an empty search result.
@@ -156,7 +158,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                                    info.fieldName,
                                    allFieldNames,
                                    adaptedRecords,
-                                   {});
+                                   {isInputAutofilled});
       } else {
         let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
 
@@ -164,7 +166,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                                       info.fieldName,
                                       allFieldNames,
                                       adaptedRecords,
-                                      {isSecure});
+                                      {isSecure, isInputAutofilled});
       }
       listener.onSearchResult(this, result);
       ProfileAutocomplete.lastProfileAutoCompleteResult = result;
