@@ -2026,21 +2026,6 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 #endif
 }
 
-gl::Error LazyInputLayout::resolve(Renderer11 *renderer)
-{
-    return resolveImpl(renderer, mInputDesc, &mByteCode, mDebugName);
-}
-
-LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugName)
-    : mDesc(desc), mDebugName(debugName)
-{
-}
-
-gl::Error LazyBlendState::resolve(Renderer11 *renderer)
-{
-    return resolveImpl(renderer, mDesc, nullptr, mDebugName);
-}
-
 angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps,
                                           const DXGI_ADAPTER_DESC &adapterDesc)
 {
