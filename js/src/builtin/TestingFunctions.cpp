@@ -13,6 +13,8 @@
 #include "mozilla/Unused.h"
 
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -4737,6 +4739,118 @@ DisableForEach(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+GetTimeZone(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 0) {
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    auto getTimeZone = [](std::time_t* now) -> const char* {
+        std::tm local{};
+#if defined(_WIN32)
+        _tzset();
+        if (localtime_s(&local, now) == 0)
+            return _tzname[local.tm_isdst > 0];
+#else
+        tzset();
+#if defined(HAVE_LOCALTIME_R)
+        if (localtime_r(now, &local)) {
+#else
+        std::tm* localtm = std::localtime(now);
+        if (localtm) {
+            *local = *localtm;
+#endif /* HAVE_LOCALTIME_R */
+
+#if defined(HAVE_TM_ZONE_TM_GMTOFF)
+            return local.tm_zone;
+#else
+            return tzname[local.tm_isdst > 0];
+#endif /* HAVE_TM_ZONE_TM_GMTOFF */
+        }
+#endif /* _WIN32 */
+        return nullptr;
+    };
+
+    std::time_t now = std::time(nullptr);
+    if (now != static_cast<std::time_t>(-1)) {
+        if (const char* tz = getTimeZone(&now)) {
+            JSString* str = JS_NewStringCopyZ(cx, tz);
+            if (!str)
+                return false;
+            args.rval().setString(str);
+            return true;
+        }
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+SetTimeZone(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 1) {
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isString() && !args[0].isUndefined()) {
+        ReportUsageErrorASCII(cx, callee, "First argument should be a string or undefined");
+        return false;
+    }
+
+    auto setTimeZone = [](const char* value) {
+#if defined(_WIN32)
+        return _putenv_s("TZ", value) == 0;
+#else
+        return setenv("TZ", value, true) == 0;
+#endif /* _WIN32 */
+    };
+
+    auto unsetTimeZone = []() {
+#if defined(_WIN32)
+        return _putenv_s("TZ", "") == 0;
+#else
+        return unsetenv("TZ") == 0;
+#endif /* _WIN32 */
+    };
+
+    if (args[0].isString() && !args[0].toString()->empty()) {
+        JSAutoByteString timeZone;
+        if (!timeZone.encodeLatin1(cx, args[0].toString()))
+            return false;
+
+        if (!setTimeZone(timeZone.ptr())) {
+            JS_ReportErrorASCII(cx, "Failed to set 'TZ' environment variable");
+            return false;
+        }
+    } else {
+        if (!unsetTimeZone()) {
+            JS_ReportErrorASCII(cx, "Failed to unset 'TZ' environment variable");
+            return false;
+        }
+    }
+
+#if defined(_WIN32)
+    _tzset();
+#else
+    tzset();
+#endif /* _WIN32 */
+
+    JS::ResetTimeZone();
+
+    args.rval().setUndefined();
+    return true;
+}
+
 #if defined(FUZZING) && defined(__AFL_COMPILER)
 static bool
 AflLoop(JSContext* cx, unsigned argc, Value* vp)
@@ -5414,6 +5528,10 @@ gc::ZealModeHelpText),
 "isLegacyIterator(value)",
 "  Returns whether the value is considered is a legacy iterator.\n"),
 
+    JS_FN_HELP("getTimeZone", GetTimeZone, 0, 0,
+"getTimeZone()",
+"  Get the current time zone.\n"),
+
     JS_FS_HELP_END
 };
 
@@ -5431,6 +5549,12 @@ static const JSFunctionSpecWithHelp FuzzingUnsafeTestingFunctions[] = {
     JS_FN_HELP("getErrorNotes", GetErrorNotes, 1, 0,
 "getErrorNotes(error)",
 "  Returns an array of error notes."),
+
+    JS_FN_HELP("setTimeZone", SetTimeZone, 1, 0,
+"setTimeZone(tzname)",
+"  Set the 'TZ' environment variable to the given time zone and applies the new time zone.\n"
+"  An empty string or undefined resets the time zone to its default value.\n"
+"  NOTE: The input string is not validated and will be passed verbatim to setenv()."),
 
     JS_FS_HELP_END
 };
