@@ -23,8 +23,9 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
-const GetStringFromName = Services.strings.createBundle(BUNDLE_URI).GetStringFromName;
+const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
+const formatStringFromName = FormAutofillUtils.stringBundle.formatStringFromName;
+const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
 let changeAutofillOptsKey = "changeAutofillOptions";
 let autofillOptsKey = "autofillOptionsLink";
 let autofillSecurityOptionsKey = "autofillSecurityOptionsLink";
@@ -37,7 +38,7 @@ if (AppConstants.platform == "macosx") {
 const CONTENT = {
   firstTimeUse: {
     notificationId: "autofill-address",
-    message: GetStringFromName("saveAddressesMessage"),
+    message: formatStringFromName("saveAddressesMessage", [brandShortName], 1),
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -97,7 +98,7 @@ const CONTENT = {
   },
   creditCard: {
     notificationId: "autofill-credit-card",
-    message: GetStringFromName("saveCreditCardMessage"),
+    message: formatStringFromName("saveCreditCardMessage", [brandShortName], 1),
     linkMessage: GetStringFromName(autofillSecurityOptionsKey),
     anchor: {
       id: "autofill-credit-card-notification-icon",
