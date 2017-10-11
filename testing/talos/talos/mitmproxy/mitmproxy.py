@@ -132,13 +132,10 @@ def start_mitmproxy_playback(mitmdump_path,
         sys.path.insert(1, mitmdump_path)
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
         env["PATH"] = os.path.dirname(browser_path) + ";" + env["PATH"]
-    elif mozinfo.os == 'mac':
+    else:
+        # mac and linux
         param2 = param + ' ' + ' '.join(mitmproxy_recordings)
         env["PATH"] = os.path.dirname(browser_path)
-    else:
-        # TODO: support other platforms, Bug 1366355
-        LOG.error('Aborting: talos mitmproxy is currently only supported on Windows and Mac')
-        sys.exit()
 
     command = [mitmdump_path, '-k', '-s', param2]
 
@@ -160,10 +157,10 @@ def start_mitmproxy_playback(mitmdump_path,
 def stop_mitmproxy_playback(mitmproxy_proc):
     """Stop the mitproxy server playback"""
     LOG.info("Stopping mitmproxy playback, klling process %d" % mitmproxy_proc.pid)
-    if mozinfo.os == 'mac':
-        mitmproxy_proc.terminate()
-    else:
+    if mozinfo.os == 'win':
         mitmproxy_proc.kill()
+    else:
+        mitmproxy_proc.terminate()
     time.sleep(10)
     if mitmproxy_proc.pid in psutil.pids():
         # I *think* we can still continue, as process will be automatically

@@ -154,7 +154,7 @@ add_task(async function test_storage_setLoginSavingEnabled_nonascii_IDN_is_suppo
   await LoginTestUtils.reloadData();
   Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
   Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
-  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [encoding]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [hostname]);
 
   LoginTestUtils.clearData();
 
@@ -163,7 +163,7 @@ add_task(async function test_storage_setLoginSavingEnabled_nonascii_IDN_is_suppo
   await LoginTestUtils.reloadData();
   Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
   Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
-  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [encoding]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [hostname]);
 
   LoginTestUtils.clearData();
 });

@@ -870,6 +870,68 @@ add_task(async function test_clients_not_in_fxa_list() {
   }
 });
 
+
+add_task(async function test_dupe_device_ids() {
+  _("Ensure that we mark devices with duplicate fxaDeviceIds but older lastModified as stale.");
+
+  await engine._store.wipe();
+  await generateNewKeys(Service.collectionKeys);
+
+  let server   = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let remoteId = Utils.makeGUID();
+  let remoteId2 = Utils.makeGUID();
+  let remoteDeviceId = Utils.makeGUID();
+
+  _("Create remote client records");
+  server.insertWBO("foo", "clients", new ServerWBO(remoteId, encryptPayload({
+    id: remoteId,
+    name: "Remote client",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    fxaDeviceId: remoteDeviceId,
+    protocols: ["1.5"],
+  }), Date.now() / 1000 - 30000));
+  server.insertWBO("foo", "clients", new ServerWBO(remoteId2, encryptPayload({
+    id: remoteId2,
+    name: "Remote client",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    fxaDeviceId: remoteDeviceId,
+    protocols: ["1.5"],
+  }), Date.now() / 1000));
+
+  let fxAccounts = engine.fxAccounts;
+  engine.fxAccounts = {
+    notifyDevices() { return Promise.resolve(true); },
+    getDeviceId() { return fxAccounts.getDeviceId(); },
+    getDeviceList() { return Promise.resolve([{ id: remoteDeviceId }]); }
+  };
+
+  try {
+    _("Syncing.");
+    await syncClientsEngine(server);
+
+    ok(engine._store._remoteClients[remoteId].stale);
+    ok(!engine._store._remoteClients[remoteId2].stale);
+
+  } finally {
+    engine.fxAccounts = fxAccounts;
+    await cleanup();
+
+    try {
+      let collection = server.getCollection("foo", "clients");
+      collection.remove(remoteId);
+    } finally {
+      await promiseStopServer(server);
+    }
+  }
+});
+
+
 add_task(async function test_send_uri_to_client_for_display() {
   _("Ensure sendURIToClientForDisplay() sends command properly.");
 

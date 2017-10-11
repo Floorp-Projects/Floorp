@@ -3052,7 +3052,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
         // Call ResolveStyleLazily to protect against stale element data in
         // the tree when styled by Servo.
         sc = styleSet->AsServo()->ResolveStyleLazily(
-            element, CSSPseudoElementType::NotPseudo, nullptr);
+            element, CSSPseudoElementType::NotPseudo);
       }
     } else {
       sc = nsComputedDOMStyle::GetStyleContextNoFlush(element,
