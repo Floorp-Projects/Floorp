@@ -77,8 +77,10 @@ message LayersPacket {
       CanvasLayer = 4;
       ImageLayer = 5;
       ColorLayer = 6;
-      RefLayer = 7;
-      ReadbackLayer = 8;
+      TextLayer = 7;
+      RefLayer = 8;
+      ReadbackLayer = 9;
+      DisplayItemLayer = 10;
     }
     enum ScrollingDirect {
       VERTICAL = 1;
