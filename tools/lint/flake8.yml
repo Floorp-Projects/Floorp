@@ -29,6 +29,7 @@ flake8:
     # Excludes should be added to topsrcdir/.flake8 due to a bug in flake8 where
     # specifying --exclude causes custom configuration files to be ignored.
     exclude: []
-    extensions: ['py']
+    # The configure option is used by the build system
+    extensions: ['configure', 'py']
     type: external
     payload: python.flake8:lint
