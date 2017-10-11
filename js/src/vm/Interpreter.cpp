@@ -375,6 +375,15 @@ ExecuteState::pushInterpreterFrame(JSContext* cx)
     return cx->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
                                                    envChain_, evalInFrame_);
 }
+
+InterpreterFrame*
+RunState::pushInterpreterFrame(JSContext* cx)
+{
+    if (isInvoke())
+        return asInvoke()->pushInterpreterFrame(cx);
+    return asExecute()->pushInterpreterFrame(cx);
+}
+
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
 // avoid this.
