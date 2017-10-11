@@ -342,28 +342,10 @@ MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript, const CallA
         return true;
 
     RootedObject callee(cx, &args.callee());
-    if (callee->isBoundFunction()) {
-        args.setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-        return true;
-    }
-
-    if (calleeScript->isDerivedClassConstructor()) {
-        MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
-        args.setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-        return true;
-    }
-
-    MOZ_ASSERT(args.thisv().isMagic(JS_IS_CONSTRUCTING));
-
     RootedObject newTarget(cx, &args.newTarget().toObject());
     NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
 
-    JSObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
-    if (!obj)
-        return false;
-
-    args.setThis(ObjectValue(*obj));
-    return true;
+    return CreateThis(cx, callee, calleeScript, newTarget, newKind, args.mutableThisv());
 }
 
 static MOZ_NEVER_INLINE bool
