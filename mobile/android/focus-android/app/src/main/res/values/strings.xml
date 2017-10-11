@@ -151,6 +151,55 @@
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">About %1$s</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Installed search engines</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Restore default search engines</string>
+
+    <!-- Action for adding an additional search engine to the list -->
+    <string name="preference_search_add">Add another search engine</string>
+    <string name="preference_search_remove_title">Remove search engines</string>
+    <string name="preference_search_remove">Remove</string>
+
+    <!-- Clickable text in tutorial to open a dialog to manually add a search engine -->
+    <string name="tutorial_search_manually_add">Manually add</string>
+
+    <string name="tutorial_search_title">Add search engine</string>
+    <string name="tutorial_search_step1">1. Go to the search engine homepage.</string>
+    <string name="tutorial_search_step2">2. Tap into the search engine’s search field.</string>
+    <!-- An alternative string for Step 2 of the tutorial -->
+    <string name="tutorial_search_step2_alternative">2. Long press the search engine’s search field.</string>
+    <string name="tutorial_search_step3">3. Tap the magnifying glass icon above the keyboard to add the search engine.</string>
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Add search engine</string>
+
+    <!-- An alternative string for Step 3 of the tutorial. Parameter 1 is action_option_add_search_engine, which is the action text that the tutorial is referring to -->
+    <string name="tutorial_search_step3_alternative">3. Tap %1$s</string>
+    <string name="tutorial_search_step4">4. If you don’t see the magnifying glass, try manually adding a search engine.</string>
+
+    <!-- An alternative string for Step 4 of tutorial. Instruction with suggested action to add search engine, and alternative if that fails. Parameter 1 is &action_option_add_search_engine, which is the clickable action text for adding a search engine. -->
+    <string name="tutorial_search_step4_alternative">4. If you don’t see %1$s, try manually adding a search engine.</string>
+    <string name="tutorial_search_finish">GET STARTED</string>
+
+    <string name="search_add_hint">Tap the magnifying glass icon above the keyboard to add this search engine.</string>
+
+    <string name="search_add_manually_name">Name to display</string>
+    <string name="search_add_manually_name_hint">Search engine name</string>
+    <string name="search_add_manually_string">Search string to use</string>
+    <string name="search_add_manually_save">Save</string>
+
+    <!-- Explanation of how to add search string, with instruction on how to modify the string if necessary. The string "%s" should not be changed or removed. -->
+    <string name="search_add_manually_string_hint">Paste or enter search string. If necessary, replace search term with: %s.</string>
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Example: example.com/search/?q=%s</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service to describe the icon for adding a search engine -->
+    <string name="accessibility_announcement_search">Add search engine</string>
+
+    <string name="search_add_confirmation">New search engine added.</string>
+    <string name="search_add_error">Check the search string and try again</string>
+
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">Clear input</string>
 
