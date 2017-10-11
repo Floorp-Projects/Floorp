@@ -149,11 +149,7 @@ public:
               float aOpacity,
               gfx::CompositionOp aOp,
               gfx::SourceSurface* aMask,
-              const gfx::Matrix* aMaskTransform)
-  {
-    RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aOp,
-                                 aMask, aMaskTransform);
-  }
+              const gfx::Matrix* aMaskTransform);
 
   virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
