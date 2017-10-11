@@ -464,8 +464,10 @@ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
   bool OnPrepareBuffers() override;
+  void ExecuteRendering() override;
   float GetOpacity() const override;
   bool PrepareBlendState();
+  void RenderWithBackdropCopy();
 
 private:
   ConstantBufferSection mBlendConstants;
