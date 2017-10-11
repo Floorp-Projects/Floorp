@@ -230,10 +230,8 @@ class RunState
 
     JS::HandleScript script() const { return script_; }
 
-    virtual InterpreterFrame* pushInterpreterFrame(JSContext* cx) = 0;
-    virtual void setReturnValue(const Value& v) = 0;
-
-    bool maybeCreateThisForConstructor(JSContext* cx);
+    InterpreterFrame* pushInterpreterFrame(JSContext* cx);
+    inline void setReturnValue(const Value& v);
 
   private:
     RunState(const RunState& other) = delete;
@@ -268,9 +266,9 @@ class ExecuteState : public RunState
     JSObject* environmentChain() const { return envChain_; }
     bool isDebuggerEval() const { return !!evalInFrame_; }
 
-    virtual InterpreterFrame* pushInterpreterFrame(JSContext* cx);
+    InterpreterFrame* pushInterpreterFrame(JSContext* cx);
 
-    virtual void setReturnValue(const Value& v) {
+    void setReturnValue(const Value& v) {
         if (result_)
             *result_ = v;
     }
@@ -281,28 +279,32 @@ class InvokeState final : public RunState
 {
     const CallArgs& args_;
     MaybeConstruct construct_;
-    bool createSingleton_;
 
   public:
     InvokeState(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
       : RunState(cx, Invoke, args.callee().as<JSFunction>().nonLazyScript()),
         args_(args),
-        construct_(construct),
-        createSingleton_(false)
+        construct_(construct)
     { }
-
-    bool createSingleton() const { return createSingleton_; }
-    void setCreateSingleton() { createSingleton_ = true; }
 
     bool constructing() const { return construct_; }
     const CallArgs& args() const { return args_; }
 
-    virtual InterpreterFrame* pushInterpreterFrame(JSContext* cx);
+    InterpreterFrame* pushInterpreterFrame(JSContext* cx);
 
-    virtual void setReturnValue(const Value& v) {
+    void setReturnValue(const Value& v) {
         args_.rval().set(v);
     }
 };
+
+inline void
+RunState::setReturnValue(const Value& v)
+{
+    if (isInvoke())
+        asInvoke()->setReturnValue(v);
+    else
+        asExecute()->setReturnValue(v);
+}
 
 extern bool
 RunScript(JSContext* cx, RunState& state);

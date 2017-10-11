@@ -48,6 +48,42 @@ class MOZ_RAII AutoSuppressProfilerSampling
 };
 
 MOZ_ALWAYS_INLINE
+GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSContext* cx,
+                                                   JSScript* script
+                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : profiler_(&cx->geckoProfiler())
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (MOZ_LIKELY(!profiler_->installed())) {
+        profiler_ = nullptr;
+        return;
+    }
+#ifdef DEBUG
+    spBefore_ = profiler_->stackPointer();
+#endif
+
+    // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
+    // Only the sp value is important.
+    profiler_->pseudoStack_->pushCppFrame(
+        /* label = */ "", /* dynamicString = */ nullptr, /* sp = */ this, /* line = */ 0,
+        ProfileEntry::Kind::CPP_MARKER_FOR_JS, ProfileEntry::Category::OTHER);
+
+    profiler_->pseudoStack_->pushJsFrame(
+        "js::RunScript", /* dynamicString = */ nullptr, script, script->code());
+}
+
+MOZ_ALWAYS_INLINE
+GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
+{
+    if (MOZ_LIKELY(profiler_ == nullptr))
+        return;
+
+    profiler_->pseudoStack_->pop();    // the JS frame
+    profiler_->pseudoStack_->pop();    // the BEGIN_PSEUDO_JS frame
+    MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
+}
+
+MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
                                                ProfileEntry::Category category
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)

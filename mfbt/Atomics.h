@@ -558,6 +558,11 @@ private:
   Atomic(Atomic<bool, Order>& aOther) = delete;
 };
 
+// If you want to atomically swap two atomic values, use exchange().
+template<typename T, MemoryOrdering Order>
+void
+Swap(Atomic<T, Order>&, Atomic<T, Order>&) = delete;
+
 } // namespace mozilla
 
 #endif /* mozilla_Atomics_h */

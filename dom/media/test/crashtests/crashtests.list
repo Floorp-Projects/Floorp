@@ -75,12 +75,15 @@ skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 102845
 load 1041466.html
 load 1045650.html
 load 1080986.html
+load 1180881.html
+load 1197935.html
 load 1122218.html
 load 1127188.html
 load 1157994.html
 load 1158427.html
 load 1185176.html
 load 1185192.html
+load 1270303.html
 load 1304948.html
 load 1319486.html
 load 1368490.html

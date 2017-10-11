@@ -1,6 +1,6 @@
-diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
---- a/mfbt/double-conversion/source/utils.h
-+++ b/mfbt/double-conversion/source/utils.h
+diff --git a/mfbt/double-conversion/double-conversion/utils.h b/mfbt/double-conversion/double-conversion/utils.h
+--- a/mfbt/double-conversion/double-conversion/utils.h
++++ b/mfbt/double-conversion/double-conversion/utils.h
 @@ -93,34 +93,18 @@ inline void abort_noreturn() { abort(); 
  #endif
  

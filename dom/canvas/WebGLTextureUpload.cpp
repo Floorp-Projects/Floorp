@@ -937,21 +937,6 @@ DoCompressedTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level,
 }
 
 static inline GLenum
-DoCopyTexImage2D(gl::GLContext* gl, TexImageTarget target, GLint level,
-                 GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    const GLint border = 0;
-
-    gl::GLContext::LocalErrorScope errorScope(*gl);
-
-    MOZ_ASSERT(!IsTarget3D(target));
-    gl->fCopyTexImage2D(target.get(), level, internalFormat, x, y, width, height,
-                        border);
-
-    return errorScope.GetError();
-}
-
-static inline GLenum
 DoCopyTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level, GLint xOffset,
                   GLint yOffset, GLint zOffset, GLint x, GLint y, GLsizei width,
                   GLsizei height)

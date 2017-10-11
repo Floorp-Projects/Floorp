@@ -591,6 +591,7 @@ load 1137723-1.html
 load 1137723-2.html
 load 1140268-1.html
 load 1145768.html
+load 1145931.html
 load 1146103.html
 load 1146107.html
 load 1146114.html
@@ -656,10 +657,13 @@ load 1308876-1.html
 load 1316649.html
 load 1349650.html
 asserts-if(browserIsRemote,0-5) load 1349816-1.html # bug 1350352
+load 1350372.html
 load 1364361-1.html
 load 1367413-1.html
 load 1368617-1.html
 load 1373586.html
+load 1381134.html
+load 1381134-2.html
 load 1401420-1.html
 load 1401709.html
 load 1401807.html

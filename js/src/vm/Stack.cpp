@@ -244,25 +244,8 @@ InterpreterFrame::prologue(JSContext* cx)
     if (callee().needsFunctionEnvironmentObjects() && !initFunctionEnvironmentObjects(cx))
         return false;
 
-    if (isConstructing()) {
-        if (callee().isBoundFunction()) {
-            thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
-        } else if (script->isDerivedClassConstructor()) {
-            MOZ_ASSERT(callee().isClassConstructor());
-            thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
-        } else if (thisArgument().isObject()) {
-            // Nothing to do. Correctly set.
-        } else {
-            MOZ_ASSERT(thisArgument().isMagic(JS_IS_CONSTRUCTING));
-            RootedObject callee(cx, &this->callee());
-            RootedObject newTarget(cx, &this->newTarget().toObject());
-            JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
-                                                  createSingleton() ? SingletonObject : GenericObject);
-            if (!obj)
-                return false;
-            thisArgument() = ObjectValue(*obj);
-        }
-    }
+    MOZ_ASSERT_IF(isConstructing(),
+                  thisArgument().isObject() || thisArgument().isMagic(JS_UNINITIALIZED_LEXICAL));
 
     return probes::EnterScript(cx, script, script->functionNonDelazifying(), this);
 }
@@ -1730,7 +1713,7 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
     MOZ_ALWAYS_TRUE(wasm::StartUnwinding(*this, state, &unwindState, &ignoredUnwound));
 
     void* pc = unwindState.pc;
-    MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
+    MOZ_ASSERT(wasm::LookupCode(pc)->lookupRange(pc)->isFunction());
 
     cx_->runtime()->startWasmInterrupt(state.pc, pc);
     setWasmExitFP(unwindState.fp);

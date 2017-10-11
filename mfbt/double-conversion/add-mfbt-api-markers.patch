@@ -1,16 +1,30 @@
-diff --git a/mfbt/double-conversion/source/double-conversion.h b/mfbt/double-conversion/source/double-conversion.h
-index f98edae..c62b16b 100644
---- a/mfbt/double-conversion/source/double-conversion.h
-+++ b/mfbt/double-conversion/source/double-conversion.h
-@@ -28,6 +28,7 @@
+diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion/double-conversion.h
+--- a/mfbt/double-conversion/double-conversion/double-conversion.h
++++ b/mfbt/double-conversion/double-conversion/double-conversion.h
+@@ -23,16 +23,17 @@
+ // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
  #ifndef DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
  #define DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
  
 +#include "mozilla/Types.h"
- #include "utils.h"
+ #include <double-conversion/utils.h>
  
  namespace double_conversion {
-@@ -129,7 +130,7 @@ class DoubleToStringConverter {
+ 
+ class DoubleToStringConverter {
+  public:
+   // When calling ToFixed with a double > 10^kMaxFixedDigitsBeforePoint
+   // or a requested_digits parameter > kMaxFixedDigitsAfterPoint then the
+@@ -124,17 +125,17 @@ class DoubleToStringConverter {
+             max_trailing_padding_zeroes_in_precision_mode) {
+     // When 'trailing zero after the point' is set, then 'trailing point'
+     // must be set too.
+     ASSERT(((flags & EMIT_TRAILING_DECIMAL_POINT) != 0) ||
+         !((flags & EMIT_TRAILING_ZERO_AFTER_POINT) != 0));
    }
  
    // Returns a converter following the EcmaScript specification.
@@ -19,7 +33,17 @@ index f98edae..c62b16b 100644
  
    // Computes the shortest string of digits that correctly represent the input
    // number. Depending on decimal_in_shortest_low and decimal_in_shortest_high
-@@ -197,7 +198,7 @@ class DoubleToStringConverter {
+   // (see constructor) it then either returns a decimal representation, or an
+   // exponential representation.
+   // Example with decimal_in_shortest_low = -6,
+   //              decimal_in_shortest_high = 21,
+   //              EMIT_POSITIVE_EXPONENT_SIGN activated, and
+@@ -192,17 +193,17 @@ class DoubleToStringConverter {
+   // except for the following cases:
+   //   - the input value is special and no infinity_symbol or nan_symbol has
+   //     been provided to the constructor,
+   //   - 'value' > 10^kMaxFixedDigitsBeforePoint, or
+   //   - 'requested_digits' > kMaxFixedDigitsAfterPoint.
    // The last two conditions imply that the result will never contain more than
    // 1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint characters
    // (one additional character for the sign, and one for the decimal point).
@@ -28,7 +52,17 @@ index f98edae..c62b16b 100644
                 int requested_digits,
                 StringBuilder* result_builder) const;
  
-@@ -229,7 +230,7 @@ class DoubleToStringConverter {
+   // Computes a representation in exponential format with requested_digits
+   // after the decimal point. The last emitted digit is rounded.
+   // If requested_digits equals -1, then the shortest exponential representation
+   // is computed.
+   //
+@@ -224,17 +225,17 @@ class DoubleToStringConverter {
+   // except for the following cases:
+   //   - the input value is special and no infinity_symbol or nan_symbol has
+   //     been provided to the constructor,
+   //   - 'requested_digits' > kMaxExponentialDigits.
+   // The last condition implies that the result will never contain more than
    // kMaxExponentialDigits + 8 characters (the sign, the digit before the
    // decimal point, the decimal point, the exponent character, the
    // exponent's sign, and at most 3 exponent digits).
@@ -37,7 +71,17 @@ index f98edae..c62b16b 100644
                       int requested_digits,
                       StringBuilder* result_builder) const;
  
-@@ -267,7 +268,7 @@ class DoubleToStringConverter {
+   // Computes 'precision' leading digits of the given 'value' and returns them
+   // either in exponential or decimal format, depending on
+   // max_{leading|trailing}_padding_zeroes_in_precision_mode (given to the
+   // constructor).
+   // The last computed digit is rounded.
+@@ -262,17 +263,17 @@ class DoubleToStringConverter {
+   // except for the following cases:
+   //   - the input value is special and no infinity_symbol or nan_symbol has
+   //     been provided to the constructor,
+   //   - precision < kMinPericisionDigits
+   //   - precision > kMaxPrecisionDigits
    // The last condition implies that the result will never contain more than
    // kMaxPrecisionDigits + 7 characters (the sign, the decimal point, the
    // exponent character, the exponent's sign, and at most 3 exponent digits).
@@ -46,7 +90,17 @@ index f98edae..c62b16b 100644
                     int precision,
                     StringBuilder* result_builder) const;
  
-@@ -292,7 +293,7 @@ class DoubleToStringConverter {
+   enum DtoaMode {
+     // Produce the shortest correct representation.
+     // For example the output of 0.299999999999999988897 is (the less accurate
+     // but correct) 0.3.
+     SHORTEST,
+@@ -287,17 +288,17 @@ class DoubleToStringConverter {
+   };
+ 
+   // The maximal number of digits that are needed to emit a double in base 10.
+   // A higher precision can be achieved by using more digits, but the shortest
+   // accurate representation of any double will never use more digits than
    // kBase10MaximalLength.
    // Note that DoubleToAscii null-terminates its input. So the given buffer
    // should be at least kBase10MaximalLength + 1 characters long.
@@ -55,7 +109,17 @@ index f98edae..c62b16b 100644
  
    // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
    // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
-@@ -332,7 +333,7 @@ class DoubleToStringConverter {
+   // after it has been casted to a single-precision float. That is, in this
+   // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
+   //
+   // The result should be interpreted as buffer * 10^(point-length).
+   //
+@@ -327,44 +328,44 @@ class DoubleToStringConverter {
+   // DoubleToAscii expects the given buffer to be big enough to hold all
+   // digits and a terminating null-character. In SHORTEST-mode it expects a
+   // buffer of at least kBase10MaximalLength + 1. In all other modes the
+   // requested_digits parameter and the padding-zeroes limit the size of the
+   // output. Don't forget the decimal point, the exponent character and the
    // terminating null-character when computing the maximal output size.
    // The given length is only used in debug mode to ensure the buffer is big
    // enough.
@@ -64,7 +128,10 @@ index f98edae..c62b16b 100644
                              DtoaMode mode,
                              int requested_digits,
                              char* buffer,
-@@ -343,7 +344,7 @@ class DoubleToStringConverter {
+                             int buffer_length,
+                             bool* sign,
+                             int* length,
+                             int* point);
  
   private:
    // Implementation for ToShortest and ToShortestSingle.
@@ -73,7 +140,7 @@ index f98edae..c62b16b 100644
                              StringBuilder* result_builder,
                              DtoaMode mode) const;
  
-@@ -351,15 +352,15 @@ class DoubleToStringConverter {
+   // If the value is a special value (NaN or Infinity) constructs the
    // corresponding string using the configured infinity/nan-symbol.
    // If either of them is NULL or the value is not special then the
    // function returns false.
@@ -92,3 +159,8 @@ index f98edae..c62b16b 100644
                                     int length,
                                     int decimal_point,
                                     int digits_after_point,
+                                    StringBuilder* result_builder) const;
+ 
+   const int flags_;
+   const char* const infinity_symbol_;
+   const char* const nan_symbol_;
