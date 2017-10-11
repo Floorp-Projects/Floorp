@@ -38,6 +38,8 @@ using mozilla::BinarySearchIf;
 
 typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;
 
+Atomic<bool> wasm::CodeExists(false);
+
 class ProcessCodeSegmentMap
 {
     // Since writes (insertions or removals) can happen on any background
@@ -134,6 +136,8 @@ class ProcessCodeSegmentMap
         if (!mutableCodeSegments_->insert(mutableCodeSegments_->begin() + index, cs))
             return false;
 
+        CodeExists = true;
+
         swapAndWait();
 
 #ifdef DEBUG
@@ -162,6 +166,9 @@ class ProcessCodeSegmentMap
                                        CodeSegmentPC(cs->base()), &index));
 
         mutableCodeSegments_->erase(mutableCodeSegments_->begin() + index);
+
+        if (!mutableCodeSegments_->length())
+            CodeExists = false;
 
         swapAndWait();
 
