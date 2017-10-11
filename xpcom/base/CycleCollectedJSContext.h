@@ -27,6 +27,7 @@ class nsThread;
 class nsWrapperCache;
 
 namespace mozilla {
+class AutoSlowOperation;
 
 class CycleCollectedJSRuntime;
 
@@ -64,6 +65,17 @@ struct CycleCollectorResults
   uint32_t mFreedGCed;
   uint32_t mFreedJSZones;
   uint32_t mNumSlices;
+};
+
+class MicroTaskRunnable
+{
+public:
+  MicroTaskRunnable() {}
+  NS_INLINE_DECL_REFCOUNTING(MicroTaskRunnable)
+  virtual void Run(AutoSlowOperation& aAso) = 0;
+  virtual bool Suppressed() { return false; }
+protected:
+  virtual ~MicroTaskRunnable() {}
 };
 
 class CycleCollectedJSContext
@@ -207,7 +219,7 @@ public:
   void LeaveMicroTask()
   {
     if (--mMicroTaskLevel == 0) {
-      PerformMainThreadMicroTaskCheckpoint();
+      PerformMicroTaskCheckPoint();
     }
   }
 
@@ -226,7 +238,9 @@ public:
     mMicroTaskLevel = aLevel;
   }
 
-  void PerformMainThreadMicroTaskCheckpoint();
+  void PerformMicroTaskCheckPoint();
+
+  void DispatchMicroTaskRunnable(already_AddRefed<MicroTaskRunnable> aRunnable);
 
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
@@ -270,6 +284,9 @@ private:
   bool mDisableMicroTaskCheckpoint;
 
   uint32_t mMicroTaskLevel;
+  std::queue<RefPtr<MicroTaskRunnable>> mPendingMicroTaskRunnables;
+
+  uint32_t mMicroTaskRecursionDepth;
 };
 
 class MOZ_STACK_CLASS nsAutoMicroTask
