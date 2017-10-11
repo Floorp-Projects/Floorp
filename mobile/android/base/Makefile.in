@@ -25,6 +25,8 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes db jars res sync services generated
 
+gradle_dir := $(topobjdir)/gradle/build/mobile/android
+
 # The bootclasspath is functionally identical to the classpath, but allows the
 # classes given to redefine classes in core packages, such as java.lang.
 # android.jar is here as it provides Android's definition of the Java Standard
@@ -141,6 +143,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 java_bundled_libs := $(call uniq,$(java_bundled_libs))
 java_bundled_libs := $(subst $(NULL) ,:,$(strip $(java_bundled_libs)))
 
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 GECKOVIEW_JARS = \
   constants.jar \
   gecko-R.jar \
@@ -166,8 +169,6 @@ ifdef MOZ_ANDROID_MMA
 GECKOVIEW_JARS += gecko-thirdparty-leanplum_sdk.jar
 endif
 
-geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
-
 FENNEC_JARS = \
   gecko-browser.jar \
   gecko-thirdparty.jar \
@@ -182,6 +183,17 @@ ifdef MOZ_ANDROID_MLS_STUMBLER
 FENNEC_JARS += ../stumbler/stumbler.jar
 endif
 
+else # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+
+GECKOVIEW_JARS := $(gradle_dir)/geckoview/intermediates/bundles/debug/classes.jar
+FENNEC_JARS := $(gradle_dir)/app/intermediates/packaged/officialPhoton/debug/classes.jar
+
+$(GECKOVIEW_JARS): .gradle.deps
+$(FENNEC_JARS): .gradle.deps
+
+endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+
+geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
 
 # All the jars we're compiling from source. (not to be confused with
 # java_bundled_libs, which holds the jars which we're including as binaries).
@@ -228,22 +240,30 @@ endif # MOZ_INSTALL_TRACKING
 
 library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
 
-gradle_dir := $(topobjdir)/gradle/build/mobile/android
-
 ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .gradle.deps: .aapt.deps FORCE
 	@$(TOUCH) $@
 	$(topsrcdir)/mach gradle \
-		app:assembleOfficialPhotonDebug app:assembleOfficialPhotonDebugAndroidTest -x lint
+		geckoview:generateJNIWrappersForGeneratedRelease \
+		app:generateJNIWrappersForFennecOfficialPhotonDebug \
+		app:assembleOfficialPhotonDebug \
+		app:assembleOfficialPhotonDebugAndroidTest \
+		-x lint
 
 classes.dex: .gradle.deps
 	$(REPORT_BUILD)
 	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex $@
+
+GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.deps
+	$(REPORT_BUILD)
+
+FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
+	$(REPORT_BUILD)
+
 else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex --force-jumbo jars-proguarded
-endif
 
 ifdef MOZ_DISABLE_PROGUARD
   PROGUARD_PASSES=0
@@ -327,6 +347,8 @@ FennecJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES) $(FENNEC_JARS)
 	$(JAVA) -classpath $(all_jars_classpath):$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) \
 		org.mozilla.gecko.annotationProcessors.AnnotationProcessor \
 		Fennec $(FENNEC_JARS)
+
+endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 include $(topsrcdir)/config/rules.mk
 
@@ -536,7 +558,6 @@ endif
 #   GeneratedJNIWrappers.h and GeneratedJNINatives.h
 # FennecJNIWrappers.cpp target also generates
 #   FennecJNIWrappers.h and FennecJNINatives.h
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 # List of build flags used by auto-generated JNI bindings (through the
 # @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
@@ -586,10 +607,11 @@ libs:: FennecJNIWrappers.cpp
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
 	  exit 1)
-endif
 
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
+
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 # Generate Java binder interfaces from AIDL files.
 GECKOVIEW_AIDLS = \
@@ -623,3 +645,5 @@ fennec_aidl_targets := $(addprefix $(fennec_aidl_target_path)/,$(patsubst %.aidl
 $(fennec_aidl_targets): $(fennec_aidl_target_path)/%.java: $(fennec_aidl_src_path)/%.aidl
 	@echo "Processing AIDL: $< => $@"
 	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(fennec_aidl_src_path) -I$(geckoview_aidl_src_path) -o$(fennec_aidl_target_path) $<
+
+endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
