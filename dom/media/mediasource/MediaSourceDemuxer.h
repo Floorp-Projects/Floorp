@@ -116,6 +116,9 @@ public:
     return false;
   }
 
+  bool HasManager(TrackBuffersManager* aManager) const;
+  void DetachManager();
+
 private:
   RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
