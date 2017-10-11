@@ -62,7 +62,11 @@ public:
   wr::LayoutRect ToRelativeLayoutRect(const LayerRect& aRect) const;
   wr::LayoutRect ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const;
   // Same but for points
-  wr::LayoutPoint ToRelativeLayoutPoint(const LayerPoint& aPoint) const;
+  wr::LayoutPoint ToRelativeLayoutPoint(const LayerPoint& aPoint) const
+  {
+    return wr::ToLayoutPoint(aPoint - mOrigin);
+  }
+
 
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
