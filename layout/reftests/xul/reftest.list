@@ -1,17 +1,17 @@
 == css-flex-1.xul css-flex-1-ref.html
 
-== menuitem-key.xul menuitem-key-ref.xul
+fails-if(styloVsGecko) == menuitem-key.xul menuitem-key-ref.xul # bug 1408831
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
-random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
-== textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
+random-if(Android) fails-if(stylo||styloVsGecko) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul # stylo: bug 1408235
+random-if(Android) fails-if(winWidget||stylo||styloVsGecko) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul # stylo: bug 1408235
+fails-if(styloVsGecko) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658, stylo: bug 1408235
 # accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
+skip-if(cocoaWidget) fails-if(styloVsGecko) == accesskey.xul accesskey-ref.xul # stylo: bug 1408811
+fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) asserts-if(stylo,13-26) fails-if(styloVsGecko) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832, stylo: bug 1397644
 skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
-!= tree-row-outline-1.xul tree-row-outline-1-notref.xul
+asserts-if(stylo,13-26) fails-if(stylo||styloVsGecko) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # stylo: bug 1397644
 == text-crop.xul text-crop-ref.xul
-== text-small-caps-1.xul text-small-caps-1-ref.xul
+fails-if(stylo||styloVsGecko) == text-small-caps-1.xul text-small-caps-1-ref.xul # stylo: bug 1408235
 fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
 fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525-ref.html
 
@@ -62,8 +62,8 @@ fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092
 == object-position-png-001.xul object-position-png-001-ref.html
 == object-position-png-002.xul object-position-png-002-ref.html
 
-== stack-sizing-1.xul stack-sizing-1-ref.xul
-== stack-sizing-2.xul stack-sizing-2-ref.xul
+fails-if(styloVsGecko) == stack-sizing-1.xul stack-sizing-1-ref.xul # bug 1408235
+fails-if(styloVsGecko) == stack-sizing-2.xul stack-sizing-2-ref.xul # bug 1408235
 
 # Tests for rendering SVG images in a XUL <treecell>:
 # XXXdholbert: These are marked as "random" right now, since they might not
@@ -72,4 +72,4 @@ fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092
 skip == treecell-image-svg-1a.xul treecell-image-svg-1-ref.xul # bug 1218954
 skip == treecell-image-svg-1b.xul treecell-image-svg-1-ref.xul # bug 1218954
 
-== treechildren-padding-percent-1.xul treechildren-padding-percent-1-ref.xul
+asserts-if(stylo,16-18) fails-if(styloVsGecko) == treechildren-padding-percent-1.xul treechildren-padding-percent-1-ref.xul # bug 1397644
