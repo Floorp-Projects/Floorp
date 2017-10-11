@@ -389,7 +389,6 @@ public:
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
                            nsPresContext* aPresContext,
-                           nsAtom* aPseudoTag,
                            CSSPseudoElementType aPseudoType,
                            const ServoStyleContext* aStyle);
 

@@ -1221,7 +1221,6 @@ already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetBaseContextForElement(
   Element* aElement,
   nsPresContext* aPresContext,
-  nsAtom* aPseudoTag,
   CSSPseudoElementType aPseudoType,
   const ServoStyleContext* aStyle)
 {

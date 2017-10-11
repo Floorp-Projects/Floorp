@@ -715,7 +715,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
           } else {
             return presContext->StyleSet()->AsServo()->
               GetBaseContextForElement(aElement, presContext,
-                                       aPseudo, pseudoType, result->AsServo());
+                                       pseudoType, result->AsServo());
           }
         }
 
@@ -748,7 +748,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
     }
 
     return servoSet->GetBaseContextForElement(aElement, presContext,
-                                              aPseudo, pseudoType, result);
+                                              pseudoType, result);
   }
 
   RefPtr<GeckoStyleContext> parentContext;
