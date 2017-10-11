@@ -346,7 +346,9 @@ private:
   // Shutdown, cannot be re-enabled.
   static constexpr LogState scShutdown = 3;
   // Current state.
-  static Atomic<LogState> sLogState;
+  // "ReleaseAcquire" because when changing to scEnabled, the just-created
+  // sMediaLogs must be accessible to consumers that see scEnabled.
+  static Atomic<LogState, ReleaseAcquire> sLogState;
 
   // If non-null, reason for an abnormal shutdown.
   static const char* sShutdownReason;
