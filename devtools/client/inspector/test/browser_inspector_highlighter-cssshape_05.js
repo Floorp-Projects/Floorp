@@ -72,7 +72,7 @@ function* highlightFromHighlighter(view, highlighters, testActor, helper) {
   let container = getRuleViewProperty(view, "#polygon", "clip-path").valueSpan;
 
   info("Hover over first point in highlighter");
-  let onEventHandled = view.once("ruleview-shape-point-highlight");
+  let onEventHandled = highlighters.once("highlighter-event-handled");
   yield mouse.move(0, 0);
   yield onEventHandled;
   let markerHidden = yield testActor.getHighlighterNodeAttribute(
@@ -99,7 +99,7 @@ function* highlightFromHighlighter(view, highlighters, testActor, helper) {
      "Hovered point is saved to state after moving point");
 
   info("Move mouse off point");
-  onEventHandled = view.once("ruleview-shape-point-highlight");
+  onEventHandled = highlighters.once("highlighter-event-handled");
   yield mouse.move(100, 100);
   yield onEventHandled;
   markerHidden = yield testActor.getHighlighterNodeAttribute(
