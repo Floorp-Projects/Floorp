@@ -27,7 +27,7 @@ ChromiumCDMChild::ChromiumCDMChild(GMPContentChild* aPlugin)
 }
 
 void
-ChromiumCDMChild::Init(cdm::ContentDecryptionModule_8* aCDM)
+ChromiumCDMChild::Init(cdm::ContentDecryptionModule_9* aCDM)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   mCDM = aCDM;
@@ -222,6 +222,13 @@ ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
   }
 }
 
+// cdm::Host_9 interface
+void
+ChromiumCDMChild::OnResolveKeyStatusPromise(uint32_t aPromiseId,
+                                            cdm::KeyStatus aKeyStatus) {
+  //TODO: The callback of GetStatusForPolicy, will implement it in Bug 1404230.
+}
+
 bool
 ChromiumCDMChild::OnResolveNewSessionPromiseInternal(uint32_t aPromiseId,
                                                      const nsCString& aSessionId)
@@ -269,6 +276,31 @@ void ChromiumCDMChild::OnResolvePromise(uint32_t aPromiseId)
                           aPromiseId);
 }
 
+// Align with spec, the Exceptions used by CDM to reject promises .
+// https://w3c.github.io/encrypted-media/#exceptions
+cdm::Exception
+ConvertCDMErrorToCDMException(cdm::Error error) {
+  switch (error) {
+    case cdm::kNotSupportedError:
+      return cdm::Exception::kExceptionNotSupportedError;
+    case cdm::kInvalidStateError:
+      return cdm::Exception::kExceptionInvalidStateError;
+    case cdm::kInvalidAccessError:
+      return cdm::Exception::kExceptionTypeError;
+    case cdm::kQuotaExceededError:
+      return cdm::Exception::kExceptionQuotaExceededError;
+
+    // cdm8 only error
+    case cdm::kUnknownError:
+    case cdm::kClientError:
+    case cdm::kOutputError:
+      break;
+  }
+
+  return cdm::Exception::kExceptionInvalidStateError;
+}
+
+// cdm::Host_8 only interface
 void
 ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
                                   cdm::Error aError,
@@ -276,20 +308,36 @@ ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
                                   const char* aErrorMessage,
                                   uint32_t aErrorMessageSize)
 {
+  OnRejectPromise(aPromiseId,
+                  ConvertCDMErrorToCDMException(aError),
+                  aSystemCode,
+                  aErrorMessage,
+                  aErrorMessageSize);
+}
+
+// cdm::Host_9 interface
+void
+ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
+                                  cdm::Exception aException,
+                                  uint32_t aSystemCode,
+                                  const char* aErrorMessage,
+                                  uint32_t aErrorMessageSize)
+{
   GMP_LOG("ChromiumCDMChild::OnRejectPromise(pid=%" PRIu32 ", err=%" PRIu32
           " code=%" PRIu32 ", msg='%s')",
           aPromiseId,
-          aError,
+          aException,
           aSystemCode,
           aErrorMessage);
   CallOnMessageLoopThread("gmp::ChromiumCDMChild::OnRejectPromise",
                           &ChromiumCDMChild::SendOnRejectPromise,
                           aPromiseId,
-                          static_cast<uint32_t>(aError),
+                          static_cast<uint32_t>(aException),
                           aSystemCode,
                           nsCString(aErrorMessage, aErrorMessageSize));
 }
 
+// cdm::Host_8 only interface
 void
 ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
                                    uint32_t aSessionIdSize,
@@ -298,6 +346,17 @@ ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
                                    uint32_t aMessageSize,
                                    const char* aLegacyDestinationUrl,
                                    uint32_t aLegacyDestinationUrlLength)
+{
+  OnSessionMessage(aSessionId, aSessionIdSize, aMessageType, aMessage, aMessageSize);
+}
+
+// cdm::Host_9 interface
+void
+ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
+                                   uint32_t aSessionIdSize,
+                                   cdm::MessageType aMessageType,
+                                   const char* aMessage,
+                                   uint32_t aMessageSize)
 {
   GMP_LOG("ChromiumCDMChild::OnSessionMessage(sid=%s, type=%" PRIu32
           " size=%" PRIu32 ")",
