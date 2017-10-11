@@ -121,3 +121,54 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     android.sourceSets."${sourceSet}".assets.srcDir syncAssetsFromDistDir.destinationDir
     android.sourceSets."${sourceSet}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
 }
+
+ext.configureVariantWithJNIWrappers = { variant, module ->
+
+    def jarTask = tasks.findByName("jar${variant.name.capitalize()}Classes")
+    if (jarTask == null) {
+        jarTask = tasks.findByName("package${variant.name.capitalize()}JarArtifact")
+    }
+    if (jarTask == null) {
+        throw new GradleException("Jar task not found: \"jar${variant.name.capitalize()}Classes\"\t\"package${variant.name.capitalize()}JarArtifact\"" )
+    }
+    if (jarTask.outputs.files.size() != 1) {
+        throw new GradleException("Jar task output multiple files other than one single jar")
+    }
+
+    // At configuration time, the classpath of dependencies with internal_impl
+    // JAR files may not be correct.  This manifests in
+    //
+    // 'Exception in thread "main" java.lang.NoClassDefFoundError: android/support/v4/app/ActivityCompatApi23$RequestPermissionsRequestCodeValidator'
+    //
+    // when running |mach gradle clean app:generateJNI...|.  We work around this
+    // by configuring the classpath at evaluation-time, not configuration-time.
+    //
+    // The specific dependency on the `prepareDependencies` task may not be
+    // necessary, but commits like
+    // https://github.com/evant/gradle-retrolambda/commit/15108c65ee43be499a1359d9d4f88b0851d46769
+    // suggest that it is.  It certainly doesn't hurt.
+    def prepareDependenciesTask = tasks.getByName("prepare${variant.name.capitalize()}Dependencies")
+
+    def wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
+        classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
+
+        // Configure the classpath at evaluation-time, not at
+        // configuration-time: see above comment.
+        doFirst {
+            classpath variant.javaCompile.classpath
+            // Include android.jar.
+            classpath variant.javaCompile.options.bootClasspath
+        }
+
+        main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
+        args module
+        args jarTask.outputs.files.iterator().next()
+
+        workingDir "${topobjdir}/mobile/android/base"
+
+        dependsOn jarTask
+        dependsOn prepareDependenciesTask
+    }
+
+    variant.assemble.dependsOn wrapperTask
+}
