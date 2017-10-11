@@ -209,14 +209,17 @@ GeckoProfilerRuntime::stringsReset()
 class MOZ_RAII GeckoProfilerEntryMarker
 {
   public:
-    explicit GeckoProfilerEntryMarker(JSContext* cx,
-                                      JSScript* script
-                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~GeckoProfilerEntryMarker();
+    explicit MOZ_ALWAYS_INLINE
+    GeckoProfilerEntryMarker(JSContext* cx,
+                             JSScript* script
+                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    MOZ_ALWAYS_INLINE ~GeckoProfilerEntryMarker();
 
   private:
-    GeckoProfilerThread* profiler;
-    mozilla::DebugOnly<uint32_t> spBefore_;
+    GeckoProfilerThread* profiler_;
+#ifdef DEBUG
+    uint32_t spBefore_;
+#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
