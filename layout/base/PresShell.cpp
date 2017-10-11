@@ -4049,8 +4049,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "Layout",
     "Display"
   };
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("PresShell::DoFlushPendingNotifications",
-                                   GRAPHICS, flushTypeNames[flushType]);
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::DoFlushPendingNotifications",
+                              GRAPHICS, flushTypeNames[flushType]);
 #endif
 
 #ifdef ACCESSIBILITY
@@ -6269,16 +6269,13 @@ PresShell::Paint(nsView*         aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
-#ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   nsIDocument* contentRoot = GetPrimaryContentDocument();
   if (contentRoot) {
     uri = contentRoot->GetDocumentURI();
   }
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-    "PresShell::Paint", GRAPHICS,
-    uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
-#endif
+  nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::Paint", GRAPHICS, uriString.get());
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
@@ -8852,12 +8849,9 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
 
-#ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-    "PresShell::DoReflow", GRAPHICS,
-    uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
-#endif
+  nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::DoReflow", GRAPHICS, uriString.get());
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
