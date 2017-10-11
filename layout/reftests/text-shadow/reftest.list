@@ -31,7 +31,7 @@ needs-focus != text-shadow-selected-2.html text-shadow-selected-2-notref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,1,1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2-ref.html # different foreground selection color on Android
 
 # bug 692744
-== text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
+fuzzy-if(webrender,19,2872) == text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
 
 # bug 721750
 needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1-ref.html
