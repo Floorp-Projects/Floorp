@@ -435,16 +435,20 @@ HashCompleterRequest.prototype = {
     let loadFlags = Ci.nsIChannel.INHIBIT_CACHING |
                     Ci.nsIChannel.LOAD_BYPASS_CACHE;
 
-    this.actualGethashUrl = this.gethashUrl;
+    this.request = {
+      url: this.gethashUrl,
+      body: ""
+    };
+
     if (this.isV4) {
       // As per spec, we add the request payload to the gethash url.
-      this.actualGethashUrl += "&$req=" + this.buildRequestV4();
+      this.request.url += "&$req=" + this.buildRequestV4();
     }
 
-    log("actualGethashUrl: " + this.actualGethashUrl);
+    log("actualGethashUrl: " + this.request.url);
 
     let channel = NetUtil.newChannel({
-      uri: this.actualGethashUrl,
+      uri: this.request.url,
       loadUsingSystemPrincipal: true
     });
     channel.loadFlags = loadFlags;
@@ -783,7 +787,7 @@ HashCompleterRequest.prototype = {
       add(this.telemetryProvider, httpStatusToBucket(httpStatus));
     if (httpStatus == 400) {
       dump("Safe Browsing server returned a 400 during completion: request= " +
-           this.actualGethashUrl + "\n");
+           this.request.url + ",payload= " + this.request.body + "\n");
     }
 
     Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").

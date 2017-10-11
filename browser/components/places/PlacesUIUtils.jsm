@@ -582,7 +582,8 @@ this.PlacesUIUtils = {
     if (!this.SUPPORTED_FLAVORS.includes(aData.type))
       throw new Error(`Unsupported '${aData.type}' data type`);
 
-    if ("itemGuid" in aData) {
+    if ("itemGuid" in aData && "instanceId" in aData &&
+        aData.instanceId == PlacesUtils.instanceId) {
       if (!this.PLACES_FLAVORS.includes(aData.type))
         throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
 

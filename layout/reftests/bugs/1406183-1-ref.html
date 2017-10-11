@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<title>Reference for bug 1406183: ImageLayer inside inactive BasicLayerManager for fallback nsDisplayFilter is drawn at the wrong position</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+.outer {
+  margin-left: 100px;
+  margin-top: 50px;
+  width: 200px;
+  height: 200px;
+}
+
+</style>
+
+<div class="outer">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAIAAABvrngfAAAAFklEQVQImWMwjWhCQwxECoW3oCHihAB0LyYv5/oAHwAAAABJRU5ErkJggg==">
+</div>

@@ -113,9 +113,7 @@ nsUrlClassifierStreamUpdater::DownloadDone()
 
   mPendingUpdates.Clear();
   mDownloadError = false;
-  mSuccessCallback = nullptr;
-  mUpdateErrorCallback = nullptr;
-  mDownloadErrorCallback = nullptr;
+  mCurrentRequest = nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -286,17 +284,13 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Already updating, queueing update %s from %s", aRequestPayload.Data(),
          aUpdateUrl.Data()));
     *_retval = false;
-    PendingRequest *request = mPendingRequests.AppendElement(fallible);
+    UpdateRequest *request = mPendingRequests.AppendElement(fallible);
     if (!request) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    request->mTables = aRequestTables;
-    request->mRequestPayload = aRequestPayload;
-    request->mIsPostRequest = aIsPostRequest;
-    request->mUrl = aUpdateUrl;
-    request->mSuccessCallback = aSuccessCallback;
-    request->mUpdateErrorCallback = aUpdateErrorCallback;
-    request->mDownloadErrorCallback = aDownloadErrorCallback;
+    BuildUpdateRequest(aRequestTables, aRequestPayload, aIsPostRequest, aUpdateUrl,
+                       aSuccessCallback, aUpdateErrorCallback, aDownloadErrorCallback,
+                       request);
     return NS_OK;
   }
 
@@ -329,17 +323,13 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Service busy, already updating, queuing update %s from %s",
          aRequestPayload.Data(), aUpdateUrl.Data()));
     *_retval = false;
-    PendingRequest *request = mPendingRequests.AppendElement(fallible);
+    UpdateRequest *request = mPendingRequests.AppendElement(fallible);
     if (!request) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    request->mTables = aRequestTables;
-    request->mRequestPayload = aRequestPayload;
-    request->mIsPostRequest = aIsPostRequest;
-    request->mUrl = aUpdateUrl;
-    request->mSuccessCallback = aSuccessCallback;
-    request->mUpdateErrorCallback = aUpdateErrorCallback;
-    request->mDownloadErrorCallback = aDownloadErrorCallback;
+    BuildUpdateRequest(aRequestTables, aRequestPayload, aIsPostRequest, aUpdateUrl,
+                       aSuccessCallback, aUpdateErrorCallback, aDownloadErrorCallback,
+                       request);
 
     // We cannot guarantee that we will be notified when DBService is done
     // processing the current update, so we fire a retry timer on our own.
@@ -366,14 +356,15 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   urlUtil->GetTelemetryProvider(tables.SafeElementAt(0, EmptyCString()),
                                 mTelemetryProvider);
 
-  mSuccessCallback = aSuccessCallback;
-  mUpdateErrorCallback = aUpdateErrorCallback;
-  mDownloadErrorCallback = aDownloadErrorCallback;
+  mCurrentRequest = MakeUnique<UpdateRequest>();
+  BuildUpdateRequest(aRequestTables, aRequestPayload, aIsPostRequest, aUpdateUrl,
+                     aSuccessCallback, aUpdateErrorCallback, aDownloadErrorCallback,
+                     mCurrentRequest.get());
 
   mIsUpdating = true;
   *_retval = true;
 
-  LOG(("FetchUpdate: %s", aUpdateUrl.Data()));
+  LOG(("FetchUpdate: %s", mCurrentRequest->mUrl.Data()));
 
   return FetchUpdate(aUpdateUrl, aRequestPayload, aIsPostRequest, EmptyCString());
 }
@@ -446,7 +437,7 @@ nsUrlClassifierStreamUpdater::FetchNextRequest()
     return NS_OK;
   }
 
-  PendingRequest request = mPendingRequests[0];
+  UpdateRequest request = mPendingRequests[0];
   mPendingRequests.RemoveElementAt(0);
   LOG(("Stream updater: fetching next request: %s, %s",
        request.mTables.get(), request.mUrl.get()));
@@ -461,6 +452,28 @@ nsUrlClassifierStreamUpdater::FetchNextRequest()
     request.mDownloadErrorCallback,
     &dummy);
   return NS_OK;
+}
+
+void
+nsUrlClassifierStreamUpdater::BuildUpdateRequest(
+  const nsACString &aRequestTables,
+  const nsACString &aRequestPayload,
+  bool aIsPostRequest,
+  const nsACString &aUpdateUrl,
+  nsIUrlClassifierCallback *aSuccessCallback,
+  nsIUrlClassifierCallback *aUpdateErrorCallback,
+  nsIUrlClassifierCallback *aDownloadErrorCallback,
+  UpdateRequest* aRequest)
+{
+  MOZ_ASSERT(aRequest);
+
+  aRequest->mTables = aRequestTables;
+  aRequest->mRequestPayload = aRequestPayload;
+  aRequest->mIsPostRequest = aIsPostRequest;
+  aRequest->mUrl = aUpdateUrl;
+  aRequest->mSuccessCallback = aSuccessCallback;
+  aRequest->mUpdateErrorCallback = aUpdateErrorCallback;
+  aRequest->mDownloadErrorCallback = aDownloadErrorCallback;
 }
 
 NS_IMETHODIMP
@@ -507,8 +520,11 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
   }
 
   // DownloadDone() clears mSuccessCallback, so we save it off here.
-  nsCOMPtr<nsIUrlClassifierCallback> successCallback = mDownloadError ? nullptr : mSuccessCallback.get();
-  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback = mDownloadError ? mDownloadErrorCallback.get() : nullptr;
+  nsCOMPtr<nsIUrlClassifierCallback> successCallback =
+    mDownloadError ? nullptr : mCurrentRequest->mSuccessCallback.get();
+  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback =
+    mDownloadError ? mCurrentRequest->mDownloadErrorCallback.get() : nullptr;
+
   DownloadDone();
 
   nsAutoCString strTimeout;
@@ -535,8 +551,10 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
   LOG(("nsUrlClassifierStreamUpdater::UpdateError [this=%p]", this));
 
   // DownloadDone() clears mUpdateErrorCallback, so we save it off here.
-  nsCOMPtr<nsIUrlClassifierCallback> errorCallback = mDownloadError ? nullptr : mUpdateErrorCallback.get();
-  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback = mDownloadError ? mDownloadErrorCallback.get() : nullptr;
+  nsCOMPtr<nsIUrlClassifierCallback> errorCallback =
+    mDownloadError ? nullptr : mCurrentRequest->mUpdateErrorCallback.get();
+  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback =
+    mDownloadError ? mCurrentRequest->mDownloadErrorCallback.get() : nullptr;
   DownloadDone();
 
   nsAutoCString strResult;
@@ -642,14 +660,9 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_REMOTE_STATUS2,
                                      mTelemetryProvider, HTTPStatusToBucket(requestStatus));
       if (requestStatus == 400) {
-        nsCOMPtr<nsIURI> uri;
-        nsAutoCString spec;
-        rv = httpChannel->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv) && uri) {
-          uri->GetAsciiSpec(spec);
-        }
-        printf_stderr("Safe Browsing server returned a 400 during update: request = %s \n",
-                      spec.get());
+        printf_stderr("Safe Browsing server returned a 400 during update:"
+                       "request url = %s, payload = %s\n",
+                       mCurrentRequest->mUrl.get(), mCurrentRequest->mRequestPayload.get());
       }
 
       LOG(("nsUrlClassifierStreamUpdater::OnStartRequest %s (%d)", succeeded ?
@@ -668,7 +681,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
     mDownloadErrorStatusStr = strStatus;
     status = NS_ERROR_ABORT;
   } else if (NS_SUCCEEDED(status)) {
-    MOZ_ASSERT(mDownloadErrorCallback);
+    MOZ_ASSERT(mCurrentRequest->mDownloadErrorCallback);
     mBeganStream = true;
     LOG(("nsUrlClassifierStreamUpdater::Beginning stream [this=%p]", this));
     rv = mDBService->BeginStream(mStreamTable);

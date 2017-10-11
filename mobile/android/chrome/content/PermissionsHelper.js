@@ -144,11 +144,11 @@ var PermissionsHelper = {
     if (aType == "password") {
       // By default, login saving is enabled, so if it is disabled, the
       // user selected the never remember option
-      if (!Services.logins.getLoginSavingEnabled(aURI.prePath))
+      if (!Services.logins.getLoginSavingEnabled(aURI.displayPrePath))
         return Services.perms.DENY_ACTION;
 
       // Check to see if the user ever actually saved a login
-      if (Services.logins.countLogins(aURI.prePath, "", ""))
+      if (Services.logins.countLogins(aURI.displayPrePath, "", ""))
         return Services.perms.ALLOW_ACTION;
 
       return Services.perms.UNKNOWN_ACTION;
@@ -173,12 +173,12 @@ var PermissionsHelper = {
     // it seperately.
     if (aType == "password") {
       // Get rid of exisiting stored logings
-      let logins = Services.logins.findLogins({}, aURI.prePath, "", "");
+      let logins = Services.logins.findLogins({}, aURI.displayPrePath, "", "");
       for (let i = 0; i < logins.length; i++) {
         Services.logins.removeLogin(logins[i]);
       }
       // Re-set login saving to enabled
-      Services.logins.setLoginSavingEnabled(aURI.prePath, true);
+      Services.logins.setLoginSavingEnabled(aURI.displayPrePath, true);
     } else {
       Services.perms.remove(aURI, aType);
       // Clear content prefs set in ContentPermissionPrompt.js
