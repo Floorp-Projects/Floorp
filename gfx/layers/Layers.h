@@ -361,12 +361,6 @@ public:
   virtual bool BlendingRequiresIntermediateSurface() { return false; }
 
   /**
-   * Returns true if this LayerManager supports component alpha layers in
-   * situations that require a copy of the backdrop.
-   */
-  virtual bool SupportsBackdropCopyForComponentAlpha() { return true; }
-
-  /**
    * CONSTRUCTION PHASE ONLY
    * Set the root layer. The root layer is initially null. If there is
    * no root layer, EndTransaction won't draw anything.
