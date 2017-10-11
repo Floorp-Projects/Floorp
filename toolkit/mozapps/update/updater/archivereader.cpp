@@ -38,11 +38,6 @@
 # include <io.h>
 #endif
 
-static size_t inbuf_size  = 262144;
-static size_t outbuf_size = 262144;
-static uint8_t *inbuf  = nullptr;
-static uint8_t *outbuf = nullptr;
-
 /**
  * Performs a verification on the opened MAR file with the passed in
  * certificate name ID and type ID.
@@ -183,24 +178,24 @@ ArchiveReader::Open(const NS_tchar *path)
   if (mArchive)
     Close();
 
-  if (!inbuf) {
-    inbuf = (uint8_t *)malloc(inbuf_size);
-    if (!inbuf) {
+  if (!mInBuf) {
+    mInBuf = (uint8_t *)malloc(mInBufSize);
+    if (!mInBuf) {
       // Try again with a smaller buffer.
-      inbuf_size = 1024;
-      inbuf = (uint8_t *)malloc(inbuf_size);
-      if (!inbuf)
+      mInBufSize = 1024;
+      mInBuf = (uint8_t *)malloc(mInBufSize);
+      if (!mInBuf)
         return ARCHIVE_READER_MEM_ERROR;
     }
   }
 
-  if (!outbuf) {
-    outbuf = (uint8_t *)malloc(outbuf_size);
-    if (!outbuf) {
+  if (!mOutBuf) {
+    mOutBuf = (uint8_t *)malloc(mOutBufSize);
+    if (!mOutBuf) {
       // Try again with a smaller buffer.
-      outbuf_size = 1024;
-      outbuf = (uint8_t *)malloc(outbuf_size);
-      if (!outbuf)
+      mOutBufSize = 1024;
+      mOutBuf = (uint8_t *)malloc(mOutBufSize);
+      if (!mOutBuf)
         return ARCHIVE_READER_MEM_ERROR;
     }
   }
@@ -227,14 +222,14 @@ ArchiveReader::Close()
     mArchive = nullptr;
   }
 
-  if (inbuf) {
-    free(inbuf);
-    inbuf = nullptr;
+  if (mInBuf) {
+    free(mInBuf);
+    mInBuf = nullptr;
   }
 
-  if (outbuf) {
-    free(outbuf);
-    outbuf = nullptr;
+  if (mOutBuf) {
+    free(mOutBuf);
+    mOutBuf = nullptr;
   }
 }
 
@@ -287,12 +282,12 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     return UNEXPECTED_XZ_ERROR;
   }
 
-  strm.in = inbuf;
+  strm.in = mInBuf;
   strm.in_pos = 0;
   strm.in_size = 0;
-  strm.out = outbuf;
+  strm.out = mOutBuf;
   strm.out_pos = 0;
-  strm.out_size = outbuf_size;
+  strm.out_size = mOutBufSize;
 
   offset = 0;
   for (;;) {
@@ -302,7 +297,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     }
 
     if (offset < (int) item->length && strm.in_pos == strm.in_size) {
-      inlen = mar_read(mArchive, item, offset, inbuf, inbuf_size);
+      inlen = mar_read(mArchive, item, offset, mInBuf, mInBufSize);
       if (inlen <= 0) {
         ret = READ_ERROR;
         break;
@@ -314,8 +309,8 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 
     xz_rv = xz_dec_run(dec, &strm);
 
-    if (strm.out_pos == outbuf_size) {
-      if (fwrite(outbuf, 1, strm.out_pos, fp) != strm.out_pos) {
+    if (strm.out_pos == mOutBufSize) {
+      if (fwrite(mOutBuf, 1, strm.out_pos, fp) != strm.out_pos) {
         ret = WRITE_ERROR_EXTRACT;
         break;
       }
@@ -338,7 +333,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     // Write out the remainder of the decompressed data. In the case of
     // strm.out_pos == 0 this is needed to create empty files included in the
     // mar file.
-    if (fwrite(outbuf, 1, strm.out_pos, fp) != strm.out_pos) {
+    if (fwrite(mOutBuf, 1, strm.out_pos, fp) != strm.out_pos) {
       ret = WRITE_ERROR_EXTRACT;
     }
     break;

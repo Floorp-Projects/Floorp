@@ -105,6 +105,13 @@ const BackgroundPageThumbs = {
    * @return {Promise} A Promise that resolves when this task completes
    */
   async captureIfMissing(url, options = {}) {
+    // Short circuit this function if pref is enabled, or else we leak observers.
+    // See Bug 1400562
+    if (!PageThumbs._prefEnabled()) {
+      if (options.onDone)
+        options.onDone(url);
+      return url;
+    }
     // The fileExistsForURL call is an optimization, potentially but unlikely
     // incorrect, and no big deal when it is.  After the capture is done, we
     // atomically test whether the file exists before writing it.

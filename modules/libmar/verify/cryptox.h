@@ -117,7 +117,7 @@ CryptoX_Result CryptoAPI_LoadPublicKey(HCRYPTPROV hProv,
 CryptoX_Result CryptoAPI_VerifyBegin(HCRYPTPROV provider, HCRYPTHASH* hash);
 CryptoX_Result CryptoAPI_VerifyUpdate(HCRYPTHASH* hash, 
                                       BYTE *buf, DWORD len);
-CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash, 
+CryptoX_Result CryptoAPI_VerifySignature(HCRYPTHASH *hash,
                                          HCRYPTKEY *pubKey,
                                          const BYTE *signature, 
                                          DWORD signatureLen);
@@ -137,7 +137,7 @@ CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash,
 #define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, publicKey) \
   CryptoAPI_LoadPublicKey(CryptoHandle, (BYTE*)(certData), dataSize, publicKey)
 #define CryptoX_VerifySignature(hash, publicKey, signedData, len) \
-  CyprtoAPI_VerifySignature(hash, publicKey, signedData, len)
+  CryptoAPI_VerifySignature(hash, publicKey, signedData, len)
 #define CryptoX_FreePublicKey(key) \
   CryptDestroyKey(*(key))
 #define CryptoX_FreeCertificate(cert) \

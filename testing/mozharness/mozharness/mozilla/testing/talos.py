@@ -417,12 +417,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             self.info("Skipping: mitmproxy is not required")
             return
 
-        # tp6 is supported in production only on win and macosx
         os_name = self.platform_name()
-        if 'win' not in os_name and os_name != 'macosx':
-            self.fatal("Aborting: this test is not supported on this platform.")
 
-        # on windows we need to install a pytyon 3 virtual env; on macosx we
+        # on windows we need to install a pytyon 3 virtual env; on macosx and linux we
         # use a mitmdump pre-built binary that doesn't need an external python 3
         if 'win' in os_name:
             # setup python 3.x virtualenv
@@ -457,16 +454,20 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             self.py3_install_modules(modules=['mitmproxy'])
             self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
         else:
-            # on macosx we use a prebuilt mitmproxy release binary
+            # on macosx and linux64 we use a prebuilt mitmproxy release binary
             mitmproxy_path = os.path.join(self.talos_path, 'talos', 'mitmproxy')
             self.mitmdump = os.path.join(mitmproxy_path, 'mitmdump')
             if not os.path.exists(self.mitmdump):
                 # download the mitmproxy release binary; will be overridden by the --no-download
                 if '--no-download' not in self.config['talos_extra_options']:
-                    self.query_mitmproxy_rel_bin('osx')
+                    if 'osx' in self.platform_name():
+                        _platform = 'osx'
+                    else:
+                        _platform = 'linux64'
+                    self.query_mitmproxy_rel_bin(_platform)
                     if self.mitmproxy_rel_bin is None:
                         self.fatal("Aborting: mitmproxy_release_bin_osx not found in talos.json")
-                    self.download_mitmproxy_binary('osx')
+                    self.download_mitmproxy_binary(_platform)
                 else:
                     self.info("Not downloading mitmproxy rel binary because no-download was specified")
             self.info('The mitmdump macosx binary is found at: %s' % self.mitmdump)
@@ -487,15 +488,18 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         dest = os.path.join(self.talos_path, 'talos', 'mitmproxy')
         _manifest = "mitmproxy-rel-bin-%s.manifest" % platform
         manifest_file = os.path.join(self.talos_path, 'talos', 'mitmproxy', _manifest)
-        self.tooltool_fetch(
-            manifest_file,
-            output_dir=dest,
-            cache=self.config.get('tooltool_cache')
-        )
-        archive = os.path.join(dest, self.mitmproxy_rel_bin)
-        tar = self.query_exe('tar')
-        unzip_cmd = [tar, '-xvzf', archive, '-C', dest]
-        self.run_command(unzip_cmd, halt_on_failure=True)
+
+        if platform in ['osx', 'linux64']:
+            self.tooltool_fetch(
+                manifest_file,
+                output_dir=dest,
+                cache=self.config.get('tooltool_cache')
+            )
+
+            archive = os.path.join(dest, self.mitmproxy_rel_bin)
+            tar = self.query_exe('tar')
+            unzip_cmd = [tar, '-xvzf', archive, '-C', dest]
+            self.run_command(unzip_cmd, halt_on_failure=True)
 
     def query_mitmproxy_recording_set(self):
         """Mitmproxy requires external playback archives to be downloaded and extracted"""
