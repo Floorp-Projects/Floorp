@@ -87,9 +87,9 @@ FormAutofillPreferences.prototype = {
     addressAutofill.id = "addressAutofill";
     addressAutofillLearnMore.id = "addressAutofillLearnMore";
 
-    addressAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMore"));
-    addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableAddressAutofill"));
-    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddresses"));
+    addressAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMoreLabel"));
+    addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("autofillAddressesCheckbox"));
+    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddressesBtnLabel"));
 
     addressAutofillLearnMore.setAttribute("href", learnMoreURL);
 
@@ -130,9 +130,9 @@ FormAutofillPreferences.prototype = {
       creditCardAutofill.id = "creditCardAutofill";
       creditCardAutofillLearnMore.id = "creditCardAutofillLearnMore";
 
-      creditCardAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMore"));
-      creditCardAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableCreditCardAutofill"));
-      savedCreditCardsBtn.setAttribute("label", this.bundle.GetStringFromName("savedCreditCards"));
+      creditCardAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMoreLabel"));
+      creditCardAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("autofillCreditCardsCheckbox"));
+      savedCreditCardsBtn.setAttribute("label", this.bundle.GetStringFromName("savedCreditCardsBtnLabel"));
 
       creditCardAutofillLearnMore.setAttribute("href", learnMoreURL);
 
