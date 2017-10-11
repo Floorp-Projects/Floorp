@@ -38,9 +38,13 @@ def fuzzy_parser():
     return FuzzyParser()
 
 
-def generic_parser():
+def base_parser():
     from tryselect.cli import BaseTryParser
-    parser = BaseTryParser()
+    return BaseTryParser()
+
+
+def generic_parser():
+    parser = base_parser()
     parser.add_argument('argv', nargs=argparse.REMAINDER)
     return parser
 
@@ -144,8 +148,9 @@ class TrySelect(MachCommandBase):
 
     @SubCommand('try',
                 'empty',
-                description='Push to try without scheduling any tasks.')
-    def try_empty(self):
+                description='Push to try without scheduling any tasks.',
+                parser=base_parser)
+    def try_empty(self, **kwargs):
         """Push to try, running no builds or tests
 
         This selector does not prompt you to run anything, it just pushes
@@ -155,7 +160,7 @@ class TrySelect(MachCommandBase):
         menu.
         """
         from tryselect.selectors.empty import run_empty_try
-        return run_empty_try()
+        return run_empty_try(**kwargs)
 
     @SubCommand('try',
                 'syntax',
