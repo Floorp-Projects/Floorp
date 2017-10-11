@@ -238,6 +238,16 @@ add_test(function() {
                                      CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL));
 });
 
+// Ensure that nsIInterceptedChannel.channelIntercepted() can return an error.
+// In this case we should automatically ResetInterception() and complete the
+// network request.
+add_test(function() {
+  var chan = make_channel(URL + '/body', null, function(chan) {
+    throw('boom');
+  });
+  chan.asyncOpen2(new ChannelListener(handle_remote_response, null));
+});
+
 add_test(function() {
   httpServer.stop(run_next_test);
 });
