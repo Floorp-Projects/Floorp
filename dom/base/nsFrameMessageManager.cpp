@@ -600,13 +600,8 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
                                    JS::MutableHandle<JS::Value> aRetval,
                                    bool aIsSync)
 {
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
-    NS_LossyConvertUTF16toASCII messageNameCStr(aMessageName);
-    AUTO_PROFILER_LABEL_DYNAMIC("nsFrameMessageManager::SendMessage", EVENTS,
-                                messageNameCStr.get());
-  }
-#endif
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+    "nsFrameMessageManager::SendMessage", EVENTS, aMessageName);
 
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
@@ -1541,14 +1536,8 @@ void
 nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                                    bool aRunInGlobalScope)
 {
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
-    NS_LossyConvertUTF16toASCII urlCStr(aURL);
-    AUTO_PROFILER_LABEL_DYNAMIC(
-      "nsMessageManagerScriptExecutor::LoadScriptInternal", OTHER,
-      urlCStr.get());
-  }
-#endif
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+    "nsMessageManagerScriptExecutor::LoadScriptInternal", OTHER, aURL);
 
   if (!mGlobal || !sCachedScripts) {
     return;
