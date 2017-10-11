@@ -1435,11 +1435,6 @@ MediaRecorder::SetOptions(const MediaRecorderOptions& aInitDict)
   }
 }
 
-static char const *const gWebMAudioEncoderCodecs[2] = {
-  "opus",
-  // no VP9 yet
-  nullptr,
-};
 static char const *const gWebMVideoEncoderCodecs[4] = {
   "opus",
   "vp8",

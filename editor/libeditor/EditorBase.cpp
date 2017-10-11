@@ -2391,13 +2391,14 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsIDOMNode>& aNode,
                                      int32_t& aOffset)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  FindBetterInsertionPoint(node, aOffset);
+  FindBetterInsertionPoint(node, aOffset, nullptr);
   aNode = do_QueryInterface(node);
 }
 
 void
 EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
-                                     int32_t& aOffset)
+                                     int32_t& aOffset,
+                                     nsCOMPtr<nsIContent>* aSelChild)
 {
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
     // There is no "better" insertion point.
@@ -2424,6 +2425,9 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
         node->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
       aNode = node->GetFirstChild();
       aOffset = 0;
+      if (aSelChild) {
+        *aSelChild = nullptr;
+      }
       return;
     }
 
@@ -2439,6 +2443,9 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
           NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
           aNode = child;
           aOffset = static_cast<int32_t>(aNode->Length());
+          if (aSelChild) {
+            *aSelChild = nullptr;
+          }
           return;
         }
       } else {
@@ -2450,6 +2457,9 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
             NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
             aNode = child;
             aOffset = static_cast<int32_t>(aNode->Length());
+            if (aSelChild) {
+              *aSelChild = nullptr;
+            }
             return;
           }
           child = child->GetPreviousSibling();
@@ -2467,10 +2477,16 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
       NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
       aNode = node->GetPreviousSibling();
       aOffset = static_cast<int32_t>(aNode->Length());
+      if (aSelChild) {
+        *aSelChild = nullptr;
+      }
       return;
     }
 
     if (node->GetParentNode() && node->GetParentNode() == root) {
+      if (aSelChild) {
+        *aSelChild = node->AsContent();
+      }
       aNode = node->GetParentNode();
       aOffset = 0;
       return;
@@ -2481,6 +2497,7 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
 nsresult
 EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
                            nsCOMPtr<nsINode>* aInOutNode,
+                           nsCOMPtr<nsIContent>* aInOutChildAtOffset,
                            int32_t* aInOutOffset,
                            nsIDocument* aDoc)
 {
@@ -2502,15 +2519,17 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
 
   nsCOMPtr<nsINode> node = *aInOutNode;
   int32_t offset = *aInOutOffset;
+  nsCOMPtr<nsIContent> child = *aInOutChildAtOffset;
+
+  MOZ_ASSERT(node->GetChildAt(offset) == *aInOutChildAtOffset);
 
   // In some cases, the node may be the anonymous div elemnt or a mozBR
   // element.  Let's try to look for better insertion point in the nearest
   // text node if there is.
-  FindBetterInsertionPoint(node, offset);
+  FindBetterInsertionPoint(node, offset, address_of(child));
 
   // If a neighboring text node already exists, use that
   if (!node->IsNodeOfType(nsINode::eTEXT)) {
-    nsIContent* child = node->GetChildAt(offset);
     if (offset && child && child->GetPreviousSibling() &&
         child->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
       node = child->GetPreviousSibling();
@@ -2566,6 +2585,7 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
 
   *aInOutNode = node;
   *aInOutOffset = offset;
+  *aInOutChildAtOffset = nullptr;
   return NS_OK;
 }
 
@@ -3278,6 +3298,7 @@ EditorBase::GetLengthOfDOMNode(nsIDOMNode* aNode,
 nsIContent*
 EditorBase::GetPriorNode(nsINode* aParentNode,
                          int32_t aOffset,
+                         nsINode* aChildAtOffset,
                          bool aEditableNode,
                          bool aNoBlockCrossing)
 {
@@ -3294,8 +3315,8 @@ EditorBase::GetPriorNode(nsINode* aParentNode,
   }
 
   // else look before the child at 'aOffset'
-  if (nsIContent* child = aParentNode->GetChildAt(aOffset)) {
-    return GetPriorNode(child, aEditableNode, aNoBlockCrossing);
+  if (aChildAtOffset) {
+    return GetPriorNode(aChildAtOffset, aEditableNode, aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -3312,6 +3333,7 @@ EditorBase::GetPriorNode(nsINode* aParentNode,
 nsIContent*
 EditorBase::GetNextNode(nsINode* aParentNode,
                         int32_t aOffset,
+                        nsINode* aChildAtOffset,
                         bool aEditableNode,
                         bool aNoBlockCrossing)
 {
@@ -3326,15 +3348,16 @@ EditorBase::GetNextNode(nsINode* aParentNode,
   }
 
   // look at the child at 'aOffset'
-  nsIContent* child = aParentNode->GetChildAt(aOffset);
-  if (child) {
-    if (aNoBlockCrossing && IsBlockNode(child)) {
-      return child;
+  if (aChildAtOffset) {
+    if (aNoBlockCrossing && IsBlockNode(aChildAtOffset)) {
+      MOZ_ASSERT(aChildAtOffset->IsContent());
+      return aChildAtOffset->AsContent();
     }
 
-    nsIContent* resultNode = GetLeftmostChild(child, aNoBlockCrossing);
+    nsIContent* resultNode = GetLeftmostChild(aChildAtOffset, aNoBlockCrossing);
     if (!resultNode) {
-      return child;
+      MOZ_ASSERT(aChildAtOffset->IsContent());
+      return aChildAtOffset->AsContent();
     }
 
     if (!IsDescendantOfEditorRoot(resultNode)) {
@@ -4078,8 +4101,12 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
 
     // Get new left and right nodes, and begin anew
     parentNode = rightNodeToJoin;
-    leftNodeToJoin = parentNode->GetChildAt(length - 1);
     rightNodeToJoin = parentNode->GetChildAt(length);
+    if (rightNodeToJoin) {
+      leftNodeToJoin = rightNodeToJoin->GetPreviousSibling();
+    } else {
+      leftNodeToJoin = nullptr;
+    }
 
     // Skip over non-editable nodes
     while (leftNodeToJoin && !IsEditable(leftNodeToJoin)) {
@@ -4540,6 +4567,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return nullptr;
   }
 
+  nsIContent* child = aRangeToDelete->GetChildAtStartOffset();
   int32_t offset = aRangeToDelete->StartOffset();
 
   // determine if the insertion point is at the beginning, middle, or end of
@@ -4652,9 +4680,9 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   // node to find out
   nsCOMPtr<nsINode> selectedNode;
   if (aAction == ePrevious) {
-    selectedNode = GetPriorNode(node, offset, true);
+    selectedNode = GetPriorNode(node, offset, child, true);
   } else if (aAction == eNext) {
-    selectedNode = GetNextNode(node, offset, true);
+    selectedNode = GetNextNode(node, offset, child, true);
   }
 
   while (selectedNode &&
@@ -4958,7 +4986,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
     nsCOMPtr<nsINode> startNode = firstRange->GetStartContainer();
     int32_t startOffset = firstRange->StartOffset();
-    FindBetterInsertionPoint(startNode, startOffset);
+    FindBetterInsertionPoint(startNode, startOffset, nullptr);
     Text* textNode = startNode->GetAsText();
     MOZ_ASSERT(textNode,
                "There must be text node if mIMETextLength is larger than 0");

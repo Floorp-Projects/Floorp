@@ -376,38 +376,6 @@ ProfileEntry::trace(JSTracer* trc)
     }
 }
 
-GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSContext* cx,
-                                                   JSScript* script
-                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&cx->geckoProfiler())
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!profiler->installed()) {
-        profiler = nullptr;
-        return;
-    }
-    spBefore_ = profiler->stackPointer();
-
-    // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
-    // Only the sp value is important.
-    profiler->pseudoStack_->pushCppFrame(
-        /* label = */ "", /* dynamicString = */ nullptr, /* sp = */ this, /* line = */ 0,
-        ProfileEntry::Kind::CPP_MARKER_FOR_JS, ProfileEntry::Category::OTHER);
-
-    profiler->pseudoStack_->pushJsFrame(
-        "js::RunScript", /* dynamicString = */ nullptr, script, script->code());
-}
-
-GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
-{
-    if (profiler == nullptr)
-        return;
-
-    profiler->pseudoStack_->pop();    // the JS frame
-    profiler->pseudoStack_->pop();    // the BEGIN_PSEUDO_JS frame
-    MOZ_ASSERT(spBefore_ == profiler->stackPointer());
-}
-
 GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bool hasProfilerFrame
                                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : profiler(&cx->geckoProfiler())

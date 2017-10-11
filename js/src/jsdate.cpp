@@ -483,7 +483,14 @@ LocalTime(double t)
 static double
 UTC(double t)
 {
-    return t - AdjustTime(t - DateTimeInfo::localTZA());
+    // Following the ES2017 specification creates undesirable results at DST
+    // transitions. For example when transitioning from PST to PDT,
+    // |new Date(2016,2,13,2,0,0).toTimeString()| returns the string value
+    // "01:00:00 GMT-0800 (PST)" instead of "03:00:00 GMT-0700 (PDT)". Follow
+    // V8 and subtract one hour before computing the offset.
+    // Spec bug: https://bugs.ecmascript.org/show_bug.cgi?id=4007
+
+    return t - AdjustTime(t - DateTimeInfo::localTZA() - msPerHour);
 }
 
 /* ES5 15.9.1.10. */
@@ -2584,7 +2591,7 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
 
 /* Interface to PRMJTime date struct. */
 static PRMJTime
-ToPRMJTime(double localTime)
+ToPRMJTime(double localTime, double utcTime)
 {
     double year = YearFromTime(localTime);
 
@@ -2598,9 +2605,7 @@ ToPRMJTime(double localTime)
     prtm.tm_wday = int8_t(WeekDay(localTime));
     prtm.tm_year = year;
     prtm.tm_yday = int16_t(DayWithinYear(localTime, year));
-
-    // XXX: DaylightSavingTA expects utc-time argument.
-    prtm.tm_isdst = (DaylightSavingTA(localTime) != 0);
+    prtm.tm_isdst = (DaylightSavingTA(utcTime) != 0);
 
     return prtm;
 }
@@ -2647,7 +2652,7 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
              */
 
             /* get a time zone string from the OS to include as a comment. */
-            PRMJTime prtm = ToPRMJTime(utcTime);
+            PRMJTime prtm = ToPRMJTime(localTime, utcTime);
             size_t tzlen = PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm);
             if (tzlen != 0) {
                 /*
@@ -2727,7 +2732,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
         strcpy(buf, js_NaN_date_str);
     } else {
         double localTime = LocalTime(utcTime);
-        PRMJTime prtm = ToPRMJTime(localTime);
+        PRMJTime prtm = ToPRMJTime(localTime, utcTime);
 
         /* Let PRMJTime format it. */
         size_t result_len = PRMJ_FormatTime(buf, sizeof buf, format, &prtm);

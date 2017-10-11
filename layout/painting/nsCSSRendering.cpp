@@ -4022,7 +4022,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       Float& ptICoord = aParams.vertical ? pt.y : pt.x;
       Float& ptBCoord = aParams.vertical ? pt.x : pt.y;
       if (aParams.vertical) {
-        ptBCoord += adv + lineThickness / 2.0;
+        ptBCoord += adv;
       }
       Float iCoordLimit = ptICoord + rectISize + lineThickness;
 
@@ -4222,7 +4222,24 @@ nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
   }
 
   gfxFloat baseline = floor(bCoord + aParams.ascent + 0.5);
+
+  // Calculate adjusted offset based on writing-mode/orientation and thickness
+  // of decoration line. The input value aParams.offset is the nominal position
+  // (offset from baseline) where we would draw a single, infinitely-thin line;
+  // but for a wavy or double line, we'll need to move the bounding rect of the
+  // decoration outwards from the baseline so that an underline remains below
+  // the glyphs, and an overline above them, despite the increased block-dir
+  // extent of the decoration.
+  //
+  // So adjustments by r.Height() are used to make the wider line styles (wavy
+  // and double) "grow" in the appropriate direction compared to the basic
+  // single line.
+  //
+  // Note that at this point, the decoration rect is being calculated in line-
+  // relative coordinates, where 'x' is line-rightwards, and 'y' is line-
+  // upwards. We'll swap them to be physical coords at the end.
   gfxFloat offset = 0.0;
+
   switch (aParams.decoration) {
     case NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE:
       offset = aParams.offset;
@@ -4238,24 +4255,46 @@ nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
         }
       }
       break;
+
     case NS_STYLE_TEXT_DECORATION_LINE_OVERLINE:
+      // For overline, we adjust the offset by lineThickness (the thickness of
+      // a single decoration line) because empirically it looks better to draw
+      // the overline just inside rather than outside the font's ascent, which
+      // is what nsTextFrame passes as aParams.offset (as fonts don't provide
+      // an explicit overline-offset).
       offset = aParams.offset - lineThickness + r.Height();
       break;
+
     case NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH: {
+      // To maintain a consistent mid-point for line-through decorations,
+      // we adjust the offset by half of the decoration rect's height.
       gfxFloat extra = floor(r.Height() / 2.0 + 0.5);
       extra = std::max(extra, lineThickness);
       offset = aParams.offset - lineThickness + extra;
       break;
     }
+
     default:
       NS_ERROR("Invalid decoration value!");
   }
 
+  // Convert line-relative coordinate system (x = line-right, y = line-up)
+  // to physical coords, and move the decoration rect to the calculated
+  // offset from baseline.
   if (aParams.vertical) {
-    r.y = baseline + floor(offset + 0.5);
     Swap(r.x, r.y);
     Swap(r.width, r.height);
+    // line-upwards in vertical mode = physical-right, so we /add/ offset
+    // to baseline. Except in sideways-lr mode, where line-upwards will be
+    // physical leftwards.
+    if (aParams.sidewaysLeft) {
+      r.x = baseline - floor(offset + 0.5);
+    } else {
+      r.x = baseline + floor(offset - r.Width() + 0.5);
+    }
   } else {
+    // line-upwards in horizontal mode = physical-up, but our physical coord
+    // system works downwards, so we /subtract/ offset from baseline.
     r.y = baseline - floor(offset + 0.5);
   }
 

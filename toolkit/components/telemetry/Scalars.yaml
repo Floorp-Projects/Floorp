@@ -991,6 +991,22 @@ gfx.advanced.layers:
     record_in_processes:
       - 'main'
 
+gfx.omtp:
+  paint_wait_ratio:
+    bug_numbers:
+      - 1386968
+    description: >
+      Ratio (in units of 1/100th of a percent) of how many times OMTP waited
+      for a paint for more than 200us, versus the total number of paints.
+    keyed: false
+    kind: uint
+    expires: "61"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - danderson@mozilla.com
+    record_in_processes:
+      - 'content'
+
 # The following section contains the form autofill related scalars.
 formautofill:
   availability:

@@ -1821,7 +1821,7 @@ class OnlyJSJitFrameIter : public JitFrameIter
 {
     void settle() {
         while (!done() && !isJSJit())
-            ++(*this);
+            JitFrameIter::operator++();
     }
 
   public:

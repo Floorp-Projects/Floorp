@@ -1949,7 +1949,9 @@ test-verify:
             default: built-projects
     tier:
         by-test-platform:
-            windows10-64-asan.*: 3
+            macosx.*: 3
+            windows.*: 3
+            # windows10-64-asan.*: 3
             default: 2
     mozharness:
         script: desktop_unittest.py

@@ -227,9 +227,6 @@ const double HTMLInputElement::kMsPerDay = 24 * 60 * 60 * 1000;
   {0xb5, 0x13, 0x7b, 0x36, 0x93, 0x43, 0xe3, 0xa0} \
 }
 
-#define PROGRESS_STR "progress"
-static const uint32_t kProgressEventInterval = 50; // ms
-
 // An helper class for the dispatching of the 'change' event.
 // This class is used when the FilePicker finished its task (or when files and
 // directories are set by some chrome/test only method).

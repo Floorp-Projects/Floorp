@@ -345,18 +345,19 @@ template<>
 class Optional<nsAString>
 {
 public:
-  Optional() : mPassed(false) {}
+  Optional()
+    : mStr(nullptr)
+  {}
 
   bool WasPassed() const
   {
-    return mPassed;
+    return !!mStr;
   }
 
   void operator=(const nsAString* str)
   {
     MOZ_ASSERT(str);
     mStr = str;
-    mPassed = true;
   }
 
   // If this code ever goes away, remove the comment pointing to it in the
@@ -365,7 +366,6 @@ public:
   {
     MOZ_ASSERT(str);
     mStr = reinterpret_cast<const nsString*>(str);
-    mPassed = true;
   }
 
   const nsAString& Value() const
@@ -379,7 +379,6 @@ private:
   Optional(const Optional& other) = delete;
   const Optional &operator=(const Optional &other) = delete;
 
-  bool mPassed;
   const nsAString* mStr;
 };
 
@@ -388,8 +387,9 @@ class NonNull
 {
 public:
   NonNull()
+    : ptr(nullptr)
 #ifdef DEBUG
-    : inited(false)
+    , inited(false)
 #endif
   {}
 

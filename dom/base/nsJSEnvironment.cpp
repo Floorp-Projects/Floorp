@@ -576,8 +576,6 @@ DumpString(const nsAString &str)
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
-static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
-
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
   : mWindowProxy(nullptr)

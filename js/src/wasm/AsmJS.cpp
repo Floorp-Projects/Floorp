@@ -6331,43 +6331,43 @@ CheckComparison(FunctionValidator& f, ParseNode* comp, Type* type)
 
     Op stmt;
     if (lhsType.isSigned() && rhsType.isSigned()) {
-        switch (comp->getOp()) {
-          case JSOP_EQ: stmt = Op::I32Eq;  break;
-          case JSOP_NE: stmt = Op::I32Ne;  break;
-          case JSOP_LT: stmt = Op::I32LtS; break;
-          case JSOP_LE: stmt = Op::I32LeS; break;
-          case JSOP_GT: stmt = Op::I32GtS; break;
-          case JSOP_GE: stmt = Op::I32GeS; break;
+        switch (comp->getKind()) {
+          case PNK_EQ: stmt = Op::I32Eq;  break;
+          case PNK_NE: stmt = Op::I32Ne;  break;
+          case PNK_LT: stmt = Op::I32LtS; break;
+          case PNK_LE: stmt = Op::I32LeS; break;
+          case PNK_GT: stmt = Op::I32GtS; break;
+          case PNK_GE: stmt = Op::I32GeS; break;
           default: MOZ_CRASH("unexpected comparison op");
         }
     } else if (lhsType.isUnsigned() && rhsType.isUnsigned()) {
-        switch (comp->getOp()) {
-          case JSOP_EQ: stmt = Op::I32Eq;  break;
-          case JSOP_NE: stmt = Op::I32Ne;  break;
-          case JSOP_LT: stmt = Op::I32LtU; break;
-          case JSOP_LE: stmt = Op::I32LeU; break;
-          case JSOP_GT: stmt = Op::I32GtU; break;
-          case JSOP_GE: stmt = Op::I32GeU; break;
+        switch (comp->getKind()) {
+          case PNK_EQ: stmt = Op::I32Eq;  break;
+          case PNK_NE: stmt = Op::I32Ne;  break;
+          case PNK_LT: stmt = Op::I32LtU; break;
+          case PNK_LE: stmt = Op::I32LeU; break;
+          case PNK_GT: stmt = Op::I32GtU; break;
+          case PNK_GE: stmt = Op::I32GeU; break;
           default: MOZ_CRASH("unexpected comparison op");
         }
     } else if (lhsType.isDouble()) {
-        switch (comp->getOp()) {
-          case JSOP_EQ: stmt = Op::F64Eq; break;
-          case JSOP_NE: stmt = Op::F64Ne; break;
-          case JSOP_LT: stmt = Op::F64Lt; break;
-          case JSOP_LE: stmt = Op::F64Le; break;
-          case JSOP_GT: stmt = Op::F64Gt; break;
-          case JSOP_GE: stmt = Op::F64Ge; break;
+        switch (comp->getKind()) {
+          case PNK_EQ: stmt = Op::F64Eq; break;
+          case PNK_NE: stmt = Op::F64Ne; break;
+          case PNK_LT: stmt = Op::F64Lt; break;
+          case PNK_LE: stmt = Op::F64Le; break;
+          case PNK_GT: stmt = Op::F64Gt; break;
+          case PNK_GE: stmt = Op::F64Ge; break;
           default: MOZ_CRASH("unexpected comparison op");
         }
     } else if (lhsType.isFloat()) {
-        switch (comp->getOp()) {
-          case JSOP_EQ: stmt = Op::F32Eq; break;
-          case JSOP_NE: stmt = Op::F32Ne; break;
-          case JSOP_LT: stmt = Op::F32Lt; break;
-          case JSOP_LE: stmt = Op::F32Le; break;
-          case JSOP_GT: stmt = Op::F32Gt; break;
-          case JSOP_GE: stmt = Op::F32Ge; break;
+        switch (comp->getKind()) {
+          case PNK_EQ: stmt = Op::F32Eq; break;
+          case PNK_NE: stmt = Op::F32Ne; break;
+          case PNK_LT: stmt = Op::F32Lt; break;
+          case PNK_LE: stmt = Op::F32Le; break;
+          case PNK_GT: stmt = Op::F32Gt; break;
+          case PNK_GE: stmt = Op::F32Ge; break;
           default: MOZ_CRASH("unexpected comparison op");
         }
     } else {
