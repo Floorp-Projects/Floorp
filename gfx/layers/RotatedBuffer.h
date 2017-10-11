@@ -236,6 +236,31 @@ private:
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
 };
 
+class DrawTargetRotatedBuffer : public RotatedBuffer
+{
+public:
+  DrawTargetRotatedBuffer(gfx::DrawTarget* aTarget, gfx::DrawTarget* aTargetOnWhite,
+                          const gfx::IntRect& aBufferRect,
+                          const gfx::IntPoint& aBufferRotation)
+    : RotatedBuffer(aBufferRect, aBufferRotation)
+    , mTarget(aTarget)
+    , mTargetOnWhite(aTargetOnWhite)
+  { }
+
+  virtual bool HaveBuffer() const override { return !!mTarget; }
+  virtual bool HaveBufferOnWhite() const override { return !!mTargetOnWhite; }
+
+  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
+
+protected:
+  virtual gfx::DrawTarget* GetDTBuffer() const override;
+  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
+
+private:
+  RefPtr<gfx::DrawTarget> mTarget;
+  RefPtr<gfx::DrawTarget> mTargetOnWhite;
+};
+
 class SourceRotatedBuffer : public RotatedBuffer
 {
 public:
