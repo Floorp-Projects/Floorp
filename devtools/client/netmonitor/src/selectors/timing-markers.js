@@ -5,7 +5,7 @@
 "use strict";
 
 function getDisplayedTimingMarker(state, marker) {
-  return state.timingMarkers.get(marker) - state.requests.get("firstStartedMillis");
+  return state.timingMarkers.get(marker) - state.requests.firstStartedMillis;
 }
 
 module.exports = {
