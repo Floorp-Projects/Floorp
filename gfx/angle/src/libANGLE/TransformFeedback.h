@@ -24,9 +24,10 @@ namespace gl
 {
 class Buffer;
 struct Caps;
+class Context;
 class Program;
 
-class TransformFeedbackState final : public angle::NonCopyable
+class TransformFeedbackState final : angle::NonCopyable
 {
   public:
     TransformFeedbackState(size_t maxIndexedBuffers);
@@ -55,12 +56,13 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
   public:
     TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps);
     virtual ~TransformFeedback();
+    Error onDestroy(const Context *context) override;
 
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
 
-    void begin(GLenum primitiveMode, Program *program);
-    void end();
+    void begin(const Context *context, GLenum primitiveMode, Program *program);
+    void end(const Context *context);
     void pause();
     void resume();
 
@@ -70,20 +72,24 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
 
     bool hasBoundProgram(GLuint program) const;
 
-    void bindGenericBuffer(Buffer *buffer);
+    void bindGenericBuffer(const Context *context, Buffer *buffer);
     const BindingPointer<Buffer> &getGenericBuffer() const;
 
-    void bindIndexedBuffer(size_t index, Buffer *buffer, size_t offset, size_t size);
+    void bindIndexedBuffer(const Context *context,
+                           size_t index,
+                           Buffer *buffer,
+                           size_t offset,
+                           size_t size);
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t index) const;
     size_t getIndexedBufferCount() const;
 
-    void detachBuffer(GLuint bufferName);
+    void detachBuffer(const Context *context, GLuint bufferName);
 
     rx::TransformFeedbackImpl *getImplementation();
     const rx::TransformFeedbackImpl *getImplementation() const;
 
   private:
-    void bindProgram(Program *program);
+    void bindProgram(const Context *context, Program *program);
 
     TransformFeedbackState mState;
     rx::TransformFeedbackImpl* mImplementation;

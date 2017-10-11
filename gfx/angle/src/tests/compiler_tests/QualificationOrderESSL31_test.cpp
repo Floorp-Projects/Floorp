@@ -13,45 +13,22 @@
 #include "compiler/translator/TranslatorESSL.h"
 #include "GLSLANG/ShaderLang.h"
 #include "tests/test_utils/compiler_test.h"
+#include "tests/test_utils/ShaderCompileTreeTest.h"
 
 using namespace sh;
 
-class QualificationVertexShaderTestESSL31 : public testing::Test
+class QualificationVertexShaderTestESSL31 : public ShaderCompileTreeTest
 {
   public:
     QualificationVertexShaderTestESSL31() {}
   protected:
-    virtual void SetUp()
-    {
-        ShBuiltInResources resources;
-        InitBuiltInResources(&resources);
-
-        mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_1_SPEC);
-        ASSERT_TRUE(mTranslator->Init(resources));
-    }
-
-    virtual void TearDown() { delete mTranslator; }
-
-    // Return true when compilation succeeds
-    bool compile(const std::string &shaderString)
-    {
-        const char *shaderStrings[] = {shaderString.c_str()};
-        mASTRoot                    = mTranslator->compileTreeForTesting(shaderStrings, 1,
-                                                      SH_INTERMEDIATE_TREE | SH_VARIABLES);
-        TInfoSink &infoSink = mTranslator->getInfoSink();
-        mInfoLog            = infoSink.info.c_str();
-        return mASTRoot != nullptr;
-    }
+    ::GLenum getShaderType() const override { return GL_VERTEX_SHADER; }
+    ShShaderSpec getShaderSpec() const override { return SH_GLES3_1_SPEC; }
 
     const TIntermSymbol *findSymbolInAST(const TString &symbolName, TBasicType basicType)
     {
         return FindSymbolNode(mASTRoot, symbolName, basicType);
     }
-
-  protected:
-    TranslatorESSL *mTranslator;
-    TIntermNode *mASTRoot;
-    std::string mInfoLog;
 };
 
 // GLSL ES 3.10 has relaxed checks on qualifier order. Any order is correct.

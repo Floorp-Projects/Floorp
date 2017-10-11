@@ -109,7 +109,7 @@ egl::Error StreamProducerNV12::validateD3DNV12Texture(void *pointer, const egl::
     textureD3D->GetDevice(&device);
     if (device != mRenderer->getDevice())
     {
-        return egl::Error(EGL_BAD_PARAMETER, "Texture not created on ANGLE D3D device");
+        return egl::EglBadParameter() << "Texture not created on ANGLE D3D device";
     }
 
     const auto planeId = static_cast<UINT>(attributes.get(EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG, 0));
@@ -117,10 +117,10 @@ egl::Error StreamProducerNV12::validateD3DNV12Texture(void *pointer, const egl::
     const auto glDesc = getGLDescFromTex(textureD3D, planeId, &errorText);
     if (!glDesc.internalFormat)
     {
-        return egl::Error(EGL_BAD_PARAMETER, errorText);
+        return egl::EglBadParameter() << errorText;
     }
-
-    return egl::Error(EGL_SUCCESS);
+    
+    return egl::NoError();
 }
 
 void StreamProducerNV12::postD3DNV12Texture(void *pointer, const egl::AttributeMap &attributes)

@@ -146,6 +146,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
   explicit FakeVideoEncoder (GMPVideoHost* hostAPI) :
     host_ (hostAPI),
     callback_ (nullptr),
+    frame_size_(BIG_FRAME),
     frames_encoded_(0) {}
 
   void InitEncode (const GMPVideoCodec& codecSettings,
@@ -155,6 +156,12 @@ class FakeVideoEncoder : public GMPVideoEncoder {
                    int32_t numberOfCores,
                    uint32_t maxPayloadSize) override {
     callback_ = callback;
+    frame_size_ = (maxPayloadSize > 0 && maxPayloadSize < BIG_FRAME) ?
+                  maxPayloadSize : BIG_FRAME;
+    frame_size_ -= 24 + 40;
+    // default header+extension size is 24, but let's leave extra room if
+    // we enable more extensions.
+    // XXX -- why isn't the size passed in based on the size minus extensions?
 
     const char *env = getenv("GMP_LOGGING");
     if (env) {
@@ -196,7 +203,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     GMPVideoEncodedFrame* f = static_cast<GMPVideoEncodedFrame*> (ftmp);
 
     err = f->CreateEmptyFrame (sizeof(eframe) +
-                               (nal_type == 5 ? sizeof(uint32_t) + BIG_FRAME : 0));
+                               (nal_type == 5 ? sizeof(uint32_t) + frame_size_ : 0));
     if (err != GMPNoErr) {
       GMPLOG (GL_ERROR, "Error allocating frame data");
       f->Destroy();
@@ -205,7 +212,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     memcpy(f->Buffer(), &eframe, sizeof(eframe));
     if (nal_type == 5) {
       // set the size for the fake iframe
-      *((uint32_t*) (f->Buffer() + sizeof(eframe))) = BIG_FRAME;
+      *((uint32_t*) (f->Buffer() + sizeof(eframe))) = frame_size_;
     }
 
     f->SetEncodedWidth(eframe.width_);
@@ -304,6 +311,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
 
   GMPVideoHost* host_;
   GMPVideoEncoderCallback* callback_;
+  uint32_t frame_size_;
   uint32_t frames_encoded_;
 };
 

@@ -780,18 +780,12 @@ protected:
                             bool bNoBlockCrossing = false);
   nsIContent* GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
                                bool aNoBlockCrossing = false);
-  nsresult GetPriorHTMLNode(nsIDOMNode* inParent, int32_t inOffset,
-                            nsCOMPtr<nsIDOMNode>* outNode,
-                            bool bNoBlockCrossing = false);
 
   nsIContent* GetNextHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode* inNode, nsCOMPtr<nsIDOMNode>* outNode,
                            bool bNoBlockCrossing = false);
   nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
                               bool aNoBlockCrossing = false);
-  nsresult GetNextHTMLNode(nsIDOMNode* inParent, int32_t inOffset,
-                           nsCOMPtr<nsIDOMNode>* outNode,
-                           bool bNoBlockCrossing = false);
 
   bool IsFirstEditableChild(nsINode* aNode);
   bool IsLastEditableChild(nsINode* aNode);

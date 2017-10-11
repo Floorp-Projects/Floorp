@@ -682,6 +682,28 @@ TransplantObject(JSContext* cx, JS::HandleObject origobj, JS::HandleObject targe
     return newIdentity;
 }
 
+JSObject*
+TransplantObjectRetainingXrayExpandos(JSContext* cx, JS::HandleObject origobj,
+                                      JS::HandleObject target)
+{
+    // Save the chain of objects that carry origobj's Xray expando properties
+    // (from all compartments). TransplantObject will blow this away; we'll
+    // restore it manually afterwards.
+    RootedObject expandoChain(cx, GetXrayTraits(origobj)->getExpandoChain(origobj));
+
+    RootedObject newIdentity(cx, TransplantObject(cx, origobj, target));
+
+    // Copy Xray expando properties to the new wrapper.
+    if (!GetXrayTraits(newIdentity)->cloneExpandoChain(cx, newIdentity, expandoChain)) {
+        // Failure here means some expandos were not copied over. The object graph
+        // and the Xray machinery are left in a consistent state, but mysteriously
+        // losing these expandos is too weird to allow.
+        MOZ_CRASH();
+    }
+
+    return newIdentity;
+}
+
 nsIGlobalObject*
 NativeGlobal(JSObject* obj)
 {

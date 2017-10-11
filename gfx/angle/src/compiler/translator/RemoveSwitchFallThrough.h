@@ -7,7 +7,7 @@
 #ifndef COMPILER_TRANSLATOR_REMOVESWITCHFALLTHROUGH_H_
 #define COMPILER_TRANSLATOR_REMOVESWITCHFALLTHROUGH_H_
 
-#include "compiler/translator/IntermNode.h"
+#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -47,4 +47,4 @@ class RemoveSwitchFallThrough : public TIntermTraverser
 
 }  // namespace sh
 
-#endif // COMPILER_TRANSLATOR_REMOVESWITCHFALLTHROUGH_H_
+#endif  // COMPILER_TRANSLATOR_REMOVESWITCHFALLTHROUGH_H_

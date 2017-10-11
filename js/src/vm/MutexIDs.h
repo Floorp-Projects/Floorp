@@ -41,8 +41,9 @@
   _(DateTimeInfoMutex,           500) \
   _(IcuTimeZoneStateMutex,       500) \
   _(ProcessExecutableRegion,     500) \
-  _(WasmCodeProfilingLabels,     500) \
   _(OffThreadPromiseState,       500) \
+  _(BufferStreamState,           500) \
+  _(WasmCodeProfilingLabels,     500) \
   _(WasmModuleTieringLock,       500) \
   _(WasmCompileTaskState,        500) \
                                       \

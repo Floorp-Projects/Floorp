@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2013-2015 The Khronos Group Inc.
+** Copyright (c) 2013-2017 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -31,14 +31,14 @@ extern "C" {
 ** This header is generated from the Khronos OpenGL / OpenGL ES XML
 ** API Registry. The current version of the Registry, generator scripts
 ** used to make the header, and the header can be found at
-**   http://www.opengl.org/registry/
+**   http://www.opengl.org/registry/egl
 **
-** Khronos $Revision: 31566 $ on $Date: 2015-06-23 08:48:48 -0700 (Tue, 23 Jun 2015) $
+** Khronos $Revision$ on $Date$
 */
 
 #include <EGL/eglplatform.h>
 
-/* Generated on date 20150623 */
+/* Generated on date 20161230 */
 
 /* Generated C header for:
  * API: egl
@@ -78,7 +78,7 @@ typedef void (*__eglMustCastToProperFunctionPointerType)(void);
 #define EGL_CONFIG_ID                     0x3028
 #define EGL_CORE_NATIVE_ENGINE            0x305B
 #define EGL_DEPTH_SIZE                    0x3025
-#define EGL_DONT_CARE                     ((EGLint)-1)
+#define EGL_DONT_CARE                     EGL_CAST(EGLint,-1)
 #define EGL_DRAW                          0x3059
 #define EGL_EXTENSIONS                    0x3055
 #define EGL_FALSE                         0
@@ -95,9 +95,9 @@ typedef void (*__eglMustCastToProperFunctionPointerType)(void);
 #define EGL_NONE                          0x3038
 #define EGL_NON_CONFORMANT_CONFIG         0x3051
 #define EGL_NOT_INITIALIZED               0x3001
-#define EGL_NO_CONTEXT                    ((EGLContext)0)
-#define EGL_NO_DISPLAY                    ((EGLDisplay)0)
-#define EGL_NO_SURFACE                    ((EGLSurface)0)
+#define EGL_NO_CONTEXT                    EGL_CAST(EGLContext,0)
+#define EGL_NO_DISPLAY                    EGL_CAST(EGLDisplay,0)
+#define EGL_NO_SURFACE                    EGL_CAST(EGLSurface,0)
 #define EGL_PBUFFER_BIT                   0x0001
 #define EGL_PIXMAP_BIT                    0x0002
 #define EGL_READ                          0x305A
@@ -197,7 +197,7 @@ typedef void *EGLClientBuffer;
 #define EGL_RGB_BUFFER                    0x308E
 #define EGL_SINGLE_BUFFER                 0x3085
 #define EGL_SWAP_BEHAVIOR                 0x3093
-#define EGL_UNKNOWN                       ((EGLint)-1)
+#define EGL_UNKNOWN                       EGL_CAST(EGLint,-1)
 #define EGL_VERTICAL_RESOLUTION           0x3091
 EGLAPI EGLBoolean EGLAPIENTRY eglBindAPI (EGLenum api);
 EGLAPI EGLenum EGLAPIENTRY eglQueryAPI (void);
@@ -224,7 +224,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglWaitClient (void);
 
 #ifndef EGL_VERSION_1_4
 #define EGL_VERSION_1_4 1
-#define EGL_DEFAULT_DISPLAY               ((EGLNativeDisplayType)0)
+#define EGL_DEFAULT_DISPLAY               EGL_CAST(EGLNativeDisplayType,0)
 #define EGL_MULTISAMPLE_RESOLVE_BOX_BIT   0x0200
 #define EGL_MULTISAMPLE_RESOLVE           0x3099
 #define EGL_MULTISAMPLE_RESOLVE_DEFAULT   0x309A
@@ -266,7 +266,7 @@ typedef void *EGLImage;
 #define EGL_FOREVER                       0xFFFFFFFFFFFFFFFFull
 #define EGL_TIMEOUT_EXPIRED               0x30F5
 #define EGL_CONDITION_SATISFIED           0x30F6
-#define EGL_NO_SYNC                       ((EGLSync)0)
+#define EGL_NO_SYNC                       EGL_CAST(EGLSync,0)
 #define EGL_SYNC_FENCE                    0x30F9
 #define EGL_GL_COLORSPACE                 0x309D
 #define EGL_GL_COLORSPACE_SRGB            0x3089
@@ -283,7 +283,7 @@ typedef void *EGLImage;
 #define EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z 0x30B7
 #define EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 0x30B8
 #define EGL_IMAGE_PRESERVED               0x30D2
-#define EGL_NO_IMAGE                      ((EGLImage)0)
+#define EGL_NO_IMAGE                      EGL_CAST(EGLImage,0)
 EGLAPI EGLSync EGLAPIENTRY eglCreateSync (EGLDisplay dpy, EGLenum type, const EGLAttrib *attrib_list);
 EGLAPI EGLBoolean EGLAPIENTRY eglDestroySync (EGLDisplay dpy, EGLSync sync);
 EGLAPI EGLint EGLAPIENTRY eglClientWaitSync (EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);

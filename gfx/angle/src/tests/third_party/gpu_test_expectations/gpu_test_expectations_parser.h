@@ -2,8 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
-#define GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
+#ifndef ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
+#define ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
+
+#include <stddef.h>
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -36,8 +39,8 @@ class GPU_EXPORT GPUTestExpectationsParser {
   const std::vector<std::string>& GetErrorMessages() const;
 
   // Get the test expectation of a given test on a given bot.
-  int32 GetTestExpectation(const std::string& test_name,
-                           const GPUTestBotConfig& bot_config) const;
+  int32_t GetTestExpectation(const std::string& test_name,
+                             const GPUTestBotConfig& bot_config) const;
 
   // Parse a list of config modifiers. If we have a valid entry with no
   // conflicts, | config | stores it, and the function returns true.
@@ -49,7 +52,7 @@ class GPU_EXPORT GPUTestExpectationsParser {
 
     std::string test_name;
     GPUTestConfig test_config;
-    int32 test_expectation;
+    int32_t test_expectation;
     size_t line_number;
   };
 
@@ -58,8 +61,9 @@ class GPU_EXPORT GPUTestExpectationsParser {
   bool ParseLine(const std::string& line_data, size_t line_number);
 
   // Update OS/GPUVendor/BuildType modifiers. May generate an error message.
-  bool UpdateTestConfig(
-      GPUTestConfig* config, int32 token, size_t line_number);
+  bool UpdateTestConfig(GPUTestConfig* config,
+                        int32_t token,
+                        size_t line_number);
 
   // Update GPUDeviceID modifier. May generate an error message.
   bool UpdateTestConfig(GPUTestConfig* config,
@@ -82,5 +86,5 @@ class GPU_EXPORT GPUTestExpectationsParser {
 
 }  // namespace gpu
 
-#endif  // GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
+#endif  // ANGLE_GPU_CONFIG_GPU_TEST_EXPECTATIONS_PARSER_H_
 

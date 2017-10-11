@@ -10,7 +10,9 @@
 
 #include "compiler/translator/UseInterfaceBlockFields.h"
 
+#include "compiler/translator/FindMain.h"
 #include "compiler/translator/IntermNode.h"
+#include "compiler/translator/IntermNode_util.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/util.h"
 
@@ -20,47 +22,9 @@ namespace sh
 namespace
 {
 
-class UseUniformBlockMembers : public TIntermTraverser
-{
-  public:
-    UseUniformBlockMembers(const InterfaceBlockList &blocks, const TSymbolTable &symbolTable)
-        : TIntermTraverser(true, false, false),
-          mBlocks(blocks),
-          mSymbolTable(symbolTable),
-          mCodeInserted(false)
-    {
-        ASSERT(mSymbolTable.atGlobalLevel());
-    }
-
-  protected:
-    bool visitAggregate(Visit visit, TIntermAggregate *node) override { return !mCodeInserted; }
-    bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override;
-
-  private:
-    void insertUseCode(TIntermSequence *sequence);
-    void AddFieldUseStatements(const ShaderVariable &var, TIntermSequence *sequence);
-
-    const InterfaceBlockList &mBlocks;
-    const TSymbolTable &mSymbolTable;
-    bool mCodeInserted;
-};
-
-bool UseUniformBlockMembers::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node)
-{
-    ASSERT(visit == PreVisit);
-    if (node->getFunctionSymbolInfo()->isMain())
-    {
-        TIntermBlock *body = node->getBody();
-        ASSERT(body);
-        insertUseCode(body->getSequence());
-        mCodeInserted = true;
-        return false;
-    }
-    return !mCodeInserted;
-}
-
-void UseUniformBlockMembers::AddFieldUseStatements(const ShaderVariable &var,
-                                                   TIntermSequence *sequence)
+void AddFieldUseStatements(const ShaderVariable &var,
+                           TIntermSequence *sequence,
+                           const TSymbolTable &symbolTable)
 {
     TString name = TString(var.name.c_str());
     if (var.isArray())
@@ -71,29 +35,13 @@ void UseUniformBlockMembers::AddFieldUseStatements(const ShaderVariable &var,
             name = name.substr(0, pos);
         }
     }
-    const TType *type;
-    TType basicType;
-    if (var.isStruct())
-    {
-        TVariable *structInfo = reinterpret_cast<TVariable *>(mSymbolTable.findGlobal(name));
-        ASSERT(structInfo);
-        const TType &structType = structInfo->getType();
-        type                    = &structType;
-    }
-    else
-    {
-        basicType = sh::GetShaderVariableBasicType(var);
-        type      = &basicType;
-    }
-    ASSERT(type);
-
-    TIntermSymbol *symbol = new TIntermSymbol(0, name, *type);
+    TIntermSymbol *symbol = ReferenceGlobalVariable(name, symbolTable);
     if (var.isArray())
     {
-        for (unsigned int i = 0; i < var.arraySize; ++i)
+        for (unsigned int i = 0u; i < var.arraySize; ++i)
         {
             TIntermBinary *element =
-                new TIntermBinary(EOpIndexDirect, symbol, TIntermTyped::CreateIndexNode(i));
+                new TIntermBinary(EOpIndexDirect, symbol->deepCopy(), CreateIndexNode(i));
             sequence->insert(sequence->begin(), element);
         }
     }
@@ -103,61 +51,57 @@ void UseUniformBlockMembers::AddFieldUseStatements(const ShaderVariable &var,
     }
 }
 
-void UseUniformBlockMembers::insertUseCode(TIntermSequence *sequence)
+void InsertUseCode(const InterfaceBlock &block, TIntermTyped *blockNode, TIntermSequence *sequence)
 {
-    for (const auto &block : mBlocks)
+    for (unsigned int i = 0; i < block.fields.size(); ++i)
+    {
+        TIntermBinary *element = new TIntermBinary(EOpIndexDirectInterfaceBlock,
+                                                   blockNode->deepCopy(), CreateIndexNode(i));
+        sequence->insert(sequence->begin(), element);
+    }
+}
+
+void InsertUseCode(TIntermSequence *sequence,
+                   const InterfaceBlockList &blocks,
+                   const TSymbolTable &symbolTable)
+{
+    for (const auto &block : blocks)
     {
         if (block.instanceName.empty())
         {
             for (const auto &var : block.fields)
             {
-                AddFieldUseStatements(var, sequence);
+                AddFieldUseStatements(var, sequence, symbolTable);
             }
         }
-        else if (block.arraySize > 0)
+        else if (block.arraySize > 0u)
         {
-            TString name      = TString(block.instanceName.c_str());
-            TVariable *ubInfo = reinterpret_cast<TVariable *>(mSymbolTable.findGlobal(name));
-            ASSERT(ubInfo);
-            TIntermSymbol *arraySymbol = new TIntermSymbol(0, name, ubInfo->getType());
-            for (unsigned int i = 0; i < block.arraySize; ++i)
+            TString name(block.instanceName.c_str());
+            TIntermSymbol *arraySymbol = ReferenceGlobalVariable(name, symbolTable);
+            for (unsigned int i = 0u; i < block.arraySize; ++i)
             {
-                TIntermBinary *instanceSymbol = new TIntermBinary(EOpIndexDirect, arraySymbol,
-                                                                  TIntermTyped::CreateIndexNode(i));
-                for (unsigned int j = 0; j < block.fields.size(); ++j)
-                {
-                    TIntermBinary *element =
-                        new TIntermBinary(EOpIndexDirectInterfaceBlock, instanceSymbol,
-                                          TIntermTyped::CreateIndexNode(j));
-                    sequence->insert(sequence->begin(), element);
-                }
+                TIntermBinary *elementSymbol =
+                    new TIntermBinary(EOpIndexDirect, arraySymbol->deepCopy(), CreateIndexNode(i));
+                InsertUseCode(block, elementSymbol, sequence);
             }
         }
         else
         {
-            TString name      = TString(block.instanceName.c_str());
-            TVariable *ubInfo = reinterpret_cast<TVariable *>(mSymbolTable.findGlobal(name));
-            ASSERT(ubInfo);
-            TIntermSymbol *blockSymbol = new TIntermSymbol(0, name, ubInfo->getType());
-            for (unsigned int i = 0; i < block.fields.size(); ++i)
-            {
-                TIntermBinary *element = new TIntermBinary(
-                    EOpIndexDirectInterfaceBlock, blockSymbol, TIntermTyped::CreateIndexNode(i));
-
-                sequence->insert(sequence->begin(), element);
-            }
+            TString name(block.instanceName.c_str());
+            TIntermSymbol *blockSymbol = ReferenceGlobalVariable(name, symbolTable);
+            InsertUseCode(block, blockSymbol, sequence);
         }
     }
 }
 
 }  // namespace anonymous
 
-void UseInterfaceBlockFields(TIntermNode *root,
+void UseInterfaceBlockFields(TIntermBlock *root,
                              const InterfaceBlockList &blocks,
                              const TSymbolTable &symbolTable)
 {
-    UseUniformBlockMembers useUniformBlock(blocks, symbolTable);
-    root->traverse(&useUniformBlock);
+    TIntermBlock *mainBody = FindMainBody(root);
+    InsertUseCode(mainBody->getSequence(), blocks, symbolTable);
 }
 
 }  // namespace sh

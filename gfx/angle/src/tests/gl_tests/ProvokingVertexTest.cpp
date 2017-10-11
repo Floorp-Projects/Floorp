@@ -140,7 +140,7 @@ TEST_P(ProvokingVertexTest, FlatTriangle)
 // Ensure that any provoking vertex shenanigans still gives correct vertex streams.
 TEST_P(ProvokingVertexTest, FlatTriWithTransformFeedback)
 {
-    // TODO(cwallez) figure out why it is broken on AMD on Mac
+// TODO(cwallez) figure out why it is broken on AMD on Mac
 #if defined(ANGLE_PLATFORM_APPLE)
     if (IsAMD())
     {
@@ -173,7 +173,7 @@ TEST_P(ProvokingVertexTest, FlatTriWithTransformFeedback)
     ASSERT_GL_NO_ERROR();
     EXPECT_EQ(vertexData[2], pixelValue);
 
-    GLvoid *mapPointer =
+    void *mapPointer =
         glMapBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(int) * 6, GL_MAP_READ_BIT);
     ASSERT_NE(nullptr, mapPointer);
 

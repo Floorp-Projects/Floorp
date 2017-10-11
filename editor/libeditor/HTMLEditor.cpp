@@ -3903,22 +3903,6 @@ HTMLEditor::GetPriorHTMLNode(nsINode* aParent,
   return GetPriorNode(aParent, aOffset, true, aNoBlockCrossing);
 }
 
-nsresult
-HTMLEditor::GetPriorHTMLNode(nsIDOMNode* aNode,
-                             int32_t aOffset,
-                             nsCOMPtr<nsIDOMNode>* aResultNode,
-                             bool aNoBlockCrossing)
-{
-  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-
-  *aResultNode = do_QueryInterface(GetPriorHTMLNode(node, aOffset,
-                                                    aNoBlockCrossing));
-  return NS_OK;
-}
-
 /**
  * GetNextHTMLNode() returns the next editable leaf node, if there is
  * one within the <body>.
@@ -3965,22 +3949,6 @@ HTMLEditor::GetNextHTMLNode(nsINode* aParent,
     return nullptr;
   }
   return content;
-}
-
-nsresult
-HTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode,
-                            int32_t aOffset,
-                            nsCOMPtr<nsIDOMNode>* aResultNode,
-                            bool aNoBlockCrossing)
-{
-  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-
-  *aResultNode = do_QueryInterface(GetNextHTMLNode(node, aOffset,
-                                                   aNoBlockCrossing));
-  return NS_OK;
 }
 
 bool

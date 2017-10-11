@@ -16,6 +16,7 @@
 
 namespace gl
 {
+class Context;
 class Framebuffer;
 class Texture;
 struct Extents;
@@ -37,24 +38,33 @@ class Blit9 : angle::NonCopyable
 
     // Copy from source surface to dest surface.
     // sourceRect, xoffset, yoffset are in D3D coordinates (0,0 in upper-left)
-    gl::Error copy2D(const gl::Framebuffer *framebuffer, const RECT &sourceRect, GLenum destFormat, const gl::Offset &destOffset, TextureStorage *storage, GLint level);
-    gl::Error copyCube(const gl::Framebuffer *framebuffer,
+    gl::Error copy2D(const gl::Context *context,
+                     const gl::Framebuffer *framebuffer,
+                     const RECT &sourceRect,
+                     GLenum destFormat,
+                     const gl::Offset &destOffset,
+                     TextureStorage *storage,
+                     GLint level);
+    gl::Error copyCube(const gl::Context *context,
+                       const gl::Framebuffer *framebuffer,
                        const RECT &sourceRect,
                        GLenum destFormat,
                        const gl::Offset &destOffset,
                        TextureStorage *storage,
                        GLenum target,
                        GLint level);
-    gl::Error copyTexture2D(const gl::Texture *source,
-                            GLint sourceLevel,
-                            const RECT &sourceRect,
-                            GLenum destFormat,
-                            const gl::Offset &destOffset,
-                            TextureStorage *storage,
-                            GLint destLevel,
-                            bool flipY,
-                            bool premultiplyAlpha,
-                            bool unmultiplyAlpha);
+    gl::Error copyTexture(const gl::Context *context,
+                          const gl::Texture *source,
+                          GLint sourceLevel,
+                          const RECT &sourceRect,
+                          GLenum destFormat,
+                          const gl::Offset &destOffset,
+                          TextureStorage *storage,
+                          GLenum destTarget,
+                          GLint destLevel,
+                          bool flipY,
+                          bool premultiplyAlpha,
+                          bool unmultiplyAlpha);
 
     // 2x2 box filter sample from source to dest.
     // Requires that source is RGB(A) and dest has the same format as source.
@@ -99,7 +109,7 @@ class Blit9 : angle::NonCopyable
                                    IDirect3DBaseTexture9 **outTexture);
     void setViewportAndShaderConstants(const RECT &sourceRect,
                                        const gl::Extents &sourceSize,
-                                       const gl::Offset &offset,
+                                       const RECT &destRect,
                                        bool flipY);
     void setCommonBlitState();
     RECT getSurfaceRect(IDirect3DSurface9 *surface) const;
