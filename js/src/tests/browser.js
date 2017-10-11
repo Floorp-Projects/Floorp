@@ -730,7 +730,7 @@ var gDialogCloserSubjects = [];
 
 function dialogCloser_observe(subject, topic, data)
 {
-  if (subject instanceof ChromeWindow && topic == 'domwindowopened' )
+  if (topic == 'domwindowopened' && subject.isChromeWindow)
   {
     gDialogCloserSubjects.push(subject);
     // timeout of 0 needed when running under reftest framework.

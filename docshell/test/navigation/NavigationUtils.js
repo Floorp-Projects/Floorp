@@ -108,7 +108,7 @@ function xpcEnumerateContentWindows(callback) {
 
   while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
-    if (/ChromeWindow/.exec(win)) {
+    if (win.isChromeWindow) {
       var docshellTreeNode = win.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsIDocShellTreeItem);

@@ -11,16 +11,36 @@
 
 vars = {
   'android_git': 'https://android.googlesource.com',
+
+  # Current revision of dEQP.
   'deqp_revision': '455d82c60b096e7bd83b6a2f5ed70c61e4bfa759',
+
+  # Current revision of glslang, the Khronos SPIRV compiler.
+  'glslang_revision': '1e275c8486325aaab34734ad9a650c0121c5efdb',
+
+  # Current revision fo the SPIRV-Headers Vulkan support library.
+  'spirv_headers_revision': 'c470b68225a04965bf87d35e143ae92f831e8110',
+
+  # Current revision of SPIRV-Tools for Vulkan.
+  'spirv_tools_revision': '68c5f0436f1d4f1f137e608780190865d0b193ca',
+
+  # Current revision of the Vulkan Validation Layers SDK.
+  'vulkan_revision': 'f47c534fee2f26f6b783209d56e0ade48e30eb8d',
 }
 
-deps_os = {
-  'win': {
-    'src/third_party/deqp/src':
-      Var('android_git') + '/platform/external/deqp@' + Var('deqp_revision'),
-  },
-  'unix': {
-    'src/third_party/deqp/src':
-      Var('android_git') + '/platform/external/deqp@' + Var('deqp_revision'),
-  }
+deps = {
+  'src/third_party/deqp/src':
+    Var('android_git') + '/platform/external/deqp@' + Var('deqp_revision'),
+
+  'src/third_party/glslang-angle/src':
+    Var('android_git') + '/platform/external/shaderc/glslang@' + Var('glslang_revision'),
+
+  'src/third_party/spirv-headers/src':
+    Var('android_git') + '/platform/external/shaderc/spirv-headers@' + Var('spirv_headers_revision'),
+
+  'src/third_party/spirv-tools-angle/src':
+    Var('android_git') + '/platform/external/shaderc/spirv-tools@' + Var('spirv_tools_revision'),
+
+  'src/third_party/vulkan-validation-layers/src':
+    Var('android_git') + '/platform/external/vulkan-validation-layers@' + Var('vulkan_revision'),
 }

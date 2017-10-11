@@ -52,9 +52,7 @@ Preprocessor::~Preprocessor()
     delete mImpl;
 }
 
-bool Preprocessor::init(size_t count,
-                        const char * const string[],
-                        const int length[])
+bool Preprocessor::init(size_t count, const char *const string[], const int length[])
 {
     static const int kDefaultGLSLVersion = 100;
 
@@ -80,23 +78,23 @@ void Preprocessor::lex(Token *token)
         mImpl->macroExpander.lex(token);
         switch (token->type)
         {
-          // We should not be returning internal preprocessing tokens.
-          // Convert preprocessing tokens to compiler tokens or report
-          // diagnostics.
-          case Token::PP_HASH:
-              UNREACHABLE();
-              break;
-          case Token::PP_NUMBER:
-            mImpl->diagnostics->report(Diagnostics::PP_INVALID_NUMBER,
-                                       token->location, token->text);
-            break;
-          case Token::PP_OTHER:
-            mImpl->diagnostics->report(Diagnostics::PP_INVALID_CHARACTER,
-                                       token->location, token->text);
-            break;
-          default:
-            validToken = true;
-            break;
+            // We should not be returning internal preprocessing tokens.
+            // Convert preprocessing tokens to compiler tokens or report
+            // diagnostics.
+            case Token::PP_HASH:
+                UNREACHABLE();
+                break;
+            case Token::PP_NUMBER:
+                mImpl->diagnostics->report(Diagnostics::PP_INVALID_NUMBER, token->location,
+                                           token->text);
+                break;
+            case Token::PP_OTHER:
+                mImpl->diagnostics->report(Diagnostics::PP_INVALID_CHARACTER, token->location,
+                                           token->text);
+                break;
+            default:
+                validToken = true;
+                break;
         }
     }
 }

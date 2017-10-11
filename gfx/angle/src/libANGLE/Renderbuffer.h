@@ -28,19 +28,24 @@ namespace gl
 // attachment point.
 
 class Renderbuffer final : public egl::ImageSibling,
-                           public gl::FramebufferAttachmentObject,
                            public LabeledObject
 {
   public:
     Renderbuffer(rx::RenderbufferImpl *impl, GLuint id);
     virtual ~Renderbuffer();
 
+    Error onDestroy(const Context *context) override;
+
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
 
-    Error setStorage(GLenum internalformat, size_t width, size_t height);
-    Error setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height);
-    Error setStorageEGLImageTarget(egl::Image *imageTarget);
+    Error setStorage(const Context *context, GLenum internalformat, size_t width, size_t height);
+    Error setStorageMultisample(const Context *context,
+                                size_t samples,
+                                GLenum internalformat,
+                                size_t width,
+                                size_t height);
+    Error setStorageEGLImageTarget(const Context *context, egl::Image *imageTarget);
 
     rx::RenderbufferImpl *getImplementation() const;
 
@@ -56,16 +61,19 @@ class Renderbuffer final : public egl::ImageSibling,
     GLuint getStencilSize() const;
 
     // FramebufferAttachmentObject Impl
-    Extents getAttachmentSize(const FramebufferAttachment::Target &target) const override;
-    const Format &getAttachmentFormat(
-        const FramebufferAttachment::Target & /*target*/) const override
+    Extents getAttachmentSize(const ImageIndex &imageIndex) const override;
+    const Format &getAttachmentFormat(GLenum /*binding*/,
+                                      const ImageIndex & /*imageIndex*/) const override
     {
         return getFormat();
     }
-    GLsizei getAttachmentSamples(const FramebufferAttachment::Target &/*target*/) const override { return getSamples(); }
+    GLsizei getAttachmentSamples(const ImageIndex & /*imageIndex*/) const override
+    {
+        return getSamples();
+    }
 
-    void onAttach() override;
-    void onDetach() override;
+    void onAttach(const Context *context) override;
+    void onDetach(const Context *context) override;
     GLuint getId() const override;
 
   private:

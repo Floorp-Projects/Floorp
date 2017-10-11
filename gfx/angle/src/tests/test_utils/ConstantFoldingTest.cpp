@@ -15,51 +15,41 @@
 
 using namespace sh;
 
-void ConstantFoldingTest::SetUp()
-{
-    allocator.push();
-    SetGlobalPoolAllocator(&allocator);
-    ShBuiltInResources resources;
-    InitBuiltInResources(&resources);
-
-    mTranslatorESSL = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_GLES3_SPEC);
-    ASSERT_TRUE(mTranslatorESSL->Init(resources));
-}
-
-void ConstantFoldingTest::TearDown()
-{
-    delete mTranslatorESSL;
-    SetGlobalPoolAllocator(NULL);
-    allocator.pop();
-}
-
-void ConstantFoldingTest::compile(const std::string &shaderString)
-{
-    const char *shaderStrings[] = {shaderString.c_str()};
-
-    mASTRoot = mTranslatorESSL->compileTreeForTesting(shaderStrings, 1, SH_OBJECT_CODE);
-    if (!mASTRoot)
-    {
-        TInfoSink &infoSink = mTranslatorESSL->getInfoSink();
-        FAIL() << "Shader compilation into ESSL failed " << infoSink.info.c_str();
-    }
-}
-
-bool ConstantFoldingTest::hasWarning()
-{
-    TInfoSink &infoSink = mTranslatorESSL->getInfoSink();
-    return infoSink.info.str().find("WARNING:") != std::string::npos;
-}
-
 void ConstantFoldingExpressionTest::evaluateFloat(const std::string &floatExpression)
 {
     std::stringstream shaderStream;
-    shaderStream << "#version 300 es\n"
+    shaderStream << "#version 310 es\n"
                     "precision mediump float;\n"
                     "out float my_FragColor;\n"
                     "void main()\n"
                     "{\n"
                  << "    my_FragColor = " << floatExpression << ";\n"
                  << "}\n";
-    compile(shaderStream.str());
+    compileAssumeSuccess(shaderStream.str());
+}
+
+void ConstantFoldingExpressionTest::evaluateInt(const std::string &intExpression)
+{
+    std::stringstream shaderStream;
+    shaderStream << "#version 310 es\n"
+                    "precision mediump int;\n"
+                    "out int my_FragColor;\n"
+                    "void main()\n"
+                    "{\n"
+                 << "    my_FragColor = " << intExpression << ";\n"
+                 << "}\n";
+    compileAssumeSuccess(shaderStream.str());
+}
+
+void ConstantFoldingExpressionTest::evaluateUint(const std::string &uintExpression)
+{
+    std::stringstream shaderStream;
+    shaderStream << "#version 310 es\n"
+                    "precision mediump int;\n"
+                    "out uint my_FragColor;\n"
+                    "void main()\n"
+                    "{\n"
+                 << "    my_FragColor = " << uintExpression << ";\n"
+                 << "}\n";
+    compileAssumeSuccess(shaderStream.str());
 }

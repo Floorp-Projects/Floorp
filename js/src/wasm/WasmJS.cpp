@@ -832,22 +832,14 @@ GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber, MutableBytes
 
     JSObject* unwrapped = CheckedUnwrap(obj);
 
-    size_t byteLength = 0;
-    uint8_t* ptr = nullptr;
-    if (unwrapped && unwrapped->is<TypedArrayObject>()) {
-        TypedArrayObject& view = unwrapped->as<TypedArrayObject>();
-        byteLength = view.byteLength();
-        ptr = (uint8_t*)view.viewDataEither().unwrap();
-    } else if (unwrapped && unwrapped->is<ArrayBufferObject>()) {
-        ArrayBufferObject& buffer = unwrapped->as<ArrayBufferObject>();
-        byteLength = buffer.byteLength();
-        ptr = buffer.dataPointer();
-    } else {
+    SharedMem<uint8_t*> dataPointer;
+    size_t byteLength;
+    if (!unwrapped || !IsBufferSource(unwrapped, &dataPointer, &byteLength)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
         return false;
     }
 
-    if (!(*bytecode)->append(ptr, byteLength)) {
+    if (!(*bytecode)->append(dataPointer.unwrap(), byteLength)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -2130,6 +2122,286 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+EnsureStreamSupport(JSContext* cx)
+{
+    if (!EnsurePromiseSupport(cx))
+        return false;
+
+    if (!cx->runtime()->consumeStreamCallback) {
+        JS_ReportErrorASCII(cx, "WebAssembly.compileStreaming not supported in this runtime.");
+        return false;
+    }
+
+    return true;
+}
+
+static bool
+RejectWithErrorNumber(JSContext* cx, uint32_t errorNumber, Handle<PromiseObject*> promise)
+{
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
+    return RejectWithPendingException(cx, promise);
+}
+
+struct CompileStreamTask : OffThreadPromiseTask, JS::StreamConsumer
+{
+    SharedCompileArgs      compileArgs;
+    MutableBytes           streamBuffer;
+    UniqueChars            compileError;
+    Maybe<uint32_t>        streamError;
+    SharedModule           module;
+    bool                   instantiate;
+    PersistentRootedObject importObj;
+
+    CompileStreamTask(JSContext* cx, Handle<PromiseObject*> promise,
+                      const CompileArgs& compileArgs, bool instantiate,
+                      HandleObject importObj)
+      : OffThreadPromiseTask(cx, promise),
+        compileArgs(&compileArgs),
+        instantiate(instantiate),
+        importObj(cx, importObj)
+    {
+        MOZ_ASSERT_IF(importObj, instantiate);
+    }
+
+    bool init(JSContext* cx) {
+        streamBuffer = cx->new_<ShareableBytes>();
+        if (!streamBuffer)
+            return false;
+        return OffThreadPromiseTask::init(cx);
+    }
+
+    bool consumeChunk(const uint8_t* begin, size_t length) override {
+        if (!streamBuffer->append(begin, length)) {
+            streamError = Some(JSMSG_OUT_OF_MEMORY);
+            dispatchResolveAndDestroy();
+            return false;
+        }
+        return true;
+    }
+
+    void streamClosed(JS::StreamConsumer::CloseReason closeReason) override {
+        switch (closeReason) {
+          case JS::StreamConsumer::EndOfFile:
+            module = CompileInitialTier(*streamBuffer, *compileArgs, &compileError);
+            break;
+          case JS::StreamConsumer::Error:
+            streamError = Some(JSMSG_WASM_STREAM_ERROR);
+            break;
+        }
+        dispatchResolveAndDestroy();
+    }
+
+    bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
+        MOZ_ASSERT_IF(module, !streamError && !compileError);
+        MOZ_ASSERT_IF(!module, !!streamError ^ !!compileError);
+        return module
+               ? Resolve(cx, *module, *compileArgs, promise, instantiate, importObj)
+               : streamError
+                 ? RejectWithErrorNumber(cx, *streamError, promise)
+                 : Reject(cx, *compileArgs, Move(compileError), promise);
+    }
+};
+
+// A short-lived object that captures the arguments of a
+// WebAssembly.{compileStreaming,instantiateStreaming} while waiting for
+// the Promise<Response> to resolve to a (hopefully) Promise.
+class ResolveResponseClosure : public NativeObject
+{
+    static const unsigned COMPILE_ARGS_SLOT = 0;
+    static const unsigned PROMISE_OBJ_SLOT = 1;
+    static const unsigned INSTANTIATE_SLOT = 2;
+    static const unsigned IMPORT_OBJ_SLOT = 3;
+    static const ClassOps classOps_;
+
+    static void finalize(FreeOp* fop, JSObject* obj) {
+        obj->as<ResolveResponseClosure>().compileArgs().Release();
+    }
+
+  public:
+    static const unsigned RESERVED_SLOTS = 4;
+    static const Class class_;
+
+    static ResolveResponseClosure* create(JSContext* cx, const CompileArgs& args,
+                                          HandleObject promise, bool instantiate,
+                                          HandleObject importObj)
+    {
+        MOZ_ASSERT_IF(importObj, instantiate);
+
+        AutoSetNewObjectMetadata metadata(cx);
+        auto* obj = NewObjectWithGivenProto<ResolveResponseClosure>(cx, nullptr);
+        if (!obj)
+            return nullptr;
+
+        args.AddRef();
+        obj->setReservedSlot(COMPILE_ARGS_SLOT, PrivateValue(const_cast<CompileArgs*>(&args)));
+        obj->setReservedSlot(PROMISE_OBJ_SLOT, ObjectValue(*promise));
+        obj->setReservedSlot(INSTANTIATE_SLOT, BooleanValue(instantiate));
+        obj->setReservedSlot(IMPORT_OBJ_SLOT, ObjectOrNullValue(importObj));
+        return obj;
+    }
+
+    const CompileArgs& compileArgs() const {
+        return *(const CompileArgs*)getReservedSlot(COMPILE_ARGS_SLOT).toPrivate();
+    }
+    PromiseObject& promise() const {
+        return getReservedSlot(PROMISE_OBJ_SLOT).toObject().as<PromiseObject>();
+    }
+    bool instantiate() const {
+        return getReservedSlot(INSTANTIATE_SLOT).toBoolean();
+    }
+    JSObject* importObj() const {
+        return getReservedSlot(IMPORT_OBJ_SLOT).toObjectOrNull();
+    }
+};
+
+const ClassOps ResolveResponseClosure::classOps_ =
+{
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    ResolveResponseClosure::finalize
+};
+
+const Class ResolveResponseClosure::class_ =
+{
+    "WebAssembly ResolveResponseClosure",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(ResolveResponseClosure::RESERVED_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
+    &ResolveResponseClosure::classOps_,
+};
+
+static ResolveResponseClosure*
+ToResolveResponseClosure(CallArgs args)
+{
+    return &args.callee().as<JSFunction>().getExtendedSlot(0).toObject().as<ResolveResponseClosure>();
+}
+
+static bool
+ResolveResponse_OnFulfilled(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs callArgs = CallArgsFromVp(argc, vp);
+
+    Rooted<ResolveResponseClosure*> closure(cx, ToResolveResponseClosure(callArgs));
+    Rooted<PromiseObject*> promise(cx, &closure->promise());
+    const CompileArgs& compileArgs = closure->compileArgs();
+    bool instantiate = closure->instantiate();
+    Rooted<JSObject*> importObj(cx, closure->importObj());
+
+    auto task = cx->make_unique<CompileStreamTask>(cx, promise, compileArgs, instantiate, importObj);
+    if (!task || !task->init(cx))
+        return false;
+
+    if (!callArgs.get(0).isObject())
+        return RejectWithErrorNumber(cx, JSMSG_BAD_RESPONSE_VALUE, promise);
+
+    RootedObject response(cx, &callArgs.get(0).toObject());
+    if (!cx->runtime()->consumeStreamCallback(cx, response, JS::MimeType::Wasm, task.get()))
+        return RejectWithPendingException(cx, promise);
+
+    Unused << task.release();
+
+    callArgs.rval().setUndefined();
+    return true;
+}
+
+static bool
+ResolveResponse_OnRejected(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<ResolveResponseClosure*> closure(cx, ToResolveResponseClosure(args));
+    Rooted<PromiseObject*> promise(cx, &closure->promise());
+
+    if (!PromiseObject::reject(cx, promise, args.get(0)))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+ResolveResponse(JSContext* cx, CallArgs callArgs, Handle<PromiseObject*> promise,
+                bool instantiate = false, HandleObject importObj = nullptr)
+{
+    MOZ_ASSERT_IF(importObj, instantiate);
+
+    SharedCompileArgs compileArgs = InitCompileArgs(cx);
+    if (!compileArgs)
+        return false;
+
+    RootedObject closure(cx, ResolveResponseClosure::create(cx, *compileArgs, promise,
+                                                            instantiate, importObj));
+    if (!closure)
+        return false;
+
+    RootedFunction onResolved(cx, NewNativeFunction(cx, ResolveResponse_OnFulfilled, 1, nullptr,
+                                                    gc::AllocKind::FUNCTION_EXTENDED));
+    if (!onResolved)
+        return false;
+
+    RootedFunction onRejected(cx, NewNativeFunction(cx, ResolveResponse_OnRejected, 1, nullptr,
+                                                    gc::AllocKind::FUNCTION_EXTENDED));
+    if (!onResolved)
+        return false;
+
+    onResolved->setExtendedSlot(0, ObjectValue(*closure));
+    onRejected->setExtendedSlot(0, ObjectValue(*closure));
+
+    RootedObject resolve(cx, PromiseObject::unforgeableResolve(cx, callArgs.get(0)));
+    if (!resolve)
+        return false;
+
+    return JS::AddPromiseReactions(cx, resolve, onResolved, onRejected);
+}
+
+static bool
+WebAssembly_compileStreaming(JSContext* cx, unsigned argc, Value* vp)
+{
+    if (!EnsureStreamSupport(cx))
+        return false;
+
+    Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+    if (!promise)
+        return false;
+
+    CallArgs callArgs = CallArgsFromVp(argc, vp);
+
+    if (!ResolveResponse(cx, callArgs, promise))
+        return RejectWithPendingException(cx, promise, callArgs);
+
+    callArgs.rval().setObject(*promise);
+    return true;
+}
+
+static bool
+WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc, Value* vp)
+{
+    if (!EnsureStreamSupport(cx))
+        return false;
+
+    Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+    if (!promise)
+        return false;
+
+    CallArgs callArgs = CallArgsFromVp(argc, vp);
+
+    RootedObject firstArg(cx);
+    RootedObject importObj(cx);
+    if (!GetInstantiateArgs(cx, callArgs, &firstArg, &importObj))
+        return RejectWithPendingException(cx, promise, callArgs);
+
+    if (!ResolveResponse(cx, callArgs, promise, true, importObj))
+        return RejectWithPendingException(cx, promise, callArgs);
+
+    callArgs.rval().setObject(*promise);
+    return true;
+}
+
 static const JSFunctionSpec WebAssembly_static_methods[] =
 {
 #if JS_HAS_TOSOURCE
@@ -2138,6 +2410,8 @@ static const JSFunctionSpec WebAssembly_static_methods[] =
     JS_FN("compile", WebAssembly_compile, 1, 0),
     JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
     JS_FN("validate", WebAssembly_validate, 1, 0),
+    JS_FN("compileStreaming", WebAssembly_compileStreaming, 1, 0),
+    JS_FN("instantiateStreaming", WebAssembly_instantiateStreaming, 1, 0),
     JS_FS_END
 };
 

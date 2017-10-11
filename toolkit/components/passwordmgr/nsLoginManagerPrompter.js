@@ -736,7 +736,7 @@ LoginManagerPrompter.prototype = {
       // There may be no applicable window e.g. in a Sandbox or JSM.
       this._chromeWindow = null;
       this._browser = null;
-    } else if (aWindow instanceof Ci.nsIDOMChromeWindow) {
+    } else if (aWindow.isChromeWindow) {
       this._chromeWindow = aWindow;
       // needs to be set explicitly using setBrowser
       this._browser = null;

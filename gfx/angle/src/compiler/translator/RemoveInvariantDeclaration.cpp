@@ -6,7 +6,7 @@
 
 #include "compiler/translator/RemoveInvariantDeclaration.h"
 
-#include "compiler/translator/IntermNode.h"
+#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -22,16 +22,12 @@ class RemoveInvariantDeclarationTraverser : public TIntermTraverser
     RemoveInvariantDeclarationTraverser() : TIntermTraverser(true, false, false) {}
 
   private:
-    bool visitAggregate(Visit visit, TIntermAggregate *node) override
+    bool visitInvariantDeclaration(Visit visit, TIntermInvariantDeclaration *node) override
     {
-        if (node->getOp() == EOpInvariantDeclaration)
-        {
-            TIntermSequence emptyReplacement;
-            mMultiReplacements.push_back(NodeReplaceWithMultipleEntry(getParentNode()->getAsBlock(),
-                                                                      node, emptyReplacement));
-            return false;
-        }
-        return true;
+        TIntermSequence emptyReplacement;
+        mMultiReplacements.push_back(
+            NodeReplaceWithMultipleEntry(getParentNode()->getAsBlock(), node, emptyReplacement));
+        return false;
     }
 };
 

@@ -4,6 +4,24 @@
 
 var sdputils = {
 
+// Finds the codec id / payload type given a codec format
+// (e.g., "VP8", "VP9/90000"). `offset` tells us which one to use in case of
+// multiple matches.
+findCodecId: function(sdp, format, offset = 0) {
+  let regex = new RegExp("rtpmap:\([0-9]+\) " + format, "gi");
+  let match;
+  for (let i = 0; i <= offset; ++i) {
+    match = regex.exec(sdp);
+    if (!match) {
+      throw new Error("Couldn't find offset " + i + " of codec " + format
+        + " while looking for offset " + offset + " in sdp:\n" + sdp);
+    }
+  }
+  // match[0] is the full matched string
+  // match[1] is the first parenthesis group
+  return match[1];
+},
+
 checkSdpAfterEndOfTrickle: function(sdp, testOptions, label) {
   info("EOC-SDP: " + JSON.stringify(sdp));
 
@@ -30,7 +48,7 @@ checkSdpCLineNotDefault: function(sdpStr, label) {
 },
 
 // Note, we don't bother removing the fmtp lines, which makes a good test
-// for some SDP parsing issues.  It would be good to have a "removeAllButCodec(sdp, codec)" too.
+// for some SDP parsing issues. 
 removeCodec: function(sdp, codec) {
     var updated_sdp = sdp.replace(new RegExp("a=rtpmap:" + codec + ".*\\/90000\\r\\n",""),"");
     updated_sdp = updated_sdp.replace(new RegExp("(RTP\\/SAVPF.*)( " + codec + ")(.*\\r\\n)",""),"$1$3");
@@ -38,6 +56,15 @@ removeCodec: function(sdp, codec) {
     updated_sdp = updated_sdp.replace(new RegExp("a=rtcp-fb:" + codec + " nack pli\\r\\n",""),"");
     updated_sdp = updated_sdp.replace(new RegExp("a=rtcp-fb:" + codec + " ccm fir\\r\\n",""),"");
   return updated_sdp;
+},
+
+removeAllButPayloadType: function(sdp, pt) {
+  return sdp.replace(new RegExp("m=(\\w+ \\w+) UDP/TLS/RTP/SAVPF .*" + pt + ".*\\r\\n", "gi"),
+                     "m=$1 UDP/TLS/RTP/SAVPF " + pt + "\r\n");
+},
+
+removeRtpMapForPayloadType: function(sdp, pt) {
+  return sdp.replace(new RegExp("a=rtpmap:" + pt + ".*\\r\\n", "gi"), "");
 },
 
 removeRtcpMux: function(sdp) {
@@ -145,7 +172,8 @@ verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
   } else {
     ok(desc.sdp.includes("m=video"), "video m-line is present in SDP");
     if (testOptions.h264) {
-      ok(desc.sdp.includes("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
+      ok(desc.sdp.includes("a=rtpmap:126 H264/90000") ||
+         desc.sdp.includes("a=rtpmap:97 H264/90000"), "H.264 codec is present in SDP");
     } else {
 	ok(desc.sdp.includes("a=rtpmap:120 VP8/90000") ||
 	   desc.sdp.includes("a=rtpmap:121 VP9/90000"), "VP8 or VP9 codec is present in SDP");
