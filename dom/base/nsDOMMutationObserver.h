@@ -575,11 +575,27 @@ public:
   }
 
   // static methods
-  static void HandleMutations()
+  static void HandleMutations(mozilla::AutoSlowOperation& aAso)
   {
     if (sScheduledMutationObservers) {
-      HandleMutationsInternal();
+      HandleMutationsInternal(aAso);
     }
+  }
+
+  static bool AllScheduledMutationObserversAreSuppressed()
+  {
+    if (sScheduledMutationObservers) {
+      uint32_t len = sScheduledMutationObservers->Length();
+      if (len > 0) {
+        for (uint32_t i = 0; i < len; ++i) {
+          if (!(*sScheduledMutationObservers)[i]->Suppressed()) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   static void EnterMutationHandling();
@@ -613,7 +629,7 @@ protected:
     return mOwner && nsGlobalWindow::Cast(mOwner)->IsInSyncOperation();
   }
 
-  static void HandleMutationsInternal();
+  static void HandleMutationsInternal(mozilla::AutoSlowOperation& aAso);
 
   static void AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver,
                                            uint32_t aMutationLevel);
@@ -641,7 +657,6 @@ protected:
 
   static uint64_t                                    sCount;
   static AutoTArray<RefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
-  static nsDOMMutationObserver*                      sCurrentObserver;
 
   static uint32_t                                    sMutationLevel;
   static AutoTArray<AutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
