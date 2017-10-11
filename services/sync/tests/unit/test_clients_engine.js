@@ -1352,7 +1352,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
       }],
       version: "48",
       protocols: ["1.5"],
-    }), now - 5));
+    }), now - 10));
 
     // Simulate reboot
     SyncEngine.prototype._uploadOutgoing = oldUploadOutgoing;
@@ -1792,24 +1792,6 @@ add_task(async function process_incoming_refreshes_known_stale_clients() {
 
   stubProcessIncoming.restore();
   stubRefresh.restore();
-});
-
-add_task(async function process_incoming_refreshes_known_stale_clients() {
-  Services.prefs.clearUserPref("services.sync.clients.lastModifiedOnProcessCommands");
-  engine._localClientLastModified = Math.round(Date.now() / 1000);
-
-  const stubRemoveLocalCommand = sinon.stub(engine, "removeLocalCommand");
-  const tabProcessedSpy = sinon.spy(engine, "_handleDisplayURIs");
-  engine.localCommands = [{ command: "displayURI", args: ["https://foo.bar", "fxaid1", "foo"] }];
-
-  await engine.processIncomingCommands();
-  ok(tabProcessedSpy.calledOnce);
-  // Let's say we failed to upload and we end up calling processIncomingCommands again
-  await engine.processIncomingCommands();
-  ok(tabProcessedSpy.calledOnce);
-
-  tabProcessedSpy.restore();
-  stubRemoveLocalCommand.restore();
 });
 
 function run_test() {
