@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <script>
+            o1 = document.createElement('style');
+            o2 = document.createElement('style');
+            o3 = document.createElement('style');
+            o4 = document.implementation.createHTMLDocument().documentElement;
+            document.replaceChild(o4, document.documentElement);
+            document.head.appendChild(o1);
+            document.head.appendChild(o2);
+            document.head.appendChild(o3);
+            o1.scrollLeft = 2;
+            document.styleSheets[0].insertRule("*:first-line { border-inline-start-color: green; }", 0);
+            document.styleSheets[0].insertRule("* {float: left ; }", 0);
+            window.find('foobar', true, false, true, true, true, false);
+            document.styleSheets[2].insertRule("*:first-line { border: 10px solid;", 0);
+            window.find('foobar', true, true, true, false, false, false);
+            o3.parentNode.removeChild(o3);
+        </script>
+    </head>
+    <body></body>
+</html>
