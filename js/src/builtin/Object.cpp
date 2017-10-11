@@ -1370,37 +1370,38 @@ js::IdToStringOrSymbol(JSContext* cx, HandleId id, MutableHandleValue result)
     return true;
 }
 
-/* ES6 draft rev 25 (2014 May 22) 19.1.2.8.1 */
+// ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
+// 19.1.2.10.1 Runtime Semantics: GetOwnPropertyKeys ( O, Type )
 bool
 js::GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags)
 {
-    // Steps 1-2.
+    // Step 1.
     RootedObject obj(cx, ToObject(cx, args.get(0)));
     if (!obj)
         return false;
 
-    // Steps 3-10.
+    // Steps 2-4.
     AutoIdVector keys(cx);
     if (!GetPropertyKeys(cx, obj, flags, &keys))
         return false;
 
-    // Step 11.
-    AutoValueVector vals(cx);
-    if (!vals.resize(keys.length()))
+    // Step 5 (Inlined CreateArrayFromList).
+    RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, keys.length()));
+    if (!array)
         return false;
 
+    array->ensureDenseInitializedLength(cx, 0, keys.length());
+
+    RootedValue val(cx);
     for (size_t i = 0, len = keys.length(); i < len; i++) {
         MOZ_ASSERT_IF(JSID_IS_SYMBOL(keys[i]), flags & JSITER_SYMBOLS);
         MOZ_ASSERT_IF(!JSID_IS_SYMBOL(keys[i]), !(flags & JSITER_SYMBOLSONLY));
-        if (!IdToStringOrSymbol(cx, keys[i], vals[i]))
+        if (!IdToStringOrSymbol(cx, keys[i], &val))
             return false;
+        array->initDenseElement(i, val);
     }
 
-    JSObject* aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
-    if (!aobj)
-        return false;
-
-    args.rval().setObject(*aobj);
+    args.rval().setObject(*array);
     return true;
 }
 
