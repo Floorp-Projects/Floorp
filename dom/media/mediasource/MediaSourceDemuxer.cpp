@@ -211,6 +211,12 @@ MediaSourceDemuxer::DoDetachSourceBuffer(
       mVideoTrack = nullptr;
     }
   }
+
+  for (auto& demuxer : mDemuxers) {
+    if (demuxer->HasManager(aSourceBuffer)) {
+      demuxer->DetachManager();
+    }
+  }
   ScanSourceBuffersForContent();
 }
 
@@ -345,6 +351,9 @@ MediaSourceTrackDemuxer::Reset()
     NS_NewRunnableFunction("MediaSourceTrackDemuxer::Reset", [self]() {
       self->mNextSample.reset();
       self->mReset = true;
+      if (!self->mManager) {
+        return;
+      }
       self->mManager->Seek(self->mType, TimeUnit::Zero(), TimeUnit::Zero());
       {
         MonitorAutoLock mon(self->mMonitor);
@@ -376,6 +385,9 @@ MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(
 media::TimeIntervals
 MediaSourceTrackDemuxer::GetBuffered()
 {
+  if (!mManager) {
+    return media::TimeIntervals();
+  }
   return mManager->Buffered();
 }
 
@@ -386,7 +398,7 @@ MediaSourceTrackDemuxer::BreakCycles()
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction("MediaSourceTrackDemuxer::BreakCycles", [self]() {
       self->mParent = nullptr;
-      self->mManager = nullptr;
+      self->DetachManager();
     });
   mParent->GetTaskQueue()->Dispatch(task.forget());
 }
@@ -394,6 +406,11 @@ MediaSourceTrackDemuxer::BreakCycles()
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(const TimeUnit& aTime)
 {
+  if (!mManager) {
+    return SeekPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("manager is detached.")), __func__);
+  }
   TimeIntervals buffered = mManager->Buffered(mType);
   // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
   // to be twice as big as the fuzz value. We only want to allow EOS_FUZZ gap.
@@ -441,6 +458,11 @@ MediaSourceTrackDemuxer::DoSeek(const TimeUnit& aTime)
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 {
+  if (!mManager) {
+    return SamplesPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("manager is detached.")), __func__);
+  }
   if (mReset) {
     // If a seek (or reset) was recently performed, we ensure that the data
     // we are about to retrieve is still available.
@@ -489,6 +511,11 @@ RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(
   const TimeUnit& aTimeThreadshold)
 {
+  if (!mManager) {
+    return SkipAccessPointPromise::CreateAndReject(
+      SkipFailureHolder(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                        RESULT_DETAIL("manager is detached.")), 0), __func__);
+  }
   uint32_t parsed = 0;
   // Ensure that the data we are about to skip to is still available.
   TimeIntervals buffered = mManager->Buffered(mType);
@@ -507,6 +534,18 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(
     mManager->IsEnded() ? NS_ERROR_DOM_MEDIA_END_OF_STREAM :
                           NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, parsed);
   return SkipAccessPointPromise::CreateAndReject(holder, __func__);
+}
+
+bool
+MediaSourceTrackDemuxer::HasManager(TrackBuffersManager* aManager) const
+{
+  return mManager == aManager;
+}
+
+void
+MediaSourceTrackDemuxer::DetachManager()
+{
+  mManager = nullptr;
 }
 
 } // namespace mozilla
