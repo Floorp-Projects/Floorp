@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 18.2.4
 esid: sec-parsefloat-string
 description: >
   Leading U+180E is not recognized as whitespace
@@ -17,7 +18,7 @@ info: >
   4. If neither trimmedString nor any prefix of trimmedString satisfies the
      syntax of a StrDecimalLiteral (see 7.1.3.1), return NaN.
   ...
-
+features: [u180e]
 ---*/
 
 var mongolianVowelSeparator = "\u180E";

@@ -1,6 +1,10 @@
 // file: decimalToHexString.js
 // Copyright (C) 2017 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    Collection of functions used to assert the correctness of various encoding operations.
+---*/
 
 function decimalToHexString(n) {
   var hex = "0123456789ABCDEF";

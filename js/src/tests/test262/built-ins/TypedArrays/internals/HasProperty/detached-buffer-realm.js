@@ -15,8 +15,8 @@ info: >
       i. Let buffer be the value of O's [[ViewedArrayBuffer]] internal slot.
       ii. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   ...
-features: [Reflect]
 includes: [testTypedArray.js, detachArrayBuffer.js]
+features: [cross-realm, Reflect, TypedArray]
 ---*/
 
 var other = $262.createRealm().global;

@@ -2,9 +2,11 @@
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
+esid: sec-integer-indexed-exotic-objects-get-p-receiver
 description: >
   Return value from valid numeric index, with SharedArrayBuffer
 includes: [testTypedArray.js]
+features: [TypedArray]
 ---*/
 
 var proto = TypedArray.prototype;

@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-named-groups is not supported
 // Copyright 2017 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -16,9 +17,11 @@ assert.throws(SyntaxError, () => eval("/(?<a>a)(?<a>a)/u"), "Duplicate name");
 assert.throws(SyntaxError, () => eval("/(?<a>a)(?<b>b)(?<a>a)/u"), "Duplicate name");
 assert.throws(SyntaxError, () => eval("/\\k<a>/u"), "Invalid reference");
 assert.throws(SyntaxError, () => eval("/\\k<a/u"), "Unterminated reference");
+assert.throws(SyntaxError, () => eval("/\\k<>/u"), "Empty reference");
 assert.throws(SyntaxError, () => eval("/\\k/u"), "Lone \k");
 assert.throws(SyntaxError, () => eval("/(?<a>.)\\k/u"), "Lone \k");
 assert.throws(SyntaxError, () => eval("/(?<a>.)\\k<a/u"), "Unterminated reference");
+assert.throws(SyntaxError, () => eval("/(?<a>.)\\k<>/u"), "Empty reference");
 assert.throws(SyntaxError, () => eval("/(?<a>.)\\k<b>/u"), "Invalid reference");
 assert.throws(SyntaxError, () => eval("/(?<a>a)\\k<ab>/u"), "Invalid reference");
 assert.throws(SyntaxError, () => eval("/(?<ab>a)\\k<a>/u"), "Invalid reference");
