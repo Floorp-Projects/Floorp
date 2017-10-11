@@ -102,3 +102,47 @@ RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument)
     }
   }
 }
+
+STDMETHODIMP
+RootAccessibleWrap::accNavigate(
+      /* [in] */ long navDir,
+      /* [optional][in] */ VARIANT varStart,
+      /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
+{
+  // Special handling for NAVRELATION_EMBEDS.
+  // When we only have a single process, this can be handled the same way as
+  // any other relation.
+  // However, for multi process, the normal relation mechanism doesn't work
+  // because it can't handle remote objects.
+  if (navDir != NAVRELATION_EMBEDS ||
+      varStart.vt != VT_I4  || varStart.lVal != CHILDID_SELF) {
+    // We only handle EMBEDS on the root here.
+    // Forward to the base implementation.
+    return DocAccessibleWrap::accNavigate(navDir, varStart, pvarEndUpAt);
+  }
+
+  if (!pvarEndUpAt) {
+    return E_INVALIDARG;
+  }
+
+  Accessible* target = nullptr;
+  // Get the document in the active tab.
+  ProxyAccessible* docProxy = GetPrimaryRemoteTopLevelContentDoc();
+  if (docProxy) {
+    target = WrapperFor(docProxy);
+  } else {
+    // The base implementation could handle this, but we may as well
+    // just handle it here.
+    Relation rel = RelationByType(RelationType::EMBEDS);
+    target = rel.Next();
+  }
+
+  if (!target) {
+    return E_FAIL;
+  }
+
+  VariantInit(pvarEndUpAt);
+  pvarEndUpAt->pdispVal = NativeAccessible(target);
+  pvarEndUpAt->vt = VT_DISPATCH;
+  return S_OK;
+}
