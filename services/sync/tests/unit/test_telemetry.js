@@ -390,7 +390,27 @@ add_task(async function test_engine_fail_weird_errors() {
       name: "unexpectederror",
       error: JSON.stringify(e)
     });
+  } finally {
+    await cleanAndGo(engine, server);
+    Service.engineManager.unregister(engine);
+  }
+});
 
+
+add_task(async function test_overrideTelemetryName() {
+  enableValidationPrefs();
+
+  await Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.overrideTelemetryName = "steam-but-better";
+  engine.enabled = true;
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  try {
+    let ping = await sync_and_validate_telem(true);
+    ok(ping.engines.find(e => e.name === "steam-but-better"));
+    ok(!ping.engines.find(e => e.name === "steam"));
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
