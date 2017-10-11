@@ -119,6 +119,22 @@ ContentClientBasic::ContentClientBasic(gfx::BackendType aBackend)
 {}
 
 void
+ContentClientBasic::DrawTo(PaintedLayer* aLayer,
+                           gfx::DrawTarget* aTarget,
+                           float aOpacity,
+                           gfx::CompositionOp aOp,
+                           gfx::SourceSurface* aMask,
+                           const gfx::Matrix* aMaskTransform)
+{
+  if (!EnsureBuffer()) {
+    return;
+  }
+
+  RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aOp,
+                               aMask, aMaskTransform);
+}
+
+void
 ContentClientBasic::CreateBuffer(ContentType aType,
                                  const IntRect& aRect,
                                  uint32_t aFlags,
