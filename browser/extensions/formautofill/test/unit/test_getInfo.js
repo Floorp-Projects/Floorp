@@ -255,3 +255,53 @@ TESTCASES.forEach(testcase => {
     LabelUtils.clearLabelMap();
   });
 });
+
+add_task(async function test_regexp_list() {
+  do_print("Verify the fieldName support for select element.");
+  let SUPPORT_LIST = {
+    "email": null, // email
+    "tel-extension": null, // tel-extension
+    "phone": null, // tel
+    "organization": null, // organization
+    "street-address": null, // street-address
+    "address1": null, // address-line1
+    "address2": null, // address-line2
+    "address3": null, // address-line3
+    "city": "address-level2",
+    "region": "address-level1",
+    "postal-code": null, // postal-code
+    "country": "country",
+    "fullname": null, // name
+    "fname": null, // given-name
+    "mname": null, // additional-name
+    "lname": null, // family-name
+    "cardholder": null, // cc-name
+    "cc-number": null, // cc-number
+    "addmonth": "cc-exp-month",
+    "addyear": "cc-exp-year",
+  };
+  for (let label of Object.keys(SUPPORT_LIST)) {
+    let testcase = {
+      description: `A select element supports ${label} or not`,
+      document: `<select id="${label}"></select>`,
+      elementId: label,
+      expectedReturnValue: (SUPPORT_LIST[label] ? {
+        fieldName: SUPPORT_LIST[label],
+        section: "",
+        addressType: "",
+        contactType: "",
+      } : null),
+    };
+    do_print(testcase.description);
+    do_print(testcase.document);
+    let doc = MockDocument.createTestDocument(
+      "http://localhost:8080/test/", testcase.document);
+
+    let element = doc.getElementById(testcase.elementId);
+    let value = FormAutofillHeuristics.getInfo(element);
+
+    Assert.deepEqual(value, testcase.expectedReturnValue, label);
+  }
+  LabelUtils.clearLabelMap();
+});
+
