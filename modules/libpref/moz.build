@@ -30,7 +30,6 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'nsPrefBranch.cpp',
-    'nsPrefsFactory.cpp',
     'prefapi.cpp',
     'Preferences.cpp',
     'prefread.cpp',
