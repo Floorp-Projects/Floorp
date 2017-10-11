@@ -557,7 +557,6 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
       aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
           mTarget->mElement,
           aPresContext,
-          nullptr,
           aPseudoType,
           aComputedStyle);
   }

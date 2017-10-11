@@ -16,6 +16,7 @@ fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) fuzzy-if(webrender,18,2160) == box
 fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,29-29,453-453) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
+== boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) fails-if(webrender) == boxshadow-onecorner.html boxshadow-onecorner-ref.html

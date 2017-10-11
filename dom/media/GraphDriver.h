@@ -122,16 +122,12 @@ public:
   virtual void Destroy() {}
   /* Start the graph, init the driver, start the thread. */
   virtual void Start() = 0;
-  /* Stop the graph, shutting down the thread. */
-  virtual void Stop() = 0;
-  /* Resume after a stop */
-  virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
   /* Remove Mixer callbacks when switching */
   virtual void RemoveCallback() = 0;
   /* Shutdown GraphDriver (synchronously) */
-  void Shutdown();
+  virtual void Shutdown() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
    * how often we want to wakeup/how much we want to process per iteration), or
@@ -274,10 +270,9 @@ public:
   explicit ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
   void Start() override;
-  void Stop() override;
-  void Resume() override;
   void Revive() override;
   void RemoveCallback() override;
+  void Shutdown() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
@@ -396,12 +391,11 @@ public:
 
   void Destroy() override;
   void Start() override;
-  void Stop() override;
-  void Resume() override;
   void Revive() override;
   void RemoveCallback() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
+  void Shutdown() override;
 #if defined(XP_WIN)
   void ResetDefaultDevice() override;
 #endif
@@ -479,6 +473,11 @@ public:
   void SetMicrophoneActive(bool aActive);
 
   void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
+
+  /* Fetch, or create a shared thread pool with up to one thread for
+   * AsyncCubebTask. */
+  SharedThreadPool* GetInitShutdownThread();
+
 private:
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
@@ -492,6 +491,8 @@ private:
   bool StartStream();
   friend class AsyncCubebTask;
   bool Init();
+  void Stop();
+
   /* MediaStreamGraphs are always down/up mixed to output channels. */
   uint32_t mOutputChannels;
   /* The size of this buffer comes from the fact that some audio backends can
@@ -542,9 +543,9 @@ private:
     AudioCallbackDriver* mDriver;
   };
 
-  /* Thread for off-main-thread initialization and
-   * shutdown of the audio stream. */
-  nsCOMPtr<nsIThread> mInitShutdownThread;
+  /* Shared thread pool with up to one thread for off-main-thread
+   * initialization and shutdown of the audio stream via AsyncCubebTask. */
+  RefPtr<SharedThreadPool> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
   /* Used to queue us to add the mixer callback on first run. */
@@ -570,21 +571,19 @@ public:
 
   nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL)
   {
-    nsresult rv = EnsureThread();
-    if (!NS_FAILED(rv)) {
-      rv = sThreadPool->Dispatch(this, aFlags);
+    SharedThreadPool* threadPool = mDriver->GetInitShutdownThread();
+    if (!threadPool) {
+      return NS_ERROR_FAILURE;
     }
-    return rv;
+    return threadPool->Dispatch(this, aFlags);
   }
 
 protected:
   virtual ~AsyncCubebTask();
 
 private:
-  static nsresult EnsureThread();
-
   NS_IMETHOD Run() override final;
-  static StaticRefPtr<nsIThreadPool> sThreadPool;
+
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
   RefPtr<MediaStreamGraphImpl> mShutdownGrip;

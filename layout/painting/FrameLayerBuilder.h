@@ -340,6 +340,7 @@ public:
 
   void Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
             PaintedLayerData* aLayerData = nullptr,
+            bool aIsInactiveLayerManager = false,
             const DisplayItemClip* aInactiveLayerClip = nullptr);
 
   /**
@@ -730,7 +731,7 @@ public:
 
   bool IsBuildingRetainedLayers()
   {
-    return !mContainingPaintedLayer && mRetainingManager;
+    return !mIsInactiveLayerManager && mRetainingManager;
   }
 
   /**
@@ -798,6 +799,8 @@ protected:
   bool                                mInvalidateAllLayers;
 
   bool                                mInLayerTreeCompressionMode;
+
+  bool                                mIsInactiveLayerManager;
 
   uint32_t                            mContainerLayerGeneration;
   uint32_t                            mMaxContainerLayerGeneration;

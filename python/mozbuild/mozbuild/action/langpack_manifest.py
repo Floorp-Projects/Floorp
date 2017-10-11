@@ -305,8 +305,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #
 # Example:
 #    manifest = create_webmanifest(
-#      ['pl'],
-#      '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}',
+#      'pl',
 #      '57.0',
 #      '57.0.*',
 #      'Firefox',
@@ -356,7 +355,7 @@ def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
 
     author = build_author_string(
         defines['MOZ_LANGPACK_CREATOR'],
-        defines['MOZ_LANGPACK_CONTRIBUTORS']
+        defines['MOZ_LANGPACK_CONTRIBUTORS'] if 'MOZ_LANGPACK_CONTRIBUTORS' in defines else ""
     )
 
     manifest = {

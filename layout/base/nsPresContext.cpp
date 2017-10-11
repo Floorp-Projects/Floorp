@@ -2253,16 +2253,29 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
   }
   Element* elem = aFrame->GetContent()->AsElement();
 
-  MOZ_ASSERT(elem->GetPseudoElementType() ==
-             aFrame->StyleContext()->GetPseudoType());
-  if (elem->HasServoData()) {
-    return Servo_HasAuthorSpecifiedRules(elem,
-                                         aRuleTypeMask,
-                                         UseDocumentColors());
-  } else {
+  // We need to handle non-generated content pseudos too, so we use
+  // the parent of generated content pseudo to be consistent.
+  if (elem->GetPseudoElementType() != CSSPseudoElementType::NotPseudo) {
+    MOZ_ASSERT(elem->GetParent(), "Pseudo element has no parent element?");
+    elem = elem->GetParent()->AsElement();
+  }
+  if (MOZ_UNLIKELY(!elem->HasServoData())) {
     // Probably shouldn't happen, but does. See bug 1387953
     return false;
   }
+
+  nsStyleContext* styleContext = aFrame->StyleContext();
+  CSSPseudoElementType pseudoType = styleContext->GetPseudoType();
+  // Anonymous boxes are more complicated, and we just assume that they
+  // cannot have any author-specified rules here.
+  if (pseudoType == CSSPseudoElementType::InheritingAnonBox ||
+      pseudoType == CSSPseudoElementType::NonInheritingAnonBox) {
+    return false;
+  }
+  return Servo_HasAuthorSpecifiedRules(styleContext->AsServo(),
+                                       elem, pseudoType,
+                                       aRuleTypeMask,
+                                       UseDocumentColors());
 }
 
 gfxUserFontSet*
