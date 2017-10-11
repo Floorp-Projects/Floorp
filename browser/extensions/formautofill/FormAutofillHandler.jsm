@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
+const {FIELD_STATES} = FormAutofillUtils;
+
 class FormAutofillSection {
   constructor(fieldDetails, winUtils) {
     this.address = {
@@ -55,11 +57,11 @@ class FormAutofillSection {
      */
     this._FIELD_STATE_ENUM = {
       // not themed
-      NORMAL: null,
+      [FIELD_STATES.NORMAL]: null,
       // highlighted
-      AUTO_FILLED: "-moz-autofill",
+      [FIELD_STATES.AUTO_FILLED]: "-moz-autofill",
       // highlighted && grey color text
-      PREVIEW: "-moz-autofill-preview",
+      [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
     };
 
     this.winUtils = winUtils;
@@ -390,7 +392,7 @@ class FormAutofillSection {
         if (element == focusedInput ||
             (element != focusedInput && !element.value)) {
           element.setUserInput(value);
-          this.changeFieldState(fieldDetail, "AUTO_FILLED");
+          this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
           continue;
         }
       }
@@ -409,7 +411,7 @@ class FormAutofillSection {
           element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
         }
         // Autofill highlight appears regardless if value is changed or not
-        this.changeFieldState(fieldDetail, "AUTO_FILLED");
+        this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
       }
     }
   }
@@ -458,7 +460,7 @@ class FormAutofillSection {
         continue;
       }
       element.previewValue = value;
-      this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
+      this.changeFieldState(fieldDetail, value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL);
     }
   }
 
@@ -483,11 +485,11 @@ class FormAutofillSection {
 
       // We keep the state if this field has
       // already been auto-filled.
-      if (fieldDetail.state === "AUTO_FILLED") {
+      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
         continue;
       }
 
-      this.changeFieldState(fieldDetail, "NORMAL");
+      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
   }
 
@@ -530,17 +532,17 @@ class FormAutofillSection {
 
   clearFieldState(focusedInput) {
     let fieldDetail = this.getFieldDetailByElement(focusedInput);
-    this.changeFieldState(fieldDetail, "NORMAL");
+    this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     let targetSet = this._getTargetSet(focusedInput);
 
-    if (!targetSet.fieldDetails.some(detail => detail.state == "AUTO_FILLED")) {
+    if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
       targetSet.filledRecordGUID = null;
     }
   }
 
   resetFieldStates() {
     for (let fieldDetail of this._validDetails) {
-      this.changeFieldState(fieldDetail, "NORMAL");
+      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.address.filledRecordGUID = null;
     this.creditCard.filledRecordGUID = null;
@@ -635,7 +637,7 @@ class FormAutofillSection {
 
         data[type].record[detail.fieldName] = value;
 
-        if (detail.state == "AUTO_FILLED") {
+        if (detail.state == FIELD_STATES.AUTO_FILLED) {
           data[type].untouchedFields.push(detail.fieldName);
         }
       });
@@ -957,4 +959,3 @@ class FormAutofillHandler {
     return null;
   }
 }
-

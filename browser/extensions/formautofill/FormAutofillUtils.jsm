@@ -30,6 +30,11 @@ const EDIT_ADDRESS_KEYWORDS = [
 ];
 const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCardsBtnLabel"];
 const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpires"];
+const FIELD_STATES = {
+  NORMAL: "NORMAL",
+  AUTO_FILLED: "AUTO_FILLED",
+  PREVIEW: "PREVIEW",
+};
 
 // The maximum length of data to be saved in a single field for preventing DoS
 // attacks that fill the user's hard drive(s).
@@ -54,6 +59,7 @@ this.FormAutofillUtils = {
   MANAGE_CREDITCARDS_KEYWORDS,
   EDIT_CREDITCARD_KEYWORDS,
   MAX_FIELD_VALUE_LENGTH,
+  FIELD_STATES,
 
   _fieldNameInfo: {
     "name": "name",
