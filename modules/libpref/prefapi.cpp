@@ -25,7 +25,6 @@
 #include "plstr.h"
 #include "prefapi.h"
 #include "prefapi_private_data.h"
-#include "prefread.h"
 #include "prlink.h"
 
 #ifdef _WIN32
