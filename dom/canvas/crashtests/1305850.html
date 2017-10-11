@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<script>
+window.onload=function(){
+  var gl = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas").getContext("webgl");
+  var shader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(shader, 'void main(){d[vec4[]()}');
+  gl.compileShader(shader);
+};
+</script>
+</html>
