@@ -69,16 +69,7 @@ public:
     // the first time it is called.
     bool HasTrackingTable();
 
-    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override
-    {
-        // If we're going to shape with Core Text, we don't support added
-        // OpenType features (aside from any CT applies by default), except
-        // for 'smcp' which we map to an AAT feature selector.
-        if (RequiresAATLayout() && aFeatureTag != HB_TAG('s','m','c','p')) {
-            return false;
-        }
-        return gfxFontEntry::SupportsOpenTypeFeature(aScript, aFeatureTag);
-    }
+    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override;
 
     // Return the tracking (in font units) to be applied for the given size.
     // (This is a floating-point number because of possible interpolation.)
@@ -107,6 +98,8 @@ protected:
     bool mIsCFFInitialized;
     bool mHasVariations;
     bool mHasVariationsInitialized;
+    bool mHasAATSmallCaps;
+    bool mHasAATSmallCapsInitialized;
     bool mCheckedForTracking;
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 
