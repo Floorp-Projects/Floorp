@@ -448,11 +448,6 @@ function openLinkIn(url, where, params) {
       postData: aPostData,
       userContextId: aUserContextId
     });
-
-    // Don't focus the content area if focus is in the address bar and we're
-    // loading the New Tab page.
-    focusUrlBar = document.activeElement == gURLBar.inputField &&
-                  w.isBlankPageURL(url);
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
