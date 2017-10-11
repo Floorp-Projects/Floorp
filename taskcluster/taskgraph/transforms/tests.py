@@ -364,13 +364,11 @@ test_description_schema = Schema({
     # the product name, defaults to firefox
     Optional('product'): basestring,
 
-    # conditional files to determine when these tests should be run
-    Optional('when'): Any({
-        Optional('files-changed'): [basestring],
-
-        # SCHEDULES components; the test suite and platform family will be added automatically.
+    Optional('when'): {
+        # Run this test when the given SCHEDULES components have changed; the
+        # test suite and platform family are added to this list automatically.
         Optional('schedules'): [basestring],
-    }),
+    },
 
     Optional('worker-type'): optionally_keyed_by(
         'test-platform',
@@ -939,19 +937,16 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
+        schedules = [suite, platform_family(test['build-platform'])]
         when = test.get('when')
-        if when and 'files-changed' in when:
-            jobdesc['when'] = when
+        if when and 'schedules' in when:
+            schedules.extend(when['schedules'])
+        if config.params['project'] != 'try':
+            # for non-try branches, include SETA
+            jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
         else:
-            schedules = [suite, platform_family(test['build-platform'])]
-            if when and 'schedules' in when:
-                schedules.extend(when['schedules'])
-            if config.params['project'] != 'try':
-                # for non-try branches, include SETA
-                jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
-            else:
-                # otherwise just use skip-unless-schedules
-                jobdesc['optimization'] = {'skip-unless-schedules': schedules}
+            # otherwise just use skip-unless-schedules
+            jobdesc['optimization'] = {'skip-unless-schedules': schedules}
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
