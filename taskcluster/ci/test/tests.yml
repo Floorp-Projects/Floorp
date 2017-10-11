@@ -348,9 +348,7 @@ jsreftest:
                 extra-options:
                     - --reftest-suite=jsreftest
     when:
-        files-changed:
-            - js/src/**
-            - js/public/**
+        schedules: ['jsreftest']
     tier:
         by-test-platform:
             linux64-qr/.*: 1
