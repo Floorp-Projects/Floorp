@@ -13,7 +13,7 @@ load 336096-1.xhtml
 load 344215-1.xul
 load 354611-1.html
 load 360078-1.xhtml
-load 363791-1.xul
+asserts-if(stylo,16) load 363791-1.xul # bug 1397644
 load 384740-1.xul
 load 384877-1.html
 load 386914-1.html

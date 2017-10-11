@@ -165,26 +165,26 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 192767-06.xul 192767-16.xul
 == 192767-07.xul 192767-17.xul
 == 192767-21.xul 192767-31.xul
-== 192767-22.xul 192767-32.xul
-== 192767-23.xul 192767-33.xul
-== 192767-24.xul 192767-34.xul
-== 192767-25.xul 192767-35.xul
-== 192767-26.xul 192767-36.xul
-== 192767-27.xul 192767-37.xul
+fails-if(styloVsGecko) == 192767-22.xul 192767-32.xul # bug 1408235
+fails-if(styloVsGecko) == 192767-23.xul 192767-33.xul # bug 1408235
+fails-if(styloVsGecko) == 192767-24.xul 192767-34.xul # bug 1408235
+fails-if(styloVsGecko) == 192767-25.xul 192767-35.xul # bug 1408235
+fails-if(styloVsGecko) == 192767-26.xul 192767-36.xul # bug 1408235
+fails-if(styloVsGecko) == 192767-27.xul 192767-37.xul # bug 1408235
 != 192767-01.xul 192767-21.xul
-!= 192767-02.xul 192767-22.xul
-fails-if(Android&&!asyncPan) != 192767-03.xul 192767-23.xul
-!= 192767-04.xul 192767-24.xul
-!= 192767-05.xul 192767-25.xul
-fails-if(Android&&!asyncPan) != 192767-06.xul 192767-26.xul
-fails-if(Android&&!asyncPan) != 192767-07.xul 192767-27.xul
+fails-if(stylo) != 192767-02.xul 192767-22.xul # bug 1408235
+fails-if(stylo||(Android&&!asyncPan)) != 192767-03.xul 192767-23.xul # bug 1408235 for stylo
+fails-if(stylo) != 192767-04.xul 192767-24.xul # bug 1408235
+fails-if(stylo) != 192767-05.xul 192767-25.xul # bug 1408235
+fails-if(stylo||(Android&&!asyncPan)) != 192767-06.xul 192767-26.xul # bug 1408235 for stylo
+fails-if(stylo||(Android&&!asyncPan)) != 192767-07.xul 192767-27.xul # bug 1408235 for stylo
 != 192767-11.xul 192767-31.xul
-!= 192767-12.xul 192767-32.xul
-fails-if(Android&&!asyncPan) != 192767-13.xul 192767-33.xul
-!= 192767-14.xul 192767-34.xul
-!= 192767-15.xul 192767-35.xul
-fails-if(Android&&!asyncPan) != 192767-16.xul 192767-36.xul
-fails-if(Android&&!asyncPan) != 192767-17.xul 192767-37.xul
+fails-if(stylo) != 192767-12.xul 192767-32.xul # bug 1408235
+fails-if(stylo||(Android&&!asyncPan)) != 192767-13.xul 192767-33.xul # bug 1408235 for stylo
+fails-if(stylo) != 192767-14.xul 192767-34.xul # bug 1408235
+fails-if(stylo) != 192767-15.xul 192767-35.xul # bug 1408235
+fails-if(stylo||(Android&&!asyncPan)) != 192767-16.xul 192767-36.xul # bug 1408235 for stylo
+fails-if(stylo||(Android&&!asyncPan)) != 192767-17.xul 192767-37.xul # bug 1408235 for stylo
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -273,13 +273,13 @@ skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
 == 246669-1.html 246669-1-ref.html
-== 249141.xul 249141-ref.xul
+fails-if(stylo||styloVsGecko) == 249141.xul 249141-ref.xul # bug 1408235
 == 249982-1.html 249982-1-ref.html
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
 fuzzy-if(skiaContent,1,5) == 255820-1.html 255820-1-ref.html
 == 260406-1.html 260406-1-ref.html
-== 261826-1.xul 261826-1-ref.xul
+fails-if(styloVsGecko) == 261826-1.xul 261826-1-ref.xul # bug 1408824
 == 262151-1.html 262151-1-ref.html
 fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 267353-1.html 267353-1-ref.html
@@ -291,9 +291,9 @@ fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
 == 272646-1.xul 272646-1-ref.xul
-== 272646-2a.xul 272646-2-ref.xul
-== 272646-2b.xul 272646-2-ref.xul
-== 272646-2c.xul 272646-2-ref.xul
+fails-if(styloVsGecko) == 272646-2a.xul 272646-2-ref.xul # bug 1408824
+fails-if(styloVsGecko) == 272646-2b.xul 272646-2-ref.xul # bug 1408824
+fails-if(styloVsGecko) == 272646-2c.xul 272646-2-ref.xul # bug 1408824
 fuzzy-if(Android,3,50) fuzzy-if(skiaContent,1,133) == 273681-1.html 273681-1-ref.html
 == 278266-1a.html 278266-1-ref.html
 == 278266-1b.html 278266-1-ref.html
@@ -316,8 +316,8 @@ random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) fuzzy-if(webrender
 == 296904-1.html 296904-1-ref.html
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
-== 299837-2.xul 299837-2-ref.xul
-random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
+fails-if(styloVsGecko) == 299837-2.xul 299837-2-ref.xul # bug 1408235
+random-if(d2d) asserts-if(stylo,24-48) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
@@ -339,7 +339,7 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
 == 309550-1.html 309550-1-ref.html
-== 309914-1.xul 309914-1-ref.xul
+fails-if(stylo||styloVsGecko) == 309914-1.xul 309914-1-ref.xul # bug 1408235
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
 == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
@@ -442,8 +442,8 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 334829-1a.xhtml 334829-1-ref.xhtml
 == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
-!= 335628-2.xul 335628-2-ref.xul
-== 336096-1.xul 336096-1-ref.xul
+fails-if(stylo||styloVsGecko) != 335628-2.xul 335628-2-ref.xul # bug 1408235
+fails-if(stylo) == 336096-1.xul 336096-1-ref.xul # bug 1408235
 == 336147-1.html 336147-1-ref.html
 == 336153-1.html 336153-1-ref.html
 != 338251-p.html about:blank
@@ -567,11 +567,11 @@ fuzzy-if(OSX,45,2) fuzzy-if(winWidget,114,1) == 363858-6a.html 363858-6-ref.html
 == 364318-1.xhtml 364318-1-ref.xhtml
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html
-== 364968-1.xul 364968-1-ref.html
+fails-if(stylo||styloVsGecko) == 364968-1.xul 364968-1-ref.html # bug 1408235
 == 364989-1.html 364989-1-ref.html
 == 365173-1.html 365173-1-ref.html
-== 366207-1.xul 366207-1-ref.xul
-== 366616-1.xul 366616-1-ref.xul
+fails-if(stylo||styloVsGecko) == 366207-1.xul 366207-1-ref.xul # bug 1408235
+fails-if(stylo) == 366616-1.xul 366616-1-ref.xul # bug 1408235
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
 == 367247-s-hidden.html 367247-s-auto.html
@@ -667,7 +667,7 @@ random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373533-3.xhtml about:blank
 == 374038-1.xul 374038-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
-random-if(d2d) == 374719-1.xul 374719-1-ref.xul
+random-if(d2d) fails-if(styloVsGecko) == 374719-1.xul 374719-1-ref.xul # bug 1408824
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375508-1.html 375508-1-ref.html
 == 375716-1.html 375716-1-ref.html
@@ -1233,7 +1233,7 @@ fuzzy-if(skiaContent,1,12000) fails-if(webrender) == 461512-1.html 461512-1-ref.
 == 462844-3.html 462844-ref.html
 == 462844-4.html 462844-ref.html
 == 463204-1.html 463204-1-ref.html
-fuzzy-if(webrender,16-16,3425-3425) == 463217-1.xul 463217-1-ref.xul
+fuzzy-if(webrender&&!stylo,16-16,3425-3425) fails-if(styloVsGecko) == 463217-1.xul 463217-1-ref.xul # bug 1408235
 == 463952-1.html 463952-1-ref.html
 == 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436
@@ -1244,7 +1244,7 @@ fuzzy-if(webrender,16-16,3425-3425) == 463217-1.xul 463217-1-ref.xul
 == 467084-2.html 467084-2-ref.html
 == 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
-== 468473-1.xul 468473-1-ref.xul
+fails-if(styloVsGecko) == 468473-1.xul 468473-1-ref.xul # bug 1408235
 == 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
@@ -1256,7 +1256,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 472769-1b.html 472769-1-ref.html
 == 472769-2.html 472769-2-ref.html
 == 472769-3.html 472769-3-ref.html
-== 473847-1.xul 473847-1-ref.xul
+fails-if(styloVsGecko) == 473847-1.xul 473847-1-ref.xul # bug 1408235
 fuzzy-if(skiaContent,1,16) == 474336-1.xul 474336-1-ref.xul
 == 474417-1.html 474417-1-ref.html
 fuzzy-if(skiaContent,1,5) skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 474472-1.html 474472-1-ref.html # Bug 1383845
@@ -1289,7 +1289,7 @@ fuzzy-if(skiaContent,1,5) skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
 == 476856-1.html 476856-1-ref.html
-random-if(d2d) == 478377-1.xul 478377-1-ref.xul
+random-if(d2d) fails-if(styloVsGecko) asserts-if(stylo,16-18) == 478377-1.xul 478377-1-ref.xul # bug 1397644
 == 478614-1.html 478614-1-ref.html
 == 478614-2.html 478614-1-ref.html
 == 478614-3.html 478614-3-ref.html
@@ -1327,7 +1327,7 @@ random-if(winWidget) fuzzy-if(skiaContent,1,5) == 482659-1a.html 482659-1-ref.ht
 fuzzy-if(skiaContent,1,5) == 482659-1b.html 482659-1-ref.html
 fuzzy-if(skiaContent,1,5) == 482659-1c.html 482659-1-ref.html
 fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
-== 483565.xul 483565-ref.xul
+fails-if(styloVsGecko) == 483565.xul 483565-ref.xul # bug 1408235
 == 484256-1.html 484256-1-ref.html
 == 484256-2.html 484256-1-ref.html
 == 485012-1.html 485012-1-ref.html
@@ -1342,7 +1342,7 @@ fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
 == 486052-2f.html 486052-2-ref.html
 == 486052-2g.html 486052-2-ref.html
 == 486065-1.html 486065-1-ref.html
-== 486848-1.xul 486848-1-ref.xul
+skip-if(stylo||styloVsGecko) == 486848-1.xul 486848-1-ref.xul # bug 1408293
 == 487539-1.html about:blank
 == 488390-1.html 488390-1-ref.html
 == 488649-1.html 488649-1-ref.html
@@ -1358,7 +1358,7 @@ fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
 pref(browser.display.focus_ring_width,1) == 491180-1.html 491180-1-ref.html
 pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 491323-1.xul 491323-1-ref.xul
-== 492239-1.xul 492239-1-ref.xul
+fails-if(styloVsGecko) == 492239-1.xul 492239-1-ref.xul # bug 1408235
 == 492661-1.html 492661-1-ref.html
 == 493968-1.html 493968-1-ref.html
 == 494667-1.html 494667-1-ref.html
@@ -1411,7 +1411,7 @@ fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-random-if(cocoaWidget||winWidget) == 508816-1.xul 508816-1-ref.xul # Bug 631982 and bug 1375012
+random-if(cocoaWidget||winWidget) fails-if(styloVsGecko) == 508816-1.xul 508816-1-ref.xul # Bug 631982 and bug 1375012, stylo: bug 1408235
 == 508816-2.html 508816-2-ref.html
 skip-if(isDebugBuild) == 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
@@ -1422,8 +1422,8 @@ fuzzy-if(Android,5,1656) fuzzy-if(skiaContent,1,1200) == 512410.html 512410-ref.
 == 513153-1b.html 513153-1-ref.html
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
-== 513318-1.xul 513318-1-ref.xul
-fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul
+fails-if(stylo||styloVsGecko) == 513318-1.xul 513318-1-ref.xul # bug 1408235
+fails-if(Android&&(!asyncPan)) fails-if(styloVsGecko) != 513318-2.xul 513318-2-ref.xul # stylo: bug 1408235
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 fuzzy-if(winWidget,73,133) fuzzy-if(cocoaWidget,103,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
@@ -1504,9 +1504,9 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkia
 fuzzy-if(skiaContent,4,5) == 557087-1.html 557087-ref.html
 fuzzy-if(skiaContent&&!Android,2,5) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
-!= 558011-1.xul 558011-1-ref.xul
+fails-if(stylo||styloVsGecko) != 558011-1.xul 558011-1-ref.xul # bug 1408235
 == 559284-1.html 559284-1-ref.html
-fails-if(Android) == 560455-1.xul 560455-1-ref.xul
+fails-if(stylo||styloVsGecko||Android) == 560455-1.xul 560455-1-ref.xul # bug 1408235 for stylo
 fuzzy-if(skiaContent,2,5) == 561981-1.html 561981-1-ref.html
 == 561981-2.html 561981-2-ref.html
 fuzzy-if(skiaContent,1,5) == 561981-3.html 561981-3-ref.html
@@ -1688,12 +1688,12 @@ fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha b
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 fuzzy-if(skiaContent,1,3500) == 660682-1.html 660682-1-ref.html
-fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131
+fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) fails-if(styloVsGecko) asserts-if(stylo,17-18) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131, stylo: bug 1397644
 == 665597-1.html 665597-1-ref.html
 == 665597-2.html 665597-2-ref.html
 == 667079-1.html 667079-1-ref.html
-== 668319-1.xul about:blank
-!= 669015-1.xul 669015-1-notref.xul
+fails-if(stylo||styloVsGecko) asserts-if(stylo,8-9) == 668319-1.xul about:blank # bug 1397644
+fails-if(stylo||styloVsGecko) != 669015-1.xul 669015-1-notref.xul # bug 1408235
 skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
 == 670467-2.html 670467-2-ref.html
