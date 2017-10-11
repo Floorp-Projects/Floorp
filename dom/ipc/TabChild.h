@@ -63,6 +63,7 @@ class APZEventState;
 class AsyncDragMetrics;
 class IAPZCTreeManager;
 class ImageCompositeNotification;
+class PCompositorBridgeChild;
 } // namespace layers
 
 namespace widget {
@@ -883,6 +884,8 @@ private:
 
   void InternalSetDocShellIsActive(bool aIsActive,
                                    bool aPreserveLayers);
+
+  bool CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCompositorChild);
 
   class DelayedDeleteRunnable;
 
