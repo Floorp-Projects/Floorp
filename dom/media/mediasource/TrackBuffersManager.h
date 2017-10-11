@@ -461,8 +461,7 @@ private:
   }
   bool OnTaskQueue() const
   {
-    MOZ_RELEASE_ASSERT(GetTaskQueue());
-    return GetTaskQueue()->IsCurrentThreadIn();
+    return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
   RefPtr<AutoTaskQueue> mTaskQueue;
 
