@@ -1814,12 +1814,6 @@ KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
     return false;
   }
 
-  // FIXME (bug 1303235): We don't calculate mCumulativeChangeHint for
-  // the Servo backend yet
-  if (mDocument->IsStyledByServo()) {
-    return false;
-  }
-
   // FIXME: For further sophisticated optimization we need to check
   // change hint on the segment corresponding to computedTiming.progress.
   return NS_IsHintSubset(
