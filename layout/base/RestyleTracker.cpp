@@ -116,8 +116,8 @@ RestyleTracker::DoProcessRestyles()
       docURL = uri->GetSpecOrDefault();
     }
   }
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-    "RestyleTracker::DoProcessRestyles", CSS, docURL);
+  AUTO_PROFILER_LABEL_DYNAMIC("RestyleTracker::DoProcessRestyles", CSS,
+                              docURL.get());
 #endif
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
