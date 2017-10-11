@@ -1346,7 +1346,6 @@ var gBrowserInit = {
     if (!window.toolbar.visible) {
       // adjust browser UI for popups
       gURLBar.setAttribute("readonly", "true");
-      gURLBar.setAttribute("enablehistory", "false");
     }
 
     // Misc. inits.

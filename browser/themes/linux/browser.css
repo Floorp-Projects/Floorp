@@ -157,11 +157,6 @@ menuitem.bookmark-item {
 
 /* Location bar */
 
-#urlbar {
-  /* override textbox[enablehistory="true"] styling: */
-  background-color: -moz-field;
-}
-
 %include ../shared/urlbar-searchbar.inc.css
 
 #urlbar:not(:-moz-lwtheme):not([focused="true"]),
@@ -175,7 +170,6 @@ menuitem.bookmark-item {
 }
 
 .urlbar-textbox-container {
-  -moz-appearance: none;
   -moz-box-align: stretch;
 }
 
