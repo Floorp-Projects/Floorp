@@ -3579,6 +3579,8 @@ WorkerMain(void* arg)
     } else {
         JS_AddInterruptCallback(cx, ShellInterruptCallback);
 
+        js::UseInternalJobQueues(cx, /* cooperative = */true);
+
         // The Gecko Profiler requires that all cooperating contexts have
         // profiling stacks installed.
         MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc.get()));

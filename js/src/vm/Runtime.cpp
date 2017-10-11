@@ -729,7 +729,7 @@ JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject pro
                              HandleObject incumbentGlobal)
 {
     MOZ_ASSERT(cx->enqueuePromiseJobCallback,
-               "Must set a callback using JS_SetEnqeueuPromiseJobCallback before using Promises");
+               "Must set a callback using JS::SetEnqueuePromiseJobCallback before using Promises");
     MOZ_ASSERT_IF(incumbentGlobal, !IsWrapper(incumbentGlobal) && !IsWindowProxy(incumbentGlobal));
 
     void* data = cx->enqueuePromiseJobCallbackData;
