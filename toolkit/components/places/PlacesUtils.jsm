@@ -135,6 +135,9 @@ function serializeNode(aNode, aIsLivemark) {
   data.title = aNode.title;
   data.id = aNode.itemId;
   data.livemark = aIsLivemark;
+  // Add an instanceId so we can tell which instance of an FF session the data
+  // is coming from.
+  data.instanceId = PlacesUtils.instanceId;
 
   let guid = aNode.bookmarkGuid;
   if (guid) {
@@ -2013,6 +2016,11 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
   return Cc["@mozilla.org/intl/stringbundle;1"].
          getService(Ci.nsIStringBundleService).
          createBundle(PLACES_STRING_BUNDLE_URI);
+});
+
+// This is just used as a reasonably-random value for copy & paste / drag operations.
+XPCOMUtils.defineLazyGetter(PlacesUtils, "instanceId", () => {
+  return PlacesUtils.history.makeGuid();
 });
 
 /**

@@ -16,8 +16,10 @@
 #include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/UpdateImageHelper.h"
+#include "gfxEnv.h"
 #include "nsDisplayListInvalidation.h"
 #include "WebRenderCanvasRenderer.h"
+#include "LayersLogging.h"
 #include "LayerTreeInvalidation.h"
 
 namespace mozilla {
@@ -354,7 +356,7 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
       }
 
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(aDisplayListBuilder, aManager);
+      layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
       layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
       aManager->BeginTransactionWithTarget(context);
@@ -374,6 +376,15 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
       }
+
+#ifdef MOZ_DUMP_PAINTING
+      if (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) {
+        fprintf_stderr(gfxUtils::sDumpPaintFile, "Basic layer tree for painting contents of display item %s(%p):\n", aItem->Name(), aItem->Frame());
+        std::stringstream stream;
+        aManager->Dump(stream, "", gfxEnv::DumpPaintToFile());
+        fprint_stderr(gfxUtils::sDumpPaintFile, stream);  // not a typo, fprint_stderr declared in LayersLogging.h
+      }
+#endif
 
       if (aManager->InTransaction()) {
         aManager->AbortTransaction();

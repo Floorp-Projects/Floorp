@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518543721375000);
+const PRTime gPreloadListExpirationTime = INT64_C(1518587810091000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -326,7 +326,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518543721375000);
 500k.nl, 1
 500p.xyz, 1
 50plusnet.nl, 1
-518maicai.com, 0
+518maicai.com, 1
 525.info, 1
 52neptune.com, 1
 5432.cc, 1
@@ -1647,8 +1647,10 @@ aqualogy.de, 1
 aquapoint.kiev.ua, 1
 aquarium-supplement.net, 1
 aquariumaccessories.shop, 1
+aquaron.com, 1
 aquaselect.eu, 1
 aquatechnologygroup.com, 1
+aquaundine.net, 1
 aquavitaedayspa.com.au, 1
 aquila.co.uk, 1
 aquilaguild.com, 1
@@ -2786,7 +2788,6 @@ biathloncup.ru, 1
 bible-maroc.com, 1
 bible.ru, 1
 bibleonline.ru, 1
-bibliaon.com, 1
 biblio.wiki, 1
 biblioblog.fr, 1
 bibliomarkt.ch, 1
@@ -3826,6 +3827,7 @@ cadman.pw, 1
 cadooz.com, 1
 cadorama.fr, 1
 cadoth.net, 1
+cadusilva.com, 1
 caerostris.com, 1
 caesarkabalan.com, 1
 cafechesscourt.com, 1
@@ -4807,7 +4809,6 @@ clu-in.org, 1
 club-is.ru, 1
 club-reduc.com, 1
 club103.ch, 1
-clubalfa.it, 1
 clubdeslecteurs.net, 1
 clubedalutashop.com, 1
 clubempleos.com, 1
@@ -5084,7 +5085,6 @@ completesecurityessex.co.uk, 1
 completesecurityessex.com, 1
 completesportperformance.com, 1
 completionist.me, 1
-complexart.ro, 1
 complexsystems.fail, 1
 compliance-management.ch, 1
 compliance-systeme.de, 1
@@ -5832,6 +5832,7 @@ danielschreurs.com, 1
 danielstach.cz, 1
 danielthompson.info, 1
 danieltollot.de, 1
+danielverlaan.nl, 1
 danielvoogsgerd.nl, 1
 danielzuzevich.com, 1
 danilapisarev.com, 1
@@ -6322,9 +6323,11 @@ deux.solutions, 1
 deuxsol.co, 1
 deuxsol.com, 1
 deuxsolutions.com, 1
+dev-pulse-mtn.pantheonsite.io, 1
 dev-talk.eu, 1
 dev-talk.net, 1
 dev-tek.de, 1
+devafterdark.com, 1
 devalps.eu, 1
 devb.nl, 1
 devdesco.com, 1
@@ -7659,7 +7662,6 @@ en-crypt.me, 1
 en-maktoob.search.yahoo.com, 0
 en4rab.co.uk, 1
 enaah.de, 1
-enaia.fr, 1
 enaim.de, 1
 enamae.net, 1
 encfs.win, 1
@@ -8383,7 +8385,6 @@ faretravel.co.uk, 1
 farfallapets.com.br, 1
 farfetchos.com, 1
 fargtorget.se, 1
-farhadexchange.com, 1
 farhood.org, 1
 farkas.bz, 1
 farm24.co.uk, 1
@@ -8454,7 +8455,6 @@ fcburk.de, 1
 fcforum.net, 1
 fckd.net, 1
 fcprovadia.com, 1
-fcsic.gov, 1
 fdlibre.eu, 1
 fdsys.gov, 0
 feac.us, 1
@@ -8704,7 +8704,6 @@ fishermansbendcorporation.com.au, 1
 fishermansbendtownhouses.com.au, 1
 fishserver.net, 1
 fishtacos.blog, 1
-fistu.la, 1
 fit-4u.ch, 1
 fit365.jp, 1
 fitchannel.com, 1
@@ -8822,6 +8821,7 @@ florinapp.com, 1
 florinlungu.it, 1
 florismoo.nl, 1
 florismouwen.com, 0
+florispoort.nl, 1
 florisvdk.net, 1
 floriswesterman.nl, 1
 flosch.at, 1
@@ -9061,7 +9061,6 @@ francoiscarrier.com, 1
 francoislepage.com, 1
 francoz.me, 1
 frandor.co.uk, 1
-frank.fyi, 1
 franke-chemie.de, 1
 franken-lehrmittel.de, 1
 frankenlehrmittel.de, 1
@@ -9234,6 +9233,7 @@ frugalfamilyhome.com, 1
 frugalmechanic.com, 1
 fruition.co.jp, 1
 frusky.de, 1
+frusky.net, 1
 frydrychit.cz, 1
 fs-fitness.eu, 1
 fs-gamenet.de, 1
@@ -10076,7 +10076,7 @@ graffen.dk, 1
 grafmurr.de, 1
 grailians.com, 1
 graingert.co.uk, 1
-graliv.net, 1
+graliv.net, 0
 gramati.com.br, 1
 granary-demo.appspot.com, 0
 grandcapital.cn, 1
@@ -10282,7 +10282,7 @@ guidechecking.com, 1
 guideo.ch, 1
 guides-peche64.com, 1
 guidetoiceland.is, 0
-guildgearscore.cf, 1
+guildgearscore.cf, 0
 guildofmusicsupervisors.co.uk, 1
 guillaume-leduc.fr, 1
 guillaumecote.me, 1
@@ -11165,7 +11165,6 @@ hpisavageforum.com, 1
 hpkp-faq.de, 1
 hpnow.com.br, 1
 hqhost.net, 0
-hqq.tv, 1
 hqwebhosting.tk, 1
 hr98.tk, 1
 hrabogados.com, 1
@@ -11357,7 +11356,7 @@ iaeste.no, 1
 iainsimms.me, 1
 ialis.me, 1
 iamcarrico.com, 1
-iamprophet.pw, 0
+iamprophet.pw, 1
 iamsoareyou.se, 1
 iamtheib.me, 1
 iamusingtheinter.net, 1
@@ -11578,7 +11577,7 @@ ilya.pp.ua, 1
 im-c-shop.com, 1
 im-design.com.ua, 1
 im2net.com, 1
-im66.net, 1
+im66.net, 0
 ima-tourcoing.fr, 1
 imacs.org, 1
 imadalin.ro, 1
@@ -12658,7 +12657,6 @@ joduska.me, 1
 jodyboucher.com, 1
 joe-pagan.com, 1
 joecod.es, 1
-joedavison.me, 1
 joedinardo.com, 1
 joedroll.com, 1
 joehenry.co.uk, 1
@@ -15279,7 +15277,6 @@ marketingdesignu.cz, 1
 marketio.co, 1
 marketizare.ro, 1
 marketnsight.com, 1
-markhaehnel.de, 1
 markido.com, 1
 markitzeroday.com, 1
 markllego.com, 1
@@ -17546,7 +17543,7 @@ nomifensine.com, 1
 nomsy.net, 1
 noname-ev.de, 1
 noncombatant.org, 1
-noob-box.net, 1
+noob-box.net, 0
 noobunbox.net, 1
 noodles.net.nz, 1
 noodplan.co.za, 1
@@ -17649,7 +17646,6 @@ nowcost.com, 1
 nowhere.dk, 1
 nowlas.org, 1
 nowloading.co, 1
-nowprotein.com, 1
 noxlogic.nl, 1
 noyocenter.org, 1
 npath.de, 1
@@ -18654,7 +18650,6 @@ pbscreens.com, 1
 pbytes.com, 1
 pc-rescue.me, 1
 pc-tweak.de, 1
-pccentral.nl, 1
 pcel.com, 1
 pcf92.fr, 1
 pcfeuerwehr.de, 1
@@ -20788,7 +20783,6 @@ rokort.dk, 1
 rokudenashi.de, 1
 roland.io, 1
 rolandkolodziej.com, 1
-rolandslate.com, 1
 rolandszabo.com, 1
 rolliwelt.de, 1
 rolodato.com, 1
@@ -21425,7 +21419,6 @@ schnellsuche.de, 1
 schnouki.net, 1
 schnyder-werbung.ch, 1
 schoeck-elektro.de, 1
-schoepski.de, 1
 schoknecht.net, 1
 schoknecht.one, 1
 schokokeks.org, 1
@@ -22452,7 +22445,6 @@ slash64.uk, 1
 slashbits.no, 1
 slaughterhouse.fr, 1
 slaws.io, 1
-sleeklounge.com, 1
 sleeplessbeastie.eu, 1
 sleepmap.de, 1
 sleepstar.co.uk, 1
@@ -23185,6 +23177,7 @@ steenackers.be, 1
 stefan-bayer.eu, 1
 stefan-schlueter.de, 1
 stefanbayer.de, 1
+stefanovski.io, 0
 stefany.eu, 1
 steidlewirt.de, 1
 steigerplank.com, 0
@@ -24659,7 +24652,6 @@ tkjg.fi, 1
 tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
-tlach.cz, 1
 tlehseasyads.com, 1
 tlo.xyz, 1
 tloxygen.com, 1
@@ -25688,7 +25680,6 @@ usd.de, 1
 use.be, 1
 usebean.com, 1
 usedesk.ru, 1
-user-new.com, 1
 useresponse.com, 1
 usetypo3.com, 1
 useyourloaf.com, 1
@@ -25725,7 +25716,6 @@ utopialgb.org.uk, 1
 utopians.dk, 1
 utopicestudios.com, 1
 utox.io, 1
-uttnetgroup.fr, 0
 utugnn.ru, 1
 utw.me, 1
 uvocorp.com, 1
@@ -26540,7 +26530,7 @@ webseitendesigner.com, 0
 webseitenserver.com, 1
 websenat.de, 1
 websharks.org, 1
-websiteadvice.com.au, 1
+websiteadvice.com.au, 0
 websitedesign.bg, 1
 websiteforlease.ca, 1
 websitesdallas.com, 1
@@ -27979,7 +27969,6 @@ zojadravai.com, 1
 zoki.art, 1
 zokster.net, 1
 zolokar.xyz, 1
-zolotoy-standart.com.ua, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
 zone-produkte.de, 1

@@ -1572,6 +1572,15 @@ public:
     mGraph->mDriver->Shutdown(); // This will wait until it's shutdown since
                                  // we'll start tearing down the graph after this
 
+    // Release the driver now so that an AudioCallbackDriver will release its
+    // SharedThreadPool reference.  Each SharedThreadPool reference must be
+    // released before SharedThreadPool::SpinUntilEmpty() runs on
+    // xpcom-shutdown-threads.  Don't wait for GC/CC to release references to
+    // objects owning streams, or for expiration of mGraph->mShutdownTimer,
+    // which won't otherwise release its reference on the graph until
+    // nsTimerImpl::Shutdown(), which runs after xpcom-shutdown-threads.
+    mGraph->mDriver = nullptr;
+
     // Safe to access these without the monitor since the graph isn't running.
     // We may be one of several graphs. Drop ticket to eventually unblock shutdown.
     if (mGraph->mShutdownTimer && !mGraph->mForceShutdownTicket) {

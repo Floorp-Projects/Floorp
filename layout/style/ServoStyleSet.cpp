@@ -344,7 +344,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
   if (aMayCompute == LazyComputeBehavior::Allow) {
     PreTraverseSync();
     return ResolveStyleLazilyInternal(
-        aElement, CSSPseudoElementType::NotPseudo, nullptr);
+        aElement, CSSPseudoElementType::NotPseudo);
   }
 
   return ResolveServoStyle(aElement);
@@ -600,7 +600,6 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleLazily(Element* aElement,
                                   CSSPseudoElementType aPseudoType,
-                                  nsAtom* aPseudoTag,
                                   StyleRuleInclusion aRuleInclusion)
 {
   // Lazy style computation avoids storing any new data in the tree.
@@ -622,7 +621,7 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement,
 
   AutoClearStaleData guard(aElement);
   PreTraverseSync();
-  return ResolveStyleLazilyInternal(aElement, aPseudoType, aPseudoTag,
+  return ResolveStyleLazilyInternal(aElement, aPseudoType,
                                     aRuleInclusion,
                                     ignoreExistingStyles);
 }
@@ -986,10 +985,12 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
         // If any style invalidation was triggered in our siblings, then we may
         // need to post-traverse them, even if the root wasn't restyled after
         // all.
+        uint32_t existingBits = doc->GetServoRestyleRootDirtyBits();
+        // We need to propagate the existing bits to the parent.
+        parent->SetFlags(existingBits);
         doc->SetServoRestyleRoot(
             parent,
-            doc->GetServoRestyleRootDirtyBits() |
-            ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+            existingBits | ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
         postTraversalRequired = true;
       }
     }
@@ -1220,7 +1221,6 @@ already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetBaseContextForElement(
   Element* aElement,
   nsPresContext* aPresContext,
-  nsAtom* aPseudoTag,
   CSSPseudoElementType aPseudoType,
   const ServoStyleContext* aStyle)
 {
@@ -1334,7 +1334,6 @@ ServoStyleSet::ClearNonInheritingStyleContexts()
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                           CSSPseudoElementType aPseudoType,
-                                          nsAtom* aPseudoTag,
                                           StyleRuleInclusion aRuleInclusion,
                                           bool aIgnoreExistingStyles)
 {

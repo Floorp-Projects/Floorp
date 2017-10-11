@@ -467,7 +467,7 @@ LoginManagerStorage_mozStorage.prototype = {
               if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value)) &&
                   valueURI.scheme == "https") {
                 condition += ` OR ${field} = :http${field}`;
-                params["http" + field] = "http://" + valueURI.hostPort;
+                params["http" + field] = "http://" + valueURI.displayHostPort;
               }
             } catch (ex) {
               // newURI will throw for some values (e.g. chrome://FirefoxAccounts)

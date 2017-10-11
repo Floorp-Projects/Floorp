@@ -1735,6 +1735,13 @@ toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton 
   width: @wideMenuPanelWidth@;
 }
 
+/* In customize mode, the overflow list is constrained by its container,
+ * so we set width: auto to avoid the scrollbar not fitting.
+ */
+#customization-panelHolder > .widget-overflow-list {
+  width: auto;
+}
+
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
