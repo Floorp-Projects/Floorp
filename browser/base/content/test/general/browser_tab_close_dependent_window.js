@@ -15,8 +15,11 @@ add_task(async function closing_tab_with_dependents_should_close_window() {
   let openedTab = (await depTabOpened).target;
   info("Got opened tab");
 
+  let otherTabClosePromise = BrowserTestUtils.tabRemoved(openedTab);
   let windowClosedPromise = BrowserTestUtils.windowClosed(win);
   await BrowserTestUtils.removeTab(tab);
+  info("Wait for other tab to close, this shouldn't time out");
+  await otherTabClosePromise;
   is(Cu.isDeadWrapper(openedTab) || openedTab.linkedBrowser == null, true, "Opened tab should also have closed");
   info("If we timeout now, the window failed to close - that shouldn't happen!");
   await windowClosedPromise;
