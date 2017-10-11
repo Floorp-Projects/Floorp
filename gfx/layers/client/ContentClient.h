@@ -21,6 +21,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "ReadbackProcessor.h"          // For ReadbackProcessor::Update
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -329,8 +330,7 @@ public:
   virtual void Clear() override
   {
     ContentClientRemoteBuffer::Clear();
-    mFrontClient = nullptr;
-    mFrontClientOnWhite = nullptr;
+    mFrontBuffer = Nothing();
   }
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
@@ -364,15 +364,11 @@ private:
   {
     mTextureClient = nullptr;
     mTextureClientOnWhite = nullptr;
-    mFrontClient = nullptr;
-    mFrontClientOnWhite = nullptr;
+    mFrontBuffer = Nothing();
   }
 
-  RefPtr<TextureClient> mFrontClient;
-  RefPtr<TextureClient> mFrontClientOnWhite;
+  Maybe<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
-  gfx::IntRect mFrontBufferRect;
-  nsIntPoint mFrontBufferRotation;
 };
 
 /**
