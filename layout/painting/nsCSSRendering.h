@@ -583,6 +583,7 @@ struct nsCSSRendering {
     // NS_STYLE_TEXT_DECORATION_STYLE_*.
     uint8_t style = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     bool vertical = false;
+    bool sidewaysLeft = false;
   };
 
   struct PaintDecorationLineParams : DecorationRectParams
