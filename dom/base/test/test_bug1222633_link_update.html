@@ -122,8 +122,10 @@ const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
 
 SimpleTest.waitForExplicitFinish();
 
+SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
+
 // Test changing as parameter from a wrong to a correct one.
-testPreloadEventAsAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120")
+.then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120"))
 // Test changing type parameter from a wrong to a correct one for given as parameter.
 .then(() => testPreloadEventAttributeChange(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", "type", "text/vtt", "image/png", false, true))
 // Test changing media parameter from a wrong to a correct one.
