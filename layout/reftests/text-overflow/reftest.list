@@ -9,12 +9,12 @@ fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonym
 HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1724) fuzzy-if(gtkWidget,10,8) HTTP(..) == block-padding.html block-padding-ref.html
-HTTP(..) fuzzy-if(webrender,3,825) == quirks-decorations.html quirks-decorations-ref.html
+fuzzy-if(webrender,3,825) HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
 fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html
-HTTP(..) fuzzy-if(webrender,5,509) == marker-shadow.html marker-shadow-ref.html
+fuzzy-if(webrender,5,509) HTTP(..) == marker-shadow.html marker-shadow-ref.html
 fuzzy-if(webrender,3,25) == aligned-baseline.html aligned-baseline-ref.html
 skip-if(Android) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
