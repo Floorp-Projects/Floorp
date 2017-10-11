@@ -9,7 +9,9 @@ add_task(async function switchToTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
 
   await promiseAutocompleteResultPopup("% about");
-  let result = await waitForAutocompleteResultAt(1);
+
+  ok(gURLBar.popup.richlistbox.children.length > 1, "Should get at least 2 results");
+  let result = gURLBar.popup.richlistbox.children[1];
   is(result.getAttribute("type"), "switchtab", "Expect right type attribute");
   is(result.label, "about:about about:about Tab", "Result a11y label should be: <title> <url> Tab");
 
@@ -32,7 +34,6 @@ add_task(async function searchSuggestions() {
   });
 
   await promiseAutocompleteResultPopup("foo");
-  await waitForAutocompleteResultAt(2);
   // Don't assume that the search doesn't match history or bookmarks left around
   // by earlier tests.
   Assert.ok(gURLBar.popup.richlistbox.children.length >= 3,
@@ -53,6 +54,5 @@ add_task(async function searchSuggestions() {
     }
   }
   Assert.ok(expectedSearches.length == 0);
-  gURLBar.popup.hidePopup();
-  await promisePopupHidden(gURLBar.popup);
+  gURLBar.closePopup();
 });
