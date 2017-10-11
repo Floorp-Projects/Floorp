@@ -60,8 +60,6 @@ void MediaDeviceInfo::GetLabel(nsString& retval)
 }
 
 MediaDeviceKind Kind();
-void GetLabel(nsString& retval);
-void GetGroupId(nsString& retval);
 
 } // namespace dom
 } // namespace mozilla

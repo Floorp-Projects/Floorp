@@ -90,8 +90,11 @@ UTCToLocalStandardOffsetSeconds()
         currentNoDST = currentMaybeWithDST;
     } else {
         // If |local| respected DST, we need a time broken down into components
-        // ignoring DST.  Turn off DST in the broken-down time.
-        local.tm_isdst = 0;
+        // ignoring DST.  Turn off DST in the broken-down time.  Create a fresh
+        // copy of |local|, because mktime() will reset tm_isdst = 1 and will
+        // adjust tm_hour and tm_hour accordingly.
+        struct tm localNoDST = local;
+        localNoDST.tm_isdst = 0;
 
         // Compute a |time_t t| corresponding to the broken-down time with DST
         // off.  This has boundary-condition issues (for about the duration of
@@ -99,7 +102,7 @@ UTCToLocalStandardOffsetSeconds()
         // zone.  But 1) errors will be transient; 2) locations rarely change
         // time zone; and 3) in the absence of an API that provides the time
         // zone offset directly, this may be the best we can do.
-        currentNoDST = mktime(&local);
+        currentNoDST = mktime(&localNoDST);
         if (currentNoDST == time_t(-1))
             return 0;
     }
@@ -177,6 +180,8 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
     if (!ComputeLocalTime(static_cast<time_t>(utcSeconds), &tm))
         return 0;
 
+    // NB: The offset isn't computed correctly when the standard local offset
+    //     at |utcSeconds| is different from |utcToLocalStandardOffsetSeconds|.
     int32_t dayoff = int32_t((utcSeconds + utcToLocalStandardOffsetSeconds) % SecondsPerDay);
     int32_t tmoff = tm.tm_sec + (tm.tm_min * SecondsPerMinute) + (tm.tm_hour * SecondsPerHour);
 
@@ -184,6 +189,8 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 
     if (diff < 0)
         diff += SecondsPerDay;
+    else if (uint32_t(diff) >= SecondsPerDay)
+        diff -= SecondsPerDay;
 
     return diff * msPerSecond;
 }

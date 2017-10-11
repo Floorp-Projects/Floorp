@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<style>
+body { -moz-column-count: 2; }
+div::after { content: "A"; }
+</style>
+
+<script>
+function boom() {
+    x.style.display = "contents";
+}
+</script>
+</head>
+<body onload="boom();"><div></div><div><div id="x"></div></div></body>
+</html>

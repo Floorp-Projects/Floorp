@@ -27,6 +27,10 @@ this.TestUtils = {
     Services.tm.dispatchToMainThread(callbackFn);
   },
 
+  waitForTick() {
+    return new Promise(resolve => this.executeSoon(resolve));
+  },
+
   /**
    * Waits for the specified topic to be observed.
    *

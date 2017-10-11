@@ -334,30 +334,18 @@ js::ValueToCallable(JSContext* cx, HandleValue v, int numToSkip, MaybeConstruct 
     return nullptr;
 }
 
-bool
-RunState::maybeCreateThisForConstructor(JSContext* cx)
+static bool
+MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript, const CallArgs& args,
+                              bool createSingleton)
 {
-    if (isInvoke()) {
-        InvokeState& invoke = *asInvoke();
-        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
-            RootedObject callee(cx, &invoke.args().callee());
-            if (callee->isBoundFunction()) {
-                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-            } else if (script()->isDerivedClassConstructor()) {
-                MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
-                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-            } else {
-                MOZ_ASSERT(invoke.args().thisv().isMagic(JS_IS_CONSTRUCTING));
-                RootedObject newTarget(cx, &invoke.args().newTarget().toObject());
-                NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
-                JSObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
-                if (!obj)
-                    return false;
-                invoke.args().setThis(ObjectValue(*obj));
-            }
-        }
-    }
-    return true;
+    if (args.thisv().isObject())
+        return true;
+
+    RootedObject callee(cx, &args.callee());
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
+
+    return CreateThis(cx, callee, calleeScript, newTarget, newKind, args.mutableThisv());
 }
 
 static MOZ_NEVER_INLINE bool
@@ -375,6 +363,15 @@ ExecuteState::pushInterpreterFrame(JSContext* cx)
     return cx->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
                                                    envChain_, evalInFrame_);
 }
+
+InterpreterFrame*
+RunState::pushInterpreterFrame(JSContext* cx)
+{
+    if (isInvoke())
+        return asInvoke()->pushInterpreterFrame(cx);
+    return asExecute()->pushInterpreterFrame(cx);
+}
+
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
 // avoid this.
@@ -493,11 +490,15 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
 
     // Check to see if createSingleton flag should be set for this frame.
     if (construct) {
+        bool createSingleton = false;
         jsbytecode* pc;
         if (JSScript* script = cx->currentScript(&pc)) {
             if (ObjectGroup::useSingletonForNewObject(cx, script, pc))
-                state.setCreateSingleton();
+                createSingleton = true;
         }
+
+        if (!MaybeCreateThisForConstructor(cx, state.script(), args, createSingleton))
+            return false;
     }
 
     bool ok = RunScript(cx, state);
@@ -3088,45 +3089,48 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
 
-        bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
+        bool createSingleton = false;
+        if (construct) {
+            createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
+
+            if (!MaybeCreateThisForConstructor(cx, funScript, args, createSingleton))
+                goto error;
+        }
 
         TypeMonitorCall(cx, args, construct);
 
-        mozilla::Maybe<InvokeState> state;
-        state.emplace(cx, args, construct);
+        {
+            InvokeState state(cx, args, construct);
 
-        if (createSingleton)
-            state->setCreateSingleton();
+            if (!createSingleton && jit::IsIonEnabled(cx)) {
+                jit::MethodStatus status = jit::CanEnter(cx, state);
+                if (status == jit::Method_Error)
+                    goto error;
+                if (status == jit::Method_Compiled) {
+                    jit::JitExecStatus exec = jit::IonCannon(cx, state);
+                    interpReturnOK = !IsErrorStatus(exec);
+                    if (interpReturnOK)
+                        CHECK_BRANCH();
+                    REGS.sp = args.spAfterCall();
+                    goto jit_return;
+                }
+            }
 
-        if (!createSingleton && jit::IsIonEnabled(cx)) {
-            jit::MethodStatus status = jit::CanEnter(cx, state.ref());
-            if (status == jit::Method_Error)
-                goto error;
-            if (status == jit::Method_Compiled) {
-                jit::JitExecStatus exec = jit::IonCannon(cx, state.ref());
-                interpReturnOK = !IsErrorStatus(exec);
-                if (interpReturnOK)
-                    CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
-                goto jit_return;
+            if (jit::IsBaselineEnabled(cx)) {
+                jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
+                if (status == jit::Method_Error)
+                    goto error;
+                if (status == jit::Method_Compiled) {
+                    jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state);
+                    interpReturnOK = !IsErrorStatus(exec);
+                    if (interpReturnOK)
+                        CHECK_BRANCH();
+                    REGS.sp = args.spAfterCall();
+                    goto jit_return;
+                }
             }
         }
 
-        if (jit::IsBaselineEnabled(cx)) {
-            jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state.ref());
-            if (status == jit::Method_Error)
-                goto error;
-            if (status == jit::Method_Compiled) {
-                jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state.ref());
-                interpReturnOK = !IsErrorStatus(exec);
-                if (interpReturnOK)
-                    CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
-                goto jit_return;
-            }
-        }
-
-        state.reset();
         funScript = fun->nonLazyScript();
 
         if (!activation.pushInlineFrame(args, funScript, construct))
@@ -5183,6 +5187,8 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
         Scope* startingScope;
         if (frame.isDebuggerEvalFrame()) {
             AbstractFramePtr evalInFramePrev = frame.asInterpreterFrame()->evalInFramePrev();
+            while (evalInFramePrev.isDebuggerEvalFrame())
+                evalInFramePrev = evalInFramePrev.asInterpreterFrame()->evalInFramePrev();
             startingScope = evalInFramePrev.script()->bodyScope();
         } else {
             MOZ_ASSERT(frame.isEvalFrame());

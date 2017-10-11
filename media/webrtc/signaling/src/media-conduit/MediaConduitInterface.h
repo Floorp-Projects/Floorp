@@ -11,7 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/utils.h"
+#include "double-conversion/utils.h" // for DISALLOW_COPY_AND_ASSIGN
 #include "CodecConfig.h"
 #include "VideoTypes.h"
 #include "MediaConduitErrors.h"

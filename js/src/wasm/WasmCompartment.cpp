@@ -28,13 +28,11 @@ using namespace js;
 using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
-  : mutatingInstances_(false)
 {}
 
 Compartment::~Compartment()
 {
     MOZ_ASSERT(instances_.empty());
-    MOZ_ASSERT(!mutatingInstances_);
 }
 
 struct InstanceComparator
@@ -62,20 +60,6 @@ struct InstanceComparator
     }
 };
 
-struct CodeSegmentPC
-{
-    const void* pc;
-
-    explicit CodeSegmentPC(const void* pc) : pc(pc) {}
-    int operator()(const CodeSegment* cs) const {
-        if (cs->containsCodePC(pc))
-            return 0;
-        if (pc < cs->base())
-            return -1;
-        return 1;
-    }
-};
-
 bool
 Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
 {
@@ -84,33 +68,16 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 
     instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
-    if (instance.debugEnabled() &&
-        instance.compartment()->debuggerObservesAllExecution())
-    {
+    if (instance.debugEnabled() && instance.compartment()->debuggerObservesAllExecution())
         instance.ensureEnterFrameTrapsState(cx, true);
-    }
 
     size_t index;
     if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
         MOZ_CRASH("duplicate registration");
 
-    {
-        AutoMutateInstances guard(*this);
-        if (!instances_.insert(instances_.begin() + index, &instance)) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-
-        const Code& code = instance.code();
-        for (auto t : code.tiers()) {
-            const CodeSegment& cs = code.segment(t);
-            BinarySearchIf(codeSegments_, 0, codeSegments_.length(), CodeSegmentPC(cs.base()),
-                           &index);
-            if (!codeSegments_.insert(codeSegments_.begin() + index, &cs)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-        }
+    if (!instances_.insert(instances_.begin() + index, &instance)) {
+        ReportOutOfMemory(cx);
+        return false;
     }
 
     Debugger::onNewWasmInstance(cx, instanceObj);
@@ -123,39 +90,7 @@ Compartment::unregisterInstance(Instance& instance)
     size_t index;
     if (!BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
         return;
-
-    AutoMutateInstances guard(*this);
     instances_.erase(instances_.begin() + index);
-    const Code& code = instance.code();
-    for (auto t : code.tiers()) {
-        MOZ_ALWAYS_TRUE(BinarySearchIf(codeSegments_, 0, codeSegments_.length(),
-                        CodeSegmentPC(code.segment(t).base()), &index));
-        codeSegments_.erase(codeSegments_.begin() + index);
-    }
-}
-
-const CodeSegment*
-Compartment::lookupCodeSegment(const void* pc) const
-{
-    // lookupCodeSegment() can be called asynchronously from the interrupt signal
-    // handler. In that case, the signal handler is just asking whether the pc
-    // is in wasm code. If instances_ is being mutated then we can't be
-    // executing wasm code so returning nullptr is fine.
-    if (mutatingInstances_)
-        return nullptr;
-
-    size_t index;
-    if (!BinarySearchIf(codeSegments_, 0, codeSegments_.length(), CodeSegmentPC(pc), &index))
-        return nullptr;
-
-    return codeSegments_[index];
-}
-
-const Code*
-Compartment::lookupCode(const void* pc) const
-{
-    const CodeSegment* found = lookupCodeSegment(pc);
-    return found ? found->code() : nullptr;
 }
 
 void

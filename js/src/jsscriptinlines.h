@@ -182,7 +182,7 @@ JSScript::setBaselineScript(JSRuntime* maybeRuntime, js::jit::BaselineScript* ba
 {
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
-    MOZ_ASSERT(!hasIonScript());
+    MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
     baseline = baselineScript;
     resetWarmUpResetCounter();
     updateBaselineOrIonRaw(maybeRuntime);

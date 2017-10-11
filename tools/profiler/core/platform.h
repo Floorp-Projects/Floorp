@@ -41,7 +41,6 @@
 #include "mozilla/Unused.h"
 #include "PlatformMacros.h"
 #include <vector>
-#include "StackTop.h"
 
 // We need a definition of gettid(), but glibc doesn't provide a
 // wrapper for it.

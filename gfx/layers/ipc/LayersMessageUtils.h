@@ -307,7 +307,6 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
-    WriteParam(aMsg, aParam.mSupportsBackdropCopyForComponentAlpha);
     WriteParam(aMsg, aParam.mUsingAdvancedLayers);
     WriteParam(aMsg, aParam.mSyncHandle);
   }
@@ -321,7 +320,6 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
                   ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
-                  ReadParam(aMsg, aIter, &aResult->mSupportsBackdropCopyForComponentAlpha) &&
                   ReadParam(aMsg, aIter, &aResult->mUsingAdvancedLayers) &&
                   ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
