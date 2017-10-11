@@ -625,7 +625,7 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        const wr::LayoutSize& aContentSize,
                                        size_t aCapacity)
-  : mMaskClipCount(0)
+  : mExtraClipCount(0)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
@@ -699,25 +699,25 @@ DisplayListBuilder::DefineClip(const wr::LayoutRect& aClipRect,
 }
 
 void
-DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aMask)
+DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aExtra)
 {
   wr_dp_push_clip(mWrState, aClipId.id);
   WRDL_LOG("PushClip id=%" PRIu64 "\n", mWrState, aClipId.id);
-  if (!aMask) {
+  if (!aExtra) {
     mClipIdStack.push_back(aClipId);
   } else {
-    mMaskClipCount++;
+    mExtraClipCount++;
   }
 }
 
 void
-DisplayListBuilder::PopClip(bool aMask)
+DisplayListBuilder::PopClip(bool aExtra)
 {
   WRDL_LOG("PopClip id=%" PRIu64 "\n", mWrState, mClipIdStack.back().id);
-  if (!aMask) {
+  if (!aExtra) {
     mClipIdStack.pop_back();
   } else {
-    mMaskClipCount--;
+    mExtraClipCount--;
   }
   wr_dp_pop_clip(mWrState);
 }
