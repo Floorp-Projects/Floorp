@@ -48,10 +48,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                    tooltiptext="&goEndCap.tooltip;"
                    xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
         <xul:dropmarker anonid="historydropmarker"
-                        class="autocomplete-history-dropmarker urlbar-history-dropmarker urlbar-icon"
+                        class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
                         tooltiptext="&urlbar.openHistoryPopup.tooltip;"
                         allowevents="true"
-                        xbl:inherits="open,enablehistory,parentfocused=focused,usertyping"/>
+                        xbl:inherits="open,parentfocused=focused,usertyping"/>
         <children includes="hbox"/>
       </xul:hbox>
       <xul:popupset anonid="popupset"
@@ -128,6 +128,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.popup.addEventListener("popupshowing", () => {
           this._enableOrDisableOneOffSearches();
         }, {capturing: true, once: true});
+
+        // history dropmarker open state
+        this.popup.addEventListener("popupshowing", () => {
+          this.setAttribute("open", "true");
+        });
+        this.popup.addEventListener("popuphidden", () => {
+          requestAnimationFrame(() => {
+            this.removeAttribute("open");
+          });
+        });
 
         // The autocomplete controller uses heuristic on some internal caches
         // to handle cases like backspace, autofill or repeated searches.
@@ -1511,10 +1521,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[
-        // Eventually show the opt-out notification even if the location bar is
-        // empty, focused, and the user clicks on it.
-        if (event.button == 0 && this.focused && this.textValue == "") {
-          this.maybeShowSearchSuggestionsNotificationOnFocus(true);
+        if (event.button == 0) {
+          if (event.originalTarget.getAttribute("anonid") == "historydropmarker") {
+            this.toggleHistoryPopup();
+          }
+
+          // Eventually show the opt-out notification even if the location bar is
+          // empty, focused, and the user clicks on it.
+          if (this.focused && this.textValue == "") {
+            this.maybeShowSearchSuggestionsNotificationOnFocus(true);
+          }
         }
       ]]></handler>
 

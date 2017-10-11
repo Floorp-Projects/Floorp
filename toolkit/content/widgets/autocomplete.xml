@@ -31,10 +31,6 @@
         <children includes="hbox"/>
       </xul:hbox>
 
-      <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
-                      allowevents="true"
-                      xbl:inherits="open,enablehistory,parentfocused=focused"/>
-
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
 
       <children includes="toolbarbutton"/>
@@ -401,23 +397,6 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
-          // history dropmarker pushed state
-          function cleanup(popup) {
-            popup.removeEventListener("popupshowing", onShow);
-          }
-          function onShow(event) {
-            var popup = event.target, input = popup.input;
-            cleanup(popup);
-            input.setAttribute("open", "true");
-            function onHide() {
-              input.removeAttribute("open");
-              popup.removeEventListener("popuphiding", onHide);
-            }
-            popup.addEventListener("popuphiding", onHide);
-          }
-          this.popup.addEventListener("popupshowing", onShow);
-          setTimeout(cleanup, 1000, this.popup);
-
           // Store our "normal" maxRows on the popup, so that it can reset the
           // value when the popup is hidden.
           this.popup._normalMaxRows = this.maxRows;
@@ -437,10 +416,7 @@
 
       <method name="toggleHistoryPopup">
         <body><![CDATA[
-          // If this method is called on the same event tick as the popup gets
-          // hidden, do nothing to avoid re-opening the popup when the drop
-          // marker is clicked while the popup is still open.
-          if (!this.popup.isPopupHidingTick && !this.popup.popupOpen)
+          if (!this.popup.popupOpen)
             this.showHistoryPopup();
           else
             this.closePopup();
@@ -912,7 +888,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIAutoCompletePopup">
       <field name="mInput">null</field>
       <field name="mPopupOpen">false</field>
-      <field name="mIsPopupHidingTick">false</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -924,9 +899,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
       <property name="popupOpen" readonly="true"
                 onget="return this.mPopupOpen;"/>
-
-      <property name="isPopupHidingTick" readonly="true"
-                onget="return this.mIsPopupHidingTick;"/>
 
       <method name="closePopup">
         <body>
@@ -1033,14 +1005,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
         this.removeAttribute("autocompleteinput");
         this.mPopupOpen = false;
-
-        // Prevent opening popup from historydropmarker mousedown handler
-        // on the same event tick the popup is hidden by the same mousedown
-        // event.
-        this.mIsPopupHidingTick = true;
-        setTimeout(() => {
-          this.mIsPopupHidingTick = false;
-        }, 0);
 
         // Reset the maxRows property to the cached "normal" value (if there's
         // any), and reset normalMaxRows so that we can detect whether it was set
@@ -2608,14 +2572,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       </xul:hbox>
       <xul:scrollbar xbl:inherits="collapsed=hidescrollbar" orient="vertical" class="tree-scrollbar"/>
     </content>
-  </binding>
-
-  <binding id="history-dropmarker" extends="chrome://global/content/bindings/general.xml#dropmarker">
-    <handlers>
-      <handler event="mousedown" button="0"><![CDATA[
-        document.getBindingParent(this).toggleHistoryPopup();
-      ]]></handler>
-    </handlers>
   </binding>
 
 </bindings>
