@@ -76,12 +76,16 @@ static int reserved_word(yyscan_t yyscanner);
 static int ES2_reserved_ES3_keyword(TParseContext *context, int token);
 static int ES2_keyword_ES3_reserved(TParseContext *context, int token);
 static int ES2_ident_ES3_keyword(TParseContext *context, int token);
+static int ES2_ident_ES3_keyword_multiview_keyword(TParseContext *context, int token);
 static int ES2_ident_ES3_reserved_ES3_1_keyword(TParseContext *context, int token);
 static int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token);
+static int ES2_and_ES3_ident_ES3_1_keyword(TParseContext *context, int token);
+static int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extension, int token);
 static int uint_constant(TParseContext *context);
 static int int_constant(TParseContext *context);
 static int float_constant(yyscan_t yyscanner);
 static int floatsuffix_check(TParseContext* context);
+static int yuvcscstandardext_constant(TParseContext *context);
 %}
 
 %option noyywrap nounput never-interactive
@@ -110,6 +114,7 @@ O           [0-7]
 "attribute"    { return ES2_keyword_ES3_reserved(context, ATTRIBUTE); }
 "const"        { return CONST_QUAL; }
 "uniform"      { return UNIFORM; }
+"buffer"       { return ES2_and_ES3_ident_ES3_1_keyword(context, BUFFER); }
 "varying"      { return ES2_keyword_ES3_reserved(context, VARYING); }
 
 "break"        { return BREAK; }
@@ -131,6 +136,7 @@ O           [0-7]
 "in"           { return IN_QUAL; }
 "out"          { return OUT_QUAL; }
 "inout"        { return INOUT_QUAL; }
+"shared"       { return ES2_and_ES3_ident_ES3_1_keyword(context, SHARED); }
 
 "float"        { return FLOAT_TYPE; }
 "int"          { return INT_TYPE; }
@@ -178,21 +184,30 @@ O           [0-7]
 "sampler3DRect"        { return ES2_reserved_ES3_keyword(context, SAMPLER3DRECT); }
 "sampler2DRect"        { return SAMPLER2DRECT; }
 "sampler2DArray"       { return ES2_ident_ES3_keyword(context, SAMPLER2DARRAY); }
+"sampler2DMS"          { return ES2_ident_ES3_reserved_ES3_1_keyword(context, SAMPLER2DMS); }
 "isampler2D"           { return ES2_ident_ES3_keyword(context, ISAMPLER2D); }
 "isampler3D"           { return ES2_ident_ES3_keyword(context, ISAMPLER3D); }
 "isamplerCube"         { return ES2_ident_ES3_keyword(context, ISAMPLERCUBE); }
 "isampler2DArray"      { return ES2_ident_ES3_keyword(context, ISAMPLER2DARRAY); }
+"isampler2DMS"         { return ES2_ident_ES3_reserved_ES3_1_keyword(context, ISAMPLER2DMS); }
 "usampler2D"           { return ES2_ident_ES3_keyword(context, USAMPLER2D); }
 "usampler3D"           { return ES2_ident_ES3_keyword(context, USAMPLER3D); }
 "usamplerCube"         { return ES2_ident_ES3_keyword(context, USAMPLERCUBE); }
 "usampler2DArray"      { return ES2_ident_ES3_keyword(context, USAMPLER2DARRAY); }
+"usampler2DMS"         { return ES2_ident_ES3_reserved_ES3_1_keyword(context, USAMPLER2DMS); }
 "sampler2DShadow"      { return ES2_reserved_ES3_keyword(context, SAMPLER2DSHADOW); }
 "samplerCubeShadow"    { return ES2_ident_ES3_keyword(context, SAMPLERCUBESHADOW); }
 "sampler2DArrayShadow" { return ES2_ident_ES3_keyword(context, SAMPLER2DARRAYSHADOW); }
+"__samplerExternal2DY2YEXT"   { return ES3_extension_keyword_else_ident(context, TExtension::EXT_YUV_target, SAMPLEREXTERNAL2DY2YEXT); }
 
 "struct"       { return STRUCT; }
 
-"layout"  { return ES2_ident_ES3_keyword(context, LAYOUT); }
+"layout"  { return ES2_ident_ES3_keyword_multiview_keyword(context, LAYOUT); }
+
+"yuvCscStandardEXT"    { return ES3_extension_keyword_else_ident(context, TExtension::EXT_YUV_target, YUVCSCSTANDARDEXT); }
+"itu_601"              { return yuvcscstandardext_constant(context); }
+"itu_601_full_range"   { return yuvcscstandardext_constant(context); }
+"itu_709"              { return yuvcscstandardext_constant(context); }
 
 "image2D" { return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE2D); }
 "iimage2D" { return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE2D); }
@@ -211,10 +226,10 @@ O           [0-7]
 "coherent" { return ES2_ident_ES3_reserved_ES3_1_keyword(context, COHERENT); }
 "restrict" { return ES2_ident_ES3_reserved_ES3_1_keyword(context, RESTRICT); }
 "volatile" { return ES2_and_ES3_reserved_ES3_1_keyword(context, VOLATILE); }
+"atomic_uint" { return ES2_ident_ES3_reserved_ES3_1_keyword(context, ATOMICUINT); }
 
     /* Reserved keywords for GLSL ES 3.00 that are not reserved for GLSL ES 1.00 */
 "resource"          |
-"atomic_uint"       |
 "noperspective"     |
 "patch"             |
 "sample"            |
@@ -249,9 +264,6 @@ O           [0-7]
 "samplerBuffer"     |
 "isamplerBuffer"    |
 "usamplerBuffer"    |
-"sampler2DMS"       |
-"isampler2DMS"      |
-"usampler2DMS"      |
 "sampler2DMSArray"  |
 "isampler2DMSArray" |
 "usampler2DMSArray" { 
@@ -399,7 +411,7 @@ O           [0-7]
 }
 <FIELDS>[ \t\v\f\r] {}
 <FIELDS>. {
-    yyextra->error(*yylloc, "Illegal character at fieldname start", yytext, "");
+    yyextra->error(*yylloc, "Illegal character at fieldname start", yytext);
     return 0;
 }
 
@@ -443,7 +455,7 @@ int check_type(yyscan_t yyscanner) {
 int reserved_word(yyscan_t yyscanner) {
     struct yyguts_t* yyg = (struct yyguts_t*) yyscanner;
 
-    yyextra->error(*yylloc, "Illegal use of reserved word", yytext, "");
+    yyextra->error(*yylloc, "Illegal use of reserved word", yytext);
     return 0;
 }
 
@@ -504,6 +516,22 @@ int ES2_ident_ES3_keyword(TParseContext *context, int token)
     return token;
 }
 
+int ES2_ident_ES3_keyword_multiview_keyword(TParseContext *context, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // not a reserved word in GLSL ES 1.00, so could be used as an identifier/type name
+    // except when multiview extension is enabled
+    if (context->getShaderVersion() < 300 && !context->isExtensionEnabled(TExtension::OVR_multiview))
+    {
+        yylval->lex.string = NewPoolTString(yytext);
+        return check_type(yyscanner);
+    }
+
+    return token;
+}
+
 int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token)
 {
     yyscan_t yyscanner = (yyscan_t) context->getScanner();
@@ -516,18 +544,48 @@ int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token)
     return token;
 }
 
+int ES2_and_ES3_ident_ES3_1_keyword(TParseContext *context, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // not a reserved word in GLSL ES 1.00 and GLSL ES 3.00, so could be used as an identifier/type name
+    if (context->getShaderVersion() < 310)
+    {
+        yylval->lex.string = NewPoolTString(yytext);
+        return check_type(yyscanner);
+    }
+
+    return token;
+}
+
+int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extension, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // a reserved word in GLSL ES 3.00 with enabled extension, otherwise could be used as an identifier/type name
+    if (context->getShaderVersion() >= 300 && context->isExtensionEnabled(extension))
+    {
+        return token;
+    }
+
+    yylval->lex.string = NewPoolTString(yytext);
+    return check_type(yyscanner);
+}
+
 int uint_constant(TParseContext *context)
 {
     struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
 
     if (context->getShaderVersion() < 300)
     {
-        context->error(*yylloc, "Unsigned integers are unsupported prior to GLSL ES 3.00", yytext, "");
+        context->error(*yylloc, "Unsigned integers are unsupported prior to GLSL ES 3.00", yytext);
         return 0;
     }
 
     if (!atoi_clamp(yytext, &(yylval->lex.u)))
-        yyextra->error(*yylloc, "Integer overflow", yytext, "");
+        yyextra->error(*yylloc, "Integer overflow", yytext);
 
     return UINTCONSTANT;
 }
@@ -545,7 +603,7 @@ int floatsuffix_check(TParseContext* context)
     std::string text = yytext;
     text.resize(text.size() - 1);
     if (!strtof_clamp(text, &(yylval->lex.f)))
-        yyextra->warning(*yylloc, "Float overflow", yytext, "");
+        yyextra->warning(*yylloc, "Float overflow", yytext);
 
     return(FLOATCONSTANT);
 }
@@ -561,9 +619,9 @@ int int_constant(TParseContext *context) {
     if (!atoi_clamp(yytext, &u))
     {
         if (context->getShaderVersion() >= 300)
-            yyextra->error(*yylloc, "Integer overflow", yytext, "");
+            yyextra->error(*yylloc, "Integer overflow", yytext);
         else
-            yyextra->warning(*yylloc, "Integer overflow", yytext, "");
+            yyextra->warning(*yylloc, "Integer overflow", yytext);
     }
     yylval->lex.i = static_cast<int>(u);
     return INTCONSTANT;
@@ -573,8 +631,24 @@ int float_constant(yyscan_t yyscanner) {
     struct yyguts_t* yyg = (struct yyguts_t*) yyscanner;
 
     if (!strtof_clamp(yytext, &(yylval->lex.f)))
-        yyextra->warning(*yylloc, "Float overflow", yytext, "");
+        yyextra->warning(*yylloc, "Float overflow", yytext);
     return FLOATCONSTANT;
+}
+
+int yuvcscstandardext_constant(TParseContext *context)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // a reserved word in GLSL ES 3.00 with enabled extension, otherwise could be used as an identifier/type name
+    if (context->getShaderVersion() >= 300 && context->isExtensionEnabled(TExtension::EXT_YUV_target))
+    {
+        yylval->lex.string = NewPoolTString(yytext);
+        return YUVCSCSTANDARDEXTCONSTANT;
+    }
+
+    yylval->lex.string = NewPoolTString(yytext);
+    return check_type(yyscanner);
 }
 
 int glslang_initialize(TParseContext* context) {
@@ -612,7 +686,7 @@ int glslang_scan(size_t count, const char* const string[], const int length[],
     const TExtensionBehavior& extBehavior = context->extensionBehavior();
     for (TExtensionBehavior::const_iterator iter = extBehavior.begin();
          iter != extBehavior.end(); ++iter) {
-        preprocessor->predefineMacro(iter->first.c_str(), 1);
+        preprocessor->predefineMacro(GetExtensionNameString(iter->first), 1);
     }
     if (context->getFragmentPrecisionHigh())
         preprocessor->predefineMacro("GL_FRAGMENT_PRECISION_HIGH", 1);

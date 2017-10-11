@@ -216,7 +216,7 @@ public:
   LockAndDispatch(CamerasChild* aCamerasChild,
                   const char* aRequestingFunc,
                   nsIRunnable *aRunnable,
-                  const T& aFailureValue = T(-1), const T& aSuccessValue = T(0))
+                  const T& aFailureValue, const T& aSuccessValue)
     : mCamerasChild(aCamerasChild), mRequestingFunc(aRequestingFunc),
       mRunnable(aRunnable),
       mReplyLock(aCamerasChild->mReplyMonitor),
@@ -256,7 +256,7 @@ private:
   MonitorAutoLock mReplyLock;
   MutexAutoLock mRequestLock;
   bool mSuccess;
-  const T& mFailureValue;
+  const T mFailureValue;
   const T& mSuccessValue;
 };
 
@@ -360,7 +360,7 @@ CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
       aCapEngine,
       unique_id,
       capability_number);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
     capability = mReplyCapability;
   }
@@ -401,7 +401,7 @@ CamerasChild::GetCaptureDevice(CaptureEngine aCapEngine,
       &CamerasChild::SendGetCaptureDevice,
       aCapEngine,
       list_number);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
     base::strlcpy(device_nameUTF8, mReplyDeviceName.get(), device_nameUTF8Length);
     base::strlcpy(unique_idUTF8, mReplyDeviceID.get(), unique_idUTF8Length);
@@ -448,7 +448,7 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
       aCapEngine,
       unique_id,
       aPrincipalInfo);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
     LOG(("Capture Device allocated: %d", mReplyInteger));
     aStreamId = mReplyInteger;
@@ -481,7 +481,7 @@ CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
       &CamerasChild::SendReleaseCaptureDevice,
       aCapEngine,
       capture_id);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   return dispatcher.ReturnValue();
 }
 
@@ -533,7 +533,7 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
       aCapEngine,
       capture_id,
       capCap);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   return dispatcher.ReturnValue();
 }
 
@@ -548,7 +548,7 @@ CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
       &CamerasChild::SendStopCapture,
       aCapEngine,
       capture_id);
-  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
     RemoveCallback(aCapEngine, capture_id);
   }
@@ -721,7 +721,8 @@ CamerasChild::CamerasChild()
   : mCallbackMutex("mozilla::cameras::CamerasChild::mCallbackMutex"),
     mIPCIsAlive(true),
     mRequestMutex("mozilla::cameras::CamerasChild::mRequestMutex"),
-    mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor")
+    mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor"),
+    mZero(0)
 {
   LOG(("CamerasChild: %p", this));
 

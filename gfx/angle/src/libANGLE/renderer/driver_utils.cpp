@@ -47,6 +47,45 @@ const uint32_t Kabylake[] = {0x5916, 0x5913, 0x5906, 0x5926, 0x5921, 0x5915, 0x5
 
 }  // anonymous namespace
 
+IntelDriverVersion::IntelDriverVersion(uint16_t lastPart) : mVersionPart(lastPart)
+{
+}
+
+bool IntelDriverVersion::operator==(const IntelDriverVersion &version)
+{
+    return mVersionPart == version.mVersionPart;
+}
+
+bool IntelDriverVersion::operator!=(const IntelDriverVersion &version)
+{
+    return !(*this == version);
+}
+
+bool IntelDriverVersion::operator<(const IntelDriverVersion &version)
+{
+    // See http://www.intel.com/content/www/us/en/support/graphics-drivers/000005654.html to
+    // understand the Intel graphics driver version number on Windows.
+    // mVersionPart1 changes with OS version. mVersionPart2 changes with DirectX version.
+    // mVersionPart3 stands for release year. mVersionPart4 is driver specific unique version
+    // number.
+    // For example: Intel driver version '20.19.15.4539'
+    //              20   -> windows 10 driver
+    //              19   -> DirectX 12 first version(12.0) supported
+    //              15   -> Driver released in 2015
+    //              4539 -> Driver specific unique version number
+    // For linux, Intel graphics driver version is the mesa version. The version number has three
+    // parts: major revision, minor revision, release number. So, for linux, we need to compare
+    // three parts.
+    // Currently, it's only used in windows. So, checking the last part is enough. Once it's needed
+    // in other platforms, it's easy to be extended.
+    return mVersionPart < version.mVersionPart;
+}
+
+bool IntelDriverVersion::operator>=(const IntelDriverVersion &version)
+{
+    return !(*this < version);
+}
+
 bool IsHaswell(uint32_t DeviceId)
 {
     return std::find(std::begin(Haswell), std::end(Haswell), DeviceId) != std::end(Haswell);

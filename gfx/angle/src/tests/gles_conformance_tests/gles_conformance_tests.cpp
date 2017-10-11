@@ -11,7 +11,7 @@ static std::vector<char> FormatArg(const char* fmt, ...)
 {
     va_list vararg;
     va_start(vararg, fmt);
-    int len = vsnprintf(NULL, 0, fmt, vararg);
+    int len = vsnprintf(nullptr, 0, fmt, vararg);
     va_end(vararg);
 
     std::vector<char> buf(len + 1);
@@ -26,7 +26,8 @@ static std::vector<char> FormatArg(const char* fmt, ...)
 static std::string GetExecutableDirectory()
 {
     std::vector<char> executableFileBuf(MAX_PATH);
-    DWORD executablePathLen = GetModuleFileNameA(NULL, executableFileBuf.data(), executableFileBuf.size());
+    DWORD executablePathLen =
+        GetModuleFileNameA(nullptr, executableFileBuf.data(), executableFileBuf.size());
     if (executablePathLen == 0)
     {
         return false;

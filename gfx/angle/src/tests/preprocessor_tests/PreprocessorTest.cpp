@@ -11,7 +11,7 @@ void SimplePreprocessorTest::preprocess(const char *input,
                                         std::stringstream *output,
                                         pp::Preprocessor *preprocessor)
 {
-    ASSERT_TRUE(preprocessor->init(1, &input, NULL));
+    ASSERT_TRUE(preprocessor->init(1, &input, nullptr));
 
     int line = 1;
     pp::Token token;

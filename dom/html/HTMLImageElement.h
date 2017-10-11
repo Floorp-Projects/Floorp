@@ -144,7 +144,15 @@ public:
   }
   void GetSrc(nsAString& aSrc, nsIPrincipal&)
   {
+    GetSrc(aSrc);
+  }
+  void GetSrc(nsAString& aSrc)
+  {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
+  }
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
   }
   void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {

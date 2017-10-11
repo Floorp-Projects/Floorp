@@ -851,7 +851,7 @@ BrowserPageActions.sendToDevice = {
 
     // This is on top because it also clears the device list between state
     // changes.
-    gSync.populateSendTabToDevicesMenu(bodyNode, url, title, (clientId, name, clientType) => {
+    gSync.populateSendTabToDevicesMenu(bodyNode, url, title, (clientId, name, clientType, lastModified) => {
       if (!name) {
         return document.createElement("toolbarseparator");
       }
@@ -859,8 +859,9 @@ BrowserPageActions.sendToDevice = {
       item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
       if (clientId) {
         item.classList.add("subviewbutton-iconic");
+        item.setAttribute("tooltiptext", gSync.formatLastSyncDate(lastModified));
       }
-      item.setAttribute("tooltiptext", name);
+
       item.addEventListener("command", event => {
         if (panelNode) {
           panelNode.hidePopup();

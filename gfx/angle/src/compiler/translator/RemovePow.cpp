@@ -11,7 +11,7 @@
 #include "compiler/translator/RemovePow.h"
 
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/IntermNode.h"
+#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
@@ -46,8 +46,7 @@ class RemovePowTraverser : public TIntermTraverser
 };
 
 RemovePowTraverser::RemovePowTraverser()
-    : TIntermTraverser(true, false, false),
-      mNeedAnotherIteration(false)
+    : TIntermTraverser(true, false, false), mNeedAnotherIteration(false)
 {
 }
 
@@ -68,7 +67,7 @@ bool RemovePowTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
         TIntermUnary *exp = new TIntermUnary(EOpExp2, mul);
         exp->setLine(node->getLine());
 
-        queueReplacement(node, exp, OriginalNode::IS_DROPPED);
+        queueReplacement(exp, OriginalNode::IS_DROPPED);
 
         // If the x parameter also needs to be replaced, we need to do that in another traversal,
         // since it's parent node will change in a way that's not handled correctly by updateTree().
@@ -81,7 +80,7 @@ bool RemovePowTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
     return true;
 }
 
-} // namespace
+}  // namespace
 
 void RemovePow(TIntermNode *root)
 {
@@ -92,8 +91,7 @@ void RemovePow(TIntermNode *root)
         traverser.nextIteration();
         root->traverse(&traverser);
         traverser.updateTree();
-    }
-    while (traverser.needAnotherIteration());
+    } while (traverser.needAnotherIteration());
 }
 
 }  // namespace sh

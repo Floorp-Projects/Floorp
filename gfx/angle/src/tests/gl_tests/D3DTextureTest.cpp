@@ -7,6 +7,7 @@
 //   Tests of the EGL_ANGLE_d3d_texture_client_buffer extension
 
 #include "test_utils/ANGLETest.h"
+#include "test_utils/gl_raii.h"
 
 #include <d3d11.h>
 #include <windows.h>
@@ -27,16 +28,16 @@ class D3DTextureTest : public ANGLETest
         setConfigGreenBits(8);
         setConfigBlueBits(8);
         setConfigAlphaBits(8);
+        setConfigDepthBits(24);
+        setConfigStencilBits(8);
     }
 
     void SetUp() override
     {
         ANGLETest::SetUp();
 
-        // clang-format off
-        const std::string vsSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vsSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -45,27 +46,34 @@ class D3DTextureTest : public ANGLETest
                 gl_Position = position;
                 texcoord = (position.xy * 0.5) + 0.5;
                 texcoord.y = 1.0 - texcoord.y;
-            }
-        );
+            })";
 
-        const std::string textureFSSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string textureFSSource =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
-        // clang-format on
+            })";
+
+        const std::string textureFSSourceNoSampling =
+            R"(precision highp float;
+
+            void main()
+            {
+                gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+            })";
 
         mTextureProgram = CompileProgram(vsSource, textureFSSource);
         ASSERT_NE(0u, mTextureProgram) << "shader compilation failed.";
 
         mTextureUniformLocation = glGetUniformLocation(mTextureProgram, "tex");
         ASSERT_NE(-1, mTextureUniformLocation);
+
+        mTextureProgramNoSampling = CompileProgram(vsSource, textureFSSourceNoSampling);
+        ASSERT_NE(0u, mTextureProgramNoSampling) << "shader compilation failed.";
 
         mD3D11Module = LoadLibrary(TEXT("d3d11.dll"));
         ASSERT_NE(nullptr, mD3D11Module);
@@ -136,10 +144,13 @@ class D3DTextureTest : public ANGLETest
         ANGLETest::TearDown();
     }
 
-    EGLSurface createPBuffer(size_t width,
-                             size_t height,
-                             EGLint eglTextureFormat,
-                             EGLint eglTextureTarget)
+    EGLSurface createD3D11PBuffer(size_t width,
+                                  size_t height,
+                                  EGLint eglTextureFormat,
+                                  EGLint eglTextureTarget,
+                                  UINT sampleCount,
+                                  UINT sampleQuality,
+                                  UINT bindFlags)
     {
         EGLWindow *window  = getEGLWindow();
         EGLDisplay display = window->getDisplay();
@@ -150,23 +161,51 @@ class D3DTextureTest : public ANGLETest
             eglTextureTarget,   EGL_NONE,         EGL_NONE,
         };
 
+        ASSERT(mD3D11Device);
+        ID3D11Texture2D *texture = nullptr;
+        CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_R8G8B8A8_UNORM, static_cast<UINT>(width),
+                                   static_cast<UINT>(height), 1, 1, bindFlags);
+        desc.SampleDesc.Count   = sampleCount;
+        desc.SampleDesc.Quality = sampleQuality;
+        EXPECT_TRUE(SUCCEEDED(mD3D11Device->CreateTexture2D(&desc, nullptr, &texture)));
+
+        EGLSurface pbuffer = eglCreatePbufferFromClientBuffer(display, EGL_D3D_TEXTURE_ANGLE,
+                                                              texture, config, attribs);
+
+        texture->Release();
+
+        return pbuffer;
+    }
+
+    EGLSurface createPBuffer(size_t width,
+                             size_t height,
+                             EGLint eglTextureFormat,
+                             EGLint eglTextureTarget,
+                             UINT sampleCount,
+                             UINT sampleQuality)
+    {
         if (mD3D11Device)
         {
-            ID3D11Texture2D *texture = nullptr;
-            CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_R8G8B8A8_UNORM, static_cast<UINT>(width),
-                                       static_cast<UINT>(height), 1, 1,
-                                       D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
-            EXPECT_TRUE(SUCCEEDED(mD3D11Device->CreateTexture2D(&desc, nullptr, &texture)));
-
-            EGLSurface pbuffer = eglCreatePbufferFromClientBuffer(display, EGL_D3D_TEXTURE_ANGLE,
-                                                                  texture, config, attribs);
-
-            texture->Release();
-
-            return pbuffer;
+            return createD3D11PBuffer(width, height, eglTextureFormat, eglTextureTarget,
+                                      sampleCount, sampleQuality,
+                                      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
         }
-        else if (mD3D9Device)
+
+        if (mD3D9Device)
         {
+            EGLWindow *window  = getEGLWindow();
+            EGLDisplay display = window->getDisplay();
+            EGLConfig config   = window->getConfig();
+
+            EGLint attribs[] = {
+                EGL_TEXTURE_FORMAT, eglTextureFormat, EGL_TEXTURE_TARGET,
+                eglTextureTarget,   EGL_NONE,         EGL_NONE,
+            };
+
+            // Multisampled textures are not supported on D3D9.
+            ASSERT(sampleCount <= 1);
+            ASSERT(sampleQuality == 0);
+
             IDirect3DTexture9 *texture = nullptr;
             EXPECT_TRUE(SUCCEEDED(mD3D9Device->CreateTexture(
                 static_cast<UINT>(width), static_cast<UINT>(height), 1, D3DUSAGE_RENDERTARGET,
@@ -217,6 +256,7 @@ class D3DTextureTest : public ANGLETest
     }
 
     GLuint mTextureProgram;
+    GLuint mTextureProgramNoSampling;
     GLint mTextureUniformLocation;
 
     HMODULE mD3D11Module       = nullptr;
@@ -238,7 +278,8 @@ TEST_P(D3DTextureTest, Clear)
 
     const size_t bufferSize = 32;
 
-    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE);
+    EGLSurface pbuffer =
+        createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 1, 0);
     ASSERT_EGL_SUCCESS();
     ASSERT_NE(pbuffer, EGL_NO_SURFACE);
 
@@ -253,6 +294,60 @@ TEST_P(D3DTextureTest, Clear)
     EXPECT_PIXEL_EQ(static_cast<GLint>(bufferSize) / 2, static_cast<GLint>(bufferSize) / 2, 255, 0,
                     255, 255);
 
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
+}
+
+// Test creating a pbuffer with a D3D texture and depth stencil bits in the EGL config creates keeps
+// its depth stencil buffer
+TEST_P(D3DTextureTest, DepthStencil)
+{
+    if (!valid())
+    {
+        return;
+    }
+
+    EGLWindow *window  = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
+
+    const size_t bufferSize = 32;
+
+    EGLSurface pbuffer =
+        createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 1, 0);
+    ASSERT_EGL_SUCCESS();
+    ASSERT_NE(pbuffer, EGL_NO_SURFACE);
+
+    // Apply the Pbuffer and clear it to purple and verify
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
+    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearDepthf(0.5f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    glUseProgram(mTextureProgram);
+    glUniform1i(mTextureUniformLocation, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &GLColor::green);
+
+    // Draw a quad that will fail the depth test and verify that the buffer is unchanged
+    drawQuad(mTextureProgram, "position", 1.0f);
+    EXPECT_PIXEL_COLOR_EQ(static_cast<GLint>(bufferSize) / 2, static_cast<GLint>(bufferSize) / 2,
+                          GLColor::cyan);
+
+    // Draw a quad that will pass the depth test and verify that the buffer is green
+    drawQuad(mTextureProgram, "position", -1.0f);
+    EXPECT_PIXEL_COLOR_EQ(static_cast<GLint>(bufferSize) / 2, static_cast<GLint>(bufferSize) / 2,
+                          GLColor::green);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
     eglDestroySurface(display, pbuffer);
 }
 
@@ -265,15 +360,17 @@ TEST_P(D3DTextureTest, BindTexImage)
     }
 
     EGLWindow *window = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
 
     const size_t bufferSize = 32;
 
-    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_TEXTURE_RGBA, EGL_TEXTURE_2D);
+    EGLSurface pbuffer =
+        createPBuffer(bufferSize, bufferSize, EGL_TEXTURE_RGBA, EGL_TEXTURE_2D, 1, 0);
     ASSERT_EGL_SUCCESS();
     ASSERT_NE(pbuffer, EGL_NO_SURFACE);
 
     // Apply the Pbuffer and clear it to purple
-    eglMakeCurrent(window->getDisplay(), pbuffer, pbuffer, window->getContext());
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
     ASSERT_EGL_SUCCESS();
 
     glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
@@ -285,8 +382,7 @@ TEST_P(D3DTextureTest, BindTexImage)
                     255, 255);
 
     // Apply the window surface
-    eglMakeCurrent(window->getDisplay(), window->getSurface(), window->getSurface(),
-                   window->getContext());
+    eglMakeCurrent(display, window->getSurface(), window->getSurface(), window->getContext());
 
     // Create a texture and bind the Pbuffer to it
     GLuint texture = 0;
@@ -298,7 +394,7 @@ TEST_P(D3DTextureTest, BindTexImage)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     EXPECT_GL_NO_ERROR();
 
-    eglBindTexImage(window->getDisplay(), pbuffer, EGL_BACK_BUFFER);
+    eglBindTexImage(display, pbuffer, EGL_BACK_BUFFER);
     glViewport(0, 0, getWindowWidth(), getWindowHeight());
     ASSERT_EGL_SUCCESS();
 
@@ -310,17 +406,252 @@ TEST_P(D3DTextureTest, BindTexImage)
     EXPECT_GL_NO_ERROR();
 
     // Unbind the texture
-    eglReleaseTexImage(window->getDisplay(), pbuffer, EGL_BACK_BUFFER);
+    eglReleaseTexImage(display, pbuffer, EGL_BACK_BUFFER);
     ASSERT_EGL_SUCCESS();
 
     // Verify that purple was drawn
     EXPECT_PIXEL_EQ(getWindowWidth() / 2, getWindowHeight() / 2, 255, 0, 255, 255);
 
     glDeleteTextures(1, &texture);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
+}
+
+// Verify that creating a pbuffer with a multisampled texture will fail on a non-multisampled
+// window.
+TEST_P(D3DTextureTest, CheckSampleMismatch)
+{
+    if (!valid())
+    {
+        return;
+    }
+
+    // Multisampling is not supported on D3D9 or OpenGL.
+    if (IsD3D9() || IsOpenGL())
+    {
+        return;
+    }
+
+    constexpr size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 2,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+    EXPECT_EGL_ERROR(EGL_BAD_PARAMETER);
+    EXPECT_EQ(pbuffer, nullptr);
+}
+
+// Tests what happens when we make a PBuffer that isn't shader-readable.
+TEST_P(D3DTextureTest, NonReadablePBuffer)
+{
+    ANGLE_SKIP_TEST_IF(!valid() || !IsD3D11());
+
+    constexpr size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createD3D11PBuffer(bufferSize, bufferSize, EGL_TEXTURE_RGBA,
+                                            EGL_TEXTURE_2D, 1, 0, D3D11_BIND_RENDER_TARGET);
+
+    ASSERT_EGL_SUCCESS();
+    ASSERT_NE(pbuffer, EGL_NO_SURFACE);
+
+    EGLWindow *window  = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
+
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
+
+    // Clear to green.
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Copy the green color to a texture.
+    GLTexture tex;
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, bufferSize, bufferSize, 0);
+    ASSERT_GL_NO_ERROR();
+
+    // Clear to red.
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
+
+    // Draw with the texture and expect green.
+    draw2DTexturedQuad(0.5f, 1.0f, false);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
+}
+
+class D3DTextureTestMS : public D3DTextureTest
+{
+  protected:
+    D3DTextureTestMS() : D3DTextureTest()
+    {
+        setSamples(4);
+        setMultisampleEnabled(true);
+    }
+};
+
+// Test creating a pbuffer from a multisampled d3d surface and clearing it.
+TEST_P(D3DTextureTestMS, Clear)
+{
+    EGLWindow *window  = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
+
+    constexpr size_t bufferSize = 32;
+    constexpr UINT testpoint    = bufferSize / 2;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 4,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+    ASSERT_EGL_SUCCESS();
+    ASSERT_NE(pbuffer, EGL_NO_SURFACE);
+
+    // Apply the Pbuffer and clear it to magenta and verify
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(testpoint, testpoint, GLColor::magenta);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
+}
+
+// Test creating a pbuffer from a multisampled d3d surface and drawing with a program.
+TEST_P(D3DTextureTestMS, DrawProgram)
+{
+    EGLWindow *window  = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
+
+    constexpr size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 4,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+    ASSERT_EGL_SUCCESS();
+    ASSERT_NE(pbuffer, EGL_NO_SURFACE);
+
+    // Apply the Pbuffer and clear it to magenta
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+
+    constexpr GLint testPoint = bufferSize / 2;
+    EXPECT_PIXEL_COLOR_EQ(testPoint, testPoint, GLColor::magenta);
+
+    // Apply the window surface
+    eglMakeCurrent(display, window->getSurface(), window->getSurface(), window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, getWindowWidth(), getWindowHeight());
+    ASSERT_EGL_SUCCESS();
+
+    // Draw a quad and verify that it is magenta
+    glUseProgram(mTextureProgramNoSampling);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mTextureProgramNoSampling, "position", 0.5f);
+    EXPECT_GL_NO_ERROR();
+
+    // Verify that magenta was drawn
+    EXPECT_PIXEL_COLOR_EQ(getWindowWidth() / 2, getWindowHeight() / 2, GLColor::magenta);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
+}
+
+// Test for failure when creating a pbuffer from a multisampled d3d surface to bind to a texture.
+TEST_P(D3DTextureTestMS, BindTexture)
+{
+    constexpr size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_TEXTURE_RGBA, EGL_TEXTURE_2D, 4,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+
+    EXPECT_EGL_ERROR(EGL_BAD_ATTRIBUTE);
+    EXPECT_EQ(pbuffer, nullptr);
+}
+
+// Verify that creating a pbuffer from a multisampled texture with a multisampled window will fail
+// when the sample counts do not match.
+TEST_P(D3DTextureTestMS, CheckSampleMismatch)
+{
+    constexpr size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 2,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+
+    EXPECT_EGL_ERROR(EGL_BAD_PARAMETER);
+    EXPECT_EQ(pbuffer, nullptr);
+}
+
+// Test creating a pbuffer with a D3D texture and depth stencil bits in the EGL config creates keeps
+// its depth stencil buffer
+TEST_P(D3DTextureTestMS, DepthStencil)
+{
+    EGLWindow *window  = getEGLWindow();
+    EGLDisplay display = window->getDisplay();
+
+    const size_t bufferSize = 32;
+
+    EGLSurface pbuffer = createPBuffer(bufferSize, bufferSize, EGL_NO_TEXTURE, EGL_NO_TEXTURE, 4,
+                                       static_cast<UINT>(D3D11_STANDARD_MULTISAMPLE_PATTERN));
+    ASSERT_EGL_SUCCESS();
+    ASSERT_NE(EGL_NO_SURFACE, pbuffer);
+
+    // Apply the Pbuffer and clear it to purple and verify
+    eglMakeCurrent(display, pbuffer, pbuffer, window->getContext());
+    ASSERT_EGL_SUCCESS();
+
+    glViewport(0, 0, static_cast<GLsizei>(bufferSize), static_cast<GLsizei>(bufferSize));
+    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearDepthf(0.5f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ASSERT_GL_NO_ERROR();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    glUseProgram(mTextureProgram);
+    glUniform1i(mTextureUniformLocation, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &GLColor::green);
+
+    // Draw a quad that will fail the depth test and verify that the buffer is unchanged
+    drawQuad(mTextureProgram, "position", 1.0f);
+    EXPECT_PIXEL_COLOR_EQ(static_cast<GLint>(bufferSize) / 2, static_cast<GLint>(bufferSize) / 2,
+                          GLColor::cyan);
+
+    // Draw a quad that will pass the depth test and verify that the buffer is green
+    drawQuad(mTextureProgram, "position", -1.0f);
+    EXPECT_PIXEL_COLOR_EQ(static_cast<GLint>(bufferSize) / 2, static_cast<GLint>(bufferSize) / 2,
+                          GLColor::green);
+
+    // Make current with fixture EGL to ensure the Surface can be released immediately.
+    getEGLWindow()->makeCurrent();
+    eglDestroySurface(display, pbuffer);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these
 // tests should be run against.
 ANGLE_INSTANTIATE_TEST(D3DTextureTest, ES2_D3D9(), ES2_D3D11(), ES2_OPENGL());
-
+ANGLE_INSTANTIATE_TEST(D3DTextureTestMS, ES2_D3D11());
 }  // namespace

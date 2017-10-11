@@ -10,8 +10,8 @@
 #include "angle_gl.h"
 #include "gtest/gtest.h"
 #include "GLSLANG/ShaderLang.h"
-#include "compiler/translator/TranslatorESSL.h"
 #include "tests/test_utils/compiler_test.h"
+#include "tests/test_utils/ShaderCompileTreeTest.h"
 
 using namespace sh;
 
@@ -93,7 +93,8 @@ void CheckImageDeclaration(TIntermNode *astRoot,
                            bool writeonly,
                            bool coherent,
                            bool restrictQualifier,
-                           bool volatileQualifier)
+                           bool volatileQualifier,
+                           int binding)
 {
     const TIntermSymbol *myImageNode = FindSymbolNode(astRoot, imageName, imageType);
     ASSERT_NE(nullptr, myImageNode);
@@ -107,43 +108,25 @@ void CheckImageDeclaration(TIntermNode *astRoot,
     ASSERT_EQ(coherent, myImageMemoryQualifier.coherent);
     ASSERT_EQ(restrictQualifier, myImageMemoryQualifier.restrictQualifier);
     ASSERT_EQ(volatileQualifier, myImageMemoryQualifier.volatileQualifier);
+    ASSERT_EQ(binding, myImageType.getLayoutQualifier().binding);
 }
 
 }  // namespace
 
-class ShaderImageTest : public testing::Test
+class ShaderImageTest : public ShaderCompileTreeTest
 {
   public:
     ShaderImageTest() {}
 
   protected:
-    virtual void SetUp()
+    void SetUp() override
     {
-        ShBuiltInResources resources;
-        sh::InitBuiltInResources(&resources);
-
-        mTranslator = new sh::TranslatorESSL(GL_COMPUTE_SHADER, SH_GLES3_1_SPEC);
-        ASSERT_TRUE(mTranslator->Init(resources));
+        ShaderCompileTreeTest::SetUp();
+        mExtraCompileOptions |= SH_VARIABLES;
     }
 
-    virtual void TearDown() { delete mTranslator; }
-
-    // Return true when compilation succeeds
-    bool compile(const std::string &shaderString)
-    {
-        const char *shaderStrings[] = {shaderString.c_str()};
-        mASTRoot                    = mTranslator->compileTreeForTesting(shaderStrings, 1,
-                                                      SH_INTERMEDIATE_TREE | SH_VARIABLES);
-        TInfoSink &infoSink = mTranslator->getInfoSink();
-        mInfoLog            = infoSink.info.c_str();
-        return mASTRoot != nullptr;
-    }
-
-  protected:
-    std::string mTranslatedCode;
-    std::string mInfoLog;
-    sh::TranslatorESSL *mTranslator;
-    TIntermNode *mASTRoot;
+    ::GLenum getShaderType() const override { return GL_COMPUTE_SHADER; }
+    ShShaderSpec getShaderSpec() const override { return SH_GLES3_1_SPEC; }
 };
 
 // Test that an image2D is properly parsed and exported as a uniform.
@@ -152,7 +135,7 @@ TEST_F(ShaderImageTest, Image2DDeclaration)
     const std::string &shaderString =
         "#version 310 es\n"
         "layout(local_size_x = 4) in;\n"
-        "layout(rgba32f) uniform highp readonly image2D myImage;\n"
+        "layout(rgba32f, binding = 1) uniform highp readonly image2D myImage;\n"
         "void main() {\n"
         "   ivec2 sz = imageSize(myImage);\n"
         "}";
@@ -161,9 +144,9 @@ TEST_F(ShaderImageTest, Image2DDeclaration)
         FAIL() << "Shader compilation failed" << mInfoLog;
     }
 
-    CheckExportedImageUniform(mTranslator->getUniforms(), 0, GL_IMAGE_2D, "myImage");
+    CheckExportedImageUniform(getUniforms(), 0, GL_IMAGE_2D, "myImage");
     CheckImageDeclaration(mASTRoot, "myImage", EbtImage2D, EiifRGBA32F, true, false, false, false,
-                          false);
+                          false, 1);
 }
 
 // Test that an image3D is properly parsed and exported as a uniform.
@@ -172,7 +155,7 @@ TEST_F(ShaderImageTest, Image3DDeclaration)
     const std::string &shaderString =
         "#version 310 es\n"
         "layout(local_size_x = 4) in;\n"
-        "layout(rgba32ui) uniform highp writeonly readonly uimage3D myImage;\n"
+        "layout(rgba32ui, binding = 3) uniform highp writeonly readonly uimage3D myImage;\n"
         "void main() {\n"
         "   ivec3 sz = imageSize(myImage);\n"
         "}";
@@ -181,9 +164,9 @@ TEST_F(ShaderImageTest, Image3DDeclaration)
         FAIL() << "Shader compilation failed" << mInfoLog;
     }
 
-    CheckExportedImageUniform(mTranslator->getUniforms(), 0, GL_UNSIGNED_INT_IMAGE_3D, "myImage");
+    CheckExportedImageUniform(getUniforms(), 0, GL_UNSIGNED_INT_IMAGE_3D, "myImage");
     CheckImageDeclaration(mASTRoot, "myImage", EbtUImage3D, EiifRGBA32UI, true, true, false, false,
-                          false);
+                          false, 3);
 }
 
 // Check that imageLoad calls get correctly parsed.
@@ -251,9 +234,9 @@ TEST_F(ShaderImageTest, ImageMemoryQualifiers)
     }
 
     CheckImageDeclaration(mASTRoot, "image1", EbtImage2D, EiifRGBA32F, true, false, true, false,
-                          false);
+                          false, -1);
     CheckImageDeclaration(mASTRoot, "image2", EbtImage2D, EiifRGBA32F, false, true, true, false,
-                          true);
-    CheckImageDeclaration(mASTRoot, "image3", EbtImage2D, EiifRGBA32F, true, true, true, true,
-                          true);
+                          true, -1);
+    CheckImageDeclaration(mASTRoot, "image3", EbtImage2D, EiifRGBA32F, true, true, true, true, true,
+                          -1);
 }
