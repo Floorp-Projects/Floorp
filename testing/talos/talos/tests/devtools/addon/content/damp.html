@@ -19,6 +19,7 @@ var defaultConfig = {
     saveAndReadHeapSnapshot: true,
     consoleBulkLogging: true,
     consoleStreamLogging: true,
+    consoleObjectExpansion: true,
   }
 };
 
@@ -32,6 +33,7 @@ var testsInfo = {
   saveAndReadHeapSnapshot: "Measure open/close toolbox on memory panel and save/read heap snapshot",
   consoleBulkLogging: "Measure time for a bunch of sync console.log statements to appear",
   consoleStreamLogging: "Measure rAF on page during a stream of console.log statements",
+  consoleObjectExpansion: "Measure time to expand a large object and close the console",
 };
 
 function updateConfig() {
