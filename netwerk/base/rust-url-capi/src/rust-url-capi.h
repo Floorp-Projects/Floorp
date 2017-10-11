@@ -19,7 +19,7 @@ extern "C" {
 // The `rusturl` opaque type is equivalent to the rust type `::url::Url`
 struct rusturl;
 
-rusturl* rusturl_new(const nsACString* spec);
+rusturl* rusturl_new(const nsACString* spec, const rusturl* base);
 rusturl* rusturl_clone(const rusturl* url);
 /* unsafe */ void rusturl_free(rusturl* url);
 
