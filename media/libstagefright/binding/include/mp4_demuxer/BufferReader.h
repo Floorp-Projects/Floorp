@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BYTE_READER_H_
-#define BYTE_READER_H_
+#ifndef BUFFER_READER_H_
+#define BUFFER_READER_H_
 
 #include "mozilla/EndianUtils.h"
 #include "nsTArray.h"
@@ -11,24 +11,24 @@
 
 namespace mp4_demuxer {
 
-class MOZ_RAII ByteReader
+class MOZ_RAII BufferReader
 {
 public:
-  ByteReader() : mPtr(nullptr), mRemaining(0) {}
-  ByteReader(const uint8_t* aData, size_t aSize)
+  BufferReader() : mPtr(nullptr), mRemaining(0) {}
+  BufferReader(const uint8_t* aData, size_t aSize)
     : mPtr(aData), mRemaining(aSize), mLength(aSize)
   {
   }
   template<size_t S>
-  explicit ByteReader(const AutoTArray<uint8_t, S>& aData)
+  explicit BufferReader(const AutoTArray<uint8_t, S>& aData)
     : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }
-  explicit ByteReader(const nsTArray<uint8_t>& aData)
+  explicit BufferReader(const nsTArray<uint8_t>& aData)
     : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }
-  explicit ByteReader(const mozilla::MediaByteBuffer* aData)
+  explicit BufferReader(const mozilla::MediaByteBuffer* aData)
     : mPtr(aData->Elements()), mRemaining(aData->Length()), mLength(aData->Length())
   {
   }
@@ -41,7 +41,7 @@ public:
     mLength = mRemaining;
   }
 
-  ~ByteReader()
+  ~BufferReader()
   {
   }
 
