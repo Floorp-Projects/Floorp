@@ -69,27 +69,27 @@
   -moz-appearance: none;
   color: inherit;
   margin-inline-end: 4px;
-  border-radius: 4px;
+  border-radius: var(--toolbarbutton-border-radius);
   border: 1px solid transparent;
   padding: 2px 4px;
 }
 
 #sidebar-switcher-target:hover {
-  background: hsla(240, 5%, 5%, 0.05);
-}
-
-#sidebar-switcher-target:hover {
-  border-color: rgba(0, 0, 0, 0.2);
+  background: var(--toolbarbutton-hover-background);
 }
 
 #sidebar-switcher-target:hover:active,
 #sidebar-switcher-target.active {
+  background: var(--toolbarbutton-active-background);
+}
+
+/* Ensure we do not lose contrast between lightweight and OS theme colours */
+#sidebar-switcher-target:hover:-moz-lwtheme {
   background: hsla(240, 5%, 5%, 0.1);
 }
-
-#sidebar-switcher-target:hover:active,
-#sidebar-switcher-target.active {
-  border-color: rgba(0, 0, 0, 0.25);
+#sidebar-switcher-target:hover:active:-moz-lwtheme,
+#sidebar-switcher-target.active:-moz-lwtheme {
+  background: hsla(240, 5%, 5%, 0.15);
 }
 
 #sidebarMenu-popup .subviewbutton {
