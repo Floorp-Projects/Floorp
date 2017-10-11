@@ -164,6 +164,25 @@ enum class PrefType
   Bool = 3,
 };
 
+#ifdef DEBUG
+const char*
+PrefTypeToString(PrefType aType)
+{
+  switch (aType) {
+    case PrefType::Invalid:
+      return "INVALID";
+    case PrefType::String:
+      return "string";
+    case PrefType::Int:
+      return "int";
+    case PrefType::Bool:
+      return "bool";
+    default:
+      MOZ_CRASH("Unhandled enum value");
+  }
+}
+#endif
+
 // Keep the type of the preference, as well as the flags guiding its behaviour.
 class PrefTypeFlags
 {
@@ -979,8 +998,11 @@ pref_HashPref(const char* aKey,
              !pref->mPrefFlags.IsPrefType(aType)) {
     NS_WARNING(
       nsPrintfCString(
-        "Trying to overwrite value of default pref %s with the wrong type!",
-        aKey)
+        "Ignoring attempt to overwrite value of default pref %s (type %s) with "
+        "the wrong type (%s)!",
+        aKey,
+        PrefTypeToString(pref->mPrefFlags.GetPrefType()),
+        PrefTypeToString(aType))
         .get());
 
     return NS_ERROR_UNEXPECTED;
