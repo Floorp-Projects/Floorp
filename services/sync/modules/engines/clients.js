@@ -49,6 +49,13 @@ const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
 const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
 
+// TTL of the message sent to another device when sending a tab
+const NOTIFY_TAB_SENT_TTL_SECS = 1 * 3600; // 1 hour
+
+// Reasons behind sending collection_changed push notifications.
+const COLLECTION_MODIFIED_REASON_SENDTAB = "sendtab";
+const COLLECTION_MODIFIED_REASON_FIRSTSYNC = "firstsync";
+
 const SUPPORTED_PROTOCOL_VERSIONS = [SYNC_API_VERSION];
 const LAST_MODIFIED_ON_PROCESS_COMMAND_PREF = "services.sync.clients.lastModifiedOnProcessCommands";
 
@@ -470,7 +477,7 @@ ClientEngine.prototype = {
       if (id == this.localID) {
         if (this.isFirstSync) {
           this._log.info("Uploaded our client record for the first time, notifying other clients.");
-          this._notifyCollectionChanged();
+          this._notifyClientRecordUploaded();
         }
         if (this.localCommands) {
           this.localCommands = this.localCommands.filter(command => !hasDupeCommand(commandChanges, command));
@@ -509,16 +516,33 @@ ClientEngine.prototype = {
       return fxaDeviceId ? acc.concat(fxaDeviceId) : acc;
     }, []);
     if (idsToNotify.length > 0) {
-      this._notifyCollectionChanged(idsToNotify, NOTIFY_TAB_SENT_TTL_SECS);
+      this._notifyOtherClientsModified(idsToNotify);
     }
   },
 
-  async _notifyCollectionChanged(ids = null, ttl = 0) {
+  _notifyOtherClientsModified(ids) {
+    // We are not waiting on this promise on purpose.
+    this._notifyCollectionChanged(ids, NOTIFY_TAB_SENT_TTL_SECS,
+                                  COLLECTION_MODIFIED_REASON_SENDTAB);
+  },
+
+  _notifyClientRecordUploaded() {
+    // We are not waiting on this promise on purpose.
+    this._notifyCollectionChanged(null, 0, COLLECTION_MODIFIED_REASON_FIRSTSYNC);
+  },
+
+  /**
+   * @param {?string[]} ids FxA Client IDs to notify. null means everyone else.
+   * @param {number} ttl TTL of the push notification.
+   * @param {string} reason Reason for sending this push notification.
+   */
+  async _notifyCollectionChanged(ids, ttl, reason) {
     const message = {
       version: 1,
       command: "sync:collection_changed",
       data: {
-        collections: ["clients"]
+        collections: ["clients"],
+        reason
       }
     };
     let excludedIds = null;
