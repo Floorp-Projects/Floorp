@@ -636,6 +636,11 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     return;
   }
 
+  if (!EnsureBuffer() ||
+      (HaveBufferOnWhite() && !EnsureBufferOnWhite())) {
+    return;
+  }
+
   // We need to ensure that we lock these two buffers in the same
   // order as the compositor to prevent deadlocks.
   TextureClientAutoLock frontLock(mFrontClient, OpenMode::OPEN_READ_ONLY);
@@ -678,48 +683,6 @@ ContentClientDoubleBuffered::EnsureBackBufferIfFrontBuffer()
 
     mBufferRect = mFrontBufferRect;
     mBufferRotation = mFrontBufferRotation;
-  }
-}
-
-void
-ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
-                                                   const nsIntRegion& aUpdateRegion)
-{
-  DrawIterator iter;
-  while (DrawTarget* destDT =
-    BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK, &iter)) {
-    bool isClippingCheap = IsClippingCheap(destDT, iter.mDrawRegion);
-    if (isClippingCheap) {
-      gfxUtils::ClipToRegion(destDT, iter.mDrawRegion);
-    }
-
-    aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
-    if (isClippingCheap) {
-      destDT->PopClip();
-    }
-    // Flush the destination before the sources become inaccessible (Unlock).
-    destDT->Flush();
-    ReturnDrawTargetToBuffer(destDT);
-  }
-
-  if (aSource.HaveBufferOnWhite()) {
-    MOZ_ASSERT(HaveBufferOnWhite());
-    DrawIterator whiteIter;
-    while (DrawTarget* destDT =
-      BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE, &whiteIter)) {
-      bool isClippingCheap = IsClippingCheap(destDT, whiteIter.mDrawRegion);
-      if (isClippingCheap) {
-        gfxUtils::ClipToRegion(destDT, whiteIter.mDrawRegion);
-      }
-
-      aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
-      if (isClippingCheap) {
-        destDT->PopClip();
-      }
-      // Flush the destination before the sources become inaccessible (Unlock).
-      destDT->Flush();
-      ReturnDrawTargetToBuffer(destDT);
-    }
   }
 }
 
