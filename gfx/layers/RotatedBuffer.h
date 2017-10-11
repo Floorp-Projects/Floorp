@@ -29,6 +29,25 @@ typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
 class TextureClient;
 class PaintedLayer;
 
+// Mixin class for classes which need logic for loaning out a draw target.
+// See comments on BorrowDrawTargetForQuadrantUpdate.
+class BorrowDrawTarget
+{
+protected:
+  void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
+
+  // The draw target loaned by BorrowDrawTargetForQuadrantUpdate. It should not
+  // be used, we just keep a reference to ensure it is kept alive and so we can
+  // correctly restore state when it is returned.
+  RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
+  gfx::Matrix mLoanedTransform;
+
+  // This flag denotes whether or not a transform was already applied
+  // to mLoanedDrawTarget and thus needs to be reset to mLoanedTransform
+  // upon returning the drawtarget.
+  bool mSetTransform;
+};
+
 /**
  * This is a cairo/Thebes surface, but with a literal twist. Scrolling
  * causes the layer's visible region to move. We want to keep
@@ -44,7 +63,8 @@ class PaintedLayer;
  * at row H-N on the screen.
  * mBufferRotation.y would be N in this example.
  */
-class RotatedBuffer {
+class RotatedBuffer : public BorrowDrawTarget
+{
 public:
   typedef gfxContentType ContentType;
 
@@ -57,6 +77,18 @@ public:
   RotatedBuffer()
     : mDidSelfCopy(false)
   { }
+
+  struct DrawIterator {
+    friend class RotatedBuffer;
+    DrawIterator()
+      : mCount(0)
+    {}
+
+    nsIntRegion mDrawRegion;
+
+  private:
+    uint32_t mCount;
+  };
 
   /*
    * Which buffer should be drawn to/read from.
@@ -74,6 +106,9 @@ public:
                               gfx::SourceSurface* aMask = nullptr,
                               const gfx::Matrix* aMaskTransform = nullptr) const;
 
+  void UpdateDestinationFrom(const RotatedBuffer& aSource,
+                             const nsIntRegion& aUpdateRegion);
+
   /**
    * |BufferRect()| is the rect of device pixels that this
    * RotatedBuffer covers.  That is what DrawBufferWithRotation()
@@ -88,6 +123,9 @@ public:
   virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const = 0;
 
 protected:
+
+  virtual gfx::DrawTarget* GetDTBuffer() const = 0;
+  virtual gfx::DrawTarget* GetDTBufferOnWhite() const = 0;
 
   enum XSide {
     LEFT, RIGHT
@@ -110,6 +148,27 @@ protected:
                           gfx::CompositionOp aOperator,
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
+
+  /**
+   * Get a draw target at the specified resolution for updating |aBounds|,
+   * which must be contained within a single quadrant.
+   *
+   * The result should only be held temporarily by the caller (it will be kept
+   * alive by this). Once used it should be returned using ReturnDrawTarget.
+   * BorrowDrawTargetForQuadrantUpdate may not be called more than once without
+   * first calling ReturnDrawTarget.
+   *
+   * ReturnDrawTarget will by default restore the transform on the draw target.
+   * But it is the callers responsibility to restore the clip.
+   * The caller should flush the draw target, if necessary.
+   * If aSetTransform is false, the required transform will be set in aOutTransform.
+   */
+  gfx::DrawTarget*
+  BorrowDrawTargetForQuadrantUpdate(const gfx::IntRect& aBounds,
+                                    ContextSource aSource,
+                                    DrawIterator* aIter,
+                                    bool aSetTransform = true,
+                                    gfx::Matrix* aOutTransform = nullptr);
 
   /** The area of the PaintedLayer that is covered by the buffer as a whole */
   gfx::IntRect             mBufferRect;
@@ -145,28 +204,13 @@ public:
   virtual bool HaveBuffer() const { return !!mSource; }
   virtual bool HaveBufferOnWhite() const { return !!mSourceOnWhite; }
 
+protected:
+  virtual gfx::DrawTarget* GetDTBuffer() const { return nullptr; }
+  virtual gfx::DrawTarget* GetDTBufferOnWhite() const { return nullptr; }
+
 private:
   RefPtr<gfx::SourceSurface> mSource;
   RefPtr<gfx::SourceSurface> mSourceOnWhite;
-};
-
-// Mixin class for classes which need logic for loaning out a draw target.
-// See comments on BorrowDrawTargetForQuadrantUpdate.
-class BorrowDrawTarget
-{
-protected:
-  void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
-
-  // The draw target loaned by BorrowDrawTargetForQuadrantUpdate. It should not
-  // be used, we just keep a reference to ensure it is kept alive and so we can
-  // correctly restore state when it is returned.
-  RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
-  gfx::Matrix mLoanedTransform;
-
-  // This flag denotes whether or not a transform was already applied
-  // to mLoanedDrawTarget and thus needs to be reset to mLoanedTransform
-  // upon returning the drawtarget.
-  bool mSetTransform;
 };
 
 /**
@@ -174,7 +218,6 @@ protected:
  * i.e., the contents of the layer's GetVisibleRegion().
  */
 class RotatedContentBuffer : public RotatedBuffer
-                           , public BorrowDrawTarget
 {
 public:
   typedef gfxContentType ContentType;
@@ -272,18 +315,6 @@ public:
   PaintState BeginPaint(PaintedLayer* aLayer,
                         uint32_t aFlags);
 
-  struct DrawIterator {
-    friend class RotatedContentBuffer;
-    DrawIterator()
-      : mCount(0)
-    {}
-
-    nsIntRegion mDrawRegion;
-
-  private:
-    uint32_t mCount;
-  };
-
   /**
    * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
    * this. See notes on BorrowDrawTargetForQuadrantUpdate.
@@ -331,14 +362,6 @@ public:
   CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
                RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) = 0;
 
-  /**
-   * Get the underlying buffer, if any. This is useful because we can pass
-   * in the buffer as the default "reference surface" if there is one.
-   * Don't use it for anything else!
-   */
-  gfx::DrawTarget* GetDTBuffer() { return mDTBuffer; }
-  gfx::DrawTarget* GetDTBufferOnWhite() { return mDTBufferOnWhite; }
-
   virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const;
 
   /**
@@ -379,29 +402,6 @@ protected:
     }
   }
 
-  /**
-   * Get a draw target at the specified resolution for updating |aBounds|,
-   * which must be contained within a single quadrant.
-   *
-   * The result should only be held temporarily by the caller (it will be kept
-   * alive by this). Once used it should be returned using ReturnDrawTarget.
-   * BorrowDrawTargetForQuadrantUpdate may not be called more than once without
-   * first calling ReturnDrawTarget.
-   *
-   * ReturnDrawTarget will by default restore the transform on the draw target.
-   * But it is the callers responsibility to restore the clip.
-   * The caller should flush the draw target, if necessary.
-   * If aSetTransform is false, the required transform will be set in aOutTransform.
-   */
-  gfx::DrawTarget*
-  BorrowDrawTargetForQuadrantUpdate(const gfx::IntRect& aBounds,
-                                    ContextSource aSource,
-                                    DrawIterator* aIter,
-                                    bool aSetTransform = true,
-                                    gfx::Matrix* aOutTransform = nullptr);
-
-  static bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
-
 protected:
   /**
    * Return the buffer's content type.  Requires a valid buffer or
@@ -417,6 +417,14 @@ protected:
 
   // Flush our buffers if they are mapped.
   void FlushBuffers();
+
+  /**
+   * Get the underlying buffer, if any. This is useful because we can pass
+   * in the buffer as the default "reference surface" if there is one.
+   * Don't use it for anything else!
+   */
+  virtual gfx::DrawTarget* GetDTBuffer() const { return mDTBuffer; }
+  virtual gfx::DrawTarget* GetDTBufferOnWhite() const { return mDTBufferOnWhite; }
 
   /**
    * True if we have a buffer where we can get it (but not necessarily
