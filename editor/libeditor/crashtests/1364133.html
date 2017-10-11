@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <script>
+      var tr = document.createElement('tr');
+      document.documentElement.appendChild(tr);
+
+      var a1 = document.createElement('a');
+      document.documentElement.appendChild(a1);
+      var a2 = document.createElement('a');
+      tr.appendChild(a2);
+
+      var a3 = document.createElement('a');
+      document.documentElement.appendChild(a3);
+
+      var a4 = document.createElement('a');
+      document.documentElement.appendChild(a4);
+
+      var a5 = document.createElement('a');
+      a1.appendChild(a5);
+
+      var input = document.createElement('input');
+      document.documentElement.appendChild(input);
+
+      a3.contentEditable = true;
+      a5.innerText = "xx";
+      a4.outerHTML = "";
+      input.select();
+
+      document.replaceChild(document.documentElement, document.documentElement);
+      window.find("x", false, false, false, false, false, false);
+
+      var range = document.createRange();
+      range.setStart(a1, 1);
+      window.getSelection().addRange(range);
+
+      document.designMode = "on";
+
+      range.selectNode(a2);
+      document.execCommand("forecolor", false, "-moz-default-background-color");
+    </script>
+  </head>
+</html>
