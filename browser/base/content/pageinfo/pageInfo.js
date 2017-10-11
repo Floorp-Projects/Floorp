@@ -851,7 +851,7 @@ function makePreview(row) {
 
     let serial = Components.classes["@mozilla.org/network/serialization-helper;1"]
                            .getService(Components.interfaces.nsISerializationHelper);
-    let loadingPrincipalStr = serial.serializeToString(gDocInfo.principal);
+    let triggeringPrinStr = serial.serializeToString(gDocInfo.principal);
     if ((item.HTMLLinkElement || item.HTMLInputElement ||
          item.HTMLImageElement || item.SVGImageElement ||
          (item.HTMLObjectElement && mimeType && mimeType.startsWith("image/")) ||
@@ -910,14 +910,14 @@ function makePreview(row) {
         setItemValue("imagedimensiontext", imageSize);
       }, {once: true});
 
-      newImage.setAttribute("loadingprincipal", loadingPrincipalStr);
+      newImage.setAttribute("triggeringprincipal", triggeringPrinStr);
       newImage.setAttribute("src", url);
     } else {
       // Handle the case where newImage is not used for width & height
       if (item.HTMLVideoElement && isProtocolAllowed) {
         newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
         newImage.id = "thepreviewimage";
-        newImage.setAttribute("loadingprincipal", loadingPrincipalStr);
+        newImage.setAttribute("triggeringprincipal", triggeringPrinStr);
         newImage.src = url;
         newImage.controls = true;
         width = physWidth = item.videoWidth;
@@ -928,7 +928,7 @@ function makePreview(row) {
       } else if (item.HTMLAudioElement && isProtocolAllowed) {
         newImage = new Audio;
         newImage.id = "thepreviewimage";
-        newImage.setAttribute("loadingprincipal", loadingPrincipalStr);
+        newImage.setAttribute("triggeringprincipal", triggeringPrinStr);
         newImage.src = url;
         newImage.controls = true;
         isAudio = true;
