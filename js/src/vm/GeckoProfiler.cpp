@@ -69,14 +69,23 @@ GetTopProfilingJitFrame(Activation* act)
     if (!act || !act->isJit())
         return nullptr;
 
-    // For null exitFrame, there is no previous exit frame, just return.
-    uint8_t* jsExitFP = act->asJit()->jsExitFP();
-    if (!jsExitFP)
+    jit::JitActivation* jitActivation = act->asJit();
+
+    // If there is no exit frame set, just return.
+    if (!jitActivation->hasExitFP())
         return nullptr;
 
-    jit::JSJitProfilingFrameIterator iter(jsExitFP);
-    MOZ_ASSERT(!iter.done());
-    return iter.fp();
+    // Skip wasm frames that might be in the way.
+    JitFrameIter iter(jitActivation);
+    while (!iter.done() && iter.isWasm())
+        ++iter;
+
+    if (!iter.isJSJit())
+        return nullptr;
+
+    jit::JSJitProfilingFrameIterator jitIter(iter.asJSJit().fp());
+    MOZ_ASSERT(!jitIter.done());
+    return jitIter.fp();
 }
 
 void
