@@ -703,10 +703,11 @@ var TelemetryStorageImpl = {
    * @return {promise<object>} Promise that is resolved with the ping data.
    */
   async loadArchivedPing(id) {
-    TelemetryStopwatch.start("TELEMETRY_ARCHIVE_LOAD_MS");
+    let idAsObject = new String(id);
+    TelemetryStopwatch.start("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
     const data = this._archivedPings.get(id);
     if (!data) {
-      TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS");
+      TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
       this._log.trace("loadArchivedPing - no ping with id: " + id);
       return Promise.reject(new Error("TelemetryStorage.loadArchivedPing - no ping with id " + id));
     }
@@ -721,7 +722,7 @@ var TelemetryStorageImpl = {
         Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB")
                  .add(Math.floor(fileSize / 1024 / 1024));
         Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED").add();
-        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS");
+        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
         await OS.File.remove(path, {ignoreAbsent: true});
         throw new Error("loadArchivedPing - exceeded the maximum ping size: " + fileSize);
       }
@@ -735,7 +736,7 @@ var TelemetryStorageImpl = {
       ping = await this.loadPingFile(pathCompressed, /* compressed*/ true);
     } catch (ex) {
       if (!ex.becauseNoSuchFile) {
-        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS");
+        TelemetryStopwatch.cancel("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
         throw ex;
       }
       // If that fails, look for the uncompressed version.
@@ -744,7 +745,7 @@ var TelemetryStorageImpl = {
       ping = await this.loadPingFile(path, /* compressed*/ false);
     }
 
-    TelemetryStopwatch.finish("TELEMETRY_ARCHIVE_LOAD_MS");
+    TelemetryStopwatch.finish("TELEMETRY_ARCHIVE_LOAD_MS", idAsObject);
     return ping;
   },
 
