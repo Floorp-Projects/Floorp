@@ -990,7 +990,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const CodeSegment* codeSegment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment)
         return false;
 
@@ -1125,7 +1125,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const CodeSegment* codeSegment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment)
         return false;
 
@@ -1336,7 +1336,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     JitActivation* activation = cx->activation()->asJit();
 
-    const CodeSegment* segment = activation->compartment()->wasm.lookupCodeSegment(pc);
+    const CodeSegment* segment = LookupCodeSegment(pc);
     if (!segment)
         return false;
 
@@ -1445,7 +1445,7 @@ wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs)
     if (!cx->compartment())
         return false;
 
-    *cs = cx->compartment()->wasm.lookupCodeSegment(pc);
+    *cs = LookupCodeSegment(pc);
     if (!*cs)
         return false;
 

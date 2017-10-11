@@ -27,6 +27,7 @@
 #endif
 #include "vtune/VTuneWrapper.h"
 #include "wasm/WasmModule.h"
+#include "wasm/WasmProcess.h"
 #include "wasm/WasmSerialize.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -284,9 +285,19 @@ CodeSegment::initialize(Tier tier,
     if (!ExecutableAllocator::makeExecutable(bytes_.get(), RoundupCodeLength(codeLength)))
         return false;
 
+    if (!RegisterCodeSegment(this))
+        return false;
+    registered_ = true;
+
     SendCodeRangesToProfiler(*this, bytecode.bytes, metadata);
 
     return true;
+}
+
+CodeSegment::~CodeSegment()
+{
+    if (registered_)
+        UnregisterCodeSegment(this);
 }
 
 size_t

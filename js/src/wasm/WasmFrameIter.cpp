@@ -62,7 +62,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     // instead.
 
     code_ = &fp_->tls->instance->code();
-    MOZ_ASSERT(code_ == activation->compartment()->wasm.lookupCode(activation->wasmUnwindPC()));
+    MOZ_ASSERT(code_ == LookupCode(activation->wasmUnwindPC()));
 
     codeRange_ = code_->lookupRange(activation->wasmUnwindPC());
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -127,7 +127,7 @@ WasmFrameIter::popFrame()
     void* returnAddress = prevFP->returnAddress;
 
     code_ = &fp_->tls->instance->code();
-    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(returnAddress));
+    MOZ_ASSERT(code_ == LookupCode(returnAddress));
 
     codeRange_ = code_->lookupRange(returnAddress);
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -596,7 +596,7 @@ static inline void
 AssertMatchesCallSite(const JitActivation& activation, void* callerPC, Frame* callerFP)
 {
 #ifdef DEBUG
-    const Code* code = activation.compartment()->wasm.lookupCode(callerPC);
+    const Code* code = LookupCode(callerPC);
     MOZ_ASSERT(code);
 
     const CodeRange* callerCodeRange = code->lookupRange(callerPC);
@@ -626,7 +626,7 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
 
     stackAddress_ = (void*)fp;
 
-    code_ = activation_->compartment()->wasm.lookupCode(pc);
+    code_ = LookupCode(pc);
     MOZ_ASSERT(code_);
 
     codeRange_ = code_->lookupRange(pc);
@@ -686,7 +686,7 @@ js::wasm::StartUnwinding(const JitActivation& activation, const RegisterState& r
     uint8_t* codeBase;
     const Code* code = nullptr;
 
-    const CodeSegment* codeSegment = activation.compartment()->wasm.lookupCodeSegment(pc);
+    const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (codeSegment) {
         code = codeSegment->code();
         codeRange = code->lookupRange(pc);
@@ -900,7 +900,7 @@ ProfilingFrameIterator::operator++()
     }
 
     code_ = &callerFP_->tls->instance->code();
-    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(callerPC_));
+    MOZ_ASSERT(code_ == LookupCode(callerPC_));
 
     codeRange_ = code_->lookupRange(callerPC_);
     MOZ_ASSERT(codeRange_);
@@ -1118,13 +1118,7 @@ wasm::LookupFaultingInstance(const CodeSegment& codeSegment, void* pc, void* fp)
 bool
 wasm::InCompiledCode(void* pc)
 {
-    JSContext* cx = TlsContext.get();
-    if (!cx)
-        return false;
-
-    MOZ_RELEASE_ASSERT(!cx->handlingSegFault);
-
-    if (cx->compartment()->wasm.lookupCodeSegment(pc))
+    if (LookupCodeSegment(pc))
         return true;
 
     const CodeRange* codeRange;

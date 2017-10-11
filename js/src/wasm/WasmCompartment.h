@@ -27,8 +27,6 @@ namespace wasm {
 class CodeSegment;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 
-typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;
-
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
 // per-compartment state. wasm::Compartment tracks every live instance in the
 // compartment and must be notified, via registerInstance(), of any new
@@ -37,20 +35,6 @@ typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;
 class Compartment
 {
     InstanceVector instances_;
-    CodeSegmentVector codeSegments_;
-    volatile bool mutatingInstances_;
-
-    struct AutoMutateInstances {
-        Compartment &c;
-        explicit AutoMutateInstances(Compartment& c) : c(c) {
-            MOZ_ASSERT(!c.mutatingInstances_);
-            c.mutatingInstances_ = true;
-        }
-        ~AutoMutateInstances() {
-            MOZ_ASSERT(c.mutatingInstances_);
-            c.mutatingInstances_ = false;
-        }
-    };
 
   public:
     explicit Compartment(Zone* zone);
@@ -71,12 +55,6 @@ class Compartment
     // since instances() is effectively a weak list.
 
     const InstanceVector& instances() const { return instances_; }
-
-    // These methods return the wasm::CodeSegment (resp. wasm::Code) containing
-    // the given pc, if any exist in the compartment.
-
-    const CodeSegment* lookupCodeSegment(const void* pc) const;
-    const Code* lookupCode(const void* pc) const;
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 
