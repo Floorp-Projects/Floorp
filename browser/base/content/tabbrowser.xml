@@ -5865,6 +5865,15 @@
         ]]></body>
       </method>
 
+      <field name="_tabMinWidthLimit">50</field>
+      <property name="tabMinWidth">
+        <setter><![CDATA[
+          let root = document.documentElement;
+          root.style.setProperty("--tab-min-width", val + "px");
+          return val;
+        ]]></setter>
+      </property>
+
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
@@ -5958,6 +5967,13 @@
                                                 "browser.tabs.remote.warmup.maxTabs", 3);
           XPCOMUtils.defineLazyPreferenceGetter(this, "tabWarmingUnloadDelay" /* ms */,
                                                 "browser.tabs.remote.warmup.unloadDelayMs", 2000);
+          XPCOMUtils.defineLazyPreferenceGetter(this, "tabMinWidthPref",
+                                                "browser.tabs.tabMinWidth", this._tabMinWidthLimit,
+            (pref, prevValue, newValue) => this.tabMinWidth = newValue,
+            newValue => Math.max(newValue, this._tabMinWidthLimit),
+          );
+
+          this.tabMinWidth = this.tabMinWidthPref;
         ]]>
       </constructor>
 
