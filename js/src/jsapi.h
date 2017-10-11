@@ -1436,6 +1436,9 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * enter/leave calls on the context. Furthermore, only the return value of a
  * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
  * the corresponding JS_LeaveCompartment call.
+ *
+ * Entering a compartment roots the compartment and its global object for the
+ * lifetime of the JSAutoCompartment.
  */
 
 class MOZ_RAII JS_PUBLIC_API(JSAutoCompartment)
@@ -1464,7 +1467,11 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoNullableCompartment)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/** NB: This API is infallible; a nullptr return value does not indicate error. */
+/** NB: This API is infallible; a nullptr return value does not indicate error.
+ *
+ * Entering a compartment roots the compartment and its global object until the
+ * matching JS_LeaveCompartment() call.
+ */
 extern JS_PUBLIC_API(JSCompartment*)
 JS_EnterCompartment(JSContext* cx, JSObject* target);
 

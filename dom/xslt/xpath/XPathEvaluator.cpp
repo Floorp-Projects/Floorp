@@ -24,11 +24,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/XPathNSResolverBinding.h"
 
-extern nsresult
-TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsAtom *aName, nsISupports *aState,
-                            FunctionCall **aFunction);
-
 namespace mozilla {
 namespace dom {
 

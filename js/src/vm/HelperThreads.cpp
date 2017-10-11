@@ -180,10 +180,9 @@ js::CancelOffThreadWasmTier2Generator()
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder)
+js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder,
+                             const AutoLockHelperThreadState& lock)
 {
-    AutoLockHelperThreadState lock;
-
     if (!HelperThreadState().ionWorklist(lock).append(builder))
         return false;
 
@@ -1232,26 +1231,35 @@ GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lo
     if (wasmWorklist(lock, mode).empty())
         return false;
 
-    // For Tier1 and Once compilation, honor the maximum allowed threads to
-    // compile wasm jobs at once, to avoid oversaturating the machine.
-    //
-    // For Tier2 compilation we need to allow other things to happen too, so for
-    // now we only allow one thread.
-    //
-    // TODO: We should investigate more intelligent strategies, see bug 1380033.
-    //
+    // Parallel compilation and background compilation should be disabled on
+    // unicore systems.
+
+    MOZ_RELEASE_ASSERT(cpuCount > 1);
+
     // If Tier2 is very backlogged we must give priority to it, since the Tier2
     // queue holds onto Tier1 tasks.  Indeed if Tier2 is backlogged we will
     // devote more resources to Tier2 and not start any Tier1 work at all.
 
     bool tier2oversubscribed = wasmTier2GeneratorWorklist(lock).length() > 20;
 
+    // For Tier1 and Once compilation, honor the maximum allowed threads to
+    // compile wasm jobs at once, to avoid oversaturating the machine.
+    //
+    // For Tier2 compilation we need to allow other things to happen too, so we
+    // do not allow all logical cores to be used for background work; instead we
+    // wish to use a fraction of the physical cores.  We can't directly compute
+    // the physical cores from the logical cores, but 1/3 of the logical cores
+    // is a safe estimate for the number of physical cores available for
+    // background work.
+
+    size_t physCoresAvailable = size_t(ceil(cpuCount / 3.0));
+
     size_t threads;
     if (mode == wasm::CompileMode::Tier2) {
         if (tier2oversubscribed)
             threads = maxWasmCompilationThreads();
         else
-            threads = 1;
+            threads = physCoresAvailable;
     } else {
         if (tier2oversubscribed)
             threads = 0;

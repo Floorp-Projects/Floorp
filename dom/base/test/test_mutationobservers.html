@@ -362,7 +362,7 @@ function testChildList5() {
       is(records[5].previousSibling, c3, "");
       is(records[5].nextSibling, c5, "");
       observer.disconnect();
-      then(testAdoptNode);
+      then(testNestedMutations);
       m = null;
     });
   m.observe(div, { childList: true, subtree: true });
@@ -373,6 +373,37 @@ function testChildList5() {
   div.appendChild(c5);
   div.replaceChild(df, c4);
   div.appendChild(emptyDF); // empty document shouldn't cause mutation records
+}
+
+function testNestedMutations() {
+  div.textContent = null;
+  div.appendChild(document.createTextNode("foo"));
+  var m2WasCalled = false;
+  m = new M(function(records, observer) {
+    is(records[0].type, "characterData", "Should have got characterData");
+    observer.disconnect();
+    m = null;
+    m3 = new M(function(records, observer) {
+      ok(m2WasCalled, "m2 should have been called before m3!");
+      is(records[0].type, "characterData", "Should have got characterData");
+      observer.disconnect();
+      then(testAdoptNode);
+      m3 = null;
+    });
+    m3.observe(div, { characterData: true, subtree: true});
+    div.firstChild.data = "foo";
+  });
+  m2 = new M(function(records, observer) {
+    m2WasCalled = true;
+    is(records[0].type, "characterData", "Should have got characterData");
+    observer.disconnect();
+    m2 = null;
+  });
+  m2.observe(div, { characterData: true, subtree: true});
+  div.appendChild(document.createTextNode("foo"));
+  m.observe(div, { characterData: true, subtree: true });
+
+  div.firstChild.data = "bar";
 }
 
 function testAdoptNode() {

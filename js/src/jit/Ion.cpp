@@ -2238,7 +2238,8 @@ IonCompile(JSContext* cx, JSScript* script,
         if (!CreateMIRRootList(*builder))
             return AbortReason::Alloc;
 
-        if (!StartOffThreadIonCompile(cx, builder)) {
+        AutoLockHelperThreadState lock;
+        if (!StartOffThreadIonCompile(cx, builder, lock)) {
             JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
             builder->graphSpewer().endFunction();
             return AbortReason::Alloc;
@@ -2521,14 +2522,6 @@ jit::CanEnter(JSContext* cx, RunState& state)
             ForbidCompilation(cx, script);
             return Method_CantCompile;
         }
-
-        if (!state.maybeCreateThisForConstructor(cx)) {
-            if (cx->isThrowingOutOfMemory()) {
-                cx->recoverFromOutOfMemory();
-                return Method_Skipped;
-            }
-            return Method_Error;
-        }
     }
 
     // If --ion-eager is used, compile with Baseline first, so that we
@@ -2539,11 +2532,8 @@ jit::CanEnter(JSContext* cx, RunState& state)
             return status;
     }
 
-    // Skip if the script is being compiled off thread or can't be
-    // Ion-compiled (again). MaybeCreateThisForConstructor could have
-    // started an Ion compilation or marked the script as uncompilable.
-    if (script->isIonCompilingOffThread() || !script->canIonCompile())
-        return Method_Skipped;
+    MOZ_ASSERT(!script->isIonCompilingOffThread());
+    MOZ_ASSERT(script->canIonCompile());
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     MethodStatus status = Compile(cx, script, nullptr, nullptr);

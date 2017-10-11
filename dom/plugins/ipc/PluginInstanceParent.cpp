@@ -615,17 +615,6 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
     return IPC_OK();
 }
 
-static inline NPRect
-IntRectToNPRect(const gfx::IntRect& rect)
-{
-    NPRect r;
-    r.left = rect.x;
-    r.top = rect.y;
-    r.right = rect.x + rect.width;
-    r.bottom = rect.y + rect.height;
-    return r;
-}
-
 mozilla::ipc::IPCResult
 PluginInstanceParent::RecvRevokeCurrentDirectSurface()
 {

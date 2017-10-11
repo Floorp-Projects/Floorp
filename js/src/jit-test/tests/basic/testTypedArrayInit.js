@@ -11,7 +11,9 @@ function f() {
                      Float32Array,
                      Float64Array ])
   {
-    for (var len of [ 3, 30, 300, 3000, 30000 ]) {
+    for (var len of [ 3, 30, 300, 3000 ]) {
+    // TODO: disabled before follow-up in bug 1406041
+    //for (var len of [ 3, 30, 300, 3000, 30000 ]) {
       var arr = new ctor(len);
       for (var i = 0; i < arr.length; i++)
         assertEq(arr[i], 0, "index " + i + " of " + ctor.name + " len " + len);

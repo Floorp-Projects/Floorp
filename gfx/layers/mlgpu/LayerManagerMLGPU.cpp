@@ -183,7 +183,6 @@ LayerManagerMLGPU::GetTextureFactoryIdentifier()
   if (mDevice) {
     ident = mDevice->GetTextureFactoryIdentifier();
   }
-  ident.mSupportsBackdropCopyForComponentAlpha = SupportsBackdropCopyForComponentAlpha();
   ident.mUsingAdvancedLayers = true;
   return ident;
 }
@@ -523,12 +522,6 @@ bool
 LayerManagerMLGPU::BlendingRequiresIntermediateSurface()
 {
   return true;
-}
-
-bool
-LayerManagerMLGPU::SupportsBackdropCopyForComponentAlpha()
-{
-  return false;
 }
 
 void
