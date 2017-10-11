@@ -1431,7 +1431,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
              "HttpChannelParent getting OnStartRequest from a different HttpBaseChannel instance");
 
   // Send down any permissions which are relevant to this URL if we are
-  // performing a document load. We can't do that is mIPCClosed is set.
+  // performing a document load. We can't do that if mIPCClosed is set.
   if (!mIPCClosed) {
     PContentParent* pcp = Manager()->Manager();
     MOZ_ASSERT(pcp, "We should have a manager if our IPC isn't closed");
