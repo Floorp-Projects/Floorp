@@ -6414,7 +6414,7 @@
 
       <field name="_firstTab">null</field>
       <field name="_lastTab">null</field>
-      <field name="_afterSelectedTab">null</field>
+      <field name="_beforeSelectedTab">null</field>
       <field name="_beforeHoveredTab">null</field>
       <field name="_afterHoveredTab">null</field>
       <field name="_hoveredTab">null</field>
@@ -6547,16 +6547,16 @@
 
           let selectedIndex = visibleTabs.indexOf(this.selectedItem);
 
-          let lastVisible = visibleTabs.length - 1;
+          if (this._beforeSelectedTab) {
+            this._beforeSelectedTab.removeAttribute("beforeselected-visible");
+          }
 
-          if (this._afterSelectedTab)
-            this._afterSelectedTab.removeAttribute("afterselected-visible");
-          if (this.selectedItem.closing || selectedIndex == lastVisible) {
-            this._afterSelectedTab = null;
+          if (this.selectedItem.closing || selectedIndex == 0) {
+            this._beforeSelectedTab = null;
           } else {
-            this._afterSelectedTab = visibleTabs[selectedIndex + 1];
-            this._afterSelectedTab.setAttribute("afterselected-visible",
-                                                "true");
+            this._beforeSelectedTab = visibleTabs[selectedIndex - 1];
+            this._beforeSelectedTab.setAttribute("beforeselected-visible",
+                                                 "true");
           }
 
           if (this._firstTab)
@@ -6565,7 +6565,7 @@
           this._firstTab.setAttribute("first-visible-tab", "true");
           if (this._lastTab)
             this._lastTab.removeAttribute("last-visible-tab");
-          this._lastTab = visibleTabs[lastVisible];
+          this._lastTab = visibleTabs[visibleTabs.length - 1];
           this._lastTab.setAttribute("last-visible-tab", "true");
 
           let hoveredTab = this._hoveredTab;
