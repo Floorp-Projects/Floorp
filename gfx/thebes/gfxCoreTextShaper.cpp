@@ -80,7 +80,8 @@ static bool
 IsBuggyIndicScript(unicode::Script aScript)
 {
     return aScript == unicode::Script::BENGALI ||
-           aScript == unicode::Script::KANNADA;
+           aScript == unicode::Script::KANNADA ||
+           aScript == unicode::Script::ORIYA;
 }
 
 bool
@@ -118,6 +119,7 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
         // for "split vowels" to work in at least Bengali and Kannada fonts.
         // Affected fonts include Bangla MN, Bangla Sangam MN, Kannada MN,
         // Kannada Sangam MN. See bugs 686225, 728557, 953231, 1145515.
+        // Also applies to Oriya fonts, see bug 1370927.
         tempCTFont =
             CreateCTFontWithFeatures(::CTFontGetSize(mCTFont),
                                      aShapedText->DisableLigatures()
