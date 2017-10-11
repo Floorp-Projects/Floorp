@@ -4,12 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @depends('--enable-compile-environment')
 def pkg_config(compile_env):
     if compile_env:
         return ('pkg-config',)
 
+
 pkg_config = check_prog('PKG_CONFIG', pkg_config, allow_missing=True)
+
 
 @depends_if(pkg_config)
 @checking('for pkg-config version')
@@ -29,6 +32,8 @@ def pkg_config_version(pkg_config):
 #   will not result in an error or logged message, and any error message
 #   will be returned to the caller.
 #   Returns `True` when the package description is fulfilled.
+
+
 @template
 def pkg_check_modules(var, package_desc, when=always,
                       allow_missing=False):
