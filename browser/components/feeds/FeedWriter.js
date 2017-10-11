@@ -17,10 +17,7 @@ const FEEDWRITER_CID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
 const FEEDWRITER_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
 
 function LOG(str) {
-  let prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-
-  let shouldLog = prefB.getBoolPref("feeds.log", false);
+  let shouldLog = Services.prefs.getBoolPref("feeds.log", false);
 
   if (shouldLog)
     dump("*** Feeds: " + str + "\n");
@@ -33,10 +30,8 @@ function LOG(str) {
  * @returns an nsIURI object, or null if the creation of the URI failed.
  */
 function makeURI(aURLSpec, aCharset) {
-  let ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
   try {
-    return ios.newURI(aURLSpec, aCharset);
+    return Services.io.newURI(aURLSpec, aCharset);
   } catch (ex) { }
 
   return null;
@@ -124,12 +119,10 @@ FeedWriter.prototype = {
    *          The URI spec to set as the href
    */
   _safeSetURIAttribute(element, attribute, uri) {
-    let secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                 getService(Ci.nsIScriptSecurityManager);
     const flags = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
     try {
       // TODO Is this necessary?
-      secman.checkLoadURIStrWithPrincipal(this._feedPrincipal, uri, flags);
+      Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(this._feedPrincipal, uri, flags);
       // checkLoadURIStrWithPrincipal will throw if the link URI should not be
       // loaded, either because our feedURI isn't allowed to load it or per
       // the rules specified in |flags|, so we'll never "linkify" the link...
@@ -144,9 +137,7 @@ FeedWriter.prototype = {
   __bundle: null,
   get _bundle() {
     if (!this.__bundle) {
-      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                      getService(Ci.nsIStringBundleService).
-                      createBundle(URI_BUNDLE);
+      this.__bundle = Services.strings.createBundle(URI_BUNDLE);
     }
     return this.__bundle;
   },
@@ -492,9 +483,7 @@ FeedWriter.prototype = {
    * @returns moz-icon url of the given file as a string
    */
   _getFileIconURL(file) {
-    let ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    let fph = ios.getProtocolHandler("file")
+    let fph = Services.io.getProtocolHandler("file")
                  .QueryInterface(Ci.nsIFileProtocolHandler);
     let urlSpec = fph.getURLSpecFromFile(file);
     return "moz-icon://" + urlSpec + "?size=16";
@@ -801,9 +790,7 @@ FeedWriter.prototype = {
     this._document = window.document;
     this._handlersList = this._document.getElementById("handlersMenuList");
 
-    let secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                 getService(Ci.nsIScriptSecurityManager);
-    this._feedPrincipal = secman.createCodebasePrincipal(this._feedURI, {});
+    this._feedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(this._feedURI, {});
 
     LOG("Subscribe Preview: feed uri = " + this._window.location.href);
 

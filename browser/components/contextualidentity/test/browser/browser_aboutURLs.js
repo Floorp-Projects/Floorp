@@ -14,7 +14,6 @@ add_task(async function() {
                 // longer, we skip this for now.
   ];
 
-  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   for (let cid in Cc) {
     let result = cid.match(/@mozilla.org\/network\/protocol\/about;1\?what\=(.*)$/);
     if (!result) {
@@ -25,7 +24,7 @@ add_task(async function() {
     let contract = "@mozilla.org/network/protocol/about;1?what=" + aboutType;
     try {
       let am = Cc[contract].getService(Ci.nsIAboutModule);
-      let uri = ios.newURI("about:" + aboutType);
+      let uri = Services.io.newURI("about:" + aboutType);
       let flags = am.getURIFlags(uri);
       if (!(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
           networkURLs.indexOf(aboutType) == -1) {

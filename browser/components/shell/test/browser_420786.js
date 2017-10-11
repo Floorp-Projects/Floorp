@@ -6,9 +6,7 @@ const DG_DRAW_BG_KEY = DG_BACKGROUND + "/draw_background";
 function onPageLoad() {
   gBrowser.selectedBrowser.removeEventListener("load", onPageLoad, true);
 
-  var bs = Cc["@mozilla.org/intl/stringbundle;1"].
-           getService(Ci.nsIStringBundleService);
-  var brandName = bs.createBundle("chrome://branding/locale/brand.properties").
+  var brandName = Services.strings.createBundle("chrome://branding/locale/brand.properties").
                   GetStringFromName("brandShortName");
 
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
