@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('caption') } catch(e) { }
+      try { o2 = document.createElement('select') } catch(e) { }
+      try { o3 = document.createElement('map') } catch(e) { }
+      try { o4 = window.getSelection() } catch(e) { }
+      try { document.documentElement.appendChild(o1) } catch(e) { }
+      try { o1.style.display = 'contents' } catch(e) { }
+      try { document.prepend(o2, document) } catch(e) { }
+      try { document.designMode = 'on'; } catch(e) { }
+      try { o3.ownerDocument.execCommand('outdent', false, null) } catch(e) { }
+      try { document.designMode = 'off'; } catch(e) { }
+      try { o4.extend(o2, 0) } catch(e) { }
+    </script>
+  </head>
+</html>
