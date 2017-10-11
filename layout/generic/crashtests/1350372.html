@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom(){
+  let root = document.documentElement,
+      inp = document.createElement("input"),
+      aud = document.createElement("audio"),
+      vid = document.createElement("video");
+  inp.type = "image";
+  document.body.appendChild(inp);
+  document.body.appendChild(aud);
+  document.body.appendChild(vid);
+  root.style.columnWidth = "0px";
+  setTimeout(function(){
+    inp.style.display = "contents";
+    setTimeout(function(){
+      inp.remove();
+      inp.appendChild(vid);
+      setTimeout(function(){
+        root.style.strokeWidth = "0px";
+      }, 10);
+    }, 10);
+  }, 10);
+}
+addEventListener("DOMContentLoaded", boom);
+</script>
+</head>
+<body></body>
+</html>
