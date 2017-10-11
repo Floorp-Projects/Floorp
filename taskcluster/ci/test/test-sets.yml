@@ -172,6 +172,7 @@ windows-tests:
     - mochitest-webgl
     - reftest
     - reftest-no-accel
+    - test-verify
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
@@ -227,6 +228,7 @@ macosx64-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
+    - test-verify
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
