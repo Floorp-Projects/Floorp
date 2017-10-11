@@ -52,17 +52,14 @@ public:
 
   uint32_t GetLength() const { return mLength; }
 
-  void ToString(nsAString& aBuf) const
-  {
-    // See the comment on |mString|'s declaration.
-    nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
-  }
-
+  void ToString(nsAString& aString) const;
   void ToUTF8String(nsACString& aString) const;
 
+  // This is only valid for dynamic atoms.
   nsStringBuffer* GetStringBuffer() const
   {
     // See the comment on |mString|'s declaration.
+    MOZ_ASSERT(IsDynamicAtom());
     return nsStringBuffer::FromData(mString);
   }
 
@@ -90,7 +87,7 @@ private:
 
   // Construction and destruction is done entirely by |friend|s.
   nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
-  nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash);
+  nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash);
 protected:
   ~nsAtom();
 
@@ -99,9 +96,10 @@ private:
   uint32_t mLength: 30;
   uint32_t mKind: 2; // nsAtom::AtomKind
   uint32_t mHash;
-  // WARNING! There is an invisible constraint on |mString|: the chars it
-  // points to must belong to an nsStringBuffer. This is so that the
-  // nsStringBuffer::FromData() calls above are valid.
+  // WARNING! For static atoms, this is a pointer to a static char buffer. For
+  // non-static atoms it points to the chars in an nsStringBuffer. This means
+  // that nsStringBuffer::FromData(mString) calls are only valid for non-static
+  // atoms.
   char16_t* mString;
 };
 

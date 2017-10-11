@@ -543,7 +543,7 @@ nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
     case eAtom:
     {
       nsAtom *atom = static_cast<nsAtom*>(GetPtr());
-      aResult.SetStringBuffer(atom->GetStringBuffer(), atom->GetLength());
+      aResult.SetOwnedAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
       break;
     }
     default:
