@@ -4203,6 +4203,7 @@ function OverflowableToolbar(aToolbarNode) {
 OverflowableToolbar.prototype = {
   initialized: false,
   _forceOnOverflow: false,
+  _addedListener: false,
 
   observe(aSubject, aTopic, aData) {
     if (aTopic == "browser-delayed-startup-finished" &&
@@ -4231,6 +4232,7 @@ OverflowableToolbar.prototype = {
     CustomizableUIInternal.addPanelCloseListeners(this._panel);
 
     CustomizableUI.addListener(this);
+    this._addedListener = true;
 
     // The 'overflow' event may have been fired before init was called.
     if (this._toolbar.overflowedDuringConstruction) {
@@ -4262,6 +4264,7 @@ OverflowableToolbar.prototype = {
     this._chevron.removeEventListener("dragend", this);
     this._panel.removeEventListener("popuphiding", this);
     CustomizableUI.removeListener(this);
+    this._addedListener = false;
     CustomizableUIInternal.removePanelCloseListeners(this._panel);
   },
 
@@ -4379,10 +4382,12 @@ OverflowableToolbar.prototype = {
         CustomizableUIInternal.notifyListeners("onWidgetOverflow", child, this._target);
 
         this._list.insertBefore(child, this._list.firstChild);
-        if (!this._toolbar.hasAttribute("overflowing")) {
+        if (!this._addedListener) {
           CustomizableUI.addListener(this);
         }
-        this._toolbar.setAttribute("overflowing", "true");
+        if (!CustomizableUI.isSpecialWidget(child.id)) {
+          this._toolbar.setAttribute("overflowing", "true");
+        }
       }
       child = prevChild;
     }
@@ -4408,7 +4413,7 @@ OverflowableToolbar.prototype = {
       if (!shouldMoveAllItems &&
           minSize &&
           this._target.clientWidth <= minSize) {
-        return;
+        break;
       }
 
       this._collapsed.delete(child.id);
@@ -4443,9 +4448,13 @@ OverflowableToolbar.prototype = {
     let win = this._target.ownerGlobal;
     win.UpdateUrlbarSearchSplitterState();
 
-    if (!this._collapsed.size) {
+    let collapsedWidgetIds = Array.from(this._collapsed.keys());
+    if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
       this._toolbar.removeAttribute("overflowing");
+    }
+    if (this._addedListener && !this._collapsed.size) {
       CustomizableUI.removeListener(this);
+      this._addedListener = false;
     }
   },
 
@@ -4535,9 +4544,13 @@ OverflowableToolbar.prototype = {
       CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer);
       CustomizableUIInternal.notifyListeners("onWidgetUnderflow", aNode, this._target);
 
-      if (!this._collapsed.size) {
+      let collapsedWidgetIds = Array.from(this._collapsed.keys());
+      if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
         this._toolbar.removeAttribute("overflowing");
+      }
+      if (this._addedListener && !this._collapsed.size) {
         CustomizableUI.removeListener(this);
+        this._addedListener = false;
       }
     } else if (aNode.previousSibling) {
       // but if it still is, it must have changed places. Bookkeep:
