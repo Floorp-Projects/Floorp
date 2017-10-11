@@ -115,25 +115,6 @@ protected:
   bool mInAsyncPaint;
 };
 
-/**
- * A ContentClient for use with OMTC.
- */
-class ContentClientRemote : public ContentClient
-{
-public:
-  explicit ContentClientRemote(CompositableForwarder* aForwarder)
-    : ContentClient(aForwarder)
-  {}
-
-  virtual void Updated(const nsIntRegion& aRegionToDraw,
-                       const nsIntRegion& aVisibleRegion,
-                       bool aDidSelfCopy) = 0;
-
-  ContentClientRemote* AsContentClientRemote() override {
-    return this;
-  }
-};
-
 // thin wrapper around RotatedContentBuffer, for on-mtc
 class ContentClientBasic final : public ContentClient
                                , protected RotatedContentBuffer
@@ -187,9 +168,9 @@ private:
 };
 
 /**
- * A ContentClientRemote backed by a RotatedContentBuffer.
+ * A ContentClient backed by a RotatedContentBuffer.
  *
- * When using a ContentClientRemote, SurfaceDescriptors are created on
+ * When using a ContentClientRemoteBuffer, SurfaceDescriptors are created on
  * the rendering side and destroyed on the compositing side. They are only
  * passed from one side to the other when the TextureClient/Hosts are created.
  * *Ownership* of the SurfaceDescriptor moves from the rendering side to the
@@ -202,14 +183,14 @@ private:
  * create them.
  */
 // Version using new texture clients
-class ContentClientRemoteBuffer : public ContentClientRemote
+class ContentClientRemoteBuffer : public ContentClient
                                 , protected RotatedContentBuffer
 {
   using RotatedContentBuffer::BufferRect;
   using RotatedContentBuffer::BufferRotation;
 public:
   explicit ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
-    : ContentClientRemote(aForwarder)
+    : ContentClient(aForwarder)
     , RotatedContentBuffer(ContainsVisibleBounds)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
@@ -263,7 +244,7 @@ public:
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,
-                       bool aDidSelfCopy) override;
+                       bool aDidSelfCopy);
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
