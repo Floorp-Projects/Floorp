@@ -7,6 +7,7 @@
 
 import argparse
 import os
+import posixpath
 import re
 import sys
 import mozinfo
@@ -100,6 +101,9 @@ class VerifyToolsMixin(object):
 
         # for each changed file, determine if it is a test file, and what suite it is in
         for file in changed_files:
+            # manifest paths use os.sep (like backslash on Windows) but
+            # automation-relevance uses posixpath.sep
+            file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if entry:
                 self.info("Verification found test %s" % file)
