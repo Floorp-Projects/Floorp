@@ -435,7 +435,7 @@ ForgetSourceHook(JSContext* cx);
  * right time(s), such as after evaluation of a script has run to completion.
  */
 extern JS_FRIEND_API(bool)
-UseInternalJobQueues(JSContext* cx);
+UseInternalJobQueues(JSContext* cx, bool cooperative = false);
 
 /**
  * Instruct the runtime to stop draining the internal job queue.
