@@ -233,8 +233,6 @@ class RunState
     InterpreterFrame* pushInterpreterFrame(JSContext* cx);
     inline void setReturnValue(const Value& v);
 
-    bool maybeCreateThisForConstructor(JSContext* cx);
-
   private:
     RunState(const RunState& other) = delete;
     RunState(const ExecuteState& other) = delete;
@@ -281,18 +279,13 @@ class InvokeState final : public RunState
 {
     const CallArgs& args_;
     MaybeConstruct construct_;
-    bool createSingleton_;
 
   public:
     InvokeState(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
       : RunState(cx, Invoke, args.callee().as<JSFunction>().nonLazyScript()),
         args_(args),
-        construct_(construct),
-        createSingleton_(false)
+        construct_(construct)
     { }
-
-    bool createSingleton() const { return createSingleton_; }
-    void setCreateSingleton() { createSingleton_ = true; }
 
     bool constructing() const { return construct_; }
     const CallArgs& args() const { return args_; }
