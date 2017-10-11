@@ -305,6 +305,11 @@ ShaderRenderPass::ExecuteRendering()
     return;
   }
 
+  // Change the blend state if needed.
+  if (Maybe<MLGBlendState> blendState = GetBlendState()) {
+    mDevice->SetBlendState(blendState.value());
+  }
+
   mDevice->SetPSConstantBuffer(0, &mPSBuffer0);
   if (MaskOperation* mask = GetMask()) {
     mDevice->SetPSTexture(kMaskLayerTextureSlot, mask->GetTexture());
@@ -992,6 +997,49 @@ RenderViewPass::SetupPipeline()
 
   mDevice->SetPSTexture(0, mSource->GetTexture());
   mDevice->SetSamplerMode(kDefaultSamplerSlot, SamplerMode::LinearClamp);
+}
+
+void
+RenderViewPass::ExecuteRendering()
+{
+  if (mAssignedLayer->NeedsSurfaceCopy()) {
+    RenderWithBackdropCopy();
+    return;
+  }
+
+  TexturedRenderPass::ExecuteRendering();
+}
+
+void
+RenderViewPass::RenderWithBackdropCopy()
+{
+  MOZ_ASSERT(mAssignedLayer->NeedsSurfaceCopy());
+
+  DebugOnly<Matrix> transform2d;
+  const Matrix4x4& transform = mAssignedLayer->GetEffectiveTransform();
+  MOZ_ASSERT(transform.Is2D(&transform2d) &&
+             !gfx::ThebesMatrix(transform2d).HasNonIntegerTranslation());
+
+  IntRect visible = mAssignedLayer->GetShadowVisibleRegion().GetBounds().ToUnknownRect();
+  visible += IntPoint::Truncate(transform._41, transform._42);
+  visible -= mParentView->GetTargetOffset();
+
+  RefPtr<MLGTexture> dest = mAssignedLayer->GetRenderTarget()->GetTexture();
+  RefPtr<MLGTexture> source = mParentView->GetRenderTarget()->GetTexture();
+
+  // Clamp the rect so that we don't read pixels outside the source texture, or
+  // write pixels outside the destination texture.
+  visible = visible.Intersect(IntRect(IntPoint(0, 0), source->GetSize()));
+  visible = visible.Intersect(IntRect(visible.TopLeft(), dest->GetSize()));
+
+  mDevice->CopyTexture(dest, IntPoint(0, 0), source, visible);
+
+  RenderViewMLGPU* childView = mAssignedLayer->GetRenderView();
+  childView->RenderAfterBackdropCopy();
+
+  mParentView->RestoreDeviceState();
+
+  TexturedRenderPass::ExecuteRendering();
 }
 
 } // namespace layers
