@@ -62,6 +62,8 @@ RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder,
     this,
     aContainer->GetLayer(),
     Stringify(mInvalidBounds).c_str());
+
+  mContainer->SetRenderView(this);
 }
 
 RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder, RenderViewMLGPU* aParent)
@@ -72,6 +74,7 @@ RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder, RenderViewMLGPU* aParen
    mFinishedBuilding(false),
    mCurrentLayerBufferIndex(kInvalidResourceIndex),
    mCurrentMaskRectBufferIndex(kInvalidResourceIndex),
+   mCurrentDepthMode(MLGDepthTestMode::Disabled),
    mNextSortIndex(1),
    mUseDepthBuffer(gfxPrefs::AdvancedLayersEnableDepthBuffer()),
    mDepthBufferNeedsClear(false)
@@ -111,11 +114,23 @@ RenderViewMLGPU::AddChild(RenderViewMLGPU* aParent)
 void
 RenderViewMLGPU::Render()
 {
-  // We render tiles front-to-back, depth-first, to minimize render target switching.
+  // We render views depth-first to minimize render target switching.
   for (const auto& child : mChildren) {
     child->Render();
   }
 
+  // If the view requires a surface copy (of its backdrop), then we delay
+  // rendering it until it is added to a batch.
+  if (mContainer && mContainer->NeedsSurfaceCopy()) {
+    return;
+  }
+  ExecuteRendering();
+}
+
+void
+RenderViewMLGPU::RenderAfterBackdropCopy()
+{
+  MOZ_ASSERT(mContainer && mContainer->NeedsSurfaceCopy());
   ExecuteRendering();
 }
 
@@ -385,26 +400,19 @@ RenderViewMLGPU::ExecuteRendering()
   if (!mTarget) {
     return;
   }
-
-  // Note: we unbind slot 0 (which is where the render target could have been
-  // bound on a previous frame). Otherwise we trigger D3D11_DEVICE_PSSETSHADERRESOURCES_HAZARD.
-  mDevice->UnsetPSTexture(0);
-  mDevice->SetRenderTarget(mTarget);
-  mDevice->SetViewport(IntRect(IntPoint(0, 0), mTarget->GetSize()));
-  mDevice->SetScissorRect(Some(mInvalidBounds));
-
   if (!mWorldConstants.IsValid()) {
     gfxWarning() << "Failed to allocate constant buffer for world transform";
     return;
   }
-  mDevice->SetVSConstantBuffer(kWorldConstantBufferSlot, &mWorldConstants);
+
+  SetDeviceState();
 
   // If using the depth buffer, clear it (if needed) and enable writes.
   if (mUseDepthBuffer) {
     if (mDepthBufferNeedsClear) {
       mDevice->ClearDepthBuffer(mTarget);
     }
-    mDevice->SetDepthTestMode(MLGDepthTestMode::Write);
+    SetDepthTestMode(MLGDepthTestMode::Write);
   }
 
   // Opaque items, rendered front-to-back.
@@ -415,7 +423,7 @@ RenderViewMLGPU::ExecuteRendering()
   if (mUseDepthBuffer) {
     // From now on we might be rendering transparent pixels, so we disable
     // writing to the z-buffer.
-    mDevice->SetDepthTestMode(MLGDepthTestMode::ReadOnly);
+    SetDepthTestMode(MLGDepthTestMode::ReadOnly);
   }
 
   // Clear any pixels that are not occluded, and therefore might require
@@ -466,12 +474,35 @@ RenderViewMLGPU::ExecutePass(RenderPassMLGPU* aPass)
     mDevice->SetVSConstantBuffer(kMaskBufferSlot, &section);
   }
 
-  // Change the blend state if needed.
-  if (Maybe<MLGBlendState> blendState = aPass->GetBlendState()) {
-    mDevice->SetBlendState(blendState.value());
-  }
-
   aPass->ExecuteRendering();
+}
+
+void
+RenderViewMLGPU::SetDeviceState()
+{
+  // Note: we unbind slot 0 (which is where the render target could have been
+  // bound on a previous frame). Otherwise we trigger D3D11_DEVICE_PSSETSHADERRESOURCES_HAZARD.
+  mDevice->UnsetPSTexture(0);
+  mDevice->SetRenderTarget(mTarget);
+  mDevice->SetViewport(IntRect(IntPoint(0, 0), mTarget->GetSize()));
+  mDevice->SetScissorRect(Some(mInvalidBounds));
+  mDevice->SetVSConstantBuffer(kWorldConstantBufferSlot, &mWorldConstants);
+}
+
+void
+RenderViewMLGPU::SetDepthTestMode(MLGDepthTestMode aMode)
+{
+  mDevice->SetDepthTestMode(aMode);
+  mCurrentDepthMode = aMode;
+}
+
+void
+RenderViewMLGPU::RestoreDeviceState()
+{
+  SetDeviceState();
+  mDevice->SetDepthTestMode(mCurrentDepthMode);
+  mCurrentLayerBufferIndex = kInvalidResourceIndex;
+  mCurrentMaskRectBufferIndex = kInvalidResourceIndex;
 }
 
 int32_t
@@ -514,6 +545,11 @@ RenderViewMLGPU::PrepareDepthBuffer()
 void
 RenderViewMLGPU::PrepareClears()
 {
+  // We don't do any clearing if we're copying from a source backdrop.
+  if (mContainer && mContainer->NeedsSurfaceCopy()) {
+    return;
+  }
+
   // Get the list of rects to clear. If using the depth buffer, we don't
   // care if it's accurate since the GPU will do occlusion testing for us.
   // If not using the depth buffer, we subtract out the occluded region.

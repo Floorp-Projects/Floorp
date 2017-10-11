@@ -52,6 +52,11 @@ public:
     return mUseDepthBuffer;
   }
 
+  // Render after having previously delayed rendering due to the view
+  // requiring a backdrop copy.
+  void RenderAfterBackdropCopy();
+  void RestoreDeviceState();
+
   // The size and render target cannot be read until the view has finished
   // building, since we try to right-size the render target to the visible
   // region.
@@ -72,6 +77,8 @@ private:
   void AddItemBackToFront(LayerMLGPU* aLayer, ItemInfo& aItem);
 
   void PrepareClears();
+  void SetDeviceState();
+  void SetDepthTestMode(MLGDepthTestMode aMode);
 
   void ExecutePass(RenderPassMLGPU* aPass);
 
@@ -123,6 +130,9 @@ private:
   // This state is used to avoid changing buffers while we execute batches.
   size_t mCurrentLayerBufferIndex;
   size_t mCurrentMaskRectBufferIndex;
+
+  // This state is saved locally so it can be restored in RestoreDeviceState.
+  MLGDepthTestMode mCurrentDepthMode;
 
   // Depth-buffer tracking.
   int32_t mNextSortIndex;
