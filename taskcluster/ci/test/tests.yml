@@ -1962,12 +1962,6 @@ test-verify:
                     - remove_executables.py
         extra-options:
             - --verify
-    when:
-        files-changed:
-            - '**/*.js'
-            - '**/*.html'
-            - '**/*.xhtml'
-            - '**/*.xul'
 
 web-platform-tests:
     description: "Web platform test run"
