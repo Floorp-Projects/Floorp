@@ -29,7 +29,6 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'prefapi.cpp',
     'Preferences.cpp',
 ]
 

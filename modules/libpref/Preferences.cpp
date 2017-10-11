@@ -7,13 +7,21 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <vector>
 
+#include "base/basictypes.h"
 #include "GeckoProfiler.h"
+#include "MainThreadUtils.h"
+#include "mozilla/ArenaAllocatorExtensions.h"
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentPrefs.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Omnijar.h"
@@ -30,10 +38,10 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAutoPtr.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
@@ -69,12 +77,17 @@
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
 #include "nsZipArchive.h"
+#include "plbase64.h"
 #include "PLDHashTable.h"
-#include "prefapi.h"
-#include "prefapi_private_data.h"
+#include "plstr.h"
+#include "prlink.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
+#endif
+
+#ifdef XP_WIN
+#include "windows.h"
 #endif
 
 using namespace mozilla;
@@ -103,15 +116,6 @@ using namespace mozilla;
     }                                                                          \
   } while (0)
 
-class WatchinPrefRAII
-{
-public:
-  WatchinPrefRAII() { pref_SetWatchingPref(true); }
-  ~WatchinPrefRAII() { pref_SetWatchingPref(false); }
-};
-
-#define WATCHING_PREF_RAII() WatchinPrefRAII watchingPrefRAII
-
 #else // DEBUG
 
 #define ENSURE_MAIN_PROCESS(func, pref)                                        \
@@ -124,9 +128,1384 @@ public:
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }
 
+#endif // DEBUG
+
+//===========================================================================
+// The old low-level prefs API
+//===========================================================================
+
+struct PrefHashEntry;
+
+extern PLDHashTable* gHashTable;
+
+namespace mozilla {
+namespace dom {
+class PrefSetting;
+} // namespace dom
+} // namespace mozilla
+
+typedef nsTArray<mozilla::UniqueFreePtr<char>> PrefSaveData;
+
+PrefSaveData
+pref_savePrefs(PLDHashTable* aTable);
+
+nsresult
+pref_SetPref(const mozilla::dom::PrefSetting& aPref);
+
+#ifdef DEBUG
+void
+pref_SetInitPhase(pref_initPhase aPhase);
+
+pref_initPhase
+pref_GetInitPhase();
+
+void
+pref_SetWatchingPref(bool aWatching);
+#endif
+
+PrefHashEntry*
+pref_HashTableLookup(const char* aKey);
+
+bool
+pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry);
+
+void
+pref_GetPrefFromEntry(PrefHashEntry* aHashEntry,
+                      mozilla::dom::PrefSetting* aPref);
+
+size_t
+pref_SizeOfPrivateData(mozilla::MallocSizeOf aMallocSizeOf);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// 1 MB should be enough for everyone.
+static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
+// Actually, 4kb should be enough for everyone.
+static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
+
+typedef union {
+  char* mStringVal;
+  int32_t mIntVal;
+  bool mBoolVal;
+} PrefValue;
+
+// The Init function initializes the preference context and creates the
+// preference hashtable.
+void
+PREF_Init();
+
+// Cleanup should be called at program exit to free the list of registered
+// callbacks.
+void
+PREF_Cleanup();
+void
+PREF_CleanupPrefs();
+
+// Preference flags, including the native type of the preference. Changing any
+// of these values will require modifying the code inside of PrefTypeFlags
+// class.
+enum class PrefType
+{
+  Invalid = 0,
+  String = 1,
+  Int = 2,
+  Bool = 3,
+};
+
+// Keep the type of the preference, as well as the flags guiding its behaviour.
+class PrefTypeFlags
+{
+public:
+  PrefTypeFlags()
+    : mValue(AsInt(PrefType::Invalid))
+  {
+  }
+
+  explicit PrefTypeFlags(PrefType aType)
+    : mValue(AsInt(aType))
+  {
+  }
+
+  PrefTypeFlags& Reset()
+  {
+    mValue = AsInt(PrefType::Invalid);
+    return *this;
+  }
+
+  bool IsTypeValid() const { return !IsPrefType(PrefType::Invalid); }
+  bool IsTypeString() const { return IsPrefType(PrefType::String); }
+  bool IsTypeInt() const { return IsPrefType(PrefType::Int); }
+  bool IsTypeBool() const { return IsPrefType(PrefType::Bool); }
+  bool IsPrefType(PrefType type) const { return GetPrefType() == type; }
+
+  PrefTypeFlags& SetPrefType(PrefType aType)
+  {
+    mValue = mValue - AsInt(GetPrefType()) + AsInt(aType);
+    return *this;
+  }
+
+  PrefType GetPrefType() const
+  {
+    return (PrefType)(mValue & (AsInt(PrefType::String) | AsInt(PrefType::Int) |
+                                AsInt(PrefType::Bool)));
+  }
+
+  bool HasDefault() const { return mValue & PREF_FLAG_HAS_DEFAULT; }
+
+  PrefTypeFlags& SetHasDefault(bool aSetOrUnset)
+  {
+    return SetFlag(PREF_FLAG_HAS_DEFAULT, aSetOrUnset);
+  }
+
+  bool HasStickyDefault() const { return mValue & PREF_FLAG_STICKY_DEFAULT; }
+
+  PrefTypeFlags& SetHasStickyDefault(bool aSetOrUnset)
+  {
+    return SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset);
+  }
+
+  bool IsLocked() const { return mValue & PREF_FLAG_LOCKED; }
+
+  PrefTypeFlags& SetLocked(bool aSetOrUnset)
+  {
+    return SetFlag(PREF_FLAG_LOCKED, aSetOrUnset);
+  }
+
+  bool HasUserValue() const { return mValue & PREF_FLAG_USERSET; }
+
+  PrefTypeFlags& SetHasUserValue(bool aSetOrUnset)
+  {
+    return SetFlag(PREF_FLAG_USERSET, aSetOrUnset);
+  }
+
+private:
+  static uint16_t AsInt(PrefType aType) { return (uint16_t)aType; }
+
+  PrefTypeFlags& SetFlag(uint16_t aFlag, bool aSetOrUnset)
+  {
+    mValue = aSetOrUnset ? mValue | aFlag : mValue & ~aFlag;
+    return *this;
+  }
+
+  // We pack both the value of type (PrefType) and flags into the same int. The
+  // flag enum starts at 4 so that the PrefType can occupy the bottom two bits.
+  enum
+  {
+    PREF_FLAG_LOCKED = 4,
+    PREF_FLAG_USERSET = 8,
+    PREF_FLAG_CONFIG = 16,
+    PREF_FLAG_REMOTE = 32,
+    PREF_FLAG_LILOCAL = 64,
+    PREF_FLAG_HAS_DEFAULT = 128,
+    PREF_FLAG_STICKY_DEFAULT = 256,
+  };
+  uint16_t mValue;
+};
+
+struct PrefHashEntry : PLDHashEntryHdr
+{
+  PrefTypeFlags mPrefFlags; // this field first to minimize 64-bit struct size
+  const char* mKey;
+  PrefValue mDefaultPref;
+  PrefValue mUserPref;
+};
+
+// Set the various types of preferences. These functions take a dotted notation
+// of the preference name (e.g. "browser.startup.homepage"). Note that this
+// will cause the preference to be saved to the file if it is different from
+// the default. In other words, these are used to set the _user_ preferences.
+//
+// If aSetDefault is set to true however, it sets the default value. This will
+// only affect the program behavior if the user does not have a value saved
+// over it for the particular preference. In addition, these will never be
+// saved out to disk.
+//
+// Each set returns PREF_VALUECHANGED if the user value changed (triggering a
+// callback), or PREF_NOERROR if the value was unchanged.
+nsresult
+PREF_SetCharPref(const char* aPref, const char* aVal, bool aSetDefault = false);
+nsresult
+PREF_SetIntPref(const char* aPref, int32_t aVal, bool aSetDefault = false);
+nsresult
+PREF_SetBoolPref(const char* aPref, bool aVal, bool aSetDefault = false);
+
+bool
+PREF_HasUserPref(const char* aPrefName);
+
+// Get the various types of preferences. These functions take a dotted
+// notation of the preference name (e.g. "browser.startup.homepage")
+//
+// They also take a pointer to fill in with the return value and return an
+// error value. At the moment, this is simply an int but it may
+// be converted to an enum once the global error strategy is worked out.
+//
+// They will perform conversion if the type doesn't match what was requested.
+// (if it is reasonably possible)
+nsresult
+PREF_GetIntPref(const char* aPref, int32_t* aValueOut, bool aGetDefault);
+nsresult
+PREF_GetBoolPref(const char* aPref, bool* aValueOut, bool aGetDefault);
+
+// These functions are similar to the above "Get" version with the significant
+// difference that the preference module will alloc the memory (e.g. XP_STRDUP)
+// and the caller will need to be responsible for freeing it...
+nsresult
+PREF_CopyCharPref(const char* aPref, char** aValueOut, bool aGetDefault);
+
+// Bool function that returns whether or not the preference is locked and
+// therefore cannot be changed.
+bool
+PREF_PrefIsLocked(const char* aPrefName);
+
+// Function that sets whether or not the preference is locked and therefore
+// cannot be changed.
+nsresult
+PREF_LockPref(const char* aKey, bool aLockIt);
+
+PrefType
+PREF_GetPrefType(const char* aPrefName);
+
+// Delete a branch of the tree.
+nsresult
+PREF_DeleteBranch(const char* aBranchName);
+
+// Clears the given pref (reverts it to its default value).
+nsresult
+PREF_ClearUserPref(const char* aPrefName);
+
+// Clears all user prefs.
+nsresult
+PREF_ClearAllUserPrefs();
+
+// The callback function will get passed the pref_node which triggered the call
+// and the void* instance_data which was passed to the registered callback
+// function. Return a non-zero result (nsresult) to pass an error up to the
+// caller.
+//
+// Temporarily conditionally compile PrefChangedFunc typedef. During migration
+// from old libpref to nsIPref we need it in both header files. Eventually
+// prefapi.h will become a private file. The two types need to be in sync for
+// now. Certain compilers were having problems with multiple definitions.
+#ifndef have_PrefChangedFunc_typedef
+typedef void (*PrefChangedFunc)(const char*, void*);
+#define have_PrefChangedFunc_typedef
+#endif
+
+// Register a callback. This takes a node in the preference tree and will call
+// the callback function if anything below that node is modified. Unregister
+// returns PREF_NOERROR if a callback was found that matched all the
+// parameters; otherwise it returns PREF_ERROR.
+void
+PREF_RegisterPriorityCallback(const char* aPrefNode,
+                              PrefChangedFunc aCallback,
+                              void* aData);
+void
+PREF_RegisterCallback(const char* aPrefNode,
+                      PrefChangedFunc aCallback,
+                      void* aData);
+nsresult
+PREF_UnregisterCallback(const char* aPrefNode,
+                        PrefChangedFunc aCallback,
+                        void* aData);
+
+// Used by nsPrefService as the callback function of the prefs parser.
+void
+PREF_ReaderCallback(void* aClosure,
+                    const char* aPref,
+                    PrefValue aValue,
+                    PrefType aType,
+                    bool aIsDefault,
+                    bool aIsStickyDefault);
+
+// Callback for whenever we change a preference.
+typedef void (*PrefsDirtyFunc)();
+void PREF_SetDirtyCallback(PrefsDirtyFunc);
+
+#ifdef __cplusplus
+}
+#endif
+
+static void
+ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
+{
+  auto pref = static_cast<PrefHashEntry*>(aEntry);
+  if (pref->mPrefFlags.IsTypeString()) {
+    if (pref->mDefaultPref.mStringVal) {
+      PL_strfree(pref->mDefaultPref.mStringVal);
+    }
+    if (pref->mUserPref.mStringVal) {
+      PL_strfree(pref->mUserPref.mStringVal);
+    }
+  }
+
+  // Don't need to free this because it's allocated in memory owned by
+  // gPrefNameArena.
+  pref->mKey = nullptr;
+  memset(aEntry, 0, aTable->EntrySize());
+}
+
+static bool
+MatchPrefEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
+{
+  auto prefEntry = static_cast<const PrefHashEntry*>(aEntry);
+
+  if (prefEntry->mKey == aKey) {
+    return true;
+  }
+
+  if (!prefEntry->mKey || !aKey) {
+    return false;
+  }
+
+  auto otherKey = static_cast<const char*>(aKey);
+  return (strcmp(prefEntry->mKey, otherKey) == 0);
+}
+
+struct CallbackNode
+{
+  char* mDomain;
+
+  // If someone attempts to remove the node from the callback list while
+  // pref_DoCallback is running, |func| is set to nullptr. Such nodes will
+  // be removed at the end of pref_DoCallback.
+  PrefChangedFunc mFunc;
+  void* mData;
+  CallbackNode* mNext;
+};
+
+PLDHashTable* gHashTable;
+
+static ArenaAllocator<8192, 4> gPrefNameArena;
+
+static CallbackNode* gFirstCallback = nullptr;
+static CallbackNode* gLastPriorityNode = nullptr;
+
+static bool gIsAnyPrefLocked = false;
+
+// These are only used during the call to pref_DoCallback.
+static bool gCallbacksInProgress = false;
+static bool gShouldCleanupDeadNodes = false;
+
+static PLDHashTableOps pref_HashTableOps = {
+  PLDHashTable::HashStringKey,
+  MatchPrefEntry,
+  PLDHashTable::MoveEntryStub,
+  ClearPrefEntry,
+  nullptr,
+};
+
+// PR_ALIGN_OF_WORD is only defined on some platforms. ALIGN_OF_WORD has
+// already been defined to PR_ALIGN_OF_WORD everywhere.
+#ifndef PR_ALIGN_OF_WORD
+#define PR_ALIGN_OF_WORD PR_ALIGN_OF_POINTER
+#endif
+
+#define WORD_ALIGN_MASK (PR_ALIGN_OF_WORD - 1)
+
+// Sanity checking.
+#if (PR_ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
+#error "PR_ALIGN_OF_WORD must be a power of 2!"
+#endif
+
+static PrefsDirtyFunc gDirtyCallback = nullptr;
+
+inline void
+MakeDirtyCallback()
+{
+  // Right now the callback function is always set, so we don't need
+  // to complicate the code to cover the scenario where we set the callback
+  // after we've already tried to make it dirty.  If this assert triggers
+  // we will add that code.
+  MOZ_ASSERT(gDirtyCallback);
+  if (gDirtyCallback) {
+    gDirtyCallback();
+  }
+}
+
+void
+PREF_SetDirtyCallback(PrefsDirtyFunc aFunc)
+{
+  gDirtyCallback = aFunc;
+}
+
+//---------------------------------------------------------------------------
+
+static bool
+pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType);
+
+static nsresult
+pref_DoCallback(const char* aChangedPref);
+
+enum
+{
+  kPrefSetDefault = 1,
+  kPrefForceSet = 2,
+  kPrefStickyDefault = 4,
+};
+
+static nsresult
+pref_HashPref(const char* aKey,
+              PrefValue aValue,
+              PrefType aType,
+              uint32_t aFlags);
+
+#define PREF_HASHTABLE_INITIAL_LENGTH 1024
+
+void
+PREF_Init()
+{
+  if (!gHashTable) {
+    gHashTable = new PLDHashTable(
+      &pref_HashTableOps, sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
+  }
+}
+
+// Frees the callback list.
+void
+PREF_Cleanup()
+{
+  NS_ASSERTION(!gCallbacksInProgress,
+               "PREF_Cleanup was called while gCallbacksInProgress is true!");
+
+  CallbackNode* node = gFirstCallback;
+  CallbackNode* next_node;
+
+  while (node) {
+    next_node = node->mNext;
+    PL_strfree(node->mDomain);
+    free(node);
+    node = next_node;
+  }
+  gLastPriorityNode = gFirstCallback = nullptr;
+
+  PREF_CleanupPrefs();
+}
+
+// Frees up all the objects except the callback list.
+void
+PREF_CleanupPrefs()
+{
+  if (gHashTable) {
+    delete gHashTable;
+    gHashTable = nullptr;
+    gPrefNameArena.Clear();
+  }
+}
+
+// Note that this appends to aResult, and does not assign!
+static void
+StrEscape(const char* aOriginal, nsCString& aResult)
+{
+  // JavaScript does not allow quotes, slashes, or line terminators inside
+  // strings so we must escape them. ECMAScript defines four line terminators,
+  // but we're only worrying about \r and \n here.  We currently feed our pref
+  // script to the JS interpreter as Latin-1 so  we won't encounter \u2028
+  // (line separator) or \u2029 (paragraph separator).
+  //
+  // WARNING: There are hints that we may be moving to storing prefs as utf8.
+  // If we ever feed them to the JS compiler as UTF8 then we'll have to worry
+  // about the multibyte sequences that would be interpreted as \u2028 and
+  // \u2029.
+  const char* p;
+
+  if (aOriginal == nullptr) {
+    return;
+  }
+
+  // Paranoid worst case all slashes will free quickly.
+  for (p = aOriginal; *p; ++p) {
+    switch (*p) {
+      case '\n':
+        aResult.AppendLiteral("\\n");
+        break;
+
+      case '\r':
+        aResult.AppendLiteral("\\r");
+        break;
+
+      case '\\':
+        aResult.AppendLiteral("\\\\");
+        break;
+
+      case '\"':
+        aResult.AppendLiteral("\\\"");
+        break;
+
+      default:
+        aResult.Append(*p);
+        break;
+    }
+  }
+}
+
+//
+// External calls
+//
+
+nsresult
+PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
+{
+  if (strlen(aValue) > MAX_PREF_LENGTH) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  PrefValue pref;
+  pref.mStringVal = const_cast<char*>(aValue);
+
+  return pref_HashPref(
+    aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
+}
+
+nsresult
+PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
+{
+  PrefValue pref;
+  pref.mIntVal = aValue;
+
+  return pref_HashPref(
+    aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
+}
+
+nsresult
+PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
+{
+  PrefValue pref;
+  pref.mBoolVal = aValue;
+
+  return pref_HashPref(
+    aPrefName, pref, PrefType::Bool, aSetDefault ? kPrefSetDefault : 0);
+}
+
+enum WhichValue
+{
+  DEFAULT_VALUE,
+  USER_VALUE
+};
+
+static nsresult
+SetPrefValue(const char* aPrefName,
+             const dom::PrefValue& aValue,
+             WhichValue aWhich)
+{
+  bool setDefault = (aWhich == DEFAULT_VALUE);
+
+  switch (aValue.type()) {
+    case dom::PrefValue::TnsCString:
+      return PREF_SetCharPref(
+        aPrefName, aValue.get_nsCString().get(), setDefault);
+
+    case dom::PrefValue::Tint32_t:
+      return PREF_SetIntPref(aPrefName, aValue.get_int32_t(), setDefault);
+
+    case dom::PrefValue::Tbool:
+      return PREF_SetBoolPref(aPrefName, aValue.get_bool(), setDefault);
+
+    default:
+      MOZ_CRASH();
+  }
+}
+
+nsresult
+pref_SetPref(const dom::PrefSetting& aPref)
+{
+  const char* prefName = aPref.name().get();
+  const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
+  const dom::MaybePrefValue& userValue = aPref.userValue();
+
+  nsresult rv;
+  if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
+    rv = SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
+    rv = SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
+  } else {
+    rv = PREF_ClearUserPref(prefName);
+  }
+
+  // NB: we should never try to clear a default value, that doesn't
+  // make sense
+
+  return rv;
+}
+
+PrefSaveData
+pref_savePrefs(PLDHashTable* aTable)
+{
+  PrefSaveData savedPrefs(aTable->EntryCount());
+
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+
+    nsAutoCString prefValue;
+    nsAutoCString prefPrefix;
+    prefPrefix.AssignLiteral("user_pref(\"");
+
+    // where we're getting our pref from
+    PrefValue* sourcePref;
+
+    if (pref->mPrefFlags.HasUserValue() &&
+        (pref_ValueChanged(pref->mDefaultPref,
+                           pref->mUserPref,
+                           pref->mPrefFlags.GetPrefType()) ||
+         !pref->mPrefFlags.HasDefault() ||
+         pref->mPrefFlags.HasStickyDefault())) {
+      sourcePref = &pref->mUserPref;
+    } else {
+      // do not save default prefs that haven't changed
+      continue;
+    }
+
+    // strings are in quotes!
+    if (pref->mPrefFlags.IsTypeString()) {
+      prefValue = '\"';
+      StrEscape(sourcePref->mStringVal, prefValue);
+      prefValue += '\"';
+
+    } else if (pref->mPrefFlags.IsTypeInt()) {
+      prefValue.AppendInt(sourcePref->mIntVal);
+
+    } else if (pref->mPrefFlags.IsTypeBool()) {
+      prefValue = (sourcePref->mBoolVal) ? "true" : "false";
+    }
+
+    nsAutoCString prefName;
+    StrEscape(pref->mKey, prefName);
+
+    savedPrefs.AppendElement()->reset(
+      ToNewCString(prefPrefix + prefName + NS_LITERAL_CSTRING("\", ") +
+                   prefValue + NS_LITERAL_CSTRING(");")));
+  }
+
+  return savedPrefs;
+}
+
+bool
+pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
+{
+  if (aHashEntry->mPrefFlags.GetPrefType() != PrefType::String) {
+    return true;
+  }
+
+  char* stringVal;
+  if (aHashEntry->mPrefFlags.HasDefault()) {
+    stringVal = aHashEntry->mDefaultPref.mStringVal;
+    if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
+    }
+  }
+
+  if (aHashEntry->mPrefFlags.HasUserValue()) {
+    stringVal = aHashEntry->mUserPref.mStringVal;
+    if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static void
+GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
+                      dom::PrefSetting* aPref,
+                      WhichValue aWhich)
+{
+  PrefValue* value;
+  dom::PrefValue* settingValue;
+  if (aWhich == USER_VALUE) {
+    value = &aHashEntry->mUserPref;
+    aPref->userValue() = dom::PrefValue();
+    settingValue = &aPref->userValue().get_PrefValue();
+  } else {
+    value = &aHashEntry->mDefaultPref;
+    aPref->defaultValue() = dom::PrefValue();
+    settingValue = &aPref->defaultValue().get_PrefValue();
+  }
+
+  switch (aHashEntry->mPrefFlags.GetPrefType()) {
+    case PrefType::String:
+      *settingValue = nsDependentCString(value->mStringVal);
+      return;
+    case PrefType::Int:
+      *settingValue = value->mIntVal;
+      return;
+    case PrefType::Bool:
+      *settingValue = !!value->mBoolVal;
+      return;
+    default:
+      MOZ_CRASH();
+  }
+}
+
+void
+pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
+{
+  aPref->name() = aHashEntry->mKey;
+
+  if (aHashEntry->mPrefFlags.HasDefault()) {
+    GetPrefValueFromEntry(aHashEntry, aPref, DEFAULT_VALUE);
+  } else {
+    aPref->defaultValue() = null_t();
+  }
+
+  if (aHashEntry->mPrefFlags.HasUserValue()) {
+    GetPrefValueFromEntry(aHashEntry, aPref, USER_VALUE);
+  } else {
+    aPref->userValue() = null_t();
+  }
+
+  MOZ_ASSERT(aPref->defaultValue().type() == dom::MaybePrefValue::Tnull_t ||
+             aPref->userValue().type() == dom::MaybePrefValue::Tnull_t ||
+             (aPref->defaultValue().get_PrefValue().type() ==
+              aPref->userValue().get_PrefValue().type()));
+}
+
+bool
+PREF_HasUserPref(const char* aPrefName)
+{
+  if (!gHashTable) {
+    return false;
+  }
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->mPrefFlags.HasUserValue();
+}
+
+nsresult
+PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
+{
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  char* stringVal;
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+
+  if (pref && pref->mPrefFlags.IsTypeString()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      stringVal = pref->mDefaultPref.mStringVal;
+    } else {
+      stringVal = pref->mUserPref.mStringVal;
+    }
+
+    if (stringVal) {
+      *aValueOut = NS_strdup(stringVal);
+      rv = NS_OK;
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
+{
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (pref && pref->mPrefFlags.IsTypeInt()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      int32_t tempInt = pref->mDefaultPref.mIntVal;
+
+      // Check to see if we even had a default.
+      if (!pref->mPrefFlags.HasDefault()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aValueOut = tempInt;
+    } else {
+      *aValueOut = pref->mUserPref.mIntVal;
+    }
+    rv = NS_OK;
+  }
+
+  return rv;
+}
+
+nsresult
+PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
+{
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  //NS_ASSERTION(pref, aPrefName);
+  if (pref && pref->mPrefFlags.IsTypeBool()) {
+    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+        !pref->mPrefFlags.HasUserValue()) {
+      bool tempBool = pref->mDefaultPref.mBoolVal;
+
+      // Check to see if we even had a default.
+      if (pref->mPrefFlags.HasDefault()) {
+        *aValueOut = tempBool;
+        rv = NS_OK;
+      }
+    } else {
+      *aValueOut = pref->mUserPref.mBoolVal;
+      rv = NS_OK;
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+PREF_DeleteBranch(const char* aBranchName)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t len = strlen(aBranchName);
+
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // The following check insures that if the branch name already has a "." at
+  // the end, we don't end up with a "..". This fixes an incompatibility
+  // between nsIPref, which needs the period added, and nsIPrefBranch which
+  // does not. When nsIPref goes away this function should be fixed to never
+  // add the period at all.
+  nsAutoCString branch_dot(aBranchName);
+  if (len > 1 && aBranchName[len - 1] != '.') {
+    branch_dot += '.';
+  }
+
+  // Delete a branch. Used for deleting mime types.
+  const char* to_delete = branch_dot.get();
+  MOZ_ASSERT(to_delete);
+  len = strlen(to_delete);
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+
+    // Note: if we're deleting "ldap" then we want to delete "ldap.xxx" and
+    // "ldap" (if such a leaf node exists) but not "ldap_1.xxx".
+    if (PL_strncmp(entry->mKey, to_delete, len) == 0 ||
+        (len - 1 == strlen(entry->mKey) &&
+         PL_strncmp(entry->mKey, to_delete, len - 1) == 0)) {
+      iter.Remove();
+    }
+  }
+
+  MakeDirtyCallback();
+  return NS_OK;
+}
+
+nsresult
+PREF_ClearUserPref(const char* aPrefName)
+{
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (pref && pref->mPrefFlags.HasUserValue()) {
+    pref->mPrefFlags.SetHasUserValue(false);
+
+    if (!pref->mPrefFlags.HasDefault()) {
+      gHashTable->RemoveEntry(pref);
+    }
+
+    pref_DoCallback(aPrefName);
+    MakeDirtyCallback();
+  }
+  return NS_OK;
+}
+
+nsresult
+PREF_ClearAllUserPrefs()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  std::vector<std::string> prefStrings;
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto pref = static_cast<PrefHashEntry*>(iter.Get());
+
+    if (pref->mPrefFlags.HasUserValue()) {
+      prefStrings.push_back(std::string(pref->mKey));
+
+      pref->mPrefFlags.SetHasUserValue(false);
+      if (!pref->mPrefFlags.HasDefault()) {
+        iter.Remove();
+      }
+    }
+  }
+
+  for (std::string& prefString : prefStrings) {
+    pref_DoCallback(prefString.c_str());
+  }
+
+  MakeDirtyCallback();
+  return NS_OK;
+}
+
+nsresult
+PREF_LockPref(const char* aKey, bool aLockIt)
+{
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PrefHashEntry* pref = pref_HashTableLookup(aKey);
+  if (!pref) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aLockIt) {
+    if (!pref->mPrefFlags.IsLocked()) {
+      pref->mPrefFlags.SetLocked(true);
+      gIsAnyPrefLocked = true;
+      pref_DoCallback(aKey);
+    }
+  } else if (pref->mPrefFlags.IsLocked()) {
+    pref->mPrefFlags.SetLocked(false);
+    pref_DoCallback(aKey);
+  }
+
+  return NS_OK;
+}
+
+//
+// Hash table functions
+//
+
+static bool
+pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
+{
+  bool changed = true;
+  switch (aType) {
+    case PrefType::String:
+      if (aOldValue.mStringVal && aNewValue.mStringVal) {
+        changed = (strcmp(aOldValue.mStringVal, aNewValue.mStringVal) != 0);
+      }
+      break;
+
+    case PrefType::Int:
+      changed = aOldValue.mIntVal != aNewValue.mIntVal;
+      break;
+
+    case PrefType::Bool:
+      changed = aOldValue.mBoolVal != aNewValue.mBoolVal;
+      break;
+
+    case PrefType::Invalid:
+    default:
+      changed = false;
+      break;
+  }
+
+  return changed;
+}
+
+// Overwrite the type and value of an existing preference. Caller must ensure
+// that they are not changing the type of a preference that has a default
+// value.
+static PrefTypeFlags
+pref_SetValue(PrefValue* aExistingValue,
+              PrefTypeFlags aFlags,
+              PrefValue aNewValue,
+              PrefType aNewType)
+{
+  if (aFlags.IsTypeString() && aExistingValue->mStringVal) {
+    PL_strfree(aExistingValue->mStringVal);
+  }
+
+  aFlags.SetPrefType(aNewType);
+  if (aFlags.IsTypeString()) {
+    MOZ_ASSERT(aNewValue.mStringVal);
+    aExistingValue->mStringVal =
+      aNewValue.mStringVal ? PL_strdup(aNewValue.mStringVal) : nullptr;
+  } else {
+    *aExistingValue = aNewValue;
+  }
+
+  return aFlags;
+}
+
+#ifdef DEBUG
+
+static pref_initPhase gPhase = START;
+
+static bool gWatchingPref = false;
+
+void
+pref_SetInitPhase(pref_initPhase aPhase)
+{
+  gPhase = aPhase;
+}
+
+pref_initPhase
+pref_GetInitPhase()
+{
+  return gPhase;
+}
+
+void
+pref_SetWatchingPref(bool aWatching)
+{
+  gWatchingPref = aWatching;
+}
+
+struct StringComparator
+{
+  const char* mKey;
+  explicit StringComparator(const char* aKey)
+    : mKey(aKey)
+  {
+  }
+  int operator()(const char* aString) const { return strcmp(mKey, aString); }
+};
+
+bool
+InInitArray(const char* aKey)
+{
+  size_t prefsLen;
+  size_t found;
+  const char** list = mozilla::dom::ContentPrefs::GetContentPrefs(&prefsLen);
+  return BinarySearchIf(list, 0, prefsLen, StringComparator(aKey), &found);
+}
+
+class WatchingPrefRAII
+{
+public:
+  WatchingPrefRAII() { pref_SetWatchingPref(true); }
+  ~WatchingPrefRAII() { pref_SetWatchingPref(false); }
+};
+
+#define WATCHING_PREF_RAII() WatchingPrefRAII watchingPrefRAII
+
+#else // DEBUG
+
 #define WATCHING_PREF_RAII()
 
 #endif // DEBUG
+
+PrefHashEntry*
+pref_HashTableLookup(const char* aKey)
+{
+  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT((!XRE_IsContentProcess() || gPhase != START),
+             "pref access before commandline prefs set");
+
+  // If you're hitting this assertion, you've added a pref access to start up.
+  // Consider moving it later or add it to the whitelist in ContentPrefs.cpp
+  // and get review from a DOM peer
+#ifdef DEBUG
+  if (XRE_IsContentProcess() && gPhase <= END_INIT_PREFS && !gWatchingPref &&
+      !InInitArray(aKey)) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+      "accessing non-init pref %s before the rest of the prefs are sent", aKey);
+  }
+#endif
+
+  return static_cast<PrefHashEntry*>(gHashTable->Search(aKey));
+}
+
+nsresult
+pref_HashPref(const char* aKey,
+              PrefValue aValue,
+              PrefType aType,
+              uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gHashTable) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  auto pref = static_cast<PrefHashEntry*>(gHashTable->Add(aKey, fallible));
+  if (!pref) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // New entry, need to initialize.
+  if (!pref->mKey) {
+    // Initialize the pref entry.
+    pref->mPrefFlags.Reset().SetPrefType(aType);
+    pref->mKey = ArenaStrdup(aKey, gPrefNameArena);
+    memset(&pref->mDefaultPref, 0, sizeof(pref->mDefaultPref));
+    memset(&pref->mUserPref, 0, sizeof(pref->mUserPref));
+
+  } else if (pref->mPrefFlags.HasDefault() &&
+             !pref->mPrefFlags.IsPrefType(aType)) {
+    NS_WARNING(
+      nsPrintfCString(
+        "Trying to overwrite value of default pref %s with the wrong type!",
+        aKey)
+        .get());
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  bool valueChanged = false;
+  if (aFlags & kPrefSetDefault) {
+    if (!pref->mPrefFlags.IsLocked()) {
+      // ?? change of semantics?
+      if (pref_ValueChanged(pref->mDefaultPref, aValue, aType) ||
+          !pref->mPrefFlags.HasDefault()) {
+        pref->mPrefFlags =
+          pref_SetValue(&pref->mDefaultPref, pref->mPrefFlags, aValue, aType)
+            .SetHasDefault(true);
+        if (aFlags & kPrefStickyDefault) {
+          pref->mPrefFlags.SetHasStickyDefault(true);
+        }
+        if (!pref->mPrefFlags.HasUserValue()) {
+          valueChanged = true;
+        }
+      }
+      // What if we change the default to be the same as the user value?
+      // Should we clear the user value?
+    }
+  } else {
+    // If new value is same as the default value and it's not a "sticky" pref,
+    // then un-set the user value. Otherwise, set the user value only if it has
+    // changed.
+    if ((pref->mPrefFlags.HasDefault()) &&
+        !(pref->mPrefFlags.HasStickyDefault()) &&
+        !pref_ValueChanged(pref->mDefaultPref, aValue, aType) &&
+        !(aFlags & kPrefForceSet)) {
+      if (pref->mPrefFlags.HasUserValue()) {
+        // XXX should we free a user-set string value if there is one?
+        pref->mPrefFlags.SetHasUserValue(false);
+        if (!pref->mPrefFlags.IsLocked()) {
+          MakeDirtyCallback();
+          valueChanged = true;
+        }
+      }
+    } else if (!pref->mPrefFlags.HasUserValue() ||
+               !pref->mPrefFlags.IsPrefType(aType) ||
+               pref_ValueChanged(pref->mUserPref, aValue, aType)) {
+      pref->mPrefFlags =
+        pref_SetValue(&pref->mUserPref, pref->mPrefFlags, aValue, aType)
+          .SetHasUserValue(true);
+      if (!pref->mPrefFlags.IsLocked()) {
+        MakeDirtyCallback();
+        valueChanged = true;
+      }
+    }
+  }
+
+  if (valueChanged) {
+    return pref_DoCallback(aKey);
+  }
+
+  return NS_OK;
+}
+
+size_t
+pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
+{
+  size_t n = gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
+  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
+    n += aMallocSizeOf(node);
+    n += aMallocSizeOf(node->mDomain);
+  }
+  return n;
+}
+
+PrefType
+PREF_GetPrefType(const char* aPrefName)
+{
+  if (gHashTable) {
+    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    if (pref) {
+      return pref->mPrefFlags.GetPrefType();
+    }
+  }
+  return PrefType::Invalid;
+}
+
+bool
+PREF_PrefIsLocked(const char* aPrefName)
+{
+  bool result = false;
+  if (gIsAnyPrefLocked && gHashTable) {
+    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+    if (pref && pref->mPrefFlags.IsLocked()) {
+      result = true;
+    }
+  }
+
+  return result;
+}
+
+// Adds a node to the beginning of the callback list.
+void
+PREF_RegisterPriorityCallback(const char* aPrefNode,
+                              PrefChangedFunc aCallback,
+                              void* aData)
+{
+  NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
+  NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
+
+  auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
+  if (node) {
+    node->mDomain = PL_strdup(aPrefNode);
+    node->mFunc = aCallback;
+    node->mData = aData;
+    node->mNext = gFirstCallback;
+    gFirstCallback = node;
+    if (!gLastPriorityNode) {
+      gLastPriorityNode = node;
+    }
+  }
+}
+
+// Adds a node to the end of the callback list.
+void
+PREF_RegisterCallback(const char* aPrefNode,
+                      PrefChangedFunc aCallback,
+                      void* aData)
+{
+  NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
+  NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
+
+  auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
+  if (node) {
+    node->mDomain = PL_strdup(aPrefNode);
+    node->mFunc = aCallback;
+    node->mData = aData;
+    if (gLastPriorityNode) {
+      node->mNext = gLastPriorityNode->mNext;
+      gLastPriorityNode->mNext = node;
+    } else {
+      node->mNext = gFirstCallback;
+      gFirstCallback = node;
+    }
+  }
+}
+
+// Removes |node| from callback list. Returns the node after the deleted one.
+CallbackNode*
+pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
+{
+  NS_PRECONDITION(!aPrevNode || aPrevNode->mNext == aNode, "invalid params");
+  NS_PRECONDITION(aPrevNode || gFirstCallback == aNode, "invalid params");
+
+  NS_ASSERTION(
+    !gCallbacksInProgress,
+    "modifying the callback list while gCallbacksInProgress is true");
+
+  CallbackNode* next_node = aNode->mNext;
+  if (aPrevNode) {
+    aPrevNode->mNext = next_node;
+  } else {
+    gFirstCallback = next_node;
+  }
+  if (gLastPriorityNode == aNode) {
+    gLastPriorityNode = aPrevNode;
+  }
+  PL_strfree(aNode->mDomain);
+  free(aNode);
+  return next_node;
+}
+
+// Deletes a node from the callback list or marks it for deletion.
+nsresult
+PREF_UnregisterCallback(const char* aPrefNode,
+                        PrefChangedFunc aCallback,
+                        void* aData)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  CallbackNode* node = gFirstCallback;
+  CallbackNode* prev_node = nullptr;
+
+  while (node != nullptr) {
+    if (node->mFunc == aCallback && node->mData == aData &&
+        strcmp(node->mDomain, aPrefNode) == 0) {
+      if (gCallbacksInProgress) {
+        // postpone the node removal until after
+        // callbacks enumeration is finished.
+        node->mFunc = nullptr;
+        gShouldCleanupDeadNodes = true;
+        prev_node = node;
+        node = node->mNext;
+      } else {
+        node = pref_RemoveCallbackNode(node, prev_node);
+      }
+      rv = NS_OK;
+    } else {
+      prev_node = node;
+      node = node->mNext;
+    }
+  }
+  return rv;
+}
+
+static nsresult
+pref_DoCallback(const char* aChangedPref)
+{
+  nsresult rv = NS_OK;
+  CallbackNode* node;
+
+  bool reentered = gCallbacksInProgress;
+
+  // Nodes must not be deleted while gCallbacksInProgress is true.
+  // Nodes that need to be deleted are marked for deletion by nulling
+  // out the |func| pointer. We release them at the end of this function
+  // if we haven't reentered.
+  gCallbacksInProgress = true;
+
+  for (node = gFirstCallback; node != nullptr; node = node->mNext) {
+    if (node->mFunc &&
+        PL_strncmp(aChangedPref, node->mDomain, strlen(node->mDomain)) == 0) {
+      (*node->mFunc)(aChangedPref, node->mData);
+    }
+  }
+
+  gCallbacksInProgress = reentered;
+
+  if (gShouldCleanupDeadNodes && !gCallbacksInProgress) {
+    CallbackNode* prev_node = nullptr;
+    node = gFirstCallback;
+
+    while (node != nullptr) {
+      if (!node->mFunc) {
+        node = pref_RemoveCallbackNode(node, prev_node);
+      } else {
+        prev_node = node;
+        node = node->mNext;
+      }
+    }
+    gShouldCleanupDeadNodes = false;
+  }
+
+  return rv;
+}
+
+void
+PREF_ReaderCallback(void* aClosure,
+                    const char* aPref,
+                    PrefValue aValue,
+                    PrefType aType,
+                    bool aIsDefault,
+                    bool aIsStickyDefault)
+{
+  uint32_t flags = 0;
+  if (aIsDefault) {
+    flags |= kPrefSetDefault;
+    if (aIsStickyDefault) {
+      flags |= kPrefStickyDefault;
+    }
+  } else {
+    flags |= kPrefForceSet;
+  }
+  pref_HashPref(aPref, aValue, aType, flags);
+}
 
 //===========================================================================
 // Prefs parsing
@@ -2191,6 +3570,7 @@ nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
   mRelativeToKey.Assign(aRelativeToKey);
   return NS_OK;
 }
+
 //===========================================================================
 // Core prefs code
 //===========================================================================
