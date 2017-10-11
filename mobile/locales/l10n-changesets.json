@@ -5,7 +5,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "a2563a1ea30e"
+        "revision": "9fa689237879"
     }, 
     "ar": {
         "platforms": [
@@ -13,7 +13,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "97584674ab91"
+        "revision": "9a7347120daf"
     }, 
     "as": {
         "platforms": [
@@ -53,14 +53,14 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "832106a424a6"
+        "revision": "1b0b11b34950"
     }, 
     "bn-BD": {
         "platforms": [
             "android", 
             "android-api-16"
         ], 
-        "revision": "def14c151984"
+        "revision": "e3ce87ac65c9"
     }, 
     "bn-IN": {
         "platforms": [
@@ -364,7 +364,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "def997fcd7e1"
+        "revision": "d0a20b8be323"
     }, 
     "ja": {
         "platforms": [
@@ -388,7 +388,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "d8b67b55f2e7"
+        "revision": "eec9c643f986"
     }, 
     "kk": {
         "platforms": [
@@ -499,7 +499,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "723ec70a70c0"
+        "revision": "715142d1d48a"
     }, 
     "nn-NO": {
         "platforms": [
@@ -531,7 +531,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b0a0ced1dd2b"
+        "revision": "6d7373d26405"
     }, 
     "pt-BR": {
         "platforms": [
@@ -539,7 +539,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8825c351b391"
+        "revision": "4510f97a3864"
     }, 
     "pt-PT": {
         "platforms": [
@@ -547,7 +547,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4ca97130b93d"
+        "revision": "b5de4d1ca97d"
     }, 
     "rm": {
         "platforms": [
