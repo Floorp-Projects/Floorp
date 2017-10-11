@@ -7,21 +7,36 @@ package org.mozilla.focus.activity;
 
 import android.content.Context;
 import android.preference.PreferenceManager;
+import android.support.annotation.IdRes;
+import android.support.annotation.StringRes;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.IdlingRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.focus.R;
+import org.mozilla.focus.activity.helpers.SessionLoadedIdlingResource;
 
+import static android.support.test.espresso.Espresso.onData;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
-import static junit.framework.Assert.assertTrue;
-import static org.mozilla.focus.activity.TestHelper.waitingTime;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test visits each page and checks whether some essential elements are being displayed
@@ -29,8 +44,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 public class PageVisitTest {
 
     @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule
-            = new ActivityTestRule<MainActivity>(MainActivity.class) {
+    public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<MainActivity>(MainActivity.class) {
 
         @Override
         protected void beforeActivityLaunched() {
@@ -47,63 +61,90 @@ public class PageVisitTest {
         }
     };
 
+    private SessionLoadedIdlingResource loadingIdlingResource;
+
+    @Before
+    public void setUp() {
+        loadingIdlingResource = new SessionLoadedIdlingResource();
+        IdlingRegistry.getInstance().register(loadingIdlingResource);
+    }
+
     @After
     public void tearDown() throws Exception {
+        IdlingRegistry.getInstance().unregister(loadingIdlingResource);
+
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
     public void visitPagesTest() throws InterruptedException, UiObjectNotFoundException {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        /********* Page View Locators ***********/
-        UiObject rightsPartialText = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.view.View")
-                .description("Firefox Focus is free and open source software " +
-                        "made by Mozilla and other contributors."));
-        UiObject rightsHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.widget.TextView")
-                .text("Your Rights"));
-        UiObject aboutPartialText = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.view.View")
-                .description("Firefox Focus puts you in control."));
-        UiObject aboutHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.widget.TextView")
-                .text("About"));
-        UiObject helpHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.widget.TextView")
-                .text("Help"));
-        UiObject helpView = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.webkit.WebView")
-                .description("What is Firefox Focus for Android? - Mozilla Support Community"));
+        // What's new page
 
-        /* Main View Menu */
-        TestHelper.menuButton.perform(click());
+        openMenu();
 
-        /* Go to Your Rights Page */
-        TestHelper.RightsItem.click();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        assertTrue(rightsHeading.exists());
-        assertTrue(rightsPartialText.exists());
+        clickMenuItem(R.id.whats_new);
+        assertWebsiteUrlContains("support.mozilla.org");
 
-        /* Go to About Page */
-        TestHelper.mDevice.pressBack();
-        TestHelper.waitForIdle();
-        TestHelper.menuButton.perform(click());
-        TestHelper.AboutItem.click();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        assertTrue(aboutHeading.exists());
-        assertTrue(aboutPartialText.exists());
+        pressBack();
 
-        /* Help Page */
-        TestHelper.mDevice.pressBack();
-        TestHelper.waitForIdle();
-        TestHelper.menuButton.perform(click());
-        TestHelper.HelpItem.click();
-        helpView.waitForExists(waitingTime * 3);
-        assertTrue(helpHeading.exists());
+        // Help page
 
-        // https://github.com/mozilla-mobile/focus-android/issues/475
-        // Disabled for now since it lies outside the scope of Focus
-        //assertTrue(helpView.exists());
+        openMenu();
+
+        clickMenuItem(R.id.help);
+        assertToolbarMatchesText(R.string.menu_help);
+
+        pressBack();
+
+        // Go to settings
+
+        openMenu();
+        clickMenuItem(R.id.settings);
+
+        // "About" page
+
+        final String aboutLabel = context.getString(R.string.preference_about, context.getString(R.string.app_name));
+
+        onData(withTitleText(aboutLabel))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        assertToolbarMatchesText(R.string.menu_about);
+
+        pressBack();
+
+        // "Your rights" page
+
+        onData(withTitleText(context.getString(R.string.your_rights)))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        assertToolbarMatchesText(R.string.your_rights);
+    }
+
+    private void openMenu() {
+        onView(withId(R.id.menu))
+                .check(matches(isDisplayed()))
+                .perform(click());
+    }
+
+    private void clickMenuItem(@IdRes int id) {
+        onView(withId(id))
+                .check(matches(isDisplayed()))
+                .perform(click());
+    }
+
+    private void assertWebsiteUrlContains(String substring) {
+        onView(withId(R.id.display_url))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(containsString(substring))));
+    }
+
+    private void assertToolbarMatchesText(@StringRes int titleResource) {
+        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(titleResource)));
     }
 }
