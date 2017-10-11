@@ -334,29 +334,35 @@ js::ValueToCallable(JSContext* cx, HandleValue v, int numToSkip, MaybeConstruct 
     return nullptr;
 }
 
-bool
-RunState::maybeCreateThisForConstructor(JSContext* cx)
+static bool
+MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript, const CallArgs& args,
+                              bool createSingleton)
 {
-    if (isInvoke()) {
-        InvokeState& invoke = *asInvoke();
-        if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
-            RootedObject callee(cx, &invoke.args().callee());
-            if (callee->isBoundFunction()) {
-                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-            } else if (script()->isDerivedClassConstructor()) {
-                MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
-                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
-            } else {
-                MOZ_ASSERT(invoke.args().thisv().isMagic(JS_IS_CONSTRUCTING));
-                RootedObject newTarget(cx, &invoke.args().newTarget().toObject());
-                NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
-                JSObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
-                if (!obj)
-                    return false;
-                invoke.args().setThis(ObjectValue(*obj));
-            }
-        }
+    if (args.thisv().isObject())
+        return true;
+
+    RootedObject callee(cx, &args.callee());
+    if (callee->isBoundFunction()) {
+        args.setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
+        return true;
     }
+
+    if (calleeScript->isDerivedClassConstructor()) {
+        MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
+        args.setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
+        return true;
+    }
+
+    MOZ_ASSERT(args.thisv().isMagic(JS_IS_CONSTRUCTING));
+
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
+
+    JSObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
+    if (!obj)
+        return false;
+
+    args.setThis(ObjectValue(*obj));
     return true;
 }
 
@@ -502,11 +508,15 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
 
     // Check to see if createSingleton flag should be set for this frame.
     if (construct) {
+        bool createSingleton = false;
         jsbytecode* pc;
         if (JSScript* script = cx->currentScript(&pc)) {
             if (ObjectGroup::useSingletonForNewObject(cx, script, pc))
-                state.setCreateSingleton();
+                createSingleton = true;
         }
+
+        if (!MaybeCreateThisForConstructor(cx, state.script(), args, createSingleton))
+            return false;
     }
 
     bool ok = RunScript(cx, state);
@@ -3097,15 +3107,18 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
 
-        bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
+        bool createSingleton = false;
+        if (construct) {
+            createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
+
+            if (!MaybeCreateThisForConstructor(cx, funScript, args, createSingleton))
+                goto error;
+        }
 
         TypeMonitorCall(cx, args, construct);
 
         {
             InvokeState state(cx, args, construct);
-
-            if (createSingleton)
-                state.setCreateSingleton();
 
             if (!createSingleton && jit::IsIonEnabled(cx)) {
                 jit::MethodStatus status = jit::CanEnter(cx, state);
