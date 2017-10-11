@@ -176,7 +176,8 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
                                          const nscolor* aBorderColors,
                                          const nsBorderColors* aCompositeColors,
                                          nscolor aBackgroundColor,
-                                         bool aBackfaceIsVisible)
+                                         bool aBackfaceIsVisible,
+                                         const Maybe<Rect>& aClipRect)
   : mPresContext(aPresContext),
     mDocument(aDocument),
     mDrawTarget(aDrawTarget),
@@ -184,7 +185,8 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
     mOuterRect(aOuterRect),
     mBorderRadii(aBorderRadii),
     mBackgroundColor(aBackgroundColor),
-    mBackfaceIsVisible(aBackfaceIsVisible)
+    mBackfaceIsVisible(aBackfaceIsVisible),
+    mLocalClip(aClipRect)
 {
   PodCopy(mBorderStyles, aBorderStyles, 4);
   PodCopy(mBorderWidths, aBorderWidths, 4);
@@ -3615,6 +3617,14 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
                                                      LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
+
+  if (mLocalClip) {
+    LayoutDeviceRect clip = LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
+    wr::LayoutRect clipRect = aSc.ToRelativeLayoutRect(clip);
+    wr::WrClipId clipId = aBuilder.DefineClip(clipRect);
+    aBuilder.PushClip(clipId);
+  }
+
   Range<const wr::BorderSide> wrsides(side, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
@@ -3622,6 +3632,10 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                       wr::ToBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       wrsides,
                       borderRadius);
+
+  if (mLocalClip) {
+    aBuilder.PopClip();
+  }
 }
 
 /* static */Maybe<nsCSSBorderImageRenderer>
