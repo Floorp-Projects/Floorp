@@ -18,8 +18,16 @@ from functools import partial
 from itertools import chain, imap
 
 # Skip all tests which use features not supported in SpiderMonkey.
-UNSUPPORTED_FEATURES = set(["tail-call-optimization"])
-RELEASE_OR_BETA = set(["async-iteration"])
+UNSUPPORTED_FEATURES = set(["tail-call-optimization",
+                            "BigInt",
+                            "class-fields",
+                            "Promise.prototype.finally",
+                            "regexp-dotall",
+                            "regexp-lookbehind",
+                            "regexp-named-groups",
+                            "regexp-unicode-property-escapes",
+                       ])
+RELEASE_OR_BETA = set()
 
 @contextlib.contextmanager
 def TemporaryDirectory():
@@ -238,11 +246,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
             refTestSkipIf.append(
               ("release_or_beta",
                "%s is not released yet" % ",".join(list(releaseOrBeta)))
-            )
-        elif "SharedArrayBuffer" in testRec["features"]:
-            refTestSkipIf.append(
-              ("!this.hasOwnProperty('SharedArrayBuffer')",
-               "SharedArrayBuffer not yet riding the trains")
             )
 
     # Includes for every test file in a directory is collected in a single
