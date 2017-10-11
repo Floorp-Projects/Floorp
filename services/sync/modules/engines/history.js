@@ -245,16 +245,17 @@ HistoryStore.prototype = {
     // the same timestamp and type as a local one won't get applied.
     // To avoid creating new objects, we rewrite the query result so we
     // can simply check for containment below.
-    let curVisits = [];
+    let curVisitsAsArray = [];
+    let curVisits = new Set();
     try {
-      curVisits = await PlacesSyncUtils.history.fetchVisitsForURL(record.histUri);
+      curVisitsAsArray = await PlacesSyncUtils.history.fetchVisitsForURL(record.histUri);
     } catch (e) {
       this._log.error("Error while fetching visits for URL ${record.histUri}", record.histUri);
     }
 
     let i, k;
-    for (i = 0; i < curVisits.length; i++) {
-      curVisits[i] = curVisits[i].date + "," + curVisits[i].type;
+    for (i = 0; i < curVisitsAsArray.length; i++) {
+      curVisits.add(curVisitsAsArray[i].date + "," + curVisitsAsArray[i].type);
     }
 
     // Walk through the visits, make sure we have sound data, and eliminate
@@ -282,7 +283,7 @@ HistoryStore.prototype = {
 
       let visitDateAsPRTime = PlacesUtils.toPRTime(visit.date);
       let visitKey = visitDateAsPRTime + "," + visit.type;
-      if (curVisits.indexOf(visitKey) != -1) {
+      if (curVisits.has(visitKey)) {
         // Visit is a dupe, don't increment 'k' so the element will be
         // overwritten.
         continue;
@@ -290,7 +291,7 @@ HistoryStore.prototype = {
 
       // Note the visit key, so that we don't add duplicate visits with
       // clamped timestamps.
-      curVisits.push(visitKey);
+      curVisits.add(visitKey);
 
       visit.transition = visit.type;
       k += 1;
