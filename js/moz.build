@@ -13,7 +13,7 @@ with Files('public/TrackedOptimizationInfo.h'):
     BUG_COMPONENT = component_jit
 
 with Files("src/**"):
-    SCHEDULES.inclusive += ['jittest']
+    SCHEDULES.inclusive += ['jittest', 'jsreftest']
 
 with Files("public/**"):
-    SCHEDULES.inclusive += ['jittest']
+    SCHEDULES.inclusive += ['jittest', 'jsreftest']

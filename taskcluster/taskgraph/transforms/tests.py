@@ -367,6 +367,9 @@ test_description_schema = Schema({
     # conditional files to determine when these tests should be run
     Optional('when'): Any({
         Optional('files-changed'): [basestring],
+
+        # SCHEDULES components; the test suite and platform family will be added automatically.
+        Optional('schedules'): [basestring],
     }),
 
     Optional('worker-type'): optionally_keyed_by(
@@ -936,10 +939,13 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        if test.get('when'):
-            jobdesc['when'] = test['when']
+        when = test.get('when')
+        if when and 'files-changed' in when:
+            jobdesc['when'] = when
         else:
             schedules = [suite, platform_family(test['build-platform'])]
+            if when and 'schedules' in when:
+                schedules.extend(when['schedules'])
             if config.params['project'] != 'try':
                 # for non-try branches, include SETA
                 jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
