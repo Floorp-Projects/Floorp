@@ -847,7 +847,7 @@ ReleaseAssertObjectHasNoWrappers(JSContext* cx, HandleObject target)
     RootedValue origv(cx, ObjectValue(*target));
 
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-        if (WrapperMap::Ptr wp = c->lookupWrapper(origv))
+        if (c->lookupWrapper(origv))
             MOZ_CRASH("wrapper found for target object");
     }
 }

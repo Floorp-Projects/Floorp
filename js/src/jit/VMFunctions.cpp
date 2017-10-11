@@ -628,14 +628,8 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
             JSScript* script = JSFunction::getOrCreateScript(cx, fun);
             if (!script || !script->ensureHasTypes(cx))
                 return false;
-            if (fun->isBoundFunction() || script->isDerivedClassConstructor()) {
-                rval.set(MagicValue(JS_UNINITIALIZED_LEXICAL));
-            } else {
-                JSObject* thisObj = CreateThisForFunction(cx, callee, newTarget, GenericObject);
-                if (!thisObj)
-                    return false;
-                rval.set(ObjectValue(*thisObj));
-            }
+            if (!js::CreateThis(cx, fun, script, newTarget, GenericObject, rval))
+                return false;
         }
     }
 

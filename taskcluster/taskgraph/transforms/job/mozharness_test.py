@@ -248,6 +248,8 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     env = worker.setdefault('env', {})
     env['MOZ_AUTOMATION'] = '1'
+    env['GECKO_HEAD_REPOSITORY'] = config.params['head_repository']
+    env['GECKO_HEAD_REV'] = config.params['head_rev']
 
     # this list will get cleaned up / reduced / removed in bug 1354088
     if is_macosx:

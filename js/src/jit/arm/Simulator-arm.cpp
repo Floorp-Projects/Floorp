@@ -1596,7 +1596,7 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     void* pc = reinterpret_cast<void*>(get_pc());
     uint8_t* fp = reinterpret_cast<uint8_t*>(get_register(r11));
 
-    const wasm::CodeSegment* segment = act->compartment()->wasm.lookupCodeSegment(pc);
+    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
     if (!segment)
         return false;
 

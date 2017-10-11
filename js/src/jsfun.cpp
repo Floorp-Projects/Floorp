@@ -80,13 +80,17 @@ fun_enumerate(JSContext* cx, HandleObject obj)
             return false;
     }
 
-    id = NameToId(cx->names().length);
-    if (!HasOwnProperty(cx, obj, id, &found))
-        return false;
+    if (!obj->as<JSFunction>().hasResolvedLength()) {
+        id = NameToId(cx->names().length);
+        if (!HasOwnProperty(cx, obj, id, &found))
+            return false;
+    }
 
-    id = NameToId(cx->names().name);
-    if (!HasOwnProperty(cx, obj, id, &found))
-        return false;
+    if (!obj->as<JSFunction>().hasResolvedName()) {
+        id = NameToId(cx->names().name);
+        if (!HasOwnProperty(cx, obj, id, &found))
+            return false;
+    }
 
     return true;
 }

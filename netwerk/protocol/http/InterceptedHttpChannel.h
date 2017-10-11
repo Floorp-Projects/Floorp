@@ -104,6 +104,9 @@ private:
                           bool aPreserveMethod,
                           uint32_t aRedirectFlags) override;
 
+  void
+  AsyncOpenInternal();
+
   bool
   ShouldRedirect() const;
 

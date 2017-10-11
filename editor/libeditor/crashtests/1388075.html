@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('style'); } catch(e) { }
+      try { o2 = document.createElement('output') } catch(e) { }
+      try { o3 = document.createElement('input') } catch(e) { }
+      try { o4 = document.createElement('script'); } catch(e) { }
+      try { o5 = o2.cloneNode(false); } catch(e) { }
+      try { document.documentElement.appendChild(o1) } catch(e) { }
+      try { o1.outerHTML = '<a contenteditable=\'true\'>'; } catch(e) { }
+      try { document.documentElement.appendChild(o3) } catch(e) { }
+      try { o7 = document.createTextNode(' '); } catch(e) { }
+      try { o4.appendChild(o7) } catch(e) { }
+      try { document.documentElement.appendChild(o4) } catch(e) { }
+      try { o6 = window.getSelection() } catch(e) { }
+      try { o3.select() } catch(e) { }
+      try { document.replaceChild(document.documentElement, document.documentElement); } catch(e) { }
+      try { o6.setBaseAndExtent(o7, 0, o5, 0) } catch(e) { }
+      try { document.designMode = 'on'; } catch(e) { }
+      try { document.execCommand('insertimage', false, 'http://localhost/') } catch(e) { }
+    </script>    
+  </head>
+</html>

@@ -7,6 +7,7 @@
 
 import argparse
 import os
+import posixpath
 import re
 import sys
 import mozinfo
@@ -100,6 +101,9 @@ class VerifyToolsMixin(object):
 
         # for each changed file, determine if it is a test file, and what suite it is in
         for file in changed_files:
+            # manifest paths use os.sep (like backslash on Windows) but
+            # automation-relevance uses posixpath.sep
+            file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if entry:
                 self.info("Verification found test %s" % file)
@@ -146,6 +150,7 @@ class VerifyToolsMixin(object):
             args = []
             # otherwise, run once for each file in requested suite
             files = self.verify_suites.get(suite)
+            references = re.compile(r"(-ref|-noref|-noref.)\.")
             for file in files:
                 if suite in ['reftest', 'crashtest']:
                     file = os.path.join(self.reftest_test_dir, file)
@@ -153,7 +158,7 @@ class VerifyToolsMixin(object):
                     # Special handling for modified reftest reference files:
                     #  - if both test and reference modified, verify the test file
                     #  - if only reference modified, verify the test file
-                    nonref = file.replace('-ref.', '.')
+                    nonref = references.sub('.', file)
                     if nonref != file:
                         file = None
                         if nonref not in files and os.path.exists(nonref):

@@ -189,8 +189,6 @@ cubeb_channel_layout sPreferredChannelLayout;
 
 } // namespace
 
-extern LazyLogModule gAudioStreamLog;
-
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 // Consevative default that can work on all platforms.
 static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;

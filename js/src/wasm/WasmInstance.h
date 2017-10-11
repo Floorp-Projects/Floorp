@@ -22,6 +22,7 @@
 #include "gc/Barrier.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
+#include "wasm/WasmProcess.h"
 #include "wasm/WasmTable.h"
 
 namespace js {

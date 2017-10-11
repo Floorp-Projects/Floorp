@@ -825,13 +825,6 @@ ClientLayerManager::AreComponentAlphaLayersEnabled()
          LayerManager::AreComponentAlphaLayersEnabled();
 }
 
-bool
-ClientLayerManager::SupportsBackdropCopyForComponentAlpha()
-{
-  const TextureFactoryIdentifier& ident = AsShadowForwarder()->GetTextureFactoryIdentifier();
-  return ident.mSupportsBackdropCopyForComponentAlpha;
-}
-
 void
 ClientLayerManager::SetIsFirstPaint()
 {

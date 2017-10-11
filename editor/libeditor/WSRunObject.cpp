@@ -234,6 +234,7 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
 nsresult
 WSRunObject::InsertText(const nsAString& aStringToInsert,
                         nsCOMPtr<nsINode>* aInOutParent,
+                        nsCOMPtr<nsIContent>* aInOutChildAtOffset,
                         int32_t* aInOutOffset,
                         nsIDocument* aDoc)
 {
@@ -356,7 +357,8 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
   }
 
   // Ready, aim, fire!
-  mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutOffset, aDoc);
+  mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutChildAtOffset,
+                              aInOutOffset, aDoc);
   return NS_OK;
 }
 

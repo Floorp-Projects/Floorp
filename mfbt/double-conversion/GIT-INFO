@@ -1,9 +1,9 @@
-commit d8d4e668ee1e6e10b728f0671a89b07d7c4d45be
-Merge: 79fb300 48b5e70
-Author: Florian Loitsch <florian@loitsch.com>
-Date:   Wed Nov 23 19:14:38 2016 +0100
+commit fe9b384793c4e79bd32133dc9053f27b75a5eeae
+Merge: 2a257b7 1d5a688
+Author: Florian Loitsch <floitsch@google.com>
+Date:   Fri Sep 15 11:32:00 2017 +0200
 
-    Merge pull request #39 from uburuntu/master
+    Merge pull request #52 from uburuntu/master
     
-    Some small fixes: compilation, null ptr derefence and const qualifiers
+    Some refactorings: remove unused static, replace deprecated headers, init member in constructor
 
