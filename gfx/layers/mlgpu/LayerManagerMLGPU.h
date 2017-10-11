@@ -50,7 +50,6 @@ public:
 
   bool AreComponentAlphaLayersEnabled() override;
   bool BlendingRequiresIntermediateSurface() override;
-  bool SupportsBackdropCopyForComponentAlpha() override;
 
   // HostLayerManager methods
   void ForcePresent() override;

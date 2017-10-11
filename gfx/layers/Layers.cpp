@@ -1352,8 +1352,7 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
       if (HasOpaqueAncestorLayer(this) &&
           GetEffectiveTransform().Is2D(&transform) &&
           !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
-          blendMode == gfx::CompositionOp::OP_OVER &&
-          Manager()->SupportsBackdropCopyForComponentAlpha())
+          blendMode == gfx::CompositionOp::OP_OVER)
       {
         mSupportsComponentAlphaChildren = true;
         needsSurfaceCopy = true;

@@ -174,7 +174,6 @@ struct TextureFactoryIdentifier
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
-  bool mSupportsBackdropCopyForComponentAlpha;
   bool mUsingAdvancedLayers;
   SyncHandle mSyncHandle;
 
@@ -193,7 +192,6 @@ struct TextureFactoryIdentifier
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
     , mSupportsComponentAlpha(aSupportsComponentAlpha)
-    , mSupportsBackdropCopyForComponentAlpha(true)
     , mUsingAdvancedLayers(false)
     , mSyncHandle(aSyncHandle)
   {}
