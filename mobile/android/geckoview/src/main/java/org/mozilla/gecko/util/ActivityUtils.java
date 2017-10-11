@@ -37,8 +37,6 @@ public class ActivityUtils {
                 newVis |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
             }
         } else {
-            // no need to prevent status bar to appear when exiting full screen
-            preventDisplayStatusbar(activity, false);
             newVis = View.SYSTEM_UI_FLAG_VISIBLE;
         }
 
@@ -78,22 +76,5 @@ public class ActivityUtils {
             context = ((ContextWrapper) context).getBaseContext();
         }
         return null;
-    }
-
-    public static void preventDisplayStatusbar(final Activity activity, boolean registering) {
-        final View decorView = activity.getWindow().getDecorView();
-        if (registering) {
-            decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-                @Override
-                public void onSystemUiVisibilityChange(int visibility) {
-                    if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                        setFullScreen(activity, true);
-                    }
-                }
-            });
-        } else {
-            decorView.setOnSystemUiVisibilityChangeListener(null);
-        }
-
     }
 }
