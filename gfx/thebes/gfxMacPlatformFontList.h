@@ -69,6 +69,16 @@ public:
     // the first time it is called.
     bool HasTrackingTable();
 
+    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override
+    {
+        // If we're going to shape with Core Text, we don't support added
+        // OpenType features (aside from any CT applies by default).
+        if (RequiresAATLayout()) {
+            return false;
+        }
+        return gfxFontEntry::SupportsOpenTypeFeature(aScript, aFeatureTag);
+    }
+
     // Return the tracking (in font units) to be applied for the given size.
     // (This is a floating-point number because of possible interpolation.)
     float TrackingForCSSPx(float aPointSize) const;
