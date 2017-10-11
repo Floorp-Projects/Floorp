@@ -18,10 +18,6 @@
     f().then(() => ok(false, msg),
              e => is(e.name, reason, msg));
 
-  var removeAllButCodec = (d, codec) =>
-    (d.sdp = d.sdp.replace(/m=video (\w) UDP\/TLS\/RTP\/SAVPF \w.*\r\n/,
-                           "m=video $1 UDP/TLS/RTP/SAVPF " + codec + "\r\n"), d);
-
   function testScale(codec) {
     var pc1 = new RTCPeerConnection();
     var pc2 = new RTCPeerConnection();
@@ -34,7 +30,9 @@
 
     pc1.onnegotiationneeded = e =>
       pc1.createOffer()
-      .then(d => pc1.setLocalDescription(codec == "VP8" ? d : removeAllButCodec(d, 126)))
+      .then(d => pc1.setLocalDescription(codec == "VP8"
+        ? d
+        : (d.sdp = sdputils.removeAllButPayloadType(d.sdp, 126), d)))
       .then(() => pc2.setRemoteDescription(pc1.localDescription))
       .then(() => pc2.createAnswer()).then(d => pc2.setLocalDescription(d))
       .then(() => pc1.setRemoteDescription(pc2.localDescription))

@@ -10,6 +10,10 @@
 #include "libANGLE/renderer/vulkan/ProgramVk.h"
 
 #include "common/debug.h"
+#include "libANGLE/Context.h"
+#include "libANGLE/renderer/vulkan/ContextVk.h"
+#include "libANGLE/renderer/vulkan/GlslangWrapper.h"
+#include "libANGLE/renderer/vulkan/RendererVk.h"
 
 namespace rx
 {
@@ -22,16 +26,26 @@ ProgramVk::~ProgramVk()
 {
 }
 
-LinkResult ProgramVk::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
+void ProgramVk::destroy(const gl::Context *contextImpl)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    VkDevice device = GetImplAs<ContextVk>(contextImpl)->getDevice();
+
+    mLinkedFragmentModule.destroy(device);
+    mLinkedVertexModule.destroy(device);
+    mPipelineLayout.destroy(device);
 }
 
-gl::Error ProgramVk::save(gl::BinaryOutputStream *stream)
+gl::LinkResult ProgramVk::load(const gl::Context *contextImpl,
+                               gl::InfoLog &infoLog,
+                               gl::BinaryInputStream *stream)
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    return gl::InternalError();
+}
+
+void ProgramVk::save(const gl::Context *context, gl::BinaryOutputStream *stream)
+{
+    UNIMPLEMENTED();
 }
 
 void ProgramVk::setBinaryRetrievableHint(bool retrievable)
@@ -39,10 +53,67 @@ void ProgramVk::setBinaryRetrievableHint(bool retrievable)
     UNIMPLEMENTED();
 }
 
-LinkResult ProgramVk::link(const gl::ContextState &data, gl::InfoLog &infoLog)
+void ProgramVk::setSeparable(bool separable)
 {
     UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+}
+
+gl::LinkResult ProgramVk::link(const gl::Context *glContext,
+                               const gl::VaryingPacking &packing,
+                               gl::InfoLog &infoLog)
+{
+    ContextVk *context             = GetImplAs<ContextVk>(glContext);
+    RendererVk *renderer           = context->getRenderer();
+    GlslangWrapper *glslangWrapper = renderer->getGlslangWrapper();
+
+    const std::string &vertexSource =
+        mState.getAttachedVertexShader()->getTranslatedSource(glContext);
+    const std::string &fragmentSource =
+        mState.getAttachedFragmentShader()->getTranslatedSource(glContext);
+
+    std::vector<uint32_t> vertexCode;
+    std::vector<uint32_t> fragmentCode;
+    bool linkSuccess = false;
+    ANGLE_TRY_RESULT(
+        glslangWrapper->linkProgram(vertexSource, fragmentSource, &vertexCode, &fragmentCode),
+        linkSuccess);
+    if (!linkSuccess)
+    {
+        return false;
+    }
+
+    vk::ShaderModule vertexModule;
+    vk::ShaderModule fragmentModule;
+    VkDevice device = renderer->getDevice();
+
+    {
+        VkShaderModuleCreateInfo vertexShaderInfo;
+        vertexShaderInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        vertexShaderInfo.pNext    = nullptr;
+        vertexShaderInfo.flags    = 0;
+        vertexShaderInfo.codeSize = vertexCode.size() * sizeof(uint32_t);
+        vertexShaderInfo.pCode    = vertexCode.data();
+        ANGLE_TRY(vertexModule.init(device, vertexShaderInfo));
+    }
+
+    {
+        VkShaderModuleCreateInfo fragmentShaderInfo;
+        fragmentShaderInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        fragmentShaderInfo.pNext    = nullptr;
+        fragmentShaderInfo.flags    = 0;
+        fragmentShaderInfo.codeSize = fragmentCode.size() * sizeof(uint32_t);
+        fragmentShaderInfo.pCode    = fragmentCode.data();
+
+        ANGLE_TRY(fragmentModule.init(device, fragmentShaderInfo));
+    }
+
+    mLinkedVertexModule.retain(device, std::move(vertexModule));
+    mLinkedFragmentModule.retain(device, std::move(fragmentModule));
+
+    // TODO(jmadill): Use pipeline cache.
+    context->invalidateCurrentPipeline();
+
+    return true;
 }
 
 GLboolean ProgramVk::validate(const gl::Caps &caps, gl::InfoLog *infoLog)
@@ -188,13 +259,16 @@ void ProgramVk::setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformB
     UNIMPLEMENTED();
 }
 
-bool ProgramVk::getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const
+bool ProgramVk::getUniformBlockSize(const std::string &blockName,
+                                    const std::string &blockMappedName,
+                                    size_t *sizeOut) const
 {
     UNIMPLEMENTED();
     return bool();
 }
 
 bool ProgramVk::getUniformBlockMemberInfo(const std::string &memberUniformName,
+                                          const std::string &memberUniformMappedName,
                                           sh::BlockMemberInfo *memberInfoOut) const
 {
     UNIMPLEMENTED();
@@ -205,6 +279,53 @@ void ProgramVk::setPathFragmentInputGen(const std::string &inputName,
                                         GLenum genMode,
                                         GLint components,
                                         const GLfloat *coeffs)
+{
+    UNIMPLEMENTED();
+}
+
+const vk::ShaderModule &ProgramVk::getLinkedVertexModule() const
+{
+    ASSERT(mLinkedVertexModule.getHandle() != VK_NULL_HANDLE);
+    return mLinkedVertexModule;
+}
+
+const vk::ShaderModule &ProgramVk::getLinkedFragmentModule() const
+{
+    ASSERT(mLinkedFragmentModule.getHandle() != VK_NULL_HANDLE);
+    return mLinkedFragmentModule;
+}
+
+gl::ErrorOrResult<vk::PipelineLayout *> ProgramVk::getPipelineLayout(VkDevice device)
+{
+    vk::PipelineLayout newLayout;
+
+    // TODO(jmadill): Descriptor sets.
+    VkPipelineLayoutCreateInfo createInfo;
+    createInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    createInfo.pNext                  = nullptr;
+    createInfo.flags                  = 0;
+    createInfo.setLayoutCount         = 0;
+    createInfo.pSetLayouts            = nullptr;
+    createInfo.pushConstantRangeCount = 0;
+    createInfo.pPushConstantRanges    = nullptr;
+
+    ANGLE_TRY(newLayout.init(device, createInfo));
+    mPipelineLayout.retain(device, std::move(newLayout));
+
+    return &mPipelineLayout;
+}
+
+void ProgramVk::getUniformfv(const gl::Context *context, GLint location, GLfloat *params) const
+{
+    UNIMPLEMENTED();
+}
+
+void ProgramVk::getUniformiv(const gl::Context *context, GLint location, GLint *params) const
+{
+    UNIMPLEMENTED();
+}
+
+void ProgramVk::getUniformuiv(const gl::Context *context, GLint location, GLuint *params) const
 {
     UNIMPLEMENTED();
 }

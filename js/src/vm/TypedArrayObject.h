@@ -326,6 +326,11 @@ IsTypedArrayClass(const Class* clasp)
 bool
 IsTypedArrayConstructor(HandleValue v, uint32_t type);
 
+// In WebIDL terminology, a BufferSource is either an ArrayBuffer or a typed
+// array view. In either case, extract the dataPointer/byteLength.
+bool
+IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer, size_t* byteLength);
+
 inline Scalar::Type
 TypedArrayObject::type() const
 {

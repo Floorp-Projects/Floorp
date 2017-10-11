@@ -13,7 +13,7 @@
             EVENT_DOCUMENT_LOAD_COMPLETE, EVENT_HIDE, EVENT_TEXT_CARET_MOVED,
             EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE, EVENT_STATE_CHANGE,
             EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE, EVENT_FOCUS,
-            EVENT_DOCUMENT_RELOAD, UnexpectedEvents,
+            EVENT_DOCUMENT_RELOAD, UnexpectedEvents, contentSpawnMutation,
             waitForEvent, waitForEvents, waitForOrderedEvents */
 
 const EVENT_DOCUMENT_LOAD_COMPLETE = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE;
@@ -182,4 +182,45 @@ function waitForEvents(events, ordered = false) {
 
 function waitForOrderedEvents(events) {
   return waitForEvents(events, true);
+}
+
+/*
+ * This function spawns a content task and awaits expected mutation events from
+ * various content changes. It's good at catching events we did *not* expect. We
+ * do this advancing the layout refresh to flush the relocations/insertions
+ * queue.
+ */
+async function contentSpawnMutation(browser, waitFor, func, args = null) {
+  let onReorders = waitForEvents({ expected: waitFor.expected || [] });
+  let unexpectedListener = new UnexpectedEvents(waitFor.unexpected || []);
+
+  function tick() {
+    // 100ms is an arbitrary positive number to advance the clock.
+    // We don't need to advance the clock for a11y mutations, but other
+    // tick listeners may depend on an advancing clock with each refresh.
+    content.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).advanceTimeAndRefresh(100);
+  }
+
+  // This stops the refreh driver from doing its regular ticks, and leaves
+  // us in control.
+  await ContentTask.spawn(browser, null, tick);
+
+  // Perform the tree mutation.
+  await ContentTask.spawn(browser, args, func);
+
+  // Do one tick to flush our queue (insertions, relocations, etc.)
+  await ContentTask.spawn(browser, null, tick);
+
+  let events = await onReorders;
+
+  unexpectedListener.stop();
+
+  // Go back to normal refresh driver ticks.
+  await ContentTask.spawn(browser, null, function() {
+    content.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).restoreNormalRefresh();
+  });
+
+  return events;
 }

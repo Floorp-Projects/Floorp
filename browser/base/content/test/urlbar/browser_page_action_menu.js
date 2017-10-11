@@ -7,10 +7,11 @@ registerCleanupFunction(function() {
   delete window.sinon;
 });
 
+const lastModifiedFixture = 1507655615.87; // Approx Oct 10th 2017
 const mockRemoteClients = [
-  { id: "0", name: "foo", type: "mobile" },
-  { id: "1", name: "bar", type: "desktop" },
-  { id: "2", name: "baz", type: "mobile" },
+  { id: "0", name: "foo", type: "mobile", serverLastModified: lastModifiedFixture },
+  { id: "1", name: "bar", type: "desktop", serverLastModified: lastModifiedFixture },
+  { id: "2", name: "baz", type: "mobile", serverLastModified: lastModifiedFixture },
 ];
 
 add_task(async function init() {
@@ -278,6 +279,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
               clientId: client.id,
               label: client.name,
               clientType: client.type,
+              tooltiptext: gSync.formatLastSyncDate(lastModifiedFixture * 1000)
             },
           });
         }

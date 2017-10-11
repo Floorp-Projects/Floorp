@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function
 
+import ConfigParser
 import argparse
 import functools
 import hashlib
@@ -27,6 +28,26 @@ ALLOWED_URL_PREFIXES = [
     "http://download.mozilla.org/",
     "https://archive.mozilla.org/",
 ]
+
+
+def find_file(directory, filename):
+    log.debug("Searching for %s in %s", filename, directory)
+    for root, dirs, files in os.walk(directory):
+        if filename in files:
+            f = os.path.join(root, filename)
+            log.debug("Found %s", f)
+            return f
+
+
+def get_option(directory, filename, section, option):
+    log.debug("Exctracting [%s]: %s from %s/**/%s", section, option, directory,
+              filename)
+    f = find_file(directory, filename)
+    config = ConfigParser.ConfigParser()
+    config.read(f)
+    rv = config.get(section, option)
+    log.debug("Found %s", rv)
+    return rv
 
 
 def verify_signature(mar, certs):
@@ -195,6 +216,16 @@ def main():
         mar_data = {
             "file_to_sign": output_filename,
             "hash": get_hash(dest),
+            "appName": get_option(unpack_dir, filename="application.ini",
+                                  section="App", option="Name"),
+            "version": get_option(unpack_dir, filename="application.ini",
+                                  section="App", option="Version"),
+            "to_buildid": get_option(unpack_dir, filename="application.ini",
+                                     section="App", option="BuildID"),
+            "toVersion": e["toVersion"],
+            "toBuildNumber": e["toBuildNumber"],
+            "platform": e["platform"],
+            "locale": e["locale"],
         }
         shutil.copy(dest, os.path.join(args.artifacts_dir, output_filename))
         work_env.cleanup()

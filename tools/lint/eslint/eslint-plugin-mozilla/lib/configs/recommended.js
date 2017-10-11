@@ -15,7 +15,6 @@ module.exports = {
     "CheckerboardReportService": false,
     // Specific to Firefox (Chrome code only).
     "ChromeUtils": false,
-    "ChromeWindow": false,
     "ChromeWorker": false,
     "Components": false,
     "DOMRequest": false,
