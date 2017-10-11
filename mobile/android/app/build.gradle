@@ -355,6 +355,10 @@ android.applicationVariants.all { variant ->
     }
 }
 
+android.applicationVariants.all { variant ->
+    configureVariantWithJNIWrappers(variant, "Fennec")
+}
+
 apply plugin: 'spoon'
 
 spoon {
