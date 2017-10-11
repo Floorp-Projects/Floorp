@@ -61,16 +61,7 @@ public:
     bool HasVariations();
     bool IsCFF();
 
-    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override
-    {
-        // If we're going to shape with Core Text, we don't support added
-        // OpenType features (aside from any CT applies by default), except
-        // for 'smcp' which we map to an AAT feature selector.
-        if (RequiresAATLayout() && aFeatureTag != HB_TAG('s','m','c','p')) {
-            return false;
-        }
-        return gfxFontEntry::SupportsOpenTypeFeature(aScript, aFeatureTag);
-    }
+    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override;
 
 protected:
     gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle,
@@ -90,6 +81,8 @@ protected:
     bool mIsCFFInitialized;
     bool mHasVariations;
     bool mHasVariationsInitialized;
+    bool mHasAATSmallCaps;
+    bool mHasAATSmallCapsInitialized;
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 
     mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
