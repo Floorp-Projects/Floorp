@@ -7,42 +7,75 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto warnings test";
-const TEST_URI_PATH = "/browser/devtools/client/webconsole/new-console-output/test/" +
-                      "mochitest/test-certificate-messages.html";
+const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto " +
+                 "warnings test";
+const TEST_URI_PATH = "/browser/devtools/client/webconsole/test/" +
+                      "test-certificate-messages.html";
 
-var tests = [{
-  url: "https://sha1ee.example.com" + TEST_URI_PATH,
-  name: "SHA1 warning displayed successfully",
-  warning: ["SHA-1"],
-  nowarning: ["SSL 3.0", "RC4"]
-}, {
-  url: "https://sha256ee.example.com" + TEST_URI_PATH,
-  name: "SSL warnings appropriately not present",
-  warning: [],
-  nowarning: ["SHA-1", "SSL 3.0", "RC4"]
-}];
+var gWebconsoleTests = [
+  {url: "https://sha1ee.example.com" + TEST_URI_PATH,
+   name: "SHA1 warning displayed successfully",
+   warning: ["SHA-1"], nowarning: ["SSL 3.0", "RC4"]},
+  {url: "https://sha256ee.example.com" + TEST_URI_PATH,
+   name: "SSL warnings appropriately not present",
+   warning: [], nowarning: ["SHA-1", "SSL 3.0", "RC4"]},
+];
 const TRIGGER_MSG = "If you haven't seen ssl warnings yet, you won't";
 
-add_task(async function () {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  for (let test of tests) {
-    await runTest(test, hud);
-  }
-});
+var gHud = undefined, gContentBrowser;
+var gCurrentTest;
 
-async function runTest(test, hud) {
-  info(`Testing ${test.name}`);
-  await loadDocument(test.url);
-  await waitFor(() => findMessage(hud, TRIGGER_MSG));
+function test() {
+  registerCleanupFunction(function () {
+    gHud = gContentBrowser = null;
+  });
 
-  for (let warning of test.warning) {
-    ok(hud.outputNode.textContent.indexOf(warning) >= 0,
-      `There is a warning message for ${warning}`);
-  }
+  loadTab(TEST_URI).then(({browser}) => {
+    gContentBrowser = browser;
+    openConsole().then(runTestLoop);
+  });
+}
 
-  for (let nowarning of test.nowarning) {
-    ok(hud.outputNode.textContent.indexOf(nowarning) < 0,
-      `There is no warning message for ${nowarning}`);
+function runTestLoop(theHud) {
+  gCurrentTest = gWebconsoleTests.shift();
+  if (!gCurrentTest) {
+    finishTest();
+    return;
   }
+  if (!gHud) {
+    gHud = theHud;
+  }
+  gHud.jsterm.clearOutput();
+  gContentBrowser.addEventListener("load", onLoad, true);
+  if (gCurrentTest.pref) {
+    SpecialPowers.pushPrefEnv({"set": gCurrentTest.pref},
+      function () {
+        BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.url);
+      });
+  } else {
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.url);
+  }
+}
+
+function onLoad() {
+  gContentBrowser.removeEventListener("load", onLoad, true);
+
+  waitForSuccess({
+    name: gCurrentTest.name,
+    validator: function () {
+      if (gHud.outputNode.textContent.indexOf(TRIGGER_MSG) >= 0) {
+        for (let warning of gCurrentTest.warning) {
+          if (gHud.outputNode.textContent.indexOf(warning) < 0) {
+            return false;
+          }
+        }
+        for (let nowarning of gCurrentTest.nowarning) {
+          if (gHud.outputNode.textContent.indexOf(nowarning) >= 0) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+  }).then(runTestLoop);
 }
