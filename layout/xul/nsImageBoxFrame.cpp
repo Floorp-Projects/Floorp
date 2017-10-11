@@ -239,10 +239,10 @@ nsImageBoxFrame::UpdateImage()
     nsIDocument* doc = mContent->GetComposedDoc();
     if (doc) {
       nsContentPolicyType contentPolicyType;
-      nsCOMPtr<nsIPrincipal> loadingPrincipal;
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal;
       uint64_t requestContextID = 0;
       nsContentUtils::GetContentPolicyTypeForUIImageLoading(mContent,
-                                                            getter_AddRefs(loadingPrincipal),
+                                                            getter_AddRefs(triggeringPrincipal),
                                                             contentPolicyType,
                                                             &requestContextID);
 
@@ -253,10 +253,14 @@ nsImageBoxFrame::UpdateImage()
                                                 doc,
                                                 baseURI);
       if (uri) {
-        nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, loadingPrincipal, requestContextID,
-                                                doc->GetDocumentURI(), doc->GetReferrerPolicy(),
+        nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc,
+                                                triggeringPrincipal,
+                                                requestContextID,
+                                                doc->GetDocumentURI(),
+                                                doc->GetReferrerPolicy(),
                                                 mListener, mLoadFlags,
-                                                EmptyString(), getter_AddRefs(mImageRequest),
+                                                EmptyString(),
+                                                getter_AddRefs(mImageRequest),
                                                 contentPolicyType);
 
         if (NS_SUCCEEDED(rv) && mImageRequest) {

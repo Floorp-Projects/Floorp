@@ -58,7 +58,7 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
                                  nsIContent*    aContent,
                                  NSMenuItem*    aNativeMenuItem)
 : mContent(aContent)
-, mLoadingPrincipal(aContent->NodePrincipal())
+, mTriggeringPrincipal(aContent->NodePrincipal())
 , mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE)
 , mMenuObject(aMenuItem)
 , mLoadedIcon(false)
@@ -213,7 +213,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   } else {
     uint64_t dummy = 0;
     nsContentUtils::GetContentPolicyTypeForUIImageLoading(mContent,
-                                                          getter_AddRefs(mLoadingPrincipal),
+                                                          getter_AddRefs(mTriggeringPrincipal),
                                                           mContentType,
                                                           &dummy);
   }
@@ -318,7 +318,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 
   nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr,
                                   mozilla::net::RP_Unset,
-                                  mLoadingPrincipal, 0, loadGroup, this,
+                                  mTriggeringPrincipal, 0, loadGroup, this,
                                   mContent, document, nsIRequest::LOAD_NORMAL, nullptr,
                                   mContentType, EmptyString(),
                                   /* aUseUrgentStartForChannel */ false,
