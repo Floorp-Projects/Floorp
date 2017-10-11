@@ -75,13 +75,19 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
 
     private static final TelemetryBackgroundReceiver instance = new TelemetryBackgroundReceiver();
 
+    private boolean initialized;
+
     public static TelemetryBackgroundReceiver getInstance() {
         return instance;
     }
 
     public void init(Context context) {
+        if (initialized) {
+            return;
+        }
         LocalBroadcastManager.getInstance(context).registerReceiver(
                 this, new IntentFilter(ACTION_BACKGROUND_TELEMETRY));
+        initialized = true;
     }
 
     @Override

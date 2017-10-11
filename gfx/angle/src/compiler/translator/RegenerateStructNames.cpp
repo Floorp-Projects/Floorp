@@ -19,7 +19,7 @@ void RegenerateStructNames::visitSymbol(TIntermSymbol *symbol)
     if (!userType)
         return;
 
-    if (mSymbolTable.findBuiltIn(userType->name(), mShaderVersion))
+    if (mSymbolTable->findBuiltIn(userType->name(), mShaderVersion))
     {
         // Built-in struct, do not touch it.
         return;
@@ -56,7 +56,7 @@ void RegenerateStructNames::visitSymbol(TIntermSymbol *symbol)
         return;
     }
     std::string id = Str(uniqueId);
-    TString tmp = kPrefix + TString(id.c_str());
+    TString tmp    = kPrefix + TString(id.c_str());
     tmp += "_" + userType->name();
     userType->setName(tmp);
 }

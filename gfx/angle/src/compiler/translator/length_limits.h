@@ -23,4 +23,4 @@ size_t GetGlobalMaxTokenSize(ShShaderSpec spec);
 
 }  // namespace sh
 
-#endif // COMPILER_TRANSLATOR_LENGTHLIMITS_H_
+#endif  // COMPILER_TRANSLATOR_LENGTHLIMITS_H_

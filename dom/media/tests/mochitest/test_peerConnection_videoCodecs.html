@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1395853",
+    title: "Verify video content over WebRTC for every video codec",
+  });
+
+  async function testVideoCodec(options = {}, codec) {
+    let test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true, fake: true}], []);
+
+    test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
+      function PC_LOCAL_FILTER_OUT_CODECS() {
+        let otherCodec = codecs.find(c => c != codec);
+        let otherId = sdputils.findCodecId(test.originalOffer.sdp, otherCodec.name, otherCodec.offset);
+        let otherRtpmapMatcher = new RegExp(`a=rtpmap:${otherId}.*\\r\\n`, "gi");
+
+        let id = sdputils.findCodecId(test.originalOffer.sdp, codec.name, codec.offset);
+        if (codec.offset) {
+          isnot(id, sdputils.findCodecId(test.originalOffer.sdp, codec.name, 0),
+            "Different offsets should return different payload types");
+        }
+        test.originalOffer.sdp =
+          sdputils.removeAllButPayloadType(test.originalOffer.sdp, id);
+
+        ok(!test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${otherId}[^0-9]`, "gi")),
+          `Other codec ${otherId} should be removed after filtering`);
+        ok(test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${id}[^0-9]`, "gi")),
+          `Tested codec ${id} should remain after filtering`);
+
+        // We only set it now, or the framework would remove non-H264 codecs
+        // for us.
+        options.h264 = codec.name == "H264";
+      },
+    ]);
+
+    test.chain.append([
+      async function CHECK_VIDEO_FLOW() {
+        try {
+          let h = new VideoStreamHelper();
+          await h.checkVideoPlaying(
+              test.pcRemote.remoteMediaElements[0],
+              10, 10, 128);
+          ok(true, `Got video flow for codec ${codec.name}, offset ${codec.offset}`);
+        } catch(e) {
+          ok(false, `No video flow for codec ${codec.name}, offset ${codec.offset}: ${e}`);
+        }
+      },
+    ]);
+
+    // This inlines test.run(), to allow for multiple tests to run.
+    test.updateChainSteps();
+    await test.chain.execute();
+    await test.close();
+  }
+
+  // We match the name against the sdp to figure out the payload type,
+  // so all other present codecs can be removed.
+  // Use `offset` when there are multiple instances of a codec expected in an sdp.
+  const codecs = [
+    { name: "VP8" },
+    { name: "VP9" },
+    { name: "H264" },
+    { name: "H264", offset: 1 },
+  ];
+
+  runNetworkTest(async (options) => {
+    for (let codec of codecs) {
+      info(`Testing video for codec ${codec.name}`);
+      try {
+        await testVideoCodec(options, codec);
+      } catch(e) {
+        ok(false, `Error in test for codec ${codec.name}: ${e}\n${e.stack}`);
+      }
+      info(`Tested video for codec ${codec.name}`);
+    }
+
+    networkTestFinished();
+  });
+</script>
+</pre>
+</body>
+</html>

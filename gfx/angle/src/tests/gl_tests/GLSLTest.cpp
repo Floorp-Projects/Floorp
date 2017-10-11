@@ -6,8 +6,6 @@
 
 #include "test_utils/ANGLETest.h"
 
-#include "libANGLE/Context.h"
-#include "libANGLE/Program.h"
 #include "test_utils/gl_raii.h"
 
 using namespace angle;
@@ -32,14 +30,12 @@ class GLSLTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        mSimpleVSSource = SHADER_SOURCE
-        (
-            attribute vec4 inputAttribute;
+        mSimpleVSSource =
+            R"(attribute vec4 inputAttribute;
             void main()
             {
                 gl_Position = inputAttribute;
-            }
-        );
+            })";
     }
 
     std::string GenerateVaryingType(GLint vectorSize)
@@ -438,6 +434,12 @@ class GLSLTest : public ANGLETest
     std::string mSimpleVSSource;
 };
 
+class GLSLTestNoValidation : public GLSLTest
+{
+  public:
+    GLSLTestNoValidation() { setNoErrorEnabled(true); }
+};
+
 class GLSLTest_ES3 : public GLSLTest
 {
     void SetUp() override
@@ -445,21 +447,35 @@ class GLSLTest_ES3 : public GLSLTest
         ANGLETest::SetUp();
 
         mSimpleVSSource =
-            "#version 300 es\n"
-            "in vec4 inputAttribute;"
-            "void main()"
-            "{"
-            "    gl_Position = inputAttribute;"
-            "}";
+            R"(#version 300 es
+            in vec4 inputAttribute;
+            void main()
+            {
+                gl_Position = inputAttribute;
+            })";
+    }
+};
+
+class GLSLTest_ES31 : public GLSLTest
+{
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+
+        mSimpleVSSource =
+            R"(#version 310 es
+            in vec4 inputAttribute;
+            void main()
+            {
+                gl_Position = inputAttribute;
+            })";
     }
 };
 
 TEST_P(GLSLTest, NamelessScopedStructs)
 {
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
-
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
         void main()
         {
             struct
@@ -469,8 +485,7 @@ TEST_P(GLSLTest, NamelessScopedStructs)
 
             gl_FragColor = vec4(1, 0, 0, 1);
             gl_FragColor.a += b.q;
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -488,9 +503,8 @@ TEST_P(GLSLTest, ScopedStructsOrderBug)
         return;
     }
 
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
 
         struct T
         {
@@ -511,8 +525,7 @@ TEST_P(GLSLTest, ScopedStructsOrderBug)
             gl_FragColor = vec4(1, 0, 0, 1);
             gl_FragColor.a += a.f;
             gl_FragColor.a += b.q;
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -520,9 +533,8 @@ TEST_P(GLSLTest, ScopedStructsOrderBug)
 
 TEST_P(GLSLTest, ScopedStructsBug)
 {
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
 
         struct T_0
         {
@@ -543,8 +555,7 @@ TEST_P(GLSLTest, ScopedStructsBug)
 
             gl_FragColor.a += a.f;
             gl_FragColor.a += b.v.x;
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -552,28 +563,24 @@ TEST_P(GLSLTest, ScopedStructsBug)
 
 TEST_P(GLSLTest, DxPositionBug)
 {
-    const std::string &vertexShaderSource = SHADER_SOURCE
-    (
-        attribute vec4 inputAttribute;
+    const std::string &vertexShaderSource =
+        R"(attribute vec4 inputAttribute;
         varying float dx_Position;
         void main()
         {
             gl_Position = vec4(inputAttribute);
             dx_Position = 0.0;
-        }
-    );
+        })";
 
-    const std::string &fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string &fragmentShaderSource =
+        R"(precision mediump float;
 
         varying float dx_Position;
 
         void main()
         {
             gl_FragColor = vec4(dx_Position, 0, 0, 1);
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -644,20 +651,17 @@ TEST_P(GLSLTest, FrontFacingAndVarying)
 {
     EGLPlatformParameters platform = GetParam().eglParameters;
 
-    const std::string vertexShaderSource = SHADER_SOURCE
-    (
-        attribute vec4 a_position;
+    const std::string vertexShaderSource =
+        R"(attribute vec4 a_position;
         varying float v_varying;
         void main()
         {
             v_varying = a_position.x;
             gl_Position = a_position;
-        }
-    );
+        })";
 
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
         varying float v_varying;
         void main()
         {
@@ -672,8 +676,7 @@ TEST_P(GLSLTest, FrontFacingAndVarying)
                 c = vec4(0, v_varying, 0, 1.0);
             }
             gl_FragColor = c;
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
 
@@ -689,6 +692,33 @@ TEST_P(GLSLTest, FrontFacingAndVarying)
 
     // Otherwise, compilation should succeed
     EXPECT_NE(0u, program);
+}
+
+// Test that we can release the shader compiler and still compile things properly.
+TEST_P(GLSLTest, ReleaseCompilerThenCompile)
+{
+    const std::string &simpleVS =
+        "attribute vec4 position; void main() { gl_Position = position; }";
+    const std::string &simpleFS = "void main() { gl_FragColor = vec4(1, 0, 0, 1); }";
+
+    // Draw with the first program.
+    ANGLE_GL_PROGRAM(program1, simpleVS, simpleFS);
+    drawQuad(program1, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
+
+    // Clear and release shader compiler.
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+    glReleaseShaderCompiler();
+    ASSERT_GL_NO_ERROR();
+
+    // Draw with a second program.
+    ANGLE_GL_PROGRAM(program2, simpleVS, simpleFS);
+    drawQuad(program2, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
 }
 
 // Verify that linking shaders declaring different shading language versions fails.
@@ -1066,8 +1096,9 @@ TEST_P(GLSLTest_ES3, MissingReturnArrayOfStructs)
 // Verify that functions without return statements still compile
 TEST_P(GLSLTest_ES3, MissingReturnStructOfArrays)
 {
-    // TODO(cwallez) remove the suppression once NVIDIA removes the restriction for
-    // GLSL >= 300. It was defined only in GLSL 2.0, section 6.1.
+    // TODO(cwallez) remove the suppression once NVIDIA drivers are updated across trybots, drivers
+    // since late 2016 should have the fix. Last check on 2017-05-30 revealed that the Windows
+    // Server 2008 bots still had the old, failing drivers.
     if (IsNVIDIA() && IsOpenGLES())
     {
         std::cout << "Test skipped on NVIDIA OpenGL ES because it disallows returning "
@@ -1353,7 +1384,12 @@ TEST_P(GLSLTest, MaxVaryingVec2Arrays)
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
-    VaryingTestBase(0, 0, 0, maxVaryings, 0, 0, 0, 0, false, false, false, true);
+    // Special case: because arrays of mat2 are packed as small grids of two rows by two columns,
+    // we should be aware that when we're packing into an odd number of varying registers the
+    // last row will be empty and can not fit the final vec2 arrary.
+    GLint maxVec2Arrays = (maxVaryings >> 1) << 1;
+
+    VaryingTestBase(0, 0, 0, maxVec2Arrays, 0, 0, 0, 0, false, false, false, true);
 }
 
 // Verify shader source with a fixed length that is less than the null-terminated length will compile.
@@ -1517,9 +1553,8 @@ TEST_P(GLSLTest, BadIndexBug)
 // Test that structs defined in uniforms are translated correctly.
 TEST_P(GLSLTest, StructSpecifiersUniforms)
 {
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
 
         uniform struct S { float field;} s;
 
@@ -1527,8 +1562,7 @@ TEST_P(GLSLTest, StructSpecifiersUniforms)
         {
             gl_FragColor = vec4(1, 0, 0, 1);
             gl_FragColor.a += s.field;
-        }
-    );
+        })";
 
     GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
     EXPECT_NE(0u, program);
@@ -1538,33 +1572,26 @@ TEST_P(GLSLTest, StructSpecifiersUniforms)
 // beginning with "gl_" are filtered out by our validation logic, we must
 // bypass the validation to test the behaviour of the implementation.
 // (note this test is still Impl-independent)
-TEST_P(GLSLTest, DepthRangeUniforms)
+TEST_P(GLSLTestNoValidation, DepthRangeUniforms)
 {
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
 
         void main()
         {
             gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, gl_DepthRange.diff, 1);
-        }
-    );
+        })";
 
-    GLuint program = CompileProgram(mSimpleVSSource, fragmentShaderSource);
-    EXPECT_NE(0u, program);
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShaderSource);
 
-    // dive into the ANGLE internals, so we can bypass validation.
-    gl::Context *context = reinterpret_cast<gl::Context *>(getEGLWindow()->getContext());
-    gl::Program *glProgram = context->getProgram(program);
-    GLint nearIndex = glProgram->getUniformLocation("gl_DepthRange.near");
+    // We need to bypass validation for this call.
+    GLint nearIndex = glGetUniformLocation(program.get(), "gl_DepthRange.near");
     EXPECT_EQ(-1, nearIndex);
 
     // Test drawing does not throw an exception.
-    drawQuad(program, "inputAttribute", 0.5f);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
 
     EXPECT_GL_NO_ERROR();
-
-    glDeleteProgram(program);
 }
 
 std::string GenerateSmallPowShader(double base, double exponent)
@@ -1635,9 +1662,8 @@ TEST_P(GLSLTest, PowOfSmallConstant)
 // than FL9_3.
 TEST_P(GLSLTest, LoopIndexingValidation)
 {
-    const std::string fragmentShaderSource = SHADER_SOURCE
-    (
-        precision mediump float;
+    const std::string fragmentShaderSource =
+        R"(precision mediump float;
 
         uniform float loopMax;
 
@@ -1651,8 +1677,7 @@ TEST_P(GLSLTest, LoopIndexingValidation)
                     gl_FragColor.a += 0.1;
                 }
             }
-        }
-    );
+        })";
 
     GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -1679,7 +1704,7 @@ TEST_P(GLSLTest, LoopIndexingValidation)
 
             std::string infoLog;
             infoLog.resize(infoLogLength);
-            glGetShaderInfoLog(shader, static_cast<GLsizei>(infoLog.size()), NULL, &infoLog[0]);
+            glGetShaderInfoLog(shader, static_cast<GLsizei>(infoLog.size()), nullptr, &infoLog[0]);
 
             if (infoLog.find("Loop index cannot be compared with non-constant expression") ==
                 std::string::npos)
@@ -1703,6 +1728,12 @@ TEST_P(GLSLTest, LoopIndexingValidation)
 // can actually be used.
 TEST_P(GLSLTest, VerifyMaxVertexUniformVectors)
 {
+    if (IsLinux() && IsIntel())
+    {
+        std::cout << "Test timed out on Linux Intel. See crbug.com/680631." << std::endl;
+        return;
+    }
+
     int maxUniforms = 10000;
     glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniforms);
     EXPECT_GL_NO_ERROR();
@@ -1749,6 +1780,12 @@ TEST_P(GLSLTest, VerifyMaxVertexUniformVectorsExceeded)
 // can actually be used.
 TEST_P(GLSLTest, VerifyMaxFragmentUniformVectors)
 {
+    if (IsLinux() && IsIntel())
+    {
+        std::cout << "Test timed out on Linux Intel. See crbug.com/680631." << std::endl;
+        return;
+    }
+
     int maxUniforms = 10000;
     glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxUniforms);
     EXPECT_GL_NO_ERROR();
@@ -1789,6 +1826,28 @@ TEST_P(GLSLTest, VerifyMaxFragmentUniformVectorsExceeded)
               << std::endl;
 
     CompileGLSLWithUniformsAndSamplers(0, maxUniforms + 1, 0, 0, false);
+}
+
+// Test compiling shaders using the GL_EXT_shader_texture_lod extension
+TEST_P(GLSLTest, TextureLOD)
+{
+    if (!extensionEnabled("GL_EXT_shader_texture_lod"))
+    {
+        std::cout << "Test skipped due to missing GL_EXT_shader_texture_lod." << std::endl;
+        return;
+    }
+
+    const std::string source =
+        "#extension GL_EXT_shader_texture_lod : require\n"
+        "uniform sampler2D u_texture;\n"
+        "void main() {\n"
+        "    gl_FragColor = texture2DGradEXT(u_texture, vec2(0.0, 0.0), vec2(0.0, 0.0), vec2(0.0, "
+        "0.0));\n"
+        "}\n";
+
+    GLuint shader = CompileShader(GL_FRAGMENT_SHADER, source);
+    ASSERT_NE(0u, shader);
+    glDeleteShader(shader);
 }
 
 // Test that two constructors which have vec4 and mat2 parameters get disambiguated (issue in
@@ -2167,6 +2226,55 @@ TEST_P(GLSLTest, NestedPowStatements)
     EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 }
 
+// Test that -float calculation is correct.
+TEST_P(GLSLTest_ES3, UnaryMinusOperatorFloat)
+{
+    const std::string &vert =
+        "#version 300 es\n"
+        "in highp vec4 position;\n"
+        "void main() {\n"
+        "    gl_Position = position;\n"
+        "}\n";
+    const std::string &frag =
+        "#version 300 es\n"
+        "out highp vec4 o_color;\n"
+        "void main() {\n"
+        "    highp float f = -1.0;\n"
+        "    // atan(tan(0.5), -f) should be 0.5.\n"
+        "    highp float v = atan(tan(0.5), -f);\n"
+        "    o_color = abs(v - 0.5) < 0.001 ? vec4(0, 1, 0, 1) : vec4(1, 0, 0, 1);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(prog, vert, frag);
+    drawQuad(prog.get(), "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that atan(vec2, vec2) calculation is correct.
+TEST_P(GLSLTest_ES3, AtanVec2)
+{
+    const std::string &vert =
+        "#version 300 es\n"
+        "in highp vec4 position;\n"
+        "void main() {\n"
+        "    gl_Position = position;\n"
+        "}\n";
+    const std::string &frag =
+        "#version 300 es\n"
+        "out highp vec4 o_color;\n"
+        "void main() {\n"
+        "    highp float f = 1.0;\n"
+        "    // atan(tan(0.5), f) should be 0.5.\n"
+        "    highp vec2 v = atan(vec2(tan(0.5)), vec2(f));\n"
+        "    o_color = (abs(v[0] - 0.5) < 0.001 && abs(v[1] - 0.5) < 0.001) ? vec4(0, 1, 0, 1) : "
+        "vec4(1, 0, 0, 1);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(prog, vert, frag);
+    drawQuad(prog.get(), "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
 // Convers a bug with the unary minus operator on signed integer workaround.
 TEST_P(GLSLTest_ES3, UnaryMinusOperatorSignedInt)
 {
@@ -2199,13 +2307,11 @@ TEST_P(GLSLTest_ES3, UnaryMinusOperatorSignedInt)
 
     ANGLE_GL_PROGRAM(prog, vert, frag);
 
-    gl::Context *context   = reinterpret_cast<gl::Context *>(getEGLWindow()->getContext());
-    gl::Program *glProgram = context->getProgram(prog.get());
-    GLint oneIndex         = glProgram->getUniformLocation("ui_one");
+    GLint oneIndex = glGetUniformLocation(prog.get(), "ui_one");
     ASSERT_NE(-1, oneIndex);
-    GLint twoIndex = glProgram->getUniformLocation("ui_two");
+    GLint twoIndex = glGetUniformLocation(prog.get(), "ui_two");
     ASSERT_NE(-1, twoIndex);
-    GLint threeIndex = glProgram->getUniformLocation("ui_three");
+    GLint threeIndex = glGetUniformLocation(prog.get(), "ui_three");
     ASSERT_NE(-1, threeIndex);
     glUseProgram(prog.get());
     glUniform1i(oneIndex, 1);
@@ -2248,13 +2354,11 @@ TEST_P(GLSLTest_ES3, UnaryMinusOperatorUnsignedInt)
 
     ANGLE_GL_PROGRAM(prog, vert, frag);
 
-    gl::Context *context   = reinterpret_cast<gl::Context *>(getEGLWindow()->getContext());
-    gl::Program *glProgram = context->getProgram(prog.get());
-    GLint oneIndex         = glProgram->getUniformLocation("ui_one");
+    GLint oneIndex = glGetUniformLocation(prog.get(), "ui_one");
     ASSERT_NE(-1, oneIndex);
-    GLint twoIndex = glProgram->getUniformLocation("ui_two");
+    GLint twoIndex = glGetUniformLocation(prog.get(), "ui_two");
     ASSERT_NE(-1, twoIndex);
-    GLint threeIndex = glProgram->getUniformLocation("ui_three");
+    GLint threeIndex = glGetUniformLocation(prog.get(), "ui_three");
     ASSERT_NE(-1, threeIndex);
     glUseProgram(prog.get());
     glUniform1ui(oneIndex, 1u);
@@ -2317,42 +2421,6 @@ TEST_P(GLSLTest, ExternalAnd2DSampler)
     ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
 }
 
-// Test that using an invalid constant right-shift produces an error.
-TEST_P(GLSLTest_ES3, FoldedInvalidRightShift)
-{
-    const std::string &fragmentShader =
-        "#version 300 es\n"
-        "precision mediump float;\n"
-        "out vec4 color;\n"
-        "void main(void)\n"
-        "{\n"
-        " int diff = -100 >> -100;\n"
-        " color = vec4(float(diff));\n"
-        "}\n";
-
-    GLuint program = CompileProgram(mSimpleVSSource, fragmentShader);
-    EXPECT_EQ(0u, program);
-    glDeleteProgram(program);
-}
-
-// Test that using an invalid constant left-shift produces an error.
-TEST_P(GLSLTest_ES3, FoldedInvalidLeftShift)
-{
-    const std::string &fragmentShader =
-        "#version 300 es\n"
-        "precision mediump float;\n"
-        "out vec4 color;\n"
-        "void main(void)\n"
-        "{\n"
-        " int diff = -100 << -100;\n"
-        " color = vec4(float(diff));\n"
-        "}\n";
-
-    GLuint program = CompileProgram(mSimpleVSSource, fragmentShader);
-    EXPECT_EQ(0u, program);
-    glDeleteProgram(program);
-}
-
 // Test that literal infinity can be written out from the shader translator.
 // A similar test can't be made for NaNs, since ESSL 3.00.6 requirements for NaNs are very loose.
 TEST_P(GLSLTest_ES3, LiteralInfinityOutput)
@@ -2395,7 +2463,1027 @@ TEST_P(GLSLTest_ES3, LiteralNegativeInfinityOutput)
     EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 }
 
+// The following MultipleDeclaration* tests are testing TranslatorHLSL specific simplification
+// passes. Because the interaction of multiple passes must be tested, it is difficult to write
+// a unittest for them. Instead we add the tests as end2end so will in particular test
+// TranslatorHLSL when run on Windows.
+
+// Test that passes splitting multiple declarations and comma operators are correctly ordered.
+TEST_P(GLSLTest_ES3, MultipleDeclarationWithCommaOperator)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 color;\n"
+        "void main(void)\n"
+        "{\n"
+        " float a = 0.0, b = ((gl_FragCoord.x < 0.5 ? a : 0.0), 1.0);\n"
+        " color = vec4(b);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+}
+
+// Test that passes splitting multiple declarations and comma operators and for loops are
+// correctly ordered.
+TEST_P(GLSLTest_ES3, MultipleDeclarationWithCommaOperatorInForLoop)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 color;\n"
+        "void main(void)\n"
+        "{\n"
+        " for(float a = 0.0, b = ((gl_FragCoord.x < 0.5 ? a : 0.0), 1.0); a < 10.0; a++)\n"
+        " {\n"
+        "  b += 1.0;\n"
+        "  color = vec4(b);\n"
+        " }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+}
+
+// Test that splitting multiple declaration in for loops works with no loop condition
+TEST_P(GLSLTest_ES3, MultipleDeclarationInForLoopEmptyCondition)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 color;\n"
+        "void main(void)\n"
+        "{\n"
+        " for(float a = 0.0, b = 1.0;; a++)\n"
+        " {\n"
+        "  b += 1.0;\n"
+        "  if (a > 10.0) {break;}\n"
+        "  color = vec4(b);\n"
+        " }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+}
+
+// Test that splitting multiple declaration in for loops works with no loop expression
+TEST_P(GLSLTest_ES3, MultipleDeclarationInForLoopEmptyExpression)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 color;\n"
+        "void main(void)\n"
+        "{\n"
+        " for(float a = 0.0, b = 1.0; a < 10.0;)\n"
+        " {\n"
+        "  b += 1.0;\n"
+        "  a += 1.0;\n"
+        "  color = vec4(b);\n"
+        " }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+}
+
+// Test that dynamic indexing of a matrix inside a dynamic indexing of a vector in an l-value works
+// correctly.
+TEST_P(GLSLTest_ES3, NestedDynamicIndexingInLValue)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform int u_zero;\n"
+        "void main() {\n"
+        "    mat2 m = mat2(0.0, 0.0, 0.0, 0.0);\n"
+        "    m[u_zero + 1][u_zero + 1] = float(u_zero + 1);\n"
+        "    float f = m[1][1];\n"
+        "    my_FragColor = vec4(1.0 - f, f, 0.0, 1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+class WebGLGLSLTest : public GLSLTest
+{
+  protected:
+    WebGLGLSLTest() { setWebGLCompatibilityEnabled(true); }
+};
+
+TEST_P(WebGLGLSLTest, MaxVaryingVec4PlusFragCoord)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    // Generate shader code that uses gl_FragCoord, a special fragment shader variables.
+    // This test should fail, since we are really using (maxVaryings + 1) varyings.
+    VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings, 0, true, false, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxVaryingVec4PlusPointCoord)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    // Generate shader code that uses gl_FragCoord, a special fragment shader variables.
+    // This test should fail, since we are really using (maxVaryings + 1) varyings.
+    VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings, 0, false, true, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxPlusOneVaryingVec3)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    VaryingTestBase(0, 0, 0, 0, maxVaryings + 1, 0, 0, 0, false, false, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxPlusOneVaryingVec3Array)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    VaryingTestBase(0, 0, 0, 0, 0, maxVaryings / 2 + 1, 0, 0, false, false, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxVaryingVec3AndOneVec2)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    VaryingTestBase(0, 0, 1, 0, maxVaryings, 0, 0, 0, false, false, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxPlusOneVaryingVec2)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    VaryingTestBase(0, 0, 2 * maxVaryings + 1, 0, 0, 0, 0, 0, false, false, false, false);
+}
+
+TEST_P(WebGLGLSLTest, MaxVaryingVec3ArrayAndMaxPlusOneFloatArray)
+{
+    GLint maxVaryings = 0;
+    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
+
+    VaryingTestBase(0, maxVaryings / 2 + 1, 0, 0, 0, 0, 0, maxVaryings / 2, false, false, false,
+                    false);
+}
+
 }  // anonymous namespace
+
+// Test that FindLSB and FindMSB return correct values in their corner cases.
+TEST_P(GLSLTest_ES31, FindMSBAndFindLSBCornerCases)
+{
+    // Suspecting AMD driver bug - failure seen on bots running on AMD R5 230.
+    if (IsAMD() && IsOpenGL() && IsLinux())
+    {
+        std::cout << "Test skipped on AMD OpenGL Linux" << std::endl;
+        return;
+    }
+
+    const std::string &fragmentShader =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform int u_zero;\n"
+        "void main() {\n"
+        "    if (findLSB(u_zero) == -1 && findMSB(u_zero) == -1 && findMSB(u_zero - 1) == -1)\n"
+        "    {\n"
+        "        my_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+        "    }\n"
+        "    else\n"
+        "    {\n"
+        "        my_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that writing into a swizzled vector that is dynamically indexed succeeds.
+TEST_P(GLSLTest_ES3, WriteIntoDynamicIndexingOfSwizzledVector)
+{
+    if (IsOpenGL())
+    {
+        // http://anglebug.com/1924
+        std::cout << "Test skipped on all OpenGL configurations because it has incorrect results"
+                  << std::endl;
+        return;
+    }
+
+    // The shader first assigns v.x to v.z (1.0)
+    // Then v.y to v.y (2.0)
+    // Then v.z to v.x (1.0)
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "    vec3 v = vec3(1.0, 2.0, 3.0);\n"
+        "    for (int i = 0; i < 3; i++) {\n"
+        "        v.zyx[i] = v[i];\n"
+        "    }\n"
+        "    my_FragColor = distance(v, vec3(1.0, 2.0, 1.0)) < 0.01 ? vec4(0, 1, 0, 1) : vec4(1, "
+        "0, 0, 1);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// This test covers a bug (and associated workaround) with nested sampling operations in the HLSL
+// compiler DLL.
+TEST_P(GLSLTest_ES3, NestedSamplingOperation)
+{
+    // This seems to be bugged on some version of Android. Might not affect the newest versions.
+    // TODO(jmadill): Lift suppression when Chromium bots are upgraded.
+    if (IsAndroid() && IsOpenGLES())
+    {
+        std::cout << "Test skipped on Android because of bug with Nexus 5X." << std::endl;
+        return;
+    }
+
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "out vec2 texCoord;\n"
+        "in vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "    texCoord = position * 0.5 + vec2(0.5);\n"
+        "}\n";
+
+    const std::string &simpleFragmentShader =
+        "#version 300 es\n"
+        "in mediump vec2 texCoord;\n"
+        "out mediump vec4 fragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    fragColor = vec4(texCoord, 0, 1);\n"
+        "}\n";
+
+    const std::string &nestedFragmentShader =
+        "#version 300 es\n"
+        "uniform mediump sampler2D samplerA;\n"
+        "uniform mediump sampler2D samplerB;\n"
+        "in mediump vec2 texCoord;\n"
+        "out mediump vec4 fragColor;\n"
+        "void main ()\n"
+        "{\n"
+        "    fragColor = texture(samplerB, texture(samplerA, texCoord).xy);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(initProg, vertexShader, simpleFragmentShader);
+    ANGLE_GL_PROGRAM(nestedProg, vertexShader, nestedFragmentShader);
+
+    // Initialize a first texture with default texCoord data.
+    GLTexture texA;
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texA);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWindowWidth(), getWindowHeight(), 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    GLFramebuffer fbo;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texA, 0);
+
+    drawQuad(initProg, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    // Initialize a second texture with a simple color pattern.
+    GLTexture texB;
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texB);
+
+    std::array<GLColor, 4> simpleColors = {
+        {GLColor::red, GLColor::green, GLColor::blue, GLColor::yellow}};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 simpleColors.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Draw with the nested program, using the first texture to index the second.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(nestedProg);
+    GLint samplerALoc = glGetUniformLocation(nestedProg, "samplerA");
+    ASSERT_NE(-1, samplerALoc);
+    glUniform1i(samplerALoc, 0);
+    GLint samplerBLoc = glGetUniformLocation(nestedProg, "samplerB");
+    ASSERT_NE(-1, samplerBLoc);
+    glUniform1i(samplerBLoc, 1);
+
+    drawQuad(nestedProg, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    // Compute four texel centers.
+    Vector2 windowSize(getWindowWidth(), getWindowHeight());
+    Vector2 quarterWindowSize = windowSize / 4;
+    Vector2 ul                = quarterWindowSize;
+    Vector2 ur(windowSize.x() - quarterWindowSize.x(), quarterWindowSize.y());
+    Vector2 ll(quarterWindowSize.x(), windowSize.y() - quarterWindowSize.y());
+    Vector2 lr = windowSize - quarterWindowSize;
+
+    EXPECT_PIXEL_COLOR_EQ_VEC2(ul, simpleColors[0]);
+    EXPECT_PIXEL_COLOR_EQ_VEC2(ur, simpleColors[1]);
+    EXPECT_PIXEL_COLOR_EQ_VEC2(ll, simpleColors[2]);
+    EXPECT_PIXEL_COLOR_EQ_VEC2(lr, simpleColors[3]);
+}
+
+// Tests that using a constant declaration as the only statement in a for loop without curly braces
+// doesn't crash.
+TEST_P(GLSLTest, ConstantStatementInForLoop)
+{
+    const std::string &vertexShader =
+        "void main()\n"
+        "{\n"
+        "    for (int i = 0; i < 10; ++i)\n"
+        "        const int b = 0;\n"
+        "}\n";
+
+    GLuint shader = CompileShader(GL_VERTEX_SHADER, vertexShader);
+    EXPECT_NE(0u, shader);
+    glDeleteShader(shader);
+}
+
+// Tests that using a constant declaration as a loop init expression doesn't crash. Note that this
+// test doesn't work on D3D9 due to looping limitations, so it is only run on ES3.
+TEST_P(GLSLTest_ES3, ConstantStatementAsLoopInit)
+{
+    const std::string &vertexShader =
+        "void main()\n"
+        "{\n"
+        "    for (const int i = 0; i < 0;) {}\n"
+        "}\n";
+
+    GLuint shader = CompileShader(GL_VERTEX_SHADER, vertexShader);
+    EXPECT_NE(0u, shader);
+    glDeleteShader(shader);
+}
+
+// Test that uninitialized local variables are initialized to 0.
+TEST_P(GLSLTest_ES3, InitUninitializedLocals)
+{
+    if (IsAndroid() && IsOpenGLES())
+    {
+        // http://anglebug.com/2046
+        std::cout
+            << "Test skipped on Android GLES because local variable initialization is disabled."
+            << std::endl;
+        return;
+    }
+
+    if (IsOSX() && IsOpenGL())
+    {
+        // http://anglebug.com/2041
+        std::cout << "Test skipped on Mac OpenGL because local variable initialization is disabled."
+                  << std::endl;
+        return;
+    }
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "int result = 0;\n"
+        "void main()\n"
+        "{\n"
+        "    int u;\n"
+        "    result += u;\n"
+        "    int k = 0;\n"
+        "    for (int i[2], j = i[0] + 1; k < 2; ++k)\n"
+        "    {\n"
+        "        result += j;\n"
+        "    }\n"
+        "    if (result == 2)\n"
+        "    {\n"
+        "        my_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "    else\n"
+        "    {\n"
+        "        my_FragColor = vec4(1, 0, 0, 1);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that uninitialized structs containing arrays of structs are initialized to 0. This
+// specifically tests with two different struct variables declared in the same block.
+TEST_P(GLSLTest, InitUninitializedStructContainingArrays)
+{
+    if (IsAndroid() && IsOpenGLES())
+    {
+        // http://anglebug.com/2046
+        std::cout
+            << "Test skipped on Android GLES because local variable initialization is disabled."
+            << std::endl;
+        return;
+    }
+
+    if (IsOSX() && IsOpenGL())
+    {
+        // http://anglebug.com/2041
+        std::cout << "Test skipped on Mac OpenGL because local variable initialization is disabled."
+                  << std::endl;
+        return;
+    }
+
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "struct T\n"
+        "{\n"
+        "    int a[2];\n"
+        "};\n"
+        "struct S\n"
+        "{\n"
+        "    T t[2];\n"
+        "};\n"
+        "void main()\n"
+        "{\n"
+        "    S s;\n"
+        "    S s2;\n"
+        "    if (s.t[1].a[1] == 0 && s2.t[1].a[1] == 0)\n"
+        "    {\n"
+        "        gl_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "    else\n"
+        "    {\n"
+        "        gl_FragColor = vec4(1, 0, 0, 1);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Verify that two shaders with the same uniform name and members but different structure names will
+// not link.
+TEST_P(GLSLTest, StructureNameMatchingTest)
+{
+    const char *vsSource =
+        "// Structures must have the same name, sequence of type names, and\n"
+        "// type definitions, and field names to be considered the same type.\n"
+        "// GLSL 1.017 4.2.4\n"
+        "precision mediump float;\n"
+        "struct info {\n"
+        "  vec4 pos;\n"
+        "  vec4 color;\n"
+        "};\n"
+        "\n"
+        "uniform info uni;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = uni.pos;\n"
+        "}\n";
+
+    GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
+    ASSERT_NE(0u, vs);
+    glDeleteShader(vs);
+
+    const char *fsSource =
+        "// Structures must have the same name, sequence of type names, and\n"
+        "// type definitions, and field names to be considered the same type.\n"
+        "// GLSL 1.017 4.2.4\n"
+        "precision mediump float;\n"
+        "struct info1 {\n"
+        "  vec4 pos;\n"
+        "  vec4 color;\n"
+        "};\n"
+        "\n"
+        "uniform info1 uni;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = uni.color;\n"
+        "}\n";
+
+    GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fsSource);
+    ASSERT_NE(0u, fs);
+    glDeleteShader(fs);
+
+    GLuint program = CompileProgram(vsSource, fsSource);
+    EXPECT_EQ(0u, program);
+}
+
+// Test that an uninitialized nameless struct inside a for loop init statement works.
+TEST_P(GLSLTest_ES3, UninitializedNamelessStructInForInitStatement)
+{
+    if (IsAndroid() && IsOpenGLES())
+    {
+        // http://anglebug.com/2046
+        std::cout
+            << "Test skipped on Android GLES because local variable initialization is disabled."
+            << std::endl;
+        return;
+    }
+
+    if (IsOSX() && IsOpenGL())
+    {
+        // http://anglebug.com/2041
+        std::cout << "Test skipped on Mac OpenGL because local variable initialization is disabled."
+                  << std::endl;
+        return;
+    }
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    my_FragColor = vec4(1, 0, 0, 1);\n"
+        "    for (struct { float q; } b; b.q < 2.0; b.q++) {\n"
+        "        my_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that uninitialized global variables are initialized to 0.
+TEST_P(WebGLGLSLTest, InitUninitializedGlobals)
+{
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "int result;\n"
+        "int i[2], j = i[0] + 1;\n"
+        "void main()\n"
+        "{\n"
+        "    result += j;\n"
+        "    if (result == 1)\n"
+        "    {\n"
+        "        gl_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "    else\n"
+        "    {\n"
+        "        gl_FragColor = vec4(1, 0, 0, 1);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f, 1.0f, true);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that an uninitialized nameless struct in the global scope works.
+TEST_P(WebGLGLSLTest, UninitializedNamelessStructInGlobalScope)
+{
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "struct { float q; } b;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = vec4(1, 0, 0, 1);\n"
+        "    if (b.q == 0.0)\n"
+        "    {\n"
+        "        gl_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f, 1.0f, true);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that a loop condition that has an initializer declares a variable.
+TEST_P(GLSLTest_ES3, ConditionInitializerDeclaresVariable)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    float i = 0.0;\n"
+        "    while (bool foo = (i < 1.5))\n"
+        "    {\n"
+        "        if (!foo)\n"
+        "        {\n"
+        "            ++i;\n"
+        "        }\n"
+        "        if (i > 3.5)\n"
+        "        {\n"
+        "            break;\n"
+        "        }\n"
+        "        ++i;\n"
+        "    }\n"
+        "    my_FragColor = vec4(i * 0.5 - 1.0, i * 0.5, 0.0, 1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that a variable hides a user-defined function with the same name after its initializer.
+// GLSL ES 1.00.17 section 4.2.2: "A variable declaration is visible immediately following the
+// initializer if present, otherwise immediately following the identifier"
+TEST_P(GLSLTest, VariableHidesUserDefinedFunctionAfterInitializer)
+{
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "uniform vec4 u;\n"
+        "vec4 foo()\n"
+        "{\n"
+        "    return u;\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "    vec4 foo = foo();\n"
+        "    gl_FragColor = foo + vec4(0, 1, 0, 1);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that structs with identical members are not ambiguous as function arguments.
+TEST_P(GLSLTest, StructsWithSameMembersDisambiguatedByName)
+{
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "uniform float u_zero;\n"
+        "struct S { float foo; };\n"
+        "struct S2 { float foo; };\n"
+        "float get(S s) { return s.foo + u_zero; }\n"
+        "float get(S2 s2) { return 0.25 + s2.foo + u_zero; }\n"
+        "void main()\n"
+        "{\n"
+        "    S s;\n"
+        "    s.foo = 0.5;\n"
+        "    S2 s2;\n"
+        "    s2.foo = 0.25;\n"
+        "    gl_FragColor = vec4(0.0, get(s) + get(s2), 0.0, 1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that a varying struct that's not statically used in the fragment shader works.
+// GLSL ES 3.00.6 section 4.3.10.
+TEST_P(GLSLTest_ES3, VaryingStructNotStaticallyUsedInFragmentShader)
+{
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "struct S {\n"
+        "    vec4 field;\n"
+        "};\n"
+        "out S varStruct;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(1.0);\n"
+        "    varStruct.field = vec4(0.0, 0.5, 0.0, 0.0);\n"
+        "}\n";
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "struct S {\n"
+        "    vec4 field;\n"
+        "};\n"
+        "in S varStruct;\n"
+        "out vec4 col;\n"
+        "void main()\n"
+        "{\n"
+        "    col = vec4(1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, vertexShader, fragmentShader);
+}
+
+// Test that a varying struct that's not declared in the fragment shader links successfully.
+// GLSL ES 3.00.6 section 4.3.10.
+TEST_P(GLSLTest_ES3, VaryingStructNotDeclaredInFragmentShader)
+{
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "struct S {\n"
+        "    vec4 field;\n"
+        "};\n"
+        "out S varStruct;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(1.0);\n"
+        "    varStruct.field = vec4(0.0, 0.5, 0.0, 0.0);\n"
+        "}\n";
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 col;\n"
+        "void main()\n"
+        "{\n"
+        "    col = vec4(1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, vertexShader, fragmentShader);
+}
+
+// Test that a varying struct that gets used in the fragment shader works.
+TEST_P(GLSLTest_ES3, VaryingStructUsedInFragmentShader)
+{
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "in vec4 inputAttribute;\n"
+        "struct S {\n"
+        "    vec4 field;\n"
+        "};\n"
+        "out S varStruct;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = inputAttribute;\n"
+        "    varStruct.field = vec4(0.0, 1.0, 0.0, 1.0);\n"
+        "}\n";
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 col;\n"
+        "struct S {\n"
+        "    vec4 field;\n"
+        "};\n"
+        "in S varStruct;\n"
+        "void main()\n"
+        "{\n"
+        "    col = varStruct.field;\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, vertexShader, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// This test covers passing an array of structs containing samplers as a function argument.
+TEST_P(GLSLTest, ArrayOfStructsWithSamplersAsFunctionArg)
+{
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        // Shader failed to compile on Android. http://anglebug.com/2114
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+        return;
+    }
+
+    const std::string &vertexShader =
+        "attribute vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "}\n";
+
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "struct S\n"
+        "{\n"
+        "    sampler2D samplerMember; \n"
+        "};\n"
+        "uniform S uStructs[2];\n"
+        "uniform vec2 uTexCoord;\n"
+        "\n"
+        "vec4 foo(S[2] structs)\n"
+        "{\n"
+        "    return texture2D(structs[0].samplerMember, uTexCoord);\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = foo(uStructs);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, vertexShader, fragmentShader);
+
+    // Initialize the texture with green.
+    GLTexture tex;
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    GLubyte texData[] = {0u, 255u, 0u, 255u};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    ASSERT_GL_NO_ERROR();
+
+    // Draw
+    glUseProgram(program);
+    GLint samplerMemberLoc = glGetUniformLocation(program, "uStructs[0].samplerMember");
+    ASSERT_NE(-1, samplerMemberLoc);
+    glUniform1i(samplerMemberLoc, 0);
+    GLint texCoordLoc = glGetUniformLocation(program, "uTexCoord");
+    ASSERT_NE(-1, texCoordLoc);
+    glUniform2f(texCoordLoc, 0.5f, 0.5f);
+
+    drawQuad(program, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(1, 1, GLColor::green);
+}
+
+// This test covers passing a struct containing an array of samplers as a function argument.
+TEST_P(GLSLTest, StructWithSamplerArrayAsFunctionArg)
+{
+    if (IsAndroid() && IsAdreno() && IsOpenGLES())
+    {
+        // Shader failed to compile on Android. http://anglebug.com/2114
+        std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
+        return;
+    }
+
+    const std::string &vertexShader =
+        "attribute vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "}\n";
+
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "struct S\n"
+        "{\n"
+        "    sampler2D samplerMembers[2];\n"
+        "};\n"
+        "uniform S uStruct;\n"
+        "uniform vec2 uTexCoord;\n"
+        "\n"
+        "vec4 foo(S str)\n"
+        "{\n"
+        "    return texture2D(str.samplerMembers[0], uTexCoord);\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = foo(uStruct);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, vertexShader, fragmentShader);
+
+    // Initialize the texture with green.
+    GLTexture tex;
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    GLubyte texData[] = {0u, 255u, 0u, 255u};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    ASSERT_GL_NO_ERROR();
+
+    // Draw
+    glUseProgram(program);
+    GLint samplerMemberLoc = glGetUniformLocation(program, "uStruct.samplerMembers[0]");
+    ASSERT_NE(-1, samplerMemberLoc);
+    glUniform1i(samplerMemberLoc, 0);
+    GLint texCoordLoc = glGetUniformLocation(program, "uTexCoord");
+    ASSERT_NE(-1, texCoordLoc);
+    glUniform2f(texCoordLoc, 0.5f, 0.5f);
+
+    drawQuad(program, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(1, 1, GLColor::green);
+}
+
+// Test that a global variable declared after main() works. This is a regression test for an issue
+// in global variable initialization.
+TEST_P(WebGLGLSLTest, GlobalVariableDeclaredAfterMain)
+{
+    const std::string &fragmentShader =
+        "precision mediump float;\n"
+        "int getFoo();\n"
+        "uniform int u_zero;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = vec4(1, 0, 0, 1);\n"
+        "    if (getFoo() == 0)\n"
+        "    {\n"
+        "        gl_FragColor = vec4(0, 1, 0, 1);\n"
+        "    }\n"
+        "}\n"
+        "int foo;\n"
+        "int getFoo()\n"
+        "{\n"
+        "    foo = u_zero;\n"
+        "    return foo;\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f, 1.0f, true);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test calling array length() with a "this" expression having side effects inside a loop condition.
+// The spec says that sequence operator operands need to run in sequence.
+TEST_P(GLSLTest_ES3, ArrayLengthOnExpressionWithSideEffectsInLoopCondition)
+{
+    // "a" gets doubled three times in the below program.
+    const std::string &fragmentShader =
+        R"(#version 300 es
+        precision highp float;
+        out vec4 my_FragColor;
+        uniform int u_zero;
+        int a;
+        int[2] doubleA()
+        {
+            a *= 2;
+            return int[2](a, a);
+        }
+        void main()
+        {
+            a = u_zero + 1;
+            for (int i = 0; i < doubleA().length(); ++i)
+            {}
+            if (a == 8)
+            {
+                my_FragColor = vec4(0, 1, 0, 1);
+            }
+            else
+            {
+                my_FragColor = vec4(1, 0, 0, 1);
+            }
+        })";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test calling array length() with a "this" expression having side effects that interact with side
+// effects of another operand of the same sequence operator. The spec says that sequence operator
+// operands need to run in order from left to right (ESSL 3.00.6 section 5.9).
+TEST_P(GLSLTest_ES3, ArrayLengthOnExpressionWithSideEffectsInSequence)
+{
+    const std::string &fragmentShader =
+        R"(#version 300 es
+        precision highp float;
+        out vec4 my_FragColor;
+        uniform int u_zero;
+        int a;
+        int[3] doubleA()
+        {
+            a *= 2;
+            return int[3](a, a, a);
+        }
+        void main()
+        {
+            a = u_zero;
+            int b = (a++, doubleA().length());
+            if (b == 3 && a == 2)
+            {
+                my_FragColor = vec4(0, 1, 0, 1);
+            }
+            else
+            {
+                my_FragColor = vec4(1, 0, 0, 1);
+            }
+        })";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test calling array length() with a "this" expression that also contains a call of array length().
+// Both "this" expressions also have side effects.
+TEST_P(GLSLTest_ES3, NestedArrayLengthMethodsWithSideEffects)
+{
+    const std::string &fragmentShader =
+        R"(#version 300 es
+        precision highp float;
+        out vec4 my_FragColor;
+        uniform int u_zero;
+        int a;
+        int[3] multiplyA(int multiplier)
+        {
+            a *= multiplier;
+            return int[3](a, a, a);
+        }
+        void main()
+        {
+            a = u_zero + 1;
+            int b = multiplyA(multiplyA(2).length()).length();
+            if (b == 3 && a == 6)
+            {
+                my_FragColor = vec4(0, 1, 0, 1);
+            }
+            else
+            {
+                my_FragColor = vec4(1, 0, 0, 1);
+            }
+        })";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(GLSLTest,
@@ -2409,3 +3497,7 @@ ANGLE_INSTANTIATE_TEST(GLSLTest,
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(GLSLTest_ES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+
+ANGLE_INSTANTIATE_TEST(WebGLGLSLTest, ES2_D3D11(), ES2_OPENGL(), ES2_OPENGLES());
+
+ANGLE_INSTANTIATE_TEST(GLSLTest_ES31, ES31_D3D11(), ES31_OPENGL(), ES31_OPENGLES());

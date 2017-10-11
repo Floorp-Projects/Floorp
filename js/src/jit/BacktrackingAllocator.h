@@ -605,7 +605,8 @@ class VirtualRegister
         return firstRange()->bundle();
     }
 
-    MOZ_MUST_USE bool addInitialRange(TempAllocator& alloc, CodePosition from, CodePosition to);
+    MOZ_MUST_USE bool addInitialRange(TempAllocator& alloc, CodePosition from, CodePosition to,
+                                      size_t* numRanges);
     void addInitialUse(UsePosition* use);
     void setInitialDefinition(CodePosition from);
 };

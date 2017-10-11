@@ -10,7 +10,7 @@
 #include <sstream>
 
 #include "ANGLEPerfTest.h"
-#include "shader_utils.h"
+#include "test_utils/draw_call_perf_utils.h"
 
 using namespace angle;
 
@@ -269,34 +269,18 @@ void BufferSubDataBenchmark::initializeBenchmark()
     ASSERT_LT(1, params.vertexComponentCount);
     ASSERT_LT(0u, params.iterations);
 
-    const std::string vs = SHADER_SOURCE
-    (
-        attribute vec2 vPosition;
-        uniform float uScale;
-        uniform float uOffset;
-        void main()
-        {
-            gl_Position = vec4(vPosition * vec2(uScale) - vec2(uOffset), 0, 1);
-        }
-    );
-
-    const std::string fs = SHADER_SOURCE
-    (
-        precision mediump float;
-        void main()
-        {
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }
-    );
-
-    mProgram = CompileProgram(vs, fs);
+    mProgram = SetupSimpleScaleAndOffsetProgram();
     ASSERT_NE(0u, mProgram);
 
-    // Use the program object
-    glUseProgram(mProgram);
+    if (params.vertexNormalized == GL_TRUE)
+    {
+        GLfloat scale  = 2.0f;
+        GLfloat offset = -0.5f;
+        glUniform1f(glGetUniformLocation(mProgram, "uScale"), scale);
+        glUniform1f(glGetUniformLocation(mProgram, "uOffset"), offset);
+    }
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
 
     std::vector<uint8_t> zeroData(params.bufferSize);
     memset(&zeroData[0], 0, zeroData.size());
@@ -334,18 +318,6 @@ void BufferSubDataBenchmark::initializeBenchmark()
 
     // Set the viewport
     glViewport(0, 0, getWindow()->getWidth(), getWindow()->getHeight());
-
-    GLfloat scale = 0.5f;
-    GLfloat offset = 0.5f;
-
-    if (params.vertexNormalized == GL_TRUE)
-    {
-        scale = 2.0f;
-        offset = 0.5f;
-    }
-
-    glUniform1f(glGetUniformLocation(mProgram, "uScale"), scale);
-    glUniform1f(glGetUniformLocation(mProgram, "uOffset"), offset);
 
     ASSERT_GL_NO_ERROR();
 }

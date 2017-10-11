@@ -312,21 +312,6 @@ const markupTests = [{
 }];
 
 /**
- * Wait for an accessible event to happen and, in case given accessible is
- * defunct, update it to one that is attached to the accessible event.
- * @param {Promise} onEvent      accessible event promise
- * @param {Object}  target       { acc, parent, id } structure that contains an
- *                                accessible, its parent and its content element
- *                                id.
- */
-async function updateAccessibleIfNeeded(onEvent, target) {
-  let event = await onEvent;
-  if (isDefunct(target.acc)) {
-    target.acc = findAccessibleChildByID(event.accessible, target.id);
-  }
-}
-
-/**
  * Test accessible name that is calculated from an attribute, remove the
  * attribute before proceeding to the next name test. If attribute removal
  * results in a reorder or text inserted event - wait for it. If accessible
@@ -340,16 +325,21 @@ async function updateAccessibleIfNeeded(onEvent, target) {
  * @param {[type]} expected     expected name value
  */
 async function testAttrRule(browser, target, rule, expected) {
-  testName(target.acc, expected);
-  let onEvent;
-  if (rule.recreated) {
-    onEvent = waitForEvent(EVENT_REORDER, target.parent);
-  } else if (rule.textchanged) {
-    onEvent = waitForEvent(EVENT_TEXT_INSERTED, target.id);
-  }
-  await invokeSetAttribute(browser, target.id, rule.attr);
-  if (onEvent) {
-    await updateAccessibleIfNeeded(onEvent, target);
+  let {id, parent, acc} = target;
+  let {recreated, textchanged, attr} = rule;
+
+  testName(acc, expected);
+
+  if (recreated || textchanged) {
+    let [event] = await contentSpawnMutation(browser, {
+      expected: [recreated ? [EVENT_REORDER, parent] : [EVENT_TEXT_INSERTED, id]]
+    }, ([contentId, contentAttr]) =>
+      document.getElementById(contentId).removeAttribute(contentAttr), [id, attr]);
+
+    // Update accessible just in case it is now defunct.
+    target.acc = findAccessibleChildByID(event.accessible, id);
+  } else {
+    await invokeSetAttribute(browser, id, attr);
   }
 }
 
@@ -366,12 +356,16 @@ async function testAttrRule(browser, target, rule, expected) {
  * @param {[type]} expected     expected name value
  */
 async function testElmRule(browser, target, rule, expected) {
-  testName(target.acc, expected);
-  let onEvent = waitForEvent(EVENT_REORDER, rule.isSibling ?
-    target.parent : target.id);
-  await ContentTask.spawn(browser, rule.elm, elm =>
-    content.document.querySelector(`${elm}`).remove());
-  await updateAccessibleIfNeeded(onEvent, target);
+  let {id, parent, acc} = target;
+  let {isSibling, elm} = rule;
+
+  testName(acc, expected);
+  let [event] = await contentSpawnMutation(browser, {
+    expected: [[EVENT_REORDER, isSibling ? parent : id]]
+  }, contentElm => document.querySelector(`${contentElm}`).remove(), elm);
+
+  // Update accessible just in case it is now defunct.
+  target.acc = findAccessibleChildByID(event.accessible, id);
 }
 
 /**
@@ -387,15 +381,20 @@ async function testElmRule(browser, target, rule, expected) {
  * @param {[type]} expected     expected name value
  */
 async function testSubtreeRule(browser, target, rule, expected) {
-  testName(target.acc, expected);
-  let onEvent = waitForEvent(EVENT_REORDER, target.id);
-  await ContentTask.spawn(browser, target.id, id => {
-    let elm = content.document.getElementById(id);
+  let {id, acc} = target;
+
+  testName(acc, expected);
+  let [event] = await contentSpawnMutation(browser, {
+    expected: [[EVENT_REORDER, id]]
+  }, contentId => {
+    let elm = document.getElementById(contentId);
     while (elm.firstChild) {
       elm.firstChild.remove();
     }
-  });
-  await updateAccessibleIfNeeded(onEvent, target);
+  }, id);
+
+  // Update accessible just in case it is now defunct.
+  target.acc = findAccessibleChildByID(event.accessible, id);
 }
 
 /**

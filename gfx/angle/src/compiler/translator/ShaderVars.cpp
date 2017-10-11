@@ -21,7 +21,6 @@ InterpolationType GetNonAuxiliaryInterpolationType(InterpolationType interpolati
 {
     return (interpolation == INTERPOLATION_CENTROID ? INTERPOLATION_SMOOTH : interpolation);
 }
-
 }
 // The ES 3.0 spec is not clear on this point, but the ES 3.1 spec, and discussion
 // on Khronos.org, clarifies that a smooth/flat mismatch produces a link error,
@@ -31,22 +30,18 @@ bool InterpolationTypesMatch(InterpolationType a, InterpolationType b)
     return (GetNonAuxiliaryInterpolationType(a) == GetNonAuxiliaryInterpolationType(b));
 }
 
-ShaderVariable::ShaderVariable()
-    : type(0),
-      precision(0),
-      arraySize(0),
-      staticUse(false)
-{}
+ShaderVariable::ShaderVariable() : type(0), precision(0), arraySize(0), staticUse(false)
+{
+}
 
 ShaderVariable::ShaderVariable(GLenum typeIn, unsigned int arraySizeIn)
-    : type(typeIn),
-      precision(0),
-      arraySize(arraySizeIn),
-      staticUse(false)
-{}
+    : type(typeIn), precision(0), arraySize(arraySizeIn), staticUse(false)
+{
+}
 
 ShaderVariable::~ShaderVariable()
-{}
+{
+}
 
 ShaderVariable::ShaderVariable(const ShaderVariable &other)
     : type(other.type),
@@ -57,30 +52,27 @@ ShaderVariable::ShaderVariable(const ShaderVariable &other)
       staticUse(other.staticUse),
       fields(other.fields),
       structName(other.structName)
-{}
+{
+}
 
 ShaderVariable &ShaderVariable::operator=(const ShaderVariable &other)
 {
-    type = other.type;
-    precision = other.precision;
-    name = other.name;
+    type       = other.type;
+    precision  = other.precision;
+    name       = other.name;
     mappedName = other.mappedName;
-    arraySize = other.arraySize;
-    staticUse = other.staticUse;
-    fields = other.fields;
+    arraySize  = other.arraySize;
+    staticUse  = other.staticUse;
+    fields     = other.fields;
     structName = other.structName;
     return *this;
 }
 
 bool ShaderVariable::operator==(const ShaderVariable &other) const
 {
-    if (type != other.type ||
-        precision != other.precision ||
-        name != other.name ||
-        mappedName != other.mappedName ||
-        arraySize != other.arraySize ||
-        staticUse != other.staticUse ||
-        fields.size() != other.fields.size() ||
+    if (type != other.type || precision != other.precision || name != other.name ||
+        mappedName != other.mappedName || arraySize != other.arraySize ||
+        staticUse != other.staticUse || fields.size() != other.fields.size() ||
         structName != other.structName)
     {
         return false;
@@ -93,9 +85,9 @@ bool ShaderVariable::operator==(const ShaderVariable &other) const
     return true;
 }
 
-bool ShaderVariable::findInfoByMappedName(
-    const std::string &mappedFullName,
-    const ShaderVariable **leafVar, std::string *originalFullName) const
+bool ShaderVariable::findInfoByMappedName(const std::string &mappedFullName,
+                                          const ShaderVariable **leafVar,
+                                          std::string *originalFullName) const
 {
     ASSERT(leafVar && originalFullName);
     // There are three cases:
@@ -110,7 +102,7 @@ bool ShaderVariable::findInfoByMappedName(
         if (mappedFullName != this->mappedName)
             return false;
         *originalFullName = this->name;
-        *leafVar = this;
+        *leafVar          = this;
         return true;
     }
     else
@@ -131,13 +123,13 @@ bool ShaderVariable::findInfoByMappedName(
             if (closePos + 1 == mappedFullName.size())
             {
                 *originalFullName = originalName;
-                *leafVar = this;
+                *leafVar          = this;
                 return true;
             }
             else
             {
                 // In the form of 'a[0].b', so after ']', '.' is expected.
-                if (mappedFullName[closePos + 1]  != '.')
+                if (mappedFullName[closePos + 1] != '.')
                     return false;
                 remaining = mappedFullName.substr(closePos + 2);  // Skip "]."
             }
@@ -149,14 +141,13 @@ bool ShaderVariable::findInfoByMappedName(
         }
         for (size_t ii = 0; ii < this->fields.size(); ++ii)
         {
-            const ShaderVariable *fieldVar = NULL;
+            const ShaderVariable *fieldVar = nullptr;
             std::string originalFieldName;
-            bool found = fields[ii].findInfoByMappedName(
-                remaining, &fieldVar, &originalFieldName);
+            bool found = fields[ii].findInfoByMappedName(remaining, &fieldVar, &originalFieldName);
             if (found)
             {
                 *originalFullName = originalName + "." + originalFieldName;
-                *leafVar = fieldVar;
+                *leafVar          = fieldVar;
                 return true;
             }
         }
@@ -164,24 +155,28 @@ bool ShaderVariable::findInfoByMappedName(
     }
 }
 
-bool ShaderVariable::isSameVariableAtLinkTime(
-    const ShaderVariable &other, bool matchPrecision) const
+bool ShaderVariable::isSameVariableAtLinkTime(const ShaderVariable &other,
+                                              bool matchPrecision,
+                                              bool matchName) const
 {
     if (type != other.type)
         return false;
     if (matchPrecision && precision != other.precision)
         return false;
-    if (name != other.name)
+    if (matchName && name != other.name)
         return false;
-    ASSERT(mappedName == other.mappedName);
+    ASSERT(!matchName || mappedName == other.mappedName);
     if (arraySize != other.arraySize)
         return false;
     if (fields.size() != other.fields.size())
         return false;
+
+    // [OpenGL ES 3.1 SPEC Chapter 7.4.1]
+    // Variables declared as structures are considered to match in type if and only if structure
+    // members match in name, type, qualification, and declaration order.
     for (size_t ii = 0; ii < fields.size(); ++ii)
     {
-        if (!fields[ii].isSameVariableAtLinkTime(other.fields[ii],
-                                                 matchPrecision))
+        if (!fields[ii].isSameVariableAtLinkTime(other.fields[ii], matchPrecision, true))
         {
             return false;
         }
@@ -191,53 +186,75 @@ bool ShaderVariable::isSameVariableAtLinkTime(
     return true;
 }
 
-Uniform::Uniform()
-{}
+Uniform::Uniform() : binding(-1), offset(-1)
+{
+}
 
 Uniform::~Uniform()
-{}
+{
+}
 
 Uniform::Uniform(const Uniform &other)
-    : ShaderVariable(other)
-{}
+    : VariableWithLocation(other), binding(other.binding), offset(other.offset)
+{
+}
 
 Uniform &Uniform::operator=(const Uniform &other)
 {
-    ShaderVariable::operator=(other);
+    VariableWithLocation::operator=(other);
+    binding                 = other.binding;
+    offset                        = other.offset;
     return *this;
 }
 
 bool Uniform::operator==(const Uniform &other) const
 {
-    return ShaderVariable::operator==(other);
+    return VariableWithLocation::operator==(other) && binding == other.binding &&
+           offset == other.offset;
 }
 
 bool Uniform::isSameUniformAtLinkTime(const Uniform &other) const
 {
-    return ShaderVariable::isSameVariableAtLinkTime(other, true);
+    // Enforce a consistent match.
+    // https://cvs.khronos.org/bugzilla/show_bug.cgi?id=16261
+    if (binding != -1 && other.binding != -1 && binding != other.binding)
+    {
+        return false;
+    }
+    if (location != -1 && other.location != -1 && location != other.location)
+    {
+        return false;
+    }
+    if (offset != other.offset)
+    {
+        return false;
+    }
+    return VariableWithLocation::isSameVariableAtLinkTime(other, true, true);
 }
 
-InterfaceVariable::InterfaceVariable() : location(-1)
-{}
+VariableWithLocation::VariableWithLocation() : location(-1)
+{
+}
 
-InterfaceVariable::~InterfaceVariable()
-{}
+VariableWithLocation::~VariableWithLocation()
+{
+}
 
-InterfaceVariable::InterfaceVariable(const InterfaceVariable &other)
+VariableWithLocation::VariableWithLocation(const VariableWithLocation &other)
     : ShaderVariable(other), location(other.location)
-{}
+{
+}
 
-InterfaceVariable &InterfaceVariable::operator=(const InterfaceVariable &other)
+VariableWithLocation &VariableWithLocation::operator=(const VariableWithLocation &other)
 {
     ShaderVariable::operator=(other);
-    location = other.location;
+    location                = other.location;
     return *this;
 }
 
-bool InterfaceVariable::operator==(const InterfaceVariable &other) const
+bool VariableWithLocation::operator==(const VariableWithLocation &other) const
 {
-    return (ShaderVariable::operator==(other) &&
-            location == other.location);
+    return (ShaderVariable::operator==(other) && location == other.location);
 }
 
 Attribute::Attribute()
@@ -248,19 +265,19 @@ Attribute::~Attribute()
 {
 }
 
-Attribute::Attribute(const Attribute &other) : InterfaceVariable(other)
+Attribute::Attribute(const Attribute &other) : VariableWithLocation(other)
 {
 }
 
 Attribute &Attribute::operator=(const Attribute &other)
 {
-    InterfaceVariable::operator=(other);
+    VariableWithLocation::operator=(other);
     return *this;
 }
 
 bool Attribute::operator==(const Attribute &other) const
 {
-    return InterfaceVariable::operator==(other);
+    return VariableWithLocation::operator==(other);
 }
 
 OutputVariable::OutputVariable()
@@ -271,79 +288,79 @@ OutputVariable::~OutputVariable()
 {
 }
 
-OutputVariable::OutputVariable(const OutputVariable &other) : InterfaceVariable(other)
+OutputVariable::OutputVariable(const OutputVariable &other) : VariableWithLocation(other)
 {
 }
 
 OutputVariable &OutputVariable::operator=(const OutputVariable &other)
 {
-    InterfaceVariable::operator=(other);
+    VariableWithLocation::operator=(other);
     return *this;
 }
 
 bool OutputVariable::operator==(const OutputVariable &other) const
 {
-    return InterfaceVariable::operator==(other);
+    return VariableWithLocation::operator==(other);
 }
 
-InterfaceBlockField::InterfaceBlockField()
-    : isRowMajorLayout(false)
-{}
+InterfaceBlockField::InterfaceBlockField() : isRowMajorLayout(false)
+{
+}
 
 InterfaceBlockField::~InterfaceBlockField()
-{}
+{
+}
 
 InterfaceBlockField::InterfaceBlockField(const InterfaceBlockField &other)
-    : ShaderVariable(other),
-      isRowMajorLayout(other.isRowMajorLayout)
-{}
+    : ShaderVariable(other), isRowMajorLayout(other.isRowMajorLayout)
+{
+}
 
 InterfaceBlockField &InterfaceBlockField::operator=(const InterfaceBlockField &other)
 {
     ShaderVariable::operator=(other);
-    isRowMajorLayout = other.isRowMajorLayout;
+    isRowMajorLayout        = other.isRowMajorLayout;
     return *this;
 }
 
 bool InterfaceBlockField::operator==(const InterfaceBlockField &other) const
 {
-    return (ShaderVariable::operator==(other) &&
-            isRowMajorLayout == other.isRowMajorLayout);
+    return (ShaderVariable::operator==(other) && isRowMajorLayout == other.isRowMajorLayout);
 }
 
 bool InterfaceBlockField::isSameInterfaceBlockFieldAtLinkTime(
     const InterfaceBlockField &other) const
 {
-    return (ShaderVariable::isSameVariableAtLinkTime(other, true) &&
+    return (ShaderVariable::isSameVariableAtLinkTime(other, true, true) &&
             isRowMajorLayout == other.isRowMajorLayout);
 }
 
-Varying::Varying()
-    : interpolation(INTERPOLATION_SMOOTH),
-      isInvariant(false)
-{}
+Varying::Varying() : interpolation(INTERPOLATION_SMOOTH), isInvariant(false)
+{
+}
 
 Varying::~Varying()
-{}
+{
+}
 
 Varying::Varying(const Varying &other)
-    : ShaderVariable(other),
+    : VariableWithLocation(other),
       interpolation(other.interpolation),
       isInvariant(other.isInvariant)
-{}
+{
+}
 
 Varying &Varying::operator=(const Varying &other)
 {
-    ShaderVariable::operator=(other);
-    interpolation = other.interpolation;
-    isInvariant = other.isInvariant;
+    VariableWithLocation::operator=(other);
+    interpolation           = other.interpolation;
+    isInvariant             = other.isInvariant;
     return *this;
 }
 
 bool Varying::operator==(const Varying &other) const
 {
-    return (ShaderVariable::operator==(other) &&
-            interpolation == other.interpolation &&
+    return (VariableWithLocation::operator==(other) && interpolation == other.interpolation &&
             isInvariant == other.isInvariant);
 }
 
@@ -354,20 +371,26 @@ bool Varying::isSameVaryingAtLinkTime(const Varying &other) const
 
 bool Varying::isSameVaryingAtLinkTime(const Varying &other, int shaderVersion) const
 {
-    return (ShaderVariable::isSameVariableAtLinkTime(other, false) &&
+    return (ShaderVariable::isSameVariableAtLinkTime(other, false, false) &&
             InterpolationTypesMatch(interpolation, other.interpolation) &&
-            (shaderVersion >= 300 || isInvariant == other.isInvariant));
+            (shaderVersion >= 300 || isInvariant == other.isInvariant) &&
+            (location == other.location) &&
+            (name == other.name || (shaderVersion >= 310 && location >= 0)));
 }
 
 InterfaceBlock::InterfaceBlock()
     : arraySize(0),
       layout(BLOCKLAYOUT_PACKED),
       isRowMajorLayout(false),
-      staticUse(false)
-{}
+      binding(-1),
+      staticUse(false),
+      blockType(BlockType::BLOCK_UNIFORM)
+{
+}
 
 InterfaceBlock::~InterfaceBlock()
-{}
+{
+}
 
 InterfaceBlock::InterfaceBlock(const InterfaceBlock &other)
     : name(other.name),
@@ -376,20 +399,25 @@ InterfaceBlock::InterfaceBlock(const InterfaceBlock &other)
       arraySize(other.arraySize),
       layout(other.layout),
       isRowMajorLayout(other.isRowMajorLayout),
+      binding(other.binding),
       staticUse(other.staticUse),
+      blockType(other.blockType),
       fields(other.fields)
-{}
+{
+}
 
 InterfaceBlock &InterfaceBlock::operator=(const InterfaceBlock &other)
 {
-    name = other.name;
-    mappedName = other.mappedName;
-    instanceName = other.instanceName;
-    arraySize = other.arraySize;
-    layout = other.layout;
+    name             = other.name;
+    mappedName       = other.mappedName;
+    instanceName     = other.instanceName;
+    arraySize        = other.arraySize;
+    layout           = other.layout;
     isRowMajorLayout = other.isRowMajorLayout;
-    staticUse = other.staticUse;
-    fields = other.fields;
+    binding          = other.binding;
+    staticUse        = other.staticUse;
+    blockType        = other.blockType;
+    fields           = other.fields;
     return *this;
 }
 
@@ -398,10 +426,16 @@ std::string InterfaceBlock::fieldPrefix() const
     return instanceName.empty() ? "" : name;
 }
 
+std::string InterfaceBlock::fieldMappedPrefix() const
+{
+    return instanceName.empty() ? "" : mappedName;
+}
+
 bool InterfaceBlock::isSameInterfaceBlockAtLinkTime(const InterfaceBlock &other) const
 {
     if (name != other.name || mappedName != other.mappedName || arraySize != other.arraySize ||
         layout != other.layout || isRowMajorLayout != other.isRowMajorLayout ||
+        binding != other.binding || blockType != other.blockType ||
         fields.size() != other.fields.size())
     {
         return false;
