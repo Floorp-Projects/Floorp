@@ -396,6 +396,14 @@ RemoteRotatedBuffer::Unlock()
   }
 }
 
+void
+RemoteRotatedBuffer::Clear()
+{
+  MOZ_ASSERT(!mTarget && !mTargetOnWhite);
+  mClient = nullptr;
+  mClientOnWhite = nullptr;
+}
+
 already_AddRefed<gfx::SourceSurface>
 RemoteRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 {
