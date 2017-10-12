@@ -1415,20 +1415,6 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
   return SyncRealTimeSpell();
 }
 
-NS_IMETHODIMP
-EditorBase::CreateNode(const nsAString& aTag,
-                       nsIDOMNode* aParent,
-                       int32_t aPosition,
-                       nsIDOMNode** aNewNode)
-{
-  RefPtr<nsAtom> tag = NS_Atomize(aTag);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  NS_ENSURE_STATE(parent);
-  *aNewNode = GetAsDOMNode(CreateNode(tag, parent, aPosition).take());
-  NS_ENSURE_STATE(*aNewNode);
-  return NS_OK;
-}
-
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
                        nsINode* aParent,
