@@ -28,6 +28,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     # Element IDs.
     _input_id = 'input'
     _input_padding_id = 'input-padding'
+    _input_size_id = 'input-size'
     _textarea_id = 'textarea'
     _textarea2_id = 'textarea2'
     _textarea_one_line_id = 'textarea-one-line'
@@ -570,36 +571,29 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     def test_long_press_to_select_when_partial_visible_word_is_selected(self):
         self.open_test_html(self._selection_html)
-        el = self.marionette.find_element(By.ID, self._input_id)
+        el = self.marionette.find_element(By.ID, self._input_size_id)
         sel = SelectionManager(el)
 
-        # To successfully select the second word while the first word is being
-        # selected, use sufficient spaces between 'a' and 'b' to avoid the
-        # second caret covers on the second word.
-        original_content = 'aaaaaaaa          bbbbbbbb'
-        el.clear()
-        el.send_keys(original_content)
+        original_content = sel.content
         words = original_content.split()
 
-        # We cannot use self.long_press_on_word() directly since it has will
-        # change the cursor position which affects this test. We have to store
-        # the position of word 0 and word 1 before long-pressing to select the
-        # word.
+        # We cannot use self.long_press_on_word() for the second long press
+        # on the first word because it has side effect that changes the
+        # cursor position. We need to save the location of the first word to
+        # be used later.
         word0_x, word0_y = self.word_location(el, 0)
-        word1_x, word1_y = self.word_location(el, 1)
 
-        self.long_press_on_location(el, word0_x, word0_y)
-        self.assertEqual(words[0], sel.selected_content)
-
-        self.long_press_on_location(el, word1_x, word1_y)
+        # Long press on the second word.
+        self.long_press_on_word(el, 1)
         self.assertEqual(words[1], sel.selected_content)
 
+        # Long press on the first word.
         self.long_press_on_location(el, word0_x, word0_y)
         self.assertEqual(words[0], sel.selected_content)
 
-        # If the second carets is visible, it can be dragged to the position of
-        # the first caret. After that, selection will contain only the first
-        # character.
+        # If the second caret is visible, it can be dragged to the position
+        # of the first caret. After that, selection will contain only the
+        # first character.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
         self.assertEqual(words[0][0], sel.selected_content)
