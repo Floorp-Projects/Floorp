@@ -45,7 +45,7 @@ function() {
   function testMakeCredential() {
     let rp = {id: document.domain, name: "none", icon: "none"};
     let user = {name: "none", icon: "none", displayName: "none"};
-    let param = {type: "public-key", alg: "es256"};
+    let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
     let makeCredentialOptions = {
       rp: rp, user: user, challenge: credentialChallenge, pubKeyCredParams: [param]
     };
