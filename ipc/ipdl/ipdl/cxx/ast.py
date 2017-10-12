@@ -471,10 +471,12 @@ class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
                  virtual=0, const=0, pure=0, static=0, warn_unused=0,
                  inline=0, force_inline=0, never_inline=0,
-                 typeop=None,
+                 typeop=None, override=0,
                  T=None):
         assert not (virtual and static)
         assert not pure or virtual      # pure => virtual
+        assert not override or virtual  # override => virtual
+        assert not (override and pure)
         assert not (static and typeop)
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
@@ -494,6 +496,7 @@ class MethodDecl(Node):
         self.virtual = virtual          # bool
         self.const = const              # bool
         self.pure = pure                # bool
+        self.override = override        # bool
         self.static = static            # bool
         self.warn_unused = warn_unused  # bool
         self.force_inline = (force_inline or T) # bool
@@ -511,6 +514,7 @@ class MethodDecl(Node):
             virtual=self.virtual,
             const=self.const,
             pure=self.pure,
+            override=self.override,
             static=self.static,
             warn_unused=self.warn_unused,
             inline=self.inline,
@@ -555,7 +559,7 @@ class ConstructorDefn(MethodDefn):
         self.memberinits = memberinits
 
 class DestructorDecl(MethodDecl):
-    def __init__(self, name, virtual=0, force_inline=0, inline=0):
+    def __init__(self, name, virtual=0, override=0, force_inline=0, inline=0):
         MethodDecl.__init__(self, name, params=[ ], ret=None,
                             virtual=virtual,
                             force_inline=force_inline, inline=inline)
