@@ -26,3 +26,6 @@ curl --fail --silent --location http://localhost:8081/nexus/service/local/status
 
 # It's helpful when debugging to see the repository configurations.
 curl http://localhost:8081/nexus/service/local/repositories || true
+
+# Populate /builds/worker/.mozbuild/android-sdk-linux.
+python2.7 /builds/worker/workspace/build/src/python/mozboot/mozboot/android.py --artifact-mode --no-interactive
