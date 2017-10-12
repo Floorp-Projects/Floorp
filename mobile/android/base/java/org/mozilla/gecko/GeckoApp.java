@@ -2136,6 +2136,8 @@ public abstract class GeckoApp extends GeckoActivity
             }
         });
 
+        GeckoAppShell.setScreenOrientationDelegate(null);
+
         super.onPause();
     }
 
