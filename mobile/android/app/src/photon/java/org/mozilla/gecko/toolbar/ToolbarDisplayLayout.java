@@ -103,7 +103,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private boolean mIsAttached;
 
     private final ThemedTextView mTitle;
-    private final ThemedView mTitleBackground;
+    private final ThemedLinearLayout mThemeBackground;
     private final int mTitlePadding;
     private final HorizontalScrollView mTitleScroll;
     private final int mMinUrlScrollMargin;
@@ -150,7 +150,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         LayoutInflater.from(context).inflate(R.layout.toolbar_display_layout, this);
 
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
-        mTitleBackground = (ThemedView) findViewById(R.id.url_bar_title_bg);
+        mThemeBackground = (ThemedLinearLayout) findViewById(R.id.url_bar_title_bg);
         mTitlePadding = mTitle.getPaddingRight();
         mTitleScroll = (HorizontalScrollView) findViewById(R.id.url_bar_title_scroll_view);
 
@@ -199,7 +199,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mStop.setPrivateMode(isPrivate);
         mPageActionLayout.setPrivateMode(isPrivate);
         mTitle.setPrivateMode(isPrivate);
-        mTitleBackground.setPrivateMode(isPrivate);
+        mThemeBackground.setPrivateMode(isPrivate);
     }
 
     @Override
@@ -277,7 +277,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
             mTitle.setPrivateMode(tab.isPrivate());
-            mTitleBackground.setPrivateMode(tab.isPrivate());
+            mThemeBackground.setPrivateMode(tab.isPrivate());
         }
     }
 
