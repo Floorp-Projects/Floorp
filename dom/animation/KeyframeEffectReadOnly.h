@@ -259,10 +259,8 @@ public:
 
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
-  void CalculateCumulativeChangeHint(nsStyleContext* aStyleContext);
-  void CalculateCumulativeChangeHint(const ServoStyleContext* aComputedValues)
-  {
-  }
+  template<typename StyleType>
+  void CalculateCumulativeChangeHint(StyleType* aStyleContext);
 
   // Returns true if all of animation properties' change hints
   // can ignore painting if the animation is not visible.
@@ -452,6 +450,16 @@ private:
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);
+
+  already_AddRefed<nsStyleContext> CreateStyleContextForAnimationValue(
+    nsCSSPropertyID aProperty,
+    const AnimationValue& aValue,
+    GeckoStyleContext* aBaseStyleContext);
+
+  already_AddRefed<nsStyleContext> CreateStyleContextForAnimationValue(
+    nsCSSPropertyID aProperty,
+    const AnimationValue& aValue,
+    const ServoStyleContext* aBaseStyleContext);
 
   nsIFrame* GetAnimationFrame() const;
 
