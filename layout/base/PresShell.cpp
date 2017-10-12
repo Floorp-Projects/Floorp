@@ -4451,11 +4451,9 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
 
   // After removing aChild from tree we should save information about live ancestor
-  if (mPointerEventTarget) {
-    MOZ_ASSERT(PointerEventHandler::IsPointerEventEnabled());
-    if (nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
-      mPointerEventTarget = aMaybeContainer;
-    }
+  if (mPointerEventTarget &&
+      nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
+    mPointerEventTarget = aMaybeContainer;
   }
 
   mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
@@ -7318,7 +7316,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     // After HandlePositionedEvent we should reestablish
     // content (which still live in tree) in some cases
     if (aTargetContent && ePointerEventClass == aEvent->mClass) {
-      MOZ_ASSERT(PointerEventHandler::IsPointerEventEnabled());
       if (!weakFrame.IsAlive()) {
         shell->mPointerEventTarget.swap(*aTargetContent);
       }
