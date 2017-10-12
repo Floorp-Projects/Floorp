@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/obj-ptrn-prop-ary-value-null.case
-// - src/dstr-binding/error/for-await-of-async-func-var.template
+// - src/dstr-binding-for-await/obj-ptrn-prop-ary-value-null.case
+// - src/dstr-binding-for-await/error/for-await-of-async-func-var.template
 /*---
 description: Object binding pattern with "nested" array binding pattern taking the `null` value (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -52,5 +51,10 @@ async function fn() {
 }
 
 fn()
-  .then(_ => { throw new Test262Error("Expected async function to reject, but resolved."); }, ({ constructor }) => assert.sameValue(constructor, TypeError))
+  .then(_ => {
+    throw new Test262Error("Expected async function to reject, but resolved.");
+  }, ({ constructor }) => {
+    assert.sameValue(constructor, TypeError);
+    
+  })
   .then($DONE, $DONE);

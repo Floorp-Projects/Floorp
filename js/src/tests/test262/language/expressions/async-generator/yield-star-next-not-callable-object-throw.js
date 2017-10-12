@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-next-not-callable-object-throw.case
 // - src/async-generators/default/async-expression.template
 /*---
 description: Not-callable next value in a yield star position - object (Unnamed async generator expression)
 esid: prod-AsyncGeneratorExpression
-features: [Symbol.asyncIterator, async-iteration]
+features: [Symbol.iterator, Symbol.asyncIterator, async-iteration]
 flags: [generated, async]
 info: |
     Async Generator Function Definitions

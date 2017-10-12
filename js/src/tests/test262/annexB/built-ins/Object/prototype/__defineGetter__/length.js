@@ -18,10 +18,11 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Object.prototype.__defineGetter__.length, 2);
-
-verifyNotEnumerable(Object.prototype.__defineGetter__, 'length');
-verifyNotWritable(Object.prototype.__defineGetter__, 'length');
-verifyConfigurable(Object.prototype.__defineGetter__, 'length');
+verifyProperty(Object.prototype.__defineGetter__, "length", {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+  value: 2
+});
 
 reportCompare(0, 0);

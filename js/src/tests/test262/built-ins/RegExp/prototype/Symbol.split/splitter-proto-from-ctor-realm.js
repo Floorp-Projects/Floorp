@@ -15,7 +15,7 @@ info: >
        a. Let realm be ? GetFunctionRealm(constructor).
        b. Let proto be realm's intrinsic object named intrinsicDefaultProto.
     [...]
-features: [Symbol.species]
+features: [cross-realm, Symbol.species, Symbol.split]
 ---*/
 
 var other = $262.createRealm().global;

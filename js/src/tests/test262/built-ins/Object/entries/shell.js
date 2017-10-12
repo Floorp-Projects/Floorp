@@ -1,4 +1,12 @@
 // file: proxyTrapsHelper.js
+// Copyright (C) 2017 Ecma International.  All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    Used to assert the correctness of object behavior in the presence
+    and context of Proxy objects.
+---*/
+
 function allowProxyTraps(overrides) {
   function throwTest262Error(msg) {
     return function () { throw new Test262Error(msg); };

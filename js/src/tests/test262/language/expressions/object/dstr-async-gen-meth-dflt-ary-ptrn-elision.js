@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-elision.case
 // - src/dstr-binding/default/async-gen-method-dflt.template
 /*---
 description: Elision advances iterator (async generator method (default parameter))
 esid: sec-asyncgenerator-definitions-propertydefinitionevaluation
-features: [generator, async-iteration]
+features: [generators, async-iteration]
 flags: [generated, async]
 info: |
     AsyncGeneratorMethod :

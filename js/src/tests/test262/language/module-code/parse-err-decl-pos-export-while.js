@@ -10,4 +10,6 @@ negative:
 flags: [module]
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 while (false) export default null;

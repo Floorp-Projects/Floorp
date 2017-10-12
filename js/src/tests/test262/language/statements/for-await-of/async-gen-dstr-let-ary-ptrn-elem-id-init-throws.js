@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elem-id-init-throws.case
-// - src/dstr-binding/error/for-await-of-async-gen-let.template
+// - src/dstr-binding-for-await/ary-ptrn-elem-id-init-throws.case
+// - src/dstr-binding-for-await/error/for-await-of-async-gen-let.template
 /*---
 description: Destructuring initializer returns an abrupt completion (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -38,13 +37,12 @@ info: |
 
     13.3.3.6 Runtime Semantics: IteratorBindingInitialization
 
-    SingleNameBinding : BindingIdentifier Initializeropt
+    SingleNameBinding : BindingIdentifier Initializer_opt
 
     [...]
-    6. If Initializer is present and v is undefined, then
+    5. If Initializer is present and v is undefined, then
        a. Let defaultValue be the result of evaluating Initializer.
-       b. Let v be GetValue(defaultValue).
-       c. ReturnIfAbrupt(v).
+       b. Set v to ? GetValue(defaultValue).
 ---*/
 
 async function * gen() {
@@ -54,5 +52,10 @@ async function * gen() {
 }
 
 gen().next()
-  .then(_ => { throw new Test262Error("Expected async function to reject, but resolved."); }, ({ constructor }) => assert.sameValue(constructor, Test262Error))
+  .then(_ => {
+    throw new Test262Error("Expected async function to reject, but resolved.");
+  }, ({ constructor }) => {
+    assert.sameValue(constructor, Test262Error);
+    
+  })
   .then($DONE, $DONE);

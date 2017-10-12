@@ -3,6 +3,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.compareexchange
 description: >
   Atomics.compareExchange.name is "compareExchange".
 includes: [propertyHelper.js]

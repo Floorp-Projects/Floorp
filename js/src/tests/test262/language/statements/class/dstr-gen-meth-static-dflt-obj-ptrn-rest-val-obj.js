@@ -5,7 +5,7 @@
 description: Rest object contains just unextracted data (static class expression generator method (default parameter))
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
 es6id: 14.5.15
-features: [object-rest, destructuring-binding, default-parameters]
+features: [object-rest, generators, destructuring-binding, default-parameters]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -64,19 +64,22 @@ info: |
 var callCount = 0;
 class C {
   static *method({a, b, ...rest} = {x: 1, y: 2, a: 5, b: 3}) {
-    assert.sameValue(rest.x, 1);
-    assert.sameValue(rest.y, 2);
     assert.sameValue(rest.a, undefined);
     assert.sameValue(rest.b, undefined);
 
-    verifyEnumerable(rest, "x");
-    verifyWritable(rest, "x");
-    verifyConfigurable(rest, "x");
+    verifyProperty(rest, "x", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 1
+    });
 
-    verifyEnumerable(rest, "y");
-    verifyWritable(rest, "y");
-    verifyConfigurable(rest, "y");
-
+    verifyProperty(rest, "y", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 2
+    });
     callCount = callCount + 1;
   }
 };

@@ -1,6 +1,10 @@
 // file: testTypedArray.js
 // Copyright (C) 2015 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    Collection of functions used to assert the correctness of TypedArray objects.
+---*/
 
 /**
  * Array containing every typed array constructor.
@@ -78,6 +82,11 @@ function testTypedArrayConversions(byteConversionValues, fn) {
 // file: testAtomics.js
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
+/*---
+description: |
+    Collection of functions used to assert the correctness of SharedArrayBuffer objects.
+---*/
+
 
 /**
  * Calls the provided function for a each bad index that should throw a

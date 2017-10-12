@@ -40,14 +40,16 @@ var callCount = 0;
 
 class Test262ParentClass {
   constructor(obj) {
-    assert.sameValue(Object.getOwnPropertyDescriptor(obj, "a").value, 42);
     assert.sameValue(obj.c, 4);
     assert.sameValue(obj.d, 5);
     assert.sameValue(Object.keys(obj).length, 3);
 
-    verifyEnumerable(obj, "a");
-    verifyWritable(obj, "a");
-    verifyConfigurable(obj, "a");
+    verifyProperty(obj, "a", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 42
+    });
     callCount += 1;
   }
 }

@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-named-groups is not supported
 // Copyright 2017 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -21,6 +22,8 @@ for (let flags of ["", "u", "g", "gu"]) {
   let re = new RegExp(source, flags);
   assert.throws(SyntaxError, () => "abcd".replace(re, "$<snd"),
                 "unclosed named group in replacement should throw a SyntaxError");
+  assert.throws(SyntaxError, () => "abcd".replace(re, "$<>"),
+                "empty named group in replacement should throw a SyntaxError");
 }
 
 reportCompare(0, 0);
