@@ -29,6 +29,13 @@ public:
   {
   }
 
+  void RetrieveDataFrom(CoalescedInputData& aSource)
+  {
+    mCoalescedInputEvent = Move(aSource.mCoalescedInputEvent);
+    mGuid = aSource.mGuid;
+    mInputBlockId = aSource.mInputBlockId;
+  }
+
   bool IsEmpty()
   {
     return !mCoalescedInputEvent;

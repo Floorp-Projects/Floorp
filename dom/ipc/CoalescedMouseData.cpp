@@ -55,8 +55,8 @@ void
 CoalescedMouseMoveFlusher::WillRefresh(mozilla::TimeStamp aTime)
 {
   MOZ_ASSERT(mRefreshDriver);
-  mTabChild->MaybeDispatchCoalescedMouseMoveEvents();
-  RemoveObserver();
+  mTabChild->FlushAllCoalescedMouseData();
+  mTabChild->ProcessPendingCoalescedMouseDataAndDispatchEvents();
 }
 
 void
