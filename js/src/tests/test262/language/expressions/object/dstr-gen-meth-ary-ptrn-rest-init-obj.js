@@ -6,7 +6,7 @@
 description: Reset element (nested object pattern) does not support initializer (generator method)
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 es6id: 14.4.13
-features: [destructuring-binding]
+features: [generators, destructuring-binding]
 flags: [generated]
 negative:
   phase: early
@@ -53,6 +53,7 @@ info: |
         [ BindingElementList[?Yield] ]
         [ BindingElementList[?Yield] , Elisionopt BindingRestElement[?Yield]opt ]
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 var callCount = 0;
 var obj = {

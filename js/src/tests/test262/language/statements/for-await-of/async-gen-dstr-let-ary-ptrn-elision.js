@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elision.case
-// - src/dstr-binding/default/for-await-of-async-gen-let.template
+// - src/dstr-binding-for-await/ary-ptrn-elision.case
+// - src/dstr-binding-for-await/default/for-await-of-async-gen-let.template
 /*---
 description: Elision advances iterator (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
-features: [generator, destructuring-binding, async-iteration]
+features: [generators, destructuring-binding, async-iteration]
 flags: [generated, async]
 info: |
     IterationStatement :

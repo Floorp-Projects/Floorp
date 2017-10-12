@@ -11,8 +11,10 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(String.prototype, 'fontsize');
-verifyWritable(String.prototype, 'fontsize');
-verifyConfigurable(String.prototype, 'fontsize');
+verifyProperty(String.prototype, "fontsize", {
+  enumerable: false,
+  writable: true,
+  configurable: true
+});
 
 reportCompare(0, 0);

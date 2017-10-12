@@ -1,4 +1,3 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/function-forms/dflt-params-ref-later.case
 // - src/function-forms/error/cls-decl-async-gen-meth-static.template

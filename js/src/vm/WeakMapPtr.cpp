@@ -99,6 +99,24 @@ JS::WeakMapPtr<K, V>::put(JSContext* cx, const K& key, const V& value)
     return details::Utils<K, V>::cast(ptr)->put(key, value);
 }
 
+template <typename K, typename V>
+V
+JS::WeakMapPtr<K, V>::removeValue(const K& key)
+{
+    typedef typename details::Utils<K, V>::Type Map;
+    typedef typename Map::Ptr Ptr;
+
+    MOZ_ASSERT(initialized());
+
+    Map* map = details::Utils<K, V>::cast(ptr);
+    if (Ptr result = map->lookup(key)) {
+        V value = result->value();
+        map->remove(result);
+        return value;
+    }
+    return details::DataType<V>::NullValue();
+}
+
 //
 // Supported specializations of JS::WeakMap:
 //

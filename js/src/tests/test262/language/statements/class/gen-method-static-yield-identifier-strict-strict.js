@@ -6,6 +6,7 @@
 /*---
 description: It's an early error if the generator body has another function body with yield as an identifier in strict mode. (Static generator method as a ClassDeclaration element)
 esid: prod-GeneratorMethod
+features: [generators]
 flags: [generated, onlyStrict]
 negative:
   phase: early
@@ -21,7 +22,9 @@ info: |
 
     GeneratorMethod :
       * PropertyName ( UniqueFormalParameters ) { GeneratorBody }
+
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 var callCount = 0;
 

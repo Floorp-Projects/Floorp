@@ -4,14 +4,9 @@
 /*---
 description: >
   The desc argument should be an object or undefined
-includes: [propertyHelper.js]
+includes: [propertyHelper.js,sta.js]
+features: [Symbol]
 ---*/
-
-// monkeypatch the API
-$ERROR = function $ERROR(message) {
-  throw new Test262Error(message);
-};
-
 var sample = { foo: 42 };
 
 assert.throws(Test262Error, () => {

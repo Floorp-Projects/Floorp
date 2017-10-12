@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-init-iter-no-close.case
-// - src/dstr-binding/default/for-await-of-async-func-var.template
+// - src/dstr-binding-for-await/ary-init-iter-no-close.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-var.template
 /*---
 description: Iterator is not closed when exhausted by pattern evaluation (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -47,10 +46,10 @@ var doneCallCount = 0;
 var iter = {};
 iter[Symbol.iterator] = function() {
   return {
-    next: function() {
+    next() {
       return { value: null, done: true };
     },
-    return: function() {
+    return() {
       doneCallCount += 1;
       return {};
     }

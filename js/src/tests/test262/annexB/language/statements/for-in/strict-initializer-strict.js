@@ -11,6 +11,8 @@ negative:
   type: SyntaxError
 flags: [onlyStrict]
 ---*/
+
+throw "Test262: This statement should not be evaluated.";
 throw NotEarlyError;
 for (var a = 0 in {});
 

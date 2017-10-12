@@ -12,7 +12,7 @@ info: >
   produces the value 0).
   10. ReturnIfAbrupt(pos).
   ...
-features: [Symbol]
+features: [Symbol, String.prototype.includes]
 ---*/
 
 var position = Symbol();

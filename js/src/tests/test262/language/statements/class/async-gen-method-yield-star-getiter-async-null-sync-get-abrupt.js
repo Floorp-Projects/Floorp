@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-getiter-async-null-sync-get-abrupt.case
 // - src/async-generators/default/async-class-decl-method.template
 /*---
 description: Abrupt completion while getting @@iterator after null @@asyncIterator (Async Generator method as a ClassDeclaration element)
 esid: prod-AsyncGeneratorMethod
-features: [Symbol.asyncIterator, async-iteration]
+features: [Symbol.iterator, Symbol.asyncIterator, async-iteration]
 flags: [generated, async]
 info: |
     ClassElement :

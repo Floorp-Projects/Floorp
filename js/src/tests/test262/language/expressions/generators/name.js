@@ -21,6 +21,7 @@ info: >
     [...]
     10. Perform SetFunctionName(closure, name).
 includes: [propertyHelper.js]
+features: [generators]
 ---*/
 
 assert.sameValue(Object.hasOwnProperty.call(function*() {}, 'name'), false);

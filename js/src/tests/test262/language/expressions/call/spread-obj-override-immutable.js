@@ -32,14 +32,19 @@ var callCount = 0;
   assert.sameValue(obj.a, 3)
   assert.sameValue(obj.b, 2);
 
-  verifyEnumerable(obj, "a");
-  verifyWritable(obj, "a");
-  verifyConfigurable(obj, "a");
+  verifyProperty(obj, "a", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 3
+  });
 
-  verifyEnumerable(obj, "b");
-  verifyWritable(obj, "b");
-  verifyConfigurable(obj, "b");
-
+  verifyProperty(obj, "b", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 2
+  });
   callCount += 1;
 }({...o, a: 3}));
 

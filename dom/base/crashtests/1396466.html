@@ -1,0 +1,20 @@
+<script>
+function addNew(i,t){
+  let n=document.createElement(t);
+  n.setAttribute('id', i);
+  document.getElementById('a').appendChild(n);
+}
+document.addEventListener("DOMContentLoaded", function(){
+  addNew('b','multicol');
+  addNew('c','marquee');
+  addNew('d','spacer');
+  document.getElementById('a').appendChild(document.createElement('iframe'));
+  document.getElementById('b').focus();
+  window.frames[0].document.body.appendChild(document.getElementById('c'));
+  let o=window.frames[0].document.body.childNodes[0];
+  document.getElementById('d').appendChild(o.parentNode.removeChild(o));
+  try{window.find('x')}catch(e){}
+  window.frames[0].document.body.appendChild(document.getElementById('c'));
+});
+</script>
+<body id='a'></body>

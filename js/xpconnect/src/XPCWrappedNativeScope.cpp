@@ -712,6 +712,15 @@ XPCWrappedNativeScope::GetExpandoChain(HandleObject target)
     return mXrayExpandos.lookup(target);
 }
 
+JSObject*
+XPCWrappedNativeScope::DetachExpandoChain(HandleObject target)
+{
+    MOZ_ASSERT(ObjectScope(target) == this);
+    if (!mXrayExpandos.initialized())
+        return nullptr;
+    return mXrayExpandos.removeValue(target);
+}
+
 bool
 XPCWrappedNativeScope::SetExpandoChain(JSContext* cx, HandleObject target,
                                        HandleObject chain)

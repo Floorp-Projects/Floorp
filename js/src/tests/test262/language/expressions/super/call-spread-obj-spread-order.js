@@ -5,7 +5,7 @@
 description: Spread operation follows [[OwnPropertyKeys]] order (SuperCall)
 esid: sec-super-keyword-runtime-semantics-evaluation
 es6id: 12.3.5.1
-features: [object-spread]
+features: [Symbol, object-spread]
 flags: [generated]
 includes: [compareArray.js]
 info: |
