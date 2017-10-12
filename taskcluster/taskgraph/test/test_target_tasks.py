@@ -84,16 +84,17 @@ class TestTargetTasks(unittest.TestCase):
         finally:
             try_option_syntax.TryOptionSyntax = orig_TryOptionSyntax
 
-    def test_just_try_it(self):
-        "try_mode = None runs try optoin syntax with no options"
+    def test_empty_try(self):
+        "try_mode = None runs nothing"
         tg = self.make_task_graph()
         method = target_tasks.get_method('try_tasks')
-        with self.fake_TryOptionSyntax():
-            params = {
-                'try_mode': None,
-                'message': '',
-            }
-            self.assertEqual(method(tg, params), ['b'])
+        params = {
+            'try_mode': None,
+            'project': 'try',
+            'message': '',
+        }
+        # only runs the task with run_on_projects: try
+        self.assertEqual(method(tg, params), [])
 
     def test_try_option_syntax(self):
         "try_mode = try_option_syntax uses TryOptionSyntax"

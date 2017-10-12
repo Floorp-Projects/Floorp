@@ -3986,7 +3986,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPreservesPitch(true),
     mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
     mCurrentPlayRangeStart(-1.0),
-    mBegun(false),
     mLoadedDataFired(false),
     mAutoplaying(true),
     mAutoplayEnabled(true),
@@ -5675,16 +5674,13 @@ void HTMLMediaElement::DownloadSuspended()
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
     DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   }
-  if (mBegun) {
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
-  }
+  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
 }
 
-void HTMLMediaElement::DownloadResumed(bool aForceNetworkLoading)
+void
+HTMLMediaElement::DownloadResumed()
 {
-  if (mBegun || aForceNetworkLoading) {
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
-  }
+  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
 }
 
 void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
@@ -6081,19 +6077,12 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
   mNetworkState = aState;
   LOG(LogLevel::Debug, ("%p Network state changed to %s", this, gNetworkStateToString[aState]));
 
-  // TODO: |mBegun| reflects the download status. We should be able to remove
-  // it and check |mNetworkState| only.
-
   if (oldState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
-    // Reset |mBegun| since we're not downloading anymore.
-    mBegun = false;
     // Stop progress notification when exiting NETWORK_LOADING.
     StopProgress();
   }
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
-    // Download is begun.
-    mBegun = true;
     // Start progress notification when entering NETWORK_LOADING.
     StartProgress();
   } else if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE &&

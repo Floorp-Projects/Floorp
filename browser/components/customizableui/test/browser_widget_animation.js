@@ -27,7 +27,7 @@ function promiseOverflowAnimationEnd() {
     let overflowButton = document.getElementById("nav-bar-overflow-button");
     overflowButton.addEventListener("animationend", function cleanupOverflowAnimationOut(event) {
       if (event.animationName == "overflow-fade") {
-        overflowButton.removeEventListener("transitionend", cleanupOverflowAnimationOut);
+        overflowButton.removeEventListener("animationend", cleanupOverflowAnimationOut);
         ok(true, "The overflow button`s animationend event should have happened");
         resolve();
       }
@@ -44,10 +44,8 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(homeButton, {type: "contextmenu", button: 2 });
   await shownPromise;
 
-  let moveToPanel = contextMenu.querySelector(".customize-context-moveToPanel");
-  if (moveToPanel) {
-    moveToPanel.click();
-  }
+  contextMenu.querySelector(".customize-context-moveToPanel").click();
+  await contextMenu.hidePopup();
 
   await Promise.all([promiseWidgetAnimationOut(homeButton), promiseOverflowAnimationEnd()]);
   ok(true, "The widget and overflow animations should have both happened.");

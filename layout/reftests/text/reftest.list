@@ -111,7 +111,7 @@ HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
-fails-if(webrender) == wordbreak-1.html wordbreak-1-ref.html
+== wordbreak-1.html wordbreak-1-ref.html
 == wordbreak-2.html wordbreak-2-ref.html
 == wordbreak-3.html wordbreak-3-ref.html
 skip-if(Android) == wordbreak-4a.html wordbreak-4a-ref.html
@@ -176,7 +176,7 @@ fails-if(!cocoaWidget&&!Android) HTTP(..) != arabic-fallback-4.html arabic-fallb
 == arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
-HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
+fails-if(webrender) HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html

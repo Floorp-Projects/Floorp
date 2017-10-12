@@ -635,9 +635,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SwipeAnimationEnabled:
         aResult = 0;
         break;
-    case eIntID_ColorPickerAvailable:
-        aResult = 1;
-        break;
     case eIntID_ContextMenuOffsetVertical:
     case eIntID_ContextMenuOffsetHorizontal:
         aResult = 2;

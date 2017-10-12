@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PublicKeyCredential.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "nsCycleCollectionParticipant.h"
@@ -81,6 +82,30 @@ PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse)
 {
   mResponse = aResponse;
 }
+
+/* static */ already_AddRefed<Promise>
+PublicKeyCredential::IsPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
+{
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aGlobal.Context()));
+  if (NS_WARN_IF(!globalObject)) {
+    return nullptr;
+  }
+
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(globalObject, rv);
+  if(rv.Failed()) {
+    return nullptr;
+  }
+
+  // Complete in Bug 1406468. This shouldn't just always return true, it should
+  // follow the guidelines in
+  // https://w3c.github.io/webauthn/#isPlatformAuthenticatorAvailable
+  // such as ensuring that U2FTokenManager isn't in some way disabled.
+  promise->MaybeResolve(true);
+  return promise.forget();
+}
+
 
 } // namespace dom
 } // namespace mozilla

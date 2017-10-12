@@ -11,9 +11,10 @@ NS_IMPL_ADDREF(MozURL)
 NS_IMPL_RELEASE(MozURL)
 
 /* static */ nsresult
-MozURL::Init(const nsACString& aSpec, MozURL** aURL)
+MozURL::Init(MozURL** aURL, const nsACString& aSpec, const MozURL* aBaseURL)
 {
-  rusturl* ptr = rusturl_new(&aSpec);
+  rusturl* base = aBaseURL ? aBaseURL->mURL.get() : nullptr;
+  rusturl* ptr = rusturl_new(&aSpec, base);
   if (!ptr) {
     return NS_ERROR_FAILURE;
   }
