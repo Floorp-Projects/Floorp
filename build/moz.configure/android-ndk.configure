@@ -11,6 +11,7 @@ js_option('--with-android-ndk', nargs=1,
 js_option('--with-android-toolchain', nargs=1,
           help='location of the Android toolchain')
 
+
 @depends(target)
 def min_android_version(target):
     if target.cpu in ['aarch64', 'x86_64', 'mips64']:
@@ -18,10 +19,12 @@ def min_android_version(target):
         return '21'
     return '9'
 
+
 js_option('--with-android-version',
           nargs=1,
           help='android platform version',
           default=min_android_version)
+
 
 @depends('--with-android-version', min_android_version, '--help')
 @imports(_from='__builtin__', _import='ValueError')
@@ -41,7 +44,9 @@ def android_version(value, min_version, _):
 
     return version
 
+
 add_old_configure_assignment('android_version', android_version)
+
 
 @depends('--with-android-ndk', build_project, '--help')
 def ndk(value, build_project, help):
@@ -53,8 +58,10 @@ def ndk(value, build_project, help):
     if value:
         return value[0]
 
+
 set_config('ANDROID_NDK', ndk)
 add_old_configure_assignment('android_ndk', ndk)
+
 
 @depends(ndk)
 @checking('for android ndk version')
@@ -73,6 +80,7 @@ def ndk_version(ndk):
             die('Unexpected Pkg.Revision line in source.properties')
     die('Cannot determine NDK version from source.properties')
 
+
 @depends(ndk_version)
 def ndk_major_version(ndk_version):
     if not ndk_version:
@@ -83,7 +91,9 @@ def ndk_major_version(ndk_version):
         return major
     die('Unexpected NDK version string: ' + ndk_version)
 
-set_config('ANDROID_NDK_MAJOR_VERSION', ndk_major_version);
+
+set_config('ANDROID_NDK_MAJOR_VERSION', ndk_major_version)
+
 
 @depends(ndk_version)
 def ndk_minor_version(ndk_version):
@@ -95,7 +105,9 @@ def ndk_minor_version(ndk_version):
         return minor
     die('Unexpected NDK version string: ' + ndk_version)
 
-set_config('ANDROID_NDK_MINOR_VERSION', ndk_minor_version);
+
+set_config('ANDROID_NDK_MINOR_VERSION', ndk_minor_version)
+
 
 @depends(target, android_version, ndk, '--help')
 @checking('for android platform directory')
@@ -131,7 +143,9 @@ def android_platform(target, android_version, ndk, _):
 
     return platform_dir
 
+
 add_old_configure_assignment('android_platform', android_platform)
+
 
 @depends(android_platform)
 def extra_toolchain_flags(platform_dir):
@@ -139,6 +153,7 @@ def extra_toolchain_flags(platform_dir):
         return []
     return ['-idirafter',
             os.path.join(platform_dir, 'usr', 'include')]
+
 
 @depends(target, host, ndk, '--with-android-toolchain', '--help')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
@@ -175,7 +190,9 @@ def android_toolchain(target, host, ndk, toolchain, _):
         die('You have to specify --with-android-toolchain='
             '/path/to/ndk/toolchain.')
 
+
 set_config('ANDROID_TOOLCHAIN', android_toolchain)
+
 
 @depends(target)
 def android_toolchain_prefix_base(target):
@@ -185,10 +202,12 @@ def android_toolchain_prefix_base(target):
         return 'i686-linux-android'
     return target.toolchain
 
+
 @depends(android_toolchain_prefix_base, android_toolchain)
 def android_toolchain_prefix(prefix_base, toolchain):
     if toolchain:
         return '%s/bin/%s-' % (toolchain, prefix_base)
+
 
 imply_option('--with-toolchain-prefix', android_toolchain_prefix,
              reason='--with-android-ndk')
@@ -196,6 +215,7 @@ imply_option('--with-toolchain-prefix', android_toolchain_prefix,
 option(env='STLPORT_CPPFLAGS',
        nargs=1,
        help='Options compiler should pass for standard C++ library')
+
 
 @depends('STLPORT_CPPFLAGS', ndk, '--help')
 @imports(_from='os.path', _import='isdir')
@@ -231,7 +251,9 @@ def stlport_cppflags(value, ndk, _):
                                             'support', 'include'),
                                cxxabi_include)
 
+
 add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
+
 
 @depends(stlport_cppflags, android_platform, android_toolchain,
          android_toolchain_prefix_base, '--help')
@@ -240,7 +262,8 @@ def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
     if not stlport_cppflags:
         return
 
-    gcc_include = os.path.join(toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
+    gcc_include = os.path.join(
+        toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
     cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
     return cflags_format % (stlport_cppflags,

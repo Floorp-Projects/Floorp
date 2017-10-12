@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
 #include "nsIFile.h"
@@ -50,13 +51,6 @@ public:
   XREAppData& operator=(const XREAppData& aOther);
   XREAppData& operator=(XREAppData&& aOther) = default;
 
-  struct NSFreePolicy
-  {
-    void operator()(const void* ptr) {
-      NS_Free(const_cast<void*>(ptr));
-    }
-  };
-
   // Lots of code reads these fields directly like a struct, so rather
   // than using UniquePtr directly, use an auto-converting wrapper.
   class CharPtr
@@ -90,7 +84,7 @@ public:
     }
 
   private:
-    UniquePtr<const char, NSFreePolicy> mValue;
+    UniqueFreePtr<const char> mValue;
   };
 
   /**

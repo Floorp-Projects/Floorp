@@ -209,7 +209,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                        "-DLLVM_ENABLE_THREADS=OFF",
                        "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % libcxx_include_dir,
                        "-DCMAKE_OSX_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
-                       "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")),
+                       "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")), # noqa
                        "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER",
                        "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY",
                        "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY",
@@ -258,8 +258,9 @@ def get_tool(config, key):
 #
 # clang/
 #   bin/
-#     clang-tidy
 #     clang-apply-replacements
+#     clang-format
+#     clang-tidy
 #   include/
 #     * (nothing will be deleted here)
 #   lib/
@@ -283,7 +284,7 @@ def prune_final_dir_for_clang_tidy(final_dir):
     # In bin/, only keep clang-tidy and clang-apply-replacements. The last one
     # is used to auto-fix some of the issues detected by clang-tidy.
     re_clang_tidy = re.compile(
-        r"^clang-(tidy|apply-replacements)(\.exe)?$", re.I)
+        r"^clang-(apply-replacements|format|tidy)(\.exe)?$", re.I)
     for f in glob.glob("%s/bin/*" % final_dir):
         if re_clang_tidy.search(os.path.basename(f)) is None:
             delete(f)
@@ -390,7 +391,8 @@ if __name__ == "__main__":
     if "build_type" in config:
         build_type = config["build_type"]
         if build_type not in ("Release", "Debug", "RelWithDebInfo", "MinSizeRel"):
-            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or MinSizeRel builds")
+            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or "
+                             "MinSizeRel builds")
     build_libcxx = False
     if "build_libcxx" in config:
         build_libcxx = config["build_libcxx"]
@@ -502,7 +504,8 @@ if __name__ == "__main__":
         extra_ldflags = []
 
         if 'LD_LIBRARY_PATH' in os.environ:
-            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH'])
+            os.environ['LD_LIBRARY_PATH'] = ('%s/lib64/:%s' %
+                                             (gcc_dir, os.environ['LD_LIBRARY_PATH']))
         else:
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
     elif is_windows():

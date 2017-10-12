@@ -36,7 +36,7 @@ public:
 
   inline void Log(const char* aSubjectTypeName,
                   const void* aSubjectPointer,
-                  DDLogClass aClass,
+                  DDLogCategory aCategory,
                   const char* aLabel,
                   DDLogValue&& aValue)
   {
@@ -45,7 +45,7 @@ public:
             aMessage.mIndex = i;
             aMessage.mTimeStamp = DDNow();
             aMessage.mObject.Set(aSubjectTypeName, aSubjectPointer);
-            aMessage.mClass = aClass;
+            aMessage.mCategory = aCategory;
             aMessage.mLabel = aLabel;
             aMessage.mValue = Move(aValue);
           })) {

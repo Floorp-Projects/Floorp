@@ -7,7 +7,6 @@
 
 import argparse
 import errno
-import itertools
 import os
 import re
 import subprocess
@@ -112,11 +111,10 @@ def maybe_clear_cache(data):
         is_set = cache.get('ac_cv_env_%s_set' % precious) == 'set'
         value = cache.get('ac_cv_env_%s_value' % precious) if is_set else None
         if value != env.get(precious):
-            print 'Removing %s because of %s value change from:' \
-                % (data['cache-file'], precious)
-            print '  %s' % (value if value is not None else 'undefined')
-            print 'to:'
-            print '  %s' % env.get(precious, 'undefined')
+            print('Removing %s because of %s value change from:' % (data['cache-file'], precious))
+            print('  %s' % (value if value is not None else 'undefined'))
+            print('to:')
+            print('  %s' % env.get(precious, 'undefined'))
             os.remove(data['cache-file'])
             return True
     return False
@@ -139,7 +137,6 @@ def get_config_files(data):
     if not os.path.exists(config_status):
         return [], []
 
-    configure = mozpath.join(data['srcdir'], 'configure')
     config_files = []
     command_files = []
 
@@ -222,7 +219,7 @@ def prepare(srcdir, objdir, shell, args):
 
     if args.cache_file:
         data['cache-file'] = mozpath.normpath(mozpath.join(os.getcwd(),
-            args.cache_file))
+                                                           args.cache_file))
     else:
         data['cache-file'] = mozpath.join(objdir, 'config.cache')
 
@@ -252,7 +249,7 @@ def execute_and_prefix(*args, **kwargs):
         line = proc.stdout.readline()
         if not line:
             break
-        print prefix_lines(line.rstrip(), prefix)
+        print(prefix_lines(line.rstrip(), prefix))
         sys.stdout.flush()
     return proc.wait()
 
@@ -330,8 +327,8 @@ def run(objdir):
         # We're going to run it ourselves.
         command += ['--no-create']
 
-        print prefix_lines('configuring', relobjdir)
-        print prefix_lines('running %s' % ' '.join(command[:-1]), relobjdir)
+        print(prefix_lines('configuring', relobjdir))
+        print(prefix_lines('running %s' % ' '.join(command[:-1]), relobjdir))
         sys.stdout.flush()
         returncode = execute_and_prefix(command, cwd=objdir, env=data['env'],
                                         prefix=relobjdir)
@@ -368,7 +365,7 @@ def run(objdir):
 
     if not skip_config_status:
         if skip_configure:
-            print prefix_lines('running config.status', relobjdir)
+            print(prefix_lines('running config.status', relobjdir))
             sys.stdout.flush()
         ret = execute_and_prefix([data['shell'], '-c', './config.status'],
                                  cwd=objdir, env=data['env'], prefix=relobjdir)
@@ -382,11 +379,11 @@ def run(objdir):
 def subconfigure(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--list', type=str,
-        help='File containing a list of subconfigures to run')
+                        help='File containing a list of subconfigures to run')
     parser.add_argument('--skip', type=str,
-        help='File containing a list of Subconfigures to skip')
+                        help='File containing a list of Subconfigures to skip')
     parser.add_argument('subconfigures', type=str, nargs='*',
-        help='Subconfigures to run if no list file is given')
+                        help='Subconfigures to run if no list file is given')
     args, others = parser.parse_known_args(args)
     subconfigures = args.subconfigures
     if args.list:

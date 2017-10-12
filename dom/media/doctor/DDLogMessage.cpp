@@ -19,7 +19,7 @@ DDLogMessage::Print() const
                    ToSeconds(mTimeStamp),
                    mObject.TypeName(),
                    mObject.Pointer(),
-                   ToShortString(mClass),
+                   ToShortString(mCategory),
                    mLabel);
   AppendToString(mValue, str);
   return str;
@@ -32,7 +32,7 @@ DDLogMessage::Print(const DDLifetimes& aLifetimes) const
   const DDLifetime* lifetime = aLifetimes.FindLifetime(mObject, mIndex);
   str.AppendPrintf("%" PRImi " | %f | ", mIndex.Value(), ToSeconds(mTimeStamp));
   lifetime->AppendPrintf(str);
-  str.AppendPrintf(" | %s | %s | ", ToShortString(mClass), mLabel);
+  str.AppendPrintf(" | %s | %s | ", ToShortString(mCategory), mLabel);
   if (!mValue.is<DDLogObject>()) {
     AppendToString(mValue, str);
   } else {

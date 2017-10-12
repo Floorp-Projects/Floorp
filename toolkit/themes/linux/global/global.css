@@ -25,8 +25,10 @@ progressmeter[mode="undetermined"] {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
 }
 
-toolbar[type="menubar"]:not([autohide="true"]):not(:-moz-lwtheme):-moz-system-metric(menubar-drag) {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+@media (-moz-menubar-drag) {
+  toolbar[type="menubar"]:not([autohide="true"]):not(:-moz-lwtheme) {
+    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+  }
 }
 
 /* ::::: Variables ::::: */
@@ -290,6 +292,7 @@ popupnotificationcontent {
   background-image: url("chrome://global/skin/icons/autoscroll.svg");
   background-size: contain;
   background-color: transparent;
+  background-repeat: no-repeat;
   -moz-appearance: none;
 }
 

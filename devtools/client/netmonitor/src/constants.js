@@ -93,6 +93,9 @@ const EVENTS = {
 
   // Fired once the connection is established
   CONNECTED: "connected",
+
+  // When request payload (HTTP details data) are fetched from the backend.
+  PAYLOAD_READY: "NetMonitor:PayloadReady",
 };
 
 const UPDATE_PROPS = [

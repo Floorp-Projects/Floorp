@@ -238,9 +238,11 @@ label[disabled="true"] {
   color: GrayText;
 }
 
-label[disabled="true"]:-moz-system-metric(windows-classic) {
-  color: ThreeDShadow;
-  text-shadow: 1px 1px ThreeDHighlight;
+@media (-moz-windows-classic) {
+  label[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
 }
 
 .tooltip-label {
@@ -301,6 +303,7 @@ popupnotificationcontent {
   background-image: url("chrome://global/skin/icons/autoscroll.svg");
   background-size: contain;
   background-color: transparent;
+  background-repeat: no-repeat;
   -moz-appearance: none;
 }
 
