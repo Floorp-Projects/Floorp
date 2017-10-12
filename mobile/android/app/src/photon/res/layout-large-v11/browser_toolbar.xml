@@ -69,7 +69,8 @@
         android:id="@+id/tabs"
         style="@style/UrlBar.Tabs"
         android:layout_alignWithParentIfMissing="true"
-        android:background="@drawable/url_bar_action_button"/>
+        android:background="@drawable/url_bar_action_button"
+        gecko:showLWTBackground="true"/>
 
     <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter
@@ -96,7 +97,8 @@
         android:background="@drawable/url_bar_action_button"
         android:contentDescription="@string/menu"
         android:scaleType="center"
-        android:src="@drawable/ic_overflow"/>
+        android:src="@drawable/ic_overflow"
+        gecko:showLWTBackground="true"/>
 
     <!-- We draw after the menu items so when they are hidden, the cancel button,
          which is thus drawn on top, may be pressed. -->
