@@ -248,13 +248,13 @@ add_test(function test_Proxy_fromJSON() {
   deepEqual(p, session.Proxy.fromJSON(null));
 
   for (let typ of [true, 42, "foo", []]) {
-    Assert.throws(() => session.Proxy.fromJSON(typ), /InvalidArgumentError/);
+    Assert.throws(() => session.Proxy.fromJSON(typ), InvalidArgumentError);
   }
 
   // must contain a valid proxyType
-  Assert.throws(() => session.Proxy.fromJSON({}), /InvalidArgumentError/);
+  Assert.throws(() => session.Proxy.fromJSON({}), InvalidArgumentError);
   Assert.throws(() => session.Proxy.fromJSON({proxyType: "foo"}),
-      /InvalidArgumentError/);
+      InvalidArgumentError);
 
   // autoconfig url
   for (let url of [true, 42, [], {}]) {
@@ -282,7 +282,7 @@ add_test(function test_Proxy_fromJSON() {
         "2001:db8::1"]) {
       manual[proxy] = host;
       Assert.throws(() => session.Proxy.fromJSON(manual),
-          /InvalidArgumentError/);
+          InvalidArgumentError);
     }
 
     p = new session.Proxy();
@@ -334,14 +334,14 @@ add_test(function test_Proxy_fromJSON() {
   // missing required socks version
   Assert.throws(() => session.Proxy.fromJSON(
       {proxyType: "manual", socksProxy: "foo:1234"}),
-      /InvalidArgumentError/);
+      InvalidArgumentError);
 
   // noProxy: invalid settings
   for (let noProxy of [true, 42, {}, null, "foo",
       [true], [42], [{}], [null]]) {
     Assert.throws(() => session.Proxy.fromJSON(
         {proxyType: "manual", noProxy: noProxy}),
-        /InvalidArgumentError/);
+        InvalidArgumentError);
   }
 
   // noProxy: valid settings
@@ -421,7 +421,7 @@ add_test(function test_Capabilities_fromJSON() {
     ok(fromJSON(typ).has("browserName"));
   }
   for (let typ of [true, 42, "foo", []]) {
-    Assert.throws(() => fromJSON(typ), /InvalidArgumentError/);
+    Assert.throws(() => fromJSON(typ), InvalidArgumentError);
   }
 
   // matching
