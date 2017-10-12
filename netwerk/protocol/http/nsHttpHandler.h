@@ -11,6 +11,7 @@
 #include "nsHttpConnectionMgr.h"
 #include "ASpdySession.h"
 
+#include "mozilla/StaticPtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
@@ -65,9 +66,8 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSISPECULATIVECONNECT
 
-    nsHttpHandler();
+    static already_AddRefed<nsHttpHandler> GetInstance();
 
-    MOZ_MUST_USE nsresult Init();
     MOZ_MUST_USE nsresult AddStandardRequestHeaders(nsHttpRequestHead *,
                                                     bool isSecure);
     MOZ_MUST_USE nsresult AddConnectionHeader(nsHttpRequestHead *,
@@ -403,7 +403,11 @@ public:
     }
 
 private:
+    nsHttpHandler();
+
     virtual ~nsHttpHandler();
+
+    MOZ_MUST_USE nsresult Init();
 
     //
     // Useragent/prefs helper methods
@@ -684,7 +688,7 @@ public:
     MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
 };
 
-extern nsHttpHandler *gHttpHandler;
+extern StaticRefPtr<nsHttpHandler> gHttpHandler;
 
 //-----------------------------------------------------------------------------
 // nsHttpsHandler - thin wrapper to distinguish the HTTP handler from the
