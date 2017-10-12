@@ -1,5 +1,0 @@
-[flake8]
-# F821: undefined name
-#       This is the moz.configure style
-ignore = F821
-

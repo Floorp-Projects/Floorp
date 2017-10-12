@@ -11,8 +11,6 @@
 # lot of them, let's stack them all here. When adding a new one, put it in the
 # _declare_exceptions template, and add it to the return statement. Then
 # destructure in the assignment below the function declaration.
-
-
 @template
 @imports(_from='__builtin__', _import='Exception')
 def _declare_exceptions():
@@ -22,7 +20,6 @@ def _declare_exceptions():
         Debugging messages emitted from the decorated function will also be
         printed out.'''
     return (FatalCheckError,)
-
 
 (FatalCheckError,) = _declare_exceptions()
 
@@ -45,8 +42,6 @@ del _declare_exceptions
 #       ...
 # An optional callback can be given, that will be used to format the returned
 # value when displaying it.
-
-
 @template
 def checking(what, callback=None):
     def decorator(func):
