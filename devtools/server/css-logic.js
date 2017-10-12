@@ -34,6 +34,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {
   getBindingElementAndPseudo,
+  getCSSStyleRules,
   l10n,
   isContentStylesheet,
   shortSource,
@@ -544,11 +545,7 @@ CssLogic.prototype = {
                    STATUS.MATCHED : STATUS.PARENT_MATCH;
 
       try {
-        // Handle finding rules on pseudo by reading style rules
-        // on the parent node with proper pseudo arg to getCSSStyleRules.
-        let {bindingElement, pseudo} =
-            CssLogic.getBindingElementAndPseudo(element);
-        domRules = domUtils.getCSSStyleRules(bindingElement, pseudo);
+        domRules = getCSSStyleRules(element);
       } catch (ex) {
         console.log("CL__buildMatchedRules error: " + ex);
         continue;
