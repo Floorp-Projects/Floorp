@@ -508,7 +508,7 @@ ShadowRoot::ContentAppended(nsIDocument* aDocument,
     // Add insertion point to destination insertion points of fallback content.
     if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
       HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
-      if (content->MatchedNodes().IsEmpty()) {
+      if (content && content->MatchedNodes().IsEmpty()) {
         currentChild->DestInsertionPoints().AppendElement(aContainer);
       }
     }
