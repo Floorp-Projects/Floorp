@@ -62,6 +62,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mozilla.focus.activity.TestHelper.browserURLbar;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 @RunWith(AndroidJUnit4.class)
@@ -382,13 +383,7 @@ public class ScreenGrabTest {
 
     private void takeScreenshotOfSettings(UiDevice device) throws UiObjectNotFoundException {
         /* Take Settings View */
-        onView(withId(R.id.menu))
-                .check(matches(isDisplayed()))
-                .perform(click());
-
-        onView(withId(R.id.settings))
-                .check(matches(isDisplayed()))
-                .perform(click());
+        openSettings();
 
         assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         Screengrab.screenshot("Settings_View_Top");

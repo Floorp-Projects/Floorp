@@ -37,6 +37,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.assertToolbarMatchesText;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.openMenu;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test visits each page and checks whether some essential elements are being displayed
@@ -124,12 +126,6 @@ public class PageVisitTest {
         assertToolbarMatchesText(R.string.your_rights);
     }
 
-    private void openMenu() {
-        onView(withId(R.id.menu))
-                .check(matches(isDisplayed()))
-                .perform(click());
-    }
-
     private void clickMenuItem(@IdRes int id) {
         onView(withId(id))
                 .check(matches(isDisplayed()))
@@ -140,11 +136,5 @@ public class PageVisitTest {
         onView(withId(R.id.display_url))
                 .check(matches(isDisplayed()))
                 .check(matches(withText(containsString(substring))));
-    }
-
-    private void assertToolbarMatchesText(@StringRes int titleResource) {
-        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
-                .check(matches(isDisplayed()))
-                .check(matches(withText(titleResource)));
     }
 }

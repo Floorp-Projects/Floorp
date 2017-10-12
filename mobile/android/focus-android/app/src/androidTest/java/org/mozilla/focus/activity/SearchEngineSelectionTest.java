@@ -24,6 +24,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test checks the search engine can be changed
@@ -79,9 +80,8 @@ public class SearchEngineSelectionTest {
 
         /* Go to Settings and select the Search Engine */
         assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
-        TestHelper.menuButton.perform(click());
-        TestHelper.settingsMenuItem.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
+
+        openSettings();
 
         /* Set the search engine to Google */
         SearchEngineSelection.click();
