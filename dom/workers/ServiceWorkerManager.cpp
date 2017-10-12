@@ -873,7 +873,8 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   int16_t decision = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
                                  aScriptURI,
-                                 documentPrincipal,
+                                 documentPrincipal, // loading principal
+                                 documentPrincipal, // triggering principal
                                  doc,
                                  EmptyCString(),
                                  nullptr,
