@@ -2634,9 +2634,6 @@ GeckoDriver.prototype.addCookie = function(cmd, resp) {
   }
 
   let newCookie = cookie.fromJSON(cmd.parameters.cookie);
-  if (typeof newCookie.domain == "undefined") {
-    newCookie.domain = hostname;
-  }
 
   cookie.add(newCookie, {restrictToHost: hostname});
 };
