@@ -36,7 +36,7 @@
   padding-bottom: var(--base-spacing);
 }
 
-.landing-page .panel header input[type="search"] {
+.landing-page .panel header input[type=search] {
   flex: 1;
   background-color: var(--theme-tab-toolbar-background);
   color: var(--theme-comment);
@@ -115,9 +115,11 @@
   color: var(--theme-comment);
   font-size: calc(var(--ui-element-font-size) / 1);
   margin: var(--base-spacing) auto;
-  max-width: 350px;
-
   line-height: 1.4em;
+}
+
+.landing-page .panel .under-construction .under-construction-message {
+  max-width: 350px;
 }
 
 .landing-page .panel .under-construction .github-link {
@@ -253,30 +255,24 @@
   padding-left: var(--base-spacing);
 }
 
-.landing-page
-  .sidebar
-  .title-wrapper
-  .launchpad-container
-  .launchpad-container-icon {
+.landing-page .sidebar .title-wrapper  .launchpad-container .launchpad-container-icon {
   display: inline-block;
 }
 
-.landing-page .sidebar .title-wrapper .launchpad-container .rocket {
-  width: 18px;
-  height: 18px;
-  background: url("/pad-assets/rocket.svg") no-repeat top left;
-  background-size: contain;
-  display: inline-block;
+.landing-page .sidebar .title-wrapper  .launchpad-container svg {
+  width: 24px;
+  height: 24px;
 }
 
-.landing-page
-  .sidebar
-  .title-wrapper
-  .launchpad-container
-  .launchpad-container-title {
+.landing-page .sidebar .title-wrapper  .launchpad-container svg path {
+  width: 24px;
+  height: 24px;
+  fill: var(--theme-body-color);
+}
+
+.landing-page .sidebar .title-wrapper .launchpad-container .launchpad-container-title {
   display: inline;
   padding-left: 3px;
-  font-weight: normal;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -504,12 +500,6 @@ body {
   display: flex;
   justify-content: space-between;
   border: 1px solid transparent;
-}
-
-@media (max-width: 640px) {
-  .shortcuts-section {
-    width: 100%;
-  }
 }
 :root {
   --arrow-width: 10px;
@@ -952,18 +942,11 @@ menuseparator {
   margin-inline-end: 5px;
 }
 
-img.arrow {
-  mask: url("chrome://devtools/skin/images/debugger/arrow.svg");
+.arrow svg {
+  fill: var(--theme-splitter-color);
   margin-top: 3px;
-  width: 9px;
-  height: 9px;
-  padding-top: 9px;
-  background: var(--theme-splitter-color);
-  mask-size: 100%;
-  display: inline-block;
-  margin-bottom: 1px;
-  transform: rotate(-90deg);
-  transition: transform 0.18s ease;
+  transition: transform 0.25s ease;
+  width: 10px;
 }
 
 html:not([dir="rtl"]) .arrow svg {
@@ -1458,20 +1441,12 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   padding: 0px 0px 0px 3px;
 }
 
-.sources-list .tree img.arrow {
-  margin-right: 5px;
+.sources-list .tree .arrow svg {
+  margin-top: 0px;
 }
 
-.sources-list .tree .focused img.arrow {
-  background-color: white;
-}
-
-.sources-list .tree img.arrow.expanded {
-  transform: rotate(0deg);
-}
-
-.theme-dark .sources-list .tree .node:not(.focused) img.arrow {
-  background: var(--theme-content-color3);
+.theme-dark .sources-list .tree .node:not(.focused) svg {
+  fill: var(--theme-content-color3);
 }
 
 .theme-dark .source-list .tree .node.focused {
@@ -1493,12 +1468,12 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .no-sources-message {
-  width: 100%;
-  font-style: italic;
-  text-align: center;
-  padding: 0.5em;
   font-size: 12px;
-  user-select: none;
+  color: var(--theme-comment-alt);
+  font-weight: lighter;
+  padding-top: 5px;
+  flex-grow: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
