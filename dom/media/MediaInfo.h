@@ -289,11 +289,18 @@ public:
         !mImage.height) {
       return ImageRect();
     }
+
     gfx::IntRect imageRect = ImageRect();
+    int64_t w = (aWidth * imageRect.Width()) / mImage.width;
+    int64_t h = (aHeight * imageRect.Height()) / mImage.height;
+    if (!w || !h) {
+      return imageRect;
+    }
+
     imageRect.x = (imageRect.x * aWidth) / mImage.width;
     imageRect.y = (imageRect.y * aHeight) / mImage.height;
-    imageRect.SetWidth((aWidth * imageRect.Width()) / mImage.width);
-    imageRect.SetHeight((aHeight * imageRect.Height()) / mImage.height);
+    imageRect.SetWidth(w);
+    imageRect.SetHeight(h);
     return imageRect;
   }
 
