@@ -1462,17 +1462,27 @@ EditorBase::InsertNode(nsIDOMNode* aNode,
                        nsIDOMNode* aParent,
                        int32_t aPosition)
 {
+  return InsertNode(aNode, aParent, aPosition, nullptr);
+}
+
+nsresult
+EditorBase::InsertNode(nsIDOMNode* aNode,
+                       nsIDOMNode* aParent,
+                       int32_t aPosition,
+                       nsIContent* aChildAtPosition)
+{
   nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   NS_ENSURE_TRUE(node && parent, NS_ERROR_NULL_POINTER);
 
-  return InsertNode(*node, *parent, aPosition);
+  return InsertNode(*node, *parent, aPosition, aChildAtPosition);
 }
 
 nsresult
 EditorBase::InsertNode(nsIContent& aNode,
                        nsINode& aParent,
-                       int32_t aPosition)
+                       int32_t aPosition,
+                       nsIContent* aChildAtPosition)
 {
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
@@ -1485,7 +1495,7 @@ EditorBase::InsertNode(nsIContent& aNode,
   }
 
   RefPtr<InsertNodeTransaction> transaction =
-    CreateTxnForInsertNode(aNode, aParent, aPosition);
+    CreateTxnForInsertNode(aNode, aParent, aPosition, aChildAtPosition);
   nsresult rv = DoTransaction(transaction);
 
   mRangeUpdater.SelAdjInsertNode(&aParent, aPosition);
@@ -4388,10 +4398,12 @@ EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
 already_AddRefed<InsertNodeTransaction>
 EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
                                    nsINode& aParent,
-                                   int32_t aPosition)
+                                   int32_t aPosition,
+                                   nsIContent* aChildAtPosition)
 {
   RefPtr<InsertNodeTransaction> transaction =
-    new InsertNodeTransaction(aNode, aParent, aPosition, *this);
+    new InsertNodeTransaction(aNode, aParent, aPosition, *this,
+                              aChildAtPosition);
   return transaction.forget();
 }
 
