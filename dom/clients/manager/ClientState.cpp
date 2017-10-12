@@ -6,6 +6,8 @@
 
 #include "ClientState.h"
 
+#include "mozilla/dom/ClientIPCTypes.h"
+
 namespace mozilla {
 namespace dom {
 

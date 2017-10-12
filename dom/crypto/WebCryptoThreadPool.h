@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_WebCryptoThreadPool_h
 #define mozilla_dom_WebCryptoThreadPool_h
 
+#include "mozilla/Mutex.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
 
