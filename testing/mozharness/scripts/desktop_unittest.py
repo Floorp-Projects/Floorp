@@ -125,6 +125,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Run tests with multiple processes."}
          ],
+        [['--headless', ], {
+            "action": "store_true",
+            "dest": "headless",
+            "default": False,
+            "help": "Run tests in headless mode."}
+         ],
         [['--no-random', ], {
             "action": "store_true",
             "dest": "no_random",
@@ -414,6 +420,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     base_cmd.append('--bisect-chunk=default')
                 else:
                     self.warning("--no-random does not currently work with suites other than mochitest.")
+
+
+            if c['headless']:
+                base_cmd.append('--headless');
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')
