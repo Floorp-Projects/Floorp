@@ -2,7 +2,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-/* exported createHttpServer, promiseConsoleOutput, cleanupDir, testEnv */
+/* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -62,6 +62,20 @@ function createHttpServer(port = -1) {
 
 if (AppConstants.platform === "android") {
   Services.io.offline = true;
+}
+
+/**
+ * Clears the HTTP and content image caches.
+ */
+function clearCache() {
+  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+      .getService(Ci.nsICacheStorageService);
+  cache.clear();
+
+  let imageCache = Cc["@mozilla.org/image/tools;1"]
+      .getService(Ci.imgITools)
+      .getImgCacheForDocument(null);
+  imageCache.clearCache(false);
 }
 
 var promiseConsoleOutput = async function(task) {
