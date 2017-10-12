@@ -9,7 +9,6 @@
 rustc = check_prog('RUSTC', ['rustc'], allow_missing=True)
 cargo = check_prog('CARGO', ['cargo'], allow_missing=True)
 
-
 @depends_if(rustc)
 @checking('rustc version', lambda info: info.version)
 def rustc_info(rustc):
@@ -19,7 +18,6 @@ def rustc_info(rustc):
         version=Version(info.get('release', '0')),
         commit=info.get('commit-hash', 'unknown'),
     )
-
 
 @depends_if(cargo)
 @checking('cargo version', lambda info: info.version)
@@ -44,7 +42,6 @@ def cargo_info(cargo):
     return namespace(
         version=Version(version),
     )
-
 
 @depends(rustc_info, cargo_info)
 @imports(_from='textwrap', _import='dedent')
@@ -176,8 +173,7 @@ def rust_triple_alias(host_or_target):
                 (host_or_target.cpu, host_or_target_raw_os))
 
         if rustc_target is None:
-            die("Don't know how to translate {} for rustc".format(
-                host_or_target.alias))
+            die("Don't know how to translate {} for rustc".format(host_or_target.alias))
 
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
@@ -201,7 +197,6 @@ def rust_triple_alias(host_or_target):
                 '-o', out_path,
                 in_path,
             ]
-
             def failed():
                 die(dedent('''\
                 Cannot compile for {} with {}
@@ -222,18 +217,15 @@ def rust_triple_alias(host_or_target):
 
     return rust_target
 
-
 rust_target_triple = rust_triple_alias(target)
 rust_host_triple = rust_triple_alias(host)
 
 set_config('RUST_TARGET', rust_target_triple)
 set_config('RUST_HOST_TARGET', rust_host_triple)
 
-
 @depends(rust_target_triple)
 def rust_target_env_name(triple):
-    return triple.upper().replace('-', '_')
-
+    return triple.upper().replace('-','_')
 
 # We need this to form various Cargo environment variables, as there is no
 # uppercase function in make, and we don't want to shell out just for

@@ -10,7 +10,6 @@
 option('--with-java-bin-path', nargs=1,
        help='Location of Java binaries (java, javac, jar)')
 
-
 @depends('--with-java-bin-path')
 @imports(_from='os', _import='environ')
 def java_search_paths(path):
@@ -26,8 +25,6 @@ def java_search_paths(path):
 
 # Finds the given java tool, failing with a custom error message if we can't
 # find it.
-
-
 @template
 def check_java_tool(tool):
     check = check_prog(tool.upper(), (tool,), paths=java_search_paths,
@@ -43,14 +40,12 @@ def check_java_tool(tool):
 
     return require_tool
 
-
 check_java_tool('java')
 check_java_tool('javah')
 check_java_tool('jar')
 check_java_tool('jarsigner')
 check_java_tool('keytool')
 javac = check_java_tool('javac')
-
 
 @depends(javac)
 @checking('for javac version')
