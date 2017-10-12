@@ -122,6 +122,16 @@ public:
                              const nsIntRegion& aUpdateRegion);
 
   /**
+   * Adjusts the buffer to be centered on the destination buffer rect,
+   * and ready to draw the specified bounds. Returns whether a new buffer
+   * needs to be created.
+   */
+  bool AdjustTo(const gfx::IntRect& aDestBufferRect,
+                const gfx::IntRect& aDrawBounds,
+                bool aCanHaveRotation,
+                bool aCanDrawRotated);
+
+  /**
    * |BufferRect()| is the rect of device pixels that this
    * RotatedBuffer covers.  That is what DrawBufferWithRotation()
    * will paint when it's called.
