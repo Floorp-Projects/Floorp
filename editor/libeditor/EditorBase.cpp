@@ -3983,7 +3983,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
                           EmptyContainers aEmptyContainers,
                           nsIContent** aOutLeftNode,
                           nsIContent** aOutRightNode,
-                          nsCOMPtr<nsIDOMNode>* ioChildAtSplitPointOffset)
+                          nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset)
 {
   MOZ_ASSERT(&aSplitPointParent == &aNode ||
              EditorUtils::IsDescendantOf(&aSplitPointParent, &aNode));
@@ -4038,7 +4038,7 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
     rightNode.forget(aOutRightNode);
   }
   if (ioChildAtSplitPointOffset) {
-    *ioChildAtSplitPointOffset = do_QueryInterface(nodeToSplit);
+    *ioChildAtSplitPointOffset = nodeToSplit;
   }
 
   return offset;
@@ -4229,8 +4229,9 @@ EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
 
   nsCOMPtr<nsINode> node = selection->GetAnchorNode();
   uint32_t offset = selection->AnchorOffset();
+  nsIContent* child = selection->GetChildAtAnchorOffset();
 
-  nsCOMPtr<Element> newElement = CreateNode(&aTag, node, offset);
+  nsCOMPtr<Element> newElement = CreateNode(&aTag, node, offset, child);
 
   // We want the selection to be just after the new node
   rv = selection->Collapse(node, offset + 1);
