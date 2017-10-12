@@ -36,27 +36,35 @@ var callCount = 0;
 
 class Test262ParentClass {
   constructor(obj) {
-    assert.sameValue(obj.a, 1);
-    assert.sameValue(obj.b, 2);
-    assert.sameValue(obj.c, 3);
-    assert.sameValue(obj.d, 4);
     assert.sameValue(Object.keys(obj).length, 4);
 
-    verifyEnumerable(obj, "a");
-    verifyWritable(obj, "a");
-    verifyConfigurable(obj, "a");
+    verifyProperty(obj, "a", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 1
+    });
 
-    verifyEnumerable(obj, "b");
-    verifyWritable(obj, "b");
-    verifyConfigurable(obj, "b");
+    verifyProperty(obj, "b", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 2
+    });
 
-    verifyEnumerable(obj, "c");
-    verifyWritable(obj, "c");
-    verifyConfigurable(obj, "c");
+    verifyProperty(obj, "c", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 3
+    });
 
-    verifyEnumerable(obj, "d");
-    verifyWritable(obj, "d");
-    verifyConfigurable(obj, "d");
+    verifyProperty(obj, "d", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 4
+    });
     callCount += 1;
   }
 }

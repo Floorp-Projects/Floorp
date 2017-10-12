@@ -11,6 +11,7 @@ info: >
     [...]
     6. Perform SetFunctionName(F, name).
 includes: [propertyHelper.js]
+features: [generators]
 ---*/
 
 function* g() {}

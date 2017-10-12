@@ -5,7 +5,7 @@
 description: Spread operation where source object contains Symbol properties (CallExpression)
 esid: sec-function-calls-runtime-semantics-evaluation
 es6id: 12.3.4.1
-features: [object-spread]
+features: [Symbol, object-spread]
 flags: [generated]
 info: |
     CallExpression : MemberExpression Arguments

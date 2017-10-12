@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
+// |reftest| error:SyntaxError
 // Copyright (C) 2017 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -15,5 +15,7 @@ negative:
   type: SyntaxError
 features: [async-iteration]
 ---*/
+
+throw "Test262: This statement should not be evaluated.";
 
 for (var x of []) async function* g() {}

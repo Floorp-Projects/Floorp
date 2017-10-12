@@ -2,10 +2,12 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.wake
 description: >
   Test Atomics.wait on arrays that allow atomic operations,
   in an Agent that is allowed to wait.  There is only the one Agent.
 includes: [testAtomics.js]
+features: [SharedArrayBuffer, ArrayBuffer, DataView, Atomics, arrow-function, let, for-of]
 ---*/
 
 var sab = new SharedArrayBuffer(1024);

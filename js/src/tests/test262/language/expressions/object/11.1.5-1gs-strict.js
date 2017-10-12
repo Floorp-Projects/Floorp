@@ -15,4 +15,6 @@ negative:
 flags: [onlyStrict]
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 var obj = { set _11_1_5_1_fun(eval) {}};

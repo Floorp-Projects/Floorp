@@ -7,6 +7,7 @@ description: YieldExpression may be followed by a TemplateMiddle construct
 info: >
   The syntactic context immediately following yield requires use of the
   InputElementRegExpOrTemplateTail lexical goal.
+features: [generators]
 ---*/
 
 var complete = false;

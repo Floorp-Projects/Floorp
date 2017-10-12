@@ -13,4 +13,6 @@ esid: sec-for-in-and-for-of-statements
 es6id: 13.7.5
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 for (const [x, x] of []) {}

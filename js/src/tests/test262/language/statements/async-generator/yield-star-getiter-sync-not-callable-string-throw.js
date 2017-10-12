@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-getiter-sync-not-callable-string-throw.case
 // - src/async-generators/default/async-declaration.template
 /*---
 description: Throws a TypeError on a non-callable [Symbol.iterator] (string) (Async generator Function declaration)
 esid: prod-AsyncGeneratorDeclaration
-features: [async-iteration]
+features: [Symbol.iterator, async-iteration]
 flags: [generated, async]
 info: |
     Async Generator Function Definitions

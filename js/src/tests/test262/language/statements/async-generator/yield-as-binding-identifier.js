@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-as-binding-identifier.case
 // - src/async-generators/syntax/async-declaration.template
@@ -24,6 +24,7 @@ info: |
     StringValue of Identifier is "yield".
 
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 
 async function *gen() {

@@ -8,6 +8,7 @@ description: >
 info: >
   The syntactic context immediately following yield requires use of the
   InputElementRegExpOrTemplateTail lexical goal.
+features: [generators]
 ---*/
 
 var complete = false;

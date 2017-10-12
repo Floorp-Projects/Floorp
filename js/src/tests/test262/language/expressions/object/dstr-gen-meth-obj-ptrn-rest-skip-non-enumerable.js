@@ -5,7 +5,7 @@
 description: Rest object doesn't contain non-enumerable properties (generator method)
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
 es6id: 14.4.13
-features: [object-rest, destructuring-binding]
+features: [object-rest, generators, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -50,18 +50,21 @@ Object.defineProperty(o, "x", { value: 4, enumerable: false });
 var callCount = 0;
 var obj = {
   *method({...rest}) {
-    assert.sameValue(rest.a, 3);
-    assert.sameValue(rest.b, 4);
     assert.sameValue(rest.x, undefined);
 
-    verifyEnumerable(rest, "a");
-    verifyWritable(rest, "a");
-    verifyConfigurable(rest, "a");
+    verifyProperty(rest, "a", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 3
+    });
 
-    verifyEnumerable(rest, "b");
-    verifyWritable(rest, "b");
-    verifyConfigurable(rest, "b");
-
+    verifyProperty(rest, "b", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 4
+    });
     callCount = callCount + 1;
   }
 };

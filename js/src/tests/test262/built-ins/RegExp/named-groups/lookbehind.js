@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-named-groups,regexp-lookbehind is not supported
 // Copyright 2018 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
