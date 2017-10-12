@@ -120,7 +120,7 @@ public:
 
   // Internal GetCssRules method which do not have security check and
   // completelness check.
-  ServoCSSRuleList* GetCssRulesInternal();
+  ServoCSSRuleList* GetCssRulesInternal(bool aRequireUniqueInner = true);
 
   // Returns the stylesheet's Servo origin as an OriginFlags value.
   OriginFlags GetOrigin();
