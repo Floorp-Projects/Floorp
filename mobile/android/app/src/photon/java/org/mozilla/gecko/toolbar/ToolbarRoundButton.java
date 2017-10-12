@@ -10,13 +10,16 @@ import android.content.res.TypedArray;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
 
 class ToolbarRoundButton extends ShapedButton {
 
+    private boolean mShowLWTBackground;
     private Drawable mBackgroundDrawable;
 
     public ToolbarRoundButton(Context context) {
@@ -38,6 +41,10 @@ class ToolbarRoundButton extends ShapedButton {
         }
         a.recycle();
 
+        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ToolbarRoundButton);
+        mShowLWTBackground = ta.getBoolean(R.styleable.ToolbarRoundButton_showLWTBackground, false);
+        ta.recycle();
+
         setPrivateMode(false);
     }
 
@@ -58,7 +65,18 @@ class ToolbarRoundButton extends ShapedButton {
 
     @Override
     public void onLightweightThemeChanged() {
-        setBackground(mBackgroundDrawable);
+        final LightweightTheme lightweightTheme = getTheme();
+        if (!lightweightTheme.isEnabled() || isPrivateMode()) {
+            setBackground(mBackgroundDrawable);
+        } else {
+            final StateListDrawable stateList = new StateListDrawable();
+            final int backgroundColorRes = lightweightTheme.isLightTheme()
+                                                ? R.color.action_bar_item_bg_color_lwt_light_pressed
+                                                : R.color.action_bar_item_bg_color_lwt_dark_pressed;
+            stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(backgroundColorRes));
+            stateList.addState(EMPTY_STATE_SET, getColorDrawable(android.R.color.transparent));
+            setBackgroundDrawable(stateList);
+        }
     }
 
     @Override

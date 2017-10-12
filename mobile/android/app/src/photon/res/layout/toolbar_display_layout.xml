@@ -17,26 +17,22 @@
          Site security icon must have exact position and size as search icon in
          edit layout -->
 
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
-        android:id="@+id/site_security"
-        style="@style/UrlBar.SiteIdentity"
+    <org.mozilla.gecko.widget.themed.ThemedLinearLayout
+        android:id="@+id/url_bar_title_bg"
+        style="@style/UrlBar.ThemeBackground"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/browser_toolbar_url_height"
+        android:layout_weight="1"
         android:layout_gravity="center_vertical"
-        android:background="@drawable/url_bar_title_bg"
-        android:contentDescription="@string/site_security"
-        android:src="@drawable/security_mode_icon"
-        tools:src="@drawable/ic_lock"/>
+        android:background="@drawable/url_bar_title_bg">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1.0">
-
-        <org.mozilla.gecko.widget.themed.ThemedView
-            android:id="@+id/url_bar_title_bg"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/browser_toolbar_url_height"
+        <org.mozilla.gecko.widget.themed.ThemedImageButton
+            android:id="@+id/site_security"
+            style="@style/UrlBar.SiteIdentity"
             android:layout_gravity="center_vertical"
-            android:background="@drawable/url_bar_title_bg"/>
+            android:contentDescription="@string/site_security"
+            android:src="@drawable/security_mode_icon"
+            tools:src="@drawable/ic_lock"/>
 
         <!-- We need this on a separate layer to avoid fading out the toolbar background as well
      and we can't use a hardware layer because that causes problems with the snapshot
@@ -59,7 +55,7 @@
 
         </org.mozilla.gecko.widget.FadedHorizontalScrollView>
 
-    </FrameLayout>
+    </org.mozilla.gecko.widget.themed.ThemedLinearLayout>
 
     <org.mozilla.gecko.toolbar.PageActionLayout
         android:id="@+id/page_action_layout"
@@ -76,6 +72,7 @@
         android:contentDescription="@string/stop"
         android:src="@drawable/ic_cancel"
         android:visibility="gone"
-        tools:visibility="visible"/>
+        tools:visibility="visible"
+        gecko:showLWTBackground="true"/>
 
 </merge>

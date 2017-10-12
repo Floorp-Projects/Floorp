@@ -845,6 +845,11 @@
         <item name="android:scaleType">centerInside</item>
     </style>
 
+    <style name="UrlBar.ThemeBackground" parent="UrlBar.V15.ThemeBackground"/>
+    <style name="UrlBar.V15.ThemeBackground" parent="UrlBar.Base">
+        <item name="android:layout_marginLeft">5dp</item>
+    </style>
+
     <!-- URL bar - Site identity -->
     <style name="UrlBar.SiteIdentity" parent="UrlBar.V15.SiteIdentity"/>
     <style name="UrlBar.Base.SiteIdentity" parent="UrlBar.Button">
@@ -853,7 +858,6 @@
         <item name="android:scaleType">center</item>
     </style>
     <style name="UrlBar.V15.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
-        <item name="android:layout_marginLeft">5dp</item>
         <item name="android:paddingRight">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 

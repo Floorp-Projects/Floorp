@@ -13,40 +13,50 @@
        tools:orientation="horizontal"
        tools:parentTag="LinearLayout">
 
-    <!-- Search icon must have exact position and size as site security in
-         display layout -->
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
-        android:id="@+id/search_icon"
-        style="@style/UrlBar.SiteIdentity"
+    <org.mozilla.gecko.widget.themed.ThemedLinearLayout
+        android:id="@+id/url_bar_title_bg"
+        style="@style/UrlBar.ThemeBackground"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/browser_toolbar_url_height"
+        android:layout_weight="1"
         android:layout_gravity="center_vertical"
-        android:background="@drawable/url_bar_title_bg"
-        android:scaleType="center"
-        android:src="@drawable/ic_search_icon"
-        android:visibility="gone"
-        tools:visibility="visible"/>
+        android:background="@drawable/url_bar_title_bg">
 
-    <org.mozilla.gecko.toolbar.ToolbarEditText
-        android:id="@+id/url_edit_text"
-        style="@style/UrlBar.EditLayout.Title"
-        android:layout_width="match_parent"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1.0"
-        android:background="@drawable/url_bar_title_bg"
-        android:contentDescription="@string/url_bar_default_text"
-        android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
-        android:inputType="textUri"
-        android:selectAllOnFocus="true"/>
+        <!-- Search icon must have exact position and size as site security in
+             display layout -->
+        <org.mozilla.gecko.widget.themed.ThemedImageButton
+            android:id="@+id/search_icon"
+            style="@style/UrlBar.SiteIdentity"
+            android:layout_gravity="center_vertical"
+            android:scaleType="center"
+            android:src="@drawable/ic_search_icon"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <org.mozilla.gecko.toolbar.ToolbarEditText
+            android:id="@+id/url_edit_text"
+            style="@style/UrlBar.EditLayout.Title"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1.0"
+            android:contentDescription="@string/url_bar_default_text"
+            android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
+            android:inputType="textUri"
+            android:selectAllOnFocus="true"/>
+    </org.mozilla.gecko.widget.themed.ThemedLinearLayout>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/qrcode"
         style="@style/UrlBar.QRCode"
         android:background="@drawable/url_bar_action_button"
-        android:src="@drawable/ic_qrcode"/>
+        android:src="@drawable/ic_qrcode"
+        gecko:showLWTBackground="true"/>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/mic"
         style="@style/UrlBar.ImageButton"
         android:background="@drawable/url_bar_action_button"
-        android:src="@drawable/ic_mic"/>
+        android:src="@drawable/ic_mic"
+        gecko:showLWTBackground="true"/>
 
 </merge>
