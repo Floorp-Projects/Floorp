@@ -380,9 +380,11 @@ protected:
                            nsAtom& aBlockTag);
   nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
   nsresult SplitAsNeeded(nsAtom& aTag, OwningNonNull<nsINode>& inOutParent,
-                         int32_t& inOutOffset);
+                         int32_t& inOutOffset,
+                         nsCOMPtr<nsIContent>* inOutChildAtOffset = nullptr);
   nsresult SplitAsNeeded(nsAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
-                         int32_t& inOutOffset);
+                         int32_t& inOutOffset,
+                         nsCOMPtr<nsIContent>* inOutChildAtOffset = nullptr);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
   EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
                                 nsIContent& aNodeRight);
