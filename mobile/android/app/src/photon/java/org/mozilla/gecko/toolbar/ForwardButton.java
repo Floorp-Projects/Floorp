@@ -12,6 +12,7 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
 
 public class ForwardButton extends NavButton {
     public ForwardButton(Context context, AttributeSet attrs) {
@@ -39,11 +40,21 @@ public class ForwardButton extends NavButton {
         }
 
         final StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_private_pressed));
-        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_pressed));
-        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(android.R.color.transparent));
-        stateList.addState(EMPTY_STATE_SET, drawable);
 
+        final LightweightTheme lightweightTheme = getTheme();
+        if (!lightweightTheme.isEnabled() || isPrivateMode()) {
+            stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_private_pressed));
+            stateList.addState(PRIVATE_STATE_SET, getColorDrawable(android.R.color.transparent));
+            stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_pressed));
+        } else {
+            if (lightweightTheme.isLightTheme()) {
+                stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_light_pressed));
+            } else {
+                stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_dark_pressed));
+            }
+        }
+
+        stateList.addState(EMPTY_STATE_SET, drawable);
         setBackgroundDrawable(stateList);
     }
 
