@@ -531,6 +531,9 @@ task_description_schema = Schema({
     }),
 })
 
+TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherder/' \
+                           'blob/master/schemas/task-treeherder-config.yml'
+
 GROUP_NAMES = {
     'cram': 'Cram tests',
     'mocha': 'Mocha unit tests',
@@ -1241,6 +1244,12 @@ def build_task(config, tasks):
                     raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
                 treeherder['groupName'] = GROUP_NAMES[groupSymbol]
             treeherder['symbol'] = symbol
+            if len(symbol) > 25 or len(groupSymbol) > 25:
+                raise RuntimeError("Treeherder group and symbol names must not be longer than "
+                                   "25 characters: {} (see {})".format(
+                                       task_th['symbol'],
+                                       TC_TREEHERDER_SCHEMA_URL,
+                                       ))
             treeherder['jobKind'] = task_th['kind']
             treeherder['tier'] = task_th['tier']
 
