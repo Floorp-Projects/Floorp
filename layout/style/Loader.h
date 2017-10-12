@@ -477,7 +477,8 @@ private:
   friend class SheetLoadData;
   friend class StreamLoader;
 
-  nsresult CheckContentPolicy(nsIPrincipal* aSourcePrincipal,
+  nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
+                              nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI,
                               nsISupports* aContext,
                               bool aIsPreload);
