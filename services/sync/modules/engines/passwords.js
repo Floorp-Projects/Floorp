@@ -51,6 +51,14 @@ this.LoginRec = function LoginRec(collection, id) {
 LoginRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Login",
+
+  cleartextToString() {
+    let o = Object.assign({}, this.cleartext);
+    if (o.password) {
+      o.password = "X".repeat(o.password.length)
+    }
+    return JSON.stringify(o);
+  }
 };
 
 Utils.deferGetSet(LoginRec, "cleartext", [
