@@ -41,6 +41,7 @@ linux64/debug:
         - common-tests
         - web-platform-tests
         - reftest-stylo
+        - mochitest-headless
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
@@ -52,6 +53,7 @@ linux64/opt:
         - talos
         - linux-talos-stylo-disabled
         - awsy
+        - mochitest-headless
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
