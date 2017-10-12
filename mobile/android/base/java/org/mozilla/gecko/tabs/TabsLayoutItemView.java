@@ -20,6 +20,7 @@ import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.ViewUtils;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -183,6 +184,12 @@ public class TabsLayoutItemView extends LinearLayout
                     getResources().getString(R.string.tab_title_prefix_is_playing_audio, tabTitle);
             mTitle.setContentDescription(tabTitleWithAudio);
         } else {
+            final String url = tab.getURL();
+            if (TextUtils.isEmpty(url)) {
+                // Ignore loading favicon without url.
+                return;
+            }
+
             if (mOngoingIconLoad != null) {
                 mOngoingIconLoad.cancel(true);
             }
@@ -191,8 +198,9 @@ public class TabsLayoutItemView extends LinearLayout
             final int iconSize = resources.getDimensionPixelSize(R.dimen.tab_favicon_size);
             final float textSize = resources.getDimensionPixelSize(R.dimen.tab_favicon_text_size);
 
-            mOngoingIconLoad = Icons.with(getContext())
-                                       .pageUrl(tab.getURL())
+            final Context appContext = getContext().getApplicationContext();
+            mOngoingIconLoad = Icons.with(appContext)
+                                       .pageUrl(url)
                                        .skipNetwork()
                                        .targetSize(iconSize)
                                        .textSize(textSize)
