@@ -29,7 +29,7 @@ public:
    * @param aOffset     The offset in aParent to insert aNode.
    */
   InsertNodeTransaction(nsIContent& aNode, nsINode& aParent, int32_t aOffset,
-                        EditorBase& aEditorBase);
+                        EditorBase& aEditorBase, nsIContent* aChildAtOffset);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction,
@@ -51,6 +51,10 @@ protected:
 
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;
+
+  // The node we will insert mNewNode before.  We compute this ourselves if it
+  // is not set by the constructor.
+  nsCOMPtr<nsIContent> mRefNode;
 };
 
 } // namespace mozilla

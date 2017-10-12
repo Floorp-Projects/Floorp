@@ -307,7 +307,10 @@ public:
    * Helper routines for node/parent manipulations.
    */
   nsresult DeleteNode(nsINode* aNode);
-  nsresult InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition);
+  nsresult InsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t aPosition,
+                      nsIContent* aChildAtPosition);
+  nsresult InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition,
+                      nsIContent* aChildAtPosition = nullptr);
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
                                              nsAtom* aNodeType,
@@ -410,7 +413,7 @@ protected:
    */
   already_AddRefed<InsertNodeTransaction>
     CreateTxnForInsertNode(nsIContent& aNode, nsINode& aParent,
-                           int32_t aOffset);
+                           int32_t aOffset, nsIContent* aChildAtPosition);
 
   /**
    * Create a transaction for removing aNode from its parent.
