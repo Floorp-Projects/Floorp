@@ -40,7 +40,7 @@
  */
 #define BBP 8
 
-static PRBool
+PRBool
 sftkdb_isULONGAttribute(CK_ATTRIBUTE_TYPE type)
 {
     switch (type) {
@@ -1370,7 +1370,8 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     }
 
     /* make sure we don't have attributes that conflict with the existing DB */
-    crv = sftkdb_checkConflicts(db, object->objclass, template, count, objectID);
+    crv = sftkdb_checkConflicts(db, object->objclass, ntemplate, count,
+                                objectID);
     if (crv != CKR_OK) {
         goto loser;
     }
@@ -1386,8 +1387,8 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
         goto loser;
     }
     inTransaction = PR_TRUE;
-    crv = sftkdb_setAttributeValue(arena, handle, db,
-                                   objectID, template, count);
+    crv = sftkdb_setAttributeValue(arena, handle, db, objectID, ntemplate,
+                                   count);
     if (crv != CKR_OK) {
         goto loser;
     }
