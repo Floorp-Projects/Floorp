@@ -53,7 +53,6 @@
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLMenuItemElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -158,7 +157,6 @@
 #include "mozilla/dom/HTMLHtmlElementBinding.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
-#include "mozilla/dom/HTMLMenuItemElementBinding.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLOptionElementBinding.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
@@ -316,7 +314,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLHtmlElement),
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM(HTMLMediaElement),
-  DEFINE_SHIM(HTMLMenuItemElement),
   DEFINE_SHIM(HTMLOptionElement),
   DEFINE_SHIM(HTMLOptionsCollection),
   DEFINE_SHIM(HTMLScriptElement),
