@@ -375,7 +375,7 @@ FormAutofillHandler.prototype = {
       }
 
       let element = fieldDetail.elementWeakRef.get();
-      if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+      if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
         continue;
       }
 
@@ -515,7 +515,7 @@ FormAutofillHandler.prototype = {
         }
       }
 
-      if (element instanceof Ci.nsIDOMHTMLSelectElement) {
+      if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
         let option = cache[value] && cache[value].get();
         if (!option) {
@@ -595,7 +595,7 @@ FormAutofillHandler.prototype = {
         continue;
       }
 
-      if (element instanceof Ci.nsIDOMHTMLSelectElement) {
+      if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
         // Unlike text input, select element is always previewed even if
         // the option is already selected.
         if (value) {
@@ -745,7 +745,7 @@ FormAutofillHandler.prototype = {
         // Try to abbreviate the value of select element.
         if (type == "address" &&
             detail.fieldName == "address-level1" &&
-            element instanceof Ci.nsIDOMHTMLSelectElement) {
+            ChromeUtils.getClassName(element) === "HTMLSelectElement") {
           // Don't save the record when the option value is empty *OR* there
           // are multiple options being selected. The empty option is usually
           // assumed to be default along with a meaningless text to users.

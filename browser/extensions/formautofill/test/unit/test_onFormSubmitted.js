@@ -551,7 +551,7 @@ TESTCASES.forEach(testcase => {
       let input = MOCK_DOC.getElementById(key);
       let value = testcase.formValue[key];
 
-      if (input instanceof Ci.nsIDOMHTMLSelectElement && value) {
+      if (ChromeUtils.getClassName(input) === "HTMLSelectElement" && value) {
         input.multiple = Array.isArray(value);
         [...input.options].forEach(option => {
           option.selected = value.includes(option.value);
