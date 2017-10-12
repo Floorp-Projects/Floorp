@@ -19,7 +19,8 @@ def FirefoxBranding():
             'VisualElements_70.png',
         ]
         BRANDING_FILES += [
-            'bgstub.bmp',
+            'bgstub.jpg',
+            'bgstub_2x.jpg',
             'branding.nsi',
             'document.ico',
             'firefox.ico',
