@@ -136,6 +136,9 @@ public:
    */
   virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget(DrawEventRecorder* aRecorder);
 
+  static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
+                                       nsCString& aAdjustedJobName);
+
 protected:
 
   // Only created via subclass's constructors
