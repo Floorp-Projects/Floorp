@@ -7,8 +7,7 @@
 
 #include "mozilla/Attributes.h"     // for MOZ_RAII
 #include "mozilla/StaticPtr.h"      // for StaticRefPtr
-
-class nsIContent;
+#include "nsIContent.h"
 
 namespace mozilla {
 namespace widget {
