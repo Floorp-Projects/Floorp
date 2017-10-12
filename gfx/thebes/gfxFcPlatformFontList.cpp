@@ -1518,12 +1518,12 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 {
     FT_Face face = Factory::NewFTFaceFromData(nullptr, aFontData, aLength, 0);
     if (!face) {
-        NS_Free((void*)aFontData);
+        free((void*)aFontData);
         return nullptr;
     }
     if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
         Factory::ReleaseFTFace(face);
-        NS_Free((void*)aFontData);
+        free((void*)aFontData);
         return nullptr;
     }
 

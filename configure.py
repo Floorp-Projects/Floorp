@@ -7,7 +7,6 @@ from __future__ import print_function, unicode_literals
 import codecs
 import itertools
 import os
-import subprocess
 import sys
 import textwrap
 

@@ -69,17 +69,15 @@
     <color name="photon_url_bar_certificate_owner_private">#16DA00</color>
     <color name="photon_url_bar_domain">@color/photon_text_main</color>
     <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
-    <color name="photon_url_bar_bg">#80FFFFFF</color>
+    <color name="photon_url_bar_bg">#B3FFFFFF</color>
 
     <!-- Tab strip color on tablet -->
     <color name="photon_tab_strip_bg">#272727</color>
 
     <!-- Tab strip item color on tablet -->
-    <color name="photon_tab_strip_item">#272727</color>
     <color name="photon_tab_strip_item_checked">#F9F9FA</color>
     <color name="photon_tab_strip_item_checked_pressed">#E4E4E5</color> <!-- #F9F9FA + #272727@10% Alpha -->
     <color name="photon_tab_strip_item_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
-    <color name="photon_tab_strip_item_private">#272727</color>
     <color name="photon_tab_strip_item_private_checked">#38383D</color>
     <color name="photon_tab_strip_item_private_checked_pressed">#4C4B51</color> <!-- #38383D + #FFFFFF@10% Alpha -->
     <color name="photon_tab_strip_item_private_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
@@ -120,6 +118,8 @@
     <color name="nav_button_border_color_private">#272727</color>
 
     <color name="action_bar_item_bg_color_pressed">#33272727</color>
+    <color name="action_bar_item_bg_color_lwt_dark_pressed">#B3FFFFFF</color>
+    <color name="action_bar_item_bg_color_lwt_light_pressed">#80B2B2B2</color>
     <color name="action_bar_item_bg_color_private_pressed">#33FFFFFF</color>
 
     <!-- Fennec color palette (bug 1127517) -->
@@ -224,8 +224,8 @@
     <color name="tab_item_private_highlight_bg_80">#CCAC39FF</color>
     <color name="tab_item_thumbnail_default_bg">#E4E4E4</color>
 
-    <color name="url_bar_urltext">@color/photon_text_placeholder</color>
-    <color name="url_bar_urltext_private">@color/photon_text_placeholder_private</color>
+    <color name="url_bar_urltext">#737373</color>
+    <color name="url_bar_urltext_private">#B2B2B2</color>
     <color name="url_bar_domaintext">@color/photon_url_bar_domain</color>
     <color name="url_bar_domaintext_private">@color/photon_url_bar_domain_private</color>
     <color name="url_bar_blockedtext">@color/photon_url_bar_blocked</color>

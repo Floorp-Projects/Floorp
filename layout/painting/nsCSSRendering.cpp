@@ -786,7 +786,8 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
                              borderColors,
                              aStyleBorder.mBorderColors.get(),
                              bgColor,
-                             !aForFrame->BackfaceIsHidden());
+                             !aForFrame->BackfaceIsHidden(),
+                             *aNeedsClip ? Some(NSRectToRect(aBorderArea, oneDevPixel)) : Nothing());
 }
 
 
@@ -926,9 +927,6 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                    aStyleBorder,
                                                    aSkipSides,
                                                    &needsClip);
-  if (needsClip) {
-    return Nothing();
-  }
   return Some(br);
 }
 
@@ -1066,7 +1064,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                          outlineColors,
                          nullptr,
                          bgColor,
-                         !aForFrame->BackfaceIsHidden());
+                         !aForFrame->BackfaceIsHidden(),
+                         Nothing());
 
   return Some(br);
 }
@@ -1142,7 +1141,8 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                          focusColors,
                          nullptr,
                          NS_RGB(255, 0, 0),
-                         true);
+                         true,
+                         Nothing());
   br.DrawBorders();
 
   PrintAsStringNewline();

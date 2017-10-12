@@ -7,7 +7,7 @@
 #ifndef DDLogMessage_h_
 #define DDLogMessage_h_
 
-#include "DDLogClass.h"
+#include "DDLogCategory.h"
 #include "DDLogObject.h"
 #include "DDLogValue.h"
 #include "DDMessageIndex.h"
@@ -26,17 +26,17 @@ struct DDLogMessage
   DDMessageIndex mIndex;
   DDTimeStamp mTimeStamp;
   DDLogObject mObject;
-  DDLogClass mClass;
+  DDLogCategory mCategory;
   const char* mLabel;
   DDLogValue mValue = DDLogValue{ DDNoValue{} };
 
   // Print the message. Format:
-  // "index | timestamp | object | message-class | label | value". E.g.:
+  // "index | timestamp | object | category | label | value". E.g.:
   // "29 | 5.047547 | dom::HTMLMediaElement[134073800] | lnk | decoder | MediaDecoder[136078200]"
   nsCString Print() const;
 
   // Print the message, using object information from aLifetimes. Format:
-  // "index | timestamp | object | message-class | label | value". E.g.:
+  // "index | timestamp | object | category | label | value". E.g.:
   // "29 | 5.047547 | dom::HTMLVideoElement[134073800]#1 (as dom::HTMLMediaElement) | lnk | decoder | MediaSourceDecoder[136078200]#5 (as MediaDecoder)"
   nsCString Print(const DDLifetimes& aLifetimes) const;
 };

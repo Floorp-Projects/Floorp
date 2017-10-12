@@ -172,6 +172,19 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
 void
 TrackBuffersManager::ProcessTasks()
 {
+  // A second Detach task was queued, prior the first one running, ignore it.
+  if (!GetTaskQueue()) {
+    RefPtr<SourceBufferTask> task = mQueue.Pop();
+    if (!task) {
+      return;
+    }
+    MOZ_RELEASE_ASSERT(task->GetType() == SourceBufferTask::Type::Detach,
+                       "only detach task could happen here!");
+    MSE_DEBUG("Could not process the task '%s' after detached",
+              task->GetTypeName());
+    return;
+  }
+
   MOZ_ASSERT(OnTaskQueue());
   typedef SourceBufferTask::Type Type;
 

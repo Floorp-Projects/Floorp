@@ -100,16 +100,18 @@ listheader[sortable="true"]:hover:active {
   list-style-image: url("chrome://global/skin/tree/sort-asc.png");
 }
 
-.listheader-sortdirection[sortDirection="ascending"]:-moz-system-metric(windows-classic) {
-  list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
-}
-
 .listheader-sortdirection[sortDirection="descending"] {
   list-style-image: url("chrome://global/skin/tree/sort-dsc.png");
 }
 
-.listheader-sortdirection[sortDirection="descending"]:-moz-system-metric(windows-classic) {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
+@media (-moz-windows-classic) {
+  .listheader-sortdirection[sortDirection="ascending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
+  }
+
+  .listheader-sortdirection[sortDirection="descending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
+  }
 }
 
 /* ::::: listcell ::::: */

@@ -300,6 +300,7 @@ popupnotificationcontent {
   background-size: contain;
   background-color: transparent;
   background-position: right top;
+  background-repeat: no-repeat;
   -moz-appearance: none;
   -moz-window-shadow: none;
 }

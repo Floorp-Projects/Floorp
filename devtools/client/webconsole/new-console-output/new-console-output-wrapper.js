@@ -273,7 +273,7 @@ NewConsoleOutputWrapper.prototype = {
 
       if (this.queuedMessageUpdates.length > 0) {
         this.queuedMessageUpdates.forEach(({ message, res }) => {
-          store.dispatch(actions.networkMessageUpdate(message));
+          store.dispatch(actions.networkMessageUpdate(message, null, res));
           this.jsterm.hud.emit("network-message-updated", res);
         });
         this.queuedMessageUpdates = [];

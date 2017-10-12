@@ -779,7 +779,6 @@
                      tabscrolling="true"
                      showcommentcolumn="true"
                      showimagecolumn="true"
-                     enablehistory="true"
                      newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
                      ontextreverted="return this.handleRevert();"

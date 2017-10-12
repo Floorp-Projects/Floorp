@@ -552,7 +552,7 @@ public:
   ~nsUnicharPtrHashKey()
   {
     if (mKey) {
-      NS_Free(const_cast<char16_t*>(mKey));
+      free(const_cast<char16_t*>(mKey));
     }
   }
 
