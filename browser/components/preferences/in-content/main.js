@@ -618,15 +618,24 @@ var gMainPane = {
     // Set the "Use Current Page(s)" button's text and enabled state.
     this._updateUseCurrentButton();
 
-    // This is an async task.
-    handleControllingExtension("prefs", "homepage_override")
-      .then((isControlled) => {
-        // Disable or enable the inputs based on if this is controlled by an extension.
-        document.querySelectorAll("#browserHomePage, .homepage-button")
-          .forEach((button) => {
-            button.disabled = isControlled;
-          });
-      });
+    function setInputDisabledStates(isControlled) {
+      // Disable or enable the inputs based on if this is controlled by an extension.
+      document.querySelectorAll("#browserHomePage, .homepage-button")
+        .forEach((element) => {
+          let isLocked = document.getElementById(element.getAttribute("preference")).locked;
+          element.disabled = isLocked || isControlled;
+        });
+    }
+
+    if (homePref.locked) {
+      // An extension can't control these settings if they're locked.
+      hideControllingExtension("homepage_override");
+      setInputDisabledStates(false);
+    } else {
+      // Asynchronously update the extension controlled UI.
+      handleControllingExtension("prefs", "homepage_override")
+        .then(setInputDisabledStates);
+    }
 
     // If the pref is set to about:home or about:newtab, set the value to ""
     // to show the placeholder text (about:home title) rather than
