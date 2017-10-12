@@ -313,7 +313,7 @@ pref("media.dormant-on-pause-timeout-ms", 5000);
 
 // Used by ChannelMediaResource to run data callbacks from HTTP channel
 // off the main thread.
-pref("media.omt_data_delivery.enabled", false);
+pref("media.omt_data_delivery.enabled", true);
 
 // File-backed MediaCache size in kilobytes
 pref("media.cache_size", 512000);

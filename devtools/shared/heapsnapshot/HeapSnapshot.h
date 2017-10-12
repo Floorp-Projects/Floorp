@@ -16,7 +16,7 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "CoreDump.pb.h"
 #include "nsCOMPtr.h"
@@ -31,14 +31,8 @@ namespace devtools {
 
 class DominatorTree;
 
-struct NSFreePolicy {
-  void operator()(void* ptr) {
-    NS_Free(ptr);
-  }
-};
-
-using UniqueTwoByteString = UniquePtr<char16_t[], NSFreePolicy>;
-using UniqueOneByteString = UniquePtr<char[], NSFreePolicy>;
+using UniqueTwoByteString = UniqueFreePtr<char16_t[]>;
+using UniqueOneByteString = UniqueFreePtr<char[]>;
 
 class HeapSnapshot final : public nsISupports
                          , public nsWrapperCache

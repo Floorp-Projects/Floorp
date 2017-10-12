@@ -12,12 +12,20 @@
           gecko:state_private="true"/>
 
     <!-- dark theme -->
-    <item android:drawable="@color/photon_url_bar_bg"
-          gecko:state_dark="true"/>
+    <item gecko:state_dark="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp"/>
+            <solid android:color="@color/photon_url_bar_bg"/>
+        </shape>
+    </item>
 
     <!-- light theme -->
-    <item android:drawable="@color/photon_url_bar_bg"
-          gecko:state_light="true"/>
+    <item gecko:state_light="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp"/>
+            <solid android:color="@color/photon_url_bar_bg"/>
+        </shape>
+    </item>
 
     <!-- normal mode -->
     <item android:drawable="@android:color/transparent"/>
