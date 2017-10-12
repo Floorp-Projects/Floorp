@@ -28,7 +28,6 @@
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
-#include "nsISelectionPrivate.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
@@ -349,14 +348,13 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(mSelection));
+  mSelection =
+    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   if (NS_WARN_IF(!mSelection)) {
     return false;
   }
 
-  auto selection = static_cast<mozilla::dom::Selection*>(mSelection.get());
-  if (nsRange* selRange = selection->GetRangeAt(0)) {
+  if (nsRange* selRange = mSelection->GetRangeAt(0)) {
     if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
@@ -405,8 +403,8 @@ IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
   if (NS_WARN_IF(!selCon)) {
     return false;
   }
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(mSelection));
+  mSelection =
+    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   if (NS_WARN_IF(!mSelection)) {
     return false;
   }
@@ -480,9 +478,7 @@ IMEContentObserver::ObserveEditableNode()
     // Add selection change listener only when this starts to observe
     // non-plugin content since we cannot detect selection changes in
     // plugins.
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
-    NS_ENSURE_TRUE_VOID(selPrivate);
-    nsresult rv = selPrivate->AddSelectionListener(this);
+    nsresult rv = mSelection->AddSelectionListener(this);
     NS_ENSURE_SUCCESS_VOID(rv);
     // Add text change observer only when this starts to observe
     // non-plugin content since we cannot detect text changes in
@@ -556,10 +552,7 @@ IMEContentObserver::UnregisterObservers()
   }
 
   if (mSelection) {
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
-    if (selPrivate) {
-      selPrivate->RemoveSelectionListener(this);
-    }
+    mSelection->RemoveSelectionListener(this);
     mSelectionData.Clear();
     mFocusedWidget = nullptr;
   }
