@@ -478,6 +478,7 @@ class TestChecksConfigure(unittest.TestCase):
             ERROR: Paths provided to find_program must be a list of strings, not %r
         ''' % mozpath.dirname(self.OTHER_A)))
 
+    @unittest.skip('Broken by Bug 1352599; re-enabling is tracked by Bug 1408159.')
     def test_java_tool_checks(self):
         includes = ('util.configure', 'checks.configure', 'java.configure')
 
