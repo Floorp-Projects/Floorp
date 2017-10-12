@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
+import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test checks all the headings in the Settings menu are there
@@ -73,8 +74,8 @@ public class SettingsAppearanceTest {
 
         /* Go to Settings */
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.menuButton.perform(click());
-        TestHelper.settingsMenuItem.click();
+
+        openSettings();
         SearchEngineSelection.waitForExists(waitingTime);
 
         /* Check the first element and other headings are present */
