@@ -41,10 +41,18 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
 
   size_t srcCursor = 0;
   size_t dstCursor = mCursor;
+  size_t currAllocLen = mSmallAllocs.Length();
 
   while (remainingBytesToCopy > 0) {
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
-      AllocChunk();
+      if (!AllocChunk()) {
+        for (size_t i = mSmallAllocs.Length() ; currAllocLen <= i ; i--) {
+          ipc::Shmem shm = mSmallAllocs.ElementAt(i);
+          mShmAllocator->DeallocShmem(shm);
+          mSmallAllocs.RemoveElementAt(i);
+        }
+        return layers::OffsetRange(0, start, 0);
+      }
       continue;
     }
 
@@ -75,16 +83,18 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
   return layers::OffsetRange(0, start, length);
 }
 
-void
+bool
 ShmSegmentsWriter::AllocChunk()
 {
   ipc::Shmem shm;
   auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
   if (!mShmAllocator->AllocShmem(mChunkSize, shmType, &shm)) {
-    gfxCriticalError() << "ShmSegmentsWriter failed to allocate chunk #" << mSmallAllocs.Length();
-    MOZ_CRASH();
+    gfxCriticalNote << "ShmSegmentsWriter failed to allocate chunk #" << mSmallAllocs.Length();
+    MOZ_ASSERT(false, "ShmSegmentsWriter fails to allocate chunk");
+    return false;
   }
   mSmallAllocs.AppendElement(shm);
+  return true;
 }
 
 layers::OffsetRange
@@ -93,8 +103,9 @@ ShmSegmentsWriter::AllocLargeChunk(size_t aSize)
   ipc::Shmem shm;
   auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
   if (!mShmAllocator->AllocShmem(aSize, shmType, &shm)) {
-    gfxCriticalError() << "ShmSegmentsWriter failed to allocate large chunk of size " << aSize;
-    MOZ_CRASH();
+    gfxCriticalNote << "ShmSegmentsWriter failed to allocate large chunk of size " << aSize;
+    MOZ_ASSERT(false, "ShmSegmentsWriter fails to allocate large chunk");
+    return layers::OffsetRange(0, 0, 0);
   }
   mLargeAllocs.AppendElement(shm);
 
@@ -222,20 +233,28 @@ IpcResourceUpdateQueue::IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator,
 : mWriter(Move(aAllocator), aChunkSize)
 {}
 
-void
+bool
 IpcResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                                  Range<uint8_t> aBytes)
 {
   auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
   mUpdates.AppendElement(layers::OpAddImage(aDescriptor, bytes, 0, key));
+  return true;
 }
 
-void
+bool
 IpcResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
                                      Range<uint8_t> aBytes)
 {
   auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
   mUpdates.AppendElement(layers::OpAddBlobImage(aDescriptor, bytes, 0, key));
+  return true;
 }
 
 void
@@ -244,22 +263,30 @@ IpcResourceUpdateQueue::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKe
   mUpdates.AppendElement(layers::OpAddExternalImage(aExtId, aKey));
 }
 
-void
+bool
 IpcResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
                                           const ImageDescriptor& aDescriptor,
                                           Range<uint8_t> aBytes)
 {
   auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
   mUpdates.AppendElement(layers::OpUpdateImage(aDescriptor, bytes, aKey));
+  return true;
 }
 
-void
+bool
 IpcResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
                                         const ImageDescriptor& aDescriptor,
                                         Range<uint8_t> aBytes)
 {
   auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
   mUpdates.AppendElement(layers::OpUpdateBlobImage(aDescriptor, bytes, aKey));
+  return true;
 }
 
 void
@@ -268,11 +295,15 @@ IpcResourceUpdateQueue::DeleteImage(ImageKey aKey)
   mUpdates.AppendElement(layers::OpDeleteImage(aKey));
 }
 
-void
+bool
 IpcResourceUpdateQueue::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
 {
   auto bytes = mWriter.Write(aBytes);
+  if (!bytes.length()) {
+    return false;
+  }
   mUpdates.AppendElement(layers::OpAddRawFont(bytes, aIndex, aKey));
+  return true;
 }
 
 void
