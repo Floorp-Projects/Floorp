@@ -342,7 +342,11 @@ this.ExtensionPreferencesManager = {
     // This could be called for a setting that isn't defined to the PreferencesManager,
     // in which case we simply defer to the SettingsStore.
     if (storeType === STORE_TYPE) {
-      for (let prefName of settingsMap.get(name).prefNames) {
+      let setting = settingsMap.get(name);
+      if (!setting) {
+        return "not_controllable";
+      }
+      for (let prefName of setting.prefNames) {
         if (Preferences.locked(prefName)) {
           return "not_controllable";
         }
