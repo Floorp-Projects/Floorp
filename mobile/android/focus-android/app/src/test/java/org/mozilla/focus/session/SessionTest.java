@@ -6,6 +6,7 @@ package org.mozilla.focus.session;
 
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.Observer;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -55,27 +56,27 @@ public class SessionTest {
 
         {
             final Observer<String> urlObserver = mockObserver();
-            session.getUrl().observe(mockLifeCycleOwner(), urlObserver);
+            session.getUrl().observe(mockLifecycleOwner(), urlObserver);
             verify(urlObserver).onChanged(TEST_URL);
         }
         {
             final Observer<Integer> progressObserver = mockObserver();
-            session.getProgress().observe(mockLifeCycleOwner(), progressObserver);
+            session.getProgress().observe(mockLifecycleOwner(), progressObserver);
             verify(progressObserver).onChanged(0);
         }
         {
             final Observer<Boolean> secureObserver = mockObserver();
-            session.getSecure().observe(mockLifeCycleOwner(), secureObserver);
+            session.getSecure().observe(mockLifecycleOwner(), secureObserver);
             verify(secureObserver).onChanged(false);
         }
         {
             final Observer<Boolean> loadingObserver = mockObserver();
-            session.getLoading().observe(mockLifeCycleOwner(), loadingObserver);
+            session.getLoading().observe(mockLifecycleOwner(), loadingObserver);
             verify(loadingObserver).onChanged(false);
         }
         {
             final Observer<Integer> blockedTrackersObserver = mockObserver();
-            session.getBlockedTrackers().observe(mockLifeCycleOwner(), blockedTrackersObserver);
+            session.getBlockedTrackers().observe(mockLifecycleOwner(), blockedTrackersObserver);
             verify(blockedTrackersObserver).onChanged(0);
         }
     }
@@ -86,7 +87,7 @@ public class SessionTest {
 
         {
             final Observer<String> urlObserver = mockObserver();
-            session.getUrl().observe(mockLifeCycleOwner(), urlObserver);
+            session.getUrl().observe(mockLifecycleOwner(), urlObserver);
             verify(urlObserver).onChanged(TEST_URL);
 
             session.setUrl(TEST_URL_2);
@@ -94,7 +95,7 @@ public class SessionTest {
         }
         {
             final Observer<Integer> progressObserver = mockObserver();
-            session.getProgress().observe(mockLifeCycleOwner(), progressObserver);
+            session.getProgress().observe(mockLifecycleOwner(), progressObserver);
             verify(progressObserver).onChanged(0);
 
             session.setProgress(42);
@@ -102,7 +103,7 @@ public class SessionTest {
         }
         {
             final Observer<Boolean> secureObserver = mockObserver();
-            session.getSecure().observe(mockLifeCycleOwner(), secureObserver);
+            session.getSecure().observe(mockLifecycleOwner(), secureObserver);
             verify(secureObserver).onChanged(false);
 
             session.setSecure(true);
@@ -110,7 +111,7 @@ public class SessionTest {
         }
         {
             final Observer<Boolean> loadingObserver = mockObserver();
-            session.getLoading().observe(mockLifeCycleOwner(), loadingObserver);
+            session.getLoading().observe(mockLifecycleOwner(), loadingObserver);
             verify(loadingObserver).onChanged(false);
 
             session.setLoading(true);
@@ -118,7 +119,7 @@ public class SessionTest {
         }
         {
             final Observer<Integer> blockedTrackersObserver = mockObserver();
-            session.getBlockedTrackers().observe(mockLifeCycleOwner(), blockedTrackersObserver);
+            session.getBlockedTrackers().observe(mockLifecycleOwner(), blockedTrackersObserver);
             verify(blockedTrackersObserver).onChanged(0);
 
             session.setTrackersBlocked(23);
@@ -207,12 +208,13 @@ public class SessionTest {
         return mock(Observer.class);
     }
 
-    private LifecycleOwner mockLifeCycleOwner() {
-        final Lifecycle lifecycle = mock(Lifecycle.class);
-        doReturn(Lifecycle.State.RESUMED).when(lifecycle).getCurrentState();
-
+    private LifecycleOwner mockLifecycleOwner() {
         final LifecycleOwner lifecycleOwner = mock(LifecycleOwner.class);
-        doReturn(lifecycle).when(lifecycleOwner).getLifecycle();
+
+        LifecycleRegistry registry = new LifecycleRegistry(lifecycleOwner);
+        registry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+
+        doReturn(registry).when(lifecycleOwner).getLifecycle();
 
         return lifecycleOwner;
     }
