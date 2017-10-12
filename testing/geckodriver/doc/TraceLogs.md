@@ -169,5 +169,5 @@ generate the correct [`moz:firefoxOptions`] capabilities object:
 	opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
 	driver = Selenium::WebDriver.for :firefox, options: opts
 
-[Ruby client]: http://seleniumhq.github.io/selenium/docs/api/rb/
-[`Options`]: http://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html
+[Ruby client]: https://seleniumhq.github.io/selenium/docs/api/rb/
+[`Options`]: https://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html
