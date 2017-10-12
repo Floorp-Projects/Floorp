@@ -49,6 +49,8 @@ COPY sources.list /etc/apt/
 # the :i386 packages we install below.
 RUN dpkg --add-architecture i386
 
+# rsync is required for l10n single locale repacks.  less, screen, and
+# vim, help debugging interactive tasks in Task Cluster.
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
       autoconf2.13 \
@@ -60,6 +62,7 @@ RUN apt-get update -q && \
       curl \
       file \
       gnupg \
+      less \
       make \
       procps \
       python \
@@ -68,10 +71,13 @@ RUN apt-get update -q && \
       python-pip \
       python-setuptools \
       python-virtualenv \
+      rsync \
+      screen \
       sudo \
       tar \
       unzip \
       uuid \
+      vim \
       wget \
       xz-utils \
       yasm \
