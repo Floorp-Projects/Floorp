@@ -39,8 +39,6 @@ android-dependencies/opt:
         custom-build-variant-cfg: api-16-gradle-dependencies
         tooltool-downloads: internal
         job-script: taskcluster/scripts/builder/build-android-dependencies.sh
-    toolchains:
-        - proguard-jar
     optimization:
         skip-unless-changed:
           - "mobile/android/config/**"
@@ -84,8 +82,6 @@ android-test/opt:
         secrets: true
         custom-build-variant-cfg: android-test
         tooltool-downloads: internal
-    toolchains:
-        - proguard-jar
     optimization:
         skip-unless-changed:
           - "mobile/android/base/**"
@@ -144,8 +140,6 @@ android-lint/opt:
         secrets: true
         custom-build-variant-cfg: android-lint
         tooltool-downloads: internal
-    toolchains:
-        - proguard-jar
     optimization:
         skip-unless-changed:
           - "mobile/android/**/*.java"
@@ -198,8 +192,6 @@ android-checkstyle/opt:
         secrets: true
         custom-build-variant-cfg: android-checkstyle
         tooltool-downloads: internal
-    toolchains:
-        - proguard-jar
     optimization:
         skip-unless-changed:
           - "mobile/android/**/checkstyle.xml"
@@ -254,8 +246,6 @@ android-findbugs/opt:
         secrets: true
         custom-build-variant-cfg: android-findbugs
         tooltool-downloads: internal
-    toolchains:
-        - proguard-jar
     optimization:
         skip-unless-changed:
           - "mobile/android/**/*.java"
