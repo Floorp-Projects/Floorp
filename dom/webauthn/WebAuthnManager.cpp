@@ -8,6 +8,7 @@
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
+#include "WebAuthnCoseIdentifiers.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
@@ -17,7 +18,6 @@
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/WebAuthnUtil.h"
-#include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
@@ -52,28 +52,6 @@ NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback,
 /***********************************************************************
  * Utility Functions
  **********************************************************************/
-
-template<class OOS>
-static nsresult
-GetAlgorithmName(const OOS& aAlgorithm,
-                 /* out */ nsString& aName)
-{
-  if (aAlgorithm.IsString()) {
-    // If string, then treat as algorithm name
-    aName.Assign(aAlgorithm.GetAsString());
-  } else {
-    // TODO: Coerce to string and extract name. See WebCryptoTask.cpp
-  }
-
-  // Only ES256 is currently supported
-  if (NORMALIZED_EQUALS(aName, JWK_ALG_ECDSA_P_256)) {
-    aName.AssignLiteral(JWK_ALG_ECDSA_P_256);
-  } else {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
-
-  return NS_OK;
-}
 
 static nsresult
 AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
@@ -365,75 +343,40 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     return promise.forget();
   }
 
-  // Process each element of cryptoParameters using the following steps, to
-  // produce a new sequence normalizedParameters.
-  nsTArray<PublicKeyCredentialParameters> normalizedParams;
+
+  // TODO: Move this logic into U2FTokenManager in Bug 1409220.
+
+  // Process each element of mPubKeyCredParams using the following steps, to
+  // produce a new sequence acceptableParams.
+  nsTArray<PublicKeyCredentialParameters> acceptableParams;
   for (size_t a = 0; a < aOptions.mPubKeyCredParams.Length(); ++a) {
     // Let current be the currently selected element of
-    // cryptoParameters.
+    // mPubKeyCredParams.
 
     // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
-    // on to the next element in cryptoParameters.
+    // on to the next element in mPubKeyCredParams.
     if (aOptions.mPubKeyCredParams[a].mType != PublicKeyCredentialType::Public_key) {
       continue;
     }
 
-    // Let normalizedAlgorithm be the result of normalizing an algorithm using
-    // the procedure defined in [WebCryptoAPI], with alg set to
-    // current.algorithm and op set to 'generateKey'. If an error occurs during
-    // this procedure, then stop processing current and move on to the next
-    // element in cryptoParameters.
-
     nsString algName;
-    if (NS_FAILED(GetAlgorithmName(aOptions.mPubKeyCredParams[a].mAlg,
-                                   algName))) {
+    if (NS_FAILED(CoseAlgorithmToWebCryptoId(aOptions.mPubKeyCredParams[a].mAlg,
+                                             algName))) {
       continue;
     }
 
-    // Add a new object of type PublicKeyCredentialParameters to
-    // normalizedParameters, with type set to current.type and algorithm set to
-    // normalizedAlgorithm.
-    PublicKeyCredentialParameters normalizedObj;
-    normalizedObj.mType = aOptions.mPubKeyCredParams[a].mType;
-    normalizedObj.mAlg.SetAsString().Assign(algName);
-
-    if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
+    if (!acceptableParams.AppendElement(aOptions.mPubKeyCredParams[a],
+                                        mozilla::fallible)){
       promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
       return promise.forget();
     }
   }
 
-  // If normalizedAlgorithm is empty and cryptoParameters was not empty, cancel
+  // If acceptableParams is empty and mPubKeyCredParams was not empty, cancel
   // the timer started in step 2, reject promise with a DOMException whose name
   // is "NotSupportedError", and terminate this algorithm.
-  if (normalizedParams.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return promise.forget();
-  }
-
-  // TODO: The following check should not be here. This is checking for
-  // parameters specific to the soft key, and should be put in the soft key
-  // manager in the parent process. Still need to serialize
-  // PublicKeyCredentialParameters first.
-
-  // Check if at least one of the specified combinations of
-  // PublicKeyCredentialParameters and cryptographic parameters is supported. If
-  // not, return an error code equivalent to NotSupportedError and terminate the
-  // operation.
-
-  bool isValidCombination = false;
-
-  for (size_t a = 0; a < normalizedParams.Length(); ++a) {
-    if (normalizedParams[a].mType == PublicKeyCredentialType::Public_key &&
-        normalizedParams[a].mAlg.IsString() &&
-        normalizedParams[a].mAlg.GetAsString().EqualsLiteral(
-          JWK_ALG_ECDSA_P_256)) {
-      isValidCombination = true;
-      break;
-    }
-  }
-  if (!isValidCombination) {
+  if (acceptableParams.IsEmpty() && !aOptions.mPubKeyCredParams.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
