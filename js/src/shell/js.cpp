@@ -3543,13 +3543,13 @@ WorkerMain(void* arg)
 
     SetCooperativeYieldCallback(cx, CooperativeYieldCallback);
 
-    UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
+    ShellContext* sc = js_new<ShellContext>(cx);
     if (!sc)
         return;
 
     auto guard = mozilla::MakeScopeExit([&] {
-        if (cx)
-            JS_DestroyContext(cx);
+        JS_DestroyContext(cx);
+        js_delete(sc);
         if (input->siblingContext) {
             cooperationState->numThreads--;
             CooperativeYield();
@@ -3559,7 +3559,7 @@ WorkerMain(void* arg)
 
     if (input->parentRuntime)
         sc->isWorker = true;
-    JS_SetContextPrivate(cx, sc.get());
+    JS_SetContextPrivate(cx, sc);
     SetWorkerContextOptions(cx);
     JS::SetBuildIdOp(cx, ShellBuildId);
 
@@ -3581,7 +3581,7 @@ WorkerMain(void* arg)
 
         // The Gecko Profiler requires that all cooperating contexts have
         // profiling stacks installed.
-        MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc.get()));
+        MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc));
     }
 
     do {
