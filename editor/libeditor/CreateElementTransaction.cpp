@@ -34,12 +34,14 @@ using namespace dom;
 CreateElementTransaction::CreateElementTransaction(EditorBase& aEditorBase,
                                                    nsAtom& aTag,
                                                    nsINode& aParent,
-                                                   int32_t aOffsetInParent)
+                                                   int32_t aOffsetInParent,
+                                                   nsIContent* aChildAtOffset)
   : EditTransactionBase()
   , mEditorBase(&aEditorBase)
   , mTag(&aTag)
   , mParent(&aParent)
   , mOffsetInParent(aOffsetInParent)
+  , mRefNode(aChildAtOffset)
 {
 }
 
@@ -83,8 +85,10 @@ CreateElementTransaction::DoTransaction()
   mOffsetInParent = std::min(mOffsetInParent,
                              static_cast<int32_t>(mParent->GetChildCount()));
 
-  // Note, it's ok for mRefNode to be null. That means append
-  mRefNode = mParent->GetChildAt(mOffsetInParent);
+  if (!mRefNode) {
+    // Note, it's ok for mRefNode to be null. That means append
+    mRefNode = mParent->GetChildAt(mOffsetInParent);
+  }
 
   nsCOMPtr<nsIContent> refNode = mRefNode;
   mParent->InsertBefore(*mNewNode, refNode, rv);

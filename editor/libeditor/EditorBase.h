@@ -398,10 +398,12 @@ protected:
   already_AddRefed<CreateElementTransaction>
     CreateTxnForCreateElement(nsAtom& aTag,
                               nsINode& aParent,
-                              int32_t aPosition);
+                              int32_t aPosition,
+                              nsIContent* aChildAtPosition);
 
   already_AddRefed<Element> CreateNode(nsAtom* aTag, nsINode* aParent,
-                                       int32_t aPosition);
+                                       int32_t aPosition,
+                                       nsIContent* aChildAtPosition = nullptr);
 
   /**
    * Create a transaction for inserting aNode as a child of aParent.

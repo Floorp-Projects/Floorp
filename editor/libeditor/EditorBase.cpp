@@ -1418,7 +1418,8 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
                        nsINode* aParent,
-                       int32_t aPosition)
+                       int32_t aPosition,
+                       nsIContent* aChildAtPosition)
 {
   MOZ_ASSERT(aTag && aParent);
 
@@ -1435,7 +1436,8 @@ EditorBase::CreateNode(nsAtom* aTag,
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, *aParent, aPosition);
+    CreateTxnForCreateElement(*aTag, *aParent, aPosition,
+                              aChildAtPosition);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
@@ -4371,10 +4373,12 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
 already_AddRefed<CreateElementTransaction>
 EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
                                       nsINode& aParent,
-                                      int32_t aPosition)
+                                      int32_t aPosition,
+                                      nsIContent* aChildAtPosition)
 {
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aParent, aPosition);
+    new CreateElementTransaction(*this, aTag, aParent, aPosition,
+                                 aChildAtPosition);
 
   return transaction.forget();
 }

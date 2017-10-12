@@ -41,7 +41,8 @@ public:
   CreateElementTransaction(EditorBase& aEditorBase,
                            nsAtom& aTag,
                            nsINode& aParent,
-                           int32_t aOffsetInParent);
+                           int32_t aOffsetInParent,
+                           nsIContent* aChildAtOffset);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTransaction,
@@ -71,7 +72,8 @@ protected:
   // The new node to insert.
   nsCOMPtr<dom::Element> mNewNode;
 
-  // The node we will insert mNewNode before.  We compute this ourselves.
+  // The node we will insert mNewNode before.  We compute this ourselves if it
+  // is not set by the constructor.
   nsCOMPtr<nsIContent> mRefNode;
 };
 
