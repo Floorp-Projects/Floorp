@@ -1601,14 +1601,13 @@ TabChild::MaybeDispatchCoalescedMouseMoveEvents()
     if (!data || data->IsEmpty()) {
       continue;
     }
-    const WidgetMouseEvent* event = data->GetCoalescedEvent();
+    UniquePtr<WidgetMouseEvent> event = data->TakeCoalescedEvent();
     MOZ_ASSERT(event);
     // Dispatch the coalesced mousemove event. Using RecvRealMouseButtonEvent to
     // bypass the coalesce handling in RecvRealMouseMoveEvent.
     RecvRealMouseButtonEvent(*event,
                              data->GetScrollableLayerGuid(),
                              data->GetInputBlockId());
-    data->Reset();
   }
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
@@ -1779,13 +1778,12 @@ TabChild::MaybeDispatchCoalescedWheelEvent()
   if (mCoalescedWheelData.IsEmpty()) {
     return;
   }
-  const WidgetWheelEvent* wheelEvent =
-    mCoalescedWheelData.GetCoalescedEvent();
+  UniquePtr<WidgetWheelEvent> wheelEvent =
+    mCoalescedWheelData.TakeCoalescedEvent();
   MOZ_ASSERT(wheelEvent);
   DispatchWheelEvent(*wheelEvent,
                      mCoalescedWheelData.GetScrollableLayerGuid(),
                      mCoalescedWheelData.GetInputBlockId());
-  mCoalescedWheelData.Reset();
 }
 
 void
