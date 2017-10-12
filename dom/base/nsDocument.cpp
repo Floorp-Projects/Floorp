@@ -6439,40 +6439,13 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
 bool
 nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 {
-  if (!nsContentUtils::IsWebComponentsEnabled()) {
-    return false;
-  }
-
-  JS::Rooted<JSObject*> obj(aCx, aObject);
-
-  JSAutoCompartment ac(aCx, obj);
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
-
-  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
-  if (doc && doc->IsStyledByServo()) {
-    NS_WARNING("stylo: Web Components not supported yet");
-    return false;
-  }
-
-  return true;
+  return nsContentUtils::IsWebComponentsEnabled();
 }
 
 bool
 nsDocument::IsWebComponentsEnabled(dom::NodeInfo* aNodeInfo)
 {
-  if (!nsContentUtils::IsWebComponentsEnabled()) {
-    return false;
-  }
-
-  nsIDocument* doc = aNodeInfo->GetDocument();
-  if (doc->IsStyledByServo()) {
-    NS_WARNING("stylo: Web Components not supported yet");
-    return false;
-  }
-
-  return true;
+  return nsContentUtils::IsWebComponentsEnabled();
 }
 
 void
