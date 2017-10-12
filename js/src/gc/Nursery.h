@@ -443,7 +443,6 @@ class Nursery
 
     void updateNumChunks(unsigned newCount);
     void updateNumChunksLocked(unsigned newCount,
-                               gc::AutoMaybeStartBackgroundAllocation& maybeBgAlloc,
                                AutoLockGC& lock);
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
