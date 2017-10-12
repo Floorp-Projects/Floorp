@@ -494,6 +494,7 @@ getopt.h
 glibconfig.h
 glib.h
 glib-object.h
+glob.h
 gmodule.h
 gnome.h
 gnu/libc-version.h

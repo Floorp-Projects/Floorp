@@ -519,7 +519,7 @@ input[type="file"] > button[type="button"] {
 }
 
 /* colored part of the color selector button */
-input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatch {
+input[type="color"]::-moz-color-swatch {
   width: 100%;
   height: 100%;
   min-width: 3px;
@@ -606,7 +606,7 @@ input[type="search"] {
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
 button,
-input[type="color"]:-moz-system-metric(color-picker-available),
+input[type="color"],
 input[type="reset"],
 input[type="button"],
 input[type="submit"] {
@@ -641,7 +641,7 @@ input[type="submit"] {
   overflow-clip-box: padding-box;
 }
 
-input[type="color"]:-moz-system-metric(color-picker-available) {
+input[type="color"] {
   inline-size: 64px;
   block-size: 23px;
 }
@@ -689,7 +689,7 @@ button {
 }
 
 button:hover,
-input[type="color"]:-moz-system-metric(color-picker-available):hover,
+input[type="color"]:hover,
 input[type="reset"]:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
@@ -704,7 +704,7 @@ input[type="submit"]:hover {
 }
 
 button:active:hover,
-input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
+input[type="color"]:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
@@ -726,7 +726,7 @@ input[type="submit"]:active:hover {
 }
 
 button::-moz-focus-inner,
-input[type="color"]:-moz-system-metric(color-picker-available)::-moz-focus-inner,
+input[type="color"]::-moz-focus-inner,
 input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
@@ -740,7 +740,7 @@ input[type="file"] > button[type="button"]::-moz-focus-inner {
 }
 
 button:-moz-focusring::-moz-focus-inner,
-input[type="color"]:-moz-system-metric(color-picker-available):-moz-focusring::-moz-focus-inner,
+input[type="color"]:-moz-focusring::-moz-focus-inner,
 input[type="reset"]:-moz-focusring::-moz-focus-inner,
 input[type="button"]:-moz-focusring::-moz-focus-inner,
 input[type="submit"]:-moz-focusring::-moz-focus-inner,
@@ -749,8 +749,8 @@ input[type="file"] > button[type="button"]:-moz-focusring::-moz-focus-inner {
 }
 
 button:disabled:active, button:disabled,
-input[type="color"]:-moz-system-metric(color-picker-available):disabled:active,
-input[type="color"]:-moz-system-metric(color-picker-available):disabled,
+input[type="color"]:disabled:active,
+input[type="color"]:disabled,
 input[type="reset"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="button"]:disabled:active,

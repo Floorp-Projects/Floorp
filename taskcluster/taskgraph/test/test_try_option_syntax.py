@@ -69,7 +69,7 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax(parameters, graph_with_jobs)
         # equilvant to "try:"..
         self.assertEqual(tos.build_types, [])
-        self.assertEqual(tos.jobs, None)
+        self.assertEqual(tos.jobs, [])
 
     def test_apostrophe_in_message(self):
         "apostrophe does not break parsing"

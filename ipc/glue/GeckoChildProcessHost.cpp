@@ -75,28 +75,16 @@ using mozilla::ipc::GeckoChildProcessHost;
 #include "mozilla/jni/Utils.h"
 #endif
 
-// We currently don't drop privileges on any platform, because we have to worry
-// about plugins and extensions breaking.
-static const bool kLowRightsSubprocesses = false;
-
 static bool
 ShouldHaveDirectoryService()
 {
   return GeckoProcessType_Default == XRE_GetProcessType();
 }
 
-/*static*/
-base::ChildPrivileges
-GeckoChildProcessHost::DefaultChildPrivileges()
-{
-  return (kLowRightsSubprocesses ?
-          base::PRIVILEGES_UNPRIVILEGED : base::PRIVILEGES_INHERIT);
-}
-
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
-                                             ChildPrivileges aPrivileges)
+                                             bool aIsFileContent)
   : mProcessType(aProcessType),
-    mPrivileges(aPrivileges),
+    mIsFileContent(aIsFileContent),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mProcessState(CREATING_CHANNEL),
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
@@ -734,11 +722,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 # if defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD) || defined(OS_SOLARIS)
   base::environment_map newEnvVars;
-  ChildPrivileges privs = mPrivileges;
-  if (privs == base::PRIVILEGES_DEFAULT ||
-      privs == base::PRIVILEGES_FILEREAD) {
-    privs = DefaultChildPrivileges();
-  }
 
 #  if defined(MOZ_WIDGET_GTK)
   if (mProcessType == GeckoProcessType_Content) {
@@ -926,7 +909,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 # else // goes with defined(MOZ_WIDGET_ANDROID)
   base::LaunchApp(childArgv, mFileMap,
 #  if defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD) || defined(OS_SOLARIS)
-                  newEnvVars, privs,
+                  newEnvVars,
 #  endif // defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD) || defined(OS_SOLARIS)
                   false, &process, arch);
 # endif // defined(MOZ_WIDGET_ANDROID)
@@ -1052,7 +1035,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         // and just crash there right away. Should this change in the future then we
         // should also handle the error here.
         mSandboxBroker.SetSecurityLevelForContentProcess(mSandboxLevel,
-                                                         mPrivileges);
+                                                         mIsFileContent);
         shouldSandboxCurrentProcess = true;
       }
 #  endif // defined(MOZ_CONTENT_SANDBOX)

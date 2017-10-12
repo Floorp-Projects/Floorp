@@ -57,8 +57,7 @@ struct Account;
 class ArrayBufferViewOrArrayBuffer;
 struct AssertionOptions;
 class OwningArrayBufferViewOrArrayBuffer;
-struct ScopedCredentialOptions;
-struct ScopedCredentialParameters;
+struct MakePublicKeyCredentialOptions;
 class Promise;
 class WebAuthnTransactionChild;
 class WebAuthnTransactionInfo;
@@ -84,7 +83,7 @@ public:
 
   already_AddRefed<Promise>
   MakeCredential(nsPIDOMWindowInner* aParent,
-                 const MakeCredentialOptions& aOptions);
+                 const MakePublicKeyCredentialOptions& aOptions);
 
   already_AddRefed<Promise>
   GetAssertion(nsPIDOMWindowInner* aParent,

@@ -299,6 +299,8 @@ var gMainPane = {
       gMainPane.checkBrowserContainers);
     setEventListener("browserContainersSettings", "command",
       gMainPane.showContainerSettings);
+    setEventListener("browserHomePage", "input",
+      gMainPane.onBrowserHomePageChange);
 
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
@@ -743,8 +745,11 @@ var gMainPane = {
     }
 
     // FIXME Bug 244192: using dangerous "|" joiner!
-    if (tabs.length)
+    if (tabs.length) {
       homePage.value = tabs.map(getTabURI).join("|");
+    }
+
+    Services.telemetry.scalarAdd("preferences.use_current_page", 1);
   },
 
   /**
@@ -757,6 +762,23 @@ var gMainPane = {
     gSubDialog.open("chrome://browser/content/preferences/selectBookmark.xul",
       "resizable=yes, modal=yes", rv,
       this._setHomePageToBookmarkClosed.bind(this, rv));
+    Services.telemetry.scalarAdd("preferences.use_bookmark", 1);
+  },
+
+  onBrowserHomePageChange() {
+    if (this.telemetryHomePageTimer) {
+      clearTimeout(this.telemetryHomePageTimer);
+    }
+    let browserHomePage = document.querySelector("#browserHomePage").value;
+    // The length of the home page URL string should be more then four,
+    // and it should contain at least one ".", for example, "https://mozilla.org".
+    if (browserHomePage.length > 4 && browserHomePage.includes(".")) {
+      this.telemetryHomePageTimer = setTimeout(() => {
+        let homePageNumber = browserHomePage.split("|").length;
+        Services.telemetry.scalarAdd("preferences.browser_home_page_change", 1);
+        Services.telemetry.keyedScalarAdd("preferences.browser_home_page_count", homePageNumber, 1);
+      }, 3000);
+    }
   },
 
   _setHomePageToBookmarkClosed(rv, aEvent) {

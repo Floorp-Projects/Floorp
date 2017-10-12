@@ -216,7 +216,7 @@ nsAppendEscapedHTML(const nsACString& aSrc, nsACString& aDst)
   // Preparation: aDst's length will increase by at least aSrc's length. If the
   // addition overflows, we skip this, which is fine, and we'll likely abort
   // while (infallibly) appending due to aDst becoming too large.
-  CheckedInt<nsACString::size_type> newCapacity = aDst.Length();
+  mozilla::CheckedInt<nsACString::size_type> newCapacity = aDst.Length();
   newCapacity += aSrc.Length();
   if (newCapacity.isValid()) {
     aDst.SetCapacity(newCapacity.value());
@@ -328,9 +328,9 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
     // If there is a filter, we wish to skip any characters which match it.
     // This is needed so we don't perform an extra pass just to extract the
     // filtered characters.
-    if (aFilterMask && ASCIIMask::IsMasked(*aFilterMask, c)) {
+    if (aFilterMask && mozilla::ASCIIMask::IsMasked(*aFilterMask, c)) {
       if (!writing) {
-        if (!aResult.Append(aPart, i, fallible)) {
+        if (!aResult.Append(aPart, i, mozilla::fallible)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
         writing = true;
@@ -364,7 +364,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
       }
     } else { /* do the escape magic */
       if (!writing) {
-        if (!aResult.Append(aPart, i, fallible)) {
+        if (!aResult.Append(aPart, i, mozilla::fallible)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
         writing = true;
@@ -377,7 +377,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
     // Flush the temp buffer if it doesnt't have room for another encoded char.
     if (tempBufferPos >= mozilla::ArrayLength(tempBuffer) - ENCODE_MAX_LEN) {
       NS_ASSERTION(writing, "should be writing");
-      if (!aResult.Append(tempBuffer, tempBufferPos, fallible)) {
+      if (!aResult.Append(tempBuffer, tempBufferPos, mozilla::fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       tempBufferPos = 0;
@@ -386,7 +386,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
     previousIsNonASCII = (c > 0x7f);
   }
   if (writing) {
-    if (!aResult.Append(tempBuffer, tempBufferPos, fallible)) {
+    if (!aResult.Append(tempBuffer, tempBufferPos, mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }

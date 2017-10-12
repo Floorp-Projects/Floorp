@@ -552,9 +552,9 @@ def ContextDerivedTypedList(klass, base_class=List):
     """
     assert issubclass(klass, ContextDerivedValue)
     class _TypedList(ContextDerivedValue, TypedList(klass, base_class)):
-        def __init__(self, context, iterable=[]):
+        def __init__(self, context, iterable=[], **kwargs):
             self.context = context
-            super(_TypedList, self).__init__(iterable)
+            super(_TypedList, self).__init__(iterable, **kwargs)
 
         def normalize(self, e):
             if not isinstance(e, klass):
@@ -678,7 +678,7 @@ def ContextDerivedTypedHierarchicalStringList(type):
 
     return _TypedListWithItems
 
-def OrderedListWithAction(action):
+def OrderedPathListWithAction(action):
     """Returns a class which behaves as a StrictOrderingOnAppendList, but
     invokes the given callable with each input and a context as it is
     read, storing a tuple including the result and the original item.
@@ -686,12 +686,12 @@ def OrderedListWithAction(action):
     This used to extend moz.build reading to make more data available in
     filesystem-reading mode.
     """
-    class _OrderedListWithAction(ContextDerivedValue,
-                                 StrictOrderingOnAppendListWithAction):
+    class _OrderedListWithAction(ContextDerivedTypedList(SourcePath,
+                                 StrictOrderingOnAppendListWithAction)):
         def __init__(self, context, *args):
             def _action(item):
                 return item, action(context, item)
-            super(_OrderedListWithAction, self).__init__(action=_action, *args)
+            super(_OrderedListWithAction, self).__init__(context, action=_action, *args)
 
     return _OrderedListWithAction
 
@@ -713,8 +713,8 @@ def TypedListWithAction(typ, action):
 WebPlatformTestManifest = TypedNamedTuple("WebPlatformTestManifest",
                                           [("manifest_path", unicode),
                                            ("test_root", unicode)])
-ManifestparserManifestList = OrderedListWithAction(read_manifestparser_manifest)
-ReftestManifestList = OrderedListWithAction(read_reftest_manifest)
+ManifestparserManifestList = OrderedPathListWithAction(read_manifestparser_manifest)
+ReftestManifestList = OrderedPathListWithAction(read_reftest_manifest)
 WptManifestList = TypedListWithAction(WebPlatformTestManifest, read_wpt_manifest)
 
 OrderedSourceList = ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList)

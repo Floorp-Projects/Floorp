@@ -211,11 +211,7 @@ public:
   // Called by the media stream, on the main thread, when the download
   // has been resumed by the cache or because the element itself
   // asked the decoder to resumed the download.
-  // If aForceNetworkLoading is True, ignore the fact that the download has
-  // previously finished. We are downloading the middle of the media after
-  // having downloaded the end, we need to notify the element a download in
-  // ongoing.
-  virtual void DownloadResumed(bool aForceNetworkLoading = false) final override;
+  void DownloadResumed();
 
   // Called to indicate the download is progressing.
   virtual void DownloadProgressed() final override;
@@ -1549,10 +1545,6 @@ protected:
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
-
-  // If true then we have begun downloading the media content.
-  // Set to false when completed, or not yet started.
-  bool mBegun;
 
   // True if loadeddata has been fired.
   bool mLoadedDataFired;

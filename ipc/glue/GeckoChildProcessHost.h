@@ -35,13 +35,10 @@ protected:
   typedef std::vector<std::string> StringVector;
 
 public:
-  typedef base::ChildPrivileges ChildPrivileges;
   typedef base::ProcessHandle ProcessHandle;
 
-  static ChildPrivileges DefaultChildPrivileges();
-
   explicit GeckoChildProcessHost(GeckoProcessType aProcessType,
-                                 ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
+                                 bool aIsFileContent = false);
 
   ~GeckoChildProcessHost();
 
@@ -125,7 +122,7 @@ public:
 
 protected:
   GeckoProcessType mProcessType;
-  ChildPrivileges mPrivileges;
+  bool mIsFileContent;
   Monitor mMonitor;
   FilePath mProcessPath;
 

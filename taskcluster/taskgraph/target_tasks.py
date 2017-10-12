@@ -110,11 +110,9 @@ def target_tasks_try(full_task_graph, parameters):
     elif try_mode == 'try_option_syntax':
         return _try_option_syntax(full_task_graph, parameters)
     else:
-        # With no try mode, we would like to schedule everything (following
-        # run_on_projects) and let optimization trim it down.  But optimization
-        # isn't yet up to the task, so instead we use try_option_syntax with
-        # an empty message (which basically just schedules `-j`objs)
-        return _try_option_syntax(full_task_graph, parameters)
+        # With no try mode, we schedule nothing, allowing the user to add tasks
+        # later via treeherder.
+        return []
 
 
 @_target_task('default')

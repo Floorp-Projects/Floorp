@@ -294,9 +294,16 @@ class OnlyIfDependenciesRun(OptimizationStrategy):
 
 
 class IndexSearch(OptimizationStrategy):
-    def should_remove_task(self, task, params, index_paths):
-        "If this task has no dependencies, don't run it.."
-        return True
+
+    # A task with no dependencies remaining after optimization will be replaced
+    # if artifacts exist for the corresponding index_paths.
+    # Otherwise, we're in one of the following cases:
+    # - the task has un-optimized dependencies
+    # - the artifacts have expired
+    # - some changes altered the index_paths and new artifacts need to be
+    # created.
+    # In every of those cases, we need to run the task to create or refresh
+    # artifacts.
 
     def should_replace_task(self, task, params, index_paths):
         "Look for a task with one of the given index paths"
