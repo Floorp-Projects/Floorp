@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/NotNull.h"
 #include "AutoTaskQueue.h"
 
 #include "MediaContainerType.h"
@@ -455,16 +456,29 @@ private:
   TrackData mAudioTracks;
 
   // TaskQueue methods and objects.
-  AbstractThread* GetTaskQueue() const
+  RefPtr<AutoTaskQueue> GetTaskQueueSafe() const
   {
+    MutexAutoLock mut(mMutex);
     return mTaskQueue;
+  }
+  NotNull<AbstractThread*> TaskQueueFromTaskQueue() const
+  {
+#ifdef DEBUG
+    RefPtr<AutoTaskQueue> taskQueue = GetTaskQueueSafe();
+    MOZ_ASSERT(taskQueue && taskQueue->IsCurrentThreadIn());
+#endif
+    return WrapNotNull(mTaskQueue.get());
   }
   bool OnTaskQueue() const
   {
-    MOZ_RELEASE_ASSERT(GetTaskQueue());
-    return GetTaskQueue()->IsCurrentThreadIn();
+    auto taskQueue = TaskQueueFromTaskQueue();
+    return taskQueue->IsCurrentThreadIn();
   }
-  RefPtr<AutoTaskQueue> mTaskQueue;
+  void ResetTaskQueue()
+  {
+    MutexAutoLock mut(mMutex);
+    mTaskQueue = nullptr;
+  }
 
   // SourceBuffer Queues and running context.
   SourceBufferTaskQueue mQueue;
@@ -507,6 +521,10 @@ private:
 
   // Monitor to protect following objects accessed across multiple threads.
   mutable Mutex mMutex;
+  // mTaskQueue is only ever written after construction on the task queue.
+  // As such, it can be accessed while on task queue without the need for the
+  // mutex.
+  RefPtr<AutoTaskQueue> mTaskQueue;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;
