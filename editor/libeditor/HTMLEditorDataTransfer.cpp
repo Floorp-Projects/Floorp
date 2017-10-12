@@ -134,14 +134,19 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
     nsCOMPtr<nsINode> parent = range->GetStartContainer();
     NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
     uint32_t childOffset = range->StartOffset();
+    nsCOMPtr<nsIContent> child = range->GetChildAtStartOffset();
 
     nsCOMPtr<nsIDOMNode> nodeToInsert;
     docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
     while (nodeToInsert) {
       rv = InsertNode(nodeToInsert, GetAsDOMNode(parent),
-                      static_cast<int32_t>(childOffset++));
+                      static_cast<int32_t>(childOffset), child);
       NS_ENSURE_SUCCESS(rv, rv);
+      childOffset++;
       docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+      if (child) {
+        child = child->GetNextSibling();
+      }
     }
   }
 
