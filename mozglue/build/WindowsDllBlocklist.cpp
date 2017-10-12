@@ -243,9 +243,13 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   { "idmcchandler5_64.dll", ALL_VERSIONS },
 
   // Nahimic 2 breaks applicaton update (bug 1356637)
-  { "nahimic2devprops.dll", ALL_VERSIONS },
+  { "nahimic2devprops.dll", MAKE_VERSION(2, 5, 19, 0xffff) },
   // Nahimic is causing crashes, bug 1233556
-  { "nahimicmsiosd.dll", ALL_VERSIONS },
+  { "nahimicmsiosd.dll", UNVERSIONED },
+  // Nahimic is causing crashes, bug 1360029
+  { "nahimicvrdevprops.dll", UNVERSIONED },
+  { "nahimic2osd.dll", MAKE_VERSION(2, 5, 19, 0xffff) },
+  { "nahimicmsidevprops.dll", UNVERSIONED },
 
   // Bug 1268470 - crashes with Kaspersky Lab on Windows 8
   { "klsihk64.dll", MAKE_VERSION(14, 0, 456, 0xffff), DllBlockInfo::BLOCK_WIN8_ONLY },
