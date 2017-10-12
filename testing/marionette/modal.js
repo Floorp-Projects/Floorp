@@ -12,7 +12,8 @@ this.EXPORTED_SYMBOLS = ["modal"];
 
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
 
-const isFirefox = () => Services.appinfo.name == "Firefox";
+const isFirefox = () =>
+    Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
 /** @namespace */
 this.modal = {

@@ -309,14 +309,14 @@ server.TCPListener = class {
   /**
    * Function produces a GeckoDriver.
    *
-   * Determines application name to initialise the driver with.
+   * Determines the application to initialise the driver with.
    *
    * @return {GeckoDriver}
    *     A driver instance.
    */
   driverFactory() {
     Preferences.set(PREF_CONTENT_LISTENER, false);
-    return new GeckoDriver(Services.appinfo.name, this);
+    return new GeckoDriver(Services.appinfo.ID, this);
   }
 
   set acceptConnections(value) {
