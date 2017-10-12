@@ -339,8 +339,7 @@ public:
    * by RotatedContentBuffer and must be redrawn on the screen.
    * mRegionToInvalidate is set when the buffer has changed from
    * opaque to transparent or vice versa, since the details of rendering can
-   * depend on the buffer type.  mDidSelfCopy is true if we kept our buffer
-   * but used MovePixels() to shift its content.
+   * depend on the buffer type.
    */
   struct PaintState {
     PaintState()
@@ -349,7 +348,6 @@ public:
       , mMode(SurfaceMode::SURFACE_NONE)
       , mClip(DrawRegionClip::NONE)
       , mContentType(gfxContentType::SENTINEL)
-      , mDidSelfCopy(false)
     {}
 
     nsIntRegion mRegionToDraw;
@@ -357,7 +355,6 @@ public:
     SurfaceMode mMode;
     DrawRegionClip mClip;
     ContentType mContentType;
-    bool mDidSelfCopy;
   };
 
   enum {

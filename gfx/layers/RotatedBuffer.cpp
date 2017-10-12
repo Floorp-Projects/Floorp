@@ -747,7 +747,6 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
             MOZ_ASSERT(mDTBufferOnWhite && mDTBufferOnWhite->IsValid());
             mDTBufferOnWhite->CopyRect(srcRect, dest);
           }
-          result.mDidSelfCopy = true;
           mDidSelfCopy = true;
           // Don't set destBuffer; we special-case self-copies, and
           // just did the necessary work above.
@@ -784,13 +783,12 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
 
             // Buffer unrotate moves all the pixels, note that
             // we self copied for SyncBackToFrontBuffer
-            result.mDidSelfCopy = true;
             mDidSelfCopy = true;
             mBufferRect = destBufferRect;
             mBufferRotation = IntPoint(0, 0);
           }
 
-          if (!result.mDidSelfCopy) {
+          if (!mDidSelfCopy) {
             destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
             CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                          &destDTBuffer, &destDTBufferOnWhite);
