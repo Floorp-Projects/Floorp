@@ -153,9 +153,7 @@ function minHomeReadSandboxLevel(level) {
 // content process--expected to fail.
 //
 // Tests attempting to write to a file in the content temp directory
-// from the content process--expected to succeed. On Mac and Windows,
-// use "ContentTmpD", but on Linux use "TmpD" until Linux uses the
-// content temp dir key.
+// from the content process--expected to succeed. Uses "ContentTmpD".
 //
 // Tests reading various files and directories from file and web
 // content processes.
@@ -172,9 +170,6 @@ add_task(async function() {
   let prefExists = true;
 
   // Read the security.sandbox.content.level pref.
-  // If the pref isn't set and we're running on Linux on !isNightly(),
-  // exit without failing. The Linux content sandbox is only enabled
-  // on Nightly at this time.
   // eslint-disable-next-line mozilla/use-default-preference-values
   try {
     level = prefs.getIntPref("security.sandbox.content.level");
@@ -368,15 +363,13 @@ async function testFileAccess() {
   // system temp dir we give write access to, so this gives a false
   // positive.
   let profileDir = GetProfileDir();
-  if (!isLinux()) {
-    tests.push({
-      desc:     "profile dir",                // description
-      ok:       false,                        // expected to succeed?
-      browser:  webBrowser,                   // browser to run test in
-      file:     profileDir,                   // nsIFile object
-      minLevel: minProfileReadSandboxLevel(), // min level to enable test
-    });
-  }
+  tests.push({
+    desc:     "profile dir",                // description
+    ok:       false,                        // expected to succeed?
+    browser:  webBrowser,                   // browser to run test in
+    file:     profileDir,                   // nsIFile object
+    minLevel: minProfileReadSandboxLevel(), // min level to enable test
+  });
   if (fileContentProcessEnabled) {
     tests.push({
       desc:     "profile dir",
@@ -561,17 +554,13 @@ async function testFileAccess() {
 
   let cookiesFile = GetProfileEntry("cookies.sqlite");
   if (cookiesFile.exists() && !cookiesFile.isDirectory()) {
-    // On Linux, the temporary profile used for tests is in the system
-    // temp dir which content has read access to, so this test fails.
-    if (!isLinux()) {
-      tests.push({
-        desc:     "cookies file",
-        ok:       false,
-        browser:  webBrowser,
-        file:     cookiesFile,
-        minLevel: minProfileReadSandboxLevel(),
-      });
-    }
+    tests.push({
+      desc:     "cookies file",
+      ok:       false,
+      browser:  webBrowser,
+      file:     cookiesFile,
+      minLevel: minProfileReadSandboxLevel(),
+    });
     if (fileContentProcessEnabled) {
       tests.push({
         desc:     "cookies file",
