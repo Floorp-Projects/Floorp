@@ -481,11 +481,6 @@ class TestChecksConfigure(unittest.TestCase):
     def test_java_tool_checks(self):
         includes = ('util.configure', 'checks.configure', 'java.configure')
 
-        def mock_valid_javac(_, args):
-            if len(args) == 1 and args[0] == '-version':
-                return 0, '1.8', ''
-            self.fail("Unexpected arguments to mock_valid_javac: %s" % args)
-
         # A valid set of tools in a standard location.
         java = mozpath.abspath('/usr/bin/java')
         javah = mozpath.abspath('/usr/bin/javah')
@@ -493,26 +488,40 @@ class TestChecksConfigure(unittest.TestCase):
         jar = mozpath.abspath('/usr/bin/jar')
         jarsigner = mozpath.abspath('/usr/bin/jarsigner')
         keytool = mozpath.abspath('/usr/bin/keytool')
+        proguard_jar = mozpath.abspath('/path/to/proguard.jar')
+        old_proguard_jar = mozpath.abspath('/path/to/old_proguard.jar')
+
+        def mock_valid_java(_, args):
+            # Yield valid proguard.jar output with a version based on the given path.
+            stdout = \
+                 'ProGuard, version {version}' + \
+                 'Usage: java proguard.ProGuard [options ...]'
+            args = tuple(args)
+            if args == ('-jar', proguard_jar):
+                return 1, stdout.format(version="5.3.3"), ''
+            elif args == ('-jar', old_proguard_jar):
+                return 1, stdout.format(version="4.2"), ''
+            self.fail("Unexpected arguments to mock_valid_java: %s" % args)
+
+        def mock_valid_javac(_, args):
+            if len(args) == 1 and args[0] == '-version':
+                return 0, '1.8', ''
+            self.fail("Unexpected arguments to mock_valid_javac: %s" % args)
 
         paths = {
-            java: None,
+            java: mock_valid_java,
             javah: None,
             javac: mock_valid_javac,
             jar: None,
             jarsigner: None,
             keytool: None,
+            proguard_jar: mock_valid_java,
         }
 
-        config, out, status = self.get_result(includes=includes, extra_paths=paths)
-        self.assertEqual(status, 0)
-        self.assertEqual(config, {
-            'JAVA': java,
-            'JAVAH': javah,
-            'JAVAC': javac,
-            'JAR': jar,
-            'JARSIGNER': jarsigner,
-            'KEYTOOL': keytool,
-        })
+        config, out, status = self.get_result(includes=includes, extra_paths=paths,
+                                              environ={
+                                                  'PROGUARD_JAR': proguard_jar,
+                                              })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for javah... %s
@@ -521,7 +530,18 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 1.8
-        ''' % (java, javah, jar, jarsigner, keytool, javac)))
+             checking for proguard.jar version... %s
+        ''' % (java, javah, jar, jarsigner, keytool, javac, proguard_jar)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'JAVA': java,
+            'JAVAH': javah,
+            'JAVAC': javac,
+            'JAR': jar,
+            'JARSIGNER': jarsigner,
+            'KEYTOOL': keytool,
+            'PROGUARD_JAR': proguard_jar,
+        })
 
         # An alternative valid set of tools referred to by JAVA_HOME.
         alt_java = mozpath.abspath('/usr/local/bin/java')
@@ -533,7 +553,7 @@ class TestChecksConfigure(unittest.TestCase):
         alt_java_home = mozpath.dirname(mozpath.dirname(alt_java))
 
         paths.update({
-            alt_java: None,
+            alt_java: mock_valid_java,
             alt_javah: None,
             alt_javac: mock_valid_javac,
             alt_jar: None,
@@ -545,17 +565,9 @@ class TestChecksConfigure(unittest.TestCase):
                                               extra_paths=paths,
                                               environ={
                                                   'JAVA_HOME': alt_java_home,
-                                                  'PATH': mozpath.dirname(java)
+                                                  'PATH': mozpath.dirname(java),
+                                                  'PROGUARD_JAR': proguard_jar,
                                               })
-        self.assertEqual(status, 0)
-        self.assertEqual(config, {
-            'JAVA': alt_java,
-            'JAVAH': alt_javah,
-            'JAVAC': alt_javac,
-            'JAR': alt_jar,
-            'JARSIGNER': alt_jarsigner,
-            'KEYTOOL': alt_keytool,
-        })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for javah... %s
@@ -564,8 +576,19 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 1.8
+             checking for proguard.jar version... %s
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
-               alt_keytool, alt_javac)))
+               alt_keytool, alt_javac, proguard_jar)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'JAVA': alt_java,
+            'JAVAH': alt_javah,
+            'JAVAC': alt_javac,
+            'JAR': alt_jar,
+            'JARSIGNER': alt_jarsigner,
+            'KEYTOOL': alt_keytool,
+            'PROGUARD_JAR': proguard_jar,
+        })
 
         # We can use --with-java-bin-path instead of JAVA_HOME to similar
         # effect.
@@ -574,17 +597,9 @@ class TestChecksConfigure(unittest.TestCase):
             includes=includes,
             extra_paths=paths,
             environ={
-                'PATH': mozpath.dirname(java)
+                'PATH': mozpath.dirname(java),
+                'PROGUARD_JAR': proguard_jar,
             })
-        self.assertEqual(status, 0)
-        self.assertEqual(config, {
-            'JAVA': alt_java,
-            'JAVAH': alt_javah,
-            'JAVAC': alt_javac,
-            'JAR': alt_jar,
-            'JARSIGNER': alt_jarsigner,
-            'KEYTOOL': alt_keytool,
-        })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for javah... %s
@@ -593,8 +608,19 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 1.8
+             checking for proguard.jar version... %s
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
-               alt_keytool, alt_javac)))
+               alt_keytool, alt_javac, proguard_jar)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'JAVA': alt_java,
+            'JAVAH': alt_javah,
+            'JAVAC': alt_javac,
+            'JAR': alt_jar,
+            'JARSIGNER': alt_jarsigner,
+            'KEYTOOL': alt_keytool,
+            'PROGUARD_JAR': proguard_jar,
+        })
 
         # If --with-java-bin-path and JAVA_HOME are both set,
         # --with-java-bin-path takes precedence.
@@ -605,16 +631,8 @@ class TestChecksConfigure(unittest.TestCase):
             environ={
                 'PATH': mozpath.dirname(java),
                 'JAVA_HOME': mozpath.dirname(mozpath.dirname(java)),
+                'PROGUARD_JAR': proguard_jar,
             })
-        self.assertEqual(status, 0)
-        self.assertEqual(config, {
-            'JAVA': alt_java,
-            'JAVAH': alt_javah,
-            'JAVAC': alt_javac,
-            'JAR': alt_jar,
-            'JARSIGNER': alt_jarsigner,
-            'KEYTOOL': alt_keytool,
-        })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for javah... %s
@@ -623,21 +641,43 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 1.8
+             checking for proguard.jar version... %s
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
-               alt_keytool, alt_javac)))
+               alt_keytool, alt_javac, proguard_jar)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {
+            'JAVA': alt_java,
+            'JAVAH': alt_javah,
+            'JAVAC': alt_javac,
+            'JAR': alt_jar,
+            'JARSIGNER': alt_jarsigner,
+            'KEYTOOL': alt_keytool,
+            'PROGUARD_JAR': proguard_jar,
+        })
 
         def mock_old_javac(_, args):
             if len(args) == 1 and args[0] == '-version':
                 return 0, '1.6.9', ''
             self.fail("Unexpected arguments to mock_old_javac: %s" % args)
 
-        # An old javac is fatal.
-        paths[javac] = mock_old_javac
+        # An old proguard JAR is fatal.
         config, out, status = self.get_result(includes=includes,
                                               extra_paths=paths,
                                               environ={
-                                                  'PATH': mozpath.dirname(java)
+                                                  'PATH': mozpath.dirname(java),
+                                                  'PROGUARD_JAR': old_proguard_jar,
                                               })
+        self.assertEqual(out, textwrap.dedent('''\
+             checking for java... %s
+             checking for javah... %s
+             checking for jar... %s
+             checking for jarsigner... %s
+             checking for keytool... %s
+             checking for javac... %s
+             checking for javac version... 1.8
+             checking for proguard.jar version... 
+             ERROR: proguard.jar 5.3.3 or higher is required (looked for %s). Run |mach artifact install --from-build proguard-jar| or add `export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.
+        ''' % (java, javah, jar, jarsigner, keytool, javac, old_proguard_jar)))
         self.assertEqual(status, 1)
         self.assertEqual(config, {
             'JAVA': java,
@@ -647,6 +687,15 @@ class TestChecksConfigure(unittest.TestCase):
             'JARSIGNER': jarsigner,
             'KEYTOOL': keytool,
         })
+
+        # An old javac is fatal.
+        paths[javac] = mock_old_javac
+        config, out, status = self.get_result(includes=includes,
+                                              extra_paths=paths,
+                                              environ={
+                                                  'PATH': mozpath.dirname(java),
+                                                  'PROGUARD_JAR': proguard_jar,
+                                              })
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for javah... %s
@@ -657,13 +706,23 @@ class TestChecksConfigure(unittest.TestCase):
              checking for javac version... 
              ERROR: javac 1.8 or higher is required (found 1.6.9). Check the JAVA_HOME environment variable.
         ''' % (java, javah, jar, jarsigner, keytool, javac)))
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {
+            'JAVA': java,
+            'JAVAH': javah,
+            'JAVAC': javac,
+            'JAR': jar,
+            'JARSIGNER': jarsigner,
+            'KEYTOOL': keytool,
+        })
 
         # Any missing tool is fatal when these checks run.
         del paths[jarsigner]
         config, out, status = self.get_result(includes=includes,
                                               extra_paths=paths,
                                               environ={
-                                                  'PATH': mozpath.dirname(java)
+                                                  'PATH': mozpath.dirname(java),
+                                                  'PROGUARD_JAR': proguard_jar,
                                               })
         self.assertEqual(status, 1)
         self.assertEqual(config, {

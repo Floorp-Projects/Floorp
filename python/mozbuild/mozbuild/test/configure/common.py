@@ -42,7 +42,6 @@ class ConfigureTestVFS(object):
         self._paths = set(mozpath.abspath(p) for p in paths)
 
     def exists(self, path):
-        path = mozpath.abspath(path)
         if path in self._paths:
             return True
         if mozpath.basedir(path, [topsrcdir, topobjdir]):
@@ -125,6 +124,15 @@ class ConfigureTestSandbox(ConfigureSandbox):
                 STDOUT=subprocess.STDOUT,
                 Popen=self.Popen,
             )
+
+        if what == 'os.path':
+            return self.imported_os.path
+
+        if what == 'os.path.exists':
+            return self.imported_os.path.exists
+
+        if what == 'os.path.isfile':
+            return self.imported_os.path.isfile
 
         if what == 'os.environ':
             return self._environ
