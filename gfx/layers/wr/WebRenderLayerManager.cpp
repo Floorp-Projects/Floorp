@@ -174,15 +174,22 @@ WebRenderLayerManager::BeginTransaction()
 bool
 WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  LayoutDeviceIntSize size = mWidget->GetClientSize();
-  WrBridge()->BeginTransaction();
-
   // With the WebRenderLayerManager we reject attempts to set most kind of
   // "pending data" for empty transactions. Any place that attempts to update
   // transforms or scroll offset, for example, will get failure return values
   // back, and will fall back to a full transaction. Therefore the only piece
   // of "pending" information we need to send in an empty transaction are the
   // APZ focus state and canvases's CompositableOperations.
+
+  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE && 
+      !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
+    MOZ_ASSERT(!mTarget);
+    WrBridge()->SendSetFocusTarget(mFocusTarget);
+    return true;
+  }
+
+  LayoutDeviceIntSize size = mWidget->GetClientSize();
+  WrBridge()->BeginTransaction();
 
   mWebRenderCommandBuilder.EmptyTransaction();
 

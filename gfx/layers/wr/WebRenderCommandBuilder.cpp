@@ -42,6 +42,12 @@ WebRenderCommandBuilder::EmptyTransaction()
   }
 }
 
+bool
+WebRenderCommandBuilder::NeedsEmptyTransaction()
+{
+  return !mLastCanvasDatas.IsEmpty();
+}
+
 void
 WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                 wr::IpcResourceUpdateQueue& aResourceUpdates,
