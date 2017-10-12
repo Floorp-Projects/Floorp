@@ -11,58 +11,6 @@
   max-height: 5em;
 }
 
-/* Opt-in notification */
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] {
-  padding: 6px 0;
-  padding-inline-start: 44px;
-  background-color: hsla(210, 4%, 10%, 0.07);
-  background-image: url("chrome://browser/skin/info.svg");
-  background-clip: padding-box;
-  background-position: 20px center;
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"]:-moz-locale-dir(rtl) {
-  background-position: right 20px center;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] > description {
-  margin: 0;
-  padding: 0;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] > description > label.text-link {
-  margin-inline-start: 0;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button {
-  -moz-appearance: none;
-  min-width: 80px;
-  border-radius: 3px;
-  margin: 0;
-  margin-inline-start: 10px;
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-disable"] {
-  color: hsl(210, 0%, 38%);
-  background-color: hsl(210, 0%, 88%);
-  border: 1px solid hsl(210, 0%, 82%);
-}
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-disable"]:hover {
-  background-color: hsl(210, 0%, 84%);
-}
-
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-enable"] {
-  color: white;
-  background-color: hsl(93, 82%, 44%);
-  border: 1px solid hsl(93, 82%, 44%);
-}
-#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-enable"]:hover {
-  background-color: hsl(93, 82%, 40%);
-}
-
 /* Opt-out hint */
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-out"] {
