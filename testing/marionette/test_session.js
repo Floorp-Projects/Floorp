@@ -187,13 +187,7 @@ add_test(function test_Proxy_toJSON() {
   let p = new session.Proxy();
   deepEqual(p.toJSON(), {});
 
-  // autoconfig url
-  p = new session.Proxy();
-  p.proxyType = "pac";
-  p.proxyAutoconfigUrl = "foo";
-  deepEqual(p.toJSON(), {proxyType: "pac", proxyAutoconfigUrl: "foo"});
-
-  // manual proxy
+  // manual
   p = new session.Proxy();
   p.proxyType = "manual";
   deepEqual(p.toJSON(), {proxyType: "manual"});
@@ -201,37 +195,36 @@ add_test(function test_Proxy_toJSON() {
   for (let proxy of ["ftpProxy", "httpProxy", "sslProxy", "socksProxy"]) {
     let expected = {proxyType: "manual"}
 
-    p = new session.Proxy();
-    p.proxyType = "manual";
+    let manual = new session.Proxy();
+    manual.proxyType = "manual";
 
     if (proxy == "socksProxy") {
-      p.socksVersion = 5;
+      manual.socksVersion = 5;
       expected.socksVersion = 5;
     }
 
     // without port
-    p[proxy] = "foo";
+    manual[proxy] = "foo";
     expected[proxy] = "foo"
-    deepEqual(p.toJSON(), expected);
+    deepEqual(manual.toJSON(), expected);
 
     // with port
-    p[proxy] = "foo";
-    p[`${proxy}Port`] = 0;
+    manual[proxy] = "foo";
+    manual[`${proxy}Port`] = 0;
     expected[proxy] = "foo:0";
-    deepEqual(p.toJSON(), expected);
+    deepEqual(manual.toJSON(), expected);
 
-    p[`${proxy}Port`] = 42;
+    manual[`${proxy}Port`] = 42;
     expected[proxy] = "foo:42"
-    deepEqual(p.toJSON(), expected);
+    deepEqual(manual.toJSON(), expected);
   }
 
   run_next_test();
 });
 
 add_test(function test_Proxy_fromJSON() {
-  let p = new session.Proxy();
-  deepEqual(p, session.Proxy.fromJSON(undefined));
-  deepEqual(p, session.Proxy.fromJSON(null));
+  deepEqual({}, session.Proxy.fromJSON(undefined).toJSON());
+  deepEqual({}, session.Proxy.fromJSON(null).toJSON());
 
   for (let typ of [true, 42, "foo", []]) {
     Assert.throws(() => session.Proxy.fromJSON(typ), InvalidArgumentError);
@@ -242,22 +235,8 @@ add_test(function test_Proxy_fromJSON() {
   Assert.throws(() => session.Proxy.fromJSON({proxyType: "foo"}),
       InvalidArgumentError);
 
-  // autoconfig url
-  for (let url of [true, 42, [], {}]) {
-    Assert.throws(() => session.Proxy.fromJSON(
-        {proxyType: "pac", proxyAutoconfigUrl: url}), /InvalidArgumentError/);
-  }
-
-  p = new session.Proxy();
-  p.proxyType = "pac";
-  p.proxyAutoconfigUrl = "foo";
-  deepEqual(p,
-      session.Proxy.fromJSON({proxyType: "pac", proxyAutoconfigUrl: "foo"}));
-
-  // manual proxy
-  p = new session.Proxy();
-  p.proxyType = "manual";
-  deepEqual(p, session.Proxy.fromJSON({proxyType: "manual"}));
+  // manual
+  session.Proxy.fromJSON({proxyType: "manual"});
 
   for (let proxy of ["httpProxy", "sslProxy", "ftpProxy", "socksProxy"]) {
     let manual = {proxyType: "manual"};
@@ -271,31 +250,19 @@ add_test(function test_Proxy_fromJSON() {
           InvalidArgumentError);
     }
 
-    p = new session.Proxy();
-    p.proxyType = "manual";
+    let expected = {"proxyType": "manual"};
     if (proxy == "socksProxy") {
       manual.socksVersion = 5;
-      p.socksVersion = 5;
+      expected.socksVersion = 5;
     }
 
-    let host_map = {
-      "foo:1": {hostname: "foo", port: 1},
-      "foo:21": {hostname: "foo", port: 21},
-      "foo:80": {hostname: "foo", port: 80},
-      "foo:443": {hostname: "foo", port: 443},
-      "foo:65535": {hostname: "foo", port: 65535},
-      "127.0.0.1:42": {hostname: "127.0.0.1", port: 42},
-      "[2001:db8::1]:42": {hostname: "[2001:db8::1]", port: "42"},
-    };
-
     // valid proxy hosts with port
-    for (let host in host_map) {
+    for (let host of ["foo:1", "foo:80", "foo:443", "foo:65535",
+        "127.0.0.1:42", "[2001:db8::1]:42"]) {
       manual[proxy] = host;
+      expected[proxy] = host;
 
-      p[`${proxy}`] = host_map[host]["hostname"];
-      p[`${proxy}Port`] = host_map[host]["port"];
-
-      deepEqual(p, session.Proxy.fromJSON(manual));
+      deepEqual(expected, session.Proxy.fromJSON(manual).toJSON());
     }
 
     // Without a port the default port of the scheme is used
@@ -303,17 +270,15 @@ add_test(function test_Proxy_fromJSON() {
       manual[proxy] = host;
 
       // For socks no default port is available
-      p[proxy] = `foo`;
       if (proxy === "socksProxy") {
-        p[`${proxy}Port`] = null;
+        expected[proxy] = `foo`;
       } else {
         let default_ports = {"ftpProxy": 21, "httpProxy": 80,
            "sslProxy": 443};
 
-        p[`${proxy}Port`] = default_ports[proxy];
+        expected[proxy] = `foo:${default_ports[proxy]}`;
       }
-
-      deepEqual(p, session.Proxy.fromJSON(manual));
+      deepEqual(expected, session.Proxy.fromJSON(manual).toJSON());
     }
   }
 
@@ -331,13 +296,9 @@ add_test(function test_Proxy_fromJSON() {
   }
 
   // valid noProxy
-  p = new session.Proxy();
-  p.proxyType = "manual";
-  for (let noProxy of [[], ["foo"], ["foo", "bar"],
-      ["127.0.0.1"], ["[2001:db8::1"]]) {
+  for (let noProxy of [[], ["foo"], ["foo", "bar"]]) {
     let manual = {proxyType: "manual", "noProxy": noProxy}
-    p.noProxy = noProxy;
-    deepEqual(p, session.Proxy.fromJSON(manual));
+    deepEqual(manual, session.Proxy.fromJSON(manual).toJSON());
   }
 
   run_next_test();
