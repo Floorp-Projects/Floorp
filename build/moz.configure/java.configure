@@ -67,7 +67,6 @@ def javac_version(javac):
     except subprocess.CalledProcessError as e:
         die('Failed to get javac version: %s', e.output)
 
-
 # Proguard detection
 # ========================================================
 @dependable
@@ -75,16 +74,13 @@ def javac_version(javac):
 def proguard_jar_default():
     # By default, look for proguard.jar in the location to which `mach
     # bootstrap` or `mach artifact toolchain` will install Proguard.
-    default = os.path.expanduser(os.path.join('~', '.mozbuild'))
-    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH', default)
+    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH',
+                                        os.path.expanduser(os.path.join('~', '.mozbuild')))
     return os.path.join(mozbuild_state_dir, 'proguard', 'lib', 'proguard.jar')
-
 
 # Proguard is really required; we provide a good error message when
 # validating.
-option(env='PROGUARD_JAR', nargs=1, default=proguard_jar_default,
-       help='Path to proguard.jar')
-
+option(env='PROGUARD_JAR', nargs=1, default=proguard_jar_default, help='Path to proguard.jar')
 
 @depends(java, 'PROGUARD_JAR')
 @checking('for proguard.jar version')
@@ -94,16 +90,14 @@ option(env='PROGUARD_JAR', nargs=1, default=proguard_jar_default,
 @imports(_from='exceptions', _import='Exception')
 def valid_proguard(java, proguard_jar):
     if not proguard_jar or not os.path.isfile(proguard_jar[0]):
-        die('proguard.jar 5.3.3 or higher is required (looked for {}). '
+        die('proguard.jar 5.3.3 or higher is required (looked for %s). '
             'Run |mach artifact install --from-build proguard-jar| or add '
-            '`export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.'
-            .format(proguard_jar[0]))
+            '`export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.' % proguard_jar[0])
 
     try:
         output = subprocess.check_output([java, '-jar', proguard_jar[0]])
         # Exit code zero shouldn't happen.
-        die('Expected `java -jar {}` to fail (with version in output) '
-            'but got exit code 0'
+        die('Expected `java -jar {}` to fail (with version in output) but got exit code 0'
             .format(proguard_jar[0]))
 
     except subprocess.CalledProcessError as e:
@@ -112,12 +106,11 @@ def valid_proguard(java, proguard_jar):
         # Usage: java proguard.ProGuard [options ...]
         output = e.output
 
-    version = Version(output.splitlines()[0].split(' ')[-1])
+    version = Version(e.output.splitlines()[0].split(' ')[-1])
     if version < '5.3.3':
         die('proguard.jar 5.3.3 or higher is required (found %s). '
             'Run |mach bootstrap| to upgrade. ' % version)
 
     return proguard_jar[0]
-
 
 set_config('PROGUARD_JAR', valid_proguard)
