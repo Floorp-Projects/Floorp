@@ -20,6 +20,12 @@ android-dependencies/opt:
           - name: public/build
             path: /builds/worker/artifacts/
             type: directory
+          - name: private/android-sdk
+            path: /builds/worker/private/android-sdk
+            type: directory
+          - name: private/java_home
+            path: /builds/worker/private/java_home
+            type: directory
         max-run-time: 36000
     run:
         using: mozharness
@@ -34,7 +40,6 @@ android-dependencies/opt:
         tooltool-downloads: internal
         job-script: taskcluster/scripts/builder/build-android-dependencies.sh
     toolchains:
-        - android-sdk-linux
         - proguard-jar
     optimization:
         skip-unless-changed:
@@ -80,7 +85,6 @@ android-test/opt:
         custom-build-variant-cfg: android-test
         tooltool-downloads: internal
     toolchains:
-        - android-sdk-linux
         - proguard-jar
     optimization:
         skip-unless-changed:
@@ -141,7 +145,6 @@ android-lint/opt:
         custom-build-variant-cfg: android-lint
         tooltool-downloads: internal
     toolchains:
-        - android-sdk-linux
         - proguard-jar
     optimization:
         skip-unless-changed:
@@ -196,7 +199,6 @@ android-checkstyle/opt:
         custom-build-variant-cfg: android-checkstyle
         tooltool-downloads: internal
     toolchains:
-        - android-sdk-linux
         - proguard-jar
     optimization:
         skip-unless-changed:
@@ -253,7 +255,6 @@ android-findbugs/opt:
         custom-build-variant-cfg: android-findbugs
         tooltool-downloads: internal
     toolchains:
-        - android-sdk-linux
         - proguard-jar
     optimization:
         skip-unless-changed:
