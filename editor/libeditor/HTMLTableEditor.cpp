@@ -104,6 +104,7 @@ HTMLEditor::InsertCell(nsIDOMElement* aCell,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cellParent, NS_ERROR_NULL_POINTER);
 
+  nsCOMPtr<nsIContent> child = do_QueryInterface(aCell);
   int32_t cellOffset = GetChildOffset(aCell, cellParent);
 
   nsCOMPtr<nsIDOMElement> newCell;
@@ -137,11 +138,14 @@ HTMLEditor::InsertCell(nsIDOMElement* aCell,
   }
   if (aAfter) {
     cellOffset++;
+    if (child) {
+      child = child->GetNextSibling();
+    }
   }
 
   //Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(this);
-  return InsertNode(newCell, cellParent, cellOffset);
+  return InsertNode(newCell, cellParent, cellOffset, child);
 }
 
 NS_IMETHODIMP
@@ -180,6 +184,7 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
   NS_ENSURE_SUCCESS(rv, rv);
   // Don't fail if no cell found
   NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  nsCOMPtr<nsIContent> child = do_QueryInterface(curCell);
 
   // Get more data for current cell in row we are inserting at (we need COLSPAN)
   int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -205,8 +210,11 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
     if (NS_SUCCEEDED(rv) && newCell) {
       if (aAfter) {
         cellOffset++;
+        if (child) {
+          child = child->GetNextSibling();
+        }
       }
-      rv = InsertNode(newCell, cellParent, cellOffset);
+      rv = InsertNode(newCell, cellParent, cellOffset, child);
       if (NS_FAILED(rv)) {
         break;
       }
@@ -659,10 +667,12 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
     nsCOMPtr<nsINode> parentOfRow = parentRow->GetParentNode();
     NS_ENSURE_TRUE(parentOfRow, NS_ERROR_NULL_POINTER);
     int32_t newRowOffset = parentOfRow->IndexOf(parentRow);
+    nsIContent* child = parentRow;
 
     // Adjust for when adding past the end
     if (aAfter && startRowIndex >= rowCount) {
       newRowOffset++;
+      child = child->GetNextSibling();
     }
 
     for (int32_t row = 0; row < aNumber; row++) {
@@ -686,7 +696,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
 
       // Use transaction system to insert the entire row+cells
       // (Note that rows are inserted at same childoffset each time)
-      rv = InsertNode(*newRow, *parentOfRow, newRowOffset);
+      rv = InsertNode(*newRow, *parentOfRow, newRowOffset, child);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -2331,7 +2341,8 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
       nsresult rv = DeleteNode(cellChild);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = InsertNode(cellChild, aTargetCell, insertIndex);
+      rv = InsertNode(cellChild, aTargetCell, insertIndex,
+                      targetCell->GetLastChild());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
