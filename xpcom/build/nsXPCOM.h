@@ -175,54 +175,6 @@ nsresult NS_NewNativeLocalFile(const NS_ConvertUTF16toUTF8& aPath,
 #endif
 
 /**
- * Allocator functions for the standalone glue.
- * Do not use outside the xpcom glue code.
- * Use moz_xmalloc/moz_xrealloc/free, or new/delete instead.
- */
-#ifdef XPCOM_GLUE
-/**
- * Allocates a block of memory of a particular size. If the memory cannot
- * be allocated (because of an out-of-memory condition), the process aborts.
- *
- * @param aSize  The size of the block to allocate
- * @result       The block of memory
- * @note         This function is thread-safe.
- */
-XPCOM_API(void*) NS_Alloc(size_t aSize);
-
-/**
- * Reallocates a block of memory to a new size.
- *
- * @param aPtr    The block of memory to reallocate. This block must originally
-                  have been allocated by NS_Alloc or NS_Realloc
- * @param aSize   The new size. If 0, frees the block like NS_Free
- * @result        The reallocated block of memory
- * @note          This function is thread-safe.
- *
- * If aPtr is null, this function behaves like NS_Alloc.
- * If s is the size of the block to which aPtr points, the first min(s, size)
- * bytes of aPtr's block are copied to the new block. If the allocation
- * succeeds, aPtr is freed and a pointer to the new block is returned. If the
- * allocation fails, the process aborts.
- */
-XPCOM_API(void*) NS_Realloc(void* aPtr, size_t aSize);
-
-/**
- * Frees a block of memory. Null is a permissible value, in which case no
- * action is taken.
- *
- * @param aPtr  The block of memory to free. This block must originally have
- *              been allocated by NS_Alloc or NS_Realloc
- * @note        This function is thread-safe.
- */
-XPCOM_API(void) NS_Free(void* aPtr);
-#else
-#define NS_Alloc moz_xmalloc
-#define NS_Realloc moz_xrealloc
-#define NS_Free free
-#endif
-
-/**
  * Support for warnings, assertions, and debugging breaks.
  */
 

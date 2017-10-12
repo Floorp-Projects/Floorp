@@ -131,7 +131,7 @@ template<typename CharT>
 CharT*
 NS_strndup(const CharT* aString, uint32_t aLen)
 {
-  auto newBuf = (CharT*)NS_Alloc((aLen + 1) * sizeof(CharT));
+  auto newBuf = (CharT*)moz_xmalloc((aLen + 1) * sizeof(CharT));
   if (newBuf) {
     memcpy(newBuf, aString, aLen * sizeof(CharT));
     newBuf[aLen] = '\0';
@@ -146,7 +146,7 @@ char*
 NS_strdup(const char* aString)
 {
   uint32_t len = strlen(aString);
-  char* str = (char*)NS_Alloc(len + 1);
+  char* str = (char*)moz_xmalloc(len + 1);
   if (str) {
     memcpy(str, aString, len);
     str[len] = '\0';

@@ -314,8 +314,8 @@ Damp.prototype = {
     this._results.push({name: name + ".reload.DAMP", value: time });
   },
 
-  async _coldInspectorOpen(url) {
-    await this.testSetup(url);
+  async _coldInspectorOpen() {
+    await this.testSetup(SIMPLE_URL);
     await this.openToolboxAndLog("cold.inspector", "inspector");
     await this.closeToolbox();
     await this.testTeardown();

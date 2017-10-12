@@ -34,10 +34,12 @@ add_task(async function task() {
   let urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 
+  let updates = waitForNetworkUpdates(toolbox);
+
   // Expand network log
   urlNode.click();
 
-  await waitForNetworkUpdates(toolbox);
+  await updates;
   await testNetworkMessage(messageNode);
 });
 
