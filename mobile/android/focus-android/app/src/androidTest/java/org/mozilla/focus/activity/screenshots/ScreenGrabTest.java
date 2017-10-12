@@ -37,14 +37,19 @@ import okhttp3.mockwebserver.MockWebServer;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
 
+import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static android.support.test.espresso.web.assertion.WebViewAssertions.webMatches;
 import static android.support.test.espresso.web.sugar.Web.onWebView;
 import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
@@ -53,6 +58,8 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static android.support.test.espresso.web.webdriver.DriverAtoms.webScrollIntoView;
 import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mozilla.focus.activity.TestHelper.browserURLbar;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
@@ -149,8 +156,7 @@ public class ScreenGrabTest {
         takeScreenshotsOfFirstrun(context, device);
 
         takeScreenshotOfHomeScreen();
-        takeScreenshotOfMenuAndYourRightsPage(device);
-        takeScreenshotOfAboutPage(context, device);
+        takeScreenshotOfMenu(device);
 
         takeScreenshotOfUrlBarAndBrowserView(device);
         takeScreenshotOfOpenWithAndShareViews(device);
@@ -159,6 +165,8 @@ public class ScreenGrabTest {
         takeScreenshotOfEraseSnackbar(device);
 
         takeScreenshotOfSettings(device);
+        takeScreenshotOfAboutPage(context, device);
+        takeScreenshotOfYourRightsPage(context, device);
 
         // Temporarily disabled: Our emulator image doesn't include Google Play - So we can't take
         // a screenshot of this dialog.
@@ -210,33 +218,58 @@ public class ScreenGrabTest {
         Screengrab.screenshot("Home_View");
     }
 
-    private void takeScreenshotOfMenuAndYourRightsPage(UiDevice device) throws UiObjectNotFoundException {
+    private void takeScreenshotOfMenu(UiDevice device) throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
 
-        assertTrue(TestHelper.RightsItem.waitForExists(waitingTime));
+        onView(withText(R.string.menu_whats_new))
+                .check(matches(isDisplayed()));
+
         Screengrab.screenshot("MainViewMenu");
 
-        TestHelper.RightsItem.click();
-       assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        device.pressBack(); // Close keyboard
+        device.pressBack(); // Close men
+    }
+
+    private void takeScreenshotOfAboutPage(Context context, UiDevice device) throws UiObjectNotFoundException {
+        final String aboutLabel = context.getString(R.string.preference_about, context.getString(R.string.app_name));
+
+        onData(withTitleText(aboutLabel))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.menu_about)));
+
+        onWebView()
+                .withElement(findElement(Locator.ID, "wordmark"))
+                .perform(webClick());
+
+        Screengrab.screenshot("About_Page");
+
+        device.pressBack(); // Leave about page
+
+    }
+
+    private void takeScreenshotOfYourRightsPage(Context context, UiDevice device) throws UiObjectNotFoundException {
+        final String yourRightsLabel = context.getString(R.string.your_rights);
+
+        onData(withTitleText(yourRightsLabel))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(yourRightsLabel)));
+
         onWebView()
                 .withElement(findElement(Locator.ID, "first"))
                 .perform(webClick());
 
         Screengrab.screenshot("YourRights_Page");
 
-        device.pressBack();
-    }
-
-    private void takeScreenshotOfAboutPage(Context context, UiDevice device) throws UiObjectNotFoundException {
-        TestHelper.menuButton.perform(click());
-        TestHelper.AboutItem.click();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        onWebView()
-                .withElement(findElement(Locator.ID, "wordmark"))
-                .perform(webClick());
-
-        Screengrab.screenshot("About_Page");
-        device.pressBack();
+        device.pressBack(); // Leave "Your rights" page
+        device.pressBack(); // Leave settings
     }
 
     private void takeScreenshotOfUrlBarAndBrowserView(UiDevice device) throws UiObjectNotFoundException {
@@ -349,8 +382,14 @@ public class ScreenGrabTest {
 
     private void takeScreenshotOfSettings(UiDevice device) throws UiObjectNotFoundException {
         /* Take Settings View */
-        TestHelper.menuButton.perform(click());
-        TestHelper.settingsMenuItem.click();
+        onView(withId(R.id.menu))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
+        onView(withId(R.id.settings))
+                .check(matches(isDisplayed()))
+                .perform(click());
+
         assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         Screengrab.screenshot("Settings_View_Top");
 
@@ -387,8 +426,6 @@ public class ScreenGrabTest {
         UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
         settingsView.scrollToEnd(4);
         Screengrab.screenshot("Settings_View_Bottom");
-
-        device.pressBack();
     }
 
     private void takeScreenshotOfContextMenu(Context context, UiDevice device) throws UiObjectNotFoundException {
