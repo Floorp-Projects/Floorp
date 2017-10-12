@@ -310,7 +310,7 @@ this.FormAutofillHeuristics = {
    *          the current element.
    */
   _isExpirationMonthLikely(element) {
-    if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+    if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
       return false;
     }
 
@@ -337,7 +337,7 @@ this.FormAutofillHeuristics = {
    *          the current element.
    */
   _isExpirationYearLikely(element) {
-    if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+    if (ChromeUtils.getClassName(element) !== "HTMLSelectElement") {
       return false;
     }
 
