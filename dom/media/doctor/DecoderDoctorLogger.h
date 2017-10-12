@@ -98,56 +98,29 @@ public:
                   Forward<Value>(aValue));
   }
 
-  // LogValue with a string literal, as they are not seen as `const char*` by
-  // Variant. Also, a literal doesn't have runtime costs, so it's cheap to call
-  // directly.
-  template<size_t N>
-  static void LogValue(const char* aSubjectTypeName,
-                       const void* aSubjectPointer,
-                       DDLogCategory aCategory,
-                       const char* aLabel,
-                       const char (&aLiteral)[N])
-  {
-    EagerLogValue(aSubjectTypeName,
-                  aSubjectPointer,
-                  aCategory,
-                  aLabel,
-                  static_cast<const char*>(aLiteral));
-  }
-
-  template<typename Subject, size_t N>
-  static void LogValue(const Subject* aSubject,
-                       DDLogCategory aCategory,
-                       const char* aLabel,
-                       const char (&aLiteral)[N])
-  {
-    EagerLogValue(
-      aSubject, aCategory, aLabel, static_cast<const char*>(aLiteral));
-  }
-
-  // Same as LogValue above, but needed to be seen by DDLOG... macros.
-  template<size_t N>
+  // EagerLogValue that can explicitly take strings, as the templated function
+  // above confuses Variant when forwarding string literals.
   static void EagerLogValue(const char* aSubjectTypeName,
                             const void* aSubjectPointer,
                             DDLogCategory aCategory,
                             const char* aLabel,
-                            const char (&aLiteral)[N])
+                            const char* aValue)
   {
-    EagerLogValue(aSubjectTypeName,
-                  aSubjectPointer,
-                  aCategory,
-                  aLabel,
-                  static_cast<const char*>(aLiteral));
+    Log(aSubjectTypeName,
+        aSubjectPointer,
+        aCategory,
+        aLabel,
+        DDLogValue{ aValue });
   }
 
-  template<typename Subject, size_t N>
+  template<typename Subject>
   static void EagerLogValue(const Subject* aSubject,
                             DDLogCategory aCategory,
                             const char* aLabel,
-                            const char (&aLiteral)[N])
+                            const char* aValue)
   {
     EagerLogValue(
-      aSubject, aCategory, aLabel, static_cast<const char*>(aLiteral));
+      DDLoggedTypeTraits<Subject>::Name(), aSubject, aCategory, aLabel, aValue);
   }
 
   template<typename... Args>
