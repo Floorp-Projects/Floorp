@@ -59,6 +59,7 @@ def id_and_secret_keyfile(desc, default=None):
                       default=default,
                       callback=id_and_secret)
 
+
     name = desc.upper().replace(' ', '_')
     set_config('MOZ_%s_CLIENTID' % name, content.id)
     set_config('MOZ_%s_KEY' % name, content.secret)
