@@ -377,7 +377,7 @@ SetJobLevel(sandbox::TargetPolicy* aPolicy, sandbox::JobLevel aJobLevel,
 
 void
 SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
-                                                 base::ChildPrivileges aPrivs)
+                                                 bool aIsFileProcess)
 {
   MOZ_RELEASE_ASSERT(mPolicy, "mPolicy must be set before this call.");
 
@@ -417,8 +417,9 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
   }
 
-  // If PRIVILEGES_FILEREAD required, don't allow settings that block reads.
-  if (aPrivs == base::ChildPrivileges::PRIVILEGES_FILEREAD) {
+  // If the process will handle file: URLs, don't allow settings that
+  // block reads.
+  if (aIsFileProcess) {
     if (accessTokenLevel < sandbox::USER_NON_ADMIN) {
       accessTokenLevel = sandbox::USER_NON_ADMIN;
     }
@@ -499,8 +500,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
 
   // We still have edge cases where the child at low integrity can't read some
   // files, so add a rule to allow read access to everything when required.
-  if (aSandboxLevel == 1 ||
-      aPrivs == base::ChildPrivileges::PRIVILEGES_FILEREAD) {
+  if (aSandboxLevel == 1 || aIsFileProcess) {
     result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                               sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                               L"*");

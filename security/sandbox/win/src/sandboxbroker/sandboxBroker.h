@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <windows.h>
 
-#include "base/child_privileges.h"
 #include "nsXULAppAPI.h"
 
 namespace sandbox {
@@ -43,7 +42,7 @@ public:
   // Security levels for different types of processes
 #if defined(MOZ_CONTENT_SANDBOX)
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
-                                         base::ChildPrivileges aPrivs);
+                                         bool aIsFileProcess);
 #endif
 
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel);

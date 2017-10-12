@@ -82,7 +82,7 @@
 #extension-icon {
   width: 16px;
   height: 16px;
-  margin-inline-start: 2px;
+  margin-inline-start: 4px;
   -moz-context-properties: fill, fill-opacity;
 }
 
@@ -169,7 +169,7 @@
 }
 
 #tracking-protection-icon:not([state]) {
-  margin-inline-end: -18px;
+  margin-inline-end: -20px;
   pointer-events: none;
   opacity: 0;
   /* Only animate the shield in, when it disappears hide it immediately. */

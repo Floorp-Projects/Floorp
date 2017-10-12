@@ -167,6 +167,7 @@ textarea {
 input[type="button"],
 input[type="submit"],
 input[type="reset"],
+input[type="color"],
 button {
   border-width: 1px;
   padding-inline-start: 7px;
@@ -206,6 +207,7 @@ input[type="file"]:focus > input[type="text"],
 select:not([size]):not([multiple]):focus,
 select[size="0"]:focus,
 select[size="1"]:focus,
+input[type="color"]:focus,
 input[type="button"]:focus,
 input[type="submit"]:focus,
 input[type="reset"]:focus,
@@ -247,6 +249,8 @@ input[type="submit"]:disabled,
 input[type="submit"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="reset"]:disabled:active,
+input[type="color"]:disabled,
+input[type="color"]:disabled:active,
 button:disabled,
 button:disabled:active {
   padding-inline-start: 7px;
@@ -288,7 +292,7 @@ xul|menulist:active {
 }
 
 button:active:hover,
-input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
+input[type="color"]:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {

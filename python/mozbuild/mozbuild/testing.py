@@ -509,7 +509,7 @@ def install_test_files(topsrcdir, topobjdir, tests_root, test_objs):
 
 # Convenience methods for test manifest reading.
 def read_manifestparser_manifest(context, manifest_path):
-    path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+    path = manifest_path.full_path
     return manifestparser.TestManifest(manifests=[path], strict=True,
                                        rootdir=context.config.topsrcdir,
                                        finder=context._finder,
@@ -517,7 +517,7 @@ def read_manifestparser_manifest(context, manifest_path):
 
 def read_reftest_manifest(context, manifest_path):
     import reftest
-    path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+    path = manifest_path.full_path
     manifest = reftest.ReftestManifest(finder=context._finder)
     manifest.load(path)
     return manifest

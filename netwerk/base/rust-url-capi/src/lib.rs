@@ -40,11 +40,18 @@ fn default_port(scheme: &str) -> Option<u32> {
 }
 
 #[no_mangle]
-pub extern "C" fn rusturl_new(spec: &nsACString) -> *mut Url {
+pub extern "C" fn rusturl_new(spec: &nsACString, baseptr: Option<&Url>) -> *mut Url {
   let url_spec = match str::from_utf8(spec) {
     Ok(spec) => spec,
     Err(_) => return ptr::null_mut(),
   };
+
+  if let Some(base) = baseptr {
+    match base.join(url_spec) {
+         Ok(url) => return Box::into_raw(Box::new(url)),
+         Err(_) => return ptr::null_mut()
+    };
+  }
 
   match parser().parse(url_spec) {
     Ok(url) => Box::into_raw(Box::new(url)),

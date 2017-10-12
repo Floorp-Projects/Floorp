@@ -203,8 +203,7 @@ toolbarpaletteitem[notransition][place="panel"] {
 
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-toolbarpaletteitem > toolbaritem.panel-wide-item,
-toolbarpaletteitem > toolbarbutton[type="menu-button"] {
+toolbarpaletteitem > toolbaritem.panel-wide-item {
   transition: transform var(--drag-drop-transition-duration) cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
@@ -213,8 +212,7 @@ toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-badge-stack > .to
   transform: scale(1.3);
 }
 
-toolbarpaletteitem[mousedown] > toolbaritem.panel-wide-item,
-toolbarpaletteitem[mousedown] > toolbarbutton[type="menu-button"] {
+toolbarpaletteitem[mousedown] > toolbaritem.panel-wide-item {
   transform: scale(1.1);
 }
 

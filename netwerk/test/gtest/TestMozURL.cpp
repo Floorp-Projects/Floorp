@@ -10,7 +10,7 @@ TEST(TestMozURL, Getters)
 {
   nsAutoCString href("http://user:pass@example.com/path?query#ref");
   RefPtr<MozURL> url;
-  ASSERT_EQ(MozURL::Init(href, getter_AddRefs(url)), NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
 
   nsAutoCString out;
 
@@ -39,7 +39,7 @@ TEST(TestMozURL, Getters)
   ASSERT_TRUE(out.EqualsLiteral("ref"));
 
   url = nullptr;
-  ASSERT_EQ(MozURL::Init(NS_LITERAL_CSTRING(""), getter_AddRefs(url)),
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), NS_LITERAL_CSTRING("")),
             NS_ERROR_FAILURE);
   ASSERT_EQ(url, nullptr);
 }
@@ -48,7 +48,7 @@ TEST(TestMozURL, MutatorChain)
 {
   nsAutoCString href("http://user:pass@example.com/path?query#ref");
   RefPtr<MozURL> url;
-  ASSERT_EQ(MozURL::Init(href, getter_AddRefs(url)), NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
   nsAutoCString out;
 
   RefPtr<MozURL> url2;
@@ -69,7 +69,7 @@ TEST(TestMozURL, MutatorFinalizeTwice)
 {
   nsAutoCString href("http://user:pass@example.com/path?query#ref");
   RefPtr<MozURL> url;
-  ASSERT_EQ(MozURL::Init(href, getter_AddRefs(url)), NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
   nsAutoCString out;
 
   RefPtr<MozURL> url2;
@@ -89,7 +89,7 @@ TEST(TestMozURL, MutatorErrorStatus)
 {
   nsAutoCString href("http://user:pass@example.com/path?query#ref");
   RefPtr<MozURL> url;
-  ASSERT_EQ(MozURL::Init(href, getter_AddRefs(url)), NS_OK);
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
   nsAutoCString out;
 
   // Test that trying to set the scheme to a bad value will get you an error
@@ -100,4 +100,22 @@ TEST(TestMozURL, MutatorErrorStatus)
   // Test that the mutator will not work after one faulty operation
   mut.SetScheme(NS_LITERAL_CSTRING("test"));
   ASSERT_EQ(mut.GetStatus(), NS_ERROR_MALFORMED_URI);
+}
+
+TEST(TestMozURL, InitWithBase)
+{
+  nsAutoCString href("https://example.net/a/b.html");
+  RefPtr<MozURL> url;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
+  nsAutoCString out;
+
+  ASSERT_EQ(url->GetSpec(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("https://example.net/a/b.html"));
+
+  RefPtr<MozURL> url2;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url2), NS_LITERAL_CSTRING("c.png"),
+                         url), NS_OK);
+
+  ASSERT_EQ(url2->GetSpec(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("https://example.net/a/c.png"));
 }

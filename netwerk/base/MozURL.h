@@ -18,7 +18,7 @@ namespace net {
 //
 // RefPtr<MozURL> url;
 // nsAutoCString href("http://example.com/path?query#ref");
-// nsresult rv = MozURL::Init(href, getter_AddRefs(url));
+// nsresult rv = MozURL::Init(getter_AddRefs(url), href);
 // if (NS_SUCCEEDED(rv)) { /* use url */ }
 //
 // When changing the URL is needed, you need to call the Mutate() method.
@@ -33,7 +33,8 @@ namespace net {
 class MozURL final
 {
 public:
-  static nsresult Init(const nsACString& aSpec, MozURL** aURL);
+  static nsresult Init(MozURL** aURL, const nsACString& aSpec,
+                       const MozURL* aBaseURL = nullptr);
 
   nsresult GetScheme(nsACString& aScheme);
   nsresult GetSpec(nsACString& aSpec);

@@ -20,7 +20,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 Cu.import("resource://testing-common/ContentTask.jsm");
 
@@ -1311,53 +1310,8 @@ this.BrowserTestUtils = {
     });
   },
 
-  /**
-   * Will poll a condition function until it returns true.
-   *
-   * @param condition
-   *        A condition function that must return true or false. If the
-   *        condition ever throws, this is also treated as a false. The
-   *        function can be a generator.
-   * @param interval
-   *        The time interval to poll the condition function. Defaults
-   *        to 100ms.
-   * @param attempts
-   *        The number of times to poll before giving up and rejecting
-   *        if the condition has not yet returned true. Defaults to 50
-   *        (~5 seconds for 100ms intervals)
-   * @return Promise
-   *        Resolves when condition is true.
-   *        Rejects if timeout is exceeded or condition ever throws.
-   */
-  waitForCondition(condition, msg, interval=100, maxTries=50) {
-    return new Promise((resolve, reject) => {
-      let tries = 0;
-      let intervalID = setInterval(async function() {
-        if (tries >= maxTries) {
-          clearInterval(intervalID);
-          msg += ` - timed out after ${maxTries} tries.`;
-          reject(msg);
-          return;
-        }
-
-        let conditionPassed = false;
-        try {
-          conditionPassed = await condition();
-        } catch(e) {
-          msg += ` - threw exception: ${e}`;
-          clearInterval(intervalID);
-          reject(msg);
-          return;
-        }
-
-        if (conditionPassed) {
-          clearInterval(intervalID);
-          resolve();
-        }
-        tries++;
-      }, interval);
-    });
-  },
+  // TODO: Fix consumers and remove me.
+  waitForCondition: TestUtils.waitForCondition,
 
   /**
    * Waits for a <xul:notification> with a particular value to appear

@@ -2337,6 +2337,51 @@ add_task(async function test_pullChanges_custom_roots() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(async function test_pullChanges_tombstones() {
+  await ignoreChangedRoots();
+
+  do_print("Insert new bookmarks");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "bookmarkAAAA",
+      url: "http://example.com/a",
+      title: "A",
+    }, {
+      guid: "bookmarkBBBB",
+      url: "http://example.com/b",
+      title: "B",
+    }],
+  });
+
+  do_print("Manually insert conflicting tombstone for new bookmark");
+  await PlacesUtils.withConnectionWrapper("test_pullChanges_tombstones",
+    async function(db) {
+      await db.executeCached(`
+        INSERT INTO moz_bookmarks_deleted(guid)
+        VALUES(:guid)`,
+        { guid: "bookmarkAAAA" });
+    }
+  );
+
+  let changes = await PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(), ["bookmarkAAAA", "bookmarkBBBB",
+    "menu"], "Should handle undeleted items when returning changes");
+  strictEqual(changes.bookmarkAAAA.tombstone, false,
+    "Should replace tombstone for A with undeleted item");
+  strictEqual(changes.bookmarkBBBB.tombstone, false,
+    "Should not report B as deleted");
+
+  await setChangesSynced(changes);
+
+  let newChanges = await PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(newChanges, {},
+    "Should not return changes after marking undeleted items as synced");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_pushChanges() {
   await ignoreChangedRoots();
 
