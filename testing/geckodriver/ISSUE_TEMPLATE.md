@@ -1,33 +1,29 @@
 ## System
+
 * Version: <!-- geckodriver version -->
 * Platform: <!-- e.g. Linux/macOS/Windows + version -->
 * Firefox: <!-- from the about dialogue -->
-* Selenium: <!-- binding + version -->
+* Selenium: <!-- client + version -->
 
 
 ## Testcase
 
 <!--
-Provide a minimal HTML document
-that can be used to reproduce the issue.
-The document should only contain the bare necessities
-required to observe the problem.
+Please provide a minimal HTML document which permits the problem
+to be reproduced.
 -->
 
 
 ## Stacktrace
 
 <!--
-Error and stacktrace produced by client binding.
+Error and stacktrace produced by client.
 -->
 
 
 ## Trace-level log
 
 <!--
-See https://github.com/mozilla/geckodriver#firefox-capabilities
-for making geckodriver produce a trace-level log.
-
-The short version is to either pass the -vv flag
-or {"moz:firefoxOptions": {"log": {"level": "trace"}}} as a capability.
+See https://searchfox.org/mozilla-central/source/testing/geckodriver/doc/TraceLogs.md
+for how to produce a trace-level log.
 -->
