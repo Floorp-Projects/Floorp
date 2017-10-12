@@ -165,6 +165,7 @@ HttpChannelChild::HttpChannelChild()
   , mSynthesizedStreamLength(0)
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
+  , mCacheEntryId(0)
   , mAltDataCacheEntryAvailable(false)
   , mCacheFetchCount(0)
   , mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
@@ -413,6 +414,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                     const nsHttpHeaderArray& aRequestHeaders,
                     const bool& aIsFromCache,
                     const bool& aCacheEntryAvailable,
+                    const uint64_t& aCacheEntryId,
                     const int32_t& aCacheFetchCount,
                     const uint32_t& aCacheExpirationTime,
                     const nsCString& aCachedCharset,
@@ -429,6 +431,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mUseResponseHead(aUseResponseHead)
   , mIsFromCache(aIsFromCache)
   , mCacheEntryAvailable(aCacheEntryAvailable)
+  , mCacheEntryId(aCacheEntryId)
   , mCacheFetchCount(aCacheFetchCount)
   , mCacheExpirationTime(aCacheExpirationTime)
   , mCachedCharset(aCachedCharset)
@@ -445,7 +448,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
     LOG(("StartRequestEvent [this=%p]\n", mChild));
     mChild->OnStartRequest(mChannelStatus, mResponseHead, mUseResponseHead,
                            mRequestHeaders, mIsFromCache, mCacheEntryAvailable,
-                           mCacheFetchCount, mCacheExpirationTime, mCachedCharset,
+                           mCacheEntryId, mCacheFetchCount,
+                           mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
                            mCacheKey, mAltDataType, mAltDataLen);
   }
@@ -457,6 +461,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   bool mUseResponseHead;
   bool mIsFromCache;
   bool mCacheEntryAvailable;
+  uint64_t mCacheEntryId;
   int32_t mCacheFetchCount;
   uint32_t mCacheExpirationTime;
   nsCString mCachedCharset;
@@ -475,6 +480,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const nsHttpHeaderArray& requestHeaders,
                                      const bool& isFromCache,
                                      const bool& cacheEntryAvailable,
+                                     const uint64_t& cacheEntryId,
                                      const int32_t& cacheFetchCount,
                                      const uint32_t& cacheExpirationTime,
                                      const nsCString& cachedCharset,
@@ -500,7 +506,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
   mEventQ->RunOrEnqueue(new StartRequestEvent(this, channelStatus, responseHead,
                                               useResponseHead, requestHeaders,
                                               isFromCache, cacheEntryAvailable,
-                                              cacheFetchCount,
+                                              cacheEntryId, cacheFetchCount,
                                               cacheExpirationTime, cachedCharset,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
@@ -535,6 +541,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const nsHttpHeaderArray& requestHeaders,
                                  const bool& isFromCache,
                                  const bool& cacheEntryAvailable,
+                                 const uint64_t& cacheEntryId,
                                  const int32_t& cacheFetchCount,
                                  const uint32_t& cacheExpirationTime,
                                  const nsCString& cachedCharset,
@@ -568,6 +575,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
 
   mIsFromCache = isFromCache;
   mCacheEntryAvailable = cacheEntryAvailable;
+  mCacheEntryId = cacheEntryId;
   mCacheFetchCount = cacheFetchCount;
   mCacheExpirationTime = cacheExpirationTime;
   mCachedCharset = cachedCharset;
@@ -2843,6 +2851,20 @@ HttpChannelChild::IsFromCache(bool *value)
     return NS_ERROR_NOT_AVAILABLE;
 
   *value = mIsFromCache;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetCacheEntryId(uint64_t *aCacheEntryId)
+{
+  bool fromCache = false;
+  if (NS_FAILED(IsFromCache(&fromCache)) ||
+      !fromCache ||
+      !mCacheEntryAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aCacheEntryId = mCacheEntryId;
   return NS_OK;
 }
 
