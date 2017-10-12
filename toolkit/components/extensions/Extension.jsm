@@ -1632,6 +1632,7 @@ this.Langpack = class extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
     this.startupData = addonData.startupData;
+    this.manifestCacheKey = [addonData.id, addonData.version];
   }
 
   static getBootstrapScope(id, file) {
@@ -1651,10 +1652,6 @@ this.Langpack = class extends ExtensionData {
       .then(result => {
         this.localeData.messages.set(locale, result);
       });
-  }
-
-  get manifestCacheKey() {
-    return [this.id, this.version, Services.locale.getAppLocaleAsLangTag()];
   }
 
   async _parseManifest() {
