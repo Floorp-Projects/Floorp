@@ -478,6 +478,9 @@ public:
                        ServoStyleContext* aNewLayoutParent,
                        Element* aElement);
 
+  bool IsMaster() const { return mKind == Kind::Master; }
+  bool IsForXBL() const { return mKind == Kind::ForXBL; }
+
 private:
   friend class AutoSetInServoTraversal;
   friend class AutoPrepareTraversal;
@@ -488,9 +491,6 @@ private:
    * Gets the pending snapshots to handle from the restyle manager.
    */
   const SnapshotTable& Snapshots();
-
-  bool IsMaster() const { return mKind == Kind::Master; }
-  bool IsForXBL() const { return mKind == Kind::ForXBL; }
 
   /**
    * Resolve all ServoDeclarationBlocks attached to mapped
