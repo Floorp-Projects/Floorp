@@ -69,6 +69,8 @@ talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-h1
+    - talos-h2
 
 awsy:
     - awsy
@@ -196,6 +198,8 @@ windows-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-h1
+    - talos-h2
 
 windows-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
@@ -253,6 +257,8 @@ macosx64-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-h1
+    - talos-h2
 
 macosx64-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
