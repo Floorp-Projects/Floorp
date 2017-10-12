@@ -103,7 +103,6 @@ protected:
               const nsIntRegion& aRegionToDraw,
               const nsIntRegion& aExtendedRegionToDraw,
               const nsIntRegion& aRegionToInvalidate,
-              bool aDidSelfCopy,
               DrawRegionClip aClip,
               LayerManager::DrawPaintedLayerCallback aCallback,
               void* aCallbackData)
