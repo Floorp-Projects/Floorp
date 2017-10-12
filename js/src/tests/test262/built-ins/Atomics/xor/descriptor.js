@@ -3,6 +3,7 @@
 // This code is governed by the license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.xor
 description: Testing descriptor property of Atomics.xor
 includes: [propertyHelper.js]
 ---*/

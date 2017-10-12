@@ -3,6 +3,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.load
 description: >
   Atomics.load.length is 2.
 info: >

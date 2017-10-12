@@ -1,4 +1,3 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-rest-val-obj.case
 // - src/dstr-binding/default/cls-expr-async-gen-meth.template
@@ -47,19 +46,22 @@ info: |
 var callCount = 0;
 var C = class {
   async *method({a, b, ...rest}) {
-    assert.sameValue(rest.x, 1);
-    assert.sameValue(rest.y, 2);
     assert.sameValue(rest.a, undefined);
     assert.sameValue(rest.b, undefined);
 
-    verifyEnumerable(rest, "x");
-    verifyWritable(rest, "x");
-    verifyConfigurable(rest, "x");
+    verifyProperty(rest, "x", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 1
+    });
 
-    verifyEnumerable(rest, "y");
-    verifyWritable(rest, "y");
-    verifyConfigurable(rest, "y");
-
+    verifyProperty(rest, "y", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 2
+    });
     callCount = callCount + 1;
   }
 };

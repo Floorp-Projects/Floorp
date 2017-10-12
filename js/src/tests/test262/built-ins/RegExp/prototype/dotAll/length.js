@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-dotall is not supported
 // Copyright (C) 2017 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

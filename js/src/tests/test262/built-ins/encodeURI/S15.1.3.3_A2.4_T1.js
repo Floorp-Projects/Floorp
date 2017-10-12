@@ -7,6 +7,8 @@ info: >
     [0xDC00 � 0xDFFF], return 4 octets (000wwwxx xxxxyyyy yyzzzzzz ->
     11110www 10xxxxxx 10yyyyyy 10zzzzzz)
 es5id: 15.1.3.3_A2.4_T1
+es6id: 18.2.6.4
+esid: sec-encodeuri-uri
 description: >
     Complex tests, use RFC 3629, string.charAt(k+1) in [0xDC00,
     0xDDFF, 0xDFFF]
@@ -17,7 +19,7 @@ var chars = [0xDC00, 0xDDFF, 0xDFFF];
 var errorCount = 0;
 var count = 0;
 var indexP;
-var indexO = 0; 
+var indexO = 0;
 for (var index = 0xD800; index <= 0xDBFF; index++) {
   var res = true;
   for (var indexC = 0; indexC < chars.length; indexC++) {
@@ -31,27 +33,27 @@ for (var index = 0xD800; index <= 0xDBFF; index++) {
 
     res = false;
   }
-  if (res !== true) {  
-    if (indexO === 0) { 
+  if (res !== true) {
+    if (indexO === 0) {
       indexO = index;
     } else {
-      if ((index - indexP) !== 1) {             
+      if ((index - indexP) !== 1) {
         if ((indexP - indexO) !== 0) {
           var hexP = decimalToHexString(indexP);
           var hexO = decimalToHexString(indexO);
           $ERROR('#' + hexO + '-' + hexP + ' ');
-        } 
+        }
         else {
           var hexP = decimalToHexString(indexP);
           $ERROR('#' + hexP + ' ');
-        }  
+        }
         indexO = index;
-      }         
+      }
     }
     indexP = index;
-    errorCount++;    
+    errorCount++;
   }
-  count++;  
+  count++;
 }
 
 if (errorCount > 0) {
@@ -62,7 +64,7 @@ if (errorCount > 0) {
   } else {
     var hexP = decimalToHexString(indexP);
     $ERROR('#' + hexP + ' ');
-  }     
+  }
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
 }
 

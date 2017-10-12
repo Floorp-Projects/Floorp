@@ -5,6 +5,7 @@
 /*---
 description: It's a syntax error if a FunctionRestParameter is followed by a trailing comma (generator function declaration)
 esid: sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
+features: [generators]
 flags: [generated]
 negative:
   phase: early
@@ -40,6 +41,7 @@ info: |
            iteratorRecord and env as arguments.
     [...]
 
+
     Trailing comma in the parameters list
 
     14.1 Function Definitions
@@ -51,6 +53,7 @@ info: |
         FormalParameterList[?Yield, ?Await] ,
         FormalParameterList[?Yield, ?Await] , FunctionRestParameter[?Yield, ?Await]
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 function* f(...a,) {
   

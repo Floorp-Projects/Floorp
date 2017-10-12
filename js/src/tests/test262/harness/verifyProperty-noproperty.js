@@ -4,14 +4,8 @@
 /*---
 description: >
   The first argument should have an own property
-includes: [propertyHelper.js]
+includes: [propertyHelper.js,sta.js]
 ---*/
-
-// monkeypatch the API
-$ERROR = function $ERROR(message) {
-  throw new Test262Error(message);
-};
-
 assert.throws(Test262Error, () => {
   verifyProperty(Object, 'JeanPaulSartre', {});
 }, "inexisting property");

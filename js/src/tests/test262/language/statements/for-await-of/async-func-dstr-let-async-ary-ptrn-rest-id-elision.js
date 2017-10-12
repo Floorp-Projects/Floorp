@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-rest-id-elision.case
-// - src/dstr-binding/default/for-await-of-async-func-let-async.template
+// - src/dstr-binding-for-await/ary-ptrn-rest-id-elision.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-let-async.template
 /*---
 description: Rest element following elision elements (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation

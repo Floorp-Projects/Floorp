@@ -1,7 +1,7 @@
-commit 5c8f4db9d72385965ff8b4fa94536649279f1470
-Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Wed May 17 15:46:04 2017 -0400
+commit 1afb7c74fd8752072397259a3ddf6ab85afdf785
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Fri Oct 6 12:37:36 2017 -0400
 
-    Merge pull request #1040 from leobalter/remove-unnecessary-tests
+    Merge pull request #986 from dilijev/intl-gcl
     
-    Remove unnecessary tests
+    Add version of intl402/6.2.3.js which tests via Intl.getCanonicalLocales

@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elem-id-iter-step-err.case
-// - src/dstr-binding/error/for-await-of-async-func-let.template
+// - src/dstr-binding-for-await/ary-ptrn-elem-id-iter-step-err.case
+// - src/dstr-binding-for-await/error/for-await-of-async-func-let.template
 /*---
 description: Error forwarding when IteratorStep returns an abrupt completion (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
-features: [destructuring-binding, async-iteration]
+features: [Symbol.iterator, destructuring-binding, async-iteration]
 flags: [generated, async]
 info: |
     IterationStatement :
@@ -38,18 +37,19 @@ info: |
 
     13.3.3.6 Runtime Semantics: IteratorBindingInitialization
 
-    SingleNameBinding : BindingIdentifier Initializeropt
+    SingleNameBinding : BindingIdentifier Initializer_opt
 
     [...]
-    4. If iteratorRecord.[[done]] is false, then
+    3. If iteratorRecord.[[done]] is false, then
        a. Let next be IteratorStep(iteratorRecord.[[iterator]]).
        b. If next is an abrupt completion, set iteratorRecord.[[done]] to true.
        c. ReturnIfAbrupt(next).
+
 ---*/
 var g = {};
 g[Symbol.iterator] = function() {
   return {
-    next: function() {
+    next() {
       throw new Test262Error();
     }
   };
@@ -62,6 +62,11 @@ async function fn() {
 }
 
 fn()
-  .then(_ => { throw new Test262Error("Expected async function to reject, but resolved."); }, ({ constructor }) => assert.sameValue(constructor, Test262Error))
+  .then(_ => {
+    throw new Test262Error("Expected async function to reject, but resolved.");
+  }, ({ constructor }) => {
+    assert.sameValue(constructor, Test262Error);
+    
+  })
   .then($DONE, $DONE);
 

@@ -3,6 +3,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.sub
 description: >
   Atomics.sub.name is "sub".
 includes: [propertyHelper.js]

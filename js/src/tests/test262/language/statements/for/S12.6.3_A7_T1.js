@@ -15,6 +15,8 @@ negative:
   type: SyntaxError
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 //////////////////////////////////////////////////////////////////////////////
 //CHECK#1
 for(index=0; index<10; index++; index--) ;

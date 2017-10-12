@@ -34,16 +34,19 @@ Object.defineProperty(obj, "b", { value: 4, writable: false, enumerable: true })
 var counter = 0;
 
 for ({...rest} of [obj]) {
-  assert.sameValue(rest.a, 3);
-  assert.sameValue(rest.b, 4);
+  verifyProperty(rest, "a", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 3
+  });
 
-  verifyEnumerable(rest, "a");
-  verifyWritable(rest, "a");
-  verifyConfigurable(rest, "a");
-
-  verifyEnumerable(rest, "b");
-  verifyWritable(rest, "b");
-  verifyConfigurable(rest, "b");
+  verifyProperty(rest, "b", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 4
+  });
 
   counter += 1;
 }

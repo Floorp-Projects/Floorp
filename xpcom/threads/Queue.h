@@ -25,7 +25,7 @@ public:
 
   ~Queue()
   {
-    MOZ_RELEASE_ASSERT(IsEmpty());
+    MOZ_ASSERT(IsEmpty());
 
     if (mHead) {
       free(mHead);

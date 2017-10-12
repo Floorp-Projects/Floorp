@@ -313,6 +313,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mIsCFFInitialized(false),
       mHasVariations(false),
       mHasVariationsInitialized(false),
+      mHasAATSmallCaps(false),
+      mHasAATSmallCapsInitialized(false),
       mCheckedForTracking(false),
       mTrakTable(nullptr),
       mTrakValues(nullptr),
@@ -336,6 +338,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mIsCFFInitialized(false),
       mHasVariations(false),
       mHasVariationsInitialized(false),
+      mHasAATSmallCaps(false),
+      mHasAATSmallCapsInitialized(false),
       mCheckedForTracking(false),
       mTrakTable(nullptr),
       mTrakValues(nullptr),
@@ -606,6 +610,95 @@ MacOSFontEntry::TrackingForCSSPx(float aSize) const
     double t = (aSize - s0) / (s1 - s0);
     return (1.0 - t) * int16_t(mTrakValues[sizeIndex - 1]) +
            t * int16_t(mTrakValues[sizeIndex]);
+}
+
+static bool
+CheckForAATSmallCaps(CFArrayRef aFeatures)
+{
+    // Walk the array of feature descriptors from the font, and see whether
+    // a small-caps feature setting is available.
+    // Just bail out (returning false) if at any point we fail to find the
+    // expected dictionary keys, etc; if the font has bad data, we don't even
+    // try to search the rest of it.
+    auto numFeatures = CFArrayGetCount(aFeatures);
+    for (auto f = 0; f < numFeatures; ++f) {
+        auto featureDict = (CFDictionaryRef)
+            CFArrayGetValueAtIndex(aFeatures, f);
+        if (!featureDict) {
+            return false;
+        }
+        auto featureNum = (CFNumberRef)
+            CFDictionaryGetValue(featureDict,
+                                 CFSTR("CTFeatureTypeIdentifier"));
+        if (!featureNum) {
+            return false;
+        }
+        int16_t featureType;
+        if (!CFNumberGetValue(featureNum, kCFNumberSInt16Type, &featureType)) {
+            return false;
+        }
+        if (featureType == kLetterCaseType || featureType == kLowerCaseType) {
+            // Which selector to look for, depending whether we've found the
+            // legacy LetterCase feature or the new LowerCase one.
+            const uint16_t smallCaps = (featureType == kLetterCaseType)
+                                       ? kSmallCapsSelector
+                                       : kLowerCaseSmallCapsSelector;
+            auto selectors = (CFArrayRef)
+                CFDictionaryGetValue(featureDict,
+                                     CFSTR("CTFeatureTypeSelectors"));
+            if (!selectors) {
+                return false;
+            }
+            auto numSelectors = CFArrayGetCount(selectors);
+            for (auto s = 0; s < numSelectors; s++) {
+                auto selectorDict =
+                    (CFDictionaryRef)CFArrayGetValueAtIndex(selectors, s);
+                if (!selectorDict) {
+                    return false;
+                }
+                auto selectorNum = (CFNumberRef)
+                    CFDictionaryGetValue(selectorDict,
+                                         CFSTR("CTFeatureSelectorIdentifier"));
+                if (!selectorNum) {
+                    return false;
+                }
+                int16_t selectorValue;
+                if (!CFNumberGetValue(selectorNum, kCFNumberSInt16Type,
+                                      &selectorValue)) {
+                    return false;
+                }
+                if (selectorValue == smallCaps) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool
+MacOSFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
+{
+    // If we're going to shape with Core Text, we don't support added
+    // OpenType features (aside from any CT applies by default), except
+    // for 'smcp' which we map to an AAT feature selector.
+    if (RequiresAATLayout()) {
+        if (aFeatureTag != HB_TAG('s','m','c','p')) {
+            return false;
+        }
+        if (mHasAATSmallCapsInitialized) {
+            return mHasAATSmallCaps;
+        }
+        mHasAATSmallCapsInitialized = true;
+        CTFontRef ctFont =
+            CTFontCreateWithGraphicsFont(mFontRef, 0.0, nullptr, nullptr);
+        CFArrayRef features = CTFontCopyFeatures(ctFont);
+        CFRelease(ctFont);
+        mHasAATSmallCaps = CheckForAATSmallCaps(features);
+        CFRelease(features);
+        return mHasAATSmallCaps;
+    }
+    return gfxFontEntry::SupportsOpenTypeFeature(aScript, aFeatureTag);
 }
 
 void

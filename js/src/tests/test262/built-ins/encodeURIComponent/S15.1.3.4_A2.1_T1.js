@@ -6,6 +6,8 @@ info: >
     If string.charAt(k) in [0x0000 - 0x007F]\[uriUnescaped], return 1 octet
     (00000000 0zzzzzzz -> 0zzzzzzz)
 es5id: 15.1.3.4_A2.1_T1
+es6id: 18.2.6.5
+esid: sec-encodeuricomponent-uricomponent
 description: Complex tests, use RFC 3629
 includes: [decimalToHexString.js]
 ---*/
@@ -16,33 +18,33 @@ var count = 0;
 var indexP;
 var indexO = 0;
 
-l : 
+l :
 for (var index = 0x0000; index <= 0x007F; index++) {
   count++;
   var str = String.fromCharCode(index);
     for (var indexC = 0; indexC < uriUnescaped.length; indexC++) {
     if (uriUnescaped[indexC] === str) continue l;
-  }    
+  }
   if (encodeURIComponent(str).toUpperCase() === decimalToPercentHexString(index)) continue l;
 
-  if (indexO === 0) { 
+  if (indexO === 0) {
     indexO = index;
   } else {
-    if ((index - indexP) !== 1) {             
+    if ((index - indexP) !== 1) {
       if ((indexP - indexO) !== 0) {
         var hexP = decimalToHexString(indexP);
         var hexO = decimalToHexString(indexO);
         $ERROR('#' + hexO + '-' + hexP + ' ');
-      } 
+      }
       else {
         var hexP = decimalToHexString(indexP);
         $ERROR('#' + hexP + ' ');
-      }  
+      }
       indexO = index;
-    }         
+    }
   }
   indexP = index;
-  errorCount++;     
+  errorCount++;
 }
 
 if (errorCount > 0) {
@@ -53,7 +55,7 @@ if (errorCount > 0) {
   } else {
     var hexP = decimalToHexString(indexP);
     $ERROR('#' + hexP + ' ');
-  }     
+  }
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
 }
 

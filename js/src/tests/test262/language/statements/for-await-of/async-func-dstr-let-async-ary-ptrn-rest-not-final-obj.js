@@ -1,7 +1,7 @@
-// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-rest-not-final-obj.case
-// - src/dstr-binding/default/for-await-of-async-func-let-async.template
+// - src/dstr-binding-for-await/ary-ptrn-rest-not-final-obj.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-let-async.template
 /*---
 description: Rest element (object binding pattern) may not be followed by any element (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -45,6 +45,7 @@ info: |
         [ BindingElementList[?Yield] ]
         [ BindingElementList[?Yield] , Elisionopt BindingRestElement[?Yield]opt ]
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 var iterCount = 0;
 var asyncIter = (async function*() {
