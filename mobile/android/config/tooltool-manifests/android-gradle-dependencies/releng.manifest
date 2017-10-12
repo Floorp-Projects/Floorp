@@ -1,10 +1,2 @@
 [
-  {
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "dotgradle-online.tar.xz",
-    "unpack": true,
-    "digest": "0979eb1dcd9349a9c3f51f24747bb6e19e803226d7150fcf6846889ae24a8df925d03edfac038a5330822703c51130d4f5757d9f4caff7bcb2b6f71858c024d3",
-    "size": 512
-  }
 ]

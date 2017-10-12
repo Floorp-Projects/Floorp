@@ -55,13 +55,5 @@
     "unpack": true,
     "digest": "e3cfe7f8259ad97722243d4e873d5a05c014bfc24d637427f89d804bf5073290229c778ea303142cf06c2dc79e0492f23521f57d3a73825f55b8db587317646f",
     "size": 51753660
-  },
-  {
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "dotgradle.tar.xz",
-    "unpack": true,
-    "digest": "9f082ccd71ad18991eb71fcad355c6990f50a72a09ab9b79696521485656083a72faf5a8d4714de9c4b901ee2319b6786a51964846bb7075061642a8505501c2",
-    "size": 512
   }
 ]
