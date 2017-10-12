@@ -1142,9 +1142,6 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPr
     RootedId id(cx);
     RootedValue key(cx);
     RootedValue value(cx);
-    RootedNativeObject nobj(cx);
-    if (obj->is<NativeObject>())
-        nobj = &obj->as<NativeObject>();
     RootedShape shape(cx);
     Rooted<PropertyDescriptor> desc(cx);
     // Step 4.
@@ -1161,7 +1158,8 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPr
         }
 
         // Step 4.a.i.
-        if (nobj) {
+        if (obj->is<NativeObject>()) {
+            HandleNativeObject nobj = obj.as<NativeObject>();
             if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
                 value = nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
             } else {
