@@ -90,7 +90,7 @@ DDMediaLogs::Shutdown(bool aPanic)
       }
       DDLE_INFO("--- Log for HTMLMediaElement[%p] ---", mediaLog.mMediaElement);
       for (const DDLogMessage& message : mediaLog.mMessages) {
-        DDLE_LOG(message.mClass <= DDLogClass::_Unlink
+        DDLE_LOG(message.mCategory <= DDLogCategory::_Unlink
                    ? mozilla::LogLevel::Debug
                    : mozilla::LogLevel::Info,
                  "%s",
@@ -333,14 +333,14 @@ DDMediaLogs::ProcessBuffer()
     LogFor(lifetime.mMediaElement)
       .mMessages.AppendElement(static_cast<const DDLogMessage&>(message));
 
-    switch (message.mClass) {
-      case DDLogClass::_Construction:
+    switch (message.mCategory) {
+      case DDLogCategory::_Construction:
         // The FindOrCreateLifetime above will have set a construction time,
         // so there's nothing more we need to do here.
         MOZ_ASSERT(lifetime.mConstructionTimeStamp);
         break;
 
-      case DDLogClass::_DerivedConstruction:
+      case DDLogCategory::_DerivedConstruction:
         // The FindOrCreateLifetime above will have set a construction time.
         MOZ_ASSERT(lifetime.mConstructionTimeStamp);
         // A derived construction must come with the base object.
@@ -370,13 +370,13 @@ DDMediaLogs::ProcessBuffer()
         }
         break;
 
-      case DDLogClass::_Destruction:
+      case DDLogCategory::_Destruction:
         lifetime.mDestructionIndex = message.mIndex;
         lifetime.mDestructionTimeStamp = message.mTimeStamp;
         UnlinkLifetime(lifetime, message.mIndex);
         break;
 
-      case DDLogClass::_Link:
+      case DDLogCategory::_Link:
         MOZ_ASSERT(message.mValue.is<DDLogObject>());
         {
           const DDLogObject& child = message.mValue.as<DDLogObject>();
@@ -391,7 +391,7 @@ DDMediaLogs::ProcessBuffer()
         }
         break;
 
-      case DDLogClass::_Unlink:
+      case DDLogCategory::_Unlink:
         MOZ_ASSERT(message.mValue.is<DDLogObject>());
         {
           const DDLogObject& child = message.mValue.as<DDLogObject>();
@@ -477,7 +477,7 @@ DDMediaLogs::FulfillPromises()
                                           message.mObject.Pointer())
                             .get());
       }
-      jw.StringProperty("cls", ToShortString(message.mClass));
+      jw.StringProperty("cat", ToShortString(message.mCategory));
       if (message.mLabel && message.mLabel[0] != '\0') {
         jw.StringProperty("lbl", message.mLabel);
       }

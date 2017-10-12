@@ -8,7 +8,7 @@
 #define DecoderDoctorLogger_h_
 
 #include "DDLoggedTypeTraits.h"
-#include "DDLogClass.h"
+#include "DDLogCategory.h"
 #include "DDLogValue.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DefineEnum.h"
@@ -60,7 +60,7 @@ public:
   // - The object that produces the message, either as a template type (for
   //   which a specialized DDLoggedTypeTraits exists), or a pointer and a type
   //   name (needed for inner classes that cannot specialize DDLoggedTypeTraits.)
-  // - A DDLogClass defining the type of log message; some are used
+  // - A DDLogCategory defining the type of log message; some are used
   //   internally for capture the lifetime and linking of C++ objects, others
   //   are used to split messages into different domains.
   // - A label (string literal).
@@ -74,26 +74,26 @@ public:
   template<typename Value>
   static void EagerLogValue(const char* aSubjectTypeName,
                             const void* aSubjectPointer,
-                            DDLogClass aClass,
+                            DDLogCategory aCategory,
                             const char* aLabel,
                             Value&& aValue)
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        aClass,
+        aCategory,
         aLabel,
         DDLogValue{ Forward<Value>(aValue) });
   }
 
   template<typename Subject, typename Value>
   static void EagerLogValue(const Subject* aSubject,
-                            DDLogClass aClass,
+                            DDLogCategory aCategory,
                             const char* aLabel,
                             Value&& aValue)
   {
     EagerLogValue(DDLoggedTypeTraits<Subject>::Name(),
                   aSubject,
-                  aClass,
+                  aCategory,
                   aLabel,
                   Forward<Value>(aValue));
   }
@@ -104,61 +104,63 @@ public:
   template<size_t N>
   static void LogValue(const char* aSubjectTypeName,
                        const void* aSubjectPointer,
-                       DDLogClass aClass,
+                       DDLogCategory aCategory,
                        const char* aLabel,
                        const char (&aLiteral)[N])
   {
     EagerLogValue(aSubjectTypeName,
                   aSubjectPointer,
-                  aClass,
+                  aCategory,
                   aLabel,
                   static_cast<const char*>(aLiteral));
   }
 
   template<typename Subject, size_t N>
   static void LogValue(const Subject* aSubject,
-                       DDLogClass aClass,
+                       DDLogCategory aCategory,
                        const char* aLabel,
                        const char (&aLiteral)[N])
   {
-    EagerLogValue(aSubject, aClass, aLabel, static_cast<const char*>(aLiteral));
+    EagerLogValue(
+      aSubject, aCategory, aLabel, static_cast<const char*>(aLiteral));
   }
 
   // Same as LogValue above, but needed to be seen by DDLOG... macros.
   template<size_t N>
   static void EagerLogValue(const char* aSubjectTypeName,
                             const void* aSubjectPointer,
-                            DDLogClass aClass,
+                            DDLogCategory aCategory,
                             const char* aLabel,
                             const char (&aLiteral)[N])
   {
     EagerLogValue(aSubjectTypeName,
                   aSubjectPointer,
-                  aClass,
+                  aCategory,
                   aLabel,
                   static_cast<const char*>(aLiteral));
   }
 
   template<typename Subject, size_t N>
   static void EagerLogValue(const Subject* aSubject,
-                            DDLogClass aClass,
+                            DDLogCategory aCategory,
                             const char* aLabel,
                             const char (&aLiteral)[N])
   {
-    EagerLogValue(aSubject, aClass, aLabel, static_cast<const char*>(aLiteral));
+    EagerLogValue(
+      aSubject, aCategory, aLabel, static_cast<const char*>(aLiteral));
   }
 
   template<typename... Args>
   static void EagerLogPrintf(const char* aSubjectTypeName,
                              const void* aSubjectPointer,
-                             DDLogClass aClass,
+                             DDLogCategory aCategory,
                              const char* aLabel,
                              const char* aFormat,
                              Args&&... aArgs)
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        aClass,
+        aCategory,
         aLabel,
         DDLogValue{
           nsCString{ nsPrintfCString(aFormat, Forward<Args>(aArgs)...) } });
@@ -166,14 +168,14 @@ public:
 
   template<typename Subject, typename... Args>
   static void EagerLogPrintf(const Subject* aSubject,
-                             DDLogClass aClass,
+                             DDLogCategory aCategory,
                              const char* aLabel,
                              const char* aFormat,
                              Args&&... aArgs)
   {
     EagerLogPrintf(DDLoggedTypeTraits<Subject>::Name(),
                    aSubject,
-                   aClass,
+                   aCategory,
                    aLabel,
                    aFormat,
                    Forward<Args>(aArgs)...);
@@ -187,7 +189,7 @@ public:
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        DDLogClass::_Construction,
+        DDLogCategory::_Construction,
         "",
         DDLogValue{ DDNoValue{} });
   }
@@ -199,7 +201,7 @@ public:
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        DDLogClass::_DerivedConstruction,
+        DDLogCategory::_DerivedConstruction,
         "",
         DDLogValue{ DDLogObject{ aBaseTypeName, aBasePointer } });
   }
@@ -211,7 +213,7 @@ public:
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        DDLogClass::_DerivedConstruction,
+        DDLogCategory::_DerivedConstruction,
         "",
         DDLogValue{ DDLogObject{ DDLoggedTypeTraits<B>::Name(), aBase } });
   }
@@ -223,13 +225,13 @@ public:
     if (!Traits::HasBase::value) {
       Log(DDLoggedTypeTraits<Subject>::Name(),
           aSubject,
-          DDLogClass::_Construction,
+          DDLogCategory::_Construction,
           "",
           DDLogValue{ DDNoValue{} });
     } else {
       Log(DDLoggedTypeTraits<Subject>::Name(),
           aSubject,
-          DDLogClass::_DerivedConstruction,
+          DDLogCategory::_DerivedConstruction,
           "",
           DDLogValue{ DDLogObject{
             DDLoggedTypeTraits<typename Traits::BaseType>::Name(),
@@ -242,7 +244,7 @@ public:
   {
     Log(aSubjectTypeName,
         aSubjectPointer,
-        DDLogClass::_Destruction,
+        DDLogCategory::_Destruction,
         "",
         DDLogValue{ DDNoValue{} });
   }
@@ -252,7 +254,7 @@ public:
   {
     Log(DDLoggedTypeTraits<Subject>::Name(),
         aSubject,
-        DDLogClass::_Destruction,
+        DDLogCategory::_Destruction,
         "",
         DDLogValue{ DDNoValue{} });
   }
@@ -265,7 +267,7 @@ public:
     if (aChild) {
       Log(DDLoggedTypeTraits<P>::Name(),
           aParent,
-          DDLogClass::_Link,
+          DDLogCategory::_Link,
           aLinkName,
           DDLogValue{ DDLogObject{ DDLoggedTypeTraits<C>::Name(), aChild } });
     }
@@ -280,7 +282,7 @@ public:
     if (aChild) {
       Log(aParentTypeName,
           aParentPointer,
-          DDLogClass::_Link,
+          DDLogCategory::_Link,
           aLinkName,
           DDLogValue{ DDLogObject{ DDLoggedTypeTraits<C>::Name(), aChild } });
     }
@@ -295,7 +297,7 @@ public:
     if (aChildPointer) {
       Log(DDLoggedTypeTraits<P>::Name(),
           aParent,
-          DDLogClass::_Link,
+          DDLogCategory::_Link,
           aLinkName,
           DDLogValue{ DDLogObject{ aChildTypeName, aChildPointer } });
     }
@@ -309,7 +311,7 @@ public:
     if (aChild) {
       Log(aParentTypeName,
           aParentPointer,
-          DDLogClass::_Unlink,
+          DDLogCategory::_Unlink,
           "",
           DDLogValue{ DDLogObject{ DDLoggedTypeTraits<C>::Name(), aChild } });
     }
@@ -321,7 +323,7 @@ public:
     if (aChild) {
       Log(DDLoggedTypeTraits<P>::Name(),
           aParent,
-          DDLogClass::_Unlink,
+          DDLogCategory::_Unlink,
           "",
           DDLogValue{ DDLogObject{ DDLoggedTypeTraits<C>::Name(), aChild } });
     }
@@ -356,7 +358,7 @@ private:
 
   static void Log(const char* aSubjectTypeName,
                   const void* aSubjectPointer,
-                  DDLogClass aClass,
+                  DDLogCategory aCategory,
                   const char* aLabel,
                   DDLogValue&& aValue);
 
@@ -399,25 +401,25 @@ public:
 // logging is enabled.
 
 // Log a single value; see DDLogValue for allowed types.
-#define DDLOG(_class, _label, _arg)                                            \
+#define DDLOG(_category, _label, _arg)                                         \
   do {                                                                         \
     if (DecoderDoctorLogger::IsDDLoggingEnabled()) {                           \
-      DecoderDoctorLogger::EagerLogValue(this, _class, _label, _arg);          \
+      DecoderDoctorLogger::EagerLogValue(this, _category, _label, _arg);       \
     }                                                                          \
   } while (0)
 // Log a single value, with an EXplicit `this`.
-#define DDLOGEX(_this, _class, _label, _arg)                                   \
+#define DDLOGEX(_this, _category, _label, _arg)                                \
   do {                                                                         \
     if (DecoderDoctorLogger::IsDDLoggingEnabled()) {                           \
-      DecoderDoctorLogger::EagerLogValue(_this, _class, _label, _arg);         \
+      DecoderDoctorLogger::EagerLogValue(_this, _category, _label, _arg);      \
     }                                                                          \
   } while (0)
 // Log a single value, with EXplicit type name and `this`.
-#define DDLOGEX2(_typename, _this, _class, _label, _arg)                       \
+#define DDLOGEX2(_typename, _this, _category, _label, _arg)                    \
   do {                                                                         \
     if (DecoderDoctorLogger::IsDDLoggingEnabled()) {                           \
       DecoderDoctorLogger::EagerLogValue(                                      \
-        _typename, _this, _class, _label, _arg);                               \
+        _typename, _this, _category, _label, _arg);                            \
     }                                                                          \
   } while (0)
 
@@ -431,12 +433,12 @@ static void inline MOZ_FORMAT_PRINTF(1, 2) DDLOGPRCheck(const char*, ...) {}
 #endif
 
 // Log a printf'd string. Discouraged, please try using DDLOG instead.
-#define DDLOGPR(_class, _label, _format, ...)                                  \
+#define DDLOGPR(_category, _label, _format, ...)                               \
   do {                                                                         \
     if (DecoderDoctorLogger::IsDDLoggingEnabled()) {                           \
       DDLOGPR_CHECK(_format, __VA_ARGS__);                                     \
       DecoderDoctorLogger::EagerLogPrintf(                                     \
-        this, _class, _label, _format, __VA_ARGS__);                           \
+        this, _category, _label, _format, __VA_ARGS__);                        \
     }                                                                          \
   } while (0)
 

@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DDLogClass.h"
+#include "DDLogCategory.h"
 
 namespace mozilla {
 
-const char* const kDDLogClassShortStrings[kDDLogClassCount] = {
+const char* const kDDLogCategoryShortStrings[kDDLogCategoryCount] = {
   "con", "dcn", "des", "lnk", "ulk", "prp", "evt", "api", "log"
 };
-const char* const kDDLogClassLongStrings[kDDLogClassCount] = {
+const char* const kDDLogCategoryLongStrings[kDDLogCategoryCount] = {
   "Construction", "Derived Construction",
   "Destruction",  "Link",
   "Unlink",       "Property",

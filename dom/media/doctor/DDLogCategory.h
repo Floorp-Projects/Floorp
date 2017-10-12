@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DDLogClass_h_
-#define DDLogClass_h_
+#ifndef DDLogCategory_h_
+#define DDLogCategory_h_
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DefineEnum.h"
 
 namespace mozilla {
 
-// Enum used to classify log messages.
+// Enum used to categorize log messages.
 // Those starting with '_' are for internal use only.
-MOZ_DEFINE_ENUM_CLASS(DDLogClass,
+MOZ_DEFINE_ENUM_CLASS(DDLogCategory,
                       (_Construction,
                        _DerivedConstruction,
                        _Destruction,
@@ -27,25 +27,25 @@ MOZ_DEFINE_ENUM_CLASS(DDLogClass,
 
 // Corresponding short strings, used as JSON property names when logs are
 // retrieved.
-extern const char* const kDDLogClassShortStrings[kDDLogClassCount];
+extern const char* const kDDLogCategoryShortStrings[kDDLogCategoryCount];
 
 inline const char*
-ToShortString(DDLogClass aClass)
+ToShortString(DDLogCategory aCategory)
 {
-  MOZ_ASSERT(static_cast<size_t>(aClass) < kDDLogClassCount);
-  return kDDLogClassShortStrings[static_cast<size_t>(aClass)];
+  MOZ_ASSERT(static_cast<size_t>(aCategory) < kDDLogCategoryCount);
+  return kDDLogCategoryShortStrings[static_cast<size_t>(aCategory)];
 }
 
 // Corresponding long strings, for use in descriptive UI.
-extern const char* const kDDLogClassLongStrings[kDDLogClassCount];
+extern const char* const kDDLogCategoryLongStrings[kDDLogCategoryCount];
 
 inline const char*
-ToLongString(DDLogClass aClass)
+ToLongString(DDLogCategory aCategory)
 {
-  MOZ_ASSERT(static_cast<size_t>(aClass) < kDDLogClassCount);
-  return kDDLogClassLongStrings[static_cast<size_t>(aClass)];
+  MOZ_ASSERT(static_cast<size_t>(aCategory) < kDDLogCategoryCount);
+  return kDDLogCategoryLongStrings[static_cast<size_t>(aCategory)];
 }
 
 } // namespace mozilla
 
-#endif // DDLogClass_h_
+#endif // DDLogCategory_h_
