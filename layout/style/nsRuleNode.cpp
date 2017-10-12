@@ -10507,14 +10507,9 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING)
     inheritBits |= NS_STYLE_INHERIT_BIT(Padding);
 
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW)
-    inheritBits |= NS_STYLE_INHERIT_BIT(Text);
-
   // properties in the SIDS, whether or not we care about them
   size_t nprops = 0,
-         backgroundOffset, borderOffset, paddingOffset, textShadowOffset;
-
-  // We put the reset properties the start of the nsCSSValue array....
+         backgroundOffset, borderOffset, paddingOffset;
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     backgroundOffset = nprops;
@@ -10529,14 +10524,6 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
     paddingOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Padding);
-  }
-
-  // ...and the inherited properties at the end of the array.
-  size_t inheritedOffset = nprops;
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
-    textShadowOffset = nprops;
-    nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Text);
   }
 
   void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
@@ -10556,10 +10543,6 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
     ruleData.mValueOffsets[eStyleStruct_Padding] = paddingOffset;
-  }
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
-    ruleData.mValueOffsets[eStyleStruct_Text] = textShadowOffset;
   }
 
   static const nsCSSPropertyID backgroundValues[] = {
@@ -10593,22 +10576,16 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
     eCSSProperty_padding_left,
   };
 
-  static const nsCSSPropertyID textShadowValues[] = {
-    eCSSProperty_text_shadow
-  };
-
   // Number of properties we care about
   size_t nValues = 0;
 
   nsCSSValue* values[MOZ_ARRAY_LENGTH(backgroundValues) +
                      MOZ_ARRAY_LENGTH(borderValues) +
-                     MOZ_ARRAY_LENGTH(paddingValues) +
-                     MOZ_ARRAY_LENGTH(textShadowValues)];
+                     MOZ_ARRAY_LENGTH(paddingValues)];
 
   nsCSSPropertyID properties[MOZ_ARRAY_LENGTH(backgroundValues) +
                            MOZ_ARRAY_LENGTH(borderValues) +
-                           MOZ_ARRAY_LENGTH(paddingValues) +
-                           MOZ_ARRAY_LENGTH(textShadowValues)];
+                           MOZ_ARRAY_LENGTH(paddingValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     for (uint32_t i = 0, i_end = ArrayLength(backgroundValues);
@@ -10631,14 +10608,6 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
          i < i_end; ++i) {
       properties[nValues] = paddingValues[i];
       values[nValues++] = ruleData.ValueFor(paddingValues[i]);
-    }
-  }
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
-    for (uint32_t i = 0, i_end = ArrayLength(textShadowValues);
-         i < i_end; ++i) {
-      properties[nValues] = textShadowValues[i];
-      values[nValues++] = ruleData.ValueFor(textShadowValues[i]);
     }
   }
 
@@ -10672,8 +10641,7 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
             if (unit != eCSSUnit_Null &&
                 unit != eCSSUnit_Dummy &&
                 unit != eCSSUnit_DummyInherit) {
-              if (unit == eCSSUnit_Inherit ||
-                  (i >= inheritedOffset && unit == eCSSUnit_Unset)) {
+              if (unit == eCSSUnit_Inherit) {
                 haveExplicitUAInherit = true;
                 values[i]->SetDummyInheritValue();
               } else {
