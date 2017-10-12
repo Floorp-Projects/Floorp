@@ -1391,7 +1391,8 @@ FontFaceSet::IsFontLoadAllowed(nsIURI* aFontLocation,
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_FONT,
                                           aFontLocation,
-                                          aPrincipal,
+                                          aPrincipal, // loading principal
+                                          aPrincipal, // triggering principal
                                           mDocument,
                                           EmptyCString(), // mime type
                                           nullptr, // aExtra
