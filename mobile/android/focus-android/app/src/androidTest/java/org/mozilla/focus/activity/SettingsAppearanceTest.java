@@ -19,7 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
