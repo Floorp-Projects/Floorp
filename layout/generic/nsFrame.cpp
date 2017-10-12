@@ -10232,7 +10232,8 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   nsChangeHint childHint = aChildFrame->StyleContext()->CalcStyleDifference(
     aNewStyleContext,
     &equalStructs,
-    &samePointerStructs);
+    &samePointerStructs,
+    /* aIgnoreVariables = */ true);
 
   // CalcStyleDifference will handle caching structs on the new style context,
   // but only if we're not on a style worker thread.

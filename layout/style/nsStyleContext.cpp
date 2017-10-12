@@ -106,19 +106,15 @@ nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                     uint32_t* aEqualStructs,
                                     uint32_t* aSamePointerStructs,
-                                    uint32_t aRelevantStructs)
+                                    bool aIgnoreVariables)
 {
   AUTO_PROFILER_LABEL("nsStyleContext::CalcStyleDifference", CSS);
 
   static_assert(nsStyleStructID_Length <= 32,
                 "aEqualStructs is not big enough");
 
-  MOZ_ASSERT(aRelevantStructs == kAllResolvedStructs || IsServo(),
-             "aRelevantStructs must be kAllResolvedStructs for Gecko contexts");
-
-  if (aRelevantStructs == kAllResolvedStructs) {
-    aRelevantStructs = mBits & NS_STYLE_INHERIT_MASK;
-  }
+  MOZ_ASSERT(!aIgnoreVariables || IsServo(),
+             "aIgnoreVariables must be false for Gecko contexts");
 
   *aEqualStructs = 0;
   *aSamePointerStructs = 0;
@@ -158,7 +154,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     }
   } else {
-    if (Servo_ComputedValues_EqualCustomProperties(
+    if (aIgnoreVariables ||
+        Servo_ComputedValues_EqualCustomProperties(
           AsServo()->ComputedData(),
           aNewContext->ComputedData())) {
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
