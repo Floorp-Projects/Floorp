@@ -9,7 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/Mutex.h"
 #include "AutoTaskQueue.h"
 
 #include "MediaContainerType.h"
@@ -35,7 +35,7 @@ class SourceBufferTaskQueue
 {
 public:
   SourceBufferTaskQueue()
-  : mMonitor("SourceBufferTaskQueue")
+  : mMutex("SourceBufferTaskQueue")
   {}
   ~SourceBufferTaskQueue()
   {
@@ -44,13 +44,13 @@ public:
 
   void Push(SourceBufferTask* aTask)
   {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     mQueue.AppendElement(aTask);
   }
 
   already_AddRefed<SourceBufferTask> Pop()
   {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     if (!mQueue.Length()) {
       return nullptr;
     }
@@ -61,12 +61,12 @@ public:
 
   nsTArray<SourceBufferTask>::size_type Length() const
   {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     return mQueue.Length();
   }
 
 private:
-  mutable Monitor mMonitor;
+  mutable Mutex mMutex;
   nsTArray<RefPtr<SourceBufferTask>> mQueue;
 };
 
@@ -506,7 +506,7 @@ private:
   Atomic<EvictionState> mEvictionState;
 
   // Monitor to protect following objects accessed across multiple threads.
-  mutable Monitor mMonitor;
+  mutable Mutex mMutex;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;
