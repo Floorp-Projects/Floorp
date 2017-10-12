@@ -117,12 +117,6 @@ class FirefoxDataProvider {
     );
 
     this.pushRequestToQueue(id, payload);
-
-    if (this.actions.updateRequest && this.isRequestPayloadReady(id)) {
-      let payloadFromQueue = this.getRequestFromQueue(id).payload;
-      this.cleanUpQueue(id);
-      await this.actions.updateRequest(id, payloadFromQueue, true);
-    }
   }
 
   async fetchResponseContent(mimeType, responseContent) {
@@ -244,8 +238,15 @@ class FirefoxDataProvider {
    * @return {boolean} return whether a specific networkEvent has been updated completely.
    */
   isRequestPayloadReady(id) {
-    // The payload is ready when there is no RDP request in-progress.
-    return !this.rdpRequestMap.get(id);
+    let record = this.rdpRequestMap.get(id);
+    if (!record) {
+      return false;
+    }
+
+    // The payload is ready when all values in the record are true.
+    // (i.e. all data received).
+    let props = Object.getOwnPropertyNames(record);
+    return props.every(prop => record[prop] === true);
   }
 
   /**
@@ -314,6 +315,14 @@ class FirefoxDataProvider {
       startedDateTime,
     } = networkInfo;
 
+    // Create tracking record for this request.
+    this.rdpRequestMap.set(actor, {
+      requestHeaders: false,
+      requestCookies: false,
+      eventTimings: false,
+      responseContent: false,
+    });
+
     this.addRequest(actor, {
       cause,
       fromCache,
@@ -337,23 +346,27 @@ class FirefoxDataProvider {
   onNetworkEventUpdate(type, data) {
     let { packet, networkInfo } = data;
     let { actor } = networkInfo;
+    let { updateType } = packet;
 
-    switch (packet.updateType) {
+    switch (updateType) {
       case "requestHeaders":
-        this.requestData(actor, packet.updateType).then(response => {
-          this.onRequestHeaders(response);
+        this.requestData(actor, updateType).then(response => {
+          this.onRequestHeaders(response)
+            .then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_REQUEST_HEADERS, actor);
         });
         break;
       case "requestCookies":
-        this.requestData(actor, packet.updateType).then(response => {
-          this.onRequestCookies(response);
+        this.requestData(actor, updateType).then(response => {
+          this.onRequestCookies(response)
+            .then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_REQUEST_COOKIES, actor);
         });
         break;
       case "requestPostData":
-        this.requestData(actor, packet.updateType).then(response => {
-          this.onRequestPostData(response);
+        this.requestData(actor, updateType).then(response => {
+          this.onRequestPostData(response)
+            .then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_REQUEST_POST_DATA, actor);
         });
         break;
@@ -361,21 +374,24 @@ class FirefoxDataProvider {
         this.updateRequest(actor, {
           securityState: networkInfo.securityInfo,
         }).then(() => {
-          this.requestData(actor, packet.updateType).then(response => {
-            this.onSecurityInfo(response);
+          this.requestData(actor, updateType).then(response => {
+            this.onSecurityInfo(response)
+              .then(() => this.onDataReceived(actor, updateType));
             emit(EVENTS.UPDATING_SECURITY_INFO, actor);
           });
         });
         break;
       case "responseHeaders":
-        this.requestData(actor, packet.updateType).then(response => {
-          this.onResponseHeaders(response);
+        this.requestData(actor, updateType).then(response => {
+          this.onResponseHeaders(response)
+            .then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_RESPONSE_HEADERS, actor);
         });
         break;
       case "responseCookies":
-        this.requestData(actor, packet.updateType).then(response => {
-          this.onResponseCookies(response);
+        this.requestData(actor, updateType).then(response => {
+          this.onResponseCookies(response)
+            .then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_RESPONSE_COOKIES, actor);
         });
         break;
@@ -392,20 +408,21 @@ class FirefoxDataProvider {
         });
         break;
       case "responseContent":
-        this.requestData(actor, packet.updateType).then(response => {
+        this.requestData(actor, updateType).then(response => {
           this.onResponseContent({
             contentSize: networkInfo.response.bodySize,
             transferredSize: networkInfo.response.transferredSize,
             mimeType: networkInfo.response.content.mimeType
-          }, response);
+          }, response).then(() => this.onDataReceived(actor, updateType));
           emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
         });
         break;
       case "eventTimings":
         this.updateRequest(actor, { totalTime: networkInfo.totalTime })
           .then(() => {
-            this.requestData(actor, packet.updateType).then(response => {
-              this.onEventTimings(response);
+            this.requestData(actor, updateType).then(response => {
+              this.onEventTimings(response)
+                .then(() => this.onDataReceived(actor, updateType));
               emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
             });
           });
@@ -434,7 +451,6 @@ class FirefoxDataProvider {
     // in the same record.
     if (!record) {
       record = {};
-      this.rdpRequestMap.set(actor, record);
     }
 
     // If data has been already requested return the same promise.
@@ -450,18 +466,6 @@ class FirefoxDataProvider {
     let promise = new Promise((resolve, reject) => {
       if (typeof this.webConsoleClient[realMethodName] == "function") {
         this.webConsoleClient[realMethodName](actor, response => {
-          // Remove resolved method from the record.
-          delete record[method];
-
-          // If the record is empty (i.e. there are no RDP requests
-          // for this actor in-progress), remove the entire record.
-          // Further data might be requested in the future, but none
-          // is in-progress at this point.
-          let props = Object.getOwnPropertyNames(record);
-          if (!props.length) {
-            this.rdpRequestMap.delete(actor);
-          }
-
           // Resolve incoming HTTP details data-promise.
           resolve(response);
         });
@@ -478,12 +482,37 @@ class FirefoxDataProvider {
   }
 
   /**
+   * Executed when new data are received from the backend.
+   */
+  async onDataReceived(actor, type) {
+    let record = this.rdpRequestMap.get(actor);
+    if (record) {
+      record[type] = true;
+    }
+
+    if (this.isRequestPayloadReady(actor)) {
+      let payloadFromQueue = this.getRequestFromQueue(actor).payload;
+
+      // Clean up
+      this.cleanUpQueue(actor);
+      this.rdpRequestMap.delete(actor);
+
+      let { updateRequest } = this.actions;
+      if (updateRequest) {
+        await updateRequest(actor, payloadFromQueue, true);
+      }
+
+      emit(EVENTS.PAYLOAD_READY, actor);
+    }
+  }
+
+  /**
    * Handles additional information received for a "requestHeaders" packet.
    *
    * @param {object} response the message received from the server.
    */
   onRequestHeaders(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       requestHeaders: response
     }).then(() => {
       emit(EVENTS.RECEIVED_REQUEST_HEADERS, response.from);
@@ -496,7 +525,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onRequestCookies(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       requestCookies: response
     }).then(() => {
       emit(EVENTS.RECEIVED_REQUEST_COOKIES, response.from);
@@ -509,7 +538,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onRequestPostData(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       requestPostData: response
     }).then(() => {
       emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
@@ -522,7 +551,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onSecurityInfo(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       securityInfo: response.securityInfo
     }).then(() => {
       emit(EVENTS.RECEIVED_SECURITY_INFO, response.from);
@@ -535,7 +564,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onResponseHeaders(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       responseHeaders: response
     }).then(() => {
       emit(EVENTS.RECEIVED_RESPONSE_HEADERS, response.from);
@@ -548,7 +577,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onResponseCookies(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       responseCookies: response
     }).then(() => {
       emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
@@ -563,7 +592,7 @@ class FirefoxDataProvider {
    */
   onResponseContent(data, response) {
     let payload = Object.assign({ responseContent: response }, data);
-    this.updateRequest(response.from, payload).then(() => {
+    return this.updateRequest(response.from, payload).then(() => {
       emit(EVENTS.RECEIVED_RESPONSE_CONTENT, response.from);
     });
   }
@@ -574,7 +603,7 @@ class FirefoxDataProvider {
    * @param {object} response the message received from the server.
    */
   onEventTimings(response) {
-    this.updateRequest(response.from, {
+    return this.updateRequest(response.from, {
       eventTimings: response
     }).then(() => {
       emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);

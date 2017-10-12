@@ -207,13 +207,13 @@ function waitForAllRequestsFinished(monitor) {
 
       // All requests are done - unsubscribe from events and resolve!
       window.off(EVENTS.NETWORK_EVENT, onRequest);
-      window.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+      window.off(EVENTS.PAYLOAD_READY, onTimings);
       info("All requests finished");
       resolve();
     }
 
     window.on(EVENTS.NETWORK_EVENT, onRequest);
-    window.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+    window.on(EVENTS.PAYLOAD_READY, onTimings);
   });
 }
 
@@ -296,6 +296,7 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
     let progress = {};
     let genericEvents = 0;
     let postEvents = 0;
+    let payloadReady = 0;
     let awaitedEventsToListeners = [
       ["UPDATING_REQUEST_HEADERS", onGenericEvent],
       ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
@@ -311,7 +312,8 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       ["UPDATING_RESPONSE_CONTENT", onGenericEvent],
       ["RECEIVED_RESPONSE_CONTENT", onGenericEvent],
       ["UPDATING_EVENT_TIMINGS", onGenericEvent],
-      ["RECEIVED_EVENT_TIMINGS", onGenericEvent]
+      ["RECEIVED_EVENT_TIMINGS", onGenericEvent],
+      ["PAYLOAD_READY", onPayloadReady]
     ];
 
     function initProgressForURL(url) {
@@ -351,6 +353,18 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       maybeResolve(event, actor, networkInfo);
     }
 
+    function onPayloadReady(event, actor) {
+      let networkInfo = getNetworkRequest(actor);
+      if (!networkInfo) {
+        // Must have been related to reloading document to disable cache.
+        // Ignore the event.
+        return;
+      }
+
+      payloadReady++;
+      maybeResolve(event, actor, networkInfo);
+    }
+
     function maybeResolve(event, actor, networkInfo) {
       info("> Network events progress: " +
         genericEvents + "/" + ((getRequests + postRequests) * 13) + ", " +
@@ -366,7 +380,8 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       // There are 15 updates which need to be fired for a request to be
       // considered finished. The "requestPostData" packet isn't fired for
       // non-POST requests.
-      if (genericEvents >= (getRequests + postRequests) * 13 &&
+      if (payloadReady >= (getRequests + postRequests) &&
+        genericEvents >= (getRequests + postRequests) * 13 &&
         postEvents >= postRequests * 2) {
         awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
         executeSoon(resolve);
