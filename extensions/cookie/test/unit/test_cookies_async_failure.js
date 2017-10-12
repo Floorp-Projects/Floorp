@@ -458,9 +458,8 @@ function* run_test_5(generator)
   do_check_eq(do_count_cookies(), 0);
 
   // Close the profile. We do not need to wait for completion, because the
-  // database has already been closed. Ensure the cookie file is unlocked.
-  do_close_profile(sub_generator);
-  yield;
+  // database has already been closed.
+  do_close_profile();
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
