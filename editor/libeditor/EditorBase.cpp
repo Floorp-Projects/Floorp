@@ -1117,8 +1117,9 @@ EditorBase::BeginningOfDocument()
     return NS_ERROR_NULL_POINTER;
   }
 
-  int32_t offsetInParent = parent->IndexOf(firstNode);
-  return selection->Collapse(parent, offsetInParent);
+  MOZ_ASSERT(parent->IndexOf(firstNode) == 0,
+             "How come the first node isn't the left most child in its parent?");
+  return selection->Collapse(parent, 0);
 }
 
 NS_IMETHODIMP
