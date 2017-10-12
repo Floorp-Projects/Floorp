@@ -234,6 +234,7 @@ WebAuthnManager::MaybeClearTransaction()
 
 WebAuthnManager::~WebAuthnManager()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MaybeClearTransaction();
 }
 
@@ -263,6 +264,7 @@ WebAuthnManager*
 WebAuthnManager::GetOrCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
   if (gWebAuthnManager) {
     return gWebAuthnManager;
   }
@@ -284,6 +286,7 @@ already_AddRefed<Promise>
 WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
                                 const MakePublicKeyCredentialOptions& aOptions)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
 
   MaybeClearTransaction();
@@ -292,7 +295,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
-  if(rv.Failed()) {
+  if (rv.Failed()) {
     return nullptr;
   }
 
@@ -516,6 +519,8 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
 
 void
 WebAuthnManager::StartRegister() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mChild) {
     mChild->SendRequestRegister(mInfo.ref());
   }
@@ -523,6 +528,8 @@ WebAuthnManager::StartRegister() {
 
 void
 WebAuthnManager::StartSign() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mChild) {
     mChild->SendRequestSign(mInfo.ref());
   }
@@ -530,6 +537,8 @@ WebAuthnManager::StartSign() {
 
 void
 WebAuthnManager::StartCancel() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mChild) {
     mChild->SendRequestCancel();
   }
@@ -539,6 +548,7 @@ already_AddRefed<Promise>
 WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
                               const PublicKeyCredentialRequestOptions& aOptions)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
 
   MaybeClearTransaction();
@@ -547,7 +557,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
-  if(rv.Failed()) {
+  if (rv.Failed()) {
     return nullptr;
   }
 
@@ -690,6 +700,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 void
 WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mTransactionPromise);
   MOZ_ASSERT(mInfo.isSome());
 
@@ -813,6 +824,7 @@ void
 WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
                                     nsTArray<uint8_t>& aSigBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mTransactionPromise);
   MOZ_ASSERT(mInfo.isSome());
 
@@ -905,6 +917,7 @@ WebAuthnManager::Cancel(const nsresult& aError)
 NS_IMETHODIMP
 WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aEvent);
 
   nsAutoString type;
@@ -954,12 +967,14 @@ WebAuthnManager::ActorCreated(PBackgroundChild* aActor)
 void
 WebAuthnManager::ActorDestroyed()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mChild = nullptr;
 }
 
 void
 WebAuthnManager::ActorFailed()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_CRASH("We shouldn't be here!");
 }
 
