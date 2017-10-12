@@ -107,7 +107,7 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
   , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
                                                  20 * 1024 * 1024))
   , mEvictionState(EvictionState::NO_EVICTION_NEEDED)
-  , mMonitor("TrackBuffersManager")
+  , mMutex("TrackBuffersManager")
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
 }
@@ -351,7 +351,7 @@ TrackBuffersManager::Buffered() const
 
   // http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
 
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   nsTArray<const TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
@@ -635,7 +635,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 void
 TrackBuffersManager::UpdateBufferedRanges()
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
 
   mVideoBufferedRanges = mVideoTracks.mSanitizedBufferedRanges;
   mAudioBufferedRanges = mAudioTracks.mSanitizedBufferedRanges;
@@ -1177,7 +1177,7 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
   }
 
   {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     mInfo = info;
   }
 
@@ -1871,7 +1871,7 @@ TrackBuffersManager::UpdateHighestTimestamp(TrackData& aTrackData,
                                             const media::TimeUnit& aHighestTime)
 {
   if (aHighestTime > aTrackData.mHighestStartTimestamp) {
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     aTrackData.mHighestStartTimestamp = aHighestTime;
   }
 }
@@ -1965,7 +1965,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
           aTrackData.mEvictionIndex.mLastIndex >= samplesRemoved &&
           aTrackData.mEvictionIndex.mEvictable >= sizeRemoved,
           "Invalid eviction index");
-        MonitorAutoLock mon(mMonitor);
+        MutexAutoLock mut(mMutex);
         aTrackData.mEvictionIndex.mLastIndex -= samplesRemoved;
         aTrackData.mEvictionIndex.mEvictable -= sizeRemoved;
       } else {
@@ -2004,7 +2004,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
         highestStartTime = sample->mTime;
       }
     }
-    MonitorAutoLock mon(mMonitor);
+    MutexAutoLock mut(mMutex);
     aTrackData.mHighestStartTimestamp = highestStartTime;
   }
 
@@ -2066,7 +2066,7 @@ TrackBuffersManager::SetAppendState(AppendState aAppendState)
 MediaInfo
 TrackBuffersManager::GetMetadata() const
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   return mInfo;
 }
 
@@ -2087,7 +2087,7 @@ TrackBuffersManager::HighestStartTime(TrackInfo::TrackType aTrack) const
 TimeIntervals
 TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   return aTrack == TrackInfo::kVideoTrack
     ? mVideoBufferedRanges
     : mAudioBufferedRanges;
@@ -2096,7 +2096,7 @@ TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
 TimeUnit
 TrackBuffersManager::HighestStartTime() const
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   TimeUnit highestStartTime;
   for (auto& track : GetTracksList()) {
     highestStartTime =
@@ -2108,7 +2108,7 @@ TrackBuffersManager::HighestStartTime() const
 TimeUnit
 TrackBuffersManager::HighestEndTime() const
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
 
   nsTArray<const TimeIntervals*> tracks;
   if (HasVideo()) {
@@ -2124,7 +2124,7 @@ TimeUnit
 TrackBuffersManager::HighestEndTime(
   nsTArray<const TimeIntervals*>& aTracks) const
 {
-  mMonitor.AssertCurrentThreadOwns();
+  mMutex.AssertCurrentThreadOwns();
 
   TimeUnit highestEndTime;
 
@@ -2137,7 +2137,7 @@ TrackBuffersManager::HighestEndTime(
 void
 TrackBuffersManager::ResetEvictionIndex(TrackData& aTrackData)
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   aTrackData.mEvictionIndex.Reset();
 }
 
@@ -2157,7 +2157,7 @@ TrackBuffersManager::UpdateEvictionIndex(TrackData& aTrackData,
     evictable += data[i]->ComputedSizeOfIncludingThis();
   }
   aTrackData.mEvictionIndex.mLastIndex = currentIndex;
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   aTrackData.mEvictionIndex.mEvictable += evictable;
 }
 
@@ -2535,7 +2535,7 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 uint32_t
 TrackBuffersManager::Evictable(TrackInfo::TrackType aTrack) const
 {
-  MonitorAutoLock mon(mMonitor);
+  MutexAutoLock mut(mMutex);
   return GetTracksData(aTrack).mEvictionIndex.mEvictable;
 }
 
