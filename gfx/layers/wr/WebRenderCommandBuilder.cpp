@@ -32,6 +32,17 @@ void WebRenderCommandBuilder::Destroy()
 }
 
 void
+WebRenderCommandBuilder::EmptyTransaction()
+{
+  // We need to update canvases that might have changed.
+  for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+    WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
+    canvas->UpdateCompositableClient();
+  }
+}
+
+void
 WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                 wr::IpcResourceUpdateQueue& aResourceUpdates,
                                                 nsDisplayList* aDisplayList,
