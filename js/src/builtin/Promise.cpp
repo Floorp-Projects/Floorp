@@ -2119,6 +2119,10 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
         // See comment for PerformPromiseAll, step 3 for why we unwrap here.
         valuesObj = UncheckedUnwrap(valuesObj);
     }
+    if (JS_IsDeadWrapper(valuesObj)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+        return false;
+    }
     RootedNativeObject values(cx, &valuesObj->as<NativeObject>());
 
     // Step 6 (moved under step 10).
