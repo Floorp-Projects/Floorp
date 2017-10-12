@@ -328,7 +328,7 @@ nsPrintSettingsX::GetScaling(double *aScaling)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsX::SetToFileName(const char16_t *aToFileName)
+nsPrintSettingsX::SetToFileName(const nsAString& aToFileName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -341,10 +341,9 @@ nsPrintSettingsX::SetToFileName(const char16_t *aToFileName)
 
   NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
 
-  if (aToFileName && aToFileName[0]) {
+  if (!aToFileName.IsEmpty()) {
     NSURL* jobSavingURL =
-        [NSURL fileURLWithPath: nsCocoaUtils::ToNSString(
-                                  nsDependentString(aToFileName))];
+        [NSURL fileURLWithPath: nsCocoaUtils::ToNSString(aToFileName)];
     if (jobSavingURL) {
       [printInfoDict setObject: NSPrintSaveJob forKey: NSPrintJobDisposition];
       [printInfoDict setObject: jobSavingURL forKey: NSPrintJobSavingURL];

@@ -563,14 +563,6 @@ AbstractFramePtr::hasInitialEnvironment() const
 }
 
 inline bool
-AbstractFramePtr::createSingleton() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->createSingleton();
-    return false;
-}
-
-inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
     if (isInterpreterFrame())

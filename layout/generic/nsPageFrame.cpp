@@ -642,17 +642,17 @@ nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext,
 
   // print document headers and footers
   nsString headerLeft, headerCenter, headerRight;
-  mPD->mPrintSettings->GetHeaderStrLeft(getter_Copies(headerLeft));
-  mPD->mPrintSettings->GetHeaderStrCenter(getter_Copies(headerCenter));
-  mPD->mPrintSettings->GetHeaderStrRight(getter_Copies(headerRight));
+  mPD->mPrintSettings->GetHeaderStrLeft(headerLeft);
+  mPD->mPrintSettings->GetHeaderStrCenter(headerCenter);
+  mPD->mPrintSettings->GetHeaderStrRight(headerRight);
   DrawHeaderFooter(aRenderingContext, *fontMet, eHeader,
                    headerLeft, headerCenter, headerRight,
                    rect, ascent, visibleHeight);
 
   nsString footerLeft, footerCenter, footerRight;
-  mPD->mPrintSettings->GetFooterStrLeft(getter_Copies(footerLeft));
-  mPD->mPrintSettings->GetFooterStrCenter(getter_Copies(footerCenter));
-  mPD->mPrintSettings->GetFooterStrRight(getter_Copies(footerRight));
+  mPD->mPrintSettings->GetFooterStrLeft(footerLeft);
+  mPD->mPrintSettings->GetFooterStrCenter(footerCenter);
+  mPD->mPrintSettings->GetFooterStrRight(footerRight);
   DrawHeaderFooter(aRenderingContext, *fontMet, eFooter,
                    footerLeft, footerCenter, footerRight,
                    rect, ascent, visibleHeight);

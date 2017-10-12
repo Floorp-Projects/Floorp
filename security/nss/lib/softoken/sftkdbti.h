@@ -49,6 +49,7 @@ SECStatus sftkdb_VerifyAttribute(SECItem *passKey,
                                  CK_ATTRIBUTE_TYPE attrType,
                                  SECItem *plainText, SECItem *sigText);
 
+PRBool sftkdb_isULONGAttribute(CK_ATTRIBUTE_TYPE type);
 void sftk_ULong2SDBULong(unsigned char *data, CK_ULONG value);
 CK_RV sftkdb_Update(SFTKDBHandle *handle, SECItem *key);
 CK_RV sftkdb_PutAttributeSignature(SFTKDBHandle *handle,

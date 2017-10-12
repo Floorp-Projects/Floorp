@@ -68,7 +68,7 @@ public:
   NS_IMETHOD SetScaling(double aScaling) override;
   NS_IMETHOD GetScaling(double *aScaling) override;
 
-  NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;
+  NS_IMETHOD SetToFileName(const nsAString& aToFileName) override;
 
   NS_IMETHOD GetOrientation(int32_t *aOrientation) override;
   NS_IMETHOD SetOrientation(int32_t aOrientation) override;

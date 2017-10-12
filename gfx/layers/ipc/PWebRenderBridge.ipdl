@@ -59,6 +59,9 @@ parent:
                           WebRenderScrollData aScrollData,
                           OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                           IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
+  async EmptyTransaction(FocusTarget focusTarget,
+                         WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
+                         IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);

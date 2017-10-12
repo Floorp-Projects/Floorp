@@ -106,6 +106,14 @@ public:
                                                  const wr::IdNamespace& aIdNamespace,
                                                  const TimeStamp& aTxnStartTime,
                                                  const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvEmptyTransaction(const FocusTarget& aFocusTarget,
+                                               InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                               InfallibleTArray<OpDestroy>&& aToDestroy,
+                                               const uint64_t& aFwdTransactionId,
+                                               const uint64_t& aTransactionId,
+                                               const wr::IdNamespace& aIdNamespace,
+                                               const TimeStamp& aTxnStartTime,
+                                               const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvSetFocusTarget(const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;

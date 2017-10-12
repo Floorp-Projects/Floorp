@@ -292,28 +292,34 @@ WasmReportUnalignedAccess()
 }
 
 static int32_t
-CoerceInPlace_ToInt32(MutableHandleValue val)
+CoerceInPlace_ToInt32(Value* rawVal)
 {
     JSContext* cx = TlsContext.get();
 
     int32_t i32;
-    if (!ToInt32(cx, val, &i32))
+    RootedValue val(cx, *rawVal);
+    if (!ToInt32(cx, val, &i32)) {
+        *rawVal = PoisonedObjectValue(0x42);
         return false;
-    val.set(Int32Value(i32));
+    }
 
+    *rawVal = Int32Value(i32);
     return true;
 }
 
 static int32_t
-CoerceInPlace_ToNumber(MutableHandleValue val)
+CoerceInPlace_ToNumber(Value* rawVal)
 {
     JSContext* cx = TlsContext.get();
 
     double dbl;
-    if (!ToNumber(cx, val, &dbl))
+    RootedValue val(cx, *rawVal);
+    if (!ToNumber(cx, val, &dbl)) {
+        *rawVal = PoisonedObjectValue(0x42);
         return false;
-    val.set(DoubleValue(dbl));
+    }
 
+    *rawVal = DoubleValue(dbl);
     return true;
 }
 
