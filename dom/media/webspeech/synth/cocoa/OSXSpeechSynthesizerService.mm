@@ -17,6 +17,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class SpeechDelegate;
+
 // We can escape the default delimiters ("[[" and "]]") by temporarily
 // changing the delimiters just before they appear, and changing them back
 // just after.
@@ -30,13 +32,7 @@ class SpeechTaskCallback final : public nsISpeechTaskCallback
 public:
   SpeechTaskCallback(nsISpeechTask* aTask,
                      NSSpeechSynthesizer* aSynth,
-                     const nsTArray<size_t>& aOffsets)
-    : mTask(aTask)
-    , mSpeechSynthesizer(aSynth)
-    , mOffsets(aOffsets)
-  {
-    mStartingTime = TimeStamp::Now();
-  }
+                     const nsTArray<size_t>& aOffsets);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SpeechTaskCallback, nsISpeechTaskCallback)
@@ -48,19 +44,55 @@ public:
   void OnDidFinishSpeaking();
 
 private:
-  virtual ~SpeechTaskCallback()
-  {
-    [mSpeechSynthesizer release];
-  }
+  virtual ~SpeechTaskCallback();
 
   float GetTimeDurationFromStart();
 
   nsCOMPtr<nsISpeechTask> mTask;
   NSSpeechSynthesizer* mSpeechSynthesizer;
+  SpeechDelegate* mDelegate;
   TimeStamp mStartingTime;
   uint32_t mCurrentIndex;
   nsTArray<size_t> mOffsets;
 };
+
+@interface SpeechDelegate : NSObject<NSSpeechSynthesizerDelegate>
+{
+@private
+  SpeechTaskCallback* mCallback;
+}
+
+  - (id)initWithCallback:(SpeechTaskCallback*)aCallback;
+@end
+
+@implementation SpeechDelegate
+- (id)initWithCallback:(SpeechTaskCallback*)aCallback
+{
+  [super init];
+  mCallback = aCallback;
+  return self;
+}
+
+- (void)speechSynthesizer:(NSSpeechSynthesizer *)aSender
+            willSpeakWord:(NSRange)aRange ofString:(NSString*)aString
+{
+  mCallback->OnWillSpeakWord(aRange.location, aRange.length);
+}
+
+- (void)speechSynthesizer:(NSSpeechSynthesizer *)aSender
+        didFinishSpeaking:(BOOL)aFinishedSpeaking
+{
+  mCallback->OnDidFinishSpeaking();
+}
+
+- (void)speechSynthesizer:(NSSpeechSynthesizer*)aSender
+ didEncounterErrorAtIndex:(NSUInteger)aCharacterIndex
+                 ofString:(NSString*)aString
+                  message:(NSString*)aMessage
+{
+  mCallback->OnError(aCharacterIndex);
+}
+@end
 
 NS_IMPL_CYCLE_COLLECTION(SpeechTaskCallback, mTask);
 
@@ -71,6 +103,25 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechTaskCallback)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechTaskCallback)
+
+SpeechTaskCallback::SpeechTaskCallback(nsISpeechTask* aTask,
+                                       NSSpeechSynthesizer* aSynth,
+                                       const nsTArray<size_t>& aOffsets)
+  : mTask(aTask)
+  , mSpeechSynthesizer(aSynth)
+  , mOffsets(aOffsets)
+{
+  mDelegate = [[SpeechDelegate alloc] initWithCallback:this];
+  [mSpeechSynthesizer setDelegate:mDelegate];
+  mStartingTime = TimeStamp::Now();
+}
+
+SpeechTaskCallback::~SpeechTaskCallback()
+{
+  [mSpeechSynthesizer setDelegate:nil];
+  [mDelegate release];
+  [mSpeechSynthesizer release];
+}
 
 NS_IMETHODIMP
 SpeechTaskCallback::OnCancel()
@@ -165,44 +216,6 @@ SpeechTaskCallback::OnDidFinishSpeaking()
   [mSpeechSynthesizer setDelegate:nil];
   mTask = nullptr;
 }
-
-@interface SpeechDelegate : NSObject<NSSpeechSynthesizerDelegate>
-{
-@private
-  SpeechTaskCallback* mCallback;
-}
-
-  - (id)initWithCallback:(SpeechTaskCallback*)aCallback;
-@end
-
-@implementation SpeechDelegate
-- (id)initWithCallback:(SpeechTaskCallback*)aCallback
-{
-  [super init];
-  mCallback = aCallback;
-  return self;
-}
-
-- (void)speechSynthesizer:(NSSpeechSynthesizer *)aSender
-            willSpeakWord:(NSRange)aRange ofString:(NSString*)aString
-{
-  mCallback->OnWillSpeakWord(aRange.location, aRange.length);
-}
-
-- (void)speechSynthesizer:(NSSpeechSynthesizer *)aSender
-        didFinishSpeaking:(BOOL)aFinishedSpeaking
-{
-  mCallback->OnDidFinishSpeaking();
-}
-
-- (void)speechSynthesizer:(NSSpeechSynthesizer*)aSender
- didEncounterErrorAtIndex:(NSUInteger)aCharacterIndex
-                 ofString:(NSString*)aString
-                  message:(NSString*)aMessage
-{
-  mCallback->OnError(aCharacterIndex);
-}
-@end
 
 namespace mozilla {
 namespace dom {
@@ -428,10 +441,6 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText,
   RefPtr<SpeechTaskCallback> callback = new SpeechTaskCallback(aTask, synth, offsets);
   nsresult rv = aTask->Setup(callback, 0, 0, 0);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  SpeechDelegate* delegate = [[SpeechDelegate alloc] initWithCallback:callback];
-  [synth setDelegate:delegate];
-  [delegate release ];
 
   NSString* text = nsCocoaUtils::ToNSString(escapedText);
   BOOL success = [synth startSpeakingString:text];
