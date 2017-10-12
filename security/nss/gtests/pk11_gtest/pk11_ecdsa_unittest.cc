@@ -15,103 +15,117 @@
 
 namespace nss_test {
 
-class Pkcs11EcdsaTest : public Pk11SignatureTest {
+class Pkcs11EcdsaTestBase : public Pk11SignatureTest {
  protected:
-  CK_MECHANISM_TYPE mechanism() { return CKM_ECDSA; }
-  SECItem* parameters() { return nullptr; }
+  Pkcs11EcdsaTestBase(SECOidTag hash_oid)
+      : Pk11SignatureTest(CKM_ECDSA, hash_oid) {}
 };
 
-class Pkcs11EcdsaSha256Test : public Pkcs11EcdsaTest {
- protected:
-  SECOidTag hashOID() { return SEC_OID_SHA256; }
+struct Pkcs11EcdsaTestParams {
+  SECOidTag hash_oid_;
+  Pkcs11SignatureTestParams sig_params_;
 };
 
-class Pkcs11EcdsaSha384Test : public Pkcs11EcdsaTest {
- protected:
-  SECOidTag hashOID() { return SEC_OID_SHA384; }
+class Pkcs11EcdsaTest
+    : public Pkcs11EcdsaTestBase,
+      public ::testing::WithParamInterface<Pkcs11EcdsaTestParams> {
+ public:
+  Pkcs11EcdsaTest() : Pkcs11EcdsaTestBase(GetParam().hash_oid_) {}
 };
 
-class Pkcs11EcdsaSha512Test : public Pkcs11EcdsaTest {
- protected:
-  SECOidTag hashOID() { return SEC_OID_SHA512; }
+TEST_P(Pkcs11EcdsaTest, Verify) { Verify(GetParam().sig_params_); }
+
+TEST_P(Pkcs11EcdsaTest, SignAndVerify) {
+  SignAndVerify(GetParam().sig_params_);
+}
+
+static const Pkcs11EcdsaTestParams kEcdsaVectors[] = {
+    {SEC_OID_SHA256,
+     {DataBuffer(kP256Pkcs8, sizeof(kP256Pkcs8)),
+      DataBuffer(kP256Spki, sizeof(kP256Spki)),
+      DataBuffer(kP256Data, sizeof(kP256Data)),
+      DataBuffer(kP256Signature, sizeof(kP256Signature))}},
+    {SEC_OID_SHA384,
+     {DataBuffer(kP384Pkcs8, sizeof(kP384Pkcs8)),
+      DataBuffer(kP384Spki, sizeof(kP384Spki)),
+      DataBuffer(kP384Data, sizeof(kP384Data)),
+      DataBuffer(kP384Signature, sizeof(kP384Signature))}},
+    {SEC_OID_SHA512,
+     {DataBuffer(kP521Pkcs8, sizeof(kP521Pkcs8)),
+      DataBuffer(kP521Spki, sizeof(kP521Spki)),
+      DataBuffer(kP521Data, sizeof(kP521Data)),
+      DataBuffer(kP521Signature, sizeof(kP521Signature))}}};
+
+INSTANTIATE_TEST_CASE_P(EcdsaSignVerify, Pkcs11EcdsaTest,
+                        ::testing::ValuesIn(kEcdsaVectors));
+
+class Pkcs11EcdsaSha256Test : public Pkcs11EcdsaTestBase {
+ public:
+  Pkcs11EcdsaSha256Test() : Pkcs11EcdsaTestBase(SEC_OID_SHA256) {}
 };
-
-TEST_F(Pkcs11EcdsaSha256Test, VerifyP256) {
-  SIG_TEST_VECTOR_VERIFY(kP256Spki, kP256Data, kP256Signature)
-}
-TEST_F(Pkcs11EcdsaSha256Test, SignAndVerifyP256) {
-  SIG_TEST_VECTOR_SIGN_VERIFY(kP256Pkcs8, kP256Spki, kP256Data)
-}
-
-TEST_F(Pkcs11EcdsaSha384Test, VerifyP384) {
-  SIG_TEST_VECTOR_VERIFY(kP384Spki, kP384Data, kP384Signature)
-}
-TEST_F(Pkcs11EcdsaSha384Test, SignAndVerifyP384) {
-  SIG_TEST_VECTOR_SIGN_VERIFY(kP384Pkcs8, kP384Spki, kP384Data)
-}
-
-TEST_F(Pkcs11EcdsaSha512Test, VerifyP521) {
-  SIG_TEST_VECTOR_VERIFY(kP521Spki, kP521Data, kP521Signature)
-}
-TEST_F(Pkcs11EcdsaSha512Test, SignAndVerifyP521) {
-  SIG_TEST_VECTOR_SIGN_VERIFY(kP521Pkcs8, kP521Spki, kP521Data)
-}
 
 // Importing a private key in PKCS#8 format must fail when the outer AlgID
 // struct contains neither id-ecPublicKey nor a namedCurve parameter.
 TEST_F(Pkcs11EcdsaSha256Test, ImportNoCurveOIDOrAlgorithmParams) {
-  EXPECT_FALSE(ImportPrivateKey(kP256Pkcs8NoCurveOIDOrAlgorithmParams,
-                                sizeof(kP256Pkcs8NoCurveOIDOrAlgorithmParams)));
+  DataBuffer k(kP256Pkcs8NoCurveOIDOrAlgorithmParams,
+               sizeof(kP256Pkcs8NoCurveOIDOrAlgorithmParams));
+  EXPECT_FALSE(ImportPrivateKey(k));
 };
 
 // Importing a private key in PKCS#8 format must succeed when only the outer
 // AlgID struct contains the namedCurve parameters.
 TEST_F(Pkcs11EcdsaSha256Test, ImportOnlyAlgorithmParams) {
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(
-      kP256Pkcs8OnlyAlgorithmParams, sizeof(kP256Pkcs8OnlyAlgorithmParams),
-      kP256Data, sizeof(kP256Data)));
+  DataBuffer k(kP256Pkcs8OnlyAlgorithmParams,
+               sizeof(kP256Pkcs8OnlyAlgorithmParams));
+  DataBuffer data(kP256Data, sizeof(kP256Data));
+  DataBuffer sig;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
 };
 
 // Importing a private key in PKCS#8 format must succeed when the outer AlgID
 // struct and the inner ECPrivateKey contain the same namedCurve parameters.
 // The inner curveOID is always ignored, so only the outer one will be used.
 TEST_F(Pkcs11EcdsaSha256Test, ImportMatchingCurveOIDAndAlgorithmParams) {
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(
-      kP256Pkcs8MatchingCurveOIDAndAlgorithmParams,
-      sizeof(kP256Pkcs8MatchingCurveOIDAndAlgorithmParams), kP256Data,
-      sizeof(kP256Data)));
+  DataBuffer k(kP256Pkcs8MatchingCurveOIDAndAlgorithmParams,
+               sizeof(kP256Pkcs8MatchingCurveOIDAndAlgorithmParams));
+  DataBuffer data(kP256Data, sizeof(kP256Data));
+  DataBuffer sig;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
 };
 
 // Importing a private key in PKCS#8 format must succeed when the outer AlgID
 // struct and the inner ECPrivateKey contain dissimilar namedCurve parameters.
 // The inner curveOID is always ignored, so only the outer one will be used.
 TEST_F(Pkcs11EcdsaSha256Test, ImportDissimilarCurveOIDAndAlgorithmParams) {
-  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(
-      kP256Pkcs8DissimilarCurveOIDAndAlgorithmParams,
-      sizeof(kP256Pkcs8DissimilarCurveOIDAndAlgorithmParams), kP256Data,
-      sizeof(kP256Data)));
+  DataBuffer k(kP256Pkcs8DissimilarCurveOIDAndAlgorithmParams,
+               sizeof(kP256Pkcs8DissimilarCurveOIDAndAlgorithmParams));
+  DataBuffer data(kP256Data, sizeof(kP256Data));
+  DataBuffer sig;
+  EXPECT_TRUE(ImportPrivateKeyAndSignHashedData(k, data, &sig));
 };
 
 // Importing a private key in PKCS#8 format must fail when the outer ASN.1
 // AlgorithmID struct contains only id-ecPublicKey but no namedCurve parameter.
 TEST_F(Pkcs11EcdsaSha256Test, ImportNoAlgorithmParams) {
-  EXPECT_FALSE(ImportPrivateKey(kP256Pkcs8NoAlgorithmParams,
-                                sizeof(kP256Pkcs8NoAlgorithmParams)));
+  DataBuffer k(kP256Pkcs8NoAlgorithmParams,
+               sizeof(kP256Pkcs8NoAlgorithmParams));
+  EXPECT_FALSE(ImportPrivateKey(k));
 };
 
 // Importing a private key in PKCS#8 format must fail when id-ecPublicKey is
 // given (so we know it's an EC key) but the namedCurve parameter is unknown.
 TEST_F(Pkcs11EcdsaSha256Test, ImportInvalidAlgorithmParams) {
-  EXPECT_FALSE(ImportPrivateKey(kP256Pkcs8InvalidAlgorithmParams,
-                                sizeof(kP256Pkcs8InvalidAlgorithmParams)));
+  DataBuffer k(kP256Pkcs8InvalidAlgorithmParams,
+               sizeof(kP256Pkcs8InvalidAlgorithmParams));
+  EXPECT_FALSE(ImportPrivateKey(k));
 };
 
 // Importing a private key in PKCS#8 format with a point not on the curve will
 // succeed. Using the contained public key however will fail when trying to
 // import it before using it for any operation.
 TEST_F(Pkcs11EcdsaSha256Test, ImportPointNotOnCurve) {
-  ScopedSECKEYPrivateKey privKey(ImportPrivateKey(
-      kP256Pkcs8PointNotOnCurve, sizeof(kP256Pkcs8PointNotOnCurve)));
+  DataBuffer k(kP256Pkcs8PointNotOnCurve, sizeof(kP256Pkcs8PointNotOnCurve));
+  ScopedSECKEYPrivateKey privKey(ImportPrivateKey(k));
   ASSERT_TRUE(privKey);
 
   ScopedSECKEYPublicKey pubKey(SECKEY_ConvertToPublicKey(privKey.get()));
@@ -127,23 +141,23 @@ TEST_F(Pkcs11EcdsaSha256Test, ImportPointNotOnCurve) {
 // Importing a private key in PKCS#8 format must fail when no point is given.
 // PK11 currently offers no APIs to derive raw public keys from private values.
 TEST_F(Pkcs11EcdsaSha256Test, ImportNoPublicKey) {
-  EXPECT_FALSE(
-      ImportPrivateKey(kP256Pkcs8NoPublicKey, sizeof(kP256Pkcs8NoPublicKey)));
+  DataBuffer k(kP256Pkcs8NoPublicKey, sizeof(kP256Pkcs8NoPublicKey));
+  EXPECT_FALSE(ImportPrivateKey(k));
 };
 
 // Importing a public key in SPKI format must fail when id-ecPublicKey is
 // given (so we know it's an EC key) but the namedCurve parameter is missing.
 TEST_F(Pkcs11EcdsaSha256Test, ImportSpkiNoAlgorithmParams) {
-  EXPECT_FALSE(ImportPublicKey(kP256SpkiNoAlgorithmParams,
-                               sizeof(kP256SpkiNoAlgorithmParams)));
+  DataBuffer k(kP256SpkiNoAlgorithmParams, sizeof(kP256SpkiNoAlgorithmParams));
+  EXPECT_FALSE(ImportPublicKey(k));
 }
 
 // Importing a public key in SPKI format with a point not on the curve will
 // succeed. Using the public key however will fail when trying to import
 // it before using it for any operation.
 TEST_F(Pkcs11EcdsaSha256Test, ImportSpkiPointNotOnCurve) {
-  ScopedSECKEYPublicKey pubKey(ImportPublicKey(
-      kP256SpkiPointNotOnCurve, sizeof(kP256SpkiPointNotOnCurve)));
+  DataBuffer k(kP256SpkiPointNotOnCurve, sizeof(kP256SpkiPointNotOnCurve));
+  ScopedSECKEYPublicKey pubKey(ImportPublicKey(k));
   ASSERT_TRUE(pubKey);
 
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());

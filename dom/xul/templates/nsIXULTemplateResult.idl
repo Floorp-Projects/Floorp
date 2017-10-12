@@ -5,9 +5,13 @@
 
 #include "nsISupports.idl"
 
-interface nsAtom;  // not a real interface; used in [noscript] methods only
 interface nsIDOMNode;
 interface nsIRDFResource;
+
+%{C++
+class nsAtom;
+%}
+[ptr] native nsAtomPtr(nsAtom);
 
 /**
  * A single result generated from a template query. Each result is identified
@@ -80,7 +84,7 @@ interface nsIXULTemplateResult : nsISupports
    *
    * @return the value for the variable or a null string if it has no value
    */
-  [noscript] AString getBindingFor(in nsAtom aVar);
+  [noscript] AString getBindingFor(in nsAtomPtr aVar);
 
   /**
    * Get an object value for a variable such as ?name for this result. 
@@ -93,7 +97,7 @@ interface nsIXULTemplateResult : nsISupports
    *
    * @return the value for the variable or null if it has no value
    */
-  [noscript] nsISupports getBindingObjectFor(in nsAtom aVar);
+  [noscript] nsISupports getBindingObjectFor(in nsAtomPtr aVar);
 
   /**
    * Indicate that a particular rule of a query has matched and that output

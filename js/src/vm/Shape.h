@@ -1013,9 +1013,13 @@ class Shape : public gc::TenuredCell
 
     BaseShape* base() const { return base_.get(); }
 
+    static bool isDataProperty(unsigned attrs, GetterOp getter, SetterOp setter) {
+        return !(attrs & (JSPROP_GETTER | JSPROP_SETTER)) && !getter && !setter;
+    }
+
     bool isDataProperty() const {
         MOZ_ASSERT(!isEmptyShape());
-        return !getter() && !setter();
+        return isDataProperty(attrs, getter(), setter());
     }
     uint32_t slot() const { MOZ_ASSERT(isDataProperty() && !hasMissingSlot()); return maybeSlot(); }
     uint32_t maybeSlot() const {
@@ -1476,7 +1480,7 @@ struct StackShape
 
     bool isDataProperty() const {
         MOZ_ASSERT(!JSID_IS_EMPTY(propid));
-        return !rawGetter && !rawSetter;
+        return Shape::isDataProperty(attrs, rawGetter, rawSetter);
     }
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 

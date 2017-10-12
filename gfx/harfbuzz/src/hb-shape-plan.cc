@@ -520,15 +520,17 @@ hb_shape_plan_create_cached2 (hb_face_t                     *face,
 
 retry:
   hb_face_t::plan_node_t *cached_plan_nodes = (hb_face_t::plan_node_t *) hb_atomic_ptr_get (&face->shape_plans);
-  for (hb_face_t::plan_node_t *node = cached_plan_nodes; node; node = node->next)
-    if (hb_shape_plan_matches (node->shape_plan, &proposal))
-    {
-      DEBUG_MSG_FUNC (SHAPE_PLAN, node->shape_plan, "fulfilled from cache");
-      return hb_shape_plan_reference (node->shape_plan);
-    }
+
+  /* Don't look for plan in the cache if there were variation coordinates XXX Fix me. */
+  if (!hb_coords_present (coords, num_coords))
+    for (hb_face_t::plan_node_t *node = cached_plan_nodes; node; node = node->next)
+      if (hb_shape_plan_matches (node->shape_plan, &proposal))
+      {
+        DEBUG_MSG_FUNC (SHAPE_PLAN, node->shape_plan, "fulfilled from cache");
+        return hb_shape_plan_reference (node->shape_plan);
+      }
 
   /* Not found. */
-
   hb_shape_plan_t *shape_plan = hb_shape_plan_create2 (face, props,
 						       user_features, num_user_features,
 						       coords, num_coords,

@@ -54,6 +54,7 @@ add_task(async function test_hsts_request() {
     }, {urls});
     browser.webRequest.onCompleted.addListener(details => {
       browser.test.assertEq(expect.shift(), "onCompleted");
+      browser.test.sendMessage("onCompleted", details.url);
     }, {urls});
     browser.webRequest.onErrorOccurred.addListener(details => {
       browser.test.notifyFail(`onErrorOccurred ${JSON.stringify(details)}`);
@@ -84,6 +85,7 @@ add_task(async function test_hsts_request() {
      "onResponseStarted", "onCompleted"]);
   // redirect_auto adds a query string
   ok((await extension.awaitMessage("tabs-done")).startsWith(sample), "redirection ok");
+  ok((await extension.awaitMessage("onCompleted")).startsWith(sample), "redirection ok");
 
   // priming hsts
   extension.sendMessage(`https://${testPath}/hsts.sjs`,
@@ -92,6 +94,8 @@ add_task(async function test_hsts_request() {
   is(await extension.awaitMessage("tabs-done"),
      "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
      "hsts primed");
+  is(await extension.awaitMessage("onCompleted"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
 
   // test upgrade
   extension.sendMessage(`http://${testPath}/hsts.sjs`,
@@ -101,6 +105,8 @@ add_task(async function test_hsts_request() {
   is(await extension.awaitMessage("tabs-done"),
      "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs",
      "hsts upgraded");
+  is(await extension.awaitMessage("onCompleted"),
+     "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
 
   await extension.unload();
 });

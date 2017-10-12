@@ -32,6 +32,23 @@ void WebRenderCommandBuilder::Destroy()
 }
 
 void
+WebRenderCommandBuilder::EmptyTransaction()
+{
+  // We need to update canvases that might have changed.
+  for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+    WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
+    canvas->UpdateCompositableClient();
+  }
+}
+
+bool
+WebRenderCommandBuilder::NeedsEmptyTransaction()
+{
+  return !mLastCanvasDatas.IsEmpty();
+}
+
+void
 WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                 wr::IpcResourceUpdateQueue& aResourceUpdates,
                                                 nsDisplayList* aDisplayList,
@@ -499,7 +516,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
       wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
-      aResources.AddBlobImage(key, descriptor, bytes);
+      if (!aResources.AddBlobImage(key, descriptor, bytes)) {
+        return nullptr;
+      }
       fallbackData->SetKey(key);
     } else {
       fallbackData->CreateImageClientIfNeeded();

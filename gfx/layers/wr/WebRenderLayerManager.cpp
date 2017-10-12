@@ -178,21 +178,38 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   // "pending data" for empty transactions. Any place that attempts to update
   // transforms or scroll offset, for example, will get failure return values
   // back, and will fall back to a full transaction. Therefore the only piece
-  // of "pending" information we need to send in an empty transaction is the
-  // APZ focus state.
-  WrBridge()->SendSetFocusTarget(mFocusTarget);
+  // of "pending" information we need to send in an empty transaction are the
+  // APZ focus state and canvases's CompositableOperations.
 
-  // We also need to update canvases that might have changed, but this code
-  // as-is causes crashes so comment it out for now.
-  //for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-  //  RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
-  //  WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
-  //  canvas->UpdateCompositableClient();
-  //}
-
-  if (!(aFlags & EndTransactionFlags::END_NO_COMPOSITE)) {
-    ScheduleComposite();
+  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE && 
+      !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
+    MOZ_ASSERT(!mTarget);
+    WrBridge()->SendSetFocusTarget(mFocusTarget);
+    return true;
   }
+
+  LayoutDeviceIntSize size = mWidget->GetClientSize();
+  WrBridge()->BeginTransaction();
+
+  mWebRenderCommandBuilder.EmptyTransaction();
+
+  WrBridge()->ClearReadLocks();
+
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
+  TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
+
+  // Skip the synchronization for buffer since we also skip the painting during
+  // device-reset status.
+  if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    if (WrBridge()->GetSyncObject() &&
+        WrBridge()->GetSyncObject()->IsSyncObjectValid()) {
+      WrBridge()->GetSyncObject()->Synchronize();
+    }
+  }
+
+  WrBridge()->EndEmptyTransaction(mFocusTarget, mLatestTransactionId, transactionStart);
+
+  MakeSnapshotIfRequired(size);
   return true;
 }
 

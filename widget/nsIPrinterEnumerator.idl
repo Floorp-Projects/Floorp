@@ -18,7 +18,7 @@ interface nsIPrinterEnumerator : nsISupports
    * default printer; see nsIPrintSettingsService.defaultPrinterName
    * for that.
    */
-  readonly attribute wstring defaultPrinterName;
+  readonly attribute AString defaultPrinterName;
 
   /**
    * Initializes certain settings from the native printer into the PrintSettings
@@ -27,7 +27,8 @@ interface nsIPrinterEnumerator : nsISupports
    *   Page Size
    *   Number of Copies
    */
-  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
+  void initPrintSettingsFromPrinter(in AString aPrinterName,
+                                    in nsIPrintSettings aPrintSettings);
 
   /**
    * The list of printer names

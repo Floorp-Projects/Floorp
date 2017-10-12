@@ -5,12 +5,16 @@
 
 #include "domstubs.idl"
 
-interface nsAtom;  // not a real interface; used in [noscript] methods only
 interface nsIArray;
 interface nsISimpleEnumerator;
 interface nsIXULTemplateResult;
 interface nsIXULTemplateRuleFilter;
 interface nsIXULTemplateBuilder;
+
+%{C++
+class nsAtom;
+%}
+[ptr] native nsAtomPtr(nsAtom);
 
 /**
  * A query processor takes a template query and generates results for it given
@@ -164,8 +168,8 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    */
   [noscript] nsISupports compileQuery(in nsIXULTemplateBuilder aBuilder,
                                       in nsIDOMNode aQuery,
-                                      in nsAtom aRefVariable,
-                                      in nsAtom aMemberVariable);
+                                      in nsAtomPtr aRefVariable,
+                                      in nsAtomPtr aMemberVariable);
 
   /**
    * Generate the results of a query and return them in an enumerator. The
@@ -223,8 +227,8 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    * @param aExpr expression used to compute the value to assign
    */
   [noscript] void addBinding(in nsIDOMNode aRuleNode,
-                             in nsAtom aVar,
-                             in nsAtom aRef,
+                             in nsAtomPtr aVar,
+                             in nsAtomPtr aRef,
                              in AString aExpr);
 
   /**
@@ -271,6 +275,6 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    */
    [noscript] int32_t compareResults(in nsIXULTemplateResult aLeft,
                                      in nsIXULTemplateResult aRight,
-                                     in nsAtom aVar,
+                                     in nsAtomPtr aVar,
                                      in unsigned long aSortHints);
 };

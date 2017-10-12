@@ -270,7 +270,6 @@ class AbstractFramePtr
     inline bool hasArgsObj() const;
     inline ArgumentsObject& argsObj() const;
     inline void initArgsObj(ArgumentsObject& argsobj) const;
-    inline bool createSingleton() const;
 
     inline Value& unaliasedLocal(uint32_t i);
     inline Value& unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
@@ -339,15 +338,12 @@ class InterpreterFrame
          */
         RUNNING_IN_JIT         =      0x100,
 
-        /* Miscellaneous state. */
-        CREATE_SINGLETON       =      0x200,  /* Constructed |this| object should be singleton. */
-
         /*
          * If set, this frame has been on the stack when
          * |js::SavedStacks::saveCurrentStack| was called, and so there is a
          * |js::SavedFrame| object cached for this frame.
          */
-        HAS_CACHED_SAVED_FRAME =      0x400,
+        HAS_CACHED_SAVED_FRAME =      0x200,
     };
 
     mutable uint32_t    flags_;         /* bits described by Flags */
@@ -757,15 +753,6 @@ class InterpreterFrame
     bool hasArgsObj() const {
         MOZ_ASSERT(script()->needsArgsObj());
         return flags_ & HAS_ARGS_OBJ;
-    }
-
-    void setCreateSingleton() {
-        MOZ_ASSERT(isConstructing());
-        flags_ |= CREATE_SINGLETON;
-    }
-    bool createSingleton() const {
-        MOZ_ASSERT(isConstructing());
-        return flags_ & CREATE_SINGLETON;
     }
 
     /*
