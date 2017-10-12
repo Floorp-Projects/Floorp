@@ -2190,6 +2190,7 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
     return;
   }
   if (!decoder.mDecoder ||
+      aTrack == TrackType::kAudioTrack ||
       (decoder.mDrainState != DrainState::PartialDrainPending &&
        decoder.mNumSamplesInput == decoder.mNumSamplesOutput)) {
     // No frames to drain.
