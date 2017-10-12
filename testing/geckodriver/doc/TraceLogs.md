@@ -127,8 +127,9 @@ The Selenium [Java client] also comes with
 a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
 constructing the [`moz:firefoxOptions`] capabilities object:
 
-	FirefoxOptions opts = new FirefoxOptions().setLogLevel(Level.ALL);
-	WebDriver driver = new FirefoxDriver(opts);
+	FirefoxOptions options = new FirefoxOptions();
+	options.setLogLevel(FirefoxDriverLogLevel.TRACE);
+	WebDriver driver = new FirefoxDriver(options);
 
 As with C#, the log output is helpfully propagated to stdout.
 
