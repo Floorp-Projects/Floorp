@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @template
 @imports('textwrap')
 @imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
@@ -54,9 +55,10 @@ def compiler_class(compiler, host_or_target):
                 flags.append('-c')
 
                 if try_invoke_compiler(
-                    compiler.wrapper + [compiler.compiler] + compiler.flags,
-                    compiler.language, source, flags,
-                    onerror=onerror) is not None:
+                        compiler.wrapper +
+                        [compiler.compiler] + compiler.flags,
+                        compiler.language, source, flags,
+                        onerror=onerror) is not None:
                     return True
 
             return func

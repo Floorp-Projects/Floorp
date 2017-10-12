@@ -14,6 +14,7 @@ add_task(function* () {
   let { document, store, windowRequire } = monitor.panelWin;
   let {
     getSortedRequests,
+    getSelectedRequest,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let wait = waitForNetworkEvents(monitor, 1);
@@ -28,6 +29,11 @@ add_task(function* () {
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]);
+
+  let selectedRequest = getSelectedRequest(store.getState());
+  is(selectedRequest, requestItem, "Proper request is selected");
+  ok(selectedRequest.requestHeaders, "Selected request should have request headers");
+  ok(selectedRequest.responseHeaders, "Selected request should have response headers");
 
   const EXPECTED_REQUEST_HEADERS = [
     `${method} ${SIMPLE_URL} ${httpVersion}`,

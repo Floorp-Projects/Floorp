@@ -83,7 +83,7 @@ public:
 
   ~AutoFreeKeyBuffer()
   {
-    NS_Free(*mKeyBuffer);
+    free(*mKeyBuffer);
   }
 };
 

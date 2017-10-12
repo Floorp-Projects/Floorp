@@ -36,6 +36,62 @@
     </item>
 
     <item android:state_enabled="true"
+          android:state_pressed="true"
+          gecko:state_dark="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_lwt_dark_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_focused="true"
+          android:state_pressed="false"
+          gecko:state_dark="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_lwt_dark_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_enabled="true"
+          android:state_pressed="true"
+          gecko:state_light="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_lwt_light_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_focused="true"
+          android:state_pressed="false"
+          gecko:state_light="true">
+        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
+               android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetRight="@dimen/browser_toolbar_image_button_h_spacing"
+               android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
+            <shape>
+                <solid android:color="@color/action_bar_item_bg_color_lwt_light_pressed"/>
+                <corners android:radius="@dimen/browser_toolbar_menu_radius"/>
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_enabled="true"
           android:state_pressed="true">
         <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing"
                android:insetLeft="@dimen/browser_toolbar_image_button_h_spacing"

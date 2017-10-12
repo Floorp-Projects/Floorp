@@ -9,7 +9,7 @@ TEST_DIRS += [
 ]
 
 EXPORTS += [
-    'DDLogClass.h',
+    'DDLogCategory.h',
     'DDLoggedTypeTraits.h',
     'DDLogObject.h',
     'DDLogValue.h',
@@ -20,7 +20,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'DDLifetime.cpp',
     'DDLifetimes.cpp',
-    'DDLogClass.cpp',
+    'DDLogCategory.cpp',
     'DDLogMessage.cpp',
     'DDLogObject.cpp',
     'DDLogUtils.cpp',

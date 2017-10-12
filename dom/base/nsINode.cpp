@@ -2684,7 +2684,8 @@ nsINode::ParseServoSelectorList(
   nsIDocument* doc = OwnerDoc();
   MOZ_ASSERT(doc->IsStyledByServo());
 
-  nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
+  nsIDocument::SelectorCache& cache =
+    doc->GetSelectorCache(mozilla::StyleBackendType::Servo);
   nsIDocument::SelectorCache::SelectorList* list =
     cache.GetList(aSelectorString);
   if (list) {
@@ -2697,11 +2698,7 @@ nsINode::ParseServoSelectorList(
       return nullptr;
     }
 
-    // FIXME(emilio): Make this private and use `WithSelectorList` everywhere,
-    // then assert.
-    if (list->IsServo()) {
-      return list->AsServo();
-    }
+    return list->AsServo();
   }
 
   NS_ConvertUTF16toUTF8 selectorString(aSelectorString);
@@ -2723,7 +2720,8 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
                            ErrorResult& aRv)
 {
   nsIDocument* doc = OwnerDoc();
-  nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
+  nsIDocument::SelectorCache& cache =
+    doc->GetSelectorCache(mozilla::StyleBackendType::Gecko);
   nsIDocument::SelectorCache::SelectorList* list =
     cache.GetList(aSelectorString);
   if (list) {
@@ -2736,11 +2734,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
       return nullptr;
     }
 
-    // FIXME(emilio): Make this private and use `WithSelectorList` everywhere,
-    // then assert.
-    if (list->IsGecko()) {
-      return list->AsGecko();
-    }
+    return list->AsGecko();
   }
 
   nsCSSParser parser(doc->CSSLoader());

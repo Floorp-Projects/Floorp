@@ -177,12 +177,17 @@ var ClientIDImpl = {
       return this._clientID;
     }
 
-    // Not yet loaded, return the cached client id if we have one.
-    if (Services.prefs.getPrefType(PREF_CACHED_CLIENTID) != Ci.nsIPrefBranch.PREF_STRING) {
+    // If the client id cache contains a value of the wrong type,
+    // reset the pref. We need to do this before |getStringPref| since
+    // it will just return |null| in that case and we won't be able
+    // to distinguish between the missing pref and wrong type cases.
+    if (Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID) &&
+        Services.prefs.getPrefType(PREF_CACHED_CLIENTID) != Ci.nsIPrefBranch.PREF_STRING) {
       this._log.error("getCachedClientID - invalid client id type in preferences, resetting");
       Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
     }
 
+    // Not yet loaded, return the cached client id if we have one.
     let id = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
     if (id === null) {
       return null;

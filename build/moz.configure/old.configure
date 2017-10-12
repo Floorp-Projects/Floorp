@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @imports('codecs')
 @imports('sys')
 def encoded_open(path, mode):
@@ -12,6 +13,7 @@ def encoded_open(path, mode):
 
 
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
+
 
 @depends(mozconfig, 'AUTOCONF')
 @checking('for autoconf')
@@ -55,6 +57,7 @@ def autoconf(mozconfig, autoconf):
         die('Could not find autoconf 2.13 at %s', autoconf)
 
     return autoconf
+
 
 set_config('AUTOCONF', autoconf)
 
@@ -117,8 +120,9 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
     cmd = [shell, old_configure]
     with encoded_open('old-configure.vars', 'w') as out:
         log.debug('Injecting the following to old-configure:')
+
         def inject(command):
-            print(command, file=out)
+            print(command, file=out) # noqa Python 2vs3
             log.debug('| %s', command)
 
         if mozconfig['path']:
@@ -360,7 +364,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         # Every variation of the exec() function I tried led to:
         # SyntaxError: unqualified exec is not allowed in function 'main' it
         # contains a nested function with free variables
-        exec code in raw_config
+        exec code in raw_config # noqa
 
     # Ensure all the flags known to old-configure appear in the
     # @old_configure_options above.
@@ -384,6 +388,8 @@ def set_old_configure_config(name, value):
     __sandbox__.set_config_impl(name, value)
 
 # Same as set_old_configure_config, but for set_define.
+
+
 @imports('__sandbox__')
 def set_old_configure_define(name, value):
     __sandbox__.set_define_impl(name, value)

@@ -68,6 +68,8 @@ def check_header(header, language='C++', flags=None, includes=None, when=None):
 # provided headers.
 # - `headers` are the headers to be checked.
 # - `kwargs` are keyword arguments passed verbatim to check_header.
+
+
 @template
 def check_headers(*headers, **kwargs):
     checks = []
@@ -79,6 +81,7 @@ def check_headers(*headers, **kwargs):
 @dependable
 def warnings_cflags():
     return []
+
 
 @dependable
 def warnings_cxxflags():
@@ -149,6 +152,8 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
 #   is added for both compilers.
 # - `when` (optional) is a @depends function or option name conditioning
 #   when the warning flag is wanted.
+
+
 @template
 def add_gcc_warning(warning, compiler=None, when=None):
     check_and_add_gcc_warning(warning, compiler, when, check=False)

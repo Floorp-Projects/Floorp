@@ -197,4 +197,16 @@ function* testCPOWInspection(hud) {
   // Just a sanity check to make sure a valid packet came back
   is(prototypeAndProperties.prototype.class, "XBL prototype JSClass",
     "Looks like a valid response");
+
+  // The CPOW is in the _contentWindow property.
+  let cpow = prototypeAndProperties.ownProperties._contentWindow.value;
+
+  // But it's only a CPOW in e10s.
+  let e10sCheck = yield hud.jsterm.requestEvaluation(
+    "Cu.isCrossProcessWrapper(gBrowser.selectedBrowser._contentWindow)");
+  if (e10sCheck.result) {
+    is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
+  } else {
+    is(cpow.class, "Window", "The object is not a CPOW.");
+  }
 }
