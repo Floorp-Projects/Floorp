@@ -12,8 +12,7 @@ public:
   {
     // The aim here is to set up the objects enough that silent printing works
     SetOutputFormat(nsIPrintSettings::kOutputFormatPDF);
-    SetPrinterName(u"PDF printer");
-    
+    SetPrinterName(NS_LITERAL_STRING("PDF printer"));
   }
 };
 

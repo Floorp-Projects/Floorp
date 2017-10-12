@@ -38,10 +38,6 @@ const std::vector<std::wstring> kDllsToUnload = {
   // K7 Computing (bug 1400637)
   L"k7pswsen.dll",
 
-  // Symantec (bug 1400637)
-  L"prntm64.dll",
-  L"sysfer.dll",
-
   // Avast Antivirus (bug 1400637)
   L"snxhk64.dll",
   L"snxhk.dll",

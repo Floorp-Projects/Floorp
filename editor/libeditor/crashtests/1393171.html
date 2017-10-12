@@ -1,0 +1,10 @@
+<script>
+window.onload=function(){
+  window.getSelection().addRange(document.createRange());
+  document.getElementById('a').appendChild(document.createElement('option'));
+  window.getSelection().modify('extend','backward','lineboundary');
+}
+</script>
+<div></div>
+<textarea autofocus='true'></textarea>
+<del id='a'>

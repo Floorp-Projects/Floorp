@@ -138,40 +138,16 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetPrintBGImages(&data->printBGImages());
   aSettings->GetPrintRange(&data->printRange());
 
-  // I have no idea if I'm doing this string copying correctly...
-  nsString title;
-  aSettings->GetTitle(getter_Copies(title));
-  data->title() = title;
+  aSettings->GetTitle(data->title());
+  aSettings->GetDocURL(data->docURL());
 
-  nsString docURL;
-  aSettings->GetDocURL(getter_Copies(docURL));
-  data->docURL() = docURL;
+  aSettings->GetHeaderStrLeft(data->headerStrLeft());
+  aSettings->GetHeaderStrCenter(data->headerStrCenter());
+  aSettings->GetHeaderStrRight(data->headerStrRight());
 
-  // Header strings...
-  nsString headerStrLeft;
-  aSettings->GetHeaderStrLeft(getter_Copies(headerStrLeft));
-  data->headerStrLeft() = headerStrLeft;
-
-  nsString headerStrCenter;
-  aSettings->GetHeaderStrCenter(getter_Copies(headerStrCenter));
-  data->headerStrCenter() = headerStrCenter;
-
-  nsString headerStrRight;
-  aSettings->GetHeaderStrRight(getter_Copies(headerStrRight));
-  data->headerStrRight() = headerStrRight;
-
-  // Footer strings...
-  nsString footerStrLeft;
-  aSettings->GetFooterStrLeft(getter_Copies(footerStrLeft));
-  data->footerStrLeft() = footerStrLeft;
-
-  nsString footerStrCenter;
-  aSettings->GetFooterStrCenter(getter_Copies(footerStrCenter));
-  data->footerStrCenter() = footerStrCenter;
-
-  nsString footerStrRight;
-  aSettings->GetFooterStrRight(getter_Copies(footerStrRight));
-  data->footerStrRight() = footerStrRight;
+  aSettings->GetFooterStrLeft(data->footerStrLeft());
+  aSettings->GetFooterStrCenter(data->footerStrCenter());
+  aSettings->GetFooterStrRight(data->footerStrRight());
 
   aSettings->GetHowToEnableFrameUI(&data->howToEnableFrameUI());
   aSettings->GetIsCancelled(&data->isCancelled());
@@ -181,10 +157,7 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetShrinkToFit(&data->shrinkToFit());
   aSettings->GetShowPrintProgress(&data->showPrintProgress());
 
-  nsString paperName;
-  aSettings->GetPaperName(getter_Copies(paperName));
-  data->paperName() = paperName;
-
+  aSettings->GetPaperName(data->paperName());
   aSettings->GetPaperData(&data->paperData());
   aSettings->GetPaperWidth(&data->paperWidth());
   aSettings->GetPaperHeight(&data->paperHeight());
@@ -196,15 +169,11 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   aSettings->GetNumCopies(&data->numCopies());
 
-  nsString printerName;
-  aSettings->GetPrinterName(getter_Copies(printerName));
-  data->printerName() = printerName;
+  aSettings->GetPrinterName(data->printerName());
 
   aSettings->GetPrintToFile(&data->printToFile());
 
-  nsString toFileName;
-  aSettings->GetToFileName(getter_Copies(toFileName));
-  data->toFileName() = toFileName;
+  aSettings->GetToFileName(data->toFileName());
 
   aSettings->GetOutputFormat(&data->outputFormat());
   aSettings->GetPrintPageDelay(&data->printPageDelay());
@@ -276,19 +245,18 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintBGImages(data.printBGImages());
   settings->SetPrintRange(data.printRange());
 
-  // I have no idea if I'm doing this string copying correctly...
-  settings->SetTitle(data.title().get());
-  settings->SetDocURL(data.docURL().get());
+  settings->SetTitle(data.title());
+  settings->SetDocURL(data.docURL());
 
   // Header strings...
-  settings->SetHeaderStrLeft(data.headerStrLeft().get());
-  settings->SetHeaderStrCenter(data.headerStrCenter().get());
-  settings->SetHeaderStrRight(data.headerStrRight().get());
+  settings->SetHeaderStrLeft(data.headerStrLeft());
+  settings->SetHeaderStrCenter(data.headerStrCenter());
+  settings->SetHeaderStrRight(data.headerStrRight());
 
   // Footer strings...
-  settings->SetFooterStrLeft(data.footerStrLeft().get());
-  settings->SetFooterStrCenter(data.footerStrCenter().get());
-  settings->SetFooterStrRight(data.footerStrRight().get());
+  settings->SetFooterStrLeft(data.footerStrLeft());
+  settings->SetFooterStrCenter(data.footerStrCenter());
+  settings->SetFooterStrRight(data.footerStrRight());
 
   settings->SetHowToEnableFrameUI(data.howToEnableFrameUI());
   settings->SetIsCancelled(data.isCancelled());
@@ -298,7 +266,7 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
   settings->SetShrinkToFit(data.shrinkToFit());
   settings->SetShowPrintProgress(data.showPrintProgress());
 
-  settings->SetPaperName(data.paperName().get());
+  settings->SetPaperName(data.paperName());
 
   settings->SetPaperData(data.paperData());
   settings->SetPaperWidth(data.paperWidth());
@@ -311,11 +279,11 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
 
   settings->SetNumCopies(data.numCopies());
 
-  settings->SetPrinterName(data.printerName().get());
+  settings->SetPrinterName(data.printerName());
 
   settings->SetPrintToFile(data.printToFile());
 
-  settings->SetToFileName(data.toFileName().get());
+  settings->SetToFileName(data.toFileName());
 
   settings->SetOutputFormat(data.outputFormat());
   settings->SetPrintPageDelay(data.printPageDelay());
@@ -533,7 +501,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
       DUMP_DBL(kReadStr, kPrintPaperWidth, width);
       aPS->SetPaperHeight(height);
       DUMP_DBL(kReadStr, kPrintPaperHeight, height);
-      aPS->SetPaperName(str.get());
+      aPS->SetPaperName(str);
       DUMP_STR(kReadStr, kPrintPaperName, str.get());
 #if defined(XP_WIN)
       if (saveSanitizedSizePrefs) {
@@ -560,42 +528,42 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
     if (GETSTRPREF(kPrintHeaderStrLeft, str)) {
-      aPS->SetHeaderStrLeft(str.get());
+      aPS->SetHeaderStrLeft(str);
       DUMP_STR(kReadStr, kPrintHeaderStrLeft, str.get());
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
     if (GETSTRPREF(kPrintHeaderStrCenter, str)) {
-      aPS->SetHeaderStrCenter(str.get());
+      aPS->SetHeaderStrCenter(str);
       DUMP_STR(kReadStr, kPrintHeaderStrCenter, str.get());
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
     if (GETSTRPREF(kPrintHeaderStrRight, str)) {
-      aPS->SetHeaderStrRight(str.get());
+      aPS->SetHeaderStrRight(str);
       DUMP_STR(kReadStr, kPrintHeaderStrRight, str.get());
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
     if (GETSTRPREF(kPrintFooterStrLeft, str)) {
-      aPS->SetFooterStrLeft(str.get());
+      aPS->SetFooterStrLeft(str);
       DUMP_STR(kReadStr, kPrintFooterStrLeft, str.get());
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
     if (GETSTRPREF(kPrintFooterStrCenter, str)) {
-      aPS->SetFooterStrCenter(str.get());
+      aPS->SetFooterStrCenter(str);
       DUMP_STR(kReadStr, kPrintFooterStrCenter, str.get());
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
     if (GETSTRPREF(kPrintFooterStrRight, str)) {
-      aPS->SetFooterStrRight(str.get());
+      aPS->SetFooterStrRight(str);
       DUMP_STR(kReadStr, kPrintFooterStrRight, str.get());
     }
   }
@@ -651,7 +619,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
 
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
     if (GETSTRPREF(kPrintToFileName, str)) {
-      aPS->SetToFileName(str.get());
+      aPS->SetToFileName(str);
       DUMP_STR(kReadStr, kPrintToFileName, str.get());
     }
   }
@@ -771,7 +739,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       NS_SUCCEEDED(aPS->GetPaperSizeUnit(&sizeUnit)) &&
       NS_SUCCEEDED(aPS->GetPaperWidth(&width)) &&
       NS_SUCCEEDED(aPS->GetPaperHeight(&height)) &&
-      NS_SUCCEEDED(aPS->GetPaperName(getter_Copies(name)))
+      NS_SUCCEEDED(aPS->GetPaperName(name))
     ) {
       DUMP_INT(kWriteStr, kPrintPaperSizeUnit, sizeUnit);
       Preferences::SetInt(GetPrefName(kPrintPaperSizeUnit, aPrinterName),
@@ -822,7 +790,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr.get());
       Preferences::SetString(GetPrefName(kPrintHeaderStrLeft, aPrinterName),
                              uStr);
@@ -830,7 +798,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr.get());
       Preferences::SetString(GetPrefName(kPrintHeaderStrCenter, aPrinterName),
                              uStr);
@@ -838,7 +806,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
-    if (NS_SUCCEEDED(aPS->GetHeaderStrRight(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetHeaderStrRight(uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr.get());
       Preferences::SetString(GetPrefName(kPrintHeaderStrRight, aPrinterName),
                              uStr);
@@ -846,7 +814,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrLeft(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrLeft(uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr.get());
       Preferences::SetString(GetPrefName(kPrintFooterStrLeft, aPrinterName),
                              uStr);
@@ -854,7 +822,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrCenter(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrCenter(uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr.get());
       Preferences::SetString(GetPrefName(kPrintFooterStrCenter, aPrinterName),
                              uStr);
@@ -862,7 +830,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
-    if (NS_SUCCEEDED(aPS->GetFooterStrRight(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetFooterStrRight(uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr.get());
       Preferences::SetString(GetPrefName(kPrintFooterStrRight, aPrinterName),
                              uStr);
@@ -915,7 +883,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   // Only the general version of this pref is saved
   if ((aFlags & nsIPrintSettings::kInitSavePrinterName)
       && aPrinterName.IsEmpty()) {
-    if (NS_SUCCEEDED(aPS->GetPrinterName(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetPrinterName(uStr))) {
       DUMP_STR(kWriteStr, kPrinterName, uStr.get());
       Preferences::SetString(kPrinterName, uStr);
     }
@@ -929,7 +897,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
-    if (NS_SUCCEEDED(aPS->GetToFileName(getter_Copies(uStr)))) {
+    if (NS_SUCCEEDED(aPS->GetToFileName(uStr))) {
       DUMP_STR(kWriteStr, kPrintToFileName, uStr.get());
       Preferences::SetString(GetPrefName(kPrintToFileName, aPrinterName), uStr);
     }
@@ -985,9 +953,9 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
   NS_ADDREF(*_retval = printSettings); // ref count
 
   nsString printerName;
-  nsresult rv = GetDefaultPrinterName(getter_Copies(printerName));
+  nsresult rv = GetDefaultPrinterName(printerName);
   NS_ENSURE_SUCCESS(rv, rv);
-  (*_retval)->SetPrinterName(printerName.get());
+  (*_retval)->SetPrinterName(printerName);
 
   (void)InitPrintSettingsFromPrefs(*_retval, false,
                                    nsIPrintSettings::kInitSaveAll);
@@ -1015,7 +983,7 @@ nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
+nsPrintOptions::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 {
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> prtEnum =
@@ -1040,7 +1008,7 @@ nsPrintOptions::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
         }
       }
       if (isValid) {
-        *aDefaultPrinterName = ToNewUnicode(lastPrinterName);
+        aDefaultPrinterName = lastPrinterName;
         return NS_OK;
       }
     }
@@ -1052,7 +1020,7 @@ nsPrintOptions::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
+nsPrintOptions::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
                                              nsIPrintSettings *aPrintSettings)
 {
   // Don't get print settings from the printer in the child when printing via
@@ -1062,11 +1030,10 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
   }
 
   NS_ENSURE_ARG_POINTER(aPrintSettings);
-  NS_ENSURE_ARG_POINTER(aPrinterName);
 
 #ifdef DEBUG
   nsString printerName;
-  aPrintSettings->GetPrinterName(getter_Copies(printerName));
+  aPrintSettings->GetPrinterName(printerName);
   if (!printerName.Equals(aPrinterName)) {
     NS_WARNING("Printer names should match!");
   }
@@ -1105,7 +1072,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 
   // Get the Printer Name from the PrintSettings
   // to use as a prefix for Pref Names
-  nsresult rv = aPS->GetPrinterName(getter_Copies(aPrinterName));
+  nsresult rv = aPS->GetPrinterName(aPrinterName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Convert any whitespaces, carriage returns or newlines to _

@@ -101,6 +101,15 @@ interface ChromeUtils : ThreadSafeChromeUtils {
    */
   [Throws]
   static object shallowClone(object obj, optional object? target = null);
+
+  /**
+   * Dispatches the given callback to the main thread when it would be
+   * otherwise idle. Similar to Window.requestIdleCallback, but not bound to a
+   * particular DOM windw.
+   */
+  [Throws]
+  static void idleDispatch(IdleRequestCallback callback,
+                           optional IdleRequestOptions options);
 };
 
 /**

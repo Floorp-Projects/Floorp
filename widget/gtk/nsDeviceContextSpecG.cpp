@@ -63,7 +63,7 @@ public:
   uint32_t  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
   nsString* GetStringAt(int32_t aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
-  void      GetDefaultPrinterName(char16_t **aDefaultPrinterName);
+  void      GetDefaultPrinterName(nsAString& aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
@@ -246,7 +246,7 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
   // Find the printer whose name matches the one inside the settings.
   nsString printerName;
   nsresult rv =
-    spec->mPrintSettings->GetPrinterName(getter_Copies(printerName));
+    spec->mPrintSettings->GetPrinterName(printerName);
   if (NS_SUCCEEDED(rv) && !printerName.IsVoid()) {
     NS_ConvertUTF16toUTF8 requestedName(printerName);
     const char* currentName = gtk_printer_get_name(aPrinter);
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     // Handle print-to-file ourselves for the benefit of embedders
     nsString targetPath;
     nsCOMPtr<nsIFile> destFile;
-    mPrintSettings->GetToFileName(getter_Copies(targetPath));
+    mPrintSettings->GetToFileName(targetPath);
 
     nsresult rv = NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -388,18 +388,19 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
   return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(char16_t **aDefaultPrinterName)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::GetDefaultPrinterName()\n"));
-  NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
 
   GlobalPrinters::GetInstance()->GetDefaultPrinterName(aDefaultPrinterName);
 
-  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUTF16toUTF8(*aDefaultPrinterName).get()));
+  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUTF16toUTF8(aDefaultPrinterName).get()));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
+NS_IMETHODIMP
+nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
+                                                     nsIPrintSettings *aPrintSettings)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
 
@@ -418,7 +419,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
     filename.AssignLiteral("mozilla.pdf");
 
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
-  aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
+  aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename));
 
   aPrintSettings->SetIsInitializedFromPrinter(true);
 
@@ -470,9 +471,9 @@ void GlobalPrinters::FreeGlobalPrinters()
 }
 
 void 
-GlobalPrinters::GetDefaultPrinterName(char16_t **aDefaultPrinterName)
+GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 {
-  *aDefaultPrinterName = nullptr;
+  aDefaultPrinterName.Truncate();
   
   bool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
   
@@ -487,7 +488,7 @@ GlobalPrinters::GetDefaultPrinterName(char16_t **aDefaultPrinterName)
   if (GlobalPrinters::GetInstance()->GetNumPrinters() == 0)
     return;
   
-  *aDefaultPrinterName = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(0));
+  aDefaultPrinterName = *GlobalPrinters::GetInstance()->GetStringAt(0);
 
   if (allocate) {  
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();

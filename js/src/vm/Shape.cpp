@@ -746,7 +746,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      */
     bool hadSlot = shape->isDataProperty();
     uint32_t oldSlot = shape->maybeSlot();
-    bool needSlot = !getter && !setter;
+    bool needSlot = Shape::isDataProperty(attrs, getter, setter);
     if (needSlot && slot == SHAPE_INVALID_SLOT && hadSlot)
         slot = oldSlot;
 
@@ -789,7 +789,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
          * is also the last property).
          */
         bool updateLast = (shape == obj->lastProperty());
-        bool accessorShape = getter || setter || (attrs & (JSPROP_GETTER | JSPROP_SETTER));
+        bool accessorShape = !Shape::isDataProperty(attrs, getter, setter);
         shape = NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr,
                                                             accessorShape);
         if (!shape)
@@ -872,7 +872,7 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
 #ifdef DEBUG
-    bool needSlot = !getter && !setter;
+    bool needSlot = Shape::isDataProperty(attrs, getter, setter);
     MOZ_ASSERT_IF(shape->isDataProperty() != needSlot, needSlot);
 #endif
 

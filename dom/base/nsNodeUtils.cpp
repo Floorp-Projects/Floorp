@@ -616,6 +616,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
             aNode->OwnerDoc()->UnregisterActivityObserver(aNode->AsElement());
           }
           aNode->mNodeInfo.swap(newNodeInfo);
+          if (elem) {
+            elem->NodeInfoChanged(newDoc);
+          }
           if (wasRegistered) {
             aNode->OwnerDoc()->RegisterActivityObserver(aNode->AsElement());
           }

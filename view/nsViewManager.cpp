@@ -100,7 +100,7 @@ nsViewManager::~nsViewManager()
     gViewManagers = nullptr;
   }
 
-  mPresShell = nullptr;
+  MOZ_RELEASE_ASSERT(!mPresShell, "Releasing nsViewManager without having called Destroy on the PresShell!");
 }
 
 // We don't hold a reference to the presentation context because it
