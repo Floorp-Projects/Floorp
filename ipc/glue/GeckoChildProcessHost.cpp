@@ -25,9 +25,7 @@
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/SandboxSettings.h"
-#if defined(XP_MACOSX)
 #include "nsAppDirectoryServiceDefs.h"
-#endif
 #endif
 
 #include "nsExceptionHandler.h"
@@ -40,6 +38,7 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Maybe.h"
 #include "ProtocolUtils.h"
 #include <sys/stat.h>
 
@@ -437,15 +436,13 @@ GeckoChildProcessHost::SetAlreadyDead()
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
 void
-GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName,
+GeckoChildProcessHost::GetChildLogName(const char* origLogName,
                                        nsACString &buffer)
 {
   // We currently have no portable way to launch child with environment
   // different than parent.  So temporarily change NSPR_LOG_FILE so child
   // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
   // startup, so it's 'safe' to play with the parent's environment this way.)
-  buffer.Assign(varName);
-
 #ifdef XP_WIN
   // On Windows we must expand relative paths because sandboxing rules
   // bound only to full paths.  fopen fowards to NtCreateFile which checks
@@ -472,12 +469,36 @@ GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogN
   // Append child-specific postfix to name
   buffer.AppendLiteral(".child-");
   buffer.AppendInt(mChildCounter);
-
-  // Passing temporary to PR_SetEnv is ok here if we keep the temporary
-  // for the time we launch the sub-process.  It's copied to the new
-  // environment.
-  PR_SetEnv(buffer.BeginReading());
 }
+
+class AutoSetAndRestoreEnvVarForChildProcess {
+public:
+  AutoSetAndRestoreEnvVarForChildProcess(const char* envVar,
+                                         const char* newVal) {
+    const char* origVal = PR_GetEnv(envVar);
+    mSetString.Assign(envVar);
+    mSetString.Append('=');
+    mRestoreString.Assign(mSetString);
+
+    mSetString.Append(newVal);
+    mRestoreString.Append(origVal);
+
+    // Passing to PR_SetEnv is ok here if we keep the the storage alive
+    // for the time we launch the sub-process.  It's copied to the new
+    // environment by PR_DuplicateEnvironment()
+    PR_SetEnv(mSetString.get());
+  }
+  // Delegate helper
+  AutoSetAndRestoreEnvVarForChildProcess(const char* envVar,
+                                         nsCString& newVal)
+    : AutoSetAndRestoreEnvVarForChildProcess(envVar, newVal.get()) {}
+  ~AutoSetAndRestoreEnvVarForChildProcess() {
+    PR_SetEnv(mRestoreString.get());
+  }
+private:
+  nsAutoCString mSetString;
+  nsAutoCString mRestoreString;
+};
 
 bool
 GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
@@ -485,62 +506,61 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #ifdef MOZ_GECKO_PROFILER
   AutoSetProfilerEnvVarsForChildProcess profilerEnvironment;
 #endif
-
-  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
-  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
-  const char* origRustLog = PR_GetEnv("RUST_LOG");
-  const char* childRustLog = PR_GetEnv("RUST_LOG_CHILD");
-
   // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
   //   or mChildCounter touched by any other thread, so this is safe.
   ++mChildCounter;
 
   // Must keep these on the same stack where from we call PerformAsyncLaunchInternal
   // so that PR_DuplicateEnvironment() still sees a valid memory.
-  nsAutoCString nsprLogName;
-  nsAutoCString mozLogName;
-  nsAutoCString rustLog;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> nsprLogDir;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> mozLogDir;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> rustLogDir;
+
+  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
+  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
 
   if (origNSPRLogName) {
-    if (mRestoreOrigNSPRLogName.IsEmpty()) {
-      mRestoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
-      mRestoreOrigNSPRLogName.Append(origNSPRLogName);
-    }
-    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName, nsprLogName);
+    nsAutoCString nsprLogName;
+    GetChildLogName(origNSPRLogName, nsprLogName);
+    nsprLogDir.emplace("NSPR_LOG_FILE", nsprLogName);
   }
   if (origMozLogName) {
-    if (mRestoreOrigMozLogName.IsEmpty()) {
-      mRestoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
-      mRestoreOrigMozLogName.Append(origMozLogName);
-    }
-    SetChildLogName("MOZ_LOG_FILE=", origMozLogName, mozLogName);
+    nsAutoCString mozLogName;
+    GetChildLogName(origMozLogName, mozLogName);
+    mozLogDir.emplace("MOZ_LOG_FILE", mozLogName);
   }
 
   // `RUST_LOG_CHILD` is meant for logging child processes only.
+  const char* childRustLog = PR_GetEnv("RUST_LOG_CHILD");
   if (childRustLog) {
-    if (mRestoreOrigRustLog.IsEmpty()) {
-      mRestoreOrigRustLog.AssignLiteral("RUST_LOG=");
-      mRestoreOrigRustLog.Append(origRustLog);
+    rustLogDir.emplace("RUST_LOG", childRustLog);
+  }
+
+#if defined(MOZ_CONTENT_SANDBOX)
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> tmpDir;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> xdgCacheHome;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> xdgCacheDir;
+  Maybe<AutoSetAndRestoreEnvVarForChildProcess> mesaCacheDir;
+
+  nsAutoCString tmpDirName;
+  nsCOMPtr<nsIFile> mContentTempDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                                       getter_AddRefs(mContentTempDir));
+  if (NS_SUCCEEDED(rv)) {
+    rv = mContentTempDir->GetNativePath(tmpDirName);
+    if (NS_SUCCEEDED(rv)) {
+      // Point a bunch of things that might want to write from content to our
+      // shiny new content-process specific tmpdir
+      tmpDir.emplace("TMPDIR", tmpDirName);
+      xdgCacheHome.emplace("XDG_CACHE_HOME", tmpDirName);
+      xdgCacheDir.emplace("XDG_CACHE_DIR", tmpDirName);
+      // Partial fix for bug 1380051 (not persistent - should be)
+      mesaCacheDir.emplace("MESA_GLSL_CACHE_DIR", tmpDirName);
     }
-    rustLog.AssignLiteral("RUST_LOG=");
-    rustLog.Append(childRustLog);
-    PR_SetEnv(rustLog.get());
   }
+#endif
 
-  bool retval = PerformAsyncLaunchInternal(aExtraOpts);
-
-  // Revert to original value
-  if (origNSPRLogName) {
-    PR_SetEnv(mRestoreOrigNSPRLogName.get());
-  }
-  if (origMozLogName) {
-    PR_SetEnv(mRestoreOrigMozLogName.get());
-  }
-  if (origRustLog) {
-    PR_SetEnv(mRestoreOrigRustLog.get());
-  }
-
-  return retval;
+  return PerformAsyncLaunchInternal(aExtraOpts);
 }
 
 bool
