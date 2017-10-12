@@ -44,7 +44,7 @@ def check_java_tool(tool):
     return require_tool
 
 
-check_java_tool('java')
+java = check_java_tool('java')
 check_java_tool('javah')
 check_java_tool('jar')
 check_java_tool('jarsigner')
@@ -66,3 +66,58 @@ def javac_version(javac):
         return version
     except subprocess.CalledProcessError as e:
         die('Failed to get javac version: %s', e.output)
+
+
+# Proguard detection
+# ========================================================
+@depends('--help')
+@imports('os')
+def proguard_jar_default(_):
+    # By default, look for proguard.jar in the location to which `mach
+    # bootstrap` or `mach artifact toolchain` will install Proguard.
+    default = os.path.expanduser(os.path.join('~', '.mozbuild'))
+    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH', default)
+    return os.path.join(mozbuild_state_dir, 'proguard', 'lib', 'proguard.jar')
+
+
+# Proguard is really required; we provide a good error message when
+# validating.
+option(env='PROGUARD_JAR', nargs=1, default=proguard_jar_default,
+       help='Path to proguard.jar')
+
+
+@depends(java, 'PROGUARD_JAR')
+@checking('for proguard.jar version')
+# Do not change, this is fragile!  This form works with the test
+# configure sandbox.
+@imports(_from='os', _import='path')
+@imports('subprocess')
+def valid_proguard(java, proguard_jar):
+    if not proguard_jar or not path.isfile(proguard_jar[0]):
+        die('proguard.jar 5.3.3 or higher is required (looked for {}). '
+            'Run |mach artifact install --from-build proguard-jar| or add '
+            '`export PROGUARD_JAR=/path/to/proguard.jar` to your mozconfig.'
+            .format(proguard_jar[0]))
+
+    try:
+        output = subprocess.check_output([java, '-jar', proguard_jar[0]])
+        # Exit code zero shouldn't happen.
+        die('Expected `java -jar {}` to fail (with version in output) '
+            'but got exit code 0'
+            .format(proguard_jar[0]))
+
+    except subprocess.CalledProcessError as e:
+        # Exit code is non zero and output is like
+        # ProGuard, version 5.3.3
+        # Usage: java proguard.ProGuard [options ...]
+        output = e.output
+
+    version = Version(output.splitlines()[0].split(' ')[-1])
+    if version < '5.3.3':
+        die('proguard.jar 5.3.3 or higher is required (found %s). '
+            'Run |mach bootstrap| to upgrade. ' % version)
+
+    return proguard_jar[0]
+
+
+set_config('PROGUARD_JAR', valid_proguard)
