@@ -105,6 +105,22 @@ geckodriver.  If you find your language missing, please consider
 [submitting a patch]: ../CONTRIBUTING.md
 
 
+Java
+----
+
+The Selenium [Java client] also comes with
+a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
+constructing the [`moz:firefoxOptions`] capabilities object:
+
+	FirefoxOptions opts = new FirefoxOptions().setLogLevel(Level.ALL);
+	WebDriver driver = new FirefoxDriver(opts);
+
+The log output is helpfully propagated to stdout.
+
+[Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
+[`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
+
+
 Python
 ------
 
@@ -141,19 +157,3 @@ Ruby interpreter with the `-d` flag.
 
 [Ruby client]: http://seleniumhq.github.io/selenium/docs/api/rb/
 [`Options`]: http://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html
-
-
-Java
-----
-
-The Selenium [Java client] also comes with
-a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
-constructing the [`moz:firefoxOptions`] capabilities object:
-
-	FirefoxOptions opts = new FirefoxOptions().setLogLevel(Level.ALL);
-	WebDriver driver = new FirefoxDriver(opts);
-
-The log output is helpfully propagated to stdout.
-
-[Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
-[`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
