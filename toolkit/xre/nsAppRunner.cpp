@@ -985,13 +985,6 @@ nsXULAppInfo::GetMaxWebProcessCount(uint32_t* aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetMultiprocessBlockPolicy(uint32_t* aResult)
-{
-  *aResult = MultiprocessBlockPolicy();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
 {
 #ifdef ACCESSIBILITY
@@ -5107,37 +5100,6 @@ enum {
 const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
 const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
-uint32_t
-MultiprocessBlockPolicy()
-{
-  if (XRE_IsContentProcess()) {
-    // If we're in a content process, we're not blocked.
-    return 0;
-  }
-
-  /**
-   * Avoids enabling e10s if there are add-ons installed.
-   */
-  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
-  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
-
-#ifdef MOZ_CRASHREPORTER
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
-                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
-                                                      : NS_LITERAL_CSTRING("0"));
-#endif
-
-  if (addonsCanDisable && disabledByAddons) {
-    return kE10sDisabledForAddons;
-  }
-
-  /*
-   * None of the blocking policies matched, so e10s is allowed to run. Return
-   * 0, indicating success.
-   */
-  return 0;
-}
-
 namespace mozilla {
 
 bool
@@ -5158,12 +5120,7 @@ BrowserTabsRemoteAutostart()
   int status = kE10sEnabledByDefault;
 
   if (optInPref) {
-    uint32_t blockPolicy = MultiprocessBlockPolicy();
-    if (blockPolicy != 0) {
-      status = blockPolicy;
-    } else {
-      gBrowserTabsRemoteAutostart = true;
-    }
+    gBrowserTabsRemoteAutostart = true;
   } else {
     status = kE10sDisabledByUser;
   }
