@@ -303,12 +303,6 @@ GetGCKindBytes(AllocKind thingKind)
     return sizeof(JSObject_Slots0) + GetGCKindSlots(thingKind) * sizeof(Value);
 }
 
-// Class to assist in triggering background chunk allocation. This cannot be done
-// while holding the GC or worker thread state lock due to lock ordering issues.
-// As a result, the triggering is delayed using this class until neither of the
-// above locks is held.
-class AutoMaybeStartBackgroundAllocation;
-
 /*
  * A single segment of a SortedArenaList. Each segment has a head and a tail,
  * which track the start and end of a segment for O(1) append and concatenation.
@@ -812,8 +806,7 @@ class ArenaLists
     inline void mergeSweptArenas(AllocKind thingKind);
 
     TenuredCell* allocateFromArena(JS::Zone* zone, AllocKind thingKind,
-                                   ShouldCheckThresholds checkThresholds,
-                                   AutoMaybeStartBackgroundAllocation& maybeStartBGAlloc);
+                                   ShouldCheckThresholds checkThresholds);
     inline TenuredCell* allocateFromArenaInner(JS::Zone* zone, Arena* arena, AllocKind kind);
 
     friend class GCRuntime;
