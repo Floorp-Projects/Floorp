@@ -75,6 +75,9 @@ public:
                       bool aIsSync, uint64_t aTransactionId,
                       const WebRenderScrollData& aScrollData,
                       const mozilla::TimeStamp& aTxnStartTime);
+  void EndEmptyTransaction(const FocusTarget& aFocusTarget,
+                           uint64_t aTransactionId,
+                           const mozilla::TimeStamp& aTxnStartTime);
   void ProcessWebRenderParentCommands();
 
   CompositorBridgeChild* GetCompositorBridgeChild();

@@ -158,6 +158,28 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
 }
 
 void
+WebRenderBridgeChild::EndEmptyTransaction(const FocusTarget& aFocusTarget,
+                                          uint64_t aTransactionId,
+                                          const mozilla::TimeStamp& aTxnStartTime)
+{
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(mIsInTransaction);
+
+  TimeStamp fwdTime;
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  fwdTime = TimeStamp::Now();
+#endif
+
+  this->SendEmptyTransaction(aFocusTarget,
+                             mParentCommands, mDestroyedActors,
+                             GetFwdTransactionId(), aTransactionId,
+                             mIdNamespace, aTxnStartTime, fwdTime);
+  mParentCommands.Clear();
+  mDestroyedActors.Clear();
+  mIsInTransaction = false;
+}
+
+void
 WebRenderBridgeChild::ProcessWebRenderParentCommands()
 {
   MOZ_ASSERT(!mDestroyed);
