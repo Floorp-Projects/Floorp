@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @imports('sys')
 def die(*args):
     'Print an error and terminate configure.'
@@ -22,6 +23,8 @@ def configure_error(message):
 # by running the given command if it exits normally, and streams that
 # output to log.debug and calls die or the given error callback if it
 # does not.
+
+
 @imports(_from='__builtin__', _import='unicode')
 @imports('subprocess')
 @imports('sys')
@@ -67,6 +70,7 @@ def check_cmd_output(*args, **kwargs):
         die('Command `%s` failed with exit status %d.' %
             (quote(*args), retcode))
 
+
 @imports('os')
 def is_absolute_or_relative(path):
     if os.altsep and os.altsep in path:
@@ -88,7 +92,8 @@ def windows_binary_type(path):
     Returns WindowsBinaryType constant.
     """
     GetBinaryTypeW = ctypes.windll.kernel32.GetBinaryTypeW
-    GetBinaryTypeW.argtypes = [wintypes.LPWSTR, wintypes.POINTER(wintypes.DWORD)]
+    GetBinaryTypeW.argtypes = [wintypes.LPWSTR,
+                               wintypes.POINTER(wintypes.DWORD)]
     GetBinaryTypeW.restype = wintypes.BOOL
 
     bin_type = wintypes.DWORD()
@@ -146,6 +151,7 @@ def normalize_path():
             return normsep(path)
 
     return normalize_path
+
 
 normalize_path = normalize_path()
 
@@ -364,6 +370,8 @@ def Version(v):
 # The function may handle the option like a typical @depends function would,
 # but it is recommended it emits a deprecation error message suggesting an
 # alternative option to use if there is one.
+
+
 @template
 def deprecated_option(*args, **kwargs):
     assert 'help' not in kwargs
@@ -414,6 +422,7 @@ def depends_tmpl(eval_args_fn, *args, **kwargs):
         when = kwargs['when']
     else:
         when = None
+
     def decorator(func):
         @depends(*args, when=when)
         def wrapper(*args):
@@ -444,9 +453,11 @@ def depends_all(*args, **kwargs):
 def old_configure_assignments():
     return []
 
+
 @dependable
 def extra_old_configure_args():
     return []
+
 
 @template
 def add_old_configure_assignment(var, value):
@@ -466,6 +477,7 @@ def add_old_configure_assignment(var, value):
             if isinstance(value, (list, tuple)):
                 value = quote(*value)
             assignments.append('%s=%s' % (var, quote(str(value))))
+
 
 @template
 def add_old_configure_arg(arg):
