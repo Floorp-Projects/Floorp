@@ -2529,6 +2529,17 @@ public:
   static void Initialize();
   static void Shutdown();
 
+#ifdef MOZ_STYLO
+  /**
+   * Principal-based blocklist for stylo.
+   * Check if aPrincipal is blocked by stylo's blocklist and should fallback to
+   * use Gecko's style backend. Note that using a document's principal rather
+   * than the document URI will let us piggy-back off the existing principal
+   * relationships and symmetries.
+   */
+  static bool IsInStyloBlocklist(nsIPrincipal* aPrincipal);
+#endif
+
   /**
    * Register an imgIRequest object with a refresh driver.
    *
@@ -2991,6 +3002,8 @@ private:
   static bool sTextCombineUprightDigitsEnabled;
 #ifdef MOZ_STYLO
   static bool sStyloEnabled;
+  static bool sStyloBlocklistEnabled;
+  static nsTArray<nsCString>* sStyloBlocklist;
 #endif
   static bool sStyleAttrWithXMLBaseDisabled;
   static uint32_t sIdlePeriodDeadlineLimit;
