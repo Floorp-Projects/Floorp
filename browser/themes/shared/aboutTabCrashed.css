@@ -10,20 +10,11 @@ body {
   background-image: url("chrome://browser/skin/tab-crashed.svg");
 }
 
-.title > h1,
-.offers {
-  margin-left: 14px;
-}
-
 .title > h1 {
   /**
    * Add commentary?
    */
   padding-right: 14px;
-}
-
-.container {
-  width: 45%;
 }
 
 #reportSent {

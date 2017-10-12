@@ -95,7 +95,8 @@ class CPPUnitTests(object):
     def build_environment(self):
         """
         Create and return a dictionary of all the appropriate env variables and values.
-        On a remote system, we overload this to set different values and are missing things like os.environ and PATH.
+        On a remote system, we overload this to set different values and are missing things
+        like os.environ and PATH.
         """
         if not os.path.isdir(self.xre_path):
             raise Exception("xre_path does not exist: %s", self.xre_path)
@@ -185,7 +186,8 @@ class CPPUnittestOptions(OptionParser):
         self.add_option("--symbols-path",
                         action="store", type="string", dest="symbols_path",
                         default=None,
-                        help="absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+                        help="absolute path to directory containing breakpad symbols, or "
+                        "the URL of a zip file containing symbols")
         self.add_option("--manifest-path",
                         action="store", type="string", dest="manifest_path",
                         default=None,
@@ -218,9 +220,16 @@ def extract_unittests_from_args(args, environ, manifest_path):
     active_tests = mp.active_tests(exists=False, disabled=False, **environ)
     suffix = '.exe' if mozinfo.isWin else ''
     if binary_path:
-        tests.extend([(os.path.join(binary_path, test['relpath'] + suffix), int(test.get('requesttimeoutfactor', 1))) for test in active_tests])
+        tests.extend([
+            (os.path.join(binary_path, test['relpath'] + suffix),
+             int(test.get('requesttimeoutfactor', 1)))
+            for test in active_tests])
     else:
-        tests.extend([(test['path'] + suffix, int(test.get('requesttimeoutfactor', 1))) for test in active_tests])
+        tests.extend([
+            (test['path'] + suffix,
+             int(test.get('requesttimeoutfactor', 1)))
+            for test in active_tests
+        ])
 
     # skip non-existing tests
     tests = [test for test in tests if os.path.isfile(test[0])]

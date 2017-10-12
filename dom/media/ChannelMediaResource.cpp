@@ -521,7 +521,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
-  element->DownloadResumed(true);
+  element->DownloadResumed();
 
   return NS_OK;
 }

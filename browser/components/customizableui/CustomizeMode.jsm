@@ -588,7 +588,7 @@ CustomizeMode.prototype = {
       return null;
     }
     let animationNode;
-    if (aNode.parentNode.id.startsWith("wrapper-")) {
+    if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
       animationNode = aNode.parentNode;
     } else {
       animationNode = aNode;
@@ -633,7 +633,7 @@ CustomizeMode.prototype = {
     }
 
     if (widgetAnimationPromise) {
-      if (aNode.parentNode.id.startsWith("wrapper-")) {
+      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
         aNode.parentNode.classList.remove("animate-out");
       } else {
         aNode.classList.remove("animate-out")
@@ -666,7 +666,7 @@ CustomizeMode.prototype = {
     }
 
     if (widgetAnimationPromise) {
-      if (aNode.parentNode.id.startsWith("wrapper-")) {
+      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
         aNode.parentNode.classList.remove("animate-out");
       } else {
         aNode.classList.remove("animate-out")
@@ -712,7 +712,7 @@ CustomizeMode.prototype = {
       }
     }
     if (widgetAnimationPromise) {
-      if (aNode.parentNode.id.startsWith("wrapper-")) {
+      if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
         aNode.parentNode.classList.remove("animate-out");
       } else {
         aNode.classList.remove("animate-out")

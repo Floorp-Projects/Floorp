@@ -39,10 +39,17 @@ const RequestListColumnWaterfall = createClass({
 
   render() {
     let { firstRequestStartedMillis, item, onWaterfallMouseDown } = this.props;
-    const { boxes, tooltip } = timingBoxes(item);
+    const boxes = timingBoxes(item);
 
     return (
-      div({ className: "requests-list-column requests-list-waterfall", title: tooltip },
+      div({
+        className: "requests-list-column requests-list-waterfall",
+        onMouseOver: function ({target}) {
+          if (!target.title) {
+            target.title = timingTooltip(item);
+          }
+        }
+      },
         div({
           className: "requests-list-timings",
           style: {
@@ -57,13 +64,37 @@ const RequestListColumnWaterfall = createClass({
   }
 });
 
-function timingBoxes(item) {
+function timingTooltip(item) {
   let { eventTimings, fromCache, fromServiceWorker, totalTime } = item;
-  let boxes = [];
   let tooltip = [];
 
   if (fromCache || fromServiceWorker) {
-    return { boxes, tooltip };
+    return tooltip;
+  }
+
+  if (eventTimings) {
+    for (let key of TIMING_KEYS) {
+      let width = eventTimings.timings[key];
+
+      if (width > 0) {
+        tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip." + key, width));
+      }
+    }
+  }
+
+  if (typeof totalTime === "number") {
+    tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip.total", totalTime));
+  }
+
+  return tooltip.join(L10N.getStr("netmonitor.waterfall.tooltip.separator"));
+}
+
+function timingBoxes(item) {
+  let { eventTimings, fromCache, fromServiceWorker, totalTime } = item;
+  let boxes = [];
+
+  if (fromCache || fromServiceWorker) {
+    return boxes;
   }
 
   if (eventTimings) {
@@ -81,7 +112,6 @@ function timingBoxes(item) {
             style: { width },
           })
         );
-        tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip." + key, width));
       }
     }
   }
@@ -95,13 +125,9 @@ function timingBoxes(item) {
         title,
       }, title)
     );
-    tooltip.push(L10N.getFormatStr("netmonitor.waterfall.tooltip.total", totalTime));
   }
 
-  return {
-    boxes,
-    tooltip: tooltip.join(L10N.getStr("netmonitor.waterfall.tooltip.separator"))
-  };
+  return boxes;
 }
 
 module.exports = RequestListColumnWaterfall;

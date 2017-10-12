@@ -1636,6 +1636,57 @@ talos-perf-reftest-stylo-disabled:
         extra-options:
             - --suite=perf-reftest-stylo-disabled
 
+talos-speedometer:
+    description: "Talos speedometer"
+    suite: talos
+    try-name: speedometer
+    treeherder-symbol: tc-T(sp)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=speedometer
+            - --add-option
+            - --webServer,localhost
+
+talos-speedometer-stylo-disabled:
+    description: "Talos Stylo disabled speedometer"
+    suite: talos
+    try-name: speedometer-stylo-disabled
+    treeherder-symbol: tc-Tsd(sp)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=speedometer-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
 talos-svgr:
     description: "Talos svgr"
     suite: talos

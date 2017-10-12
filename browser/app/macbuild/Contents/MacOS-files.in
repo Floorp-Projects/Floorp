@@ -2,6 +2,9 @@
 /*.dylib
 /certutil
 /firefox-bin
+#if defined(MOZ_GECKODRIVER)
+/geckodriver
+#endif
 /gtest/***
 #if defined(MOZ_ASAN) || defined(MOZ_TSAN)
 /llvm-symbolizer

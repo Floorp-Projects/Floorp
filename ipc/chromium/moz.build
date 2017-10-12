@@ -58,10 +58,6 @@ if os_win:
         'src/chrome/common/transport_dib_win.cc',
     ]
 
-    EXPORTS.base += [
-        'src/base/child_privileges.h',
-    ]
-
 elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
     DIRS += ['src/third_party']
 

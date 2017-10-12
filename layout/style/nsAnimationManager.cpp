@@ -428,6 +428,45 @@ public:
     aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
   }
 
+  // Currently all the animation building code in this file is based on
+  // assumption that creating and removing animations should *not* trigger
+  // additional restyles since those changes will be handled within the same
+  // restyle.
+  //
+  // While that is true for the Gecko style backend, it is not true for the
+  // Servo style backend where we want restyles to be triggered so that we
+  // perform a second animation restyle where we will incorporate the changes
+  // arising from creating and removing animations.
+  //
+  // Fortunately, our attempts to avoid posting extra restyles as part of the
+  // processing here are imperfect and most of the time we happen to post
+  // them anyway. Occasionally, however, we don't. For example, we don't post
+  // a restyle when we create a new animation whose an animation index matches
+  // the default value it was given already (which is typically only true when
+  // the CSSAnimation we create is the first Animation created in a particular
+  // content process).
+  //
+  // As a result, when we are using the Servo backend, whenever we have an added
+  // or removed animation we need to explicitly trigger a restyle.
+  //
+  // This code should eventually disappear along with the Gecko style backend
+  // and we should simply call Play() / Pause() / Cancel() etc. which will
+  // post the required restyles.
+  void NotifyNewOrRemovedAnimation(const Animation& aAnimation)
+  {
+    AnimationEffectReadOnly* effect = aAnimation.GetEffect();
+    if (!effect) {
+      return;
+    }
+
+    KeyframeEffectReadOnly* keyframeEffect = effect->AsKeyframeEffect();
+    if (!keyframeEffect) {
+      return;
+    }
+
+    keyframeEffect->RequestRestyle(EffectCompositor::RestyleType::Standard);
+  }
+
 private:
   const ServoStyleContext* mStyleContext;
 };
@@ -451,6 +490,8 @@ public:
   {
     aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
   }
+
+  void NotifyNewOrRemovedAnimation(const Animation&) {}
 
 private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
@@ -604,6 +645,8 @@ BuildAnimation(nsPresContext* aPresContext,
   } else {
     animation->PlayFromStyle();
   }
+
+  aBuilder.NotifyNewOrRemovedAnimation(*animation);
 
   return animation.forget();
 }
@@ -1099,6 +1142,7 @@ nsAnimationManager::DoUpdateAnimations(
 
   // Cancel removed animations
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
+    aBuilder.NotifyNewOrRemovedAnimation(*newAnimations[newAnimIdx]);
     newAnimations[newAnimIdx]->CancelFromStyle();
   }
 }

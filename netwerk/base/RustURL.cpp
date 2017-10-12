@@ -58,7 +58,7 @@ RustURL::SetSpec(const nsACString & aSpec)
 {
   ENSURE_MUTABLE();
 
-  rusturl* ptr = rusturl_new(&aSpec);
+  rusturl* ptr = rusturl_new(&aSpec, nullptr);
   if (!ptr) {
     return NS_ERROR_FAILURE;
   }

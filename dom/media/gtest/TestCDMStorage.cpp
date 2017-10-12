@@ -11,6 +11,7 @@
 #include "ChromiumCDMCallback.h"
 #include "GMPTestMonitor.h"
 #include "GMPServiceParent.h"
+#include "MediaResult.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNSSComponent.h" //For EnsureNSSInitializedChromeOrContent
@@ -470,7 +471,7 @@ class CDMStorageTest
                       self->Update(update);
                     }
                   },
-                  [](nsresult rv) { EXPECT_TRUE(false); });
+                  [](MediaResult rv) { EXPECT_TRUE(false); });
   }
 
   void TestBasicStorage() {

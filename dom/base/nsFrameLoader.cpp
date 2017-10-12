@@ -3796,6 +3796,18 @@ nsFrameLoader::RequestFrameLoaderClose()
 }
 
 void
+nsFrameLoader::RequestUpdatePosition(ErrorResult& aRv)
+{
+  if (auto* tabParent = TabParent::GetFrom(GetRemoteBrowser())) {
+    nsresult rv = tabParent->UpdatePosition();
+
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+    }
+  }
+}
+
+void
 nsFrameLoader::Print(uint64_t aOuterWindowID,
                      nsIPrintSettings* aPrintSettings,
                      nsIWebProgressListener* aProgressListener,
