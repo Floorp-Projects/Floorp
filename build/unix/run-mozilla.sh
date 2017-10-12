@@ -238,7 +238,7 @@ then
 fi
 #
 if [ -z "$MRE_HOME" ]; then
-    MRE_HOME=$MOZ_DIST_BIN"
+    MRE_HOME=$MOZ_DIST_BIN
 fi
 ##
 ## Set LD_LIBRARY_PATH

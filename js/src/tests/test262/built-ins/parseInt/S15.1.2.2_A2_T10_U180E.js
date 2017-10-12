@@ -2,6 +2,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es5id: 15.1.2.2
+es6id: 18.2.5
 esid: sec-parseint-string-radix
 description: >
   Leading U+180E is not recognized as whitespace
@@ -20,6 +22,7 @@ info: >
       such code unit; otherwise, let Z be S.
   14. If Z is empty, return NaN.
   ...
+features: [u180e]
 ---*/
 
 var mongolianVowelSeparator = "\u180E";

@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/obj-ptrn-prop-id-init-skipped.case
-// - src/dstr-binding/default/for-await-of-async-gen-var.template
+// - src/dstr-binding-for-await/obj-ptrn-prop-id-init-skipped.case
+// - src/dstr-binding-for-await/default/for-await-of-async-gen-var.template
 /*---
 description: Destructuring initializer is not evaluated when value is not `undefined` (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -35,7 +34,7 @@ info: |
 
     13.3.3.7 Runtime Semantics: KeyedBindingInitialization
 
-    BindingElement : BindingPattern Initializeropt
+    BindingElement : BindingPattern Initializer_opt
 
     [...]
     3. If Initializer is present and v is undefined, then

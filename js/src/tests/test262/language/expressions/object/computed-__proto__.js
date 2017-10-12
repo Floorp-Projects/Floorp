@@ -25,6 +25,7 @@ info: |
     a. If Type(propValue) is either Object or Null, then
         i. Return object.[[SetPrototypeOf]](propValue).
     b. Return NormalCompletion(empty).
+features: [Symbol]
 ---*/
 
 var obj;

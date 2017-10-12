@@ -3,13 +3,16 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-  description: >
-      `yield` expressions are not LogicalOrExpressions.
-  es6id: 12.1.1
-  negative:
-    phase: early
-    type: SyntaxError
- ---*/
+description: >
+    `yield` expressions are not LogicalOrExpressions.
+es6id: 12.1.1
+negative:
+  phase: early
+  type: SyntaxError
+features: [generators]
+---*/
+
+throw "Test262: This statement should not be evaluated.";
 
 
 function* g() {

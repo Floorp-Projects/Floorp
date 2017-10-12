@@ -6,6 +6,8 @@ info: >
     If B = 1110xxxx (n = 3) and string.charAt(k + 3),
     string.charAt(k + 6) not equal "%", throw URIError
 es5id: 15.1.3.2_A1.8_T1
+es6id: 18.2.6.3
+esid: sec-decodeuricomponent-encodeduricomponent
 description: >
     Complex tests. B = [0xE0 - 0xEF],  string.charAt(k + 3) not equal "%"
 includes: [decimalToHexString.js]
@@ -17,31 +19,31 @@ var indexP;
 var indexO = 0;
 
 for (var index = 0xE0; index <= 0xEF; index++) {
-  count++; 
+  count++;
   var hex = decimalToPercentHexString(index);
   try {
     decodeURIComponent(hex + "111%A0");
-  } catch (e) { 
-    if ((e instanceof URIError) === true) continue;                
+  } catch (e) {
+    if ((e instanceof URIError) === true) continue;
   }
-  if (indexO === 0) { 
+  if (indexO === 0) {
     indexO = index;
   } else {
-    if ((index - indexP) !== 1) {             
+    if ((index - indexP) !== 1) {
       if ((indexP - indexO) !== 0) {
         var hexP = decimalToHexString(indexP);
         var hexO = decimalToHexString(indexO);
         $ERROR('#' + hexO + '-' + hexP + ' ');
-      } 
+      }
       else {
         var hexP = decimalToHexString(indexP);
         $ERROR('#' + hexP + ' ');
-      }  
+      }
       indexO = index;
-    }         
+    }
   }
   indexP = index;
-  errorCount++;       
+  errorCount++;
 }
 
 if (errorCount > 0) {
@@ -52,7 +54,7 @@ if (errorCount > 0) {
   } else {
     var hexP = decimalToHexString(indexP);
     $ERROR('#' + hexP + ' ');
-  }     
+  }
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
 }
 

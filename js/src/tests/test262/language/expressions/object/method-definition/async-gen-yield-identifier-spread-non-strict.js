@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-identifier-spread-non-strict.case
 // - src/async-generators/non-strict/async-obj-method.template
 /*---
 description: Mixed use of object spread and yield as a valid identifier in a function body inside a generator body in non strict mode (Generator method - valid for non-strict only cases)
 esid: prod-AsyncGeneratorMethod
-features: [object-spread, async-iteration]
+features: [object-spread, Symbol, async-iteration]
 flags: [generated, noStrict, async]
 info: |
     Async Generator Function Definitions

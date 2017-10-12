@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/obj-ptrn-rest-skip-non-enumerable.case
-// - src/dstr-binding/default/for-await-of-async-func-let-async.template
+// - src/dstr-binding-for-await/obj-ptrn-rest-skip-non-enumerable.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-let-async.template
 /*---
 description: Rest object doesn't contain non-enumerable properties (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -51,14 +50,19 @@ async function fn() {
     assert.sameValue(rest.b, 4);
     assert.sameValue(rest.x, undefined);
 
-    verifyEnumerable(rest, "a");
-    verifyWritable(rest, "a");
-    verifyConfigurable(rest, "a");
+    verifyProperty(rest, "a", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 3
+    });
 
-    verifyEnumerable(rest, "b");
-    verifyWritable(rest, "b");
-    verifyConfigurable(rest, "b");
-
+    verifyProperty(rest, "b", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 4
+    });
 
     iterCount += 1;
   }

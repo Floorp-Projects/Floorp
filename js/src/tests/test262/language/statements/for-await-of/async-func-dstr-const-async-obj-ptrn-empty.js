@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/obj-ptrn-empty.case
-// - src/dstr-binding/default/for-await-of-async-func-const-async.template
+// - src/dstr-binding-for-await/obj-ptrn-empty.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-const-async.template
 /*---
 description: No property access occurs for an "empty" object binding pattern (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation

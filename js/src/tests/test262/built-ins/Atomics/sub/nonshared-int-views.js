@@ -2,9 +2,11 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.sub
 description: >
   Test Atomics.sub on non-shared integer TypedArrays
 includes: [testTypedArray.js]
+features: [TypedArray]
 ---*/
 
 var ab = new ArrayBuffer(16);

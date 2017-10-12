@@ -10,6 +10,7 @@ info: >
   8. If _a_ has a [[TypedArrayName]] internal slot, then
     a. If IsDetachedBuffer(_a_.[[ViewedArrayBuffer]]) is *true*, throw a *TypeError* exception.
 includes: [testTypedArray.js, detachArrayBuffer.js]
+features: [TypedArray]
 ---*/
 
 testWithTypedArrayConstructors(TA => {

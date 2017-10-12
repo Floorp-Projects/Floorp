@@ -10,8 +10,10 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Object.prototype, '__defineSetter__');
-verifyWritable(Object.prototype, '__defineSetter__');
-verifyConfigurable(Object.prototype, '__defineSetter__');
+verifyProperty(Object.prototype, "__defineSetter__", {
+  enumerable: false,
+  writable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

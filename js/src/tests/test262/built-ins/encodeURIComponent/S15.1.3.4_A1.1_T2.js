@@ -4,6 +4,8 @@
 /*---
 info: If string.charAt(k) in [0xDC00 - 0xDFFF], throw URIError
 es5id: 15.1.3.4_A1.1_T2
+es6id: 18.2.6.5
+esid: sec-encodeuricomponent-uricomponent
 description: Complex tests
 includes: [decimalToHexString.js]
 ---*/
@@ -14,31 +16,31 @@ var indexP;
 var indexO = 0;
 
 for (var index = 0xDC00; index <= 0xDFFF; index++) {
-  count++; 
+  count++;
   var hex = decimalToHexString(index);
   try {
     encodeURIComponent(String.fromCharCode(index, 0x0041));
-  } catch (e) { 
-    if ((e instanceof URIError) === true) continue;                
+  } catch (e) {
+    if ((e instanceof URIError) === true) continue;
   }
-  if (indexO === 0) { 
+  if (indexO === 0) {
     indexO = index;
   } else {
-    if ((index - indexP) !== 1) {             
+    if ((index - indexP) !== 1) {
       if ((indexP - indexO) !== 0) {
         var hexP = decimalToHexString(indexP);
         var hexO = decimalToHexString(indexO);
         $ERROR('#' + hexO + '-' + hexP + ' ');
-      } 
+      }
       else {
         var hexP = decimalToHexString(indexP);
         $ERROR('#' + hexP + ' ');
-      }  
+      }
       indexO = index;
-    }         
+    }
   }
   indexP = index;
-  errorCount++;    
+  errorCount++;
 }
 
 if (errorCount > 0) {
@@ -49,7 +51,7 @@ if (errorCount > 0) {
   } else {
     var hexP = decimalToHexString(indexP);
     $ERROR('#' + hexP + ' ');
-  }     
+  }
   $ERROR('Total error: ' + errorCount + ' bad Unicode character in ' + count + ' ');
 }
 

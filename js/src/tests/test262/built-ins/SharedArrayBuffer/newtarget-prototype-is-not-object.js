@@ -18,7 +18,7 @@ info: >
     1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBufferPrototype%",
        «[[ArrayBufferData]], [[ArrayBufferByteLength]]» ).
     ...
-features: [Reflect.construct]
+features: [Symbol, Reflect.construct]
 ---*/
 
 function newTarget() { }

@@ -7,6 +7,7 @@ description: Object extensibility
 info: >
   The value of the [[Extensible]] internal slot of the GeneratorFunction
   constructor is true.
+features: [generators]
 ---*/
 
 var GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;

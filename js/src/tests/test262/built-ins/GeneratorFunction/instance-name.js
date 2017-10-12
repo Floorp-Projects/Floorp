@@ -14,6 +14,7 @@ info: >
     [...]
     29. Perform SetFunctionName(F, "anonymous").
 includes: [propertyHelper.js]
+features: [generators]
 ---*/
 
 var GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;

@@ -5,6 +5,7 @@
 /*---
 description: redeclaration with const-LexicalDeclaration (GeneratorDeclaration in SwitchStatement)
 esid: sec-switch-statement-static-semantics-early-errors
+features: [generators]
 flags: [generated]
 negative:
   phase: early
@@ -17,5 +18,7 @@ info: |
 
 ---*/
 
+
+throw "Test262: This statement should not be evaluated.";
 
 switch (0) { case 1: function* f() {} default: const f = 0; }

@@ -75,6 +75,7 @@ info: |
       elements.
 
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 0, class {
   method(x = 0, x) {
