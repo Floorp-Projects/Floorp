@@ -4,6 +4,8 @@
   <title>Video controls test</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -40,7 +42,6 @@ const scrubberMargin = 9;
 const scrubberWidth = videoWidth - controlBarMargin - playButtonWidth - scrubberMargin * 2 - positionAndDurationWidth - muteButtonWidth - volumeSliderMarginStart - volumeSliderWidth - volumeSliderMarginEnd - fullscreenButtonWidth - controlBarMargin;
 const scrubberHeight = 40;
 
-
 // Play button is on the bottom-left
 const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
 const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
@@ -55,28 +56,21 @@ const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight 
 const scrubberOffsetX = controlBarMargin + playButtonWidth + scrubberMargin;
 const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
-var testnum = 1;
-var video = document.getElementById("video");
+const video = document.getElementById("video");
 
-const domUtil = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
+let expectingEvents;
+let expectingEventPromise;
 
-function getButtonByAttribute(aName, aValue) {
-  var kids = domUtil.getChildrenForNode(video, true);
-  var videocontrols = kids[1];
-  return SpecialPowers.wrap(document)
-    .getAnonymousElementByAttribute(videocontrols, aName, aValue);
-}
-
-function isMuteButtonMuted() {
-  var muteButton = getButtonByAttribute("anonid", "muteButton");
+async function isMuteButtonMuted() {
+  const muteButton = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+  await new Promise(SimpleTest.executeSoon);
   return muteButton.getAttribute("muted") === "true";
 }
 
-function isVolumeSliderShowingCorrectVolume(expectedVolume) {
-  var volumeControl = getButtonByAttribute("anonid", "volumeControl");
-  is(+volumeControl.value, expectedVolume * 100,
-     "volume slider should match expected volume");
+async function isVolumeSliderShowingCorrectVolume(expectedVolume) {
+  const volumeControl = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeControl");
+  await new Promise(SimpleTest.executeSoon);
+  is(+volumeControl.value, expectedVolume * 100, "volume slider should match expected volume");
 }
 
 function forceReframe() {
@@ -88,382 +82,262 @@ function forceReframe() {
   video.getBoundingClientRect();
 }
 
-function runTest(event) {
-  ok(true, "----- test #" + testnum + " -----");
+function verifyExpectedEvent(event) {
+  const checkingEvent = expectingEvents.shift();
 
-  switch (testnum) {
-    /*
-     * Check operation of play/pause/mute/unmute buttons.
-     */
-    case 1:
-      // Check initial state upon load
-      is(event.type, "canplaythrough", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-
-      // Click the play button
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
-      });
-      break;
-
-    case 2:
-      is(event.type, "play", "checking event type");
-      is(video.paused, false, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-
-      // Click the pause button
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
-      });
-      break;
-
-    case 3:
-      is(event.type, "pause", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Mute.
-      });
-      break;
-
-    case 4:
-      is(event.type, "volumechange", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, true, "checking video mute state");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Unmute.
-      });
-      break;
-
-    /*
-     * Bug 470596: Make sure that having CSS border or padding doesn't
-     * break the controls (though it should move them)
-     */
-    case 5:
-      is(event.type, "volumechange", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-
-      video.style.border = "medium solid purple";
-      video.style.borderWidth = "30px 40px 50px 60px";
-      video.style.padding = "10px 20px 30px 40px";
-      // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
-
-      // Click the play button
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
-      });
-      break;
-
-    case 6:
-      is(event.type, "play", "checking event type");
-      is(video.paused, false, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-      video.pause();
-      break;
-
-    case 7:
-      is(event.type, "pause", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-
-      // Click the mute button
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, { });
-      });
-      break;
-
-    case 8:
-      is(event.type, "volumechange", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, true, "checking video mute state");
-      // Clear the style set in test 5.
-      video.style.border = "";
-      video.style.borderWidth = "";
-      video.style.padding = "";
-
-      video.muted = false;
-      break;
-
-    /*
-     * Previous tests have moved playback postion, reset it to 0.
-     */
-    case 9:
-      is(event.type, "volumechange", "checking event type");
-      is(video.paused, true, "checking video play state");
-      is(video.muted, false, "checking video mute state");
-      ok(true, "video position is at " + video.currentTime);
-      video.currentTime = 0.0;
-      break;
-
-    case 10:
-      is(event.type, "seeking", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      break;
-
-    /*
-     * Drag the slider's thumb to the halfway point with the mouse.
-     */
-    case 11:
-      is(event.type, "seeked", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      // Bug 477434 -- sometimes we get 0.098999 here instead of 0!
-      // is(video.currentTime, 0.0, "checking playback position");
-
-      SimpleTest.executeSoon(() => {
-        var beginDragX = scrubberOffsetX;
-        var endDragX = scrubberOffsetX + (scrubberWidth / 2);
-        synthesizeMouse(video, beginDragX, scrubberCenterY, { type: "mousedown", button: 0 });
-        synthesizeMouse(video, endDragX, scrubberCenterY, { type: "mousemove", button: 0 });
-        synthesizeMouse(video, endDragX, scrubberCenterY, { type: "mouseup",   button: 0 });
-      });
-      break;
-
-    case 12:
-      is(event.type, "seeking", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      break;
-
-    /*
-     * Click the slider at the 1/4 point with the mouse (jump backwards)
-     */
-    case 13:
-      is(event.type, "seeked", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      var expectedTime = videoDuration / 2;
-      // The width of srubber is not equal in every platform as we use system default font
-      // in duration and position box. We can not precisely drag to expected position, so
-      // we just make sure the difference is within 10% of video duration.
-      ok(Math.abs(video.currentTime - expectedTime) < videoDuration / 10, "checking expected playback position");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, { });
-      });
-      break;
-
-    case 14:
-      is(event.type, "seeking", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      break;
-
-    case 15:
-      is(event.type, "seeked", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      // The scrubber currently just jumps towards the nearest pageIncrement point, not
-      // precisely to the point clicked. So, expectedTime isn't (videoDuration / 4).
-      // We should end up at 1.733, but sometimes we end up at 1.498. I guess
-      // it's timing depending if the <scale> things it's click-and-hold, or a
-      // single click. So, just make sure we end up less that the previous
-      // position.
-      var lastPosition = (videoDuration / 2) - 0.1;
-      ok(video.currentTime < lastPosition, "checking expected playback position");
-
-      // Set volume to 0.1 so one down arrow hit will decrease it to 0.
-      video.volume = 0.1;
-      break;
-
-    // See bug 694696.
-    case 16:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.1, "Volume should be set.");
-      ok(!video.muted, "Video is not muted.");
-
-      video.focus();
-      SimpleTest.executeSoon(() => synthesizeKey("VK_DOWN", {}));
-      break;
-
-    case 17:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0, "Volume should be 0.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => {
-        ok(isMuteButtonMuted(), "Mute button says it's muted");
-        synthesizeKey("VK_UP", {});
-      });
-      break;
-
-    case 18:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.1, "Volume is increased.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => {
-        ok(!isMuteButtonMuted(), "Mute button says it's not muted");
-        synthesizeKey("VK_DOWN", {});
-      });
-      break;
-
-    case 19:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0, "Volume should be 0.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => {
-        ok(isMuteButtonMuted(), "Mute button says it's muted");
-        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
-      });
-      break;
-
-    case 20:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.5, "Volume should be 0.5.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => synthesizeKey("VK_UP", {}));
-      break;
-
-    case 21:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.6, "Volume should be 0.6.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
-      });
-      break;
-
-    case 22:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.6, "Volume should be 0.6.");
-      ok(video.muted, "Video is muted.");
-
-      SimpleTest.executeSoon(() => {
-        ok(isMuteButtonMuted(), "Mute button says it's muted");
-        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
-      });
-      break;
-
-    case 23:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.6, "Volume should be 0.6.");
-      ok(!video.muted, "Video is not muted.");
-
-      SimpleTest.executeSoon(() => {
-        ok(!isMuteButtonMuted(), "Mute button says it's not muted");
-        synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, { });
-      });
-      break;
-
-    case 24:
-      is(event.type, "mozfullscreenchange", "checking event type");
-      is(video.volume, 0.6, "Volume should still be 0.6");
-      SimpleTest.executeSoon(function() {
-        isVolumeSliderShowingCorrectVolume(video.volume);
-        synthesizeKey("VK_ESCAPE", {});
-      });
-      break;
-
-    case 25:
-      is(event.type, "mozfullscreenchange", "checking event type");
-      is(video.volume, 0.6, "Volume should still be 0.6");
-      SimpleTest.executeSoon(function() {
-        isVolumeSliderShowingCorrectVolume(video.volume);
-        forceReframe();
-        video.focus();
-        synthesizeKey("VK_DOWN", {});
-      });
-      break;
-
-    case 26:
-      is(event.type, "volumechange", "checking event type");
-      is(video.volume, 0.5, "Volume should be decreased by 0.1");
-      SimpleTest.executeSoon(function() {
-        isVolumeSliderShowingCorrectVolume(video.volume);
-        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
-      });
-      break;
-
-    case 27:
-      is(event.type, "play", "checking event type");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeKey(" ", {});
-      });
-      break;
-
-    case 28:
-      is(event.type, "pause", "checking event type");
-
-      SimpleTest.executeSoon(() => {
-        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
-      });
-      break;
-
-    case 29:
-      is(event.type, "play", "checking event type");
-
-      SimpleTest.executeSoon(() => {
-        // Bug 1352724: Click and hold on timeline should pause video immediately.
-        synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, { type: "mousedown", button: 0 });
-      });
-      break;
-
-    case 30:
-      is(event.type, "pause", "checking event type");
-      break;
-
-    case 31:
-      is(event.type, "seeking", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      break;
-
-    case 32:
-      is(event.type, "seeked", "checking event type");
-      ok(true, "video position is at " + video.currentTime);
-      synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
-      break;
-
-    case 33:
-      is(event.type, "play", "checking event type");
-      ok(true, "video resume after mouseup");
-      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
-      break;
-
-    // Bug 1367194: Always ensure video is paused before calling SimpleTest.finish().
-    case 34:
-      is(event.type, "pause", "checking event type");
-      SimpleTest.finish();
-      break;
-
-    default:
-      throw "unexpected test #" + testnum + " w/ event " + event.type;
+  if (event.type == checkingEvent) {
+    ok(true, "checking event type: ", checkingEvent);
+  } else {
+    expectingEventPromise.reject(new Error(`Got event: ${event.type}, expected: ${checkingEvent}`));
   }
 
-  testnum++;
+  if (expectingEvents.length == 0) {
+    expectingEventPromise.resolve();
+  }
 }
 
+async function waitForEvent(...eventTypes) {
+  expectingEvents = eventTypes;
 
-
-function canplaythroughevent(event) {
-  video.removeEventListener("canplaythrough", canplaythroughevent);
-  // Other events expected by the test.
-  video.addEventListener("play", runTest);
-  video.addEventListener("pause", runTest);
-  video.addEventListener("volumechange", runTest);
-  video.addEventListener("seeking", runTest);
-  video.addEventListener("seeked", runTest);
-  document.addEventListener("mozfullscreenchange", runTest);
-  // Begin the test.
-  runTest(event);
+  return new Promise((resolve, reject) => expectingEventPromise = {resolve, reject}).catch(e => {
+    // Throw error here to get the caller in error stack.
+    ok(false, e);
+  });
 }
 
-function startMediaLoad() {
-  // Kick off test once video has loaded, in its canplaythrough event handler.
-  video.src = "seek_with_sound.ogg";
-  video.addEventListener("canplaythrough", canplaythroughevent);
-}
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+  await new Promise(resolve => {
+    video.addEventListener("canplaythrough", resolve, {once: true});
+    video.src = "seek_with_sound.ogg";
+  })
 
-function loadevent(event) {
-  SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
-}
+  video.addEventListener("play", verifyExpectedEvent);
+  video.addEventListener("pause", verifyExpectedEvent);
+  video.addEventListener("volumechange", verifyExpectedEvent);
+  video.addEventListener("seeking", verifyExpectedEvent);
+  video.addEventListener("seeked", verifyExpectedEvent);
+  document.addEventListener("mozfullscreenchange", verifyExpectedEvent);
 
-window.addEventListener("load", loadevent);
+  // Check initial state upon load
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
 
-SimpleTest.waitForExplicitFinish();
+add_task(async function click_playbutton() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+  is(video.paused, false, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+add_task(async function click_pausebutton() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {})
+  await waitForEvent("pause");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+add_task(async function mute_volume() {
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, true, "checking video mute state");
+});
+
+add_task(async function unmute_volume() {
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+/*
+ * Bug 470596: Make sure that having CSS border or padding doesn't
+ * break the controls (though it should move them)
+ */
+add_task(async function styled_video() {
+  video.style.border = "medium solid purple";
+  video.style.borderWidth = "30px 40px 50px 60px";
+  video.style.padding = "10px 20px 30px 40px";
+  // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
+
+  // Click the play button
+  synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
+  await waitForEvent("play");
+  is(video.paused, false, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+
+  // Pause the video
+  video.pause();
+  await waitForEvent("pause");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+
+  // Click the mute button
+  synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, true, "checking video mute state");
+
+  // Clear the style set
+  video.style.border = "";
+  video.style.borderWidth = "";
+  video.style.padding = "";
+
+  // Unmute the video
+  video.muted = false;
+  await waitForEvent("volumechange");
+  is(video.paused, true, "checking video play state");
+  is(video.muted, false, "checking video mute state");
+});
+
+/*
+ * Previous tests have moved playback postion, reset it to 0.
+ */
+add_task(async function reset_currentTime() {
+  ok(true, "video position is at " + video.currentTime);
+  video.currentTime = 0.0;
+  await waitForEvent("seeking", "seeked");
+  // Bug 477434 -- sometimes we get 0.098999 here instead of 0!
+  // is(video.currentTime, 0.0, "checking playback position");
+  ok(true, "video position is at " + video.currentTime);
+});
+
+/*
+ * Drag the slider's thumb to the halfway point with the mouse.
+ */
+add_task(async function drag_slider() {
+  const beginDragX = scrubberOffsetX;
+  const endDragX = scrubberOffsetX + (scrubberWidth / 2);
+  const expectedTime = videoDuration / 2;
+
+  synthesizeMouse(video, beginDragX, scrubberCenterY, {type: "mousedown", button: 0});
+  synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mousemove", button: 0});
+  synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mouseup",   button: 0});
+  await waitForEvent("seeking", "seeked");
+  ok(true, "video position is at " + video.currentTime);
+  // The width of srubber is not equal in every platform as we use system default font
+  // in duration and position box. We can not precisely drag to expected position, so
+  // we just make sure the difference is within 10% of video duration.
+  ok(Math.abs(video.currentTime - expectedTime) < videoDuration / 10, "checking expected playback position");
+});
+
+/*
+ * Click the slider at the 1/4 point with the mouse (jump backwards)
+ */
+add_task(async function click_slider() {
+  synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, {});
+  await waitForEvent("seeking", "seeked");
+  ok(true, "video position is at " + video.currentTime);
+  // The scrubber currently just jumps towards the nearest pageIncrement point, not
+  // precisely to the point clicked. So, expectedTime isn't (videoDuration / 4).
+  // We should end up at 1.733, but sometimes we end up at 1.498. I guess
+  // it's timing depending if the <scale> things it's click-and-hold, or a
+  // single click. So, just make sure we end up less that the previous
+  // position.
+  const lastPosition = (videoDuration / 2) - 0.1;
+  ok(video.currentTime < lastPosition, "checking expected playback position");
+
+  // Set volume to 0.1 so one down arrow hit will decrease it to 0.
+  video.volume = 0.1;
+  await waitForEvent("volumechange");
+  is(video.volume, 0.1, "Volume should be set.");
+  ok(!video.muted, "Video is not muted.");
+});
+
+// See bug 694696.
+add_task(async function change_volume() {
+  video.focus();
+
+  synthesizeKey("VK_DOWN", {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0, "Volume should be 0.");
+  ok(!video.muted, "Video is not muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeKey("VK_UP", {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.1, "Volume is increased.");
+  ok(!video.muted, "Video is not muted.");
+  ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
+
+  synthesizeKey("VK_DOWN", {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0, "Volume should be 0.");
+  ok(!video.muted, "Video is not muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.5, "Volume should be 0.5.");
+  ok(!video.muted, "Video is not muted.");
+
+  synthesizeKey("VK_UP", {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(!video.muted, "Video is not muted.");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(video.muted, "Video is muted.");
+  ok(await isMuteButtonMuted(), "Mute button says it's muted");
+
+  synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.6, "Volume should be 0.6.");
+  ok(!video.muted, "Video is not muted.");
+  ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
+
+  synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, {});
+  await waitForEvent("mozfullscreenchange");
+  is(video.volume, 0.6, "Volume should still be 0.6");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+
+  synthesizeKey("VK_ESCAPE", {});
+  await waitForEvent("mozfullscreenchange");
+  is(video.volume, 0.6, "Volume should still be 0.6");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+  forceReframe();
+
+  video.focus();
+  synthesizeKey("VK_DOWN", {});
+  await waitForEvent("volumechange");
+  is(video.volume, 0.5, "Volume should be decreased by 0.1");
+  await isVolumeSliderShowingCorrectVolume(video.volume);
+});
+
+add_task(async function whitespace_pause_video() {
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+
+  video.focus();
+  synthesizeKey(" ", {});
+  await waitForEvent("pause");
+
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
+  await waitForEvent("play");
+});
+
+/*
+ * Bug 1352724: Click and hold on timeline should pause video immediately.
+ */
+add_task(async function click_and_hold_slider() {
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {type: "mousedown", button: 0});
+  await waitForEvent("pause", "seeking", "seeked");
+
+  synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
+  await waitForEvent("play");
+});
+
+// Bug 1367194: Always ensure video is paused before finishing the test.
+add_task(async function ensure_video_pause() {
+  if (!video.paused) {
+    video.pause();
+    await waitForEvent("pause");
+  }
+});
 
 </script>
 </pre>
