@@ -1011,7 +1011,7 @@ nsPrintEngine::CheckForPrinters(nsIPrintSettings* aPrintSettings)
 
   // See if aPrintSettings already has a printer
   nsString printerName;
-  nsresult rv = aPrintSettings->GetPrinterName(getter_Copies(printerName));
+  nsresult rv = aPrintSettings->GetPrinterName(printerName);
   if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
     return NS_OK;
   }
@@ -1021,9 +1021,9 @@ nsPrintEngine::CheckForPrinters(nsIPrintSettings* aPrintSettings)
     do_GetService(sPrintSettingsServiceContractID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+  rv = printSettingsService->GetDefaultPrinterName(printerName);
   if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
-    rv = aPrintSettings->SetPrinterName(printerName.get());
+    rv = aPrintSettings->SetPrinterName(printerName);
   }
   return rv;
 #endif
@@ -1455,21 +1455,8 @@ nsPrintEngine::GetDisplayTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
   // First check to see if the PrintSettings has defined an alternate title
   // and use that if it did
   if (mPrt->mPrintSettings) {
-    char16_t * docTitleStrPS = nullptr;
-    char16_t * docURLStrPS   = nullptr;
-    mPrt->mPrintSettings->GetTitle(&docTitleStrPS);
-    mPrt->mPrintSettings->GetDocURL(&docURLStrPS);
-
-    if (docTitleStrPS) {
-      aTitle = docTitleStrPS;
-    }
-
-    if (docURLStrPS) {
-      aURLStr = docURLStrPS;
-    }
-
-    free(docTitleStrPS);
-    free(docURLStrPS);
+    mPrt->mPrintSettings->GetTitle(aTitle);
+    mPrt->mPrintSettings->GetDocURL(aURLStr);
   }
 
   nsAutoString docTitle;
@@ -1828,7 +1815,7 @@ nsPrintEngine::SetupToPrintContent()
   printData->mPrintSettings->GetPrintToFile(&isPrintToFile);
   if (isPrintToFile) {
     // On some platforms The BeginDocument needs to know the name of the file.
-    printData->mPrintSettings->GetToFileName(getter_Copies(fileNameStr));
+    printData->mPrintSettings->GetToFileName(fileNameStr);
   }
 
   nsAutoString docTitleStr;

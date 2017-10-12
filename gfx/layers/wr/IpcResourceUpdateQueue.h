@@ -34,7 +34,7 @@ public:
   void Clear();
 
 protected:
-  void AllocChunk();
+  bool AllocChunk();
   layers::OffsetRange AllocLargeChunk(size_t aSize);
 
   nsTArray<ipc::Shmem> mSmallAllocs;
@@ -67,21 +67,21 @@ public:
   // So we pick 64k - 2 * 4k = 57344 bytes as the defautl alloc
   explicit IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator, size_t aChunkSize = 57344);
 
-  void AddImage(wr::ImageKey aKey,
+  bool AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
 
-  void AddBlobImage(wr::ImageKey aKey,
+  bool AddBlobImage(wr::ImageKey aKey,
                     const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes);
 
   void AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
 
-  void UpdateImageBuffer(wr::ImageKey aKey,
+  bool UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
                          Range<uint8_t> aBytes);
 
-  void UpdateBlobImage(wr::ImageKey aKey,
+  bool UpdateBlobImage(wr::ImageKey aKey,
                        const ImageDescriptor& aDescriptor,
                        Range<uint8_t> aBytes);
 
@@ -93,7 +93,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
+  bool AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
 
   void DeleteFont(wr::FontKey aKey);
 

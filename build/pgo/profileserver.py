@@ -45,13 +45,19 @@ if __name__ == '__main__':
         # TODO: refactor this into mozprofile
         prefpath = os.path.join(
             build.topsrcdir, "testing", "profiles", "prefs_general.js")
+        overridepath = os.path.join(
+            build.topsrcdir, "build", "pgo", "prefs_override.js")
+
         prefs = {}
         prefs.update(Preferences.read_prefs(prefpath))
+        prefs.update(Preferences.read_prefs(overridepath))
+
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address,
                          "OOP": "false"}
         prefs = json.loads(json.dumps(prefs) % interpolation)
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
+
         profile = FirefoxProfile(profile=profilePath,
                                  preferences=prefs,
                                  addons=[os.path.join(
