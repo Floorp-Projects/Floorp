@@ -354,6 +354,8 @@ public:
 
   DimensionInfo GetDimensionInfo();
 
+  nsresult UpdatePosition();
+
   void SizeModeChanged(const nsSizeMode& aSizeMode);
 
   void UIResolutionChanged();
@@ -668,8 +670,6 @@ private:
 
   RefPtr<nsIContentParent> mManager;
   void TryCacheDPIAndScale();
-
-  nsresult UpdatePosition();
 
   bool AsyncPanZoomEnabled() const;
 

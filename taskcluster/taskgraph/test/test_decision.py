@@ -76,6 +76,7 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     def test_try_options(self):
         self.options['message'] = 'try: -b do -t all'
+        self.options['project'] = 'try'
         params = decision.get_decision_parameters(self.options)
         self.assertEqual(params['try_mode'], 'try_option_syntax')
         self.assertEqual(params['try_options']['build_types'], 'do')
@@ -85,6 +86,7 @@ class TestGetDecisionParameters(unittest.TestCase):
     def test_try_task_config(self):
         ttc = {'tasks': ['a', 'b'], 'templates': {}}
         ttc_file = os.path.join(os.getcwd(), 'try_task_config.json')
+        self.options['project'] = 'try'
         with MockedOpen({ttc_file: json.dumps(ttc)}):
             params = decision.get_decision_parameters(self.options)
             self.assertEqual(params['try_mode'], 'try_task_config')

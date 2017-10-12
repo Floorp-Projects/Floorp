@@ -68,6 +68,7 @@ talos:
     - talos-perf-reftest-singletons
     - talos-tp6
     - talos-tp6-stylo-threads
+    - talos-speedometer
 
 awsy:
     - awsy
@@ -113,6 +114,7 @@ qr-talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
+    - talos-speedometer
 
 qr-tests:
     - cppunit
@@ -147,6 +149,7 @@ linux-talos-stylo-disabled:
     - talos-perf-reftest-stylo-disabled
     - talos-perf-reftest-singletons-stylo-disabled
     - talos-tp6-stylo-disabled
+    - talos-speedometer-stylo-disabled
 
 windows-reftest-gpu:
     - reftest-gpu
@@ -192,6 +195,7 @@ windows-talos:
     - talos-xperf
     - talos-tp6
     - talos-tp6-stylo-threads
+    - talos-speedometer
 
 windows-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
@@ -207,6 +211,7 @@ windows-talos-stylo-disabled:
     - talos-tp5o-stylo-disabled
     - talos-xperf-stylo-disabled
     - talos-tp6-stylo-disabled
+    - talos-speedometer-stylo-disabled
 
 macosx64-tests:
     - cppunit
@@ -247,6 +252,7 @@ macosx64-talos:
     - talos-perf-reftest-singletons
     - talos-tp6
     - talos-tp6-stylo-threads
+    - talos-speedometer
 
 macosx64-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
@@ -261,6 +267,7 @@ macosx64-talos-stylo-disabled:
     - talos-perf-reftest-stylo-disabled
     - talos-perf-reftest-singletons-stylo-disabled
     - talos-tp6-stylo-disabled
+    - talos-speedometer-stylo-disabled
 
 linux32-tests:
     - cppunit

@@ -1863,8 +1863,10 @@ class PackageFrontend(MachCommandBase):
                     pass
 
                 name = os.path.basename(artifact_name)
+                artifact_url = get_artifact_url(task_id, artifact_name,
+                    use_proxy=not artifact_name.startswith('public/'))
                 super(ArtifactRecord, self).__init__(
-                    get_artifact_url(task_id, artifact_name), name,
+                    artifact_url, name,
                     None, digest, algorithm, unpack=True)
 
         records = OrderedDict()

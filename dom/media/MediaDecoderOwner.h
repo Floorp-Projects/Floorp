@@ -96,15 +96,6 @@ public:
   // asked the decoder to suspend the download.
   virtual void DownloadSuspended() = 0;
 
-  // Called by the media stream, on the main thread, when the download
-  // has been resumed by the cache or because the element itself
-  // asked the decoder to resumed the download.
-  // If aForceNetworkLoading is True, ignore the fact that the download has
-  // previously finished. We are downloading the middle of the media after
-  // having downloaded the end, we need to notify the element a download in
-  // ongoing.
-  virtual void DownloadResumed(bool aForceNetworkLoading = false) = 0;
-
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aSuspendedByCache) = 0;

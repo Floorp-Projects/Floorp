@@ -62,6 +62,9 @@ if CONFIG['LIBFUZZER']:
         '/tools/fuzzing/libfuzzer',
     ]
 
+if CONFIG['ENABLE_GECKODRIVER']:
+    DEFINES['MOZ_GECKODRIVER'] = True
+
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.

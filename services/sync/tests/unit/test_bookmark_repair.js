@@ -38,6 +38,7 @@ var recordedEvents = [];
 
 add_task(async function setup() {
   clientsEngine = Service.clientsEngine;
+  clientsEngine.ignoreLastModifiedOnProcessCommands = true;
   bookmarksEngine = Service.engineManager.get("bookmarks");
 
   await generateNewKeys(Service.collectionKeys);
@@ -200,6 +201,7 @@ add_task(async function test_bookmark_repair_integration() {
     // so now let's take over the role of that other client!
     _("Create new clients engine pretending to be remote client");
     let remoteClientsEngine = Service.clientsEngine = new ClientEngine(Service);
+    remoteClientsEngine.ignoreLastModifiedOnProcessCommands = true;
     await remoteClientsEngine.initialize();
     remoteClientsEngine.localID = remoteID;
 
@@ -307,6 +309,7 @@ add_task(async function test_bookmark_repair_integration() {
   } finally {
     await cleanup(server);
     clientsEngine = Service.clientsEngine = new ClientEngine(Service);
+    clientsEngine.ignoreLastModifiedOnProcessCommands = true;
     clientsEngine.initialize();
   }
 });

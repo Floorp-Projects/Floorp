@@ -1202,7 +1202,7 @@ set_config('DEVELOPER_OPTIONS', developer_options)
 # ==============================================================
 
 @depends(target)
-def build_not_win_mac(target):
+def is_linker_option_enabled(target):
     if target.kernel not in ('Darwin', 'WINNT', 'SunOS'):
         return True
 
@@ -1210,11 +1210,9 @@ def build_not_win_mac(target):
 option('--enable-gold',
        env='MOZ_FORCE_GOLD',
        help='Enable GNU Gold Linker when it is not already the default',
-       when=build_not_win_mac)
+       when=is_linker_option_enabled)
 
-imply_option('--enable-linker',
-             depends_if('--enable-gold', when=build_not_win_mac)(lambda x: 'gold'),
-             when=build_not_win_mac)
+imply_option('--enable-linker', 'gold', when='--enable-gold')
 
 @imports('os')
 @imports('shutil')
@@ -1290,10 +1288,10 @@ def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_e
 js_option('--enable-linker', nargs=1,
           choices=('bfd', 'gold', 'lld', 'other'),
           help='Select the linker',
-          when=build_not_win_mac)
+          when=is_linker_option_enabled)
 
 @depends('--enable-linker', c_compiler, developer_options, check_build_environment,
-         extra_toolchain_flags, when=build_not_win_mac)
+         extra_toolchain_flags, when=is_linker_option_enabled)
 @checking('for linker', lambda x: x.KIND)
 def select_linker(linker, c_compiler, developer_options, build_env, toolchain_flags):
     linker = linker[0] if linker else 'other'

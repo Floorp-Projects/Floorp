@@ -94,8 +94,10 @@ add_task(async function() {
     // Wait for the autocomplete search. Note that we cannot wait for the search
     // to be complete, since the add-on doesn't communicate when it's done, so
     // just check matches count.
-    await BrowserTestUtils.waitForCondition(() => gURLBar.controller.matchCount >= 2,
-                                            "waiting urlbar search to complete");
+    await BrowserTestUtils.waitForCondition(
+      () => gURLBar.controller.matchCount >= 2 &&
+            gURLBar.popup.richlistbox.children[1].getAttribute("ac-text") == gURLBar.controller.searchString,
+      "waiting urlbar search to complete");
     return "t";
   }
 

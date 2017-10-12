@@ -558,8 +558,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     return PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: pushChanges", async function(db) {
         let skippedCount = 0;
-        let syncedTombstoneGuids = [];
-        let syncedChanges = [];
+        let updateParams = [];
 
         for (let syncId in changeRecords) {
           // Validate change records to catch coding errors.
@@ -581,37 +580,39 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
           }
 
           let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
-          if (changeRecord.tombstone) {
-            syncedTombstoneGuids.push(guid);
-          } else {
-            syncedChanges.push([guid, changeRecord]);
-          }
+          updateParams.push({
+            guid,
+            syncChangeDelta: changeRecord.counter,
+            syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+          });
         }
 
-        if (syncedChanges.length || syncedTombstoneGuids.length) {
+        // Reduce the change counter and update the sync status for
+        // reconciled and uploaded items. If the bookmark was updated
+        // during the sync, its change counter will still be > 0 for the
+        // next sync.
+        if (updateParams.length) {
           await db.executeTransaction(async function() {
-            for (let [guid, changeRecord] of syncedChanges) {
-              // Reduce the change counter and update the sync status for
-              // reconciled and uploaded items. If the bookmark was updated
-              // during the sync, its change counter will still be > 0 for the
-              // next sync.
-              await db.executeCached(`
-                UPDATE moz_bookmarks
-                SET syncChangeCounter = MAX(syncChangeCounter - :syncChangeDelta, 0),
-                    syncStatus = :syncStatus
-                WHERE guid = :guid`,
-                { guid, syncChangeDelta: changeRecord.counter,
-                  syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
-            }
+            await db.executeCached(`
+              UPDATE moz_bookmarks
+              SET syncChangeCounter = MAX(syncChangeCounter - :syncChangeDelta, 0),
+                  syncStatus = :syncStatus
+              WHERE guid = :guid`,
+              updateParams);
 
-            await removeTombstones(db, syncedTombstoneGuids);
+            // Unconditionally delete tombstones, in case the GUID exists in
+            // `moz_bookmarks` and `moz_bookmarks_deleted` (bug 1405563).
+            let deleteParams = updateParams.map(({ guid }) => ({ guid }));
+            await db.executeCached(`
+              DELETE FROM moz_bookmarks_deleted
+              WHERE guid = :guid`,
+              deleteParams);
           });
         }
 
         BookmarkSyncLog.debug(`pushChanges: Processed change records`,
                               { skipped: skippedCount,
-                                updated: syncedChanges.length,
-                                tombstones: syncedTombstoneGuids.length });
+                                updated: updateParams.length });
       }
     );
   },
@@ -1965,9 +1966,28 @@ async function fetchQueryItem(db, bookmarkItem) {
 }
 
 function addRowToChangeRecords(row, changeRecords) {
-  let syncId = BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid"));
+  let guid = row.getResultByName("guid");
+  if (!guid) {
+    throw new Error(`Changed item missing GUID`);
+  }
+  let isTombstone = !!row.getResultByName("tombstone");
+  let syncId = BookmarkSyncUtils.guidToSyncId(guid);
   if (syncId in changeRecords) {
-    throw new Error(`Duplicate entry for ${syncId} in changeset`);
+    let existingRecord = changeRecords[syncId];
+    if (existingRecord.tombstone == isTombstone) {
+      // Should never happen: `moz_bookmarks.guid` has a unique index, and
+      // `moz_bookmarks_deleted.guid` is the primary key.
+      throw new Error(`Duplicate item or tombstone ${syncId} in changeset`);
+    }
+    if (!existingRecord.tombstone && isTombstone) {
+      // Don't replace undeleted items with tombstones...
+      BookmarkSyncLog.warn("addRowToChangeRecords: Ignoring tombstone for " +
+                           "undeleted item", syncId);
+      return;
+    }
+    // ...But replace undeleted tombstones with items.
+    BookmarkSyncLog.warn("addRowToChangeRecords: Replacing tombstone for " +
+                         "undeleted item", syncId);
   }
   let modifiedAsPRTime = row.getResultByName("modified");
   let modified = modifiedAsPRTime / MICROSECONDS_PER_SECOND;
@@ -1980,7 +2000,7 @@ function addRowToChangeRecords(row, changeRecords) {
     modified,
     counter: row.getResultByName("syncChangeCounter"),
     status: row.getResultByName("syncStatus"),
-    tombstone: !!row.getResultByName("tombstone"),
+    tombstone: isTombstone,
     synced: false,
   };
 }

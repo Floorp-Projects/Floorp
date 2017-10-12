@@ -481,9 +481,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled] ? 1 : 0;
       }
       break;
-    case eIntID_ColorPickerAvailable:
-      aResult = 1;
-      break;
     case eIntID_ContextMenuOffsetVertical:
       aResult = -6;
       break;
