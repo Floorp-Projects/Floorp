@@ -911,10 +911,6 @@ void wr_dec_ref_arc(const VecU8 *aArc)
 WR_FUNC;
 
 WR_INLINE
-void wr_dp_clear_save(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
 uint64_t wr_dp_define_clip(WrState *aState,
                            LayoutRect aClipRect,
                            const ComplexClipRegion *aComplex,
@@ -1177,14 +1173,6 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  WrImageKey aImageKey2,
                                  WrYuvColorSpace aColorSpace,
                                  ImageRendering aImageRendering)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_restore(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_save(WrState *aState)
 WR_FUNC;
 
 extern bool wr_moz2d_render_cb(ByteSlice aBlob,
