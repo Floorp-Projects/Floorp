@@ -24,12 +24,17 @@ using namespace dom;
 InsertNodeTransaction::InsertNodeTransaction(nsIContent& aNode,
                                              nsINode& aParent,
                                              int32_t aOffset,
-                                             EditorBase& aEditorBase)
+                                             EditorBase& aEditorBase,
+                                             nsIContent* aChildAtOffset)
   : mNode(&aNode)
   , mParent(&aParent)
   , mOffset(aOffset)
   , mEditorBase(&aEditorBase)
+  , mRefNode(aChildAtOffset)
 {
+  MOZ_ASSERT(!aChildAtOffset ||
+             aChildAtOffset->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
+             aChildAtOffset == aParent.GetChildAt(aOffset));
 }
 
 InsertNodeTransaction::~InsertNodeTransaction()
@@ -39,7 +44,8 @@ InsertNodeTransaction::~InsertNodeTransaction()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTransactionBase,
                                    mEditorBase,
                                    mNode,
-                                   mParent)
+                                   mParent,
+                                   mRefNode)
 
 NS_IMPL_ADDREF_INHERITED(InsertNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTransactionBase)
@@ -59,13 +65,16 @@ InsertNodeTransaction::DoTransaction()
     mOffset = count;
   }
 
-  // Note, it's ok for ref to be null. That means append.
-  nsCOMPtr<nsIContent> ref = mParent->GetChildAt(mOffset);
+  if (!mRefNode ||
+      mRefNode->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    // Note, it's ok for mRefNode to be null. That means append
+    mRefNode = mParent->GetChildAt(mOffset);
+  }
 
   mEditorBase->MarkNodeDirty(GetAsDOMNode(mNode));
 
   ErrorResult rv;
-  mParent->InsertBefore(*mNode, ref, rv);
+  mParent->InsertBefore(*mNode, mRefNode, rv);
   NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Only set selection to insertion point if editor gives permission
