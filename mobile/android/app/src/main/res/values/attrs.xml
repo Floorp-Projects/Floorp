@@ -196,5 +196,9 @@
         <attr name="shiftInterpolator" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="ToolbarRoundButton">
+        <attr name="showLWTBackground" format="boolean"/>
+    </declare-styleable>
+
 </resources>
 

@@ -200,10 +200,16 @@
         <item name="android:layout_alignParentRight">true</item>
     </style>
 
+    <style name="UrlBar.ThemeBackground" parent="UrlBar.V15.ThemeBackground"/>
+
+    <style name="UrlBar.V15.ThemeBackground" parent="UrlBar.Base">
+        <item name="android:layout_marginLeft">8dp</item>
+    </style>
+
     <style name="UrlBar.SiteIdentity" parent="UrlBar.V15.SiteIdentity" />
 
     <style name="UrlBar.V15.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
-        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:paddingLeft">3dp</item>
         <item name="android:paddingRight">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 

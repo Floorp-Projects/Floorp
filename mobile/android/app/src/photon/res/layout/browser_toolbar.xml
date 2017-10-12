@@ -44,13 +44,15 @@
         style="@style/UrlBar.Menu"
         android:background="@drawable/url_bar_action_button"
         android:contentDescription="@string/menu"
-        android:src="@drawable/ic_overflow"/>
+        android:src="@drawable/ic_overflow"
+        gecko:showLWTBackground="true"/>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
         android:id="@+id/tabs"
         style="@style/UrlBar.Tabs"
         android:layout_alignWithParentIfMissing="true"
-        android:background="@drawable/url_bar_action_button"/>
+        android:background="@drawable/url_bar_action_button"
+        gecko:showLWTBackground="true"/>
 
     <org.mozilla.gecko.toolbar.TabCounter
         android:id="@+id/tabs_counter"
@@ -70,7 +72,8 @@
         android:background="@drawable/url_bar_action_button"
         android:contentDescription="@string/edit_mode_cancel"
         android:src="@drawable/ic_cancel"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        gecko:showLWTBackground="true"/>
 
     <!-- The space to the left of the cancel button would be larger than the right because
          the url bar drawable contains some whitespace, so we compensate by removing

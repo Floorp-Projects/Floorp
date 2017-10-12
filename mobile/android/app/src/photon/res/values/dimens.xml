@@ -15,9 +15,9 @@
     <dimen name="browser_toolbar_image_button_width">42dp</dimen>
     <!-- ToolbarImageButton's pressed-highlight region is different from clickable region.
          Our design is to make pressed-highlight region to be square. this vertical spacing value
-         helps drawable xml to set padding: (56 - 42) / 2 -->
-    <dimen name="browser_toolbar_image_button_v_spacing">7dp</dimen>
-    <dimen name="browser_toolbar_image_button_h_spacing">0dp</dimen>
+         helps drawable xml to set padding: (56 - 32) / 2 -->
+    <dimen name="browser_toolbar_image_button_v_spacing">12dp</dimen>
+    <dimen name="browser_toolbar_image_button_h_spacing">5dp</dimen>
 
     <!-- This value is the height of the Tabs Panel header view
          (browser_toolbar_height) minus the height of the indicator
