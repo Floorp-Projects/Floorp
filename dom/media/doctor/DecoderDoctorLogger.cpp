@@ -157,14 +157,14 @@ DecoderDoctorLogger::RetrieveMessages(
 /* static */ void
 DecoderDoctorLogger::Log(const char* aSubjectTypeName,
                          const void* aSubjectPointer,
-                         DDLogClass aClass,
+                         DDLogCategory aCategory,
                          const char* aLabel,
                          DDLogValue&& aValue)
 {
   if (IsDDLoggingEnabled()) {
     MOZ_ASSERT(sMediaLogs);
     sMediaLogs->Log(
-      aSubjectTypeName, aSubjectPointer, aClass, aLabel, Move(aValue));
+      aSubjectTypeName, aSubjectPointer, aCategory, aLabel, Move(aValue));
   }
 }
 
