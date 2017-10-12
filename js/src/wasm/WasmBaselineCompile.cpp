@@ -75,6 +75,7 @@
 #include "wasm/WasmBaselineCompile.h"
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 
 #include "jit/AtomicOp.h"
 #include "jit/IonTypes.h"
@@ -82,6 +83,7 @@
 #include "jit/Label.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MIR.h"
+#include "jit/RegisterAllocator.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #if defined(JS_CODEGEN_ARM)
@@ -103,6 +105,7 @@ using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::IsPowerOfTwo;
+using mozilla::Maybe;
 using mozilla::SpecificNaN;
 
 namespace js {
@@ -298,169 +301,518 @@ BaseLocalIter::operator++(int)
     settle();
 }
 
-class BaseCompiler
-{
-    // We define our own ScratchRegister abstractions, deferring to
-    // the platform's when possible.
+// The strongly typed register wrappers are especially useful to distinguish
+// float registers from double registers.
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    typedef ScratchDoubleScope ScratchF64;
+struct RegI32 : public Register
+{
+    RegI32() : Register(Register::Invalid()) {}
+    explicit RegI32(Register reg) : Register(reg) {}
+};
+
+struct RegI64 : public Register64
+{
+    RegI64() : Register64(Register64::Invalid()) {}
+    explicit RegI64(Register64 reg) : Register64(reg) {}
+};
+
+struct RegF32 : public FloatRegister
+{
+    RegF32() : FloatRegister() {}
+    explicit RegF32(FloatRegister reg) : FloatRegister(reg) {}
+};
+
+struct RegF64 : public FloatRegister
+{
+    RegF64() : FloatRegister() {}
+    explicit RegF64(FloatRegister reg) : FloatRegister(reg) {}
+};
+
+struct AnyReg
+{
+    explicit AnyReg(RegI32 r) { tag = I32; i32_ = r; }
+    explicit AnyReg(RegI64 r) { tag = I64; i64_ = r; }
+    explicit AnyReg(RegF32 r) { tag = F32; f32_ = r; }
+    explicit AnyReg(RegF64 r) { tag = F64; f64_ = r; }
+
+    RegI32 i32() const {
+        MOZ_ASSERT(tag == I32);
+        return i32_;
+    }
+    RegI64 i64() const {
+        MOZ_ASSERT(tag == I64);
+        return i64_;
+    }
+    RegF32 f32() const {
+        MOZ_ASSERT(tag == F32);
+        return f32_;
+    }
+    RegF64 f64() const {
+        MOZ_ASSERT(tag == F64);
+        return f64_;
+    }
+    AnyRegister any() const {
+        switch (tag) {
+          case F32: return AnyRegister(f32_);
+          case F64: return AnyRegister(f64_);
+          case I32: return AnyRegister(i32_);
+          case I64:
+#ifdef JS_PUNBOX64
+            return AnyRegister(i64_.reg);
 #else
-    class ScratchF64
+            // The compiler is written so that this is never needed: any() is
+            // called on arbitrary registers for asm.js but asm.js does not have
+            // 64-bit ints.  For wasm, any() is called on arbitrary registers
+            // only on 64-bit platforms.
+            MOZ_CRASH("AnyReg::any() on 32-bit platform");
+#endif
+          default:
+            MOZ_CRASH();
+        }
+        // Work around GCC 5 analysis/warning bug.
+        MOZ_CRASH("AnyReg::any(): impossible case");
+    }
+
+    union {
+        RegI32 i32_;
+        RegI64 i64_;
+        RegF32 f32_;
+        RegF64 f64_;
+    };
+    enum { I32, I64, F32, F64 } tag;
+};
+
+class BaseCompilerInterface
+{
+  public:
+    // Spill all spillable registers.
+    //
+    // TODO / OPTIMIZE (Bug 1316802): It's possible to do better here by
+    // spilling only enough registers to satisfy current needs.
+    virtual void sync() = 0;
+};
+
+// Register allocator.
+
+class BaseRegAlloc
+{
+    // Notes on float register allocation.
+    //
+    // The general rule in SpiderMonkey is that float registers can alias double
+    // registers, but there are predicates to handle exceptions to that rule:
+    // hasUnaliasedDouble() and hasMultiAlias().  The way aliasing actually
+    // works is platform dependent and exposed through the aliased(n, &r)
+    // predicate, etc.
+    //
+    //  - hasUnaliasedDouble(): on ARM VFPv3-D32 there are double registers that
+    //    cannot be treated as float.
+    //  - hasMultiAlias(): on ARM and MIPS a double register aliases two float
+    //    registers.
+    //
+    // On some platforms (x86, x64, ARM64) but not all (ARM)
+    // ScratchFloat32Register is the same as ScratchDoubleRegister.
+    //
+    // It's a basic invariant of the AllocatableRegisterSet that it deals
+    // properly with aliasing of registers: if s0 or s1 are allocated then d0 is
+    // not allocatable; if s0 and s1 are freed individually then d0 becomes
+    // allocatable.
+
+    BaseCompilerInterface&        bc;
+    AllocatableGeneralRegisterSet availGPR;
+    AllocatableFloatRegisterSet   availFPU;
+#ifdef DEBUG
+    AllocatableGeneralRegisterSet allGPR;       // The registers available to the compiler
+    AllocatableFloatRegisterSet   allFPU;       //   after removing ScratchReg, HeapReg, etc
+    bool                          scratchTaken;
+#endif
+#ifdef JS_CODEGEN_X86
+    AllocatableGeneralRegisterSet singleByteRegs;
+#endif
+
+    bool hasGPR() {
+        return !availGPR.empty();
+    }
+
+    bool hasGPR64() {
+#ifdef JS_PUNBOX64
+        return !availGPR.empty();
+#else
+        if (availGPR.empty())
+            return false;
+        Register r = allocGPR();
+        bool available = !availGPR.empty();
+        freeGPR(r);
+        return available;
+#endif
+    }
+
+    template<MIRType t>
+    bool hasFPU() {
+        return availFPU.hasAny<RegTypeOf<t>::value>();
+    }
+
+    bool isAvailableGPR(Register r) {
+        return availGPR.has(r);
+    }
+
+    bool isAvailableFPU(FloatRegister r) {
+        return availFPU.has(r);
+    }
+
+    void allocGPR(Register r) {
+        MOZ_ASSERT(isAvailableGPR(r));
+        availGPR.take(r);
+    }
+
+    Register allocGPR() {
+        MOZ_ASSERT(hasGPR());
+        return availGPR.takeAny();
+    }
+
+    void allocInt64(Register64 r) {
+#ifdef JS_PUNBOX64
+        allocGPR(r.reg);
+#else
+        allocGPR(r.low);
+        allocGPR(r.high);
+#endif
+    }
+
+    Register64 allocInt64() {
+        MOZ_ASSERT(hasGPR64());
+#ifdef JS_PUNBOX64
+        return Register64(availGPR.takeAny());
+#else
+        Register high = availGPR.takeAny();
+        Register low = availGPR.takeAny();
+        return Register64(high, low);
+#endif
+    }
+
+#ifdef JS_CODEGEN_ARM
+    // r12 is normally the ScratchRegister and r13 is always the stack pointer,
+    // so the highest possible pair has r10 as the even-numbered register.
+
+    static const uint32_t pairLimit = 10;
+
+    bool hasGPRPair() {
+        for (uint32_t i = 0; i <= pairLimit; i += 2) {
+            if (isAvailableGPR(Register::FromCode(i)) && isAvailableGPR(Register::FromCode(i + 1)))
+                return true;
+        }
+        return false;
+    }
+
+    void allocGPRPair(Register* low, Register* high) {
+        MOZ_ASSERT(hasGPRPair());
+        for (uint32_t i = 0; i <= pairLimit; i += 2) {
+            if (isAvailableGPR(Register::FromCode(i)) &&
+                isAvailableGPR(Register::FromCode(i + 1)))
+            {
+                *low = Register::FromCode(i);
+                *high = Register::FromCode(i + 1);
+                allocGPR(*low);
+                allocGPR(*high);
+                return;
+            }
+        }
+        MOZ_CRASH("No pair");
+    }
+#endif
+
+    void allocFPU(FloatRegister r) {
+        MOZ_ASSERT(isAvailableFPU(r));
+        availFPU.take(r);
+    }
+
+    template<MIRType t>
+    FloatRegister allocFPU() {
+        return availFPU.takeAny<RegTypeOf<t>::value>();
+    }
+
+    void freeGPR(Register r) {
+        availGPR.add(r);
+    }
+
+    void freeInt64(Register64 r) {
+#ifdef JS_PUNBOX64
+        freeGPR(r.reg);
+#else
+        freeGPR(r.low);
+        freeGPR(r.high);
+#endif
+    }
+
+    void freeFPU(FloatRegister r) {
+        availFPU.add(r);
+    }
+
+  public:
+    explicit BaseRegAlloc(BaseCompilerInterface& bc)
+      : bc(bc)
+      , availGPR(GeneralRegisterSet::All())
+      , availFPU(FloatRegisterSet::All())
+#ifdef DEBUG
+      , scratchTaken(false)
+#endif
+#ifdef JS_CODEGEN_X86
+      , singleByteRegs(GeneralRegisterSet(Registers::SingleByteRegs))
+#endif
     {
+        RegisterAllocator::takeWasmRegisters(availGPR);
+
+#if defined(JS_CODEGEN_ARM)
+        availGPR.take(ScratchRegARM);
+#elif defined(JS_CODEGEN_X86)
+        availGPR.take(ScratchRegX86);
+#endif
+
+#ifdef DEBUG
+        allGPR = availGPR;
+        allFPU = availFPU;
+#endif
+    }
+
+#ifdef DEBUG
+    bool scratchRegisterTaken() const {
+        return scratchTaken;
+    }
+
+    void setScratchRegisterTaken(bool state) {
+        scratchTaken = state;
+    }
+#endif
+
+#ifdef JS_CODEGEN_X86
+    bool isSingleByteI32(Register r) {
+        return singleByteRegs.has(r);
+    }
+#endif
+
+    bool isAvailableI32(RegI32 r) {
+        return isAvailableGPR(r);
+    }
+
+    bool isAvailableI64(RegI64 r) {
+#ifdef JS_PUNBOX64
+        return isAvailableGPR(r.reg);
+#else
+        return isAvailableGPR(r.low) && isAvailableGPR(r.high);
+#endif
+    }
+
+    bool isAvailableF32(RegF32 r) {
+        return isAvailableFPU(r);
+    }
+
+    bool isAvailableF64(RegF64 r) {
+        return isAvailableFPU(r);
+    }
+
+    // TODO / OPTIMIZE (Bug 1316802): Do not sync everything on allocation
+    // failure, only as much as we need.
+
+    MOZ_MUST_USE RegI32 needI32() {
+        if (!hasGPR())
+            bc.sync();
+        return RegI32(allocGPR());
+    }
+
+    void needI32(RegI32 specific) {
+        if (!isAvailableI32(specific))
+            bc.sync();
+        allocGPR(specific);
+    }
+
+    MOZ_MUST_USE RegI64 needI64() {
+        if (!hasGPR64())
+            bc.sync();
+        return RegI64(allocInt64());
+    }
+
+    void needI64(RegI64 specific) {
+        if (!isAvailableI64(specific))
+            bc.sync();
+        allocInt64(specific);
+    }
+
+    MOZ_MUST_USE RegF32 needF32() {
+        if (!hasFPU<MIRType::Float32>())
+            bc.sync();
+        return RegF32(allocFPU<MIRType::Float32>());
+    }
+
+    void needF32(RegF32 specific) {
+        if (!isAvailableF32(specific))
+            bc.sync();
+        allocFPU(specific);
+    }
+
+    MOZ_MUST_USE RegF64 needF64() {
+        if (!hasFPU<MIRType::Double>())
+            bc.sync();
+        return RegF64(allocFPU<MIRType::Double>());
+    }
+
+    void needF64(RegF64 specific) {
+        if (!isAvailableF64(specific))
+            bc.sync();
+        allocFPU(specific);
+    }
+
+    void freeI32(RegI32 r) {
+        freeGPR(r);
+    }
+
+    void freeI64(RegI64 r) {
+        freeInt64(r);
+    }
+
+    void freeF64(RegF64 r) {
+        freeFPU(r);
+    }
+
+    void freeF32(RegF32 r) {
+        freeFPU(r);
+    }
+
+#ifdef JS_CODEGEN_ARM
+    MOZ_MUST_USE RegI64 needI64Pair() {
+        if (!hasGPRPair())
+            bc.sync();
+        Register low, high;
+        allocGPRPair(&low, &high);
+        return RegI64(Register64(high, low));
+    }
+#endif
+
+#ifdef DEBUG
+    friend class LeakCheck;
+
+    class MOZ_RAII LeakCheck
+    {
+      private:
+        const BaseRegAlloc&           ra;
+        AllocatableGeneralRegisterSet knownGPR;
+        AllocatableFloatRegisterSet   knownFPU;
+
       public:
-        ScratchF64(BaseCompiler& b) {}
-        operator FloatRegister() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchF64");
+        explicit LeakCheck(const BaseRegAlloc& ra) : ra(ra) {
+            knownGPR = ra.availGPR;
+            knownFPU = ra.availFPU;
+        }
+
+        ~LeakCheck() {
+            MOZ_ASSERT(knownGPR.bits() == ra.allGPR.bits());
+            MOZ_ASSERT(knownFPU.bits() == ra.allFPU.bits());
+        }
+
+        void addKnownI32(RegI32 r) {
+            knownGPR.add(r);
+        }
+
+        void addKnownI64(RegI64 r) {
+# ifdef JS_PUNBOX64
+            knownGPR.add(r.reg);
+# else
+            knownGPR.add(r.high);
+            knownGPR.add(r.low);
+# endif
+        }
+
+        void addKnownF32(RegF32 r) {
+            knownFPU.add(r);
+        }
+
+        void addKnownF64(RegF64 r) {
+            knownFPU.add(r);
         }
     };
 #endif
+};
+
+// ScratchRegister abstractions.  We define our own, deferring to the platform's
+// when possible.
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    typedef ScratchFloat32Scope ScratchF32;
+typedef ScratchDoubleScope ScratchF64;
 #else
-    class ScratchF32
-    {
-      public:
-        ScratchF32(BaseCompiler& b) {}
-        operator FloatRegister() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchF32");
-        }
-    };
+class ScratchF64
+{
+  public:
+    ScratchF64(BaseRegAlloc&) {}
+    operator FloatRegister() const {
+        MOZ_CRASH("BaseCompiler platform hook - ScratchF64");
+    }
+};
+#endif
+
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+typedef ScratchFloat32Scope ScratchF32;
+#else
+class ScratchF32
+{
+  public:
+    ScratchF32(BaseRegAlloc&) {}
+    operator FloatRegister() const {
+        MOZ_CRASH("BaseCompiler platform hook - ScratchF32");
+    }
+};
 #endif
 
 #if defined(JS_CODEGEN_X64)
-    typedef ScratchRegisterScope ScratchI32;
+typedef ScratchRegisterScope ScratchI32;
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    class ScratchI32
-    {
+class ScratchI32
+{
 # ifdef DEBUG
-        BaseCompiler& bc;
-      public:
-        explicit ScratchI32(BaseCompiler& bc) : bc(bc) {
-            MOZ_ASSERT(!bc.scratchRegisterTaken());
-            bc.setScratchRegisterTaken(true);
-        }
-        ~ScratchI32() {
-            MOZ_ASSERT(bc.scratchRegisterTaken());
-            bc.setScratchRegisterTaken(false);
-        }
+    BaseRegAlloc& ra;
+  public:
+    explicit ScratchI32(BaseRegAlloc& ra) : ra(ra) {
+        MOZ_ASSERT(!ra.scratchRegisterTaken());
+        ra.setScratchRegisterTaken(true);
+    }
+    ~ScratchI32() {
+        MOZ_ASSERT(ra.scratchRegisterTaken());
+        ra.setScratchRegisterTaken(false);
+    }
 # else
-      public:
-        explicit ScratchI32(BaseCompiler& bc) {}
+  public:
+    explicit ScratchI32(BaseRegAlloc&) {}
 # endif
-        operator Register() const {
+    operator Register() const {
 # ifdef JS_CODEGEN_X86
-            return ScratchRegX86;
+        return ScratchRegX86;
 # else
-            return ScratchRegARM;
+        return ScratchRegARM;
 # endif
-        }
-    };
+    }
+};
 #else
-    class ScratchI32
-    {
-      public:
-        ScratchI32(BaseCompiler& bc) {}
-        operator Register() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchI32");
-        }
-    };
+class ScratchI32
+{
+public:
+    ScratchI32(BaseRegAlloc&) {}
+    operator Register() const {
+        MOZ_CRASH("BaseCompiler platform hook - ScratchI32");
+    }
+};
 #endif
 
 #if defined(JS_CODEGEN_X86)
-    // ScratchEBX is a mnemonic device: For some atomic ops we really need EBX,
-    // no other register will do.  And we would normally have to allocate that
-    // register using ScratchI32 since normally the scratch register is EBX.
-    // But the whole point of ScratchI32 is to hide that relationship.  By using
-    // the ScratchEBX alias, we document that at that point we require the
-    // scratch register to be EBX.
-    typedef ScratchI32 ScratchEBX;
+// ScratchEBX is a mnemonic device: For some atomic ops we really need EBX,
+// no other register will do.  And we would normally have to allocate that
+// register using ScratchI32 since normally the scratch register is EBX.
+// But the whole point of ScratchI32 is to hide that relationship.  By using
+// the ScratchEBX alias, we document that at that point we require the
+// scratch register to be EBX.
+typedef ScratchI32 ScratchEBX;
 #endif
 
+class BaseCompiler final : public BaseCompilerInterface
+{
     typedef Vector<NonAssertingLabel, 8, SystemAllocPolicy> LabelVector;
     typedef Vector<MIRType, 8, SystemAllocPolicy> MIRTypeVector;
-
-    // The strongly typed register wrappers have saved my bacon a few
-    // times; though they are largely redundant they stay, for now.
-
-    struct RegI32 : public Register
-    {
-        RegI32() : Register(Register::Invalid()) {}
-        explicit RegI32(Register reg) : Register(reg) {}
-    };
-
-    struct RegI64 : public Register64
-    {
-        RegI64() : Register64(Register64::Invalid()) {}
-        explicit RegI64(Register64 reg) : Register64(reg) {}
-    };
-
-    struct RegF32 : public FloatRegister
-    {
-        RegF32() : FloatRegister() {}
-        explicit RegF32(FloatRegister reg) : FloatRegister(reg) {}
-    };
-
-    struct RegF64 : public FloatRegister
-    {
-        RegF64() : FloatRegister() {}
-        explicit RegF64(FloatRegister reg) : FloatRegister(reg) {}
-    };
-
-    struct AnyReg
-    {
-        AnyReg() { tag = NONE; }
-        explicit AnyReg(RegI32 r) { tag = I32; i32_ = r; }
-        explicit AnyReg(RegI64 r) { tag = I64; i64_ = r; }
-        explicit AnyReg(RegF32 r) { tag = F32; f32_ = r; }
-        explicit AnyReg(RegF64 r) { tag = F64; f64_ = r; }
-
-        RegI32 i32() {
-            MOZ_ASSERT(tag == I32);
-            return i32_;
-        }
-        RegI64 i64() {
-            MOZ_ASSERT(tag == I64);
-            return i64_;
-        }
-        RegF32 f32() {
-            MOZ_ASSERT(tag == F32);
-            return f32_;
-        }
-        RegF64 f64() {
-            MOZ_ASSERT(tag == F64);
-            return f64_;
-        }
-        AnyRegister any() {
-            switch (tag) {
-              case F32: return AnyRegister(f32_);
-              case F64: return AnyRegister(f64_);
-              case I32: return AnyRegister(i32_);
-              case I64:
-#ifdef JS_PUNBOX64
-                return AnyRegister(i64_.reg);
-#else
-                // The compiler is written so that this is never needed: any() is called
-                // on arbitrary registers for asm.js but asm.js does not have 64-bit ints.
-                // For wasm, any() is called on arbitrary registers only on 64-bit platforms.
-                MOZ_CRASH("AnyReg::any() on 32-bit platform");
-#endif
-              case NONE:
-                MOZ_CRASH("AnyReg::any() on NONE");
-            }
-            // Work around GCC 5 analysis/warning bug.
-            MOZ_CRASH("AnyReg::any(): impossible case");
-        }
-
-        union {
-            RegI32 i32_;
-            RegI64 i64_;
-            RegF32 f32_;
-            RegF64 f64_;
-        };
-        enum { NONE, I32, I64, F32, F64 } tag;
-    };
 
     struct Local
     {
@@ -523,10 +875,6 @@ class BaseCompiler
     };
 
     typedef OpIter<BaseCompilePolicy> BaseOpIter;
-
-    // Volatile registers except ReturnReg.
-
-    static LiveRegisterSet VolatileReturnGPR;
 
     // The baseline compiler will use OOL code more sparingly than
     // Baldr since our code is not high performance and frills like
@@ -632,14 +980,7 @@ class BaseCompiler
 
     FuncOffsets                 offsets_;
     MacroAssembler&             masm;            // No '_' suffix - too tedious...
-
-    AllocatableGeneralRegisterSet availGPR_;
-    AllocatableFloatRegisterSet   availFPU_;
-#ifdef DEBUG
-    bool                          scratchRegisterTaken_;
-    AllocatableGeneralRegisterSet allGPR_;       // The registers available to the compiler
-    AllocatableFloatRegisterSet   allFPU_;       //   after removing ScratchReg, HeapReg, etc
-#endif
+    BaseRegAlloc                ra;              // Ditto
 
     Vector<Local, 8, SystemAllocPolicy> localInfo_;
     Vector<OutOfLineCode*, 8, SystemAllocPolicy> outOfLine_;
@@ -656,16 +997,16 @@ class BaseCompiler
     RegI32 specific_eax;
     RegI32 specific_ecx;
     RegI32 specific_edx;
+    RegI32 specific_edi;
+    RegI32 specific_esi;
 #endif
 
 #if defined(JS_CODEGEN_X86)
     RegI64 specific_ecx_ebx;
     RegI64 specific_edx_eax;
-
-    AllocatableGeneralRegisterSet singleByteRegs_;
 #endif
 
-#if defined(JS_NUNBOX32)
+#if !defined(JS_PUNBOX64)
     RegI64 abiReturnRegI64;
 #endif
 
@@ -701,15 +1042,7 @@ class BaseCompiler
 
     // Used by some of the ScratchRegister implementations.
     operator MacroAssembler&() const { return masm; }
-
-#ifdef DEBUG
-    bool scratchRegisterTaken() const {
-        return scratchRegisterTaken_;
-    }
-    void setScratchRegisterTaken(bool state) {
-        scratchRegisterTaken_ = state;
-    }
-#endif
+    operator BaseRegAlloc&() { return ra; }
 
   private:
 
@@ -787,166 +1120,6 @@ class BaseCompiler
     int32_t frameOffsetFromSlot(uint32_t slot, MIRType type) {
         MOZ_ASSERT(localInfo_[slot].type() == type);
         return localInfo_[slot].offs();
-    }
-
-    ////////////////////////////////////////////////////////////
-    //
-    // Low-level register allocation.
-
-    bool isAvailable(Register r) {
-        return availGPR_.has(r);
-    }
-
-    bool hasGPR() {
-        return !availGPR_.empty();
-    }
-
-    void allocGPR(Register r) {
-        MOZ_ASSERT(isAvailable(r));
-        availGPR_.take(r);
-    }
-
-    Register allocGPR() {
-        MOZ_ASSERT(hasGPR());
-        return availGPR_.takeAny();
-    }
-
-    void freeGPR(Register r) {
-        availGPR_.add(r);
-    }
-
-    bool isAvailable(Register64 r) {
-#ifdef JS_PUNBOX64
-        return isAvailable(r.reg);
-#else
-        return isAvailable(r.low) && isAvailable(r.high);
-#endif
-    }
-
-    bool hasInt64() {
-#ifdef JS_PUNBOX64
-        return !availGPR_.empty();
-#else
-        if (availGPR_.empty())
-            return false;
-        Register r = allocGPR();
-        bool available = !availGPR_.empty();
-        freeGPR(r);
-        return available;
-#endif
-    }
-
-    void allocInt64(Register64 r) {
-        MOZ_ASSERT(isAvailable(r));
-#ifdef JS_PUNBOX64
-        availGPR_.take(r.reg);
-#else
-        availGPR_.take(r.low);
-        availGPR_.take(r.high);
-#endif
-    }
-
-    Register64 allocInt64() {
-        MOZ_ASSERT(hasInt64());
-#ifdef JS_PUNBOX64
-        return Register64(availGPR_.takeAny());
-#else
-        Register high = availGPR_.takeAny();
-        Register low = availGPR_.takeAny();
-        return Register64(high, low);
-#endif
-    }
-
-    void freeInt64(Register64 r) {
-#ifdef JS_PUNBOX64
-        availGPR_.add(r.reg);
-#else
-        availGPR_.add(r.low);
-        availGPR_.add(r.high);
-#endif
-    }
-
-#ifdef JS_CODEGEN_ARM
-    // r12 is normally the ScratchRegister and r13 is always the stack pointer,
-    // so the highest possible pair has r10 as the even-numbered register.
-
-    static const uint32_t pairLimit = 10;
-
-    bool hasGPRPair() {
-        for (uint32_t i = 0; i <= pairLimit; i += 2) {
-            if (isAvailable(Register::FromCode(i)) && isAvailable(Register::FromCode(i + 1)))
-                return true;
-        }
-        return false;
-    }
-
-    void allocGPRPair(Register* low, Register* high) {
-        for (uint32_t i = 0; i <= pairLimit; i += 2) {
-            if (isAvailable(Register::FromCode(i)) && isAvailable(Register::FromCode(i + 1))) {
-                *low = Register::FromCode(i);
-                *high = Register::FromCode(i + 1);
-                allocGPR(*low);
-                allocGPR(*high);
-                return;
-            }
-        }
-        MOZ_CRASH("No pair");
-    }
-#endif
-
-    // Notes on float register allocation.
-    //
-    // The general rule in SpiderMonkey is that float registers can
-    // alias double registers, but there are predicates to handle
-    // exceptions to that rule: hasUnaliasedDouble() and
-    // hasMultiAlias().  The way aliasing actually works is platform
-    // dependent and exposed through the aliased(n, &r) predicate,
-    // etc.
-    //
-    //  - hasUnaliasedDouble(): on ARM VFPv3-D32 there are double
-    //    registers that cannot be treated as float.
-    //  - hasMultiAlias(): on ARM and MIPS a double register aliases
-    //    two float registers.
-    //  - notes in Architecture-arm.h indicate that when we use a
-    //    float register that aliases a double register we only use
-    //    the low float register, never the high float register.  I
-    //    think those notes lie, or at least are confusing.
-    //  - notes in Architecture-mips32.h suggest that the MIPS port
-    //    will use both low and high float registers except on the
-    //    Longsoon, which may be the only MIPS that's being tested, so
-    //    who knows what's working.
-    //  - SIMD is not yet implemented on ARM or MIPS so constraints
-    //    may change there.
-    //
-    // On some platforms (x86, x64, ARM64) but not all (ARM)
-    // ScratchFloat32Register is the same as ScratchDoubleRegister.
-    //
-    // It's a basic invariant of the AllocatableRegisterSet that it
-    // deals properly with aliasing of registers: if s0 or s1 are
-    // allocated then d0 is not allocatable; if s0 and s1 are freed
-    // individually then d0 becomes allocatable.
-
-    template<MIRType t>
-    bool hasFPU() {
-        return availFPU_.hasAny<RegTypeOf<t>::value>();
-    }
-
-    bool isAvailable(FloatRegister r) {
-        return availFPU_.has(r);
-    }
-
-    void allocFPU(FloatRegister r) {
-        MOZ_ASSERT(isAvailable(r));
-        availFPU_.take(r);
-    }
-
-    template<MIRType t>
-    FloatRegister allocFPU() {
-        return availFPU_.takeAny<RegTypeOf<t>::value>();
-    }
-
-    void freeFPU(FloatRegister r) {
-        availFPU_.add(r);
     }
 
     ////////////////////////////////////////////////////////////
@@ -1049,16 +1222,12 @@ class BaseCompiler
         return stk_.back();
     }
 
-    Register64 invalidRegister64() {
-        return Register64::Invalid();
-    }
-
     RegI32 invalidI32() {
         return RegI32(Register::Invalid());
     }
 
     RegI64 invalidI64() {
-        return RegI64(invalidRegister64());
+        return RegI64(Register64::Invalid());
     }
 
     RegF64 invalidF64() {
@@ -1070,7 +1239,7 @@ class BaseCompiler
     }
 
     RegI64 widenI32(RegI32 r) {
-        MOZ_ASSERT(!isAvailable(r));
+        MOZ_ASSERT(!isAvailableI32(r));
 #ifdef JS_PUNBOX64
         return RegI64(Register64(r));
 #else
@@ -1080,7 +1249,7 @@ class BaseCompiler
     }
 
     RegI32 narrowI64(RegI64 r) {
-#if defined(JS_64BIT)
+#if defined(JS_PUNBOX64)
         return RegI32(r.reg);
 #else
         freeI32(RegI32(r.high));
@@ -1105,18 +1274,34 @@ class BaseCompiler
     }
 
     void maybeClearHighPart(RegI64 r) {
-#ifdef JS_NUNBOX32
+#if !defined(JS_PUNBOX64)
         masm.move32(Imm32(0), r.high);
 #endif
     }
 
-    void freeI32(RegI32 r) {
-        freeGPR(r);
-    }
+    bool isAvailableI32(RegI32 r) { return ra.isAvailableI32(r); }
+    bool isAvailableI64(RegI64 r) { return ra.isAvailableI64(r); }
+    bool isAvailableF32(RegF32 r) { return ra.isAvailableF32(r); }
+    bool isAvailableF64(RegF64 r) { return ra.isAvailableF64(r); }
 
-    void freeI64(RegI64 r) {
-        freeInt64(r);
-    }
+    MOZ_MUST_USE RegI32 needI32() { return ra.needI32(); }
+    MOZ_MUST_USE RegI64 needI64() { return ra.needI64(); }
+    MOZ_MUST_USE RegF32 needF32() { return ra.needF32(); }
+    MOZ_MUST_USE RegF64 needF64() { return ra.needF64(); }
+
+    void needI32(RegI32 specific) { ra.needI32(specific); }
+    void needI64(RegI64 specific) { ra.needI64(specific); }
+    void needF32(RegF32 specific) { ra.needF32(specific); }
+    void needF64(RegF64 specific) { ra.needF64(specific); }
+
+#if defined(JS_CODEGEN_ARM)
+    MOZ_MUST_USE RegI64 needI64Pair() { return ra.needI64Pair(); }
+#endif
+
+    void freeI32(RegI32 r) { ra.freeI32(r); }
+    void freeI64(RegI64 r) { ra.freeI64(r); }
+    void freeF32(RegF32 r) { ra.freeF32(r); }
+    void freeF64(RegF64 r) { ra.freeF64(r); }
 
     void freeI64Except(RegI64 r, RegI32 except) {
 #ifdef JS_PUNBOX64
@@ -1128,24 +1313,19 @@ class BaseCompiler
 #endif
     }
 
-    void freeF64(RegF64 r) {
-        freeFPU(r);
+    void maybeFreeI32(RegI32 r) {
+        if (r != invalidI32())
+            freeI32(r);
     }
 
-    void freeF32(RegF32 r) {
-        freeFPU(r);
+    void maybeFreeI64(RegI64 r) {
+        if (r != invalidI64())
+            freeI64(r);
     }
 
-    MOZ_MUST_USE RegI32 needI32() {
-        if (!hasGPR())
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        return RegI32(allocGPR());
-    }
-
-    void needI32(RegI32 specific) {
-        if (!isAvailable(specific))
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        allocGPR(specific);
+    void needI32NoSync(RegI32 r) {
+        MOZ_ASSERT(isAvailableI32(r));
+        needI32(r);
     }
 
     // TODO / OPTIMIZE: need2xI32() can be optimized along with needI32()
@@ -1156,55 +1336,9 @@ class BaseCompiler
         needI32(r1);
     }
 
-    MOZ_MUST_USE RegI64 needI64() {
-        if (!hasInt64())
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        return RegI64(allocInt64());
-    }
-
-    void needI64(RegI64 specific) {
-        if (!isAvailable(specific))
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        allocInt64(specific);
-    }
-
     void need2xI64(RegI64 r0, RegI64 r1) {
         needI64(r0);
         needI64(r1);
-    }
-
-#ifdef JS_CODEGEN_ARM
-    MOZ_MUST_USE RegI64 needI64Pair() {
-        if (!hasGPRPair())
-            sync();
-        Register low, high;
-        allocGPRPair(&low, &high);
-        return RegI64(Register64(high, low));
-    }
-#endif
-
-    MOZ_MUST_USE RegF32 needF32() {
-        if (!hasFPU<MIRType::Float32>())
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        return RegF32(allocFPU<MIRType::Float32>());
-    }
-
-    void needF32(RegF32 specific) {
-        if (!isAvailable(specific))
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        allocFPU(specific);
-    }
-
-    MOZ_MUST_USE RegF64 needF64() {
-        if (!hasFPU<MIRType::Double>())
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        return RegF64(allocFPU<MIRType::Double>());
-    }
-
-    void needF64(RegF64 specific) {
-        if (!isAvailable(specific))
-            sync();            // TODO / OPTIMIZE: improve this (Bug 1316802)
-        allocFPU(specific);
     }
 
     void moveI32(RegI32 src, RegI32 dest) {
@@ -1347,7 +1481,7 @@ class BaseCompiler
         }
     }
 
-#ifdef JS_NUNBOX32
+#if !defined(JS_PUNBOX64)
     void loadI64Low(Register r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstI64:
@@ -1453,7 +1587,7 @@ class BaseCompiler
     //    register on demand to free up one we need, thus avoiding the
     //    sync.  That type of fix would go into needI32().
 
-    void sync() {
+    void sync() final {
         size_t start = 0;
         size_t lim = stk_.length();
 
@@ -1570,25 +1704,25 @@ class BaseCompiler
     // Push the register r onto the stack.
 
     void pushI32(RegI32 r) {
-        MOZ_ASSERT(!isAvailable(r));
+        MOZ_ASSERT(!isAvailableI32(r));
         Stk& x = push();
         x.setI32Reg(r);
     }
 
     void pushI64(RegI64 r) {
-        MOZ_ASSERT(!isAvailable(r));
+        MOZ_ASSERT(!isAvailableI64(r));
         Stk& x = push();
         x.setI64Reg(r);
     }
 
     void pushF64(RegF64 r) {
-        MOZ_ASSERT(!isAvailable(r));
+        MOZ_ASSERT(!isAvailableF64(r));
         Stk& x = push();
         x.setF64Reg(r);
     }
 
     void pushF32(RegF32 r) {
-        MOZ_ASSERT(!isAvailable(r));
+        MOZ_ASSERT(!isAvailableF32(r));
         Stk& x = push();
         x.setF32Reg(r);
     }
@@ -1932,34 +2066,34 @@ class BaseCompiler
     // popping of the stack we can just use the JoinReg as it will
     // become available in that process.
 
-    MOZ_MUST_USE AnyReg popJoinRegUnlessVoid(ExprType type) {
+    MOZ_MUST_USE Maybe<AnyReg> popJoinRegUnlessVoid(ExprType type) {
         switch (type) {
           case ExprType::Void: {
-            return AnyReg();
+            return Nothing();
           }
           case ExprType::I32: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterI32 || k == Stk::ConstI32 || k == Stk::MemI32 ||
                        k == Stk::LocalI32);
-            return AnyReg(popI32(joinRegI32));
+            return Some(AnyReg(popI32(joinRegI32)));
           }
           case ExprType::I64: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterI64 || k == Stk::ConstI64 || k == Stk::MemI64 ||
                        k == Stk::LocalI64);
-            return AnyReg(popI64(joinRegI64));
+            return Some(AnyReg(popI64(joinRegI64)));
           }
           case ExprType::F64: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterF64 || k == Stk::ConstF64 || k == Stk::MemF64 ||
                        k == Stk::LocalF64);
-            return AnyReg(popF64(joinRegF64));
+            return Some(AnyReg(popF64(joinRegF64)));
           }
           case ExprType::F32: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterF32 || k == Stk::ConstF32 || k == Stk::MemF32 ||
                        k == Stk::LocalF32);
-            return AnyReg(popF32(joinRegF32));
+            return Some(AnyReg(popF32(joinRegF32)));
           }
           default: {
             MOZ_CRASH("Compiler bug: unexpected expression type");
@@ -1973,61 +2107,65 @@ class BaseCompiler
     // joinreg in the contexts it's being used, so some other solution will need
     // to be found.
 
-    MOZ_MUST_USE AnyReg captureJoinRegUnlessVoid(ExprType type) {
+    MOZ_MUST_USE Maybe<AnyReg> captureJoinRegUnlessVoid(ExprType type) {
         switch (type) {
           case ExprType::I32:
-            allocGPR(joinRegI32);
-            return AnyReg(joinRegI32);
+            MOZ_ASSERT(isAvailableI32(joinRegI32));
+            needI32(joinRegI32);
+            return Some(AnyReg(joinRegI32));
           case ExprType::I64:
-            allocInt64(joinRegI64);
-            return AnyReg(joinRegI64);
+            MOZ_ASSERT(isAvailableI64(joinRegI64));
+            needI64(joinRegI64);
+            return Some(AnyReg(joinRegI64));
           case ExprType::F32:
-            allocFPU(joinRegF32);
-            return AnyReg(joinRegF32);
+            MOZ_ASSERT(isAvailableF32(joinRegF32));
+            needF32(joinRegF32);
+            return Some(AnyReg(joinRegF32));
           case ExprType::F64:
-            allocFPU(joinRegF64);
-            return AnyReg(joinRegF64);
+            MOZ_ASSERT(isAvailableF64(joinRegF64));
+            needF64(joinRegF64);
+            return Some(AnyReg(joinRegF64));
           case ExprType::Void:
-            return AnyReg();
+            return Nothing();
           default:
             MOZ_CRASH("Compiler bug: unexpected type");
         }
     }
 
-    void pushJoinRegUnlessVoid(AnyReg r) {
-        switch (r.tag) {
-          case AnyReg::NONE:
-            break;
+    void pushJoinRegUnlessVoid(const Maybe<AnyReg>& r) {
+        if (!r)
+            return;
+        switch (r->tag) {
           case AnyReg::I32:
-            pushI32(r.i32());
+            pushI32(r->i32());
             break;
           case AnyReg::I64:
-            pushI64(r.i64());
+            pushI64(r->i64());
             break;
           case AnyReg::F64:
-            pushF64(r.f64());
+            pushF64(r->f64());
             break;
           case AnyReg::F32:
-            pushF32(r.f32());
+            pushF32(r->f32());
             break;
         }
     }
 
-    void freeJoinRegUnlessVoid(AnyReg r) {
-        switch (r.tag) {
-          case AnyReg::NONE:
-            break;
+    void freeJoinRegUnlessVoid(const Maybe<AnyReg>& r) {
+        if (!r)
+            return;
+        switch (r->tag) {
           case AnyReg::I32:
-            freeI32(r.i32());
+            freeI32(r->i32());
             break;
           case AnyReg::I64:
-            freeI64(r.i64());
+            freeI64(r->i64());
             break;
           case AnyReg::F64:
-            freeF64(r.f64());
+            freeF64(r->f64());
             break;
           case AnyReg::F32:
-            freeF32(r.f32());
+            freeF32(r->f32());
             break;
         }
     }
@@ -2208,42 +2346,28 @@ class BaseCompiler
     // state of the stack + available registers with the set of
     // all available registers.
 
-    // Call this before compiling any code.
-    void setupRegisterLeakCheck() {
-        allGPR_ = availGPR_;
-        allFPU_ = availFPU_;
-    }
-
     // Call this between opcodes.
     void performRegisterLeakCheck() {
-        AllocatableGeneralRegisterSet knownGPR_ = availGPR_;
-        AllocatableFloatRegisterSet knownFPU_ = availFPU_;
+        BaseRegAlloc::LeakCheck check(ra);
         for (size_t i = 0 ; i < stk_.length() ; i++) {
             Stk& item = stk_[i];
             switch (item.kind_) {
               case Stk::RegisterI32:
-                knownGPR_.add(item.i32reg());
+                check.addKnownI32(item.i32reg());
                 break;
               case Stk::RegisterI64:
-#ifdef JS_PUNBOX64
-                knownGPR_.add(item.i64reg().reg);
-#else
-                knownGPR_.add(item.i64reg().high);
-                knownGPR_.add(item.i64reg().low);
-#endif
+                check.addKnownI64(item.i64reg());
                 break;
               case Stk::RegisterF32:
-                knownFPU_.add(item.f32reg());
+                check.addKnownF32(item.f32reg());
                 break;
               case Stk::RegisterF64:
-                knownFPU_.add(item.f64reg());
+                check.addKnownF64(item.f64reg());
                 break;
               default:
                 break;
             }
         }
-        MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
-        MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
     }
 #endif
 
@@ -2811,21 +2935,21 @@ class BaseCompiler
 
     RegI32 captureReturnedI32() {
         RegI32 rv = RegI32(ReturnReg);
-        MOZ_ASSERT(isAvailable(rv));
+        MOZ_ASSERT(isAvailableI32(rv));
         needI32(rv);
         return rv;
     }
 
     RegI64 captureReturnedI64() {
         RegI64 rv = RegI64(ReturnReg64);
-        MOZ_ASSERT(isAvailable(rv));
+        MOZ_ASSERT(isAvailableI64(rv));
         needI64(rv);
         return rv;
     }
 
     RegF32 captureReturnedF32(const FunctionCall& call) {
         RegF32 rv = RegF32(ReturnFloat32Reg);
-        MOZ_ASSERT(isAvailable(rv));
+        MOZ_ASSERT(isAvailableF32(rv));
         needF32(rv);
 #if defined(JS_CODEGEN_ARM)
         if (call.usesSystemAbi && !call.hardFP)
@@ -2836,7 +2960,7 @@ class BaseCompiler
 
     RegF64 captureReturnedF64(const FunctionCall& call) {
         RegF64 rv = RegF64(ReturnDoubleReg);
-        MOZ_ASSERT(isAvailable(rv));
+        MOZ_ASSERT(isAvailableF64(rv));
         needF64(rv);
 #if defined(JS_CODEGEN_ARM)
         if (call.usesSystemAbi && !call.hardFP)
@@ -2925,7 +3049,7 @@ class BaseCompiler
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailable(rdx));
+        MOZ_ASSERT(isAvailableI64(specific_rdx));
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
             masm.udivq(rhs.reg);
@@ -2953,7 +3077,7 @@ class BaseCompiler
 # if defined(JS_CODEGEN_X64)
         // The caller must set up the following situation.
         MOZ_ASSERT(srcDest.reg == rax);
-        MOZ_ASSERT(isAvailable(rdx));
+        MOZ_ASSERT(isAvailableI64(specific_rdx));
 
         if (isUnsigned) {
             masm.xorq(rdx, rdx);
@@ -3444,22 +3568,21 @@ class BaseCompiler
 #endif
     }
 
-    // This is the temp register passed as the last argument to load()
-    MOZ_MUST_USE size_t loadTemps(const MemoryAccessDesc& access) {
+    void needLoadTemps(const MemoryAccessDesc& access, RegI32* tmp1, RegI32* tmp2, RegI32* tmp3) {
 #if defined(JS_CODEGEN_ARM)
         if (IsUnaligned(access)) {
             switch (access.type()) {
-              case Scalar::Float32:
-                return 2;
               case Scalar::Float64:
-                return 3;
+                *tmp3 = needI32();
+                MOZ_FALLTHROUGH;
+              case Scalar::Float32:
+                *tmp2 = needI32();
+                MOZ_FALLTHROUGH;
               default:
-                return 1;
+                *tmp1 = needI32();
+                break;
             }
         }
-        return 0;
-#else
-        return 0;
 #endif
     }
 
@@ -3495,7 +3618,7 @@ class BaseCompiler
             MOZ_ASSERT(dest.i64() == abiReturnRegI64);
             masm.wasmLoadI64(*access, srcAddr, dest.i64());
         } else {
-            bool byteRegConflict = access->byteSize() == 1 && !singleByteRegs_.has(dest.i32());
+            bool byteRegConflict = access->byteSize() == 1 && !ra.isSingleByteI32(dest.i32());
             AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
 
             masm.wasmLoad(*access, srcAddr, out);
@@ -3533,12 +3656,11 @@ class BaseCompiler
         return true;
     }
 
-    MOZ_MUST_USE size_t storeTemps(const MemoryAccessDesc& access, ValType srcType) {
+    void needStoreTemps(const MemoryAccessDesc& access, ValType srcType, RegI32* tmp) {
 #if defined(JS_CODEGEN_ARM)
         if (IsUnaligned(access) && srcType != ValType::I32)
-            return 1;
+            *tmp = needI32();
 #endif
-        return 0;
     }
 
     // ptr and src must not be the same register.
@@ -3550,12 +3672,12 @@ class BaseCompiler
 
         // Emit the store
 #if defined(JS_CODEGEN_X64)
-        MOZ_ASSERT(tmp == Register::Invalid());
+        MOZ_ASSERT(tmp == invalidI32());
         Operand dstAddr(HeapReg, ptr, TimesOne, access->offset());
 
         masm.wasmStore(*access, src.any(), dstAddr);
 #elif defined(JS_CODEGEN_X86)
-        MOZ_ASSERT(tmp == Register::Invalid());
+        MOZ_ASSERT(tmp == invalidI32());
         masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
         Operand dstAddr(ptr, access->offset());
 
@@ -3564,13 +3686,13 @@ class BaseCompiler
         } else {
             AnyRegister value;
             if (src.tag == AnyReg::I64) {
-                if (access->byteSize() == 1 && !singleByteRegs_.has(src.i64().low)) {
+                if (access->byteSize() == 1 && !ra.isSingleByteI32(src.i64().low)) {
                     masm.mov(src.i64().low, ScratchRegX86);
                     value = AnyRegister(ScratchRegX86);
                 } else {
                     value = AnyRegister(src.i64().low);
                 }
-            } else if (access->byteSize() == 1 && !singleByteRegs_.has(src.i32())) {
+            } else if (access->byteSize() == 1 && !ra.isSingleByteI32(src.i32())) {
                 masm.mov(src.i32(), ScratchRegX86);
                 value = AnyRegister(ScratchRegX86);
             } else {
@@ -3592,12 +3714,12 @@ class BaseCompiler
                 masm.wasmUnalignedStoreFP(*access, src.f64(), HeapReg, ptr, ptr, tmp);
                 break;
               default:
-                MOZ_ASSERT(tmp == Register::Invalid());
+                MOZ_ASSERT(tmp == invalidI32());
                 masm.wasmUnalignedStore(*access, src.i32(), HeapReg, ptr, ptr);
                 break;
             }
         } else {
-            MOZ_ASSERT(tmp == Register::Invalid());
+            MOZ_ASSERT(tmp == invalidI32());
             if (access->type() == Scalar::Int64)
                 masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
             else if (src.tag == AnyReg::I64)
@@ -3665,8 +3787,7 @@ class BaseCompiler
         else
             freeI64(rd);
 
-        if (tls != invalidI32())
-            freeI32(tls);
+        maybeFreeI32(tls);
         freeI32(rp);
 
 #if defined(JS_CODEGEN_X86)
@@ -3678,17 +3799,17 @@ class BaseCompiler
 #endif
     }
 
-    MOZ_MUST_USE uint32_t
-    atomicRMWTemps(AtomicOp op, MemoryAccessDesc* access) {
+    void needAtomicRMWTemps(AtomicOp op, MemoryAccessDesc* access, RegI32* tmp) {
 #if defined(JS_CODEGEN_X86)
         // Handled specially in atomicRMW
         if (access->byteSize() == 1)
-            return 0;
+            return;
 #endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        return op == AtomicFetchAddOp || op == AtomicFetchSubOp ? 0 : 1;
+        if (op != AtomicFetchAddOp && op != AtomicFetchSubOp)
+            *tmp = needI32();
 #elif defined(JS_CODEGEN_ARM)
-        return 1;
+        *tmp = needI32();
 #else
         MOZ_CRASH("BaseCompiler platform hook: atomicRMWTemps");
 #endif
@@ -3751,14 +3872,14 @@ class BaseCompiler
         }
     }
 
-    MOZ_MUST_USE uint32_t
-    atomicRMW64Temps(AtomicOp op) {
+    void needAtomicRMW64Temps(AtomicOp op, RegI64* tmp) {
 #if defined(JS_CODEGEN_X86)
         MOZ_CRASH("Do not call on x86");
 #elif defined(JS_CODEGEN_X64)
-        return (op == AtomicFetchAddOp || op == AtomicFetchSubOp) ? 0 : 1;
+        if (op != AtomicFetchAddOp && op != AtomicFetchSubOp)
+            *tmp = needI64();
 #elif defined(JS_CODEGEN_ARM)
-        return 1;
+        *tmp = needI64Pair();
 #else
         MOZ_CRASH("BaseCompiler platform hook: atomicRMW64Temps");
 #endif
@@ -3791,7 +3912,7 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X86)
             ScratchEBX scratch(*this);
             MOZ_ASSERT(rd == specific_eax);
-            if (!singleByteRegs_.has(rnew)) {
+            if (!ra.isSingleByteI32(rnew)) {
                 // The replacement value must have a byte persona.
                 masm.movl(rnew, scratch);
                 rnew = RegI32(scratch);
@@ -3822,7 +3943,7 @@ class BaseCompiler
         switch (access->type()) {
           case Scalar::Uint8: {
 #if defined(JS_CODEGEN_X86)
-            if (!singleByteRegs_.has(rd)) {
+            if (!ra.isSingleByteI32(rd)) {
                 ScratchEBX scratch(*this);
                 // The output register must have a byte persona.
                 masm.atomicExchange8ZeroExtend(srcAddr, rv, scratch);
@@ -4044,7 +4165,7 @@ class BaseCompiler
     template<typename Cond, typename Lhs, typename Rhs>
     void jumpConditionalWithJoinReg(BranchState* b, Cond cond, Lhs lhs, Rhs rhs)
     {
-        AnyReg r = popJoinRegUnlessVoid(b->resultType);
+        Maybe<AnyReg> r = popJoinRegUnlessVoid(b->resultType);
 
         if (b->framePushed != BranchState::NoPop && willPopStackBeforeBranch(b->framePushed)) {
             Label notTaken;
@@ -4369,8 +4490,7 @@ BaseCompiler::emitMultiplyI64()
     temp = needI32();
 #endif
     masm.mul64(r1, r0, temp);
-    if (temp != Register::Invalid())
-        freeI32(temp);
+    maybeFreeI32(temp);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4998,8 +5118,7 @@ BaseCompiler::emitRotrI64()
         if (rotate64NeedsTemp())
             temp = needI32();
         masm.rotateRight64(Imm32(c & 63), r, r, temp);
-        if (temp != Register::Invalid())
-            freeI32(temp);
+        maybeFreeI32(temp);
         pushI64(r);
     } else {
         RegI64 r0, r1;
@@ -5037,8 +5156,7 @@ BaseCompiler::emitRotlI64()
         if (rotate64NeedsTemp())
             temp = needI32();
         masm.rotateLeft64(Imm32(c & 63), r, r, temp);
-        if (temp != Register::Invalid())
-            freeI32(temp);
+        maybeFreeI32(temp);
         pushI64(r);
     } else {
         RegI64 r0, r1;
@@ -5388,8 +5506,7 @@ BaseCompiler::emitConvertU64ToF32()
     if (convertI64ToFloatNeedsTemp(ValType::F32, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF32(r0, IsUnsigned(true), f0, temp);
-    if (temp != Register::Invalid())
-        freeI32(temp);
+    maybeFreeI32(temp);
     freeI64(r0);
     pushF32(f0);
 }
@@ -5445,8 +5562,7 @@ BaseCompiler::emitConvertU64ToF64()
     if (convertI64ToFloatNeedsTemp(ValType::F64, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF64(r0, IsUnsigned(true), d0, temp);
-    if (temp != Register::Invalid())
-        freeI32(temp);
+    maybeFreeI32(temp);
     freeI64(r0);
     pushF64(d0);
 }
@@ -5667,7 +5783,7 @@ BaseCompiler::endBlock(ExprType type)
     Control& block = controlItem();
 
     // Save the value.
-    AnyReg r;
+    Maybe<AnyReg> r;
     if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
         block.bceSafeOnExit &= bceSafe_;
@@ -5720,7 +5836,7 @@ BaseCompiler::endLoop(ExprType type)
 {
     Control& block = controlItem();
 
-    AnyReg r;
+    Maybe<AnyReg> r;
     if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
         // block.bceSafeOnExit need not be updated because it won't be used for
@@ -5814,7 +5930,7 @@ BaseCompiler::emitElse()
 
     ifThenElse.deadThenBranch = deadCode_;
 
-    AnyReg r;
+    Maybe<AnyReg> r;
     if (!deadCode_)
         r = popJoinRegUnlessVoid(thenType);
 
@@ -5851,8 +5967,7 @@ BaseCompiler::endIfThenElse(ExprType type)
     // full expression is I32.  So restore whatever's there, not what
     // we want to find there.  The "then" arm has the same constraint.
 
-    AnyReg r;
-
+    Maybe<AnyReg> r;
     if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
         ifThenElse.bceSafeOnExit &= bceSafe_;
@@ -5920,7 +6035,7 @@ BaseCompiler::emitBr()
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
 
-    AnyReg r = popJoinRegUnlessVoid(type);
+    Maybe<AnyReg> r = popJoinRegUnlessVoid(type);
 
     popStackBeforeBranch(target.framePushed);
     masm.jump(&target.label);
@@ -5980,7 +6095,7 @@ BaseCompiler::emitBrTable()
 
     maybeUnreserveJoinRegI(branchValueType);
 
-    AnyReg r = popJoinRegUnlessVoid(branchValueType);
+    Maybe<AnyReg> r = popJoinRegUnlessVoid(branchValueType);
 
     Label dispatchCode;
     masm.branch32(Assembler::Below, rc, Imm32(depths.length()), &dispatchCode);
@@ -6354,11 +6469,11 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
     FunctionCall call(0);
 
     masm.setupWasmABICall();
-# ifdef JS_NUNBOX32
+# if defined(JS_PUNBOX64)
+    MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
+# else
     masm.passABIArg(input.high);
     masm.passABIArg(input.low);
-# else
-    MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
 # endif
     masm.callWithABI(bytecodeOffset(), callee,
                      resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
@@ -6715,7 +6830,7 @@ BaseCompiler::emitSetGlobal()
 // TODO / OPTIMIZE (bug 1329576): There are opportunities to generate better
 // code by not moving a constant address with a zero offset into a register.
 
-BaseCompiler::RegI32
+RegI32
 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check)
 {
     check->onlyPointerAlignment = (access->offset() & (access->byteSize() - 1)) == 0;
@@ -6750,10 +6865,10 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check)
     return popI32();
 }
 
-BaseCompiler::RegI32
+RegI32
 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check)
 {
-    RegI32 tls = invalidI32();
+    RegI32 tls;
     if (needTlsForAccess(check)) {
         tls = needI32();
         masm.loadWasmTlsRegFromFrame(tls);
@@ -6766,12 +6881,8 @@ BaseCompiler::loadCommon(MemoryAccessDesc* access, ValType type)
 {
     AccessCheck check;
 
-    size_t temps = loadTemps(*access);
-    MOZ_ASSERT(temps <= 3);
-    RegI32 tmp1 = temps >= 1 ? needI32() : invalidI32();
-    RegI32 tmp2 = temps >= 2 ? needI32() : invalidI32();
-    RegI32 tmp3 = temps >= 3 ? needI32() : invalidI32();
-    RegI32 tls = invalidI32();
+    RegI32 tls, tmp1, tmp2, tmp3;
+    needLoadTemps(*access, &tmp1, &tmp2, &tmp3);
 
     switch (type) {
       case ValType::I32: {
@@ -6832,16 +6943,10 @@ BaseCompiler::loadCommon(MemoryAccessDesc* access, ValType type)
         break;
     }
 
-    if (tls != invalidI32())
-        freeI32(tls);
-
-    MOZ_ASSERT(temps <= 3);
-    if (temps >= 1)
-        freeI32(tmp1);
-    if (temps >= 2)
-        freeI32(tmp2);
-    if (temps >= 3)
-        freeI32(tmp3);
+    maybeFreeI32(tls);
+    maybeFreeI32(tmp1);
+    maybeFreeI32(tmp2);
+    maybeFreeI32(tmp3);
 
     return true;
 }
@@ -6864,11 +6969,9 @@ bool
 BaseCompiler::storeCommon(MemoryAccessDesc* access, ValType resultType)
 {
     AccessCheck check;
-    size_t temps = storeTemps(*access, resultType);
 
-    MOZ_ASSERT(temps <= 1);
-    RegI32 tmp = temps >= 1 ? needI32() : invalidI32();
-    RegI32 tls = invalidI32();
+    RegI32 tls, tmp;
+    needStoreTemps(*access, resultType, &tmp);
 
     switch (resultType) {
       case ValType::I32: {
@@ -6916,12 +7019,8 @@ BaseCompiler::storeCommon(MemoryAccessDesc* access, ValType resultType)
         break;
     }
 
-    if (tls != invalidI32())
-        freeI32(tls);
-
-    MOZ_ASSERT(temps <= 1);
-    if (temps >= 1)
-        freeI32(tmp);
+    maybeFreeI32(tls);
+    maybeFreeI32(tmp);
 
     return true;
 }
@@ -7221,8 +7320,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
 
         atomicCompareExchange(&access, &check, tls, rp, rexpect, rnew, rd);
 
-        if (tls != invalidI32())
-            freeI32(tls);
+        maybeFreeI32(tls);
         freeI32(rp);
         freeI32(rnew);
         if (rexpect != rd)
@@ -7269,8 +7367,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
 
     pushI64(rd);
 
-    if (tls != invalidI32())
-        freeI32(tls);
+    maybeFreeI32(tls);
     freeI32(rp);
 #if defined(JS_CODEGEN_X64)
     freeI64(rreplace);
@@ -7316,7 +7413,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
     RegI64 tmp = specific_ecx_ebx;
     RegI64 output = specific_edx_eax;
 # elif defined(JS_CODEGEN_ARM)
-    RegI64 tmp = invalidI64();
+    RegI64 tmp;
     RegI64 output = needI64Pair();
 # else
     RegI64 tmp, output;
@@ -7333,8 +7430,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
     pushI64(output);
 
     freeI32(rp);
-    if (tls != invalidI32())
-        freeI32(tls);
+    maybeFreeI32(tls);
 # if defined(JS_CODEGEN_X86)
     freeI32(specific_ecx);
 # elif defined(JS_CODEGEN_ARM)
@@ -7382,19 +7478,16 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
         MOZ_CRASH("BaseCompiler porting interface: atomic rmw");
 #endif
         RegI32 tls = maybeLoadTlsForAccess(check);
-        size_t temps = atomicRMWTemps(op, &access);
-        MOZ_ASSERT(temps <= 1);
-        RegI32 tmp = temps >= 1 ? needI32() : invalidI32();
+        RegI32 tmp;
+        needAtomicRMWTemps(op, &access, &tmp);
 
         atomicRMW(op, &access, &check, tls, rp, rv, output, tmp);
 
-        if (tls != invalidI32())
-            freeI32(tls);
+        maybeFreeI32(tls);
+        maybeFreeI32(tmp);
         freeI32(rp);
         if (rv != output)
             freeI32(rv);
-        if (temps >= 1)
-            freeI32(tmp);
 
         if (narrowing)
             pushU32AsI64(output);
@@ -7409,12 +7502,12 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
 
     sync();
 
-    allocGPR(eax);
+    needI32NoSync(specific_eax);
     ScratchEBX scratch(*this);           // Already allocated
-    allocGPR(ecx);
-    allocGPR(edx);
-    allocGPR(edi);
-    allocGPR(esi);
+    needI32NoSync(specific_ecx);
+    needI32NoSync(specific_edx);
+    needI32NoSync(specific_edi);
+    needI32NoSync(specific_esi);
 
     AccessCheck check;
     MOZ_ASSERT(needTlsForAccess(check));
@@ -7422,11 +7515,11 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
     RegI64 tmp = specific_ecx_ebx;
     popI64ToSpecific(tmp);
 
-    RegI32 ptr = RegI32(esi);
+    RegI32 ptr = specific_esi;
     popI32ToSpecific(ptr);
 
-    RegI32 tls = RegI32(edi);
-    RegI32 memoryBase = RegI32(edi);     // Yes, same
+    RegI32 tls = specific_edi;
+    RegI32 memoryBase = specific_edi;     // Yes, same
     masm.loadWasmTlsRegFromFrame(tls);
 
     prepareMemoryAccess(&access, &check, tls, ptr);
@@ -7444,9 +7537,9 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
     masm.freeStack(8);
 
     pushI64(rd);
-    freeGPR(ecx);
-    freeGPR(edi);
-    freeGPR(esi);
+    freeI32(specific_ecx);
+    freeI32(specific_edi);
+    freeI32(specific_esi);
 
 #else // !JS_CODEGEN_X86
 
@@ -7468,14 +7561,8 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
 # endif
 
     RegI32 tls = maybeLoadTlsForAccess(check);
-    size_t temps = atomicRMW64Temps(op);
-    MOZ_ASSERT(temps <= 1);
-    RegI64 tmp = invalidI64();
-# ifdef JS_CODEGEN_ARM
-    if (temps >= 1) tmp = needI64Pair();
-# else
-    if (temps >= 1) tmp = needI64();
-# endif
+    RegI64 tmp;
+    needAtomicRMW64Temps(op, &tmp);
 
     prepareMemoryAccess(&access, &check, tls, rp);
     ATOMIC_PTR(srcAddr, &access, tls, rp);
@@ -7484,13 +7571,11 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
 
     pushI64(rd);
 
-    if (tls != invalidI32())
-        freeI32(tls);
+    maybeFreeI32(tls);
     freeI32(rp);
     if (rv != rd)
         freeI64(rv);
-    if (temps >= 1)
-        freeI64(tmp);
+    maybeFreeI64(tmp);
 
 #endif // !JS_CODEGEN_X86
 
@@ -7553,8 +7638,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
 
         atomicExchange(&access, &check, tls, rp, rv, rd);
 
-        if (tls != invalidI32())
-            freeI32(tls);
+        maybeFreeI32(tls);
         freeI32(rp);
         if (rv != rd)
             freeI32(rv);
@@ -7584,8 +7668,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
     masm.atomicExchange64(srcAddr, rv, rd);
     pushI64(rd);
 
-    if (tls != invalidI32())
-        freeI32(tls);
+    maybeFreeI32(tls);
     freeI32(rp);
     if (rv != rd)
         freeI64(rv);
@@ -8461,7 +8544,7 @@ BaseCompiler::emitInitStackLocals()
     if (initWords < 2 * unrollLimit)  {
         for (uint32_t i = low; i < high; i += wordSize)
             masm.storePtr(zero, Address(StackPointer, localOffsetToSPOffset(i + wordSize)));
-        freeGPR(zero);
+        freeI32(zero);
         return;
     }
 
@@ -8492,9 +8575,9 @@ BaseCompiler::emitInitStackLocals()
     for (uint32_t i = 0; i < tailWords; ++i)
         masm.storePtr(zero, Address(p, -(wordSize * i)));
 
-    freeGPR(p);
-    freeGPR(lim);
-    freeGPR(zero);
+    freeI32(p);
+    freeI32(lim);
+    freeI32(zero);
 }
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
@@ -8525,11 +8608,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       latentIntCmp_(Assembler::Equal),
       latentDoubleCmp_(Assembler::DoubleEqual),
       masm(*masm),
-      availGPR_(GeneralRegisterSet::All()),
-      availFPU_(FloatRegisterSet::All()),
-#ifdef DEBUG
-      scratchRegisterTaken_(false),
-#endif
+      ra(*this),
 #ifdef JS_CODEGEN_X64
       specific_rax(RegI64(Register64(rax))),
       specific_rcx(RegI64(Register64(rcx))),
@@ -8539,11 +8618,12 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       specific_eax(RegI32(eax)),
       specific_ecx(RegI32(ecx)),
       specific_edx(RegI32(edx)),
+      specific_edi(RegI32(edi)),
+      specific_esi(RegI32(esi)),
 #endif
 #ifdef JS_CODEGEN_X86
       specific_ecx_ebx(RegI64(Register64(ecx, ebx))),
       specific_edx_eax(RegI64(Register64(edx, eax))),
-      singleByteRegs_(GeneralRegisterSet(Registers::SingleByteRegs)),
       abiReturnRegI64(RegI64(Register64(edx, eax))),
 #endif
 #ifdef JS_CODEGEN_ARM
@@ -8554,26 +8634,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       joinRegF32(RegF32(ReturnFloat32Reg)),
       joinRegF64(RegF64(ReturnDoubleReg))
 {
-    // jit/RegisterAllocator.h: RegisterAllocator::RegisterAllocator()
-
-#if defined(JS_CODEGEN_X64)
-    availGPR_.take(HeapReg);
-#elif defined(JS_CODEGEN_ARM)
-    availGPR_.take(HeapReg);
-    availGPR_.take(ScratchRegARM);
-#elif defined(JS_CODEGEN_ARM64)
-    availGPR_.take(HeapReg);
-    availGPR_.take(HeapLenReg);
-#elif defined(JS_CODEGEN_X86)
-    availGPR_.take(ScratchRegX86);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    availGPR_.take(HeapReg);
-#endif
-    availGPR_.take(FramePointer);
-
-#ifdef DEBUG
-    setupRegisterLeakCheck();
-#endif
 }
 
 bool
