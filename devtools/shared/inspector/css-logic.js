@@ -8,6 +8,7 @@
 
 const { getRootBindingParent } = require("devtools/shared/layout/utils");
 const { getTabPrefs } = require("devtools/shared/indentation");
+const { Ci, Cc } = require("chrome");
 
 const MAX_DATA_URL_LENGTH = 40;
 
@@ -498,3 +499,16 @@ function getBindingElementAndPseudo(node) {
   };
 }
 exports.getBindingElementAndPseudo = getBindingElementAndPseudo;
+
+/**
+ * Returns css style rules for a given a node.
+ * This function can handle ::before or ::after pseudo element as well as
+ * normal element.
+ */
+function getCSSStyleRules(node) {
+  const DOMUtils =
+    Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+  let { bindingElement, pseudo } = getBindingElementAndPseudo(node);
+  return DOMUtils.getCSSStyleRules(bindingElement, pseudo);
+}
+exports.getCSSStyleRules = getCSSStyleRules;
