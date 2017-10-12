@@ -1098,21 +1098,6 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_save(state: &mut WrState) {
-    state.frame_builder.dl_builder.save();
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_restore(state: &mut WrState) {
-    state.frame_builder.dl_builder.restore();
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
-    state.frame_builder.dl_builder.clear_save();
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: LayoutRect,
                                               animation_id: u64,
