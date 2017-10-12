@@ -68,6 +68,7 @@ def use_toolchains(config, jobs):
             return aliases.get(key, key)
 
     for job in jobs:
+        scopes = job.setdefault('scopes', [])
         env = job.setdefault('worker', {}).setdefault('env', {})
 
         toolchains = [get_alias(t)
@@ -83,7 +84,7 @@ def use_toolchains(config, jobs):
                 raise Exception('Missing toolchain job for %s-%s: %s'
                                 % (config.kind, job['name'], t))
 
-            f = os.path.basename(artifacts[t])
+            dirname, f = os.path.split(artifacts[t])
             if f in filenames:
                 # Build jobs don't support toolchain artifacts with the same
                 # name: they would overwrite one with the other.
@@ -92,6 +93,15 @@ def use_toolchains(config, jobs):
                                 % (config.kind, job['name'], filenames[f],
                                    t, f))
             filenames[f] = t
+
+            if not artifacts[t].startswith('public/'):
+                # Use taskcluster-proxy and request appropriate scope.
+                # For example, add 'scopes: [queue:get-artifact:path/to/*]'
+                # for 'path/to/artifact.tar.xz'.
+                job['worker']['taskcluster-proxy'] = True
+                scope = 'queue:get-artifact:{}/*'.format(dirname)
+                if scope not in scopes:
+                    scopes.append(scope)
 
             if t.endswith('-sccache'):
                 job['needs-sccache'] = True

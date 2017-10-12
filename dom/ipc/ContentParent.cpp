@@ -268,7 +268,6 @@
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
-using base::ChildPrivileges;
 using base::KillProcess;
 
 #ifdef MOZ_CRASHREPORTER
@@ -2123,10 +2122,8 @@ ContentParent::ContentParent(ContentParent* aOpener,
 #endif
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  ChildPrivileges privs = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)
-                          ? base::PRIVILEGES_FILEREAD
-                          : base::PRIVILEGES_DEFAULT;
-  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, privs);
+  bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
+  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
 }
 
 ContentParent::~ContentParent()

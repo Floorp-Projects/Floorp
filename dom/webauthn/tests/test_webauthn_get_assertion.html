@@ -81,7 +81,7 @@
           // Test with an invalid credential
           let publicKeyCredentialRequestOptions = {
             challenge: gAssertionChallenge,
-            allowList: [invalidCred]
+            allowCredentials: [invalidCred]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -91,7 +91,7 @@
           // Test with an unknown credential
           let publicKeyCredentialRequestOptions = {
             challenge: gAssertionChallenge,
-            allowList: [unknownCred]
+            allowCredentials: [unknownCred]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -102,7 +102,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: gAssertionChallenge,
             unknownValue: "hi",
-            allowList: [invalidCred]
+            allowCredentials: [invalidCred]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)

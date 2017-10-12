@@ -64,18 +64,24 @@ function addPlace(aUrl, aFavicon) {
   return id;
 }
 
-function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle) {
+function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle,
+                     aGuid = PlacesUtils.history.makeGuid(),
+                     aSyncStatus = PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+                     aSyncChangeCounter = 0) {
   let stmt = mDBConn.createStatement(
     `INSERT INTO moz_bookmarks (fk, type, parent, keyword_id, folder_type,
-                                title, guid)
+                                title, guid, syncStatus, syncChangeCounter)
      VALUES (:place_id, :type, :parent, :keyword_id, :folder_type, :title,
-             GENERATE_GUID())`);
+             :guid, :sync_status, :change_counter)`);
   stmt.params.place_id = aPlaceId || null;
   stmt.params.type = aType || bs.TYPE_BOOKMARK;
   stmt.params.parent = aParent || bs.unfiledBookmarksFolder;
   stmt.params.keyword_id = aKeywordId || null;
   stmt.params.folder_type = aFolderType || null;
   stmt.params.title = typeof(aTitle) == "string" ? aTitle : null;
+  stmt.params.guid = aGuid;
+  stmt.params.sync_status = aSyncStatus;
+  stmt.params.change_counter = aSyncChangeCounter;
   stmt.execute();
   stmt.finalize();
   return mDBConn.lastInsertRowID;
@@ -1230,6 +1236,125 @@ tests.push({
   async check() {
     Assert.ok((await this._getHash()) > 0);
   }
+});
+
+// ------------------------------------------------------------------------------
+
+tests.push({
+  name: "S.1",
+  desc: "fix invalid GUIDs for synced bookmarks",
+  _bookmarkInfos: [],
+
+  async setup() {
+    await PlacesTestUtils.markBookmarksAsSynced();
+
+    let folderWithInvalidGuid = addBookmark(
+      null, PlacesUtils.bookmarks.TYPE_FOLDER,
+      PlacesUtils.bookmarks.bookmarksMenuFolder, /* aKeywordId */ null,
+      /* aFolderType */ null, "NORMAL folder with invalid GUID",
+      "{123456}", PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
+
+    let placeIdForBookmarkWithoutGuid = addPlace();
+    let bookmarkWithoutGuid = addBookmark(
+      placeIdForBookmarkWithoutGuid, PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      folderWithInvalidGuid, /* aKeywordId */ null,
+      /* aFolderType */ null, "NEW bookmark without GUID",
+      /* aGuid */ null);
+
+    let placeIdForBookmarkWithInvalidGuid = addPlace();
+    let bookmarkWithInvalidGuid = addBookmark(
+      placeIdForBookmarkWithInvalidGuid, PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      folderWithInvalidGuid, /* aKeywordId */ null,
+      /* aFolderType */ null, "NORMAL bookmark with invalid GUID",
+      "bookmarkAAAA\n", PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
+
+    let placeIdForBookmarkWithValidGuid = addPlace();
+    let bookmarkWithValidGuid = addBookmark(
+      placeIdForBookmarkWithValidGuid, PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      folderWithInvalidGuid, /* aKeywordId */ null,
+      /* aFolderType */ null, "NORMAL bookmark with valid GUID",
+      "bookmarkBBBB", PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
+
+    this._bookmarkInfos.push({
+      id: PlacesUtils.bookmarks.bookmarksMenuFolder,
+      syncChangeCounter: 1,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    }, {
+      id: folderWithInvalidGuid,
+      syncChangeCounter: 3,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    }, {
+      id: bookmarkWithoutGuid,
+      syncChangeCounter: 1,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    }, {
+      id: bookmarkWithInvalidGuid,
+      syncChangeCounter: 1,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    }, {
+      id: bookmarkWithValidGuid,
+      syncChangeCounter: 0,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    });
+  },
+
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let updatedRows = await db.execute(`
+      SELECT id, guid, syncChangeCounter, syncStatus
+      FROM moz_bookmarks
+      WHERE id IN (?, ?, ?, ?, ?)`,
+      this._bookmarkInfos.map(info => info.id));
+
+    for (let row of updatedRows) {
+      let id = row.getResultByName("id");
+      let guid = row.getResultByName("guid");
+      do_check_true(PlacesUtils.isValidGuid(guid));
+
+      let cachedGuid = await PlacesUtils.promiseItemGuid(id);
+      do_check_eq(cachedGuid, guid);
+
+      let expectedInfo = this._bookmarkInfos.find(info => info.id == id);
+
+      let syncChangeCounter = row.getResultByName("syncChangeCounter");
+      do_check_eq(syncChangeCounter, expectedInfo.syncChangeCounter);
+
+      let syncStatus = row.getResultByName("syncStatus");
+      do_check_eq(syncStatus, expectedInfo.syncStatus);
+    }
+
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    do_check_matches(tombstones.map(info => info.guid),
+      ["bookmarkAAAA\n", "{123456}"]);
+
+    await PlacesSyncUtils.bookmarks.reset();
+  },
+});
+
+tests.push({
+  name: "S.2",
+  desc: "drop tombstones for bookmarks that aren't deleted",
+
+  async setup() {
+    addBookmark(null, bs.TYPE_BOOKMARK, bs.bookmarksMenuFolder, null, null,
+                "", "bookmarkAAAA");
+
+    await PlacesUtils.withConnectionWrapper("Insert tombstones", db =>
+      db.executeTransaction(async function() {
+        for (let guid of ["bookmarkAAAA", "bookmarkBBBB"]) {
+          await db.executeCached(`
+            INSERT INTO moz_bookmarks_deleted(guid)
+            VALUES(:guid)`,
+            { guid });
+        }
+      })
+    );
+  },
+
+  async check() {
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    do_check_matches(tombstones.map(info => info.guid), ["bookmarkBBBB"]);
+  },
 });
 
 // ------------------------------------------------------------------------------

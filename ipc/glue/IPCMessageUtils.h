@@ -255,13 +255,6 @@ struct BitFlagsEnumSerializer
                    BitFlagsEnumValidator<E, AllBits>>
 {};
 
-template <>
-struct ParamTraits<base::ChildPrivileges>
-  : public ContiguousEnumSerializer<base::ChildPrivileges,
-                                    base::PRIVILEGES_DEFAULT,
-                                    base::PRIVILEGES_LAST>
-{ };
-
 /**
  * A helper class for serializing plain-old data (POD) structures.
  * The memory representation of the structure is written to and read from

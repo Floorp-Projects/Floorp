@@ -323,7 +323,9 @@ class TryOptionSyntax(object):
         self.include_nightly = options['include_nightly']
 
     def parse_jobs(self, jobs_arg):
-        if not jobs_arg or jobs_arg == ['all']:
+        if not jobs_arg or jobs_arg == ['none']:
+            return []  # default is `-j none`
+        if jobs_arg == ['all']:
             return None
         expanded = []
         for job in jobs_arg:
@@ -597,23 +599,17 @@ class TryOptionSyntax(object):
             else:
                 return False
 
-        job_try_name = attr('job_try_name')
-        if job_try_name:
+        if attr('job_try_name'):
             # Beware the subtle distinction between [] and None for self.jobs and self.platforms.
             # They will be [] if there was no try syntax, and None if try syntax was detected but
             # they remained unspecified.
-            if self.jobs:
-                return job_try_name in self.jobs
-            elif not self.jobs and 'build' in task.dependencies:
-                # We exclude tasks with build dependencies from the default set of jobs because
-                # they will schedule their builds even if they end up optimized away. This means
-                # to run these tasks on try, they'll need to be explicitly specified by -j until
-                # we find a better solution (see bug 1372510).
-                return False
-            elif not self.jobs and attr('build_platform'):
-                if self.platforms is None or attr('build_platform') in self.platforms:
-                    return True
-                return False
+            if self.jobs is not None:
+                return attr('job_try_name') in self.jobs
+
+            # User specified `-j all`
+            if self.platforms is not None and attr('build_platform') not in self.platforms:
+                return False  # honor -p for jobs governed by a platform
+            # "all" means "everything with `try` in run_on_projects"
             return check_run_on_projects()
         elif attr('kind') == 'test':
             return match_test(self.unittests, 'unittest_try_name') \

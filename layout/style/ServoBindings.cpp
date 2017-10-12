@@ -401,7 +401,7 @@ Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
       const_cast<ServoStyleContext*>(aNewStyle),
       &equalStructs,
       &samePointerStructs,
-      NS_STYLE_INHERIT_MASK);
+      /* aIgnoreVariables = */ true);
 
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
 
