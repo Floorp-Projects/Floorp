@@ -258,8 +258,7 @@ RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
     ReturnDrawTarget(destDT);
   }
 
-  if (aSource.HaveBufferOnWhite()) {
-    MOZ_ASSERT(HaveBufferOnWhite());
+  if (aSource.HaveBufferOnWhite() && HaveBufferOnWhite()) {
     DrawIterator whiteIter;
     while (DrawTarget* destDT =
       BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE, &whiteIter)) {
@@ -831,38 +830,25 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
   NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || destBufferRect == neededRegion.GetBounds(),
                "If we're resampling, we need to validate the entire buffer");
 
-  // If we have no buffered data already, then destBuffer will be a fresh buffer
-  // and we do not need to clear it below.
-  bool isClear = !HaveBuffer();
-
+  // If needed, copy the old buffer over to the new one
   if (destDTBuffer) {
-    if (!isClear && (mode != SurfaceMode::SURFACE_COMPONENT_ALPHA || HaveBufferOnWhite())) {
-      // Copy the bits
-      IntPoint offset = -destBufferRect.TopLeft();
-      Matrix mat = Matrix::Translation(offset.x, offset.y);
-      destDTBuffer->SetTransform(mat);
-      if (!EnsureBuffer()) {
-        return result;
-      }
-      MOZ_ASSERT(mDTBuffer && mDTBuffer->IsValid(), "Have we got a Thebes buffer for some reason?");
-      DrawBufferWithRotation(destDTBuffer, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
-      destDTBuffer->SetTransform(Matrix());
+    if ((HaveBuffer() && EnsureBuffer()) &&
+        (mode != SurfaceMode::SURFACE_COMPONENT_ALPHA || (HaveBufferOnWhite() && EnsureBufferOnWhite()))) {
+      DrawTargetRotatedBuffer oldBuffer = DrawTargetRotatedBuffer(mDTBuffer, mDTBufferOnWhite,
+                                                                  mBufferRect, mBufferRotation);
 
-      if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-        if (!destDTBufferOnWhite || !EnsureBufferOnWhite()) {
-          return result;
-        }
-        MOZ_ASSERT(mDTBufferOnWhite && mDTBufferOnWhite->IsValid(), "Have we got a Thebes buffer for some reason?");
-        destDTBufferOnWhite->SetTransform(mat);
-        DrawBufferWithRotation(destDTBufferOnWhite, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
-        destDTBufferOnWhite->SetTransform(Matrix());
-      }
+      mDTBuffer = destDTBuffer.forget();
+      mDTBufferOnWhite = destDTBufferOnWhite.forget();
+      mBufferRect = destBufferRect;
+      mBufferRotation = IntPoint(0,0);
+
+      UpdateDestinationFrom(oldBuffer, nsIntRegion(mBufferRect));
+    } else {
+      mDTBuffer = destDTBuffer.forget();
+      mDTBufferOnWhite = destDTBufferOnWhite.forget();
+      mBufferRect = destBufferRect;
+      mBufferRotation = IntPoint(0,0);
     }
-
-    mDTBuffer = destDTBuffer.forget();
-    mDTBufferOnWhite = destDTBufferOnWhite.forget();
-    mBufferRect = destBufferRect;
-    mBufferRotation = IntPoint(0,0);
   }
   NS_ASSERTION(canHaveRotation || mBufferRotation == IntPoint(0,0),
                "Rotation disabled, but we have nonzero rotation?");
