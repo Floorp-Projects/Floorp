@@ -124,6 +124,7 @@
 #include "DisplayItemClip.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "prenv.h"
+#include "nsIEffectiveTLDService.h" // for IsInStyloBlocklist
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -189,6 +190,8 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 /* static */ bool nsLayoutUtils::sTextCombineUprightDigitsEnabled;
 #ifdef MOZ_STYLO
 /* static */ bool nsLayoutUtils::sStyloEnabled;
+/* static */ bool nsLayoutUtils::sStyloBlocklistEnabled;
+/* static */ nsTArray<nsCString>* nsLayoutUtils::sStyloBlocklist = nullptr;
 #endif
 /* static */ bool nsLayoutUtils::sStyleAttrWithXMLBaseDisabled;
 /* static */ uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
@@ -7842,6 +7845,24 @@ nsLayoutUtils::Initialize()
     Preferences::AddBoolVarCache(&sStyloEnabled,
                                  "layout.css.servo.enabled");
   }
+  // We should only create the blocklist ONCE, and ignore any blocklist
+  // reloads happen. Because otherwise we could have a top level page that
+  // uses Stylo (if its load happens before the blocklist reload) and a
+  // child iframe that uses Gecko (if its load happens after the blocklist
+  // reload). If some page contains both backends, and they try to move
+  // element across backend boundary, it could crash (see bug 1404020).
+  sStyloBlocklistEnabled =
+    Preferences::GetBool("layout.css.stylo-blocklist.enabled");
+  if (sStyloBlocklistEnabled && !sStyloBlocklist) {
+    nsAutoCString blocklist;
+    Preferences::GetCString("layout.css.stylo-blocklist.blocked_domains", blocklist);
+    if (!blocklist.IsEmpty()) {
+      sStyloBlocklist = new nsTArray<nsCString>;
+      for (const nsACString& domainString : blocklist.Split(',')) {
+        sStyloBlocklist->AppendElement(domainString);
+      }
+    }
+  }
 #endif
   Preferences::AddBoolVarCache(&sStyleAttrWithXMLBaseDisabled,
                                "layout.css.style-attr-with-xml-base.disabled");
@@ -7866,7 +7887,13 @@ nsLayoutUtils::Shutdown()
     delete sContentMap;
     sContentMap = nullptr;
   }
-
+#ifdef MOZ_STYLO
+  if (sStyloBlocklist) {
+    sStyloBlocklist->Clear();
+    delete sStyloBlocklist;
+    sStyloBlocklist = nullptr;
+  }
+#endif
   for (auto& callback : kPrefCallbacks) {
     Preferences::UnregisterCallback(callback.func, callback.name);
   }
@@ -7875,6 +7902,39 @@ nsLayoutUtils::Shutdown()
   // so the cached initial quotes array doesn't appear to be a leak
   nsStyleList::Shutdown();
 }
+
+#ifdef MOZ_STYLO
+/* static */
+bool
+nsLayoutUtils::IsInStyloBlocklist(nsIPrincipal* aPrincipal)
+{
+  if (!sStyloBlocklist) {
+    return false;
+  }
+
+  // Note that a non-codebase principal (eg the system principal) will return
+  // a null URI.
+  nsCOMPtr<nsIURI> codebaseURI;
+  aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+  if (!codebaseURI) {
+    return false;
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(tldService, false);
+
+  // Check if a document's eTLD+1 domain belongs to one of the stylo blocklist.
+  nsAutoCString baseDomain;
+  NS_SUCCEEDED(tldService->GetBaseDomain(codebaseURI, 0, baseDomain));
+  for (const nsCString& domains : *sStyloBlocklist) {
+    if (baseDomain.Equals(domains)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
 
 /* static */
 void
