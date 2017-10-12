@@ -19,10 +19,11 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(String.prototype.fixed.name, "fixed");
-
-verifyNotEnumerable(String.prototype.fixed, "name");
-verifyNotWritable(String.prototype.fixed, "name");
-verifyConfigurable(String.prototype.fixed, "name");
+verifyProperty(String.prototype.fixed, "name", {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+  value: "fixed"
+});
 
 reportCompare(0, 0);

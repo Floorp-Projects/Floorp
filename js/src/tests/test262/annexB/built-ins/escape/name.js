@@ -19,10 +19,11 @@ info: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(escape.name, "escape");
-
-verifyNotEnumerable(escape, "name");
-verifyNotWritable(escape, "name");
-verifyConfigurable(escape, "name");
+verifyProperty(escape, "name", {
+  enumerable: false,
+  writable: false,
+  configurable: true,
+  value: "escape"
+});
 
 reportCompare(0, 0);

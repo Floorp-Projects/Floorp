@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.wake
 description: >
   Test that Atomics.wake wakes two waiters if that's what the count is.
 ---*/

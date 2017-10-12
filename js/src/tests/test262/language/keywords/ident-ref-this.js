@@ -16,6 +16,8 @@ negative:
   type: SyntaxError
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 // It's tempting to write `this = 0`, but that'd be a test to validate `this`
 // is not a valid simple assignment target, cf. tests in language/expressions/assignment.
 // Also see: sec-semantics-static-semantics-isvalidsimpleassignmenttarget

@@ -24,7 +24,10 @@ info: >
 negative:
   phase: early
   type: SyntaxError
+features: [u180e]
 ---*/
+
+throw "Test262: This statement should not be evaluated.";
 
 // U+180E between "var" and "foo"; UTF8(0x180E) = 0xE1 0xA0 0x8E
 var᠎foo;

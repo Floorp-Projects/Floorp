@@ -5,7 +5,7 @@
 description: Getter is called when obj is being deconstructed to a rest Object (static class expression generator method (default parameter))
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
 es6id: 14.5.15
-features: [object-rest, destructuring-binding, default-parameters]
+features: [object-rest, generators, destructuring-binding, default-parameters]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -65,13 +65,14 @@ var count = 0;
 var callCount = 0;
 class C {
   static *method({...x} = { get v() { count++; return 2; } }) {
-    assert.sameValue(x.v, 2);
     assert.sameValue(count, 1);
 
-    verifyEnumerable(x, "v");
-    verifyWritable(x, "v");
-    verifyConfigurable(x, "v");
-
+    verifyProperty(x, "v", {
+      enumerable: true,
+      writable: true,
+      configurable: true,
+      value: 2
+    });
     callCount = callCount + 1;
   }
 };

@@ -69,6 +69,8 @@ public:
     // the first time it is called.
     bool HasTrackingTable();
 
+    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag) override;
+
     // Return the tracking (in font units) to be applied for the given size.
     // (This is a floating-point number because of possible interpolation.)
     float TrackingForCSSPx(float aPointSize) const;
@@ -96,6 +98,8 @@ protected:
     bool mIsCFFInitialized;
     bool mHasVariations;
     bool mHasVariationsInitialized;
+    bool mHasAATSmallCaps;
+    bool mHasAATSmallCapsInitialized;
     bool mCheckedForTracking;
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 

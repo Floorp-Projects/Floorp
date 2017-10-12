@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.islockfree
 description: >
   Test isLockFree on nonnegative integer arguments
 ---*/

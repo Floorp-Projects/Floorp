@@ -25,6 +25,8 @@ negative:
 flags: [module]
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 // Create an appropriately-named ExportEntry in order to avoid false positives
 // (e.g. cases where the implementation does not generate the expected early
 // error but does produce a SyntaxError for unresolvable bindings).

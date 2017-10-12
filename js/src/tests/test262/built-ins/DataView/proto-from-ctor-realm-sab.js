@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer not yet riding the trains
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -21,7 +20,7 @@ info: |
        a. Let realm be ? GetFunctionRealm(constructor).
        b. Let proto be realm's intrinsic object named intrinsicDefaultProto.
     [...]
-features: [Reflect, SharedArrayBuffer]
+features: [cross-realm, Reflect, SharedArrayBuffer]
 ---*/
 
 var other = $262.createRealm().global;

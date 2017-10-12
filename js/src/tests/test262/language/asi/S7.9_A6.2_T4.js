@@ -14,6 +14,8 @@ negative:
   type: SyntaxError
 ---*/
 
+throw "Test262: This statement should not be evaluated.";
+
 //CHECK#1
 for(
     

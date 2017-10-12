@@ -44,13 +44,14 @@ var count = 0;
 
 var callCount = 0;
 function f({...x}) {
-  assert.sameValue(x.v, 2);
   assert.sameValue(count, 1);
 
-  verifyEnumerable(x, "v");
-  verifyWritable(x, "v");
-  verifyConfigurable(x, "v");
-
+  verifyProperty(x, "v", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 2
+  });
   callCount = callCount + 1;
 };
 f({ get v() { count++; return 2; } });

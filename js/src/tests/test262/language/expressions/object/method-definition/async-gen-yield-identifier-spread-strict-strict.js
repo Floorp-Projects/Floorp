@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
+// |reftest| error:SyntaxError
 'use strict';
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-identifier-spread-strict.case
@@ -25,6 +25,7 @@ info: |
       ...AssignmentExpression[In, ?Yield]
 
 ---*/
+throw "Test262: This statement should not be evaluated.";
 
 var callCount = 0;
 

@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elem-id-init-skipped.case
-// - src/dstr-binding/default/for-await-of-async-func-let.template
+// - src/dstr-binding-for-await/ary-ptrn-elem-id-init-skipped.case
+// - src/dstr-binding-for-await/default/for-await-of-async-func-let.template
 /*---
 description: Destructuring initializer is not evaluated when value is not `undefined` (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -38,13 +37,13 @@ info: |
 
     13.3.3.6 Runtime Semantics: IteratorBindingInitialization
 
-    SingleNameBinding : BindingIdentifier Initializeropt
+    SingleNameBinding : BindingIdentifier Initializer_opt
 
     [...]
     6. If Initializer is present and v is undefined, then
        [...]
     7. If environment is undefined, return PutValue(lhs, v).
-    8. Return InitializeReferencedBinding(lhs, v).
+    7. Return InitializeReferencedBinding(lhs, v).
 ---*/
 var initCount = 0;
 function counter() {

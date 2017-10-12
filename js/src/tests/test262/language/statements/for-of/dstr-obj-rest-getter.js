@@ -32,13 +32,14 @@ var count = 0;
 var counter = 0;
 
 for ({...x} of [{ get v() { count++; return 2; } }]) {
-  assert.sameValue(x.v, 2);
   assert.sameValue(count, 1);
 
-  verifyEnumerable(x, "v");
-  verifyWritable(x, "v");
-  verifyConfigurable(x, "v");
-
+  verifyProperty(x, "v", {
+    enumerable: true,
+    writable: true,
+    configurable: true,
+    value: 2
+  });
   counter += 1;
 }
 

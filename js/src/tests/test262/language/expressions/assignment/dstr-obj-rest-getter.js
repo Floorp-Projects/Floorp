@@ -25,13 +25,14 @@ var vals = { get v() { count++; return 2; } };
 
 result = {...x} = vals;
 
-assert.sameValue(x.v, 2);
 assert.sameValue(count, 1);
 
-verifyEnumerable(x, "v");
-verifyWritable(x, "v");
-verifyConfigurable(x, "v");
-
+verifyProperty(x, "v", {
+  enumerable: true,
+  writable: true,
+  configurable: true,
+  value: 2
+});
 
 assert.sameValue(result, vals);
 

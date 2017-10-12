@@ -1,11 +1,10 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elision-iter-close.case
-// - src/dstr-binding/iter-close/for-await-of-async-func-let.template
+// - src/dstr-binding-for-await/ary-ptrn-elision-iter-close.case
+// - src/dstr-binding-for-await/iter-close/for-await-of-async-func-let.template
 /*---
 description: The iterator is properly consumed by the destructuring pattern (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
-features: [destructuring-binding, async-iteration]
+features: [generators, destructuring-binding, async-iteration]
 flags: [generated, async]
 info: |
     IterationStatement :

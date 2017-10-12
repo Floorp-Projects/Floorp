@@ -3,6 +3,7 @@
 // This code is governed by the license found in the LICENSE file.
 
 /*---
+esid: sec-atomics.load
 description: Testing descriptor property of Atomics.load
 includes: [propertyHelper.js]
 ---*/

@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+esid: sec-array-exotic-objects-defineownproperty-p-desc
 info: >
     For every integer k that is less than the value of
     the length property of A but not less than ToUint32(length),
@@ -14,19 +15,19 @@ description: Change length of array
 //CHECK#1
 var x = [0,,2,,4];
 x.length = 4;
-if (x[4] !== undefined) {  
-  $ERROR('#1: x = [0,,2,,4]; x.length = 4; x[4] === undefined. Actual: ' + (x[4]));    
+if (x[4] !== undefined) {
+  $ERROR('#1: x = [0,,2,,4]; x.length = 4; x[4] === undefined. Actual: ' + (x[4]));
 }
 
 //CHECK#2
 x.length = 3;
-if (x[3] !== undefined) {  
-  $ERROR('#2: x = [0,,2,,4]; x.length = 4; x.length = 3; x[3] === undefined. Actual: ' + (x[3]));    
+if (x[3] !== undefined) {
+  $ERROR('#2: x = [0,,2,,4]; x.length = 4; x.length = 3; x[3] === undefined. Actual: ' + (x[3]));
 }
 
 //CHECK#3
-if (x[2] !== 2) {  
-  $ERROR('#3: x = [0,,2,,4]; x.length = 4; x.length = 3; x[2] === 2. Actual: ' + (x[2]));    
+if (x[2] !== 2) {
+  $ERROR('#3: x = [0,,2,,4]; x.length = 4; x.length = 3; x[2] === 2. Actual: ' + (x[2]));
 }
 
 reportCompare(0, 0);

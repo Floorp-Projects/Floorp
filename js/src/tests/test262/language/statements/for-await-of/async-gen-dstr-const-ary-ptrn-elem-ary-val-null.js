@@ -1,7 +1,6 @@
-// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
-// - src/dstr-binding/ary-ptrn-elem-ary-val-null.case
-// - src/dstr-binding/error/for-await-of-async-gen-const.template
+// - src/dstr-binding-for-await/ary-ptrn-elem-ary-val-null.case
+// - src/dstr-binding-for-await/error/for-await-of-async-gen-const.template
 /*---
 description: Nested array destructuring with a null value (for-await-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
@@ -38,7 +37,7 @@ info: |
 
     13.3.3.6 Runtime Semantics: IteratorBindingInitialization
 
-    BindingElement : BindingPattern Initializeropt
+    BindingElement : BindingPattern Initializer_opt
 
     1. If iteratorRecord.[[done]] is false, then
        [...]
@@ -52,8 +51,7 @@ info: |
 
     BindingPattern : ArrayBindingPattern
 
-    1. Let iterator be GetIterator(value).
-    2. ReturnIfAbrupt(iterator).
+    1. Let iterator be ? GetIterator(value).
 ---*/
 
 async function * gen() {
@@ -63,6 +61,10 @@ async function * gen() {
 }
 
 gen().next()
-  .then(_ => { throw new Test262Error("Expected async function to reject, but resolved."); }, ({ constructor }) => assert.sameValue(constructor, TypeError))
+  .then(_ => {
+    throw new Test262Error("Expected async function to reject, but resolved.");
+  }, ({ constructor }) => {
+    assert.sameValue(constructor, TypeError);
+    
+  })
   .then($DONE, $DONE);
-
