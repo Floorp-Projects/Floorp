@@ -1,0 +1,20 @@
+<html>
+<head>
+<style>
+body {
+  mask: url(#mymask);
+}
+div::after {
+  content: counter(n);
+}
+</style>
+<script>
+window.onload = function(){
+  document.getElementsByTagName('body')[0].animate(
+    [{"transform": "skewy(11rad)"},
+     {"transform": "rotatex(0.125turn)"}],
+    {"fill":"forwards", "iterations": 0.75, "duration": 1});
+};
+</script></head>
+<body><div></div></body>
+</html>

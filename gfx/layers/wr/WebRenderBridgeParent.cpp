@@ -615,6 +615,48 @@ WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
+                                            InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                            InfallibleTArray<OpDestroy>&& aToDestroy,
+                                            const uint64_t& aFwdTransactionId,
+                                            const uint64_t& aTransactionId,
+                                            const wr::IdNamespace& aIdNamespace,
+                                            const TimeStamp& aTxnStartTime,
+                                            const TimeStamp& aFwdTime)
+{
+  if (mDestroyed) {
+    for (const auto& op : aToDestroy) {
+      DestroyActor(op);
+    }
+    return IPC_OK();
+  }
+
+  AutoProfilerTracing tracing("Paint", "EmptyTransaction");
+  UpdateFwdTransactionId(aFwdTransactionId);
+  AutoClearReadLocks clearLocks(mReadLocks);
+
+  // This ensures that destroy operations are always processed. It is not safe
+  // to early-return without doing so.
+  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
+
+  if (!aCommands.IsEmpty()) {
+    mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+    ProcessWebRenderParentCommands(aCommands);
+    mCompositorScheduler->ScheduleComposition();
+  }
+
+  mScrollData.SetFocusTarget(aFocusTarget);
+  UpdateAPZ(false);
+
+  // XXX Call DidComposite at correct timing.
+  TimeStamp now = TimeStamp::Now();
+  HoldPendingTransactionId(mWrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+  mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetFocusTarget(const FocusTarget& aFocusTarget)
 {
   mScrollData.SetFocusTarget(aFocusTarget);

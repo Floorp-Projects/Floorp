@@ -202,16 +202,16 @@ interface nsIPrintSettings : nsISupports
 
   attribute short   printRange; 
 
-  attribute wstring title;
-  attribute wstring docURL;
+  attribute AString title;
+  attribute AString docURL;
 
-  attribute wstring headerStrLeft;
-  attribute wstring headerStrCenter;
-  attribute wstring headerStrRight;
+  attribute AString headerStrLeft;
+  attribute AString headerStrCenter;
+  attribute AString headerStrRight;
 
-  attribute wstring footerStrLeft;
-  attribute wstring footerStrCenter;
-  attribute wstring footerStrRight;
+  attribute AString footerStrLeft;
+  attribute AString footerStrCenter;
+  attribute AString footerStrRight;
 
   attribute short   howToEnableFrameUI;  /* indicates how to enable the frameset UI            */
   attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
@@ -222,7 +222,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
-  attribute wstring paperName;     /* name of paper */
+  attribute AString paperName;     /* name of paper */
   attribute short   paperData;     /* native data value */
   attribute double  paperWidth;    /* width of the paper in inches or mm */
   attribute double  paperHeight;   /* height of the paper in inches or mm */
@@ -233,10 +233,10 @@ interface nsIPrintSettings : nsISupports
   attribute long    orientation;   /*  see orientation consts */
   attribute long    numCopies;
 
-  attribute wstring printerName;   /* name of destination printer */
+  attribute AString printerName;   /* name of destination printer */
 
   attribute boolean printToFile;
-  attribute wstring toFileName;
+  attribute AString toFileName;
   attribute short   outputFormat;
 
   attribute long    printPageDelay; /* in milliseconds */

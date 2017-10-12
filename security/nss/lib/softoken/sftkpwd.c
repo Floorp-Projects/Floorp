@@ -926,6 +926,13 @@ sftk_updateMacs(PLArenaPool *arena, SFTKDBHandle *handle,
             continue;
         }
 
+        if (authAttrs[i].ulValueLen == sizeof(CK_ULONG) &&
+            sftkdb_isULONGAttribute(authAttrs[i].type)) {
+            CK_ULONG value = *(CK_ULONG *)authAttrs[i].pValue;
+            sftk_ULong2SDBULong(authAttrs[i].pValue, value);
+            authAttrs[i].ulValueLen = SDB_ULONG_SIZE;
+        }
+
         plainText.data = authAttrs[i].pValue;
         plainText.len = authAttrs[i].ulValueLen;
         rv = sftkdb_SignAttribute(arena, newKey, id,

@@ -1,0 +1,17 @@
+<xsl:stylesheet id='xsl'>
+<script id='script'>
+try { o1 = document.createElement('table') } catch(e) { }
+try { o3 = document.createElement('area') } catch(e) { }
+try { o4 = document.createElement('script'); } catch(e) { }
+try { o5 = document.getSelection() } catch(e) { }
+try { document.implementation.createDocument('', '', null).adoptNode(o1); } catch(e) { }
+try { o1.appendChild(o3) } catch(e) { }
+try { o5.addRange(new Range()); } catch(e) { }
+try { document.documentElement.appendChild(o4) } catch(e) { }
+try { o4.textContent = 'XX' } catch(e) { }
+try { o7 = o4.firstChild } catch(e) { }
+try { o4.parentNode.insertBefore(o7, o4); } catch(e) { }
+try { o5.modify('extend', 'forward', 'line') } catch(e) { }
+try { o5.selectAllChildren(o3) } catch(e) { }
+try { o7.splitText(1) } catch(e) { }
+</script>
