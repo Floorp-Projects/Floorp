@@ -1165,8 +1165,10 @@ FreeOp::appendJitPoisonRange(const jit::JitPoisonRange& range)
 /*
  * RAII class that takes the GC lock while it is live.
  *
- * Note that the lock may be temporarily released by use of AutoUnlockGC when
- * passed a non-const reference to this class.
+ * Usually functions will pass const references of this class.  However
+ * non-const references can be used to either temporarily release the lock by
+ * use of AutoUnlockGC or to start background allocation when the lock is
+ * released.
  */
 class MOZ_RAII AutoLockGC
 {
@@ -1174,6 +1176,7 @@ class MOZ_RAII AutoLockGC
     explicit AutoLockGC(JSRuntime* rt
                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : runtime_(rt)
+      , startBgAlloc(false)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         lock();
@@ -1181,6 +1184,13 @@ class MOZ_RAII AutoLockGC
 
     ~AutoLockGC() {
         unlock();
+        /*
+         * We have to do this after releasing the lock because it may acquire
+         * the helper lock which could cause lock inversion if we still held
+         * the GC lock.
+         */
+        if (startBgAlloc)
+            runtime_->gc.startBackgroundAllocTaskIfIdle();
     }
 
     void lock() {
@@ -1193,6 +1203,16 @@ class MOZ_RAII AutoLockGC
         lockGuard_.reset();
     }
 
+    /*
+     * This can be used to start a background allocation task (if one isn't
+     * already running) that allocates chunks and makes them available in the
+     * free chunks list.  This happens after the lock is released in order to
+     * avoid lock inversion.
+     */
+    void tryToStartBackgroundAllocation() {
+        startBgAlloc = true;
+    }
+
     js::LockGuard<js::Mutex>& guard() {
         return lockGuard_.ref();
     }
@@ -1201,6 +1221,10 @@ class MOZ_RAII AutoLockGC
     JSRuntime* runtime_;
     mozilla::Maybe<js::LockGuard<js::Mutex>> lockGuard_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    // true if we should start a background chunk allocation task after the
+    // lock is released.
+    bool startBgAlloc;
 
     AutoLockGC(const AutoLockGC&) = delete;
     AutoLockGC& operator=(const AutoLockGC&) = delete;
