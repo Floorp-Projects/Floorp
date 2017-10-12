@@ -494,7 +494,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   IntRect tmpDTRect;
 
   if (ctx->CurrentOp() != CompositionOp::OP_OVER || mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
-    gfxRect clipRect = ctx->GetClipExtents();
+    gfxRect clipRect = ctx->GetClipExtents(gfxContext::eDeviceSpace);
     tmpDTRect = RoundedOut(ToRect(clipRect));
     if (tmpDTRect.IsEmpty()) {
       return DrawResult::SUCCESS;
@@ -507,7 +507,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
       return DrawResult::TEMPORARY_ERROR;
     }
-    tempDT->SetTransform(Matrix::Translation(-tmpDTRect.TopLeft()));
+    tempDT->SetTransform(ctx->GetDrawTarget()->GetTransform() * Matrix::Translation(-tmpDTRect.TopLeft()));
     ctx = gfxContext::CreatePreservingTransformOrNull(tempDT);
     if (!ctx) {
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
@@ -566,7 +566,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     if (mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
       RefPtr<DataSourceSurface> maskData = surf->GetDataSurface();
       DataSourceSurface::MappedSurface map;
-      if (!maskData->Map(DataSourceSurface::MapType::WRITE, &map)) {
+      if (!maskData->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
         return result;
       }
 
@@ -576,10 +576,13 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
 
     DrawTarget* dt = aRenderingContext.GetDrawTarget();
+    Matrix oldTransform = dt->GetTransform();
+    dt->SetTransform(Matrix());
     dt->DrawSurface(surf, Rect(tmpDTRect.x, tmpDTRect.y, tmpDTRect.width, tmpDTRect.height),
                     Rect(0, 0, tmpDTRect.width, tmpDTRect.height),
                     DrawSurfaceOptions(SamplingFilter::POINT),
                     DrawOptions(1.0f, aRenderingContext.CurrentOp()));
+    dt->SetTransform(oldTransform);
   }
 
   return result;
