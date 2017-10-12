@@ -87,13 +87,60 @@ public:
   nsresult GetString(const char* aSection, const char* aKey,
                      char* aResult, uint32_t aResultLen);
 
+  /**
+   * Sets the value of the specified key in the specified section. The section
+   * is created if it does not already exist.
+   *
+   * @oaram aSection      section name
+   * @param aKey          key name
+   * @param aValue        the value to set
+   */
+  nsresult SetString(const char* aSection, const char* aKey, const char* aValue);
+
+  /**
+   * Deletes the value of the specified key in the specified section.
+   *
+   * @param aSection      section name
+   * @param aKey          key name
+   *
+   * @throws NS_ERROR_FAILURE if the string was not set.
+   */
+  nsresult DeleteString(const char* aSection, const char* aKey);
+
+  /**
+   * Deletes the specified section.
+   *
+   * @param aSection      section name
+   *
+   * @throws NS_ERROR_FAILURE if the section did not exist.
+   */
+  nsresult DeleteSection(const char* aSection);
+
+  /**
+   * Writes the ini data to disk.
+   * @param aFile         the file to write to
+   * @throws NS_ERROR_FAILURE on failure.
+   */
+  nsresult WriteToFile(nsIFile *aFile);
+
 private:
   struct INIValue
   {
     INIValue(const char* aKey, const char* aValue)
-      : key(aKey)
-      , value(aValue)
+      : key(strdup(aKey))
+      , value(strdup(aValue))
     {
+    }
+
+    ~INIValue()
+    {
+      delete key;
+      delete value;
+    }
+
+    void SetValue(const char* aValue) {
+      delete value;
+      value = strdup(aValue);
     }
 
     const char* key;
@@ -101,10 +148,13 @@ private:
     mozilla::UniquePtr<INIValue> next;
   };
 
-  nsClassHashtable<nsDepCharHashKey, INIValue> mSections;
-  nsCString mFileContents;
+  nsClassHashtable<nsCharPtrHashKey, INIValue> mSections;
 
   nsresult InitFromString(const nsCString& aStr);
+
+  bool IsValidSection(const char* aSection);
+  bool IsValidKey(const char* aKey);
+  bool IsValidValue(const char* aValue);
 };
 
 #endif /* nsINIParser_h__ */

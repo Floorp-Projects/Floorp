@@ -2568,7 +2568,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
   }
 
   nsCOMPtr<nsIINIParserFactory> iniFactory =
-    do_GetService("@mozilla.org/xpcom/ini-processor-factory;1", &rv);
+    do_GetService("@mozilla.org/xpcom/ini-parser-factory;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIINIParser> iniParser;
@@ -2586,7 +2586,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
                               *aSubmitReports ?  NS_LITERAL_CSTRING("1") :
                                                  NS_LITERAL_CSTRING("0"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = iniWriter->WriteFile(nullptr, 0);
+    rv = iniWriter->WriteFile(reporterINI);
     return rv;
   }
 
