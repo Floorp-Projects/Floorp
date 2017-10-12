@@ -26,6 +26,7 @@
 namespace js {
 
 class AutoLockGC;
+class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class VerifyPreTracer;
 
@@ -938,7 +939,7 @@ class GCRuntime
                                   ChunkPool::Iter(fullChunks(lock)));
     }
 
-    Chunk* getOrAllocChunk(AutoLockGC& lock);
+    Chunk* getOrAllocChunk(AutoLockGCBgAlloc& lock);
     void recycleChunk(Chunk* chunk, const AutoLockGC& lock);
 
 #ifdef JS_GC_ZEAL
@@ -995,7 +996,7 @@ class GCRuntime
 
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
-    Chunk* pickChunk(AutoLockGC& lock);
+    Chunk* pickChunk(AutoLockGCBgAlloc& lock);
     Arena* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind,
                          ShouldCheckThresholds checkThresholds, const AutoLockGC& lock);
 
@@ -1438,6 +1439,7 @@ class GCRuntime
 
     /* Synchronize GC heap access among GC helper threads and active threads. */
     friend class js::AutoLockGC;
+    friend class js::AutoLockGCBgAlloc;
     js::Mutex lock;
 
     BackgroundAllocTask allocTask;

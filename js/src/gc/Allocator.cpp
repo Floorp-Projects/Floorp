@@ -332,7 +332,7 @@ ArenaLists::allocateFromArena(JS::Zone* zone, AllocKind thingKind,
 {
     JSRuntime* rt = zone->runtimeFromAnyThread();
 
-    mozilla::Maybe<AutoLockGC> maybeLock;
+    mozilla::Maybe<AutoLockGCBgAlloc> maybeLock;
 
     // See if we can proceed without taking the GC lock.
     if (backgroundFinalizeState(thingKind) != BFS_DONE)
@@ -504,7 +504,7 @@ Chunk::findDecommittedArenaOffset()
 // ///////////  System -> Chunk Allocator  /////////////////////////////////////
 
 Chunk*
-GCRuntime::getOrAllocChunk(AutoLockGC& lock)
+GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock)
 {
     Chunk* chunk = emptyChunks(lock).pop();
     if (!chunk) {
@@ -527,7 +527,7 @@ GCRuntime::recycleChunk(Chunk* chunk, const AutoLockGC& lock)
 }
 
 Chunk*
-GCRuntime::pickChunk(AutoLockGC& lock)
+GCRuntime::pickChunk(AutoLockGCBgAlloc& lock)
 {
     if (availableChunks(lock).count())
         return availableChunks(lock).head();

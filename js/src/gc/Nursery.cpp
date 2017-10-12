@@ -116,7 +116,7 @@ js::Nursery::Nursery(JSRuntime* rt)
 {}
 
 bool
-js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
+js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
 {
     if (!mallocedBuffers.init())
         return false;
@@ -1046,14 +1046,14 @@ void
 js::Nursery::updateNumChunks(unsigned newCount)
 {
     if (numChunks() != newCount) {
-        AutoLockGC lock(runtime());
+        AutoLockGCBgAlloc lock(runtime());
         updateNumChunksLocked(newCount, lock);
     }
 }
 
 void
 js::Nursery::updateNumChunksLocked(unsigned newCount,
-                                   AutoLockGC& lock)
+                                   AutoLockGCBgAlloc& lock)
 {
     // The GC nursery is an optimization and so if we fail to allocate nursery
     // chunks we do not report an error.

@@ -1160,7 +1160,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 
     {
-        AutoLockGC lock(rt);
+        AutoLockGCBgAlloc lock(rt);
 
         MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
         MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_NURSERY_BYTES, maxNurseryBytes, lock));
