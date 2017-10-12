@@ -53,7 +53,7 @@ public:
   struct NSFreePolicy
   {
     void operator()(const void* ptr) {
-      NS_Free(const_cast<void*>(ptr));
+      free(const_cast<void*>(ptr));
     }
   };
 

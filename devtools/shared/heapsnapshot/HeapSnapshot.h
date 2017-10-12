@@ -33,7 +33,7 @@ class DominatorTree;
 
 struct NSFreePolicy {
   void operator()(void* ptr) {
-    NS_Free(ptr);
+    free(ptr);
   }
 };
 
