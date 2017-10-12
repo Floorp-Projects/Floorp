@@ -516,7 +516,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
       wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
-      aResources.AddBlobImage(key, descriptor, bytes);
+      if (!aResources.AddBlobImage(key, descriptor, bytes)) {
+        return nullptr;
+      }
       fallbackData->SetKey(key);
     } else {
       fallbackData->CreateImageClientIfNeeded();
