@@ -60,7 +60,7 @@ private:
     {
         mozilla::gfx::Factory::ReleaseFTFace(mFace);
         if (mFontData) {
-            NS_Free((void*)mFontData);
+            free((void*)mFontData);
         }
     }
 
