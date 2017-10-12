@@ -301,6 +301,7 @@ popupnotificationcontent {
   background-image: url("chrome://global/skin/icons/autoscroll.svg");
   background-size: contain;
   background-color: transparent;
+  background-repeat: no-repeat;
   -moz-appearance: none;
 }
 
