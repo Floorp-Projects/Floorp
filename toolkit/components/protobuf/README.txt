@@ -23,3 +23,5 @@ We do not include the protobuf tests or the protoc compiler.
 
 3. Update the moz.build to export the new set of headers and add any new .cc
    files to the unified sources and remove old ones.
+
+4. Re-generate all .pb.cc and .pb.h files using `$ ./toolkit/components/protobuf/regenerate_cpp_files.sh`.
