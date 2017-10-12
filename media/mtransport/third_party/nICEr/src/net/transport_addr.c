@@ -98,7 +98,8 @@ int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
 int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len)
   {
     int _status;
-    char buffer[40];
+    /* leave room for a fully-expanded IPV4-mapped IPV6 address */
+    char buffer[46];
 
     switch(addr->ip_version){
       case NR_IPV4:
@@ -114,7 +115,10 @@ int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char
       default:
         ABORT(R_INTERNAL);
     }
+    buffer[sizeof(buffer) - 1] = '\0';
+
     snprintf(buf,len,"%s:%s",addr->ifname,buffer);
+    buf[len - 1] = '\0';
 
     _status=0;
   abort:
