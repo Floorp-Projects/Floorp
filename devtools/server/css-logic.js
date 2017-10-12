@@ -32,7 +32,14 @@
 const { Cc, Ci, Cu } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
-const {l10n, isContentStylesheet, shortSource, FILTER, STATUS} = require("devtools/shared/inspector/css-logic");
+const {
+  getBindingElementAndPseudo,
+  l10n,
+  isContentStylesheet,
+  shortSource,
+  FILTER,
+  STATUS
+} = require("devtools/shared/inspector/css-logic");
 
 /**
  * @param {function} isInherited A function that determines if the CSS property
@@ -654,21 +661,7 @@ CssLogic.getSelectors = function (domRule) {
  *            - {DOMNode} node The non-anonymous node
  *            - {string} pseudo One of ':before', ':after', or null.
  */
-CssLogic.getBindingElementAndPseudo = function (node) {
-  let bindingElement = node;
-  let pseudo = null;
-  if (node.nodeName == "_moz_generated_content_before") {
-    bindingElement = node.parentNode;
-    pseudo = ":before";
-  } else if (node.nodeName == "_moz_generated_content_after") {
-    bindingElement = node.parentNode;
-    pseudo = ":after";
-  }
-  return {
-    bindingElement: bindingElement,
-    pseudo: pseudo
-  };
-};
+CssLogic.getBindingElementAndPseudo = getBindingElementAndPseudo;
 
 /**
  * Get the computed style on a node.  Automatically handles reading
