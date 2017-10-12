@@ -7,6 +7,7 @@ package org.mozilla.gecko.toolbar;
 import android.content.res.TypedArray;
 import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -84,13 +85,25 @@ abstract class NavButton extends ShapedButton {
         }
 
         final StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_pressed));
-        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_pressed));
-        stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_focused));
-        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_focused));
-        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private));
-        stateList.addState(EMPTY_STATE_SET, drawable);
 
+        final LightweightTheme lightweightTheme = getTheme();
+        if (!lightweightTheme.isEnabled() || isPrivateMode()) {
+            stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_pressed));
+            stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private_focused));
+            stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_private));
+            stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_pressed));
+            stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.nav_button_bg_color_focused));
+        } else {
+            if (lightweightTheme.isLightTheme()) {
+                stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_light_pressed));
+                stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_light_pressed));
+            } else {
+                stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_dark_pressed));
+                stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.action_bar_item_bg_color_lwt_dark_pressed));
+            }
+        }
+
+        stateList.addState(EMPTY_STATE_SET, drawable);
         setBackgroundDrawable(stateList);
     }
 

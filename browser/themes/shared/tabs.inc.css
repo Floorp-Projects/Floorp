@@ -459,18 +459,6 @@ tabbrowser {
   background-repeat: repeat-x;
 }
 
-/* Hide the selected tab's start border when it's adjacent to the window border
-   or to .titlebar-placeholder[type="pre-tabs"] which has its own border. */
-%ifdef CAN_DRAW_IN_TITLEBAR
-%define tabContainerAsFirstChild .titlebar-placeholder[type="pre-tabs"] + #tabbrowser-tabs
-%else
-%define tabContainerAsFirstChild #tabbrowser-tabs:first-child
-%endif
-@tabContainerAsFirstChild@:not([overflow=true]) > .tabbrowser-tab[first-visible-tab] > .tab-stack > .tab-background[selected=true],
-@tabContainerAsFirstChild@ > .tabbrowser-tab[first-visible-tab][pinned] > .tab-stack > .tab-background[selected=true] {
-  border-inline-start-style: none;
-}
-
 .tab-line[selected=true] {
   background-color: var(--tab-line-color);
 }
@@ -520,9 +508,16 @@ tabbrowser {
 /* Pinned tabs */
 
 /* Pinned tab separators need position: absolute when positioned (during overflow). */
-#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::before {
+#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::after {
   height: 100%;
   position: absolute;
+  top: 0;
+  right: 0;
+}
+
+#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]:-moz-locale-dir(rtl)::after {
+  right: unset;
+  left: 0;
 }
 
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
@@ -573,16 +568,13 @@ tabbrowser {
 %ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
 :root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
-:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::before,
 %else
 :root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
-:root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::before,
 %endif
 %endif
 /* Show full height tab separators on hover. */
-.tabbrowser-tab:hover::before,
-.tabbrowser-tab[last-visible-tab]:hover::after,
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[afterhovered]::before {
+.tabbrowser-tab:hover::after,
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforehovered]::after {
   border-image: linear-gradient(transparent calc(1px + var(--tabs-top-border-width)),
                                 currentColor calc(1px + var(--tabs-top-border-width)),
                                 currentColor calc(100% - 1px),
@@ -591,8 +583,8 @@ tabbrowser {
 }
 
 /* Show full height tab separators on selected tabs. */
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[afterselected]::before,
-.tabbrowser-tab[visuallyselected]::before,
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforeselected-visible]::after,
+#tabbrowser-tabs[movingtab] > .tabbrowser-tab[visuallyselected]::before,
 .tabbrowser-tab[visuallyselected]::after {
   border-color: var(--tabs-border);
   border-image: linear-gradient(transparent 1px,
@@ -602,10 +594,9 @@ tabbrowser {
   opacity: 1;
 }
 
-.tabbrowser-tab:not([first-visible-tab])::before,
-#tabbrowser-tabs:not([overflow]):not([movingtab]) > .tabbrowser-tab[last-visible-tab]::after,
+.tabbrowser-tab::after,
 /* Also show separators beside the selected tab when dragging it. */
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[visuallyselected]::after {
+#tabbrowser-tabs[movingtab] > .tabbrowser-tab[visuallyselected]::before {
   content: "";
   display: -moz-box;
 }

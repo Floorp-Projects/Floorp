@@ -61,7 +61,7 @@ def submit_telemetry_data(statedir):
     now = time.time()
     for filename in os.listdir(submitted):
         ctime = os.stat(os.path.join(submitted, filename)).st_ctime
-        if now - ctime >= 60*60*24*30:
+        if now - ctime >= 60 * 60 * 24 * 30:
             os.remove(os.path.join(submitted, filename))
 
     return 0

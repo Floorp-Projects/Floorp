@@ -23,21 +23,17 @@ function test() {
 
             is(win.gURLBar.readOnly, false,
                "URL bar should not be read-only before setting the state");
-            is(win.gURLBar.getAttribute("enablehistory"), "true",
-               "URL bar autocomplete should be enabled before setting the state");
             ss.setWindowState(win, state, true);
             is(win.gURLBar.readOnly, expected.readOnly,
                "URL bar read-only state should be restored correctly");
-            is(win.gURLBar.getAttribute("enablehistory"), expected.enablehistory,
-               "URL bar autocomplete state should be restored correctly");
 
             BrowserTestUtils.closeWindow(win).then(callback);
           });
         }
 
         BrowserTestUtils.closeWindow(newWin).then(() => {
-          testState(state1, {readOnly: false, enablehistory: "true"}, function() {
-            testState(state2, {readOnly: true, enablehistory: "false"}, finish);
+          testState(state1, {readOnly: false}, function() {
+            testState(state2, {readOnly: true}, finish);
           });
         });
       });

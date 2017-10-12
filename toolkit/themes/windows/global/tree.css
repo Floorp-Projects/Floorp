@@ -289,16 +289,18 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascendi
   list-style-image: url("chrome://global/skin/tree/sort-asc.png");
 }
 
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"]:-moz-system-metric(windows-classic) {
-  list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
-}
-
 treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
   list-style-image: url("chrome://global/skin/tree/sort-dsc.png");
 }
 
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"]:-moz-system-metric(windows-classic) {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
+@media (-moz-windows-classic) {
+  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
+  }
+
+  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
+  }
 }
 
 /* ::::: column picker :::::  */

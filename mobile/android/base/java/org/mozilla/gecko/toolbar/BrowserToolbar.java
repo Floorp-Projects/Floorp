@@ -86,7 +86,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private static final String LOGTAG = "GeckoToolbar";
 
     private static final int LIGHTWEIGHT_THEME_INVERT_ALPHA_START = 204; // 255 - alpha = invert_alpha
-    private static final int LIGHTWEIGHT_THEME_INVERT_ALPHA_END = 102;
+    private static final int LIGHTWEIGHT_THEME_INVERT_ALPHA_END = 179;
     public static final int LIGHTWEIGHT_THEME_INVERT_ALPHA_TABLET = 51;
 
     public interface OnActivateListener {

@@ -101,7 +101,8 @@ public:
                       const nscolor* aBorderColors,
                       const nsBorderColors* aCompositeColors,
                       nscolor aBackgroundColor,
-                      bool aBackfaceIsVisible);
+                      bool aBackfaceIsVisible,
+                      const mozilla::Maybe<Rect>& aClipRect);
 
   // draw the entire border
   void DrawBorders();
@@ -165,6 +166,7 @@ private:
   bool mNoBorderRadius;
   bool mAvoidStroke;
   bool mBackfaceIsVisible;
+  mozilla::Maybe<Rect> mLocalClip;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?

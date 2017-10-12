@@ -177,12 +177,17 @@ function enableNetProvider(hud) {
       }
 
       let type = action.type;
+      let newState = reducer(state, action);
 
-      // If network message has been opened, fetch all
-      // HTTP details from the backend.
+      // If network message has been opened, fetch all HTTP details
+      // from the backend. It can happen (especially in test) that
+      // the message is opened before all network event updates are
+      // received. The rest of updates will be handled below, see:
+      // NETWORK_MESSAGE_UPDATE action handler.
       if (type == MESSAGE_OPEN) {
         let message = getMessage(state, action.id);
         if (!message.openedOnce && message.source == "network") {
+          dataProvider.onNetworkEvent(null, message);
           message.updates.forEach(updateType => {
             dataProvider.onNetworkEventUpdate(null, {
               packet: { updateType: updateType },
@@ -194,13 +199,14 @@ function enableNetProvider(hud) {
 
       // Process all incoming HTTP details packets.
       if (type == NETWORK_MESSAGE_UPDATE) {
-        let open = getAllMessagesUiById(state).includes(action.id);
+        let actor = action.response.networkInfo.actor;
+        let open = getAllMessagesUiById(state).includes(actor);
         if (open) {
           dataProvider.onNetworkEventUpdate(null, action.response);
         }
       }
 
-      return reducer(state, action);
+      return newState;
     }
 
     return next(netProviderEnhancer, initialState, enhancer);
