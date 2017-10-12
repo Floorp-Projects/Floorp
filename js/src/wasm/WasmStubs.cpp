@@ -770,6 +770,15 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
     masm.callJitNoProfiler(callee);
 
+    // Note that there might be a GC thing in the JSReturnOperand now.
+    // In all the code paths from here:
+    // - either the value is unboxed because it was a primitive and we don't
+    //   need to worry about rooting anymore.
+    // - or the value needs to be rooted, but nothing can cause a GC between
+    //   here and CoerceInPlace, which roots before coercing to a primitive.
+    //   In particular, this is true because wasm::InInterruptibleCode will
+    //   return false when PC is in the jit exit.
+
     // The JIT callee clobbers all registers, including WasmTlsReg and
     // FramePointer, so restore those here. During this sequence of
     // instructions, FP can't be trusted by the profiling frame iterator.

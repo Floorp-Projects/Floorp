@@ -303,7 +303,7 @@ class JSJitProfilingFrameIterator
 
   public:
     JSJitProfilingFrameIterator(JSContext* cx,
-                              const JS::ProfilingFrameIterator::RegisterState& state);
+                                const JS::ProfilingFrameIterator::RegisterState& state);
     explicit JSJitProfilingFrameIterator(void* exitFrame);
 
     void operator++();

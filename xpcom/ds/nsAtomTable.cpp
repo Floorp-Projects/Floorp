@@ -138,10 +138,11 @@ UniquePtr<nsTArray<FakeBufferRefcountHelper>> gFakeBuffers;
 // This constructor is for dynamic atoms and HTML5 atoms.
 nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
   : mRefCnt(1)
+  , mLength(aString.Length())
+  , mKind(static_cast<uint32_t>(aKind))
+  , mHash(aHash)
 {
-  mLength = aString.Length();
-  SetKind(aKind);
-  MOZ_ASSERT(IsDynamicAtom() || IsHTML5Atom());
+  MOZ_ASSERT(aKind == AtomKind::DynamicAtom || aKind == AtomKind::HTML5Atom);
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
   if (buf) {
     mString = static_cast<char16_t*>(buf->Data());
@@ -158,13 +159,12 @@ nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
     mString[mLength] = char16_t(0);
   }
 
-  mHash = aHash;
   MOZ_ASSERT_IF(IsDynamicAtom(), mHash == HashString(mString, mLength));
 
-  NS_ASSERTION(mString[mLength] == char16_t(0), "null terminated");
-  NS_ASSERTION(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
-               "enough storage");
-  NS_ASSERTION(Equals(aString), "correct data");
+  MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");
+  MOZ_ASSERT(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
+             "enough storage");
+  MOZ_ASSERT(Equals(aString), "correct data");
 
   // Take ownership of buffer
   mozilla::Unused << buf.forget();
@@ -172,11 +172,11 @@ nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
 
 // This constructor is for static atoms.
 nsAtom::nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
+  : mLength(aLength)
+  , mKind(static_cast<uint32_t>(AtomKind::StaticAtom))
+  , mHash(aHash)
+  , mString(static_cast<char16_t*>(aStringBuffer->Data()))
 {
-  mLength = aLength;
-  SetKind(AtomKind::StaticAtom);
-  mString = static_cast<char16_t*>(aStringBuffer->Data());
-
 #if defined(NS_BUILD_REFCNT_LOGGING)
   MOZ_ASSERT(NS_IsMainThread());
   if (!gFakeBuffers) {
@@ -189,7 +189,6 @@ nsAtom::nsAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
   // the static atom buffers have an initial refcount of 2.
   aStringBuffer->AddRef();
 
-  mHash = aHash;
   MOZ_ASSERT(mHash == HashString(mString, mLength));
 
   MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");

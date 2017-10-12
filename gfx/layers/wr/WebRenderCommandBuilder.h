@@ -40,6 +40,10 @@ public:
 
   void Destroy();
 
+  void EmptyTransaction();
+
+  bool NeedsEmptyTransaction();
+
   void BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                               wr::IpcResourceUpdateQueue& aResourceUpdates,
                               nsDisplayList* aDisplayList,

@@ -58,7 +58,7 @@ interface nsIPrintSettingsService : nsISupports
   /**
    * The name of the last printer used, or else the system default printer.
    */
-  readonly attribute wstring defaultPrinterName;
+  readonly attribute AString defaultPrinterName;
 
   /**
    * Initializes certain settings from the native printer into the PrintSettings
@@ -68,7 +68,8 @@ interface nsIPrintSettingsService : nsISupports
    *   Page Size
    *   Number of Copies
    */
-  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
+  void initPrintSettingsFromPrinter(in AString aPrinterName,
+                                    in nsIPrintSettings aPrintSettings);
 
   /**
    * Reads PrintSettings values from Prefs,

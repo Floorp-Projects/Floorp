@@ -771,6 +771,7 @@ ParentAPIManager = {
 
     let {childId} = data;
     let handlingUserInput = false;
+    let lowPriority = data.path.startsWith("webRequest.");
 
     function listener(...listenerArgs) {
       return context.sendMessage(
@@ -781,9 +782,12 @@ ParentAPIManager = {
           handlingUserInput,
           listenerId: data.listenerId,
           path: data.path,
-          args: new StructuredCloneHolder(listenerArgs),
+          get args() {
+            return new StructuredCloneHolder(listenerArgs);
+          },
         },
         {
+          lowPriority,
           recipient: {childId},
         }).then(result => {
           return result && result.deserialize(global);

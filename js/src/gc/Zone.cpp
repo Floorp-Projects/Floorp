@@ -58,6 +58,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
 #endif
     jitZone_(group, nullptr),
     gcScheduled_(false),
+    gcScheduledSaved_(false),
     gcPreserveCode_(group, false),
     keepShapeTables_(group, false),
     listNext_(group, NotOnList)
