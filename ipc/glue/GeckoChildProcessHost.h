@@ -180,8 +180,7 @@ private:
 
   // The buffer is passed to preserve its lifetime until we are done
   // with launching the sub-process.
-  void SetChildLogName(const char* varName, const char* origLogName,
-                       nsACString &buffer);
+  void GetChildLogName(const char* origLogName, nsACString &buffer);
 
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
