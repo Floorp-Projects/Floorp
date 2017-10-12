@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the mechanism of stylo blocklist</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.getDOMWindowUtils(window).addToStyloBlocklist("stylo-blocklist.com");
+let win =
+  window.open("http://stylo-blocklist.com/tests/layout/style/test/stylo_blocked_domain_page.html", "");
+window.onmessage = function (evt) {
+  is(evt.data, "TEST-PASS",
+     "Document with blocked domain should not use servo backend");
+  win.close();
+  SpecialPowers.getDOMWindowUtils(window).removeFromStyloBlocklist("stylo-blocklist.com");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
