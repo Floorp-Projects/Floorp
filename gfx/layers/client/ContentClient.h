@@ -239,8 +239,7 @@ public:
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
-                       const nsIntRegion& aVisibleRegion,
-                       bool aDidSelfCopy);
+                       const nsIntRegion& aVisibleRegion);
 
   // Expose these protected methods from the superclass.
   virtual const gfx::IntRect& BufferRect() const
@@ -264,8 +263,7 @@ protected:
   void DestroyBuffers();
 
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
-                                       const nsIntRegion& aVisibleRegion,
-                                       bool aDidSelfCopy);
+                                       const nsIntRegion& aVisibleRegion);
 
   void BuildTextureClients(gfx::SurfaceFormat aFormat,
                            const gfx::IntRect& aRect,
@@ -329,10 +327,6 @@ public:
     ContentClientRemoteBuffer::Clear();
     mFrontBuffer = Nothing();
   }
-
-  virtual void Updated(const nsIntRegion& aRegionToDraw,
-                       const nsIntRegion& aVisibleRegion,
-                       bool aDidSelfCopy) override;
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
