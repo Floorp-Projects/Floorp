@@ -259,5 +259,6 @@ function* checkClickOnNode(hud, toolbox, frameLinkNode) {
  * Returns true if the give node is currently focused.
  */
 function hasFocus(node) {
-  return node.ownerDocument.activeElement == node;
+  return node.ownerDocument.activeElement == node
+    && node.ownerDocument.hasFocus();
 }
