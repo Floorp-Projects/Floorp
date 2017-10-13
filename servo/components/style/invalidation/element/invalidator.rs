@@ -16,9 +16,9 @@ use invalidation::element::restyle_hints::*;
 use selector_map::SelectorMap;
 use selector_parser::{SelectorImpl, Snapshot};
 use selectors::attr::CaseSensitivity;
+use selectors::matching::{CompoundSelectorMatchingResult, QuirksMode};
 use selectors::matching::{MatchingContext, MatchingMode, VisitedHandlingMode};
 use selectors::matching::{matches_selector, matches_compound_selector};
-use selectors::matching::CompoundSelectorMatchingResult;
 use selectors::parser::{Combinator, Component, Selector};
 use smallvec::SmallVec;
 use std::fmt;
@@ -255,7 +255,7 @@ impl<'a, 'b: 'a, E> TreeStyleInvalidator<'a, 'b, E>
                 wrapper: wrapper,
                 element: self.element,
                 snapshot: &snapshot,
-                shared_context: self.shared_context,
+                quirks_mode: self.shared_context.quirks_mode(),
                 lookup_element: lookup_element,
                 removed_id: id_removed.as_ref(),
                 added_id: id_added.as_ref(),
@@ -277,6 +277,7 @@ impl<'a, 'b: 'a, E> TreeStyleInvalidator<'a, 'b, E>
             // just at that map.
             let _cut_off_inheritance =
                 self.element.each_xbl_stylist(|stylist| {
+                    collector.quirks_mode = stylist.quirks_mode();
                     stylist.each_invalidation_map(|invalidation_map| {
                         collector.collect_dependencies_in_invalidation_map(invalidation_map);
                     });
@@ -815,7 +816,7 @@ struct InvalidationCollector<'a, 'b: 'a, E>
     element: E,
     wrapper: ElementWrapper<'b, E>,
     snapshot: &'a Snapshot,
-    shared_context: &'a SharedStyleContext<'b>,
+    quirks_mode: QuirksMode,
     lookup_element: E,
     removed_id: Option<&'a Atom>,
     added_id: Option<&'a Atom>,
@@ -834,7 +835,7 @@ impl<'a, 'b: 'a, E> InvalidationCollector<'a, 'b, E>
         &mut self,
         map: &InvalidationMap,
     ) {
-        let quirks_mode = self.shared_context.quirks_mode();
+        let quirks_mode = self.quirks_mode;
         let removed_id = self.removed_id;
         if let Some(ref id) = removed_id {
             if let Some(deps) = map.id_to_selector.get(id, quirks_mode) {
@@ -887,7 +888,7 @@ impl<'a, 'b: 'a, E> InvalidationCollector<'a, 'b, E>
     ) {
         map.lookup_with_additional(
             self.lookup_element,
-            self.shared_context.quirks_mode(),
+            self.quirks_mode,
             self.removed_id,
             self.classes_removed,
             &mut |dependency| {
@@ -904,7 +905,7 @@ impl<'a, 'b: 'a, E> InvalidationCollector<'a, 'b, E>
     ) {
         map.lookup_with_additional(
             self.lookup_element,
-            self.shared_context.quirks_mode(),
+            self.quirks_mode,
             self.removed_id,
             self.classes_removed,
             &mut |dependency| {
@@ -953,11 +954,11 @@ impl<'a, 'b: 'a, E> InvalidationCollector<'a, 'b, E>
         let mut now_context =
             MatchingContext::new_for_visited(MatchingMode::Normal, None, None,
                                              VisitedHandlingMode::AllLinksUnvisited,
-                                             self.shared_context.quirks_mode());
+                                             self.quirks_mode);
         let mut then_context =
             MatchingContext::new_for_visited(MatchingMode::Normal, None, None,
                                              VisitedHandlingMode::AllLinksUnvisited,
-                                             self.shared_context.quirks_mode());
+                                             self.quirks_mode);
 
         let matched_then =
             matches_selector(&dependency.selector,
