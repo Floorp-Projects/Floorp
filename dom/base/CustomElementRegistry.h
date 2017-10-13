@@ -132,24 +132,16 @@ struct CustomElementData
   // e.g., create an element, insert a node.
   AutoTArray<UniquePtr<CustomElementReaction>, 3> mReactionQueue;
 
-  RefPtr<CustomElementDefinition> mCustomElementDefinition;
+  void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
+  CustomElementDefinition* GetCustomElementDefinition();
 
-  void
-  SetCustomElementDefinition(CustomElementDefinition* aDefinition)
-  {
-    MOZ_ASSERT(!mCustomElementDefinition);
-
-    mCustomElementDefinition = aDefinition;
-  }
-
-  CustomElementDefinition*
-  GetCustomElementDefinition()
-  {
-    return mCustomElementDefinition;
-  }
+  void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
+  void Unlink();
 
 private:
   virtual ~CustomElementData() {}
+
+  RefPtr<CustomElementDefinition> mCustomElementDefinition;
 };
 
 #define ALEADY_CONSTRUCTED_MARKER nullptr
@@ -169,7 +161,8 @@ struct CustomElementDefinition
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
 
-  // The type (name) for this custom element.
+  // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
+  // this would be x-foo.
   RefPtr<nsAtom> mType;
 
   // The localname to (e.g. <button is=type> -- this would be button).
