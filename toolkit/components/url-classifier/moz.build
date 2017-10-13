@@ -26,6 +26,7 @@ XPIDL_MODULE = 'url-classifier'
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 
 UNIFIED_SOURCES += [
+    'chromium/safebrowsing.pb.cc',
     'ChunkSet.cpp',
     'Classifier.cpp',
     'LookupCache.cpp',
@@ -35,7 +36,6 @@ UNIFIED_SOURCES += [
     'nsUrlClassifierInfo.cpp',
     'nsUrlClassifierProxies.cpp',
     'nsUrlClassifierUtils.cpp',
-    'protobuf/safebrowsing.pb.cc',
     'ProtocolParser.cpp',
     'RiceDeltaDecoder.cpp',
     'UrlClassifierTelemetryUtils.cpp',
@@ -65,11 +65,11 @@ EXTRA_JS_MODULES += [
 ]
 
 EXPORTS += [
+    'chromium/safebrowsing.pb.h',
     'Entries.h',
     'LookupCache.h',
     'LookupCacheV4.h',
     'nsUrlClassifierPrefixSet.h',
-    'protobuf/safebrowsing.pb.h',
     'VariableLengthPrefixSet.h',
 ]
 
