@@ -55,7 +55,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                 match text_run_cpu.font.render_mode {
-                    FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.font.color),
+                    FontRenderMode::Subpixel => BlendMode::Subpixel,
                     FontRenderMode::Alpha |
                     FontRenderMode::Mono |
                     FontRenderMode::Bitmap => BlendMode::PremultipliedAlpha,
@@ -129,26 +129,49 @@ impl AlphaBatchList {
     ) -> &mut Vec<PrimitiveInstance> {
         let mut selected_batch_index = None;
 
-        // Composites always get added to their own batch.
-        // This is because the result of a composite can affect
-        // the input to the next composite. Perhaps we can
-        // optimize this in the future.
         match key.kind {
-            BatchKind::Composite { .. } => {}
-            _ => 'outer: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10)
-            {
-                if batch.key.is_compatible_with(&key) {
-                    selected_batch_index = Some(batch_index);
-                    break;
-                }
+            BatchKind::Composite { .. } => {
+                // Composites always get added to their own batch.
+                // This is because the result of a composite can affect
+                // the input to the next composite. Perhaps we can
+                // optimize this in the future.
+            }
+            BatchKind::Transformable(_, TransformBatchKind::TextRun) => {
+                'outer_text: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                    // Subpixel text is drawn in two passes. Because of this, we need
+                    // to check for overlaps with every batch (which is a bit different
+                    // than the normal batching below).
+                    for item_rect in &batch.item_rects {
+                        if item_rect.intersects(item_bounding_rect) {
+                            break 'outer_text;
+                        }
+                    }
 
-                // check for intersections
-                for item_rect in &batch.item_rects {
-                    if item_rect.intersects(item_bounding_rect) {
-                        break 'outer;
+                    if batch.key.is_compatible_with(&key) {
+                        selected_batch_index = Some(batch_index);
+                        break;
                     }
                 }
-            },
+            }
+            _ => {
+                'outer_default: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                    // For normal batches, we only need to check for overlaps for batches
+                    // other than the first batch we consider. If the first batch
+                    // is compatible, then we know there isn't any potential overlap
+                    // issues to worry about.
+                    if batch.key.is_compatible_with(&key) {
+                        selected_batch_index = Some(batch_index);
+                        break;
+                    }
+
+                    // check for intersections
+                    for item_rect in &batch.item_rects {
+                        if item_rect.intersects(item_bounding_rect) {
+                            break 'outer_default;
+                        }
+                    }
+                }
+            }
         }
 
         if selected_batch_index.is_none() {
@@ -229,7 +252,7 @@ impl BatchList {
     ) -> &mut Vec<PrimitiveInstance> {
         match key.blend_mode {
             BlendMode::None => self.opaque_batch_list.get_suitable_batch(key),
-            BlendMode::Alpha | BlendMode::PremultipliedAlpha | BlendMode::Subpixel(..) => {
+            BlendMode::Alpha | BlendMode::PremultipliedAlpha | BlendMode::Subpixel => {
                 self.alpha_batch_list
                     .get_suitable_batch(key, item_bounding_rect)
             }
@@ -1601,6 +1624,17 @@ pub struct StackingContext {
 
     /// Current stacking context visibility of backface.
     pub is_backface_visible: bool,
+
+    /// Allow subpixel AA for text runs on this stacking context.
+    /// This is a temporary hack while we don't support subpixel AA
+    /// on transparent stacking contexts.
+    pub allow_subpixel_aa: bool,
+
+    /// Indicate that if any pritimive contained in this stacking context.
+    pub has_any_primitive: bool,
+
+    /// Union of all stacking context bounds of all children.
+    pub children_sc_bounds: LayerRect,
 }
 
 impl StackingContext {
@@ -1618,6 +1652,8 @@ impl StackingContext {
             TransformStyle::Flat => ContextIsolation::None,
             TransformStyle::Preserve3D => ContextIsolation::Items,
         };
+        let allow_subpixel_aa = composite_ops.count() == 0 &&
+                                isolation == ContextIsolation::None;
         StackingContext {
             pipeline_id,
             reference_frame_offset,
@@ -1630,6 +1666,9 @@ impl StackingContext {
             is_pipeline_root,
             is_visible: false,
             is_backface_visible,
+            allow_subpixel_aa,
+            has_any_primitive: false,
+            children_sc_bounds: LayerRect::zero(),
         }
     }
 

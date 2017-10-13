@@ -14,7 +14,7 @@ debugger = ["ws", "serde_json", "serde", "serde_derive"]
 
 [dependencies]
 app_units = "0.5.6"
-bincode = "0.8"
+bincode = "0.9"
 byteorder = "1.0"
 euclid = "0.15.2"
 fxhash = "0.2.1"
@@ -44,10 +44,10 @@ freetype = { version = "0.3", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4"
-gamma-lut = "0.2"
+gamma-lut = "0.2.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"
 core-graphics = "0.9"
 core-text = { version = "7.0", default-features = false }
-gamma-lut = "0.2"
+gamma-lut = "0.2.1"
