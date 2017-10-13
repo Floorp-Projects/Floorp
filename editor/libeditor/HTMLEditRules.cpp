@@ -1344,6 +1344,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     // find where we are
     nsCOMPtr<nsINode> curNode = selNode;
     int32_t curOffset = selOffset;
+    nsCOMPtr<nsIContent> curChild = selChild;
 
     // is our text going to be PREformatted?
     // We remember this so that we know how to handle tabs.
@@ -1399,13 +1400,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
             NS_ENSURE_STATE(mHTMLEditor);
             nsCOMPtr<Element> br =
               mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
-                                        nsIEditor::eNone);
+                                        address_of(curChild), nsIEditor::eNone);
             NS_ENSURE_STATE(br);
             pos++;
           } else {
             NS_ENSURE_STATE(mHTMLEditor);
             rv = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
-                                             address_of(selChild),
+                                             address_of(curChild),
                                              &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
           }
@@ -1439,7 +1440,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           if (subStr.Equals(tabStr)) {
             rv =
               wsObj.InsertText(spacesStr, address_of(curNode),
-                               address_of(selChild), &curOffset, doc);
+                               address_of(curChild), &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
             pos++;
           }
@@ -1447,13 +1448,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           else if (subStr.Equals(newlineStr)) {
             nsCOMPtr<Element> br = wsObj.InsertBreak(address_of(curNode),
                                                      &curOffset,
-                                                     nsIEditor::eNone);
+                                                     nsIEditor::eNone,
+                                                     address_of(curChild));
             NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
             pos++;
-            selChild = br->GetNextSibling();;
           } else {
             rv = wsObj.InsertText(subStr, address_of(curNode),
-                                  address_of(selChild), &curOffset, doc);
+                                  address_of(curChild), &curOffset, doc);
             NS_ENSURE_SUCCESS(rv, rv);
           }
         }
