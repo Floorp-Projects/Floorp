@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for FileReader API</title>
+  <title>Test for FileReader API in workers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="common_fileReader.js"></script>
@@ -14,9 +14,23 @@ SimpleTest.waitForExplicitFinish();
 
 test_setup()
 .then(data => {
-  return runTests(data);
-})
-.then(SimpleTest.finish);
+  let worker = new Worker('worker_fileReader.js');
+  worker.postMessage(data);
+
+  worker.onmessage = event => {
+    if (event.data.type == 'finish') {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (event.data.type == 'check') {
+      ok(event.data.status, event.data.msg);
+      return;
+    }
+
+    ok(false, "Unknown message.");
+  }
+});
 
 </script>
 </body>
