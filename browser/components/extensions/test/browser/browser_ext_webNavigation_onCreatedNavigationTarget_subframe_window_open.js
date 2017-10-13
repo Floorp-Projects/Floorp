@@ -39,7 +39,7 @@ async function background() {
   });
 }
 
-add_task(async function test_window_open() {
+add_task(async function test_window_open_from_subframe() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
@@ -55,37 +55,37 @@ add_task(async function test_window_open() {
 
   const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
-  info("open a url in a new tab from a window.open call");
+  info("open a url in a new tab from subframe window.open call");
 
   await runCreatedNavigationTargetTest({
     extension,
     openNavTarget() {
       extension.sendMessage({
         type: "execute-contentscript",
-        code: `window.open("${OPENED_PAGE}#new-tab-from-window-open"); true;`,
+        code: `document.querySelector('iframe').contentWindow.open("${OPENED_PAGE}#new-tab-from-window-open-subframe"); true;`,
       });
     },
     expectedWebNavProps: {
       sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-tab-from-window-open`,
+      sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
+      url: `${OPENED_PAGE}#new-tab-from-window-open-subframe`,
     },
   });
 
-  info("open a url in a new window from a window.open call");
+  info("open a url in a new window from subframe window.open call");
 
   await runCreatedNavigationTargetTest({
     extension,
     openNavTarget() {
       extension.sendMessage({
         type: "execute-contentscript",
-        code: `window.open("${OPENED_PAGE}#new-win-from-window-open", "_blank", "toolbar=0"); true;`,
+        code: `document.querySelector('iframe').contentWindow.open("${OPENED_PAGE}#new-win-from-window-open-subframe", "_blank", "toolbar=0"); true;`,
       });
     },
     expectedWebNavProps: {
       sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-win-from-window-open`,
+      sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
+      url: `${OPENED_PAGE}#new-win-from-window-open-subframe`,
     },
   });
 
