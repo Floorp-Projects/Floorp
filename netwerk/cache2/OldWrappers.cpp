@@ -346,13 +346,13 @@ _OldGetDiskConsumption::VisitEntry(const char * deviceID,
 // _OldCacheEntryWrapper
 
 _OldCacheEntryWrapper::_OldCacheEntryWrapper(nsICacheEntryDescriptor* desc)
-: mOldDesc(desc), mOldInfo(desc)
+: mOldDesc(desc), mOldInfo(desc), mCacheEntryId(CacheEntry::GetNextId())
 {
   LOG(("Creating _OldCacheEntryWrapper %p for descriptor %p", this, desc));
 }
 
 _OldCacheEntryWrapper::_OldCacheEntryWrapper(nsICacheEntryInfo* info)
-: mOldDesc(nullptr), mOldInfo(info)
+: mOldDesc(nullptr), mOldInfo(info), mCacheEntryId(CacheEntry::GetNextId())
 {
   LOG(("Creating _OldCacheEntryWrapper %p for info %p", this, info));
 }

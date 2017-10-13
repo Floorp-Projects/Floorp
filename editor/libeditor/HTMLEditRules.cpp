@@ -5062,7 +5062,6 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
   if (emptyBlock && emptyBlock->IsEditable()) {
     nsCOMPtr<nsINode> blockParent = emptyBlock->GetParentNode();
     NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
-    int32_t offset = blockParent->IndexOf(emptyBlock);
 
     if (HTMLEditUtils::IsListItem(emptyBlock)) {
       // Are we the first list item in the list?
@@ -5070,9 +5069,10 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
       if (htmlEditor->IsFirstEditableChild(emptyBlock)) {
         nsCOMPtr<nsINode> listParent = blockParent->GetParentNode();
         NS_ENSURE_TRUE(listParent, NS_ERROR_FAILURE);
-        int32_t listOffset = listParent->IndexOf(blockParent);
         // If we are a sublist, skip the br creation
         if (!HTMLEditUtils::IsList(listParent)) {
+          int32_t listOffset = listParent->IndexOf(blockParent);
+
           // Create a br before list
           NS_ENSURE_STATE(htmlEditor);
           nsCOMPtr<Element> br =
@@ -5086,6 +5086,8 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
         // AfterEdit()
       }
     } else {
+      int32_t offset = blockParent->IndexOf(emptyBlock);
+
       if (aAction == nsIEditor::eNext || aAction == nsIEditor::eNextWord ||
           aAction == nsIEditor::eToEndOfLine) {
         // Move to the start of the next node, if any
@@ -5147,8 +5149,13 @@ HTMLEditRules::CheckForInvisibleBR(Element& aBlock,
     }
 
     testNode = rightmostNode->GetParentNode();
+    // Since rightmostNode is always the last child, its index is equal to the
+    // child count, so instead of IndexOf() we use the faster GetChildCount(),
+    // and assert the equivalence below.
+    testOffset = testNode->GetChildCount();
+
     // Use offset + 1, so last node is included in our evaluation
-    testOffset = testNode->IndexOf(rightmostNode) + 1;
+    MOZ_ASSERT(testNode->IndexOf(rightmostNode) + 1 == testOffset);
   } else if (aOffset) {
     testNode = &aBlock;
     // We'll check everything to the left of the input position
@@ -5572,7 +5579,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
            !htmlEditor->IsVisibleBRElement(priorNode) &&
            !IsBlockNode(*priorNode)) {
       offset = priorNode->GetParentNode()->IndexOf(priorNode);
-      child = node;
+      child = priorNode;
       node = priorNode->GetParentNode();
       priorNode = htmlEditor->GetPriorHTMLNode(node, offset, child, true);
     }

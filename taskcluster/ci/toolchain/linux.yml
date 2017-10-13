@@ -110,6 +110,27 @@ linux64-gcc-6:
         toolchain-alias: linux64-gcc
         toolchain-artifact: public/build/gcc.tar.xz
 
+linux64-sixgill:
+    description: "sixgill GCC plugin build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(sixgill)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-gcc-sixgill-plugin-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+            - 'taskcluster/scripts/misc/build-gcc-sixgill-plugin-linux.sh'
+        toolchain-artifact: public/build/sixgill.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
 linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:

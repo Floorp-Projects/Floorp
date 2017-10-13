@@ -75,6 +75,12 @@ interface nsIToolkitProfile : nsISupports
     void remove(in boolean removeFiles);
 
     /**
+     * Removes the profile from the registry of profiles.
+     * The profile directory is removed in the stream transport thread.
+     */
+    void removeInBackground();
+
+    /**
      * Lock this profile using platform-specific locking methods.
      *
      * @param lockFile If locking fails, this may return a lockFile object

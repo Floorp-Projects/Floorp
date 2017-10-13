@@ -1503,10 +1503,17 @@ let PDFViewerApplication = {
         return;
       }
       pdfDocument.getJavaScript().then(javaScript => {
-        if (javaScript.length) {
+        if (javaScript.length === 0) {
+          return;
+        }
+        javaScript.some(js => {
+          if (!js) {
+            return false;
+          }
           console.warn('Warning: JavaScript is not supported');
           this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.javaScript);
-        }
+          return true;
+        });
         let regex = /\bprint\s*\(/;
         for (let i = 0, ii = javaScript.length; i < ii; i++) {
           let js = javaScript[i];
@@ -4381,7 +4388,7 @@ exports.PDFFindBar = PDFFindBar;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isDestsEqual = exports.PDFHistory = undefined;
+exports.isDestArraysEqual = exports.isDestHashesEqual = exports.PDFHistory = undefined;
 
 var _ui_utils = __webpack_require__(0);
 
@@ -4484,7 +4491,7 @@ class PDFHistory {
       return;
     }
     let forceReplace = false;
-    if (this._destination && (this._destination.hash === hash || isDestsEqual(this._destination.dest, explicitDest))) {
+    if (this._destination && (isDestHashesEqual(this._destination.hash, hash) || isDestArraysEqual(this._destination.dest, explicitDest))) {
       if (this._destination.page) {
         return;
       }
@@ -4691,7 +4698,20 @@ class PDFHistory {
     window.addEventListener('pagehide', _boundEvents.pageHide);
   }
 }
-function isDestsEqual(firstDest, secondDest) {
+function isDestHashesEqual(destHash, pushHash) {
+  if (typeof destHash !== 'string' || typeof pushHash !== 'string') {
+    return false;
+  }
+  if (destHash === pushHash) {
+    return true;
+  }
+  let { nameddest } = (0, _ui_utils.parseQueryString)(destHash);
+  if (nameddest === pushHash) {
+    return true;
+  }
+  return false;
+}
+function isDestArraysEqual(firstDest, secondDest) {
   function isEntryEqual(first, second) {
     if (typeof first !== typeof second) {
       return false;
@@ -4726,7 +4746,8 @@ function isDestsEqual(firstDest, secondDest) {
   return true;
 }
 exports.PDFHistory = PDFHistory;
-exports.isDestsEqual = isDestsEqual;
+exports.isDestHashesEqual = isDestHashesEqual;
+exports.isDestArraysEqual = isDestArraysEqual;
 
 /***/ }),
 /* 17 */
@@ -6443,9 +6464,13 @@ class AnnotationLayerBuilder {
     this.renderInteractiveForms = renderInteractiveForms;
     this.l10n = l10n;
     this.div = null;
+    this._cancelled = false;
   }
   render(viewport, intent = 'display') {
     this.pdfPage.getAnnotations({ intent }).then(annotations => {
+      if (this._cancelled) {
+        return;
+      }
       let parameters = {
         viewport: viewport.clone({ dontFlip: true }),
         div: this.div,
@@ -6469,6 +6494,9 @@ class AnnotationLayerBuilder {
         this.l10n.translate(this.div);
       }
     });
+  }
+  cancel() {
+    this._cancelled = true;
   }
   hide() {
     if (!this.div) {
@@ -6578,7 +6606,7 @@ class PDFPageView {
     this.zoomLayer = null;
   }
   reset(keepZoomLayer = false, keepAnnotations = false) {
-    this.cancelRendering();
+    this.cancelRendering(keepAnnotations);
     let div = this.div;
     div.style.width = Math.floor(this.viewport.width) + 'px';
     div.style.height = Math.floor(this.viewport.height) + 'px';
@@ -6595,7 +6623,8 @@ class PDFPageView {
     div.removeAttribute('data-loaded');
     if (currentAnnotationNode) {
       this.annotationLayer.hide();
-    } else {
+    } else if (this.annotationLayer) {
+      this.annotationLayer.cancel();
       this.annotationLayer = null;
     }
     if (!currentZoomLayerNode) {
@@ -6661,7 +6690,7 @@ class PDFPageView {
     }
     this.reset(true, true);
   }
-  cancelRendering() {
+  cancelRendering(keepAnnotations = false) {
     if (this.paintTask) {
       this.paintTask.cancel();
       this.paintTask = null;
@@ -6671,6 +6700,10 @@ class PDFPageView {
     if (this.textLayer) {
       this.textLayer.cancel();
       this.textLayer = null;
+    }
+    if (!keepAnnotations && this.annotationLayer) {
+      this.annotationLayer.cancel();
+      this.annotationLayer = null;
     }
   }
   cssTransform(target, redrawAnnotations = false) {
