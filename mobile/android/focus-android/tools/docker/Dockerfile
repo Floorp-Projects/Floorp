@@ -96,6 +96,9 @@ RUN ./gradlew assemble testFocusWebviewDebugUnitTest lint pmd checkstyle findbug
 # Install dependencies needed to run Android2Po
 RUN pip install -r tools/l10n/android2po/requirements.txt
 
+# Install taskcluster python library (used by decision tasks)
+RUN pip install taskcluster
+
 # -- Cleanup ----------------------------------------------------------------------------
 
 RUN apt-get clean
