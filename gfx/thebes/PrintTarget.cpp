@@ -181,6 +181,17 @@ PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
   }
 }
 
+/* static */
+void
+PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
+                                      nsString& aAdjustedJobName)
+{
+  nsAutoCString jobName;
+  AdjustPrintJobNameForIPP(aJobName, jobName);
+
+  CopyUTF8toUTF16(jobName, aAdjustedJobName);
+}
+
 /* static */ already_AddRefed<DrawTarget>
 PrintTarget::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
                                        DrawTarget* aDrawTarget)
