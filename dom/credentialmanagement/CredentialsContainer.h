@@ -33,13 +33,13 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise>
-  Get(const CredentialRequestOptions& aOptions);
+  Get(const CredentialRequestOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Create(const CredentialCreationOptions& aOptions);
+  Create(const CredentialCreationOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Store(const Credential& aCredential);
+  Store(const Credential& aCredential, ErrorResult& aRv);
 
 private:
   ~CredentialsContainer();

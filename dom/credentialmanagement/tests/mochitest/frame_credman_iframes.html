@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Embedded Frame for Credential Management: Prohibit use in cross-origin iframes</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta charset=utf-8>
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+const cose_alg_ECDSA_w_SHA256 = -7;
+var _parentOrigin = "https://example.com/";
+
+function log(msg) {
+  console.log(msg);
+  let logBox = document.getElementById("log");
+  if (logBox) {
+    logBox.textContent += "\n" + msg;
+  }
+}
+
+function local_finished() {
+  parent.postMessage({"done": true}, _parentOrigin);
+  log("Done.");
+}
+
+function local_ok(expression, message) {
+  let body = {"test": expression, "status": expression, "msg": message};
+  parent.postMessage(body, _parentOrigin);
+  log(expression + ": " + message);
+}
+
+function testSameOrigin() {
+  log("Same origin: " + document.domain);
+
+  navigator.credentials.create({publicKey: makeCredentialOptions})
+  .then(function sameOriginCreateThen(aResult) {
+    local_ok(aResult != undefined, "Create worked " + aResult);
+  })
+  .catch(function sameOriginCatch(aResult) {
+    local_ok(false, "Should not have failed " + aResult);
+  })
+  .then(function() {
+    local_finished();
+  });
+}
+
+function testCrossOrigin() {
+  log("Cross-origin: " + document.domain);
+
+  navigator.credentials.create({publicKey: makeCredentialOptions})
+  .then(function crossOriginThen(aBad) {
+    local_ok(false, "Should not have succeeded " + aBad);
+  })
+  .catch(function crossOriginCatch(aResult) {
+    local_ok(aResult.toString().startsWith("NotAllowedError"),
+             "Expecting a NotAllowedError, received " + aResult);
+  })
+  .then(function() {
+    local_finished();
+  });
+}
+
+let rp = {id: document.domain, name: "none", icon: "none"};
+let user = {
+  id: crypto.getRandomValues(new Uint8Array(16)),
+  name: "none", icon: "none", displayName: "none"
+};
+let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
+let makeCredentialOptions = {
+  rp, user, challenge: new Uint8Array(), pubKeyCredParams: [param]
+};
+
+if (document.domain == "example.com") {
+  testSameOrigin();
+} else {
+  testCrossOrigin();
+}
+
+</script>
+
+<div id="log"></div>
+
+</body>
+</html>
