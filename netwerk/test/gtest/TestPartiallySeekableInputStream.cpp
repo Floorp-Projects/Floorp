@@ -69,7 +69,7 @@ CreateStream(uint32_t aSize, uint64_t aStreamSize, nsCString& aBuffer)
   }
 
   RefPtr<NonSeekableStream> stream = new NonSeekableStream(aBuffer);
-  return new PartiallySeekableInputStream(stream, aStreamSize);
+  return new PartiallySeekableInputStream(stream.forget(), aStreamSize);
 }
 
 // Simple reading.

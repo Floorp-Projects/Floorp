@@ -6975,6 +6975,31 @@ gc::IsIncrementalGCUnsafe(JSRuntime* rt)
     return gc::AbortReason::None;
 }
 
+static inline void
+CheckZoneIsScheduled(Zone* zone, JS::gcreason::Reason reason, const char* trigger)
+{
+#ifdef DEBUG
+    if (zone->isGCScheduled())
+        return;
+
+    fprintf(stderr,
+            "CheckZoneIsScheduled: Zone %p not scheduled as expected in %s GC for %s trigger\n",
+            zone,
+            JS::gcreason::ExplainReason(reason),
+            trigger);
+    JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        fprintf(stderr,
+                "  Zone %p:%s%s\n",
+                zone.get(),
+                zone->isAtomsZone() ? " atoms" : "",
+                zone->isGCScheduled() ? " scheduled" : "");
+    }
+    fflush(stderr);
+    MOZ_CRASH("Zone not scheduled");
+#endif
+}
+
 GCRuntime::IncrementalResult
 GCRuntime::budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason reason,
                                SliceBudget& budget, AutoLockForExclusiveAccess& lock)
@@ -7024,13 +7049,13 @@ GCRuntime::budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason re
             continue;
 
         if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
-            MOZ_ASSERT(zone->isGCScheduled());
+            CheckZoneIsScheduled(zone, reason, "GC bytes");
             budget.makeUnlimited();
             stats().nonincremental(AbortReason::GCBytesTrigger);
         }
 
         if (zone->isTooMuchMalloc()) {
-            MOZ_ASSERT(zone->isGCScheduled());
+            CheckZoneIsScheduled(zone, reason, "malloc bytes");
             budget.makeUnlimited();
             stats().nonincremental(AbortReason::MallocBytesTrigger);
         }

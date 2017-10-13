@@ -16419,42 +16419,52 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           switch (fn | 0) {
             case _util.OPS.paintXObject:
               var name = args[0].name;
-              if (!name) {
-                (0, _util.warn)('XObject must be referred to by name.');
-                continue;
-              }
-              if (imageCache[name] !== undefined) {
+              if (name && imageCache[name] !== undefined) {
                 operatorList.addOp(imageCache[name].fn, imageCache[name].args);
                 args = null;
                 continue;
               }
-              var xobj = xobjs.get(name);
-              if (xobj) {
+              next(new Promise(function (resolveXObject, rejectXObject) {
+                if (!name) {
+                  throw new _util.FormatError('XObject must be referred to by name.');
+                }
+                let xobj = xobjs.get(name);
+                if (!xobj) {
+                  operatorList.addOp(fn, args);
+                  resolveXObject();
+                  return;
+                }
                 if (!(0, _primitives.isStream)(xobj)) {
                   throw new _util.FormatError('XObject should be a stream');
                 }
-                var type = xobj.dict.get('Subtype');
+                let type = xobj.dict.get('Subtype');
                 if (!(0, _primitives.isName)(type)) {
                   throw new _util.FormatError('XObject should have a Name subtype');
                 }
                 if (type.name === 'Form') {
                   stateManager.save();
-                  next(self.buildFormXObject(resources, xobj, null, operatorList, task, stateManager.state.clone()).then(function () {
+                  self.buildFormXObject(resources, xobj, null, operatorList, task, stateManager.state.clone()).then(function () {
                     stateManager.restore();
-                  }));
+                    resolveXObject();
+                  }, rejectXObject);
                   return;
                 } else if (type.name === 'Image') {
                   self.buildPaintImageXObject(resources, xobj, false, operatorList, name, imageCache);
-                  args = null;
-                  continue;
                 } else if (type.name === 'PS') {
                   (0, _util.info)('Ignored XObject subtype PS');
-                  continue;
                 } else {
                   throw new _util.FormatError(`Unhandled XObject subtype ${type.name}`);
                 }
-              }
-              break;
+                resolveXObject();
+              }).catch(function (reason) {
+                if (self.options.ignoreErrors) {
+                  self.handler.send('UnsupportedFeature', { featureId: _util.UNSUPPORTED_FEATURES.unknown });
+                  (0, _util.warn)(`getOperatorList - ignoring XObject: "${reason}".`);
+                  return;
+                }
+                throw reason;
+              }));
+              return;
             case _util.OPS.setFont:
               var fontSize = args[1];
               next(self.handleSetFont(resources, args, null, operatorList, task, stateManager.state).then(function (loadedName) {
@@ -17003,57 +17013,74 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                 xobjs = resources.get('XObject') || _primitives.Dict.empty;
               }
               var name = args[0].name;
-              if (name in skipEmptyXObjs) {
+              if (name && skipEmptyXObjs[name] !== undefined) {
                 break;
               }
-              var xobj = xobjs.get(name);
-              if (!xobj) {
-                break;
-              }
-              if (!(0, _primitives.isStream)(xobj)) {
-                throw new _util.FormatError('XObject should be a stream');
-              }
-              var type = xobj.dict.get('Subtype');
-              if (!(0, _primitives.isName)(type)) {
-                throw new _util.FormatError('XObject should have a Name subtype');
-              }
-              if (type.name !== 'Form') {
-                skipEmptyXObjs[name] = true;
-                break;
-              }
-              var currentState = stateManager.state.clone();
-              var xObjStateManager = new StateManager(currentState);
-              var matrix = xobj.dict.getArray('Matrix');
-              if (Array.isArray(matrix) && matrix.length === 6) {
-                xObjStateManager.transform(matrix);
-              }
-              enqueueChunk();
-              let sinkWrapper = {
-                enqueueInvoked: false,
-                enqueue(chunk, size) {
-                  this.enqueueInvoked = true;
-                  sink.enqueue(chunk, size);
-                },
-                get desiredSize() {
-                  return sink.desiredSize;
-                },
-                get ready() {
-                  return sink.ready;
+              next(new Promise(function (resolveXObject, rejectXObject) {
+                if (!name) {
+                  throw new _util.FormatError('XObject must be referred to by name.');
                 }
-              };
-              next(self.getTextContent({
-                stream: xobj,
-                task,
-                resources: xobj.dict.get('Resources') || resources,
-                stateManager: xObjStateManager,
-                normalizeWhitespace,
-                combineTextItems,
-                sink: sinkWrapper,
-                seenStyles
-              }).then(function () {
-                if (!sinkWrapper.enqueueInvoked) {
+                let xobj = xobjs.get(name);
+                if (!xobj) {
+                  resolveXObject();
+                  return;
+                }
+                if (!(0, _primitives.isStream)(xobj)) {
+                  throw new _util.FormatError('XObject should be a stream');
+                }
+                let type = xobj.dict.get('Subtype');
+                if (!(0, _primitives.isName)(type)) {
+                  throw new _util.FormatError('XObject should have a Name subtype');
+                }
+                if (type.name !== 'Form') {
                   skipEmptyXObjs[name] = true;
+                  resolveXObject();
+                  return;
                 }
+                let currentState = stateManager.state.clone();
+                let xObjStateManager = new StateManager(currentState);
+                let matrix = xobj.dict.getArray('Matrix');
+                if (Array.isArray(matrix) && matrix.length === 6) {
+                  xObjStateManager.transform(matrix);
+                }
+                enqueueChunk();
+                let sinkWrapper = {
+                  enqueueInvoked: false,
+                  enqueue(chunk, size) {
+                    this.enqueueInvoked = true;
+                    sink.enqueue(chunk, size);
+                  },
+                  get desiredSize() {
+                    return sink.desiredSize;
+                  },
+                  get ready() {
+                    return sink.ready;
+                  }
+                };
+                self.getTextContent({
+                  stream: xobj,
+                  task,
+                  resources: xobj.dict.get('Resources') || resources,
+                  stateManager: xObjStateManager,
+                  normalizeWhitespace,
+                  combineTextItems,
+                  sink: sinkWrapper,
+                  seenStyles
+                }).then(function () {
+                  if (!sinkWrapper.enqueueInvoked) {
+                    skipEmptyXObjs[name] = true;
+                  }
+                  resolveXObject();
+                }, rejectXObject);
+              }).catch(function (reason) {
+                if (reason instanceof _util.AbortException) {
+                  return;
+                }
+                if (self.options.ignoreErrors) {
+                  (0, _util.warn)(`getTextContent - ignoring XObject: "${reason}".`);
+                  return;
+                }
+                throw reason;
               }));
               return;
             case _util.OPS.setGState:
@@ -23823,8 +23850,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '1.9.630';
-var pdfjsBuild = 'ec469673';
+var pdfjsVersion = '1.9.640';
+var pdfjsBuild = '853db85b';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -24019,7 +24046,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '1.9.630';
+    let workerVersion = '1.9.640';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

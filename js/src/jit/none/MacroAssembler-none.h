@@ -80,6 +80,7 @@ static constexpr Register ABINonArgReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReg1 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg1 { Registers::invalid_reg };
+static constexpr Register NativeABIPrologueClobberable { Registers::invalid_reg };
 
 static constexpr Register WasmTableCallScratchReg { Registers::invalid_reg };
 static constexpr Register WasmTableCallSigReg { Registers::invalid_reg };

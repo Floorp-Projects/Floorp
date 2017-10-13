@@ -596,31 +596,19 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
       return mLayerManager;
     }
 
-    if (mTabChild && !mTabChild->IsLayersConnected()) {
-      // If we know for sure that the parent side of this TabChild is not
-      // connected to the compositor, we don't want to use a "remote" layer
-      // manager like WebRender or Client. Instead we use a Basic one which
-      // can do drawing in this process.
-      mLayerManager = new BasicLayerManager(this);
-    } else if (gfxVars::UseWebRender()) {
-      MOZ_ASSERT(!aShadowManager);
-      mLayerManager = new WebRenderLayerManager(this);
-    } else {
-      mLayerManager = new ClientLayerManager(this);
-    }
-  }
-
-  // Attach a shadow forwarder if none exists.
-  ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder();
-  if (lf && !lf->HasShadowManager() && aShadowManager) {
-    lf->SetShadowManager(aShadowManager);
+    // If we know for sure that the parent side of this TabChild is not
+    // connected to the compositor, we don't want to use a "remote" layer
+    // manager like WebRender or Client. Instead we use a Basic one which
+    // can do drawing in this process.
+    MOZ_ASSERT(!mTabChild || mTabChild->IsLayersConnected() != Some(true));
+    mLayerManager = new BasicLayerManager(this);
   }
 
   return mLayerManager;
 }
 
 bool
-PuppetWidget::RecreateLayerManager(const std::function<bool(LayerManager*)>& aInitializeFunc)
+PuppetWidget::CreateRemoteLayerManager(const std::function<bool(LayerManager*)>& aInitializeFunc)
 {
   RefPtr<LayerManager> lm;
   MOZ_ASSERT(mTabChild);
@@ -1053,7 +1041,9 @@ PuppetWidget::Paint()
 #endif
 
     if (mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_CLIENT ||
-        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_WR) {
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_WR ||
+        (mozilla::layers::LayersBackend::LAYERS_BASIC == mLayerManager->GetBackendType() &&
+         mTabChild && mTabChild->IsLayersConnected().isSome())) {
       // Do nothing, the compositor will handle drawing
       if (mTabChild) {
         mTabChild->NotifyPainted();
