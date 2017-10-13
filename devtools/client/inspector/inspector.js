@@ -597,6 +597,10 @@ Inspector.prototype = {
         const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
         panel = new BoxModel(this, this.panelWin);
         break;
+      case "fontinspector":
+        const FontInspector = require("devtools/client/inspector/fonts/fonts");
+        panel = new FontInspector(this, this.panelWin);
+        break;
       default:
         // This is a custom panel or a non lazy-loaded one.
         return null;
@@ -616,6 +620,11 @@ Inspector.prototype = {
     this.sidebar.on("select", this.onSidebarSelect);
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+
+    if (!Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
+       defaultTab == "fontinspector") {
+      defaultTab = "ruleview";
+    }
 
     // Append all side panels
     this.sidebar.addExistingTab(
@@ -659,29 +668,13 @@ Inspector.prototype = {
         defaultTab == "animationinspector");
     }
 
-    if (this.canGetUsedFontFaces) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      let fontId = "fontinspector";
-      let fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
-      this.sidebar.addTab(
-        fontId,
-        fontTitle,
-        {
-          props: {
-            id: fontId,
-            title: fontTitle
-          },
-          panel: () => {
-            if (!this.fontinspector) {
-              const FontInspector =
-                this.browserRequire("devtools/client/inspector/fonts/fonts");
-              this.fontinspector = new FontInspector(this, this.panelWin);
-            }
-            return this.fontinspector.provider;
-          }
-        },
-        defaultTab == fontId);
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
+        this.canGetUsedFontFaces) {
+      const FontInspector = this.browserRequire("devtools/client/inspector/fonts/fonts");
+      this.fontinspector = new FontInspector(this, this.panelWin);
+      this.fontinspector.init();
+
+      this.sidebar.toggleTab(true, "fontinspector");
     }
 
     // Persist splitter state in preferences.
