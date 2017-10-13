@@ -14,7 +14,7 @@ SimpleTest.waitForExplicitFinish();
 
 test_setup()
 .then(data => {
-  return runEncodingTests(data);
+  return runTests(data);
 })
 .then(SimpleTest.finish);
 
