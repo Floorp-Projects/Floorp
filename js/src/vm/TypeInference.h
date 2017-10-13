@@ -382,8 +382,8 @@ class TypeSet
 
     static const char* NonObjectTypeString(Type type);
 
-    static const char* TypeString(Type type);
-    static const char* ObjectGroupString(ObjectGroup* group);
+    static UniqueChars TypeString(Type type);
+    static UniqueChars ObjectGroupString(ObjectGroup* group);
 
   protected:
     /* Flags for this type set. */
