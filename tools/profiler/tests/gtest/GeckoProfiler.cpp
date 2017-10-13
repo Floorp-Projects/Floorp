@@ -628,7 +628,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                  features, filters, MOZ_ARRAY_LENGTH(filters));
 
-  w.Start(SpliceableJSONWriter::SingleLineStyle);
+  w.Start();
   ASSERT_TRUE(profiler_stream_json_for_this_process(w));
   w.End();
 
@@ -663,7 +663,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
     NS_NewRunnableFunction(
       "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
       [&]() {
-        w.Start(SpliceableJSONWriter::SingleLineStyle);
+        w.Start();
         ASSERT_TRUE(profiler_stream_json_for_this_process(w));
         w.End();
       }),
