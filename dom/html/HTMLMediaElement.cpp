@@ -5071,6 +5071,10 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
   // This will also do an AddRemoveSelfReference.
   NotifyOwnerDocumentActivityChanged();
 
+  if (mPausedForInactiveDocumentOrChannel) {
+    mDecoder->Suspend();
+  }
+
   nsresult rv = NS_OK;
   if (!mPaused) {
     SetPlayedOrSeeked(true);
