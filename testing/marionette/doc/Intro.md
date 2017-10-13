@@ -88,11 +88,3 @@ Questions/Comments/Concerns
 ===========================
 
 Feel free to drop us a line over at the #ateam channel!
-
-
-Contributing
-============
-
-If you’re interested in contributing, please follow this [setup guide]!
-
-[setup guide]: https://developer.mozilla.org/en-US/docs/Marionette/Developer_setup
