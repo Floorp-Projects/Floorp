@@ -612,6 +612,16 @@ ParseMIMETypeString(const nsAString& aMIMEType,
   return ParseCodecsString(codecsStr, aOutCodecs);
 }
 
+template <int N>
+static bool
+StartsWith(const nsACString& string, const char (&prefix)[N])
+{
+    if (N - 1 > string.Length()) {
+      return false;
+    }
+    return memcmp(string.Data(), prefix, N - 1) == 0;
+}
+
 bool
 IsH264CodecString(const nsAString& aCodec)
 {
@@ -635,25 +645,25 @@ IsAACCodecString(const nsAString& aCodec)
 bool
 IsVP8CodecString(const nsAString& aCodec)
 {
+  uint8_t profile = 0;
+  uint8_t level = 0;
+  uint8_t bitDepth = 0;
   return aCodec.EqualsLiteral("vp8") ||
-         aCodec.EqualsLiteral("vp8.0");
+         aCodec.EqualsLiteral("vp8.0") ||
+         (StartsWith(NS_ConvertUTF16toUTF8(aCodec), "vp08") &&
+          ExtractVPXCodecDetails(aCodec, profile, level, bitDepth));
 }
 
 bool
 IsVP9CodecString(const nsAString& aCodec)
 {
+  uint8_t profile = 0;
+  uint8_t level = 0;
+  uint8_t bitDepth = 0;
   return aCodec.EqualsLiteral("vp9") ||
-         aCodec.EqualsLiteral("vp9.0");
-}
-
-template <int N>
-static bool
-StartsWith(const nsACString& string, const char (&prefix)[N])
-{
-    if (N - 1 > string.Length()) {
-      return false;
-    }
-    return memcmp(string.Data(), prefix, N - 1) == 0;
+         aCodec.EqualsLiteral("vp9.0") ||
+         (StartsWith(NS_ConvertUTF16toUTF8(aCodec), "vp09") &&
+          ExtractVPXCodecDetails(aCodec, profile, level, bitDepth));
 }
 
 UniquePtr<TrackInfo>
