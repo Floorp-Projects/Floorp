@@ -32,8 +32,11 @@
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsNetCID.h"
 #include "nsXULAppAPI.h"
+#include "nsThreadUtils.h"
 
+#include "nsIRunnable.h"
 #include "nsINIParser.h"
 #include "nsXREDirProvider.h"
 #include "nsAppRunner.h"
@@ -63,6 +66,9 @@ private:
                      nsIFile* aLocalDir,
                      nsToolkitProfile* aPrev,
                      bool aForExternalApp);
+
+    nsresult
+    RemoveInternal(bool aRemoveFiles, bool aInBackground);
 
     friend class nsToolkitProfileLock;
 
@@ -223,8 +229,8 @@ nsToolkitProfile::SetName(const nsACString& aName)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsToolkitProfile::Remove(bool removeFiles)
+nsresult
+nsToolkitProfile::RemoveInternal(bool aRemoveFiles, bool aInBackground)
 {
     NS_ASSERTION(nsToolkitProfileService::gService,
                  "Whoa, my service is gone.");
@@ -237,18 +243,32 @@ nsToolkitProfile::Remove(bool removeFiles)
     if (!mPrev && !mNext && nsToolkitProfileService::gService->mFirst != this)
         return NS_ERROR_NOT_INITIALIZED;
 
-    if (removeFiles) {
-        bool equals;
-        nsresult rv = mRootDir->Equals(mLocalDir, &equals);
-        if (NS_FAILED(rv))
-            return rv;
+    if (aRemoveFiles) {
+        nsCOMPtr<nsIFile> rootDir(mRootDir);
+        nsCOMPtr<nsIFile> localDir(mLocalDir);
 
-        // The root dir might contain the temp dir, so remove
-        // the temp dir first.
-        if (!equals)
-            mLocalDir->Remove(true);
+        nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+          "nsToolkitProfile::RemoveInternal",
+          [rootDir, localDir]() {
+              bool equals;
+              nsresult rv = rootDir->Equals(localDir, &equals);
+              // The root dir might contain the temp dir, so remove
+              // the temp dir first.
+              if (NS_SUCCEEDED(rv) && !equals) {
+                  localDir->Remove(true);
+              }
 
-        mRootDir->Remove(true);
+              rootDir->Remove(true);
+            }
+        );
+
+        if (aInBackground) {
+            nsCOMPtr<nsIEventTarget> target =
+                do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+             target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+        } else {
+          runnable->Run();
+        }
     }
 
     if (mPrev)
@@ -268,6 +288,18 @@ nsToolkitProfile::Remove(bool removeFiles)
     nsToolkitProfileService::gService->mDirty = true;
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsToolkitProfile::Remove(bool removeFiles)
+{
+    return RemoveInternal(removeFiles, false /* in background */);
+}
+
+NS_IMETHODIMP
+nsToolkitProfile::RemoveInBackground()
+{
+    return RemoveInternal(true /* remove Files */, true /* in background */);
 }
 
 NS_IMETHODIMP
