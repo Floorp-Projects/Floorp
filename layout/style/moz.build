@@ -55,7 +55,6 @@ EXPORTS += [
     'nsDOMCSSRGBColor.h',
     'nsICSSDeclaration.h',
     'nsICSSLoaderObserver.h',
-    'nsICSSPseudoComparator.h',
     'nsICSSStyleRuleDOMWrapper.h',
     'nsIStyleRule.h',
     'nsIStyleRuleProcessor.h',
