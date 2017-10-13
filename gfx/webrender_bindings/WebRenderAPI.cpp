@@ -1084,9 +1084,9 @@ DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
 }
 
 void
-DisplayListBuilder::PopShadow()
+DisplayListBuilder::PopAllShadows()
 {
-  wr_dp_pop_shadow(mWrState);
+  wr_dp_pop_all_shadows(mWrState);
 }
 
 void
