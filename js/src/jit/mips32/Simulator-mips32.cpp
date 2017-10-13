@@ -1637,6 +1637,9 @@ Simulator::startInterrupt(JitActivation* activation)
 void
 Simulator::handleWasmInterrupt()
 {
+    if (!wasm::CodeExists)
+        return;
+
     void* pc = (void*)get_pc();
     void* fp = (void*)getRegister(Register::fp);
 
@@ -1663,6 +1666,9 @@ Simulator::handleWasmInterrupt()
 bool
 Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 {
+    if (!wasm::CodeExists)
+        return false;
+
     JSContext* cx = TlsContext.get();
     if (!cx->activation() || !cx->activation()->isJit())
         return false;

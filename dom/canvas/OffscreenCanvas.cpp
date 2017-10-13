@@ -217,11 +217,13 @@ OffscreenCanvas::ToCloneData()
 }
 
 already_AddRefed<ImageBitmap>
-OffscreenCanvas::TransferToImageBitmap()
+OffscreenCanvas::TransferToImageBitmap(ErrorResult& aRv)
 {
-  ErrorResult rv;
   nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalObject();
-  RefPtr<ImageBitmap> result = ImageBitmap::CreateFromOffscreenCanvas(globalObject, *this, rv);
+  RefPtr<ImageBitmap> result = ImageBitmap::CreateFromOffscreenCanvas(globalObject, *this, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Clear the content.
   if ((mCurrentContextType == CanvasContextType::WebGL1 ||

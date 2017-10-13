@@ -102,10 +102,13 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     secMan->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+
   int16_t decision = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_INTERNAL_IMAGE,
                                              channelURI,
                                              channelPrincipal,
+                                             loadInfo ? loadInfo->TriggeringPrincipal() : nullptr,
                                              domWindow->GetFrameElementInternal(),
                                              mimeType,
                                              nullptr,

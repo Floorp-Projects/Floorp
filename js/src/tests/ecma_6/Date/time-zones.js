@@ -32,7 +32,7 @@ const datePart = String.raw `(?:${weekdays}) (?:${months}) \d{2}`;
 const timePart = String.raw `\d{4,6} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}`;
 const dateTimeRE = new RegExp(String.raw `^(${datePart} ${timePart})(?: \((.+)\))?$`);
 
-function assertDateTime(date, expected) {
+function assertDateTime(date, expected, alternativeTimeZone = undefined) {
     let actual = date.toString();
     assertEq(dateTimeRE.test(expected), true, `${expected}`);
     assertEq(dateTimeRE.test(actual), true, `${actual}`);
@@ -45,6 +45,10 @@ function assertDateTime(date, expected) {
     // The time zone identifier is optional, so only compare its value if it's
     // present in |actual| and |expected|.
     if (expectedTimeZone !== undefined && actualTimeZone !== undefined) {
+        // Test against the alternative time zone identifier if necessary.
+        if (actualTimeZone !== expectedTimeZone && alternativeTimeZone !== undefined) {
+            expectedTimeZone = alternativeTimeZone;
+        }
         assertEq(actualTimeZone, expectedTimeZone);
     }
 }
@@ -212,7 +216,7 @@ inTimeZone("America/Sao_Paulo", () => {
     let dt = new Date(2014, Month.October, 19);
     assertEq(dt.getDate(), 19);
     assertEq(dt.getHours(), 1);
-    assertDateTime(dt, "Sun Oct 19 2014 01:00:00 GMT-0200 (BRST)");
+    assertDateTime(dt, "Sun Oct 19 2014 01:00:00 GMT-0200 (BRST)", "-02");
 });
 
 // bug 1084547
@@ -248,13 +252,13 @@ inTimeZone("Europe/Moscow", () => {
 // bug 1284507
 inTimeZone("Atlantic/Azores", () => {
     let dt1 = new Date(2017, Month.March, 25, 0, 0, 0);
-    assertDateTime(dt1, "Sat Mar 25 2017 00:00:00 GMT-0100 (AZOT)");
+    assertDateTime(dt1, "Sat Mar 25 2017 00:00:00 GMT-0100 (AZOT)", "-01");
 
     let dt2 = new Date(2016, Month.October, 30, 0, 0, 0);
-    assertDateTime(dt2, "Sun Oct 30 2016 00:00:00 GMT+0000 (AZOST)");
+    assertDateTime(dt2, "Sun Oct 30 2016 00:00:00 GMT+0000 (AZOST)", "+00");
 
     let dt3 = new Date(2016, Month.October, 30, 23, 0, 0);
-    assertDateTime(dt3, "Sun Oct 30 2016 23:00:00 GMT-0100 (AZOT)");
+    assertDateTime(dt3, "Sun Oct 30 2016 23:00:00 GMT-0100 (AZOT)", "-01");
 });
 
 // bug 1303306

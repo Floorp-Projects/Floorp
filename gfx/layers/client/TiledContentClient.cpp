@@ -1399,13 +1399,6 @@ TiledContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   aStream << aPrefix;
   aStream << nsPrintfCString("%sTiledContentClient (0x%p)", mName, this).get();
-
-  if (PROFILER_FEATURE_ACTIVE(ProfilerFeature::DisplayListDump)) {
-    nsAutoCString pfx(aPrefix);
-    pfx += "  ";
-
-    Dump(aStream, pfx.get(), false);
-  }
 }
 
 void

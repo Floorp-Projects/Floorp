@@ -267,6 +267,7 @@ public:
     int16_t decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(aLoadInfo->InternalContentPolicyType(), uri,
                                    aLoadInfo->LoadingPrincipal(),
+                                   aLoadInfo->TriggeringPrincipal(),
                                    aLoadInfo->LoadingNode(), EmptyCString(),
                                    nullptr, &decision);
     NS_ENSURE_SUCCESS(rv, false);
