@@ -296,6 +296,8 @@ def update_prefs(config):
         config['preferences']['extensions.e10sBlocksEnabling'] = False
     else:
         config['preferences']['browser.tabs.remote.autostart'] = False
+        config['preferences']['browser.tabs.remote.autostart.1'] = False
+        config['preferences']['browser.tabs.remote.autostart.2'] = False
 
     # update prefs from command line
     prefs = config.pop('extraPrefs')

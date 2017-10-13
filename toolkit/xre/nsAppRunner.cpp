@@ -955,6 +955,7 @@ nsXULAppInfo::GetRemoteType(nsAString& aRemoteType)
 static bool gBrowserTabsRemoteAutostart = false;
 static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
+static bool gListeningForCohortChange = false;
 
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
@@ -981,6 +982,13 @@ NS_IMETHODIMP
 nsXULAppInfo::GetMaxWebProcessCount(uint32_t* aResult)
 {
   *aResult = mozilla::GetMaxWebProcessCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetMultiprocessBlockPolicy(uint32_t* aResult)
+{
+  *aResult = MultiprocessBlockPolicy();
   return NS_OK;
 }
 
@@ -5100,7 +5108,47 @@ enum {
 const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
 const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
+uint32_t
+MultiprocessBlockPolicy()
+{
+  if (XRE_IsContentProcess()) {
+    // If we're in a content process, we're not blocked.
+    return 0;
+  }
+
+  /**
+   * Avoids enabling e10s if there are add-ons installed.
+   */
+  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
+  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
+                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
+                                                      : NS_LITERAL_CSTRING("0"));
+#endif
+
+  if (addonsCanDisable && disabledByAddons) {
+    return kE10sDisabledForAddons;
+  }
+
+  /*
+   * None of the blocking policies matched, so e10s is allowed to run. Return
+   * 0, indicating success.
+   */
+  return 0;
+}
+
 namespace mozilla {
+
+static void
+CohortChanged(const char* aPref, void* aClosure)
+{
+  // Reset to the default state and recompute on the next call.
+  gBrowserTabsRemoteAutostartInitialized = false;
+  gBrowserTabsRemoteAutostart = false;
+  Preferences::UnregisterCallback(CohortChanged, "e10s.rollout.cohort");
+}
 
 bool
 BrowserTabsRemoteAutostart()
@@ -5116,18 +5164,40 @@ BrowserTabsRemoteAutostart()
     return gBrowserTabsRemoteAutostart;
   }
 
-  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", true);
-  int status = kE10sEnabledByDefault;
+  // This is a pretty heinous hack. On the first launch, we end up retrieving
+  // whether e10s is enabled setting up a document very early in startup. This
+  // caches that e10s is off before the e10srollout extension can run. See
+  // bug 1372824 comment 3 for a more thorough explanation.
+  if (!gListeningForCohortChange) {
+    gListeningForCohortChange = true;
+    Preferences::RegisterCallback(CohortChanged, "e10s.rollout.cohort");
+  }
 
+  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
+  bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
+  bool prefEnabled = optInPref || trialPref;
+  int status;
   if (optInPref) {
-    gBrowserTabsRemoteAutostart = true;
+    status = kE10sEnabledByUser;
+  } else if (trialPref) {
+    status = kE10sEnabledByDefault;
   } else {
     status = kE10sDisabledByUser;
+  }
+
+  if (prefEnabled) {
+    uint32_t blockPolicy = MultiprocessBlockPolicy();
+    if (blockPolicy != 0) {
+      status = blockPolicy;
+    } else {
+      gBrowserTabsRemoteAutostart = true;
+    }
   }
 
   // Uber override pref for manual testing purposes
   if (Preferences::GetBool(kForceEnableE10sPref, false)) {
     gBrowserTabsRemoteAutostart = true;
+    prefEnabled = true;
     status = kE10sEnabledByUser;
   }
 
@@ -5142,6 +5212,10 @@ BrowserTabsRemoteAutostart()
   gBrowserTabsRemoteStatus = status;
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STATUS, status);
+  if (prefEnabled) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
+                                    !gBrowserTabsRemoteAutostart);
+  }
   return gBrowserTabsRemoteAutostart;
 }
 
@@ -5157,7 +5231,30 @@ GetMaxWebProcessCount()
 
   const char* optInPref = "dom.ipc.processCount";
   uint32_t optInPrefValue = Preferences::GetInt(optInPref, 1);
-  return std::max(1u, optInPrefValue);
+  const char* useDefaultPerformanceSettings =
+    "browser.preferences.defaultPerformanceSettings.enabled";
+  bool useDefaultPerformanceSettingsValue =
+    Preferences::GetBool(useDefaultPerformanceSettings, true);
+
+  // If the user has set dom.ipc.processCount, or if they have opt out of
+  // default performances settings from about:preferences, respect their
+  // decision regardless of add-ons that might affect their experience or
+  // experiment cohort.
+  if (Preferences::HasUserValue(optInPref) || !useDefaultPerformanceSettingsValue) {
+    return std::max(1u, optInPrefValue);
+  }
+
+#ifdef RELEASE_OR_BETA
+  // For our rollout on Release and Beta, we set this pref from the
+  // e10srollout extension. On Nightly, we don't touch the pref at all,
+  // allowing stale values to disable e10s-multi for certain users.
+  if (Preferences::HasUserValue("dom.ipc.processCount.web")) {
+    // The user didn't opt in or out so read the .web version of the pref.
+    return std::max(1, Preferences::GetInt("dom.ipc.processCount.web", 1));
+  }
+#endif
+
+  return optInPrefValue;
 }
 
 const char*
