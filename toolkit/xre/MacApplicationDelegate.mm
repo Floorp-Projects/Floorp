@@ -297,6 +297,12 @@ ProcessPendingGetURLAppleEvents()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (void)applicationWillFinishLaunching:(NSNotification*)notification {
+  // We provide our own full screen menu item, so we don't want the OS providing
+  // one as well.
+  [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
+}
+
 // If we don't handle applicationShouldTerminate:, a call to [NSApp terminate:]
 // (from the browser or from the OS) can result in an unclean shutdown.
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
