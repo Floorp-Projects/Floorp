@@ -166,16 +166,14 @@ repackage-zip-%: unpack
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN='$(ZIP_IN)'
 
 
-ifdef IS_LANGUAGE_REPACK
-MERGE_TK_FILE = $(firstword \
-  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,toolkit/locales)/$(1)) \
-  $(wildcard $(LOCALE_SRCDIR)/$(1)) \
-  $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/$(1) )
-else
-MERGE_TK_FILE = $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/$(1)
-endif
-
-LANGPACK_DEFINES = $(call MERGE_TK_FILE,defines.inc) $(call MERGE_DIR,defines.inc)
+LANGPACK_DEFINES = \
+  $(firstword \
+    $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc) \
+    $(MOZILLA_DIR)/toolkit/locales/en-US/defines.inc) \
+  $(firstword \
+    $(wildcard $(LOCALE_SRCDIR)/defines.inc) \
+    $(srcdir)/en-US/defines.inc) \
+$(NULL)
 
 # Dealing with app sub dirs: If DIST_SUBDIRS is defined it contains a
 # listing of app sub-dirs we should include in langpack xpis. If not,

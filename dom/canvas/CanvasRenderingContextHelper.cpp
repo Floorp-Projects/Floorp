@@ -25,6 +25,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
                                      BlobCallback& aCallback,
                                      const nsAString& aType,
                                      JS::Handle<JS::Value> aParams,
+                                     bool aUsePlaceholder,
                                      ErrorResult& aRv)
 {
   // Encoder callback when encoding is complete.
@@ -58,7 +59,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
   RefPtr<EncodeCompleteCallback> callback =
     new EncodeCallback(aGlobal, &aCallback);
 
-  ToBlob(aCx, aGlobal, callback, aType, aParams, aRv);
+  ToBlob(aCx, aGlobal, callback, aType, aParams, aUsePlaceholder, aRv);
 }
 
 void
@@ -67,6 +68,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
                                      EncodeCompleteCallback* aCallback,
                                      const nsAString& aType,
                                      JS::Handle<JS::Value> aParams,
+                                     bool aUsePlaceholder,
                                      ErrorResult& aRv)
 {
   nsAutoString type;
@@ -107,6 +109,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
                                        Move(imageBuffer),
                                        format,
                                        GetWidthHeight(),
+                                       aUsePlaceholder,
                                        callback);
 }
 

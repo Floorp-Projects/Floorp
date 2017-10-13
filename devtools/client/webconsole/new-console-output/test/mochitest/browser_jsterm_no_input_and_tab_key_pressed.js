@@ -7,13 +7,10 @@
 
 // See Bug 583816.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/browser/test-console.html";
+const TEST_URI = "data:text/html,Testing jsterm with no input";
 
 add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
+  let hud = yield openNewTabAndConsole(TEST_URI);
   testCompletion(hud);
 });
 
@@ -25,7 +22,7 @@ function testCompletion(hud) {
   EventUtils.synthesizeKey("VK_TAB", {});
   is(jsterm.completeNode.value, "<- no result", "<- no result - matched");
   is(input.value, "", "inputnode is empty - matched");
-  is(input.getAttribute("focused"), "true", "input is still focused");
+  ok(hasFocus(input), "input is still focused");
 
   // Any thing which is not in property autocompleter
   jsterm.setInputValue("window.Bug583816");
@@ -33,5 +30,5 @@ function testCompletion(hud) {
   is(jsterm.completeNode.value, "                <- no result",
      "completenode content - matched");
   is(input.value, "window.Bug583816", "inputnode content - matched");
-  is(input.getAttribute("focused"), "true", "input is still focused");
+  ok(hasFocus(input), "input is still focused");
 }
