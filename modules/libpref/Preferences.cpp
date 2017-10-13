@@ -175,20 +175,17 @@ pref_GetPrefFromEntry(PrefHashEntry* aHashEntry,
 
 size_t
 pref_SizeOfPrivateData(mozilla::MallocSizeOf aMallocSizeOf);
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // 1 MB should be enough for everyone.
 static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
-typedef union {
+union PrefValue {
   char* mStringVal;
   int32_t mIntVal;
   bool mBoolVal;
-} PrefValue;
+};
 
 // The Init function initializes the preference context and creates the
 // preference hashtable.
@@ -421,10 +418,6 @@ PREF_ReaderCallback(void* aClosure,
 // Callback for whenever we change a preference.
 typedef void (*PrefsDirtyFunc)();
 void PREF_SetDirtyCallback(PrefsDirtyFunc);
-
-#ifdef __cplusplus
-}
-#endif
 
 static void
 ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
@@ -1511,10 +1504,6 @@ PREF_ReaderCallback(void* aClosure,
 // Prefs parsing
 //===========================================================================
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Callback function used to notify consumer of preference name value pairs.
 // The pref name and value must be copied by the implementor of the callback
 // if they are needed beyond the scope of the callback function.
@@ -1537,7 +1526,7 @@ typedef void (*PrefParseErrorReporter)(const char* aMessage,
                                        int aLine,
                                        bool aError);
 
-typedef struct PrefParseState
+struct PrefParseState
 {
   PrefReader mReader;
   PrefParseErrorReporter mReporter;
@@ -1558,7 +1547,7 @@ typedef struct PrefParseState
   PrefType mVtype;       // PREF_{STRING,INT,BOOL}
   bool mIsDefault;       // true if (default) pref
   bool mIsStickyDefault; // true if (sticky) pref
-} PrefParseState;
+};
 
 // Initialize a PrefParseState instance.
 //
@@ -1586,10 +1575,6 @@ PREF_FinalizeParseState(PrefParseState* aPS);
 // contains malformed content.
 bool
 PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen);
-
-#ifdef __cplusplus
-}
-#endif
 
 #ifdef TEST_PREFREAD
 #include <stdio.h>
