@@ -712,7 +712,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e6a7bcadb0dd"
+        "revision": "0e8829c9281a"
     }, 
     "pt-BR": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0232ba6432ab"
+        "revision": "c0c66a1fc7e6"
     }, 
     "tr": {
         "platforms": [
@@ -932,7 +932,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ddd7aebff4d1"
+        "revision": "5ea43bd58fa5"
     }, 
     "zh-TW": {
         "platforms": [
