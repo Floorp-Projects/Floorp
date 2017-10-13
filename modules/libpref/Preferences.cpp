@@ -488,19 +488,6 @@ static PLDHashTableOps pref_HashTableOps = {
   nullptr,
 };
 
-// PR_ALIGN_OF_WORD is only defined on some platforms. ALIGN_OF_WORD has
-// already been defined to PR_ALIGN_OF_WORD everywhere.
-#ifndef PR_ALIGN_OF_WORD
-#define PR_ALIGN_OF_WORD PR_ALIGN_OF_POINTER
-#endif
-
-#define WORD_ALIGN_MASK (PR_ALIGN_OF_WORD - 1)
-
-// Sanity checking.
-#if (PR_ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
-#error "PR_ALIGN_OF_WORD must be a power of 2!"
-#endif
-
 static PrefsDirtyFunc gDirtyCallback = nullptr;
 
 inline void
