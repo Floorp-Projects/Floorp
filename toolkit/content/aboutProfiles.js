@@ -291,7 +291,7 @@ function removeProfile(profile) {
     }
   }
 
-  profile.remove(deleteFiles);
+  profile.removeInBackground(deleteFiles);
   ProfileService.flush();
   refreshUI();
 }

@@ -1,0 +1,20 @@
+<script>
+function jsfuzzer() {
+  try { document.execCommand("insertUnorderedList", false); } catch(e) { }
+  try { document.execCommand("delete", false); } catch(e) { }
+}
+function eventhandler1() {
+  try { window.getSelection().collapse(htmlvar00001,1); } catch(e) { }
+}
+function eventhandler2() {
+  try { htmlvar00002.appendChild(htmlvar00001); } catch(e) { }
+}
+</script>
+<body onload=jsfuzzer()>
+<label id="htmlvar00002" contenteditable="true">
+<details ontoggle="eventhandler2()" open="true">
+</details>
+</label>
+<details ontoggle="eventhandler1()" open="true">
+<font id="htmlvar00001" dir="rtl">
+<summary>

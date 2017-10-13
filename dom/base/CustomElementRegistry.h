@@ -165,7 +165,7 @@ struct CustomElementDefinition
                           nsAtom* aLocalName,
                           Function* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          JSObject* aPrototype,
+                          JS::Handle<JSObject*> aPrototype,
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
 
@@ -214,40 +214,32 @@ private:
 class CustomElementReaction
 {
 public:
-  explicit CustomElementReaction(CustomElementDefinition* aDefinition)
-    : mDefinition(aDefinition)
-  {
-  }
-
   virtual ~CustomElementReaction() = default;
   virtual void Invoke(Element* aElement, ErrorResult& aRv) = 0;
   virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const
   {
   }
-
-protected:
-  CustomElementDefinition* mDefinition;
 };
 
 class CustomElementUpgradeReaction final : public CustomElementReaction
 {
 public:
   explicit CustomElementUpgradeReaction(CustomElementDefinition* aDefinition)
-    : CustomElementReaction(aDefinition)
+    : mDefinition(aDefinition)
   {
   }
 
 private:
    virtual void Invoke(Element* aElement, ErrorResult& aRv) override;
+
+   CustomElementDefinition* mDefinition;
 };
 
 class CustomElementCallbackReaction final : public CustomElementReaction
 {
   public:
-    CustomElementCallbackReaction(CustomElementDefinition* aDefinition,
-                                  UniquePtr<CustomElementCallback> aCustomElementCallback)
-      : CustomElementReaction(aDefinition)
-      , mCustomElementCallback(Move(aCustomElementCallback))
+    explicit CustomElementCallbackReaction(UniquePtr<CustomElementCallback> aCustomElementCallback)
+      : mCustomElementCallback(Move(aCustomElementCallback))
     {
     }
 
@@ -291,7 +283,6 @@ public:
    * https://html.spec.whatwg.org/multipage/scripting.html#enqueue-a-custom-element-callback-reaction
    */
   void EnqueueCallbackReaction(Element* aElement,
-                               CustomElementDefinition* aDefinition,
                                UniquePtr<CustomElementCallback> aCustomElementCallback);
 
   // [CEReactions] Before executing the algorithm's steps

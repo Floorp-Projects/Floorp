@@ -7852,6 +7852,18 @@ nsHttpChannel::IsFromCache(bool *value)
 }
 
 NS_IMETHODIMP
+nsHttpChannel::GetCacheEntryId(uint64_t *aCacheEntryId)
+{
+  bool fromCache = false;
+  if (NS_FAILED(IsFromCache(&fromCache)) || !fromCache || !mCacheEntry ||
+      NS_FAILED(mCacheEntry->GetCacheEntryId(aCacheEntryId))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetCacheTokenFetchCount(int32_t *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);

@@ -28726,55 +28726,53 @@ module.exports = isEmpty;
 /* 1021 */,
 /* 1022 */,
 /* 1023 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "extractScriptTags", function() { return extractScriptTags; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "generateWhitespace", function() { return generateWhitespace; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCandidateScriptLocations", function() { return getCandidateScriptLocations; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseScript", function() { return parseScript; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseScripts", function() { return parseScripts; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseScriptTags", function() { return parseScriptTags; });
-const babylon = __webpack_require__(435);
-const types = __webpack_require__(493);
 
-const startScript = /<script[^>]*>/im;
-const endScript = /<\/script\s*>/im;
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var babylon = __webpack_require__(435);
+var types = __webpack_require__(493);
+
+var startScript = /<script[^>]*>/im;
+var endScript = /<\/script\s*>/im;
 // https://stackoverflow.com/questions/5034781/js-regex-to-split-by-line#comment5633979_5035005
-const newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
+var newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
 
 function getCandidateScriptLocations(source, index) {
-  const i = index || 0;
-  const str = source.substring(i);
+  var i = index || 0;
+  var str = source.substring(i);
 
-  const startMatch = startScript.exec(str);
+  var startMatch = startScript.exec(str);
   if (startMatch) {
-    const startsAt = startMatch.index + startMatch[0].length;
-    const afterStart = str.substring(startsAt);
-    const endMatch = endScript.exec(afterStart);
+    var startsAt = startMatch.index + startMatch[0].length;
+    var afterStart = str.substring(startsAt);
+    var endMatch = endScript.exec(afterStart);
     if (endMatch) {
-      const locLength = endMatch.index;
-      const locIndex = i + startsAt;
+      var locLength = endMatch.index;
+      var locIndex = i + startsAt;
 
-      return [
-        adjustForLineAndColumn(source, {
-          index: locIndex,
-          length: locLength,
-          source: source.substring(locIndex, locIndex + locLength)
-        }),
-        ...getCandidateScriptLocations(
-          source,
-          locIndex + locLength + endMatch[0].length
-        )
-      ];
+      return [adjustForLineAndColumn(source, {
+        index: locIndex,
+        length: locLength,
+        source: source.substring(locIndex, locIndex + locLength)
+      })].concat(_toConsumableArray(getCandidateScriptLocations(source, locIndex + locLength + endMatch[0].length)));
     }
   }
 
   return [];
 }
 
-function parseScript({source, line}) {
+function parseScript(_ref) {
+  var source = _ref.source,
+      line = _ref.line;
+
   // remove empty or only whitespace scripts
   if (source.length === 0 || /^\s+$/.test(source)) {
     return null;
@@ -28790,7 +28788,9 @@ function parseScript({source, line}) {
   }
 }
 
-function parseScripts(locations, parser = parseScript) {
+function parseScripts(locations) {
+  var parser = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : parseScript;
+
   return locations.map(parser);
 }
 
@@ -28799,35 +28799,31 @@ function generateWhitespace(length) {
 }
 
 function calcLineAndColumn(source, index) {
-  const lines = source
-    .substring(0, index)
-    .split(newLines)
-  const line = lines.length;
-  const column = lines.pop().length + 1;
+  var lines = source.substring(0, index).split(newLines);
+  var line = lines.length;
+  var column = lines.pop().length + 1;
 
   return {
-    column,
-    line
+    column: column,
+    line: line
   };
 }
 
 function adjustForLineAndColumn(fullSource, location) {
-  const {column, line} = calcLineAndColumn(fullSource, location.index);
+  var _calcLineAndColumn = calcLineAndColumn(fullSource, location.index),
+      column = _calcLineAndColumn.column,
+      line = _calcLineAndColumn.line;
+
   return Object.assign({}, location, {
-    line,
-    column,
+    line: line,
+    column: column,
     // prepend whitespace for scripts that do not start on the first column
     source: generateWhitespace(column) + location.source
   });
 }
 
 function parseScriptTags(source, parser) {
-  const scripts = parseScripts(
-    getCandidateScriptLocations(source),
-    parser
-  ).filter(
-    types.isFile
-  ).reduce((main, script) => {
+  var scripts = parseScripts(getCandidateScriptLocations(source), parser).filter(types.isFile).reduce(function (main, script) {
     return {
       statements: main.statements.concat(script.program.body),
       comments: main.comments.concat(script.comments),
@@ -28839,14 +28835,10 @@ function parseScriptTags(source, parser) {
     tokens: []
   });
 
-  const program = types.program(scripts.statements);
-  const file = types.file(
-    program,
-    scripts.comments,
-    scripts.tokens
-  );
+  var program = types.program(scripts.statements);
+  var file = types.file(program, scripts.comments, scripts.tokens);
 
-  const end = calcLineAndColumn(source, source.length);
+  var end = calcLineAndColumn(source, source.length);
   file.start = program.start = 0;
   file.end = program.end = source.length;
   file.loc = program.loc = {
@@ -28854,32 +28846,31 @@ function parseScriptTags(source, parser) {
       line: 1,
       column: 0
     },
-    end
-  }
+    end: end
+  };
 
   return file;
 }
 
 function extractScriptTags(source) {
-  return parseScripts(
-    getCandidateScriptLocations(source),
-    loc => {
-      const ast = parseScript(loc);
+  return parseScripts(getCandidateScriptLocations(source), function (loc) {
+    var ast = parseScript(loc);
 
-      if (ast) {
-        return loc;
-      }
-
-      return null;
+    if (ast) {
+      return loc;
     }
-  ).filter(
-    types.isFile
-  );
+
+    return null;
+  }).filter(types.isFile);
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (parseScriptTags);
-
-
+exports.default = parseScriptTags;
+exports.extractScriptTags = extractScriptTags;
+exports.generateWhitespace = generateWhitespace;
+exports.getCandidateScriptLocations = getCandidateScriptLocations;
+exports.parseScript = parseScript;
+exports.parseScripts = parseScripts;
+exports.parseScriptTags = parseScriptTags;
 
 /***/ }),
 /* 1024 */,

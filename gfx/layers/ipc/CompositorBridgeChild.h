@@ -387,7 +387,7 @@ private:
   // True if this CompositorBridge is currently delaying its messages until the
   // paint thread completes. This is R/W on both the main and paint threads, and
   // must be accessed within the paint lock.
-  bool mIsWaitingForPaint;
+  bool mIsDelayingForAsyncPaints;
 
   uintptr_t mSlowFlushCount;
   uintptr_t mTotalFlushCount;

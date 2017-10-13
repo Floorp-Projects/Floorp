@@ -94,7 +94,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild *aManager)
   , mPaintLock("CompositorBridgeChild.mPaintLock")
   , mOutstandingAsyncPaints(0)
   , mOutstandingAsyncEndTransaction(false)
-  , mIsWaitingForPaint(false)
+  , mIsDelayingForAsyncPaints(false)
   , mSlowFlushCount(0)
   , mTotalFlushCount(0)
 {
@@ -1164,7 +1164,7 @@ CompositorBridgeChild::FlushAsyncPaints()
 
   {
     MonitorAutoLock lock(mPaintLock);
-    while (mIsWaitingForPaint) {
+    while (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
       lock.Wait();
     }
 
@@ -1198,7 +1198,7 @@ CompositorBridgeChild::NotifyBeginAsyncPaint(CapturedPaintState* aState)
   // We must not be waiting for paints to complete yet. This would imply we
   // started a new paint without waiting for a previous one, which could lead to
   // incorrect rendering or IPDL deadlocks.
-  MOZ_ASSERT(!mIsWaitingForPaint);
+  MOZ_ASSERT(!mIsDelayingForAsyncPaints);
 
   mOutstandingAsyncPaints++;
 
@@ -1267,15 +1267,15 @@ CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction()
   mOutstandingAsyncEndTransaction = false;
 
   // It's possible that we painted so fast that the main thread never reached
-  // the code that starts delaying messages. If so, mIsWaitingForPaint will be
+  // the code that starts delaying messages. If so, mIsDelayingForAsyncPaints will be
   // false, and we can safely return.
-  if (mIsWaitingForPaint) {
+  if (mIsDelayingForAsyncPaints) {
     ResumeIPCAfterAsyncPaint();
-
-    // Notify the main thread in case it's blocking. We do this unconditionally
-    // to avoid deadlocking.
-    lock.Notify();
   }
+
+  // Notify the main thread in case it's blocking. We do this unconditionally
+  // to avoid deadlocking.
+  lock.Notify();
 }
 
 void
@@ -1285,9 +1285,10 @@ CompositorBridgeChild::ResumeIPCAfterAsyncPaint()
   mPaintLock.AssertCurrentThreadOwns();
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
   MOZ_ASSERT(mOutstandingAsyncPaints == 0);
-  MOZ_ASSERT(mIsWaitingForPaint);
+  MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
+  MOZ_ASSERT(mIsDelayingForAsyncPaints);
 
-  mIsWaitingForPaint = false;
+  mIsDelayingForAsyncPaints = false;
 
   // It's also possible that the channel has shut down already.
   if (!mCanSend || mActorDestroyed) {
@@ -1304,12 +1305,12 @@ CompositorBridgeChild::PostponeMessagesIfAsyncPainting()
 
   MonitorAutoLock lock(mPaintLock);
 
-  MOZ_ASSERT(!mIsWaitingForPaint);
+  MOZ_ASSERT(!mIsDelayingForAsyncPaints);
 
   // We need to wait for async paints and the async end transaction as
   // it will do texture synchronization
   if (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
-    mIsWaitingForPaint = true;
+    mIsDelayingForAsyncPaints = true;
     GetIPCChannel()->BeginPostponingSends();
   }
 }
