@@ -411,10 +411,10 @@ ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   auto pref = static_cast<PrefHashEntry*>(aEntry);
   if (pref->mPrefFlags.IsTypeString()) {
     if (pref->mDefaultPref.mStringVal) {
-      PL_strfree(pref->mDefaultPref.mStringVal);
+      free(pref->mDefaultPref.mStringVal);
     }
     if (pref->mUserPref.mStringVal) {
-      PL_strfree(pref->mUserPref.mStringVal);
+      free(pref->mUserPref.mStringVal);
     }
   }
 
@@ -539,7 +539,7 @@ PREF_Cleanup()
 
   while (node) {
     next_node = node->mNext;
-    PL_strfree(node->mDomain);
+    free(node->mDomain);
     free(node);
     node = next_node;
   }
@@ -861,7 +861,7 @@ PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
     }
 
     if (stringVal) {
-      *aValueOut = NS_strdup(stringVal);
+      *aValueOut = moz_xstrdup(stringVal);
       rv = NS_OK;
     }
   }
@@ -1087,14 +1087,14 @@ pref_SetValue(PrefValue* aExistingValue,
               PrefType aNewType)
 {
   if (aFlags.IsTypeString() && aExistingValue->mStringVal) {
-    PL_strfree(aExistingValue->mStringVal);
+    free(aExistingValue->mStringVal);
   }
 
   aFlags.SetPrefType(aNewType);
   if (aFlags.IsTypeString()) {
     MOZ_ASSERT(aNewValue.mStringVal);
     aExistingValue->mStringVal =
-      aNewValue.mStringVal ? PL_strdup(aNewValue.mStringVal) : nullptr;
+      aNewValue.mStringVal ? moz_xstrdup(aNewValue.mStringVal) : nullptr;
   } else {
     *aExistingValue = aNewValue;
   }
@@ -1320,7 +1320,7 @@ PREF_RegisterPriorityCallback(const char* aPrefNode,
 
   auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
   if (node) {
-    node->mDomain = PL_strdup(aPrefNode);
+    node->mDomain = moz_xstrdup(aPrefNode);
     node->mFunc = aCallback;
     node->mData = aData;
     node->mNext = gFirstCallback;
@@ -1342,7 +1342,7 @@ PREF_RegisterCallback(const char* aPrefNode,
 
   auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
   if (node) {
-    node->mDomain = PL_strdup(aPrefNode);
+    node->mDomain = moz_xstrdup(aPrefNode);
     node->mFunc = aCallback;
     node->mData = aData;
     if (gLastPriorityNode) {
@@ -1375,7 +1375,7 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   if (gLastPriorityNode == aNode) {
     gLastPriorityNode = aPrevNode;
   }
-  PL_strfree(aNode->mDomain);
+  free(aNode->mDomain);
   free(aNode);
   return next_node;
 }
@@ -2590,7 +2590,7 @@ nsPrefBranch::GetCharPrefWithDefault(const char* aPrefName,
 
   if (NS_FAILED(rv) && aArgc == 1) {
     NS_ENSURE_ARG(aDefaultValue);
-    *aRetVal = NS_strdup(aDefaultValue);
+    *aRetVal = moz_xstrdup(aDefaultValue);
     return NS_OK;
   }
 
