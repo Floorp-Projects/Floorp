@@ -25,6 +25,7 @@
 #include "SVGAttrValueWrapper.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsAtom.h"
+#include "mozilla/AtomArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/EnumTypeTraits.h"
@@ -84,8 +85,6 @@ public:
 class nsAttrValue {
   friend struct MiscContainer;
 public:
-  typedef nsTArray< RefPtr<nsAtom> > AtomArray;
-
   // This has to be the same as in ValueBaseType
   enum ValueType {
     eString =       0x00, //   00
@@ -200,7 +199,7 @@ public:
   bool GetColorValue(nscolor& aColor) const;
   inline int16_t GetEnumValue() const;
   inline float GetPercentValue() const;
-  inline AtomArray* GetAtomArrayValue() const;
+  inline mozilla::AtomArray* GetAtomArrayValue() const;
   inline mozilla::DeclarationBlock* GetCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;

@@ -6,6 +6,7 @@
 #ifndef nsTreeBodyFrame_h
 #define nsTreeBodyFrame_h
 
+#include "mozilla/AtomArray.h"
 #include "mozilla/Attributes.h"
 
 #include "nsLeafBoxFrame.h"
@@ -599,7 +600,7 @@ protected: // Data Members
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
 
   // A scratch array used when looking up cached style contexts.
-  AtomArray mScratchArray;
+  mozilla::AtomArray mScratchArray;
 
   // The index of the first visible row and the # of rows visible onscreen.
   // The tree only examines onscreen rows, starting from

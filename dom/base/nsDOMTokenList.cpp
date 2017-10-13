@@ -62,7 +62,7 @@ nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr)
   }
 
   BloomFilter<8, nsAtom> filter;
-  nsAttrValue::AtomArray* array = aAttr->GetAtomArrayValue();
+  AtomArray* array = aAttr->GetAtomArrayValue();
   for (uint32_t i = 0; i < array->Length(); i++) {
     nsAtom* atom = array->ElementAt(i);
     if (filter.mightContain(atom)) {
@@ -76,8 +76,7 @@ nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr)
 }
 
 void
-nsDOMTokenList::RemoveDuplicatesInternal(nsAttrValue::AtomArray* aArray,
-                                         uint32_t aStart)
+nsDOMTokenList::RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart)
 {
   nsDataHashtable<nsPtrHashKey<nsAtom>, bool> tokens;
 
