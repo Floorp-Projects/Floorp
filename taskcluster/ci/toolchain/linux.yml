@@ -12,7 +12,7 @@ linux64-clang-3.9:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: desktop-build}
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: toolchain-script
         script: build-clang-3.9-linux.sh
@@ -35,13 +35,35 @@ linux64-clang-4:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: desktop-build}
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: toolchain-script
         script: build-clang-4-linux.sh
         resources:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-4-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-5:
+    description: "Clang 5 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(clang5)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+    run:
+        using: toolchain-script
+        script: build-clang-5-linux.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-5-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
