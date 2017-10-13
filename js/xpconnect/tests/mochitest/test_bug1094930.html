@@ -16,14 +16,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1094930
 <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
   var proto = { 
-    createdCallback: function() {
-      ok(true, "createdCallback was called");
+    connectedCallback: function() {
+      ok(true, "connectedCallback was called");
       SimpleTest.finish()
     }
   };
 
   var f = document.registerElement.call(frames[0].document, "x-foo", { prototype: proto });
-  var inst = new f();
+  frames[0].document.firstChild.appendChild(new f());
 </script>
 </body>
 </html>
