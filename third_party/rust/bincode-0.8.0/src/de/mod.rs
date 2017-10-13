@@ -56,9 +56,11 @@ impl<'de, R: BincodeRead<'de>, E: ByteOrder, S: SizeLimit> Deserializer<R, S, E>
     }
 
     fn read_string(&mut self) -> Result<String> {
-        let vec = self.read_vec()?;
-        String::from_utf8(vec).map_err(|e|
-            ErrorKind::InvalidUtf8Encoding(e.utf8_error()).into())
+        String::from_utf8(try!(self.read_vec())).map_err(|err|
+            ErrorKind::InvalidEncoding{
+                desc: "error while decoding utf8 string",
+                detail: Some(format!("Deserialize error: {}", err))
+            }.into())
     }
 }
 
@@ -83,7 +85,8 @@ where R: BincodeRead<'de>, S: SizeLimit, E: ByteOrder {
     fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor<'de>,
     {
-        Err(Box::new(ErrorKind::DeserializeAnyNotSupported))
+        let message = "bincode does not support Deserializer::deserialize";
+        Err(Error::custom(message))
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
@@ -94,7 +97,10 @@ where R: BincodeRead<'de>, S: SizeLimit, E: ByteOrder {
             1 => visitor.visit_bool(true),
             0 => visitor.visit_bool(false),
             value => {
-                Err(ErrorKind::InvalidBoolEncoding(value).into())
+                Err(ErrorKind::InvalidEncoding{
+                    desc: "invalid u8 when decoding bool",
+                    detail: Some(format!("Expected 0 or 1, got {}", value))
+                }.into())
             }
         }
     }
@@ -137,7 +143,10 @@ where R: BincodeRead<'de>, S: SizeLimit, E: ByteOrder {
         use std::str;
 
         let error = || {
-            ErrorKind::InvalidCharEncoding.into()
+            ErrorKind::InvalidEncoding{
+                desc: "Invalid char encoding",
+                detail: None,
+            }.into()
         };
 
         let mut buf = [0u8; 4];
@@ -247,7 +256,10 @@ where R: BincodeRead<'de>, S: SizeLimit, E: ByteOrder {
         match value {
             0 => visitor.visit_none(),
             1 => visitor.visit_some(&mut *self),
-            v => Err(ErrorKind::InvalidTagEncoding(v as usize).into())
+            _ => Err(ErrorKind::InvalidEncoding{
+                desc: "invalid tag when decoding Option",
+                detail: Some(format!("Expected 0 or 1, got {}", value))
+            }.into()),
         }
     }
 

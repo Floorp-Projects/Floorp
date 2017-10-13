@@ -195,32 +195,25 @@ fn test_fixed_size_array() {
 
 #[test]
 fn deserializing_errors() {
-
-    match *deserialize_little::<bool>(&vec![0xA][..]).unwrap_err() {
-        ErrorKind::InvalidBoolEncoding(0xA) => {},
-        _ => panic!(),
+    fn isize_invalid_deserialize<T: Debug>(res: Result<T>) {
+        match res.map_err(|e| *e) {
+            Err(ErrorKind::InvalidEncoding{..}) => {},
+            Err(ErrorKind::Custom(ref s)) if s.contains("invalid encoding") => {},
+            Err(ErrorKind::Custom(ref s)) if s.contains("invalid value") => {},
+            other => panic!("Expecting InvalidEncoding, got {:?}", other),
+        }
     }
-    match *deserialize_little::<String>(&vec![1, 0, 0, 0, 0, 0, 0, 0, 0xFF][..]).unwrap_err() {
-        ErrorKind::InvalidUtf8Encoding(_) => {},
-        _ => panic!(),
-    }
 
+    isize_invalid_deserialize(deserialize_little::<bool>(&vec![0xA][..]));
+    isize_invalid_deserialize(deserialize_little::<String>(&vec![1, 0, 0, 0, 0, 0, 0, 0, 0xFF][..]));
     // Out-of-bounds variant
     #[derive(Serialize, Deserialize, Debug)]
     enum Test {
         One,
         Two,
     };
-
-    match *deserialize_little::<Test>(&vec![0, 0, 0, 5][..]).unwrap_err() {
-        // Error message comes from serde
-        ErrorKind::Custom(_) => {},
-        _ => panic!(),
-    }
-    match *deserialize_little::<Option<u8>>(&vec![5, 0][..]).unwrap_err() {
-        ErrorKind::InvalidTagEncoding(_) => {},
-        _ => panic!(),
-    }
+    isize_invalid_deserialize(deserialize_little::<Test>(&vec![0, 0, 0, 5][..]));
+    isize_invalid_deserialize(deserialize_little::<Option<u8>>(&vec![5, 0][..]));
 }
 
 #[test]

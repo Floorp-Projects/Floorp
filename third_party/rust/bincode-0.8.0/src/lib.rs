@@ -4,9 +4,9 @@
 //! serialization strategy.
 //!
 //! There are simple functions for encoding to `Vec<u8>` and decoding from
-//! `&[u8]`, but the meat of the library is the `serialize_into` and `deserialize_from`
-//! functions which respectively allow encoding into any `std::io::Write`
-//! or decode from any `std::io::Read`.
+//! `&[u8]`, but the meat of the library is the `encode_into` and `decode_from`
+//! functions which respectively allow encoding into a `std::io::Writer`
+//! and decoding from a `std::io::Buffer`.
 //!
 //! ## Modules
 //! Until "default type parameters" lands, we have an extra module called `endian_choice`
@@ -37,6 +37,7 @@
 #![crate_type = "dylib"]
 
 extern crate byteorder;
+extern crate num_traits;
 extern crate serde as serde_crate;
 
 mod ser;
@@ -45,7 +46,7 @@ pub mod internal;
 
 pub mod read_types {
     //! The types that the deserializer uses for optimizations
-    pub use ::de::read::{SliceReader, BincodeRead, IoReader};
+    pub use ::de::read::{SliceReader, BincodeRead, IoReadReader};
 }
 
 use std::io::{Read, Write};
@@ -124,7 +125,7 @@ pub fn serialize<T: ?Sized, S>(value: &T, size_limit: S) -> internal::Result<Vec
 /// encoding function, the encoder will verify that the structure can be encoded
 /// within that limit.  This verification occurs before any bytes are written to
 /// the Writer, so recovering from an error is easy.
-pub trait SizeLimit: private::Sealed {
+pub trait SizeLimit {
     /// Tells the SizeLimit that a certain number of bytes has been
     /// read or written.  Returns Err if the limit has been exceeded.
     fn add(&mut self, n: u64) -> Result<()>;
@@ -141,11 +142,6 @@ pub struct Bounded(pub u64);
 /// Use this if you don't care about the size of encoded or decoded messages.
 #[derive(Copy, Clone)]
 pub struct Infinite;
-
-struct CountSize {
-    total: u64,
-    limit: Option<u64>,
-}
 
 impl SizeLimit for Bounded {
     #[inline(always)]
@@ -168,14 +164,4 @@ impl SizeLimit for Infinite {
 
     #[inline(always)]
     fn limit(&self) -> Option<u64> { None }
-}
-
-mod private {
-    pub trait Sealed {}
-
-    impl<'a> Sealed for super::de::read::SliceReader<'a> {}
-    impl<R> Sealed for super::de::read::IoReader<R> {}
-    impl Sealed for super::Infinite {}
-    impl Sealed for super::Bounded {}
-    impl Sealed for super::CountSize {}
 }
