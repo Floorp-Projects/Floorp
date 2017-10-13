@@ -7,6 +7,7 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/element.js");
 
 const XBLNS = "http://www.mozilla.org/xbl";
+const XHTMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 class Element {
@@ -26,6 +27,8 @@ class Element {
 class DOMElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
+
+    this.namespaceURI = XHTMLNS;
 
     if (this.localName == "option") {
       this.selected = false;
@@ -93,9 +96,20 @@ add_test(function test_isSelected() {
   run_next_test();
 });
 
+add_test(function test_isDOMElement() {
+  ok(element.isDOMElement(domEl));
+  ok(!element.isDOMElement(xulEl));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMElement(typ));
+  }
+
+  run_next_test();
+});
+
 add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
   ok(element.isXULElement(xblEl));
+  ok(!element.isXULElement(domEl));
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isXULElement(typ));
   }
