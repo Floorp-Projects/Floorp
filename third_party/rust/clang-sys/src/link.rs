@@ -181,5 +181,10 @@ macro_rules! link {
 macro_rules! link {
     ($($(#[cfg($cfg:meta)])* pub fn $name:ident($($pname:ident: $pty:ty), *) $(-> $ret:ty)*;)+) => (
         extern { $($(#[cfg($cfg)])* pub fn $name($($pname: $pty), *) $(-> $ret)*;)+ }
+
+        $($(#[cfg($cfg)])*
+        pub mod $name {
+            pub fn is_loaded() -> bool { true }
+        })+
     )
 }

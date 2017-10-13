@@ -360,6 +360,36 @@ add_task(async function test_generic_engine_fail() {
   }
 });
 
+add_task(async function test_engine_fail_weird_errors() {
+  enableValidationPrefs();
+  await Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.enabled = true;
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  try {
+    let msg = "Bad things happened!"
+    engine._errToThrow = { message: msg };
+    let ping = await sync_and_validate_telem(true);
+    equal(ping.status.service, SYNC_FAILED_PARTIAL);
+    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+      name: "unexpectederror",
+      error: "Bad things happened!"
+    });
+    let e = { msg };
+    engine._errToThrow = e;
+    ping = await sync_and_validate_telem(true);
+    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+      name: "unexpectederror",
+      error: JSON.stringify(e)
+    });
+
+  } finally {
+    await cleanAndGo(engine, server);
+    Service.engineManager.unregister(engine);
+  }
+});
+
 add_task(async function test_engine_fail_ioerror() {
   enableValidationPrefs();
 

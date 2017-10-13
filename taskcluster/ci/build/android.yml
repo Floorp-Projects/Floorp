@@ -293,8 +293,7 @@ android-api-16-gradle/opt:
         docker-image: {in-tree: android-build}
         max-run-time: 7200
         env:
-            # Bug 1292762 - Set GRADLE_USER_HOME to avoid sdk-manager-plugin intermittent
-            GRADLE_USER_HOME: /builds/worker/workspace/build/src/dotgradle
+            GRADLE_USER_HOME: /builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
         artifacts:
           - name: public/android/maven

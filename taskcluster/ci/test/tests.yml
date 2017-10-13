@@ -292,10 +292,6 @@ jittest:
                     - remove_executables.py
         extra-options:
             - --jittest-suite=jittest-chunked
-    when:
-        files-changed:
-            - js/src/**
-            - js/public/**
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -352,9 +348,7 @@ jsreftest:
                 extra-options:
                     - --reftest-suite=jsreftest
     when:
-        files-changed:
-            - js/src/**
-            - js/public/**
+        schedules: ['jsreftest']
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -1968,12 +1962,6 @@ test-verify:
                     - remove_executables.py
         extra-options:
             - --verify
-    when:
-        files-changed:
-            - '**/*.js'
-            - '**/*.html'
-            - '**/*.xhtml'
-            - '**/*.xul'
 
 web-platform-tests:
     description: "Web platform test run"
