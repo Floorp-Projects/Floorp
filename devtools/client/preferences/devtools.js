@@ -61,9 +61,6 @@ pref("devtools.inspector.colorWidget.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 
-// Enable the Font Inspector
-pref("devtools.fontinspector.enabled", true);
-
 // Counter to promote the inspector layout view.
 // @remove after release 56 (See Bug 1355747)
 pref("devtools.promote.layoutview", 1);
