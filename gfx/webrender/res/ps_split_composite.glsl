@@ -38,11 +38,15 @@ void main(void) {
     CompositeInstance ci = fetch_composite_instance();
     SplitGeometry geometry = fetch_split_geometry(ci.user_data0);
     AlphaBatchTask src_task = fetch_alpha_batch_task(ci.src_task_index);
+    AlphaBatchTask dest_task = fetch_alpha_batch_task(ci.render_task_index);
+
+    vec2 dest_origin = dest_task.render_target_origin -
+                       dest_task.screen_space_origin;
 
     vec3 world_pos = bilerp(geometry.points[0], geometry.points[1],
                             geometry.points[3], geometry.points[2],
                             aPosition.y, aPosition.x);
-    vec4 final_pos = vec4(world_pos.xy * uDevicePixelRatio, ci.z, 1.0);
+    vec4 final_pos = vec4((world_pos.xy + dest_origin) * uDevicePixelRatio, ci.z, 1.0);
 
     gl_Position = uTransform * final_pos;
 
