@@ -27,19 +27,38 @@ import org.mozilla.focus.widget.DefaultBrowserPreference;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static final String FRAGMENT_RESID_INTENT_EXTRA = "extra_frament_resid";
+    public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
+    private TitleUpdater titleUpdater;
+
     private boolean localeUpdated;
+
+    public interface TitleUpdater {
+        void updateTitle(int stringResId);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        addPreferencesFromResource(R.xml.settings);
+        final Bundle args = getArguments();
+        final int prefResId = args != null ? args.getInt(FRAGMENT_RESID_INTENT_EXTRA) : R.xml.settings;
+        final int titleResId = args != null ? args.getInt(TITLE_RESID_INTENT_EXTRA) : R.string.menu_settings;
+
+        if (titleUpdater != null) {
+            titleUpdater.updateTitle(titleResId);
+        }
+
+        addPreferencesFromResource(prefResId);
     }
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         final Resources resources = getResources();
 
+        // AppCompatActivity has a Toolbar that is used as the ActionBar, and it conflicts with the ActionBar
+        // used by PreferenceScreen to create the headers (with title, back navigation), so we wrap all these
+        // "preference screens" into separate activities.
         if (preference.getKey().equals(resources.getString(R.string.pref_key_about))) {
             final Intent intent = InfoActivity.getAboutIntent(getActivity());
             startActivity(intent);
@@ -51,6 +70,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_privacy_notice))) {
             final Intent intent = InfoActivity.getPrivacyNoticeIntent(getActivity());
+            startActivity(intent);
+        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
+            final Intent intent = new Intent(getActivity(), SettingsActivity.class);
+            intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, R.xml.search_engine_settings);
+            intent.putExtra(TITLE_RESID_INTENT_EXTRA, R.string.preference_search_installed_search_engines);
             startActivity(intent);
         }
 
@@ -74,6 +98,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onPause();
 
         getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    public void setTitleUpdater(TitleUpdater titleUpdater) {
+        this.titleUpdater = titleUpdater;
     }
 
     @Override

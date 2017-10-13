@@ -5,6 +5,7 @@
 package org.mozilla.focus.activity;
 
 import android.os.Bundle;
+import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -14,7 +15,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.settings.SettingsFragment;
 
-public class SettingsActivity extends LocaleAwareAppCompatActivity {
+public class SettingsActivity extends LocaleAwareAppCompatActivity implements SettingsFragment.TitleUpdater {
     public static final int ACTIVITY_RESULT_LOCALE_CHANGED = 1;
 
     @Override
@@ -38,8 +39,12 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity {
             }
         });
 
+        final PreferenceFragment fragment = new SettingsFragment();
+        fragment.setArguments(getIntent().getExtras());
+        ((SettingsFragment) fragment).setTitleUpdater(this);
+
         getFragmentManager().beginTransaction()
-                .replace(R.id.container, new SettingsFragment())
+                .replace(R.id.container, fragment)
                 .commit();
 
         // Ensure all locale specific Strings are initialised on first run, we don't set the title
@@ -51,5 +56,10 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity {
     @Override
     public void applyLocale() {
         setTitle(R.string.menu_settings);
+    }
+
+    @Override
+    public void updateTitle(int titleResId) {
+        setTitle(titleResId);
     }
 }
