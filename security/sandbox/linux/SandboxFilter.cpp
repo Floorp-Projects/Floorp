@@ -734,6 +734,9 @@ public:
         // ffmpeg, and anything else that calls isatty(), will be told
         // that nothing is a typewriter:
         .ElseIf(request == TCGETS, Error(ENOTTY))
+        // Bug 1408498: libgio uses FIONREAD on inotify fds.
+        // (We should stop using inotify: bug 1408497.)
+        .ElseIf(request == FIONREAD, Allow())
         // Allow anything that isn't a tty ioctl, for now; bug 1302711
         // will cover changing this to a default-deny policy.
         .ElseIf(shifted_type != kTtyIoctls, Allow())
