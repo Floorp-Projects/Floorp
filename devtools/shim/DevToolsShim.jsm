@@ -160,12 +160,18 @@ this.DevToolsShim = {
    *         markup view or that resolves immediately if DevTools are not installed.
    */
   inspectNode: function (tab, selectors) {
+    // Record the timing at which this event started in order to compute later in
+    // gDevTools.showToolbox, the complete time it takes to open the toolbox.
+    // i.e. especially take `DevtoolsStartup.initDevTools` into account.
+    let { performance } = Services.appShell.hiddenDOMWindow;
+    let startTime = performance.now();
+
     let devtoolsReady = this._maybeInitializeDevTools("ContextMenu");
     if (!devtoolsReady) {
       return Promise.resolve();
     }
 
-    return this._gDevTools.inspectNode(tab, selectors);
+    return this._gDevTools.inspectNode(tab, selectors, startTime);
   },
 
   _onDevToolsRegistered: function () {

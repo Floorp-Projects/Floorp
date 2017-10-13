@@ -8402,6 +8402,28 @@
      "releaseChannelCollection": "opt-out",
      "description": "A counter incremented every time the user prints a document."
    },
+  "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
+    "bug_numbers": [1405584],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "Time taken (in ms) to open the first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, shadereditor, canvasdebugger, performance, memory, netmonitor, storage, webaudioeditor, scratchpad, dom]."
+  },
+  "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
+    "bug_numbers": [1405584],
+    "expires_in_version": "62",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "Time taken (in ms) to open all but first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, shadereditor, canvasdebugger, performance, memory, netmonitor, storage, webaudioeditor, scratchpad, dom]."
+  },
   "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_LOCAL_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

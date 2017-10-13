@@ -9,8 +9,8 @@ case "$(uname -s)" in
 Linux)
     WORKSPACE=$HOME/workspace
     UPLOAD_DIR=$HOME/artifacts
-    export CC=clang
-    PATH="$WORKSPACE/build/src/clang/bin:$PATH"
+    export CC=gcc
+    PATH="$WORKSPACE/build/src/gcc/bin:$PATH"
     COMPRESS_EXT=xz
     ;;
 MINGW*)

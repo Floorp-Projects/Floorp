@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -60,12 +60,7 @@ cookie.fromJSON = function(json) {
   newCookie.value = assert.string(json.value, "Cookie value must be string");
 
   if (typeof json.domain != "undefined") {
-    let domain = assert.string(json.domain, "Cookie domain must be string");
-    if (domain.substring(0, 1) !== ".") {
-      // make sure that this is stored as a domain cookie
-      domain = "." + domain;
-    }
-    newCookie.domain = domain;
+    newCookie.domain = assert.string(json.domain, "Cookie domain must be string");
   }
   if (typeof json.path != "undefined") {
     newCookie.path = assert.string(json.path, "Cookie path must be string");
@@ -104,6 +99,12 @@ cookie.fromJSON = function(json) {
 cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
+
+  let hostOnly = false;
+  if (typeof newCookie.domain == "undefined") {
+    hostOnly = true;
+    newCookie.domain = restrictToHost;
+  }
   assert.string(newCookie.domain, "Cookie domain must be string");
 
   if (typeof newCookie.path == "undefined") {
@@ -118,11 +119,30 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
     newCookie.expiry = date.getTime() / 1000;
   }
 
+  let isIpAddress = false;
+  try {
+    Services.eTLD.getPublicSuffixFromHost(newCookie.domain);
+  } catch (e) {
+    switch (e.result) {
+      case Cr.NS_ERROR_HOST_IS_IP_ADDRESS:
+        isIpAddress = true;
+        break;
+      default:
+        throw new InvalidCookieDomainError(newCookie.domain);
+    }
+  }
+
+  if (!hostOnly && !isIpAddress) {
+    // only store this as a domain cookie if the domain was specified in the
+    // request and it wasn't an IP address.
+    newCookie.domain = "." + newCookie.domain;
+  }
+
   if (restrictToHost) {
     if (!restrictToHost.endsWith(newCookie.domain) &&
-        ("." + restrictToHost) !== newCookie.domain) {
-      throw new InvalidCookieDomainError(
-          `Cookies may only be set ` +
+        ("." + restrictToHost) !== newCookie.domain &&
+        restrictToHost !== newCookie.domain) {
+      throw new InvalidCookieDomainError(`Cookies may only be set ` +
           `for the current domain (${restrictToHost})`);
     }
   }

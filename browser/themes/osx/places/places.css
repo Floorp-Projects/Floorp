@@ -19,6 +19,10 @@
   font-size: 1.0909rem;
 }
 
+:root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+
 .sidebar-placesTree {
   -moz-appearance: -moz-mac-source-list;
   -moz-font-smoothing-background-color: -moz-mac-source-list;
