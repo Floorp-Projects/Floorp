@@ -115,6 +115,11 @@ public:
   {
     return mOldInfo->GetKey(aKey);
   }
+  NS_IMETHOD GetCacheEntryId(uint64_t *aCacheEntryId) override
+  {
+    *aCacheEntryId = mCacheEntryId;
+    return NS_OK;
+  }
   NS_IMETHOD GetFetchCount(int32_t *aFetchCount) override
   {
     return mOldInfo->GetFetchCount(aFetchCount);
@@ -176,6 +181,8 @@ private:
   _OldCacheEntryWrapper() = delete;
   nsICacheEntryDescriptor* mOldDesc; // ref holded in mOldInfo
   nsCOMPtr<nsICacheEntryInfo> mOldInfo;
+
+  const uint64_t mCacheEntryId;
 };
 
 

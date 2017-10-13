@@ -53,6 +53,7 @@ function ChannelListener(closure, ctx, flags) {
   this._closurectx = ctx;
   this._flags = flags;
   this._isFromCache = false;
+  this._cacheEntryId = undefined;
 }
 ChannelListener.prototype = {
   _closure: null,
@@ -79,8 +80,19 @@ ChannelListener.prototype = {
       this._lastEvent = Date.now();
 
       try {
-        this._isFromCache = request.QueryInterface(Ci.nsICachingChannel).isFromCache();
+        this._isFromCache = request.QueryInterface(Ci.nsICacheInfoChannel).isFromCache();
       } catch (e) {}
+
+      var thrown = false;
+      try {
+        this._cacheEntryId = request.QueryInterface(Ci.nsICacheInfoChannel).getCacheEntryId();
+      } catch (e) {
+        thrown = true;
+      }
+      if (this._isFromCache && thrown)
+        do_throw("Should get a CacheEntryId");
+      else if (!this._isFromCache && !thrown)
+        do_throw("Shouldn't get a CacheEntryId");
 
       request.QueryInterface(Components.interfaces.nsIChannel);
       try {
@@ -171,7 +183,11 @@ ChannelListener.prototype = {
       do_throw("Error in onStopRequest: " + ex);
     }
     try {
-      this._closure(request, this._buffer, this._closurectx, this._isFromCache);
+      this._closure(request,
+                    this._buffer,
+                    this._closurectx,
+                    this._isFromCache,
+                    this._cacheEntryId);
       this._closurectx = null;
     } catch (ex) {
       do_throw("Error in closure function: " + ex);
