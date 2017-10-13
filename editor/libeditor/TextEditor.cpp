@@ -417,14 +417,12 @@ TextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 already_AddRefed<Element>
 TextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
                          int32_t* aInOutOffset,
-                         nsCOMPtr<nsIContent>* aInOutChildAtOffset,
                          EDirection aSelect)
 {
   nsCOMPtr<nsIDOMNode> parent(GetAsDOMNode(*aInOutParent));
   nsCOMPtr<nsIDOMNode> br;
   // We ignore the retval, and assume it's fine if the br is non-null
-  CreateBRImpl(address_of(parent), aInOutOffset, aInOutChildAtOffset,
-               address_of(br), aSelect);
+  CreateBRImpl(address_of(parent), aInOutOffset, address_of(br), aSelect);
   *aInOutParent = do_QueryInterface(parent);
   nsCOMPtr<Element> ret(do_QueryInterface(br));
   return ret.forget();
@@ -433,7 +431,6 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
 nsresult
 TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
                          int32_t* aInOutOffset,
-                         nsCOMPtr<nsIContent>* aInOutChildAtOffset,
                          nsCOMPtr<nsIDOMNode>* outBRNode,
                          EDirection aSelect)
 {
@@ -443,7 +440,6 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
   // we need to insert a br.  unfortunately, we may have to split a text node to do it.
   nsCOMPtr<nsINode> node = do_QueryInterface(*aInOutParent);
   int32_t theOffset = *aInOutOffset;
-  const int32_t kInOffset = *aInOutOffset;
   RefPtr<Element> brNode;
   if (IsTextNode(node)) {
     int32_t offset;
@@ -477,11 +473,6 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
     }
     (*aInOutOffset)++;
   }
-  for (int32_t i = 0; i < *aInOutOffset - kInOffset; ++i) {
-    if (aInOutChildAtOffset && *aInOutChildAtOffset) {
-      *aInOutChildAtOffset = (*aInOutChildAtOffset)->GetNextSibling();
-    }
-  }
 
   *outBRNode = GetAsDOMNode(brNode);
   if (*outBRNode && (aSelect != eNone)) {
@@ -512,7 +503,7 @@ TextEditor::CreateBR(nsIDOMNode* aNode,
 {
   nsCOMPtr<nsIDOMNode> parent = aNode;
   int32_t offset = aOffset;
-  return CreateBRImpl(address_of(parent), &offset, nullptr, outBRNode, aSelect);
+  return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
 nsresult
