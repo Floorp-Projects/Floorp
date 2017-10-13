@@ -17,7 +17,14 @@ const {
 const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
-this.EXPORTED_SYMBOLS = ["element"];
+this.EXPORTED_SYMBOLS = [
+  "ChromeWebElement",
+  "ContentWebElement",
+  "ContentWebFrame",
+  "ContentWebWindow",
+  "element",
+  "WebElement",
+];
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
@@ -1193,3 +1200,296 @@ element.isBooleanAttribute = function(el, attr) {
   }
   return boolEls[el.localName].includes(attr);
 };
+
+/**
+ * A web element is an abstraction used to identify an element when
+ * it is transported via the protocol, between remote- and local ends.
+ *
+ * In Marionette this abstraction can represent DOM elements,
+ * WindowProxies, and XUL elements.
+ */
+class WebElement {
+  /**
+   * @param {string} uuid
+   *     Identifier that must be unique across all browsing contexts
+   *     for the contract to be upheld.
+   */
+  constructor(uuid) {
+    this.uuid = assert.string(uuid);
+  }
+
+  /**
+   * Performs an equality check between this web element and
+   * <var>other</var>.
+   *
+   * @param {WebElement} other
+   *     Web element to compare with this.
+   *
+   * @return {boolean}
+   *     True if this and <var>other</var> are the same.  False
+   *     otherwise.
+   */
+  is(other) {
+    return other instanceof WebElement && this.uuid === other.uuid;
+  }
+
+  toString() {
+    return `[object ${this.constructor.name} uuid=${this.uuid}]`;
+  }
+
+  /**
+   * Returns a new {@link WebElement} reference for a DOM element,
+   * <code>WindowProxy</code>, or XUL element.
+   *
+   * @param {(Element|WindowProxy|XULElement)} node
+   *     Node to construct a web element reference for.
+   *
+   * @return {(ContentWebElement|ChromeWebElement)}
+   *     Web element reference for <var>el</var>.
+   *
+   * @throws {TypeError}
+   *     If <var>node</var> is neither a <code>WindowProxy</code>,
+   *     DOM element, or a XUL element.
+   */
+  static from(node) {
+    const uuid = WebElement.generateUUID();
+
+    if (element.isDOMElement(node) || element.isSVGElement(node)) {
+      return new ContentWebElement(uuid);
+    } else if (element.isDOMWindow(node)) {
+      if (node.parent === node) {
+        return new ContentWebWindow(uuid);
+      }
+      return new ContentWebFrame(uuid);
+    } else if (element.isXULElement(node)) {
+      return new ChromeWebElement(uuid);
+    }
+
+    throw new TypeError("Expected DOM window/element " +
+        pprint`or XUL element, got: ${node}`);
+  }
+
+  /**
+   * Unmarshals a JSON Object to one of {@link ContentWebElement},
+   * {@link ContentWebWindow}, {@link ContentWebFrame}, or
+   * {@link ChromeWebElement}.
+   *
+   * @param {Object.<string, string>} json
+   *     Web element reference, which is supposed to be a JSON Object
+   *     where the key is one of the {@link WebElement} concrete
+   *     classes' UUID identifiers.
+   *
+   * @return {WebElement}
+   *     Representation of the web element.
+   *
+   * @throws {TypeError}
+   *     If <var>json</var> is not a web element reference.
+   */
+  static fromJSON(json) {
+    let keys = [];
+    try {
+      keys = Object.keys(json);
+    } catch (e) {
+      throw new TypeError(`Expected JSON Object: ${e}`);
+    }
+
+    for (let key of keys) {
+      switch (key) {
+        case ContentWebElement.Identifier:
+        case ContentWebElement.LegacyIdentifier:
+          return ContentWebElement.fromJSON(json);
+
+        case ContentWebWindow.Identifier:
+          return ContentWebWindow.fromJSON(json);
+
+        case ContentWebFrame.Identifier:
+          return ContentWebFrame.fromJSON(json);
+
+        case ChromeWebElement.Identifier:
+          return ChromeWebElement.fromJSON(json);
+      }
+    }
+
+    throw new TypeError(
+        pprint`Expected web element reference, got: ${json}`);
+  }
+
+  /**
+   * Constructs a {@link ContentWebElement} or {@link ChromeWebElement}
+   * from a a string <var>uuid</var>.
+   *
+   * This whole function is a workaround for the fact that clients
+   * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
+   * Objects instead of web element representations.  For that reason
+   * we need the <var>context</var> argument to determine what kind of
+   * {@link WebElement} to return.
+   *
+   * @param {string} uuid
+   *     UUID to be associated with the web element.
+   * @param {Context} context
+   *     Context, which is used to determine if the returned type
+   *     should be a content web element or a chrome web element.
+   *
+   * @return {WebElement}
+   *     One of {@link ContentWebElement} or {@link ChromeWebElement},
+   *     based on <var>context</var>.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>uuid</var> is not a string.
+   * @throws {TypeError}
+   *     If <var>context</var> is an invalid context.
+   */
+  static fromUUID(uuid, context) {
+    assert.string(uuid);
+
+    switch (context) {
+      case "chrome":
+        return new ChromeWebElement(uuid);
+
+      case "content":
+        return new ContentWebElement(uuid);
+
+      default:
+        throw new TypeError("Unknown context: " + context);
+    }
+  }
+
+  /**
+   * Checks if <var>ref<var> is a {@link WebElement} reference,
+   * i.e. if it has {@link ContentWebElement.Identifier},
+   * {@link ContentWebElement.LegacyIdentifier}, or
+   * {@link ChromeWebElement.Identifier} as properties.
+   *
+   * @param {Object.<string, string>} obj
+   *     Object that represents a reference to a {@link WebElement}.
+   * @return {boolean}
+   *     True if <var>obj</var> is a {@link WebElement}, false otherwise.
+   */
+  static isReference(obj) {
+    if (Object.prototype.toString.call(obj) != "[object Object]") {
+      return false;
+    }
+
+    if ((ContentWebElement.Identifier in obj) ||
+        (ContentWebElement.LegacyIdentifier in obj) ||
+        (ContentWebWindow.Identifier in obj) ||
+        (ContentWebFrame.Identifier in obj) ||
+        (ChromeWebElement.Identifier in obj)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Generates a unique identifier.
+   *
+   * @return {string}
+   *     UUID.
+   */
+  static generateUUID() {
+    let uuid = uuidGen.generateUUID().toString();
+    return uuid.substring(1, uuid.length - 1);
+  }
+}
+this.WebElement = WebElement;
+
+/**
+ * DOM elements are represented as web elements when they are
+ * transported over the wire protocol.
+ */
+class ContentWebElement extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    const {Identifier, LegacyIdentifier} = ContentWebElement;
+
+    if (!(Identifier in json) && !(LegacyIdentifier in json)) {
+      throw new TypeError(
+          pprint`Expected web element reference, got: ${json}`);
+    }
+
+    let uuid = json[Identifier] || json[LegacyIdentifier];
+    return new ContentWebElement(uuid);
+  }
+}
+ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
+ContentWebElement.LegacyIdentifier = "ELEMENT";
+this.ContentWebElement = ContentWebElement;
+
+/**
+ * Top-level browsing contexts, such as <code>WindowProxy</code>
+ * whose <code>opener</code> is null, are represented as web windows
+ * over the wire protocol.
+ */
+class ContentWebWindow extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebWindow.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ContentWebWindow.Identifier in json)) {
+      throw new TypeError(
+          pprint`Expected web window reference, got: ${json}`);
+    }
+    let uuid = json[ContentWebWindow.Identifier];
+    return new ContentWebWindow(uuid);
+  }
+}
+ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
+this.ContentWebWindow = ContentWebWindow;
+
+/**
+ * Nested browsing contexts, such as the <code>WindowProxy</code>
+ * associated with <tt>&lt;frame&gt;</tt> and <tt>&lt;iframe&gt;</tt>,
+ * are represented as web frames over the wire protocol.
+ */
+class ContentWebFrame extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebFrame.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ContentWebFrame.Identifier in json)) {
+      throw new TypeError(pprint`Expected web frame reference, got: ${json}`);
+    }
+    let uuid = json[ContentWebFrame.Identifier];
+    return new ContentWebFrame(uuid);
+  }
+}
+ContentWebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
+this.ContentWebFrame = ContentWebFrame;
+
+/**
+ * XUL elements in chrome space are represented as chrome web elements
+ * over the wire protocol.
+ */
+class ChromeWebElement extends WebElement {
+  toJSON() {
+    return {
+      [ChromeWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ChromeWebElement.Identifier in json)) {
+      throw new TypeError("Expected chrome element reference " +
+          pprint`for XUL/XBL element, got: ${json}`);
+    }
+    let uuid = json[ChromeWebElement.Identifier];
+    return new ChromeWebElement(uuid);
+  }
+}
+ChromeWebElement.Identifier = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
+this.ChromeWebElement = ChromeWebElement;
