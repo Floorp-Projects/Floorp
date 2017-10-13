@@ -231,3 +231,33 @@ add_task(async function testCancel() {
 
   await BrowserTestUtils.windowClosed(win);
 });
+
+async function testModuleNameHelper(moduleName, acceptButtonShouldBeDisabled) {
+  let win = await openLoadModuleDialog();
+  resetCallCounts();
+
+  info(`Setting Module Name to '${moduleName}'`);
+  let moduleNameBox = win.document.getElementById("device_name");
+  moduleNameBox.value = moduleName;
+  // this makes this not a great test, but it's the easiest way to simulate this
+  moduleNameBox.onchange();
+
+  let dialogNode = win.document.querySelector("dialog");
+  Assert.equal(dialogNode.getAttribute("buttondisabledaccept"),
+               acceptButtonShouldBeDisabled ? "true" : "", // it's a string
+               `dialog accept button should ${acceptButtonShouldBeDisabled ? "" : "not "}be disabled`);
+
+  return BrowserTestUtils.closeWindow(win);
+}
+
+add_task(async function testEmptyModuleName() {
+  await testModuleNameHelper("", true);
+});
+
+add_task(async function testReservedModuleName() {
+  await testModuleNameHelper("Root Certs", true);
+});
+
+add_task(async function testAcceptableModuleName() {
+  await testModuleNameHelper("Some Module Name", false);
+});

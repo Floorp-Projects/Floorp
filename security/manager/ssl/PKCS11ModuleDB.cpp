@@ -114,6 +114,17 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // "Root Certs" is the name some NSS command-line utilities will give the
+  // roots module if they decide to load it when there happens to be a
+  // `DLL_PREFIX "nssckbi" DLL_SUFFIX` file in the directory being operated on.
+  // This causes failures, so as a workaround, the PSM initialization code will
+  // unconditionally remove any module named "Root Certs". We should prevent the
+  // user from adding an unrelated module named "Root Certs" in the first place
+  // so PSM doesn't delete it. See bug 1406396.
+  if (aModuleName.EqualsLiteral("Root Certs")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   // There appears to be a deadlock if we try to load modules concurrently, so
   // just wait until the loadable roots module has been loaded.
   nsresult rv = BlockUntilLoadableRootsLoaded();
