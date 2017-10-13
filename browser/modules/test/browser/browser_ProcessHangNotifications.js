@@ -43,8 +43,14 @@ const ADDON_ID = "fake-addon";
  *
  * @param hangType
  *        One of SLOW_SCRIPT, PLUGIN_HANG, ADDON_HANG.
+ * @param browser (optional)
+ *        The <xul:browser> that this hang should be associated with.
+ *        If not supplied, the hang will be associated with every browser,
+ *        but the nsIHangReport.scriptBrowser attribute will return the
+ *        currently selected browser in this window's gBrowser.
  */
-let TestHangReport = function(hangType = SLOW_SCRIPT) {
+let TestHangReport = function(hangType = SLOW_SCRIPT,
+                              browser = gBrowser.selectedBrowser) {
   this.promise = new Promise((resolve, reject) => {
     this._resolver = resolve;
   });
@@ -57,6 +63,8 @@ let TestHangReport = function(hangType = SLOW_SCRIPT) {
   } else {
     this._hangType = hangType;
   }
+
+  this._browser = browser;
 }
 
 TestHangReport.prototype = {
@@ -95,7 +103,15 @@ TestHangReport.prototype = {
   },
 
   isReportForBrowser(aFrameLoader) {
+    if (this._browser) {
+      return this._browser.frameLoader === aFrameLoader;
+    }
+
     return true;
+  },
+
+  get scriptBrowser() {
+    return this._browser;
   }
 };
 
@@ -306,7 +322,7 @@ add_task(async function terminateAtShutdown() {
 add_task(async function terminateNoWindows() {
   let testWin = await BrowserTestUtils.openNewBrowserWindow();
 
-  let pausedHang = new TestHangReport(SLOW_SCRIPT);
+  let pausedHang = new TestHangReport(SLOW_SCRIPT, testWin.gBrowser.selectedBrowser);
   Services.obs.notifyObservers(pausedHang, "process-hang-report");
   ProcessHangMonitor.waitLonger(testWin);
   ok(ProcessHangMonitor.findPausedReport(testWin.gBrowser.selectedBrowser),
@@ -369,4 +385,46 @@ add_task(async function terminateNoWindows() {
      "With no open windows, should have terminated global for add-on hang.");
 
   document.documentElement.setAttribute("windowtype", "navigator:browser");
+});
+
+/**
+ * Test that if a script hang occurs in one browser window, and that
+ * browser window goes away, that we clear the hang. For plug-in hangs,
+ * we do the conservative thing and terminate any plug-in hangs when a
+ * window closes, even though we don't exactly know which window it
+ * belongs to.
+ */
+add_task(async function terminateClosedWindow() {
+  let testWin = await BrowserTestUtils.openNewBrowserWindow();
+  let testBrowser = testWin.gBrowser.selectedBrowser;
+
+  let pausedHang = new TestHangReport(SLOW_SCRIPT, testBrowser);
+  Services.obs.notifyObservers(pausedHang, "process-hang-report");
+  ProcessHangMonitor.waitLonger(testWin);
+  ok(ProcessHangMonitor.findPausedReport(testWin.gBrowser.selectedBrowser),
+     "There should be a paused report for the selected browser.");
+
+  let pluginHang = new TestHangReport(PLUGIN_HANG, testBrowser);
+  let scriptHang = new TestHangReport(SLOW_SCRIPT, testBrowser);
+  let addonHang = new TestHangReport(ADDON_HANG, testBrowser);
+
+  [pluginHang, scriptHang, addonHang].forEach(hangReport => {
+    Services.obs.notifyObservers(hangReport, "process-hang-report");
+  });
+
+  await BrowserTestUtils.closeWindow(testWin);
+
+  let pausedAction = await pausedHang.promise;
+  let pluginAction = await pluginHang.promise;
+  let scriptAction = await scriptHang.promise;
+  let addonAction = await addonHang.promise;
+
+  is(pausedAction, TEST_ACTION_TERMSCRIPT,
+     "When closing window, should have terminated script for a paused script hang.");
+  is(pluginAction, TEST_ACTION_TERMPLUGIN,
+     "When closing window, should have terminated hung plug-in.");
+  is(scriptAction, TEST_ACTION_TERMSCRIPT,
+     "When closing window, should have terminated script for script hang.");
+  is(addonAction, TEST_ACTION_TERMGLOBAL,
+     "When closing window, should have terminated global for add-on hang.");
 });
