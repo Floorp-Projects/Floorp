@@ -169,7 +169,8 @@ WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
 already_AddRefed<Element>
 WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
                          int32_t* aInOutOffset,
-                         nsIEditor::EDirection aSelect)
+                         nsIEditor::EDirection aSelect,
+                         nsCOMPtr<nsIContent>* aInOutChildAtOffset)
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
@@ -228,7 +229,8 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
   }
 
   // ready, aim, fire!
-  return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset, aSelect);
+  return mHTMLEditor->CreateBRImpl(aInOutParent, aInOutOffset,
+                                   aInOutChildAtOffset, aSelect);
 }
 
 nsresult

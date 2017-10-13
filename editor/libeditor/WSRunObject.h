@@ -215,9 +215,11 @@ public:
   // and makes any needed adjustments to ws around that point.
   // example of fixup: normalws after {aInOutParent,aInOutOffset}
   //                   needs to begin with nbsp.
-  already_AddRefed<dom::Element> InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
-                                             int32_t* aInOutOffset,
-                                             nsIEditor::EDirection aSelect);
+  already_AddRefed<dom::Element>
+    InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
+                int32_t* aInOutOffset,
+                nsIEditor::EDirection aSelect,
+                nsCOMPtr<nsIContent>* aInOutChildAtOffset = nullptr);
 
   // InsertText inserts a string at {aInOutParent,aInOutOffset} and makes any
   // needed adjustments to ws around that point.  Example of fixup:
