@@ -310,7 +310,9 @@ pref("browser.urlbar.maxRichResults", 10);
 pref("browser.urlbar.delay", 50);
 
 // The maximum number of historical search results to show.
-pref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
+pref("browser.urlbar.maxHistoricalSearchSuggestions", 0);
+// The awesomebar result composition.
+pref("browser.urlbar.matchBuckets", "suggestion:4,general:5");
 
 // The default behavior for the urlbar can be configured to use any combination
 // of the match filters with each additional filter adding more results (union).
