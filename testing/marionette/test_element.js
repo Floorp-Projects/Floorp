@@ -67,6 +67,16 @@ const domEl = new DOMElement("p");
 const xulEl = new XULElement("browser");
 const xblEl = new XBLElement("framebox");
 
+class WindowProxy {
+  get parent() { return this; }
+  get self() { return this; }
+  toString() { return "[object Window]"; }
+}
+const domWin = new WindowProxy();
+const domFrame = new class extends WindowProxy {
+  get parent() { return domWin; }
+};
+
 add_test(function test_isSelected() {
   let checkbox = new DOMElement("input", {type: "checkbox"});
   ok(!element.isSelected(checkbox));
@@ -99,6 +109,8 @@ add_test(function test_isSelected() {
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
   ok(!element.isDOMElement(xulEl));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isDOMElement(typ));
   }
@@ -110,8 +122,22 @@ add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
   ok(element.isXULElement(xblEl));
   ok(!element.isXULElement(domEl));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isXULElement(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isDOMWindow() {
+  ok(element.isDOMWindow(domWin));
+  ok(element.isDOMWindow(domFrame));
+  ok(!element.isDOMWindow(domEl));
+  ok(!element.isDOMWindow(xulEl));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMWindow(typ));
   }
 
   run_next_test();

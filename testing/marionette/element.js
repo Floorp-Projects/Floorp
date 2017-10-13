@@ -1081,6 +1081,26 @@ element.isXULElement = function(node) {
       [XBLNS, XULNS].includes(node.namespaceURI);
 };
 
+/**
+ * Ascertains whether <var>node</var> is a <code>WindowProxy</code>.
+ *
+ * @param {*} node
+ *     Node thought to be a <code>WindowProxy</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is a DOM window.
+ */
+element.isDOMWindow = function(node) {
+  // TODO(ato): This should use Object.prototype.toString.call(node)
+  // but it's not clear how to write a good xpcshell test for that,
+  // seeing as we stub out a WindowProxy.
+  return typeof node == "object" &&
+      node !== null &&
+      typeof node.toString == "function" &&
+      node.toString() == "[object Window]" &&
+      node.self === node;
+};
+
 const boolEls = {
   audio: ["autoplay", "controls", "loop", "muted"],
   button: ["autofocus", "disabled", "formnovalidate"],
