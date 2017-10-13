@@ -77,6 +77,7 @@ enum MediaStreamTrackState {
 interface MediaStreamTrack : EventTarget {
     readonly    attribute DOMString             kind;
     readonly    attribute DOMString             id;
+    [NeedsCallerType]
     readonly    attribute DOMString             label;
                 attribute boolean               enabled;
 //  readonly    attribute boolean               muted;
@@ -90,6 +91,7 @@ interface MediaStreamTrack : EventTarget {
     void                   stop ();
 //  MediaTrackCapabilities getCapabilities ();
     MediaTrackConstraints  getConstraints ();
+    [NeedsCallerType]
     MediaTrackSettings     getSettings ();
 
     [Throws, NeedsCallerType]
