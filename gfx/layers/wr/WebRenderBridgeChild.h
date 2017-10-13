@@ -112,6 +112,16 @@ public:
     mIdNamespace = aIdNamespace;
   }
 
+  wr::FontKey GetNextFontKey()
+  {
+    return wr::FontKey { GetNamespace(), GetNextResourceId() };
+  }
+
+  wr::FontInstanceKey GetNextFontInstanceKey()
+  {
+    return wr::FontInstanceKey { GetNamespace(), GetNextResourceId() };
+  }
+
   wr::WrImageKey GetNextImageKey()
   {
     return wr::WrImageKey{ GetNamespace(), GetNextResourceId() };
