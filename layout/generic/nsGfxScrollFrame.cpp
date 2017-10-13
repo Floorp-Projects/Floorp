@@ -3319,9 +3319,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   Unused << DecideScrollableLayer(aBuilder, &dirtyRect,
               /* aSetBase = */ !mIsRoot);
 
-  bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
-    nsLayoutUtils::HasDisplayPort(mOuter->GetContent());
-
   if (aBuilder->IsForFrameVisibility()) {
     // We expand the dirty rect to catch frames just outside of the scroll port.
     // We use the dirty rect instead of the whole scroll port to prevent
@@ -3352,7 +3349,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // If we are a root scroll frame that has a display port we want to add
     // scrollbars, they will be children of the scrollable layer, but they get
     // adjusted by the APZC automatically.
-    bool addScrollBars = mIsRoot && usingDisplayPort && !aBuilder->IsForEventDelivery();
+    bool addScrollBars = mIsRoot && mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow();
 
     if (addScrollBars) {
       // Add classic scrollbars.
@@ -3524,7 +3521,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsRect scrolledRectClip =
         GetUnsnappedScrolledRectInternal(mScrolledFrame->GetScrollableOverflowRect(),
                                          mScrollPort.Size()) + mScrolledFrame->GetPosition();
-      if (usingDisplayPort) {
+      if (mWillBuildScrollableLayer) {
         // Clip the contents to the display port.
         // The dirty rect already acts kind of like a clip, in that
         // FrameLayerBuilder intersects item bounds and opaque regions with

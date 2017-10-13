@@ -295,17 +295,6 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
        bY = s15Fixed16Number_to_float(profile->blueColorant.Y);
        bZ = s15Fixed16Number_to_float(profile->blueColorant.Z);
 
-       // Check if any of the XYZ values are negative (see mozilla bug 498245)
-       // CIEXYZ tristimulus values cannot be negative according to the spec.
-       negative =
-	       (rX < 0) || (rY < 0) || (rZ < 0) ||
-	       (gX < 0) || (gY < 0) || (gZ < 0) ||
-	       (bX < 0) || (bY < 0) || (bZ < 0);
-
-       if (negative)
-	       return true;
-
-
        // Sum the values; they should add up to something close to white
        sum[0] = rX + gX + bX;
        sum[1] = rY + gY + bY;
@@ -330,6 +319,28 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
                  ((sum[i] + tolerance[i]) >= target[i])))
                return true;
        }
+
+#ifndef __APPLE__
+       // Check if any of the XYZ values are negative (see mozilla bug 498245)
+       // CIEXYZ tristimulus values cannot be negative according to the spec.
+
+       negative =
+	       (rX < 0) || (rY < 0) || (rZ < 0) ||
+	       (gX < 0) || (gY < 0) || (gZ < 0) ||
+	       (bX < 0) || (bY < 0) || (bZ < 0);
+
+#else
+       // Chromatic adaption to D50 can result in negative XYZ, but the white
+       // point D50 tolerance test has passed. Accept negative values herein.
+       // See https://bugzilla.mozilla.org/show_bug.cgi?id=498245#c18 onwards
+       // for discussion about whether profile XYZ can or cannot be negative,
+       // per the spec. Also the https://bugzil.la/450923 user report.
+
+       // FIXME: allow this relaxation on all ports?
+       negative = false;
+#endif
+       if (negative)
+	       return true; // bogus
 
        // All Good
        return false;

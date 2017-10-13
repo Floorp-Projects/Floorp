@@ -23,11 +23,8 @@
         "id": "ProfilerFeature",
         "type": "string",
         "enum": [
-          "displaylistdump",
-          "gpu",
           "java",
           "js",
-          "layersdump",
           "leaf",
           "mainthreadio",
           "memory",

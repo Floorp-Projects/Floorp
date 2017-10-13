@@ -229,6 +229,9 @@ public:
   void
   OnResponseEnd(FetchDriverObserver::EndReason eReason) override;
 
+  bool
+  NeedOnDataAvailable() override;
+
   void
   OnDataAvailable() override;
 
@@ -288,6 +291,9 @@ public:
 
     FlushConsoleReport();
   }
+
+  bool
+  NeedOnDataAvailable() override;
 
   void
   OnDataAvailable() override;
@@ -499,6 +505,13 @@ MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse
   }
 }
 
+bool
+MainThreadFetchResolver::NeedOnDataAvailable()
+{
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
+  return !!mFetchObserver;
+}
+
 void
 MainThreadFetchResolver::OnDataAvailable()
 {
@@ -696,6 +709,14 @@ WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
   if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response");
   }
+}
+
+bool
+WorkerFetchResolver::NeedOnDataAvailable()
+{
+  AssertIsOnMainThread();
+  MutexAutoLock lock(mPromiseProxy->Lock());
+  return !!mFetchObserver;
 }
 
 void
