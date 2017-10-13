@@ -2186,7 +2186,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     }
 
     if (presContext->RefreshDriver()->HasScheduleFlush()) {
-      presContext->NotifyInvalidation(layerManager->GetLastTransactionId(), nsIntRect());
+      presContext->NotifyInvalidation(layerManager->GetLastTransactionId(), frame->GetRect());
     }
 
     return layerManager.forget();
