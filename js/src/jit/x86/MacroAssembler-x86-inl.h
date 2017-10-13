@@ -30,6 +30,80 @@ MacroAssembler::move64(Register64 src, Register64 dest)
     movl(src.high, dest.high);
 }
 
+void
+MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
+{
+    ScratchDoubleScope scratch(*this);
+
+    if (Assembler::HasSSE41()) {
+        vmovd(src, dest.low);
+        vpextrd(1, src, dest.high);
+    } else {
+        vmovd(src, dest.low);
+        moveDouble(src, scratch);
+        vpsrldq(Imm32(4), scratch, scratch);
+        vmovd(scratch, dest.high);
+    }
+}
+
+void
+MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
+{
+    ScratchDoubleScope scratch(*this);
+
+    if (Assembler::HasSSE41()) {
+        vmovd(src.low, dest);
+        vpinsrd(1, src.high, dest, dest);
+    } else {
+        vmovd(src.low, dest);
+        vmovd(src.high, ScratchDoubleReg);
+        vunpcklps(ScratchDoubleReg, dest, dest);
+    }
+}
+
+void
+MacroAssembler::move64To32(Register64 src, Register dest)
+{
+    if (src.low != dest)
+        movl(src.low, dest);
+}
+
+void
+MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
+{
+    if (src != dest.low)
+        movl(src, dest.low);
+    movl(Imm32(0), dest.high);
+}
+
+void
+MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_ASSERT(dest.low == eax);
+    MOZ_ASSERT(dest.high == edx);
+    move8SignExtend(src, eax);
+    masm.cdq();
+}
+
+void
+MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_ASSERT(dest.low == eax);
+    MOZ_ASSERT(dest.high == edx);
+    move16SignExtend(src, eax);
+    masm.cdq();
+}
+
+void
+MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_ASSERT(dest.low == eax);
+    MOZ_ASSERT(dest.high == edx);
+    if (src != eax)
+        movl(src, eax);
+    masm.cdq();
+}
+
 // ===============================================================
 // Logical functions
 
