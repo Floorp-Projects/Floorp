@@ -67,6 +67,10 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   public static final int MAX_UPLOAD_FAILURE_COUNT = 5;
   public static final long NOTIFY_TAB_SENT_TTL_SECS = TimeUnit.SECONDS.convert(1L, TimeUnit.HOURS); // 1 hour
 
+  // Reasons behind sending collection_changed push notifications.
+  public static final String COLLECTION_MODIFIED_REASON_SENDTAB = "sendtab";
+  public static final String COLLECTION_MODIFIED_REASON_FIRSTSYNC = "firstsync";
+
   protected final ClientRecordFactory factory = new ClientRecordFactory();
   protected ClientUploadDelegate clientUploadDelegate;
   protected ClientDownloadDelegate clientDownloadDelegate;
@@ -184,7 +188,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
         if (!isFirstLocalClientRecordUpload && account != null) {
           // Notify the clients who got their record written
           final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-          notifyClients(fxAccount, devicesToNotify);
+          notifyClients(fxAccount, devicesToNotify, NOTIFY_TAB_SENT_TTL_SECS, COLLECTION_MODIFIED_REASON_SENDTAB);
         }
 
         return;
@@ -192,17 +196,19 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       checkAndUpload();
       if (isFirstLocalClientRecordUpload && account != null) {
         final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-        notifyAllClients(fxAccount);
+        notifyAllClients(fxAccount, 0, COLLECTION_MODIFIED_REASON_FIRSTSYNC);
       }
     }
 
-    private void notifyClients(@NonNull AndroidFxAccount fxAccount, @NonNull List<String> devicesToNotify) {
-      final ExtendedJSONObject body = createNotifyClientsBody(devicesToNotify);
+    private void notifyClients(@NonNull AndroidFxAccount fxAccount, @NonNull List<String> devicesToNotify,
+                               long ttl, @NonNull String reason) {
+      final ExtendedJSONObject body = createNotifyClientsBody(devicesToNotify, ttl, reason);
       notifyClientsHelper(fxAccount, body);
     }
 
-    private void notifyAllClients(@NonNull AndroidFxAccount fxAccount) {
-      final ExtendedJSONObject body = createNotifyAllClientsBody(fxAccount.getDeviceId());
+    private void notifyAllClients(@NonNull AndroidFxAccount fxAccount, long ttl,
+                                  @NonNull String reason) {
+      final ExtendedJSONObject body = createNotifyAllClientsBody(fxAccount.getDeviceId(), ttl, reason);
       notifyClientsHelper(fxAccount, body);
     }
 
@@ -240,35 +246,38 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
     @NonNull
     @SuppressWarnings("unchecked")
-    private ExtendedJSONObject createNotifyClientsBody(@NonNull List<String> devicesToNotify) {
+    private ExtendedJSONObject createNotifyClientsBody(@NonNull List<String> devicesToNotify,
+                                                       long ttl, @NonNull String reason) {
       final ExtendedJSONObject body = new ExtendedJSONObject();
       final JSONArray to = new JSONArray();
       to.addAll(devicesToNotify);
       body.put("to", to);
-      createNotifyClientsHelper(body);
+      createNotifyClientsHelper(body, ttl, reason);
       return body;
     }
 
     @NonNull
     @SuppressWarnings("unchecked")
-    private ExtendedJSONObject createNotifyAllClientsBody(@NonNull String localFxADeviceId) {
+    private ExtendedJSONObject createNotifyAllClientsBody(@NonNull String localFxADeviceId,
+                                                          long ttl, @NonNull String reason) {
       final ExtendedJSONObject body = new ExtendedJSONObject();
       body.put("to", "all");
       final JSONArray excluded = new JSONArray();
       excluded.add(localFxADeviceId);
       body.put("excluded", excluded);
-      createNotifyClientsHelper(body);
+      createNotifyClientsHelper(body, ttl, reason);
       return body;
     }
 
-    private void createNotifyClientsHelper(ExtendedJSONObject body) {
-      body.put("payload", createNotifyDevicesPayload());
-      body.put("TTL", NOTIFY_TAB_SENT_TTL_SECS);
+    private void createNotifyClientsHelper(ExtendedJSONObject body, long ttl,
+                                           @NonNull String reason) {
+      body.put("payload", createNotifyDevicesPayload(reason));
+      body.put("TTL", ttl);
     }
 
     @NonNull
     @SuppressWarnings("unchecked")
-    private ExtendedJSONObject createNotifyDevicesPayload() {
+    private ExtendedJSONObject createNotifyDevicesPayload(@NonNull String reason) {
       final ExtendedJSONObject payload = new ExtendedJSONObject();
       payload.put("version", 1);
       payload.put("command", "sync:collection_changed");
@@ -276,6 +285,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       final JSONArray collections = new JSONArray();
       collections.add("clients");
       data.put("collections", collections);
+      data.put("reason", reason);
       payload.put("data", data);
       return payload;
     }

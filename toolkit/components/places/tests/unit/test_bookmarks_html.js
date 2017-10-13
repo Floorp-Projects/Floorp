@@ -59,6 +59,9 @@ var test_bookmarks = {
     { title: "Latest Headlines",
       url: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
       feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml"
+    },
+    { title: "Latest Headlines No Site",
+      feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml"
     }
   ],
   unfiled: [
@@ -78,13 +81,12 @@ add_task(async function setup() {
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
 
   // File pointer to legacy bookmarks file.
-  gBookmarksFileOld = do_get_file("bookmarks.preplaces.html");
+  gBookmarksFileOld = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
 
   // File pointer to a new Places-exported bookmarks file.
-  gBookmarksFileNew = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  gBookmarksFileNew.append("bookmarks.exported.html");
-  if (gBookmarksFileNew.exists()) {
-    gBookmarksFileNew.remove(false);
+  gBookmarksFileNew = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.html");
+  if (await OS.File.exists(gBookmarksFileNew)) {
+    await OS.File.remove(gBookmarksFileNew);
   }
 
   // This test must be the first one, since it setups the new bookmarks.html.
@@ -347,7 +349,9 @@ function checkItem(aExpected, aNode) {
           break;
         case "feedUrl":
           let livemark = await PlacesUtils.livemarks.getLivemark({ id });
-          do_check_eq(livemark.siteURI.spec, aExpected.url);
+          if (aExpected.url) {
+            do_check_eq(livemark.siteURI.spec, aExpected.url);
+          }
           do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
           break;
         case "children":

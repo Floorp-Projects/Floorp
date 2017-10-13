@@ -8,23 +8,69 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
+const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = [
   "Command",
   "Message",
-  "MessageOrigin",
   "Response",
 ];
 
+/** Representation of the packets transproted over the wire. */
+class Message {
+  /**
+   * @param {number} messageID
+   *     Message ID unique identifying this message.
+   */
+  constructor(messageID) {
+    this.id = assert.integer(messageID);
+  }
+
+  toString() {
+    return truncate`${this.toPacket()}`;
+  }
+
+  /**
+   * Converts a data packet into a {@link Command} or {@link Response}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, method name or error, and parameters
+   *     or result.
+   *
+   * @return {Message}
+   *     Based on the message type, a {@link Command} or {@link Response}
+   *     instance.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(data) {
+    const [type] = data;
+
+    switch (type) {
+      case Command.Type:
+        return Command.fromPacket(data);
+
+      case Response.Type:
+        return Response.fromPacket(data);
+
+      default:
+        throw new TypeError(
+            "Unrecognised message type in packet: " + JSON.stringify(data));
+    }
+  }
+}
+
 /**
  * Messages may originate from either the server or the client.
- * Because the remote protocol is full duplex, both endpoints may be the
- * origin of both commands and responses.
+ * Because the remote protocol is full duplex, both endpoints may be
+ * the origin of both commands and responses.
  *
  * @enum
  * @see {@link Message}
  */
-const MessageOrigin = {
+Message.Origin = {
   /** Indicates that the message originates from the client. */
   Client: 0,
   /** Indicates that the message originates from the server. */
@@ -32,93 +78,68 @@ const MessageOrigin = {
 };
 
 /**
- * Representation of the packets transproted over the wire.
- *
- * @class
- */
-this.Message = {};
-
-/**
- * Converts a data packet into a Command or Response type.
- *
- * @param {Array.<number, number, ?, ?>} data
- *     A four element array where the elements, in sequence, signifies
- *     message type, message ID, method name or error, and parameters
- *     or result.
- *
- * @return {Message}
- *     Based on the message type, a {@link Command} or {@link Response}
- *     instance.
- *
- * @throws {TypeError}
- *     If the message type is not recognised.
- */
-Message.fromMsg = function(data) {
-  switch (data[0]) {
-    case Command.TYPE:
-      return Command.fromMsg(data);
-
-    case Response.TYPE:
-      return Response.fromMsg(data);
-
-    default:
-      throw new TypeError(
-          "Unrecognised message type in packet: " + JSON.stringify(data));
-  }
-};
-
-/**
  * A command is a request from the client to run a series of remote end
  * steps and return a fitting response.
  *
  * The command can be synthesised from the message passed over the
- * Marionette socket using the {@code fromMsg} function.  The format of
+ * Marionette socket using the {@link fromPacket} function.  The format of
  * a message is:
  *
- *     [type, id, name, params]
+ * <pre>
+ *     [<var>type</var>, <var>id</var>, <var>name</var>, <var>params</var>]
+ * </pre>
  *
  * where
  *
- *   type (integer)
- *     Must be zero (integer). Zero means that this message is a command.
+ * <dl>
+ *   <dt><var>type</var> (integer)
+ *   <dd>
+ *     Must be zero (integer).  Zero means that this message is
+ *     a command.
  *
- *   id (integer)
- *     Integer used as a sequence number.  The server replies with the
- *     same ID for the response.
+ *   <dt><var>id</var> (integer)
+ *   <dd>
+ *     Integer used as a sequence number.  The server replies with
+ *     the same ID for the response.
  *
- *   name (string)
- *     String representing the command name with an associated set of
- *     remote end steps.
+ *   <dt><var>name</var> (string)
+ *   <dd>
+ *     String representing the command name with an associated set
+ *     of remote end steps.
  *
- *   params (JSON Object or null)
+ *   <dt><var>params</var> (JSON Object or null)
+ *   <dd>
  *     Object of command function arguments.  The keys of this object
  *     must be strings, but the values can be arbitrary values.
+ * </dl>
  *
- * A command has an associated message {@code id} that prevents the
- * dispatcher from sending responses in the wrong order.
+ * A command has an associated message <var>id</var> that prevents
+ * the dispatcher from sending responses in the wrong order.
  *
  * The command may also have optional error- and result handlers that
  * are called when the client returns with a response.  These are
- * {@code function onerror({Object})}, {@code function onresult({Object})},
- * and {@code function onresult({Response})}.
+ * <code>function onerror({Object})</code>,
+ * <code>function onresult({Object})</code>, and
+ * <code>function onresult({Response})</code>:
  *
- * @param {number} msgId
+ * @param {number} messageID
  *     Message ID unique identifying this message.
  * @param {string} name
  *     Command name.
  * @param {Object.<string, ?>} params
  *     Command parameters.
  */
-class Command {
-  constructor(msgID, name, params = {}) {
-    this.id = assert.integer(msgID);
+class Command extends Message {
+  constructor(messageID, name, params = {}) {
+    super(messageID);
+
     this.name = assert.string(name);
     this.parameters = assert.object(params);
 
     this.onerror = null;
     this.onresult = null;
 
-    this.origin = MessageOrigin.Client;
+    this.origin = Message.Origin.Client;
     this.sent = false;
   }
 
@@ -128,7 +149,7 @@ class Command {
    *
    * @param {Response} resp
    *     The response to pass on to the result or error to the
-   *     {@code onerror} or {@code onresult} handlers to.
+   *     <code>onerror</code> or <code>onresult</code> handlers to.
    */
   onresponse(resp) {
     if (this.onerror && resp.error) {
@@ -138,19 +159,37 @@ class Command {
     }
   }
 
-  toMsg() {
-    return [Command.TYPE, this.id, this.name, this.parameters];
+  /**
+   * Encodes the command to a packet.
+   *
+   * @return {Array}
+   *     Packet.
+   */
+  toPacket() {
+    return [
+      Command.Type,
+      this.id,
+      this.name,
+      this.parameters,
+    ];
   }
 
-  toString() {
-    return "Command {id: " + this.id + ", " +
-        "name: " + JSON.stringify(this.name) + ", " +
-        "parameters: " + JSON.stringify(this.parameters) + "}";
-  }
-
-  static fromMsg(msg) {
-    let [type, msgID, name, params] = msg;
-    assert.that(n => n === Command.TYPE)(type);
+  /**
+   * Converts a data packet into {@link Command}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, command name, and parameters.
+   *
+   * @return {Command}
+   *     Representation of packet.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(payload) {
+    let [type, msgID, name, params] = payload;
+    assert.that(n => n === Command.Type)(type);
 
     // if parameters are given but null, treat them as undefined
     if (params === null) {
@@ -160,8 +199,7 @@ class Command {
     return new Command(msgID, name, params);
   }
 }
-
-Command.TYPE = 0;
+Command.Type = 0;
 
 const validator = {
   exclusionary: {
@@ -194,9 +232,10 @@ const validator = {
  * mutually exclusionary fields on the input against the existing data
  * in the body.
  *
- * For example setting the {@code error} property on the body when
- * {@code value}, {@code sessionId}, or {@code capabilities} have been
- * set previously will cause an error.
+ * For example setting the <code>error</code> property on
+ * the body when <code>value</code>, <code>sessionId</code>, or
+ * <code>capabilities</code> have been set previously will cause
+ * an error.
  */
 const ResponseBody = () => new Proxy({}, validator);
 
@@ -216,25 +255,27 @@ const ResponseBody = () => new Proxy({}, validator);
  * you modify the body property on the response.  The body property can
  * also be replaced completely.
  *
- * The response is sent implicitly by CommandProcessor when a command
- * has finished executing, and any modifications made subsequent to that
- * will have no effect.
+ * The response is sent implicitly by
+ * {@link server.TCPConnection#execute when a command has finished
+ * executing, and any modifications made subsequent to that will have
+ * no effect.
  *
- * @param {number} msgID
- *     Message ID tied to the corresponding command request this is a
- *     response for.
+ * @param {number} messageID
+ *     Message ID tied to the corresponding command request this is
+ *     a response for.
  * @param {ResponseHandler} respHandler
  *     Function callback called on sending the response.
  */
-class Response {
-  constructor(msgID, respHandler = () => {}) {
-    this.id = assert.integer(msgID);
+class Response extends Message {
+  constructor(messageID, respHandler = () => {}) {
+    super(messageID);
+
     this.respHandler_ = assert.callable(respHandler);
 
     this.error = null;
     this.body = ResponseBody();
 
-    this.origin = MessageOrigin.Server;
+    this.origin = Message.Origin.Server;
     this.sent = false;
   }
 
@@ -251,7 +292,8 @@ class Response {
   }
 
   /**
-   * Sends response using the response handler provided on construction.
+   * Sends response using the response handler provided on
+   * construction.
    *
    * @throws {RangeError}
    *     If the response has already been sent.
@@ -265,7 +307,7 @@ class Response {
   }
 
   /**
-   * Send given Error to client.
+   * Send error to client.
    *
    * Turns the response into an error response, clears any previously
    * set body data, and sends it using the response handler provided
@@ -275,8 +317,8 @@ class Response {
    *     The Error instance to send.
    *
    * @throws {Error}
-   *     If the {@code error} is not a WebDriverError, the error is
-   *     propagated.
+   *     If <var>err</var> is not a {@link WebDriverError}, the error
+   *     is propagated, i.e. rethrown.
    */
   sendError(err) {
     this.error = error.wrap(err).toJSON();
@@ -289,19 +331,37 @@ class Response {
     }
   }
 
-  toMsg() {
-    return [Response.TYPE, this.id, this.error, this.body];
+  /**
+   * Encodes the response to a packet.
+   *
+   * @return {Array}
+   *     Packet.
+   */
+  toPacket() {
+    return [
+      Response.Type,
+      this.id,
+      this.error,
+      this.body,
+    ];
   }
 
-  toString() {
-    return "Response {id: " + this.id + ", " +
-        "error: " + JSON.stringify(this.error) + ", " +
-        "body: " + JSON.stringify(this.body) + "}";
-  }
-
-  static fromMsg(msg) {
-    let [type, msgID, err, body] = msg;
-    assert.that(n => n === Response.TYPE)(type);
+  /**
+   * Converts a data packet into {@link Response}.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, error, and result.
+   *
+   * @return {Response}
+   *     Representation of packet.
+   *
+   * @throws {TypeError}
+   *     If the message type is not recognised.
+   */
+  static fromPacket(payload) {
+    let [type, msgID, err, body] = payload;
+    assert.that(n => n === Response.Type)(type);
 
     let resp = new Response(msgID);
     resp.error = assert.string(err);
@@ -310,5 +370,8 @@ class Response {
     return resp;
   }
 }
+Response.Type = 1;
 
-Response.TYPE = 1;
+this.Message = Message;
+this.Command = Command;
+this.Response = Response;

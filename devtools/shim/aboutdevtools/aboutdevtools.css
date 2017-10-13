@@ -1,0 +1,97 @@
+.box {
+  width: 980px;
+  display: flex;
+  align-items: center;
+  height: 400px;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  align-items: center;
+  width: 100%;
+}
+
+.left-pane {
+  width: 360px;
+  background-image: url(images/otter.png);
+  background-size: 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.message {
+  line-height: 1.6em;
+}
+
+.right-pane {
+  height: 250px;
+}
+
+.features {
+  max-width: 980px;
+  border-top: 1px solid #d7d7db;
+}
+
+.features-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 40px 20px;
+  margin: 40px;
+  padding: 0;
+}
+
+.feature {
+  list-style: none;
+  text-align: center;
+}
+
+.feature-desc {
+  margin: 1em 20px
+}
+
+a {
+  color: #0A84FF;
+}
+
+h1 {
+  font-size: 36px;
+  margin-top: 16px;
+  font-weight: 300;
+  line-height: 44px;
+}
+
+.installpage-button {
+  display: block;
+
+  margin-top: 2em;
+  padding: 10px 20px;
+
+  border: none;
+  border-radius: 3px;
+
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 21px;
+
+  background-color: #0060df;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
+  cursor: pointer;
+}
+
+.installpage-button:enabled:hover {
+  background-color: #003eaa
+}
+
+/* Remove light gray outline when clicking on the button */
+.installpage-button::-moz-focus-inner {
+  border: 0;
+}
+
+[hidden="true"] {
+  display: none;
+}

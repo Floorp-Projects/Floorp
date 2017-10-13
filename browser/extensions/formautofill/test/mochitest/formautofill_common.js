@@ -7,6 +7,8 @@
 let formFillChromeScript;
 let expectingPopup = null;
 
+const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
   SimpleTest.requestFlakyTimeout(reason);
   await new Promise(resolve => setTimeout(resolve, ms));
@@ -112,6 +114,14 @@ async function cleanUpStorage() {
   await cleanUpCreditCards();
 }
 
+function patchRecordCCNumber(record) {
+  const ccNumber = record["cc-number"];
+  const normalizedCCNumber = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
+  const ccNumberFmt = FormAutofillUtils.fmtMaskedCreditCardLabel(normalizedCCNumber);
+
+  return Object.assign({}, record, {ccNumberFmt});
+}
+
 // Utils for registerPopupShownListener(in satchel_common.js) that handles dropdown popup
 // Please call "initPopupListener()" in your test and "await expectPopup()"
 // if you want to wait for dropdown menu displayed.
@@ -119,6 +129,16 @@ function expectPopup() {
   info("expecting a popup");
   return new Promise(resolve => {
     expectingPopup = resolve;
+  });
+}
+
+function notExpectPopup(ms = 500) {
+  info("not expecting a popup");
+  return new Promise((resolve, reject) => {
+    expectingPopup = reject.bind(this, "Unexpected Popup");
+    // TODO: We don't have an event to notify no popup showing, so wait for 500
+    // ms (in default) to predict any unexpected popup showing.
+    setTimeout(resolve, ms);
   });
 }
 
@@ -144,8 +164,10 @@ function formAutoFillCommonSetup() {
     }
   });
 
-  SimpleTest.registerCleanupFunction(() => {
+  SimpleTest.registerCleanupFunction(async () => {
     formFillChromeScript.sendAsyncMessage("cleanup");
+    await formFillChromeScript.promiseOneMessage("cleanup-finished");
+
     formFillChromeScript.destroy();
     expectingPopup = null;
   });

@@ -22,7 +22,11 @@ const {
   error,
   UnknownCommandError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/message.js");
+const {
+  Command,
+  Message,
+  Response,
+} = Cu.import("chrome://marionette/content/message.js", {});
 const {DebuggerTransport} =
     Cu.import("chrome://marionette/content/transport.js", {});
 
@@ -315,14 +319,14 @@ server.TCPListener = class {
   /**
    * Function produces a GeckoDriver.
    *
-   * Determines application name to initialise the driver with.
+   * Determines the application to initialise the driver with.
    *
    * @return {GeckoDriver}
    *     A driver instance.
    */
   driverFactory() {
     Preferences.set(PREF_CONTENT_LISTENER, false);
-    return new GeckoDriver(Services.appinfo.name, this);
+    return new GeckoDriver(Services.appinfo.ID, this);
   }
 
   set acceptConnections(value) {
@@ -489,8 +493,8 @@ server.TCPConnection = class {
     // return immediately with any error trying to unmarshal message
     let msg;
     try {
-      msg = Message.fromMsg(data);
-      msg.origin = MessageOrigin.Client;
+      msg = Message.fromPacket(data);
+      msg.origin = Message.Origin.Client;
       this.log_(msg);
     } catch (e) {
       let resp = this.createResponse(data[1]);
@@ -619,7 +623,7 @@ server.TCPConnection = class {
    *     The command or response to send.
    */
   send(msg) {
-    msg.origin = MessageOrigin.Server;
+    msg.origin = Message.Origin.Server;
     if (msg instanceof Command) {
       this.commands_.set(msg.id, msg);
       this.sendToEmulator(msg);
@@ -649,7 +653,7 @@ server.TCPConnection = class {
    */
   sendMessage(msg) {
     this.log_(msg);
-    let payload = msg.toMsg();
+    let payload = msg.toPacket();
     this.sendRaw(payload);
   }
 
@@ -665,9 +669,8 @@ server.TCPConnection = class {
   }
 
   log_(msg) {
-    let a = (msg.origin == MessageOrigin.Client ? " -> " : " <- ");
-    let s = JSON.stringify(msg.toMsg());
-    logger.trace(this.id + a + s);
+    let dir = (msg.origin == Message.Origin.Client ? "->" : "<-");
+    logger.trace(`${this.id} ${dir} ${msg}`);
   }
 
   toString() {
