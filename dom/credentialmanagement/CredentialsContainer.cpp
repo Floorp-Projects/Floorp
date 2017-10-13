@@ -48,5 +48,12 @@ CredentialsContainer::Create(const CredentialCreationOptions& aOptions)
   return mgr->MakeCredential(mParent, aOptions.mPublicKey);
 }
 
+already_AddRefed<Promise>
+CredentialsContainer::Store(const Credential& aCredential)
+{
+  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
+  return mgr->Store(mParent, aCredential);
+}
+
 } // namespace dom
 } // namespace mozilla

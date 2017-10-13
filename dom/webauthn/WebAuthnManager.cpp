@@ -697,6 +697,27 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   return promise.forget();
 }
 
+already_AddRefed<Promise>
+WebAuthnManager::Store(nsPIDOMWindowInner* aParent,
+                       const Credential& aCredential)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aParent);
+
+  MaybeClearTransaction();
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
+
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(global, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  return promise.forget();
+}
+
 void
 WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 {

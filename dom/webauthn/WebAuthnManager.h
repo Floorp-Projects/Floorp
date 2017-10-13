@@ -89,6 +89,9 @@ public:
   GetAssertion(nsPIDOMWindowInner* aParent,
                const PublicKeyCredentialRequestOptions& aOptions);
 
+  already_AddRefed<Promise>
+  Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
+
   void StartRegister();
   void StartSign();
   void StartCancel();
