@@ -5980,8 +5980,8 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       continue;
 
 #ifdef MOZ_DUMP_PAINTING
-    AUTO_PROFILER_LABEL_DYNAMIC("FrameLayerBuilder::PaintItems", GRAPHICS,
-                                cdi->mItem->Name());
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR("FrameLayerBuilder::PaintItems", GRAPHICS,
+                                     cdi->mItem->Name());
 #else
     AUTO_PROFILER_LABEL("FrameLayerBuilder::PaintItems", GRAPHICS);
 #endif
