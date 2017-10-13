@@ -4572,19 +4572,19 @@ var Root = __webpack_require__(186);
 // Using this static variable allows webpack to know at compile-time
 // to avoid this require and not include it at all in the output.
 if (false) {
-  require("devtools-modules/src/themes/light-theme.css");
-  require("devtools-modules/src/themes/dark-theme.css");
-  require("devtools-modules/src/themes/firebug-theme.css");
+  require("devtools-mc-assets/assets/devtools/client/themes/light-theme.css");
+  require("devtools-mc-assets/assets/devtools/client/themes/dark-theme.css");
+  require("devtools-mc-assets/assets/devtools/client/themes/firebug-theme.css");
 }
 
-function updateTheme() {
+function updateTheme(className) {
   if (false) {
     var theme = getValue("theme");
     var root = document.body.parentNode;
     var appRoot = document.querySelector(".launchpad-root");
 
     root.className = "";
-    appRoot.className = "launchpad-root";
+    appRoot.className = className;
 
     root.classList.add(`theme-${theme}`);
     appRoot.classList.add(`theme-${theme}`);
@@ -4597,7 +4597,7 @@ function updateDir() {
   root.dir = dir;
 }
 
-function renderRoot(_React, _ReactDOM, component, _store) {
+function renderRoot(_React, _ReactDOM, component, _store, props) {
   var createElement = _React.createElement;
 
   var mount = document.querySelector("#mount");
@@ -4607,16 +4607,17 @@ function renderRoot(_React, _ReactDOM, component, _store) {
     return;
   }
 
-  var root = Root("launchpad-root theme-body");
+  var className = "launchpad-root theme-body";
+  var root = Root(className);
   mount.appendChild(root);
 
   if (isDevelopment()) {
     updateConfig();
-    updateTheme();
+    updateTheme(className);
   }
 
   if (component.props || component.propTypes) {
-    _ReactDOM.render(createElement(Provider, { store: _store }, createElement(component)), root);
+    _ReactDOM.render(createElement(Provider, { store: _store }, createElement(component, props)), root);
   } else {
     root.appendChild(component);
   }
@@ -11895,7 +11896,7 @@ module.exports = {
 
 var React = __webpack_require__(0);
 
-__webpack_require__(1221);
+__webpack_require__(1298);
 var dom = React.DOM;
 
 var ImPropTypes = __webpack_require__(150);
@@ -11976,18 +11977,16 @@ var LandingPage = React.createClass({
   },
 
   renderLaunchButton(browserName, isUnderConstruction) {
-    return dom.div({ className: "launch-action-container" }, dom.button({ onClick: () => this.launchBrowser(browserName) }, `Launch ${browserName}`), isUnderConstruction ? this.renderExperimentalMessage(browserName) // eslint-disable-line max-len
-    : null);
+    return dom.div({ className: "launch-action-container" }, dom.button({ onClick: () => this.launchBrowser(browserName) }, `Launch ${browserName}`), isUnderConstruction ? this.renderExperimentalMessage(browserName) : null);
   },
 
   renderExperimentalMessage(browserName) {
     var underConstructionMessage = "Debugging is experimental and certain features won't work (i.e, seeing variables, attaching breakpoints)"; // eslint-disable-line max-len
-    var githubIssuesUrl = "https://github.com/devtools-html/debugger.html/issues?q=is%3Aopen+is%3Aissue+label%3A";
-    var underConstructionImageSrc = __webpack_require__(855);
-    return dom.div({ className: "under-construction" }, dom.img({ src: underConstructionImageSrc }), dom.div({ className: "under-construction-message" }, underConstructionMessage, // eslint-disable-line max-len
-    dom.a({ className: "github-link",
-      href: `${githubIssuesUrl}${browserName}`,
-      target: "_blank" }, "Help us make it happen")));
+
+    return dom.div({ className: "under-construction" }, dom.div({ className: "under-construction-message" }, dom.p({}, underConstructionMessage), dom.img({ src: "/assets/under_construction.png" }), dom.a({
+      className: "github-link",
+      target: "_blank"
+    }, "Help us make it happen")));
   },
 
   launchBrowser(browser) {
@@ -12322,7 +12321,7 @@ function combineReducers(reducers) {
 
 var React = __webpack_require__(0);
 
-__webpack_require__(1222);
+__webpack_require__(1299);
 var dom = React.DOM;
 
 var classnames = __webpack_require__(175);
@@ -12557,16 +12556,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var React = __webpack_require__(0);
-var createElement = React.createElement;
-
-__webpack_require__(1223);
-var rocketSvg = __webpack_require__(1126);
-var InlineSVG = __webpack_require__(1205);
-
+__webpack_require__(1300);
 var dom = React.DOM;
 
 var classnames = __webpack_require__(175);
-
+var Svg = __webpack_require__(1349);
 var Sidebar = React.createClass({
   displayName: "Sidebar",
 
@@ -12579,10 +12573,7 @@ var Sidebar = React.createClass({
   },
 
   renderTitle(title) {
-    return dom.div({ className: "title-wrapper" }, dom.h1({}, title), dom.div({ className: "launchpad-container" }, createElement(InlineSVG, {
-      className: "launchpad-container-icon",
-      src: rocketSvg
-    }), dom.h2({ className: "launchpad-container-title" }, "Launchpad")));
+    return dom.div({ className: "title-wrapper" }, dom.h1({}, title), dom.div({ className: "launchpad-container" }, Svg({ name: "rocket" }), dom.h2({ className: "launchpad-container-title" }, "Launchpad")));
   },
 
   renderItem(title) {
@@ -13221,7 +13212,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var classnames = __webpack_require__(175);
-__webpack_require__(1225);
+__webpack_require__(1302);
 
 module.exports = function (className) {
   var root = document.createElement("div");
@@ -16052,13 +16043,13 @@ var _ui = __webpack_require__(1128);
 
 var _devtoolsModules = __webpack_require__(830);
 
-__webpack_require__(1228);
+__webpack_require__(1305);
 
-__webpack_require__(1229);
+__webpack_require__(1306);
 
-__webpack_require__(1230);
+__webpack_require__(1307);
 
-__webpack_require__(1231);
+__webpack_require__(1308);
 
 var _devtoolsSplitter = __webpack_require__(910);
 
@@ -16092,6 +16083,10 @@ var _SymbolModal = __webpack_require__(1170);
 
 var _SymbolModal2 = _interopRequireDefault(_SymbolModal);
 
+var _GotoLineModal = __webpack_require__(1346);
+
+var _GotoLineModal2 = _interopRequireDefault(_GotoLineModal);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var shortcuts = new _devtoolsModules.KeyShortcuts({ window });
@@ -16117,6 +16112,7 @@ class App extends _react.Component {
     this.getChildContext = this.getChildContext.bind(this);
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.toggleSymbolModal = this.toggleSymbolModal.bind(this);
+    this.toggleGoToLineModal = this.toggleGoToLineModal.bind(this);
     this.renderEditorPane = this.renderEditorPane.bind(this);
     this.renderVerticalLayout = this.renderVerticalLayout.bind(this);
     this.onEscape = this.onEscape.bind(this);
@@ -16129,7 +16125,11 @@ class App extends _react.Component {
 
   componentDidMount() {
     verticalLayoutBreakpoint.addListener(this.onLayoutChange);
+
     shortcuts.on(L10N.getStr("symbolSearch.search.key2"), this.toggleSymbolModal);
+
+    shortcuts.on(L10N.getStr("gotoLineModal.key"), this.toggleGoToLineModal);
+
     shortcuts.on("Escape", this.onEscape);
     shortcuts.on("Cmd+/", this.onCommandSlash);
   }
@@ -16137,6 +16137,9 @@ class App extends _react.Component {
   componentWillUnmount() {
     verticalLayoutBreakpoint.removeListener(this.onLayoutChange);
     shortcuts.off(L10N.getStr("symbolSearch.search.key2"), this.toggleSymbolModal);
+
+    shortcuts.off(L10N.getStr("gotoLineModal.key"), this.toggleGoToLineModal);
+
     shortcuts.off("Escape", this.onEscape);
   }
 
@@ -16178,6 +16181,28 @@ class App extends _react.Component {
     setActiveSearch("symbol");
   }
 
+  toggleGoToLineModal(_, e) {
+    var _props3 = this.props,
+        selectedSource = _props3.selectedSource,
+        activeSearch = _props3.activeSearch,
+        closeActiveSearch = _props3.closeActiveSearch,
+        setActiveSearch = _props3.setActiveSearch;
+
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!selectedSource) {
+      return;
+    }
+
+    if (activeSearch == "line") {
+      return closeActiveSearch();
+    }
+
+    setActiveSearch("line");
+  }
+
   onLayoutChange() {
     if ((0, _ui.isVisible)()) {
       this.setState({ horizontal: verticalLayoutBreakpoint.matches });
@@ -16185,9 +16210,9 @@ class App extends _react.Component {
   }
 
   renderEditorPane() {
-    var _props3 = this.props,
-        startPanelCollapsed = _props3.startPanelCollapsed,
-        endPanelCollapsed = _props3.endPanelCollapsed;
+    var _props4 = this.props,
+        startPanelCollapsed = _props4.startPanelCollapsed,
+        endPanelCollapsed = _props4.endPanelCollapsed;
     var _state = this.state,
         horizontal = _state.horizontal,
         endPanelSize = _state.endPanelSize,
@@ -16225,9 +16250,9 @@ class App extends _react.Component {
   }
 
   renderHorizontalLayout() {
-    var _props4 = this.props,
-        startPanelCollapsed = _props4.startPanelCollapsed,
-        endPanelCollapsed = _props4.endPanelCollapsed;
+    var _props5 = this.props,
+        startPanelCollapsed = _props5.startPanelCollapsed,
+        endPanelCollapsed = _props5.endPanelCollapsed;
     var horizontal = this.state.horizontal;
 
 
@@ -16262,9 +16287,9 @@ class App extends _react.Component {
   }
 
   renderVerticalLayout() {
-    var _props5 = this.props,
-        startPanelCollapsed = _props5.startPanelCollapsed,
-        endPanelCollapsed = _props5.endPanelCollapsed;
+    var _props6 = this.props,
+        startPanelCollapsed = _props6.startPanelCollapsed,
+        endPanelCollapsed = _props6.endPanelCollapsed;
     var horizontal = this.state.horizontal;
 
 
@@ -16291,10 +16316,10 @@ class App extends _react.Component {
   }
 
   renderSymbolModal() {
-    var _props6 = this.props,
-        selectSource = _props6.selectSource,
-        selectedSource = _props6.selectedSource,
-        activeSearch = _props6.activeSearch;
+    var _props7 = this.props,
+        selectSource = _props7.selectSource,
+        selectedSource = _props7.selectedSource,
+        activeSearch = _props7.activeSearch;
 
 
     if (activeSearch !== "symbol") {
@@ -16302,6 +16327,23 @@ class App extends _react.Component {
     }
 
     return _react2.default.createElement(_SymbolModal2.default, {
+      selectSource: selectSource,
+      selectedSource: selectedSource
+    });
+  }
+
+  renderGotoLineModal() {
+    var _props8 = this.props,
+        selectSource = _props8.selectSource,
+        selectedSource = _props8.selectedSource,
+        activeSearch = _props8.activeSearch;
+
+
+    if (activeSearch !== "line") {
+      return;
+    }
+
+    return _react2.default.createElement(_GotoLineModal2.default, {
       selectSource: selectSource,
       selectedSource: selectedSource
     });
@@ -16327,6 +16369,7 @@ class App extends _react.Component {
       { className: "debugger" },
       this.state.horizontal ? this.renderHorizontalLayout() : this.renderVerticalLayout(),
       this.renderSymbolModal(),
+      this.renderGotoLineModal(),
       this.renderShortcutsModal()
     );
   }
@@ -20267,7 +20310,7 @@ var _Transition = __webpack_require__(333);
 
 var _Transition2 = _interopRequireDefault(_Transition);
 
-__webpack_require__(1226);
+__webpack_require__(1303);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21732,7 +21775,7 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _resultList = __webpack_require__(343);
 
-__webpack_require__(1240);
+__webpack_require__(1315);
 
 var _SearchInput = __webpack_require__(377);
 
@@ -21964,7 +22007,7 @@ var _Svg = __webpack_require__(345);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(1234);
+__webpack_require__(1310);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22030,8 +22073,8 @@ var svg = {
   togglePanes: __webpack_require__(370),
   "whole-word-match": __webpack_require__(371),
   worker: __webpack_require__(372),
-  "sad-face": __webpack_require__(373),
-  refresh: __webpack_require__(374),
+  "sad-face": __webpack_require__(1347),
+  refresh: __webpack_require__(1348),
   webpack: __webpack_require__(1001),
   node: __webpack_require__(1002),
   express: __webpack_require__(1003),
@@ -22387,18 +22430,8 @@ module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http:/
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path fill-rule=\"evenodd\" d=\"M8.5 8.793L5.854 6.146l-.04-.035L7.5 4.426c.2-.2.3-.4.3-.6 0-.2-.1-.4-.2-.6l-1-1c-.4-.3-.9-.3-1.2 0l-4.1 4.1c-.2.2-.3.4-.3.6 0 .2.1.4.2.6l1 1c.3.3.9.3 1.2 0l1.71-1.71.036.04L7.793 9.5l-3.647 3.646c-.195.196-.195.512 0 .708.196.195.512.195.708 0L8.5 10.207l3.646 3.647c.196.195.512.195.708 0 .195-.196.195-.512 0-.708L9.207 9.5l2.565-2.565L13.3 8.5c.1.1 2.3 1.1 2.7.7.4-.4-.3-2.7-.5-2.9l-1.1-1.1c.1-.1.2-.4.2-.6 0-.2-.1-.4-.2-.6l-.4-.4c-.3-.3-.8-.3-1.1 0l-1.5-1.4c-.2-.2-.3-.2-.5-.2s-.3.1-.5.2L9.2 3.4c-.2.1-.2.2-.2.4s.1.4.2.5l1.874 1.92L8.5 8.792z\"></path></svg>"
 
 /***/ }),
-/* 373 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\" fill=\"#D92215\"><path d=\"M8 14.5c-3.6 0-6.5-2.9-6.5-6.5S4.4 1.5 8 1.5s6.5 2.9 6.5 6.5-2.9 6.5-6.5 6.5zm0-12C5 2.5 2.5 5 2.5 8S5 13.5 8 13.5 13.5 11 13.5 8 11 2.5 8 2.5z\"></path><circle cx=\"5\" cy=\"6\" r=\"1\" transform=\"translate(1 1)\"></circle><circle cx=\"9\" cy=\"6\" r=\"1\" transform=\"translate(1 1)\"></circle><path d=\"M5.5 11c-.1 0-.2 0-.3-.1-.2-.1-.3-.4-.1-.7C6 9 7 8.5 8.1 8.5c1.7.1 2.8 1.7 2.8 1.8.2.2.1.5-.1.7-.2.1-.6 0-.7-.2 0 0-.9-1.3-2-1.3-.7 0-1.4.4-2.1 1.3-.2.2-.4.2-.5.2z\"></path></svg>"
-
-/***/ }),
-/* 374 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M13.917 7C13.44 4.162 10.973 2 8 2 4.686 2 2 4.686 2 8s2.686 6 6 6c2.22 0 4.16-1.207 5.197-3H12c-.912 1.214-2.364 2-4 2-2.76 0-5-2.24-5-5s2.24-5 5-5c2.42 0 4.437 1.718 4.9 4h1.017z\"></path><path d=\"M14 1L8 7h6V1zm-1 1L9 6h4V2z\" fill-rule=\"evenodd\"></path></svg>"
-
-/***/ }),
+/* 373 */,
+/* 374 */,
 /* 375 */,
 /* 376 */,
 /* 377 */
@@ -22429,7 +22462,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(1237);
+__webpack_require__(1313);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22573,7 +22606,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(1236);
+__webpack_require__(1312);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22617,7 +22650,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-__webpack_require__(1241);
+__webpack_require__(1316);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22774,7 +22807,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(1235);
+__webpack_require__(1311);
 
 var _devtoolsComponents = __webpack_require__(1007);
 
@@ -22787,13 +22820,32 @@ class ManagedTree extends _react.Component {
   constructor(props) {
     super();
 
-    this.setExpanded = (item, isExpanded) => {
+    this.setExpanded = (item, isExpanded, shouldIncludeChildren) => {
+      var expandItem = i => {
+        var path = this.props.getPath(i);
+        if (isExpanded) {
+          expanded.add(path);
+        } else {
+          expanded.delete(path);
+        }
+      };
       var expanded = this.state.expanded;
-      var itemPath = this.props.getPath(item);
-      if (isExpanded) {
-        expanded.add(itemPath);
-      } else {
-        expanded.delete(itemPath);
+      expandItem(item);
+
+      if (shouldIncludeChildren) {
+        var parents = [item];
+        while (parents.length) {
+          var children = [];
+          for (var parent of parents) {
+            if (parent.contents && parent.contents.length) {
+              for (var child of parent.contents) {
+                expandItem(child);
+                children.push(child);
+              }
+            }
+          }
+          parents = children;
+        }
       }
       this.setState({ expanded });
 
@@ -22869,8 +22921,8 @@ class ManagedTree extends _react.Component {
       isExpanded: item => expanded.has(this.props.getPath(item)),
       focused: focusedItem,
       getKey: this.props.getPath,
-      onExpand: item => this.setExpanded(item, true),
-      onCollapse: item => this.setExpanded(item, false),
+      onExpand: item => this.setExpanded(item, true, false),
+      onCollapse: item => this.setExpanded(item, false, false),
       onFocus: this.focusItem,
       renderItem: function () {
         var _props;
@@ -23027,9 +23079,9 @@ var _ConditionalPanel2 = _interopRequireDefault(_ConditionalPanel);
 
 var _editor = __webpack_require__(257);
 
-__webpack_require__(1257);
+__webpack_require__(1332);
 
-__webpack_require__(1258);
+__webpack_require__(1333);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23607,7 +23659,7 @@ var _PaneToggle = __webpack_require__(428);
 
 var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 
-__webpack_require__(1248);
+__webpack_require__(1322);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23786,7 +23838,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(1247);
+__webpack_require__(1321);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23884,7 +23936,7 @@ var _SearchInput = __webpack_require__(377);
 
 var _SearchInput2 = _interopRequireDefault(_SearchInput);
 
-__webpack_require__(1249);
+__webpack_require__(1323);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -24930,7 +24982,7 @@ var _BracketArrow = __webpack_require__(1029);
 
 var _BracketArrow2 = _interopRequireDefault(_BracketArrow);
 
-__webpack_require__(1253);
+__webpack_require__(1327);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -25143,7 +25195,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(1246);
+__webpack_require__(1331);
 
 var _editor = __webpack_require__(257);
 
@@ -25560,7 +25612,7 @@ var _Scopes2 = __webpack_require__(731);
 
 var _Scopes3 = _interopRequireDefault(_Scopes2);
 
-__webpack_require__(1267);
+__webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -25802,7 +25854,7 @@ var _Close2 = _interopRequireDefault(_Close);
 
 var _devtoolsReps = __webpack_require__(924);
 
-__webpack_require__(1260);
+__webpack_require__(1335);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -26047,7 +26099,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(1259);
+__webpack_require__(1334);
 
 var _lodash = __webpack_require__(2);
 
@@ -26424,7 +26476,7 @@ var _ManagedTree = __webpack_require__(419);
 
 var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
 
-__webpack_require__(1216);
+__webpack_require__(1296);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -26661,7 +26713,7 @@ var _scopes = __webpack_require__(732);
 
 var _devtoolsReps = __webpack_require__(924);
 
-__webpack_require__(1216);
+__webpack_require__(1296);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -26958,7 +27010,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(1264);
+__webpack_require__(1339);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27072,7 +27124,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(1266);
+__webpack_require__(1341);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27205,7 +27257,7 @@ var _actions = __webpack_require__(244);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-__webpack_require__(1215);
+__webpack_require__(1295);
 
 var _devtoolsModules = __webpack_require__(830);
 
@@ -27422,7 +27474,7 @@ var _PaneToggle = __webpack_require__(428);
 
 var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 
-__webpack_require__(1268);
+__webpack_require__(1343);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27581,7 +27633,7 @@ var _lodash = __webpack_require__(2);
 
 var _text = __webpack_require__(389);
 
-__webpack_require__(1269);
+__webpack_require__(1344);
 
 var _PaneToggle = __webpack_require__(428);
 
@@ -28052,7 +28104,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(1270);
+__webpack_require__(1345);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28339,7 +28391,7 @@ var _lodash = __webpack_require__(2);
 
 var _frame = __webpack_require__(1014);
 
-__webpack_require__(1245);
+__webpack_require__(1320);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28691,7 +28743,7 @@ var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
 
 var _editor = __webpack_require__(257);
 
-__webpack_require__(1254);
+__webpack_require__(1328);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -29092,12 +29144,7 @@ module.exports = {
 /* 852 */,
 /* 853 */,
 /* 854 */,
-/* 855 */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,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"
-
-/***/ }),
+/* 855 */,
 /* 856 */,
 /* 857 */,
 /* 858 */,
@@ -30135,7 +30182,9 @@ var onConnect = exports.onConnect = (() => {
 
     // NOTE: The Worker and Browser Content toolboxes do not have a parent
     // with a listWorkers function
-    if (threadClient._parent && threadClient._parent.listWorkers) {
+    // TODO: there is a listWorkers property, but it is not a function on the
+    // parent. Investigate what it is
+    if (threadClient._parent && typeof threadClient._parent.listWorkers === "function") {
       threadClient._parent.listWorkers().then(function (workers) {
         return actions.setWorkers(workers);
       });
@@ -31479,6 +31528,10 @@ module.exports = SplitBox;
 "use strict";
 
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(4);
 var Draggable = React.createFactory(__webpack_require__(912));
@@ -31486,7 +31539,7 @@ var dom = React.DOM,
     PropTypes = React.PropTypes;
 
 
-__webpack_require__(1232);
+__webpack_require__(1309);
 
 /**
  * This component represents a Splitter. The splitter supports vertical
@@ -31528,7 +31581,7 @@ var SplitBox = React.createClass({
 
   displayName: "SplitBox",
 
-  getDefaultProps() {
+  getDefaultProps: function getDefaultProps() {
     return {
       splitterSize: 5,
       vert: true,
@@ -31538,12 +31591,13 @@ var SplitBox = React.createClass({
     };
   },
 
+
   /**
    * The state stores the current orientation (vertical or horizontal)
    * and the current size (width/height). All these values can change
    * during the component's life time.
    */
-  getInitialState() {
+  getInitialState: function getInitialState() {
     return {
       vert: this.props.vert,
       // We use integers for these properties
@@ -31551,12 +31605,12 @@ var SplitBox = React.createClass({
       height: parseInt(this.props.initialHeight || this.props.initialSize)
     };
   },
-
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
     if (this.props.vert !== nextProps.vert) {
       this.setState({ vert: nextProps.vert });
     }
   },
+
 
   // Dragging Events
 
@@ -31565,7 +31619,7 @@ var SplitBox = React.createClass({
    * This avoids cursor-flickering that happens when the mouse leaves
    * the splitter bar area (happens frequently).
    */
-  onStartMove() {
+  onStartMove: function onStartMove() {
     var splitBox = ReactDOM.findDOMNode(this);
     var doc = splitBox.ownerDocument;
     var defaultCursor = doc.documentElement.style.cursor;
@@ -31577,8 +31631,7 @@ var SplitBox = React.createClass({
       defaultCursor: defaultCursor
     });
   },
-
-  onStopMove() {
+  onStopMove: function onStopMove() {
     var splitBox = ReactDOM.findDOMNode(this);
     var doc = splitBox.ownerDocument;
     doc.documentElement.style.cursor = this.state.defaultCursor;
@@ -31590,12 +31643,13 @@ var SplitBox = React.createClass({
     }
   },
 
+
   /**
    * Adjust size of the controlled panel. Depending on the current
    * orientation we either remember the width or height of
    * the splitter box.
    */
-  onMove(_ref) {
+  onMove: function onMove(_ref) {
     var movementX = _ref.movementX,
         movementY = _ref.movementY;
 
@@ -31617,18 +31671,23 @@ var SplitBox = React.createClass({
         movementX = -movementX;
       }
 
-      this.setState((state, props) => ({
-        width: state.width + movementX
-      }));
+      this.setState(function (state, props) {
+        return {
+          width: state.width + movementX
+        };
+      });
     } else {
-      this.setState((state, props) => ({
-        height: state.height + movementY
-      }));
+      this.setState(function (state, props) {
+        return {
+          height: state.height + movementY
+        };
+      });
     }
   },
 
+
   // Rendering
-  preparePanelStyles() {
+  preparePanelStyles: function preparePanelStyles() {
     var vert = this.state.vert;
     var _props = this.props,
         minSize = _props.minSize,
@@ -31671,10 +31730,9 @@ var SplitBox = React.createClass({
       };
     }
 
-    return { leftPanelStyle, rightPanelStyle };
+    return { leftPanelStyle: leftPanelStyle, rightPanelStyle: rightPanelStyle };
   },
-
-  render() {
+  render: function render() {
     var vert = this.state.vert;
     var _props2 = this.props,
         startPanelCollapsed = _props2.startPanelCollapsed,
@@ -31702,7 +31760,7 @@ var SplitBox = React.createClass({
 
 
     var splitterStyle = {
-      flex: `0 0 ${splitterSize}px`
+      flex: "0 0 " + splitterSize + "px"
     };
 
     return dom.div({
@@ -31754,30 +31812,27 @@ var Draggable = React.createClass({
     className: PropTypes.string
   },
 
-  startDragging(ev) {
+  startDragging: function startDragging(ev) {
     ev.preventDefault();
     var doc = ReactDOM.findDOMNode(this).ownerDocument;
     doc.addEventListener("mousemove", this.onMove);
     doc.addEventListener("mouseup", this.onUp);
     this.props.onStart && this.props.onStart();
   },
-
-  onMove(ev) {
+  onMove: function onMove(ev) {
     ev.preventDefault();
     // We pass the whole event because we don't know which properties
     // the callee needs.
     this.props.onMove(ev);
   },
-
-  onUp(ev) {
+  onUp: function onUp(ev) {
     ev.preventDefault();
     var doc = ReactDOM.findDOMNode(this).ownerDocument;
     doc.removeEventListener("mousemove", this.onMove);
     doc.removeEventListener("mouseup", this.onUp);
     this.props.onStop && this.props.onStop();
   },
-
-  render() {
+  render: function render() {
     return dom.div({
       style: this.props.style,
       className: this.props.className,
@@ -32416,7 +32471,7 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(1250);
+__webpack_require__(1324);
 
 // Load all existing rep templates
 var Undefined = __webpack_require__(929);
@@ -36034,7 +36089,7 @@ module.exports = {
 /* 960 */
 /***/ (function(module, exports) {
 
-module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (sourceSearch.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=Generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (sourceTabs.newTabButtonTooltip): The tooltip that is displayed for\n# new tab button in source tabs.\nsourceTabs.newTabButtonTooltip=Search for sources (%S)\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
+module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (sourceSearch.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=Generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (sourceTabs.newTabButtonTooltip): The tooltip that is displayed for\n# new tab button in source tabs.\nsourceTabs.newTabButtonTooltip=Search for sources (%S)\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\ngotoLineModal.key=CmdOrCtrl+Shift+;\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
 
 /***/ }),
 /* 961 */,
@@ -38428,7 +38483,7 @@ var _clipboard = __webpack_require__(423);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(1263);
+__webpack_require__(1338);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39121,7 +39176,7 @@ var _FrameMenu = __webpack_require__(1032);
 
 var _FrameMenu2 = _interopRequireDefault(_FrameMenu);
 
-__webpack_require__(1261);
+__webpack_require__(1336);
 
 var _Frame = __webpack_require__(1013);
 
@@ -39369,7 +39424,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-__webpack_require__(1252);
+__webpack_require__(1326);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40131,7 +40186,7 @@ var _SearchInput = __webpack_require__(377);
 
 var _SearchInput2 = _interopRequireDefault(_SearchInput);
 
-__webpack_require__(1238);
+__webpack_require__(1314);
 
 var _sourcesTree = __webpack_require__(39);
 
@@ -40442,7 +40497,7 @@ var _lodash = __webpack_require__(2);
 
 var _pause = __webpack_require__(255);
 
-__webpack_require__(1262);
+__webpack_require__(1337);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40609,7 +40664,7 @@ function inToolbox() {
 }
 
 if (!inToolbox()) {
-  __webpack_require__(1224);
+  __webpack_require__(1301);
 }
 
 function createPopup(doc) {
@@ -41323,7 +41378,7 @@ var _prefs = __webpack_require__(226);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(1242);
+__webpack_require__(1317);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41574,7 +41629,7 @@ var _selectors = __webpack_require__(242);
 
 var _devtoolsConfig = __webpack_require__(828);
 
-__webpack_require__(1243);
+__webpack_require__(1318);
 
 var _classnames = __webpack_require__(175);
 
@@ -41820,7 +41875,7 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(1244);
+__webpack_require__(1319);
 
 var _PreviewFunction = __webpack_require__(798);
 
@@ -41878,7 +41933,7 @@ class Outline extends _react.Component {
     }
 
     var klass = classFunctions[0].klass;
-    var klassFunc = (0, _lodash.find)(functions, func => func.name === klass);
+    var klassFunc = functions.find(func => func.name === klass);
 
     return _react2.default.createElement(
       "div",
@@ -41955,7 +42010,7 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(1256);
+__webpack_require__(1330);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -42208,14 +42263,13 @@ class SourcesTree extends _react.Component {
   renderItem(item, depth, focused, _, expanded, _ref) {
     var setExpanded = _ref.setExpanded;
 
-    var arrow = (0, _sourcesTree.nodeHasChildren)(item) ? _react2.default.createElement(_Svg2.default, {
-      name: "arrow",
-      className: (0, _classnames2.default)({
+    var arrow = (0, _sourcesTree.nodeHasChildren)(item) ? _react2.default.createElement("img", {
+      className: (0, _classnames2.default)("arrow", {
         expanded: expanded
       }),
       onClick: e => {
         e.stopPropagation();
-        setExpanded(item, !expanded);
+        setExpanded(item, !expanded, e.altKey);
       }
     }) : _react2.default.createElement("i", { className: "no-arrow" });
 
@@ -42231,9 +42285,9 @@ class SourcesTree extends _react.Component {
         className: (0, _classnames2.default)("node", { focused }),
         style: { [paddingDir]: `${depth * 15 + 5}px` },
         key: item.path,
-        onClick: () => {
+        onClick: e => {
           this.selectItem(item);
-          setExpanded(item, !expanded);
+          setExpanded(item, !expanded, e.altKey);
         },
         onContextMenu: e => this.onContextMenu(e, item)
       },
@@ -42342,7 +42396,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(1265);
+__webpack_require__(1340);
 
 var _reactRedux = __webpack_require__(1189);
 
@@ -42456,7 +42510,7 @@ var _require = __webpack_require__(0),
     PropTypes = _require.PropTypes;
 
 var Tree = createFactory(__webpack_require__(1007).Tree);
-__webpack_require__(1251);
+__webpack_require__(1325);
 
 var classnames = __webpack_require__(175);
 var Svg = __webpack_require__(1151);
@@ -43434,7 +43488,7 @@ var _actions2 = _interopRequireDefault(_actions);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function getCallSiteAtLocation(callSites, location) {
-  return (0, _lodash.find)(callSites, callSite => (0, _lodash.isEqualWith)(callSite.location, location, (cloc, loc) => {
+  return callSites.find(callSite => (0, _lodash.isEqualWith)(callSite.location, location, (cloc, loc) => {
     return loc.line === cloc.start.line && loc.column >= cloc.start.column && loc.column <= cloc.end.column;
   }));
 }
@@ -43698,7 +43752,7 @@ var _react = __webpack_require__(0);
 
 var _editor = __webpack_require__(257);
 
-__webpack_require__(1255);
+__webpack_require__(1329);
 
 class CallSite extends _react.Component {
 
@@ -44001,7 +44055,7 @@ var _ResultList = __webpack_require__(383);
 
 var _ResultList2 = _interopRequireDefault(_ResultList);
 
-__webpack_require__(1271);
+__webpack_require__(1297);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -44637,7 +44691,7 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _text = __webpack_require__(389);
 
-__webpack_require__(1227);
+__webpack_require__(1304);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -44837,7 +44891,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(1215);
+__webpack_require__(1295);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -46481,130 +46535,35 @@ function correctIndentation(text) {
 }
 
 /***/ }),
-/* 1215 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1216 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1215 */,
+/* 1216 */,
 /* 1217 */,
 /* 1218 */,
 /* 1219 */,
 /* 1220 */,
-/* 1221 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1222 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1223 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1224 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1225 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1226 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1227 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1228 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1229 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1230 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1231 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1232 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1221 */,
+/* 1222 */,
+/* 1223 */,
+/* 1224 */,
+/* 1225 */,
+/* 1226 */,
+/* 1227 */,
+/* 1228 */,
+/* 1229 */,
+/* 1230 */,
+/* 1231 */,
+/* 1232 */,
 /* 1233 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 256 296\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" preserveAspectRatio=\"xMidYMid\"><g><polygon fill=\"#673AB8\" points=\"128 0 256 73.8999491 256 221.699847 128 295.599796 0 221.699847 0 73.8999491\"></polygon><path d=\"M34.8647584,220.478469 C51.8814262,242.25881 105.959701,225.662965 157.014868,185.774297 C208.070035,145.885628 237.255632,97.428608 220.238964,75.6482664 C203.222296,53.8679249 149.144022,70.4637701 98.0888543,110.352439 C47.0336869,150.241107 17.8480906,198.698127 34.8647584,220.478469 Z M42.1343351,214.798853 C36.4908625,207.575537 38.9565723,193.395881 49.7081913,175.544904 C61.0297348,156.747677 80.2490923,135.997367 103.76847,117.622015 C127.287848,99.2466634 152.071368,85.6181573 173.049166,79.1803727 C192.970945,73.066665 207.325915,74.1045667 212.969387,81.3278822 C218.61286,88.5511977 216.14715,102.730854 205.395531,120.581832 C194.073987,139.379058 174.85463,160.129368 151.335252,178.50472 C127.815874,196.880072 103.032354,210.508578 82.054556,216.946362 C62.1327769,223.06007 47.7778077,222.022168 42.1343351,214.798853 Z\" fill=\"#FFFFFF\"></path><path d=\"M220.238964,220.478469 C237.255632,198.698127 208.070035,150.241107 157.014868,110.352439 C105.959701,70.4637701 51.8814262,53.8679249 34.8647584,75.6482664 C17.8480906,97.428608 47.0336869,145.885628 98.0888543,185.774297 C149.144022,225.662965 203.222296,242.25881 220.238964,220.478469 Z M212.969387,214.798853 C207.325915,222.022168 192.970945,223.06007 173.049166,216.946362 C152.071368,210.508578 127.287848,196.880072 103.76847,178.50472 C80.2490923,160.129368 61.0297348,139.379058 49.7081913,120.581832 C38.9565723,102.730854 36.4908625,88.5511977 42.1343351,81.3278822 C47.7778077,74.1045667 62.1327769,73.066665 82.054556,79.1803727 C103.032354,85.6181573 127.815874,99.2466634 151.335252,117.622015 C174.85463,135.997367 194.073987,156.747677 205.395531,175.544904 C216.14715,193.395881 218.61286,207.575537 212.969387,214.798853 Z\" fill=\"#FFFFFF\"></path><path d=\"M127.551861,167.666971 C138.378632,167.666971 147.155465,158.890139 147.155465,148.063368 C147.155465,137.236596 138.378632,128.459764 127.551861,128.459764 C116.72509,128.459764 107.948257,137.236596 107.948257,148.063368 C107.948257,158.890139 116.72509,167.666971 127.551861,167.666971 L127.551861,167.666971 Z\" fill=\"#FFFFFF\"></path></g></svg>"
 
 /***/ }),
-/* 1234 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1235 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1236 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1237 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1238 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1234 */,
+/* 1235 */,
+/* 1236 */,
+/* 1237 */,
+/* 1238 */,
 /* 1239 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -46626,6 +46585,11 @@ var _utils = __webpack_require__(18);
  * Gets domain from url (without www prefix)
  */
 function getDomain(url) {
+  // TODO: define how files should be ordered on the browser debugger
+  if (!url) {
+    return null;
+  }
+
   var _parse = (0, _url.parse)(url),
       host = _parse.host;
 
@@ -46735,198 +46699,38 @@ function createTreeNodeMatcher(part, isDir, debuggeeHost) {
 }
 
 /***/ }),
-/* 1240 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1241 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1242 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1243 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1244 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1245 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1246 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1247 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1248 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1249 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1250 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1251 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1252 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1253 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1254 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1255 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1256 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1257 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1258 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1259 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1260 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1261 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1262 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1263 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1264 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1265 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1266 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1267 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1268 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1269 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1270 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 1271 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1240 */,
+/* 1241 */,
+/* 1242 */,
+/* 1243 */,
+/* 1244 */,
+/* 1245 */,
+/* 1246 */,
+/* 1247 */,
+/* 1248 */,
+/* 1249 */,
+/* 1250 */,
+/* 1251 */,
+/* 1252 */,
+/* 1253 */,
+/* 1254 */,
+/* 1255 */,
+/* 1256 */,
+/* 1257 */,
+/* 1258 */,
+/* 1259 */,
+/* 1260 */,
+/* 1261 */,
+/* 1262 */,
+/* 1263 */,
+/* 1264 */,
+/* 1265 */,
+/* 1266 */,
+/* 1267 */,
+/* 1268 */,
+/* 1269 */,
+/* 1270 */,
+/* 1271 */,
 /* 1272 */,
 /* 1273 */,
 /* 1274 */,
@@ -46949,6 +46753,507 @@ function createTreeNodeMatcher(part, isDir, debuggeeHost) {
 /***/ (function(module, exports) {
 
 module.exports = "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 512 512\" enable-background=\"new 0 0 512 512\" xml:space=\"preserve\"><g id=\"Layer_2\"><path fill=\"#132028\" d=\"M190.475,376V203.308H81.266c-27.129,0-50.139,26-58.222,62.035c-9.877,1.302-17.62,13.541-17.62,28.455 c0,14.914,7.743,27.153,17.62,28.455c7.291,32.507,26.733,56.84,50.385,61.294v68.669h395.95V376H190.475z\"></path></g><g id=\"Layer_3\"><path fill=\"#575A5B\" d=\"M490.712,427.977c0,30.941-25.082,56.023-56.023,56.023c-25.804,0-47.519-17.451-54.023-41.19 c-6.504,23.739-28.219,41.19-54.023,41.19c-30.941,0-56.023-25.082-56.023-56.023c0-30.941,25.082-56.023,56.023-56.023 c25.804,0,47.519,17.451,54.023,41.19c6.504-23.739,28.219-41.19,54.023-41.19C465.629,371.954,490.712,397.036,490.712,427.977z M161.24,203.308l29.75-113.845H94.232l29.75,113.845h-13.668c-33.865,0-61.319,40.513-61.319,90.489 c0,49.976,27.453,90.489,61.319,90.489H294.27V203.308H161.24z M162.321,420.431c-13.164,0-24.458,8.002-29.285,19.408 c-4.826-11.405-16.121-19.408-29.284-19.408c-17.554,0-31.785,14.23-31.785,31.784c0,17.554,14.23,31.785,31.785,31.785 c13.164,0,24.458-8.002,29.284-19.408C137.863,475.998,149.157,484,162.321,484c17.554,0,31.784-14.23,31.784-31.785 C194.106,434.661,179.875,420.431,162.321,420.431z\"></path></g><g id=\"Layer_4\"><path fill=\"#FFB636\" d=\"M200.78,384.287h-16.028c-20.105,0-36.403-40.513-36.403-90.489c0-49.976,16.298-90.489,36.403-90.489 h16.028c-20.105,0-36.403,40.513-36.403,90.489C164.378,343.773,180.676,384.287,200.78,384.287z M122.236,293.797 c0-49.976,16.298-90.489,36.403-90.489H142.61c-20.105,0-36.403,40.513-36.403,90.489c0,49.976,16.298,90.489,36.403,90.489h16.028 C138.534,384.287,122.236,343.773,122.236,293.797z\"></path></g><g id=\"Layer_5\"><path fill=\"#FF473E\" d=\"M489.353,384.287H294.27V85.761h195.083V384.287z M74.21,384.103h-7.99c-2.436,0-4.707,1.48-6.035,3.934 l-43.633,80.594C13.436,474.387,16.874,482,22.587,482h52.826c4.027,0,7.271-3.968,7.199-8.806l-1.203-80.594 C81.339,387.883,78.136,384.103,74.21,384.103z\"></path></g><g id=\"Layer_6\"><path fill=\"#EF2020\" d=\"M497.28,66.397H286.342c-5.92,0-10.72,4.8-10.72,10.72v1.626c0,5.92,4.8,10.72,10.72,10.72H497.28 c5.921,0,10.72-4.8,10.72-10.72v-1.626C508,71.197,503.201,66.397,497.28,66.397z\"></path></g><g id=\"Layer_7\"><path fill=\"#76DFFF\" d=\"M371.466,257.523h-40.952c-3.976,0-7.2-3.224-7.2-7.2V124.018c0-3.976,3.224-7.2,7.2-7.2h40.952 c3.976,0,7.2,3.224,7.2,7.2v126.305C378.666,254.3,375.442,257.523,371.466,257.523z M460.474,250.323V124.018 c0-3.976-3.224-7.2-7.2-7.2h-40.952c-3.976,0-7.2,3.224-7.2,7.2v126.305c0,3.976,3.224,7.2,7.2,7.2h40.952 C457.251,257.523,460.474,254.3,460.474,250.323z\"></path></g><g id=\"Layer_8\"><path fill=\"#132028\" d=\"M489.353,339.586H294.27v-36.582h195.083V339.586z M111.17,52L94.206,89.463h96.758L174,52H111.17z M326.643,414.954c-7.192,0-13.023,5.831-13.023,13.023S319.451,441,326.643,441c7.192,0,13.023-5.831,13.023-13.023 S333.835,414.954,326.643,414.954z M434.689,414.954c-7.192,0-13.023,5.831-13.023,13.023S427.496,441,434.689,441 s13.023-5.831,13.023-13.023S441.881,414.954,434.689,414.954z M103.752,444.827c-4.081,0-7.389,3.308-7.389,7.389 s3.308,7.389,7.389,7.389c4.081,0,7.389-3.308,7.389-7.389S107.833,444.827,103.752,444.827z M162.321,444.827 c-4.081,0-7.389,3.308-7.389,7.389s3.308,7.389,7.389,7.389s7.389-3.308,7.389-7.389S166.402,444.827,162.321,444.827z\"></path></g><g id=\"Layer_9\"><path fill=\"#FFB636\" d=\"M196.709,444.208h-92.957c-4.91,0-8.891-3.98-8.891-8.891s3.98-8.891,8.891-8.891h90.449l36.759-22.53 c1.398-0.857,3.006-1.311,4.646-1.311H459.54c4.91,0,8.891,3.98,8.891,8.891s-3.98,8.891-8.891,8.891H238.114l-36.759,22.53 C199.957,443.755,198.349,444.208,196.709,444.208z\"></path></g><g id=\"Layer_10\"><path fill=\"#ADB7BC\" d=\"M69.849,393.079c-5.787,0-10.485-4.685-10.5-10.475c-0.014-5.799,4.676-10.512,10.475-10.525l413.924-1 c0.009,0,0.018,0,0.026,0c5.787,0,10.485,4.685,10.499,10.475c0.014,5.799-4.676,10.512-10.475,10.525l-413.924,1 C69.867,393.079,69.857,393.079,69.849,393.079z\"></path></g></svg>"
+
+/***/ }),
+/* 1291 */,
+/* 1292 */,
+/* 1293 */,
+/* 1294 */,
+/* 1295 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1296 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1297 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1298 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1299 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1300 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1301 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1302 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1303 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1304 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1305 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1306 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1307 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1308 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1309 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1310 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1311 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1312 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1313 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1314 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1315 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1316 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1317 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1318 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1319 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1320 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1321 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1322 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1323 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1324 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1325 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1326 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1327 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1328 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1329 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1330 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1331 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1332 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1333 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1334 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1335 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1336 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1337 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1338 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1339 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1340 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1341 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1342 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1343 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1344 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1345 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1346 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(1189);
+
+var _redux = __webpack_require__(3);
+
+var _selectors = __webpack_require__(242);
+
+var _actions = __webpack_require__(244);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _Modal = __webpack_require__(332);
+
+var _Modal2 = _interopRequireDefault(_Modal);
+
+var _SearchInput = __webpack_require__(377);
+
+var _SearchInput2 = _interopRequireDefault(_SearchInput);
+
+__webpack_require__(1297);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class GotoLineModal extends _react.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.onClick = e => {
+      e.stopPropagation();
+    };
+
+    this.onChange = e => {
+      var selectedSource = this.props.selectedSource;
+
+      if (!selectedSource || !selectedSource.get("text")) {
+        return;
+      }
+
+      this.setState({ query: e.target.value });
+    };
+
+    this.closeModal = () => {
+      this.props.closeActiveSearch();
+      this.props.clearHighlightLineRange();
+    };
+
+    this.onKeyUp = e => {
+      e.preventDefault();
+      var _props = this.props,
+          selectSource = _props.selectSource,
+          selectedSource = _props.selectedSource,
+          enabled = _props.enabled;
+      var query = this.state.query;
+
+
+      if (!enabled || !selectedSource) {
+        return;
+      }
+
+      if (e.key === "Enter" && query != null) {
+        var linenumber = parseInt(query.replace(/[^\d+]/g, ""), 10);
+        if (!isNaN(linenumber)) {
+          selectSource(selectedSource.get("id"), { line: linenumber });
+        }
+        this.closeModal();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        this.closeModal();
+        return;
+      }
+      return;
+    };
+
+    this.buildPlaceHolder = () => L10N.getFormatStr("gotoLineModal.placeholder");
+
+    this.state = { query: "" };
+  }
+
+  renderInput() {
+    var query = this.state.query;
+
+
+    return _react2.default.createElement(
+      "div",
+      { key: "input", className: "input-wrapper" },
+      _react2.default.createElement(_SearchInput2.default, {
+        query: query,
+        placeholder: this.buildPlaceHolder(),
+        onChange: this.onChange,
+        onKeyUp: this.onKeyUp,
+        handleClose: this.closeModal
+      })
+    );
+  }
+
+  render() {
+    var enabled = this.props.enabled;
+
+
+    if (!enabled) {
+      return null;
+    }
+
+    return _react2.default.createElement(
+      _Modal2.default,
+      { "in": enabled, handleClose: this.closeModal },
+      this.renderInput()
+    );
+  }
+}
+
+exports.default = (0, _reactRedux.connect)(state => {
+  var source = (0, _selectors.getSelectedSource)(state);
+  return {
+    enabled: Boolean((0, _selectors.getActiveSearch)(state) === "line" && source)
+  };
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(GotoLineModal);
+
+/***/ }),
+/* 1347 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\" fill=\"#D92215\"><path d=\"M8 14.5c-3.6 0-6.5-2.9-6.5-6.5S4.4 1.5 8 1.5s6.5 2.9 6.5 6.5-2.9 6.5-6.5 6.5zm0-12C5 2.5 2.5 5 2.5 8S5 13.5 8 13.5 13.5 11 13.5 8 11 2.5 8 2.5z\"></path><circle cx=\"5\" cy=\"6\" r=\"1\" transform=\"translate(1 1)\"></circle><circle cx=\"9\" cy=\"6\" r=\"1\" transform=\"translate(1 1)\"></circle><path d=\"M5.5 11c-.1 0-.2 0-.3-.1-.2-.1-.3-.4-.1-.7C6 9 7 8.5 8.1 8.5c1.7.1 2.8 1.7 2.8 1.8.2.2.1.5-.1.7-.2.1-.6 0-.7-.2 0 0-.9-1.3-2-1.3-.7 0-1.4.4-2.1 1.3-.2.2-.4.2-.5.2z\"></path></svg>"
+
+/***/ }),
+/* 1348 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M13.917 7C13.44 4.162 10.973 2 8 2 4.686 2 2 4.686 2 8s2.686 6 6 6c2.22 0 4.16-1.207 5.197-3H12c-.912 1.214-2.364 2-4 2-2.76 0-5-2.24-5-5s2.24-5 5-5c2.42 0 4.437 1.718 4.9 4h1.017z\"></path><path d=\"M14 1L8 7h6V1zm-1 1L9 6h4V2z\" fill-rule=\"evenodd\"></path></svg>"
+
+/***/ }),
+/* 1349 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var React = __webpack_require__(0);
+var InlineSVG = __webpack_require__(1205);
+
+var _require = __webpack_require__(828),
+    isDevelopment = _require.isDevelopment;
+
+var svg = {
+  "rocket": __webpack_require__(1126)
+};
+
+function Svg(_ref) {
+  var name = _ref.name,
+      className = _ref.className,
+      onClick = _ref.onClick,
+      ariaLabel = _ref["aria-label"];
+
+  className = `${name} ${className || ""}`;
+  if (name === "subSettings") {
+    className = "";
+  }
+
+  console.log({ name });
+
+  var props = {
+    className,
+    onClick,
+    ["aria-label"]: ariaLabel,
+    src: svg[name]
+  };
+
+  return React.createElement(InlineSVG, props);
+}
+
+// Svg.displayName = "Svg";
+
+module.exports = Svg;
 
 /***/ })
 /******/ ]);
