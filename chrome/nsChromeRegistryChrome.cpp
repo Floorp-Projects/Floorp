@@ -739,7 +739,7 @@ nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx, int lineno
   if (mainPackage.Equals(package)) {
     // We should refresh the LocaleService, since the available
     // locales changed.
-    LocaleService::GetInstance()->OnAvailableLocalesChanged();
+    LocaleService::GetInstance()->AvailableLocalesChanged();
   }
 }
 

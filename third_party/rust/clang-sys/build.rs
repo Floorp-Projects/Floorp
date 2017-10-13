@@ -253,7 +253,14 @@ pub fn find_shared_library() -> Result<PathBuf, String> {
 
 /// Returns the name of an LLVM or Clang library from a path to such a library.
 fn get_library_name(path: &Path) -> Option<String> {
-    path.file_stem().map(|l| l.to_string_lossy()[3..].into())
+    path.file_stem().map(|p| {
+        let string = p.to_string_lossy();
+        if string.starts_with("lib") {
+            string[3..].to_owned()
+        } else {
+            string.to_string()
+        }
+    })
 }
 
 /// Returns the LLVM libraries required to link to `libclang` statically.
@@ -299,31 +306,34 @@ fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
 /// Find and link to `libclang` statically.
 #[cfg_attr(feature="runtime", allow(dead_code))]
 fn link_static() {
-    let file = find(Library::Static, &["libclang.a".into()], "LIBCLANG_STATIC_PATH").unwrap();
+    let name = if cfg!(target_os="windows") { "libclang.lib" } else { "libclang.a" };
+    let file = find(Library::Static, &[name.into()], "LIBCLANG_STATIC_PATH").unwrap();
     let directory = file.parent().unwrap();
-    print!("cargo:rustc-flags=");
 
     // Specify required Clang static libraries.
-    print!("-L {} ", directory.display());
+    println!("cargo:rustc-link-search=native={}", directory.display());
     for library in get_clang_libraries(directory) {
-        print!("-l static={} ", library);
+        println!("cargo:rustc-link-lib=static={}", library);
     }
 
+    // Determine the shared mode used by LLVM.
+    let mode = run_llvm_config(&["--shared-mode"]).map(|m| m.trim().to_owned());
+    let prefix = if mode.ok().map_or(false, |m| m == "static") { "static=" } else { "" };
+
     // Specify required LLVM static libraries.
-    print!("-L {} ", run_llvm_config(&["--libdir"]).unwrap().trim_right());
+    println!("cargo:rustc-link-search=native={}", run_llvm_config(&["--libdir"]).unwrap().trim_right());
     for library in get_llvm_libraries() {
-        print!("-l static={} ", library);
+        println!("cargo:rustc-link-lib={}{}", prefix, library);
     }
 
     // Specify required system libraries.
+    // MSVC doesn't need this, as it tracks dependencies inside `.lib` files.
     if cfg!(target_os="freebsd") {
-        println!("-l ffi -l ncursesw -l c++ -l z");
+        println!("cargo:rustc-flags=-l ffi -l ncursesw -l c++ -l z");
     } else if cfg!(target_os="linux") {
-        println!("-l ffi -l ncursesw -l stdc++ -l z");
+        println!("cargo:rustc-flags=-l ffi -l ncursesw -l stdc++ -l z");
     } else if cfg!(target_os="macos") {
-        println!("-l ffi -l ncurses -l c++ -l z");
-    } else {
-        panic!("unsupported operating system for static linking");
+        println!("cargo:rustc-flags=-l ffi -l ncurses -l c++ -l z");
     }
 }
 
@@ -375,5 +385,10 @@ fn main() {
         link_static();
     } else {
         link_dynamic();
+    }
+
+    if let Ok(output) = run_llvm_config(&["--includedir"]) {
+        let directory = Path::new(output.trim_right());
+        println!("cargo:include={}", directory.display());
     }
 }

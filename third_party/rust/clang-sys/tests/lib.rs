@@ -19,7 +19,7 @@ fn parse() {
             0,
             ptr::null_mut(),
             0,
-            CXTranslationUnit_Flags::empty(),
+            0,
         );
         assert!(!tu.is_null());
     }

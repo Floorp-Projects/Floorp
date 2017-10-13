@@ -226,3 +226,54 @@ add_task(async function test_MatchGlob() {
   // Case sensitive
   fail({url: moz, pattern: ["*.ORG/"]});
 });
+
+add_task(async function test_MatchPattern_subsumes() {
+  function test(oldPat, newPat) {
+    let m = new MatchPatternSet(oldPat);
+    return m.subsumes(new MatchPattern(newPat));
+  }
+
+  function pass({oldPat, newPat}) {
+    ok(test(oldPat, newPat), `${JSON.stringify(oldPat)} subsumes "${newPat}"`);
+  }
+
+  function fail({oldPat, newPat}) {
+    ok(!test(oldPat, newPat), `${JSON.stringify(oldPat)} doesn't subsume "${newPat}"`);
+  }
+
+  pass({oldPat: ["<all_urls>"], newPat: "*://*/*"});
+  pass({oldPat: ["<all_urls>"], newPat: "http://*/*"});
+  pass({oldPat: ["<all_urls>"], newPat: "http://*.example.com/*"});
+
+  pass({oldPat: ["*://*/*"], newPat: "http://*/*"});
+  pass({oldPat: ["*://*/*"], newPat: "wss://*/*"});
+  pass({oldPat: ["*://*/*"], newPat: "http://*.example.com/*"});
+
+  pass({oldPat: ["*://*.example.com/*"], newPat: "http://*.example.com/*"});
+  pass({oldPat: ["*://*.example.com/*"], newPat: "*://sub.example.com/*"});
+
+  pass({oldPat: ["https://*/*"], newPat: "https://*.example.com/*"});
+  pass({oldPat: ["http://*.example.com/*"], newPat: "http://subdomain.example.com/*"});
+  pass({oldPat: ["http://*.sub.example.com/*"], newPat: "http://sub.example.com/*"});
+  pass({oldPat: ["http://*.sub.example.com/*"], newPat: "http://sec.sub.example.com/*"});
+  pass({oldPat: ["http://www.example.com/*"], newPat: "http://www.example.com/path/*"});
+  pass({oldPat: ["http://www.example.com/path/*"], newPat: "http://www.example.com/*"});
+
+  fail({oldPat: ["*://*/*"], newPat: "<all_urls>"});
+  fail({oldPat: ["*://*/*"], newPat: "ftp://*/*"});
+  fail({oldPat: ["*://*/*"], newPat: "file://*/*"});
+
+  fail({oldPat: ["http://example.com/*"], newPat: "*://example.com/*"});
+  fail({oldPat: ["http://example.com/*"], newPat: "https://example.com/*"});
+  fail({oldPat: ["http://example.com/*"], newPat: "http://otherexample.com/*"});
+  fail({oldPat: ["http://example.com/*"], newPat: "http://*.example.com/*"});
+  fail({oldPat: ["http://example.com/*"], newPat: "http://subdomain.example.com/*"});
+
+  fail({oldPat: ["http://subdomain.example.com/*"], newPat: "http://example.com/*"});
+  fail({oldPat: ["http://subdomain.example.com/*"], newPat: "http://*.example.com/*"});
+  fail({oldPat: ["http://sub.example.com/*"], newPat: "http://*.sub.example.com/*"});
+
+  fail({oldPat: ["ws://example.com/*"], newPat: "wss://example.com/*"});
+  fail({oldPat: ["http://example.com/*"], newPat: "ws://example.com/*"});
+  fail({oldPat: ["https://example.com/*"], newPat: "wss://example.com/*"});
+});

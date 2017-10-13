@@ -6,8 +6,8 @@
 // on debug test slave, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
-const {gDevTools} = DevToolsShim;
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 // Small helper which provides the common steps to the following reload test cases.
 async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {

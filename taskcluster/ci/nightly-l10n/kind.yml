@@ -6,11 +6,13 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
    - taskgraph.transforms.l10n:transforms
+   - taskgraph.transforms.use_toolchains:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
    - build
+   - toolchain
 
 only-for-build-platforms:
    - linux64-nightly/opt
@@ -40,6 +42,13 @@ job-template:
       by-build-platform:
          default: 36000
          android-api-16-nightly: 18000
+   docker-image:
+      by-build-platform:
+         default:
+           in-tree: desktop-build
+         android-api-16-nightly:
+           in-tree: android-build
+         win.*: null
    tooltool:
       by-build-platform:
          default: public

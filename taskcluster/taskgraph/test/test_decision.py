@@ -46,6 +46,8 @@ class TestDecision(unittest.TestCase):
 
 class TestGetDecisionParameters(unittest.TestCase):
 
+    ttc_file = os.path.join(os.getcwd(), 'try_task_config.json')
+
     def setUp(self):
         self.options = {
             'base_repository': 'https://hg.mozilla.org/mozilla-unified',
@@ -61,7 +63,8 @@ class TestGetDecisionParameters(unittest.TestCase):
         }
 
     def test_simple_options(self):
-        params = decision.get_decision_parameters(self.options)
+        with MockedOpen({self.ttc_file: None}):
+            params = decision.get_decision_parameters(self.options)
         self.assertEqual(params['pushlog_id'], 143)
         self.assertEqual(params['build_date'], 1503691511)
         self.assertEqual(params['moz_build_date'], '20170825200511')
@@ -71,13 +74,15 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     def test_no_email_owner(self):
         self.options['owner'] = 'ffxbld'
-        params = decision.get_decision_parameters(self.options)
+        with MockedOpen({self.ttc_file: None}):
+            params = decision.get_decision_parameters(self.options)
         self.assertEqual(params['owner'], 'ffxbld@noreply.mozilla.org')
 
     def test_try_options(self):
         self.options['message'] = 'try: -b do -t all'
         self.options['project'] = 'try'
-        params = decision.get_decision_parameters(self.options)
+        with MockedOpen({self.ttc_file: None}):
+            params = decision.get_decision_parameters(self.options)
         self.assertEqual(params['try_mode'], 'try_option_syntax')
         self.assertEqual(params['try_options']['build_types'], 'do')
         self.assertEqual(params['try_options']['unittests'], 'all')
@@ -85,9 +90,8 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     def test_try_task_config(self):
         ttc = {'tasks': ['a', 'b'], 'templates': {}}
-        ttc_file = os.path.join(os.getcwd(), 'try_task_config.json')
         self.options['project'] = 'try'
-        with MockedOpen({ttc_file: json.dumps(ttc)}):
+        with MockedOpen({self.ttc_file: json.dumps(ttc)}):
             params = decision.get_decision_parameters(self.options)
             self.assertEqual(params['try_mode'], 'try_task_config')
             self.assertEqual(params['try_options'], None)

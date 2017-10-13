@@ -89,9 +89,6 @@ URI_LENGTH_MAX:                        65536,
 MAX_HISTORY_UPLOAD:                    5000,
 MAX_HISTORY_DOWNLOAD:                  5000,
 
-// TTL of the message sent to another device when sending a tab
-NOTIFY_TAB_SENT_TTL_SECS:              1 * 3600, // 1 hour
-
 // Top-level statuses:
 STATUS_OK:                             "success.status_ok",
 SYNC_FAILED:                           "error.sync.failed",

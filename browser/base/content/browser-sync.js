@@ -465,9 +465,12 @@ var gSync = {
                               contextMenu.onVideo || contextMenu.onAudio ||
                               contextMenu.onLink || contextMenu.onTextInput);
 
-    ["context-sendpagetodevice", "context-sep-sendpagetodevice"]
+    // Avoids double separator on images with links.
+    const hideSeparator = contextMenu.isContentSelected &&
+                          contextMenu.onLink && contextMenu.onImage;
+    ["context-sendpagetodevice", ...(hideSeparator ? [] : ["context-sep-sendpagetodevice"])]
     .forEach(id => contextMenu.showItem(id, showSendPage));
-    ["context-sendlinktodevice", "context-sep-sendlinktodevice"]
+    ["context-sendlinktodevice", ...(hideSeparator ? [] : ["context-sep-sendlinktodevice"])]
     .forEach(id => contextMenu.showItem(id, showSendLink));
 
     if (!showSendLink && !showSendPage) {

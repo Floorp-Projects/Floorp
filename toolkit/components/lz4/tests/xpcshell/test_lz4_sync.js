@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/lz4.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 
 function compare_arrays(a, b) {
-  return Array.prototype.join.call(a) == Array.prototype.join.call(a);
+  return Array.prototype.join.call(a) == Array.prototype.join.call(b);
 }
 
 add_task(async function() {
