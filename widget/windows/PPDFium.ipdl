@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace widget {
+
+
+/**
+ * A protocol for communicating with the PDFium processes. Useful for
+ * converting a PDF file to EMF contents.
+ *
+ * PDFium processes are created on-demand as necessary.
+ */
+protocol PPDFium
+{
+parent:
+  /**
+   * Called by the PDFium process once the PDF has been converted to EMF.
+   */
+  async ConvertToEMFDone(nsresult aResult, Shmem aEMFContents);
+
+child:
+  /**
+   * Start to convert a PDF file to EMF contents.
+   */
+  async ConvertToEMF(FileDescriptor aFD, int aPageWidth, int aPageHeight);
+};
+
+} // namespace widget
+} // namespace mozilla
