@@ -6,7 +6,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 const { getColor } = require("devtools/client/shared/theme");
 
@@ -28,7 +27,7 @@ function FontInspector(inspector, window) {
   this.document = window.document;
   this.inspector = inspector;
   this.pageStyle = this.inspector.pageStyle;
-  this.store = inspector.store;
+  this.store = this.inspector.store;
 
   this.update = this.update.bind(this);
 
@@ -36,6 +35,8 @@ function FontInspector(inspector, window) {
   this.onPreviewFonts = this.onPreviewFonts.bind(this);
   this.onShowAllFont = this.onShowAllFont.bind(this);
   this.onThemeChanged = this.onThemeChanged.bind(this);
+
+  this.init();
 }
 
 FontInspector.prototype = {
@@ -50,20 +51,14 @@ FontInspector.prototype = {
     });
 
     let provider = createElement(Provider, {
-      store: this.store,
       id: "fontinspector",
-      title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
       key: "fontinspector",
+      store: this.store,
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle")
     }, app);
 
-    let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
-
-    this.inspector.addSidebarTab(
-      "fontinspector",
-      INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
-      provider,
-      defaultTab == "fontinspector"
-    );
+    // Expose the provider to let inspector.js use it in setupSidebar.
+    this.provider = provider;
 
     this.inspector.selection.on("new-node-front", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
@@ -135,6 +130,11 @@ FontInspector.prototype = {
   },
 
   update: Task.async(function* () {
+    // Stop refreshing if the inspector or store is already destroyed.
+    if (!this.inspector || !this.store) {
+      return;
+    }
+
     let node = this.inspector.selection.nodeFront;
     let fonts = [];
     let { fontOptions } = this.store.getState();

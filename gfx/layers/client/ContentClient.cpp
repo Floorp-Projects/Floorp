@@ -108,13 +108,6 @@ ContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   aStream << aPrefix;
   aStream << nsPrintfCString("ContentClient (0x%p)", this).get();
-
-  if (PROFILER_FEATURE_ACTIVE(ProfilerFeature::DisplayListDump)) {
-    nsAutoCString pfx(aPrefix);
-    pfx += "  ";
-
-    Dump(aStream, pfx.get(), false);
-  }
 }
 
 // We pass a null pointer for the ContentClient Forwarder argument, which means

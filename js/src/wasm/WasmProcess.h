@@ -19,6 +19,8 @@
 #ifndef wasm_process_h
 #define wasm_process_h
 
+#include "mozilla/Atomics.h"
+
 namespace js {
 namespace wasm {
 
@@ -34,6 +36,11 @@ LookupCodeSegment(const void* pc);
 
 const Code*
 LookupCode(const void* pc);
+
+// A bool member that can be used as a very fast lookup to know if there is any
+// code segment at all.
+
+extern mozilla::Atomic<bool> CodeExists;
 
 // These methods allow to (un)register CodeSegments so they can be looked up
 // via pc in the methods described above.

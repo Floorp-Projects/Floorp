@@ -1,0 +1,11 @@
+<body>
+<table contenteditable="true"></table>
+</body>
+<script>
+window.onload = function() {
+  document.execCommand("useCSS", false, false);
+  document.designMode = 'on';
+  document.execCommand("insertunorderedlist", false);
+  document.execCommand("justifyfull", false);
+};
+</script>

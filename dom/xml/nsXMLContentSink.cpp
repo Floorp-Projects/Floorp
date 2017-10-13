@@ -702,7 +702,8 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     int16_t decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XSLT,
                                    url,
-                                   mDocument->NodePrincipal(),
+                                   mDocument->NodePrincipal(), // loading principal
+                                   mDocument->NodePrincipal(), // triggering principal
                                    aElement,
                                    type,
                                    nullptr,

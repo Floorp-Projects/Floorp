@@ -590,6 +590,7 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
   rv = NS_CheckContentLoadPolicy(aPolicyType,
                                  contentLocation,
+                                 aTriggeringPrincipal, // loading principal
                                  aTriggeringPrincipal,
                                  aLoadingContext,
                                  EmptyCString(), //mime guess

@@ -188,7 +188,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
                                     mURL,
-                                    principal,
+                                    principal, // loading principal
+                                    principal, // triggering principal
                                     element,
                                     contentType,
                                     nullptr,

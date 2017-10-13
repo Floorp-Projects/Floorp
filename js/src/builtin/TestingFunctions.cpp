@@ -2664,9 +2664,11 @@ SetIonCheckGraphCoherency(JSContext* cx, unsigned argc, Value* vp)
 
 class CloneBufferObject : public NativeObject {
     static const JSPropertySpec props_[3];
-    static const size_t DATA_SLOT   = 0;
+
+    static const size_t DATA_SLOT = 0;
     static const size_t LENGTH_SLOT = 1;
-    static const size_t NUM_SLOTS   = 2;
+    static const size_t SYNTHETIC_SLOT = 2;
+    static const size_t NUM_SLOTS = 3;
 
   public:
     static const Class class_;
@@ -2677,6 +2679,7 @@ class CloneBufferObject : public NativeObject {
             return nullptr;
         obj->as<CloneBufferObject>().setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
         obj->as<CloneBufferObject>().setReservedSlot(LENGTH_SLOT, Int32Value(0));
+        obj->as<CloneBufferObject>().setReservedSlot(SYNTHETIC_SLOT, BooleanValue(false));
 
         if (!JS_DefineProperties(cx, obj, props_))
             return nullptr;
@@ -2694,7 +2697,7 @@ class CloneBufferObject : public NativeObject {
             return nullptr;
         }
         buffer->steal(data.get());
-        obj->setData(data.release());
+        obj->setData(data.release(), false);
         return obj;
     }
 
@@ -2702,9 +2705,14 @@ class CloneBufferObject : public NativeObject {
         return static_cast<JSStructuredCloneData*>(getReservedSlot(DATA_SLOT).toPrivate());
     }
 
-    void setData(JSStructuredCloneData* aData) {
+    bool isSynthetic() const {
+        return getReservedSlot(SYNTHETIC_SLOT).toBoolean();
+    }
+
+    void setData(JSStructuredCloneData* aData, bool synthetic) {
         MOZ_ASSERT(!data());
         setReservedSlot(DATA_SLOT, PrivateValue(aData));
+        setReservedSlot(SYNTHETIC_SLOT, BooleanValue(synthetic));
     }
 
     // Discard an owned clone buffer.
@@ -2718,12 +2726,6 @@ class CloneBufferObject : public NativeObject {
 
     static bool
     setCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
-        if (fuzzingSafe) {
-            // A manually-created clonebuffer could easily trigger a crash
-            args.rval().setUndefined();
-            return true;
-        }
-
         Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
 
         uint8_t* data = nullptr;
@@ -2756,7 +2758,7 @@ class CloneBufferObject : public NativeObject {
             return false;
         js_memcpy(buf->Start(), data, nbytes);
         obj->discard();
-        obj->setData(buf.release());
+        obj->setData(buf.release(), true);
 
         args.rval().setUndefined();
         return true;
@@ -2974,8 +2976,11 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorASCII(cx, "deserialize requires a clonebuffer argument");
         return false;
     }
+    Rooted<CloneBufferObject*> obj(cx, &args[0].toObject().as<CloneBufferObject>());
 
-    JS::StructuredCloneScope scope = JS::StructuredCloneScope::SameProcessSameThread;
+    JS::StructuredCloneScope scope =
+        obj->isSynthetic() ? JS::StructuredCloneScope::DifferentProcess
+                           : JS::StructuredCloneScope::SameProcessSameThread;
     if (args.get(1).isObject()) {
         RootedObject opts(cx, &args[1].toObject());
         if (!opts)
@@ -2999,8 +3004,6 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    Rooted<CloneBufferObject*> obj(cx, &args[0].toObject().as<CloneBufferObject>());
-
     // Clone buffer was already consumed?
     if (!obj->data()) {
         JS_ReportErrorASCII(cx, "deserialize given invalid clone buffer "
@@ -3011,6 +3014,13 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     bool hasTransferable;
     if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
         return false;
+
+    if (obj->isSynthetic() &&
+        (scope != JS::StructuredCloneScope::DifferentProcess || hasTransferable))
+    {
+        JS_ReportErrorASCII(cx, "clone buffer data is synthetic but may contain pointers");
+        return false;
+    }
 
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, *obj->data(),

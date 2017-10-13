@@ -121,11 +121,8 @@ StreamFilterParent::CheckListenerChain()
 {
   AssertIsMainThread();
 
-  nsCOMPtr<nsIThreadRetargetableStreamListener> trsl =
-    do_QueryInterface(mOrigListener);
-  if (trsl) {
-    return trsl->CheckListenerChain();
-  }
+  // Disable thread retargeting due to segments being delivbered out-of-order.
+  // See bug 1405286.
   return NS_ERROR_FAILURE;
 }
 

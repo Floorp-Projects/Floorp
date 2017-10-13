@@ -1550,24 +1550,40 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
  * {*ioParent,*ioOffset} up to parent, and then insert aNode.
  * ioParent & ioOffset are then adjusted to point to the actual location that
  * aNode was inserted at.  aNoEmptyNodes specifies if the splitting process
- * is allowed to reslt in empty nodes.
+ * is allowed to reslt in empty nodes.  ioChildAtOffset, if provided, is the
+ * child node at offset if ioParent is non-null, and the function will update
+ * *ioChildAtOffset upon returning.
  *
  * @param aNode             Node to insert.
  * @param ioParent          Insertion parent.
  * @param ioOffset          Insertion offset.
  * @param aNoEmptyNodes     Splitting can result in empty nodes?
+ * @param ioChildAtOffset   Child node at insertion offset (optional).
  */
 nsresult
 HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
                               nsCOMPtr<nsIDOMNode>* ioParent,
                               int32_t* ioOffset,
-                              bool aNoEmptyNodes)
+                              bool aNoEmptyNodes,
+                              nsCOMPtr<nsIDOMNode>* ioChildAtOffset)
 {
   nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(ioParent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(*ioParent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(ioOffset, NS_ERROR_NULL_POINTER);
+  bool isDocumentFragment = false;
+  if (ioChildAtOffset) {
+    *ioChildAtOffset = aNode;
+    uint16_t nodeType = 0;
+    if (NS_SUCCEEDED(aNode->GetNodeType(&nodeType)) &&
+        nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      // For document fragments, we can't return aNode itself in
+      // *ioChildAtOffset, so we have to find out the inserted child after
+      // the insertion is successfully finished.
+      isDocumentFragment = true;
+    }
+  }
 
   nsCOMPtr<nsIContent> parent = do_QueryInterface(*ioParent);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
@@ -1595,16 +1611,28 @@ HTMLEditor::InsertNodeAtPoint(nsIDOMNode* aNode,
     parent = parent->GetParent();
   }
   if (parent != topChild) {
+    nsCOMPtr<nsIContent> child;
+    if (ioChildAtOffset) {
+      child = do_QueryInterface(*ioChildAtOffset);
+    }
     // we need to split some levels above the original selection parent
     int32_t offset = SplitNodeDeep(*topChild, *origParent, *ioOffset,
                                    aNoEmptyNodes ? EmptyContainers::no
-                                                 : EmptyContainers::yes);
+                                                 : EmptyContainers::yes,
+                                   nullptr, nullptr, address_of(child));
     NS_ENSURE_STATE(offset != -1);
     *ioParent = GetAsDOMNode(parent);
     *ioOffset = offset;
+    if (ioChildAtOffset) {
+      *ioChildAtOffset = GetAsDOMNode(child);
+    }
   }
   // Now we can insert the new node
-  return InsertNode(*node, *parent, *ioOffset);
+  nsresult rv = InsertNode(*node, *parent, *ioOffset);
+  if (isDocumentFragment) {
+    *ioChildAtOffset = do_QueryInterface(parent->GetChildAt(*ioOffset));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1948,6 +1976,8 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     OwningNonNull<nsIContent> node =
       *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
+    nsCOMPtr<nsIContent> child =
+      selection->GetRangeAt(0)->GetChildAtStartOffset();
 
     if (isCollapsed) {
       // have to find a place to put the list
@@ -1962,15 +1992,18 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 
       if (parent != node) {
         // we need to split up to the child of parent
-        offset = SplitNodeDeep(*topChild, *node, offset);
+        offset = SplitNodeDeep(*topChild, *node, offset,
+                               EmptyContainers::yes, nullptr, nullptr,
+                               address_of(child));
         NS_ENSURE_STATE(offset != -1);
       }
 
       // make a list
-      nsCOMPtr<Element> newList = CreateNode(listAtom, parent, offset);
+      nsCOMPtr<Element> newList = CreateNode(listAtom, parent, offset, child);
       NS_ENSURE_STATE(newList);
       // make a list item
-      nsCOMPtr<Element> newItem = CreateNode(nsGkAtoms::li, newList, 0);
+      nsCOMPtr<Element> newItem = CreateNode(nsGkAtoms::li, newList, 0,
+                                             newList->GetFirstChild());
       NS_ENSURE_STATE(newItem);
       rv = selection->Collapse(newItem, 0);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2085,6 +2118,8 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     OwningNonNull<nsIContent> node =
       *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
+    nsCOMPtr<nsIContent> child =
+      selection->GetRangeAt(0)->GetChildAtStartOffset();
 
     if (isCollapsed) {
       // have to find a place to put the block
@@ -2100,12 +2135,14 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 
       if (parent != node) {
         // we need to split up to the child of parent
-        offset = SplitNodeDeep(*topChild, *node, offset);
+        offset = SplitNodeDeep(*topChild, *node, offset,
+                               EmptyContainers::yes, nullptr, nullptr,
+                               address_of(child));
         NS_ENSURE_STATE(offset != -1);
       }
 
       // make a block
-      nsCOMPtr<Element> newBlock = CreateNode(blockAtom, parent, offset);
+      nsCOMPtr<Element> newBlock = CreateNode(blockAtom, parent, offset, child);
       NS_ENSURE_STATE(newBlock);
 
       // reposition selection to inside the block
@@ -2156,6 +2193,8 @@ HTMLEditor::Indent(const nsAString& aIndent)
     OwningNonNull<nsIContent> node =
       *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
+    nsCOMPtr<nsIContent> child =
+      selection->GetRangeAt(0)->GetChildAtStartOffset();
 
     if (aIndent.EqualsLiteral("indent")) {
       if (isCollapsed) {
@@ -2170,12 +2209,15 @@ HTMLEditor::Indent(const nsAString& aIndent)
 
         if (parent != node) {
           // we need to split up to the child of parent
-          offset = SplitNodeDeep(*topChild, *node, offset);
+          offset = SplitNodeDeep(*topChild, *node, offset,
+                                 EmptyContainers::yes, nullptr, nullptr,
+                                 address_of(child));
           NS_ENSURE_STATE(offset != -1);
         }
 
         // make a blockquote
-        nsCOMPtr<Element> newBQ = CreateNode(nsGkAtoms::blockquote, parent, offset);
+        nsCOMPtr<Element> newBQ =
+          CreateNode(nsGkAtoms::blockquote, parent, offset, child);
         NS_ENSURE_STATE(newBQ);
         // put a space in it so layout will draw the list item
         rv = selection->Collapse(newBQ, 0);
@@ -4558,7 +4600,8 @@ HTMLEditor::CopyLastEditableChildStyles(nsIDOMNode* aPreviousBlock,
         NS_ENSURE_STATE(newStyles);
       } else {
         deepestStyle = newStyles =
-          CreateNode(childElement->NodeInfo()->NameAtom(), newBlock, 0);
+          CreateNode(childElement->NodeInfo()->NameAtom(), newBlock, 0,
+                     newBlock->GetFirstChild());
         NS_ENSURE_STATE(newStyles);
       }
       CloneAttributes(newStyles, childElement);
