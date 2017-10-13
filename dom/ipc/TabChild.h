@@ -63,6 +63,7 @@ class APZEventState;
 class AsyncDragMetrics;
 class IAPZCTreeManager;
 class ImageCompositeNotification;
+class PCompositorBridgeChild;
 } // namespace layers
 
 namespace widget {
@@ -609,7 +610,7 @@ public:
   static TabChild* GetFrom(uint64_t aLayersId);
 
   uint64_t LayersId() { return mLayersId; }
-  bool IsLayersConnected() { return mLayersConnected; }
+  Maybe<bool> IsLayersConnected() { return mLayersConnected; }
 
   void DidComposite(uint64_t aTransactionId,
                     const TimeStamp& aCompositeStart,
@@ -884,6 +885,8 @@ private:
   void InternalSetDocShellIsActive(bool aIsActive,
                                    bool aPreserveLayers);
 
+  bool CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCompositorChild);
+
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
@@ -901,7 +904,7 @@ private:
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
   nscolor mLastBackgroundColor;
-  bool mLayersConnected;
+  Maybe<bool> mLayersConnected;
   bool mDidFakeShow;
   bool mNotified;
   bool mTriedBrowserInit;

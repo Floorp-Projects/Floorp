@@ -145,7 +145,7 @@ SpewTempOptimizationTypeInfoVector(JitSpewChannel channel,
                      indent ? indent : "",
                      TrackedTypeSiteString(t->site()), StringFromMIRType(t->mirType()));
         for (uint32_t i = 0; i < t->types().length(); i++)
-            JitSpewCont(channel, " %s", TypeSet::TypeString(t->types()[i]));
+            JitSpewCont(channel, " %s", TypeSet::TypeString(t->types()[i]).get());
         JitSpewFin(channel);
     }
 #endif
@@ -872,7 +872,7 @@ SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
 #ifdef JS_JITSPEW
     if (!constructor->isInterpreted()) {
         JitSpew(JitSpew_OptimizationTrackingExtended, "   Unique type %s has native constructor",
-                TypeSet::TypeString(ty));
+                TypeSet::TypeString(ty).get());
         return;
     }
 
@@ -887,7 +887,7 @@ SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
     InterpretedFunctionFilenameAndLineNumber(constructor, &filename, &lineno);
 
     JitSpew(JitSpew_OptimizationTrackingExtended, "   Unique type %s has constructor %s (%s:%u)",
-            TypeSet::TypeString(ty), buf, filename, lineno.isSome() ? *lineno : 0);
+            TypeSet::TypeString(ty).get(), buf, filename, lineno.isSome() ? *lineno : 0);
 #endif
 }
 
@@ -899,7 +899,7 @@ SpewAllocationSite(TypeSet::Type ty, JSScript* script, uint32_t offset)
         return;
 
     JitSpew(JitSpew_OptimizationTrackingExtended, "   Unique type %s has alloc site %s:%u",
-            TypeSet::TypeString(ty), script->filename(),
+            TypeSet::TypeString(ty).get(), script->filename(),
             PCToLineNumber(script, script->offsetToPC(offset)));
 #endif
 }

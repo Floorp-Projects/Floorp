@@ -28,6 +28,12 @@ interface nsICacheEntry : nsISupports
   readonly attribute ACString key;
 
   /**
+   * The unique ID for every nsICacheEntry instance, which can be used to check
+   * whether two pieces of information are from the same nsICacheEntry instance.
+   */
+  readonly attribute uint64_t cacheEntryId;
+
+  /**
    * Whether the entry is memory/only or persisted to disk.
    * Note: private browsing entries are reported as persistent for consistency
    * while are not actually persisted to disk.

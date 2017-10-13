@@ -246,24 +246,22 @@ WebRenderBridgeChild::DeallocExternalImageId(wr::ExternalImageId& aImageId)
   SendRemoveExternalImageId(aImageId);
 }
 
-struct FontFileData
+struct FontFileDataSink
 {
-  wr::ByteBuffer mFontBuffer;
-  uint32_t mFontIndex;
+  wr::FontKey* mFontKey;
+  WebRenderBridgeChild* mWrBridge;
+  wr::IpcResourceUpdateQueue* mResources;
 };
 
 static void
 WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
                   void* aBaton)
 {
-  FontFileData* data = static_cast<FontFileData*>(aBaton);
+  FontFileDataSink* sink = static_cast<FontFileDataSink*>(aBaton);
 
-  if (!data->mFontBuffer.Allocate(aLength)) {
-    return;
-  }
-  memcpy(data->mFontBuffer.mData, aData, aLength);
+  *sink->mFontKey = sink->mWrBridge->GetNextFontKey();
 
-  data->mFontIndex = aIndex;
+  sink->mResources->AddRawFont(*sink->mFontKey, Range<uint8_t>(const_cast<uint8_t*>(aData), aLength), aIndex);
 }
 
 void
@@ -306,22 +304,15 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
 
   wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
   if (!mFontKeys.Get(unscaled, &fontKey)) {
-    FontFileData data;
-    if (!unscaled->GetFontFileData(WriteFontFileData, &data) ||
-        !data.mFontBuffer.mData) {
+    FontFileDataSink sink = { &fontKey, this, &resources };
+    if (!unscaled->GetFontFileData(WriteFontFileData, &sink)) {
       return instanceKey;
     }
-
-    fontKey.mNamespace = GetNamespace();
-    fontKey.mHandle = GetNextResourceId();
-
-    resources.AddRawFont(fontKey, data.mFontBuffer.AsSlice(), data.mFontIndex);
 
     mFontKeys.Put(unscaled, fontKey);
   }
 
-  instanceKey.mNamespace = GetNamespace();
-  instanceKey.mHandle = GetNextResourceId();
+  instanceKey = GetNextFontInstanceKey();
 
   Maybe<wr::FontInstanceOptions> options;
   Maybe<wr::FontInstancePlatformOptions> platformOptions;

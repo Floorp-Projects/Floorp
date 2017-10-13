@@ -124,28 +124,33 @@ TypeSet::NonObjectTypeString(TypeSet::Type type)
     return "object";
 }
 
-/* static */ const char*
+static UniqueChars MakeStringCopy(const char* s)
+{
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    char* copy = strdup(s);
+    if (!copy)
+        oomUnsafe.crash("Could not copy string");
+    return UniqueChars(copy);
+}
+
+/* static */ UniqueChars
 TypeSet::TypeString(TypeSet::Type type)
 {
     if (type.isPrimitive() || type.isUnknown() || type.isAnyObject())
-        return NonObjectTypeString(type);
+        return MakeStringCopy(NonObjectTypeString(type));
 
-    static char bufs[4][40];
-    static unsigned which = 0;
-    which = (which + 1) & 3;
-
+    char buf[100];
     if (type.isSingleton()) {
         JSObject* singleton = type.singletonNoBarrier();
-        snprintf(bufs[which], 40, "<%s %#" PRIxPTR ">",
-                 singleton->getClass()->name, uintptr_t(singleton));
+        SprintfLiteral(buf, "<%s %#" PRIxPTR ">", singleton->getClass()->name, uintptr_t(singleton));
     } else {
-        snprintf(bufs[which], 40, "[%s * %#" PRIxPTR "]", type.groupNoBarrier()->clasp()->name, uintptr_t(type.groupNoBarrier()));
+        SprintfLiteral(buf, "[%s * %#" PRIxPTR "]", type.groupNoBarrier()->clasp()->name, uintptr_t(type.groupNoBarrier()));
     }
 
-    return bufs[which];
+    return MakeStringCopy(buf);
 }
 
-/* static */ const char*
+/* static */ UniqueChars
 TypeSet::ObjectGroupString(ObjectGroup* group)
 {
     return TypeString(TypeSet::ObjectType(group));
@@ -303,8 +308,8 @@ js::ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id, const Val
 
         if (!types->hasType(type)) {
             TypeFailure(cx, "Missing type in object %s %s: %s",
-                        TypeSet::ObjectGroupString(group), TypeIdString(id),
-                        TypeSet::TypeString(type));
+                        TypeSet::ObjectGroupString(group).get(), TypeIdString(id),
+                        TypeSet::TypeString(type).get());
         }
     }
     return true;
@@ -704,7 +709,7 @@ ConstraintTypeSet::addType(JSContext* cx, Type type)
 
     InferSpew(ISpewOps, "addType: %sT%p%s %s",
               InferSpewColor(this), this, InferSpewColorReset(),
-              TypeString(type));
+              TypeString(type).get());
 
     /* Propagate the type to all constraints. */
     if (!cx->helperThread()) {
@@ -769,7 +774,7 @@ TypeSet::print(FILE* fp)
         for (unsigned i = 0; i < count; i++) {
             ObjectKey* key = getObject(i);
             if (key)
-                fprintf(fp, " %s", TypeString(ObjectType(key)));
+                fprintf(fp, " %s", TypeString(ObjectType(key)).get());
         }
     }
 
@@ -2665,7 +2670,8 @@ UpdatePropertyType(JSContext* cx, HeapTypeSet* types, NativeObject* obj, Shape* 
         } else {
             InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s - setConstant",
                       InferSpewColor(types), types, InferSpewColorReset(),
-                      TypeSet::ObjectGroupString(obj->group()), TypeIdString(shape->propid()));
+                      TypeSet::ObjectGroupString(obj->group()).get(),
+                      TypeIdString(shape->propid()));
         }
     }
 }
@@ -2675,7 +2681,7 @@ ObjectGroup::updateNewPropertyTypes(JSContext* cx, JSObject* objArg, jsid id, He
 {
     InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s",
               InferSpewColor(types), types, InferSpewColorReset(),
-              TypeSet::ObjectGroupString(this), TypeIdString(id));
+              TypeSet::ObjectGroupString(this).get(), TypeIdString(id));
 
     MOZ_ASSERT_IF(objArg, objArg->group() == this);
     MOZ_ASSERT_IF(singleton(), objArg);
@@ -2800,7 +2806,8 @@ js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id,
     // Clear any constant flag if it exists.
     if (!types->empty() && !types->nonConstantProperty()) {
         InferSpew(ISpewOps, "constantMutated: %sT%p%s %s",
-                  InferSpewColor(types), types, InferSpewColorReset(), TypeSet::TypeString(type));
+                  InferSpewColor(types), types, InferSpewColorReset(),
+                  TypeSet::TypeString(type).get());
         types->setNonConstantProperty(cx);
     }
 
@@ -2808,7 +2815,9 @@ js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id,
         return;
 
     InferSpew(ISpewOps, "externalType: property %s %s: %s",
-              TypeSet::ObjectGroupString(group), TypeIdString(id), TypeSet::TypeString(type));
+              TypeSet::ObjectGroupString(group).get(),
+              TypeIdString(id),
+              TypeSet::TypeString(type).get());
     types->addType(cx, type);
 
     // If this addType caused the type set to be marked as containing any
@@ -2899,7 +2908,7 @@ ObjectGroup::setFlags(JSContext* cx, ObjectGroupFlags flags)
 
     addFlags(flags);
 
-    InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeSet::ObjectGroupString(this), flags);
+    InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeSet::ObjectGroupString(this).get(), flags);
 
     ObjectStateChange(cx, this, false);
 
@@ -2923,7 +2932,7 @@ ObjectGroup::markUnknown(JSContext* cx)
     MOZ_ASSERT(cx->zone()->types.activeAnalysis);
     MOZ_ASSERT(!unknownProperties());
 
-    InferSpew(ISpewOps, "UnknownProperties: %s", TypeSet::ObjectGroupString(this));
+    InferSpew(ISpewOps, "UnknownProperties: %s", TypeSet::ObjectGroupString(this).get());
 
     clearNewScript(cx);
     ObjectStateChange(cx, this, true);
@@ -3070,9 +3079,9 @@ ObjectGroup::print()
 {
     TaggedProto tagged(proto());
     fprintf(stderr, "%s : %s",
-            TypeSet::ObjectGroupString(this),
+            TypeSet::ObjectGroupString(this).get(),
             tagged.isObject()
-            ? TypeSet::TypeString(TypeSet::ObjectType(tagged.toObject()))
+            ? TypeSet::TypeString(TypeSet::ObjectType(tagged.toObject())).get()
             : tagged.isDynamic()
             ? "(dynamic)"
             : "(null)");
@@ -3325,7 +3334,7 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::
         return;
 
     InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s",
-              script, script->pcToOffset(pc), TypeSet::TypeString(type));
+              script, script->pcToOffset(pc), TypeSet::TypeString(type).get());
     types->addType(cx, type);
 }
 
@@ -3341,7 +3350,7 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackType
     MOZ_ASSERT(!types->hasType(type));
 
     InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s",
-              script, script->pcToOffset(pc), TypeSet::TypeString(type));
+              script, script->pcToOffset(pc), TypeSet::TypeString(type).get());
     types->addType(cx, type);
 }
 
