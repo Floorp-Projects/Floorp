@@ -200,20 +200,18 @@ AnimationEffectReadOnly::GetComputedTimingAt(
                     ? fmod(overallProgress, 1.0)
                     : fmod(result.mIterationStart, 1.0);
 
-  // When we finish exactly at the end of an iteration we need to report
-  // the end of the final iteration and not the start of the next iteration.
-  // We *don't* want to do this when we have a zero-iteration animation or
-  // when the animation has been effectively made into a zero-duration animation
-  // using a negative end-delay, however.
-  if (result.mPhase == ComputedTiming::AnimationPhase::After &&
-      progress == 0.0 &&
-      result.mIterations != 0.0 &&
-      (result.mActiveTime != zeroDuration ||
-       result.mDuration == zeroDuration)) {
-    // The only way we can be in the after phase with a progress of zero and
-    // a current iteration of zero, is if we have a zero iteration count or
-    // were clipped using a negative end delay--both of which we should have
-    // detected above.
+  // When we are at the end of the active interval and the end of an iteration
+  // we need to report the end of the final iteration and not the start of the
+  // next iteration. We *don't* want to do this, however, when we have
+  // a zero-iteration animation.
+  if (progress == 0.0 &&
+      (result.mPhase == ComputedTiming::AnimationPhase::After ||
+       result.mPhase == ComputedTiming::AnimationPhase::Active) &&
+      result.mActiveTime == result.mActiveDuration &&
+      result.mIterations != 0.0) {
+    // The only way we can reach the end of the active interval and have
+    // a progress of zero and a current iteration of zero, is if we have a zero
+    // iteration count -- something we should have detected above.
     MOZ_ASSERT(result.mCurrentIteration != 0,
                "Should not have zero current iteration");
     progress = 1.0;
