@@ -5572,7 +5572,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
            !htmlEditor->IsVisibleBRElement(priorNode) &&
            !IsBlockNode(*priorNode)) {
       offset = priorNode->GetParentNode()->IndexOf(priorNode);
-      child = node;
+      child = priorNode;
       node = priorNode->GetParentNode();
       priorNode = htmlEditor->GetPriorHTMLNode(node, offset, child, true);
     }
