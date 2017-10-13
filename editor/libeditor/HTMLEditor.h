@@ -331,7 +331,8 @@ public:
   nsresult InsertNodeAtPoint(nsIDOMNode* aNode,
                              nsCOMPtr<nsIDOMNode>* ioParent,
                              int32_t* ioOffset,
-                             bool aNoEmptyNodes);
+                             bool aNoEmptyNodes,
+                             nsCOMPtr<nsIDOMNode>* ioChildAtOffset = nullptr);
 
   /**
    * Use this to assure that selection is set after attribute nodes when

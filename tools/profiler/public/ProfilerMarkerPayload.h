@@ -202,29 +202,6 @@ private:
   mozilla::TimeStamp mVsyncTimestamp;
 };
 
-class GPUMarkerPayload : public ProfilerMarkerPayload
-{
-public:
-  GPUMarkerPayload(const mozilla::TimeStamp& aCpuTimeStart,
-                   const mozilla::TimeStamp& aCpuTimeEnd,
-                   uint64_t aGpuTimeStart,
-                   uint64_t aGpuTimeEnd)
-    : ProfilerMarkerPayload(aCpuTimeStart, aCpuTimeEnd)
-    , mCpuTimeStart(aCpuTimeStart)
-    , mCpuTimeEnd(aCpuTimeEnd)
-    , mGpuTimeStart(aGpuTimeStart)
-    , mGpuTimeEnd(aGpuTimeEnd)
-  {}
-
-  DECL_STREAM_PAYLOAD
-
-private:
-  mozilla::TimeStamp mCpuTimeStart;
-  mozilla::TimeStamp mCpuTimeEnd;
-  uint64_t mGpuTimeStart;
-  uint64_t mGpuTimeEnd;
-};
-
 class GCSliceMarkerPayload : public ProfilerMarkerPayload
 {
 public:

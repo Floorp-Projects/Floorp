@@ -692,10 +692,14 @@ MacOSFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
         mHasAATSmallCapsInitialized = true;
         CTFontRef ctFont =
             CTFontCreateWithGraphicsFont(mFontRef, 0.0, nullptr, nullptr);
-        CFArrayRef features = CTFontCopyFeatures(ctFont);
-        CFRelease(ctFont);
-        mHasAATSmallCaps = CheckForAATSmallCaps(features);
-        CFRelease(features);
+        if (ctFont) {
+            CFArrayRef features = CTFontCopyFeatures(ctFont);
+            CFRelease(ctFont);
+            if (features) {
+                mHasAATSmallCaps = CheckForAATSmallCaps(features);
+                CFRelease(features);
+            }
+        }
         return mHasAATSmallCaps;
     }
     return gfxFontEntry::SupportsOpenTypeFeature(aScript, aFeatureTag);

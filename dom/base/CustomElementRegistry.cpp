@@ -112,13 +112,11 @@ CustomElementConstructor::Construct(const char* aExecutionReason,
   JS::Rooted<JSObject*> result(cx);
   JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
   if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   RefPtr<Element> element;
   if (NS_FAILED(UNWRAP_OBJECT(Element, &result, element))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
@@ -902,7 +900,7 @@ DoUpgrade(Element* aElement,
     return;
   }
 
-  if (constructResult.get() != aElement) {
+  if (!constructResult || constructResult.get() != aElement) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }

@@ -430,18 +430,6 @@ interface nsIEditor  : nsISupports
   void cloneAttributes(in nsIDOMNode destNode, in nsIDOMNode sourceNode);
 
   /**
-   * createNode instantiates a new element of type aTag and inserts it
-   * into aParent at aPosition.
-   * @param aTag      The type of object to create
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   * @return          The node created.  Caller must release aNewNode.
-   */
-  nsIDOMNode createNode(in AString tag,
-                        in nsIDOMNode parent,
-                        in long position);
-
-  /**
    * insertNode inserts aNode into aParent at aPosition.
    * No checking is done to verify the legality of the insertion.
    * That is the responsibility of the caller.

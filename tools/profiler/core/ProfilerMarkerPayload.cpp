@@ -56,22 +56,6 @@ TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 }
 
 void
-GPUMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                const TimeStamp& aProcessStartTime,
-                                UniqueStacks& aUniqueStacks)
-{
-  StreamCommonProps("gpu_timer_query", aWriter, aProcessStartTime,
-                    aUniqueStacks);
-
-  aWriter.DoubleProperty("cpustart",
-                         (mCpuTimeStart - aProcessStartTime).ToMilliseconds());
-  aWriter.DoubleProperty("cpuend",
-                         (mCpuTimeEnd - aProcessStartTime).ToMilliseconds());
-  aWriter.IntProperty("gpustart", (int)mGpuTimeStart);
-  aWriter.IntProperty("gpuend", (int)mGpuTimeEnd);
-}
-
-void
 IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                const TimeStamp& aProcessStartTime,
                                UniqueStacks& aUniqueStacks)

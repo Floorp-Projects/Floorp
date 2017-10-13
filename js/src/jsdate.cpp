@@ -2658,14 +2658,14 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
                 /*
                  * Decide whether to use the resulting time zone string.
                  *
-                 * Reject it if it contains any non-ASCII, non-alphanumeric
+                 * Reject it if it contains any non-ASCII or non-printable
                  * characters.  It's then likely in some other character
                  * encoding, and we probably won't display it correctly.
                  */
                 usetz = true;
                 for (size_t i = 0; i < tzlen; i++) {
                     char16_t c = tzbuf[i];
-                    if (c > 127 || !(isalnum(c) || c == ' ' || c == '(' || c == ')' || c == '.')) {
+                    if (c > 127 || !isprint(c)) {
                         usetz = false;
                         break;
                     }

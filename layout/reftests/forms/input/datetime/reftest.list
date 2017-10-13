@@ -1,24 +1,21 @@
 default-preferences pref(dom.forms.datetime,true)
 
-# not valid on Android where type=time looks like type=text
-skip-if(Android) != time-simple-unthemed.html time-simple-unthemed-ref.html
-skip-if(Android) != time-large-font.html time-basic.html
-skip-if(Android) != time-width-height.html time-basic.html
-skip-if(Android) != time-border.html time-basic.html
-# only valid on Android where type=number looks the same as type=text
-skip-if(!Android) == time-simple-unthemed.html time-simple-unthemed-ref.html
+!= time-simple-unthemed.html time-simple-unthemed-ref.html
+!= time-large-font.html time-basic.html
+!= time-width-height.html time-basic.html
+!= time-border.html time-basic.html
 
 # type change
-skip-if(Android) == to-time-from-other-type-unthemed.html time-simple-unthemed.html
-skip-if(Android) == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
+== to-time-from-other-type-unthemed.html time-simple-unthemed.html
+== from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
 
 # content should not overflow on small width/height
-skip-if(Android) == time-small-width.html time-small-width-ref.html
-skip-if(Android) == time-small-height.html time-small-height-ref.html
-skip-if(Android) == time-small-width-height.html time-small-width-height-ref.html
+== time-small-width.html time-small-width-ref.html
+== time-small-height.html time-small-height-ref.html
+== time-small-width-height.html time-small-width-height-ref.html
 
 # content (text) should be left aligned
-skip-if(Android) == time-content-left-aligned.html time-content-left-aligned-ref.html
+fuzzy-if(Android,4,8) == time-content-left-aligned.html time-content-left-aligned-ref.html
 
 # reset button should be right aligned
 skip-if(Android) == time-reset-button-right-aligned.html time-reset-button-right-aligned-ref.html # bug 1372062

@@ -456,18 +456,11 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
       MOZ_ASSERT(false, "can not perform security check without a valid contentType");
   }
 
-  // For document loads we use the triggeringPrincipal as the originPrincipal.
-  // Note the the loadingPrincipal for loads of TYPE_DOCUMENT is a nullptr.
-  nsCOMPtr<nsIPrincipal> principal =
-    (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
-     contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT)
-    ? aLoadInfo->TriggeringPrincipal()
-    : aLoadInfo->LoadingPrincipal();
-
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(internalContentPolicyType,
                                  uri,
-                                 principal,
+                                 aLoadInfo->LoadingPrincipal(),
+                                 aLoadInfo->TriggeringPrincipal(),
                                  requestingContext,
                                  mimeTypeGuess,
                                  nullptr,        //extra,

@@ -69,12 +69,15 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mMainThreadEventTarget(aMainThreadEventTarget)
+  , mNeedToObserveOnDataAvailable(false)
   , mIsTrackingFetch(aIsTrackingFetch)
 #ifdef DEBUG
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
 #endif
 {
+  AssertIsOnMainThread();
+
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aMainThreadEventTarget);
@@ -82,6 +85,8 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
 
 FetchDriver::~FetchDriver()
 {
+  AssertIsOnMainThread();
+
   // We assert this since even on failures, we should call
   // FailWithNetworkError().
   MOZ_ASSERT(mResponseAvailableCalled);
@@ -497,6 +502,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   MOZ_ASSERT(!mPipeOutputStream);
   MOZ_ASSERT(mObserver);
 
+  mNeedToObserveOnDataAvailable = mObserver->NeedOnDataAvailable();
+
   RefPtr<InternalResponse> response;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
@@ -747,15 +754,18 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
   // called between OnStartRequest and OnStopRequest, so we don't need to worry
   // about races.
 
-  if (mObserver) {
-    if (NS_IsMainThread()) {
-      mObserver->OnDataAvailable();
-    } else {
-      RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
-      nsresult rv =
-        mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+  if (mNeedToObserveOnDataAvailable) {
+    mNeedToObserveOnDataAvailable = false;
+    if (mObserver) {
+      if (NS_IsMainThread()) {
+        mObserver->OnDataAvailable();
+      } else {
+        RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
+        nsresult rv =
+          mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -924,7 +934,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 NS_IMETHODIMP
 FetchDriver::CheckListenerChain()
 {
-  return NS_ERROR_NO_INTERFACE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

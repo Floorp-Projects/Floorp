@@ -455,7 +455,9 @@ JSContext::enterNonAtomsCompartment(JSCompartment* c)
     enterCompartmentDepth_++;
 
     MOZ_ASSERT(!c->zone()->isAtomsZone());
+    c->holdGlobal();
     enterZoneGroup(c->zone()->group());
+    c->releaseGlobal();
 
     c->enter();
     setCompartment(c, nullptr);
