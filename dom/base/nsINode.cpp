@@ -409,11 +409,7 @@ nsINode::ChildNodes()
 {
   nsSlots* slots = Slots();
   if (!slots->mChildNodes) {
-    // Check |!IsElement()| first to catch the common case
-    // without virtual call |IsNodeOfType|
-    slots->mChildNodes = !IsElement() && IsNodeOfType(nsINode::eATTRIBUTE) ?
-                           new nsAttrChildContentList(this) :
-                           new nsParentNodeChildContentList(this);
+    slots->mChildNodes = new nsAttrChildContentList(this);
   }
 
   return slots->mChildNodes;
@@ -1556,8 +1552,8 @@ nsresult
 nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
                          bool aNotify, nsAttrAndChildArray& aChildArray)
 {
-  MOZ_ASSERT(!aKid->GetParentNode(), "Inserting node that already has parent");
-  MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
+  NS_PRECONDITION(!aKid->GetParentNode(),
+                  "Inserting node that already has parent");
 
   // The id-handling code, and in the future possibly other code, need to
   // react to unexpected attribute changes.
@@ -1599,14 +1595,6 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
   if (aIndex == 0) {
     mFirstChild = aKid;
-  }
-
-  // Invalidate cached array of child nodes
-  nsSlots* slots = GetExistingSlots();
-  if (slots && slots->mChildNodes) {
-    auto childNodes =
-      static_cast<nsParentNodeChildContentList*>(slots->mChildNodes.get());
-    childNodes->InvalidateCache();
   }
 
   nsIContent* parent =
@@ -1914,10 +1902,9 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   // nsIDocument::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
   // value for our cached root element, per note in nsDocument::RemoveChildAt().
-  MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
-             aKid == GetChildAt(aIndex) &&
-             IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
-  MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
+  NS_PRECONDITION(aKid && aKid->GetParentNode() == this &&
+                  aKid == GetChildAt(aIndex) &&
+                  IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
 
   nsMutationGuard::DidMutate();
   mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_CONTENT_MODEL, aNotify);
@@ -1929,14 +1916,6 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   }
 
   aChildArray.RemoveChildAt(aIndex);
-
-  // Invalidate cached array of child nodes
-  nsSlots* slots = GetExistingSlots();
-  if (slots && slots->mChildNodes) {
-    auto childNodes =
-      static_cast<nsParentNodeChildContentList*>(slots->mChildNodes.get());
-    childNodes->InvalidateCache();
-  }
 
   if (aNotify) {
     nsNodeUtils::ContentRemoved(this, aKid, previousSibling);
