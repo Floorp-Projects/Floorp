@@ -70,7 +70,7 @@ need to download a Marionette client or use the in-tree client.
 [5] ./Debugging.md
 [6] https://developer.mozilla.org/en-US/docs/Marionette/Builds
 [7] https://github.com/mozilla-b2g/marionette_js_client
-[8] https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
+[8] ./Protocol.md
 
 
 Bugs
