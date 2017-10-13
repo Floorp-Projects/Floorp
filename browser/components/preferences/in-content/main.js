@@ -97,11 +97,6 @@ const APP_ICON_ATTR_NAME = "appHandlerIcon";
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
-if (AppConstants.E10S_TESTING_ONLY) {
-  XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-    "resource://gre/modules/UpdateUtils.jsm");
-}
-
 if (AppConstants.MOZ_DEV_EDITION) {
   XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
     "resource://gre/modules/FxAccounts.jsm");
@@ -316,26 +311,6 @@ var gMainPane = {
       Components.utils.import("resource:///modules/translation/Translation.jsm");
       if (Translation.translationEngine == "bing") {
         document.getElementById("bingAttribution").removeAttribute("hidden");
-      }
-    }
-
-    if (AppConstants.E10S_TESTING_ONLY) {
-      setEventListener("e10sAutoStart", "command",
-        gMainPane.enableE10SChange);
-      let e10sCheckbox = document.getElementById("e10sAutoStart");
-
-      let e10sPref = document.getElementById("browser.tabs.remote.autostart");
-      let e10sTempPref = document.getElementById("e10sTempPref");
-      let e10sForceEnable = document.getElementById("e10sForceEnable");
-
-      let preffedOn = e10sPref.value || e10sTempPref.value || e10sForceEnable.value;
-
-      if (preffedOn) {
-        // The checkbox is checked if e10s is preffed on and enabled.
-        e10sCheckbox.checked = Services.appinfo.browserTabsRemoteAutostart;
-
-        // but if it's force disabled, then the checkbox is disabled.
-        e10sCheckbox.disabled = !Services.appinfo.browserTabsRemoteAutostart;
       }
     }
 
@@ -559,39 +534,6 @@ var gMainPane = {
     }
 
     return e10sEnabled;
-  },
-
-  enableE10SChange() {
-    if (AppConstants.E10S_TESTING_ONLY) {
-      let e10sCheckbox = document.getElementById("e10sAutoStart");
-      let e10sPref = document.getElementById("browser.tabs.remote.autostart");
-      let e10sTempPref = document.getElementById("e10sTempPref");
-
-      let prefsToChange;
-      if (e10sCheckbox.checked) {
-        // Enabling e10s autostart
-        prefsToChange = [e10sPref];
-      } else {
-        // Disabling e10s autostart
-        prefsToChange = [e10sPref];
-        if (e10sTempPref.value) {
-          prefsToChange.push(e10sTempPref);
-        }
-      }
-
-      let buttonIndex = confirmRestartPrompt(e10sCheckbox.checked, 0,
-        true, false);
-      if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
-        for (let prefToChange of prefsToChange) {
-          prefToChange.value = e10sCheckbox.checked;
-        }
-
-        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-      }
-
-      // Revert the checkbox in case we didn't quit
-      e10sCheckbox.checked = e10sPref.value || e10sTempPref.value;
-    }
   },
 
   separateProfileModeChange() {
