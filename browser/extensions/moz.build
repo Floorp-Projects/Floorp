@@ -7,6 +7,7 @@
 DIRS += [
     'activity-stream',
     'aushelper',
+    'e10srollout',
     'followonsearch',
     'formautofill',
     'onboarding',
