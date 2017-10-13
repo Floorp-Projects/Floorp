@@ -110,7 +110,7 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
             NS_LITERAL_CSTRING("audio/flac"), aType));
         continue;
       }
-      if (codec.EqualsLiteral("vp9") || codec.EqualsLiteral("vp9.0")) {
+      if (IsVP9CodecString(codec)) {
         trackInfos.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
             NS_LITERAL_CSTRING("video/vp9"), aType));

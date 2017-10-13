@@ -10,6 +10,7 @@
 #include "AOMDecoder.h"
 #endif
 #include "MediaContainerType.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -39,9 +40,9 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
     }
     // Note: Only accept VP8/VP9 in a video container type, not in an audio
     // container type.
+
     if (isVideo &&
-        (codec.EqualsLiteral("vp8") || codec.EqualsLiteral("vp8.0") ||
-         codec.EqualsLiteral("vp9") || codec.EqualsLiteral("vp9.0"))) {
+        (IsVP8CodecString(codec) || IsVP9CodecString(codec))) {
       continue;
     }
 #ifdef MOZ_AV1
