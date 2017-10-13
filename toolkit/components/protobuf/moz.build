@@ -227,8 +227,8 @@ SOURCES += [
     'src/google/protobuf/generated_message_table_driven.cc',
     'src/google/protobuf/generated_message_table_driven_lite.cc',
     'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
-    'src/google/protobuf/util/internal/json_escaping.cc',
-    'src/google/protobuf/util/internal/json_objectwriter.cc',
+    'src/google/protobuf/util/internal/json_escaping.cc',  # namespace problem in json_escaping.h
+    'src/google/protobuf/util/internal/json_objectwriter.cc',  # namespace problem in json_escaping.h
     'src/google/protobuf/util/internal/json_stream_parser.cc',
     'src/google/protobuf/util/internal/proto_writer.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/util/internal/protostream_objectsource.cc',  # GetCurrentTime conflict in winbase.h
