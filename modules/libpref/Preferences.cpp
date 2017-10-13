@@ -375,20 +375,6 @@ PREF_ClearUserPref(const char* aPrefName);
 nsresult
 PREF_ClearAllUserPrefs();
 
-// The callback function will get passed the pref_node which triggered the call
-// and the void* instance_data which was passed to the registered callback
-// function. Return a non-zero result (nsresult) to pass an error up to the
-// caller.
-//
-// Temporarily conditionally compile PrefChangedFunc typedef. During migration
-// from old libpref to nsIPref we need it in both header files. Eventually
-// prefapi.h will become a private file. The two types need to be in sync for
-// now. Certain compilers were having problems with multiple definitions.
-#ifndef have_PrefChangedFunc_typedef
-typedef void (*PrefChangedFunc)(const char*, void*);
-#define have_PrefChangedFunc_typedef
-#endif
-
 // Register a callback. This takes a node in the preference tree and will call
 // the callback function if anything below that node is modified. Unregister
 // returns PREF_NOERROR if a callback was found that matched all the
