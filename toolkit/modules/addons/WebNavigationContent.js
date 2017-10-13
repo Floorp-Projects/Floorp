@@ -10,17 +10,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
-function getDocShellOuterWindowId(docShell) {
-  if (!docShell) {
-    return undefined;
-  }
-
-  return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindow)
-                 .getInterface(Ci.nsIDOMWindowUtils)
-                 .outerWindowID;
-}
-
 function loadListener(event) {
   let document = event.target;
   let window = document.defaultView;
@@ -67,9 +56,8 @@ var CreatedNavigationTargetListener = {
     }
 
     const isSourceTab = docShell === sourceDocShell || isSourceTabDescendant;
-
     const sourceFrameId = WebNavigationFrames.getDocShellFrameId(sourceDocShell);
-    const createdOuterWindowId = getDocShellOuterWindowId(sourceDocShell);
+    const createdWindowId = WebNavigationFrames.getDocShellFrameId(createdDocShell);
 
     let url;
     if (props.hasKey("url")) {
@@ -79,7 +67,7 @@ var CreatedNavigationTargetListener = {
     sendAsyncMessage("Extension:CreatedNavigationTarget", {
       url,
       sourceFrameId,
-      createdOuterWindowId,
+      createdWindowId,
       isSourceTab,
     });
   },
