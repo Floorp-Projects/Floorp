@@ -284,6 +284,23 @@ describe("TelemetryFeed", () => {
         // Does it have the right value?
         assert.propertyVal(ping, "value", 10);
       });
+      describe("#validate *_data_late_by_ms", () => {
+        it("should create a valid highlights_data_late_by_ms ping", () => {
+          const data = {
+            type: at.TELEMETRY_UNDESIRED_EVENT,
+            data: {
+              source: "HIGHLIGHTS",
+              event: `highlights_data_late_by_ms`,
+              value: 2
+            }
+          };
+          const ping = instance.createUndesiredEvent(data);
+
+          assert.validate(ping, UndesiredPing);
+          assert.propertyVal(ping, "value", data.data.value);
+          assert.propertyVal(ping, "event", data.data.event);
+        });
+      });
     });
     describe("#createPerformanceEvent", () => {
       it("should create a valid event without a session", async () => {
