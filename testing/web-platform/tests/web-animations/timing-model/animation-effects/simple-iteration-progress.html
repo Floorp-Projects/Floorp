@@ -12,26 +12,40 @@
 'use strict';
 
 function runTests(tests, description) {
-  tests.forEach(function(currentTest) {
-    var testParams = '';
-    for (var attr in currentTest.input) {
-      testParams += ' ' + attr + ':' + currentTest.input[attr];
-    }
-    test(function(t) {
-      var div = createDiv(t);
-      var anim = div.animate({ opacity: [ 0, 1 ] }, currentTest.input);
+  for (const currentTest of tests) {
+    const testParams = Object.entries(currentTest.input)
+                             .map(([attr, value]) => `${attr}:${value}`)
+                             .join(' ');
+
+    test(t => {
+      const div = createDiv(t);
+      const anim = div.animate({}, currentTest.input);
+
+      // Before phase
       assert_equals(anim.effect.getComputedTiming().progress,
                     currentTest.before);
-      anim.currentTime = currentTest.input.delay || 0;
-      assert_equals(anim.effect.getComputedTiming().progress,
-                    currentTest.active);
-      if (typeof currentTest.after !== 'undefined') {
+
+      // Active phase
+      if (anim.effect.getComputedTiming().activeDuration > 0) {
+        anim.currentTime = currentTest.input.delay || 0;
+        assert_equals(anim.effect.getComputedTiming().progress,
+                      currentTest.active);
+      } else if (currentTest.active !== undefined) {
+        assert_false('Test specifies an active progress to check but the'
+                     + ' animation has a zero duration');
+      }
+
+      // After phase
+      if (anim.effect.getComputedTiming().activeDuration !== Infinity) {
         anim.finish();
         assert_equals(anim.effect.getComputedTiming().progress,
                       currentTest.after);
+      } else if (currentTest.after !== undefined) {
+        assert_false('Test specifies an after phase progress to check but the'
+                     + ' animation has an infinite duration');
       }
-    }, description + ':' + testParams);
-  });
+    }, `${description}: ${testParams}`);
+  }
 }
 
 
@@ -49,7 +63,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   },
 
@@ -60,7 +73,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   },
 
@@ -71,7 +83,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   },
 
@@ -82,7 +93,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 0.5,
     after: 0.5
   },
 
@@ -93,7 +103,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 0.5,
     after: 0.5
   },
 
@@ -104,7 +113,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 0.5,
     after: 0.5
   },
 
@@ -115,7 +123,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   },
 
@@ -126,7 +133,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   },
 
@@ -137,7 +143,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0,
     after: 0
   }
 ], 'Test zero iterations');
@@ -157,7 +162,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 1,
     after: 1
   },
 
@@ -189,7 +193,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 0.5,
     after: 0.5
   },
 
@@ -221,7 +224,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 1,
     after: 1
   },
 
@@ -262,7 +264,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0.5,
     after: 0.5
   },
 
@@ -294,7 +295,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 1,
     after: 1
   },
 
@@ -326,7 +326,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 0.5,
     after: 0.5
   },
 
@@ -367,7 +366,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 1,
     after: 1
   },
 
@@ -398,7 +396,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0.5,
-    active: 0.5,
     after: 0.5
   },
 
@@ -429,7 +426,6 @@ runTests([
                 delay: 1,
                 fill: 'both' },
     before: 0,
-    active: 1,
     after: 1
   },
 
