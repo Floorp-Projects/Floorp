@@ -5347,7 +5347,7 @@ CreateAudioTrack(AudioStreamTrack* aStreamTrack)
   nsAutoString id;
   nsAutoString label;
   aStreamTrack->GetId(id);
-  aStreamTrack->GetLabel(label);
+  aStreamTrack->GetLabel(label, CallerType::System);
 
   return MediaTrackList::CreateAudioTrack(id, NS_LITERAL_STRING("main"),
                                           label, EmptyString(), true);
@@ -5359,7 +5359,7 @@ CreateVideoTrack(VideoStreamTrack* aStreamTrack)
   nsAutoString id;
   nsAutoString label;
   aStreamTrack->GetId(id);
-  aStreamTrack->GetLabel(label);
+  aStreamTrack->GetLabel(label, CallerType::System);
 
   return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
                                           label, EmptyString(),

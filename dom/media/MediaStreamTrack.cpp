@@ -259,9 +259,18 @@ MediaStreamTrack::GetConstraints(dom::MediaTrackConstraints& aResult)
 }
 
 void
-MediaStreamTrack::GetSettings(dom::MediaTrackSettings& aResult)
+MediaStreamTrack::GetSettings(dom::MediaTrackSettings& aResult, CallerType aCallerType)
 {
   GetSource().GetSettings(aResult);
+
+  // Spoof values when privacy.resistFingerprinting is true.
+  if (!nsContentUtils::ResistFingerprinting(aCallerType)) {
+    return;
+  }
+  if (aResult.mFacingMode.WasPassed()) {
+    aResult.mFacingMode.Value().Assign(NS_ConvertASCIItoUTF16(
+        VideoFacingModeEnumValues::strings[uint8_t(VideoFacingModeEnum::User)].value));
+  }
 }
 
 already_AddRefed<Promise>
