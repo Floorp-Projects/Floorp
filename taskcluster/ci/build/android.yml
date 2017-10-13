@@ -335,6 +335,7 @@ android-api-16-gradle/opt:
         custom-build-variant-cfg: api-16-gradle
         tooltool-downloads: internal
     toolchains:
+        - android-gradle-dependencies
         - android-sdk-linux
         - linux64-rust-android
         - linux64-sccache
