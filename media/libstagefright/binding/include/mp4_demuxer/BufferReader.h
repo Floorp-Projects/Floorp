@@ -6,8 +6,10 @@
 #define BUFFER_READER_H_
 
 #include "mozilla/EndianUtils.h"
+#include "nscore.h"
 #include "nsTArray.h"
 #include "MediaData.h"
+#include "mozilla/Result.h"
 
 namespace mp4_demuxer {
 
@@ -42,8 +44,7 @@ public:
   }
 
   ~BufferReader()
-  {
-  }
+  {}
 
   size_t Offset() const
   {
@@ -52,61 +53,61 @@ public:
 
   size_t Remaining() const { return mRemaining; }
 
-  bool CanRead8() const { return mRemaining >= 1; }
-
-  uint8_t ReadU8()
+  Result<uint8_t, nsresult> ReadU8()
   {
     auto ptr = Read(1);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return *ptr;
   }
 
-  bool CanRead16() { return mRemaining >= 2; }
-
-  uint16_t ReadU16()
+  Result<uint16_t, nsresult> ReadU16()
   {
     auto ptr = Read(2);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint16(ptr);
   }
 
-  int16_t ReadLE16()
+  Result<int16_t, nsresult> ReadLE16()
   {
     auto ptr = Read(2);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::LittleEndian::readInt16(ptr);
   }
 
-  uint32_t ReadU24()
+  Result<uint32_t, nsresult> ReadU24()
   {
     auto ptr = Read(3);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
   }
 
-  uint32_t Read24()
+  Result<int32_t, nsresult> Read24()
   {
-    return (uint32_t)ReadU24();
+    auto res = ReadU24();
+    if (res.isErr()) {
+      return mozilla::Err(NS_ERROR_FAILURE);
+    }
+    return (int32_t)res.unwrap();
   }
 
-  int32_t ReadLE24()
+  Result<int32_t, nsresult> ReadLE24()
   {
     auto ptr = Read(3);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     int32_t result = int32_t(ptr[2] << 16 | ptr[1] << 8 | ptr[0]);
     if (result & 0x00800000u) {
@@ -115,44 +116,42 @@ public:
     return result;
   }
 
-  bool CanRead32() { return mRemaining >= 4; }
-
-  uint32_t ReadU32()
+  Result<uint32_t, nsresult> ReadU32()
   {
     auto ptr = Read(4);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint32(ptr);
   }
 
-  int32_t Read32()
+  Result<int32_t, nsresult> Read32()
   {
     auto ptr = Read(4);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readInt32(ptr);
   }
 
-  uint64_t ReadU64()
+  Result<uint64_t, nsresult> ReadU64()
   {
     auto ptr = Read(8);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint64(ptr);
   }
 
-  int64_t Read64()
+  Result<int64_t, nsresult> Read64()
   {
     auto ptr = Read(8);
     if (!ptr) {
       NS_WARNING("Failed to read data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readInt64(ptr);
   }
