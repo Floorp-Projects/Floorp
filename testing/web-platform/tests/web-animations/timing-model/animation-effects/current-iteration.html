@@ -5,6 +5,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../../testcommon.js"></script>
+<script src="../../resources/effect-tests.js"></script>
 <body>
 <div id="log"></div>
 <script>
@@ -20,29 +21,13 @@ function runTests(tests, description) {
       const div = createDiv(t);
       const anim = div.animate({}, currentTest.input);
 
-      // Before phase
-      assert_equals(anim.effect.getComputedTiming().currentIteration,
-                    currentTest.before);
-
-      // Active phase
-      if (anim.effect.getComputedTiming().activeDuration > 0) {
-        anim.currentTime = currentTest.input.delay || 0;
-        assert_equals(anim.effect.getComputedTiming().currentIteration,
-                      currentTest.active);
-      } else if (currentTest.active !== undefined) {
-        assert_false('Test specifies an active phase iteration to check but the'
-                     + ' animation has a zero duration');
-      }
-
-      // After phase
-      if (anim.effect.getComputedTiming().activeDuration !== Infinity) {
-        anim.finish();
-        assert_equals(anim.effect.getComputedTiming().currentIteration,
-                      currentTest.after);
-      } else if (currentTest.after !== undefined) {
-        assert_false('Test specifies an after phase iteration to check but the'
-                     + ' animation has an infinite duration');
-      }
+      assert_computed_timing_for_each_phase(
+        anim,
+        'currentIteration',
+        { before: currentTest.before,
+          active: currentTest.active,
+          after: currentTest.after },
+      );
     }, `${description}: ${testParams}`);
   }
 }
