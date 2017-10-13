@@ -16,7 +16,6 @@
 #include <algorithm>
 #include "nsAtom.h"
 #include "PLDHashTable.h"
-#include "nsICSSPseudoComparator.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/StyleRule.h"
