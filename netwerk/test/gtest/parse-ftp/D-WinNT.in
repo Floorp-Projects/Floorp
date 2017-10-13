@@ -46,13 +46,15 @@ ftp> ls
 08-22-00  10:36AM       <DIR>          Sean
 08-10-00  01:54PM       <DIR>          SLeong
 09-07-00  05:46PM       <DIR>          svr
-07-21-00  07:22AM       <JUNCTION>     a_junction_sample
 10-23-00  01:27PM       <JUNCTION>     b_junction_sample => foo
 06-15-00  07:37AM       <JUNCTION>     c_junction_sample -> bar too
 07-14-00  01:35PM              2094926 canprankdesk.tif
 07-21-00  01:19PM                95077 Jon Kauffman Enjoys the Good Life.jpg
 07-21-00  01:19PM                52275 Name Plate.jpg
 07-14-00  01:38PM              2250540 Valentineoffprank-HiRes.jpg
+01-11-14  12:25AM             18864566 Bug961346
+10-10-2014  10:10AM       <DIR>        Bug1061898
+01-18-12  19:00             30724571 Bug1125816
 226 Transfer complete.
 ftp> close
 221  Thank-You For Using Microsoft Products!

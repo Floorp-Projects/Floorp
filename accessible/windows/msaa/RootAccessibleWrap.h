@@ -38,6 +38,11 @@ public:
    */
   already_AddRefed<IUnknown> GetInternalUnknown();
 
+  virtual /* [id] */ HRESULT STDMETHODCALLTYPE accNavigate(
+    /* [in] */ long navDir,
+    /* [optional][in] */ VARIANT varStart,
+    /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt) override;
+
 private:
   // DECLARE_AGGREGATABLE declares the internal IUnknown methods as well as
   // mInternalUnknown.
