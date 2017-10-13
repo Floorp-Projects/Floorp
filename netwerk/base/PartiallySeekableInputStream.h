@@ -17,6 +17,7 @@ namespace mozilla {
 namespace net {
 
 // A wrapper for making a stream seekable for the first |aBufferSize| bytes.
+// Note that this object takes the ownership of the underlying stream.
 
 class PartiallySeekableInputStream final : public nsISeekableStream
                                          , public nsIAsyncInputStream
@@ -33,7 +34,7 @@ public:
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSIINPUTSTREAMCALLBACK
 
-  explicit PartiallySeekableInputStream(nsIInputStream* aInputStream,
+  explicit PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aInputStream,
                                         uint64_t aBufferSize = 4096);
 
 private:
