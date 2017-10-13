@@ -6,6 +6,7 @@
 #ifndef nsTreeUtils_h__
 #define nsTreeUtils_h__
 
+#include "mozilla/AtomArray.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsTreeStyleCache.h"
@@ -21,7 +22,8 @@ class nsTreeUtils
      * of atoms.
      */
     static nsresult
-    TokenizeProperties(const nsAString& aProperties, AtomArray & aPropertiesArray);
+    TokenizeProperties(const nsAString& aProperties,
+                       mozilla::AtomArray& aPropertiesArray);
 
     static nsIContent*
     GetImmediateChild(nsIContent* aContainer, nsAtom* aTag);
