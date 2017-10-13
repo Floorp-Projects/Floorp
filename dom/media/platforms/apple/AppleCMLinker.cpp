@@ -104,3 +104,5 @@ AppleCMLinker::GetIOConst(const char* symbol)
 }
 
 } // namespace mozilla
+
+#undef LOG

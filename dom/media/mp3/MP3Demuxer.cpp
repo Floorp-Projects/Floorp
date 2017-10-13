@@ -16,10 +16,10 @@
 #include "VideoUtils.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
-#define MP3LOG(msg, ...) \
-  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, ("MP3Demuxer " msg, ##__VA_ARGS__))
-#define MP3LOGV(msg, ...) \
-  MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("MP3Demuxer " msg, ##__VA_ARGS__))
+#define MP3LOG(msg, ...)                                                       \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
+#define MP3LOGV(msg, ...)                                                      \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, msg, ##__VA_ARGS__)
 
 using mozilla::media::TimeUnit;
 using mozilla::media::TimeInterval;
@@ -773,3 +773,6 @@ MP3TrackDemuxer::AverageFrameLength() const
 }
 
 } // namespace mozilla
+
+#undef MP3LOG
+#undef MP3LOGV

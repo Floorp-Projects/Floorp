@@ -78,6 +78,8 @@ public:
 
   static ContainerParser* CreateForMIMEType(const MediaContainerType& aType);
 
+  const MediaContainerType& ContainerType() const { return mType; }
+
 protected:
   RefPtr<MediaByteBuffer> mInitData;
   RefPtr<SourceBufferResource> mResource;
