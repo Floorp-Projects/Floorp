@@ -28,9 +28,9 @@ NS_INTERFACE_MAP_BEGIN(PartiallySeekableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-PartiallySeekableInputStream::PartiallySeekableInputStream(nsIInputStream* aInputStream,
+PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsIInputStream> aInputStream,
                                                            uint64_t aBufferSize)
-  : mInputStream(aInputStream)
+  : mInputStream(Move(aInputStream))
   , mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
@@ -38,29 +38,29 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(nsIInputStream* aInpu
   , mPos(0)
   , mClosed(false)
 {
-  MOZ_ASSERT(aInputStream);
+  MOZ_ASSERT(mInputStream);
 
 #ifdef DEBUG
-  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(aInputStream);
+  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mInputStream);
   MOZ_ASSERT(!seekableStream);
 #endif
 
   nsCOMPtr<nsICloneableInputStream> cloneableStream =
-    do_QueryInterface(aInputStream);
-  if (cloneableStream && SameCOMIdentity(aInputStream, cloneableStream)) {
+    do_QueryInterface(mInputStream);
+  if (cloneableStream && SameCOMIdentity(mInputStream, cloneableStream)) {
     mWeakCloneableInputStream = cloneableStream;
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializableStream =
-    do_QueryInterface(aInputStream);
+    do_QueryInterface(mInputStream);
   if (serializableStream &&
-      SameCOMIdentity(aInputStream, serializableStream)) {
+      SameCOMIdentity(mInputStream, serializableStream)) {
     mWeakIPCSerializableInputStream = serializableStream;
   }
 
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-    do_QueryInterface(aInputStream);
-  if (asyncInputStream && SameCOMIdentity(aInputStream, asyncInputStream)) {
+    do_QueryInterface(mInputStream);
+  if (asyncInputStream && SameCOMIdentity(mInputStream, asyncInputStream)) {
     mWeakAsyncInputStream = asyncInputStream;
   }
 }
@@ -183,7 +183,7 @@ PartiallySeekableInputStream::Clone(nsIInputStream** aResult)
   }
 
   nsCOMPtr<nsIInputStream> stream =
-    new PartiallySeekableInputStream(clonedStream, mBufferSize);
+    new PartiallySeekableInputStream(clonedStream.forget(), mBufferSize);
 
   stream.forget(aResult);
   return NS_OK;
