@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -351,12 +351,15 @@ module.exports = {
 
 
 const { actionTypes: at } = __webpack_require__(0);
+const { Dedupe } = __webpack_require__(20);
 
 // Locales that should be displayed RTL
 const RTL_LIST = ["ar", "he", "fa", "ur"];
 
 const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
+
+const dedupe = new Dedupe(site => site && site.url);
 
 const INITIAL_STATE = {
   App: {
@@ -580,7 +583,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       }
       return newState;
     case at.SECTION_UPDATE:
-      return prevState.map(section => {
+      newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
           // If the action is updating rows, we should consider initialized to be true.
           // This can be overridden if initialized is defined in the action.data
@@ -589,6 +592,28 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
+
+      if (!action.data.dedupeConfigurations) {
+        return newState;
+      }
+
+      action.data.dedupeConfigurations.forEach(dedupeConf => {
+        newState = newState.map(section => {
+          if (section.id === dedupeConf.id) {
+            const dedupedRows = dedupeConf.dedupeFrom.reduce((rows, dedupeSectionId) => {
+              const dedupeSection = newState.find(s => s.id === dedupeSectionId);
+              const [, newRows] = dedupe.group(dedupeSection.rows, rows);
+              return newRows;
+            }, section.rows);
+
+            return Object.assign({}, section, { rows: dedupedRows });
+          }
+
+          return section;
+        });
+      });
+
+      return newState;
     case at.SECTION_UPDATE_CARD:
       return prevState.map(section => {
         if (section && section.id === action.data.id && section.rows) {
@@ -611,10 +636,12 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           // find the item within the rows that is attempted to be bookmarked
           if (item.url === action.data.url) {
             const { bookmarkGuid, bookmarkTitle, dateAdded } = action.data;
-            Object.assign(item, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded });
-            if (!item.type || item.type === "history") {
-              item.type = "bookmark";
-            }
+            return Object.assign({}, item, {
+              bookmarkGuid,
+              bookmarkTitle,
+              bookmarkDateCreated: dateAdded,
+              type: "bookmark"
+            });
           }
           return item;
         })
@@ -683,148 +710,12 @@ module.exports = {
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-/* globals Services */
-
-
-/* istanbul ignore if */
-// Note: normally we would just feature detect Components.utils here, but
-// unfortunately that throws an ugly warning in content if we do.
-
-if (typeof Window === "undefined" && typeof Components !== "undefined" && Components.utils) {
-  Components.utils.import("resource://gre/modules/Services.jsm");
-}
-
-let usablePerfObj;
-
-/* istanbul ignore if */
-/* istanbul ignore else */
-if (typeof Services !== "undefined") {
-  // Borrow the high-resolution timer from the hidden window....
-  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else if (typeof performance !== "undefined") {
-  // we must be running in content space
-  usablePerfObj = performance;
-} else {
-  // This is a dummy object so this file doesn't crash in the node prerendering
-  // task.
-  usablePerfObj = {
-    now() {},
-    mark() {}
-  };
-}
-
-var _PerfService = function _PerfService(options) {
-  // For testing, so that we can use a fake Window.performance object with
-  // known state.
-  if (options && options.performanceObj) {
-    this._perf = options.performanceObj;
-  } else {
-    this._perf = usablePerfObj;
-  }
-};
-
-_PerfService.prototype = {
-  /**
-   * Calls the underlying mark() method on the appropriate Window.performance
-   * object to add a mark with the given name to the appropriate performance
-   * timeline.
-   *
-   * @param  {String} name  the name to give the current mark
-   * @return {void}
-   */
-  mark: function mark(str) {
-    this._perf.mark(str);
-  },
-
-  /**
-   * Calls the underlying getEntriesByName on the appropriate Window.performance
-   * object.
-   *
-   * @param  {String} name
-   * @param  {String} type eg "mark"
-   * @return {Array}       Performance* objects
-   */
-  getEntriesByName: function getEntriesByName(name, type) {
-    return this._perf.getEntriesByName(name, type);
-  },
-
-  /**
-   * The timeOrigin property from the appropriate performance object.
-   * Used to ensure that timestamps from the add-on code and the content code
-   * are comparable.
-   *
-   * @note If this is called from a context without a window
-   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
-   * window, which appears to be the first created window (and thus
-   * timeOrigin) in the browser.  Note also, however, there is also a private
-   * hidden window, presumably for private browsing, which appears to be
-   * created dynamically later.  Exactly how/when that shows up needs to be
-   * investigated.
-   *
-   * @return {Number} A double of milliseconds with a precision of 0.5us.
-   */
-  get timeOrigin() {
-    return this._perf.timeOrigin;
-  },
-
-  /**
-   * Returns the "absolute" version of performance.now(), i.e. one that
-   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
-   * be comparable across both chrome and content.
-   *
-   * @return {Number}
-   */
-  absNow: function absNow() {
-    return this.timeOrigin + this._perf.now();
-  },
-
-  /**
-   * This returns the absolute startTime from the most recent performance.mark()
-   * with the given name.
-   *
-   * @param  {String} name  the name to lookup the start time for
-   *
-   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
-   *
-   * @throws {Error}        "No Marks with the name ..." if none are available
-   *
-   * @note Always surround calls to this by try/catch.  Otherwise your code
-   * may fail when the `privacy.resistFingerprinting` pref is true.  When
-   * this pref is set, all attempts to get marks will likely fail, which will
-   * cause this method to throw.
-   *
-   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
-   * for more info.
-   */
-  getMostRecentAbsMarkStartByName(name) {
-    let entries = this.getEntriesByName(name, "mark");
-
-    if (!entries.length) {
-      throw new Error(`No marks with the name ${name}`);
-    }
-
-    let mostRecentEntry = entries[entries.length - 1];
-    return this._perf.timeOrigin + mostRecentEntry.startTime;
-  }
-};
-
-var perfService = new _PerfService();
-module.exports = {
-  _PerfService,
-  perfService
-};
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 const React = __webpack_require__(1);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
-const LinkMenu = __webpack_require__(9);
+const LinkMenu = __webpack_require__(8);
 
 const { TOP_SITES_SOURCE, TOP_SITES_CONTEXT_MENU_OPTIONS, MIN_RICH_FAVICON_SIZE, MIN_CORNER_FAVICON_SIZE } = __webpack_require__(5);
 
@@ -1033,7 +924,7 @@ module.exports.TopSiteLink = TopSiteLink;
 module.exports.TopSitePlaceholder = TopSitePlaceholder;
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -1091,7 +982,7 @@ module.exports = injectIntl(LinkMenu);
 module.exports._unconnected = LinkMenu;
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1281,17 +1172,327 @@ module.exports.Info = Info;
 module.exports.InfoIntl = InfoIntl;
 
 /***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const React = __webpack_require__(1);
+const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
+const { perfService: perfSvc } = __webpack_require__(11);
+
+// Currently record only a fixed set of sections. This will prevent data
+// from custom sections from showing up or from topstories.
+const RECORDED_SECTIONS = ["highlights", "topsites"];
+
+class ComponentPerfTimer extends React.Component {
+  constructor(props) {
+    super(props);
+    // Just for test dependency injection:
+    this.perfSvc = this.props.perfSvc || perfSvc;
+
+    this._sendBadStateEvent = this._sendBadStateEvent.bind(this);
+    this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
+    this._reportMissingData = false;
+    this._timestampHandled = false;
+    this._recordedFirstRender = false;
+  }
+
+  componentDidMount() {
+    if (!RECORDED_SECTIONS.includes(this.props.id)) {
+      return;
+    }
+
+    this._maybeSendPaintedEvent();
+  }
+
+  componentDidUpdate() {
+    if (!RECORDED_SECTIONS.includes(this.props.id)) {
+      return;
+    }
+
+    this._maybeSendPaintedEvent();
+  }
+
+  /**
+   * Call the given callback after the upcoming frame paints.
+   *
+   * @note Both setTimeout and requestAnimationFrame are throttled when the page
+   * is hidden, so this callback may get called up to a second or so after the
+   * requestAnimationFrame "paint" for hidden tabs.
+   *
+   * Newtabs hidden while loading will presumably be fairly rare (other than
+   * preloaded tabs, which we will be filtering out on the server side), so such
+   * cases should get lost in the noise.
+   *
+   * If we decide that it's important to find out when something that's hidden
+   * has "painted", however, another option is to post a message to this window.
+   * That should happen even faster than setTimeout, and, at least as of this
+   * writing, it's not throttled in hidden windows in Firefox.
+   *
+   * @param {Function} callback
+   *
+   * @returns void
+   */
+  _afterFramePaint(callback) {
+    requestAnimationFrame(() => setTimeout(callback, 0));
+  }
+
+  _maybeSendBadStateEvent() {
+    // Follow up bugs:
+    // https://github.com/mozilla/activity-stream/issues/3688
+    // https://github.com/mozilla/activity-stream/issues/3691
+    if (!this.props.initialized) {
+      // Remember to report back when data is available.
+      this._reportMissingData = true;
+    } else if (this._reportMissingData) {
+      this._reportMissingData = false;
+      // Report how long it took for component to become initialized.
+      this._sendBadStateEvent();
+    }
+  }
+
+  _maybeSendPaintedEvent() {
+    // If we've already handled a timestamp, don't do it again.
+    if (this._timestampHandled || !this.props.initialized) {
+      return;
+    }
+
+    // And if we haven't, we're doing so now, so remember that. Even if
+    // something goes wrong in the callback, we can't try again, as we'd be
+    // sending back the wrong data, and we have to do it here, so that other
+    // calls to this method while waiting for the next frame won't also try to
+    // handle it.
+    this._timestampHandled = true;
+    this._afterFramePaint(this._sendPaintedEvent);
+  }
+
+  /**
+   * Triggered by call to render. Only first call goes through due to
+   * `_recordedFirstRender`.
+   */
+  _ensureFirstRenderTsRecorded() {
+    // Used as t0 for recording how long component took to initialize.
+    if (!this._recordedFirstRender) {
+      this._recordedFirstRender = true;
+      // topsites_first_render_ts, highlights_first_render_ts.
+      const key = `${this.props.id}_first_render_ts`;
+      this.perfSvc.mark(key);
+    }
+  }
+
+  /**
+   * Creates `TELEMETRY_UNDESIRED_EVENT` with timestamp in ms
+   * of how much longer the data took to be ready for display than it would
+   * have been the ideal case.
+   * https://github.com/mozilla/ping-centre/issues/98
+   */
+  _sendBadStateEvent() {
+    // highlights_data_ready_ts, topsites_data_ready_ts.
+    const dataReadyKey = `${this.props.id}_data_ready_ts`;
+    this.perfSvc.mark(dataReadyKey);
+
+    try {
+      const firstRenderKey = `${this.props.id}_first_render_ts`;
+      // value has to be Int32.
+      const value = parseInt(this.perfSvc.getMostRecentAbsMarkStartByName(dataReadyKey) - this.perfSvc.getMostRecentAbsMarkStartByName(firstRenderKey), 10);
+      this.props.dispatch(ac.SendToMain({
+        type: at.TELEMETRY_UNDESIRED_EVENT,
+        data: {
+          source: this.props.id.toUpperCase(),
+          // highlights_data_late_by_ms, topsites_data_late_by_ms.
+          event: `${this.props.id}_data_late_by_ms`,
+          value
+        }
+      }));
+    } catch (ex) {
+      // If this failed, it's likely because the `privacy.resistFingerprinting`
+      // pref is true.
+    }
+  }
+
+  _sendPaintedEvent() {
+    // Record first_painted event but only send if topsites.
+    if (this.props.id !== "topsites") {
+      return;
+    }
+
+    // topsites_first_painted_ts.
+    const key = `${this.props.id}_first_painted_ts`;
+    this.perfSvc.mark(key);
+
+    try {
+      const data = {};
+      data[key] = this.perfSvc.getMostRecentAbsMarkStartByName(key);
+
+      this.props.dispatch(ac.SendToMain({
+        type: at.SAVE_SESSION_PERF_DATA,
+        data
+      }));
+    } catch (ex) {
+      // If this failed, it's likely because the `privacy.resistFingerprinting`
+      // pref is true.  We should at least not blow up, and should continue
+      // to set this._timestampHandled to avoid going through this again.
+    }
+  }
+
+  render() {
+    if (RECORDED_SECTIONS.includes(this.props.id)) {
+      this._ensureFirstRenderTsRecorded();
+      this._maybeSendBadStateEvent();
+    }
+    return this.props.children;
+  }
+}
+
+module.exports = ComponentPerfTimer;
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+/* globals Services */
+
+
+/* istanbul ignore if */
+// Note: normally we would just feature detect Components.utils here, but
+// unfortunately that throws an ugly warning in content if we do.
+
+if (typeof Window === "undefined" && typeof Components !== "undefined" && Components.utils) {
+  Components.utils.import("resource://gre/modules/Services.jsm");
+}
+
+let usablePerfObj;
+
+/* istanbul ignore if */
+/* istanbul ignore else */
+if (typeof Services !== "undefined") {
+  // Borrow the high-resolution timer from the hidden window....
+  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
+} else if (typeof performance !== "undefined") {
+  // we must be running in content space
+  usablePerfObj = performance;
+} else {
+  // This is a dummy object so this file doesn't crash in the node prerendering
+  // task.
+  usablePerfObj = {
+    now() {},
+    mark() {}
+  };
+}
+
+var _PerfService = function _PerfService(options) {
+  // For testing, so that we can use a fake Window.performance object with
+  // known state.
+  if (options && options.performanceObj) {
+    this._perf = options.performanceObj;
+  } else {
+    this._perf = usablePerfObj;
+  }
+};
+
+_PerfService.prototype = {
+  /**
+   * Calls the underlying mark() method on the appropriate Window.performance
+   * object to add a mark with the given name to the appropriate performance
+   * timeline.
+   *
+   * @param  {String} name  the name to give the current mark
+   * @return {void}
+   */
+  mark: function mark(str) {
+    this._perf.mark(str);
+  },
+
+  /**
+   * Calls the underlying getEntriesByName on the appropriate Window.performance
+   * object.
+   *
+   * @param  {String} name
+   * @param  {String} type eg "mark"
+   * @return {Array}       Performance* objects
+   */
+  getEntriesByName: function getEntriesByName(name, type) {
+    return this._perf.getEntriesByName(name, type);
+  },
+
+  /**
+   * The timeOrigin property from the appropriate performance object.
+   * Used to ensure that timestamps from the add-on code and the content code
+   * are comparable.
+   *
+   * @note If this is called from a context without a window
+   * (eg a JSM in chrome), it will return the timeOrigin of the XUL hidden
+   * window, which appears to be the first created window (and thus
+   * timeOrigin) in the browser.  Note also, however, there is also a private
+   * hidden window, presumably for private browsing, which appears to be
+   * created dynamically later.  Exactly how/when that shows up needs to be
+   * investigated.
+   *
+   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   */
+  get timeOrigin() {
+    return this._perf.timeOrigin;
+  },
+
+  /**
+   * Returns the "absolute" version of performance.now(), i.e. one that
+   * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
+   * be comparable across both chrome and content.
+   *
+   * @return {Number}
+   */
+  absNow: function absNow() {
+    return this.timeOrigin + this._perf.now();
+  },
+
+  /**
+   * This returns the absolute startTime from the most recent performance.mark()
+   * with the given name.
+   *
+   * @param  {String} name  the name to lookup the start time for
+   *
+   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   *
+   * @throws {Error}        "No Marks with the name ..." if none are available
+   *
+   * @note Always surround calls to this by try/catch.  Otherwise your code
+   * may fail when the `privacy.resistFingerprinting` pref is true.  When
+   * this pref is set, all attempts to get marks will likely fail, which will
+   * cause this method to throw.
+   *
+   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
+   * for more info.
+   */
+  getMostRecentAbsMarkStartByName(name) {
+    let entries = this.getEntriesByName(name, "mark");
+
+    if (!entries.length) {
+      throw new Error(`No marks with the name ${name}`);
+    }
+
+    let mostRecentEntry = entries[entries.length - 1];
+    return this._perf.timeOrigin + mostRecentEntry.startTime;
+  }
+};
+
+var perfService = new _PerfService();
+module.exports = {
+  _PerfService,
+  perfService
+};
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* WEBPACK VAR INJECTION */(function(global) {const React = __webpack_require__(1);
-const ReactDOM = __webpack_require__(12);
-const Base = __webpack_require__(13);
+const ReactDOM = __webpack_require__(13);
+const Base = __webpack_require__(14);
 const { Provider } = __webpack_require__(3);
-const initStore = __webpack_require__(30);
+const initStore = __webpack_require__(31);
 const { reducers } = __webpack_require__(6);
-const DetectUserSessionStart = __webpack_require__(32);
-const { addSnippetsSubscriber } = __webpack_require__(33);
+const DetectUserSessionStart = __webpack_require__(33);
+const { addSnippetsSubscriber } = __webpack_require__(34);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
 
 new DetectUserSessionStart().sendEventOrAddListener();
@@ -1315,26 +1516,26 @@ addSnippetsSubscriber(store);
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { addLocaleData, IntlProvider } = __webpack_require__(2);
-const TopSites = __webpack_require__(14);
-const Search = __webpack_require__(20);
-const ConfirmDialog = __webpack_require__(22);
-const ManualMigration = __webpack_require__(23);
-const PreferencesPane = __webpack_require__(24);
-const Sections = __webpack_require__(25);
+const TopSites = __webpack_require__(15);
+const Search = __webpack_require__(21);
+const ConfirmDialog = __webpack_require__(23);
+const ManualMigration = __webpack_require__(24);
+const PreferencesPane = __webpack_require__(25);
+const Sections = __webpack_require__(26);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
-const { PrerenderData } = __webpack_require__(29);
+const { PrerenderData } = __webpack_require__(30);
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
@@ -1436,17 +1637,17 @@ module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base
 module.exports._unconnected = Base;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { FormattedMessage } = __webpack_require__(2);
 
-const TopSitesPerfTimer = __webpack_require__(15);
 const TopSitesEdit = __webpack_require__(16);
-const { TopSite, TopSitePlaceholder } = __webpack_require__(8);
-const CollapsibleSection = __webpack_require__(10);
+const { TopSite, TopSitePlaceholder } = __webpack_require__(7);
+const CollapsibleSection = __webpack_require__(9);
+const ComponentPerfTimer = __webpack_require__(10);
 
 const TopSites = props => {
   const realTopSites = props.TopSites.rows.slice(0, props.TopSitesCount);
@@ -1456,8 +1657,8 @@ const TopSites = props => {
     body: { id: "settings_pane_topsites_body" }
   };
   return React.createElement(
-    TopSitesPerfTimer,
-    null,
+    ComponentPerfTimer,
+    { id: "topsites", initialized: props.TopSites.initialized, dispatch: props.dispatch },
     React.createElement(
       CollapsibleSection,
       { className: "top-sites", icon: "topsites", title: React.createElement(FormattedMessage, { id: "header_top_sites" }), infoOption: infoOption, prefName: "collapseTopSites", Prefs: props.Prefs, dispatch: props.dispatch },
@@ -1481,125 +1682,6 @@ module.exports = connect(state => ({ TopSites: state.TopSites, Prefs: state.Pref
 module.exports._unconnected = TopSites;
 
 /***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
-const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
-const { perfService: perfSvc } = __webpack_require__(7);
-
-/**
- * A proxy class that uses double requestAnimationFrame from
- * componentDidMount to dispatch a SAVE_SESSION_PERF_DATA to the main procsess
- * after the paint.
- *
- * This uses two callbacks because, after one callback, this part of the tree
- * may have rendered but not yet reflowed.  This strategy is modeled after
- * https://stackoverflow.com/a/34999925 but uses a double rFA because
- * we want to get to the closest reliable paint for measuring, and
- * setTimeout is often throttled or queued by browsers in ways that could
- * make it lag too long.
- *
- * XXX Should be made more generic by using this.props.children, or potentially
- * even split out into a higher-order component to wrap whatever.
- *
- * @class TopSitesPerfTimer
- * @extends {React.PureComponent}
- */
-class TopSitesPerfTimer extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    // Just for test dependency injection:
-    this.perfSvc = this.props.perfSvc || perfSvc;
-
-    this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
-    this._timestampHandled = false;
-  }
-
-  componentDidMount() {
-    this._maybeSendPaintedEvent();
-  }
-
-  componentDidUpdate() {
-    this._maybeSendPaintedEvent();
-  }
-
-  /**
-   * Call the given callback after the upcoming frame paints.
-   *
-   * @note Both setTimeout and requestAnimationFrame are throttled when the page
-   * is hidden, so this callback may get called up to a second or so after the
-   * requestAnimationFrame "paint" for hidden tabs.
-   *
-   * Newtabs hidden while loading will presumably be fairly rare (other than
-   * preloaded tabs, which we will be filtering out on the server side), so such
-   * cases should get lost in the noise.
-   *
-   * If we decide that it's important to find out when something that's hidden
-   * has "painted", however, another option is to post a message to this window.
-   * That should happen even faster than setTimeout, and, at least as of this
-   * writing, it's not throttled in hidden windows in Firefox.
-   *
-   * @param {Function} callback
-   *
-   * @returns void
-   */
-  _afterFramePaint(callback) {
-    requestAnimationFrame(() => setTimeout(callback, 0));
-  }
-
-  _maybeSendPaintedEvent() {
-    // We don't want this to ever happen, but sometimes it does.  And when it
-    // does (typically on the first newtab at startup time calling
-    // componentDidMount), the paint(s) we care about will be later (eg
-    // in a subsequent componentDidUpdate).
-    if (!this.props.TopSites.initialized) {
-      // XXX should send bad event
-      return;
-    }
-
-    // If we've already handled a timestamp, don't do it again
-    if (this._timestampHandled) {
-      return;
-    }
-
-    // And if we haven't, we're doing so now, so remember that. Even if
-    // something goes wrong in the callback, we can't try again, as we'd be
-    // sending back the wrong data, and we have to do it here, so that other
-    // calls to this method while waiting for the next frame won't also try to
-    // handle handle it.
-    this._timestampHandled = true;
-
-    this._afterFramePaint(this._sendPaintedEvent);
-  }
-
-  _sendPaintedEvent() {
-    this.perfSvc.mark("topsites_first_painted_ts");
-
-    try {
-      let topsites_first_painted_ts = this.perfSvc.getMostRecentAbsMarkStartByName("topsites_first_painted_ts");
-
-      this.props.dispatch(ac.SendToMain({
-        type: at.SAVE_SESSION_PERF_DATA,
-        data: { topsites_first_painted_ts }
-      }));
-    } catch (ex) {
-      // If this failed, it's likely because the `privacy.resistFingerprinting`
-      // pref is true.  We should at least not blow up, and should continue
-      // to set this._timestampHandled to avoid going through this again.
-    }
-  }
-
-  render() {
-    return this.props.children;
-  }
-}
-
-module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSitesPerfTimer);
-module.exports._unconnected = TopSitesPerfTimer;
-
-/***/ }),
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1608,7 +1690,7 @@ const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 const TopSiteForm = __webpack_require__(17);
-const { TopSite, TopSitePlaceholder } = __webpack_require__(8);
+const { TopSite, TopSitePlaceholder } = __webpack_require__(7);
 
 const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
 const { TOP_SITES_SOURCE } = __webpack_require__(5);
@@ -2181,6 +2263,46 @@ module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports
 
 /***/ }),
 /* 20 */
+/***/ (function(module, exports) {
+
+var Dedupe = class Dedupe {
+  constructor(createKey) {
+    this.createKey = createKey || this.defaultCreateKey;
+  }
+
+  defaultCreateKey(item) {
+    return item;
+  }
+
+  /**
+   * Dedupe any number of grouped elements favoring those from earlier groups.
+   *
+   * @param {Array} groups Contains an arbitrary number of arrays of elements.
+   * @returns {Array} A matching array of each provided group deduped.
+   */
+  group(...groups) {
+    const globalKeys = new Set();
+    const result = [];
+    for (const values of groups) {
+      const valueMap = new Map();
+      for (const value of values) {
+        const key = this.createKey(value);
+        if (!globalKeys.has(key) && !valueMap.has(key)) {
+          valueMap.set(key, value);
+        }
+      }
+      result.push(valueMap);
+      valueMap.forEach((value, key) => globalKeys.add(key));
+    }
+    return result.map(m => Array.from(m.values()));
+  }
+};
+module.exports = {
+  Dedupe
+};
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2191,7 +2313,7 @@ const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac } = __webpack_require__(0);
-const { IS_NEWTAB } = __webpack_require__(21);
+const { IS_NEWTAB } = __webpack_require__(22);
 
 class Search extends React.PureComponent {
   constructor(props) {
@@ -2291,7 +2413,7 @@ module.exports = connect(state => ({ locale: state.App.locale }))(injectIntl(Sea
 module.exports._unconnected = Search;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {module.exports = {
@@ -2301,7 +2423,7 @@ module.exports._unconnected = Search;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2406,7 +2528,7 @@ module.exports._unconnected = ConfirmDialog;
 module.exports.Dialog = ConfirmDialog;
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2470,7 +2592,7 @@ module.exports = connect()(ManualMigration);
 module.exports._unconnected = ManualMigration;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -2667,7 +2789,7 @@ module.exports.PreferencesPane = PreferencesPane;
 module.exports.PreferencesInput = PreferencesInput;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -2675,11 +2797,12 @@ module.exports.PreferencesInput = PreferencesInput;
 const React = __webpack_require__(1);
 const { connect } = __webpack_require__(3);
 const { injectIntl, FormattedMessage } = __webpack_require__(2);
-const Card = __webpack_require__(26);
+const Card = __webpack_require__(27);
 const { PlaceholderCard } = Card;
-const Topics = __webpack_require__(28);
+const Topics = __webpack_require__(29);
 const { actionCreators: ac } = __webpack_require__(0);
-const CollapsibleSection = __webpack_require__(10);
+const CollapsibleSection = __webpack_require__(9);
+const ComponentPerfTimer = __webpack_require__(10);
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -2816,30 +2939,34 @@ class Section extends React.PureComponent {
     // <Section> <-- React component
     // <section> <-- HTML5 element
     return React.createElement(
-      CollapsibleSection,
-      { className: "section", icon: icon, title: getFormattedMessage(title), infoOption: infoOption, prefName: `section.${id}.collapsed`, Prefs: this.props.Prefs, dispatch: this.props.dispatch },
-      !shouldShowEmptyState && React.createElement(
-        "ul",
-        { className: "section-list", style: { padding: 0 } },
-        realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
-          eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats })),
-        placeholders > 0 && [...new Array(placeholders)].map((_, i) => React.createElement(PlaceholderCard, { key: i }))
-      ),
-      shouldShowEmptyState && React.createElement(
-        "div",
-        { className: "section-empty-state" },
-        React.createElement(
+      ComponentPerfTimer,
+      this.props,
+      React.createElement(
+        CollapsibleSection,
+        { className: "section", icon: icon, title: getFormattedMessage(title), infoOption: infoOption, prefName: `section.${id}.collapsed`, Prefs: this.props.Prefs, dispatch: this.props.dispatch },
+        !shouldShowEmptyState && React.createElement(
+          "ul",
+          { className: "section-list", style: { padding: 0 } },
+          realRows.map((link, index) => link && React.createElement(Card, { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
+            eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats })),
+          placeholders > 0 && [...new Array(placeholders)].map((_, i) => React.createElement(PlaceholderCard, { key: i }))
+        ),
+        shouldShowEmptyState && React.createElement(
           "div",
-          { className: "empty-state" },
-          emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? React.createElement("img", { className: "empty-state-icon icon", style: { "background-image": `url('${emptyState.icon}')` } }) : React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
+          { className: "section-empty-state" },
           React.createElement(
-            "p",
-            { className: "empty-state-message" },
-            getFormattedMessage(emptyState.message)
+            "div",
+            { className: "empty-state" },
+            emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? React.createElement("img", { className: "empty-state-icon icon", style: { "background-image": `url('${emptyState.icon}')` } }) : React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
+            React.createElement(
+              "p",
+              { className: "empty-state-message" },
+              getFormattedMessage(emptyState.message)
+            )
           )
-        )
-      ),
-      shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
+        ),
+        shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
+      )
     );
   }
 }
@@ -2871,13 +2998,13 @@ module.exports._unconnectedSection = Section;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
-const LinkMenu = __webpack_require__(9);
+const LinkMenu = __webpack_require__(8);
 const { FormattedMessage } = __webpack_require__(2);
-const cardContextTypes = __webpack_require__(27);
+const cardContextTypes = __webpack_require__(28);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 
 // Keep track of pending image loads to only request once
@@ -3073,7 +3200,7 @@ module.exports = Card;
 module.exports.PlaceholderCard = PlaceholderCard;
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -3096,7 +3223,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
@@ -3147,7 +3274,7 @@ module.exports._unconnected = Topics;
 module.exports.Topic = Topic;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 class _PrerenderData {
@@ -3237,12 +3364,12 @@ module.exports = {
 };
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/* eslint-env mozilla/frame-script */
 
-const { createStore, combineReducers, applyMiddleware } = __webpack_require__(31);
+const { createStore, combineReducers, applyMiddleware } = __webpack_require__(32);
 const { actionTypes: at, actionCreators: ac, actionUtils: au } = __webpack_require__(0);
 
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
@@ -3352,17 +3479,17 @@ module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const { actionTypes: at } = __webpack_require__(0);
-const { perfService: perfSvc } = __webpack_require__(7);
+const { perfService: perfSvc } = __webpack_require__(11);
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -3428,7 +3555,7 @@ module.exports = class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {const DATABASE_NAME = "snippets_db";

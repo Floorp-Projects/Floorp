@@ -37,7 +37,8 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 
   _dedupeKey(site) {
-    return site && site.url;
+    // Treat bookmarks as un-dedupable, otherwise show one of a url
+    return site && (site.type === "bookmark" ? {} : site.url);
   }
 
   init() {
@@ -157,6 +158,9 @@ this.HighlightsFeed = class HighlightsFeed {
         break;
       case at.PLACES_BOOKMARK_ADDED:
       case at.PLACES_BOOKMARK_REMOVED:
+        this.linksCache.expire();
+        this.fetchHighlights(false);
+        break;
       case at.TOP_SITES_UPDATED:
         this.fetchHighlights(false);
         break;
