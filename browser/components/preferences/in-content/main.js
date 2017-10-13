@@ -521,21 +521,6 @@ var gMainPane = {
     this.readBrowserContainersCheckbox();
   },
 
-  isE10SEnabled() {
-    let e10sEnabled;
-    try {
-      let e10sStatus = Components.classes["@mozilla.org/supports-PRUint64;1"]
-        .createInstance(Ci.nsISupportsPRUint64);
-      let appinfo = Services.appinfo.QueryInterface(Ci.nsIObserver);
-      appinfo.observe(e10sStatus, "getE10SBlocked", "");
-      e10sEnabled = e10sStatus.data < 2;
-    } catch (e) {
-      e10sEnabled = false;
-    }
-
-    return e10sEnabled;
-  },
-
   separateProfileModeChange() {
     if (AppConstants.MOZ_DEV_EDITION) {
       function quitApp() {
@@ -1218,7 +1203,7 @@ var gMainPane = {
   },
 
   buildContentProcessCountMenuList() {
-    if (gMainPane.isE10SEnabled()) {
+    if (Services.appinfo.browserTabsRemoteAutostart) {
       let processCountPref = document.getElementById("dom.ipc.processCount");
       let e10sRolloutProcessCountPref =
         document.getElementById("dom.ipc.processCount.web");
