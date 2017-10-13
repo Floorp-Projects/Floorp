@@ -135,39 +135,10 @@ using namespace mozilla;
 
 struct PrefHashEntry;
 
-extern PLDHashTable* gHashTable;
-
 typedef nsTArray<mozilla::UniqueFreePtr<char>> PrefSaveData;
 
-PrefSaveData
-pref_savePrefs(PLDHashTable* aTable);
-
-nsresult
-pref_SetPref(const mozilla::dom::PrefSetting& aPref);
-
-#ifdef DEBUG
-void
-pref_SetInitPhase(pref_initPhase aPhase);
-
-pref_initPhase
-pref_GetInitPhase();
-
-void
-pref_SetWatchingPref(bool aWatching);
-#endif
-
-PrefHashEntry*
+static PrefHashEntry*
 pref_HashTableLookup(const char* aKey);
-
-bool
-pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry);
-
-void
-pref_GetPrefFromEntry(PrefHashEntry* aHashEntry,
-                      mozilla::dom::PrefSetting* aPref);
-
-size_t
-pref_SizeOfPrivateData(mozilla::MallocSizeOf aMallocSizeOf);
 
 // 1 MB should be enough for everyone.
 static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
@@ -179,18 +150,6 @@ union PrefValue {
   int32_t mIntVal;
   bool mBoolVal;
 };
-
-// The Init function initializes the preference context and creates the
-// preference hashtable.
-void
-PREF_Init();
-
-// Cleanup should be called at program exit to free the list of registered
-// callbacks.
-void
-PREF_Cleanup();
-void
-PREF_CleanupPrefs();
 
 // Preference flags, including the native type of the preference. Changing any
 // of these values will require modifying the code inside of PrefTypeFlags
@@ -301,99 +260,8 @@ struct PrefHashEntry : PLDHashEntryHdr
   PrefValue mUserPref;
 };
 
-// Set the various types of preferences. These functions take a dotted notation
-// of the preference name (e.g. "browser.startup.homepage"). Note that this
-// will cause the preference to be saved to the file if it is different from
-// the default. In other words, these are used to set the _user_ preferences.
-//
-// If aSetDefault is set to true however, it sets the default value. This will
-// only affect the program behavior if the user does not have a value saved
-// over it for the particular preference. In addition, these will never be
-// saved out to disk.
-//
-// Each set returns PREF_VALUECHANGED if the user value changed (triggering a
-// callback), or PREF_NOERROR if the value was unchanged.
-nsresult
-PREF_SetCharPref(const char* aPref, const char* aVal, bool aSetDefault = false);
-nsresult
-PREF_SetIntPref(const char* aPref, int32_t aVal, bool aSetDefault = false);
-nsresult
-PREF_SetBoolPref(const char* aPref, bool aVal, bool aSetDefault = false);
-
-bool
-PREF_HasUserPref(const char* aPrefName);
-
-// Get the various types of preferences. These functions take a dotted
-// notation of the preference name (e.g. "browser.startup.homepage")
-//
-// They also take a pointer to fill in with the return value and return an
-// error value. At the moment, this is simply an int but it may
-// be converted to an enum once the global error strategy is worked out.
-//
-// They will perform conversion if the type doesn't match what was requested.
-// (if it is reasonably possible)
-nsresult
-PREF_GetIntPref(const char* aPref, int32_t* aValueOut, bool aGetDefault);
-nsresult
-PREF_GetBoolPref(const char* aPref, bool* aValueOut, bool aGetDefault);
-
-// These functions are similar to the above "Get" version with the significant
-// difference that the preference module will alloc the memory (e.g. XP_STRDUP)
-// and the caller will need to be responsible for freeing it...
-nsresult
-PREF_CopyCharPref(const char* aPref, char** aValueOut, bool aGetDefault);
-
-// Bool function that returns whether or not the preference is locked and
-// therefore cannot be changed.
-bool
-PREF_PrefIsLocked(const char* aPrefName);
-
-// Function that sets whether or not the preference is locked and therefore
-// cannot be changed.
-nsresult
-PREF_LockPref(const char* aKey, bool aLockIt);
-
-PrefType
-PREF_GetPrefType(const char* aPrefName);
-
-// Delete a branch of the tree.
-nsresult
-PREF_DeleteBranch(const char* aBranchName);
-
-// Clears the given pref (reverts it to its default value).
-nsresult
+static nsresult
 PREF_ClearUserPref(const char* aPrefName);
-
-// Clears all user prefs.
-nsresult
-PREF_ClearAllUserPrefs();
-
-// Register a callback. This takes a node in the preference tree and will call
-// the callback function if anything below that node is modified. Unregister
-// returns PREF_NOERROR if a callback was found that matched all the
-// parameters; otherwise it returns PREF_ERROR.
-void
-PREF_RegisterCallback(const char* aPrefNode,
-                      PrefChangedFunc aCallback,
-                      void* aData,
-                      bool aIsPriority);
-nsresult
-PREF_UnregisterCallback(const char* aPrefNode,
-                        PrefChangedFunc aCallback,
-                        void* aData);
-
-// Used by nsPrefService as the callback function of the prefs parser.
-void
-PREF_ReaderCallback(void* aClosure,
-                    const char* aPref,
-                    PrefValue aValue,
-                    PrefType aType,
-                    bool aIsDefault,
-                    bool aIsStickyDefault);
-
-// Callback for whenever we change a preference.
-typedef void (*PrefsDirtyFunc)();
-void PREF_SetDirtyCallback(PrefsDirtyFunc);
 
 static void
 ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
@@ -443,7 +311,7 @@ struct CallbackNode
   CallbackNode* mNext;
 };
 
-PLDHashTable* gHashTable;
+static PLDHashTable* gHashTable;
 
 static ArenaAllocator<8192, 4> gPrefNameArena;
 
@@ -466,9 +334,10 @@ static PLDHashTableOps pref_HashTableOps = {
   nullptr,
 };
 
+typedef void (*PrefsDirtyFunc)();
 static PrefsDirtyFunc gDirtyCallback = nullptr;
 
-inline void
+static inline void
 MakeDirtyCallback()
 {
   // Right now the callback function is always set, so we don't need
@@ -481,7 +350,8 @@ MakeDirtyCallback()
   }
 }
 
-void
+// Callback for whenever we change a preference.
+static void
 PREF_SetDirtyCallback(PrefsDirtyFunc aFunc)
 {
   gDirtyCallback = aFunc;
@@ -510,7 +380,9 @@ pref_HashPref(const char* aKey,
 
 #define PREF_HASHTABLE_INITIAL_LENGTH 1024
 
-void
+// The Init function initializes the preference context and creates the
+// preference hashtable.
+static void
 PREF_Init()
 {
   if (!gHashTable) {
@@ -519,8 +391,19 @@ PREF_Init()
   }
 }
 
-// Frees the callback list.
-void
+// Frees up all the objects except the callback list.
+static void
+PREF_CleanupPrefs()
+{
+  if (gHashTable) {
+    delete gHashTable;
+    gHashTable = nullptr;
+    gPrefNameArena.Clear();
+  }
+}
+
+// Frees the callback list. Should be called at program exit.
+static void
 PREF_Cleanup()
 {
   NS_ASSERTION(!gCallbacksInProgress,
@@ -538,17 +421,6 @@ PREF_Cleanup()
   gLastPriorityNode = gFirstCallback = nullptr;
 
   PREF_CleanupPrefs();
-}
-
-// Frees up all the objects except the callback list.
-void
-PREF_CleanupPrefs()
-{
-  if (gHashTable) {
-    delete gHashTable;
-    gHashTable = nullptr;
-    gPrefNameArena.Clear();
-  }
 }
 
 // Note that this appends to aResult, and does not assign!
@@ -601,7 +473,19 @@ StrEscape(const char* aOriginal, nsCString& aResult)
 // External calls
 //
 
-nsresult
+// Set a char* pref. This function takes a dotted notation of the preference
+// name (e.g. "browser.startup.homepage"). Note that this will cause the
+// preference to be saved to the file if it is different from the default. In
+// other words, this is used to set the _user_ preferences.
+//
+// If aSetDefault is set to true however, it sets the default value. This will
+// only affect the program behavior if the user does not have a value saved
+// over it for the particular preference. In addition, these will never be
+// saved out to disk.
+//
+// Each set returns PREF_VALUECHANGED if the user value changed (triggering a
+// callback), or PREF_NOERROR if the value was unchanged.
+static nsresult
 PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
 {
   if (strlen(aValue) > MAX_PREF_LENGTH) {
@@ -615,7 +499,8 @@ PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
     aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
 }
 
-nsresult
+// Like PREF_SetCharPref(), but for integers.
+static nsresult
 PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
 {
   PrefValue pref;
@@ -625,7 +510,8 @@ PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
     aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
 }
 
-nsresult
+// Like PREF_SetCharPref(), but for booleans.
+static nsresult
 PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
 {
   PrefValue pref;
@@ -664,7 +550,7 @@ SetPrefValue(const char* aPrefName,
   }
 }
 
-nsresult
+static nsresult
 pref_SetPref(const dom::PrefSetting& aPref)
 {
   const char* prefName = aPref.name().get();
@@ -691,7 +577,7 @@ pref_SetPref(const dom::PrefSetting& aPref)
   return rv;
 }
 
-PrefSaveData
+static PrefSaveData
 pref_savePrefs(PLDHashTable* aTable)
 {
   PrefSaveData savedPrefs(aTable->EntryCount());
@@ -742,7 +628,7 @@ pref_savePrefs(PLDHashTable* aTable)
   return savedPrefs;
 }
 
-bool
+static bool
 pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
 {
   if (aHashEntry->mPrefFlags.GetPrefType() != PrefType::String) {
@@ -799,7 +685,7 @@ GetPrefValueFromEntry(PrefHashEntry* aHashEntry,
   }
 }
 
-void
+static void
 pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
 {
   aPref->name() = aHashEntry->mKey;
@@ -822,7 +708,7 @@ pref_GetPrefFromEntry(PrefHashEntry* aHashEntry, dom::PrefSetting* aPref)
               aPref->userValue().get_PrefValue().type()));
 }
 
-bool
+static bool
 PREF_HasUserPref(const char* aPrefName)
 {
   if (!gHashTable) {
@@ -833,7 +719,8 @@ PREF_HasUserPref(const char* aPrefName)
   return pref && pref->mPrefFlags.HasUserValue();
 }
 
-nsresult
+// This function allocates memory and the caller is responsible for freeing it.
+static nsresult
 PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
 {
   if (!gHashTable) {
@@ -861,7 +748,16 @@ PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
   return rv;
 }
 
-nsresult
+// Get an int preference. This function takes a dotted notation of the
+// preference name (e.g. "browser.startup.homepage")
+//
+// It also takes a pointer to fill in with the return value and return an error
+// value. At the moment, this is simply an int but it may be converted to an
+// enum once the global error strategy is worked out.
+//
+// This function will perform conversion if the type doesn't match what was
+// requested. (If it is reasonably possible.)
+static nsresult
 PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
 {
   if (!gHashTable) {
@@ -889,7 +785,8 @@ PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
   return rv;
 }
 
-nsresult
+// Like PREF_GetIntPref(), but for booleans.
+static nsresult
 PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
 {
   if (!gHashTable) {
@@ -918,7 +815,8 @@ PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
   return rv;
 }
 
-nsresult
+// Delete a branch of the tree.
+static nsresult
 PREF_DeleteBranch(const char* aBranchName)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -959,7 +857,8 @@ PREF_DeleteBranch(const char* aBranchName)
   return NS_OK;
 }
 
-nsresult
+// Clears the given pref (reverts it to its default value).
+static nsresult
 PREF_ClearUserPref(const char* aPrefName)
 {
   if (!gHashTable) {
@@ -980,7 +879,8 @@ PREF_ClearUserPref(const char* aPrefName)
   return NS_OK;
 }
 
-nsresult
+// Clears all user prefs.
+static nsresult
 PREF_ClearAllUserPrefs()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1011,7 +911,9 @@ PREF_ClearAllUserPrefs()
   return NS_OK;
 }
 
-nsresult
+// Function that sets whether or not the preference is locked and therefore
+// cannot be changed.
+static nsresult
 PREF_LockPref(const char* aKey, bool aLockIt)
 {
   if (!gHashTable) {
@@ -1100,19 +1002,19 @@ static pref_initPhase gPhase = START;
 
 static bool gWatchingPref = false;
 
-void
+static void
 pref_SetInitPhase(pref_initPhase aPhase)
 {
   gPhase = aPhase;
 }
 
-pref_initPhase
+static pref_initPhase
 pref_GetInitPhase()
 {
   return gPhase;
 }
 
-void
+static void
 pref_SetWatchingPref(bool aWatching)
 {
   gWatchingPref = aWatching;
@@ -1128,7 +1030,7 @@ struct StringComparator
   int operator()(const char* aString) const { return strcmp(mKey, aString); }
 };
 
-bool
+static bool
 InInitArray(const char* aKey)
 {
   size_t prefsLen;
@@ -1152,7 +1054,7 @@ public:
 
 #endif // DEBUG
 
-PrefHashEntry*
+static PrefHashEntry*
 pref_HashTableLookup(const char* aKey)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
@@ -1173,7 +1075,7 @@ pref_HashTableLookup(const char* aKey)
   return static_cast<PrefHashEntry*>(gHashTable->Search(aKey));
 }
 
-nsresult
+static nsresult
 pref_HashPref(const char* aKey,
               PrefValue aValue,
               PrefType aType,
@@ -1264,7 +1166,7 @@ pref_HashPref(const char* aKey,
   return NS_OK;
 }
 
-size_t
+static size_t
 pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 {
   size_t n = gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
@@ -1275,7 +1177,7 @@ pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
   return n;
 }
 
-PrefType
+static PrefType
 PREF_GetPrefType(const char* aPrefName)
 {
   if (gHashTable) {
@@ -1287,7 +1189,9 @@ PREF_GetPrefType(const char* aPrefName)
   return PrefType::Invalid;
 }
 
-bool
+// Bool function that returns whether or not the preference is locked and
+// therefore cannot be changed.
+static bool
 PREF_PrefIsLocked(const char* aPrefName)
 {
   bool result = false;
@@ -1301,8 +1205,9 @@ PREF_PrefIsLocked(const char* aPrefName)
   return result;
 }
 
-// Adds a node to the callback list; the position depends on aIsPriority.
-void
+// Adds a node to the callback list; the position depends on aIsPriority. The
+// callback function will be called if anything below that node is modified.
+static void
 PREF_RegisterCallback(const char* aPrefNode,
                       PrefChangedFunc aCallback,
                       void* aData,
@@ -1336,7 +1241,7 @@ PREF_RegisterCallback(const char* aPrefNode,
 }
 
 // Removes |node| from callback list. Returns the node after the deleted one.
-CallbackNode*
+static CallbackNode*
 pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 {
   NS_PRECONDITION(!aPrevNode || aPrevNode->mNext == aNode, "invalid params");
@@ -1360,8 +1265,9 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   return next_node;
 }
 
-// Deletes a node from the callback list or marks it for deletion.
-nsresult
+// Deletes a node from the callback list or marks it for deletion. Succeeds if
+// a callback was found that matched all the parameters.
+static nsresult
 PREF_UnregisterCallback(const char* aPrefNode,
                         PrefChangedFunc aCallback,
                         void* aData)
@@ -1433,7 +1339,8 @@ pref_DoCallback(const char* aChangedPref)
   return rv;
 }
 
-void
+// The callback function of the prefs parser.
+static void
 PREF_ReaderCallback(void* aClosure,
                     const char* aPref,
                     PrefValue aValue,
@@ -1501,33 +1408,6 @@ struct PrefParseState
   bool mIsDefault;       // true if (default) pref
   bool mIsStickyDefault; // true if (sticky) pref
 };
-
-// Initialize a PrefParseState instance.
-//
-// |aPS| is the PrefParseState instance.
-// |aReader| is the PrefReader callback function, which will be called once for
-// each preference name value pair extracted.
-// |aReporter| is the PrefParseErrorReporter callback function, which will be
-// called if we encounter any errors (stop) or warnings (continue) during
-// parsing.
-// |aClosure| is extra data passed to |aReader|.
-void
-PREF_InitParseState(PrefParseState* aPS,
-                    PrefReader aReader,
-                    PrefParseErrorReporter aReporter,
-                    void* aClosure);
-
-// Release any memory in use by the PrefParseState instance.
-void
-PREF_FinalizeParseState(PrefParseState* aPS);
-
-// Parse a buffer containing some portion of a preference file.  This function
-// may be called repeatedly as new data is made available. The PrefReader
-// callback function passed PREF_InitParseState will be called as preference
-// name value pairs are extracted from the data. Returns false if buffer
-// contains malformed content.
-bool
-PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen);
 
 // Pref parser states.
 enum
@@ -1663,7 +1543,16 @@ pref_DoCallback(PrefParseState* aPS)
   return true;
 }
 
-void
+// Initialize a PrefParseState instance.
+//
+// |aPS| is the PrefParseState instance.
+// |aReader| is the PrefReader callback function, which will be called once for
+// each preference name value pair extracted.
+// |aReporter| is the PrefParseErrorReporter callback function, which will be
+// called if we encounter any errors (stop) or warnings (continue) during
+// parsing.
+// |aClosure| is extra data passed to |aReader|.
+static void
 PREF_InitParseState(PrefParseState* aPS,
                     PrefReader aReader,
                     PrefParseErrorReporter aReporter,
@@ -1675,7 +1564,8 @@ PREF_InitParseState(PrefParseState* aPS,
   aPS->mReporter = aReporter;
 }
 
-void
+// Release any memory in use by the PrefParseState instance.
+static void
 PREF_FinalizeParseState(PrefParseState* aPS)
 {
   if (aPS->mLb) {
@@ -1683,6 +1573,12 @@ PREF_FinalizeParseState(PrefParseState* aPS)
   }
 }
 
+// Parse a buffer containing some portion of a preference file. This function
+// may be called repeatedly as new data is made available. The PrefReader
+// callback function passed PREF_InitParseState will be called as preference
+// name value pairs are extracted from the data. Returns false if buffer
+// contains malformed content.
+//
 // Pseudo-BNF
 // ----------
 // function      = LJUNK function-name JUNK function-args
@@ -1703,7 +1599,7 @@ PREF_FinalizeParseState(PrefParseState* aPS)
 // comment-line  = <C++ style comment line>
 // bcomment-line = <bourne-shell style comment line>
 //
-bool
+static bool
 PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
 {
   const char* end;
@@ -3428,8 +3324,6 @@ nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
 // Core prefs code
 //===========================================================================
 
-class PrefCallback;
-
 namespace mozilla {
 
 #define INITIAL_PREF_FILES 10
@@ -3479,9 +3373,6 @@ pref_InitInitialObjects();
 
 static nsresult
 pref_LoadPrefsInDirList(const char* aListId);
-
-static nsresult
-ReadExtensionPrefs(nsIFile* aFile);
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kOldTelemetryPref[] = "toolkit.telemetry.enabledPreRelease";
@@ -4126,7 +4017,7 @@ NS_INTERFACE_MAP_END
 // nsIPrefService Implementation
 //
 
-InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
+static InfallibleTArray<Preferences::PrefSetting>* gInitPrefs;
 
 /* static */ void
 Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs)
