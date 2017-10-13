@@ -157,12 +157,14 @@ job-template:
                - platform-config=single_locale/win32.py
                - config=single_locale/tc_win32.py
                - config=taskcluster_nightly.py
+               - revision=$GECKO_HEAD_REV
             win64-nightly:
                - environment-config=single_locale/production.py
                - branch-config=single_locale/{project}.py
                - platform-config=single_locale/win64.py
                - config=single_locale/tc_win64.py
                - config=taskcluster_nightly.py
+               - revision=$GECKO_HEAD_REV
             default: [ ]
       actions:
          by-build-platform:
