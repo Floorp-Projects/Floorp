@@ -38,6 +38,16 @@ const SEARCH_ENGINE_DETAILS = [{
   },
   name: "DuckDuckGo",
 }, {
+  alias: "e",
+  baseURL: "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo",
+  codes: {
+    context: "",
+    keyword: "",
+    newTab: "",
+    submission: "",
+  },
+  name: "eBay",
+}, {
 // TODO: Google is tested in browser_google_behaviors.js - we can't test it here
 // yet because of bug 1315953.
 //   alias: "g",
