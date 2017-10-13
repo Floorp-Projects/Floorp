@@ -11,7 +11,6 @@
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoImportRule.h"
-#include "mozilla/StyleSheetInlines.h"
 
 #include "nsDocument.h"
 #include "nsStyleSheetService.h"
@@ -176,19 +175,7 @@ void
 ServoStyleRuleMap::FillTableFromStyleSheet(ServoStyleSheet* aSheet)
 {
   if (aSheet->IsComplete()) {
-    // Users of ServoStyleRuleMap should ensure any non-XBL complete
-    // stylesheet has already had a unique inner, and XBL stylesheets
-    // are not expected to ever change, so it's fine to construct the
-    // rule list without a unique inner.
-    // This is important because inner of XBL stylesheets is not made
-    // unique by EnsureSafeToHandOutCSSRules, and even if it is, the new
-    // unique inner may not be taken to restyle properly, so we may end
-    // up not being able to match rules there anyway.
-    MOZ_ASSERT(aSheet->HasUniqueInner() || mStyleSet->IsForXBL(),
-               "Non-XBL stylesheets should be made unique before "
-               "initializing ServoStyleRuleMap");
-    FillTableFromRuleList(
-      aSheet->GetCssRulesInternal(/* aRequireUniqueInner = */ false));
+    FillTableFromRuleList(aSheet->GetCssRulesInternal());
   }
 }
 
