@@ -1990,7 +1990,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '1.9.630';
+  let apiVersion = '1.9.640';
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
   source.chunkedViewerLoading = !!pdfDataRangeTransport;
@@ -2884,7 +2884,7 @@ var WorkerTransport = function WorkerTransportClosure() {
               };
             }
             var font = new _font_loader.FontFaceObject(exportedData, {
-              isEvalSuported: (0, _dom_utils.getDefaultSetting)('isEvalSupported'),
+              isEvalSupported: (0, _dom_utils.getDefaultSetting)('isEvalSupported'),
               disableFontFace: (0, _dom_utils.getDefaultSetting)('disableFontFace'),
               fontRegistry
             });
@@ -3311,8 +3311,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.9.630';
-  exports.build = build = 'ec469673';
+  exports.version = version = '1.9.640';
+  exports.build = build = '853db85b';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -5051,8 +5051,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '1.9.630';
-var pdfjsBuild = 'ec469673';
+var pdfjsVersion = '1.9.640';
+var pdfjsBuild = '853db85b';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -8177,8 +8177,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '1.9.630';
-  PDFJS.build = 'ec469673';
+  PDFJS.version = '1.9.640';
+  PDFJS.build = '853db85b';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
