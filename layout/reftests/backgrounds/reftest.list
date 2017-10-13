@@ -184,4 +184,4 @@ fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-t
 fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-text-1d.html background-clip-text-1-ref.html
 fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2811) == background-clip-text-1e.html background-clip-text-1-ref.html
 
-== background-clip-text-2.html background-clip-text-2-ref.html
+fuzzy-if(webrender,5-5,7193-7193) == background-clip-text-2.html background-clip-text-2-ref.html
