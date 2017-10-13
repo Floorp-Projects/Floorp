@@ -1443,6 +1443,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
   nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   bool isFromCache = false;
+  uint64_t cacheEntryId = 0;
   int32_t fetchCount = 0;
   uint32_t expirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
   nsCString cachedCharset;
@@ -1451,6 +1452,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   if (httpChannelImpl) {
     httpChannelImpl->IsFromCache(&isFromCache);
+    httpChannelImpl->GetCacheEntryId(&cacheEntryId);
     httpChannelImpl->GetCacheTokenFetchCount(&fetchCount);
     httpChannelImpl->GetCacheTokenExpirationTime(&expirationTime);
     httpChannelImpl->GetCacheTokenCachedCharset(cachedCharset);
@@ -1528,6 +1530,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           requestHead->Headers(),
                           isFromCache,
                           mCacheEntry ? true : false,
+                          cacheEntryId,
                           fetchCount, expirationTime,
                           cachedCharset, secInfoSerialization,
                           chan->GetSelfAddr(), chan->GetPeerAddr(),

@@ -1068,7 +1068,8 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
 
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aStream);
   if (!seekable) {
-    aStream = new PartiallySeekableInputStream(aStream);
+    nsCOMPtr<nsIInputStream> stream = aStream;
+    aStream = new PartiallySeekableInputStream(stream.forget());
   }
 
   mUploadStream = aStream;

@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518764351095000);
+const PRTime gPreloadListExpirationTime = INT64_C(1518803015565000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -158,7 +158,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518764351095000);
 1km.ro, 1
 1kmi.co, 1
 1ll.uk, 1
-1nfr.com, 1
+1nfr.com, 0
 1nian.vip, 1
 1of16.de, 1
 1on1on1.de, 1
@@ -445,6 +445,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518764351095000);
 9yw.me, 1
 a-1indianawaterproofing.com, 1
 a-allard.be, 1
+a-intel.com, 1
 a-ix.net, 1
 a-little-linux-box.at, 1
 a1scuba.com, 1
@@ -1377,6 +1378,7 @@ anastasiafond.com, 1
 anchev.net, 1
 anchorgrounds.com, 1
 anchovy.nz, 0
+ancient-gates.de, 1
 ancientcraft.eu, 1
 ancolies-andre.com, 1
 and-stuff.nl, 1
@@ -1428,7 +1430,6 @@ andrewvoce.com, 1
 andrewyg.net, 1
 andrezadnik.com, 1
 andro2id.com, 1
-andro4all.com, 1
 android.re, 1
 androide.com, 1
 androidhry.cz, 1
@@ -2268,6 +2269,7 @@ awaremi-tai.com, 1
 awaro.net, 1
 awccanadianpharmacy.com, 1
 awei.pub, 1
+awen.me, 1
 awf0.xyz, 1
 awin.la, 1
 awk.tw, 1
@@ -2423,6 +2425,7 @@ balancenaturalhealthclinic.ca, 1
 balatoni-nyar.hu, 1
 balboa.io, 1
 balcaonet.com.br, 1
+baldur.cc, 1
 balicekzdravi.cz, 1
 balidesignshop.com.br, 1
 balihai.com, 1
@@ -2756,6 +2759,7 @@ ben-energy.com, 0
 ben-stock.de, 1
 ben.ninja, 1
 ben2.co.il, 1
+benabrams.it, 1
 benary.org, 1
 benbozsa.ca, 1
 benburwell.com, 1
@@ -2966,6 +2970,7 @@ biathloncup.ru, 1
 bible-maroc.com, 1
 bible.ru, 1
 bibleonline.ru, 1
+bibliaon.com, 1
 biblio.wiki, 1
 biblioblog.fr, 1
 bibliomarkt.ch, 1
@@ -4842,7 +4847,6 @@ chrisupjohn.xyz, 1
 chriswarrick.com, 1
 chriswbarry.com, 1
 chriswells.io, 1
-chromaryu.net, 0
 chromaxa.com, 1
 chrome-devtools-frontend.appspot.com, 1
 chrome.com, 0
@@ -5083,7 +5087,6 @@ cloudia.org, 1
 cloudily.com, 1
 cloudlight.biz, 1
 cloudmigrator365.com, 1
-cloudopt.net, 0
 cloudoptimizedsmb.com, 1
 cloudoptimus.com, 1
 cloudpagesforwork.com, 1
@@ -5685,6 +5688,7 @@ crackingking.com, 0
 crackle.io, 1
 crackorsquad.in, 1
 crackpfer.de, 1
+crackslut.eu, 1
 crackstation.net, 1
 cradlepointecm.com, 1
 craftandbuild.de, 1
@@ -5742,7 +5746,6 @@ creativeink.de, 1
 creativelaw.eu, 1
 creativeliquid.com, 1
 creativesurvey.com, 1
-creativeweb.biz, 1
 creators-design.com, 1
 creators.co, 1
 credential.eu, 1
@@ -6987,7 +6990,7 @@ discofitta.com, 1
 disconformity.net, 1
 discord-chan.net, 1
 discordapp.com, 1
-discotek.club, 0
+discotek.club, 1
 discount24.de, 1
 discountmania.eu, 1
 discountmetaux.fr, 1
@@ -8276,7 +8279,7 @@ epistas.de, 1
 epizentrum.work, 1
 epizentrum.works, 1
 epmcentroitalia.it, 1
-epoch.com, 0
+epoch.com, 1
 epolitiker.com, 1
 eposkent.co.uk, 1
 eposleeds.co.uk, 1
@@ -9880,6 +9883,7 @@ fundingempire.com, 1
 fundort.ch, 1
 funfunmstdn.tokyo, 1
 fungame.eu, 1
+funi4u.com, 1
 funideas.org, 1
 funken-networks.de, 1
 funkes-ferien.de, 1
@@ -10808,6 +10812,7 @@ greve.xyz, 1
 grey.house, 1
 greybit.net, 1
 greyhash.se, 1
+greysky.me, 1
 greyskymedia.com, 1
 greysolutions.it, 1
 greywizard.com, 1
@@ -11133,7 +11138,6 @@ hangtenseo.com, 1
 hanksservice.com, 1
 hannah.link, 1
 hannes-speelgoedencadeautjes.nl, 1
-hannover-banditen.de, 1
 hanover.edu, 0
 hansen.hn, 1
 hansmund.com, 1
@@ -12379,6 +12383,7 @@ immortal.run, 1
 imokuri123.com, 1
 imoner.com, 1
 imoner.ga, 1
+imouyang.com, 1
 impact.health.nz, 1
 impacter.eu, 1
 impactfestival.be, 1
@@ -13672,6 +13677,7 @@ julianskitchen.ch, 1
 julianvmodesto.com, 1
 julianwallmeroth.de, 1
 julianweigle.de, 1
+juliaoantiguidades.com.br, 1
 juliawebber.co.za, 1
 julibear.com, 1
 julie-and-stevens-wedding.com, 1
@@ -14684,6 +14690,7 @@ kyusyu.org, 1
 kyy.me, 1
 kzsdabas.hu, 1
 l-lab.org, 1
+l0re.com, 1
 l18.io, 1
 l2guru.ru, 1
 l4n-clan.de, 1
@@ -16483,7 +16490,6 @@ mazda626.net, 1
 maze.fr, 1
 mazternet.ru, 1
 mazurlabs.tk, 1
-mazyun.com, 1
 mazzotta.me, 1
 mb-is.info, 1
 mbaestlein.de, 1
@@ -17469,6 +17475,7 @@ movil.uno, 1
 movinglogistics.nl, 0
 movingoklahoma.org, 1
 movingtohttps.com, 1
+movio.ga, 1
 movlib.org, 1
 mowalls.net, 1
 moyer.pub, 1
@@ -17804,7 +17811,6 @@ mylawyer.be, 1
 myleanfactory.de, 1
 mylene-chandelier.me, 1
 mylifeabundant.com, 1
-mylighthost.com, 1
 myliveupdates.com, 1
 mylocalsearch.co.uk, 1
 mylookout.com, 0
@@ -18456,7 +18462,6 @@ nicholaspruss.com, 1
 nicholasquigley.com, 1
 nichteinschalten.de, 0
 nichthelfer.de, 1
-nicic.gov, 1
 nickcleans.co.uk, 1
 nickcraver.com, 1
 nickdekruijk.nl, 1
@@ -18738,7 +18743,6 @@ notdienstreform-nordrhein.de, 1
 note7forever.com, 1
 notesforpebble.com, 1
 notevencode.com, 1
-nothing.org.uk, 1
 noticiasdehumor.com, 1
 notificami.com, 1
 notify.moe, 1
@@ -19010,7 +19014,6 @@ oflow.me, 1
 ofo2.com, 1
 oftamedic.com, 1
 oftn.org, 1
-oganime.com, 1
 oge.ch, 1
 ogis.gov, 1
 ogkw.de, 1
@@ -19241,7 +19244,6 @@ openconnect.com.au, 1
 opendataincubator.eu, 1
 openevic.info, 1
 openfir.st, 1
-openfitapi-falke.azurewebsites.net, 1
 opengg.me, 1
 openings.ninja, 1
 openintelligence.uk, 1
@@ -19840,6 +19842,7 @@ pbscreens.com, 1
 pbytes.com, 1
 pc-rescue.me, 1
 pc-tweak.de, 1
+pccentral.nl, 1
 pcel.com, 1
 pcf92.fr, 1
 pcfeuerwehr.de, 1
@@ -21166,6 +21169,7 @@ qforum.org, 1
 qgustavor.tk, 1
 qhse-professionals.nl, 1
 qianalysis.com, 1
+qiannews.net, 1
 qifu.me, 1
 qifu.org.cn, 1
 qikan.net, 1
@@ -21399,7 +21403,6 @@ rapenroer.nl, 1
 raphael.li, 1
 raphaelcasazza.ch, 1
 rapidapp.io, 1
-rapido.nu, 1
 rapidshit.net, 1
 rapidstone.com, 1
 raraflora.com.au, 1
@@ -22124,6 +22127,7 @@ romanticvillas.com.au, 1
 romarin.es, 1
 rome.dating, 1
 rommelwood.de, 1
+ronanrbr.com, 1
 rondommen.nl, 1
 rondreis-planner.nl, 1
 ronghexx.com, 1
@@ -22181,6 +22185,7 @@ rospa100.com, 1
 rosset.me, 1
 rosset.net, 1
 rossiworld.com, 1
+rosslug.org.uk, 1
 rot47.net, 1
 roten.email, 1
 rotex1840.de, 1
@@ -25409,7 +25414,6 @@ team-azerty.com, 1
 team-bbd.com, 1
 team-pancake.eu, 1
 team3482.com, 1
-teambakchod.com, 1
 teambeam.at, 1
 teambeam.ch, 1
 teambeam.com, 1
@@ -25936,7 +25940,6 @@ thetuxkeeper.de, 0
 theunitedstates.io, 1
 thevalentineconstitution.com, 1
 thevgg.com, 1
-thewebflash.com, 1
 thewebsitemarketingagency.com, 1
 thewhitehat.club, 1
 thewhiterabbit.space, 1
@@ -26187,6 +26190,7 @@ tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
 tkw01536.de, 1
+tlach.cz, 1
 tlca.org, 1
 tlcnet.info, 1
 tlehseasyads.com, 1
@@ -27227,7 +27231,6 @@ urbalex.ch, 1
 urban-culture.fr, 1
 urban.melbourne, 1
 urbanesecurity.com, 1
-urbanfi.sh, 1
 urbanguerillas.de, 1
 urbanietz-immobilien.de, 1
 urbanmelbourne.info, 1
@@ -27808,6 +27811,7 @@ vocalviews.com, 1
 vodpay.com, 1
 vodpay.net, 1
 vodpay.org, 1
+vogler.name, 1
 vogt.tech, 1
 voice-of-design.com, 1
 voicu.ch, 1
@@ -28297,6 +28301,7 @@ wenjs.me, 1
 wenode.net, 1
 wenz.io, 1
 wepay.com, 0
+wepay.in.th, 1
 weplaynaked.dk, 1
 wer-kommt-her.de, 1
 werally.com, 1
@@ -28566,7 +28571,6 @@ wint.global, 1
 winter-elektro.de, 1
 winter.engineering, 0
 winterbergwebcams.com, 1
-wintercircle.co, 1
 winterfeldt.de, 1
 winterhillbank.com, 1
 wintermeyer-consulting.de, 1
@@ -29705,7 +29709,7 @@ zlatosnadno.cz, 1
 zlavomat.sk, 1
 zlc1994.com, 1
 zlima12.com, 1
-zmk.fr, 0
+zmk.fr, 1
 znacite.com, 1
 znation.nl, 1
 zning.net.cn, 1

@@ -8,5 +8,4 @@ DevToolsModules(
     'Accordion.css',
     'Accordion.js',
     'App.js',
-    'LayoutPromoteBar.js',
 )

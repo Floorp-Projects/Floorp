@@ -296,3 +296,6 @@ devtools.jar:
     skin/images/firebug/command-measure.svg (themes/images/firebug/command-measure.svg)
     skin/images/firebug/command-rulers.svg (themes/images/firebug/command-rulers.svg)
     skin/images/firebug/command-noautohide.svg (themes/images/firebug/command-noautohide.svg)
+
+    # Debugger
+    skin/images/debugger/arrow.svg (themes/images/debugger/arrow.svg)
