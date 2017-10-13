@@ -4,10 +4,37 @@
 
 const {utils: Cu} = Components;
 
-const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
+const {pprint, truncate} = Cu.import("chrome://marionette/content/format.js", {});
 
 const MAX_STRING_LENGTH = 250;
 const HALF = "x".repeat(MAX_STRING_LENGTH / 2);
+
+add_test(function test_pprint() {
+  equal('[object Object] {"foo":"bar"}', pprint`${{foo: "bar"}}`);
+
+  equal("[object Number] 42", pprint`${42}`);
+  equal("[object Boolean] true", pprint`${true}`);
+  equal("[object Undefined] undefined", pprint`${undefined}`);
+  equal("[object Null] null", pprint`${null}`);
+
+  let complexObj = {toJSON: () => "foo"};
+  equal('[object Object] "foo"', pprint`${complexObj}`);
+
+  let cyclic = {};
+  cyclic.me = cyclic;
+  equal("[object Object] <cyclic object value>", pprint`${cyclic}`);
+
+  let el = {
+    nodeType: 1,
+    localName: "input",
+    id: "foo",
+    classList: {length: 1},
+    className: "bar baz",
+  };
+  equal('<input id="foo" class="bar baz">', pprint`${el}`);
+
+  run_next_test();
+});
 
 add_test(function test_truncate_empty() {
   equal(truncate``, "");
