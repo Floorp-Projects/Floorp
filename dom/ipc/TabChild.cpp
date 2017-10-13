@@ -2832,32 +2832,8 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
 
     MOZ_ASSERT(!mPuppetWidget->HasLayerManager());
     bool success = false;
-    if (mLayersConnected == Some(true) && gfxVars::UseWebRender()) {
-      success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
-        MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
-        return aLayerManager->AsWebRenderLayerManager()->Initialize(compositorChild,
-                                                                    wr::AsPipelineId(mLayersId),
-                                                                    &mTextureFactoryIdentifier);
-      });
-    } else if (mLayersConnected == Some(true)) {
-      nsTArray<LayersBackend> ignored;
-      PLayerTransactionChild* shadowManager = compositorChild->SendPLayerTransactionConstructor(ignored, LayersId());
-      if (shadowManager &&
-          shadowManager->SendGetTextureFactoryIdentifier(&mTextureFactoryIdentifier) &&
-          mTextureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
-      {
-        success = true;
-      }
-      if (!success) {
-        NS_WARNING("failed to allocate layer transaction");
-      } else {
-        success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
-          ShadowLayerForwarder* lf = aLayerManager->AsShadowForwarder();
-          lf->SetShadowManager(shadowManager);
-          lf->IdentifyTextureHost(mTextureFactoryIdentifier);
-          return true;
-        });
-      }
+    if (mLayersConnected == Some(true)) {
+      success = CreateRemoteLayerManager(compositorChild);
     }
 
     if (success) {
@@ -2879,6 +2855,42 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
                                      BEFORE_FIRST_PAINT,
                                      false);
     }
+}
+
+bool
+TabChild::CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCompositorChild)
+{
+  MOZ_ASSERT(aCompositorChild);
+
+  bool success = false;
+  if (gfxVars::UseWebRender()) {
+    success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
+      MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
+      return aLayerManager->AsWebRenderLayerManager()->Initialize(aCompositorChild,
+                                                                  wr::AsPipelineId(mLayersId),
+                                                                  &mTextureFactoryIdentifier);
+    });
+  } else {
+    nsTArray<LayersBackend> ignored;
+    PLayerTransactionChild* shadowManager = aCompositorChild->SendPLayerTransactionConstructor(ignored, LayersId());
+    if (shadowManager &&
+        shadowManager->SendGetTextureFactoryIdentifier(&mTextureFactoryIdentifier) &&
+        mTextureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
+    {
+      success = true;
+    }
+    if (!success) {
+      NS_WARNING("failed to allocate layer transaction");
+    } else {
+      success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
+        ShadowLayerForwarder* lf = aLayerManager->AsShadowForwarder();
+        lf->SetShadowManager(shadowManager);
+        lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+        return true;
+      });
+    }
+  }
+  return success;
 }
 
 void
@@ -3178,33 +3190,9 @@ TabChild::ReinitRendering()
 
   bool success = false;
   RefPtr<CompositorBridgeChild> cb = CompositorBridgeChild::Get();
-  if (gfxVars::UseWebRender()) {
-    success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
-      MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
-      return aLayerManager->AsWebRenderLayerManager()->Initialize(cb,
-                                                                  wr::AsPipelineId(mLayersId),
-                                                                  &mTextureFactoryIdentifier);
-    });
-  } else {
-    nsTArray<LayersBackend> ignored;
-    PLayerTransactionChild* shadowManager = cb->SendPLayerTransactionConstructor(ignored, LayersId());
-    if (shadowManager &&
-        shadowManager->SendGetTextureFactoryIdentifier(&mTextureFactoryIdentifier) &&
-        mTextureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
-    {
-      success = true;
-    }
-    if (!success) {
-      NS_WARNING("failed to re-allocate layer transaction");
-      return;
-    }
 
-    success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
-      ShadowLayerForwarder* lf = aLayerManager->AsShadowForwarder();
-      lf->SetShadowManager(shadowManager);
-      lf->IdentifyTextureHost(mTextureFactoryIdentifier);
-      return true;
-    });
+  if (cb) {
+    success = CreateRemoteLayerManager(cb);
   }
 
   if (!success) {
