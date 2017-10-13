@@ -42,19 +42,25 @@ describe("Release actor enhancer:", () => {
       const firstMessage = messages.first();
       const firstMessageActor = firstMessage.parameters[1].actor;
 
+      // Add an evaluation result message (see Bug 1408321).
+      const evaluationResultPacket = stubPackets.get("new Date(0)");
+      dispatch(actions.messageAdd(evaluationResultPacket));
+      const secondMessageActor = evaluationResultPacket.result.actor;
+
       const logCount = logLimit + 1;
       const packet = clonePacket(stubPackets.get(
         "console.assert(false, {message: 'foobar'})"));
-      const secondMessageActor = packet.message.arguments[0].actor;
+      const thirdMessageActor = packet.message.arguments[0].actor;
 
       for (let i = 1; i <= logCount; i++) {
         packet.message.arguments.push(`message num ${i}`);
         dispatch(actions.messageAdd(packet));
       }
 
-      expect(releasedActors.length).toBe(2);
+      expect(releasedActors.length).toBe(3);
       expect(releasedActors).toInclude(firstMessageActor);
       expect(releasedActors).toInclude(secondMessageActor);
+      expect(releasedActors).toInclude(thirdMessageActor);
     });
 
     it("properly releases backend actors after clear", () => {
@@ -80,11 +86,18 @@ describe("Release actor enhancer:", () => {
       const secondMessageActor = packet.message.arguments[0].actor;
       dispatch(actions.messageAdd(packet));
 
+      // Add an evaluation result message (see Bug 1408321).
+      const evaluationResultPacket = stubPackets.get("new Date(0)");
+      dispatch(actions.messageAdd(evaluationResultPacket));
+      const thirdMessageActor = evaluationResultPacket.result.actor;
+
+      // Kick-off the actor release.
       dispatch(actions.messagesClear());
 
-      expect(releasedActors.length).toBe(2);
+      expect(releasedActors.length).toBe(3);
       expect(releasedActors).toInclude(firstMessageActor);
       expect(releasedActors).toInclude(secondMessageActor);
+      expect(releasedActors).toInclude(thirdMessageActor);
     });
   });
 });
