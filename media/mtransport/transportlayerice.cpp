@@ -99,6 +99,17 @@ TransportLayerIce::~TransportLayerIce() {
 void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
                                       RefPtr<NrIceMediaStream> stream,
                                       int component) {
+  // Stream could be null in the case of some badly written js that causes
+  // us to be in an ICE restart case, but not have valid streams due to
+  // not calling PeerConnectionMedia::EnsureTransports if
+  // PeerConnectionImpl::SetSignalingState_m thinks the conditions were
+  // not correct.  We also solved a case where an incoming answer was
+  // incorrectly beginning an ICE restart when the offer did not indicate one.
+  if (!stream) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
   // If SetParameters is called and we already have a stream_, this means
   // we're handling an ICE restart.  We need to hold the old stream until
   // we know the new stream is working.
