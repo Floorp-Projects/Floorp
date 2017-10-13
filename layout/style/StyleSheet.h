@@ -138,7 +138,6 @@ public:
 
   bool IsModified() const { return mDirty; }
 
-  inline bool HasUniqueInner() const;
   void EnsureUniqueInner();
 
   // Append all of this sheet's child sheets to aArray.
