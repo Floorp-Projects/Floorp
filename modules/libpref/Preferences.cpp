@@ -1317,16 +1317,14 @@ PREF_RegisterPriorityCallback(const char* aPrefNode,
   NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
   NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
 
-  auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
-  if (node) {
-    node->mDomain = moz_xstrdup(aPrefNode);
-    node->mFunc = aCallback;
-    node->mData = aData;
-    node->mNext = gFirstCallback;
-    gFirstCallback = node;
-    if (!gLastPriorityNode) {
-      gLastPriorityNode = node;
-    }
+  auto node = new CallbackNode();
+  node->mDomain = moz_xstrdup(aPrefNode);
+  node->mFunc = aCallback;
+  node->mData = aData;
+  node->mNext = gFirstCallback;
+  gFirstCallback = node;
+  if (!gLastPriorityNode) {
+    gLastPriorityNode = node;
   }
 }
 
@@ -1339,18 +1337,16 @@ PREF_RegisterCallback(const char* aPrefNode,
   NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
   NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
 
-  auto node = (CallbackNode*)malloc(sizeof(struct CallbackNode));
-  if (node) {
-    node->mDomain = moz_xstrdup(aPrefNode);
-    node->mFunc = aCallback;
-    node->mData = aData;
-    if (gLastPriorityNode) {
-      node->mNext = gLastPriorityNode->mNext;
-      gLastPriorityNode->mNext = node;
-    } else {
-      node->mNext = gFirstCallback;
-      gFirstCallback = node;
-    }
+  auto node = new CallbackNode();
+  node->mDomain = moz_xstrdup(aPrefNode);
+  node->mFunc = aCallback;
+  node->mData = aData;
+  if (gLastPriorityNode) {
+    node->mNext = gLastPriorityNode->mNext;
+    gLastPriorityNode->mNext = node;
+  } else {
+    node->mNext = gFirstCallback;
+    gFirstCallback = node;
   }
 }
 
@@ -3122,10 +3118,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   numPrefs = prefArray.Length();
 
   if (numPrefs) {
-    outArray = (char**)moz_xmalloc(numPrefs * sizeof(char*));
-    if (!outArray) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    outArray = new char*[numPrefs];
 
     for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
       // we need to lop off mPrefRoot in case the user is planning to pass this
