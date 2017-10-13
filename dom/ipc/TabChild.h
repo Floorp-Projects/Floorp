@@ -609,7 +609,7 @@ public:
   static TabChild* GetFrom(uint64_t aLayersId);
 
   uint64_t LayersId() { return mLayersId; }
-  bool IsLayersConnected() { return mLayersConnected; }
+  Maybe<bool> IsLayersConnected() { return mLayersConnected; }
 
   void DidComposite(uint64_t aTransactionId,
                     const TimeStamp& aCompositeStart,
@@ -901,7 +901,7 @@ private:
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
   nscolor mLastBackgroundColor;
-  bool mLayersConnected;
+  Maybe<bool> mLayersConnected;
   bool mDidFakeShow;
   bool mNotified;
   bool mTriedBrowserInit;
