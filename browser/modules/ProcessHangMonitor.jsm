@@ -255,6 +255,12 @@ var ProcessHangMonitor = {
         win.addEventListener("load", listener, true);
         break;
       }
+
+      case "domwindowclosed": {
+        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        this.onWindowClosed(win);
+        break;
+      }
     }
   },
 
@@ -267,6 +273,48 @@ var ProcessHangMonitor = {
   onQuitApplicationGranted() {
     this._shuttingDown = true;
     this.stopAllHangs();
+    this.updateWindows();
+  },
+
+  onWindowClosed(win) {
+    let maybeStopHang = (report) => {
+      if (report.hangType == report.SLOW_SCRIPT) {
+        let hungBrowserWindow = null;
+        try {
+          hungBrowserWindow = report.scriptBrowser.ownerGlobal;
+        } catch (e) {
+          // Ignore failures to get the script browser - we'll be
+          // conservative, and assume that if we cannot access the
+          // window that belongs to this report that we should stop
+          // the hang.
+        }
+        if (!hungBrowserWindow || hungBrowserWindow == win) {
+          this.stopHang(report);
+          return true;
+        }
+      } else if (report.hangType == report.PLUGIN_HANG) {
+        // If any window has closed during a plug-in hang, we'll
+        // do the conservative thing and terminate the plug-in.
+        this.stopHang(report);
+        return true;
+      }
+      return false;
+    }
+
+    // If there are any script hangs for browsers that are in this window
+    // that is closing, we can stop them now.
+    for (let report of this._activeReports) {
+      if (maybeStopHang(report)) {
+        this._activeReports.delete(report);
+      }
+    }
+
+    for (let [pausedReport, ] of this._pausedReports) {
+      if (maybeStopHang(pausedReport)) {
+        this.removePausedReport(pausedReport);
+      }
+    }
+
     this.updateWindows();
   },
 
