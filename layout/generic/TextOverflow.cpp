@@ -306,13 +306,12 @@ nsDisplayTextOverflowMarker::CreateWebRenderCommands(mozilla::wr::DisplayListBui
   }
 
   // Run the rendering algorithm to capture the glyphs and shadows
-  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aSc);
+  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aSc, aManager, this, bounds);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
-  // TextOverflowMarker only draws glyphs
-  textDrawer->StartDrawing(TextDrawTarget::Phase::eGlyphs);
   Paint(aDisplayListBuilder, captureCtx);
+  textDrawer->TerminateShadows();
 
-  return textDrawer->CreateWebRenderCommands(aBuilder, aSc, aManager, this, bounds);
+  return !textDrawer->HasUnsupportedFeatures();
 }
 
 

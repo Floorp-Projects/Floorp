@@ -303,7 +303,8 @@ ScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                           aURI,
-                                          aDocument->NodePrincipal(),
+                                          aDocument->NodePrincipal(), // loading principal
+                                          aDocument->NodePrincipal(), // triggering principal
                                           aContext,
                                           NS_LossyConvertUTF16toASCII(aType),
                                           nullptr,    //extra

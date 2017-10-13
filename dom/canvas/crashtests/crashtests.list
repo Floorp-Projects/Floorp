@@ -46,4 +46,6 @@ load 1305312-1.html
 load 1305850.html
 load 1334366-1.html
 load 1334647-1.html
+load 1349067.html
+pref(gfx.offscreencanvas.enabled,true) load 1348976-1.html
 load 1357092.html

@@ -11,6 +11,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
+#include "nsLiteralString.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
@@ -116,61 +117,81 @@ inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir)
   return nsIContentSecurityPolicy::NO_DIRECTIVE;
 }
 
-// Please add any new enum items not only to CSPKeyword, but also add
-// a string version for every enum >> using the same index << to
-// CSPStrKeywords underneath.
+#define FOR_EACH_CSP_KEYWORD(macro) \
+  macro(CSP_SELF,            "'self'") \
+  macro(CSP_UNSAFE_INLINE,   "'unsafe-inline'") \
+  macro(CSP_UNSAFE_EVAL,     "'unsafe-eval'") \
+  macro(CSP_NONE,            "'none'") \
+  macro(CSP_NONCE,           "'nonce-") \
+  macro(CSP_REQUIRE_SRI_FOR, "require-sri-for") \
+  macro(CSP_STRICT_DYNAMIC,  "'strict-dynamic'")
+
 enum CSPKeyword {
-  CSP_SELF = 0,
-  CSP_UNSAFE_INLINE,
-  CSP_UNSAFE_EVAL,
-  CSP_NONE,
-  CSP_NONCE,
-  CSP_REQUIRE_SRI_FOR,
-  CSP_STRICT_DYNAMIC,
+  #define KEYWORD_ENUM(id_, string_) id_,
+  FOR_EACH_CSP_KEYWORD(KEYWORD_ENUM)
+  #undef KEYWORD_ENUM
+
   // CSP_LAST_KEYWORD_VALUE always needs to be the last element in the enum
   // because we use it to calculate the size for the char* array.
   CSP_LAST_KEYWORD_VALUE,
+
   // Putting CSP_HASH after the delimitor, because CSP_HASH is not a valid
   // keyword (hash uses e.g. sha256, sha512) but we use CSP_HASH internally
   // to identify allowed hashes in ::allows.
   CSP_HASH
  };
 
-static const char* CSPStrKeywords[] = {
-  "'self'",          // CSP_SELF = 0
-  "'unsafe-inline'", // CSP_UNSAFE_INLINE
-  "'unsafe-eval'",   // CSP_UNSAFE_EVAL
-  "'none'",          // CSP_NONE
-  "'nonce-",         // CSP_NONCE
-  "require-sri-for", // CSP_REQUIRE_SRI_FOR
-  "'strict-dynamic'" // CSP_STRICT_DYNAMIC
-  // Remember: CSP_HASH is not supposed to be used
+// The keywords, in UTF-8 form.
+static const char* gCSPUTF8Keywords[] = {
+  #define KEYWORD_UTF8_LITERAL(id_, string_) string_,
+  FOR_EACH_CSP_KEYWORD(KEYWORD_UTF8_LITERAL)
+  #undef KEYWORD_UTF8_LITERAL
 };
 
-inline const char* CSP_EnumToKeyword(enum CSPKeyword aKey)
-{
-  // Make sure all elements in enum CSPKeyword got added to CSPStrKeywords.
-  static_assert((sizeof(CSPStrKeywords) / sizeof(CSPStrKeywords[0]) ==
-                static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)),
-                "CSP_LAST_KEYWORD_VALUE does not match length of CSPStrKeywords");
+// The keywords, in UTF-16 form.
+static const char16_t* gCSPUTF16Keywords[] = {
+  #define KEYWORD_UTF16_LITERAL(id_, string_) u"" string_,
+  FOR_EACH_CSP_KEYWORD(KEYWORD_UTF16_LITERAL)
+  #undef KEYWORD_UTF16_LITERAL
+};
 
-  if (static_cast<uint32_t>(aKey) < static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)) {
-      return CSPStrKeywords[static_cast<uint32_t>(aKey)];
+#undef FOR_EACH_CSP_KEYWORD
+
+inline const char* CSP_EnumToUTF8Keyword(enum CSPKeyword aKey)
+{
+  // Make sure all elements in enum CSPKeyword got added to gCSPUTF8Keywords.
+  static_assert((sizeof(gCSPUTF8Keywords) / sizeof(gCSPUTF8Keywords[0]) ==
+                CSP_LAST_KEYWORD_VALUE),
+                "CSP_LAST_KEYWORD_VALUE != length(gCSPUTF8Keywords)");
+
+  if (static_cast<uint32_t>(aKey) <
+      static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)) {
+    return gCSPUTF8Keywords[static_cast<uint32_t>(aKey)];
   }
-  return "error: invalid keyword in CSP_EnumToKeyword";
+  return "error: invalid keyword in CSP_EnumToUTF8Keyword";
 }
 
-inline CSPKeyword CSP_KeywordToEnum(const nsAString& aKey)
+inline const char16_t* CSP_EnumToUTF16Keyword(enum CSPKeyword aKey)
+{
+  // Make sure all elements in enum CSPKeyword got added to gCSPUTF16Keywords.
+  static_assert((sizeof(gCSPUTF16Keywords) / sizeof(gCSPUTF16Keywords[0]) ==
+                CSP_LAST_KEYWORD_VALUE),
+                "CSP_LAST_KEYWORD_VALUE != length(gCSPUTF16Keywords)");
+
+  if (static_cast<uint32_t>(aKey) <
+      static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)) {
+    return gCSPUTF16Keywords[static_cast<uint32_t>(aKey)];
+  }
+  return u"error: invalid keyword in CSP_EnumToUTF16Keyword";
+}
+
+inline CSPKeyword CSP_UTF16KeywordToEnum(const nsAString& aKey)
 {
   nsString lowerKey = PromiseFlatString(aKey);
   ToLowerCase(lowerKey);
 
-  static_assert(CSP_LAST_KEYWORD_VALUE ==
-                (sizeof(CSPStrKeywords) / sizeof(CSPStrKeywords[0])),
-                 "CSP_LAST_KEYWORD_VALUE does not match length of CSPStrKeywords");
-
   for (uint32_t i = 0; i < CSP_LAST_KEYWORD_VALUE; i++) {
-    if (lowerKey.EqualsASCII(CSPStrKeywords[i])) {
+    if (lowerKey.Equals(gCSPUTF16Keywords[i])) {
       return static_cast<CSPKeyword>(i);
     }
   }
