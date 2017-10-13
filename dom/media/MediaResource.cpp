@@ -19,9 +19,8 @@ using mozilla::media::TimeUnit;
 mozilla::LazyLogModule gMediaResourceIndexLog("MediaResourceIndex");
 // Debug logging macro with object pointer and class name.
 #define ILOG(msg, ...)                                                         \
-  MOZ_LOG(gMediaResourceIndexLog,                                              \
-          mozilla::LogLevel::Debug,                                            \
-          ("%p " msg, this, ##__VA_ARGS__))
+  DDMOZ_LOG(                                                                   \
+    gMediaResourceIndexLog, mozilla::LogLevel::Debug, msg, ##__VA_ARGS__)
 
 namespace mozilla {
 

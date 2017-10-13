@@ -24,15 +24,33 @@
 
 extern mozilla::LogModule* GetMediaSourceLog();
 
-#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
-#define MSE_DEBUGV(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...)                                                    \
+  DDMOZ_LOG(GetMediaSourceLog(),                                               \
+            mozilla::LogLevel::Debug,                                          \
+            "(%s)::%s: " arg,                                                  \
+            mType.OriginalString().Data(),                                     \
+            __func__,                                                          \
+            ##__VA_ARGS__)
+#define MSE_DEBUGV(arg, ...)                                                   \
+  DDMOZ_LOG(GetMediaSourceLog(),                                               \
+            mozilla::LogLevel::Verbose,                                        \
+            "(%s)::%s: " arg,                                                  \
+            mType.OriginalString().Data(),                                     \
+            __func__,                                                          \
+            ##__VA_ARGS__)
 
 mozilla::LogModule* GetMediaSourceSamplesLog()
 {
   static mozilla::LazyLogModule sLogModule("MediaSourceSamples");
   return sLogModule;
 }
-#define SAMPLE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
+#define SAMPLE_DEBUG(arg, ...)                                                 \
+  DDMOZ_LOG(GetMediaSourceSamplesLog(),                                        \
+            mozilla::LogLevel::Debug,                                          \
+            "(%s)::%s: " arg,                                                  \
+            mType.OriginalString().Data(),                                     \
+            __func__,                                                          \
+            ##__VA_ARGS__)
 
 namespace mozilla {
 
