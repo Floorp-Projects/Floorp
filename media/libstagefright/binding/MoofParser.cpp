@@ -593,6 +593,7 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, S
       if (ParseTrun(box, tfhd, aMvhd, aMdhd, aEdts, &decodeTime, aIsAudio).isOk()) {
         mValid = true;
       } else {
+        LOG(Moof, "ParseTrun failed");
         mValid = false;
         break;
       }
@@ -636,21 +637,6 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
   MOZ_TRY_VAR(sampleCount, reader->ReadU32());
   if (sampleCount == 0) {
     return Ok();
-  }
-
-  size_t need =
-    ((flags & 1) ? sizeof(uint32_t) : 0) +
-    ((flags & 4) ? sizeof(uint32_t) : 0);
-  uint16_t flag[] = { 0x100, 0x200, 0x400, 0x800, 0 };
-  for (size_t i = 0; flag[i]; i++) {
-    if (flags & flag[i]) {
-      need += sizeof(uint32_t) * sampleCount;
-    }
-  }
-  if (reader->Remaining() < need) {
-    LOG(Moof, "Incomplete Box (have:%zu need:%zu)",
-        reader->Remaining(), need);
-    return Err(NS_ERROR_FAILURE);
   }
 
   uint64_t offset = aTfhd.mBaseDataOffset;
@@ -721,6 +707,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
 Tkhd::Tkhd(Box& aBox)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Tkhd, "Parse failed");
     mValid = true;
   }
 }
@@ -729,20 +716,9 @@ Result<Ok, nsresult>
 Tkhd::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Tkhd, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need =
-    3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(int32_t);
-  if (reader->Remaining() < need) {
-    LOG(Tkhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   if (version == 0) {
     uint32_t creationTime, modificationTime, reserved, duration;
     MOZ_TRY_VAR(creationTime, reader->ReadU32());
@@ -771,6 +747,7 @@ Tkhd::Parse(Box& aBox)
 Mvhd::Mvhd(Box& aBox)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Mvhd, "Parse failed");
     mValid = true;
   }
 }
@@ -779,20 +756,10 @@ Result<Ok, nsresult>
 Mvhd::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Mdhd, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
+
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need =
-    3*(version ? sizeof(int64_t) : sizeof(int32_t)) + sizeof(uint32_t);
-  if (reader->Remaining() < need) {
-    LOG(Mvhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
 
   if (version == 0) {
     uint32_t creationTime, modificationTime, duration;
@@ -822,6 +789,7 @@ Mdhd::Mdhd(Box& aBox)
 Trex::Trex(Box& aBox)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Trex, "Parse failed");
     mValid = true;
   }
 }
@@ -830,11 +798,7 @@ Result<Ok, nsresult>
 Trex::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (reader->Remaining() < 6*sizeof(uint32_t)) {
-    LOG(Trex, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)6*sizeof(uint32_t));
-    return Err(NS_ERROR_FAILURE);
-  }
+
   MOZ_TRY_VAR(mFlags, reader->ReadU32());
   MOZ_TRY_VAR(mTrackId, reader->ReadU32());
   MOZ_TRY_VAR(mDefaultSampleDescriptionIndex, reader->ReadU32());
@@ -849,6 +813,7 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex)
   : Trex(aTrex)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Tfhd, "Parse failed");
     mValid = true;
   }
 }
@@ -861,24 +826,8 @@ Tfhd::Parse(Box& aBox)
   MOZ_ASSERT(aBox.Parent()->Parent()->IsType("moof"));
 
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Tfhd, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
+
   MOZ_TRY_VAR(mFlags, reader->ReadU32());
-  size_t need = sizeof(uint32_t) /* trackid */;
-  uint8_t flag[] = { 1, 2, 8, 0x10, 0x20, 0 };
-  uint8_t flagSize[] = { sizeof(uint64_t), sizeof(uint32_t), sizeof(uint32_t), sizeof(uint32_t), sizeof(uint32_t) };
-  for (size_t i = 0; flag[i]; i++) {
-    if (mFlags & flag[i]) {
-      need += flagSize[i];
-    }
-  }
-  if (reader->Remaining() < need) {
-    LOG(Tfhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   MOZ_TRY_VAR(mTrackId, reader->ReadU32());
   mBaseDataOffset = aBox.Parent()->Parent()->Offset();
   if (mFlags & 0x01) {
@@ -903,6 +852,7 @@ Tfhd::Parse(Box& aBox)
 Tfdt::Tfdt(Box& aBox)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Tfdt, "Parse failed");
     mValid = true;
   }
 }
@@ -911,19 +861,10 @@ Result<Ok, nsresult>
 Tfdt::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Tfdt, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
+
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need = version ? sizeof(uint64_t) : sizeof(uint32_t) ;
-  if (reader->Remaining() < need) {
-    LOG(Tfdt, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   if (version == 0) {
     uint32_t tmp;
     MOZ_TRY_VAR(tmp, reader->ReadU32());
@@ -939,6 +880,7 @@ Edts::Edts(Box& aBox)
   , mEmptyOffset(0)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Edts, "Parse failed");
     mValid = true;
   }
 }
@@ -952,20 +894,9 @@ Edts::Parse(Box& aBox)
   }
 
   BoxReader reader(child);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Edts, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need =
-    sizeof(uint32_t) + 2*(version ? sizeof(int64_t) : sizeof(uint32_t));
-  if (reader->Remaining() < need) {
-    LOG(Edts, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   bool emptyEntry = false;
   uint32_t entryCount;
   MOZ_TRY_VAR(entryCount, reader->ReadU32());
@@ -1005,6 +936,7 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   , mAuxInfoTypeParameter(0)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Saiz, "Parse failed");
     mValid = true;
   }
 }
@@ -1013,20 +945,10 @@ Result<Ok, nsresult>
 Saiz::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Saiz, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
+
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need =
-    ((flags & 1) ? 2*sizeof(uint32_t) : 0) + sizeof(uint8_t) + sizeof(uint32_t);
-  if (reader->Remaining() < need) {
-    LOG(Saiz, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   if (flags & 1) {
     MOZ_TRY_VAR(mAuxInfoType, reader->ReadU32());
     MOZ_TRY_VAR(mAuxInfoTypeParameter, reader->ReadU32());
@@ -1055,6 +977,7 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   , mAuxInfoTypeParameter(0)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Saio, "Parse failed");
     mValid = true;
   }
 }
@@ -1063,31 +986,17 @@ Result<Ok, nsresult>
 Saio::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Saio, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
+
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   uint8_t version = flags >> 24;
-  size_t need = ((flags & 1) ? (2*sizeof(uint32_t)) : 0) + sizeof(uint32_t);
-  if (reader->Remaining() < need) {
-    LOG(Saio, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   if (flags & 1) {
     MOZ_TRY_VAR(mAuxInfoType, reader->ReadU32());
     MOZ_TRY_VAR(mAuxInfoTypeParameter, reader->ReadU32());
   }
+
   size_t count;
   MOZ_TRY_VAR(count, reader->ReadU32());
-  need = (version ? sizeof(uint64_t) : sizeof(uint32_t)) * count;
-  if (reader->Remaining() < need) {
-    LOG(Saio, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   if (!mOffsets.SetCapacity(count, fallible)) {
     LOG(Saiz, "OOM");
     return Err(NS_ERROR_FAILURE);
@@ -1120,23 +1029,10 @@ Sbgp::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
 
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Sbgp, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
-
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   const uint8_t version = flags >> 24;
   flags = flags & 0xffffff;
-
-  // Make sure we have enough bytes to read as far as the count.
-  uint32_t need = (version == 1 ? sizeof(uint32_t) : 0) + sizeof(uint32_t) * 2;
-  if (reader->Remaining() < need) {
-    LOG(Sbgp, "Incomplete Box (have:%" PRIu64 ", need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
 
   uint32_t type;
   MOZ_TRY_VAR(type, reader->ReadU32());
@@ -1148,14 +1044,6 @@ Sbgp::Parse(Box& aBox)
 
   uint32_t count;
   MOZ_TRY_VAR(count, reader->ReadU32());
-
-  // Make sure we can read all the entries.
-  need = sizeof(uint32_t) * 2 * count;
-  if (reader->Remaining() < need) {
-    LOG(Sbgp, "Incomplete Box (have:%" PRIu64 ", need:%" PRIu64 "). Failed to read entries",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
 
   for (uint32_t i = 0; i < count; i++) {
     uint32_t sampleCount;
@@ -1175,6 +1063,7 @@ Sbgp::Parse(Box& aBox)
 Sgpd::Sgpd(Box& aBox)
 {
   if (Parse(aBox).isOk()) {
+    LOG(Sgpd, "Parse failed");
     mValid = true;
   }
 }
@@ -1184,22 +1073,10 @@ Sgpd::Parse(Box& aBox)
 {
   BoxReader reader(aBox);
 
-  if (!reader->CanReadType<uint32_t>()) {
-    LOG(Sgpd, "Incomplete Box (missing flags)");
-    return Err(NS_ERROR_FAILURE);
-  }
-
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   const uint8_t version = flags >> 24;
   flags = flags & 0xffffff;
-
-  uint32_t need = ((flags & 1) ? sizeof(uint32_t) : 0) + sizeof(uint32_t) * 2;
-  if (reader->Remaining() < need) {
-    LOG(Sgpd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
 
   uint32_t type;
   MOZ_TRY_VAR(type, reader->ReadU32());
@@ -1218,15 +1095,6 @@ Sgpd::Parse(Box& aBox)
   uint32_t count;
   MOZ_TRY_VAR(count, reader->ReadU32());
 
-  // Make sure we have sufficient remaining bytes to read the entries.
-  need =
-    count * (sizeof(uint32_t) * (version == 1 && defaultLength == 0 ? 2 : 1) +
-             kKeyIdSize * sizeof(uint8_t));
-  if (reader->Remaining() < need) {
-    LOG(Sgpd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 "). Failed to read entries",
-        (uint64_t)reader->Remaining(), (uint64_t)need);
-    return Err(NS_ERROR_FAILURE);
-  }
   for (uint32_t i = 0; i < count; ++i) {
     if (version == 1 && defaultLength == 0) {
       uint32_t descriptionLength;
