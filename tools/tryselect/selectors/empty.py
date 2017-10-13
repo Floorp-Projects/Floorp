@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from ..vcs import VCSHelper
 
 
-def run_empty_try():
+def run_empty_try(message='{msg}', push=True, **kwargs):
     vcs = VCSHelper.create()
-    return vcs.push_to_try("empty", "", [])
+    msg = 'No try selector specified, use "Add New Jobs" to select tasks.'
+    return vcs.push_to_try('empty', message.format(msg=msg), [], push=push)

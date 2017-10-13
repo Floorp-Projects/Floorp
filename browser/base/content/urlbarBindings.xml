@@ -1434,14 +1434,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (this.browserSearchSuggestEnabled && !this.inPrivateContext &&
               // In any case, if the user made a choice we should not nag him.
               !this._userMadeSearchSuggestionsChoice) {
-            let enabledByDefault = this._defaultPrefs.getBoolPref("suggest.searches");
-            if (!enabledByDefault &&
-                this._prefs.getIntPref("daysBeforeHidingSuggestionsPrompt")) {
-              return "opt-in";
-            }
-            if (enabledByDefault &&
-                // Has not been switched off.
-                this.urlbarSearchSuggestEnabled &&
+            if (this._defaultPrefs.getBoolPref("suggest.searches") &&
+                this.urlbarSearchSuggestEnabled && // Has not been switched off.
                 this._prefs.getIntPref("timesBeforeHidingSuggestionsHint")) {
               return "opt-out";
             }
@@ -1457,21 +1451,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             throw new Error("Unexpected notification type");
           }
 
-          let useDays = whichNotification == "opt-in";
-          let prefName = useDays ? "daysBeforeHidingSuggestionsPrompt"
-                                 : "timesBeforeHidingSuggestionsHint";
-          let remaining = this._prefs.getIntPref(prefName);
-          if (remaining <= 0)
-            return;
-
-          let now = new Date();
-          let date = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-
-          let previousDate = this._prefs.getIntPref("lastSuggestionsPromptDate");
-          if (!useDays || previousDate != date) {
-            this._prefs.setIntPref(prefName, remaining - 1);
+          let remaining = this._prefs.getIntPref("timesBeforeHidingSuggestionsHint");
+          if (remaining > 0) {
+            this._prefs.setIntPref("timesBeforeHidingSuggestionsHint", remaining - 1);
           }
-          this._prefs.setIntPref("lastSuggestionsPromptDate", date);
         ]]></body>
       </method>
 
@@ -1647,32 +1630,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 align="center"
                 role="alert"
                 selectedIndex="0">
-        <!-- OPT-IN -->
-        <xul:hbox flex="1" align="center" anonid="search-suggestions-opt-in">
-          <xul:description flex="1" id="search-suggestions-question">
-            &urlbar.searchSuggestionsNotification.question;
-            <!-- Several things here are to make the label accessibile via an
-                accesskey so that a11y doesn't suck: the accesskey, using an
-                onclick handler instead of an href attribute, the control
-                attribute, and having the control attribute refer to a valid ID
-                that is the label itself. -->
-            <xul:label id="search-suggestions-learn-more"
-                      class="text-link"
-                      role="link"
-                      value="&urlbar.searchSuggestionsNotification.learnMore;"
-                      accesskey="&urlbar.searchSuggestionsNotification.learnMore.accesskey;"
-                      onclick="document.getBindingParent(this).openSearchSuggestionsNotificationLearnMoreURL();"
-                      control="search-suggestions-learn-more"/>
-          </xul:description>
-          <xul:button anonid="search-suggestions-notification-disable"
-                      label="&urlbar.searchSuggestionsNotification.disable;"
-                      accesskey="&urlbar.searchSuggestionsNotification.disable.accesskey;"
-                      onclick="document.getBindingParent(this).dismissSearchSuggestionsNotification(false);"/>
-          <xul:button anonid="search-suggestions-notification-enable"
-                      label="&urlbar.searchSuggestionsNotification.enable;"
-                      accesskey="&urlbar.searchSuggestionsNotification.enable.accesskey;"
-                      onclick="document.getBindingParent(this).dismissSearchSuggestionsNotification(true);"/>
-        </xul:hbox>
         <!-- OPT-OUT -->
         <xul:hbox flex="1" align="center" anonid="search-suggestions-opt-out">
           <xul:image class="ac-site-icon" type="searchengine"/>
@@ -1778,38 +1735,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.oneOffSearchButtons.textbox = null;
             this.oneOffSearchButtons.popup = null;
           }
-        ]]></body>
-      </method>
-
-      <method name="openSearchSuggestionsNotificationLearnMoreURL">
-        <body><![CDATA[
-        let url = Services.urlFormatter.formatURL(
-          Services.prefs.getCharPref("app.support.baseURL") + "suggestions"
-        );
-        openUILinkIn(url, "tab");
-        ]]></body>
-      </method>
-
-      <method name="dismissSearchSuggestionsNotification">
-        <parameter name="enableSuggestions"/>
-        <body><![CDATA[
-          // Make sure the urlbar is focused.  It won't be, for example, if the
-          // user used an accesskey to make an opt-in choice.  mIgnoreFocus
-          // prevents the text from being selected.
-          this.input.mIgnoreFocus = true;
-          this.input.focus();
-          this.input.mIgnoreFocus = false;
-
-          Services.prefs.setBoolPref(
-            "browser.urlbar.suggest.searches", enableSuggestions
-          );
-          Services.prefs.setBoolPref(
-            "browser.urlbar.userMadeSearchSuggestionsChoice", true
-          );
-          // Hide the notification.
-          this.searchSuggestionsNotificationWasDismissed(
-            Services.prefs.getBoolPref("browser.urlbar.suggest.searches")
-          );
         ]]></body>
       </method>
 
@@ -2003,10 +1928,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="popupDirection"/>
         <body>
           <![CDATA[
-          let deckIndex = 0;
           if (whichNotification == "opt-out") {
-            deckIndex = 1;
-
             if (this.siteIconStart) {
               this.searchSuggestionsNotification.style.paddingInlineStart =
                 this.siteIconStart + "px";
@@ -2020,12 +1942,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.searchSuggestionsNotification.setAttribute("animate", "true");
             }
           }
-          this.searchSuggestionsNotification.setAttribute("selectedIndex", deckIndex);
 
-          let ariaDescElt = whichNotification == "opt-in" ?
-            "search-suggestions-question" : "search-suggestions-hint";
-
-          this.searchSuggestionsNotification.setAttribute("aria-describedby", ariaDescElt);
+          this.searchSuggestionsNotification.setAttribute("aria-describedby",
+                                                          "search-suggestions-hint");
 
           // With the notification shown, the listbox's height can sometimes be
           // too small when it's flexed, as it normally is.  Also, it can start
@@ -2055,24 +1974,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="searchSuggestionsNotificationWasDismissed">
-        <parameter name="enableSuggestions"/>
-        <body>
-          <![CDATA[
-          if (!this.popupOpen) {
-            this._hideSearchSuggestionsNotification();
-            return;
-          }
-          this._hideSearchSuggestionsNotificationWithAnimation().then(() => {
-            if (enableSuggestions && this.input.textValue) {
-              // Start a new search so that suggestions appear immediately.
-              this.input.controller.startSearch(this.input.textValue);
-            }
-          });
-          ]]>
-        </body>
-      </method>
-
       <method name="_hideSearchSuggestionsNotification">
         <body>
           <![CDATA[
@@ -2086,33 +1987,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           } else {
             this.closePopup();
           }
-          ]]>
-        </body>
-      </method>
-
-      <method name="_hideSearchSuggestionsNotificationWithAnimation">
-        <body>
-          <![CDATA[
-          return new Promise(resolve => {
-            let notificationHeight = this.searchSuggestionsNotification
-                                         .getBoundingClientRect()
-                                         .height;
-            this.searchSuggestionsNotification.style.marginTop =
-              "-" + notificationHeight + "px";
-
-            let popupHeightPx =
-              (this.getBoundingClientRect().height - notificationHeight) + "px";
-            this.style.height = popupHeightPx;
-
-            let onTransitionEnd = () => {
-              this.removeEventListener("transitionend", onTransitionEnd, true);
-              this.searchSuggestionsNotification.style.marginTop = "0px";
-              this.style.removeProperty("height");
-              this._hideSearchSuggestionsNotification();
-              resolve();
-            };
-            this.addEventListener("transitionend", onTransitionEnd, true);
-          });
           ]]>
         </body>
       </method>

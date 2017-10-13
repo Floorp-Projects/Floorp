@@ -138,7 +138,7 @@ fn is_executable(path: &Path) -> io::Result<bool> {
 }
 
 #[cfg(not(unix))]
-fn is_executable(path: &Path) -> io::Result<bool> {
+fn is_executable(_: &Path) -> io::Result<bool> {
     Ok(true)
 }
 

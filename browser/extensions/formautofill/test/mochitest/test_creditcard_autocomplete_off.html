@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: simple form credit card autofill
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+const MOCK_STORAGE = [{
+  "cc-name": "John Doe",
+  "cc-number": "1234567812345678",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "1111222233334444",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
+
+async function setupCreditCardStorage() {
+  await addCreditCard(MOCK_STORAGE[0]);
+  await addCreditCard(MOCK_STORAGE[1]);
+}
+
+async function setupFormHistory() {
+  await updateFormHistory([
+    {op: "add", fieldname: "cc-name", value: "John Smith"},
+    {op: "add", fieldname: "cc-number", value: "1234000056780000"},
+  ]);
+}
+
+initPopupListener();
+
+// Show Form History popup for non-autocomplete="off" field only
+add_task(async function history_only_menu_checking() {
+  await setupFormHistory();
+
+  await setInput("#cc-number", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["1234000056780000"], false);
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await notExpectPopup();
+});
+
+// Show Form Autofill popup for the credit card fields.
+add_task(async function check_menu_when_both_with_autocomplete_off() {
+  await setupCreditCardStorage();
+
+  await setInput("#cc-number", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primaryAffix: cc.ccNumberFmt.affix,
+    primary: cc.ccNumberFmt.label,
+    secondary: cc["cc-name"],
+  })));
+
+  await setInput("#cc-name", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
+    primary: cc["cc-name"],
+    secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+  })));
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <form id="form1">
+    <p>This is a Credit Card form with autocomplete="off" cc-name field.</p>
+    <p><label>Name: <input id="cc-name" autocomplete="off"></label></p>
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+  </form>
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

@@ -35,7 +35,9 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
     ShCompileOptions options = SH_VARIABLES |
                                SH_ENFORCE_PACKING_RESTRICTIONS |
                                SH_OBJECT_CODE |
-                               SH_INIT_GL_POSITION;
+                               SH_INIT_GL_POSITION |
+                               SH_INITIALIZE_UNINITIALIZED_LOCALS |
+                               SH_INIT_OUTPUT_VARIABLES;
 
 #ifndef XP_MACOSX
     // We want to do this everywhere, but to do this on Mac, we need

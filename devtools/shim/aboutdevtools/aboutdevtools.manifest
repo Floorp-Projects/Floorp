@@ -1,0 +1,2 @@
+component {3a16d383-92bd-4c24-ac10-0e2bd66883ab} aboutdevtools-registration.js
+contract @mozilla.org/network/protocol/about;1?what=devtools {3a16d383-92bd-4c24-ac10-0e2bd66883ab}

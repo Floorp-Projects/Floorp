@@ -15,7 +15,7 @@
 #include "libANGLE/angletypes.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Framebuffer.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 
 namespace rx
 {

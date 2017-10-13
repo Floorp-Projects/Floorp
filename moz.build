@@ -49,6 +49,18 @@ with Files('**/Makefile.in'):
     BUG_COMPONENT = ('Core', 'Build Config')
     FINAL = True
 
+with Files("**/*.js"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.html"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.xhtml"):
+    SCHEDULES.inclusive += ['test-verification']
+
+with Files("**/*.xul"):
+    SCHEDULES.inclusive += ['test-verification']
+
 FILES_PER_UNIFIED_FILE = 1
 
 CONFIGURE_SUBST_FILES += [
@@ -67,7 +79,7 @@ DIRS += [
     'third_party/python',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     # These python manifests are included here so they get picked up without an objdir
     PYTHON_UNITTEST_MANIFESTS += [
         'layout/tools/reftest/selftest/python.ini',
@@ -100,7 +112,8 @@ if not CONFIG['JS_STANDALONE']:
         'tools',
     ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG['COMPILE_ENVIRONMENT'] and (CONFIG['MOZ_WIDGET_TOOLKIT'] or
+                                      CONFIG['JS_STANDALONE']):
     DIRS += ['js/src']
 
 DIRS += [
@@ -112,14 +125,14 @@ DIRS += [
     'mozglue',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['xpcom/xpidl']
 
 if CONFIG['USE_ICU']:
     DIRS += ['config/external/icu']
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    if not CONFIG['JS_STANDALONE']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT']:
         DIRS += [
             'config/external',
             'security',

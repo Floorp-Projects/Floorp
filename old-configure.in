@@ -4418,20 +4418,24 @@ dnl
 dnl option to disable necko's wifi scanner
 dnl
 
-case "$OS_TARGET" in
-  Darwin)
-    if test -z "$MOZ_IOS"; then
+if test "$MOZ_WIDGET_TOOLKIT"; then
+
+  case "$OS_TARGET" in
+    Darwin)
+      if test -z "$MOZ_IOS"; then
+	NECKO_WIFI=1
+      fi
+      ;;
+    DragonFly|FreeBSD|WINNT)
       NECKO_WIFI=1
-    fi
-    ;;
-  DragonFly|FreeBSD|WINNT)
-    NECKO_WIFI=1
-    ;;
-  Linux)
-    NECKO_WIFI=1
-    NECKO_WIFI_DBUS=1
-    ;;
-esac
+      ;;
+    Linux)
+      NECKO_WIFI=1
+      NECKO_WIFI_DBUS=1
+      ;;
+  esac
+
+fi
 
 MOZ_ARG_DISABLE_BOOL(necko-wifi,
 [  --disable-necko-wifi    Disable necko wifi scanner],
@@ -5028,7 +5032,7 @@ if test -n "$_subconfigure_subdir"; then
   srcdir="$_save_srcdir"
 fi
 
-if test "$COMPILE_ENVIRONMENT"; then
+if test "$COMPILE_ENVIRONMENT" -a "$MOZ_WIDGET_TOOLKIT"; then
 
 export WRAP_LDFLAGS
 
