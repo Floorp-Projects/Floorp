@@ -20,6 +20,7 @@
 #include "nsILoadContext.h"
 #include "nsIDocument.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/AtomArray.h"
 #include "mozilla/BloomFilter.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/GuardObjects.h"
@@ -551,21 +552,20 @@ struct MOZ_STACK_CLASS XULTreeRuleProcessorData :
                            mozilla::dom::Element* aParentElement,
                            nsRuleWalker* aRuleWalker,
                            nsAtom* aPseudoTag,
-                           nsICSSPseudoComparator* aComparator,
+                           const mozilla::AtomArray& aInputWord,
                            TreeMatchContext& aTreeMatchContext)
     : ElementDependentRuleProcessorData(aPresContext, aParentElement,
                                         aRuleWalker, aTreeMatchContext),
       mPseudoTag(aPseudoTag),
-      mComparator(aComparator)
+      mInputWord(aInputWord)
   {
     NS_PRECONDITION(aPseudoTag, "null pointer");
     NS_PRECONDITION(aRuleWalker, "Must have rule walker");
-    NS_PRECONDITION(aComparator, "must have a comparator");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
   }
 
   nsAtom*                 mPseudoTag;
-  nsICSSPseudoComparator*  mComparator;
+  const mozilla::AtomArray& mInputWord;
 };
 #endif
 
