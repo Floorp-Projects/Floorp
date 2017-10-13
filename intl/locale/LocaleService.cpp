@@ -19,6 +19,8 @@
 
 #include "unicode/uloc.h"
 
+#define INTL_SYSTEM_LOCALES_CHANGED "intl:system-locales-changed"
+
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 
@@ -175,8 +177,13 @@ LocaleService::GetInstance()
       // from prefs.
       DebugOnly<nsresult> rv = Preferences::AddWeakObservers(sInstance, kObservedPrefs);
       MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      if (obs) {
+        obs->AddObserver(sInstance, INTL_SYSTEM_LOCALES_CHANGED, true);
+      }
     }
-    ClearOnShutdown(&sInstance);
+    ClearOnShutdown(&sInstance, ShutdownPhase::Shutdown);
   }
   return sInstance;
 }
@@ -185,6 +192,11 @@ LocaleService::~LocaleService()
 {
   if (mIsServer) {
     Preferences::RemoveObservers(this, kObservedPrefs);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, INTL_SYSTEM_LOCALES_CHANGED);
+    }
   }
 }
 
@@ -270,16 +282,16 @@ LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
 
 
 void
-LocaleService::OnAvailableLocalesChanged()
+LocaleService::AvailableLocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
   mAvailableLocales.Clear();
   // In the future we may want to trigger here intl:available-locales-changed
-  OnLocalesChanged();
+  LocalesChanged();
 }
 
 void
-LocaleService::OnRequestedLocalesChanged()
+LocaleService::RequestedLocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
@@ -292,12 +304,12 @@ LocaleService::OnRequestedLocalesChanged()
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
     }
-    OnLocalesChanged();
+    LocalesChanged();
   }
 }
 
 void
-LocaleService::OnLocalesChanged()
+LocaleService::LocalesChanged()
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
@@ -519,19 +531,24 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
-  NS_ConvertUTF16toUTF8 pref(aData);
+  if (!strcmp(aTopic, INTL_SYSTEM_LOCALES_CHANGED)) {
+    RequestedLocalesChanged();
+  } else {
+    NS_ConvertUTF16toUTF8 pref(aData);
 
-  // This is a temporary solution until we get bug 1337078 landed.
-  if (pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
-    OSPreferences::GetInstance()->Refresh();
+    // This is a temporary solution until we get bug 1337078 landed.
+    if (pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
+      OSPreferences::GetInstance()->Refresh();
+    }
+    // At the moment the only thing we're observing are settings indicating
+    // user requested locales.
+    if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
+        pref.EqualsLiteral(SELECTED_LOCALE_PREF) ||
+        pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
+      RequestedLocalesChanged();
+    }
   }
-  // At the moment the only thing we're observing are settings indicating
-  // user requested locales.
-  if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
-      pref.EqualsLiteral(SELECTED_LOCALE_PREF) ||
-      pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
-    OnRequestedLocalesChanged();
-  }
+
   return NS_OK;
 }
 

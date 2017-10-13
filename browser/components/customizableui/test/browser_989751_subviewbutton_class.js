@@ -8,7 +8,8 @@ const kCustomClass = "acustomclassnoonewilluse";
 var tempElement = null;
 
 function insertClassNameToMenuChildren(parentMenu) {
-  let el = parentMenu.querySelector("menuitem:first-of-type");
+  // Skip hidden menuitem elements, not copied via fillSubviewFromMenuItems.
+  let el = parentMenu.querySelector("menuitem:not([hidden])");
   el.classList.add(kCustomClass);
   tempElement = el;
 }

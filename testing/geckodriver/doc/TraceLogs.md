@@ -105,6 +105,38 @@ geckodriver.  If you find your language missing, please consider
 [submitting a patch]: ../CONTRIBUTING.md
 
 
+C#
+--
+
+The Selenium [C# client] comes with a [`FirefoxOptions`] helper for
+constructing the [`moz:firefoxOptions`] capabilities object:
+
+	FirefoxOptions options = new FirefoxOptions();
+	options.LogLevel =  FirefoxDriverLogLevel.Trace;
+	IWebDriver driver = new FirefoxDriver(options);
+
+The log output is directed to stdout.
+
+[C# client]: https://seleniumhq.github.io/selenium/docs/api/dotnet/
+[`FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/dotnet/html/T_OpenQA_Selenium_Firefox_FirefoxOptions.htm
+
+Java
+----
+
+The Selenium [Java client] also comes with
+a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
+constructing the [`moz:firefoxOptions`] capabilities object:
+
+	FirefoxOptions options = new FirefoxOptions();
+	options.setLogLevel(FirefoxDriverLogLevel.TRACE);
+	WebDriver driver = new FirefoxDriver(options);
+
+As with C#, the log output is helpfully propagated to stdout.
+
+[Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
+[`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
+
+
 Python
 ------
 
@@ -133,27 +165,9 @@ Ruby
 The Selenium [Ruby client] comes with an [`Options`] helper to
 generate the correct [`moz:firefoxOptions`] capabilities object:
 
+	Selenium::WebDriver.logger.level = :trace
 	opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
 	driver = Selenium::WebDriver.for :firefox, options: opts
 
-To show the logs, set the `DEBUG=1` output variable or start your
-Ruby interpreter with the `-d` flag.
-
-[Ruby client]: http://seleniumhq.github.io/selenium/docs/api/rb/
-[`Options`]: http://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html
-
-
-Java
-----
-
-The Selenium [Java client] also comes with
-a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
-constructing the [`moz:firefoxOptions`] capabilities object:
-
-	FirefoxOptions opts = new FirefoxOptions().setLogLevel(Level.ALL);
-	WebDriver driver = new FirefoxDriver(opts);
-
-The log output is helpfully propagated to stdout.
-
-[Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
-[`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
+[Ruby client]: https://seleniumhq.github.io/selenium/docs/api/rb/
+[`Options`]: https://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html

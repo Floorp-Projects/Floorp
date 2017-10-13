@@ -318,10 +318,9 @@ pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             true);
+
+// Whether the user made a choice in the old search suggestions opt-in bar.
 pref("browser.urlbar.userMadeSearchSuggestionsChoice", false);
-// The suggestion opt-in notification will be shown on 4 different days.
-pref("browser.urlbar.daysBeforeHidingSuggestionsPrompt", 4);
-pref("browser.urlbar.lastSuggestionsPromptDate", 20160601);
 // The suggestion opt-out hint will be hidden after being shown 4 times.
 pref("browser.urlbar.timesBeforeHidingSuggestionsHint", 4);
 

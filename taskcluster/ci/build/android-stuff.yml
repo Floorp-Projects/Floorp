@@ -12,7 +12,7 @@ android-dependencies/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle-online"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
             PERFHERDER_EXTRA_OPTIONS: android-dependencies
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
             WORKSPACE: "/builds/worker/workspace"
@@ -60,7 +60,7 @@ android-test/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-test
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
@@ -103,7 +103,7 @@ android-lint/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-lint
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
@@ -167,7 +167,7 @@ android-checkstyle/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
@@ -215,7 +215,7 @@ android-findbugs/opt:
     worker:
         docker-image: {in-tree: android-build}
         env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:

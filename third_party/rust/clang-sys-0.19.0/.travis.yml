@@ -1,0 +1,28 @@
+language: rust
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+
+os:
+  - linux
+  - osx
+
+rust: stable
+
+env:
+  - LLVM_VERSION=3.5 CLANG_VERSION=clang_3_5
+  - LLVM_VERSION=4.0 CLANG_VERSION=clang_4_0
+
+# FIXME: I have no idea why this build is failing.
+matrix:
+  allow_failures:
+    - os: osx
+      env: LLVM_VERSION=4.0 CLANG_VERSION=clang_4_0
+
+before_install: . ./ci/before_install.sh
+
+script: . ./ci/script.sh

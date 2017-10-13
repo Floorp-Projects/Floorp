@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
+    <title>Visual Editing</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-148.000000, -3508.000000)">
+            <g id="Page-1" transform="translate(223.000000, 3529.000000)" stroke-linecap="round">
+                <path d="M0.89919464,57.0148819 L77.7462535,23.4916261" id="Stroke-1" stroke="#00C7D8" stroke-width="3"></path>
+                <path d="M45.0950384,7 L29.3065911,7" id="Stroke-7" stroke="#0022A9" stroke-width="4"></path>
+                <path d="M27.8236668,7.37685859 C27.8236668,3.30266194 24.5180803,0 20.4416475,0 C16.3638431,0 13.0582566,3.30266194 13.0582566,7.37685859 C13.0582566,11.4510552 16.3638431,14.7537172 20.4416475,14.7537172 C24.5180803,14.7537172 27.8236668,11.4510552 27.8236668,7.37685859 Z" id="Stroke-9" stroke="#0022A9" stroke-width="4"></path>
+                <g id="Group-22" transform="translate(50.605882, 72.383721) scale(-1, 1) translate(-50.605882, -72.383721) translate(34.105882, 64.883721)" stroke="#0022A9" stroke-width="4">
+                    <path d="M32.271509,6 L16.4830617,6" id="Stroke-7"></path>
+                    <path d="M15.0001374,7.37685859 C15.0001374,3.30266194 11.6945509,-8.52651283e-14 7.61811806,-8.52651283e-14 C3.54031364,-8.52651283e-14 0.234727144,3.30266194 0.234727144,7.37685859 C0.234727144,11.4510552 3.54031364,14.7537172 7.61811806,14.7537172 C11.6945509,14.7537172 15.0001374,11.4510552 15.0001374,7.37685859 Z" id="Stroke-9"></path>
+                </g>
+            </g>
+            <path d="M228.208485,3610.05653 C246.820825,3610.05653 261.908498,3594.86648 261.908498,3576.12979 L261.908498,3572.0866 L261.908498,3563.26842 C261.908498,3544.53086 271.883376,3529.97961 290.495715,3529.97961" id="Stroke-10" stroke="#0080FF" stroke-width="5" stroke-linecap="round" transform="translate(259.352100, 3570.018067) rotate(13.000000) translate(-259.352100, -3570.018067) "></path>
+            <ellipse id="Oval" fill="#0080FF" cx="220.155067" cy="3602.14962" rx="6.15506733" ry="6.14962174"></ellipse>
+            <ellipse id="Oval" fill="#0080FF" cx="299.155067" cy="3536.14962" rx="6.15506733" ry="6.14962174"></ellipse>
+            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
+        </g>
+    </g>
+</svg>
