@@ -253,7 +253,7 @@ public class ScreenGrabTest {
     }
 
     private void takeScreenshotOfYourRightsPage(Context context, UiDevice device) throws UiObjectNotFoundException {
-        final String yourRightsLabel = context.getString(R.string.your_rights);
+        final String yourRightsLabel = context.getString(R.string.menu_rights);
 
         onData(withTitleText(yourRightsLabel))
                 .check(matches(isDisplayed()))
@@ -513,6 +513,7 @@ public class ScreenGrabTest {
             device.pressKeyCode(KEYCODE_ENTER);
 
             assertTrue(TestHelper.webView.waitForExists(waitingTime));
+            assertTrue(TestHelper.progressBar.waitUntilGone(waitingTime));
 
             // Android O has an issue with using Locator.ID
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

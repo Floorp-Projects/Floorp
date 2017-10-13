@@ -92,7 +92,7 @@ public final class TestHelper {
     public static UiObject webView = mDevice.findObject(new UiSelector()
             .className("android.webkit.WebView")
             .enabled(true));
-    static UiObject progressBar = mDevice.findObject(new UiSelector()
+    public static UiObject progressBar = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/progress")
             .enabled(true));
     static UiObject tryAgainBtn = mDevice.findObject(new UiSelector()
