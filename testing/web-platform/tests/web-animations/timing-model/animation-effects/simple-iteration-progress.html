@@ -558,5 +558,43 @@ runTests([
   },
 ], 'Test end delay');
 
+
+// --------------------------------------------------------------------
+//
+// Negative playback rate tests
+//
+// --------------------------------------------------------------------
+
+runTests([
+  {
+    input:    { duration: 1,
+                delay: 1,
+                fill: 'both' },
+    playbackRate: -1,
+    before: 0,
+    active: 1,
+    after: 1
+  },
+
+  {
+    input:    { duration: 0,
+                delay: 1,
+                fill: 'both' },
+    playbackRate: -1,
+    before: 0,
+    after: 1
+  },
+
+  {
+    input:    { duration: 0,
+                iterations: 0,
+                delay: 1,
+                fill: 'both' },
+    playbackRate: -1,
+    before: 0,
+    after: 0
+  },
+], 'Test negative playback rate');
+
 </script>
 </body>
