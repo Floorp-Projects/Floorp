@@ -51,6 +51,11 @@
   min-height: 24px;
 }
 
+:root[uidensity=touch] #search-box,
+:root[uidensity=touch] .sidebar-placesTreechildren::-moz-tree-row {
+  min-height: 32px;
+}
+
 .sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
 .sidebar-placesTreechildren::-moz-tree-image(leaf) {
   cursor: pointer;

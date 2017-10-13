@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<title>CSS variables loop resolving</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
+<style id="test">
+  #outer {
+    --a: a;
+    --b: b;
+    --c: c;
+    --d: d;
+    --e: e;
+  }
+  #inner {
+    --a: var(--d, ad);
+    --b: var(--d, ad);
+    --c: var(--d, ad);
+    --d: var(--e, de);
+    --e: var(--a, ea) var(--b, eb) var(--c, ec);
+  }
+</style>
+<div id="outer">
+  <div id="inner"></div>
+</div>
+<script>
+let inner_cs = getComputedStyle(document.getElementById("inner"));
+for (let v of ['a', 'b', 'c', 'd', 'e']) {
+  is(inner_cs.getPropertyValue(`--${v}`), "",
+     `Variable --${v} should be eliminated`);
+}
+</script>

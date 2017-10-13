@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ParseFTPList.h"
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -25,8 +26,22 @@ static inline int ParsingFailed(struct list_state *state)
   return '"';        /* its part of a comment or error message */
 }
 
+void
+FixupYear(PRExplodedTime* aTime)
+{
+  /* if year has only two digits then assume that
+     00-79 is 2000-2079
+     80-99 is 1980-1999 */
+  if (aTime->tm_year < 80) {
+    aTime->tm_year += 2000;
+  } else if (aTime->tm_year < 100) {
+    aTime->tm_year += 1900;
+  }
+}
+
 int ParseFTPList(const char *line, struct list_state *state,
-                 struct list_result *result )
+                 struct list_result *result, PRTimeParamFn timeParam,
+                 NowTimeFn nowTimeFn)
 {
   unsigned int carry_buf_len; /* copy of state->carry_buf_len */
   unsigned int pos;
@@ -136,7 +151,7 @@ int ParseFTPList(const char *line, struct list_state *state,
                 PRTime seconds;
                 PR_sscanf(p+1, "%llu", &seconds);
                 t = seconds * PR_USEC_PER_SEC;
-                PR_ExplodeTime(t, PR_LocalTimeParameters, &(result->fe_time) );
+                PR_ExplodeTime(t, timeParam, &(result->fe_time) );
               }
             }
           }
@@ -453,46 +468,17 @@ int ParseFTPList(const char *line, struct list_state *state,
             while (pos < toklen[1] && (tokens[1][pos]) != '/')
               pos++;
 
-/*
- * I've never seen size come back in bytes, its always in blocks, and
- * the following test fails. So, always perform the "size in blocks".
- * I'm leaving the "size in bytes" code if'd out in case we ever need
- * to re-instate it.
-*/
-#if 0
-            if (pos < toklen[1] && ( (pos<<1) > (toklen[1]-1) ||
-                 (strtoul(tokens[1], (char **)0, 10) >
-                  strtoul(tokens[1]+pos+1, (char **)0, 10))        ))
-            {                                   /* size is in bytes */
-              if (pos > (sizeof(result->fe_size)-1))
-                pos = sizeof(result->fe_size)-1;
-              memcpy( result->fe_size, tokens[1], pos );
-              result->fe_size[pos] = '\0';
-            }
-            else /* size is in blocks */
-#endif
-            {
-              /* size requires multiplication by blocksize.
-               *
-               * We could assume blocksize is 512 (like Lynx does) and
-               * shift by 9, but that might not be right. Even if it
-               * were, doing that wouldn't reflect what the file's
-               * real size was. The sanest thing to do is not use the
-               * LISTing's filesize, so we won't (like ftpmirror).
-               *
-               * ulltoa(((unsigned long long)fsz)<<9, result->fe_size, 10);
-               *
-               * A block is always 512 bytes on OpenVMS, compute size.
-               * So its rounded up to the next block, so what, its better
-               * than not showing the size at all.
-               * A block is always 512 bytes on OpenVMS, compute size.
-               * So its rounded up to the next block, so what, its better
-               * than not showing the size at all.
-              */
-              uint64_t fsz = uint64_t(strtoul(tokens[1], (char **)0, 10) * 512);
-              SprintfLiteral(result->fe_size, "%" PRId64, fsz);
-            }
-
+            /*
+             * On OpenVMS, the size is given in blocks. A block is 512
+             * bytes. This can only approximate the size of the file,
+             * but that's better than not showing a size at all.
+             * numBlocks is clamped to UINT32_MAX to make 32-bit and
+             * 64-bit builds return consistent results.
+             */
+            uint64_t numBlocks = strtoul(tokens[1], nullptr, 10);
+            numBlocks = std::min(numBlocks, (uint64_t)UINT32_MAX);
+            uint64_t fileSize = numBlocks * 512;
+            SprintfLiteral(result->fe_size, "%" PRIu64, fileSize);
           } /* if (result->fe_type != 'd') */
 
           p = tokens[2] + 2;
@@ -655,7 +641,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         p = tokens[tokmarker+4];
         if (toklen[tokmarker+4] == 10) /* newstyle: YYYY-MM-DD format */
         {
-          result->fe_time.tm_year = atoi(p+0) - 1900;
+          result->fe_time.tm_year = atoi(p+0);
           result->fe_time.tm_month  = atoi(p+5) - 1;
           result->fe_time.tm_mday = atoi(p+8);
         }
@@ -665,8 +651,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month  = atoi(p) - 1;
           result->fe_time.tm_mday = atoi((p+pos)-5);
           result->fe_time.tm_year = atoi((p+pos)-2);
-          if (result->fe_time.tm_year < 70)
-            result->fe_time.tm_year += 100;
+          FixupYear(&result->fe_time);
         }
 
         p = tokens[tokmarker+5];
@@ -829,13 +814,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month--;
           result->fe_time.tm_mday = atoi(tokens[0]+3);
           result->fe_time.tm_year = atoi(tokens[0]+6);
-          /* if year has only two digits then assume that
-               00-79 is 2000-2079
-               80-99 is 1980-1999 */
-          if (result->fe_time.tm_year < 80)
-            result->fe_time.tm_year += 2000;
-          else if (result->fe_time.tm_year < 100)
-            result->fe_time.tm_year += 1900;
+          FixupYear(&result->fe_time);
         }
 
         result->fe_time.tm_hour = atoi(tokens[1]+0);
@@ -947,8 +926,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         result->fe_time.tm_month = atoi(&p[35-18]) - 1;
         result->fe_time.tm_mday = atoi(&p[38-18]);
         result->fe_time.tm_year = atoi(&p[41-18]);
-        if (result->fe_time.tm_year < 80)
-          result->fe_time.tm_year += 100;
+        FixupYear(&result->fe_time);
         result->fe_time.tm_hour = atoi(&p[46-18]);
         result->fe_time.tm_min = atoi(&p[49-18]);
 
@@ -1161,8 +1139,8 @@ int ParseFTPList(const char *line, struct list_state *state,
 
           if (!state->now_time)
           {
-            state->now_time = PR_Now();
-            PR_ExplodeTime((state->now_time), PR_LocalTimeParameters, &(state->now_tm) );
+            state->now_time = nowTimeFn();
+            PR_ExplodeTime((state->now_time), timeParam, &(state->now_tm) );
           }
 
           result->fe_time.tm_year = state->now_tm.tm_year;
@@ -1374,7 +1352,7 @@ int ParseFTPList(const char *line, struct list_state *state,
             {
               result->fe_time.tm_month = pos/3;
               result->fe_time.tm_mday = atoi(tokens[3]);
-              result->fe_time.tm_year = atoi(tokens[4]) - 1900;
+              result->fe_time.tm_year = atoi(tokens[4]);
               break;
             }
           }
@@ -1385,8 +1363,7 @@ int ParseFTPList(const char *line, struct list_state *state,
           result->fe_time.tm_month = atoi(p+0)-1;
           result->fe_time.tm_mday = atoi(p+3);
           result->fe_time.tm_year = atoi(p+6);
-          if (result->fe_time.tm_year < 80) /* SuperTCP */
-            result->fe_time.tm_year += 100;
+          FixupYear(&result->fe_time); /* SuperTCP */
 
           pos = 3; /* SuperTCP toknum of date field */
         }
@@ -1631,7 +1608,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 
               pos = atoi(p);
               if (pos > 24)
-                result->fe_time.tm_year = pos-1900;
+                result->fe_time.tm_year = pos;
               else
               {
                 if (p[1] == ':')
@@ -1640,8 +1617,8 @@ int ParseFTPList(const char *line, struct list_state *state,
                 result->fe_time.tm_min = atoi(p+3);
                 if (!state->now_time)
                 {
-                  state->now_time = PR_Now();
-                  PR_ExplodeTime((state->now_time), PR_LocalTimeParameters, &(state->now_tm) );
+                  state->now_time = nowTimeFn();
+                  PR_ExplodeTime((state->now_time), timeParam, &(state->now_tm) );
                 }
                 result->fe_time.tm_year = state->now_tm.tm_year;
                 if ( (( state->now_tm.tm_month  << 4) + state->now_tm.tm_mday) <
@@ -1688,207 +1665,3 @@ int ParseFTPList(const char *line, struct list_state *state,
   return ParsingFailed(state);
 }
 
-/* ==================================================================== */
-/* standalone testing                                                   */
-/* ==================================================================== */
-#if 0
-
-#include <stdio.h>
-
-static int do_it(FILE *outfile,
-                 char *line, size_t linelen, struct list_state *state,
-                 char **cmnt_buf, unsigned int *cmnt_buf_sz,
-                 char **list_buf, unsigned int *list_buf_sz )
-{
-  struct list_result result;
-  char *p;
-  int rc;
-
-  rc = ParseFTPList( line, state, &result );
-
-  if (!outfile)
-  {
-    outfile = stdout;
-    if (rc == '?')
-      fprintf(outfile, "junk: %.*s\n", (int)linelen, line );
-    else if (rc == '"')
-      fprintf(outfile, "cmnt: %.*s\n", (int)linelen, line );
-    else
-      fprintf(outfile,
-              "list: %02u-%02u-%02u  %02u:%02u%cM %20s %.*s%s%.*s\n",
-              (result.fe_time.tm_mday ? (result.fe_time.tm_month + 1) : 0),
-              result.fe_time.tm_mday,
-              (result.fe_time.tm_mday ? (result.fe_time.tm_year % 100) : 0),
-              result.fe_time.tm_hour -
-                ((result.fe_time.tm_hour > 12)?(12):(0)),
-              result.fe_time.tm_min,
-              ((result.fe_time.tm_hour >= 12) ? 'P' : 'A'),
-              (rc == 'd' ? "<DIR>         " :
-              (rc == 'l' ? "<JUNCTION>    " : result.fe_size)),
-              (int)result.fe_fnlen, result.fe_fname,
-              ((rc == 'l' && result.fe_lnlen) ? " -> " : ""),
-              (int)((rc == 'l' && result.fe_lnlen) ? result.fe_lnlen : 0),
-              ((rc == 'l' && result.fe_lnlen) ? result.fe_lname : "") );
-  }
-  else if (rc != '?') /* NOT junk */
-  {
-    char **bufp = list_buf;
-    unsigned int *bufz = list_buf_sz;
-
-    if (rc == '"') /* comment - make it a 'result' */
-    {
-      memset( &result, 0, sizeof(result));
-      result.fe_fname = line;
-      result.fe_fnlen = linelen;
-      result.fe_type = 'f';
-      if (line[linelen-1] == '/')
-      {
-        result.fe_type = 'd';
-        result.fe_fnlen--;
-      }
-      bufp = cmnt_buf;
-      bufz = cmnt_buf_sz;
-      rc = result.fe_type;
-    }
-
-    linelen = 80 + result.fe_fnlen + result.fe_lnlen;
-    p = (char *)realloc( *bufp, *bufz + linelen );
-    if (!p)
-      return -1;
-    sprintf( &p[*bufz],
-             "%02u-%02u-%04u  %02u:%02u:%02u %20s %.*s%s%.*s\n",
-              (result.fe_time.tm_mday ? (result.fe_time.tm_month + 1) : 0),
-              result.fe_time.tm_mday,
-              (result.fe_time.tm_mday ? (result.fe_time.tm_year + 1900) : 0),
-              result.fe_time.tm_hour,
-              result.fe_time.tm_min,
-              result.fe_time.tm_sec,
-              (rc == 'd' ? "<DIR>         " :
-              (rc == 'l' ? "<JUNCTION>    " : result.fe_size)),
-              (int)result.fe_fnlen, result.fe_fname,
-              ((rc == 'l' && result.fe_lnlen) ? " -> " : ""),
-              (int)((rc == 'l' && result.fe_lnlen) ? result.fe_lnlen : 0),
-              ((rc == 'l' && result.fe_lnlen) ? result.fe_lname : "") );
-    linelen = strlen(&p[*bufz]);
-    *bufp = p;
-    *bufz = *bufz + linelen;
-  }
-  return 0;
-}
-
-int main(int argc, char *argv[])
-{
-  FILE *infile = (FILE *)0;
-  FILE *outfile = (FILE *)0;
-  int need_close_in = 0;
-  int need_close_out = 0;
-
-  if (argc > 1)
-  {
-    infile = stdin;
-    if (strcmp(argv[1], "-") == 0)
-      need_close_in = 0;
-    else if ((infile = fopen(argv[1], "r")) != ((FILE *)0))
-      need_close_in = 1;
-    else
-      fprintf(stderr, "Unable to open input file '%s'\n", argv[1]);
-  }
-  if (infile && argc > 2)
-  {
-    outfile = stdout;
-    if (strcmp(argv[2], "-") == 0)
-      need_close_out = 0;
-    else if ((outfile = fopen(argv[2], "w")) != ((FILE *)0))
-      need_close_out = 1;
-    else
-    {
-      fprintf(stderr, "Unable to open output file '%s'\n", argv[2]);
-      fclose(infile);
-      infile = (FILE *)0;
-    }
-  }
-
-  if (!infile)
-  {
-    char *appname = &(argv[0][strlen(argv[0])]);
-    while (appname > argv[0])
-    {
-      appname--;
-      if (*appname == '/' || *appname == '\\' || *appname == ':')
-      {
-        appname++;
-        break;
-      }
-    }
-    fprintf(stderr,
-        "Usage: %s <inputfilename> [<outputfilename>]\n"
-        "\nIf an outout file is specified the results will be"
-        "\nbe post-processed, and only the file entries will appear"
-        "\n(or all comments if there are no file entries)."
-        "\nNot specifying an output file causes %s to run in \"debug\""
-        "\nmode, ie results are printed as lines are parsed."
-        "\nIf a filename is a single dash ('-'), stdin/stdout is used."
-        "\n", appname, appname );
-  }
-  else
-  {
-    char *cmnt_buf = (char *)0;
-    unsigned int cmnt_buf_sz = 0;
-    char *list_buf = (char *)0;
-    unsigned int list_buf_sz = 0;
-
-    struct list_state state;
-    char line[512];
-
-    memset( &state, 0, sizeof(state) );
-    while (fgets(line, sizeof(line), infile))
-    {
-      size_t linelen = strlen(line);
-      if (linelen < (sizeof(line)-1))
-      {
-        if (linelen > 0 && line[linelen-1] == '\n')
-          linelen--;
-        if (do_it( outfile, line, linelen, &state,
-                   &cmnt_buf, &cmnt_buf_sz, &list_buf, &list_buf_sz) != 0)
-        {
-          fprintf(stderr, "Insufficient memory. Listing may be incomplete.\n");
-          break;
-        }
-      }
-      else
-      {
-        /* no '\n' found. drop this and everything up to the next '\n' */
-        fprintf(stderr, "drop: %.*s", (int)linelen, line );
-        while (linelen == sizeof(line))
-        {
-          if (!fgets(line, sizeof(line), infile))
-            break;
-          linelen = 0;
-          while (linelen < sizeof(line) && line[linelen] != '\n')
-            linelen++;
-          fprintf(stderr, "%.*s", (int)linelen, line );
-        }
-        fprintf(stderr, "\n");
-      }
-    }
-    if (outfile)
-    {
-      if (list_buf)
-        fwrite( list_buf, 1, list_buf_sz, outfile );
-      else if (cmnt_buf)
-        fwrite( cmnt_buf, 1, cmnt_buf_sz, outfile );
-    }
-    if (list_buf)
-      free(list_buf);
-    if (cmnt_buf)
-      free(cmnt_buf);
-
-    if (need_close_in)
-      fclose(infile);
-    if (outfile && need_close_out)
-      fclose(outfile);
-  }
-
-  return 0;
-}
-#endif

@@ -10,6 +10,10 @@ devtools-shim.jar:
 
     content/aboutdevtools/images/otter.png (aboutdevtools/images/otter.png)
 
+    # Temporary localisation file, move back to devtools/shim/locales/en-US when ready for localization
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1408369
+    content/aboutdevtools/tmp-locale/aboutdevtools.dtd (aboutdevtools/tmp-locale/aboutdevtools.dtd)
+
     content/aboutdevtools/images/feature-inspector.svg (aboutdevtools/images/feature-inspector.svg)
     content/aboutdevtools/images/feature-console.svg (aboutdevtools/images/feature-console.svg)
     content/aboutdevtools/images/feature-debugger.svg (aboutdevtools/images/feature-debugger.svg)

@@ -602,19 +602,18 @@ static const StaticFingerprints kPinset_spideroak = {
 static const char* const kPinset_yahoo_Data[] = {
   kYahooBackup1Fingerprint,
   kGOOGLE_PIN_VeriSignClass2_G2Fingerprint,
+  kDigiCert_Assured_ID_Root_CAFingerprint,
   kVeriSign_Class_3_Public_Primary_Certification_Authority___G5Fingerprint,
-  kGeoTrust_Primary_Certification_AuthorityFingerprint,
   kVerisign_Class_3_Public_Primary_Certification_Authority___G3Fingerprint,
   kVeriSign_Class_3_Public_Primary_Certification_Authority___G4Fingerprint,
+  kDigiCert_Trusted_Root_G4Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kVerisign_Class_2_Public_Primary_Certification_Authority___G3Fingerprint,
   kYahooBackup2Fingerprint,
-  kGeoTrust_Global_CAFingerprint,
+  kDigiCert_Global_Root_G2Fingerprint,
   kVeriSign_Universal_Root_Certification_AuthorityFingerprint,
-  kGeoTrust_Universal_CAFingerprint,
-  kGeoTrust_Primary_Certification_Authority___G3Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
-  kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
+  kDigiCert_Global_Root_G3Fingerprint,
 };
 static const StaticFingerprints kPinset_yahoo = {
   sizeof(kPinset_yahoo_Data) / sizeof(const char*),
@@ -1159,4 +1158,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1516345162956000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1516383825734000);

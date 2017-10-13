@@ -995,6 +995,7 @@ JSTerm.prototype = {
     this.focus();
     this.emit("messages-cleared");
   },
+
   /**
    * Remove all of the private messages from the Web Console output.
    *
@@ -1773,7 +1774,13 @@ JSTerm.prototype = {
     this._sidebarDestroy();
 
     this.clearCompletion();
-    this.clearOutput();
+
+    if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.webConsoleClient.clearNetworkRequests();
+      this.hud.outputNode.innerHTML = "";
+    } else {
+      this.clearOutput();
+    }
 
     this.autocompletePopup.destroy();
     this.autocompletePopup = null;

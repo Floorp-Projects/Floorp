@@ -37,7 +37,8 @@ cookie.manager = {
   },
 
   getCookiesFromHost(host, originAttributes = {}) {
-    let hostCookies = this.cookies.filter(cookie => cookie.host === host);
+    let hostCookies = this.cookies.filter(cookie => cookie.host === host ||
+       cookie.host === "." + host);
     let nextIndex = 0;
 
     return {
@@ -83,7 +84,7 @@ add_test(function test_fromJSON() {
     domain: "domain"
   };
   let parsedCookie = cookie.fromJSON(test);
-  equal(parsedCookie.domain, ".domain");
+  equal(parsedCookie.domain, "domain");
 
   // path
   for (let invalidType of [42, true, [], {}, null]) {
@@ -189,7 +190,7 @@ add_test(function test_add() {
   equal(1, cookie.manager.cookies.length);
   equal("name", cookie.manager.cookies[0].name);
   equal("value", cookie.manager.cookies[0].value);
-  equal("domain", cookie.manager.cookies[0].host);
+  equal(".domain", cookie.manager.cookies[0].host);
   equal("/", cookie.manager.cookies[0].path);
   ok(cookie.manager.cookies[0].expiry > new Date(Date.now()).getTime() / 1000);
 
@@ -210,7 +211,7 @@ add_test(function test_add() {
     value: "value4",
     domain: "my.domain:1234",
   });
-  equal("my.domain", cookie.manager.cookies[2].host);
+  equal(".my.domain", cookie.manager.cookies[2].host);
 
   cookie.add({
     name: "name5",
@@ -247,13 +248,11 @@ add_test(function test_remove() {
 add_test(function test_iter() {
   cookie.manager.cookies = [];
 
-  cookie.add({name: "0", value: "", domain: "example.com"});
-  cookie.add({name: "1", value: "", domain: "foo.example.com"});
-  cookie.add({name: "2", value: "", domain: "bar.example.com"});
-
+  cookie.add({name: "0", value: "", domain: "foo.example.com"});
+  cookie.add({name: "1", value: "", domain: "bar.example.com"});
   let fooCookies = [...cookie.iter("foo.example.com")];
   equal(1, fooCookies.length);
-  equal("foo.example.com", fooCookies[0].domain);
+  equal(".foo.example.com", fooCookies[0].domain);
 
   run_next_test();
 });

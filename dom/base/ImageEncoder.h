@@ -42,6 +42,7 @@ public:
   static nsresult ExtractData(nsAString& aType,
                               const nsAString& aOptions,
                               const nsIntSize aSize,
+                              bool aUsePlaceholder,
                               nsICanvasRenderingContextInternal* aContext,
                               layers::AsyncCanvasRenderer* aRenderer,
                               nsIInputStream** aStream);
@@ -63,6 +64,7 @@ public:
                                    UniquePtr<uint8_t[]> aImageBuffer,
                                    int32_t aFormat,
                                    const nsIntSize aSize,
+                                   bool aUsePlaceholder,
                                    EncodeCompleteCallback* aEncodeCallback);
 
   // Extract an Image asynchronously. Its function is same as ExtractDataAsync
@@ -74,6 +76,7 @@ public:
                                                   const nsAString& aOptions,
                                                   bool aUsingCustomOptions,
                                                   layers::Image* aImage,
+                                                  bool aUsePlaceholder,
                                                   EncodeCompleteCallback* aEncodeCallback);
 
   // Gives you a stream containing the image represented by aImageBuffer.
@@ -95,6 +98,7 @@ private:
                       uint8_t* aImageBuffer,
                       int32_t aFormat,
                       const nsIntSize aSize,
+                      bool aUsePlaceholder,
                       layers::Image* aImage,
                       nsICanvasRenderingContextInternal* aContext,
                       layers::AsyncCanvasRenderer* aRenderer,
