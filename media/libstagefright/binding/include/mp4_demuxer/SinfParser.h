@@ -6,6 +6,7 @@
 #ifndef SINF_PARSER_H_
 #define SINF_PARSER_H_
 
+#include "mozilla/ResultExtensions.h"
 #include "mp4_demuxer/Atom.h"
 #include "mp4_demuxer/AtomType.h"
 
@@ -39,9 +40,9 @@ public:
 
   Sinf& GetSinf() { return mSinf; }
 private:
-  void ParseSchm(Box& aBox);
-  void ParseSchi(Box& aBox);
-  void ParseTenc(Box& aBox);
+  Result<Ok, nsresult> ParseSchm(Box& aBox);
+  Result<Ok, nsresult> ParseSchi(Box& aBox);
+  Result<Ok, nsresult> ParseTenc(Box& aBox);
 
   Sinf mSinf;
 };
