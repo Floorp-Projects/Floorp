@@ -61,13 +61,6 @@ pref("devtools.inspector.colorWidget.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 
-// Counter to promote the inspector layout view.
-// @remove after release 56 (See Bug 1355747)
-pref("devtools.promote.layoutview", 1);
-// Whether or not to show the promote bar in the layout view
-// @remove after release 56 (See Bug 1355747)
-pref("devtools.promote.layoutview.showPromoteBar", true);
-
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
 pref("devtools.gridinspector.gridOutlineMaxRows", 50);
