@@ -38,7 +38,9 @@
 #define PROFILER_CLEAR_JS_CONTEXT()
 
 #define AUTO_PROFILER_LABEL(label, category)
-#define AUTO_PROFILER_LABEL_DYNAMIC(label, category, dynamicStr)
+#define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, category, cStr)
+#define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, category, nsCStr)
+#define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, category, nsStr)
 
 #define PROFILER_ADD_MARKER(markerName)
 
@@ -379,22 +381,25 @@ PseudoStack* profiler_get_pseudo_stack();
 
 // Insert an RAII object in this scope to enter a pseudo stack frame. Any
 // samples collected in this scope will contain this label in their pseudo
-// stack. The label argument must be a string literal. It is usually of the
+// stack. The label argument must be a static C string. It is usually of the
 // form "ClassName::FunctionName". (Ideally we'd use the compiler to provide
 // that for us, but __func__ gives us the function name without the class
 // name.) If the label applies to only part of a function, you can qualify it
 // like this: "ClassName::FunctionName:PartName".
 //
-// Use AUTO_PROFILER_LABEL_DYNAMIC if you want to add additional / dynamic
+// Use AUTO_PROFILER_LABEL_DYNAMIC_* if you want to add additional / dynamic
 // information to the pseudo stack frame.
 #define AUTO_PROFILER_LABEL(label, category) \
   mozilla::AutoProfilerLabel PROFILER_RAII(label, nullptr, __LINE__, \
                                            js::ProfileEntry::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL, but with an additional string. The inserted
-// RAII object stores the dynamicStr pointer in a field; it does not copy the
-// string. This means that the string you pass to this macro needs to live at
-// least until the end of the current scope.
+// RAII object stores the cStr pointer in a field; it does not copy the string.
+//
+// WARNING: This means that the string you pass to this macro needs to live at
+// least until the end of the current scope. Be careful using this macro with
+// ns[C]String; the other AUTO_PROFILER_LABEL_DYNAMIC_* macros below are
+// preferred because they avoid this problem.
 //
 // If the profiler samples the current thread and walks the pseudo stack while
 // this RAII object is on the stack, it will copy the supplied string into the
@@ -406,10 +411,43 @@ PseudoStack* profiler_get_pseudo_stack();
 // AUTO_PROFILER_LABEL are sampled, no string copy needs to be made because the
 // profile buffer can just store the raw pointers to the literal strings.
 // Consequently, AUTO_PROFILER_LABEL frames take up considerably less space in
-// the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC frames.
-#define AUTO_PROFILER_LABEL_DYNAMIC(label, category, dynamicStr) \
-  mozilla::AutoProfilerLabel PROFILER_RAII(label, dynamicStr, __LINE__, \
-                                           js::ProfileEntry::Category::category)
+// the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC_* frames.
+#define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, category, cStr) \
+  mozilla::AutoProfilerLabel \
+    PROFILER_RAII(label, cStr, __LINE__, js::ProfileEntry::Category::category)
+
+// Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
+//
+// Note: The use of the Maybe<>s ensures the scopes for the dynamic string and
+// the AutoProfilerLabel are appropriate, while also not incurring the runtime
+// cost of the string assignment unless the profiler is active. Therefore,
+// unlike AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC_CSTR, this macro
+// doesn't push/pop a label when the profiler is inactive.
+#define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, category, nsCStr) \
+  mozilla::Maybe<nsAutoCString> autoCStr; \
+  mozilla::Maybe<AutoProfilerLabel> raiiObjectNsCString; \
+  if (profiler_is_active()) { \
+    autoCStr.emplace(nsCStr); \
+    raiiObjectNsCString.emplace(label, autoCStr->get(), __LINE__, \
+                                js::ProfileEntry::Category::category); \
+  }
+
+// Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsString that is
+// is lossily converted to an ASCII string.
+//
+// Note: The use of the Maybe<>s ensures the scopes for the converted dynamic
+// string and the AutoProfilerLabel are appropriate, while also not incurring
+// the runtime cost of the string conversion unless the profiler is active.
+// Therefore, unlike AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC_CSTR,
+// this macro doesn't push/pop a label when the profiler is inactive.
+#define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, category, nsStr) \
+  mozilla::Maybe<NS_LossyConvertUTF16toASCII> asciiStr; \
+  mozilla::Maybe<AutoProfilerLabel> raiiObjectLossyNsString; \
+  if (profiler_is_active()) { \
+    asciiStr.emplace(nsStr); \
+    raiiObjectLossyNsString.emplace(label, asciiStr->get(), __LINE__, \
+                                    js::ProfileEntry::Category::category); \
+  }
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
