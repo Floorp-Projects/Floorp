@@ -43,6 +43,9 @@ public:
   uint64_t mModificationTime;
   uint32_t mTimescale;
   uint64_t mDuration;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Tkhd : public Mvhd
@@ -55,6 +58,9 @@ public:
   explicit Tkhd(Box& aBox);
 
   uint32_t mTrackId;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Mdhd : public Mvhd
@@ -85,6 +91,9 @@ public:
   uint32_t mDefaultSampleDuration;
   uint32_t mDefaultSampleSize;
   uint32_t mDefaultSampleFlags;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Tfhd : public Trex
@@ -99,6 +108,9 @@ public:
   Tfhd(Box& aBox, Trex& aTrex);
 
   uint64_t mBaseDataOffset;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Tfdt : public Atom
@@ -111,6 +123,9 @@ public:
   explicit Tfdt(Box& aBox);
 
   uint64_t mBaseMediaDecodeTime;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Edts : public Atom
@@ -130,6 +145,9 @@ public:
 
   int64_t mMediaStart;
   int64_t mEmptyOffset;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 struct Sample
@@ -149,6 +167,9 @@ public:
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
   FallibleTArray<uint8_t> mSampleInfoSize;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class Saio final : public Atom
@@ -159,6 +180,9 @@ public:
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
   FallibleTArray<uint64_t> mOffsets;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 struct SampleToGroupEntry
@@ -185,6 +209,9 @@ public:
   AtomType mGroupingType;
   uint32_t mGroupingTypeParam;
   FallibleTArray<SampleToGroupEntry> mEntries;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 struct CencSampleEncryptionInfoEntry final
@@ -206,6 +233,9 @@ public:
 
   AtomType mGroupingType;
   FallibleTArray<CencSampleEncryptionInfoEntry> mEntries;
+
+protected:
+  bool Parse(Box& aBox);
 };
 
 class AuxInfo {
