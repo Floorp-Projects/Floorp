@@ -1820,6 +1820,9 @@ private:
   // resolved/rejected at AsyncResolveSeekDOMPromiseIfExists()/
   // AsyncRejectSeekDOMPromiseIfExists() methods.
   RefPtr<dom::Promise> mSeekDOMPromise;
+
+  // For debugging bug 1407148.
+  void AssertReadyStateIsNothing();
 };
 
 // Check if the context is chrome or has the debugger or tabs permission

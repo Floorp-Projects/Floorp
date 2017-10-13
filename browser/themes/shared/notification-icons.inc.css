@@ -117,6 +117,11 @@
   list-style-image: url(chrome://browser/skin/notification-icons/screen-blocked.svg);
 }
 
+#canvas-notification-icon,
+.popup-notification-icon[popupid="canvas-permissions-prompt"] {
+  list-style-image: url(chrome://browser/skin/notification-icons/canvas.svg);
+}
+
 #webRTC-preview:not([hidden]) {
   display: -moz-stack;
   border-radius: 4px;

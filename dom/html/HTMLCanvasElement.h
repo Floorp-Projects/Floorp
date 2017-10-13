@@ -262,7 +262,8 @@ public:
    * caller's responsibility to keep them alive. Once a registered
    * FrameCaptureListener is destroyed it will be automatically deregistered.
    */
-  nsresult RegisterFrameCaptureListener(FrameCaptureListener* aListener);
+  nsresult RegisterFrameCaptureListener(FrameCaptureListener* aListener,
+                                        bool aReturnPlaceholderData);
 
   /*
    * Returns true when there is at least one registered FrameCaptureListener
@@ -348,7 +349,8 @@ protected:
   virtual already_AddRefed<nsICanvasRenderingContextInternal>
   CreateContext(CanvasContextType aContextType) override;
 
-  nsresult ExtractData(nsAString& aType,
+  nsresult ExtractData(JSContext* aCx,
+                       nsAString& aType,
                        const nsAString& aOptions,
                        nsIInputStream** aStream);
   nsresult ToDataURLImpl(JSContext* aCx,

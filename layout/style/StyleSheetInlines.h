@@ -129,6 +129,12 @@ StyleSheet::GetIntegrity(dom::SRIMetadata& aResult) const
   aResult = SheetInfo().mIntegrity;
 }
 
+bool
+StyleSheet::HasUniqueInner() const
+{
+  return mInner->mSheets.Length() == 1;
+}
+
 }
 
 #endif // mozilla_StyleSheetInlines_h

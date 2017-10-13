@@ -123,26 +123,33 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(const nsAString& aTitle, 
+NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(const nsAString& aTitle,
                                                   const nsAString& aPrintToFileName,
-                                                  int32_t          aStartPage, 
+                                                  int32_t          aStartPage,
                                                   int32_t          aEndPage)
 {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    if (!aTitle.IsEmpty()) {
-      CFStringRef cfString =
-        ::CFStringCreateWithCharacters(NULL, reinterpret_cast<const UniChar*>(aTitle.BeginReading()),
-                                             aTitle.Length());
-      if (cfString) {
-        ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
-        ::CFRelease(cfString);
-      }
+  // Print Core of Application Service sent print job with names exceeding
+  // 255 bytes. This is a workaround until fix it.
+  // (https://openradar.appspot.com/34428043)
+  nsAutoString adjustedTitle;
+  PrintTarget::AdjustPrintJobNameForIPP(aTitle, adjustedTitle);
+
+  if (!adjustedTitle.IsEmpty()) {
+    CFStringRef cfString =
+      ::CFStringCreateWithCharacters(NULL,
+                                     reinterpret_cast<const UniChar*>(adjustedTitle.BeginReading()),
+                                     adjustedTitle.Length());
+    if (cfString) {
+      ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
+      ::CFRelease(cfString);
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
