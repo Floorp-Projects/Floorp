@@ -438,7 +438,7 @@ mochitest:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
             android.*: xlarge
-            default: legacy # Bug 1281241: migrating to m3.large instances
+            default: default
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 48
@@ -616,7 +616,6 @@ mochitest-browser-screenshots:
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=browser-chrome-screenshots
-    instance-size: legacy
     allow-software-gl-layers: false
 
 mochitest-chrome:
@@ -2176,7 +2175,7 @@ xpcshell:
     instance-size:
         by-test-platform:
             android.*: xlarge
-            default: legacy # Bug 1281241: migrating to m3.large instances
+            default: default
     max-run-time: 5400
     e10s: false
     allow-software-gl-layers: false
