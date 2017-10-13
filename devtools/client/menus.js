@@ -41,7 +41,7 @@ exports.menuitems = [
     l10nKey: "devToolboxMenuItem",
     oncommand(event) {
       let window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
+      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, window.performance.now());
     },
     keyId: "toggleToolbox",
     checkbox: true

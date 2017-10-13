@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<meta charset=utf-8>
+<script>
+
+function boom() {
+  const div = document.createElement('div');
+  const anim = div.animate([{}], {});
+  document.documentElement.appendChild(div);
+  anim.pause();
+  document.documentElement.removeChild(div);
+
+  requestAnimationFrame(() => {
+    document.documentElement.appendChild(div);
+    anim.play();
+    document.documentElement.className = '';
+  });
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

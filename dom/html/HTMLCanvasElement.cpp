@@ -44,6 +44,7 @@
 #include "nsRefreshDriver.h"
 #include "nsStreamUtils.h"
 #include "ActiveLayerTracker.h"
+#include "CanvasUtils.h"
 #include "VRManagerChild.h"
 #include "WebGL1Context.h"
 #include "WebGL2Context.h"
@@ -62,8 +63,10 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver
 
 public:
   RequestedFrameRefreshObserver(HTMLCanvasElement* const aOwningElement,
-                                nsRefreshDriver* aRefreshDriver)
+                                nsRefreshDriver* aRefreshDriver,
+                                bool aReturnPlaceholderData)
     : mRegistered(false),
+      mReturnPlaceholderData(aReturnPlaceholderData),
       mOwningElement(aOwningElement),
       mRefreshDriver(aRefreshDriver)
   {
@@ -71,7 +74,8 @@ public:
   }
 
   static already_AddRefed<DataSourceSurface>
-  CopySurface(const RefPtr<SourceSurface>& aSurface)
+  CopySurface(const RefPtr<SourceSurface>& aSurface,
+              bool aReturnPlaceholderData)
   {
     RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
     if (!data) {
@@ -100,10 +104,21 @@ public:
     MOZ_ASSERT(data->GetSize() == copy->GetSize());
     MOZ_ASSERT(data->GetFormat() == copy->GetFormat());
 
-    memcpy(write.GetData(), read.GetData(),
-           write.GetStride() * copy->GetSize().height);
+    if (aReturnPlaceholderData) {
+      // If returning placeholder data, fill the frame copy with white pixels.
+      memset(write.GetData(), 0xFF,
+             write.GetStride() * copy->GetSize().height);
+    } else {
+      memcpy(write.GetData(), read.GetData(),
+             write.GetStride() * copy->GetSize().height);
+    }
 
     return copy.forget();
+  }
+
+  void SetReturnPlaceholderData(bool aReturnPlaceholderData)
+  {
+    mReturnPlaceholderData = aReturnPlaceholderData;
   }
 
   void WillRefresh(TimeStamp aTime) override
@@ -144,7 +159,7 @@ public:
     {
       AUTO_PROFILER_LABEL(
         "RequestedFrameRefreshObserver::WillRefresh:CopySurface", OTHER);
-      copy = CopySurface(snapshot);
+      copy = CopySurface(snapshot, mReturnPlaceholderData);
       if (!copy) {
         return;
       }
@@ -201,6 +216,7 @@ private:
   }
 
   bool mRegistered;
+  bool mReturnPlaceholderData;
   HTMLCanvasElement* const mOwningElement;
   RefPtr<nsRefreshDriver> mRefreshDriver;
 };
@@ -754,7 +770,14 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
                          new CanvasCaptureTrackSource(principal, stream));
   stream->AddTrackInternal(track);
 
-  rv = RegisterFrameCaptureListener(stream->FrameCaptureListener());
+  // Check site-specific permission and display prompt if appropriate.
+  // If no permission, arrange for the frame capture listener to return
+  // all-white, opaque image data.
+  bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
+    OwnerDoc(),
+    nsContentUtils::GetCurrentJSContext());
+
+  rv = RegisterFrameCaptureListener(stream->FrameCaptureListener(), usePlaceholder);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -764,13 +787,18 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
 }
 
 nsresult
-HTMLCanvasElement::ExtractData(nsAString& aType,
+HTMLCanvasElement::ExtractData(JSContext* aCx,
+                               nsAString& aType,
                                const nsAString& aOptions,
                                nsIInputStream** aStream)
 {
+  // Check site-specific permission and display prompt if appropriate.
+  // If no permission, return all-white, opaque image data.
+  bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(OwnerDoc(), aCx);
   return ImageEncoder::ExtractData(aType,
                                    aOptions,
                                    GetSize(),
+                                   usePlaceholder,
                                    mCurrentContext,
                                    mAsyncCanvasRenderer,
                                    aStream);
@@ -800,12 +828,12 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = ExtractData(type, params, getter_AddRefs(stream));
+  rv = ExtractData(aCx, type, params, getter_AddRefs(stream));
 
   // If there are unrecognized custom parse options, we should fall back to
   // the default values for the encoder without any options at all.
   if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
-    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream));
+    rv = ExtractData(aCx, type, EmptyString(), getter_AddRefs(stream));
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -855,8 +883,11 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
     return;
   }
 
+  // Check site-specific permission and display prompt if appropriate.
+  // If no permission, return all-white, opaque image data.
+  bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(OwnerDoc(), aCx);
   CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType,
-                                       aParams, aRv);
+                                       aParams, usePlaceholder, aRv);
 
 }
 
@@ -925,7 +956,8 @@ HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 {
   nsCOMPtr<nsIInputStream> stream;
   nsAutoString type(aType);
-  nsresult rv = ExtractData(type, EmptyString(), getter_AddRefs(stream));
+  nsresult rv = ExtractData(nsContentUtils::GetCurrentJSContext(),
+                            type, EmptyString(), getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t imgSize;
@@ -1246,7 +1278,8 @@ HTMLCanvasElement::IsContextCleanForFrameCapture()
 }
 
 nsresult
-HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener)
+HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener,
+                                                bool aReturnPlaceholderData)
 {
   WeakPtr<FrameCaptureListener> listener = aListener;
 
@@ -1285,7 +1318,9 @@ HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener)
     }
 
     mRequestedFrameRefreshObserver =
-      new RequestedFrameRefreshObserver(this, driver);
+      new RequestedFrameRefreshObserver(this, driver, aReturnPlaceholderData);
+  } else {
+    mRequestedFrameRefreshObserver->SetReturnPlaceholderData(aReturnPlaceholderData);
   }
 
   mRequestedFrameListeners.AppendElement(listener);

@@ -85,6 +85,7 @@ function* testSteps()
         ok(!("exception" in info), "shouldn't throw" + test);
         is(JSON.stringify(objectStore.keyPath), JSON.stringify(info.keyPath),
            "correct keyPath property" + test);
+        // eslint-disable-next-line no-self-compare
         ok(objectStore.keyPath === objectStore.keyPath,
            "object identity should be preserved");
         stores[indexName] = objectStore;
@@ -174,6 +175,7 @@ function* testSteps()
         ok(!("exception" in info), "shouldn't throw" + test);
         is(JSON.stringify(index.keyPath), JSON.stringify(info.keyPath),
            "index has correct keyPath property" + test);
+        // eslint-disable-next-line no-self-compare
         ok(index.keyPath === index.keyPath,
            "object identity should be preserved");
         indexes[indexName] = index;

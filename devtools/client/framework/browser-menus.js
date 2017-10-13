@@ -76,7 +76,7 @@ function createToolMenuElements(toolDefinition, doc) {
 
   let oncommand = function (id, event) {
     let window = event.target.ownerDocument.defaultView;
-    gDevToolsBrowser.selectToolCommand(window.gBrowser, id);
+    gDevToolsBrowser.selectToolCommand(window.gBrowser, id, window.performance.now());
   }.bind(null, id);
 
   let menuitem = createMenuItem({

@@ -422,6 +422,12 @@ DevTools.prototype = {
   },
 
   /**
+   * Boolean, true, if we never opened a toolbox.
+   * Used to implement the telemetry tracking toolbox opening.
+   */
+  _firstShowToolbox: true,
+
+  /**
    * Show a Toolbox for a target (either by creating a new one, or if a toolbox
    * already exists for the target, by bring to the front the existing one)
    * If |toolId| is specified then the displayed toolbox will have the
@@ -437,11 +443,14 @@ DevTools.prototype = {
    *        The type of host (bottom, window, side)
    * @param {object} hostOptions
    *        Options for host specifically
+   * @param {Number} startTime
+   *        Optional, indicates the time at which the user event related to this toolbox
+   *        opening started. This is a `performance.now()` timing.
    *
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
    */
-  showToolbox: Task.async(function* (target, toolId, hostType, hostOptions) {
+  showToolbox: Task.async(function* (target, toolId, hostType, hostOptions, startTime) {
     let toolbox = this._toolboxes.get(target);
     if (toolbox) {
       if (hostType != null && toolbox.hostType != hostType) {
@@ -465,9 +474,36 @@ DevTools.prototype = {
       this._creatingToolboxes.set(target, toolboxPromise);
       toolbox = yield toolboxPromise;
       this._creatingToolboxes.delete(target);
+
+      if (startTime) {
+        this.logToolboxOpenTime(toolbox.currentToolId, startTime);
+      }
+      this._firstShowToolbox = false;
     }
     return toolbox;
   }),
+
+  /**
+   * Log telemetry related to toolbox opening.
+   * Two distinct probes are logged. One for cold startup, when we open the very first
+   * toolbox. This one includes devtools framework loading. And a second one for all
+   * subsequent toolbox opening, which should all be faster.
+   * These two probes are indexed by Tool ID.
+   *
+   * @param {String} toolId
+   *        The id of the opened tool.
+   * @param {Number} startTime
+   *        Indicates the time at which the user event related to the toolbox
+   *        opening started. This is a `performance.now()` timing.
+   */
+  logToolboxOpenTime(toolId, startTime) {
+    let { performance } = Services.appShell.hiddenDOMWindow;
+    let delay = performance.now() - startTime;
+    let telemetryKey = this._firstShowToolbox ?
+      "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
+    let histogram = Services.telemetry.getKeyedHistogramById(telemetryKey);
+    histogram.add(toolId, delay);
+  },
 
   createToolbox: Task.async(function* (target, toolId, hostType, hostOptions) {
     let manager = new ToolboxHostManager(target, hostType, hostOptions);
@@ -575,13 +611,16 @@ DevTools.prototype = {
    *        An array of CSS selectors to find the target node. Several selectors can be
    *        needed if the element is nested in frames and not directly in the root
    *        document.
+   * @param {Number} startTime
+   *        Optional, indicates the time at which the user event related to this node
+   *        inspection started. This is a `performance.now()` timing.
    * @return {Promise} a promise that resolves when the node is selected in the inspector
    *         markup view.
    */
-  async inspectNode(tab, nodeSelectors) {
+  async inspectNode(tab, nodeSelectors, startTime) {
     let target = TargetFactory.forTab(tab);
 
-    let toolbox = await gDevTools.showToolbox(target, "inspector");
+    let toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
     let inspector = toolbox.getCurrentPanel();
 
     // new-node-front tells us when the node has been selected, whether the
