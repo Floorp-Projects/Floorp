@@ -29,7 +29,8 @@
   <hbox align="center">
     <label value="&loaddevice.modname2;" accesskey="&loaddevice.modname2.accesskey;"
            control="device_name"/>
-    <textbox id="device_name" flex="1" value="&loaddevice.modname.default;"/>
+    <textbox id="device_name" flex="1" value="&loaddevice.modname.default;"
+             onchange="validateModuleName();"/>
   </hbox>
   <hbox align="center">
     <label value="&loaddevice.filename2;" accesskey="&loaddevice.filename2.accesskey;"
@@ -39,5 +40,6 @@
             accesskey="&loaddevice.browse.accesskey;"
             oncommand="onBrowseBtnPress();"/>
   </hbox>
+  <label id="helpText" value=""/>
 
 </dialog>
