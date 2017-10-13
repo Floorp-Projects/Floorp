@@ -997,21 +997,3 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     },
   });
 }
-
-if (AppConstants.E10S_TESTING_ONLY) {
-  if (Services.appinfo.browserTabsRemoteAutostart) {
-    CustomizableWidgets.push({
-      id: "e10s-button",
-      defaultArea: CustomizableUI.AREA_PANEL,
-      onBuild(aDocument) {
-        let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
-        node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
-        node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
-      },
-      onCommand(aEvent) {
-        let win = aEvent.view;
-        win.OpenBrowserWindow({remote: false});
-      },
-    });
-  }
-}
