@@ -137,16 +137,16 @@ public:
   AppendShadow(const wr::Shadow& aShadow)
   {
     mBuilder.PushShadow(mBoundsRect, mClipRect, mBackfaceVisible, aShadow);
-    mShadowCount++;
+    mHasShadows = true;
   }
 
   void
   TerminateShadows()
   {
-    for (size_t i = 0; i < mShadowCount; ++i) {
-      mBuilder.PopShadow();
+    if (mHasShadows) {
+      mBuilder.PopAllShadows();
+      mHasShadows = false;
     }
-    mShadowCount = 0;
   }
 
   void
@@ -220,8 +220,8 @@ private:
   // * Text stroke
   bool mHasUnsupportedFeatures = false;
 
-  // Number of shadows currently pushed, so we can pop them later.
-  size_t mShadowCount = 0;
+  // Whether PopAllShadows needs to be called
+  bool mHasShadows = false;
 
   // Things used to push to webrender
   wr::DisplayListBuilder& mBuilder;
