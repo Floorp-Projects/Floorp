@@ -323,7 +323,7 @@ impl ComputedValuesInner {
     }
 
     /// Clone the visited style.  Used for inheriting parent styles in
-    /// StyleBuilder::for_derived_style.
+    /// StyleBuilder::for_inheritance.
     pub fn clone_visited_style(&self) -> Option<Arc<ComputedValues>> {
         self.visited_style.as_ref().map(|x| x.clone_arc())
     }
