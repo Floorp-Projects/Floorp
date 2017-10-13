@@ -69,6 +69,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mMainThreadEventTarget(aMainThreadEventTarget)
+  , mNeedToObserveOnDataAvailable(false)
   , mIsTrackingFetch(aIsTrackingFetch)
 #ifdef DEBUG
   , mResponseAvailableCalled(false)
@@ -501,6 +502,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   MOZ_ASSERT(!mPipeOutputStream);
   MOZ_ASSERT(mObserver);
 
+  mNeedToObserveOnDataAvailable = mObserver->NeedOnDataAvailable();
+
   RefPtr<InternalResponse> response;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
@@ -751,15 +754,18 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
   // called between OnStartRequest and OnStopRequest, so we don't need to worry
   // about races.
 
-  if (mObserver) {
-    if (NS_IsMainThread()) {
-      mObserver->OnDataAvailable();
-    } else {
-      RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
-      nsresult rv =
-        mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+  if (mNeedToObserveOnDataAvailable) {
+    mNeedToObserveOnDataAvailable = false;
+    if (mObserver) {
+      if (NS_IsMainThread()) {
+        mObserver->OnDataAvailable();
+      } else {
+        RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
+        nsresult rv =
+          mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
