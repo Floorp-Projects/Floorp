@@ -1,14 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for FileReader API</title>
+  <title>Test for FileReader in workers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="common_fileReader.js"></script>
 </head>
 
 <body>
-<script class="testbody" type="text/javascript">
+<script type="text/javascript">
 
 const minFileSize = 20000;
 SimpleTest.waitForExplicitFinish();
@@ -58,21 +57,42 @@ opener.sendAsyncMessage("files.open", [
 ]);
 
 function onFilesOpened(message) {
-  let [
-    asciiFile,
-    binaryFile,
-    nonExistingFile,
-    utf8TextFile,
-    utf16TextFile,
-    emptyFile,
-    dataUrlFile0,
-    dataUrlFile1,
-    dataUrlFile2,
-  ] = message;
+  var worker = new Worker('worker_fileReader.js');
+  worker.postMessage({ blobs: message,
+                       testTextData: testTextData,
+                       testASCIIData: testASCIIData,
+                       testBinaryData: testBinaryData,
+                       dataurldata0: dataurldata0,
+                       dataurldata1: dataurldata1,
+                       dataurldata2: dataurldata2 });
 
-  runTests(asciiFile, binaryFile, nonExistingFile, utf8TextFile, utf16TextFile,
-           emptyFile, dataUrlFile0, dataUrlFile1, dataUrlFile2, testTextData)
-  .then(SimpleTest.finish);
+  worker.onmessage = function(e) {
+    var msg = e.data;
+    if (msg.type == 'finish') {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (msg.type == 'check') {
+      ok(msg.status, msg.msg);
+      return;
+    }
+
+    ok(false, "Unknown message.");
+  }
+}
+
+function convertToUTF16(s) {
+  res = "";
+  for (var i = 0; i < s.length; ++i) {
+    c = s.charCodeAt(i);
+    res += String.fromCharCode(c & 255, c >>> 8);
+  }
+  return res;
+}
+
+function convertToUTF8(s) {
+  return unescape(encodeURIComponent(s));
 }
 
 </script>
