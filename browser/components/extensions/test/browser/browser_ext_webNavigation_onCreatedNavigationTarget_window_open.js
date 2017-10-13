@@ -58,17 +58,7 @@ async function runTestCase({extension, openNavTarget, expectedWebNavProps}) {
   is(completedNavMsg.url, url, "Got the expected webNavigation.onCompleted url property");
 }
 
-// Test that there are no pending createdNavigationTarget messages still tracked
-// in WebNavigation.jsm (to be called before the extension is unloaded, because
-// once the last extension which have subscribed a webNavigation event is unloaded
-// all the pending created navigation target data is completely cleared).
-function assertNoPendingCreatedNavigationTargetData() {
-  const {Manager} = Cu.import("resource://gre/modules/WebNavigation.jsm", {});
-  Assert.equal(Manager.createdNavigationTargetByOuterWindowId.size, 0,
-               "There should be no pending createdNavigationTarget messages in WebNavigation");
-}
-
-add_task(async function test_window_open() {
+add_task(async function test_on_created_navigation_target_from_window_open() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
@@ -84,7 +74,7 @@ add_task(async function test_window_open() {
 
   const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
-  info("open a url in a new tab from a window.open call");
+  info("open an url in a new tab from a window.open call");
 
   await runTestCase({
     extension,
@@ -101,7 +91,7 @@ add_task(async function test_window_open() {
     },
   });
 
-  info("open a url in a new window from a window.open call");
+  info("open an url in a new window from a window.open call");
 
   await runTestCase({
     extension,
@@ -118,14 +108,12 @@ add_task(async function test_window_open() {
     },
   });
 
-  assertNoPendingCreatedNavigationTargetData();
-
   await BrowserTestUtils.removeTab(tab1);
 
   await extension.unload();
 });
 
-add_task(async function test_window_open_from_subframe() {
+add_task(async function test_on_created_navigation_target_from_window_open_subframe() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
   gBrowser.selectedTab = tab1;
@@ -141,7 +129,7 @@ add_task(async function test_window_open_from_subframe() {
 
   const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
 
-  info("open a url in a new tab from subframe window.open call");
+  info("open an url in a new tab from subframe window.open call");
 
   await runTestCase({
     extension,
@@ -158,7 +146,7 @@ add_task(async function test_window_open_from_subframe() {
     },
   });
 
-  info("open a url in a new window from subframe window.open call");
+  info("open an url in a new window from subframe window.open call");
 
   await runTestCase({
     extension,
@@ -174,131 +162,6 @@ add_task(async function test_window_open_from_subframe() {
       url: `${OPENED_PAGE}#new-win-from-window-open-subframe`,
     },
   });
-
-  assertNoPendingCreatedNavigationTargetData();
-
-  await BrowserTestUtils.removeTab(tab1);
-
-  await extension.unload();
-});
-
-add_task(async function test_window_open_close_from_browserAction_popup() {
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
-
-  gBrowser.selectedTab = tab1;
-
-  function popup() {
-    window.open("", "_self").close();
-
-    browser.test.sendMessage("browserAction_popup_executed");
-  }
-
-  const extension = ExtensionTestUtils.loadExtension({
-    background,
-    manifest: {
-      browser_action: {
-        default_popup: "popup.html",
-      },
-      permissions: ["webNavigation", "tabs", "<all_urls>"],
-    },
-    files: {
-      "popup.html": `<!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-          </head>
-          <body>
-            <script src="popup.js"></script>
-          </body>
-        </html>
-      `,
-      "popup.js": popup,
-    },
-  });
-
-  await extension.startup();
-
-  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
-
-  clickBrowserAction(extension);
-
-  await extension.awaitMessage("browserAction_popup_executed");
-
-  info("open a url in a new tab from a window.open call");
-
-  await runTestCase({
-    extension,
-    openNavTarget() {
-      extension.sendMessage({
-        type: "execute-contentscript",
-        code: `window.open("${OPENED_PAGE}#new-tab-from-window-open"); true;`,
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-tab-from-window-open`,
-    },
-  });
-
-  assertNoPendingCreatedNavigationTargetData();
-
-  await BrowserTestUtils.removeTab(tab1);
-
-  await extension.unload();
-});
-
-add_task(async function test_window_open_in_named_win() {
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
-
-  gBrowser.selectedTab = tab1;
-
-  const extension = ExtensionTestUtils.loadExtension({
-    background,
-    manifest: {
-      permissions: ["webNavigation", "tabs", "<all_urls>"],
-    },
-  });
-
-  await extension.startup();
-
-  const expectedSourceTab = await extension.awaitMessage("expectedSourceTab");
-
-  info("open a url in a new named window from a window.open call");
-
-  await runTestCase({
-    extension,
-    openNavTarget() {
-      extension.sendMessage({
-        type: "execute-contentscript",
-        code: `window.open("${OPENED_PAGE}#new-named-window-open", "TestWinName"); true;`,
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-named-window-open`,
-    },
-  });
-
-  info("open a url in an existent named window from a window.open call");
-
-  await runTestCase({
-    extension,
-    openNavTarget() {
-      extension.sendMessage({
-        type: "execute-contentscript",
-        code: `window.open("${OPENED_PAGE}#existent-named-window-open", "TestWinName"); true;`,
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#existent-named-window-open`,
-    },
-  });
-
-  assertNoPendingCreatedNavigationTargetData();
 
   await BrowserTestUtils.removeTab(tab1);
 
