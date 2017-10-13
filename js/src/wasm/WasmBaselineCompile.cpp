@@ -2935,48 +2935,6 @@ class BaseCompiler
 #endif
     }
 
-    void reinterpretI64AsF64(RegI64 src, RegF64 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.vmovq(src.reg, dest);
-#elif defined(JS_CODEGEN_X86)
-        masm.Push(src.high);
-        masm.Push(src.low);
-        masm.vmovq(Operand(esp, 0), dest);
-        masm.freeStack(sizeof(uint64_t));
-#elif defined(JS_CODEGEN_ARM)
-        masm.ma_vxfer(src.low, src.high, dest);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: reinterpretI64AsF64");
-#endif
-    }
-
-    void reinterpretF64AsI64(RegF64 src, RegI64 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.vmovq(src, dest.reg);
-#elif defined(JS_CODEGEN_X86)
-        masm.reserveStack(sizeof(uint64_t));
-        masm.vmovq(src, Operand(esp, 0));
-        masm.Pop(dest.low);
-        masm.Pop(dest.high);
-#elif defined(JS_CODEGEN_ARM)
-        masm.ma_vxfer(src, dest.low, dest.high);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: reinterpretF64AsI64");
-#endif
-    }
-
-    void wrapI64ToI32(RegI64 src, RegI32 dest) {
-#if defined(JS_CODEGEN_X64)
-        // movl clears the high bits if the two registers are the same.
-        masm.movl(src.reg, dest);
-#elif defined(JS_NUNBOX32)
-        if (src.low != dest)
-            masm.move32(src.low, dest);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: wrapI64ToI32");
-#endif
-    }
-
     RegI64 popI32ForSignExtendI64() {
 #if defined(JS_CODEGEN_X86)
         need2xI32(specific_edx, specific_eax);
@@ -2997,56 +2955,6 @@ class BaseCompiler
         return popI64ToSpecific(RegI64(Register64(specific_edx, specific_eax)));
 #else
         return popI64();
-#endif
-    }
-
-    void signExtendI64_8(RegI64 r) {
-#if defined(JS_CODEGEN_X64)
-        masm.movsbq(Operand(r.reg), r.reg);
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-        masm.move8SignExtend(r.low, r.low);
-        signExtendI32ToI64(RegI32(r.low), r);
-#else
-        MOZ_CRASH("Basecompiler platform hook: signExtendI64_8");
-#endif
-    }
-
-    void signExtendI64_16(RegI64 r) {
-#if defined(JS_CODEGEN_X64)
-        masm.movswq(Operand(r.reg), r.reg);
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-        masm.move16SignExtend(r.low, r.low);
-        signExtendI32ToI64(RegI32(r.low), r);
-#else
-        MOZ_CRASH("Basecompiler platform hook: signExtendI64_16");
-#endif
-    }
-
-    void signExtendI32ToI64(RegI32 src, RegI64 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.movslq(src, dest.reg);
-#elif defined(JS_CODEGEN_X86)
-        MOZ_ASSERT(dest.low == src);
-        MOZ_ASSERT(dest.low == eax);
-        MOZ_ASSERT(dest.high == edx);
-        masm.cdq();
-#elif defined(JS_CODEGEN_ARM)
-        masm.ma_mov(src, dest.low);
-        masm.ma_asr(Imm32(31), src, dest.high);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: signExtendI32ToI64");
-#endif
-    }
-
-    void extendU32ToI64(RegI32 src, RegI64 dest) {
-#if defined(JS_CODEGEN_X64)
-        masm.movl(src, dest.reg);
-#elif defined(JS_NUNBOX32)
-        if (src != dest.low)
-            masm.move32(src, dest.low);
-        masm.move32(Imm32(0), dest.high);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: extendU32ToI64");
 #endif
     }
 
@@ -4481,12 +4389,12 @@ BaseCompiler::emitCopysignF64()
     pop2xF64(&r0, &r1);
     RegI64 x0 = needI64();
     RegI64 x1 = needI64();
-    reinterpretF64AsI64(r0, x0);
-    reinterpretF64AsI64(r1, x1);
+    masm.moveDoubleToGPR64(r0, x0);
+    masm.moveDoubleToGPR64(r1, x1);
     masm.and64(Imm64(INT64_MAX), x0);
     masm.and64(Imm64(INT64_MIN), x1);
     masm.or64(x1, x0);
-    reinterpretI64AsF64(x0, r0);
+    masm.moveGPR64ToDouble(x0, r0);
     freeI64(x0);
     freeI64(x1);
     freeF64(r1);
@@ -4985,7 +4893,7 @@ BaseCompiler::emitWrapI64ToI32()
 {
     RegI64 r0 = popI64();
     RegI32 i0 = fromI64(r0);
-    wrapI64ToI32(r0, i0);
+    masm.move64To32(r0, i0);
     freeI64Except(r0, i0);
     pushI32(i0);
 }
@@ -5010,7 +4918,7 @@ void
 BaseCompiler::emitExtendI64_8()
 {
     RegI64 r = popI64ForSignExtendI64();
-    signExtendI64_8(r);
+    masm.move8To64SignExtend(lowPart(r), r);
     pushI64(r);
 }
 
@@ -5018,7 +4926,7 @@ void
 BaseCompiler::emitExtendI64_16()
 {
     RegI64 r = popI64ForSignExtendI64();
-    signExtendI64_16(r);
+    masm.move16To64SignExtend(lowPart(r), r);
     pushI64(r);
 }
 
@@ -5026,20 +4934,16 @@ void
 BaseCompiler::emitExtendI64_32()
 {
     RegI64 x0 = popI64ForSignExtendI64();
-    RegI32 r0 = RegI32(lowPart(x0));
-    signExtendI32ToI64(r0, x0);
+    masm.move32To64SignExtend(lowPart(x0), x0);
     pushI64(x0);
-    // Note: no need to free r0, since it is part of x0
 }
 
 void
 BaseCompiler::emitExtendI32ToI64()
 {
     RegI64 x0 = popI32ForSignExtendI64();
-    RegI32 r0 = RegI32(lowPart(x0));
-    signExtendI32ToI64(r0, x0);
+    masm.move32To64SignExtend(lowPart(x0), x0);
     pushI64(x0);
-    // Note: no need to free r0, since it is part of x0
 }
 
 void
@@ -5047,9 +4951,8 @@ BaseCompiler::emitExtendU32ToI64()
 {
     RegI32 r0 = popI32();
     RegI64 x0 = widenI32(r0);
-    extendU32ToI64(r0, x0);
+    masm.move32To64ZeroExtend(r0, x0);
     pushI64(x0);
-    // Note: no need to free r0, since it is part of x0
 }
 
 void
@@ -5067,7 +4970,7 @@ BaseCompiler::emitReinterpretF64AsI64()
 {
     RegF64 r0 = popF64();
     RegI64 x0 = needI64();
-    reinterpretF64AsI64(r0, x0);
+    masm.moveDoubleToGPR64(r0, x0);
     freeF64(r0);
     pushI64(x0);
 }
@@ -5201,7 +5104,7 @@ BaseCompiler::emitReinterpretI64AsF64()
 {
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
-    reinterpretI64AsF64(r0, d0);
+    masm.moveGPR64ToDouble(r0, d0);
     freeI64(r0);
     pushF64(d0);
 }

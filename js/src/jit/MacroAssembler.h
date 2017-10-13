@@ -746,8 +746,21 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void moveFloat32ToGPR(FloatRegister src, Register dest) PER_SHARED_ARCH;
     inline void moveGPRToFloat32(Register src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void moveDoubleToGPR64(FloatRegister src, Register64 dest) PER_ARCH;
+    inline void moveGPR64ToDouble(Register64 src, FloatRegister dest) PER_ARCH;
+
     inline void move8SignExtend(Register src, Register dest) PER_SHARED_ARCH;
     inline void move16SignExtend(Register src, Register dest) PER_SHARED_ARCH;
+
+    // move64To32 will clear the high bits of `dest` on 64-bit systems.
+    inline void move64To32(Register64 src, Register dest) PER_ARCH;
+
+    inline void move32To64ZeroExtend(Register src, Register64 dest) PER_ARCH;
+
+    // On x86, `dest` must be edx:eax for the sign extend operations.
+    inline void move8To64SignExtend(Register src, Register64 dest) PER_ARCH;
+    inline void move16To64SignExtend(Register src, Register64 dest) PER_ARCH;
+    inline void move32To64SignExtend(Register src, Register64 dest) PER_ARCH;
 
     // Copy a constant, typed-register, or a ValueOperand into a ValueOperand
     // destination.
