@@ -1,46 +1,162 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for File API + Slice</title>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=575946
+-->
+  <title>Test for Bug 575946</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="common_blob.js"></script>
+  <script type="text/javascript" src="fileutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
 <body>
-
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=575946">Mozilla Bug 575946</a>
 <p id="display">
   <canvas id=canvas width=1100 height=1100 hidden moz-opaque></canvas>
+  <canvas id=testcanvas hidden moz-opaque></canvas>
+  <input id="fileList" type="file"></input>
 </p>
 
-<script type="text/javascript">
+<script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
 
 // Create files containing data we'll test with. We'll want long
 // strings to ensure they span multiple buffers while loading
 
-let canvasData;
-let fileData;
+// Create a decent-sized image
+cx = $("canvas").getContext('2d');
+var s = cx.canvas.width;
+var grad = cx.createLinearGradient(0, 0, s-1, s-1);
+for (i = 0; i < 0.95; i += .1) {
+  grad.addColorStop(i, "white");
+  grad.addColorStop(i + .05, "black");
+}
+grad.addColorStop(1, "white");
+cx.fillStyle = grad;
+cx.fillRect(0, 0, s-1, s-1);
+cx.fillStyle = "rgba(200, 0, 0, 0.9)";
+cx.fillRect(.1 * s, .1 * s, .7 * s, .7 * s);
+cx.strokeStyle = "rgba(0, 0, 130, 0.5)";
+cx.lineWidth = .14 * s;
+cx.beginPath();
+cx.arc(.6 * s, .6 * s, .3 * s, 0, Math.PI*2, true);
+cx.stroke();
+cx.closePath();
+cx.fillStyle = "rgb(0, 255, 0)";
+cx.beginPath();
+cx.arc(.1 * s, .8 * s, .1 * s, 0, Math.PI*2, true);
+cx.fill();
+cx.closePath();
 
-createCanvasURL()
-.then(data => {
-  canvasData = data;
-  return createFile(data, "basicTestFile");
-})
 
-.then(file => {
-  fileData = file;
-  return testSlice(fileData, canvasData.length, "", canvasData, "fileFile");
-})
+function imageLoadHandler(event) {
+  var origcanvas = $("canvas");
+  var testcanvas = $("testcanvas");
+  var image = event.target;
+  is(image.naturalWidth, origcanvas.width, "width correct");
+  is(image.naturalHeight, origcanvas.height, "height correct");
 
-.then(file => {
-  let cx = $("canvas").getContext('2d');
-  let memFile = cx.canvas.mozGetAsFile("image/png");
-  return testSlice(memFile, canvasData.length, "image/png", canvasData, "memFile");
-})
+  testcanvas.width = origcanvas.width;
+  testcanvas.height = origcanvas.height;
+  testcanvas.getContext("2d").drawImage(image, 0, 0);
+  // Do not use |is(testcanvas.toDataURL("image/png"), origcanvas.toDataURL("image/png"), "...");| that results in a _very_ long line.
+  var origDataURL = origcanvas.toDataURL("image/png");
+  var testDataURL = testcanvas.toDataURL("image/png");
+  is(testDataURL.length, origDataURL.length,
+     "Length of correct image data");
+  ok(testDataURL == origDataURL,
+     "Content of correct image data");
 
-.then(SimpleTest.finish);
+  testHasRun();
+}
+
+var fileData =
+  atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
+var size = fileData.length;
+var testBinaryData = "";
+
+// This might fail if we dramatically improve the png encoder. If that happens
+// please increase the complexity or size of the image generated above to ensure
+// that we're testing with files that are large enough.
+ok(size > 65536, "test data sufficiently large");
+
+SpecialPowers.createFiles([{name: "basicTestFile", data: fileData}],
+                          basicTest);
+
+function basicTest(files) {
+  var fileFile = files[0];
+
+  // Test that basic properties work
+  var memFile = cx.canvas.mozGetAsFile("image/png");
+  testSlice(memFile, size, "image/png", fileData, "memFile");
+  testSlice(fileFile, size, "", fileData, "fileFile");
+
+  // Try loading directly from slice into an image
+  for (var i = 0; i < 256; i++) {
+    testBinaryData += String.fromCharCode(i);
+  }
+  while (testBinaryData.length < 20000) {
+    testBinaryData += testBinaryData;
+  }
+
+  // image in the middle
+  SpecialPowers.createFiles([{name: "middleTestFile",
+                             data: testBinaryData + fileData + testBinaryData}],
+                            imageMiddleTest);
+}
+
+function imageMiddleTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image at start
+  SpecialPowers.createFiles([{name: "startTestFile",
+                             data: fileData + testBinaryData}],
+                            imageStartTest);
+}
+
+function imageStartTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(0, size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image at end
+  SpecialPowers.createFiles([{name: "endTestFile",
+                             data: testBinaryData + fileData}],
+                            imageEndTest);
+}
+
+function imageEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image past end
+  SpecialPowers.createFiles([{name: "pastEndTestFile",
+                             data: testBinaryData + fileData}],
+                            imagePastEndTest);
+}
+
+function imagePastEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+}
 
 </script>
 </body>
