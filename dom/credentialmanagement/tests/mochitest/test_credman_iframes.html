@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<head>
+  <title>Credential Management: Prohibit use in cross-origin iframes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta charset=utf-8>
+</head>
+<body>
+<h1>Credential Management: Prohibit use in cross-origin iframes</h1>
+<ul>
+  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1407789">Mozilla Bug 1407789</a></li>
+</ul>
+
+<div id="framediv">
+  <h2>Same Origin Test</h2>
+  <iframe id="frame_top"></iframe>
+
+  <h2>Cross-Origin Test</h2>
+  <iframe id="frame_bottom"></iframe>
+</div>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+var _countCompletes = 0;
+var _expectedCompletes = 2; // 2 iframes
+
+function handleEventMessage(event) {
+  if ("test" in event.data) {
+    let summary = event.data.test + ": " + event.data.msg;
+    ok(event.data.status, summary);
+  } else if ("done" in event.data) {
+    _countCompletes += 1;
+    if (_countCompletes == _expectedCompletes) {
+      console.log("Test compeleted. Finished.");
+      SimpleTest.finish();
+    }
+  } else {
+    ok(false, "Unexpected message in the test harness: " + event.data);
+  }
+}
+
+window.addEventListener("message", handleEventMessage);
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                   ["security.webauth.webauthn_enable_softtoken", true],
+                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+function() {
+  document.getElementById("frame_top").src = "https://example.com/tests/dom/credentialmanagement/tests/mochitest/frame_credman_iframes.html";
+
+  document.getElementById("frame_bottom").src = "https://test1.example.com/tests/dom/credentialmanagement/tests/mochitest/frame_credman_iframes.html";
+
+});
+</script>
+</body>
+</html>
