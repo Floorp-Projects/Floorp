@@ -1576,14 +1576,6 @@ PREF_FinalizeParseState(PrefParseState* aPS);
 bool
 PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen);
 
-#ifdef TEST_PREFREAD
-#include <stdio.h>
-#define NS_WARNING(_s) printf(">>> " _s "!\n")
-#define NS_NOTREACHED(_s) NS_WARNING(_s)
-#else
-#include "nsDebug.h" // for NS_WARNING
-#endif
-
 // Pref parser states.
 enum
 {
@@ -1645,10 +1637,6 @@ pref_GrowBuf(PrefParseState* aPS)
   } else {
     bufLen <<= 1; // double buffer size
   }
-
-#ifdef TEST_PREFREAD
-  fprintf(stderr, ">>> realloc(%d)\n", bufLen);
-#endif
 
   aPS->mLb = (char*)realloc(aPS->mLb, bufLen);
   if (!aPS->mLb) {
@@ -2179,62 +2167,6 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
   aPS->mState = state;
   return true;
 }
-
-#ifdef TEST_PREFREAD
-
-static void
-pref_reader(void* aClosure,
-            const char* aPref,
-            PrefValue aVal,
-            PrefType aType,
-            bool aDefPref)
-{
-  printf("%spref(\"%s\", ", aDefPref ? "" : "user_", aPref);
-  switch (aType) {
-    case PREF_STRING:
-      printf("\"%s\");\n", aVal.mStringVal);
-      break;
-    case PREF_INT:
-      printf("%i);\n", aVal.mIntVal);
-      break;
-    case PREF_BOOL:
-      printf("%s);\n", aVal.mBoolVal == false ? "false" : "true");
-      break;
-  }
-}
-
-int
-main(int aArgc, char** aArgv)
-{
-  PrefParseState aPS;
-  char buf[4096]; // i/o buffer
-  FILE* fp;
-  int n;
-
-  if (aArgc == 1) {
-    printf("usage: prefread file.js\n");
-    return -1;
-  }
-
-  fp = fopen(aArgv[1], "r");
-  if (!fp) {
-    printf("failed to open file\n");
-    return -1;
-  }
-
-  PREF_InitParseState(&aPS, pref_reader, nullptr, nullptr);
-
-  while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
-    PREF_ParseBuf(&aPS, buf, n);
-  }
-
-  PREF_FinalizeParseState(&aPS);
-
-  fclose(fp);
-  return 0;
-}
-
-#endif // TEST_PREFREAD
 
 //===========================================================================
 // nsPrefBranch et al.
