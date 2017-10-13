@@ -903,8 +903,12 @@ public:
         return (ch == 0x200D);
     }
 
+    // We treat Combining Grapheme Joiner (U+034F) together with the join
+    // controls (ZWJ, ZWNJ) here, because (like them) it is an invisible
+    // char that will be handled by the shaper even if not explicitly
+    // supported by the font. (See bug 1408366.)
     static inline bool IsJoinControl(uint32_t ch) {
-        return (ch == 0x200C || ch == 0x200D);
+        return (ch == 0x200C || ch == 0x200D || ch == 0x034f);
     }
 
     enum {
