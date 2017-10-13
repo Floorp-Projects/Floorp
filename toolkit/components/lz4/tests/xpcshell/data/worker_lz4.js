@@ -73,7 +73,7 @@ function test_reference_file() {
 }
 
 function compare_arrays(a, b) {
-  return Array.prototype.join.call(a) == Array.prototype.join.call(a);
+  return Array.prototype.join.call(a) == Array.prototype.join.call(b);
 }
 
 function run_rawcompression(name, array) {

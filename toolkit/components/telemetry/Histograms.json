@@ -8824,6 +8824,36 @@
     "n_buckets": 20,
     "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
   },
+  "WEBRTC_ICE_NR_ICE_GATHER_TIME": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
+    "bug_numbers": [1319268],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering did not succeed/fail immediately during the call."
+  },
+  "WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_FAILURE": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
+    "bug_numbers": [1319268],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering failed immediately during the call."
+  },
+  "WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_SUCCESS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
+    "bug_numbers": [1319268],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering succeeded immediately during the call."
+  },
   "WEBRTC_ICE_SUCCESS_TIME": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],

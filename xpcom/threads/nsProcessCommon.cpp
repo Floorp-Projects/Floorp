@@ -38,6 +38,11 @@
 #ifdef XP_MACOSX
 #include <crt_externs.h>
 #include <spawn.h>
+#endif
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#include "base/process_util.h"
+#endif
 #include <sys/wait.h>
 #include <sys/errno.h>
 #endif
@@ -78,7 +83,7 @@ nsProcess::nsProcess()
   , mObserver(nullptr)
   , mWeakObserver(nullptr)
   , mExitValue(-1)
-#if !defined(XP_MACOSX)
+#if !defined(XP_UNIX)
   , mProcess(nullptr)
 #endif
 {
@@ -272,7 +277,7 @@ nsProcess::Monitor(void* aArg)
     }
   }
 #else
-#ifdef XP_MACOSX
+#ifdef XP_UNIX
   int exitCode = -1;
   int status = 0;
   pid_t result;
@@ -296,7 +301,7 @@ nsProcess::Monitor(void* aArg)
   // Lock in case Kill or GetExitCode are called during this
   {
     MutexAutoLock lock(process->mLock);
-#if !defined(XP_MACOSX)
+#if !defined(XP_UNIX)
     process->mProcess = nullptr;
 #endif
     process->mExitValue = exitCode;
@@ -570,6 +575,20 @@ nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
   if (result != 0) {
     return NS_ERROR_FAILURE;
   }
+#elif defined(XP_UNIX)
+  base::file_handle_mapping_vector fdMap;
+  std::vector<std::string> argvVec;
+  for (char** arg = aMyArgv; *arg != nullptr; ++arg) {
+    argvVec.push_back(*arg);
+  }
+  pid_t newPid;
+  if (base::LaunchApp(argvVec, fdMap, false, &newPid)) {
+    static_assert(sizeof(pid_t) <= sizeof(int32_t),
+                  "mPid is large enough to hold a pid");
+    mPid = static_cast<int32_t>(newPid);
+  } else {
+    return NS_ERROR_FAILURE;
+  }
 #else
   mProcess = PR_CreateProcess(aMyArgv[0], aMyArgv, nullptr, nullptr);
   if (!mProcess) {
@@ -676,7 +695,7 @@ nsProcess::Kill()
     if (TerminateProcess(mProcess, 0) == 0) {
       return NS_ERROR_FAILURE;
     }
-#elif defined(XP_MACOSX)
+#elif defined(XP_UNIX)
     if (kill(mPid, SIGKILL) != 0) {
       return NS_ERROR_FAILURE;
     }

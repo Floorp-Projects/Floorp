@@ -520,6 +520,10 @@ tabbrowser {
   left: 0;
 }
 
+#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] > .tab-stack {
+  border-inline-end: 1px solid transparent;
+}
+
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
   background-image: url(chrome://browser/skin/tabbrowser/indicator-tab-attention.svg);

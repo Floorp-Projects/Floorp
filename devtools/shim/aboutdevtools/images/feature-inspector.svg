@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="222px" height="122px" viewBox="0 0 222 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 45.2 (43514) - http://www.bohemiancoding.com/sketch -->
+    <title>Inspector</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <polygon id="path-1" points="82.3351726 27.0750512 82.3351726 54.149836 0.391390693 54.149836 0.391390693 0.000266310669 82.3351726 0.000266310669 82.3351726 27.0750512"></polygon>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2017.06.07.Firefox.DevEdition-[white]" transform="translate(-145.000000, -2868.000000)">
+            <g id="Group-18" transform="translate(176.000000, 2877.000000)">
+                <g id="Group-6">
+                    <g id="Page-1">
+                        <g id="Group-14">
+                            <path d="M104.972689,69.5181903 L40.5788803,69.5181903 C35.675454,69.5181903 31.6986882,65.5085545 31.6986882,60.5606493 L31.6986882,36.4173153 C31.6986882,31.4694101 35.675454,27.4597744 40.5788803,27.4597744 L104.972689,27.4597744 C109.877327,27.4597744 113.854092,31.4694101 113.854092,36.4173153 L113.854092,60.5606493 C113.854092,65.5085545 109.877327,69.5181903 104.972689,69.5181903" id="Fill-1" fill="#0080FF"></path>
+                            <path d="M19.6363636,0.611219006 L19.6363636,97.7367656" id="Stroke-3" stroke="#0080FF" stroke-width="4" stroke-linecap="round"></path>
+                            <path d="M125.181818,0.611219006 L125.181818,97.7367656" id="Stroke-5" stroke="#0080FF" stroke-width="4" stroke-linecap="round"></path>
+                            <path d="M145.397489,13.5581395 L0.605902617,13.5581395" id="Stroke-7" stroke="#0080FF" stroke-width="4" stroke-linecap="round"></path>
+                            <path d="M145.397489,82.5813953 L0.605902617,82.5813953" id="Stroke-9" stroke="#0080FF" stroke-width="4" stroke-linecap="round"></path>
+                        </g>
+                        <g id="Group-13" transform="translate(77.331874, 50.959169)">
+                            <mask id="mask-2" fill="white">
+                                <use xlink:href="#path-1"></use>
+                            </mask>
+                            <g id="Clip-12"></g>
+                            <path d="M15.6361907,54.1501023 C7.21643156,54.1501023 0.391390693,47.2917149 0.391390693,38.8319126 L0.391390693,0.000266310669 L67.0894891,0.000266310669 C75.5092482,0.000266310669 82.3351726,6.85865373 82.3351726,15.318456 L82.3351726,38.8319126 C82.3351726,47.2917149 75.5092482,54.1501023 67.0894891,54.1501023 L15.6361907,54.1501023 Z" id="Fill-11" fill="#1C2142" mask="url(#mask-2)"></path>
+                        </g>
+                    </g>
+                    <g id="Group-25" transform="translate(85.139034, 64.361849)" fill="#00C7D8">
+                        <rect id="Rectangle-5" x="49.840151" y="0" width="15.6361258" height="2.94439966" rx="1.47219983"></rect>
+                        <rect id="Rectangle-5" x="0" y="24.5366638" width="15.6361258" height="2.94439966" rx="1.47219983"></rect>
+                        <rect id="Rectangle-5" x="20.5224151" y="24.5366638" width="15.6361258" height="2.94439966" rx="1.47219983"></rect>
+                        <rect id="Rectangle-5" x="0" y="0" width="43.9766038" height="2.94439966" rx="1.47219983"></rect>
+                        <rect id="Rectangle-5" x="0" y="12.7590652" width="65.4762768" height="2.94439966" rx="1.47219983"></rect>
+                    </g>
+                </g>
+            </g>
+            <g id="Group-6" transform="translate(145.000000, 2865.000000)"></g>
+        </g>
+    </g>
+</svg>

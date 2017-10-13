@@ -11,6 +11,8 @@ const { loader } = Components.utils.import(
   "resource://devtools/shared/Loader.jsm", {});
 const { BrowserLoader } = Components.utils.import(
   "resource://devtools/client/shared/browser-loader.js", {});
+const { Services } = Components.utils.import(
+  "resource://gre/modules/Services.jsm", {});
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
@@ -31,6 +33,12 @@ const AboutDebuggingApp = createFactory(require("./components/aboutdebugging"));
 
 var AboutDebugging = {
   init() {
+    if (!Services.prefs.getBoolPref("devtools.enabled", true)) {
+      // If DevTools are disabled, navigate to about:devtools.
+      window.location = "about:devtools?reason=AboutDebugging";
+      return;
+    }
+
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
     }
@@ -53,8 +61,10 @@ var AboutDebugging = {
   destroy() {
     unmountComponentAtNode(document.querySelector("#body"));
 
-    this.client.close();
-    this.client = null;
+    if (this.client) {
+      this.client.close();
+      this.client = null;
+    }
   },
 };
 

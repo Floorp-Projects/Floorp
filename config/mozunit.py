@@ -135,6 +135,9 @@ class MockedOpen(object):
 
     will thus open the virtual file instance for the file 'foo' to f.
 
+    If the content of a file is given as None, then that file will be
+    represented as not existing (even if it does, actually, exist).
+
     MockedOpen also masks writes, so that creating or replacing files
     doesn't touch the file system, while subsequently opening the file
     will return the recorded content.
@@ -154,7 +157,10 @@ class MockedOpen(object):
         if 'w' in mode:
             file = MockedFile(self, absname)
         elif absname in self.files:
-            file = MockedFile(self, absname, self.files[absname])
+            content = self.files[absname]
+            if content is None:
+                raise IOError(2, 'No such file or directory')
+            file = MockedFile(self, absname, content)
         elif 'a' in mode:
             file = MockedFile(self, absname, self.open(name, 'r').read())
         else:
@@ -183,17 +189,16 @@ class MockedOpen(object):
 
     def _wrapped_exists(self, p):
         return (self._wrapped_isfile(p) or
-                self._wrapped_isdir(p) or
-                self._orig_path_exists(p))
+                self._wrapped_isdir(p))
 
     def _wrapped_isfile(self, p):
         p = normcase(p)
         if p in self.files:
-            return True
+            return self.files[p] is not None
 
         abspath = normcase(os.path.abspath(p))
         if abspath in self.files:
-            return True
+            return self.files[abspath] is not None
 
         return self._orig_path_isfile(p)
 
@@ -207,7 +212,7 @@ class MockedOpen(object):
         if any(f.startswith(abspath) for f in self.files):
             return True
 
-        return self._orig_path_exists(p)
+        return self._orig_path_isdir(p)
 
 
 def main(*args, **kwargs):
