@@ -17,7 +17,6 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentPrefs.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/HashFunctions.h"
@@ -2145,8 +2144,6 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
 // nsPrefBranch et al.
 //===========================================================================
 
-using mozilla::dom::ContentChild;
-
 namespace mozilla {
 class PreferenceServiceReporter;
 } // namespace mozilla
@@ -2425,19 +2422,6 @@ private:
   nsCOMPtr<nsIFile> mFile;
   nsCString mRelativeToKey;
 };
-
-static ContentChild*
-GetContentChild()
-{
-  if (XRE_IsContentProcess()) {
-    ContentChild* cpc = ContentChild::GetSingleton();
-    if (!cpc) {
-      MOZ_CRASH("Content Protocol is NULL!  We're going to crash!");
-    }
-    return cpc;
-  }
-  return nullptr;
-}
 
 //----------------------------------------------------------------------------
 // nsPrefBranch
@@ -2751,7 +2735,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIFile))) {
-    if (GetContentChild()) {
+    if (XRE_IsContentProcess()) {
       NS_ERROR("cannot get nsIFile pref from content process");
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -2769,7 +2753,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
-    if (GetContentChild()) {
+    if (XRE_IsContentProcess()) {
       NS_ERROR("cannot get nsIRelativeFilePref from content process");
       return NS_ERROR_NOT_AVAILABLE;
     }
