@@ -8,13 +8,13 @@
 #include "Entries.h"
 #include "ChunkSet.h"
 
+#include "chromium/safebrowsing.pb.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
-#include "safebrowsing.pb.h"
 #include <string>
 
 namespace mozilla {
