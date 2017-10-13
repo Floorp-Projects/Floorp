@@ -11,9 +11,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
   this);
 
+Services.prefs.setBoolPref("devtools.fontinspector.enabled", true);
 Services.prefs.setCharPref("devtools.inspector.activeSidebar", "fontinspector");
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
+  Services.prefs.clearUserPref("devtools.fontinspector.enabled");
 });
 
 /**
@@ -46,7 +47,7 @@ var openFontInspectorForURL = Task.async(function* (url) {
   return {
     toolbox,
     inspector,
-    view: inspector.fontinspector
+    view: inspector.getPanel("fontinspector")
   };
 });
 
