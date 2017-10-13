@@ -235,7 +235,7 @@ SOURCES += [
     'src/google/protobuf/util/internal/protostream_objectwriter.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/util/message_differencer.cc',
     'src/google/protobuf/util/time_util.cc',  # GetCurrentTime conflict in winbase.h
-    'src/google/protobuf/wire_format.cc',
+    'src/google/protobuf/wire_format.cc',  # GetMessage conflict in windows.h
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
