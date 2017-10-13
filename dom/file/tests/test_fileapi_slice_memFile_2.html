@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for File API + Slice (in file)</title>
+  <title>Test for File API + Slice (in memory)</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="common_blob.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -17,16 +17,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let canvasData;
-
 createCanvasURL()
 .then(data => {
-  canvasData = data;
-  return createFile(data, "basicTestFile");
-})
-
-.then(file => {
-  return testSlice(file, canvasData.length, "", canvasData, "fileFile");
+  let cx = $("canvas").getContext('2d');
+  let memFile = cx.canvas.mozGetAsFile("image/png");
+  return testSlice(memFile, data.length, "image/png", data, "memFile", RANGE_2);
 })
 
 .then(SimpleTest.finish);
