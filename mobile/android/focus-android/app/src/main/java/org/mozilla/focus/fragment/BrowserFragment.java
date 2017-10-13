@@ -28,6 +28,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -650,14 +651,25 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 .addRequestHeader("User-Agent", download.getUserAgent())
                 .addRequestHeader("Cookie", cookie)
                 .addRequestHeader("Referer", getUrl())
-                .setDestinationInExternalPublicDir(download.getDestinationDirectory(), fileName)
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setMimeType(download.getMimeType());
 
+        try {
+            request.setDestinationInExternalPublicDir(
+                    download.getDestinationDirectory(), fileName);
+        } catch (IllegalStateException e) {
+            Log.e(FRAGMENT_TAG, "Cannot create download directory");
+            return;
+        }
+
         request.allowScanningByMediaScanner();
 
-        long downloadReference = manager.enqueue(request);
-        downloadBroadcastReceiver.addQueuedDownload(downloadReference);
+        try {
+            long downloadReference = manager.enqueue(request);
+            downloadBroadcastReceiver.addQueuedDownload(downloadReference);
+        } catch (RuntimeException e) {
+            Log.e(FRAGMENT_TAG, "Download failed: " + e);
+        }
     }
 
     public boolean onBackPressed() {
