@@ -5149,8 +5149,13 @@ HTMLEditRules::CheckForInvisibleBR(Element& aBlock,
     }
 
     testNode = rightmostNode->GetParentNode();
+    // Since rightmostNode is always the last child, its index is equal to the
+    // child count, so instead of IndexOf() we use the faster GetChildCount(),
+    // and assert the equivalence below.
+    testOffset = testNode->GetChildCount();
+
     // Use offset + 1, so last node is included in our evaluation
-    testOffset = testNode->IndexOf(rightmostNode) + 1;
+    MOZ_ASSERT(testNode->IndexOf(rightmostNode) + 1 == testOffset);
   } else if (aOffset) {
     testNode = &aBlock;
     // We'll check everything to the left of the input position
