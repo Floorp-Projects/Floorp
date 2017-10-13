@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsICSSPseudoComparator.h"
 #include "nsRefPtrHashtable.h"
 #include "nsStyleContext.h"
 
@@ -34,8 +33,7 @@ public:
     mNextState = 0;
   }
 
-  nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsPresContext* aPresContext,
+  nsStyleContext* GetStyleContext(nsPresContext* aPresContext,
                                   nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsICSSAnonBoxPseudo* aPseudoElement,

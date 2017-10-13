@@ -32,8 +32,7 @@ nsTreeStyleCache::Transition::Hash() const
 
 // The style context cache impl
 nsStyleContext*
-nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsPresContext* aPresContext,
+nsTreeStyleCache::GetStyleContext(nsPresContext* aPresContext,
                                   nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsICSSAnonBoxPseudo* aPseudoElement,
