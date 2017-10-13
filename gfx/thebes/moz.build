@@ -11,7 +11,6 @@ with Files('*DWrite*'):
     BUG_COMPONENT = ('Core', 'Graphics: Text')
 
 EXPORTS += [
-    'ContextStateTracker.h',
     'DrawMode.h',
     'gfx2DGlue.h',
     'gfxAlphaRecovery.h',
@@ -167,7 +166,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['gfxAlphaRecoverySSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 SOURCES += [
-    'ContextStateTracker.cpp',
     # Includes mac system header conflicting with point/size,
     # and includes glxXlibSurface.h which drags in Xrender.h
     'gfxASurface.cpp',

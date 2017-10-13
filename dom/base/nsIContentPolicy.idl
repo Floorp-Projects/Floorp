@@ -399,8 +399,11 @@ interface nsIContentPolicy : nsISupports
    *                          not be null
    *
    * @param aRequestOrigin    OPTIONAL. the location of the resource that
-   *                          initiated this load request; can be null if
-   *                          inapplicable
+   *                          that is loading the request. This will generally
+   *                          be the URI of the loading principal for the
+   *                          resulting request (as determined by its
+   *                          LoadInfo), but may vary depending on the
+   *                          caller. Can be null if inapplicable.
    *
    * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
    *                          initiated the request, or something that can QI
@@ -420,8 +423,12 @@ interface nsIContentPolicy : nsISupports
    * @param aRequestPrincipal an OPTIONAL argument, defines the principal that
    *                          caused the load. This is optional only for
    *                          non-gecko code: all gecko code should set this
-   *                          argument.  For navigation events, this is
-   *                          the principal of the page that caused this load.
+   *                          argument. This should generally be the same as
+   *                          the triggering principal for the resulting
+   *                          request (as determined by its LoadInfo), but may
+   *                          vary depending on the caller. Sometimes it will
+   *                          be the loading principal or final channel
+   *                          principal instead.
    *
    * @return ACCEPT or REJECT_*
    *

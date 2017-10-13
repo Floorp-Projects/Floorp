@@ -427,8 +427,10 @@ function CanonicalizeLanguageTag(locale) {
             // "zh-nan" -> "nan"
             // Note that the script generating extlangMappings makes sure that
             // no extlang mapping will replace a normal language code.
-            subtag = extlangMappings[subtag].preferred;
-            if (i === 1 && extlangMappings[subtag].prefix === subtags[0]) {
+            // The preferred value for all current deprecated extlang subtags
+            // is equal to the extlang subtag, so we only need remove the
+            // redundant prefix to get the preferred value.
+            if (i === 1 && extlangMappings[subtag] === subtags[0]) {
                 callFunction(std_Array_shift, subtags);
                 i--;
             }

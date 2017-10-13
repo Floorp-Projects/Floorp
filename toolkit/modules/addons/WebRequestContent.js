@@ -187,7 +187,10 @@ var ContentPolicy = {
       data.frameAncestors = frameAncestors;
     }
     if (requestOrigin) {
-      data.originUrl = requestOrigin.spec;
+      data.documentUrl = requestOrigin.spec;
+    }
+    if (requestPrincipal && requestPrincipal.URI) {
+      data.originUrl = requestPrincipal.URI.spec;
     }
     mm.sendAsyncMessage("WebRequest:ShouldLoad", data);
 

@@ -37,8 +37,6 @@
 #define PROFILER_SET_JS_CONTEXT(cx)
 #define PROFILER_CLEAR_JS_CONTEXT()
 
-#define PROFILER_FEATURE_ACTIVE(feature) false
-
 #define AUTO_PROFILER_LABEL(label, category)
 #define AUTO_PROFILER_LABEL_DYNAMIC(label, category, dynamicStr)
 
@@ -97,45 +95,36 @@ class TimeStamp;
 // Any changes to this list should also be applied to the feature list in
 // browser/components/extensions/schemas/geckoProfiler.json.
 #define PROFILER_FOR_EACH_FEATURE(macro) \
-  /* Dump the display list with the textures. */ \
-  macro(0, "displaylistdump", DisplayListDump) \
-  \
-  /* GPU Profiling (may not be supported by the GL). */ \
-  macro(1, "gpu", GPU) \
-  \
   /* Profile Java code (Android only). */ \
-  macro(2, "java", Java) \
+  macro(0, "java", Java) \
   \
   /* Get the JS engine to emit pseudostack entries in prologues/epilogues */ \
-  macro(3, "js", JS) \
-  \
-  /* Dump the layer tree with the textures. */ \
-  macro(4, "layersdump", LayersDump) \
+  macro(1, "js", JS) \
   \
   /* Include the C++ leaf node if not stackwalking. */ \
   /* The DevTools profiler doesn't want the native addresses. */ \
-  macro(5, "leaf", Leaf) \
+  macro(2, "leaf", Leaf) \
   \
   /* Add main thread I/O to the profile. */ \
-  macro(6, "mainthreadio", MainThreadIO) \
+  macro(3, "mainthreadio", MainThreadIO) \
   \
   /* Add memory measurements (e.g. RSS). */ \
-  macro(7, "memory", Memory) \
+  macro(4, "memory", Memory) \
   \
   /* Do not include user-identifiable information. */ \
-  macro(8, "privacy", Privacy) \
+  macro(5, "privacy", Privacy) \
   \
   /* Restyle profiling. */ \
-  macro(9, "restyle", Restyle) \
+  macro(6, "restyle", Restyle) \
   \
   /* Walk the C++ stack. Not available on all platforms. */ \
-  macro(10, "stackwalk", StackWalk) \
+  macro(7, "stackwalk", StackWalk) \
   \
   /* Start profiling with feature TaskTracer. */ \
-  macro(11, "tasktracer", TaskTracer) \
+  macro(8, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(12, "threads", Threads)
+  macro(9, "threads", Threads)
 
 struct ProfilerFeature
 {
@@ -289,7 +278,6 @@ uint32_t profiler_get_available_features();
 // active. Returns false if the profiler is inactive. Note: the return value
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
-#define PROFILER_FEATURE_ACTIVE(feature) profiler_feature_active(feature)
 bool profiler_feature_active(uint32_t aFeature);
 
 // Get the params used to start the profiler. Returns 0 and an empty vector

@@ -263,9 +263,8 @@ class CSPValidator final : public nsCSPSrcVisitor {
         return true;
 
       default:
-        NS_ConvertASCIItoUTF16 keyword(CSP_EnumToKeyword(src.getKeyword()));
-
-        FormatError("csp.error.illegal-keyword", keyword);
+        FormatError("csp.error.illegal-keyword",
+                    nsDependentString(CSP_EnumToUTF16Keyword(src.getKeyword())));
         return false;
       }
     };

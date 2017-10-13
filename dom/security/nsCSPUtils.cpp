@@ -322,7 +322,7 @@ CSP_IsDirective(const nsAString& aValue, CSPDirective aDir)
 bool
 CSP_IsKeyword(const nsAString& aValue, enum CSPKeyword aKey)
 {
-  return aValue.LowerCaseEqualsASCII(CSP_EnumToKeyword(aKey));
+  return aValue.LowerCaseEqualsASCII(CSP_EnumToUTF8Keyword(aKey));
 }
 
 bool
@@ -331,14 +331,10 @@ CSP_IsQuotelessKeyword(const nsAString& aKey)
   nsString lowerKey = PromiseFlatString(aKey);
   ToLowerCase(lowerKey);
 
-  static_assert(CSP_LAST_KEYWORD_VALUE ==
-                (sizeof(CSPStrKeywords) / sizeof(CSPStrKeywords[0])),
-                "CSP_LAST_KEYWORD_VALUE does not match length of CSPStrKeywords");
-
   nsAutoString keyword;
   for (uint32_t i = 0; i < CSP_LAST_KEYWORD_VALUE; i++) {
     // skipping the leading ' and trimming the trailing '
-    keyword.AssignASCII(CSPStrKeywords[i] + 1);
+    keyword.AssignASCII(gCSPUTF8Keywords[i] + 1);
     keyword.Trim("'", false, true);
     if (lowerKey.Equals(keyword)) {
       return true;
@@ -482,7 +478,7 @@ nsCSPBaseSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                      bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPBaseSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
-              aKeyword == CSP_HASH ? "hash" : CSP_EnumToKeyword(aKeyword),
+              aKeyword == CSP_HASH ? "hash" : CSP_EnumToUTF8Keyword(aKeyword),
               NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
   return false;
 }
@@ -827,7 +823,7 @@ nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                         bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPKeywordSrc::allows, aKeyWord: %s, aHashOrNonce: %s, mInvalidated: %s",
-              CSP_EnumToKeyword(aKeyword),
+              CSP_EnumToUTF8Keyword(aKeyword),
               NS_ConvertUTF16toUTF8(aHashOrNonce).get(),
               mInvalidated ? "yes" : "false"));
 
@@ -853,7 +849,7 @@ nsCSPKeywordSrc::visit(nsCSPSrcVisitor* aVisitor) const
 void
 nsCSPKeywordSrc::toString(nsAString& outStr) const
 {
-  outStr.AppendASCII(CSP_EnumToKeyword(mKeyword));
+  outStr.Append(CSP_EnumToUTF16Keyword(mKeyword));
 }
 
 /* ===== nsCSPNonceSrc ==================== */
@@ -886,7 +882,8 @@ nsCSPNonceSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                       bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPNonceSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
-              CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
+              CSP_EnumToUTF8Keyword(aKeyword),
+              NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
   if (aKeyword != CSP_NONCE) {
     return false;
@@ -904,7 +901,7 @@ nsCSPNonceSrc::visit(nsCSPSrcVisitor* aVisitor) const
 void
 nsCSPNonceSrc::toString(nsAString& outStr) const
 {
-  outStr.AppendASCII(CSP_EnumToKeyword(CSP_NONCE));
+  outStr.Append(CSP_EnumToUTF16Keyword(CSP_NONCE));
   outStr.Append(mNonce);
   outStr.AppendASCII("'");
 }
@@ -928,7 +925,8 @@ nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                      bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPHashSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
-              CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
+              CSP_EnumToUTF8Keyword(aKeyword),
+              NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
   if (aKeyword != CSP_HASH) {
     return false;
@@ -1061,7 +1059,8 @@ nsCSPDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                        bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPDirective::allows, aKeyWord: %s, a HashOrNonce: %s",
-              CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
+              CSP_EnumToUTF8Keyword(aKeyword),
+              NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
     if (mSrcs[i]->allows(aKeyword, aHashOrNonce, aParserCreated)) {
@@ -1450,7 +1449,8 @@ nsCSPPolicy::allows(nsContentPolicyType aContentType,
                     bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPPolicy::allows, aKeyWord: %s, a HashOrNonce: %s",
-              CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
+              CSP_EnumToUTF8Keyword(aKeyword),
+              NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
   nsCSPDirective* defaultDir = nullptr;
 

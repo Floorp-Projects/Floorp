@@ -1117,8 +1117,9 @@ EditorBase::BeginningOfDocument()
     return NS_ERROR_NULL_POINTER;
   }
 
-  int32_t offsetInParent = parent->IndexOf(firstNode);
-  return selection->Collapse(parent, offsetInParent);
+  MOZ_ASSERT(parent->IndexOf(firstNode) == 0,
+             "How come the first node isn't the left most child in its parent?");
+  return selection->Collapse(parent, 0);
 }
 
 NS_IMETHODIMP
@@ -1414,24 +1415,11 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
   return SyncRealTimeSpell();
 }
 
-NS_IMETHODIMP
-EditorBase::CreateNode(const nsAString& aTag,
-                       nsIDOMNode* aParent,
-                       int32_t aPosition,
-                       nsIDOMNode** aNewNode)
-{
-  RefPtr<nsAtom> tag = NS_Atomize(aTag);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  NS_ENSURE_STATE(parent);
-  *aNewNode = GetAsDOMNode(CreateNode(tag, parent, aPosition).take());
-  NS_ENSURE_STATE(*aNewNode);
-  return NS_OK;
-}
-
 already_AddRefed<Element>
 EditorBase::CreateNode(nsAtom* aTag,
                        nsINode* aParent,
-                       int32_t aPosition)
+                       int32_t aPosition,
+                       nsIContent* aChildAtPosition)
 {
   MOZ_ASSERT(aTag && aParent);
 
@@ -1448,7 +1436,8 @@ EditorBase::CreateNode(nsAtom* aTag,
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, *aParent, aPosition);
+    CreateTxnForCreateElement(*aTag, *aParent, aPosition,
+                              aChildAtPosition);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
@@ -3789,20 +3778,6 @@ EditorBase::IsTextNode(nsIDOMNode* aNode)
   return (nodeType == nsIDOMNode::TEXT_NODE);
 }
 
-nsCOMPtr<nsIDOMNode>
-EditorBase::GetChildAt(nsIDOMNode* aParent, int32_t aOffset)
-{
-  nsCOMPtr<nsIDOMNode> resultNode;
-
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
-
-  NS_ENSURE_TRUE(parent, resultNode);
-
-  resultNode = do_QueryInterface(parent->GetChildAt(aOffset));
-
-  return resultNode;
-}
-
 /**
  * GetNodeAtRangeOffsetPoint() returns the node at this position in a range,
  * assuming that aParentOrNode is the node itself if it's a text node, or
@@ -4007,7 +3982,8 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
                           int32_t aSplitPointOffset,
                           EmptyContainers aEmptyContainers,
                           nsIContent** aOutLeftNode,
-                          nsIContent** aOutRightNode)
+                          nsIContent** aOutRightNode,
+                          nsCOMPtr<nsIContent>* ioChildAtSplitPointOffset)
 {
   MOZ_ASSERT(&aSplitPointParent == &aNode ||
              EditorUtils::IsDescendantOf(&aSplitPointParent, &aNode));
@@ -4060,6 +4036,9 @@ EditorBase::SplitNodeDeep(nsIContent& aNode,
   }
   if (aOutRightNode) {
     rightNode.forget(aOutRightNode);
+  }
+  if (ioChildAtSplitPointOffset) {
+    *ioChildAtSplitPointOffset = nodeToSplit;
   }
 
   return offset;
@@ -4250,8 +4229,9 @@ EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
 
   nsCOMPtr<nsINode> node = selection->GetAnchorNode();
   uint32_t offset = selection->AnchorOffset();
+  nsIContent* child = selection->GetChildAtAnchorOffset();
 
-  nsCOMPtr<Element> newElement = CreateNode(&aTag, node, offset);
+  nsCOMPtr<Element> newElement = CreateNode(&aTag, node, offset, child);
 
   // We want the selection to be just after the new node
   rv = selection->Collapse(node, offset + 1);
@@ -4394,10 +4374,12 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
 already_AddRefed<CreateElementTransaction>
 EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
                                       nsINode& aParent,
-                                      int32_t aPosition)
+                                      int32_t aPosition,
+                                      nsIContent* aChildAtPosition)
 {
   RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aParent, aPosition);
+    new CreateElementTransaction(*this, aTag, aParent, aPosition,
+                                 aChildAtPosition);
 
   return transaction.forget();
 }
