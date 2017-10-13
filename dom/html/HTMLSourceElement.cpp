@@ -14,7 +14,6 @@
 
 #include "nsGkAtoms.h"
 
-#include "nsCSSParser.h"
 #include "nsHostObjectProtocolHandler.h"
 
 #include "mozilla/Preferences.h"
@@ -89,7 +88,6 @@ HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
     return;
   }
 
-  nsCSSParser cssParser;
   mMediaList = MediaList::Create(OwnerDoc()->GetStyleBackendType(), mediaStr);
 }
 
