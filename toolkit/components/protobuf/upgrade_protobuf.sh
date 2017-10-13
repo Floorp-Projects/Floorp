@@ -47,7 +47,13 @@ cp -r $PROTOBUF_LIB_PATH/src/google/* src/google/
 rm -rf src/google/protobuf/compiler
 
 # Remove test files.
-find src/google -name '*test*' | xargs rm -rf
+find src/google -name '*_unittest*' | xargs rm -f
+find src/google -name '*unittest_*' | xargs rm -f
+find src/google -name 'unittest.*' | xargs rm -f
+find src/google -name '*_test*' | xargs rm -f
+find src/google -name '*test_*' | xargs rm -f
+find src/google -type d -name 'testdata' | xargs rm -rf
+find src/google -type d -name 'testing' | xargs rm -rf
 
 # Remove protobuf's build files.
 find src/google/ -name '.deps' | xargs rm -rf
