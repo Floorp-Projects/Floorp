@@ -20,20 +20,19 @@ class nsINode;
  * and Item to its existing child list.
  * @see nsIDOMNodeList
  */
-class nsAttrChildContentList final : public nsINodeList
+class nsChildContentList final : public nsINodeList
 {
 public:
-  explicit nsAttrChildContentList(nsINode* aNode)
+  explicit nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsAttrChildContentList)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsChildContentList)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
@@ -53,7 +52,7 @@ public:
   }
 
 private:
-  ~nsAttrChildContentList() {}
+  ~nsChildContentList() {}
 
   // The node whose children make up the list.
   // This is a non-owning ref which is safe because it's set to nullptr by
