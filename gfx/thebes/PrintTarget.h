@@ -138,6 +138,8 @@ public:
 
   static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
                                        nsCString& aAdjustedJobName);
+  static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
+                                       nsString& aAdjustedJobName);
 
 protected:
 
