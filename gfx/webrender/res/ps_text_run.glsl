@@ -64,21 +64,38 @@ void main(void) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
+
+#define MODE_ALPHA          0
+#define MODE_SUBPX_PASS0    1
+#define MODE_SUBPX_PASS1    2
+
 void main(void) {
     vec3 tc = vec3(clamp(vUv.xy, vUvBorder.xy, vUvBorder.zw), vUv.z);
-#ifdef WR_FEATURE_SUBPIXEL_AA
-    //note: the blend mode is not compatible with clipping
-    oFragColor = texture(sColor0, tc);
-#else
-    vec4 color = texture(sColor0, tc) * vColor;
+    vec4 color = texture(sColor0, tc);
+
     float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
-    float a = 0.0;
-    init_transform_fs(vLocalPos, a);
-    alpha *= a;
+    init_transform_fs(vLocalPos, alpha);
 #endif
-    alpha = min(alpha, do_clip());
-    oFragColor = color * alpha;
-#endif
+    alpha *= do_clip();
+
+    // TODO(gw): It would be worth profiling this and seeing
+    //           if we should instead handle the mode via
+    //           a combination of mix() etc. Branching on
+    //           a uniform is probably fast in most GPUs now though?
+    vec4 modulate_color = vec4(0.0);
+    switch (uMode) {
+        case MODE_ALPHA:
+            modulate_color = alpha * vColor;
+            break;
+        case MODE_SUBPX_PASS0:
+            modulate_color = vec4(alpha);
+            break;
+        case MODE_SUBPX_PASS1:
+            modulate_color = vColor;
+            break;
+    }
+
+    oFragColor = color * modulate_color;
 }
 #endif
