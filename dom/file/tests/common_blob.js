@@ -83,6 +83,98 @@ function testBlob(file, contents, testName) {
   });
 }
 
+function testSlice(file, size, type, contents, fileType) {
+  is(file.type, type, fileType + " file is correct type");
+  is(file.size, size, fileType + " file is correct size");
+  ok(file instanceof File, fileType + " file is a File");
+  ok(file instanceof Blob, fileType + " file is also a Blob");
+
+  let slice = file.slice(0, size);
+  ok(slice instanceof Blob, fileType + " fullsize slice is a Blob");
+  ok(!(slice instanceof File), fileType + " fullsize slice is not a File");
+
+  slice = file.slice(0, 1234);
+  ok(slice instanceof Blob, fileType + " sized slice is a Blob");
+  ok(!(slice instanceof File), fileType + " sized slice is not a File");
+
+  slice = file.slice(0, size, "foo/bar");
+  is(slice.type, "foo/bar", fileType + " fullsize slice foo/bar type");
+
+  slice = file.slice(0, 5432, "foo/bar");
+  is(slice.type, "foo/bar", fileType + " sized slice foo/bar type");
+
+  is(slice.slice(0, 10).type, "", fileType + " slice-slice type");
+  is(slice.slice(0, 10).size, 10, fileType + " slice-slice size");
+  is(slice.slice(0, 10, "hello/world").type, "hello/world", fileType + " slice-slice hello/world type");
+  is(slice.slice(0, 10, "hello/world").size, 10, fileType + " slice-slice hello/world size");
+
+  // Start, end, expected size
+  var indexes = [[0, size, size],
+                 [0, 1234, 1234],
+                 [size-500, size, 500],
+                 [size-500, size+500, 500],
+                 [size+500, size+1500, 0],
+                 [0, 0, 0],
+                 [1000, 1000, 0],
+                 [size, size, 0],
+                 [undefined, undefined, size],
+                 [0, undefined, size],
+                 [100, undefined, size-100],
+                 [-100, undefined, 100],
+                 [100, -100, size-200],
+                 [-size-100, undefined, size],
+                 [-2*size-100, 500, 500],
+                 [0, -size-100, 0],
+                 [100, -size-100, 0],
+                 [50, -size+100, 50],
+                 [0, 33000, 33000],
+                 [1000, 34000, 33000],
+                ];
+
+  function runNextTest() {
+    if (indexes.length == 0) {
+      return Promise.resolve(true);
+    }
+
+    let index = indexes.shift();
+
+    let sliceContents;
+    let testName;
+    if (index[0] == undefined) {
+      slice = file.slice();
+      sliceContents = contents.slice();
+      testName = fileType + " slice()";
+    } else if (index[1] == undefined) {
+      slice = file.slice(index[0]);
+      sliceContents = contents.slice(index[0]);
+      testName = fileType + " slice(" + index[0] + ")";
+    } else {
+      slice = file.slice(index[0], index[1]);
+      sliceContents = contents.slice(index[0], index[1]);
+      testName = fileType + " slice(" + index[0] + ", " + index[1] + ")";
+    }
+
+    is(slice.type, "", testName + " type");
+    is(slice.size, index[2], testName + " size");
+    is(sliceContents.length, index[2], testName + " data size");
+
+    return testBlob(slice, sliceContents, testName).then(runNextTest);
+  }
+
+  return runNextTest()
+  .then(() => {
+    // Slice of slice
+    let slice = file.slice(0, 40000);
+    return testBlob(slice.slice(5000, 42000), contents.slice(5000, 40000), "file slice slice");
+  })
+  .then(() => {
+    // ...of slice of slice
+    let slice = file.slice(0, 40000).slice(5000, 42000).slice(400, 700);
+    SpecialPowers.gc();
+    return testBlob(slice, contents.slice(5400, 5700), "file slice slice slice");
+  });
+}
+
 function convertXHRBinary(s) {
   let res = "";
   for (let i = 0; i < s.length; ++i) {
@@ -139,4 +231,49 @@ function checkMPSubmission(sub, expected) {
     ok(sub[i].body == expected[i].value,
        "Content of correct value");
   }
+}
+
+function createCanvasURL() {
+  return new Promise(resolve => {
+    // Create a decent-sized image
+    let cx = $("canvas").getContext('2d');
+    let s = cx.canvas.width;
+    let grad = cx.createLinearGradient(0, 0, s-1, s-1);
+    for (i = 0; i < 0.95; i += .1) {
+      grad.addColorStop(i, "white");
+      grad.addColorStop(i + .05, "black");
+    }
+    grad.addColorStop(1, "white");
+    cx.fillStyle = grad;
+    cx.fillRect(0, 0, s-1, s-1);
+    cx.fillStyle = "rgba(200, 0, 0, 0.9)";
+    cx.fillRect(.1 * s, .1 * s, .7 * s, .7 * s);
+    cx.strokeStyle = "rgba(0, 0, 130, 0.5)";
+    cx.lineWidth = .14 * s;
+    cx.beginPath();
+    cx.arc(.6 * s, .6 * s, .3 * s, 0, Math.PI*2, true);
+    cx.stroke();
+    cx.closePath();
+    cx.fillStyle = "rgb(0, 255, 0)";
+    cx.beginPath();
+    cx.arc(.1 * s, .8 * s, .1 * s, 0, Math.PI*2, true);
+    cx.fill();
+    cx.closePath();
+
+    let data = atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
+
+    // This might fail if we dramatically improve the png encoder. If that happens
+    // please increase the complexity or size of the image generated above to ensure
+    // that we're testing with files that are large enough.
+    ok(data.length > 65536, "test data sufficiently large");
+
+    resolve(data);
+  });
+}
+
+function createFile(data, name) {
+  return new Promise(resolve => {
+    SpecialPowers.createFiles([{name, data}],
+                              files => { resolve(files[0]); });
+  });
 }
