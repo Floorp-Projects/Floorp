@@ -13,19 +13,25 @@
 
 function runTests(tests, description) {
   for (const currentTest of tests) {
-    const testParams = Object.entries(currentTest.input)
-                             .map(([attr, value]) => `${attr}:${value}`)
-                             .join(' ');
+    let testParams = Object.entries(currentTest.input)
+                           .map(([attr, value]) => `${attr}:${value}`)
+                           .join(' ');
+    if (currentTest.playbackRate !== undefined) {
+      testParams += ` playbackRate:${currentTest.playbackRate}`;
+    }
 
     test(t => {
       const div = createDiv(t);
       const anim = div.animate({}, currentTest.input);
+      if (currentTest.playbackRate !== undefined) {
+        anim.playbackRate = currentTest.playbackRate;
+      }
 
       assert_computed_timing_for_each_phase(
         anim,
         'currentIteration',
         { before: currentTest.before,
-          active: currentTest.active,
+          activeBoundary: currentTest.active,
           after: currentTest.after },
       );
     }, `${description}: ${testParams}`);
