@@ -21,7 +21,7 @@ createCanvasURL()
 .then(data => {
   let cx = $("canvas").getContext('2d');
   let memFile = cx.canvas.mozGetAsFile("image/png");
-  return testSlice(memFile, data.length, "image/png", data, "memFile", RANGE_1);
+  return testSlice(memFile, data.length, "image/png", data, "memFile");
 })
 
 .then(SimpleTest.finish);
