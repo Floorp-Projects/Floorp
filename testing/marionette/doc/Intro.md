@@ -82,9 +82,3 @@ component in Bugzilla.  You can view a [list of current bugs]
 to see if your problem is already being addressed.
 
 [list of current bugs]: https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette&resolution=---&list_id=1844713
-
-
-Questions/Comments/Concerns
-===========================
-
-Feel free to drop us a line over at the #ateam channel!
