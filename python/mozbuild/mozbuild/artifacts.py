@@ -744,7 +744,13 @@ class ArtifactPersistLimit(PersistLimit):
             if f.path in self._downloaded_now:
                 kept.append(f)
                 continue
-            fs.remove(f.path)
+            try:
+                fs.remove(f.path)
+            except WindowsError:
+                # For some reason, on automation, we can't remove those files.
+                # So for now, ignore the error.
+                kept.append(f)
+                continue
             self.log(logging.INFO, 'artifact',
                 {'filename': f.path},
                 'Purged artifact {filename}')
