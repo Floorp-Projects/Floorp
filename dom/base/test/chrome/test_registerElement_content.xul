@@ -21,19 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
   <script type="application/javascript"><![CDATA[
 
   /** Test for Bug 1130028 **/
-  SimpleTest.waitForExplicitFinish();
+  var connectedCallbackCount = 0;
 
-  var createdCallbackCount = 0;
-
-  // Callback should be called once by element created in chrome,
-  // and once by element created in content.
-  function createdCallbackCalled() {
-    createdCallbackCount++;
-    ok(true, "Created callback called, should be called twice in test.");
+  // Callback should be called only once by element created in content.
+  function connectedCallbackCalled() {
+    connectedCallbackCount++;
+    is(connectedCallbackCount, 1, "Connected callback called, should be called once in test.");
     is(this.magicNumber, 42, "Callback should be able to see the custom prototype.");
-    if (createdCallbackCount == 2) {
-      SimpleTest.finish();
-    }
   }
 
   function startTests() {
@@ -45,10 +39,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
 
     var proto = Object.create(frame.contentWindow.HTMLElement.prototype);
     proto.magicNumber = 42;
-    proto.createdCallback = createdCallbackCalled;
-    frame.contentDocument.registerElement("x-bar", { prototype: proto });
+    proto.connectedCallback = connectedCallbackCalled;
 
-    frame.contentDocument.createElement("x-bar");
+    frame.contentDocument.registerElement("x-bar", { prototype: proto });
+    is(connectedCallbackCount, 1, "Connected callback should be called by element created in content.");
+
+    var element = frame.contentDocument.createElement("x-bar");
+    is(element.magicNumber, 42, "Should be able to see the custom prototype on created element.");
   }
 
   ]]></script>
