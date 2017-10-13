@@ -56,7 +56,7 @@ need to download a Marionette client or use the in-tree client.
     Python client
   * You might want to experiment with [using Marionette interactively
     at a Python command prompt][3]
-  * Start [writing and running][4] tests with supported test frameworks!
+  * Start [writing and running][4] tests
   * Tips on [debugging][5] Marionette code
   * [Get a Build][6] – Instructions on how to get a Marionette-enabled
     build of Firefox
@@ -66,7 +66,7 @@ need to download a Marionette client or use the in-tree client.
 [1] https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver
 [2] http://marionette-client.readthedocs.io/en/latest/
 [3] http://marionette-client.readthedocs.io/en/latest/interactive.html
-[4] https://developer.mozilla.org/en/Marionette/Tests
+[4] ./PythonTests.md
 [5] ./Debugging.md
 [6] https://developer.mozilla.org/en-US/docs/Marionette/Builds
 [7] https://github.com/mozilla-b2g/marionette_js_client
