@@ -51,7 +51,6 @@ outside component (the Marionette client), which drives the tests.
 The Marionette server ships with Firefox, and to use it you will
 need to download a Marionette client or use the in-tree client.
 
-  * [Using Marionette via WebDriver][1]
   * [Download and setup the Python client for Marionette][2]
   * [Run Tests with Python][3] – How to run tests using the
     Python client
