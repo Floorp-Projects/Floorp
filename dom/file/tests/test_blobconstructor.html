@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=721569
   <title>Test for Blob constructor (Bug 721569)</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="common_blob.js"></script>
+  <script type="text/javascript" src="fileutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -196,49 +196,49 @@ let testData =
                              {start: 4, length: 8, contents:  "DEFGHIJK"}]]
  ];
 
-let currentTest = null;
 let testCounter = 0;
 
-function runTests() {
-  if (!currentTest || currentTest[2].length == 0) {
-    if (testData.length == 0) {
-      SimpleTest.finish();
-      return;
+function doTest(data) {
+  testCounter++;
+
+  var [blobs, options, tests] = data;
+
+  function runTest(test) {
+
+    let blob;
+    if (options !== undefined) {
+      blob = new Blob(blobs, options);
+    } else {
+      blob = new Blob(blobs);
     }
+    ok(blob, "Test " + testCounter + " got blob");
+    ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
+    ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
 
-    currentTest = testData.shift();
-    ++testCounter;
+    let slice = blob.slice(test.start, test.start + test.length);
+    ok(slice, "Test " + testCounter + " got slice");
+    ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
+    ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
+    is(slice.size, test.contents.length,
+       "Test " + testCounter + " slice is correct size");
+
+    testFile(slice, test.contents, "Test " + testCounter);
   }
-
-  let [blobs, options] = currentTest;
-  let test = currentTest[2].shift();
-
-  let blob;
-  if (options !== undefined) {
-    blob = new Blob(blobs, options);
+  if (Array.isArray(tests)) {
+    tests.forEach(runTest);
   } else {
-    blob = new Blob(blobs);
+    try {
+      let blob = new Blob(blobs, options);
+      ok(false, "NOT REACHED");
+    } catch (e) {
+      is(e.name, tests, "Blob constructor should throw " + tests);
+    }
   }
-
-  ok(blob, "Test " + testCounter + " got blob");
-  ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
-  ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
-
-  let slice = blob.slice(test.start, test.start + test.length);
-  ok(slice, "Test " + testCounter + " got slice");
-  ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
-  ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
-  is(slice.size, test.contents.length, "Test " + testCounter + " slice is correct size");
-
-  testBlob(slice, test.contents, "Test " + testCounter).then(() => {
-    SpecialPowers.gc();
-    runTests();
-  });
+  SpecialPowers.gc();
 }
 
-SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
-runTests();
+testData.forEach(doTest);
 
 </script>
 </pre>
