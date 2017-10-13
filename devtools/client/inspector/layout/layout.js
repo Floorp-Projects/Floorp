@@ -15,20 +15,12 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-// @remove after release 56 (See Bug 1355747)
-const PROMOTE_COUNT_PREF = "devtools.promote.layoutview";
-
-// @remove after release 56 (See Bug 1355747)
-const GRID_LINK = "https://www.mozilla.org/en-US/developer/css-grid/?utm_source=gridtooltip&utm_medium=devtools&utm_campaign=cssgrid_layout";
-
 loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
 
 function LayoutView(inspector, window) {
   this.document = window.document;
   this.inspector = inspector;
   this.store = inspector.store;
-
-  this.onPromoteLearnMoreClick = this.onPromoteLearnMoreClick.bind(this);
 
   this.init();
 }
@@ -65,10 +57,6 @@ LayoutView.prototype = {
       onToggleShowInfiniteLines,
     } = this.gridInspector.getComponentProps();
 
-    let {
-      onPromoteLearnMoreClick,
-    } = this;
-
     let app = App({
       getSwatchColorPickerTooltip,
       setSelectedNode,
@@ -78,7 +66,6 @@ LayoutView.prototype = {
        */
       showBoxModelProperties: true,
       onHideBoxModelHighlighter,
-      onPromoteLearnMoreClick,
       onSetGridOverlayColor,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -98,10 +85,6 @@ LayoutView.prototype = {
       key: "layoutview",
       store: this.store,
       title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
-      // @remove after release 56 (See Bug 1355747)
-      badge: Services.prefs.getIntPref(PROMOTE_COUNT_PREF) > 0 ?
-        INSPECTOR_L10N.getStr("inspector.sidebar.newBadge") : null,
-      showBadge: () => Services.prefs.getIntPref(PROMOTE_COUNT_PREF) > 0,
     }, app);
 
     // Expose the provider to let inspector.js use it in setupSidebar.
@@ -118,11 +101,6 @@ LayoutView.prototype = {
     this.inspector = null;
     this.store = null;
   },
-
-  onPromoteLearnMoreClick() {
-    let browserWin = this.inspector.target.tab.ownerDocument.defaultView;
-    browserWin.openUILinkIn(GRID_LINK, "current");
-  }
 
 };
 

@@ -54,7 +54,7 @@ FontInspector.prototype = {
       id: "fontinspector",
       key: "fontinspector",
       store: this.store,
-      title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle")
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
     }, app);
 
     // Expose the provider to let inspector.js use it in setupSidebar.
