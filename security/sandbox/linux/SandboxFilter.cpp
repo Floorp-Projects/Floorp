@@ -714,6 +714,10 @@ public:
 #endif
       return Allow();
 
+#ifdef MOZ_ALSA
+    case __NR_ioctl:
+      return Allow();
+#else
     case __NR_ioctl: {
       static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
       static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
@@ -742,6 +746,7 @@ public:
         .ElseIf(shifted_type != kTtyIoctls, Allow())
         .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
     }
+#endif // !MOZ_ALSA
 
     CASES_FOR_fcntl:
       // Some fcntls have significant side effects like sending
