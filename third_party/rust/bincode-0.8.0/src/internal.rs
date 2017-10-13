@@ -2,12 +2,11 @@
 //! that use the `serde` crate for the serializable and deserializable
 //! implementation.
 
-use std::io::{self, Write, Read};
+use std::io::{Write, Read};
+use std::io::Error as IoError;
 use std::{error, fmt, result};
-use std::str::Utf8Error;
-use ::{CountSize, SizeLimit};
+use ::SizeLimit;
 use byteorder::{ByteOrder};
-use std::error::Error as StdError;
 
 pub use super::de::{
     Deserializer,
@@ -25,6 +24,9 @@ use serde_crate as serde;
 pub type Result<T> = result::Result<T, Error>;
 
 /// An error that can be produced during (de)serializing.
+///
+/// If decoding from a Buffer, assume that the buffer has been left
+/// in an invalid state.
 pub type Error = Box<ErrorKind>;
 
 /// The kind of error that can be produced during a serialization or deserialization.
@@ -32,20 +34,17 @@ pub type Error = Box<ErrorKind>;
 pub enum ErrorKind {
     /// If the error stems from the reader/writer that is being used
     /// during (de)serialization, that error will be stored and returned here.
-    Io(io::Error),
-    /// Returned if the deserializer attempts to deserialize a string that is not valid utf8
-    InvalidUtf8Encoding(Utf8Error),
-    /// Returned if the deserializer attempts to deserialize a bool that was
-    /// not encoded as either a 1 or a 0
-    InvalidBoolEncoding(u8),
-    /// Returned if the deserializer attempts to deserialize a char that is not in the correct format.
-    InvalidCharEncoding,
-    /// Returned if the deserializer attempts to deserialize the tag of an enum that is
-    /// not in the expected ranges
-    InvalidTagEncoding(usize),
-    /// Serde has a deserialize_any method that lets the format hint to the
-    /// object which route to take in deserializing.
-    DeserializeAnyNotSupported,
+    IoError(IoError),
+    /// If the bytes in the reader are not decodable because of an invalid
+    /// encoding, this error will be returned.  This error is only possible
+    /// if a stream is corrupted.  A stream produced from `encode` or `encode_into`
+    /// should **never** produce an InvalidEncoding error.
+    InvalidEncoding {
+        #[allow(missing_docs)]
+        desc: &'static str,
+        #[allow(missing_docs)]
+        detail: Option<String>
+    },
     /// If (de)serializing a message takes more than the provided size limit, this
     /// error is returned.
     SizeLimit,
@@ -55,16 +54,12 @@ pub enum ErrorKind {
     Custom(String)
 }
 
-impl StdError for ErrorKind {
+impl error::Error for ErrorKind {
     fn description(&self) -> &str {
         match *self {
-            ErrorKind::Io(ref err) => error::Error::description(err),
-            ErrorKind::InvalidUtf8Encoding(_) => "string is not valid utf8",
-            ErrorKind::InvalidBoolEncoding(_) => "invalid u8 while decoding bool",
-            ErrorKind::InvalidCharEncoding => "char is not valid",
-            ErrorKind::InvalidTagEncoding(_) => "tag for enum is not valid",
+            ErrorKind::IoError(ref err) => error::Error::description(err),
+            ErrorKind::InvalidEncoding{desc, ..} => desc,
             ErrorKind::SequenceMustHaveLength => "bincode can't encode infinite sequences",
-            ErrorKind::DeserializeAnyNotSupported => "bincode doesn't support serde::Deserializer::deserialize_any",
             ErrorKind::SizeLimit => "the size limit for decoding has been reached",
             ErrorKind::Custom(ref msg) => msg,
 
@@ -73,44 +68,34 @@ impl StdError for ErrorKind {
 
     fn cause(&self) -> Option<&error::Error> {
         match *self {
-            ErrorKind::Io(ref err) => Some(err),
-            ErrorKind::InvalidUtf8Encoding(_) => None,
-            ErrorKind::InvalidBoolEncoding(_) => None,
-            ErrorKind::InvalidCharEncoding => None,
-            ErrorKind::InvalidTagEncoding(_) => None,
+            ErrorKind::IoError(ref err) => err.cause(),
+            ErrorKind::InvalidEncoding{..} => None,
             ErrorKind::SequenceMustHaveLength => None,
-            ErrorKind::DeserializeAnyNotSupported => None,
             ErrorKind::SizeLimit => None,
             ErrorKind::Custom(_) => None,
         }
     }
 }
 
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        ErrorKind::Io(err).into()
+impl From<IoError> for Error {
+    fn from(err: IoError) -> Error {
+        ErrorKind::IoError(err).into()
     }
 }
 
 impl fmt::Display for ErrorKind {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ErrorKind::Io(ref ioerr) =>
-                write!(fmt, "io error: {}", ioerr),
-            ErrorKind::InvalidUtf8Encoding(ref e) =>
-                write!(fmt, "{}: {}", self.description(), e),
-            ErrorKind::InvalidBoolEncoding(b) =>
-                write!(fmt, "{}, expected 0 or 1, found {}", self.description(), b),
-            ErrorKind::InvalidCharEncoding =>
-                write!(fmt, "{}", self.description()),
-            ErrorKind::InvalidTagEncoding(tag) =>
-                write!(fmt, "{}, found {}", self.description(), tag),
+            ErrorKind::IoError(ref ioerr) =>
+                write!(fmt, "IoError: {}", ioerr),
+            ErrorKind::InvalidEncoding{desc, detail: None}=>
+                write!(fmt, "InvalidEncoding: {}", desc),
+            ErrorKind::InvalidEncoding{desc, detail: Some(ref detail)}=>
+                write!(fmt, "InvalidEncoding: {} ({})", desc, detail),
             ErrorKind::SequenceMustHaveLength =>
-                write!(fmt, "bincode can only encode sequences and maps that have a knowable size ahead of time."),
+                write!(fmt, "Bincode can only encode sequences and maps that have a knowable size ahead of time."),
             ErrorKind::SizeLimit =>
-                write!(fmt, "size limit was exceeded"),
-            ErrorKind::DeserializeAnyNotSupported=>
-                write!(fmt, "bincode does not support the serde::Deserializer::deserialize_any method"),
+                write!(fmt, "SizeLimit"),
             ErrorKind::Custom(ref s) =>
                 s.fmt(fmt),
         }
@@ -137,7 +122,7 @@ impl serde::ser::Error for Error {
 /// If this returns an `Error` (other than SizeLimit), assume that the
 /// writer is in an invalid state, as writing could bail out in the middle of
 /// serializing.
-pub fn serialize_into<W, T: ?Sized, S, E>(writer: W, value: &T, size_limit: S) -> Result<()>
+pub fn serialize_into<W: ?Sized, T: ?Sized, S, E>(writer: &mut W, value: &T, size_limit: S) -> Result<()>
     where W: Write, T: serde::Serialize, S: SizeLimit, E: ByteOrder
 {
     if let Some(limit) = size_limit.limit() {
@@ -168,6 +153,12 @@ pub fn serialize<T: ?Sized, S, E>(value: &T, size_limit: S) -> Result<Vec<u8>>
 
     try!(serialize_into::<_, _, _, E>(&mut writer, value, super::Infinite));
     Ok(writer)
+}
+
+
+struct CountSize {
+    total: u64,
+    limit: Option<u64>,
 }
 
 impl SizeLimit for CountSize {
@@ -219,7 +210,7 @@ pub fn serialized_size_bounded<T: ?Sized>(value: &T, max: u64) -> Option<u64>
     }
 }
 
-/// Deserializes an object directly from a `Read`er.
+/// Deserializes an object directly from a `Buffer`ed Reader.
 ///
 /// If the provided `SizeLimit` is reached, the deserialization will bail immediately.
 /// A SizeLimit can help prevent an attacker from flooding your server with
@@ -228,10 +219,10 @@ pub fn serialized_size_bounded<T: ?Sized>(value: &T, max: u64) -> Option<u64>
 /// If this returns an `Error`, assume that the buffer that you passed
 /// in is in an invalid state, as the error could be returned during any point
 /// in the reading.
-pub fn deserialize_from<R, T, S, E>(reader: R, size_limit: S) -> Result<T>
+pub fn deserialize_from<R: ?Sized, T, S, E>(reader: &mut R, size_limit: S) -> Result<T>
     where R: Read, T: serde::de::DeserializeOwned, S: SizeLimit, E: ByteOrder
 {
-    let reader = ::de::read::IoReader::new(reader);
+    let reader = ::de::read::IoReadReader::new(reader);
     let mut deserializer = Deserializer::<_, S, E>::new(reader, size_limit);
     serde::Deserialize::deserialize(&mut deserializer)
 }

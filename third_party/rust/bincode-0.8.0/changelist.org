@@ -1,0 +1,27 @@
+* 1.0.0
+** Removed depricated rustc-serialize support
+ Rustc-serialize was a stopgap until projects like Serde were able to catch up.
+ With macros stabilization on its way, we are able to switch to serde without any
+ big user-friendliness issues.  Major congratulations to Serde for coming this far!
+
+** Moved Refbox, Strbox and Slicebox into a "refbox" module
+ Refbox, Strbox and Slicebox are still an integral piece of bincode, but since
+ they are mainly used by power-users, this move will make the crate API more organized
+ and easier for new users to understand.
+
+** Upgraded to Serde 0.9.*
+ Serde 0.9.* gives us a better API surface area and allows use of procedural macros for
+ deriving serialize and deserialize implemenetations.
+
+** Moved serde functions into global module
+ Since serde is the only supported serialization mechanism, it makes sense to have these
+ functions available at the top level.
+
+** Added the ability to chose your own endian encoding.
+ This functionality is located in the endian_choice module.
+
+** Changed SizeLimit to be a trait instead of an enum
+ Mostly for performance reasons.
+
+** Removed RefBox / StrBox / SliceBox
+ Since rustc-serialize support was phased out, you can use `Cow<T>` with serde.

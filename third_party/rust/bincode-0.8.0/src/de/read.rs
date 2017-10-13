@@ -1,10 +1,10 @@
-use std::io;
+use std::io::{Read as IoRead, Result as IoResult, Error as IoError, ErrorKind as IoErrorKind};
 use ::Result;
 use serde_crate as serde;
 
 /// A byte-oriented reading trait that is specialized for
 /// slices and generic readers.
-pub trait BincodeRead<'storage>: io::Read + ::private::Sealed {
+pub trait BincodeRead<'storage>: IoRead {
     #[doc(hidden)]
     fn forward_read_str<V>(&mut self, length: usize, visitor: V) ->  Result<V::Value>
     where V: serde::de::Visitor<'storage>;
@@ -23,7 +23,7 @@ pub struct SliceReader<'storage> {
 }
 
 /// A BincodeRead implementation for io::Readers
-pub struct IoReader<R> {
+pub struct IoReadReader<R> {
     reader: R,
     temp_buffer: Vec<u8>,
 }
@@ -37,37 +37,31 @@ impl <'storage> SliceReader<'storage> {
     }
 }
 
-impl <R> IoReader<R> {
+impl <R> IoReadReader<R> {
     /// Constructs an IoReadReader
-    pub fn new(r: R) -> IoReader<R> {
-        IoReader {
+    pub fn new(r: R) -> IoReadReader<R> {
+        IoReadReader {
             reader: r,
             temp_buffer: vec![],
         }
     }
 }
 
-impl <'storage> io::Read for SliceReader<'storage> {
-    fn read(&mut self, out: & mut [u8]) -> io::Result<usize> {
+impl <'storage> IoRead for SliceReader<'storage> {
+    fn read(&mut self, out: & mut [u8]) -> IoResult<usize> {
         (&mut self.slice).read(out)
-    }
-    fn read_exact(&mut self, out: & mut [u8]) -> io::Result<()> {
-        (&mut self.slice).read_exact(out)
     }
 }
 
-impl <R: io::Read> io::Read for IoReader<R> {
-    fn read(&mut self, out: & mut [u8]) -> io::Result<usize> {
+impl <R: IoRead> IoRead for IoReadReader<R> {
+    fn read(&mut self, out: & mut [u8]) -> IoResult<usize> {
         self.reader.read(out)
-    }
-    fn read_exact(&mut self, out: & mut [u8]) -> io::Result<()> {
-        self.reader.read_exact(out)
     }
 }
 
 impl <'storage> SliceReader<'storage> {
     fn unexpected_eof() -> Box<::ErrorKind> {
-        return Box::new(::ErrorKind::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "")));
+        return Box::new(::ErrorKind::IoError(IoError::new(IoErrorKind::UnexpectedEof, "")));
     }
 }
 
@@ -81,7 +75,10 @@ impl <'storage> BincodeRead<'storage> for SliceReader<'storage> {
 
         let string = match ::std::str::from_utf8(&self.slice[..length]) {
             Ok(s) => s,
-            Err(e) => return Err(ErrorKind::InvalidUtf8Encoding(e).into()),
+            Err(_) => return Err(Box::new(ErrorKind::InvalidEncoding {
+                desc: "string was not valid utf8",
+                detail: None,
+            })),
         };
         let r = visitor.visit_borrowed_str(string);
         self.slice = &self.slice[length..];
@@ -110,7 +107,7 @@ impl <'storage> BincodeRead<'storage> for SliceReader<'storage> {
     }
 }
 
-impl <R> IoReader<R> where R: io::Read {
+impl <R> IoReadReader<R> where R: IoRead {
     fn fill_buffer(&mut self, length: usize) -> Result<()> {
         let current_length = self.temp_buffer.len();
         if length > current_length{
@@ -123,14 +120,17 @@ impl <R> IoReader<R> where R: io::Read {
     }
 }
 
-impl <R> BincodeRead<'static> for IoReader<R> where R: io::Read {
+impl <R> BincodeRead<'static> for IoReadReader<R> where R: IoRead {
     fn forward_read_str<V>(&mut self, length: usize, visitor: V) ->  Result<V::Value>
     where V: serde::de::Visitor<'static> {
         self.fill_buffer(length)?;
 
         let string = match ::std::str::from_utf8(&self.temp_buffer[..length]) {
             Ok(s) => s,
-            Err(e) => return Err(::ErrorKind::InvalidUtf8Encoding(e).into()),
+            Err(_) => return Err(Box::new(::ErrorKind::InvalidEncoding {
+                desc: "string was not valid utf8",
+                detail: None,
+            })),
         };
 
         let r = visitor.visit_str(string);
