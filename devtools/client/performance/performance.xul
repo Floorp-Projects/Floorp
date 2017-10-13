@@ -211,8 +211,6 @@
               <hbox pack="center">
                 <html:div class='recording-button-mount'/>
               </hbox>
-              <label class="realtime-disabled-message"
-                     value="&performanceUI.disabledRealTime.nonE10SBuild;"/>
               <label class="realtime-disabled-on-e10s-message"
                      value="&performanceUI.disabledRealTime.disabledE10S;"/>
               <label class="buffer-status-message"
@@ -237,8 +235,6 @@
                 <label class="console-profile-command" />
                 <label value="&performanceUI.console.stopCommandEnd;" />
               </hbox>
-              <label class="realtime-disabled-message"
-                     value="&performanceUI.disabledRealTime.nonE10SBuild;"/>
               <label class="realtime-disabled-on-e10s-message"
                      value="&performanceUI.disabledRealTime.disabledE10S;"/>
               <label class="buffer-status-message"
