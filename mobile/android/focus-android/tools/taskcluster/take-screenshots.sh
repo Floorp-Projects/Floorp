@@ -2,8 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This script takes screenshots of Focus in different locales on
+# taskcluster. The locales need to be passed to this script, e.g.:
+# ./take-screenshots.sh en de-DE fr
+
 # If a command fails then do not proceed and fail this script too.
 set -e
+
+# Make sure we passed locales to this script.
+if (( $# < 1 )); then
+	echo "No locales passed to this script, e.g.: ./take-screenshots.sh en de-DE fr"
+    exit 1
+fi
+
+echo "Taking screenshots for locales: $@"
+directory="$(dirname "$0")"
 
 # Required for fastlane (otherwise it just crashes randomly)
 export LC_ALL="en_US.UTF-8"
@@ -15,7 +28,10 @@ emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 ./gradlew assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
 
 # Start our server for running screencap on the emulator host (via HTTP)
-python /opt/focus-android/tools/taskcluster/screencap-server.py &
+python $directory/screencap-server.py &
+
+# Generate Screengrab configuration
+python $directory/generate_screengrab_config.py $@
 
 # Wait for emulator to finish booting
 /opt/focus-android/tools/taskcluster/android-wait-for-emulator.sh
