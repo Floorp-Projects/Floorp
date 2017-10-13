@@ -9,7 +9,7 @@ echo "running as" $(id)
 set -v
 
 mkdir -p ${NEXUS_WORK}/conf
-cp /builds/worker/workspace/build/src/taskcluster/scripts/builder/build-android-dependencies/nexus.xml ${NEXUS_WORK}/conf/nexus.xml
+cp /builds/worker/workspace/build/src/taskcluster/scripts/misc/android-gradle-dependencies/nexus.xml ${NEXUS_WORK}/conf/nexus.xml
 
 RUN_AS_USER=worker /opt/sonatype/nexus/bin/nexus restart
 
