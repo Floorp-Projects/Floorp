@@ -18,6 +18,7 @@ const BoxModelTypes = require("devtools/client/inspector/boxmodel/types");
 const GridTypes = require("devtools/client/inspector/grids/types");
 
 const Accordion = createFactory(require("./Accordion"));
+const LayoutPromoteBar = createFactory(require("./LayoutPromoteBar"));
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
@@ -40,6 +41,7 @@ const App = createClass({
     setSelectedNode: PropTypes.func.isRequired,
     showBoxModelProperties: PropTypes.bool.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
+    onPromoteLearnMoreClick: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
@@ -52,10 +54,15 @@ const App = createClass({
   mixins: [ addons.PureRenderMixin ],
 
   render() {
+    let { onPromoteLearnMoreClick } = this.props;
+
     return dom.div(
       {
         id: "layout-container",
       },
+      LayoutPromoteBar({
+        onPromoteLearnMoreClick,
+      }),
       Accordion({
         items: [
           {
