@@ -295,14 +295,8 @@ nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle,
                                       const nsAString& aPrintToFileName,
                                       int32_t aStartPage, int32_t aEndPage)
 {
-  // Print job names exceeding 255 bytes are safe with GTK version 3.18.2 or
-  // newer. This is a workaround for old GTK.
-  if (gtk_check_version(3,18,2) != nullptr) {
-    PrintTarget::AdjustPrintJobNameForIPP(aTitle, mTitle);
-  } else {
-    CopyUTF16toUTF8(aTitle, mTitle);
-  }
-
+  mTitle.Truncate();
+  AppendUTF16toUTF8(aTitle, mTitle);
   return NS_OK;
 }
 
