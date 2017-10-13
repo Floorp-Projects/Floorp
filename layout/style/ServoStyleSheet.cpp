@@ -393,15 +393,10 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
 }
 
 ServoCSSRuleList*
-ServoStyleSheet::GetCssRulesInternal(bool aRequireUniqueInner)
+ServoStyleSheet::GetCssRulesInternal()
 {
   if (!mRuleList) {
-    MOZ_ASSERT(HasUniqueInner() || aRequireUniqueInner || !mDocument,
-               "Not requiring unique inner for stylesheet associated "
-               "with document may have undesired behavior");
-    if (aRequireUniqueInner) {
-      EnsureUniqueInner();
-    }
+    EnsureUniqueInner();
 
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mContents).Consume();

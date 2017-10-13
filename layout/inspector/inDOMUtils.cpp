@@ -284,8 +284,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     // Collect style rule maps for bindings.
     for (nsIContent* bindingContent = element; bindingContent;
          bindingContent = bindingContent->GetBindingParent()) {
-      for (nsXBLBinding* binding = bindingContent->GetXBLBinding();
-           binding; binding = binding->GetBaseBinding()) {
+      if (nsXBLBinding* binding = bindingContent->GetXBLBinding()) {
         if (ServoStyleSet* styleSet = binding->GetServoStyleSet()) {
           ServoStyleRuleMap* map = styleSet->StyleRuleMap();
           map->EnsureTable();

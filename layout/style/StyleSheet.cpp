@@ -450,7 +450,7 @@ StyleSheet::EnsureUniqueInner()
              "unexpected number of outers");
   mDirty = true;
 
-  if (HasUniqueInner()) {
+  if (mInner->mSheets.Length() == 1) {
     // already unique
     return;
   }
