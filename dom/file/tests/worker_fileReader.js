@@ -9,22 +9,7 @@ function is(a, b, msg) {
 }
 
 onmessage = event => {
-  let p;
-
-  if (event.data.tests == 'basic') {
-    p = runBasicTests(event.data.data);
-  } else if (event.data.tests == 'encoding') {
-    p = runEncodingTests(event.data.data);
-  } else if (event.data.tests == 'twice') {
-    p = runTwiceTests(event.data.data);
-  } else if (event.data.tests == 'other') {
-    p = runOtherTests(event.data.data);
-  } else {
-    postMessage({type: 'error'});
-    return;
-  }
-
-  p.then(() => {
+  runTests(event.data).then(() => {
     postMessage({ type: 'finish' });
   });
 };
