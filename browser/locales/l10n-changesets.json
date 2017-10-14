@@ -27,7 +27,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f23df26539a3"
+        "revision": "f50d1ed49f81"
     }, 
     "ar": {
         "platforms": [
@@ -77,7 +77,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "df0b372401c2"
+        "revision": "08a65ab888be"
     }, 
     "bg": {
         "platforms": [
