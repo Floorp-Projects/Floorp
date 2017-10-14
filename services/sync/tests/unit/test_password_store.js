@@ -141,6 +141,11 @@ async function test_apply_same_record_with_different_times() {
   /* eslint-enable no-unsed-vars */
 }
 
+async function test_LoginRec_toString(store, recordData) {
+  let rec = await store.createRecord(recordData.id);
+  ok(rec);
+  ok(!rec.toString().includes(rec.password));
+}
 
 add_task(async function run_test() {
   initTestLogging("Trace");
@@ -189,6 +194,8 @@ add_task(async function run_test() {
 
     do_check_true(!!(await store.getAllIDs())[BOGUS_GUID_B]);
     do_check_true(!(await store.getAllIDs())[BOGUS_GUID_A]);
+
+    await test_LoginRec_toString(store, recordB);
 
     await test_apply_records_with_times("http://afoo.baz.com", undefined, undefined);
     await test_apply_records_with_times("http://bfoo.baz.com", 1000, undefined);

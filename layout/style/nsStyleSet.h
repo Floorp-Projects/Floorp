@@ -12,6 +12,7 @@
 #ifndef nsStyleSet_h_
 #define nsStyleSet_h_
 
+#include "mozilla/AtomArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EnumeratedArray.h"
@@ -302,12 +303,12 @@ class nsStyleSet final
 #ifdef MOZ_XUL
   // Get a style context for a XUL tree pseudo.  aPseudoTag is the
   // pseudo-tag to use and must be non-null.  aParentContent must be
-  // non-null.  aComparator must be non-null.
+  // non-null.
   already_AddRefed<mozilla::GeckoStyleContext>
   ResolveXULTreePseudoStyle(mozilla::dom::Element* aParentElement,
                             nsICSSAnonBoxPseudo* aPseudoTag,
                             mozilla::GeckoStyleContext* aParentContext,
-                            nsICSSPseudoComparator* aComparator);
+                            const mozilla::AtomArray& aInputWord);
 #endif
 
   // Append all the currently-active font face rules to aArray.  Return

@@ -84,6 +84,7 @@ import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.util.SimpleArrayMap;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -628,7 +629,7 @@ public class GeckoAppShell
         return sScreenOrientationDelegate;
     }
 
-    public static void setScreenOrientationDelegate(ScreenOrientationDelegate screenOrientationDelegate) {
+    public static void setScreenOrientationDelegate(@Nullable ScreenOrientationDelegate screenOrientationDelegate) {
         sScreenOrientationDelegate = (screenOrientationDelegate != null) ? screenOrientationDelegate : DEFAULT_LISTENERS;
     }
 

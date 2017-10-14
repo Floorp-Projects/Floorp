@@ -659,7 +659,7 @@ class ContextMenu {
       contentType: context.target.ownerDocument.contentType,
 
       // used for nsContextMenu.saveLink
-      isPrivate: context.target.ownerDocument.isPrivate,
+      isPrivate: PrivateBrowsingUtils.isBrowserPrivate(context.target.ownerDocument),
     };
 
     // used for nsContextMenu.initMediaPlayerItems

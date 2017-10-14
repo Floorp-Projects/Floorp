@@ -280,7 +280,7 @@ impl DebugRenderer {
         // Triangles
         if !self.tri_vertices.is_empty() {
             device.bind_program(&self.color_program);
-            device.set_uniforms(&self.color_program, &projection);
+            device.set_uniforms(&self.color_program, &projection, 0);
             device.bind_vao(&self.tri_vao);
             device.update_vao_indices(&self.tri_vao, &self.tri_indices, VertexUsageHint::Dynamic);
             device.update_vao_main_vertices(
@@ -294,7 +294,7 @@ impl DebugRenderer {
         // Lines
         if !self.line_vertices.is_empty() {
             device.bind_program(&self.color_program);
-            device.set_uniforms(&self.color_program, &projection);
+            device.set_uniforms(&self.color_program, &projection, 0);
             device.bind_vao(&self.line_vao);
             device.update_vao_main_vertices(
                 &self.line_vao,
@@ -307,7 +307,7 @@ impl DebugRenderer {
         // Glyph
         if !self.font_indices.is_empty() {
             device.bind_program(&self.font_program);
-            device.set_uniforms(&self.font_program, &projection);
+            device.set_uniforms(&self.font_program, &projection, 0);
             device.bind_texture(DebugSampler::Font, &self.font_texture);
             device.bind_vao(&self.font_vao);
             device.update_vao_indices(&self.font_vao, &self.font_indices, VertexUsageHint::Dynamic);

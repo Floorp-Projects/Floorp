@@ -244,15 +244,6 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "BOX_ALIGN_PROPS_IN_BLOCKS_FLAG": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bwerth@mozilla.com"],
-    "bug_numbers": [1351383],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "57",
-    "kind": "boolean",
-    "description": "Whether we have layed out any display:block containers with not-yet-supported properties from CSS Box Align."
-  },
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],

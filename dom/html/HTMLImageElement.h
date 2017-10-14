@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "imgRequestProxy.h"
 #include "Units.h"
 #include "nsCycleCollectionParticipant.h"
@@ -23,8 +22,7 @@ class ImageLoadTask;
 
 class ResponsiveImageSelector;
 class HTMLImageElement final : public nsGenericHTMLElement,
-                               public nsImageLoadingContent,
-                               public nsIDOMHTMLImageElement
+                               public nsImageLoadingContent
 {
   friend class HTMLSourceElement;
   friend class HTMLPictureElement;
@@ -51,9 +49,6 @@ public:
 
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
-
-  // nsIDOMHTMLImageElement
-  NS_DECL_NSIDOMHTMLIMAGEELEMENT
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLImageElement, img)
 
@@ -89,6 +84,11 @@ public:
   nsresult CopyInnerTo(Element* aDest, bool aPreallocateChildren);
 
   void MaybeLoadImage(bool aAlwaysForceLoad);
+
+  // Overrides for nsImageLoadingContent's GetNaturalHeight/Width, since we
+  // handle responsive scaling in the element's version of these methods.
+  NS_IMETHOD GetNaturalHeight(uint32_t* aNaturalHeight) override;
+  NS_IMETHOD GetNaturalWidth(uint32_t* aNaturalWidth) override;
 
   bool IsMap()
   {
@@ -395,8 +395,6 @@ protected:
 
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
-  NS_IMETHOD GetNaturalWidth(uint32_t* aNaturalWidth) override;
-  NS_IMETHOD GetNaturalHeight(uint32_t* aNaturalHeight) override;
 
   // This is a weak reference that this element and the HTMLFormElement
   // cooperate in maintaining.

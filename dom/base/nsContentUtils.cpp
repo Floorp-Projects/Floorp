@@ -6757,7 +6757,7 @@ nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
 }
 
 struct ClassMatchingInfo {
-  nsAttrValue::AtomArray mClasses;
+  AtomArray mClasses;
   nsCaseTreatment mCaseTreatment;
 };
 

@@ -939,6 +939,10 @@ uint64_t wr_dp_define_sticky_frame(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_pop_all_shadows(WrState *aState)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_pop_clip(WrState *aState)
 WR_FUNC;
 
@@ -948,10 +952,6 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_pop_scroll_layer(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_dp_pop_shadow(WrState *aState)
 WR_FUNC;
 
 WR_INLINE

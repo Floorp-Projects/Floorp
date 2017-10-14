@@ -111,10 +111,11 @@ def rust_supported_targets(rustc):
     per_raw_os = {}
     for t in out:
         t = split_triplet(t, allow_unknown=True)
-        key = (t.cpu, t.os)
+        key = (t.cpu, t.endianness, t.os)
         if key in per_os:
             previous = per_os[key]
-            per_raw_os[(previous.cpu, previous.raw_os)] = previous
+            per_raw_os[(previous.cpu, previous.endianness,
+                        previous.raw_os)] = previous
             del per_os[key]
             ambiguous.add(key)
         if key in ambiguous:
@@ -125,7 +126,7 @@ def rust_supported_targets(rustc):
             # normalize.
             if raw_os == 'androideabi':
                 raw_os = 'linux-androideabi'
-            per_raw_os[(t.cpu, raw_os)] = t
+            per_raw_os[(t.cpu, t.endianness, raw_os)] = t
         else:
             per_os[key] = t
     return namespace(per_os=per_os, per_raw_os=per_raw_os)
@@ -169,11 +170,12 @@ def rust_triple_alias(host_or_target):
             host_or_target_raw_os = host_or_target.raw_os
 
         rustc_target = rust_supported_targets.per_os.get(
-            (host_or_target.cpu, host_or_target_os))
+            (host_or_target.cpu, host_or_target.endianness, host_or_target_os))
 
         if rustc_target is None:
             rustc_target = rust_supported_targets.per_raw_os.get(
-                (host_or_target.cpu, host_or_target_raw_os))
+                (host_or_target.cpu, host_or_target.endianness,
+                 host_or_target_raw_os))
 
         if rustc_target is None:
             die("Don't know how to translate {} for rustc".format(

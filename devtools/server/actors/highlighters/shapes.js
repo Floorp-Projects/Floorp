@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { CanvasFrameAnonymousContentHelper, getCSSStyleRules,
+const { CanvasFrameAnonymousContentHelper,
         createSVGNode, createNode, getComputedStyle } = require("./utils/markup");
 const { setIgnoreLayoutChanges, getCurrentZoom,
         getAdjustedQuads } = require("devtools/shared/layout/utils");
@@ -17,6 +17,7 @@ const {
   clickedOnPoint
 } = require("devtools/server/actors/utils/shapes-geometry-utils");
 const EventEmitter = require("devtools/shared/old-event-emitter");
+const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
 
 const BASE_MARKER_SIZE = 5;
 // the width of the area around highlighter lines that can be clicked, in px

@@ -32,8 +32,7 @@ nsTreeStyleCache::Transition::Hash() const
 
 // The style context cache impl
 nsStyleContext*
-nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
-                                  nsPresContext* aPresContext,
+nsTreeStyleCache::GetStyleContext(nsPresContext* aPresContext,
                                   nsIContent* aContent,
                                   nsStyleContext* aContext,
                                   nsICSSAnonBoxPseudo* aPseudoElement,
@@ -89,7 +88,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
     } else {
       newResult = aPresContext->StyleSet()->AsGecko()->
         ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
-                                  aContext->AsGecko(), aComparator);
+                                  aContext->AsGecko(), aInputWord);
     }
 
     // Put the style context in our table, transferring the owning reference to the table.

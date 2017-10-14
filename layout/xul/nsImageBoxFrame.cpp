@@ -31,7 +31,6 @@
 #include "nsILoadGroup.h"
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsTransform2D.h"

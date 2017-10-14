@@ -9,10 +9,8 @@ const {interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
-const {
-  InvalidCookieDomainError,
-  pprint,
-} = Cu.import("chrome://marionette/content/error.js", {});
+const {InvalidCookieDomainError} = Cu.import("chrome://marionette/content/error.js", {});
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["cookie"];
 

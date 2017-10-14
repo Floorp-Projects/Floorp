@@ -8064,7 +8064,8 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            transformForSC,
                            nullptr,
                            gfx::CompositionOp::OP_OVER,
-                           !BackfaceIsHidden());
+                           !BackfaceIsHidden(),
+                           mFrame->Extend3DContext());
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);
@@ -8675,7 +8676,8 @@ nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& a
                            &transformForSC,
                            &perspectiveMatrix,
                            gfx::CompositionOp::OP_OVER,
-                           !BackfaceIsHidden());
+                           !BackfaceIsHidden(),
+                           true);
 
   return mList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                        aManager, aDisplayListBuilder);

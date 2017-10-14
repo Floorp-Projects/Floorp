@@ -104,7 +104,7 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "ps_text_run",
-        features: &["", "TRANSFORM", "SUBPIXEL_AA_FEATURE"],
+        features: PRIM_FEATURES,
     },
     Shader {
         name: "ps_rectangle",

@@ -10,13 +10,14 @@ A compact encoder / decoder pair that uses a binary zero-fluff encoding scheme.
 The size of the encoded object will be the same or smaller than the size that
 the object takes up in memory in a running Rust program.
 
-In addition to exposing two simple functions that encode to Vec<u8> and decode
-from Vec<u8>, binary-encode exposes a Reader/Writer API that makes it work
+In addition to exposing two simple functions
+(one that encodes to `Vec<u8>`, and one that decodes from `&[u8]`),
+binary-encode exposes a Reader/Writer API that makes it work
 perfectly with other stream-based apis such as rust files, network streams,
 and the [flate2-rs](https://github.com/alexcrichton/flate2-rs) compression
 library.
 
-## [Api Documentation](http://tyoverby.github.io/bincode/bincode/)
+## [Api Documentation](http://docs.rs/bincode/)
 
 ## Bincode in the wild
 
@@ -32,13 +33,13 @@ extern crate bincode;
 
 use bincode::{serialize, deserialize, Infinite};
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct Entity {
     x: f32,
     y: f32,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct World(Vec<Entity>);
 
 fn main() {
@@ -51,7 +52,7 @@ fn main() {
 
     let decoded: World = deserialize(&encoded[..]).unwrap();
 
-    assert!(world == decoded);
+    assert_eq!(world, decoded);
 }
 ```
 
@@ -67,7 +68,7 @@ then the contents.
 However, there are some implementation details to be aware of:
 
 * `isize`/`usize` are encoded as `i64`/`u64`, for portability.
-* enums variants are encoded as a `u32` instead of a `uint`.
+* enums variants are encoded as a `u32` instead of a `usize`.
   `u32` is enough for all practical uses.
 * `str` is encoded as `(u64, &[u8])`, where the `u64` is the number of
   bytes contained in the encoded string.

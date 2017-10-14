@@ -631,7 +631,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     return IPC_OK();
   }
 
-  AutoProfilerTracing tracing("Paint", "EmptyTransaction");
+  AUTO_PROFILER_TRACING("Paint", "EmptyTransaction");
   UpdateFwdTransactionId(aFwdTransactionId);
   AutoClearReadLocks clearLocks(mReadLocks);
 

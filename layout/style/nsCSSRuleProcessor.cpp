@@ -16,7 +16,6 @@
 #include <algorithm>
 #include "nsAtom.h"
 #include "PLDHashTable.h"
-#include "nsICSSPseudoComparator.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/ImportRule.h"
 #include "mozilla/css/StyleRule.h"
@@ -2589,6 +2588,22 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
 }
 
 #ifdef MOZ_XUL
+static bool
+XULTreePseudoMatches(nsCSSSelector* aSelector, const AtomArray& aInputWord)
+{
+  // Iterate the class list.  For each item in the list, see if
+  // it is contained in our scratch array.  If we have a miss, then
+  // we aren't a match.  If all items in the class list are
+  // present in the scratch array, then we have a match.
+  nsAtomList* curr = aSelector->mClassList;
+  while (curr) {
+    if (!aInputWord.Contains(curr->mAtom))
+      return false;
+    curr = curr->mNext;
+  }
+  return true;
+}
+
 /* virtual */ void
 nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
@@ -2603,7 +2618,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
-        if (aData->mComparator->PseudoMatches(value->mSelector)) {
+        if (XULTreePseudoMatches(value->mSelector, aData->mInputWord)) {
           ContentEnumFunc(*value, value->mSelector->mNext, aData, nodeContext,
                           nullptr);
         }
