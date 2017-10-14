@@ -10,6 +10,8 @@
 #include "MouseEvents.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/TextEvents.h"
+#include "HeadlessKeyBindings.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -422,6 +424,25 @@ HeadlessWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
   }
 
   return NS_OK;
+}
+
+nsresult
+HeadlessWidget::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent)
+{
+  HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
+  return bindings.AttachNativeKeyEvent(aEvent);
+}
+
+void
+HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
+                                const WidgetKeyboardEvent& aEvent,
+                                nsTArray<CommandInt>& aCommands)
+{
+  // Validate the arguments.
+  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+
+  HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
+  bindings.GetEditCommands(aType, aEvent, aCommands);
 }
 
 nsresult
