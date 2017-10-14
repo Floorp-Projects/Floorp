@@ -15,37 +15,5 @@
     "digest": "d68dd7d31b0153095ecf5cde5837fb1f95dc6e3f799d496fb764f7afeb9c6095c332467177c3aa54d3749b1901e0d6fa84c42162526e764e8a9d2196a0189861",
     "algorithm": "sha512",
     "filename": "jsshell.tar.xz"
-  },
-  {
-    "size": 7797928,
-    "visibility": "public",
-    "digest": "7bb5c7b3586179a7805ae60b025b7856cb8dbed66da1b7962bc446d94ea6fa45ed55ebfe065d2d82690c68bf71bdab613e97f53da79b85e3185955461f751256",
-    "algorithm": "sha512",
-    "filename": "google.tar.xz",
-    "unpack": true
-  },
-  {
-    "size": 52693504,
-    "visibility": "public",
-    "digest": "d8c0d91ff4039dd8a22e34634c0f72b21b1c272d60987f20a709fbfd919ba62eab4c3bddbaf96af1c6caf85320b4bf0676589071fe3b31724c51782a55da83e0",
-    "algorithm": "sha512",
-    "filename": "jcenter.tar.xz",
-    "unpack": true
-  },
-  {
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "gradle-dist.tar.xz",
-    "unpack": true,
-    "digest": "e3cfe7f8259ad97722243d4e873d5a05c014bfc24d637427f89d804bf5073290229c778ea303142cf06c2dc79e0492f23521f57d3a73825f55b8db587317646f",
-    "size": 51753660
-  },
-  {
-    "size": 37130176,
-    "visibility": "internal",
-    "digest": "254eecc06eea407c098417c1dbedf89f59883cdde7e173b0473fa5b34719c967830afa11189c3a9f69dc3f3b9e5fb43469434340e1f8feb378609af965783b48",
-    "algorithm": "sha512",
-    "filename": "java_home.tar.xz",
-    "unpack": true
   }
 ]

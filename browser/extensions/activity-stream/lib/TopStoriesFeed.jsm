@@ -14,6 +14,7 @@ const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.js
 const {shortURL} = Cu.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {SectionsManager} = Cu.import("resource://activity-stream/lib/SectionsManager.jsm", {});
 const {UserDomainAffinityProvider} = Cu.import("resource://activity-stream/lib/UserDomainAffinityProvider.jsm", {});
+const {PersistentCache} = Cu.import("resource://activity-stream/lib/PersistentCache.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
 
@@ -28,6 +29,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.spocsPerNewTabs = 0;
     this.newTabsSinceSpoc = 0;
     this.contentUpdateQueue = [];
+    this.cache = new PersistentCache(SECTION_ID, true);
   }
 
   init() {
@@ -47,6 +49,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.topicsLastUpdated = 0;
         this.affinityLastUpdated = 0;
 
+        this.loadCachedData();
         this.fetchStories();
         this.fetchTopics();
       } catch (e) {
@@ -76,11 +79,29 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.spocs = this.show_spocs && this.transform(body.spocs).filter(s => s.score >= s.min_score);
 
       this.dispatchUpdateEvent(this.storiesLastUpdated, {rows: this.stories});
-      this.storiesLastUpdated = Date.now();
+      body._timestamp = this.storiesLastUpdated = Date.now();
       // This is filtered so an update function can return true to retry on the next run
       this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
+
+      this.cache.set("stories", body);
     } catch (error) {
       Cu.reportError(`Failed to fetch content: ${error.message}`);
+    }
+  }
+
+  async loadCachedData() {
+    const data = await this.cache.get();
+    let stories = data.stories && data.stories.recommendations;
+    let topics = data.topics && data.topics.topics;
+    if (stories && stories.length > 0 && this.storiesLastUpdated === 0) {
+      this.updateSettings(data.stories.settings);
+      const rows = this.transform(stories);
+      this.dispatchUpdateEvent(this.storiesLastUpdated, {rows});
+      this.storiesLastUpdated = data.stories._timestamp;
+    }
+    if (topics && topics.length > 0 && this.topicsLastUpdated === 0) {
+      this.dispatchUpdateEvent(this.topicsLastUpdated, {topics, read_more_endpoint: this.read_more_endpoint});
+      this.topicsLastUpdated = data.topics._timestamp;
     }
   }
 
@@ -117,10 +138,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
       if (!response.ok) {
         throw new Error(`Topics endpoint returned unexpected status: ${response.status}`);
       }
-      const {topics} = await response.json();
+      const body = await response.json();
+      const {topics} = body;
       if (topics) {
         this.dispatchUpdateEvent(this.topicsLastUpdated, {topics, read_more_endpoint: this.read_more_endpoint});
-        this.topicsLastUpdated = Date.now();
+        body._timestamp = this.topicsLastUpdated = Date.now();
+        this.cache.set("topics", body);
       }
     } catch (error) {
       Cu.reportError(`Failed to fetch topics: ${error.message}`);
@@ -218,7 +241,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   maybeAddSpoc(target) {
-    if (!this.show_spocs) {
+    if (!this.show_spocs || !this.store.getState().Prefs.values.showSponsored) {
       return;
     }
 
@@ -232,7 +255,8 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
         // Create a new array with a spoc inserted at index 2
         // For now we're using the top scored spoc until we can support viewability based rotation
-        let rows = this.stories.slice(0, this.stories.length);
+        const position = SectionsManager.sections.get(SECTION_ID).order;
+        let rows = this.store.getState().Sections[position].rows.slice(0, this.stories.length);
         rows.splice(2, 0, this.spocs[0]);
 
         // Send a content update to the target tab
@@ -281,14 +305,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
       case at.PLACES_LINK_BLOCKED:
         if (this.spocs) {
           this.spocs = this.spocs.filter(s => s.url !== action.data.url);
-        }
-
-        if (this.stories) {
-          const prevStoriesLength = this.stories.length;
-          this.stories = this.stories.filter(s => s.url !== action.data.url);
-          if (prevStoriesLength !== this.stories.length) {
-            SectionsManager.updateSection(SECTION_ID, {rows: this.stories}, true);
-          }
         }
         break;
     }

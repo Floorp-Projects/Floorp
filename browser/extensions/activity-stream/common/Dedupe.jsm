@@ -1,15 +1,10 @@
 this.Dedupe = class Dedupe {
-  constructor(createKey, compare) {
+  constructor(createKey) {
     this.createKey = createKey || this.defaultCreateKey;
-    this.compare = compare || this.defaultCompare;
   }
 
   defaultCreateKey(item) {
     return item;
-  }
-
-  defaultCompare() {
-    return false;
   }
 
   /**
@@ -25,7 +20,7 @@ this.Dedupe = class Dedupe {
       const valueMap = new Map();
       for (const value of values) {
         const key = this.createKey(value);
-        if (!globalKeys.has(key) && (!valueMap.has(key) || this.compare(valueMap.get(key), value))) {
+        if (!globalKeys.has(key) && !valueMap.has(key)) {
           valueMap.set(key, value);
         }
       }

@@ -269,6 +269,38 @@ linux64-android-sdk-linux-repack:
         toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
         toolchain-alias: android-sdk-linux
 
+linux64-android-gradle-dependencies:
+    description: "Android Gradle dependencies toolchain task"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gradle-dependencies)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: android-gradle-dependencies.sh
+        sparse-profile: null
+
+        tc-vcs: false
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+            - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
+            - '**/*.gradle'
+            - 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/**'
+            - 'mobile/android/config/mozconfigs/common*'
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
+        toolchain-alias: android-gradle-dependencies
+    toolchains:
+        # Aliases aren't allowed for toolchains depending on toolchains.
+        - linux64-android-sdk-linux-repack
+        - linux64-proguard-jar-repack
+
 linux64-rust-1.20:
     description: "rust repack"
     treeherder:
