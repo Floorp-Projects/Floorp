@@ -10,6 +10,7 @@ flake8:
         - layout/tools/reftest
         - python/mach
         - python/mach_commands.py
+        - python/mozboot
         - python/mozlint
         - python/mozversioncontrol
         - security/manager
