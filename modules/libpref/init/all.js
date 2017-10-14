@@ -5789,10 +5789,14 @@ pref("dom.webkitBlink.filesystem.enabled", true);
 pref("media.block-autoplay-until-in-foreground", true);
 
 // Is Stylo CSS support built and enabled?
-// Only define this pref if Stylo support is actually built in.
+// Only define these prefs if Stylo support is actually built in.
 #ifdef MOZ_STYLO
 pref("layout.css.stylo-blocklist.enabled", true);
+#ifdef NIGHTLY_BUILD
+pref("layout.css.stylo-blocklist.blocked_domains", "arewestyloyet.rs");
+#else
 pref("layout.css.stylo-blocklist.blocked_domains", "");
+#endif
 #ifdef MOZ_STYLO_ENABLE
 pref("layout.css.servo.enabled", true);
 #else
