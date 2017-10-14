@@ -167,10 +167,6 @@ android.libraryVariants.all { variant ->
     }
 }
 
-android.libraryVariants.all { variant ->
-    configureVariantWithJNIWrappers(variant, "Generated")
-}
-
 apply plugin: 'maven'
  
 uploadArchives {
