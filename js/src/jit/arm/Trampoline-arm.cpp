@@ -105,7 +105,7 @@ struct EnterJITStack
  *   ...using standard EABI calling convention
  */
 JitCode*
-JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
+JitRuntime::generateEnterJIT(JSContext* cx)
 {
     const Address slot_token(sp, offsetof(EnterJITStack, token));
     const Address slot_vp(sp, offsetof(EnterJITStack, vp));
@@ -145,8 +145,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.loadPtr(slot_token, r9);
 
     // Save stack pointer.
-    if (type == EnterJitBaseline)
-        masm.movePtr(sp, r11);
+    masm.movePtr(sp, r11);
 
     // Load the number of actual arguments into r10.
     masm.loadPtr(slot_vp, r10);
@@ -215,8 +214,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.finishDataTransfer();
 
     Label returnLabel;
-    if (type == EnterJitBaseline) {
-        // Handle OSR.
+    {
+        // Handle Interpreter -> Baseline OSR.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
         regs.take(JSReturnOperand);
         regs.takeUnchecked(OsrFrameReg);
@@ -352,10 +351,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Call the function.
     masm.callJitNoProfiler(r0);
 
-    if (type == EnterJitBaseline) {
-        // Baseline OSR will return here.
-        masm.bind(&returnLabel);
-    }
+    // Interpreter -> Baseline OSR will return here.
+    masm.bind(&returnLabel);
 
     // The top of the stack now points to the address of the field following the
     // return address because the return address is popped for the return, so we
