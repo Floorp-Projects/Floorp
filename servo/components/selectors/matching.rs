@@ -393,7 +393,9 @@ pub fn matches_selector<E, F>(selector: &Selector<E::Impl>,
     let iter = if offset == 0 {
         selector.iter()
     } else {
-        selector.iter_from(offset)
+        let iter = selector.iter_from(offset);
+        local_context.note_position(&iter);
+        iter
     };
     matches_complex_selector(iter, element, &mut local_context, flags_setter)
 }
@@ -432,6 +434,10 @@ where
     }
 
     let mut local_context = LocalMatchingContext::new(context, selector);
+    // Disable the hover quirk here, since we're in a random position inside the
+    // selector, and this is only used for invalidation, so incorrectly
+    // returning true doesn't affect correctness, only does a bit more work.
+    local_context.hover_active_quirk_disabled = true;
     for component in selector.iter_raw_parse_order_from(from_offset - 1) {
         if matches!(*component, Component::Combinator(..)) {
             return CompoundSelectorMatchingResult::Matched {
