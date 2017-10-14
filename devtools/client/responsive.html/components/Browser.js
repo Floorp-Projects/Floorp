@@ -6,14 +6,15 @@
 
 "use strict";
 
+const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 const flags = require("devtools/shared/flags");
-const { getToplevelWindow } = require("../utils/window");
 const { DOM: dom, createClass, addons, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
+const { getToplevelWindow } = require("../utils/window");
 
 const FRAME_SCRIPT = "resource://devtools/client/responsive.html/browser/content.js";
 
@@ -36,6 +37,27 @@ module.exports = createClass({
   mixins: [ addons.PureRenderMixin ],
 
   /**
+   * Before the browser is mounted, listen for `remote-browser-shown` so that we know when
+   * the browser is fully ready.  Without waiting for an event such as this, we don't know
+   * whether all frame state for the browser is fully initialized (since some happens
+   * async after the element is added), and swapping browsers can fail if this state is
+   * not ready.
+   */
+  componentWillMount() {
+    this.browserShown = new Promise(resolve => {
+      let handler = frameLoader => {
+        let browser = this.refs.browserContainer.querySelector("iframe.browser");
+        if (frameLoader.ownerElement != browser) {
+          return;
+        }
+        Services.obs.removeObserver(handler, "remote-browser-shown");
+        resolve();
+      };
+      Services.obs.addObserver(handler, "remote-browser-shown");
+    });
+  },
+
+  /**
    * Once the browser element has mounted, load the frame script and enable
    * various features, like floating scrollbars.
    */
@@ -48,6 +70,7 @@ module.exports = createClass({
 
     // Notify manager.js that this browser has mounted, so that it can trigger
     // a swap if needed and continue with the rest of its startup.
+    yield this.browserShown;
     this.props.onBrowserMounted();
 
     // If we are swapping browsers after mount, wait for the swap to complete
@@ -101,9 +124,9 @@ module.exports = createClass({
 
   stopFrameScript: Task.async(function* () {
     let { onContentResize } = this;
-
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
+
     e10s.off(mm, "OnContentResize", onContentResize);
     yield e10s.request(mm, "Stop");
     message.post(window, "stop-frame-script:done");
