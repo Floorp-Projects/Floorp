@@ -74,6 +74,25 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
     gBrowser.swapBrowsersAndCloseOther(ourTab, otherTab);
   };
 
+  // It is possible for the frame loader swap within `gBrowser._swapBrowserDocShells` to
+  // fail when various frame state is either not ready yet or doesn't match between the
+  // two browsers you're trying to swap.  However, such errors are currently caught and
+  // silenced in the browser, because they are apparently expected in certain cases.
+  // So, here we do our own check to verify that the swap actually did in fact take place,
+  // making it much easier to track such errors when they happen.
+  let swapBrowserDocShells = (ourTab, otherBrowser) => {
+    // The verification step here assumes both browsers are remote.
+    if (!ourTab.linkedBrowser.isRemoteBrowser || !otherBrowser.isRemoteBrowser) {
+      throw new Error("Both browsers should be remote before swapping.");
+    }
+    let contentTabId = ourTab.linkedBrowser.frameLoader.tabParent.tabId;
+    gBrowser._swapBrowserDocShells(ourTab, otherBrowser);
+    if (otherBrowser.frameLoader.tabParent.tabId != contentTabId) {
+      // Bug 1408602: Try to unwind to save tab content from being lost.
+      throw new Error("Swapping tab content between browsers failed.");
+    }
+  };
+
   return {
 
     start: Task.async(function* () {
@@ -149,7 +168,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    `gBrowser._swapBrowserDocShells`.
       dispatchDevToolsBrowserSwap(tab.linkedBrowser, innerBrowser);
       debug("Swap content to inner browser");
-      gBrowser._swapBrowserDocShells(tab, innerBrowser);
+      swapBrowserDocShells(tab, innerBrowser);
 
       // 5. Force the original browser tab to be non-remote since the tool UI
       //    must be loaded in the parent process, and we're about to swap the
@@ -214,7 +233,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    to the regular browser tab, preserving all state via
       //    `gBrowser._swapBrowserDocShells`.
       dispatchDevToolsBrowserSwap(innerBrowser, contentBrowser);
-      gBrowser._swapBrowserDocShells(contentTab, innerBrowser);
+      swapBrowserDocShells(contentTab, innerBrowser);
       innerBrowser = null;
 
       // Copy tab listener state flags to content tab.  See similar comment in `start`
