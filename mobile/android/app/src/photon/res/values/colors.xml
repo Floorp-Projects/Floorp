@@ -267,4 +267,10 @@
     <color name="tablet_tab_strip_indicator_private">#8000D7</color>
 
     <color name="bookmark_folder_bg_color">#FCFCFC</color>
+
+    <!-- PWA -->
+    <color name="pwa_cancel_btn_press">#ededf0</color>
+    <color name="pwa_cancel_btn">@android:color/transparent</color>
+
+
 </resources>

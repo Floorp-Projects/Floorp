@@ -1,48 +1,3 @@
-android-dependencies/opt:
-    description: "Android armv7 api-16+ gradle dependencies"
-    index:
-        product: mobile
-        job-name: android-dependencies
-    treeherder:
-        platform: android-4-0-armv7-api16/opt
-        kind: build
-        tier: 2
-        symbol: tc(Deps)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-android
-    worker:
-        docker-image: {in-tree: android-build}
-        env:
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
-            PERFHERDER_EXTRA_OPTIONS: android-dependencies
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
-            WORKSPACE: "/builds/worker/workspace"
-        artifacts:
-          - name: public/build
-            path: /builds/worker/artifacts/
-            type: directory
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [get-secrets build multi-l10n update]
-        config:
-            - builds/releng_base_android_64_builds.py
-            - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: api-16-gradle-dependencies
-        tooltool-downloads: internal
-        job-script: taskcluster/scripts/builder/build-android-dependencies.sh
-    toolchains:
-        - android-sdk-linux
-        - proguard-jar
-    optimization:
-        skip-unless-changed:
-          - "mobile/android/config/**"
-          - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
-          - "**/*.gradle"
-          - "taskcluster/docker/android-build/**"
-
 android-test/opt:
     description: "Android armv7 unit tests"
     index:
@@ -80,6 +35,7 @@ android-test/opt:
         custom-build-variant-cfg: android-test
         tooltool-downloads: internal
     toolchains:
+        - android-gradle-dependencies
         - android-sdk-linux
         - proguard-jar
     optimization:
@@ -141,6 +97,7 @@ android-lint/opt:
         custom-build-variant-cfg: android-lint
         tooltool-downloads: internal
     toolchains:
+        - android-gradle-dependencies
         - android-sdk-linux
         - proguard-jar
     optimization:
@@ -196,6 +153,7 @@ android-checkstyle/opt:
         custom-build-variant-cfg: android-checkstyle
         tooltool-downloads: internal
     toolchains:
+        - android-gradle-dependencies
         - android-sdk-linux
         - proguard-jar
     optimization:
@@ -253,6 +211,7 @@ android-findbugs/opt:
         custom-build-variant-cfg: android-findbugs
         tooltool-downloads: internal
     toolchains:
+        - android-gradle-dependencies
         - android-sdk-linux
         - proguard-jar
     optimization:

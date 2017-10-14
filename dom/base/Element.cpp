@@ -3467,27 +3467,38 @@ Element::GetTokenList(nsAtom* aAtom,
 Element*
 Element::Closest(const nsAString& aSelector, ErrorResult& aResult)
 {
-  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
-  if (!selectorList) {
-    // Either we failed (and aResult already has the exception), or this
-    // is a pseudo-element-only selector that matches nothing.
-    return nullptr;
-  }
-  TreeMatchContext matchingContext(false,
-                                   nsRuleWalker::eRelevantLinkUnvisited,
-                                   OwnerDoc(),
-                                   TreeMatchContext::eNeverMatchVisited);
-  matchingContext.SetHasSpecifiedScope();
-  matchingContext.AddScopeElement(this);
-  for (nsINode* node = this; node; node = node->GetParentNode()) {
-    if (node->IsElement() &&
-        nsCSSRuleProcessor::SelectorListMatches(node->AsElement(),
-                                                matchingContext,
-                                                selectorList)) {
-      return node->AsElement();
+  return WithSelectorList<Element*>(
+    aSelector,
+    aResult,
+    [&](const RawServoSelectorList* aList) -> Element* {
+      if (!aList) {
+        return nullptr;
+      }
+      return const_cast<Element*>(Servo_SelectorList_Closest(this, aList));
+    },
+    [&](nsCSSSelectorList* aList) -> Element* {
+      if (!aList) {
+        // Either we failed (and aError already has the exception), or this
+        // is a pseudo-element-only selector that matches nothing.
+        return nullptr;
+      }
+      TreeMatchContext matchingContext(false,
+                                       nsRuleWalker::eRelevantLinkUnvisited,
+                                       OwnerDoc(),
+                                       TreeMatchContext::eNeverMatchVisited);
+      matchingContext.SetHasSpecifiedScope();
+      matchingContext.AddScopeElement(this);
+      for (nsINode* node = this; node; node = node->GetParentNode()) {
+        if (node->IsElement() &&
+            nsCSSRuleProcessor::SelectorListMatches(node->AsElement(),
+                                                    matchingContext,
+                                                    aList)) {
+          return node->AsElement();
+        }
+      }
+      return nullptr;
     }
-  }
-  return nullptr;
+  );
 }
 
 bool

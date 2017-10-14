@@ -69,6 +69,10 @@ const PREFS_CONFIG = new Map([
       personalized: false
     })
   }],
+  ["showSponsored", {
+    title: "Show sponsored cards in spoc experiment (show_spocs in topstories.options has to be set to true as well)",
+    value: true
+  }],
   ["filterAdult", {
     title: "Remove adult pages from sites, highlights, etc.",
     value: true

@@ -22,21 +22,5 @@ describe("Dedupe", () => {
       const afterItems = [[{id: 1}, {id: 2}], [{id: 3}], [{id: 5}]];
       assert.deepEqual(instance.group(...beforeItems), afterItems);
     });
-    it("should take a custom comparison function", () => {
-      function compare(previous, current) {
-        return current.amount > previous.amount;
-      }
-      instance = new Dedupe(item => item.id, compare);
-      const beforeItems = [
-        [{id: 1, amount: 50}, {id: 1, amount: 100}],
-        [{id: 1, amount: 200}, {id: 2, amount: 0}, {id: 2, amount: 100}]
-      ];
-      const afterItems = [
-        [{id: 1, amount: 100}],
-        [{id: 2, amount: 100}]
-      ];
-
-      assert.deepEqual(instance.group(...beforeItems), afterItems);
-    });
   });
 });

@@ -32,3 +32,7 @@ glob:**/*.mozbuild
 # Tooltool manifests also need to be opened. Assume they
 # are all somewhere in "tooltool-manifests" directories.
 glob:**/tooltool-manifests/**
+
+# For scheduling android-gradle-dependencies.
+path:mobile/android/config/
+glob:**/*.gradle

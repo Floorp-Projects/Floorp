@@ -76,6 +76,7 @@
       "settings_pane_snippets_header": " ",
       "settings_pane_snippets_body": " ",
       "settings_pane_done_button": " ",
+      "settings_pane_topstories_options_sponsored": " ",
       "edit_topsites_button_text": " ",
       "edit_topsites_button_label": " ",
       "edit_topsites_showmore_button": " ",

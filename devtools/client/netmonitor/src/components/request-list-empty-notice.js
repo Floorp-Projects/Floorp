@@ -22,6 +22,13 @@ const MDNLink = createFactory(require("./mdn-link"));
 
 const { button, div, span } = DOM;
 
+const RELOAD_NOTICE_1 = L10N.getStr("netmonitor.reloadNotice1");
+const RELOAD_NOTICE_2 = L10N.getStr("netmonitor.reloadNotice2");
+const RELOAD_NOTICE_3 = L10N.getStr("netmonitor.reloadNotice3");
+const PERFORMANCE_NOTICE_1 = L10N.getStr("netmonitor.perfNotice1");
+const PERFORMANCE_NOTICE_2 = L10N.getStr("netmonitor.perfNotice2");
+const PERFORMANCE_NOTICE_3 = L10N.getStr("netmonitor.perfNotice3");
+
 /**
  * UI displayed when the request list is empty. Contains instructions on reloading
  * the page and on triggering performance analysis of the page.
@@ -40,26 +47,26 @@ const RequestListEmptyNotice = createClass({
         className: "request-list-empty-notice",
       },
       div({ className: "notice-reload-message" },
-        span(null, L10N.getStr("netmonitor.reloadNotice1")),
+        span(null, RELOAD_NOTICE_1),
         button(
           {
             className: "devtools-button requests-list-reload-notice-button",
             "data-standalone": true,
             onClick: this.props.onReloadClick,
           },
-          L10N.getStr("netmonitor.reloadNotice2")
+          RELOAD_NOTICE_2
         ),
-        span(null, L10N.getStr("netmonitor.reloadNotice3"))
+        span(null, RELOAD_NOTICE_3)
       ),
       div({ className: "notice-perf-message" },
-        span(null, L10N.getStr("netmonitor.perfNotice1")),
+        span(null, PERFORMANCE_NOTICE_1),
         button({
-          title: L10N.getStr("netmonitor.perfNotice3"),
+          title: PERFORMANCE_NOTICE_3,
           className: "devtools-button requests-list-perf-notice-button",
           "data-standalone": true,
           onClick: this.props.onPerfClick,
         }),
-        span(null, L10N.getStr("netmonitor.perfNotice2")),
+        span(null, PERFORMANCE_NOTICE_2),
         MDNLink({ url: getPerformanceAnalysisURL() })
       )
     );

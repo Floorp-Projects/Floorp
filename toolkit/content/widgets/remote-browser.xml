@@ -278,7 +278,7 @@
             if (msg.data.id != id) {
               return;
             }
-	    aCallback(msg.data.inPermitUnload);
+            aCallback(msg.data.inPermitUnload);
           });
         ]]>
         </body>

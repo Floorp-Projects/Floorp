@@ -853,3 +853,9 @@ is simply hidden from the Activity Stream panel. -->
 <!ENTITY private_tab_learn_more "Want to learn more?">
 
 <!ENTITY fullscreen_warning "Entered full screen">
+
+
+<!ENTITY pwa_add_to_launcher_confirm "+ Add to Home Screen">
+<!ENTITY pwa_add_to_launcher_badge "Add PWA to Home Screen">
+<!ENTITY pwa_continue_to_website "Continue to Website">
+<!ENTITY pwa_onboarding_sumo "You can easily add this website to your Home screen to have instant access and browse faster with an app-like experience.">

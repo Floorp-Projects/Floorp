@@ -1,0 +1,25 @@
+[
+  {
+    "size": 266240,
+    "digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
+    "algorithm": "sha512",
+    "filename": "mozmake.exe"
+  },
+  {
+    "version": "Visual Studio 2017 15.4.0 / SDK 10.0.16299.0",
+    "digest": "4f5fe31a3955f1c1beb1fb7463da0182ae51e4e6ea22725523461531597ef049f76c3271d32816022d74f5d64a19de60e1cfe8620c2a852beb6cfbacb345dc2f",
+    "size": 322518187
+    "algorithm": "sha512",
+    "filename": "vs2017_15.4.0.zip",
+    "unpack": true
+  },
+  {
+    "version": "makecab rev d2bc6797648b7a834782714a55d339d2fd4e58c8",
+    "algorithm": "sha512",
+    "visibility": "public",
+    "filename": "makecab.tar.bz2",
+    "unpack": true,
+    "digest": "196ac6a567c85559957dfe511c3d8654d23c94d5603259e19ccafe9d71e0e4ccee63ccc9a778f2699654b786cda54266108b7d4db543d01bb0b42545b4e6ec75",
+    "size": 297118
+  }
+]
