@@ -8,6 +8,10 @@ const { Ci } = require("chrome");
 const { Task } = require("devtools/shared/task");
 const { tunnelToInnerBrowser } = require("./tunnel");
 
+function debug(msg) {
+  // console.log(`RDM swap: ${msg}`);
+}
+
 /**
  * Swap page content from an existing tab into a new browser within a container
  * page.  Page state is preserved by using `swapFrameLoaders`, just like when
@@ -83,6 +87,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       freezeNavigationState(tab);
 
       // 1. Create a temporary, hidden tab to load the tool UI.
+      debug("Add blank tool tab");
       let containerTab = addTabSilently("about:blank", {
         skipAnimation: true,
         forceNotRemote: true,
@@ -103,6 +108,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
         epoch: -1,
       });
       // Prevent the `containerURL` from ending up in the tab's history.
+      debug("Load container URL");
       containerBrowser.loadURIWithFlags(containerURL, {
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
       });
@@ -122,12 +128,15 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Even worse than the delay, there appears to be no obvious event fired
       // after the frame is set lazily, so it's unclear how to know that work
       // has finished.
+      debug("Set container docShell active");
       containerBrowser.docShellIsActive = true;
 
       // 3. Create the initial viewport inside the tool UI.
       // The calling application will use container page loaded into the tab to
       // do whatever it needs to create the inner browser.
+      debug("Yield to container tab loaded");
       yield tabLoaded(containerTab);
+      debug("Yield to get inner browser");
       innerBrowser = yield getInnerBrowser(containerBrowser);
       addXULBrowserDecorations(innerBrowser);
       if (innerBrowser.isRemoteBrowser != tab.linkedBrowser.isRemoteBrowser) {
@@ -139,22 +148,26 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    the viewport in the tool UI, preserving all state via
       //    `gBrowser._swapBrowserDocShells`.
       dispatchDevToolsBrowserSwap(tab.linkedBrowser, innerBrowser);
+      debug("Swap content to inner browser");
       gBrowser._swapBrowserDocShells(tab, innerBrowser);
 
       // 5. Force the original browser tab to be non-remote since the tool UI
       //    must be loaded in the parent process, and we're about to swap the
       //    tool UI into this tab.
+      debug("Flip original tab to remote false");
       gBrowser.updateBrowserRemoteness(tab.linkedBrowser, false);
 
       // 6. Swap the tool UI (with viewport showing the content) into the
       //    original browser tab and close the temporary tab used to load the
       //    tool via `swapBrowsersAndCloseOther`.
+      debug("Swap tool UI to original tab");
       swapBrowsersAndCloseOtherSilently(tab, containerTab);
 
       // 7. Start a tunnel from the tool tab's browser to the viewport browser
       //    so that some browser UI functions, like navigation, are connected to
       //    the content in the viewport, instead of the tool page.
       tunnel = tunnelToInnerBrowser(tab.linkedBrowser, innerBrowser);
+      debug("Yield to tunnel start");
       yield tunnel.start();
 
       // Swapping browsers disconnects the find bar UI from the browser.
