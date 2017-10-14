@@ -1,6 +1,9 @@
 # Manifest entries for imported test suites whose individual test cases
 # we don't want to change.
 
+# Skip the folder with tests for the scripts
+skip include test/jstests.list
+
 skip script ecma_6/String/normalize-generateddata-input.js # input data for other test
 
 # Skip intl402 tests when Intl isn't available.
@@ -121,6 +124,7 @@ skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer-
 skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer.js
+skip script test262/harness/detachArrayBuffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-greater-than-last-index.js
@@ -488,12 +492,28 @@ skip script test262/language/statements/async-generator/yield-star-async-next.js
 skip script test262/language/statements/class/async-gen-method-yield-star-async-next.js
 skip script test262/language/statements/class/async-gen-method-static-yield-star-async-next.js
 
+# Optional Catch Binding
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1380881
 skip script test262/language/statements/try/optional-catch-binding-lexical.js
 skip script test262/language/statements/try/optional-catch-binding-throws.js
 skip script test262/language/statements/try/optional-catch-binding-finally.js
 skip script test262/language/statements/try/optional-catch-binding.js
 
+# Promise.prototype.finally
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1019116
+skip script test262/built-ins/Promise/prototype/finally/invokes-then-with-function.js
+skip script test262/built-ins/Promise/prototype/finally/invokes-then-with-non-function.js
+skip script test262/built-ins/Promise/prototype/finally/is-a-function.js
+skip script test262/built-ins/Promise/prototype/finally/length.js
+skip script test262/built-ins/Promise/prototype/finally/name.js
+skip script test262/built-ins/Promise/prototype/finally/prop-desc.js
+skip script test262/built-ins/Promise/prototype/finally/rejected-observable-then-calls.js
+skip script test262/built-ins/Promise/prototype/finally/rejection-reason-no-fulfill.js
+skip script test262/built-ins/Promise/prototype/finally/rejection-reason-override-with-throw.js
+skip script test262/built-ins/Promise/prototype/finally/resolution-value-no-override.js
+skip script test262/built-ins/Promise/prototype/finally/resolved-observable-then-calls.js
+skip script test262/built-ins/Promise/prototype/finally/this-value-then-poisoned.js
+skip script test262/built-ins/Promise/prototype/finally/this-value-then-throws.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

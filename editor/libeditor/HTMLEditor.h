@@ -152,8 +152,8 @@ public:
   NS_DECL_NSIHTMLINLINETABLEEDITOR
 
   // XXX Following methods are not overriding but defined here...
-  nsresult CopyLastEditableChildStyles(nsIDOMNode* aPreviousBlock,
-                                       nsIDOMNode* aNewBlock,
+  nsresult CopyLastEditableChildStyles(nsINode* aPreviousBlock,
+                                       nsINode* aNewBlock,
                                        Element** aOutBrNode);
 
   nsresult LoadHTML(const nsAString& aInputString);
@@ -770,23 +770,15 @@ protected:
   nsresult RemoveBlockContainer(nsIContent& aNode);
 
   nsIContent* GetPriorHTMLSibling(nsINode* aNode);
-  nsresult GetPriorHTMLSibling(nsIDOMNode*inNode,
-                               nsCOMPtr<nsIDOMNode>* outNode);
 
   nsIContent* GetNextHTMLSibling(nsINode* aNode);
-  nsresult GetNextHTMLSibling(nsIDOMNode* inNode,
-                              nsCOMPtr<nsIDOMNode>* outNode);
 
   nsIContent* GetPriorHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
-  nsresult GetPriorHTMLNode(nsIDOMNode* inNode, nsCOMPtr<nsIDOMNode>* outNode,
-                            bool bNoBlockCrossing = false);
   nsIContent* GetPriorHTMLNode(nsINode* aParent, int32_t aOffset,
                                nsINode* aChildAtOffset,
                                bool aNoBlockCrossing = false);
 
   nsIContent* GetNextHTMLNode(nsINode* aNode, bool aNoBlockCrossing = false);
-  nsresult GetNextHTMLNode(nsIDOMNode* inNode, nsCOMPtr<nsIDOMNode>* outNode,
-                           bool bNoBlockCrossing = false);
   nsIContent* GetNextHTMLNode(nsINode* aParent, int32_t aOffset,
                               nsINode* aChildAtOffset,
                               bool aNoBlockCrossing = false);
