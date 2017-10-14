@@ -31,7 +31,7 @@ static const LiveRegisterSet AllRegs =
  *   ...using standard AArch64 calling convention
  */
 JitCode*
-JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
+JitRuntime::generateEnterJIT(JSContext* cx)
 {
     MacroAssembler masm(cx);
 
@@ -167,8 +167,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.Push(r19);
 
     Label osrReturnPoint;
-    if (type == EnterJitBaseline) {
-        // Check for OSR.
+    {
+        // Check for Interpreter -> Baseline OSR.
         Label notOsr;
         masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
 
@@ -229,9 +229,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Since AArch64 doesn't have the pc register available, the callee must push lr.
     masm.callJitNoProfiler(reg_code);
 
-    // Baseline OSR will return here.
-    if (type == EnterJitBaseline)
-        masm.bind(&osrReturnPoint);
+    // Interpreter -> Baseline OSR will return here.
+    masm.bind(&osrReturnPoint);
 
     // Return back to SP.
     masm.Pop(r19);
