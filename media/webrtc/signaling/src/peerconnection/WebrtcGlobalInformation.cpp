@@ -666,6 +666,7 @@ WebrtcGlobalInformation::GetLogging(
 
 static int32_t sLastSetLevel = 0;
 static bool sLastAECDebug = false;
+static Maybe<nsCString> sAecDebugLogDir;
 
 void
 WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel)
@@ -692,7 +693,7 @@ void
 WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal, bool aEnable)
 {
   if (aEnable) {
-    StartAecLog();
+    sAecDebugLogDir.emplace(StartAecLog());
   } else {
     StopAecLog();
   }
@@ -708,6 +709,12 @@ bool
 WebrtcGlobalInformation::AecDebug(const GlobalObject& aGlobal)
 {
   return sLastAECDebug;
+}
+
+void
+WebrtcGlobalInformation::GetAecDebugLogDir(const GlobalObject& aGlobal, nsAString& aDir)
+{
+  aDir = NS_ConvertASCIItoUTF16(sAecDebugLogDir.valueOr(EmptyCString()));
 }
 
 mozilla::ipc::IPCResult
