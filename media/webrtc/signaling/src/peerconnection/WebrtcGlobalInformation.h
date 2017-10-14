@@ -40,6 +40,7 @@ public:
 
   static void SetAecDebug(const GlobalObject& aGlobal, bool aEnable);
   static bool AecDebug(const GlobalObject& aGlobal);
+  static void GetAecDebugLogDir(const GlobalObject& aGlobal, nsAString& aDir);
 
   static void StoreLongTermICEStatistics(PeerConnectionImpl& aPc);
 
