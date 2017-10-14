@@ -121,33 +121,3 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     android.sourceSets."${sourceSet}".assets.srcDir syncAssetsFromDistDir.destinationDir
     android.sourceSets."${sourceSet}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
 }
-
-ext.configureVariantWithJNIWrappers = { variant, module ->
-
-    def jarTask = tasks.findByName("jar${variant.name.capitalize()}Classes")
-    if (jarTask == null) {
-        jarTask = tasks.findByName("package${variant.name.capitalize()}JarArtifact")
-    }
-    if (jarTask == null) {
-        throw new GradleException("Jar task not found: \"jar${variant.name.capitalize()}Classes\"\t\"package${variant.name.capitalize()}JarArtifact\"" )
-    }
-    if (jarTask.outputs.files.size() != 1) {
-        throw new GradleException("Jar task output multiple files other than one single jar")
-    }
-
-    def wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
-        classpath = variant.javaCompile.classpath
-        // Include android.jar.
-        classpath variant.javaCompile.options.bootClasspath
-        classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
-        main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
-        args module
-        args jarTask.outputs.files.iterator().next()
-
-        workingDir "${topobjdir}/mobile/android/base"
-
-        dependsOn jarTask
-    }
-
-    variant.assemble.dependsOn wrapperTask
-}
