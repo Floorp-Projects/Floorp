@@ -88,7 +88,7 @@ public:
    * @note This method might destroy the frame, pres shell and other objects.
    * Called when the 'curpos' attribute on one of the scrollbars changes.
    */
-  void CurPosAttributeChanged(nsIContent* aChild);
+  void CurPosAttributeChanged(nsIContent* aChild, bool aDoScroll = true);
 
   void PostScrollEvent();
   void FireScrollEvent();

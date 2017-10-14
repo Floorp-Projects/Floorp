@@ -12,9 +12,9 @@ Cu.import("chrome://marionette/content/atom.js");
 const {
   InvalidSelectorError,
   NoSuchElementError,
-  pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["element"];

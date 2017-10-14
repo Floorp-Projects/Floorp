@@ -1,3 +1,4 @@
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -687,8 +688,8 @@ impl Frame {
                     .builder
                     .push_shadow(shadow, clip_and_scroll, &prim_info);
             }
-            SpecificDisplayItem::PopShadow => {
-                context.builder.pop_shadow();
+            SpecificDisplayItem::PopAllShadows => {
+                context.builder.pop_all_shadows();
             }
         }
         None

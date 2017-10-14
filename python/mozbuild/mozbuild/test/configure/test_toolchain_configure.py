@@ -1541,6 +1541,12 @@ class RustTest(BaseConfigureTest):
             'armv7s-apple-ios',
             'i386-apple-ios',
             'x86_64-apple-ios',
+            'mips-unknown-linux-gnu',
+            'mipsel-unknown-linux-gnu',
+            'mips64-unknown-linux-gnuabi64',
+            'mips64el-unknown-linux-gnuabi64',
+            'powerpc64-unknown-linux-gnu',
+            'powerpc64le-unknown-linux-gnu',
         ):
             self.assertEqual(self.get_rust_target(straightforward), straightforward)
 

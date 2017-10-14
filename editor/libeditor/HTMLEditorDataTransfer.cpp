@@ -39,7 +39,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMNode.h"

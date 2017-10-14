@@ -1458,10 +1458,10 @@ pub extern "C" fn wr_dp_push_shadow(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_pop_shadow(state: &mut WrState) {
+pub extern "C" fn wr_dp_pop_all_shadows(state: &mut WrState) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.pop_shadow();
+    state.frame_builder.dl_builder.pop_all_shadows();
 }
 
 #[no_mangle]

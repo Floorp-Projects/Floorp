@@ -13,9 +13,9 @@ const {
   ElementNotInteractableError,
   InvalidArgumentError,
   InvalidElementStateError,
-  pprint,
 } = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/element.js");
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 Cu.import("chrome://marionette/content/event.js");
 
 Cu.importGlobalProperties(["File"]);

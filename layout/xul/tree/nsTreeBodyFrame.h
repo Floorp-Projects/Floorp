@@ -6,11 +6,11 @@
 #ifndef nsTreeBodyFrame_h
 #define nsTreeBodyFrame_h
 
+#include "mozilla/AtomArray.h"
 #include "mozilla/Attributes.h"
 
 #include "nsLeafBoxFrame.h"
 #include "nsITreeView.h"
-#include "nsICSSPseudoComparator.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
@@ -48,7 +48,6 @@ struct nsTreeImageCacheEntry
 // The actual frame that paints the cells and rows.
 class nsTreeBodyFrame final
   : public nsLeafBoxFrame
-  , public nsICSSPseudoComparator
   , public nsIScrollbarMediator
   , public nsIReflowCallback
 {
@@ -130,9 +129,6 @@ public:
   // nsIReflowCallback
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
-
-  // nsICSSPseudoComparator
-  virtual bool PseudoMatches(nsCSSSelector* aSelector) override;
 
   // nsIScrollbarMediator
   virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -599,7 +595,7 @@ protected: // Data Members
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
 
   // A scratch array used when looking up cached style contexts.
-  AtomArray mScratchArray;
+  mozilla::AtomArray mScratchArray;
 
   // The index of the first visible row and the # of rows visible onscreen.
   // The tree only examines onscreen rows, starting from
