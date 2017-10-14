@@ -156,7 +156,7 @@ GeneratePrologue(MacroAssembler& masm)
 // The trampoline use the EnterJitCode signature, with the standard x64 fastcall
 // calling convention.
 JitCode *
-JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
+JitRuntime::generateEnterJIT(JSContext* cx)
 {
     const Register reg_code = IntArgReg0;
     const Register reg_argc = IntArgReg1;
@@ -176,8 +176,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.movePtr(StackPointer, s4);
 
     // Save stack pointer as baseline frame.
-    if (type == EnterJitBaseline)
-        masm.movePtr(StackPointer, BaselineFrameReg);
+    masm.movePtr(StackPointer, BaselineFrameReg);
 
     // Load the number of actual arguments into s3.
     masm.unboxInt32(Address(reg_vp, 0), s3);
@@ -234,8 +233,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
     CodeLabel returnLabel;
     CodeLabel oomReturnLabel;
-    if (type == EnterJitBaseline) {
-        // Handle OSR.
+    {
+        // Handle Interpreter -> Baseline OSR.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
         regs.take(OsrFrameReg);
         regs.take(BaselineFrameReg);
@@ -340,8 +339,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Call the function with pushing return address to stack.
     masm.callJitNoProfiler(reg_code);
 
-    if (type == EnterJitBaseline) {
-        // Baseline OSR will return here.
+    {
+        // Interpreter -> Baseline OSR will return here.
         masm.bind(returnLabel.target());
         masm.addCodeLabel(returnLabel);
         masm.bind(oomReturnLabel.target());
