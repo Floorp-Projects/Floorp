@@ -40,7 +40,7 @@ describe("Top Stories Feed", () => {
       enableSection: sinon.spy(),
       disableSection: sinon.spy(),
       updateSection: sinon.spy(),
-      sections: new Map([["topstories", {options: FAKE_OPTIONS}]])
+      sections: new Map([["topstories", {order: 0, options: FAKE_OPTIONS}]])
     };
 
     class FakeUserDomainAffinityProvider {}
@@ -52,7 +52,7 @@ describe("Top Stories Feed", () => {
     }));
 
     instance = new TopStoriesFeed();
-    instance.store = {getState() { return {}; }, dispatch: sinon.spy()};
+    instance.store = {getState() { return {Prefs: {values: {showSponsored: true}}}; }, dispatch: sinon.spy()};
     instance.storiesLastUpdated = 0;
     instance.topicsLastUpdated = 0;
     instance.affinityProvider = {calculateItemRelevanceScore: s => 1};
@@ -120,6 +120,11 @@ describe("Top Stories Feed", () => {
 
       assert.called(Components.utils.reportError);
     });
+    it("should load data from cache on init", () => {
+      instance.loadCachedData = sinon.spy();
+      instance.onAction({type: at.INIT});
+      assert.calledOnce(instance.loadCachedData);
+    });
   });
   describe("#uninit", () => {
     it("should disable its section", () => {
@@ -129,7 +134,7 @@ describe("Top Stories Feed", () => {
     });
   });
   describe("#fetch", () => {
-    it("should fetch stories and send event", async () => {
+    it("should fetch stories, send event and cache results", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
@@ -163,6 +168,7 @@ describe("Top Stories Feed", () => {
 
       instance.stories_endpoint = "stories-endpoint";
       instance.stories_referrer = "referrer";
+      instance.cache.set = sinon.spy();
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchStories();
 
@@ -171,6 +177,8 @@ describe("Top Stories Feed", () => {
       assert.calledWithExactly(fetchStub, instance.stories_endpoint);
       assert.calledOnce(sectionsManagerStub.updateSection);
       assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: stories});
+      assert.calledOnce(instance.cache.set);
+      assert.calledWith(instance.cache.set, "stories", Object.assign({}, response, {_timestamp: 0}));
     });
     it("should call SectionsManager.updateSection", () => {
       instance.dispatchUpdateEvent(123, {});
@@ -227,7 +235,7 @@ describe("Top Stories Feed", () => {
       assert.equal(sectionsManagerStub.updateSection.firstCall.args[1].rows[1].type, "trending");
       assert.equal(sectionsManagerStub.updateSection.firstCall.args[1].rows[2].type, "trending");
     });
-    it("should fetch topics and send event", async () => {
+    it("should fetch topics, send event and cache results", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
 
@@ -241,6 +249,7 @@ describe("Top Stories Feed", () => {
       }];
 
       instance.topics_endpoint = "topics-endpoint";
+      instance.cache.set = sinon.spy();
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchTopics();
 
@@ -248,6 +257,8 @@ describe("Top Stories Feed", () => {
       assert.calledWithExactly(fetchStub, instance.topics_endpoint);
       assert.calledOnce(sectionsManagerStub.updateSection);
       assert.calledWithMatch(sectionsManagerStub.updateSection, SECTION_ID, {topics});
+      assert.calledOnce(instance.cache.set);
+      assert.calledWith(instance.cache.set, "topics", Object.assign({}, response, {_timestamp: 0}));
     });
     it("should report error for unexpected topics response", async () => {
       let fetchStub = globals.sandbox.stub();
@@ -377,7 +388,7 @@ describe("Top Stories Feed", () => {
 
       const response = {
         "settings": {"spocsPerNewTabs": 2},
-        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
+        "recommendations": [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -387,9 +398,12 @@ describe("Top Stories Feed", () => {
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchStories();
 
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
+
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
       let action = instance.store.dispatch.firstCall.args[0];
+
       assert.equal(at.SECTION_UPDATE, action.type);
       assert.equal(true, action.meta.skipMain);
       assert.equal(action.data.rows[0].guid, "rec1");
@@ -423,11 +437,14 @@ describe("Top Stories Feed", () => {
       instance.personalized = true;
       instance.show_spocs = true;
       instance.stories_endpoint = "stories-endpoint";
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
 
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.notCalled(instance.store.dispatch);
       assert.equal(instance.contentUpdateQueue.length, 1);
+
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}]});
 
       await instance.fetchStories();
       assert.equal(instance.contentUpdateQueue.length, 0);
@@ -446,8 +463,30 @@ describe("Top Stories Feed", () => {
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
+      instance.personalized = true;
       instance.show_spocs = false;
       instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.notCalled(instance.store.dispatch);
+    });
+    it("should not insert spoc if user opted out", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
+        "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
+      };
+
+      instance.personalized = true;
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: false}}});
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchStories();
 
@@ -538,15 +577,60 @@ describe("Top Stories Feed", () => {
       assert.equal(instance.topicsLastUpdated, 0);
       assert.equal(instance.affinityLastUpdated, 0);
     });
-    it("should filter recs and spocs when link is blocked", () => {
-      instance.stories = [{"url": "not_blocked"}, {"url": "blocked"}];
+    it("should filter spocs when link is blocked", () => {
       instance.spocs = [{"url": "not_blocked"}, {"url": "blocked"}];
       instance.onAction({type: at.PLACES_LINK_BLOCKED, data: {url: "blocked"}});
 
-      assert.deepEqual(instance.stories, [{"url": "not_blocked"}]);
       assert.deepEqual(instance.spocs, [{"url": "not_blocked"}]);
-      assert.calledOnce(sectionsManagerStub.updateSection);
-      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: instance.stories});
+    });
+  });
+  describe("#loadCachedData", () => {
+    it("should update section with cached stories and topics if available", async () => {
+      const stories = {
+        "_timestamp": 123,
+        "recommendations": [{
+          "id": "1",
+          "title": "title",
+          "excerpt": "description",
+          "image_src": "image-url",
+          "url": "rec-url",
+          "published_timestamp": "123",
+          "context": "trending",
+          "icon": "icon"
+        }]
+      };
+      const transformedStores = [{
+        "guid": "1",
+        "type": "now",
+        "title": "title",
+        "context": "trending",
+        "icon": "icon",
+        "description": "description",
+        "image": "image-url",
+        "referrer": "referrer",
+        "url": "rec-url",
+        "hostname": "rec-url",
+        "min_score": 0,
+        "score": 1
+      }];
+      const topics = {
+        "_timestamp": 123,
+        "topics": [{"name": "topic1", "url": "url-topic1"}, {"name": "topic2", "url": "url-topic2"}]
+      };
+      instance.cache.get = () => ({stories, topics});
+      instance.stories_referrer = "referrer";
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      await instance.loadCachedData();
+      assert.calledTwice(sectionsManagerStub.updateSection);
+      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {topics: topics.topics, read_more_endpoint: undefined});
+      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: transformedStores});
+    });
+    it("should NOT update section if there is no cached data", async () => {
+      instance.cache.get = () => ({});
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      await instance.loadCachedData();
+      assert.notCalled(sectionsManagerStub.updateSection);
     });
   });
 });

@@ -46,6 +46,7 @@ describe("Highlights Feed", () => {
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
+
     globals.set("NewTabUtils", fakeNewTabUtils);
     ({HighlightsFeed, HIGHLIGHTS_UPDATE_TIME, SECTION_ID} = injector({
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
@@ -153,6 +154,17 @@ describe("Highlights Feed", () => {
         {url: "http://www.topsite0.com"},
         {url: "http://www.topsite1.com"},
         {url: "http://www.topsite2.com"}
+      ];
+
+      const highlights = await fetchHighlights();
+
+      assert.equal(highlights.length, 1);
+      assert.equal(highlights[0].url, links[0].url);
+    });
+    it("should include bookmark but not history already in Top Sites", async () => {
+      links = [
+        {url: "http://www.topsite0.com", type: "bookmark"},
+        {url: "http://www.topsite1.com", type: "history"}
       ];
 
       const highlights = await fetchHighlights();

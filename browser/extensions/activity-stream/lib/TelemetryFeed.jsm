@@ -30,7 +30,8 @@ const USER_PREFS_ENCODING = {
   "showTopSites": 1 << 1,
   "feeds.section.topstories": 1 << 2,
   "feeds.section.highlights": 1 << 3,
-  "feeds.snippets": 1 << 4
+  "feeds.snippets": 1 << 4,
+  "showSponsored": 1 << 5
 };
 
 const IMPRESSION_STATS_RESET_TIME = 60 * 60 * 1000; // 60 minutes

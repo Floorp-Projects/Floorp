@@ -76,6 +76,7 @@ overrider.set({
     }
   },
   XPCOMUtils: {
+    defineLazyGetter(_1, _2, f) { f(); },
     defineLazyModuleGetter() {},
     defineLazyServiceGetter() {},
     generateQI() { return {}; }
