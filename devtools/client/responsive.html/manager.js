@@ -28,6 +28,10 @@ loader.lazyRequireGetter(this, "getStr",
 loader.lazyRequireGetter(this, "EmulationFront",
   "devtools/shared/fronts/emulation", true);
 
+function debug(msg) {
+  // console.log(`RDM manager: ${msg}`);
+}
+
 /**
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
  * opening and closing the responsive UI.
@@ -317,6 +321,8 @@ ResponsiveUI.prototype = {
    * For more details, see /devtools/docs/responsive-design-mode.md.
    */
   init: Task.async(function* () {
+    debug("Init start");
+
     let ui = this;
 
     // Watch for tab close and window close so we can clean up RDM synchronously
@@ -324,30 +330,38 @@ ResponsiveUI.prototype = {
     this.browserWindow.addEventListener("unload", this);
 
     // Swap page content from the current tab into a viewport within RDM
+    debug("Create browser swapper");
     this.swap = swapToInnerBrowser({
       tab: this.tab,
       containerURL: TOOL_URL,
       getInnerBrowser: Task.async(function* (containerBrowser) {
         let toolWindow = ui.toolWindow = containerBrowser.contentWindow;
         toolWindow.addEventListener("message", ui);
+        debug("Yield to init from inner");
         yield message.request(toolWindow, "init");
         toolWindow.addInitialViewport("about:blank");
+        debug("Yield to browser mounted");
         yield message.wait(toolWindow, "browser-mounted");
         return ui.getViewportBrowser();
       })
     });
+    debug("Yield to swap start");
     yield this.swap.start();
 
     this.tab.addEventListener("BeforeTabRemotenessChange", this);
 
     // Notify the inner browser to start the frame script
+    debug("Yield to start frame script");
     yield message.request(this.toolWindow, "start-frame-script");
 
     // Get the protocol ready to speak with emulation actor
+    debug("Yield to RDP server connect");
     yield this.connectToServer();
 
     // Non-blocking message to tool UI to start any delayed init activities
     message.post(this.toolWindow, "post-init");
+
+    debug("Init done");
   }),
 
   /**
