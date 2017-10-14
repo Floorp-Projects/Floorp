@@ -118,6 +118,12 @@ public:
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 
+  virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) override;
+  virtual void GetEditCommands(
+                 NativeKeyBindingsType aType,
+                 const WidgetKeyboardEvent& aEvent,
+                 nsTArray<CommandInt>& aCommands) override;
+
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
 
