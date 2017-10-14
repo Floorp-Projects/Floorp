@@ -84,8 +84,6 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     controlFlowGraph_(nullptr)
 { }
 
-static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
-
 static bool
 CheckFrame(InterpreterFrame* fp)
 {
@@ -108,17 +106,14 @@ CheckFrame(InterpreterFrame* fp)
 static JitExecStatus
 EnterBaseline(JSContext* cx, EnterJitData& data)
 {
-    if (data.osrFrame) {
-        // Check for potential stack overflow before OSR-ing.
-        uint8_t spDummy;
-        uint32_t extra = BaselineFrame::Size() + (data.osrNumStackValues * sizeof(Value));
-        uint8_t* checkSp = (&spDummy) - extra;
-        if (!CheckRecursionLimitWithStackPointer(cx, checkSp))
-            return JitExec_Aborted;
-    } else {
-        if (!CheckRecursionLimit(cx))
-            return JitExec_Aborted;
-    }
+    MOZ_ASSERT(data.osrFrame);
+
+    // Check for potential stack overflow before OSR-ing.
+    uint8_t spDummy;
+    uint32_t extra = BaselineFrame::Size() + (data.osrNumStackValues * sizeof(Value));
+    uint8_t* checkSp = (&spDummy) - extra;
+    if (!CheckRecursionLimitWithStackPointer(cx, checkSp))
+        return JitExec_Aborted;
 
 #ifdef DEBUG
     // Assert we don't GC before entering JIT code. A GC could discard JIT code
@@ -130,9 +125,9 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 #endif
 
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
-    MOZ_ASSERT_IF(data.osrFrame, CheckFrame(data.osrFrame));
+    MOZ_ASSERT(CheckFrame(data.osrFrame));
 
-    EnterJitCode enter = cx->runtime()->jitRuntime()->enterBaseline();
+    EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();
 
     bool constructingLegacyGen =
         data.constructing && CalleeTokenToFunction(data.calleeToken)->isLegacyGenerator();
@@ -150,8 +145,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
         ActivationEntryMonitor entryMonitor(cx, data.calleeToken);
         JitActivation activation(cx);
 
-        if (data.osrFrame)
-            data.osrFrame->setRunningInJit();
+        data.osrFrame->setRunningInJit();
 
 #ifdef DEBUG
         nogc.reset();
@@ -161,8 +155,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
                             data.calleeToken, data.envChain.get(), data.osrNumStackValues,
                             data.result.address());
 
-        if (data.osrFrame)
-            data.osrFrame->clearRunningInJit();
+        data.osrFrame->clearRunningInJit();
     }
 
     MOZ_ASSERT(!cx->hasIonReturnOverride());
@@ -183,24 +176,6 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 
     MOZ_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
     return data.result.isMagic() ? JitExec_Error : JitExec_Ok;
-}
-
-JitExecStatus
-jit::EnterBaselineMethod(JSContext* cx, RunState& state)
-{
-    BaselineScript* baseline = state.script()->baselineScript();
-
-    EnterJitData data(cx);
-    data.jitcode = baseline->method()->raw();
-
-    SetEnterJitData(cx, data, state);
-
-    JitExecStatus status = EnterBaseline(cx, data);
-    if (status != JitExec_Ok)
-        return status;
-
-    state.setReturnValue(data.result);
-    return JitExec_Ok;
 }
 
 JitExecStatus
