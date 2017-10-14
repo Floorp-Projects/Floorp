@@ -67,9 +67,6 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
     } else {
         numActualArgs = 0;
         constructing = false;
-        envChain = state.asExecute()->environmentChain();
-        calleeToken = CalleeToToken(script);
-
         if (script->isDirectEvalInFunction()) {
             if (state.asExecute()->newTarget().isNull()) {
                 ScriptFrameIter iter(cx);
@@ -81,6 +78,8 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
             maxArgc = 0;
             maxArgv = nullptr;
         }
+        envChain = state.asExecute()->environmentChain();
+        calleeToken = CalleeToToken(state.script());
     }
 
     // Caller must construct |this| before invoking the function. Legacy
