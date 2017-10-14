@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518803015565000);
+const PRTime gPreloadListExpirationTime = INT64_C(1518849091134000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -130,7 +130,6 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518803015565000);
 1590284872.rsc.cdn77.org, 1
 1600esplanade.com, 1
 16164f.com, 1
-1644091933.rsc.cdn77.org, 1
 174.net.nz, 1
 1750studios.com, 0
 17hats.com, 1
@@ -234,7 +233,6 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518803015565000);
 2programmers.net, 1
 2stv.net, 1
 2ulcceria.nl, 1
-300mbmovie24.com, 1
 3133780x.com, 1
 314chan.org, 1
 31klabs.com, 1
@@ -1430,6 +1428,7 @@ andrewvoce.com, 1
 andrewyg.net, 1
 andrezadnik.com, 1
 andro2id.com, 1
+andro4all.com, 1
 android.re, 1
 androide.com, 1
 androidhry.cz, 1
@@ -1638,7 +1637,6 @@ api.simple.com, 0
 api.xero.com, 0
 apiary.blog, 1
 apiary.clothing, 1
-apiary.shop, 1
 apiary.store, 1
 apiary.supplies, 1
 apiary.supply, 1
@@ -1707,7 +1705,6 @@ apptomics.com, 1
 apptoutou.com, 1
 appuals.com, 1
 appui-de-fenetre.fr, 1
-appuro.com, 1
 appzoojoo.be, 1
 aprefix.com, 1
 apretatuercas.es, 1
@@ -1771,7 +1768,7 @@ arcaik.net, 1
 arcenergy.co.uk, 1
 archii.ca, 1
 archimedicx.com, 1
-architectdirect.nl, 1
+architectdirect.nl, 0
 architecte-interieur.be, 1
 archivesdelavieordinaire.ch, 1
 archlinux.de, 1
@@ -3219,7 +3216,6 @@ bjarnerest.de, 1
 bjgongyi.com, 1
 bjornhelmersson.se, 1
 bjornjohansen.no, 1
-bjs.gov, 1
 bjtxl.cn, 1
 bkhpilates.co.uk, 1
 bl4ckb0x.biz, 1
@@ -4569,7 +4565,7 @@ champions.co, 1
 championweb.com.au, 1
 champonthis.de, 1
 champserver.net, 1
-chancat.blog, 1
+chancat.blog, 0
 chandr1000.ga, 1
 changecopyright.ru, 1
 changelab.cc, 1
@@ -5087,6 +5083,7 @@ cloudia.org, 1
 cloudily.com, 1
 cloudlight.biz, 1
 cloudmigrator365.com, 1
+cloudopt.net, 0
 cloudoptimizedsmb.com, 1
 cloudoptimus.com, 1
 cloudpagesforwork.com, 1
@@ -5746,6 +5743,7 @@ creativeink.de, 1
 creativelaw.eu, 1
 creativeliquid.com, 1
 creativesurvey.com, 1
+creativeweb.biz, 1
 creators-design.com, 1
 creators.co, 1
 credential.eu, 1
@@ -6415,6 +6413,7 @@ ddel.de, 1
 dden.ca, 0
 dden.website, 1
 dden.xyz, 1
+ddepot.us, 1
 ddfreedish.site, 0
 ddhosted.com, 1
 ddmeportal.com, 1
@@ -6479,7 +6478,6 @@ decomplify.com, 1
 deconsolutions.com, 1
 decor-d.com, 1
 decoraid.com, 1
-decoratrix.com, 1
 decorestilo.com.br, 1
 decorincasa.com.br, 1
 decorland.com.ua, 1
@@ -8081,7 +8079,6 @@ emergencyessay.com, 1
 emergentvisiontec.com, 1
 emergenzalavoro.com, 1
 emero.de, 1
-emesolutions.net, 1
 emi-air-comprime.com, 1
 emi.im, 1
 emielraaijmakers.nl, 1
@@ -8830,7 +8827,6 @@ failover.de, 1
 failover.eu, 1
 fairbill.com, 1
 faircom.co.za, 1
-fairedeseconomies.info, 1
 fairviewmotel-simcoe.com, 1
 faithmissionaries.com, 1
 faithwatch.org, 1
@@ -9416,7 +9412,6 @@ flymns.fr, 1
 flynn.io, 1
 flyserver.co.il, 1
 flyspace.ga, 1
-flyspace.ml, 1
 flyss.net, 1
 flyssh.net, 1
 flyt.online, 1
@@ -10658,7 +10653,6 @@ gothamlimo.com, 1
 gothic.dating, 1
 gotirupati.com, 1
 goto.google.com, 1
-goto.msk.ru, 1
 goto.world, 1
 gotomi.info, 1
 gotoxy.at, 1
@@ -12181,7 +12175,7 @@ idexxpublicationportal.com, 1
 idgard.de, 1
 idhosts.co.id, 1
 idid.tk, 1
-idinby.dk, 0
+idinby.dk, 1
 idiopolis.org, 1
 idiotentruppe.de, 1
 idmanagement.gov, 1
@@ -13562,6 +13556,7 @@ joostvanderlaan.nl, 1
 jooto.com, 1
 jopsens.de, 1
 joran.org, 1
+jordanhamilton.me, 1
 jordankmportal.com, 1
 jordans.co.uk, 1
 jordanscorporatelaw.com, 1
@@ -13667,6 +13662,7 @@ juergenspecht.de, 1
 jugendsuenden.info, 1
 juhakoho.com, 1
 juice.codes, 1
+juka.pp.ua, 1
 julegoerke.de, 1
 julian-weigle.de, 1
 juliangonggrijp.com, 1
@@ -14987,7 +14983,7 @@ leaseit24.de, 1
 leasit.at, 1
 leasit.de, 1
 leatherfurnitureexpo.com, 1
-leaversmith.com, 0
+leaversmith.com, 1
 leavesofchangeweekly.org, 1
 lebal.se, 1
 lebanesearmy.gov.lb, 1
@@ -16555,7 +16551,6 @@ mcuong.tk, 0
 mcynews.com, 1
 mcyukon.com, 1
 md5file.com, 1
-md5hashing.net, 1
 mdcloudpracticesolutions.com, 1
 mdcloudps.com, 1
 mdek.at, 1
@@ -18008,7 +18003,6 @@ naphex.rocks, 1
 napisynapomniky.cz, 1
 napolinissanctparts.com, 1
 narach.com, 1
-narada.com.ua, 1
 naralogics.com, 1
 narfation.org, 1
 nargele.eu, 1
@@ -18676,7 +18670,6 @@ noop.ch, 1
 noordsee.de, 1
 noorsolidarity.com, 1
 nootropic.com, 1
-nootropicsource.com, 1
 nopaste.xyz, 1
 nord-sud.be, 1
 nordakademie.de, 1
@@ -19244,6 +19237,7 @@ openconnect.com.au, 1
 opendataincubator.eu, 1
 openevic.info, 1
 openfir.st, 1
+openfitapi-falke.azurewebsites.net, 1
 opengg.me, 1
 openings.ninja, 1
 openintelligence.uk, 1
@@ -19351,7 +19345,6 @@ origami.to, 1
 originalmockups.com, 1
 originalniknihy.cz, 1
 orimex-mebel.ru, 1
-oriongames.eu, 1
 orkestar-krizevci.hr, 1
 orleika.io, 1
 orlives.de, 0
@@ -21403,6 +21396,7 @@ rapenroer.nl, 1
 raphael.li, 1
 raphaelcasazza.ch, 1
 rapidapp.io, 1
+rapido.nu, 1
 rapidshit.net, 1
 rapidstone.com, 1
 raraflora.com.au, 1
@@ -21529,7 +21523,6 @@ reaven.nl, 1
 rebelessex.com, 1
 rebelz.se, 1
 rebirthia.me, 1
-rebootmc.com, 1
 reboxetine.com, 1
 reboxonline.com, 1
 recantoshop.com, 1
@@ -22738,7 +22731,6 @@ scenicbyways.info, 1
 scepticism.com, 1
 sceptique.eu, 1
 schaafenstrasse.koeln, 1
-schachburg.de, 1
 schadevergoedingen.eu, 1
 schallert.com, 1
 schamlosharmlos.de, 1
@@ -23445,7 +23437,7 @@ shishlik.net, 1
 shitagi-shop.com, 1
 shitbeast.institute, 1
 shitfest.info, 1
-shitmybradsays.com, 1
+shitmybradsays.com, 0
 shitposts.se, 1
 shitproductions.org, 1
 shitsta.in, 1
@@ -23511,6 +23503,7 @@ shux.pro, 1
 shuzicai.cn, 1
 shymeck.pw, 1
 si-benelux.nl, 1
+si.to, 1
 siamega.com, 1
 siamojo.com, 1
 siamsnus.com, 1
@@ -23874,7 +23867,6 @@ slash64.uk, 1
 slashbits.no, 1
 slaughterhouse.fr, 1
 slaws.io, 1
-sleeklounge.com, 1
 sleeplessbeastie.eu, 1
 sleepmap.de, 1
 sleepstar.co.uk, 1
@@ -24598,9 +24590,7 @@ statecollegemortgages.com, 1
 statgram.me, 1
 static-692b8c32.de, 1
 static-assets.io, 1
-static-myfxee-808795.c.cdn77.org, 1
 static-myfxoau-808795.c.cdn77.org, 1
-static-myfxouk-808795.c.cdn77.org, 1
 static.hosting, 1
 static.wepay.com, 0
 staticisnoise.com, 1
@@ -24994,7 +24984,6 @@ supersonnigfestival.de, 1
 supersu.kr, 1
 superswingtrainer.com, 1
 supertasker.org, 1
-supes.io, 1
 supeuro.com, 1
 supplementler.com, 1
 supplies24.at, 1
@@ -25068,7 +25057,6 @@ svetzitrka.cz, 0
 svijet-medija.hr, 1
 sviz.pro, 1
 svj-stochovska.cz, 1
-svjvn.cz, 1
 svm-basketball.de, 1
 svm-it.eu, 1
 sw-servers.net, 1
@@ -26063,7 +26051,6 @@ tibovanheule.site, 1
 ticfleet.com, 1
 ticketluck.com, 1
 ticketmates.com.au, 1
-ticketoplichting.nl, 1
 ticketslover.com, 1
 ticketsmate.com, 1
 ticketsource.co.uk, 1
@@ -26903,7 +26890,6 @@ twisted-brains.org, 1
 twistedwave.com, 1
 twisto.cz, 1
 twit-guide.com, 1
-twittelzie.nl, 1
 twitter.ax, 1
 twitter.com, 0
 twitteroauth.com, 1
@@ -27706,7 +27692,6 @@ viptamin.eu, 1
 vir-tec.eu, 1
 viralboombox.xyz, 1
 viralpop.it, 1
-virgopolymer.com, 1
 virial.de, 1
 viridis-milites.cz, 1
 virtualdesignmedia.com, 0
@@ -28019,7 +28004,6 @@ warekon.dk, 1
 warenits.at, 1
 warezaddict.com, 1
 wargameexclusive.com, 1
-warhaggis.com, 1
 warlions.info, 0
 warmestwishes.ca, 1
 warmlyyours.com, 0
@@ -28056,6 +28040,7 @@ watermonitor.gov, 1
 watersb.org, 1
 watertrails.io, 1
 watsonwork.me, 1
+wattechweb.com, 1
 wave-ola.es, 1
 wavesboardshop.com, 1
 wavesoftime.com, 1
@@ -28351,8 +28336,6 @@ wetofu.top, 1
 wettbonus.info, 1
 wetthost.com, 1
 wevenues.com, 1
-wewillgo.com, 1
-wewillgo.org, 1
 weyland-yutani.org, 1
 weyland.tech, 1
 wf-bigsky-master.appspot.com, 1
@@ -29114,7 +29097,6 @@ xn--rt-cja.eu, 1
 xn--rt-cja.ie, 1
 xn--rtter-kva.eu, 1
 xn--ruanmller-u9a.com, 1
-xn--sdkwa9azd389v01ya.com, 1
 xn--seelenwchter-mcb.eu, 1
 xn--spenijmazania-yhc.pl, 1
 xn--srenpind-54a.dk, 1
@@ -29490,6 +29472,7 @@ yudan.com.br, 1
 yude.ml, 1
 yue.la, 1
 yue2.net, 1
+yufan.me, 1
 yuhuo.org, 1
 yuka.one, 1
 yuki.xyz, 1
@@ -29724,6 +29707,7 @@ zojadravai.com, 1
 zoki.art, 1
 zokster.net, 1
 zolokar.xyz, 1
+zolotoy-standart.com.ua, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
 zone-produkte.de, 1
