@@ -520,8 +520,7 @@ protected:
   };
 
   nsresult DetectCharset();
-  nsresult AppendToResponseText(const char* aBuffer, uint32_t aBufferLen,
-                                bool aLast = false);
+  nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
   static nsresult StreamReaderFunc(nsIInputStream* in,
                                    void* closure,
                                    const char* fromRawSegment,
