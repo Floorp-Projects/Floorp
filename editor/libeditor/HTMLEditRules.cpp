@@ -6814,8 +6814,8 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
         }
 
         nsCOMPtr<Element> brNode;
-        rv = htmlEditor->CopyLastEditableChildStyles(GetAsDOMNode(prevItem),
-                                                     GetAsDOMNode(&aListItem),
+        rv = htmlEditor->CopyLastEditableChildStyles(prevItem,
+                                                     &aListItem,
                                                      getter_AddRefs(brNode));
         NS_ENSURE_SUCCESS(rv, rv);
         if (brNode) {
