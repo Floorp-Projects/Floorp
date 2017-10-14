@@ -285,12 +285,12 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 # This step can occur much earlier than the main Proguard pass: it needs only
 # gecko-R.jar to have been compiled (as that's where the library R.java files
 # end up), but it does block the main Proguard pass.
-.bundled.proguard.deps: gecko-R.jar $(proguard_config_dir)/strip-libs.cfg
+.bundled.proguard.deps: gecko-R.jar $(proguard_config_dir)/strip-libs.cfg $(PROGUARD_JAR)
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
 	$(JAVA) \
 		-Xmx512m -Xms128m \
-		-jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
+		-jar $(PROGUARD_JAR) \
 		@$(proguard_config_dir)/strip-libs.cfg \
 		-injars $(subst ::,:,$(java_bundled_libs))\
 		-outjars bundled-jars-nodebug \
@@ -300,12 +300,12 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 # outputs are fresher than the target, preventing a subsequent
 # invocation from thinking Proguard's outputs are stale.  This is safe
 # because Make removes the target file if any recipe command fails.
-.proguard.deps: .geckoview.deps .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg
+.proguard.deps: .geckoview.deps .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg $(PROGUARD_JAR)
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
 	$(JAVA) \
 		-Xmx512m -Xms128m \
-		-jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
+		-jar $(PROGUARD_JAR) \
 		@$(proguard_config_dir)/proguard.cfg \
 		-optimizationpasses $(PROGUARD_PASSES) \
 		-injars $(subst ::,:,$(all_jars_classpath)):bundled-jars-nodebug \

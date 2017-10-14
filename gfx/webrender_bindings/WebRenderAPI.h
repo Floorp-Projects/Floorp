@@ -374,7 +374,7 @@ public:
                       bool aIsBackfaceVisible,
                       const wr::Shadow& aShadow);
 
-  void PopShadow();
+  void PopAllShadows();
 
 
 

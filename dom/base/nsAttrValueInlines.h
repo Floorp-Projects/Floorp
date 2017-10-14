@@ -34,7 +34,7 @@ struct MiscContainer final
         mozilla::DeclarationBlock* mCSSDeclaration;
         mozilla::css::URLValue* mURL;
         mozilla::css::ImageValue* mImage;
-        nsAttrValue::AtomArray* mAtomArray;
+        mozilla::AtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
         const nsSVGAngle* mSVGAngle;
         const nsSVGIntegerPair* mSVGIntegerPair;
@@ -139,7 +139,7 @@ nsAttrValue::GetPercentValue() const
             / 100.0f;
 }
 
-inline nsAttrValue::AtomArray*
+inline mozilla::AtomArray*
 nsAttrValue::GetAtomArrayValue() const
 {
   NS_PRECONDITION(Type() == eAtomArray, "wrong type");

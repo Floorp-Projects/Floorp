@@ -5,9 +5,10 @@
 "use strict";
 
 const { AutoRefreshHighlighter } = require("./auto-refresh");
-const { CanvasFrameAnonymousContentHelper, getCSSStyleRules, getComputedStyle,
+const { CanvasFrameAnonymousContentHelper, getComputedStyle,
         createSVGNode, createNode } = require("./utils/markup");
 const { setIgnoreLayoutChanges, getAdjustedQuads } = require("devtools/shared/layout/utils");
+const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
 
 const GEOMETRY_LABEL_SIZE = 6;
 

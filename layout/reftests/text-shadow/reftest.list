@@ -9,14 +9,14 @@ HTTP(..) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
 == basic-negcoord.html basic-negcoord-ref.html
-== basic-opacity.html basic-opacity-ref.html
+fuzzy-if(webrender,24-24,80-80) == basic-opacity.html basic-opacity-ref.html
 != blur.html blur-notref.html
 == color-inherit.html color-inherit-ref.html
 == color-parserorder.html color-parserorder-ref.html
-fails-if(webrender) == decorations-multiple-zorder.html decorations-multiple-zorder-ref.html
+== decorations-multiple-zorder.html decorations-multiple-zorder-ref.html
 == multiple-noblur.html multiple-noblur-ref.html
-fails-if(webrender) == quirks-decor-noblur.html quirks-decor-noblur-ref.html
-fails-if(webrender) == standards-decor-noblur.html standards-decor-noblur-ref.html
+== quirks-decor-noblur.html quirks-decor-noblur-ref.html
+== standards-decor-noblur.html standards-decor-noblur-ref.html
 == padding-decoration.html padding-decoration-ref.html
 == textindent.html textindent-ref.html
 == lineoverflow.html lineoverflow-ref.html

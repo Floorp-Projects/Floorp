@@ -7467,7 +7467,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   result.mHasSize = status & imgIRequest::STATUS_SIZE_AVAILABLE;
   if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
     // Spec says to use GetComplete, but that only works on
-    // nsIDOMHTMLImageElement, and we support all sorts of other stuff
+    // HTMLImageElement, and we support all sorts of other stuff
     // here.  Do this for now pending spec clarification.
     result.mIsStillLoading = (status & imgIRequest::STATUS_ERROR) == 0;
     return result;

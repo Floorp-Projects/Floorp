@@ -138,7 +138,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
                                              nsGenericHTMLElement,
-                                             nsIDOMHTMLImageElement,
                                              nsIImageLoadingContent,
                                              imgIOnloadBlocker,
                                              imgINotificationObserver)
@@ -756,6 +755,13 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
   return img.forget();
 }
 
+NS_IMETHODIMP
+HTMLImageElement::GetNaturalHeight(uint32_t* aNaturalHeight)
+{
+  *aNaturalHeight = NaturalHeight();
+  return NS_OK;
+}
+
 uint32_t
 HTMLImageElement::NaturalHeight()
 {
@@ -777,9 +783,9 @@ HTMLImageElement::NaturalHeight()
 }
 
 NS_IMETHODIMP
-HTMLImageElement::GetNaturalHeight(uint32_t* aNaturalHeight)
+HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
 {
-  *aNaturalHeight = NaturalHeight();
+  *aNaturalWidth = NaturalWidth();
   return NS_OK;
 }
 
@@ -801,13 +807,6 @@ HTMLImageElement::NaturalWidth()
   }
 
   return width;
-}
-
-NS_IMETHODIMP
-HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
-{
-  *aNaturalWidth = NaturalWidth();
-  return NS_OK;
 }
 
 nsresult

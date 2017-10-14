@@ -49,6 +49,12 @@ job-template:
          android-api-16-nightly:
            in-tree: android-build
          win.*: null
+   toolchains:
+      by-build-platform:
+         default: []
+         android-api-16-nightly:
+            - android-sdk-linux
+            - proguard-jar
    tooltool:
       by-build-platform:
          default: public

@@ -12,13 +12,6 @@ set -v
 # Package everything up.
 pushd $WORKSPACE
 
-cp -R /builds/worker/.mozbuild/android-sdk-linux android-sdk-linux
-tar cJf android-sdk-linux.tar.xz android-sdk-linux
-
-# We can't redistribute the Android SDK publicly.
-mkdir -p /builds/worker/private/android-sdk
-mv android-sdk-linux.tar.xz /builds/worker/private/android-sdk
-
 cp -R ${NEXUS_WORK}/storage/jcenter jcenter
 tar cJf jcenter.tar.xz jcenter
 

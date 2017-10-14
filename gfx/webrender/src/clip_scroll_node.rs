@@ -58,7 +58,7 @@ pub enum NodeType {
     /// of its parent node and a given set of sticky positioning constraints.
     /// Sticky positioned is described in the CSS Positioned Layout Module Level 3 here:
     /// https://www.w3.org/TR/css-position-3/#sticky-pos
-    StickyFrame(StickyFrameInfo),
+    StickyFrame(StickyFrameInfo, LayerVector2D),
 }
 
 /// Contains information common among all types of ClipScrollTree nodes.
@@ -194,7 +194,7 @@ impl ClipScrollNode {
             parent: Some(parent_id),
             children: Vec::new(),
             pipeline_id,
-            node_type: NodeType::StickyFrame(sticky_frame_info),
+            node_type: NodeType::StickyFrame(sticky_frame_info, LayerVector2D::zero()),
         }
     }
 
@@ -256,22 +256,25 @@ impl ClipScrollNode {
     }
 
     pub fn update_transform(&mut self, state: &TransformUpdateState) {
-        let scrolled_parent_combined_clip = state
-            .parent_combined_viewport_rect
-            .translate(&-state.parent_scroll_offset);
+        // We calculate this here to avoid a double-borrow later.
+        let sticky_offset = self.calculate_sticky_offset(
+            &state.nearest_scrolling_ancestor_offset,
+            &state.nearest_scrolling_ancestor_viewport,
+        );
 
         let (local_transform, accumulated_scroll_offset) = match self.node_type {
             NodeType::ReferenceFrame(ref info) => {
                 self.combined_local_viewport_rect = info.transform
                     .with_destination::<LayerPixel>()
-                    .inverse_rect_footprint(&scrolled_parent_combined_clip);
+                    .inverse_rect_footprint(&state.parent_combined_viewport_rect);
                 self.reference_frame_relative_scroll_offset = LayerVector2D::zero();
                 (info.transform, state.parent_accumulated_scroll_offset)
             }
             NodeType::Clip(_) | NodeType::ScrollFrame(_) => {
                 // Move the parent's viewport into the local space (of the node origin)
                 // and intersect with the local clip rectangle to get the local viewport.
-                self.combined_local_viewport_rect = scrolled_parent_combined_clip
+                self.combined_local_viewport_rect =
+                    state.parent_combined_viewport_rect
                     .intersection(&self.local_clip_rect)
                     .unwrap_or(LayerRect::zero());
                 self.reference_frame_relative_scroll_offset =
@@ -281,15 +284,10 @@ impl ClipScrollNode {
                     self.reference_frame_relative_scroll_offset,
                 )
             }
-            NodeType::StickyFrame(sticky_frame_info) => {
-                let sticky_offset = self.calculate_sticky_offset(
-                    &self.local_viewport_rect,
-                    &sticky_frame_info,
-                    &state.nearest_scrolling_ancestor_offset,
-                    &state.nearest_scrolling_ancestor_viewport,
-                );
-
-                self.combined_local_viewport_rect = scrolled_parent_combined_clip
+            NodeType::StickyFrame(_, ref mut node_sticky_offset) => {
+                *node_sticky_offset = sticky_offset;
+                self.combined_local_viewport_rect =
+                    state.parent_combined_viewport_rect
                     .translate(&-sticky_offset)
                     .intersection(&self.local_clip_rect)
                     .unwrap_or(LayerRect::zero());
@@ -321,12 +319,15 @@ impl ClipScrollNode {
 
     fn calculate_sticky_offset(
         &self,
-        sticky_rect: &LayerRect,
-        sticky_frame_info: &StickyFrameInfo,
         viewport_scroll_offset: &LayerVector2D,
         viewport_rect: &LayerRect,
     ) -> LayerVector2D {
-        let sticky_rect = sticky_rect.translate(viewport_scroll_offset);
+        let sticky_frame_info = match self.node_type {
+            NodeType::StickyFrame(info, _) => info,
+            _ => return LayerVector2D::zero(),
+        };
+
+        let sticky_rect = self.local_viewport_rect.translate(viewport_scroll_offset);
         let mut sticky_offset = LayerVector2D::zero();
 
         if let Some(info) = sticky_frame_info.top {

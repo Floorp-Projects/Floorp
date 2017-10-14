@@ -41,7 +41,6 @@ pub struct ClipScrollTree {
 pub struct TransformUpdateState {
     pub parent_reference_frame_transform: LayerToWorldTransform,
     pub parent_combined_viewport_rect: LayerRect,
-    pub parent_scroll_offset: LayerVector2D,
     pub parent_accumulated_scroll_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_viewport: LayerRect,
@@ -312,7 +311,6 @@ impl ClipScrollTree {
                 0.0,
             ),
             parent_combined_viewport_rect: root_viewport,
-            parent_scroll_offset: LayerVector2D::zero(),
             parent_accumulated_scroll_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayerRect::zero(),
@@ -338,27 +336,34 @@ impl ClipScrollTree {
                 NodeType::ReferenceFrame(ref info) => TransformUpdateState {
                     parent_reference_frame_transform: node.world_viewport_transform,
                     parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    parent_scroll_offset: LayerVector2D::zero(),
                     parent_accumulated_scroll_offset: LayerVector2D::zero(),
                     nearest_scrolling_ancestor_viewport: state
                         .nearest_scrolling_ancestor_viewport
                         .translate(&info.origin_in_parent_reference_frame),
                     ..*state
                 },
-                NodeType::Clip(..) | NodeType::StickyFrame(..) => TransformUpdateState {
+                NodeType::Clip(..) => TransformUpdateState {
                     parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    parent_scroll_offset: LayerVector2D::zero(),
                     ..*state
                 },
                 NodeType::ScrollFrame(ref scrolling) => TransformUpdateState {
-                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    parent_scroll_offset: scrolling.offset,
+                    parent_combined_viewport_rect:
+                        node.combined_local_viewport_rect.translate(&-scrolling.offset),
                     parent_accumulated_scroll_offset: scrolling.offset +
                         state.parent_accumulated_scroll_offset,
                     nearest_scrolling_ancestor_offset: scrolling.offset,
                     nearest_scrolling_ancestor_viewport: node.local_viewport_rect,
                     ..*state
                 },
+                NodeType::StickyFrame(_, sticky_offset) => TransformUpdateState {
+                    // We don't translate the combined rect by the sticky offset, because sticky
+                    // offsets actually adjust the node position itself, whereas scroll offsets
+                    // only apply to contents inside the node.
+                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
+                    parent_accumulated_scroll_offset:
+                        sticky_offset + state.parent_accumulated_scroll_offset,
+                    ..*state
+                }
             };
 
             (state, node.children.clone())
@@ -479,9 +484,10 @@ impl ClipScrollTree {
                 pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll.offset: {:?}", scrolling_info.offset));
             }
-            NodeType::StickyFrame(sticky_frame_info) => {
+            NodeType::StickyFrame(sticky_frame_info, sticky_offset) => {
                 pt.new_level(format!("StickyFrame"));
                 pt.add_item(format!("sticky info: {:?}", sticky_frame_info));
+                pt.add_item(format!("sticky offset: {:?}", sticky_offset));
             }
         }
 

@@ -14,10 +14,10 @@ const {
   InvalidArgumentError,
   InvalidSessionIDError,
   NoSuchWindowError,
-  pprint,
   UnexpectedAlertOpenError,
   UnsupportedOperationError,
 } = Cu.import("chrome://marionette/content/error.js", {});
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["assert"];
 

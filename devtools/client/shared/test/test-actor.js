@@ -14,7 +14,10 @@ const {
 } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
-const {isContentStylesheet} = require("devtools/shared/inspector/css-logic");
+const {
+  isContentStylesheet,
+  getCSSStyleRules
+} = require("devtools/shared/inspector/css-logic");
 const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                  .getService(Ci.mozIJSSubScriptLoader);
@@ -777,7 +780,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    */
   getStyleSheetsInfoForNode: function (selector) {
     let node = this._querySelector(selector);
-    let domRules = DOMUtils.getCSSStyleRules(node);
+    let domRules = getCSSStyleRules(node);
 
     let sheets = [];
 

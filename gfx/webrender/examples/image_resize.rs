@@ -8,6 +8,8 @@ extern crate webrender;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
+#[path = "common/image_helper.rs"]
+mod image_helper;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
 use webrender::api::*;
@@ -26,18 +28,11 @@ impl Example for App {
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let mut image_data = Vec::new();
-        for y in 0 .. 32 {
-            for x in 0 .. 32 {
-                let lum = 255 * (((x & 8) == 0) ^ ((y & 8) == 0)) as u8;
-                image_data.extend_from_slice(&[lum, lum, lum, 0xff]);
-            }
-        }
-
+        let (image_descriptor, image_data) = image_helper::make_checkerboard(32, 32);
         resources.add_image(
             self.image_key,
-            ImageDescriptor::new(32, 32, ImageFormat::BGRA8, true),
-            ImageData::new(image_data),
+            image_descriptor,
+            image_data,
             None,
         );
 

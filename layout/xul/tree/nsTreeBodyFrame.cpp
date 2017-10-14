@@ -4475,26 +4475,9 @@ nsTreeBodyFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,
 nsStyleContext*
 nsTreeBodyFrame::GetPseudoStyleContext(nsICSSAnonBoxPseudo* aPseudoElement)
 {
-  return mStyleCache.GetStyleContext(this, PresContext(), mContent,
+  return mStyleCache.GetStyleContext(PresContext(), mContent,
                                      mStyleContext, aPseudoElement,
                                      mScratchArray);
-}
-
-// Our comparator for resolving our complex pseudos
-bool
-nsTreeBodyFrame::PseudoMatches(nsCSSSelector* aSelector)
-{
-  // Iterate the class list.  For each item in the list, see if
-  // it is contained in our scratch array.  If we have a miss, then
-  // we aren't a match.  If all items in the class list are
-  // present in the scratch array, then we have a match.
-  nsAtomList* curr = aSelector->mClassList;
-  while (curr) {
-    if (!mScratchArray.Contains(curr->mAtom))
-      return false;
-    curr = curr->mNext;
-  }
-  return true;
 }
 
 nsIContent*
