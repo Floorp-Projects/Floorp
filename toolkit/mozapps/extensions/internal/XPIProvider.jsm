@@ -4357,7 +4357,8 @@ this.XPIProvider = {
         id: aAddon.id,
         version: aAddon.version,
         installPath: aFile.clone(),
-        resourceURI: getURIForResourceInFile(aFile, "")
+        resourceURI: getURIForResourceInFile(aFile, ""),
+        signedState: aAddon.signedState,
       };
 
       if (aMethod == "startup" && aAddon.startupData) {
