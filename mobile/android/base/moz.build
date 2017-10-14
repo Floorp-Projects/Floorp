@@ -483,6 +483,7 @@ gvjar.extra_jars += [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+    CONFIG['ANDROID_PALETTE_V7_AAR_LIB'],
     'constants.jar',
     'gecko-mozglue.jar',
     'gecko-util.jar',
@@ -1174,7 +1175,6 @@ gbjar.extra_jars += [CONFIG['ANDROID_CARDVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_PALETTE_V7_AAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
