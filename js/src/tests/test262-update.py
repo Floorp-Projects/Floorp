@@ -331,7 +331,7 @@ def process_test262(test262Dir, test262OutDir, strictTests):
             continue
 
         # Skip creating a "prs" directory if it already exists
-        if relPath != "prs" or not os.path.exists(os.path.join(test262OutDir, relPath)):
+        if relPath not in ("prs", "local") and not os.path.exists(os.path.join(test262OutDir, relPath)):
             os.makedirs(os.path.join(test262OutDir, relPath))
 
         includeSet = set()
@@ -361,13 +361,101 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         # Add shell.js and browers.js files for the current directory.
         writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, relPath)
 
-def fetch_pr_files(outDir, inDir, prNumber):
+def fetch_local_changes(inDir, outDir, srcDir, strictTests):
+    """
+    Fetch the changes from a local clone of Test262.
+
+    1. Get the list of file changes made by the current branch used on Test262 (srcDir).
+    2. Copy only the (A)dded, (C)opied, (M)odified, and (R)enamed files to inDir.
+    3. inDir is treated like a Test262 checkout, where files will be converted.
+    4. Fetches the current branch name to set the outDir.
+    5. Processed files will be added to `<outDir>/local/<branchName>`.
+    """
+    import subprocess
+
+    # TOOD: fail if it's in the master branch? or require a branch name?
+
+    # Checks for unstaged or non committed files. A clean branch provides a clean status.
+    status = subprocess.check_output(
+        ("git -C %s status --porcelain" % srcDir).split(" ")
+    )
+
+    if status.strip():
+        raise RuntimeError(
+            "Please commit files and cleanup the local test262 folder before importing files.\nCurrent status: \n%s"
+            % status)
+
+    # Captures the branch name to be used on the output
+    branchName = subprocess.check_output(
+        ("git -C %s rev-parse --abbrev-ref HEAD" % srcDir).split(" ")).split("\n")[0]
+
+    # Fetches the file names to import
+    files = subprocess.check_output(
+        ("git -C %s diff master --diff-filter=ACMR --name-only" % srcDir).split(" ")
+    )
+
+    # Fetches the deleted files to print an output log. This can be used to
+    # set up the skip list, if necessary.
+    deletedFiles = subprocess.check_output(
+        ("git -C %s diff master --diff-filter=D --name-only" % srcDir).split(" ")
+    )
+
+    # Fetches the modified files as well for logging to support maintenance
+    # in the skip list.
+    modifiedFiles = subprocess.check_output(
+        ("git -C %s diff master --diff-filter=M --name-only" % srcDir).split(" ")
+    )
+
+    # Fetches the renamed files for the same reason, this avoids duplicate
+    # tests if running the new local folder and the general imported Test262
+    # files.
+    renamedFiles = subprocess.check_output(
+        ("git -C %s diff master --diff-filter=R --summary" % srcDir).split(" ")
+    )
+
+    # Print some friendly output
+    print("From the branch %s in %s \n" % (branchName, srcDir))
+    print("Files being copied to the local folder: \n%s" % files)
+    if deletedFiles:
+        print("Deleted files (use this list to update the skip list): \n%s" % deletedFiles)
+    if modifiedFiles:
+        print("Modified files (use this list to update the skip list): \n%s" % modifiedFiles)
+    if renamedFiles:
+        print("Renamed files (already added with the new names): \n%s" % renamedFiles)
+
+    for f in files.splitlines():
+        # Capture the subdirectories names to recreate the file tree
+        # TODO: join the file tree with -- instead of multiple subfolders?
+        fileTree = os.path.join(inDir, os.path.dirname(f))
+        if not os.path.exists(fileTree):
+            os.makedirs(fileTree)
+
+        shutil.copyfile(
+            os.path.join(srcDir, f),
+            os.path.join(fileTree, os.path.basename(f))
+        )
+
+    # Extras from Test262. Copy the current support folders - including the
+    # harness - for a proper conversion process
+    shutil.copytree(os.path.join(srcDir, "tools"), os.path.join(inDir, "tools"))
+    shutil.copytree(os.path.join(srcDir, "harness"), os.path.join(inDir, "harness"))
+
+    # Reset any older directory in the output using the same branch name
+    outDir = os.path.join(outDir, "local", branchName)
+    if os.path.isdir(outDir):
+        shutil.rmtree(outDir)
+    os.makedirs(outDir)
+
+    process_test262(inDir, outDir, strictTests)
+
+def fetch_pr_files(inDir, outDir, prNumber, strictTests):
     import requests
 
-    prTestsOutDir = os.path.join(outDir, prNumber)
+    prTestsOutDir = os.path.join(outDir, "prs", prNumber)
     if os.path.isdir(prTestsOutDir):
         print("Removing folder %s" % prTestsOutDir)
         shutil.rmtree(prTestsOutDir)
+    os.makedirs(prTestsOutDir)
 
     # Reuses current Test262 clone's harness and tools folders only, the clone's test/
     # folder can be discarded from here
@@ -380,40 +468,80 @@ def fetch_pr_files(outDir, inDir, prNumber):
 
     if (pr["state"] != "open"):
         # Closed PR, remove respective files from folder
-        print("PR %s is closed" % prNumber)
-    else:
-        files = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s/files" % prNumber)
-        files.raise_for_status()
+        return print("PR %s is closed" % prNumber)
 
-        for item in files.json():
-            if not item["filename"].startswith("test/"):
-                continue
+    files = requests.get("https://api.github.com/repos/tc39/test262/pulls/%s/files" % prNumber)
+    files.raise_for_status()
 
-            filename = item["filename"]
-            fileStatus = item["status"]
+    for item in files.json():
+        if not item["filename"].startswith("test/"):
+            continue
 
-            print("%s %s" % (fileStatus, filename))
+        filename = item["filename"]
+        fileStatus = item["status"]
 
-            # Do not add deleted files
-            if fileStatus == "removed":
-                continue
+        print("%s %s" % (fileStatus, filename))
 
-            contents = requests.get(item["raw_url"])
-            contents.raise_for_status()
+        # Do not add deleted files
+        if fileStatus == "removed":
+            continue
 
-            fileText = contents.text
+        contents = requests.get(item["raw_url"])
+        contents.raise_for_status()
 
-            # Prefix the PRs tests dir with test/ so files are processed as Test262 files
-            prsTestsDir = "test/prs/%s" % prNumber
-            filePathDirs = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:-1])
+        fileText = contents.text
 
-            if not os.path.isdir(filePathDirs):
-                os.makedirs(filePathDirs)
+        filePathDirs = os.path.join(inDir, *filename.split("/")[:-1])
 
-            filenameInDir = os.path.join(inDir, prsTestsDir, *filename.split("/")[1:])
+        if not os.path.isdir(filePathDirs):
+            os.makedirs(filePathDirs)
 
-            with io.open(filenameInDir, "wb") as output_file:
-                output_file.write(fileText.encode('utf8'))
+        with io.open(os.path.join(inDir, *filename.split("/")), "wb") as output_file:
+            output_file.write(fileText.encode('utf8'))
+
+    process_test262(inDir, prTestsOutDir, strictTests)
+
+def general_update(inDir, outDir, strictTests):
+    import subprocess
+
+    restoreLocalTestsDir = False
+    restorePrsTestsDir = False
+    localTestsOutDir = os.path.join(outDir, "local")
+    prsTestsOutDir = os.path.join(outDir, "prs")
+
+    # Stash test262/local and test262/prs. Currently the Test262 repo does not have any
+    # top-level subdirectories named "local" or "prs".
+    # This prevents these folders from being removed during the update process.
+    if os.path.isdir(localTestsOutDir):
+        shutil.move(localTestsOutDir, inDir)
+        restoreLocalTestsDir = True
+
+    if os.path.isdir(prsTestsOutDir):
+        shutil.move(prsTestsOutDir, inDir)
+        restorePrsTestsDir = True
+
+    # Create the output directory from scratch.
+    if os.path.isdir(outDir):
+        shutil.rmtree(outDir)
+    os.makedirs(outDir)
+
+    # Copy license file.
+    shutil.copyfile(os.path.join(inDir, "LICENSE"), os.path.join(outDir, "LICENSE"))
+
+    # Create the git info file.
+    with io.open(os.path.join(outDir, "GIT-INFO"), "wb") as info:
+        subprocess.check_call(["git", "-C", inDir, "log", "-1"], stdout=info)
+
+    # Copy the test files.
+    process_test262(inDir, outDir, strictTests)
+
+    # Move test262/local back.
+    if restoreLocalTestsDir:
+        shutil.move(os.path.join(inDir, "local"), outDir)
+
+    # Restore test262/prs if necessary after a general Test262 update.
+    if restorePrsTestsDir:
+        shutil.move(os.path.join(inDir, "prs"), outDir)
 
 def update_test262(args):
     import subprocess
@@ -423,18 +551,18 @@ def update_test262(args):
     revision = args.revision
     outDir = args.out
     prNumber = args.pull
+    srcDir = args.local
 
     if not os.path.isabs(outDir):
         outDir = os.path.join(os.getcwd(), outDir)
 
     strictTests = args.strict
-    localTestsOutDir = os.path.join(outDir, "local")
-    prsTestsOutDir = os.path.join(outDir, "prs")
 
     # Download the requested branch in a temporary directory.
     with TemporaryDirectory() as inDir:
-        restoreLocalTestsDir = False
-        restorePrsTestsDir = False
+        # If it's a local import, skip the git clone parts.
+        if srcDir:
+            return fetch_local_changes(inDir, outDir, srcDir, strictTests)
 
         if revision == "HEAD":
             subprocess.check_call(["git", "clone", "--depth=1", "--branch=%s" % branch, url, inDir])
@@ -442,46 +570,14 @@ def update_test262(args):
             subprocess.check_call(["git", "clone", "--single-branch", "--branch=%s" % branch, url, inDir])
             subprocess.check_call(["git", "-C", inDir, "reset", "--hard", revision])
 
-        # If a PR number is provided, fetches only the new and modified files from that PR.
-        # It also creates a new folder for that PR or replaces if it already exists, without
-        # updating the regular Test262 tests.
+        # If a PR number is provided, fetches only the new and modified files
+        # from that PR. It also creates a new folder for that PR or replaces if
+        # it already exists, without updating the regular Test262 tests.
         if prNumber:
-            fetch_pr_files(prsTestsOutDir, inDir, prNumber)
-        # Without a specific PR, follows through a regular copy.
-        else:
-            # Stash test262/local and test262/prs. Currently the Test262 repo does not have any
-            # top-level subdirectories named "local" or "prs".
-            # This prevents these folders from being removed during the update process.
-            if os.path.isdir(localTestsOutDir):
-                shutil.move(localTestsOutDir, inDir)
-                restoreLocalTestsDir = True
+            return fetch_pr_files(inDir, outDir, prNumber, strictTests)
 
-            if os.path.isdir(prsTestsOutDir):
-                shutil.move(prsTestsOutDir, inDir)
-                restorePrsTestsDir = True
-
-            # Create the output directory from scratch.
-            if os.path.isdir(outDir):
-                shutil.rmtree(outDir)
-            os.makedirs(outDir)
-
-            # Copy license file.
-            shutil.copyfile(os.path.join(inDir, "LICENSE"), os.path.join(outDir, "LICENSE"))
-
-            # Create the git info file.
-            with io.open(os.path.join(outDir, "GIT-INFO"), "wb") as info:
-                subprocess.check_call(["git", "-C", inDir, "log", "-1"], stdout=info)
-
-        # Copy the test files.
-        process_test262(inDir, outDir, strictTests)
-
-        # Move test262/local back.
-        if restoreLocalTestsDir:
-            shutil.move(os.path.join(inDir, "local"), outDir)
-
-        # Restore test262/prs if necessary after a general Test262 update.
-        if restorePrsTestsDir:
-            shutil.move(os.path.join(inDir, "prs"), outDir)
+        # Without a PR or a local import, follows through a regular copy.
+        general_update(inDir, outDir, strictTests)
 
 if __name__ == "__main__":
     import argparse
