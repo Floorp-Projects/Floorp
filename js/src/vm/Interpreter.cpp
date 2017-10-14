@@ -38,6 +38,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
+#include "jit/Jit.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
@@ -404,24 +405,14 @@ js::RunScript(JSContext* cx, RunState& state)
 
     state.script()->ensureNonLazyCanonicalFunction();
 
-    if (jit::IsIonEnabled(cx)) {
-        jit::MethodStatus status = jit::CanEnter(cx, state);
-        if (status == jit::Method_Error)
-            return false;
-        if (status == jit::Method_Compiled) {
-            jit::JitExecStatus status = jit::IonCannon(cx, state);
-            return !IsErrorStatus(status);
-        }
-    }
-
-    if (jit::IsBaselineEnabled(cx)) {
-        jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
-        if (status == jit::Method_Error)
-            return false;
-        if (status == jit::Method_Compiled) {
-            jit::JitExecStatus status = jit::EnterBaselineMethod(cx, state);
-            return !IsErrorStatus(status);
-        }
+    jit::EnterJitStatus status = jit::MaybeEnterJit(cx, state);
+    switch (status) {
+      case jit::EnterJitStatus::Error:
+        return false;
+      case jit::EnterJitStatus::Ok:
+        return true;
+      case jit::EnterJitStatus::NotEntered:
+        break;
     }
 
     if (state.isInvoke()) {
@@ -3102,32 +3093,17 @@ CASE(JSOP_FUNCALL)
         {
             InvokeState state(cx, args, construct);
 
-            if (!createSingleton && jit::IsIonEnabled(cx)) {
-                jit::MethodStatus status = jit::CanEnter(cx, state);
-                if (status == jit::Method_Error)
-                    goto error;
-                if (status == jit::Method_Compiled) {
-                    jit::JitExecStatus exec = jit::IonCannon(cx, state);
-                    interpReturnOK = !IsErrorStatus(exec);
-                    if (interpReturnOK)
-                        CHECK_BRANCH();
-                    REGS.sp = args.spAfterCall();
-                    goto jit_return;
-                }
-            }
-
-            if (jit::IsBaselineEnabled(cx)) {
-                jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
-                if (status == jit::Method_Error)
-                    goto error;
-                if (status == jit::Method_Compiled) {
-                    jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state);
-                    interpReturnOK = !IsErrorStatus(exec);
-                    if (interpReturnOK)
-                        CHECK_BRANCH();
-                    REGS.sp = args.spAfterCall();
-                    goto jit_return;
-                }
+            jit::EnterJitStatus status = jit::MaybeEnterJit(cx, state);
+            switch (status) {
+              case jit::EnterJitStatus::Error:
+                goto error;
+              case jit::EnterJitStatus::Ok:
+                interpReturnOK = true;
+                CHECK_BRANCH();
+                REGS.sp = args.spAfterCall();
+                goto jit_return;
+              case jit::EnterJitStatus::NotEntered:
+                break;
             }
         }
 

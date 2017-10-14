@@ -32,7 +32,7 @@ static const LiveRegisterSet AllRegs =
 // The trampoline use the EnterJitCode signature, with the standard x64 fastcall
 // calling convention.
 JitCode*
-JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
+JitRuntime::generateEnterJIT(JSContext* cx)
 {
     MacroAssembler masm(cx);
     masm.assertStackAlignment(ABIStackAlignment, -int32_t(sizeof(uintptr_t)) /* return address */);
@@ -166,8 +166,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
     CodeLabel returnLabel;
     CodeLabel oomReturnLabel;
-    if (type == EnterJitBaseline) {
-        // Handle OSR.
+    {
+        // Handle Interpreter -> Baseline OSR.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
         regs.takeUnchecked(OsrFrameReg);
         regs.take(rbp);
@@ -290,8 +290,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Call function.
     masm.callJitNoProfiler(reg_code);
 
-    if (type == EnterJitBaseline) {
-        // Baseline OSR will return here.
+    {
+        // Interpreter -> Baseline OSR will return here.
         masm.use(returnLabel.target());
         masm.addCodeLabel(returnLabel);
         masm.use(oomReturnLabel.target());
