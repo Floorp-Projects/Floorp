@@ -180,7 +180,7 @@ linux64-base-toolchains/opt:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-4.9
-        - linux64-rust-1.19
+        - linux64-rust-1.20
         - linux64-sccache
 
 linux64-base-toolchains/debug:
@@ -211,7 +211,7 @@ linux64-base-toolchains/debug:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-4.9
-        - linux64-rust-1.19
+        - linux64-rust-1.20
         - linux64-sccache
 
 linux/opt:
