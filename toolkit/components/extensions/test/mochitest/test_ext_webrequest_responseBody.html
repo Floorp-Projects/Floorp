@@ -407,6 +407,48 @@ add_task(async function() {
   await extension.unload();
 });
 
+// Test that registering a listener for a cached response does not cause a crash.
+add_task(async function test_cachedResponse() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.webRequest.onHeadersReceived.addListener(data => {
+        let filter = browser.webRequest.filterResponseData(data.requestId);
+
+        filter.onstop = event => {
+          filter.close();
+        };
+        filter.ondata = event => {
+          filter.write(event.data);
+        };
+
+        if (data.fromCache) {
+          browser.test.sendMessage("from-cache");
+        }
+      }, {
+        urls: ["http://mochi.test/*/file_sample.html?r=*"],
+      },
+      ["blocking"]);
+    },
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://mochi.test/",
+      ],
+    },
+  });
+
+  await extension.startup();
+
+  let url = `file_sample.html?r=${Math.random()}`;
+  await fetch(url);
+  await fetch(url);
+  await extension.awaitMessage("from-cache");
+
+  await extension.unload();
+});
+
 add_task(async function test_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
