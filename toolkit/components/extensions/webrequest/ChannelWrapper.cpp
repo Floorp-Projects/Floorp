@@ -630,6 +630,12 @@ ChannelWrapper::GetFrameAncestors(nsILoadInfo* aLoadInfo, nsTArray<dom::MozFrame
 void
 ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon, nsITabParent* aTabParent)
 {
+  // We can't attach new listeners after the response has started, so don't
+  // bother registering anything.
+  if (mResponseStarted) {
+    return;
+  }
+
   mAddonEntries.Put(aAddon.Id(), aTabParent);
   if (!mChannelEntry) {
     mChannelEntry = WebRequestService::GetSingleton().RegisterChannel(this);
@@ -914,6 +920,7 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest *request, nsISupports
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
   mChannelWrapper->mChannelEntry = nullptr;
+  mChannelWrapper->mResponseStarted = true;
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(NS_LITERAL_STRING("start"));
 
