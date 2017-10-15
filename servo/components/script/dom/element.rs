@@ -89,7 +89,7 @@ use script_layout_interface::message::ReflowGoal;
 use script_thread::ScriptThread;
 use selectors::Element as SelectorsElement;
 use selectors::attr::{AttrSelectorOperation, NamespaceConstraint, CaseSensitivity};
-use selectors::matching::{ElementSelectorFlags, LocalMatchingContext, MatchingContext, RelevantLinkStatus};
+use selectors::matching::{ElementSelectorFlags, MatchingContext, MatchingMode, RelevantLinkStatus};
 use selectors::matching::{HAS_EDGE_CHILD_SELECTOR, HAS_SLOW_SELECTOR, HAS_SLOW_SELECTOR_LATER_SIBLINGS};
 use selectors::sink::Push;
 use servo_arc::Arc;
@@ -1306,26 +1306,13 @@ impl Element {
             Some(attr) => attr,
             None => return DOMString::new(),
         };
-        let value = attr.value();
-        match *value {
-            AttrValue::Url(ref value, _) => {
-                // XXXManishearth this doesn't handle `javascript:` urls properly
-                let base = document_from_node(self).base_url();
-                let value = base.join(value)
-                    .map(|parsed| parsed.into_string())
-                    .unwrap_or_else(|_| value.clone());
-                DOMString::from(value)
-            },
-            _ => panic!("attribute value should be AttrValue::Url(..)"),
-        }
-    }
-
-    pub fn set_url_attribute(&self, local_name: &LocalName, value: DOMString) {
-        let value = AttrValue::from_url(
-            document_from_node(self).base_url(),
-            value.into(),
-        );
-        self.set_attribute(local_name, value);
+        let value = &**attr.value();
+        // XXXManishearth this doesn't handle `javascript:` urls properly
+        let base = document_from_node(self).base_url();
+        let value = base.join(value)
+            .map(|parsed| parsed.into_string())
+            .unwrap_or_else(|_| value.to_owned());
+        DOMString::from(value)
     }
 
     pub fn get_string_attribute(&self, local_name: &LocalName) -> DOMString {
@@ -1334,6 +1321,7 @@ impl Element {
             None => DOMString::new(),
         }
     }
+
     pub fn set_string_attribute(&self, local_name: &LocalName, value: DOMString) {
         assert!(*local_name == local_name.to_ascii_lowercase());
         self.set_attribute(local_name, AttrValue::String(value.into()));
@@ -2583,7 +2571,7 @@ impl<'a> SelectorsElement for DomRoot<Element> {
 
     fn match_non_ts_pseudo_class<F>(&self,
                                     pseudo_class: &NonTSPseudoClass,
-                                    _: &mut LocalMatchingContext<Self::Impl>,
+                                    _: &mut MatchingContext,
                                     _: &RelevantLinkStatus,
                                     _: &mut F)
                                     -> bool
