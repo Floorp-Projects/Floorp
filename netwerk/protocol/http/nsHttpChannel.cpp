@@ -7751,6 +7751,19 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget)
+{
+    if (mCachePump) {
+        return mCachePump->GetDeliveryTarget(aEventTarget);
+    }
+    if (mTransactionPump) {
+        return mTransactionPump->GetDeliveryTarget(aEventTarget);
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsThreadRetargetableStreamListener
 //-----------------------------------------------------------------------------
