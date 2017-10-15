@@ -43,7 +43,7 @@ function test_setTabState() {
     window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
     window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
 
-    gBrowser.removeTab(tab)
+    gBrowser.removeTab(tab);
     finish();
   }
 

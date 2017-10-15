@@ -61,7 +61,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       contextMenu.removeAttribute("onpopupshown");
       contextMenu.setAttribute("onpopupshowing",
         "DownloadsSubview.updateContextMenu(document.popupNode, this);");
-      contextMenu.setAttribute("onpopuphidden", "DownloadsSubview.onContextMenuHidden(this);")
+      contextMenu.setAttribute("onpopuphidden", "DownloadsSubview.onContextMenuHidden(this);");
       let clearButton = contextMenu.querySelector("menuitem[command='downloadsCmd_clearDownloads']");
       clearButton.hidden = false;
       clearButton.previousSibling.hidden = true;

@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 const TEST_URLS = [
   "about:robots",
@@ -12,7 +12,7 @@ add_task(async function() {
   }
   registerCleanupFunction(async function() {
     for (let tab of tabs) {
-      await BrowserTestUtils.removeTab(tab)
+      await BrowserTestUtils.removeTab(tab);
     }
   });
 

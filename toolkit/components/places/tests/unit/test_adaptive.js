@@ -63,7 +63,7 @@ AutoCompleteInput.prototype = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
-}
+};
 
 /**
  * Checks that autocomplete results are ordered correctly.

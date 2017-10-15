@@ -325,7 +325,7 @@ add_task(async function test_suspend_resume() {
       list.add(download);
       return download;
     })();
-  }
+  };
 
   let publicList = await promiseNewList();
   let privateList = await promiseNewList(true);

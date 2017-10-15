@@ -71,7 +71,7 @@ function* testSteps()
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }
-    }
+    };
   }
   event = yield undefined;
   // Now create the indexes.
@@ -153,7 +153,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreData.length, "Saw all the expected keys");
@@ -184,7 +184,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
@@ -224,7 +224,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -250,7 +250,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -276,7 +276,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -302,7 +302,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -328,7 +328,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -354,7 +354,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
@@ -380,7 +380,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
@@ -406,7 +406,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 3, "Saw all the expected keys");
@@ -432,7 +432,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 2, "Saw all the expected keys");
@@ -458,7 +458,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -509,7 +509,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
@@ -560,7 +560,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -612,7 +612,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -664,7 +664,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -716,7 +716,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -768,7 +768,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -820,7 +820,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 0, "Saw all the expected keys");
@@ -847,7 +847,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -874,7 +874,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -899,7 +899,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -928,7 +928,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -964,7 +964,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 5, "Saw all the expected keys");
@@ -1001,7 +1001,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 4, "Saw all the expected keys");
@@ -1036,7 +1036,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -1075,7 +1075,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all the expected keys");
@@ -1113,7 +1113,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreData.length, "Saw all the expected keys");
@@ -1146,7 +1146,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreData.length, "Saw all the expected keys");
@@ -1204,7 +1204,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
@@ -1257,7 +1257,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");

@@ -112,7 +112,7 @@ function actual_test() {
                                                         return library[1] == id;
                                                       });
     do_check_eq(matchingLibrary.length, 1);
-    let library = matchingLibrary[0]
+    let library = matchingLibrary[0];
     let name = library[0];
     do_check_eq(LOADED_MODULES[id], name);
   }
@@ -126,7 +126,7 @@ function actual_test() {
     let unevalCanonicalStack = uneval(canonicalStack);
     return function(obj, idx, array) {
       return unevalCanonicalStack == obj;
-    }
+    };
   }
   do_check_eq(uneval_STACKS.filter(stackChecker(first_stack)).length, 1);
   do_check_eq(uneval_STACKS.filter(stackChecker(second_stack)).length, 1);

@@ -50,7 +50,7 @@ function* testSteps()
 
   fileHandle.location = 0;
   request = fileHandle.readAsText(testString.length);
-  location += testString.length
+  location += testString.length;
   is(fileHandle.location, location, "Correct location");
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;

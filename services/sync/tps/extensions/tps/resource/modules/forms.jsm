@@ -32,7 +32,7 @@ var FormDB = {
         handleCompletion(reason) {
           resolve();
         }
-      }
+      };
       FormHistory.update(data, handlers);
     });
   },
@@ -50,7 +50,7 @@ var FormDB = {
    */
   insertValue(fieldname, value, us) {
     let data = { op: "add", fieldname, value, timesUsed: 1,
-                 firstUsed: us, lastUsed: us }
+                 firstUsed: us, lastUsed: us };
     return this._update(data);
   },
 
@@ -97,7 +97,7 @@ var FormDB = {
         handleCompletion(reason) {
           resolve(result);
         }
-      }
+      };
       FormHistory.search(["guid", "lastUsed", "firstUsed"], { fieldname, value }, handlers);
     });
   },

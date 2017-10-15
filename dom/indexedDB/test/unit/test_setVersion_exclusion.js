@@ -29,7 +29,7 @@ function* testSteps()
 
   db.onupgradeneeded = function() {
     ok(false, "our ongoing VERSION_CHANGE transaction should exclude any others!");
-  }
+  };
 
   db.createObjectStore("foo");
 
@@ -64,7 +64,7 @@ function* testSteps()
   db.onversionchange = function() {
     ok(true, "next setVersion was unblocked appropriately");
     db.close();
-  }
+  };
 
   try {
     db.transaction("foo");

@@ -78,7 +78,7 @@ function* testSteps()
         if (++finishedAdds === NumModules * NumCopies) {
           continueToNextStepSync();
         }
-      }
+      };
     }
   }
   yield undefined;
@@ -97,7 +97,7 @@ function* testSteps()
         if (++finishedGets === NumModules * NumCopies) {
           continueToNextStepSync();
         }
-      }
+      };
     }
   }
   yield undefined;

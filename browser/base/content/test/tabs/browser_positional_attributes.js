@@ -45,7 +45,7 @@ add_task(async function test() {
   testAttrib(gBrowser.tabs[0], "beforeselected-visible", true,
              "First tab marked beforeselected-visible!");
 
-  gBrowser.showTab(gBrowser.tabs[1])
+  gBrowser.showTab(gBrowser.tabs[1]);
 
   testAttrib(gBrowser.tabs[1], "beforeselected-visible", true,
              "Second tab marked beforeselected-visible!");

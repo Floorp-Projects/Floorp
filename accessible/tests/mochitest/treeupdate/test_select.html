@@ -30,7 +30,7 @@
 
           this.selectNode.add(opt, null);
         }
-      }
+      };
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.selectList)
@@ -49,11 +49,11 @@
             ] }
           ] };
         testAccessibleTree(this.select, tree);
-      }
+      };
 
       this.getID = function addOptions_getID() {
         return "test elements insertion into a select";
-      }
+      };
     }
 
     function removeOptions(aID) {
@@ -64,7 +64,7 @@
       this.invoke = function removeOptions_invoke() {
         while (this.selectNode.length)
           this.selectNode.remove(0);
-      }
+      };
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.selectList)
@@ -76,11 +76,11 @@
             { COMBOBOX_LIST: [] }
           ] };
         testAccessibleTree(this.select, tree);
-      }
+      };
 
       this.getID = function removeptions_getID() {
         return "test elements removal from a select";
-      }
+      };
     }
 
     /**
@@ -94,7 +94,7 @@
 
       this.invoke = function setHrefOnOption_setHref() {
         getNode("s2_o").setAttribute("href", "1");
-      }
+      };
 
       this.finalCheck = function() {
         var tree =
@@ -104,11 +104,11 @@
             ] }
           ] };
         testAccessibleTree("s2", tree);
-      }
+      };
 
       this.getID = function removeptions_getID() {
         return "setting @href on select option";
-      }
+      };
     }
 
     function doTest() {

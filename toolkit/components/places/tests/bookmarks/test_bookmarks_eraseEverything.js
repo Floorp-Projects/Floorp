@@ -6,7 +6,7 @@ function promiseManyFrecenciesChanged() {
     let obs = new NavHistoryObserver();
     obs.onManyFrecenciesChanged = () => {
       Assert.ok(true, "onManyFrecenciesChanged is triggered.");
-      PlacesUtils.history.removeObserver(obs)
+      PlacesUtils.history.removeObserver(obs);
       resolve();
     };
 

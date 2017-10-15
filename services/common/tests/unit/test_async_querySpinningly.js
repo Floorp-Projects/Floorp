@@ -109,7 +109,7 @@ function run_test() {
   } catch (e) {
     except = e;
   }
-  stmt.finalize()
+  stmt.finalize();
   do_check_true(!!except);
   do_check_eq(except.result, SQLITE_CONSTRAINT_VIOLATION);
 

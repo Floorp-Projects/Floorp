@@ -39,7 +39,7 @@ add_task(async function() {
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
   is(LightweightThemeManager.currentTheme, null, "Theme reset to default");
 
-  await gCustomizeMode.undoReset()
+  await gCustomizeMode.undoReset();
 
   is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme has been reset from default to original choice");
   ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");

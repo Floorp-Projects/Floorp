@@ -35,7 +35,7 @@ async function addBookmarks() {
   for (let url of uris) {
     await PlacesUtils.bookmarks.insert({
       url, parentGuid: PlacesUtils.bookmarks.menuGuid
-    })
+    });
   }
   checkBookmarksExist();
 }
@@ -143,7 +143,7 @@ add_task(async function test_json_restore_normal() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("JSON restore: normal restore should succeed");
@@ -166,7 +166,7 @@ add_task(async function test_json_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("JSON restore: empty file should succeed");
@@ -185,7 +185,7 @@ add_task(async function test_json_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_JSON,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(false);
 
   do_print("JSON restore: nonexistent file should fail");
@@ -204,7 +204,7 @@ add_task(async function test_html_restore_normal() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("HTML restore: normal restore should succeed");
@@ -227,7 +227,7 @@ add_task(async function test_html_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("HTML restore: empty file should succeed");
@@ -247,7 +247,7 @@ add_task(async function test_html_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(false);
 
   do_print("HTML restore: nonexistent file should fail");
@@ -266,7 +266,7 @@ add_task(async function test_html_init_restore_normal() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("HTML initial restore: normal restore should succeed");
@@ -289,7 +289,7 @@ add_task(async function test_html_init_restore_empty() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(true);
 
   do_print("HTML initial restore: empty file should succeed");
@@ -309,7 +309,7 @@ add_task(async function test_html_init_restore_nonexist() {
   let expectedData = {
     data:       NSIOBSERVER_DATA_HTML_INIT,
     folderId:   null
-  }
+  };
   let expectPromises = registerObservers(false);
 
   do_print("HTML initial restore: nonexistent file should fail");

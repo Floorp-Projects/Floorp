@@ -33,7 +33,7 @@ var newFactory = function(window) {
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
   };
-}
+};
 
 this.MockColorPicker = {
   init(window) {

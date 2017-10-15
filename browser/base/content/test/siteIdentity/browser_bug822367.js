@@ -19,7 +19,7 @@ add_task(async function test() {
   var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
-  newTab.linkedBrowser.stop()
+  newTab.linkedBrowser.stop();
 
   // Mixed Script Test
   var url = HTTPS_TEST_ROOT + "file_bug822367_1.html";

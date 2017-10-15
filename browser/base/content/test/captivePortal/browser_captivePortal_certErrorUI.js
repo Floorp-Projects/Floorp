@@ -32,7 +32,7 @@ add_task(async function checkCaptivePortalCertErrorUI() {
     return tab;
   }, false);
 
-  info("Waiting for cert error page to load.")
+  info("Waiting for cert error page to load.");
   await certErrorLoaded;
 
   let portalTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, CANONICAL_URL);

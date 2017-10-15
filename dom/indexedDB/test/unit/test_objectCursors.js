@@ -74,7 +74,7 @@ function* testSteps()
       request.onsuccess = function(event) {
         is(event.target.result.value.name, "Ben", "Good object");
         executeSoon(function() { testGenerator.next(); });
-      }
+      };
       yield undefined;
     }
   }

@@ -19,7 +19,7 @@
 function doTest() {
   var y = document.getElementById("y");
   var oldBody = document.body;
-  var newBody = document.createElement("body")
+  var newBody = document.createElement("body");
   document.documentElement.insertBefore(newBody, oldBody);
   setTimeout(function() {
     document.documentElement.removeChild(oldBody);

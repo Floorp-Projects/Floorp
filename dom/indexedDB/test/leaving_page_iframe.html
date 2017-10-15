@@ -21,7 +21,7 @@ function madeMod() {
               objectStore("mystore");
   trans.oncomplete = function() {
     parent.postMessage("didcommit", "*");
-  }
+  };
 
   store.put({ hello: "officer" }, 42).onsuccess = function(e) {
     // Make this transaction run until the end of time or until the page is
@@ -31,7 +31,7 @@ function madeMod() {
     }
     doGet();
     document.location = "about:blank";
-  }
+  };
 
 }
   </script>

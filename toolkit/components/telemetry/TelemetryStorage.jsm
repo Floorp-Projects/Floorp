@@ -1765,7 +1765,7 @@ var TelemetryStorageImpl = {
       if (ex.becauseNoSuchFile) {
         this._log.trace("loadAbortedSessionPing - no such file");
       } else {
-        this._log.error("loadAbortedSessionPing - error loading ping", ex)
+        this._log.error("loadAbortedSessionPing - error loading ping", ex);
       }
     }
     return ping;
@@ -1780,7 +1780,7 @@ var TelemetryStorageImpl = {
         if (ex.becauseNoSuchFile) {
           this._log.trace("removeAbortedSessionPing - no such file");
         } else {
-          this._log.error("removeAbortedSessionPing - error removing ping", ex)
+          this._log.error("removeAbortedSessionPing - error removing ping", ex);
         }
       }
     });
@@ -1814,7 +1814,7 @@ var TelemetryStorageImpl = {
         if (ex.becauseNoSuchFile) {
           this._log.trace("removeDeletionPing - no such file");
         } else {
-          this._log.error("removeDeletionPing - error removing ping", ex)
+          this._log.error("removeDeletionPing - error removing ping", ex);
         }
       }
     });
@@ -1931,7 +1931,7 @@ var getArchivedPingSize = async function(aPingId, aDate, aType) {
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
 var getPendingPingSize = async function(aPingId) {
-  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, aPingId)
+  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, aPingId);
   try {
     return (await OS.File.stat(path)).size;
   } catch (e) {}

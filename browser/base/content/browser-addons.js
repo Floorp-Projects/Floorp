@@ -78,7 +78,7 @@ var gXPInstallObserver = {
       let pending = this.pendingInstalls.get(browser);
       if (pending && pending.length)
         this.showInstallConfirmation(browser, pending.shift());
-    }
+    };
 
     // If all installs have already been cancelled in some way then just show
     // the next confirmation
@@ -309,7 +309,7 @@ var gXPInstallObserver = {
     case "addon-install-started": {
       let needsDownload = function needsDownload(aInstall) {
         return aInstall.state != AddonManager.STATE_DOWNLOADED;
-      }
+      };
       // If all installs have already been downloaded then there is no need to
       // show the download progress
       if (!installInfo.installs.some(needsDownload))

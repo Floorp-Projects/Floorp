@@ -464,7 +464,7 @@ Livemark.prototype = {
     if (!aSiteURI) {
       PlacesUtils.annotations.removeItemAnnotation(this.id,
                                                    PlacesUtils.LMANNO_SITEURI,
-                                                   aSource)
+                                                   aSource);
       this.siteURI = null;
       return;
     }
@@ -707,7 +707,7 @@ Livemark.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.mozILivemark
   ])
-}
+};
 
 // LivemarkLoadListener
 
@@ -869,6 +869,6 @@ LivemarkLoadListener.prototype = {
     Ci.nsIRequestObserver,
     Ci.nsIInterfaceRequestor
   ])
-}
+};
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LivemarkService]);

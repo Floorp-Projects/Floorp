@@ -29,7 +29,7 @@ add_task(async function test() {
 
   // Make sure it has only one add-engine menu button item.
   let items = getOpenSearchItems();
-  Assert.equal(items.length, 1, "A single button")
+  Assert.equal(items.length, 1, "A single button");
   let menuButton = items[0];
   Assert.equal(menuButton.type, "menu", "A menu button");
 

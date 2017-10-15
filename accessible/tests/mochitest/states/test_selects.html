@@ -32,7 +32,7 @@
       this.invoke = function openComboboxNCheckStates_invoke() {
         getNode(aID).focus();
         synthesizeKey("VK_DOWN", { altKey: true });
-      }
+      };
 
       this.finalCheck = function openComboboxNCheckStates_invoke() {
         // Expanded state on combobox.
@@ -40,11 +40,11 @@
 
         // Floating state on combobox list.
         testStates(this.comboboxList, STATE_FLOATING);
-      }
+      };
 
       this.getID = function openComboboxNCheckStates_getID() {
         return "open combobox and test states";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true;

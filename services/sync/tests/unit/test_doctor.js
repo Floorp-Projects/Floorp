@@ -27,9 +27,9 @@ add_task(async function test_validation_interval() {
         validate(e) {
           return {};
         }
-      }
+      };
     },
-  }
+  };
 
   // setup prefs which enable test-engine validation.
   Services.prefs.setBoolPref("services.sync.engine.test-engine.validation.enabled", true);
@@ -61,7 +61,7 @@ add_task(async function test_repairs_start() {
   let repairStarted = false;
   let problems = {
     missingChildren: ["a", "b", "c"],
-  }
+  };
   let validator = {
     validate(engine) {
       return problems;
@@ -69,13 +69,13 @@ add_task(async function test_repairs_start() {
     canValidate() {
       return Promise.resolve(true);
     }
-  }
+  };
   let engine = {
     name: "test-engine",
     getValidator() {
       return validator;
     }
-  }
+  };
   let requestor = {
     async startRepairs(validationInfo, flowID) {
       ok(flowID, "got a flow ID");
@@ -86,7 +86,7 @@ add_task(async function test_repairs_start() {
     tryServerOnlyRepairs() {
       return false;
     }
-  }
+  };
   let doctor = mockDoctor({
     _getEnginesToValidate(recentlySyncedEngines) {
       deepEqual(recentlySyncedEngines, [engine]);
@@ -117,7 +117,7 @@ add_task(async function test_repairs_advanced_daily() {
     tryServerOnlyRepairs() {
       return false;
     }
-  }
+  };
   // start now at just after REPAIR_ADVANCE_PERIOD so we do a a first one.
   let now = REPAIR_ADVANCE_PERIOD + 1;
   let doctor = mockDoctor({
@@ -130,7 +130,7 @@ add_task(async function test_repairs_advanced_daily() {
     _getAllRepairRequestors() {
       return {
         foo: requestor,
-      }
+      };
     },
     _now() {
       return now;
@@ -157,13 +157,13 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
     validate() {
       ok(false, "Shouldn't validate");
     }
-  }
+  };
   let engine = {
     name: "test-engine",
     getValidator() {
       return validator;
     }
-  }
+  };
   let requestor = {
     async startRepairs(validationInfo, flowID) {
       assert.ok(false, "Never should start repairs");
@@ -171,7 +171,7 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
     tryServerOnlyRepairs() {
       return false;
     }
-  }
+  };
   let doctor = mockDoctor({
     _getEnginesToValidate(recentlySyncedEngines) {
       deepEqual(recentlySyncedEngines, [engine]);

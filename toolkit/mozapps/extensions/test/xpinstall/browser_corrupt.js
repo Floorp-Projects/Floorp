@@ -28,8 +28,8 @@ const finish_test = async function(count) {
     return {
       return: content.document.getElementById("return").textContent,
       status: content.document.getElementById("status").textContent,
-    }
-  })
+    };
+  });
 
   is(results.status, "-207", "Callback should have seen the failure");
 

@@ -34,7 +34,7 @@ async function middleClickTest(win) {
   let browser = win.gBrowser.selectedBrowser;
   let tabsToggle = browser.contentDocument.getElementById("tabsToggle");
   EventUtils.synthesizeMouseAtCenter(tabsToggle, { button: 0 }, browser.contentWindow);
-  let treeContainer = browser.contentDocument.querySelector(".tree-container")
+  let treeContainer = browser.contentDocument.querySelector(".tree-container");
   await BrowserTestUtils.waitForCondition(() => win.getComputedStyle(treeContainer).visibility == "visible");
 
   let tree = browser.contentDocument.getElementById("tabList");

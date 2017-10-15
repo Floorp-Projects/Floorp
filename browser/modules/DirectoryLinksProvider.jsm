@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm")
+  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
@@ -199,7 +199,7 @@ var DirectoryLinksProvider = {
         this._lastDownloadMS = Date.now();
         this._downloadDeferred.resolve();
         this._downloadDeferred = null;
-        this._callObservers("onManyLinksChanged")
+        this._callObservers("onManyLinksChanged");
       },
       error => {
         this._downloadDeferred.resolve();

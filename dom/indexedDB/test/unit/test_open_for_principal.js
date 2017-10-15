@@ -82,7 +82,7 @@ function* testSteps()
 
   request = indexedDB.deleteForPrincipal(principal, name);
   request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler
+  request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   finishTest();

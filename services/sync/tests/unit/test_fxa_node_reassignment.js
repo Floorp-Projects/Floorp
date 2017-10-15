@@ -67,7 +67,7 @@ function prepareServer(cbAfterTokenFetch) {
       do_check_true(full.startsWith(config.fxaccount.token.endpoint),
                     `request made to ${full}`);
     }
-  }
+  };
   let server = new SyncServer(callback);
   server.registerUser("johndoe");
   server.start();
@@ -222,7 +222,7 @@ add_task(async function test_momentary_401_engine() {
   let global = {syncID: Service.syncID,
                 storageVersion: STORAGE_VERSION,
                 rotary: {version: engine.version,
-                         syncID:  engine.syncID}}
+                         syncID:  engine.syncID}};
   john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
@@ -312,7 +312,7 @@ add_task(async function test_momentary_401_info_collections_loggedout() {
 
   // Return a 401 for the next /info request - it will be reset immediately
   // after a new token is fetched.
-  oldHandler = server.toplevelHandlers.info
+  oldHandler = server.toplevelHandlers.info;
   server.toplevelHandlers.info = handleReassign;
 
   do_check_false(Service.isLoggedIn, "not already logged in");
@@ -320,7 +320,7 @@ add_task(async function test_momentary_401_info_collections_loggedout() {
   await Service.sync();
   do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
   // sync was successful - check we grabbed a new token.
-  do_check_true(sawTokenFetch, "a new token was fetched by this test.")
+  do_check_true(sawTokenFetch, "a new token was fetched by this test.");
   // and we are done.
   await Service.startOver();
   await promiseStopServer(server);

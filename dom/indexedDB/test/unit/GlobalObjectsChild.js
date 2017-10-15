@@ -31,10 +31,10 @@ function run_test() {
   request.onerror = function(event) {
     ok(false, "indexedDB error, '" + event.target.error.name + "'");
     finishTest();
-  }
+  };
   request.onsuccess = function(event) {
     let db = event.target.result;
     ok(db, "Got database");
     finishTest();
-  }
+  };
 }

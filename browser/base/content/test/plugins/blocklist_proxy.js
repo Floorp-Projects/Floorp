@@ -70,7 +70,7 @@ var BlocklistProxy = {
   getPluginInfoURL(aPluginTag) {
     return "";
   },
-}
+};
 
 BlocklistProxy.init();
 addEventListener("unload", () => {

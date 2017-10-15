@@ -299,7 +299,7 @@ var gSyncPane = {
         label.value = data.email;
       });
       this._populateComputerName(Weave.Service.clientsEngine.localName);
-      let engines = document.getElementById("fxaSyncEngines")
+      let engines = document.getElementById("fxaSyncEngines");
       for (let checkbox of engines.querySelectorAll("checkbox")) {
         checkbox.disabled = !syncReady;
       }
@@ -449,8 +449,8 @@ var gSyncPane = {
       let title = sb.GetStringFromName("verification" + maybeNot + "SentTitle");
       let email = !isError && data ? data.email : "";
       let body = sb.formatStringFromName("verification" + maybeNot + "SentBody", [email], 1);
-      new Notification(title, { body })
-    }
+      new Notification(title, { body });
+    };
 
     let onError = () => {
       showVerifyNotification();

@@ -130,7 +130,7 @@ var Provider = {
           btn.id = "update-" + provider;
           btn.addEventListener("click", () => { this.update(provider); });
 
-          let str = bundle.GetStringFromName("TriggerUpdate")
+          let str = bundle.GetStringFromName("TriggerUpdate");
           btn.appendChild(document.createTextNode(str));
           td.appendChild(btn);
         } else {
@@ -197,7 +197,7 @@ var Cache = {
   init() {
     this.showCacheEnties = new Set();
 
-    this.register()
+    this.register();
     this.render();
   },
 
@@ -255,7 +255,7 @@ var Cache = {
         let elem = typeof v === "object" ? v : document.createTextNode(v);
         td.appendChild(elem);
         tr.appendChild(td);
-      })
+      });
       body.appendChild(tr);
     }
 
@@ -295,12 +295,12 @@ var Cache = {
               let list = [match.fullhash, new Date(match.expiry * 1000).toString()];
               tds = tds.concat(list);
             } else {
-              tds = tds.concat([STR_NA, STR_NA])
+              tds = tds.concat([STR_NA, STR_NA]);
             }
             createRow(tds, document.getElementById("cache-entries-table-body"), 5);
             j++;
             tds = [""];
-          } while (j < matches.length)
+          } while (j < matches.length);
         }
 
         // Create cache information entries.
@@ -390,7 +390,7 @@ var Debug = {
       chk.id = "chk-" + module;
       chk.type = "checkbox";
       chk.checked = true;
-      chk.addEventListener("click", () => { logModuleUpdate(module) });
+      chk.addEventListener("click", () => { logModuleUpdate(module); });
       container.appendChild(chk, modules);
 
       let label = document.createElement("label");

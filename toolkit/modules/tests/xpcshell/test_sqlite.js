@@ -875,7 +875,7 @@ add_task(async function test_direct() {
 
   deferred = Promise.defer();
   db.asyncClose(function() {
-    deferred.resolve()
+    deferred.resolve();
   });
   await deferred.promise;
 });

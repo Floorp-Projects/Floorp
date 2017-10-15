@@ -314,7 +314,7 @@ add_task(async function test_execute() {
   for (var id of invalidIds) {
     try {
       annosvc.setItemAnnotation(id, "foo", "bar", 0, 0);
-      do_throw("setItemAnnotation* should throw for invalid item id: " + id)
+      do_throw("setItemAnnotation* should throw for invalid item id: " + id);
     } catch (ex) { }
   }
 

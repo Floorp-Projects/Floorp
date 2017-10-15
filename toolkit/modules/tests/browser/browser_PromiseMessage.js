@@ -12,7 +12,7 @@ const url = "http://example.org/tests/dom/manifest/test/resource.sjs";
  * Test basic API error conditions
  */
 add_task(async function() {
-  await BrowserTestUtils.withNewTab({gBrowser, url}, testPromiseMessageAPI)
+  await BrowserTestUtils.withNewTab({gBrowser, url}, testPromiseMessageAPI);
 });
 
 async function testPromiseMessageAPI(aBrowser) {

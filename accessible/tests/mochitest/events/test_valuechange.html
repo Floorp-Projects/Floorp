@@ -43,7 +43,7 @@
         // Note: this should always fire an EVENT_VALUE_CHANGE
         if (aValuetext != undefined)
           this.DOMNode.setAttribute("aria-valuetext", aValuetext);
-      }
+      };
 
       this.check = function changeARIAValue_check() {
         var acc = getAccessible(aNodeOrID, [nsIAccessibleValue]);
@@ -54,11 +54,11 @@
         // aria-valuetext takes precedence over aria-valuenow in gecko.
         is(acc.value, (aValuetext != undefined) ? aValuetext : aValuenow,
             "Wrong value of " + prettyName(aNodeOrID));
-      }
+      };
 
       this.getID = function changeARIAValue_getID() {
         return prettyName(aNodeOrID) + " value changed";
-      }
+      };
     }
 
     function changeValue(aID, aValue) {
@@ -69,16 +69,16 @@
 
       this.invoke = function changeValue_invoke() {
         this.DOMNode.value = aValue;
-      }
+      };
 
       this.check = function changeValue_check() {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, aValue, "Wrong value for " + prettyName(aID));
-      }
+      };
 
       this.getID = function changeValue_getID() {
         return prettyName(aID) + " value changed";
-      }
+      };
     }
 
     function changeProgressValue(aID, aValue) {
@@ -87,16 +87,16 @@
 
       this.invoke = function changeProgressValue_invoke() {
          this.DOMNode.value = aValue;
-      }
+      };
 
       this.check = function changeProgressValue_check() {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, aValue + "%", "Wrong value for " + prettyName(aID));
-      }
+      };
 
       this.getID = function changeProgressValue_getID() {
         return prettyName(aID) + " value changed";
-      }
+      };
     }
 
     function changeRangeValue(aID) {
@@ -105,16 +105,16 @@
 
       this.invoke = function changeRangeValue_invoke() {
         synthesizeMouse(getNode(aID), 5, 5, { });
-      }
+      };
 
       this.finalCheck = function changeRangeValue_finalCheck() {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, "0", "Wrong value for " + prettyName(aID));
-      }
+      };
 
       this.getID = function changeRangeValue_getID() {
         return prettyName(aID) + " range value changed";
-      }
+      };
     }
 
     function changeSelectValue(aID, aKey, aValue) {
@@ -124,15 +124,15 @@
       this.invoke = function changeSelectValue_invoke() {
         getNode(aID).focus();
         synthesizeKey(aKey, {}, window);
-      }
+      };
 
       this.finalCheck = function changeSelectValue_finalCheck() {
         is(getAccessible(aID).value, aValue, "Wrong value for " + prettyName(aID));
-      }
+      };
 
       this.getID = function changeSelectValue_getID() {
         return `${prettyName(aID)} closed select value change on '${aKey}'' key press`;
-      }
+      };
     }
 
     // enableLogging("DOMEvents");

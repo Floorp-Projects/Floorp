@@ -33,7 +33,7 @@ add_task(async function() {
   await checkGrid("2,1,3,4,,,,,");
 
   // Make sure these added links have the right type
-  let type = await performOnCell(1, cell => { return cell.site.link.type });
+  let type = await performOnCell(1, cell => { return cell.site.link.type; });
   is(type, "history", "added link is history");
 });
 

@@ -193,7 +193,7 @@ this.PermissionPromptPrototype = {
    * permissionKey.
    */
   cancel() {
-    throw new Error("Not implemented.")
+    throw new Error("Not implemented.");
   },
 
   /**
@@ -333,7 +333,7 @@ this.PermissionPromptPrototype = {
         },
       };
       if (promptAction.dismiss) {
-        action.dismiss = promptAction.dismiss
+        action.dismiss = promptAction.dismiss;
       }
 
       popupNotificationActions.push(action);

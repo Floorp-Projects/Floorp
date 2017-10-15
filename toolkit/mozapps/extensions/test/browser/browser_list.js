@@ -883,7 +883,7 @@ add_task(async function() {
   info("Addon 12");
   addon = items["Test add-on 12"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name } = await get_tooltip_info(addon))
+  ({ name } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 12", "Name should be correct");
   is(name, "Test add-on 12", "Tooltip name should be correct");
 

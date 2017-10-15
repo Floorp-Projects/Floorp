@@ -58,7 +58,7 @@ function triggerSave(aWindow, aCallback) {
     ok(!destFile.exists(), "Destination file should be removed");
     mockTransferCallback = null;
     info("done mockTransferCallback");
-  }
+  };
 
   function onUCTDialog(dialog) {
     function doLoad() {

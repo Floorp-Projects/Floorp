@@ -59,7 +59,7 @@ if (!this.runTest) {
 
     do_test_pending();
     testGenerator.next();
-  }
+  };
 }
 
 function finishTest()
@@ -76,7 +76,7 @@ function finishTest()
 
   do_execute_soon(function() {
     do_test_finished();
-  })
+  });
 }
 
 function grabEventAndContinueHandler(event)
@@ -379,7 +379,7 @@ function getRandomView(size)
 {
   let view = getView(size);
   for (let i = 0; i < size; i++) {
-    view[i] = parseInt(Math.random() * 255)
+    view[i] = parseInt(Math.random() * 255);
   }
   return view;
 }
@@ -474,7 +474,7 @@ function verifyBlob(blob1, blob2)
         verifyBuffers(buffer1, buffer2);
         testGenerator.next();
       }
-    }
+    };
   }
 
   let reader = new FileReader();
@@ -485,7 +485,7 @@ function verifyBlob(blob1, blob2)
       verifyBuffers(buffer1, buffer2);
       testGenerator.next();
     }
-  }
+  };
 }
 
 function verifyMutableFile(mutableFile1, file2)

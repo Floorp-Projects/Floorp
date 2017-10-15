@@ -35,7 +35,7 @@ var HeadersTraversalRule =
   },
 
   QueryInterface: XPCOMUtils.generateQI([nsIAccessibleTraversalRule])
-}
+};
 
 /**
  * Traversal rule for all focusable nodes or leafs.
@@ -511,7 +511,7 @@ function dumpTraversalSequence(aPivot, aRule) {
   if (aPivot.moveFirst(aRule)) {
     do {
       sequence.push("'" + prettyName(aPivot.position) + "'");
-    } while (aPivot.moveNext(aRule))
+    } while (aPivot.moveNext(aRule));
   }
   SimpleTest.info("\n[" + sequence.join(", ") + "]\n");
 }

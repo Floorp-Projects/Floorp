@@ -620,7 +620,7 @@ add_task(async function test_dom_full_screen() {
       async preCheckContextMenuFn() {
         await pushPrefs(["full-screen-api.allow-trusted-requests-only", false],
                         ["full-screen-api.transition-duration.enter", "0 0"],
-                        ["full-screen-api.transition-duration.leave", "0 0"])
+                        ["full-screen-api.transition-duration.leave", "0 0"]);
         await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
           let doc = content.document;
           let win = doc.defaultView;

@@ -95,14 +95,14 @@ document.body.appendChild(newScript);
 var newImage = document.createElement("img");
 newImage.id = "badimage2";
 newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg";
-newImage.addEventListener("load", function onload() { imageItem2 = "spoiled" });
+newImage.addEventListener("load", function onload() { imageItem2 = "spoiled"; });
 document.body.appendChild(newImage);
 
 // Try loading from a tracking iframe URI (2)
 var newFrame = document.createElement("iframe");
 newFrame.id = "badframe2";
-newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
-newFrame.addEventListener("load", function onload() { frameItem2 = "spoiled" });
+newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html";
+newFrame.addEventListener("load", function onload() { frameItem2 = "spoiled"; });
 document.body.appendChild(newFrame);
 
 // Try doing an XHR against a tracking domain (bug 1216793)

@@ -302,7 +302,7 @@ function testWordAt(aElement, aWordIndex, aText, aToDoFlag) {
   acc.getTextAtOffset(endOffsetObj.value, BOUNDARY_WORD_END,
                       startOffsetObj, endOffsetObj);
   if (startOffsetObj.value != textLength)
-    endWordOffset = startOffsetObj.value
+    endWordOffset = startOffsetObj.value;
 
   if (endWordOffset <= startWordOffset) {
     todo(false,

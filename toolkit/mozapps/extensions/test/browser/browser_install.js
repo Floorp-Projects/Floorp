@@ -100,7 +100,7 @@ function installSearchResult(aCallback) {
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
-    let remote = gManagerWindow.document.getElementById("search-filter-remote")
+    let remote = gManagerWindow.document.getElementById("search-filter-remote");
     EventUtils.synthesizeMouseAtCenter(remote, { }, gManagerWindow);
 
     let item = get_addon_element(gManagerWindow, "install1@tests.mozilla.org");

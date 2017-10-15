@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
 this.DistributionCustomizer = function DistributionCustomizer() {
-}
+};
 
 DistributionCustomizer.prototype = {
   get _iniFile() {

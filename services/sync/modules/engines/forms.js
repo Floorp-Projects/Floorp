@@ -22,7 +22,7 @@ const FORMS_TTL = 3 * 365 * 24 * 60 * 60;   // Three years in seconds.
 
 this.FormRec = function FormRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-}
+};
 FormRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Form",
@@ -50,7 +50,7 @@ var FormWrapper = {
         }
       };
       FormHistory.search(terms, searchData, callbacks);
-    })
+    });
   },
 
   async _update(changes) {
@@ -93,7 +93,7 @@ var FormWrapper = {
       op: "update",
       guid: oldGUID,
       newGuid: newGUID,
-    }
+    };
     await this._update(changes);
   }
 
@@ -101,7 +101,7 @@ var FormWrapper = {
 
 this.FormEngine = function FormEngine(service) {
   SyncEngine.call(this, "Forms", service);
-}
+};
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: FormStore,
@@ -150,7 +150,7 @@ FormStore.prototype = {
   },
 
   async getAllIDs() {
-    let results = await FormWrapper._search(["guid"], [])
+    let results = await FormWrapper._search(["guid"], []);
     let guids = {};
     for (let result of results) {
       guids[result.guid] = true;

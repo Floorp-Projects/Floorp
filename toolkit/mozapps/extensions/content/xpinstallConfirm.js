@@ -164,7 +164,7 @@ XPInstallConfirm.init = function() {
     setWidgetsAfterFocus();
   } else
     okButton.label = bundle.getString("installButtonLabel");
-}
+};
 
 XPInstallConfirm.onOK = function() {
   Components.classes["@mozilla.org/base/telemetry;1"].
@@ -174,10 +174,10 @@ XPInstallConfirm.onOK = function() {
   // Perform the install or cancel after the window has unloaded
   XPInstallConfirm._installOK = true;
   return true;
-}
+};
 
 XPInstallConfirm.onCancel = function() {
   // Perform the install or cancel after the window has unloaded
   XPInstallConfirm._installOK = false;
   return true;
-}
+};

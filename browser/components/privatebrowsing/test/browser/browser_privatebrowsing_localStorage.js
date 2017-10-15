@@ -5,7 +5,7 @@
  add_task(async function test() {
   requestLongerTimeout(2);
   const page1 = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/" +
-                "browser_privatebrowsing_localStorage_page1.html"
+                "browser_privatebrowsing_localStorage_page1.html";
 
   let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
 

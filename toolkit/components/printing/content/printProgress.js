@@ -190,7 +190,7 @@ function onLoad() {
     // Set global variables.
     printProgress = window.arguments[0];
     if (window.arguments[1]) {
-      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
+      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams);
       if (progressParams) {
         docTitle = ellipseString(progressParams.docTitle, false);
         docURL   = ellipseString(progressParams.docURL, true);
@@ -199,7 +199,7 @@ function onLoad() {
 
     if ( !printProgress ) {
         dump( "Invalid argument to printProgress.xul\n" );
-        window.close()
+        window.close();
         return;
     }
 

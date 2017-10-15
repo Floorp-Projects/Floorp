@@ -34,7 +34,7 @@ function* testSteps()
       if (++addedCount == 100) {
         executeSoon(function() { testGenerator.next(); });
       }
-    }
+    };
   }
   yield undefined;
 
@@ -86,7 +86,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.result, null, "ObjectStore shouldn't have any items");
     testGenerator.next(event);
-  }
+  };
   event = yield undefined;
 
   db.deleteObjectStore(objectStore.name);

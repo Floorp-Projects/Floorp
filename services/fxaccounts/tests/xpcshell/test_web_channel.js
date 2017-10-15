@@ -628,7 +628,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_not_priva
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return false;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
   do_check_true(shouldAllowFxaStatus);
@@ -645,7 +645,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_not_priv
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return false;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
   do_check_true(shouldAllowFxaStatus);
@@ -662,7 +662,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_no_service_not_private
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return false;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
   do_check_true(shouldAllowFxaStatus);
@@ -679,7 +679,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_private_b
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return true;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
   do_check_true(shouldAllowFxaStatus);
@@ -696,7 +696,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_private_
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return true;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
   do_check_false(shouldAllowFxaStatus);
@@ -713,7 +713,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_no_service_private_bro
     wasCalled.isPrivateBrowsingMode = true;
     do_check_eq(sendingContext, mockSendingContext);
     return true;
-  }
+  };
 
   let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
   do_check_false(shouldAllowFxaStatus);
@@ -783,7 +783,7 @@ add_task(async function test_helpers_change_password() {
       updateDeviceRegistration() {
         do_check_eq(arguments.length, 0);
         wasCalled.updateDeviceRegistration = true;
-        return Promise.resolve()
+        return Promise.resolve();
       }
     }
   });
@@ -806,7 +806,7 @@ add_task(async function test_helpers_change_password_with_error() {
 
       updateDeviceRegistration() {
         wasCalled.updateDeviceRegistration = true;
-        return Promise.resolve()
+        return Promise.resolve();
       }
     }
   });

@@ -25,7 +25,7 @@ add_task(async function() {
     MockFilePicker.showCallback = function(fp) {
       is(fp.defaultString, "index.gif");
       resolve();
-    }
+    };
   });
 
   registerCleanupFunction(function() {

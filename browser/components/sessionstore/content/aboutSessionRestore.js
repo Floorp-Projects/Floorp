@@ -24,7 +24,7 @@ window.onload = function() {
     let toggleHiddenTabs = () => {
       toggleTabs.classList.toggle("show-tabs");
       treeContainer.classList.toggle("expanded");
-    }
+    };
     toggleTabs.onclick = toggleHiddenTabs;
   }
 

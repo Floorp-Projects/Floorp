@@ -31,7 +31,7 @@ add_test(function() {
         break;
       }
     }
-    ok(testPluginId, "Test Plug-in should exist")
+    ok(testPluginId, "Test Plug-in should exist");
 
     AddonManager.getAddonByID(testPluginId, function(testPlugin) {
       let pluginEl = get_addon_element(gManagerWindow, testPluginId);

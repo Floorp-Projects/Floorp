@@ -85,9 +85,9 @@
         xhr.onerror = function() {
           postMessage({ data: null });
           URL.revokeObjectURL(blobUrl);
-        }
+        };
         xhr.send();
-      }
+      };
     }
 
     let workerScriptUrl =

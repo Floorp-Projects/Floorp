@@ -9,7 +9,7 @@ if (!this.window) {
   this.runTest = function() {
     todo(false, "Test disabled in xpcshell test suite for now");
     finishTest();
-  }
+  };
 }
 
 var testGenerator = testSteps();
@@ -29,8 +29,8 @@ function genCheck(key, value, test, options) {
       is(JSON.stringify(event.target.result), JSON.stringify(value),
          "correct stored value in " + test);
       continueToNextStepSync();
-    }
-  }
+    };
+  };
 }
 
 function* testSteps()
@@ -60,7 +60,7 @@ function* testSteps()
   store2.createIndex("unique1", "unique", { unique: true });
 
   // Test simple inserts
-  let test = " for test simple insert"
+  let test = " for test simple insert";
   store1.add({ foo: "value1" }).onsuccess =
     genCheck(c1++, { foo: "value1" }, "first" + test);
   store1.add({ foo: "value2" }).onsuccess =
@@ -278,7 +278,7 @@ function* testSteps()
 
   trans.abort();
   trans.onabort = grabEventAndContinueHandler;
-  event = yield
+  event = yield;
   is(event.type, "abort", "transaction aborted");
   is(event.target, trans, "correct transaction aborted");
 
@@ -291,7 +291,7 @@ function* testSteps()
   yield undefined; yield undefined;
 
   // Test that delete doesn't decrease generator
-  test = " for test delete items"
+  test = " for test delete items";
   trans = db.transaction(["store1", "store2"], RW);
   trans.objectStore("store1").add({ delete: 1 }).onsuccess =
     genCheck(c1++, { delete: 1 }, "first" + test);

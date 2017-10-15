@@ -314,7 +314,7 @@ function checkAssertions(assertions, doneCallback) {
     }
 
     doneCallback();
-  }
+  };
 
   checkAssertion();
 }
@@ -327,7 +327,7 @@ function updateError(arg) {
 function doUpdateTest(updates, assertions, successCallback, errorCallback) {
   var errorUpdate = function() {
     checkAssertions(assertions, errorCallback);
-  }
+  };
 
   var runUpdate = function() {
     if (updates.length > 0) {
@@ -336,7 +336,7 @@ function doUpdateTest(updates, assertions, successCallback, errorCallback) {
     } else {
       checkAssertions(assertions, successCallback);
     }
-  }
+  };
 
   runUpdate();
 }
@@ -382,7 +382,7 @@ QueryInterface(iid) {
 notify(timer) {
     this.cb();
   }
-}
+};
 
 // LFSRgenerator is a 32-bit linear feedback shift register random number
 // generator. It is highly predictable and is not intended to be used for

@@ -41,7 +41,7 @@ add_task(async function test() {
   await ContentTask.spawn(browser1, { url: BASE_URI + "?new" }, async function(opts) {
     await (new content.window.wrappedJSObject.Promise(resolve => {
       let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
-      w.onload = function() { resolve(); }
+      w.onload = function() { resolve(); };
     }));
   });
 

@@ -9,7 +9,7 @@ async function test_autocomplete(data) {
   await promiseAutocompleteResultPopup(typed);
   is(gURLBar.textValue, autofilled, "autofilled value is as expected");
   if (onAutoFill)
-    onAutoFill()
+    onAutoFill();
 
   keys.forEach(key => EventUtils.synthesizeKey(key, {}));
 

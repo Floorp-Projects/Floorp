@@ -253,7 +253,7 @@ function onPopupEvent(eventName, callback, condition) {
     PopupNotifications.panel.removeEventListener(eventName, listener);
     gActiveListeners.delete(listener);
     executeSoon(() => callback.call(PopupNotifications.panel));
-  }
+  };
   gActiveListeners.set(listener, eventName);
   PopupNotifications.panel.addEventListener(eventName, listener);
 }

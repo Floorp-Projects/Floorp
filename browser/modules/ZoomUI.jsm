@@ -20,7 +20,7 @@ var ZoomUI = {
       aWindow.removeEventListener("TextZoomChange", onZoomChange);
     }, {once: true});
   },
-}
+};
 
 function fullZoomLocationChangeObserver(aSubject, aTopic) {
   // If the tab was the last one in its window and has been dragged to another

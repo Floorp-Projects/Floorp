@@ -10,7 +10,7 @@ function* testSteps()
   const dbNames = [
     "No files",
     "Blobs and mutable files"
-  ]
+  ];
   const version = 1;
   const objectStoreName = "test";
 

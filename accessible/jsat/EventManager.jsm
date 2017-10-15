@@ -480,7 +480,7 @@ this.EventManager.prototype = {
         if (liveAttrs) {
           return liveAttrs;
         }
-        parent = parent.parent
+        parent = parent.parent;
       }
       return {};
     };
@@ -512,7 +512,7 @@ this.EventManager.prototype = {
         Utils.win.clearTimeout(nextEvent.timeoutID);
         queue.shift();
         if (queue.length === 0) {
-          this._liveEventQueue.delete(domNode)
+          this._liveEventQueue.delete(domNode);
         }
       }
     }

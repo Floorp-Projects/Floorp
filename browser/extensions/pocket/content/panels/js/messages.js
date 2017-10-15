@@ -50,7 +50,7 @@ var pktPanelMessaging = (function() {
       var responseListener = function(responsePayload) {
         callback(responsePayload);
         removeMessageListener(panelId, messageResponseId, responseListener);
-      }
+      };
 
       addMessageListener(panelId, messageResponseId, responseListener);
     }

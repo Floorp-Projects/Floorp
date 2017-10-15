@@ -214,7 +214,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     if (ids.size > MAX_REQUESTED_IDS) {
       log.info("Not starting a repair as there are over " + MAX_REQUESTED_IDS + " problems");
       let extra = { flowID, reason: `too many problems: ${ids.size}` };
-      this.service.recordTelemetryEvent("repair", "aborted", undefined, extra)
+      this.service.recordTelemetryEvent("repair", "aborted", undefined, extra);
       return false;
     }
 
@@ -226,7 +226,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     if (this.anyClientsRepairing()) {
       log.info("Can't start repair, since other clients are already repairing bookmarks");
       let extra = { flowID, reason: "other clients repairing" };
-      this.service.recordTelemetryEvent("repair", "aborted", undefined, extra)
+      this.service.recordTelemetryEvent("repair", "aborted", undefined, extra);
       return false;
     }
 
@@ -328,7 +328,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
           let extra = {
             deviceID: this.service.identity.hashedDeviceID(clientID),
             flowID,
-          }
+          };
           this.service.recordTelemetryEvent("repair", "abandon", "missing", extra);
           break;
         }
@@ -345,7 +345,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
             let extra = {
               deviceID: this.service.identity.hashedDeviceID(clientID),
               flowID,
-            }
+            };
             this.service.recordTelemetryEvent("repair", "abandon", "silent", extra);
             break;
           }
@@ -433,7 +433,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       deviceID: this.service.identity.hashedDeviceID(clientID),
       flowID,
       numIDs: response.ids.length.toString(),
-    }
+    };
     this.service.recordTelemetryEvent("repair", "response", "upload", extra);
     return state;
   }
@@ -454,7 +454,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       requestor: this.service.clientsEngine.localID,
       ids,
       flowID,
-    }
+    };
     await this.service.clientsEngine.sendCommand("repairRequest", [request], clientID, { flowID });
     this.prefs.set(PREF.REPAIR_WHEN, Math.floor(this._now()));
     // record telemetry about this
@@ -462,7 +462,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
       deviceID: this.service.identity.hashedDeviceID(clientID),
       flowID,
       numIDs: ids.length.toString(),
-    }
+    };
     this.service.recordTelemetryEvent("repair", "request", "upload", extra);
   }
 
@@ -582,7 +582,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
       rawCommand,
       processedCommand: false,
       ids: [],
-    }
+    };
 
     try {
       let engine = this.service.engineManager.get("bookmarks");
@@ -721,11 +721,11 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     let eventExtra = {
       flowID,
       numIDs: response.ids.length.toString(),
-    }
+    };
     if (this._currentState.failureReason) {
       // *sob* - recording this in "extra" means the value must be a string of
       // max 85 chars.
-      eventExtra.failureReason = JSON.stringify(this._currentState.failureReason).substring(0, 85)
+      eventExtra.failureReason = JSON.stringify(this._currentState.failureReason).substring(0, 85);
       this.service.recordTelemetryEvent("repairResponse", "failed", undefined, eventExtra);
     } else {
       this.service.recordTelemetryEvent("repairResponse", "finished", undefined, eventExtra);

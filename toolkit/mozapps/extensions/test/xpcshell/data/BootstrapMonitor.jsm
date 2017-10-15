@@ -27,4 +27,4 @@ this.monitor = function(scope, methods = ["install", "startup", "shutdown", "uni
   for (let event of methods) {
     scope[event] = notify.bind(null, event, scope[event]);
   }
-}
+};

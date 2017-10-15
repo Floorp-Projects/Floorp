@@ -169,7 +169,7 @@ class BlocklistClient {
 
     // this is a content-signature field from an autograph response.
     const {x5u, signature} = await fetchCollectionMetadata(remote, collection);
-    const certChainResponse = await fetch(x5u)
+    const certChainResponse = await fetch(x5u);
     const certChain = await certChainResponse.text();
 
     const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
@@ -225,7 +225,7 @@ class BlocklistClient {
         "incoming-changes": [(payload, collection) => {
           return this.validateCollectionSignature(remote, payload, collection);
         }]
-      }
+      };
     }
 
     let reportStatus = null;

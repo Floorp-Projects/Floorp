@@ -55,7 +55,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
     notEqual(record.id, localID, "Only apply tab records from remote clients");
     applied.push(record);
     apply.call(store, record);
-  }
+  };
 
   let collection = new ServerCollection();
 
@@ -90,7 +90,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 
       await syncFinish.call(engine);
       resolve();
-    }
+    };
   });
 
   _("Start sync");

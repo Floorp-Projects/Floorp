@@ -29,7 +29,7 @@ function test() {
     { "#input1": "value24", "/xhtml:html/xhtml:body/xhtml:input[@name='input2']": "value25", id: { "input1": "value26" } },
     { "#input1": "value27", "/xhtml:html/xhtml:body/xhtml:input[@name='input2']": "value28", id: { "input1": "value29" }, xpath: { "/xhtml:html/xhtml:body/xhtml:input[@name='input2']": "value30" } },
     { "#input1": "value31", "/xhtml:html/xhtml:body/xhtml:input[@name='input2']": "value32", xpath: { "/xhtml:html/xhtml:body/xhtml:input[@name='input2']": "value33" } }
-  ]
+  ];
   let expectedValues = [
     [ "", "" ],
     // old format

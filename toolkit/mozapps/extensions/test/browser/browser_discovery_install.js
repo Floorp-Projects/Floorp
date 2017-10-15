@@ -47,7 +47,7 @@ function waitForFail() {
     let listener = (subject, topic, data) => {
       Services.obs.removeObserver(listener, topic);
       resolve();
-    }
+    };
     Services.obs.addObserver(listener, "addon-install-origin-blocked");
   });
 }

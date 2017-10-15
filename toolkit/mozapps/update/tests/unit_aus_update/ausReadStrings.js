@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const BIN_DIR = (IS_WIN ? "test_bug473417-ó" : "test_bug473417")
+const BIN_DIR = (IS_WIN ? "test_bug473417-ó" : "test_bug473417");
 const BIN_EXE = "TestAUSReadStrings" + BIN_SUFFIX;
 const tempdir = do_get_tempdir();
 
@@ -18,7 +18,7 @@ function run_test() {
   ];
   for (let i = 0; i < paths.length; i++) {
     let file = do_get_file("../data/" + paths[i]);
-    file.copyTo(workdir, null)
+    file.copyTo(workdir, null);
   }
 
   let readStrings = workdir.clone();

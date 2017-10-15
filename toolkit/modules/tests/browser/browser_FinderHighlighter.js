@@ -13,7 +13,7 @@ const kFixtureBaseURL = "https://example.com/browser/toolkit/modules/tests/brows
 const kIteratorTimeout = Services.prefs.getIntPref("findbar.iteratorTimeout");
 
 function promiseOpenFindbar(findbar) {
-  findbar.onFindCommand()
+  findbar.onFindCommand();
   return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
 }
 

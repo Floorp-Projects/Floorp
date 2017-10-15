@@ -30,7 +30,7 @@ classifierHelper.waitForInit = function() {
     classifierHelper._initsCB.push(resolve);
     gScript.sendAsyncMessage("waitForInit");
   });
-}
+};
 
 // This function is used to allow completion for specific "list",
 // some lists like "test-malware-simple" is default disabled to ask for complete.
@@ -51,7 +51,7 @@ classifierHelper.allowCompletion = function(lists, url) {
 
   // Set get hash url
   SpecialPowers.setCharPref(PREFS.PROVIDER_GETHASHURL, url);
-}
+};
 
 // Pass { url: ..., db: ... } to add url to database,
 // onsuccess/onerror will be called when update complete.
@@ -78,7 +78,7 @@ classifierHelper.addUrlToDB = function(updateData) {
 
     classifierHelper._update(testUpdate, resolve, reject);
   });
-}
+};
 
 // This API is used to expire all add/sub chunks we have updated
 // by using addUrlToDB.
@@ -113,7 +113,7 @@ classifierHelper.reloadDatabase = function() {
 
     gScript.sendAsyncMessage("doReload");
   });
-}
+};
 
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
   // Queue the task if there is still an on-going update

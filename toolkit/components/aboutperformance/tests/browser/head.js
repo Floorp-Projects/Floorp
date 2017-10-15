@@ -47,6 +47,6 @@ function hasLowPrecision() {
     info("Running old Linux, need to deactivate tests due to bad precision.");
     return true;
   }
-  info("This platform has good precision.")
+  info("This platform has good precision.");
   return false;
 }

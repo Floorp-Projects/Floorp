@@ -450,7 +450,7 @@ var TelemetryScheduler = {
           Services.tm.idleDispatchToMainThread(() => {
             return this._idleDispatch
               ? this._idleDispatch.dispatch(resolve, reject)
-              : Promise.resolve().then(resolve, reject)
+              : Promise.resolve().then(resolve, reject);
             },
             SCHEDULER_TICK_MAX_IDLE_DELAY_MS));
       } else {
@@ -727,13 +727,13 @@ var Impl = {
   _observedTopics: new Set(),
 
   addObserver(aTopic) {
-    Services.obs.addObserver(this, aTopic)
-    this._observedTopics.add(aTopic)
+    Services.obs.addObserver(this, aTopic);
+    this._observedTopics.add(aTopic);
   },
 
   removeObserver(aTopic) {
-    Services.obs.removeObserver(this, aTopic)
-    this._observedTopics.delete(aTopic)
+    Services.obs.removeObserver(this, aTopic);
+    this._observedTopics.delete(aTopic);
   },
 
   get _log() {
@@ -759,7 +759,7 @@ var Impl = {
     var ret = {
       totalTime: Math.round(elapsedTime / 1000), // totalTime, in seconds
       uptime: Math.round(elapsedTime / 60000) // uptime in minutes
-    }
+    };
 
     // Look for app-specific timestamps
     var appTimestamps = {};
@@ -781,7 +781,7 @@ var Impl = {
       for (let field of Object.keys(si)) {
         if (field == "process")
           continue;
-        ret[field] = si[field] - si.process
+        ret[field] = si[field] - si.process;
       }
 
       for (let p in appTimestamps) {
@@ -1097,7 +1097,7 @@ var Impl = {
         boundHandleMemoryReport(id, units, amount);
       } catch (e) {
       }
-    }
+    };
     let b = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_BYTES, n);
     let c = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT, n);
     let cc = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE, n);
@@ -1672,7 +1672,7 @@ var Impl = {
     {
       // In child process, send the requested USS report
       this.sendContentProcessUSS(message.data.id);
-      break
+      break;
     }
     default:
       throw new Error("Telemetry.receiveMessage: bad message name");

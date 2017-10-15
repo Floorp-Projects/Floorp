@@ -38,7 +38,7 @@ add_test(function test_addEngineWithExtensionID() {
     onError(errorCode) {
       do_throw("search callback returned error: " + errorCode);
     }
-  }
+  };
   Services.search.addEngine(gDataUrl + "engine.xml", null,
                             null, false, searchCallback, kExtensionID2);
 });

@@ -630,7 +630,7 @@ TabWindow.prototype = {
       }
     );
   }
-}
+};
 
 // AeroPeek
 

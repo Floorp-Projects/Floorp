@@ -137,7 +137,7 @@ function promisePageLoaded(browser) {
     await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true,
       (event) => {
         return event.originalTarget === content.document &&
-               event.target.location.href !== "about:blank"
+               event.target.location.href !== "about:blank";
       });
   });
 }

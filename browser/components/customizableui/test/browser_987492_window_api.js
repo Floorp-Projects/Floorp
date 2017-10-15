@@ -19,7 +19,7 @@ add_task(async function testOpenCloseWindow() {
     onWindowOpened(window) {
       newWindow = window;
     }
-  }
+  };
   CustomizableUI.addListener(openListener);
 
   {
@@ -42,10 +42,10 @@ add_task(async function testOpenCloseWindow() {
     onWindowClosed(window) {
       closedWindow = window;
     }
-  }
+  };
   CustomizableUI.addListener(closeListener);
   await promiseWindowClosed(newWindow);
-  isnot(closedWindow, null, "Should have gotten onWindowClosed event")
+  isnot(closedWindow, null, "Should have gotten onWindowClosed event");
   is(newWindow, closedWindow, "Closed window should match previously opened window");
   CustomizableUI.removeListener(closeListener);
 

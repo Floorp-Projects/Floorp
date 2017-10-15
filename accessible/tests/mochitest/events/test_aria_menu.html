@@ -37,11 +37,11 @@
 
       this.invoke = function focusMenu_invoke() {
         getNode(aMenuID).focus();
-      }
+      };
 
       this.getID = function focusMenu_getID() {
         return "focus menu '" + aMenuID + "'";
-      }
+      };
     }
 
     function showMenu(aMenuID, aParentMenuID, aHow) {
@@ -88,13 +88,13 @@
           this.menuNode.style.display = "none";
         else
           this.menuNode.style.visibility = "hidden";
-      }
+      };
 
       this.getID = function closeMenu_getID() {
         return "Close ARIA menu " + aMenuID + " by " +
           (aHow == kViaDisplayStyle ? "display" : "visibility") +
           " style tricks";
-      }
+      };
 
       function getMenu(aThisObj) {
         return aThisObj.menu;
@@ -112,11 +112,11 @@
 
       this.invoke = function focusInsideMenu_invoke() {
         getNode(aMenuID).focus();
-      }
+      };
 
       this.getID = function focusInsideMenu_getID() {
         return "focus menu '" + aMenuID + "'";
-      }
+      };
     }
 
     function blurMenu(aMenuBarID) {
@@ -129,7 +129,7 @@
 
       this.getID = function blurMenu_getID() {
         return "blur menu";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

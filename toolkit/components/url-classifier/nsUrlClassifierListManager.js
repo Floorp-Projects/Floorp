@@ -38,7 +38,7 @@ this.log = function log(...stuff) {
   msg = Services.urlFormatter.trimSensitiveURLs(msg);
   Services.console.logStringMessage(msg);
   dump(msg + "\n");
-}
+};
 
 /**
  * A ListManager keeps track of black and white lists and knows
@@ -71,7 +71,7 @@ this.PROT_ListManager = function PROT_ListManager() {
 
   Services.obs.addObserver(this, "quit-application");
   Services.prefs.addObserver(PREF_DEBUG_ENABLED, this);
-}
+};
 
 /**
  * Register a new table table
@@ -106,7 +106,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
   this.needsUpdate_[updateUrl][tableName] = false;
 
   return true;
-}
+};
 
 /**
  * Unregister a table table from list
@@ -124,7 +124,7 @@ PROT_ListManager.prototype.unregisterTable = function(tableName) {
   }
   delete this.tablesData[tableName];
 
-}
+};
 
 /**
  * Delete all of our data tables which seem to leak otherwise.
@@ -137,7 +137,7 @@ PROT_ListManager.prototype.shutdown_ = function() {
   }
   Services.obs.removeObserver(this, "quit-application");
   Services.prefs.removeObserver(PREF_DEBUG_ENABLED, this);
-}
+};
 
 /**
  * xpcom-shutdown callback
@@ -153,7 +153,7 @@ PROT_ListManager.prototype.observe = function(aSubject, aTopic, aData) {
     }
     break;
   }
-}
+};
 
 
 PROT_ListManager.prototype.getGethashUrl = function(tableName) {
@@ -161,14 +161,14 @@ PROT_ListManager.prototype.getGethashUrl = function(tableName) {
     return this.tablesData[tableName].gethashUrl;
   }
   return "";
-}
+};
 
 PROT_ListManager.prototype.getUpdateUrl = function(tableName) {
   if (this.tablesData[tableName] && this.tablesData[tableName].updateUrl) {
     return this.tablesData[tableName].updateUrl;
   }
   return "";
-}
+};
 
 /**
  * Enable updates for some tables
@@ -180,7 +180,7 @@ PROT_ListManager.prototype.enableUpdate = function(tableName) {
     log("Enabling table updates for " + tableName);
     this.needsUpdate_[table.updateUrl][tableName] = true;
   }
-}
+};
 
 /**
  * Returns true if any table associated with the updateUrl requires updates.
@@ -194,7 +194,7 @@ PROT_ListManager.prototype.updatesNeeded_ = function(updateUrl) {
     }
   }
   return updatesNeeded;
-}
+};
 
 /**
  * Disables updates for some tables
@@ -211,7 +211,7 @@ PROT_ListManager.prototype.disableUpdate = function(tableName) {
       this.updateCheckers_[table.updateUrl] = null;
     }
   }
-}
+};
 
 /**
  * Determine if we have some tables that need updating.
@@ -225,7 +225,7 @@ PROT_ListManager.prototype.requireTableUpdates = function() {
   }
 
   return false;
-}
+};
 
 /**
  *  Set timer to check update after delay
@@ -241,7 +241,7 @@ PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl,
       this.setUpdateCheckTimer(updateUrl, this.updateInterval);
     }
   }, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-}
+};
 /**
  * Acts as a nsIUrlClassifierCallback for getTables.
  */
@@ -294,7 +294,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function(onDiskTableData) {
       log("No updates needed or already initialized for " + updateUrl);
     }
   }
-}
+};
 
 PROT_ListManager.prototype.stopUpdateCheckers = function() {
   log("Stopping updates");
@@ -304,7 +304,7 @@ PROT_ListManager.prototype.stopUpdateCheckers = function() {
       this.updateCheckers_[updateUrl] = null;
     }
   }
-}
+};
 
 /**
  * Determine if we have any tables that require updating.  Different
@@ -327,7 +327,7 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
     log("Stopping managing lists (if currently active)");
     this.stopUpdateCheckers();                    // Cancel pending updates
   }
-}
+};
 
 /**
  * Updates our internal tables from the update server
@@ -350,7 +350,7 @@ PROT_ListManager.prototype.checkForUpdates = function(updateUrl) {
   this.dbService_.getTables(BindToObject(this.makeUpdateRequest_, this,
                             updateUrl));
   return true;
-}
+};
 
 /**
  * Method that fires the actual HTTP update request.
@@ -480,7 +480,7 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
     // We were disabled between kicking off getTables and now.
     log("Not sending empty request");
   }
-}
+};
 
 PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(updateUrl,
                                                                  tableList,
@@ -510,7 +510,7 @@ PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(updateUrl,
     let provider = this.tablesData[table].provider;
     Services.obs.notifyObservers(null, "safebrowsing-update-begin", provider);
   }
-}
+};
 
 /**
  * Callback function if the update request succeeded.
@@ -577,7 +577,7 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   Services.prefs.setCharPref(nextUpdatePref, targetTime.toString());
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished", "success");
-}
+};
 
 /**
  * Callback function if the update request succeeded.
@@ -591,7 +591,7 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
                                "update error: " + result);
-}
+};
 
 /**
  * Callback function when the download failed
@@ -618,7 +618,7 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
                                "download error: " + status);
-}
+};
 
 /**
  * Get back-off time for the given provider.
@@ -639,7 +639,7 @@ PROT_ListManager.prototype.getBackOffTime = function(provider) {
 
   let delay = this.requestBackoffs_[updateUrl].nextRequestDelay();
   return delay == 0 ? 0 : Date.now() + delay;
-}
+};
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
   if (iid.equals(Ci.nsISupports) ||
@@ -649,7 +649,7 @@ PROT_ListManager.prototype.QueryInterface = function(iid) {
     return this;
 
   throw Components.results.NS_ERROR_NO_INTERFACE;
-}
+};
 
 var modScope = this;
 function Init() {

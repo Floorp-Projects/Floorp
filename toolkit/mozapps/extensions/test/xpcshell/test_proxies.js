@@ -35,7 +35,7 @@ var METADATA = {
     minVersion: "2",
     maxVersion: "2"
   }]
-}
+};
 
 const ios = AM_Cc["@mozilla.org/network/io-service;1"].getService(AM_Ci.nsIIOService);
 
@@ -105,9 +105,9 @@ async function run_proxy_tests() {
     writeInstallRDFToDir(METADATA, gTmpD);
 
     if (addon.type == "proxy") {
-      writeFile(addon.directory.path, addon.proxyFile)
+      writeFile(addon.directory.path, addon.proxyFile);
     } else if (addon.type == "symlink") {
-      await createSymlink(addon.directory, addon.proxyFile)
+      await createSymlink(addon.directory, addon.proxyFile);
     }
   }
 

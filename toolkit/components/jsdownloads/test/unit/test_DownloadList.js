@@ -430,7 +430,7 @@ add_task(async function test_removeFinished() {
   list.removeFinished();
   await deferred.promise;
 
-  let downloads = await list.getAll()
+  let downloads = await list.getAll();
   do_check_eq(downloads.length, 1);
 });
 

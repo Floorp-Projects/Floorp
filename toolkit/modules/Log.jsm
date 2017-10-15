@@ -244,7 +244,7 @@ LogMessage.prototype = {
     if (this.params) {
       msg += " " + JSON.stringify(this.params);
     }
-    return msg + "]"
+    return msg + "]";
   }
 };
 
@@ -629,7 +629,7 @@ StructuredFormatter.prototype = {
 
     return JSON.stringify(output);
   }
-}
+};
 
 /**
  * Test an object to see if it is a Mozilla JS Error.
@@ -646,7 +646,7 @@ function isError(aObj) {
  */
 
 function ParameterFormatter() {
-  this._name = "ParameterFormatter"
+  this._name = "ParameterFormatter";
 }
 ParameterFormatter.prototype = {
   format(ob) {
@@ -685,10 +685,10 @@ ParameterFormatter.prototype = {
     try {
       return "" + ob;
     } catch (_) {
-      return "[object]"
+      return "[object]";
     }
   }
-}
+};
 
 /*
  * Appenders

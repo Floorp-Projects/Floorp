@@ -78,4 +78,4 @@ var CustomizationHandler = {
 
     gBrowser.selectedBrowser.focus();
   }
-}
+};

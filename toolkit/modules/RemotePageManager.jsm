@@ -52,7 +52,7 @@ MessageListener.prototype = {
 
     this.listeners.get(name).delete(callback);
   },
-}
+};
 
 
 /**
@@ -73,7 +73,7 @@ this.RemotePages = function(urls) {
   for (const url of this.urls) {
     RemotePageManager.addRemotePageListener(url, this.portCreated);
   }
-}
+};
 
 RemotePages.prototype = {
   urls: null,
@@ -161,7 +161,7 @@ RemotePages.prototype = {
 
     if (!this.listener.has(name)) {
       for (let port of this.messagePorts.values()) {
-        this.registerPortListener(port, name)
+        this.registerPortListener(port, name);
       }
     }
 
@@ -352,7 +352,7 @@ ChromeMessagePort.prototype.swapBrowsers = function({ detail: newBrowser }) {
   this.swapMessageManager(newBrowser.messageManager);
 
   this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
-}
+};
 
 // Called when a message manager has been disconnected indicating that the
 // tab has closed or crashed
@@ -467,7 +467,7 @@ ChildMessagePort.prototype.message = function({ data: messagedata }) {
 ChildMessagePort.prototype.destroy = function() {
   this.window = null;
   MessagePort.prototype.destroy.call(this);
-}
+};
 
 // Allows callers to register to connect to specific content pages. Registration
 // is done through the addRemotePageListener method

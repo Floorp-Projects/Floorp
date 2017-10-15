@@ -927,7 +927,7 @@ var ViewSourceContent = {
       if (itemSpec.accesskey) {
         let accesskeyName = `context_${itemSpec.id}_accesskey`;
         item.setAttribute("accesskey",
-                          this.bundle.GetStringFromName(accesskeyName))
+                          this.bundle.GetStringFromName(accesskeyName));
       }
       menu.appendChild(item);
     });
