@@ -1365,6 +1365,10 @@ nsIFrame::HasOpacityInternal(float aThreshold,
 
   EffectSet* effects =
     aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
+  if (!effects) {
+    return false;
+  }
+
   return (IsPrimaryFrame() &&
           nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_opacity));
 }
