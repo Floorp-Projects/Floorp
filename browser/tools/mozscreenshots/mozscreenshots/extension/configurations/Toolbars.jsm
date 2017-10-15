@@ -15,6 +15,7 @@ this.Toolbars = {
 
   configurations: {
     onlyNavBar: {
+      selectors: ["#navigator-toolbox"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let personalToolbar = browserWindow.document.getElementById("PersonalToolbar");
@@ -24,6 +25,7 @@ this.Toolbars = {
     },
 
     allToolbars: {
+      selectors: ["#navigator-toolbox"],
       async applyConfig() { // Boookmarks and menubar
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let personalToolbar = browserWindow.document.getElementById("PersonalToolbar");

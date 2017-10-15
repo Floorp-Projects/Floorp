@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<title>Opacity animation on ib-split-sibling</title>
+<style>
+@keyframes anim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
+<span id="animating">A <span style="display:block"></span> C</span>
+<script>
+window.addEventListener("load", () => {
+  animating.style.animation = 'anim 100s step-end reverse';
+  window.addEventListener("MozAfterPaint", () => {
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  }, {once: true});
+});
+</script>

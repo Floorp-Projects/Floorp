@@ -61,3 +61,6 @@ fails-if(layerChecksEnabled) == background-position-important.html background-po
 == change-animation-name-to-other-in-rule.html change-animation-name-in-rule-ref.html
 == change-animation-name-to-non-existent-in-rule.html change-animation-name-in-rule-ref.html
 == no-style-sharing-with-animations.html no-style-sharing-with-animations-ref.html
+
+== continuation-opacity.html continuation-opacity-ref.html
+== ib-split-sibling-opacity.html about:blank
