@@ -121,7 +121,8 @@
 }
 
 .customizationmode-button:-moz-any(:focus,:active,:hover):not([disabled]),
-.customizationmode-button[open] {
+.customizationmode-button[open],
+.customizationmode-button[checked] {
   background-color: #e1e1e5;
 }
 
@@ -556,4 +557,90 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #downloads-button-autohide-checkbox {
   margin: 0;
   padding: 0;
+}
+
+#ready-player-one {
+  /* Don't need HiDPI versions since the size used will be scaled down to 20x20. */
+  list-style-image: url("chrome://browser/skin/customizableui/whimsy.png");
+}
+
+#ready-player-one > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#customization-palette[whimsypong] {
+  /* Keep the palette in the render tree but invisible
+     so -moz-element() will work. */
+  padding: 0;
+  min-height: 0;
+  max-height: 0;
+}
+
+#customization-palette[whimsypong] > toolbarpaletteitem > toolbarspring {
+  margin: 0 -7px;
+}
+
+#lives,
+#ball {
+  /* Don't need HiDPI versions since the size used will be scaled down to 20x20. */
+  background-image: url("chrome://browser/skin/customizableui/whimsy.png");
+  background-size: contain;
+  width: 20px;
+}
+
+#customization-pong-arena {
+  width: 300px;
+  height: 300px;
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  margin: 16px auto 0;
+}
+
+#ball {
+  margin-left: -10px;
+  margin-top: -10px;
+  height: 20px;
+}
+
+#player1,
+#player2 {
+  width: 84px;
+  height: calc(39px + 3em);
+  background-color: rgba(255,255,0,.5);
+}
+
+#player1,
+#player2,
+#ball,
+#score {
+  position: fixed;
+}
+
+#score {
+  transform: translateX(-4ch);
+}
+
+#lives {
+  transform: translate(-4ch, 1ch);
+}
+
+#lives[lives="5"] {
+  height: 100px;
+}
+
+#lives[lives="4"] {
+  height: 80px;
+}
+
+#lives[lives="3"] {
+  height: 60px;
+}
+
+#lives[lives="2"] {
+  height: 40px;
+}
+
+#lives[lives="1"] {
+  height: 20px;
 }
