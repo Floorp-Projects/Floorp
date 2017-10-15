@@ -67,3 +67,50 @@ this.read = function(path, options = {}) {
     );
   });
 };
+
+/**
+ * Native implementation of OS.File.writeAtomic.
+ * This should not be called when |buffer| is a view with some non-zero byte offset.
+ * Does not handle option |compression|.
+ */
+this.writeAtomic = function(path, buffer, options = {}) {
+  // Sanity check on types of options - we check only the encoding, since
+  // the others are checked inside Internals.writeAtomic.
+  if ("encoding" in options && typeof options.encoding !== "string") {
+    return Promise.reject(new TypeError("Invalid type for option encoding"));
+  }
+
+  if (typeof buffer == "string") {
+    // Normalize buffer to a C buffer by encoding it
+    let encoding = options.encoding || "utf-8";
+    buffer = new TextEncoder(encoding).encode(buffer);
+  }
+
+  if (ArrayBuffer.isView(buffer)) {
+    // We need to throw an error if it's a buffer with some byte offset.
+    if ("byteOffset" in buffer && buffer.byteOffset > 0) {
+      return Promise.reject(new Error("Invalid non-zero value of Typed Array byte offset"));
+    }
+    buffer = buffer.buffer;
+  }
+
+  return new Promise((resolve, reject) => {
+    Internals.writeAtomic(
+      path,
+      buffer,
+      options,
+      function onSuccess(success) {
+        success.QueryInterface(Ci.nsINativeOSFileResult);
+        if ("outExecutionDuration" in options) {
+          options.outExecutionDuration =
+            success.executionDurationMS +
+            (options.outExecutionDuration || 0);
+        }
+        resolve(success.result);
+      },
+      function onError(operation, oserror) {
+        reject(new SysAll.Error(operation, oserror, path));
+      }
+    );
+  });
+};
