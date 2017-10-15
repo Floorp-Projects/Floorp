@@ -28,7 +28,7 @@ struct ParamTraits<mozilla::dom::Sequence<T>>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, dynamic_cast<FallibleTArray<T>*>(aResult));
+    return ReadParam(aMsg, aIter, static_cast<FallibleTArray<T>*>(aResult));
   }
 };
 
