@@ -1369,7 +1369,9 @@ nsIFrame::HasOpacityInternal(float aThreshold,
     return false;
   }
 
-  return (IsPrimaryFrame() &&
+  return ((IsPrimaryFrame() ||
+           nsLayoutUtils::FirstContinuationOrIBSplitSibling(this)->
+             IsPrimaryFrame()) &&
           nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_opacity));
 }
 
