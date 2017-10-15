@@ -123,6 +123,14 @@ function getElementText(selector) {
   });
 }
 
+function getElementAttr(selector, attr) {
+  info("Get attribute '" + attr + "' for element '" + selector + "'");
+
+  let data = {selector, attr};
+  return executeInContent("Test:JsonView:GetElementAttr", data)
+  .then(result => result.text);
+}
+
 function focusElement(selector) {
   info("Focus element: '" + selector + "'");
 
