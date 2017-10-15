@@ -53,9 +53,9 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 // Naming: there are two kinds of functions in this file:
 //
 // * Functions named internal_*: these can only be reached via an
-//   interface function (TelemetryScalar::*). They expect the interface
-//   function to have acquired |gTelemetryScalarsMutex|, so they do not
-//   have to be thread-safe.
+//   interface function (TelemetryScalar::*). If they access shared
+//   state, they require the interface function to have acquired
+//   |gTelemetryScalarMutex| to ensure thread safety.
 //
 // * Functions named TelemetryScalar::*. This is the external interface.
 //   Entries and exits to these functions are serialised using
@@ -65,8 +65,7 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 //
 // All functions in the external interface (TelemetryScalar::*) are
 // serialised using the mutex |gTelemetryScalarsMutex|. This means
-// that the external interface is thread-safe, and many of the
-// internal_* functions can ignore thread safety. But it also brings
+// that the external interface is thread-safe. But it also brings
 // a danger of deadlock if any function in the external interface can
 // get back to that interface. That is, we will deadlock on any call
 // chain like this
@@ -180,7 +179,7 @@ typedef AutoHashtable<CharPtrEntryType> ScalarMapType;
 StaticAutoPtr<nsTArray<DynamicScalarInfo>> gDynamicScalarInfo;
 
 const BaseScalarInfo&
-internal_GetScalarInfo(const ScalarKey& aId)
+internal_GetScalarInfo(const StaticMutexAutoLock& lock, const ScalarKey& aId)
 {
   if (!aId.dynamic) {
     return gScalars[aId.id];
@@ -195,10 +194,8 @@ IsValidEnumId(mozilla::Telemetry::ScalarID aID)
   return aID < mozilla::Telemetry::ScalarID::ScalarCount;
 }
 
-// TODO: We should explicitly pass a lock here. Unfortunately this needs
-// some refactoring of the callers as well. See bug 1362957.
 bool
-internal_IsValidId(const ScalarKey& aId)
+internal_IsValidId(const StaticMutexAutoLock& lock, const ScalarKey& aId)
 {
   // Please note that this function needs to be called with the scalar
   // mutex being acquired: other functions might be messing with
@@ -946,18 +943,18 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 //
-// PRIVATE: thread-unsafe helpers for the external interface
+// PRIVATE: helpers for the external interface
 
 namespace {
 
 bool
-internal_CanRecordBase()
+internal_CanRecordBase(const StaticMutexAutoLock& lock)
 {
   return gCanRecordBase;
 }
 
 bool
-internal_CanRecordExtended()
+internal_CanRecordExtended(const StaticMutexAutoLock& lock)
 {
   return gCanRecordExtended;
 }
@@ -965,45 +962,49 @@ internal_CanRecordExtended()
 /**
  * Check if the given scalar is a keyed scalar.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @return true if aId refers to a keyed scalar, false otherwise.
  */
 bool
-internal_IsKeyedScalar(const ScalarKey& aId)
+internal_IsKeyedScalar(const StaticMutexAutoLock& lock, const ScalarKey& aId)
 {
-  return internal_GetScalarInfo(aId).keyed;
+  return internal_GetScalarInfo(lock, aId).keyed;
 }
 
 /**
  * Check if we're allowed to record the given scalar in the current
  * process.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @return true if the scalar is allowed to be recorded in the current process, false
  *         otherwise.
  */
 bool
-internal_CanRecordProcess(const ScalarKey& aId)
+internal_CanRecordProcess(const StaticMutexAutoLock& lock,
+                          const ScalarKey& aId)
 {
-  const BaseScalarInfo &info = internal_GetScalarInfo(aId);
+  const BaseScalarInfo &info = internal_GetScalarInfo(lock, aId);
   return CanRecordInProcess(info.record_in_processes, XRE_GetProcessType());
 }
 
 bool
-internal_CanRecordForScalarID(const ScalarKey& aId)
+internal_CanRecordForScalarID(const StaticMutexAutoLock& lock,
+                              const ScalarKey& aId)
 {
   // Get the scalar info from the id.
-  const BaseScalarInfo &info = internal_GetScalarInfo(aId);
+  const BaseScalarInfo &info = internal_GetScalarInfo(lock, aId);
 
   // Can we record at all?
-  bool canRecordBase = internal_CanRecordBase();
+  bool canRecordBase = internal_CanRecordBase(lock);
   if (!canRecordBase) {
     return false;
   }
 
   bool canRecordDataset = CanRecordDataset(info.dataset,
                                            canRecordBase,
-                                           internal_CanRecordExtended());
+                                           internal_CanRecordExtended(lock));
   if (!canRecordDataset) {
     return false;
   }
@@ -1014,26 +1015,28 @@ internal_CanRecordForScalarID(const ScalarKey& aId)
 /**
  * Check if we are allowed to record the provided scalar.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aKeyed Are we attempting to write a keyed scalar?
  * @return ScalarResult::Ok if we can record, an error code otherwise.
  */
 ScalarResult
-internal_CanRecordScalar(const ScalarKey& aId, bool aKeyed)
+internal_CanRecordScalar(const StaticMutexAutoLock& lock, const ScalarKey& aId,
+                         bool aKeyed)
 {
   // Make sure that we have a keyed scalar if we are trying to change one.
-  if (internal_IsKeyedScalar(aId) != aKeyed) {
+  if (internal_IsKeyedScalar(lock, aId) != aKeyed) {
     return ScalarResult::KeyedTypeMismatch;
   }
 
   // Are we allowed to record this scalar based on the current Telemetry
   // settings?
-  if (!internal_CanRecordForScalarID(aId)) {
+  if (!internal_CanRecordForScalarID(lock, aId)) {
     return ScalarResult::CannotRecordDataset;
   }
 
   // Can we record in this process?
-  if (!internal_CanRecordProcess(aId)) {
+  if (!internal_CanRecordProcess(lock, aId)) {
     return ScalarResult::CannotRecordInProcess;
   }
 
@@ -1043,6 +1046,7 @@ internal_CanRecordScalar(const ScalarKey& aId, bool aKeyed)
 /**
  * Get the scalar enum id from the scalar name.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aName The scalar name.
  * @param aId The output variable to contain the enum.
  * @return
@@ -1051,7 +1055,9 @@ internal_CanRecordScalar(const ScalarKey& aId, bool aKeyed)
  *   NS_OK if the scalar was found and aId contains a valid enum id.
  */
 nsresult
-internal_GetEnumByScalarName(const nsACString& aName, ScalarKey* aId)
+internal_GetEnumByScalarName(const StaticMutexAutoLock& lock,
+                             const nsACString& aName,
+                             ScalarKey* aId)
 {
   if (!gInitDone) {
     return NS_ERROR_FAILURE;
@@ -1069,6 +1075,7 @@ internal_GetEnumByScalarName(const nsACString& aName, ScalarKey* aId)
  * Get a scalar object by its enum id. This implicitly allocates the scalar
  * object in the storage if it wasn't previously allocated.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aProcessStorage This drives the selection of the map to use to store
  *        the scalar data coming from child processes. This is only meaningful when
@@ -1083,16 +1090,17 @@ internal_GetEnumByScalarName(const nsACString& aName, ScalarKey* aId)
  *   valid pointer to a scalar type.
  */
 nsresult
-internal_GetScalarByEnum(const ScalarKey& aId,
+internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
+                         const ScalarKey& aId,
                          ProcessID aProcessStorage,
                          ScalarBase** aRet)
 {
-  if (!internal_IsValidId(aId)) {
+  if (!internal_IsValidId(lock, aId)) {
     MOZ_ASSERT(false, "Requested a scalar with an invalid id.");
     return NS_ERROR_INVALID_ARG;
   }
 
-  const BaseScalarInfo &info = internal_GetScalarInfo(aId);
+  const BaseScalarInfo &info = internal_GetScalarInfo(lock, aId);
 
   // Dynamic scalars fixup: they are always stored in the "dynamic" process.
   if (aId.dynamic) {
@@ -1135,23 +1143,24 @@ internal_GetScalarByEnum(const ScalarKey& aId,
 /**
  * Update the scalar with the provided value. This is used by the JS API.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aName The scalar name.
  * @param aType The action type for updating the scalar.
  * @param aValue The value to use for updating the scalar.
  * @return a ScalarResult error value.
  */
 ScalarResult
-internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
-                      nsIVariant* aValue)
+internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
+                      ScalarActionType aType, nsIVariant* aValue)
 {
   ScalarKey uniqueId;
-  nsresult rv = internal_GetEnumByScalarName(aName, &uniqueId);
+  nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
   if (NS_FAILED(rv)) {
     return (rv == NS_ERROR_FAILURE) ?
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  ScalarResult sr = internal_CanRecordScalar(uniqueId, false);
+  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, false);
   if (sr != ScalarResult::Ok) {
     if (sr == ScalarResult::CannotRecordDataset) {
       return ScalarResult::Ok;
@@ -1161,7 +1170,7 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    const BaseScalarInfo &info = internal_GetScalarInfo(uniqueId);
+    const BaseScalarInfo &info = internal_GetScalarInfo(lock, uniqueId);
     // Convert the nsIVariant to a Variant.
     mozilla::Maybe<ScalarVariant> variantValue;
     sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
@@ -1176,7 +1185,7 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
 
   // Finally get the scalar.
   ScalarBase* scalar = nullptr;
-  rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  rv = internal_GetScalarByEnum(lock, uniqueId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1210,6 +1219,7 @@ namespace {
  * Get a keyed scalar object by its enum id. This implicitly allocates the keyed
  * scalar object in the storage if it wasn't previously allocated.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aProcessStorage This drives the selection of the map to use to store
  *        the scalar data coming from child processes. This is only meaningful when
@@ -1225,16 +1235,17 @@ namespace {
  *   valid pointer to a scalar type.
  */
 nsresult
-internal_GetKeyedScalarByEnum(const ScalarKey& aId,
+internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
+                              const ScalarKey& aId,
                               ProcessID aProcessStorage,
                               KeyedScalar** aRet)
 {
-  if (!internal_IsValidId(aId)) {
+  if (!internal_IsValidId(lock, aId)) {
     MOZ_ASSERT(false, "Requested a keyed scalar with an invalid id.");
     return NS_ERROR_INVALID_ARG;
   }
 
-  const BaseScalarInfo &info = internal_GetScalarInfo(aId);
+  const BaseScalarInfo &info = internal_GetScalarInfo(lock, aId);
 
   // Dynamic scalars fixup: they are always stored in the "dynamic" process.
   if (aId.dynamic) {
@@ -1282,6 +1293,7 @@ internal_GetKeyedScalarByEnum(const ScalarKey& aId,
 /**
  * Update the keyed scalar with the provided value. This is used by the JS API.
  *
+ * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aName The scalar name.
  * @param aKey The key name.
  * @param aType The action type for updating the scalar.
@@ -1289,17 +1301,18 @@ internal_GetKeyedScalarByEnum(const ScalarKey& aId,
  * @return a ScalarResult error value.
  */
 ScalarResult
-internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
+internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
+                           const nsACString& aName, const nsAString& aKey,
                            ScalarActionType aType, nsIVariant* aValue)
 {
   ScalarKey uniqueId;
-  nsresult rv = internal_GetEnumByScalarName(aName, &uniqueId);
+  nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
   if (NS_FAILED(rv)) {
     return (rv == NS_ERROR_FAILURE) ?
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  ScalarResult sr = internal_CanRecordScalar(uniqueId, true);
+  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, true);
   if (sr != ScalarResult::Ok) {
     if (sr == ScalarResult::CannotRecordDataset) {
       return ScalarResult::Ok;
@@ -1309,7 +1322,7 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    const BaseScalarInfo &info = internal_GetScalarInfo(uniqueId);
+    const BaseScalarInfo &info = internal_GetScalarInfo(lock, uniqueId);
     // Convert the nsIVariant to a Variant.
     mozilla::Maybe<ScalarVariant> variantValue;
     sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
@@ -1324,7 +1337,8 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
 
   // Finally get the scalar.
   KeyedScalar* scalar = nullptr;
-  rv = internal_GetKeyedScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  rv = internal_GetKeyedScalarByEnum(lock, uniqueId, ProcessID::Parent,
+                                     &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1348,7 +1362,8 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
  * to |DynamicScalarDefinition| used by the IPC calls.
  */
 void
-internal_DynamicScalarToIPC(const nsTArray<DynamicScalarInfo>& aDynamicScalarInfos,
+internal_DynamicScalarToIPC(const StaticMutexAutoLock& lock,
+                            const nsTArray<DynamicScalarInfo>& aDynamicScalarInfos,
                             nsTArray<DynamicScalarDefinition>& aIPCDefs)
 {
   for (auto info : aDynamicScalarInfos) {
@@ -1367,7 +1382,8 @@ internal_DynamicScalarToIPC(const nsTArray<DynamicScalarInfo>& aDynamicScalarInf
  * content processes.
  */
 void
-internal_BroadcastDefinitions(const nsTArray<DynamicScalarInfo>& scalarInfos)
+internal_BroadcastDefinitions(const StaticMutexAutoLock& lock,
+                              const nsTArray<DynamicScalarInfo>& scalarInfos)
 {
   nsTArray<mozilla::dom::ContentParent*> parents;
   mozilla::dom::ContentParent::GetAll(parents);
@@ -1377,7 +1393,7 @@ internal_BroadcastDefinitions(const nsTArray<DynamicScalarInfo>& scalarInfos)
 
   // Convert the internal scalar representation to a stripped down IPC one.
   nsTArray<DynamicScalarDefinition> ipcDefinitions;
-  internal_DynamicScalarToIPC(scalarInfos, ipcDefinitions);
+  internal_DynamicScalarToIPC(lock, scalarInfos, ipcDefinitions);
 
   // Broadcast the definitions to the other content processes.
   for (auto parent : parents) {
@@ -1501,7 +1517,8 @@ TelemetryScalar::Add(const nsACString& aName, JS::HandleValue aVal, JSContext* a
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateScalar(aName, ScalarActionType::eAdd, unpackedVal);
+    sr = internal_UpdateScalar(locker, aName, ScalarActionType::eAdd,
+                               unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1538,7 +1555,9 @@ TelemetryScalar::Add(const nsACString& aName, const nsAString& aKey, JS::HandleV
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateKeyedScalar(aName, aKey, ScalarActionType::eAdd, unpackedVal);
+    sr = internal_UpdateKeyedScalar(locker, aName, aKey,
+                                    ScalarActionType::eAdd,
+                                    unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1566,7 +1585,7 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, false) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, false) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1580,7 +1599,8 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                         &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1607,7 +1627,7 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, true) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, true) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1620,7 +1640,9 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId,
+                                              ProcessID::Parent,
+                                              &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1652,7 +1674,8 @@ TelemetryScalar::Set(const nsACString& aName, JS::HandleValue aVal, JSContext* a
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateScalar(aName, ScalarActionType::eSet, unpackedVal);
+    sr = internal_UpdateScalar(locker, aName, ScalarActionType::eSet,
+                               unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1689,7 +1712,9 @@ TelemetryScalar::Set(const nsACString& aName, const nsAString& aKey, JS::HandleV
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateKeyedScalar(aName, aKey, ScalarActionType::eSet, unpackedVal);
+    sr = internal_UpdateKeyedScalar(locker, aName, aKey,
+                                    ScalarActionType::eSet,
+                                    unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1717,7 +1742,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, false) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, false) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1731,7 +1756,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                         &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1756,7 +1782,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, false) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, false) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1770,7 +1796,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                         &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1795,7 +1822,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, false) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, false) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1809,7 +1836,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                         &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1836,7 +1864,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, true) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, true) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1849,7 +1877,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId,
+                                              ProcessID::Parent,
+                                              &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1876,7 +1906,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, true) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, true) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -1889,7 +1919,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId,
+                                              ProcessID::Parent,
+                                              &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1921,7 +1953,8 @@ TelemetryScalar::SetMaximum(const nsACString& aName, JS::HandleValue aVal, JSCon
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateScalar(aName, ScalarActionType::eSetMaximum, unpackedVal);
+    sr = internal_UpdateScalar(locker, aName, ScalarActionType::eSetMaximum,
+                               unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1958,7 +1991,9 @@ TelemetryScalar::SetMaximum(const nsACString& aName, const nsAString& aKey, JS::
   ScalarResult sr;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-    sr = internal_UpdateKeyedScalar(aName, aKey, ScalarActionType::eSetMaximum, unpackedVal);
+    sr = internal_UpdateKeyedScalar(locker, aName, aKey,
+                                    ScalarActionType::eSetMaximum,
+                                    unpackedVal);
   }
 
   // Warn the user about the error if we need to.
@@ -1986,7 +2021,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, false) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, false) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -2000,7 +2035,8 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                         &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -2027,7 +2063,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
   ScalarKey uniqueId{static_cast<uint32_t>(aId), false};
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-  if (internal_CanRecordScalar(uniqueId, true) != ScalarResult::Ok) {
+  if (internal_CanRecordScalar(locker, uniqueId, true) != ScalarResult::Ok) {
     // We can't record this scalar. Bail out.
     return;
   }
@@ -2040,7 +2076,8 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(uniqueId, ProcessID::Parent, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId, ProcessID::Parent,
+                                              &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -2099,7 +2136,8 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
 
         // Get the informations for this scalar.
         const BaseScalarInfo& info =
-          internal_GetScalarInfo(ScalarKey{childIter.Key(), isDynamicProcess});
+          internal_GetScalarInfo(locker, ScalarKey{childIter.Key(),
+                                 isDynamicProcess});
 
         // Serialize the scalar if it's in the desired dataset.
         if (IsInDataset(info.dataset, aDataset)) {
@@ -2206,7 +2244,8 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
 
         // Get the informations for this scalar.
         const BaseScalarInfo& info =
-          internal_GetScalarInfo(ScalarKey{childIter.Key(), isDynamicProcess});
+          internal_GetScalarInfo(locker, ScalarKey{childIter.Key(),
+                                 isDynamicProcess});
 
         // Serialize the scalar if it's in the desired dataset.
         if (IsInDataset(info.dataset, aDataset)) {
@@ -2389,17 +2428,17 @@ TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
     res = ::internal_RegisterScalars(locker, newScalarInfos);
+
+
+    if (res == ScalarResult::AlreadyRegistered) {
+      JS_ReportErrorASCII(cx, "Attempt to register a scalar that is already registered.");
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // Propagate the registration to all the content-processes. Please note that
+    // this does not require to hold the mutex.
+    ::internal_BroadcastDefinitions(locker, newScalarInfos);
   }
-
-  if (res == ScalarResult::AlreadyRegistered) {
-    JS_ReportErrorASCII(cx, "Attempt to register a scalar that is already registered.");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Propagate the registration to all the content-processes. Please note that
-  // this does not require to hold the mutex.
-  ::internal_BroadcastDefinitions(newScalarInfos);
-
   return NS_OK;
 }
 
@@ -2458,32 +2497,33 @@ TelemetryScalar::UpdateChildData(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "The stored child processes scalar data must be updated from the parent process.");
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  if (!internal_CanRecordBase()) {
+  if (!internal_CanRecordBase(locker)) {
     return;
   }
 
   for (auto& upd : aScalarActions) {
     ScalarKey uniqueId{upd.mId, upd.mDynamic};
-    if (NS_WARN_IF(!internal_IsValidId(uniqueId))) {
+    if (NS_WARN_IF(!internal_IsValidId(locker, uniqueId))) {
       MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
       continue;
     }
 
-    if (internal_IsKeyedScalar(uniqueId)) {
+    if (internal_IsKeyedScalar(locker, uniqueId)) {
       continue;
     }
 
     // Are we allowed to record this scalar? We don't need to check for
     // allowed processes here, that's taken care of when recording
     // in child processes.
-    if (!internal_CanRecordForScalarID(uniqueId)) {
+    if (!internal_CanRecordForScalarID(locker, uniqueId)) {
       continue;
     }
 
     // Refresh the data in the parent process with the data coming from the child
     // processes.
     ScalarBase* scalar = nullptr;
-    nsresult rv = internal_GetScalarByEnum(uniqueId, aProcessType, &scalar);
+    nsresult rv = internal_GetScalarByEnum(locker, uniqueId, aProcessType,
+                                           &scalar);
     if (NS_FAILED(rv)) {
       NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
       continue;
@@ -2496,7 +2536,7 @@ TelemetryScalar::UpdateChildData(ProcessID aProcessType,
 
     // Get the type of this scalar from the scalar ID. We already checked
     // for its validity a few lines above.
-    const uint32_t scalarType = internal_GetScalarInfo(uniqueId).kind;
+    const uint32_t scalarType = internal_GetScalarInfo(locker, uniqueId).kind;
 
     // Extract the data from the mozilla::Variant.
     switch (upd.mActionType)
@@ -2550,32 +2590,33 @@ TelemetryScalar::UpdateChildKeyedData(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "The stored child processes keyed scalar data must be updated from the parent process.");
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  if (!internal_CanRecordBase()) {
+  if (!internal_CanRecordBase(locker)) {
     return;
   }
 
   for (auto& upd : aScalarActions) {
     ScalarKey uniqueId{upd.mId, upd.mDynamic};
-    if (NS_WARN_IF(!internal_IsValidId(uniqueId))) {
+    if (NS_WARN_IF(!internal_IsValidId(locker, uniqueId))) {
       MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
       continue;
     }
 
-    if (!internal_IsKeyedScalar(uniqueId)) {
+    if (!internal_IsKeyedScalar(locker, uniqueId)) {
       continue;
     }
 
     // Are we allowed to record this scalar? We don't need to check for
     // allowed processes here, that's taken care of when recording
     // in child processes.
-    if (!internal_CanRecordForScalarID(uniqueId)) {
+    if (!internal_CanRecordForScalarID(locker, uniqueId)) {
       continue;
     }
 
     // Refresh the data in the parent process with the data coming from the child
     // processes.
     KeyedScalar* scalar = nullptr;
-    nsresult rv = internal_GetKeyedScalarByEnum(uniqueId, aProcessType, &scalar);
+    nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId, aProcessType,
+                                                &scalar);
     if (NS_FAILED(rv)) {
       NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
       continue;
@@ -2588,7 +2629,7 @@ TelemetryScalar::UpdateChildKeyedData(ProcessID aProcessType,
 
     // Get the type of this scalar from the scalar ID. We already checked
     // for its validity a few lines above.
-    const uint32_t scalarType = internal_GetScalarInfo(uniqueId).kind;
+    const uint32_t scalarType = internal_GetScalarInfo(locker, uniqueId).kind;
 
     // Extract the data from the mozilla::Variant.
     switch (upd.mActionType)
@@ -2641,38 +2682,38 @@ TelemetryScalar::RecordDiscardedData(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Discarded Data must be updated from the parent process.");
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  if (!internal_CanRecordBase()) {
+  if (!internal_CanRecordBase(locker)) {
     return;
   }
 
   ScalarBase* scalar = nullptr;
   mozilla::DebugOnly<nsresult> rv;
 
-  rv = internal_GetScalarByEnum(
+  rv = internal_GetScalarByEnum(locker,
     ScalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_DISCARDED_ACCUMULATIONS), false},
     aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   scalar->AddValue(aDiscardedData.mDiscardedHistogramAccumulations);
 
-  rv = internal_GetScalarByEnum(
+  rv = internal_GetScalarByEnum(locker,
     ScalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_DISCARDED_KEYED_ACCUMULATIONS), false},
     aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   scalar->AddValue(aDiscardedData.mDiscardedKeyedHistogramAccumulations);
 
-  rv = internal_GetScalarByEnum(
+  rv = internal_GetScalarByEnum(locker,
     ScalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_DISCARDED_SCALAR_ACTIONS), false},
     aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   scalar->AddValue(aDiscardedData.mDiscardedScalarActions);
 
-  rv = internal_GetScalarByEnum(
+  rv = internal_GetScalarByEnum(locker,
     ScalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_DISCARDED_KEYED_SCALAR_ACTIONS), false},
     aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   scalar->AddValue(aDiscardedData.mDiscardedKeyedScalarActions);
 
-  rv = internal_GetScalarByEnum(
+  rv = internal_GetScalarByEnum(locker,
     ScalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_DISCARDED_CHILD_EVENTS), false},
     aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -2694,7 +2735,7 @@ TelemetryScalar::GetDynamicScalarDefinitions(
   }
 
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  internal_DynamicScalarToIPC(*gDynamicScalarInfo, aDefArray);
+  internal_DynamicScalarToIPC(locker, *gDynamicScalarInfo, aDefArray);
 }
 
 /**
