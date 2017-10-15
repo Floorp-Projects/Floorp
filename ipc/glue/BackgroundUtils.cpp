@@ -192,15 +192,18 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   }
 
   // might be an expanded principal
-  auto* basePrin = BasePrincipal::Cast(aPrincipal);
-  if (basePrin->Is<ExpandedPrincipal>()) {
-    auto* expanded = basePrin->As<ExpandedPrincipal>();
+  nsCOMPtr<nsIExpandedPrincipal> expanded =
+    do_QueryInterface(aPrincipal);
 
+  if (expanded) {
     nsTArray<PrincipalInfo> whitelistInfo;
     PrincipalInfo info;
 
-    for (auto& prin : expanded->WhiteList()) {
-      rv = PrincipalToPrincipalInfo(prin, &info);
+    nsTArray< nsCOMPtr<nsIPrincipal> >* whitelist;
+    MOZ_ALWAYS_SUCCEEDS(expanded->GetWhiteList(&whitelist));
+
+    for (uint32_t i = 0; i < whitelist->Length(); i++) {
+      rv = PrincipalToPrincipalInfo((*whitelist)[i], &info);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

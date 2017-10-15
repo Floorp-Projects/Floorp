@@ -44,7 +44,6 @@
 #include "nsPrintfCString.h"
 #include "mozilla/AbstractThread.h"
 #include "ContentPrincipal.h"
-#include "ExpandedPrincipal.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -2234,13 +2233,16 @@ nsPermissionManager::CommonTestPermissionInternal(nsIPrincipal* aPrincipal,
 
   // For expanded principals, we want to iterate over the whitelist and see
   // if the permission is granted for any of them.
-  auto* basePrin = BasePrincipal::Cast(aPrincipal);
-  if (basePrin->Is<ExpandedPrincipal>()) {
-    auto ep = basePrin->As<ExpandedPrincipal>();
-    for (auto& prin : ep->WhiteList()) {
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+  if (ep) {
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist;
+    nsresult rv = ep->GetWhiteList(&whitelist);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (size_t i = 0; i < whitelist->Length(); ++i) {
       uint32_t perm;
-      nsresult rv = CommonTestPermission(prin, aType, &perm,
-                                         aExactHostMatch, aIncludingSession);
+      rv = CommonTestPermission(whitelist->ElementAt(i), aType, &perm,
+                                aExactHostMatch, aIncludingSession);
       NS_ENSURE_SUCCESS(rv, rv);
       if (perm == nsIPermissionManager::ALLOW_ACTION) {
         *aPermission = perm;
