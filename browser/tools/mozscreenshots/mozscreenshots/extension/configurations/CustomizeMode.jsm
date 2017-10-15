@@ -17,6 +17,7 @@ this.CustomizeMode = {
 
   configurations: {
     notCustomizing: {
+      selectors: ["#navigator-toolbox"],
       applyConfig() {
         return new Promise((resolve) => {
           let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -38,6 +39,7 @@ this.CustomizeMode = {
     },
 
     customizing: {
+      selectors: ["#navigator-toolbox", "#customization-container"],
       applyConfig() {
         return new Promise((resolve) => {
           let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
