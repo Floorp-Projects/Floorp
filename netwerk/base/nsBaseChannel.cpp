@@ -975,6 +975,20 @@ nsBaseChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget)
 }
 
 NS_IMETHODIMP
+nsBaseChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE(mRequest, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsIThreadRetargetableRequest> req;
+    req = do_QueryInterface(mRequest);
+
+  NS_ENSURE_TRUE(req, NS_ERROR_NOT_IMPLEMENTED);
+  return req->GetDeliveryTarget(aEventTarget);
+}
+
+NS_IMETHODIMP
 nsBaseChannel::CheckListenerChain()
 {
   MOZ_ASSERT(NS_IsMainThread());
