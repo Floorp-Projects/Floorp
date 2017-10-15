@@ -82,6 +82,33 @@ interface nsINativeOSFileInternalsService: nsISupports
   void read(in AString path, in jsval options,
             in nsINativeOSFileSuccessCallback onSuccess,
             in nsINativeOSFileErrorCallback onError);
+
+  /**
+   * Implementation of OS.File.writeAtomic
+   *
+   * @param path the absolute path of the file to write to.
+   * @param buffer the data as an array buffer to be written to the file.
+   * @param options An object that may contain the following fields
+   * - {number} bytes If provided, the number of bytes written is equal to this.
+   *   The default value is the size of the |buffer|.
+   * - {string} tmpPath If provided and not null, first write to this path, and
+   *   move to |path| after writing.
+   * - {string} backupPath if provided, backup file at |path| to this path
+   *   before overwriting it.
+   * - {bool} flush if provided and true, flush the contents of the buffer after
+   *   writing. This is slower, but safer.
+   * - {bool} noOverwrite if provided and true, do not write if a file already
+   *   exists at |path|.
+   * @param onSuccess The success callback.
+   * @param onError The error callback.
+   */
+  [implicit_jscontext]
+  void writeAtomic(in AString path,
+                   in jsval buffer,
+                   in jsval options,
+                   in nsINativeOSFileSuccessCallback onSuccess,
+                   in nsINativeOSFileErrorCallback onError);
+
 };
 
 
