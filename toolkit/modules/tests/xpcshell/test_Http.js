@@ -62,7 +62,7 @@ function getDataChecker(aExpectedMethod, aExpectedData, aExpectedMimeType = null
     aResponse.setStatusLine(null, 200, "OK");
     aResponse.setHeader("Content-Type", "application/json");
     aResponse.write("Success!");
-  }
+  };
 }
 
 add_test(function test_successCallback() {
@@ -78,7 +78,7 @@ add_test(function test_successCallback() {
       do_test_finished();
       run_next_test();
     }
-  }
+  };
   httpRequest(kSuccessUrl, options);
 });
 
@@ -95,7 +95,7 @@ add_test(function test_errorCallback() {
       do_test_finished();
       run_next_test();
     }
-  }
+  };
   httpRequest(kBaseUrl + "/failure", options);
 });
 
@@ -113,7 +113,7 @@ add_test(function test_PostData() {
       run_next_test();
     },
     postData: kPostDataSent
-  }
+  };
   httpRequest(kPostUrl, options);
 });
 
@@ -132,7 +132,7 @@ add_test(function test_PutData() {
       run_next_test();
     },
     postData: kPutDataSent
-  }
+  };
   httpRequest(kPutUrl, options);
 });
 
@@ -150,7 +150,7 @@ add_test(function test_GetData() {
       run_next_test();
     },
     postData: null
-  }
+  };
   httpRequest(kGetUrl, options);
 });
 
@@ -188,7 +188,7 @@ add_test(function test_CustomContentTypeOnPost() {
     postData: kJsonPostData,
     // Setting a custom Content-Type header.
     headers: [["Content-Type", "application/json"]]
-  }
+  };
 
   // Firing the request.
   httpRequest(kJsonPostUrl, options);

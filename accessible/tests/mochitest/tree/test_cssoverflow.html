@@ -36,16 +36,16 @@
 
       this.invoke = function focusAnchor_invoke() {
         this.linkNode.focus();
-      }
+      };
 
       this.check = function focusAnchor_check(aEvent) {
         todo_is(this.link, aEvent.accessible,
                 "Focus should be fired against new link accessible!");
-      }
+      };
 
       this.getID = function focusAnchor_getID() {
         return "focus a:focus{overflow:scroll} #1";
-      }
+      };
     }
 
     function tabAnchor(aID) {
@@ -58,16 +58,16 @@
 
       this.invoke = function tabAnchor_invoke() {
         synthesizeKey("VK_TAB", { shiftKey: false });
-      }
+      };
 
       this.check = function tabAnchor_check(aEvent) {
         todo_is(this.link, aEvent.accessible,
                    "Focus should be fired against new link accessible!");
-      }
+      };
 
       this.getID = function tabAnchor_getID() {
         return "focus a:focus{overflow:scroll} #2";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

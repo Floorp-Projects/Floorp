@@ -40,7 +40,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 
   if (aIsRootItem && aNode.itemId != PlacesUtils.placesRootId) {
     Assert.ok("parentGuid" in aItem);
-    await check_has_child(aItem.parentGuid, aItem.guid)
+    await check_has_child(aItem.parentGuid, aItem.guid);
   } else {
     check_unset("parentGuid");
   }

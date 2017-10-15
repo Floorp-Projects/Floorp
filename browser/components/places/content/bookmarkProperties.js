@@ -490,7 +490,7 @@ var BookmarkPropertiesPanel = {
       this._defaultInsertionPoint.itemId,
       await this._defaultInsertionPoint.getIndex(),
       this._defaultInsertionPoint.guid,
-    ]
+    ];
   },
 
   /**

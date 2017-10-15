@@ -226,7 +226,7 @@ function promiseFindFinished(searchText, highlightOn) {
         clearTimeout(findTimeout);
         findbar.browser.finder.removeResultListener(resultListener);
         resolve();
-      }
+      };
 
       resultListener = {
         onFindResult: foundOrTimedout

@@ -57,7 +57,7 @@ this.AsyncResource = function AsyncResource(uri) {
   this.uri = uri;
   this._headers = {};
   this._onComplete = Utils.bind2(this, this._onComplete);
-}
+};
 AsyncResource.prototype = {
   _logName: "Sync.AsyncResource",
 

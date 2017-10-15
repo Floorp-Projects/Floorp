@@ -247,7 +247,7 @@ var gGestureSupport = {
 
       this._doUpdate = function() {};
       this._doEnd = function() {};
-    }
+    };
   },
 
   /**
@@ -664,7 +664,7 @@ var gHistorySwipeAnimation = {
           this._lastSwipeDir = "";
         }
         this.updateAnimation(0);
-      }
+      };
       SessionStore.getSessionHistory(gBrowser.selectedTab, updateSessionHistory);
     }
   },
@@ -836,7 +836,7 @@ var gHistorySwipeAnimation = {
         this._navigateToHistoryIndex();
       else
         this.stopAnimation();
-    }
+    };
     SessionStore.getSessionHistory(gBrowser.selectedTab, updateSessionHistory);
   },
 

@@ -40,18 +40,18 @@
         testAccessibleTree(aContainerID, tree);
 
         getNode(aChildID).setAttribute("hidden", "true");
-      }
+      };
 
       this.finalCheck = function setHiddenAttr_finalCheck() {
         var tree =
           { SECTION: [
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function setHiddenAttr_getID() {
         return "Set @hidden attribute on input and test accessible tree for div";
-      }
+      };
     }
 
     /**
@@ -69,7 +69,7 @@
         testAccessibleTree(aContainerID, tree);
 
         getNode(aChildID).removeAttribute("hidden");
-      }
+      };
 
       this.finalCheck = function removeHiddenAttr_finalCheck() {
         var tree =
@@ -78,11 +78,11 @@
               ] }
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function removeHiddenAttr_getID() {
         return "Remove @hidden attribute on input and test accessible tree for div";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

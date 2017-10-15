@@ -129,7 +129,7 @@ add_test(function test_source_uri_rewrite() {
   let installOptions = {
     id: "rewrite@tests.mozilla.org",
     requireSecureURI: false,
-  }
+  };
   AddonUtils.installAddons([installOptions], installCallback);
 
   installCallback.wait();

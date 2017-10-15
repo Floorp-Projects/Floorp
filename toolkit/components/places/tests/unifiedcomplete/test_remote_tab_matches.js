@@ -20,7 +20,7 @@ MockTabsEngine.prototype = {
   getAllClients() {
     return this.clients;
   },
-}
+};
 
 // A clients engine that doesn't need to be a constructor.
 let MockClientsEngine = {
@@ -28,7 +28,7 @@ let MockClientsEngine = {
     Assert.ok(guid.endsWith("desktop") || guid.endsWith("mobile"));
     return guid.endsWith("mobile");
   },
-}
+};
 
 // Tell Sync about the mocks.
 Weave.Service.engineManager.register(MockTabsEngine);
@@ -56,7 +56,7 @@ function makeRemoteTabMatch(url, deviceName, extra = {}) {
     title: extra.title || url,
     style: [ "action", "remotetab" ],
     icon: extra.icon,
-  }
+  };
 }
 
 // The tests.

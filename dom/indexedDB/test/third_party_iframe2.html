@@ -18,7 +18,7 @@
         let request = indexedDB.open(window.location.pathname, 1);
         request.onsuccess = function(event) {
           report(!!(event.target.result instanceof IDBDatabase));
-        }
+        };
       }
       catch (e) {
         report(false);

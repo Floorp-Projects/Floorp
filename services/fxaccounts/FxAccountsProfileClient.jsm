@@ -5,7 +5,7 @@
 /**
  * A client to fetch profile information for a Firefox Account.
  */
- "use strict;"
+ "use strict;";
 
 this.EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
 

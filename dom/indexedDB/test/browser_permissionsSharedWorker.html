@@ -17,7 +17,7 @@
           message = e.data.error;
         }
         postMessage(message, "*");
-      }
+      };
 
       const name = window.location.pathname + "_sharedWorker";
       w.port.postMessage(name);

@@ -88,7 +88,7 @@ add_task(async function step_6() {
   gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
   gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
 
-  await ensure_opentabs_match_db()
+  await ensure_opentabs_match_db();
 
   await BrowserTestUtils.removeTab(tabToKeep);
 

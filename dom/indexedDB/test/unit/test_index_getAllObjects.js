@@ -54,7 +54,7 @@ function* testSteps()
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }
-    }
+    };
   }
   event = yield undefined;
 

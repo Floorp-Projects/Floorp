@@ -36,8 +36,8 @@ const PERSON_CONTRACTID = "@mozilla.org/feed-person;1";
 const PERSON_CLASSID = Components.ID("{95c963b7-20b2-11db-92f6-001422106990}");
 const PERSON_CLASSNAME = "Feed Person";
 
-const IO_CONTRACTID = "@mozilla.org/network/io-service;1"
-const BAG_CONTRACTID = "@mozilla.org/hash-property-bag;1"
+const IO_CONTRACTID = "@mozilla.org/network/io-service;1";
+const BAG_CONTRACTID = "@mozilla.org/hash-property-bag;1";
 const ARRAY_CONTRACTID = "@mozilla.org/array;1";
 const SAX_CONTRACTID = "@mozilla.org/saxparser/xmlreader;1";
 const PARSERUTILS_CONTRACTID = "@mozilla.org/parserutils;1";
@@ -107,7 +107,7 @@ function findAtomLinks(rel, links) {
     if (bagHasKey(linkElement, "href")) {
       var relAttribute = null;
       if (bagHasKey(linkElement, "rel"))
-        relAttribute = linkElement.getPropertyAsAString("rel")
+        relAttribute = linkElement.getPropertyAsAString("rel");
       if ((!relAttribute && rel == "alternate") || relAttribute == rel) {
         rvLinks.push(linkElement);
         continue;
@@ -156,7 +156,7 @@ function makePropGetter(key) {
     } catch (e) {
     }
     return null;
-  }
+  };
 }
 
 const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -178,7 +178,7 @@ var gNamespaces = {
   "http://www.w3.org/XML/1998/namespace": "xml",
   "http://search.yahoo.com/mrss/": "media",
   "http://search.yahoo.com/mrss": "media"
-}
+};
 
 // We allow a very small set of namespaces in XHTML content,
 // for attributes only
@@ -187,7 +187,7 @@ var gAllowedXHTMLNamespaces = {
   // if someone ns qualifies XHTML, we have to prefix it to avoid an
   // attribute collision.
   "http://www.w3.org/1999/xhtml": "xhtml"
-}
+};
 
 function FeedResult() {}
 FeedResult.prototype = {
@@ -205,7 +205,7 @@ FeedResult.prototype = {
   // XPCOM stuff
   classID: FR_CLASSID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedResult])
-}
+};
 
 function Feed() {
   this.subtitle = null;
@@ -377,7 +377,7 @@ Feed.prototype = {
   // XPCOM stuff
   classID: FEED_CLASSID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer])
-}
+};
 
 function Entry() {
   this.summary = null;
@@ -589,7 +589,7 @@ Entry.prototype = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIFeedEntry, Ci.nsIFeedContainer]
   )
-}
+};
 
 Entry.prototype._atomLinksToURI = Feed.prototype._atomLinksToURI;
 Entry.prototype._resolveURI = Feed.prototype._resolveURI;
@@ -626,7 +626,7 @@ TextConstruct.prototype = {
     }
     var isXML;
     if (this.type == "xhtml")
-      isXML = true
+      isXML = true;
     else if (this.type == "html")
       isXML = false;
     else
@@ -640,7 +640,7 @@ TextConstruct.prototype = {
   // XPCOM stuff
   classID: TEXTCONSTRUCT_CLASSID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedTextConstruct])
-}
+};
 
 // Generator represents the software that produced the feed
 function Generator() {
@@ -680,7 +680,7 @@ Generator.prototype = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIFeedGenerator, Ci.nsIFeedElementBase]
   )
-}
+};
 
 function Person() {
   this.name = null;
@@ -698,7 +698,7 @@ Person.prototype = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIFeedPerson, Ci.nsIFeedElementBase]
   )
-}
+};
 
 /**
  * Map a list of fields into properties on a container.
@@ -941,7 +941,7 @@ XHTMLHandler.prototype = {
   },
   processingInstruction: function XH_processingInstruction() {
   },
-}
+};
 
 /**
  * The ExtensionHandler deals with elements we haven't explicitly
@@ -1209,7 +1209,7 @@ function FeedProcessor() {
       "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
                                       null, true)
     }
-  }
+  };
 }
 
 // See startElement for a long description of how feeds are processed.
@@ -1613,7 +1613,7 @@ FeedProcessor.prototype = {
     var versions = { "0.91": "rss091",
                      "0.92": "rss092",
                      "0.93": "rss093",
-                     "0.94": "rss094" }
+                     "0.94": "rss094" };
     if (versions[versionAttr])
       return versions[versionAttr];
     if (versionAttr.substr(0, 2) != "2.")
@@ -1761,7 +1761,7 @@ FeedProcessor.prototype = {
     [Ci.nsIFeedProcessor, Ci.nsISAXContentHandler, Ci.nsISAXErrorHandler,
      Ci.nsIStreamListener, Ci.nsIRequestObserver]
   )
-}
+};
 
 var components = [FeedProcessor, FeedResult, Feed, Entry,
                   TextConstruct, Generator, Person];

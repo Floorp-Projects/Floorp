@@ -952,7 +952,7 @@ function getGlobalIndicator() {
       } else if (this[field] && !aState) {
         this._statusBar.removeItem(this[field]);
         this[field].remove();
-        this[field] = null
+        this[field] = null;
       }
     },
     updateIndicatorState() {

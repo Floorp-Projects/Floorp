@@ -134,7 +134,7 @@ RokuApp.prototype = {
       callback();
     }
   }
-}
+};
 
 /* RemoteMedia provides a wrapper for using TCP socket to control Roku apps.
  * The server implementation must be built into the Roku receiver app.
@@ -227,4 +227,4 @@ RemoteMedia.prototype = {
   get status() {
     return this._status;
   }
-}
+};

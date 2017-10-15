@@ -3,9 +3,9 @@
  */
 
 add_task(async function test_replaceFaviconData_validHistoryURI() {
-  const TEST_URL = "http://mozilla.com/"
+  const TEST_URL = "http://mozilla.com/";
   await PlacesTestUtils.addVisits(TEST_URL);
-  const TEST_URL2 = "http://test.mozilla.com/"
+  const TEST_URL2 = "http://test.mozilla.com/";
   await PlacesTestUtils.addVisits(TEST_URL2);
 
   let favicons = [

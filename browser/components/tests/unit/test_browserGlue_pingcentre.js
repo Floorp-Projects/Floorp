@@ -16,7 +16,7 @@ add_task(async function() {
   const SEND_PING_CALL_ARGS = {
     event: "AS_ENABLED",
     value: asEnabled
-  }
+  };
   const SEND_PING_FILTER = { filter: "activity-stream" };
 
   Assert.ok(SEND_PING_MOCK.called, "gBrowserGlue.pingCentre.sendPing() is called");

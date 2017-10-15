@@ -44,7 +44,7 @@ add_task(async function test_412_not_treated_as_failure() {
         saw412 = ex.status == 412;
         throw ex;
       }
-    }
+    };
     _("Second sync - expecting a 412");
     await Service.sync();
     await promiseObserved;

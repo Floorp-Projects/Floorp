@@ -32,15 +32,15 @@ add_task(async function oneOffReturnAfterSuggestion() {
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {})
+  EventUtils.synthesizeKey("VK_DOWN", {});
   assertState(1, -1, "foofoo");
 
   // Down to select the next search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {})
+  EventUtils.synthesizeKey("VK_DOWN", {});
   assertState(2, -1, "foobar");
 
   // Alt+Down to select the first one-off.
-  EventUtils.synthesizeKey("VK_DOWN", { altKey: true })
+  EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
   assertState(2, 0, "foobar");
 
   let resultsPromise =
@@ -64,11 +64,11 @@ add_task(async function oneOffClickAfterSuggestion() {
   assertState(0, -1, typedValue);
 
   // Down to select the first search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {})
+  EventUtils.synthesizeKey("VK_DOWN", {});
   assertState(1, -1, "foofoo");
 
   // Down to select the next search suggestion.
-  EventUtils.synthesizeKey("VK_DOWN", {})
+  EventUtils.synthesizeKey("VK_DOWN", {});
   assertState(2, -1, "foobar");
 
   let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
@@ -90,7 +90,7 @@ add_task(async function overridden_engine_not_reused() {
     await BrowserTestUtils.waitForCondition(suggestionsPresent,
                                             "waiting for suggestions");
     // Down to select the first search suggestion.
-    EventUtils.synthesizeKey("VK_DOWN", {})
+    EventUtils.synthesizeKey("VK_DOWN", {});
     assertState(1, -1, "foofoo");
     // ALT+Down to select the second search engine.
     EventUtils.synthesizeKey("VK_DOWN", { altKey: true });

@@ -97,7 +97,7 @@ function ensureAcquired(probeNames) {
   let shouldAcquire = [];
   for (let probeName of probeNames) {
     if (alreadyAcquired.indexOf(probeName) == -1) {
-      shouldAcquire.push(probeName)
+      shouldAcquire.push(probeName);
     }
   }
 

@@ -96,7 +96,7 @@ this.PageMetadata = {
     }
 
     for (let element of elements) {
-      let value = element.getAttribute("content")
+      let value = element.getAttribute("content");
       if (!value) {
         continue;
       }

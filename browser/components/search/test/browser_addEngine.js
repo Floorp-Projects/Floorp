@@ -15,7 +15,7 @@ function observer(aSubject, aTopic, aData) {
   switch (aData) {
     case "engine-added":
       if (gCurrentTest.added)
-        method = "added"
+        method = "added";
       break;
     case "engine-current":
       if (gCurrentTest.current)

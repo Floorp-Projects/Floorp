@@ -72,7 +72,7 @@ add_task(async function() {
   gBrowser.loadURI("http://example.com/");
   await promiseLoaded;
 
-  await testCopy("example.com", "http://example.com/")
+  await testCopy("example.com", "http://example.com/");
 
   SetPageProxyState("invalid");
   gURLBar.valueIsTyped = true;

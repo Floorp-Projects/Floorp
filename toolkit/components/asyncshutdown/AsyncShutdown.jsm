@@ -338,7 +338,7 @@ function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
       filename: "<internal error: could not get origin>",
       lineNumber: -1,
       stack: "<internal error: could not get origin>",
-    }
+    };
   }
 }
 
@@ -704,7 +704,7 @@ function Barrier(name) {
             } catch (ex) {
               reject(ex);
             }
-          }
+          };
         });
       } else {
         // If `condition` is not a function, `trigger` is not particularly

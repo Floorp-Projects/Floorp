@@ -29,12 +29,12 @@ function getWarningMessages(log) {
   let warnMessages = [];
   let warn = log.warn;
   log.warn = function(message) {
-    let regEx = /The response body\'s length of: \d+ doesn\'t match the header\'s content-length of: \d+/i
+    let regEx = /The response body\'s length of: \d+ doesn\'t match the header\'s content-length of: \d+/i;
     if (message.match(regEx)) {
       warnMessages.push(message);
     }
     warn.call(log, message);
-  }
+  };
   return warnMessages;
 }
 

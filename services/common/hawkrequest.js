@@ -141,7 +141,7 @@ this.deriveHawkCredentials = function deriveHawkCredentials(tokenHex,
   }
 
   return result;
-}
+};
 
 // With hawk request, we send the user's accepted-languages with each request.
 // To keep the number of times we read this pref at a minimum, maintain the

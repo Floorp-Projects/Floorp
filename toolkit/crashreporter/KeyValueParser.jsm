@@ -34,7 +34,7 @@ this.parseKeyValuePairsFromLines = function(lines) {
     }
   }
   return data;
-}
+};
 
 this.parseKeyValuePairs = function parseKeyValuePairs(text) {
   let lines = text.split("\n");

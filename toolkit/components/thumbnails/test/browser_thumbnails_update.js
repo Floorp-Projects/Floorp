@@ -77,7 +77,7 @@ function* simpleCaptureTest() {
       // the notification comes.
     });
   });
-  yield undefined // wait for callbacks to call 'next'...
+  yield undefined; // wait for callbacks to call 'next'...
 }
 
 /* Check functionality of captureAndStoreIfStale when there is an error response

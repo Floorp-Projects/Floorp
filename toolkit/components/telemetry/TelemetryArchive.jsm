@@ -87,7 +87,7 @@ var TelemetryArchiveImpl = {
 
     for (let field of ["creationDate", "id", "type"]) {
       if (!(field in ping)) {
-        this._log.warn("promiseArchivePing - missing field " + field)
+        this._log.warn("promiseArchivePing - missing field " + field);
         return Promise.reject(new Error("missing field " + field));
       }
     }

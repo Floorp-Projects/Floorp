@@ -266,7 +266,7 @@ AccountState.prototype = {
       log.error("Failed to update cached tokens", err);
     });
   },
-}
+};
 
 /* Given an array of scopes, make a string key by normalizing. */
 function getScopeKey(scopeArray) {
@@ -354,7 +354,7 @@ this.FxAccounts = function(mockInternal) {
   internal.initialize();
 
   return Object.freeze(external);
-}
+};
 
 /**
  * The internal API's constructor.
@@ -761,7 +761,7 @@ FxAccountsInternal.prototype = {
       serverURL: tokenData.server,
       client_id: FX_OAUTH_CLIENT_ID
     });
-    return client.destroyToken(tokenData.token)
+    return client.destroyToken(tokenData.token);
   },
 
   _destroyAllOAuthTokens(tokenInfos) {
@@ -812,7 +812,7 @@ FxAccountsInternal.prototype = {
           FxAccountsConfig.resetConfigURLs();
           // just for testing - notifications are cheap when no observers.
           this.notifyObservers("testhelper-fxa-signout-complete");
-        })
+        });
       } else {
         // We want to do this either way -- but if we're signing out remotely we
         // need to wait until we destroy the oauth tokens if we want that to succeed.
@@ -978,7 +978,7 @@ FxAccountsInternal.prototype = {
       kB: CommonUtils.bytesAsHex(kB_hex),
       keyFetchToken: null, // null values cause the item to be removed.
       unwrapBKey: null,
-    }
+    };
 
     log.debug("Keys Obtained: kA=" + !!updateData.kA + ", kB=" + !!updateData.kB);
     if (logPII) {
@@ -1059,7 +1059,7 @@ FxAccountsInternal.prototype = {
       return {
         keyPair: accountData.keyPair.rawKeyPair,
         certificate: accountData.cert.rawCert
-      }
+      };
     }
     // We are definately going to generate a new cert, either because it has
     // already expired, or the keyPair has - and a new keyPair means we must
@@ -1114,7 +1114,7 @@ FxAccountsInternal.prototype = {
     return {
       keyPair: keyPair.rawKeyPair,
       certificate,
-    }
+    };
   },
 
   getUserAccountData() {
@@ -1268,7 +1268,7 @@ FxAccountsInternal.prototype = {
 
   async onPollEmailSuccess(currentState, why) {
     try {
-      await currentState.updateUserAccountData({ verified: true })
+      await currentState.updateUserAccountData({ verified: true });
       const accountData = await currentState.getUserAccountData();
       // Now that the user is verified, we can proceed to fetch keys
       if (currentState.whenVerifiedDeferred) {
@@ -1645,7 +1645,7 @@ FxAccountsInternal.prototype = {
       if (!FXA_PWDMGR_REAUTH_WHITELIST.has(field)) {
         updateData[field] = null;
       }
-    }
+    };
     FXA_PWDMGR_PLAINTEXT_FIELDS.forEach(clearField);
     FXA_PWDMGR_SECURE_FIELDS.forEach(clearField);
     FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
@@ -1779,7 +1779,7 @@ FxAccountsInternal.prototype = {
         return this._logErrorAndResetDeviceRegistrationVersion(error);
       }).catch(secondError => {
         log.error("failed to recover from device-session conflict", secondError);
-        this._logErrorAndResetDeviceRegistrationVersion(error)
+        this._logErrorAndResetDeviceRegistrationVersion(error);
       });
   },
 

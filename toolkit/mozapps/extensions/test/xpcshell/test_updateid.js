@@ -57,7 +57,7 @@ add_task(async function test_update_new_id() {
   do_check_eq(install.existingAddon, addon);
 
   await Assert.rejects(promiseInstallUpdate(install),
-                       function(err) { return err.code == AddonManager.ERROR_INCORRECT_ID },
+                       function(err) { return err.code == AddonManager.ERROR_INCORRECT_ID; },
                        "Upgrade to a different ID fails");
 
   addon.uninstall();

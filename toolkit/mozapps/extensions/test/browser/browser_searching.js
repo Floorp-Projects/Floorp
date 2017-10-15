@@ -144,7 +144,7 @@ function search(aQuery, aFinishImmediately, aCallback, aCategoryType) {
     aCallback();
   });
 
-  finishImmediately = false
+  finishImmediately = false;
   if (!aFinishImmediately)
     check_is_searching(true);
 }
@@ -245,7 +245,7 @@ function get_expected_results(aSortBy, aLocalExpected) {
 
 
   return [expectedOrder.filter(filterResults),
-          unknownOrder.filter(filterResults)]
+          unknownOrder.filter(filterResults)];
 }
 
 /*
@@ -542,7 +542,7 @@ add_test(function() {
       check_filtered_results(QUERY, "relevancescore", false);
       run_next_test();
     }
-  }
+  };
 
   search(QUERY, false, function() {
     var list = gManagerWindow.document.getElementById("search-list");

@@ -1138,7 +1138,7 @@ ContentPrefService2.prototype = {
     // Close the database, ignoring the "already closed" exception, if any.
     // It'll be open if we're here because of a migration failure but closed
     // if we're here because of database corruption.
-    try { aDBConnection.close() } catch (ex) {}
+    try { aDBConnection.close(); } catch (ex) {}
 
     aDBFile.remove(false);
 

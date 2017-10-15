@@ -21,7 +21,7 @@ function MockedPlainStorage(accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
       accountData,
-    }
+    };
   }
   this.data = data;
   this.numReads = 0;
@@ -44,7 +44,7 @@ function MockedSecureStorage(accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
       accountData,
-    }
+    };
   }
   this.data = data;
   this.numReads = 0;
@@ -72,7 +72,7 @@ MockedSecureStorage.prototype = {
   async set(uid, contents) {
     this.data = contents;
   },
-}
+};
 
 function add_storage_task(testFunction) {
   add_task(async function() {
@@ -92,7 +92,7 @@ add_storage_task(async function checkInitializedEmpty(sm) {
   }
   await sm.initialize();
   Assert.strictEqual((await sm.getAccountData()), null);
-  Assert.rejects(sm.updateAccountData({kA: "kA"}), "No user is logged in")
+  Assert.rejects(sm.updateAccountData({kA: "kA"}), "No user is logged in");
 });
 
 // Initialized with account data (ie, simulating a new user being logged in).
@@ -104,7 +104,7 @@ add_storage_task(async function checkNewUser(sm) {
     kA: "kA",
     deviceId: "device id"
   };
-  sm.plainStorage = new MockedPlainStorage()
+  sm.plainStorage = new MockedPlainStorage();
   if (sm.secureStorage) {
     sm.secureStorage = new MockedSecureStorage(null);
   }
@@ -175,7 +175,7 @@ add_storage_task(async function checkEverythingRead(sm) {
 });
 
 add_storage_task(function checkInvalidUpdates(sm) {
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   if (sm.secureStorage) {
     sm.secureStorage = new MockedSecureStorage(null);
   }
@@ -185,7 +185,7 @@ add_storage_task(function checkInvalidUpdates(sm) {
 
 add_storage_task(async function checkNullUpdatesRemovedUnlocked(sm) {
   if (sm.secureStorage) {
-    sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+    sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
     sm.secureStorage = new MockedSecureStorage({kA: "kA", kB: "kB"});
   } else {
     sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com",
@@ -201,7 +201,7 @@ add_storage_task(async function checkNullUpdatesRemovedUnlocked(sm) {
 
 add_storage_task(async function checkDelete(sm) {
   if (sm.secureStorage) {
-    sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+    sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
     sm.secureStorage = new MockedSecureStorage({kA: "kA", kB: "kB"});
   } else {
     sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com",
@@ -222,7 +222,7 @@ add_storage_task(async function checkDelete(sm) {
 // Some tests only for the secure storage manager.
 add_task(async function checkNullUpdatesRemovedLocked() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA", kB: "kB"});
   sm.secureStorage.locked = true;
   await sm.initialize();
@@ -246,7 +246,7 @@ add_task(async function checkNullUpdatesRemovedLocked() {
 
 add_task(async function checkEverythingReadSecure() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   await sm.initialize();
 
@@ -259,7 +259,7 @@ add_task(async function checkEverythingReadSecure() {
 
 add_task(async function checkMemoryFieldsNotReturnedByDefault() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   await sm.initialize();
 
@@ -276,7 +276,7 @@ add_task(async function checkMemoryFieldsNotReturnedByDefault() {
 
 add_task(async function checkExplicitGet() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   await sm.initialize();
 
@@ -290,7 +290,7 @@ add_task(async function checkExplicitGet() {
 
 add_task(async function checkExplicitGetNoSecureRead() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   await sm.initialize();
 
@@ -306,7 +306,7 @@ add_task(async function checkExplicitGetNoSecureRead() {
 
 add_task(async function checkLockedUpdates() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "old-kA", kB: "kB"});
   sm.secureStorage.locked = true;
   await sm.initialize();
@@ -337,7 +337,7 @@ add_task(async function checkLockedUpdates() {
 // resolves or rejects the blocked promise.
 async function setupStorageManagerForQueueTest() {
   let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"});
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});
   sm.secureStorage.locked = true;
   await sm.initialize();
@@ -349,7 +349,7 @@ async function setupStorageManagerForQueueTest() {
   });
 
   sm._queueStorageOperation(() => blockedPromise);
-  return {sm, blockedPromise, resolveBlocked, rejectBlocked}
+  return {sm, blockedPromise, resolveBlocked, rejectBlocked};
 }
 
 // First the general functionality.
@@ -428,7 +428,7 @@ add_task(async function checkQueuedReadAndUpdate() {
   sm._doReadAndUpdateSecure = () => {
     _doReadCalled = true;
     return Promise.resolve();
-  }
+  };
 
   let resultPromise = sm._maybeReadAndUpdateSecure();
   Assert.ok(!_doReadCalled);
@@ -446,7 +446,7 @@ add_task(async function checkQueuedWrite() {
   sm.__write = () => {
     __writeCalled = true;
     return Promise.resolve();
-  }
+  };
 
   let writePromise = sm._write();
   Assert.ok(!__writeCalled);
@@ -464,7 +464,7 @@ add_task(async function checkQueuedDelete() {
   sm._deleteAccountData = () => {
     _deleteCalled = true;
     return Promise.resolve();
-  }
+  };
 
   let resultPromise = sm.deleteAccountData();
   Assert.ok(!_deleteCalled);

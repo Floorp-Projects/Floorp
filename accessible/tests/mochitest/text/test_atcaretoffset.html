@@ -66,7 +66,7 @@
         }
 
         return true;
-      }
+      };
 
       Object.defineProperty(this, "offset", { get: function() { return this.mOffset; }
       });
@@ -217,7 +217,7 @@
       });
       this.isFakeLine = function line_isFakeLine() {
         return aIndex < 0 || aIndex >= aLines.length;
-      }
+      };
 
       Object.defineProperty(this, "lastWord", { get: function() {
           if (aIndex < 0)
@@ -243,7 +243,7 @@
       this.isLastWord = function line_isLastWord(aWord) {
         var lastWord = this.lastWord;
         return lastWord.start == aWord.start && lastWord.end == aWord.end;
-      }
+      };
 
       Object.defineProperty(this, "lineStartFailures", { get: function() {
           if (aIndex < 0 || aIndex >= aLines.length)
@@ -309,10 +309,10 @@
         var start = this.start, end = this.end;
         return "'" + aLine.wholeText.substring(start, end) +
           "' at [" + start + ", " + end + "]";
-      }
+      };
 
-      this.isFakeStartWord = function() { return aIndex < 0; }
-      this.isFakeEndWord = function() { return aIndex >= aWords.length; }
+      this.isFakeStartWord = function() { return aIndex < 0; };
+      this.isFakeEndWord = function() { return aIndex >= aWords.length; };
     }
 
     /**
@@ -348,16 +348,16 @@
           func.call(null, kCaretOffset, boundary, text, startOffset, endOffset,
                     aID, isOk1, isOk2, isOk3);
         }
-      }
+      };
 
       this.getID = function genericMoveTo_getID() {
         return "move to " + this.offsetDescr;
-      }
+      };
 
       this.noTests = function tmpl_moveTo_noTests() {
         return ("debugOffset" in aCharIter) &&
           (aCharIter.debugOffset != this.offset);
-      }
+      };
 
       this.offsetDescr = aCharIter.offsetDescr;
       this.tests = this.noTests() ? null : aCharIter.tests;

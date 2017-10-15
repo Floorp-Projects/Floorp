@@ -202,7 +202,7 @@ function doTest(evt) {
     var error = JSON.stringify(evt.data.content);
     var pass = false;
     try {
-      pass = test.validateResponse(evt.data.content)
+      pass = test.validateResponse(evt.data.content);
     } catch (e) {}
     reportResult(test.info, pass, error);
   }

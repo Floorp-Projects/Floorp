@@ -250,7 +250,7 @@ function waitForEvent(topic, status = null) {
         resolve(innerStatus);
       }
     }
-  }, topic))
+  }, topic));
 }
 
 /**

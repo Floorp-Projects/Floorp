@@ -59,7 +59,7 @@ this.CrashReports = {
     // Sort reports descending by date
     return reports.sort( (a, b) => b.date - a.date);
   }
-}
+};
 
 function CrashReports_pendingDir() {
   let pendingDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);

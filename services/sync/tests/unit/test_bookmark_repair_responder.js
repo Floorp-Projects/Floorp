@@ -64,12 +64,12 @@ add_task(async function test_responder_error() {
     request: "upload",
     ids: [Utils.makeGUID()],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   // mock the responder to simulate an error.
   responder._fetchItemsToUpload = async function() {
     throw new Error("oh no!");
-  }
+  };
   await responder.repair(request, null);
 
   checkRecordedEvents([
@@ -96,7 +96,7 @@ add_task(async function test_responder_no_items() {
     request: "upload",
     ids: [Utils.makeGUID()],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -134,7 +134,7 @@ add_task(async function test_responder_upload() {
     request: "upload",
     ids: [bm.guid],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -183,7 +183,7 @@ add_task(async function test_responder_item_exists_locally() {
     request: "upload",
     ids: [bm.guid],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -251,7 +251,7 @@ add_task(async function test_responder_missing_items() {
     request: "upload",
     ids: [fxBmk.guid, tbBmk.guid, Utils.makeGUID()],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -317,7 +317,7 @@ add_task(async function test_non_syncable() {
     request: "upload",
     ids: [allBookmarksGuid, unfiledQueryGuid],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -467,7 +467,7 @@ add_task(async function test_folder_descendants() {
       childBmk.syncId,
       grandChildSiblingBmk.syncId],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -507,7 +507,7 @@ add_task(async function test_aborts_unknown_request() {
     request: "not-upload",
     ids: [],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -538,7 +538,7 @@ add_task(async function test_upload_fail() {
     request: "upload",
     ids: [bm.guid],
     flowID: Utils.makeGUID(),
-  }
+  };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
@@ -555,7 +555,7 @@ add_task(async function test_upload_fail() {
   let oldCreateRecord = engine._createRecord;
   engine._createRecord = async function(id) {
     return "anything"; // doesn't have an "encrypt"
-  }
+  };
 
   let numFailures = 0;
   let numSuccesses = 0;
@@ -599,7 +599,7 @@ add_task(async function test_upload_fail() {
       value: undefined,
       extra: {flowID: request.flowID, numIDs: "1"},
     },
-  ])
+  ]);
 
   equal(numFailures, 1);
   equal(numSuccesses, 1);

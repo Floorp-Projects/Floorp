@@ -26,5 +26,5 @@ async function checkFrameSource() {
   let id = await ContentTask.spawn(browser, {}, async function() {
     return content.document.body.id;
   });
-  is(id, "viewsource", "View source mode enabled")
+  is(id, "viewsource", "View source mode enabled");
 }

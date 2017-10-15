@@ -1198,7 +1198,7 @@ var ViewMenu = {
     result.sortingAnnotation = colLookupTable[columnId].anno || "";
     result.sortingMode = Ci.nsINavHistoryQueryOptions[sortConst];
   }
-}
+};
 
 var ContentArea = {
   _specialViews: new Map(),

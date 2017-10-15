@@ -251,7 +251,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, data.length, "Correct count for no arg to openCursor");
@@ -267,7 +267,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, data.length, "Correct count for null arg to openCursor");
@@ -283,7 +283,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, data.length, "Correct count for undefined arg to openCursor");
@@ -299,7 +299,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for single key arg to openCursor");
@@ -315,7 +315,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -333,7 +333,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for only keyRange arg to openCursor");
@@ -350,7 +350,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, data.length - 2,
@@ -368,7 +368,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, data.length - 3,
@@ -386,7 +386,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -404,7 +404,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 2, "Correct count for bound arg to openCursor");
@@ -421,7 +421,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for bound arg to openCursor");
@@ -438,7 +438,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0, "Correct count for bound arg to openCursor");
@@ -456,7 +456,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -473,7 +473,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -490,7 +490,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -507,7 +507,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openKeyCursor");
@@ -523,7 +523,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -541,7 +541,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -559,7 +559,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1,
@@ -577,7 +577,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -595,7 +595,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -613,7 +613,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -631,7 +631,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1,
@@ -649,7 +649,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -667,7 +667,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -686,7 +686,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -704,7 +704,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -722,7 +722,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -741,7 +741,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -761,7 +761,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -781,7 +781,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 2,
@@ -800,7 +800,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -819,7 +819,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -838,7 +838,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 3,
@@ -855,7 +855,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -872,7 +872,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -889,7 +889,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -906,7 +906,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openCursor");
@@ -922,7 +922,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -940,7 +940,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -958,7 +958,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1,
@@ -976,7 +976,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -994,7 +994,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -1012,7 +1012,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -1030,7 +1030,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1,
@@ -1048,7 +1048,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -1066,7 +1066,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1085,7 +1085,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -1103,7 +1103,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1121,7 +1121,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -1140,7 +1140,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1160,7 +1160,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 1,
@@ -1180,7 +1180,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length - 2,
@@ -1199,7 +1199,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1218,7 +1218,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -1237,7 +1237,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 3,
@@ -1471,7 +1471,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1488,7 +1488,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1505,7 +1505,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, weightSort.length,
@@ -1522,7 +1522,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1, "Correct count for single key arg to index.openKeyCursor");
@@ -1538,7 +1538,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 0,
@@ -1556,7 +1556,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(count, 1,

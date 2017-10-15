@@ -133,7 +133,7 @@ this.Async = {
    */
   isAppReady() {
     try {
-      return Async.checkAppReady()
+      return Async.checkAppReady();
     } catch (ex) {
       if (!Async.isShutdownException(ex)) {
         throw ex;
@@ -257,6 +257,6 @@ this.Async = {
       if (++iterations % yieldEvery === 0) {
         await Async.promiseYield();
       }
-    }
+    };
   }
 };

@@ -95,4 +95,4 @@ WindowDraggingElement.prototype = {
         break;
     }
   }
-}
+};

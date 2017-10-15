@@ -46,7 +46,7 @@
         ok(event.isExtraState, "Extra state change was expected");
         is(event.state, EXT_STATE_EDITABLE, "Wrong state of statechange event");
         ok(event.isEnabled, "Expected editable state to be enabled");
-      }
+      };
 
       this.getID = function editabledoc_getID() {
         return prettyName(aDocNode) + " editable state changed";
@@ -79,12 +79,12 @@
 
       this.invoke = function changeCheckInput_invoke() {
         this.DOMNode.checked = aIsChecked;
-      }
+      };
 
       this.getID = function changeCheckInput_getID() {
         return "change checked state to '" + aIsChecked + "' for " +
           prettyName(aID);
-      }
+      };
     }
 
     function stateChangeOnFileInput(aID, aAttr, aValue,
@@ -96,7 +96,7 @@
 
       this.invoke = function stateChangeOnFileInput_invoke() {
         this.fileControlNode.setAttribute(aAttr, aValue);
-      }
+      };
 
       this.eventSeq = [
         new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.fileControl),
@@ -105,7 +105,7 @@
 
       this.getID = function stateChangeOnFileInput_getID() {
         return "inherited state change on file input on attribute '" + aAttr + "' change";
-      }
+      };
     }
 
     function dupeStateChange(aID, aAttr, aValue,
@@ -117,11 +117,11 @@
       this.invoke = function dupeStateChange_invoke() {
         getNode(aID).setAttribute(aAttr, aValue);
         getNode(aID).setAttribute(aAttr, aValue);
-      }
+      };
 
       this.getID = function dupeStateChange_getID() {
         return "duped state change events";
-      }
+      };
     }
 
     function oppositeStateChange(aID, aAttr, aState, aIsExtraState) {
@@ -134,11 +134,11 @@
       this.invoke = function oppositeStateChange_invoke() {
         getNode(aID).setAttribute(aAttr, "false");
         getNode(aID).setAttribute(aAttr, "true");
-      }
+      };
 
       this.getID = function oppositeStateChange_getID() {
         return "opposite state change events";
-      }
+      };
     }
 
     /**
@@ -159,11 +159,11 @@
           getNode(aID).setAttribute(aARIAAttr, aValue);
           getNode(aID).setAttribute(aAttr, aValue);
         }
-      }
+      };
 
       this.getID = function echoingStateChange_getID() {
         return "enchoing ARIA and native attributes change";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

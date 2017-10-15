@@ -47,7 +47,7 @@ function promiseStateChangeURI() {
           resolve(req.originalURI.spec);
         });
       }
-    }
+    };
 
     gBrowser.addProgressListener(listener);
   });
@@ -145,7 +145,7 @@ async function testSearchEngine(engineDetails) {
       name: "new tab search",
       searchURL: base + engineDetails.codes.newTab,
       async preTest(tab) {
-        let browser = tab.linkedBrowser
+        let browser = tab.linkedBrowser;
         await BrowserTestUtils.loadURI(browser, "about:newtab");
         await BrowserTestUtils.browserLoaded(browser);
 

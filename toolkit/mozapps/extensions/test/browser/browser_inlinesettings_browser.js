@@ -103,7 +103,7 @@ async function openDetailsBrowser(addonId) {
 
   ok(browser, "Grid should have a browser descendant");
   is(browser.localName, "browser", "Grid should have a browser descendant");
-  is(url, addon.mAddon.optionsURL, "Browser has the expected options URL loaded")
+  is(url, addon.mAddon.optionsURL, "Browser has the expected options URL loaded");
 
   is(browser.clientWidth, browser.parentNode.clientWidth,
      "Browser should be the same width as its direct parent");

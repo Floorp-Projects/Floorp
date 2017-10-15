@@ -155,7 +155,7 @@ PKT_SIGNUP.prototype = {
         // tell back end we're ready
         thePKT_SIGNUP.sendMessage("show");
     }
-}
+};
 
 $(function() {
     if (!window.thePKT_SIGNUP) {

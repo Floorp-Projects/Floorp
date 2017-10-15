@@ -27,5 +27,5 @@ function run_test() {
               do_check_eq(cmp, result);
               do_test_finished();
           });
-    })
+    });
 }

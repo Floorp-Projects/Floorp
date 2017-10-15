@@ -27,7 +27,7 @@
         var target = aEvent.accessible;
         is(target.description, aDescription,
            "Wrong description for " + prettyName(target));
-      }
+      };
     }
 
     var gFocusHandler = {
@@ -83,7 +83,7 @@
         gButtonElm.removeEventListener("blur", gBlurHandler);
         gTextboxElm.removeEventListener("focus", gFocusHandler);
         gTextboxElm.removeEventListener("blur", gBlurHandler);
-      }
+      };
 
       var descr = "It's a tooltip";
       gQueue.push(new synthFocus("button", new actionChecker("button", descr)));

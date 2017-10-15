@@ -69,7 +69,7 @@ add_task(async function() {
 
   newButton.onfocus = () => {
     ok(false, "chromebutton shouldn't get focus during testing with tab3");
-  }
+  };
 
   // Press the accesskey for the chrome element while the content document is focused.
   focusedId = await performAccessKey("z");
@@ -98,7 +98,7 @@ add_task(async function() {
     // into the DOM tree, therefore, chrome accesskey always wins focus from
     // content. However, this is different from shortcut keys.
     todo(false, "chromebutton shouldn't get focus during testing with tab4");
-  }
+  };
 
   // Press the accesskey for the chrome element while the content document is focused.
   focusedId = await performAccessKey("z");
@@ -117,7 +117,7 @@ function childHandleFocus() {
     sent = true;
     let focusedElement = content.document.activeElement;
     focusedElement.blur();
-    sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id })
+    sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id });
   }, true);
   content.document.body.addEventListener("keydown", function keydown(event) {
     sent = false;

@@ -112,4 +112,4 @@ add_task(async function test_remove() {
 
   // Request a flush and remove the tab. The flush should still complete.
   await Promise.all([TabStateFlusher.flush(browser), promiseRemoveTab(tab)]);
-})
+});

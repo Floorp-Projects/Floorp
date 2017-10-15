@@ -29,16 +29,16 @@
       this.invoke = function addChild_invoke() {
         this.childNode = document.createElement("div");
         this.containerNode.appendChild(this.childNode);
-      }
+      };
 
       this.finalCheck = function addChild_finalCheck() {
         // no stale state should be set
         testStates(this.childNode, 0, 0, 0, EXT_STATE_STALE);
-      }
+      };
 
       this.getID = function addChild_getID() {
         return "add child for " + prettyName(aContainerID);
-      }
+      };
     }
 
     function removeChildChecker(aInvoker) {
@@ -48,7 +48,7 @@
       this.check = function removeChildChecker_check() {
         // stale state should be set
         testStates(aInvoker.child, 0, EXT_STATE_STALE);
-      }
+      };
     }
 
     function removeChild(aContainerID) {
@@ -64,11 +64,11 @@
         this.child = getAccessible(childNode);
 
         this.containerNode.removeChild(childNode);
-      }
+      };
 
       this.getID = function removeChild_getID() {
         return "remove child from " + prettyName(aContainerID);
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true; //debugging

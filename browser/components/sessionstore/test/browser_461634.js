@@ -42,7 +42,7 @@ function test() {
 
     // Verify that non JSON serialized data is the same as JSON serialized data.
     is(JSON.stringify(closedTabs), SessionStore.getClosedTabData(newWin),
-       "Non-serialized data is the same as serialized data")
+       "Non-serialized data is the same as serialized data");
 
     is(closedTabs.length, test_state.windows[0]._closedTabs.length,
        "Closed tab list has the expected length");
@@ -68,7 +68,7 @@ function test() {
 
     // Verify that non JSON serialized data is the same as JSON serialized data.
     is(JSON.stringify(closedTabs), SessionStore.getClosedTabData(newWin),
-       "Non-serialized data is the same as serialized data")
+       "Non-serialized data is the same as serialized data");
 
     is(closedTabs.length, remember_count,
        "The correct amout of tabs was removed");

@@ -92,7 +92,7 @@ async function test_with_mock_shellservice(options, testFn) {
     };
     win.getShellService = function() {
       return mockShellService;
-    }
+    };
     mockShellService._isDefault = contentOptions.isDefault;
     win.gMainPane.updateSetDefaultBrowser();
   });

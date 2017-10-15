@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 // The time to wait before considering a transaction stuck and rejecting it.
-const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000 // 4 minutes
+const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 minutes
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
@@ -379,7 +379,7 @@ ConnectionData.prototype = Object.freeze({
       try {
         return (await promiseResult);
       } finally {
-        this._barrier.client.removeBlocker(key, promiseComplete)
+        this._barrier.client.removeBlocker(key, promiseComplete);
       }
     })();
   },
@@ -452,7 +452,7 @@ ConnectionData.prototype = Object.freeze({
       // a blocker for Barriers.connections.
       Barriers.connections.client.removeBlocker(this._deferredClose.promise);
       this._deferredClose.resolve();
-    }
+    };
     if (wrappedConnections.has(this._identifier)) {
       wrappedConnections.delete(this._identifier);
       this._dbConn = null;
@@ -645,7 +645,7 @@ ConnectionData.prototype = Object.freeze({
     });
     // Atomically update the queue before anyone else has a chance to enqueue
     // further transactions.
-    this._transactionQueue = promise.catch(ex => { console.error(ex) });
+    this._transactionQueue = promise.catch(ex => { console.error(ex); });
 
     // Make sure that we do not shutdown the connection during a transaction.
     this._barrier.client.addBlocker(`Transaction (${this._getOperationId()})`,

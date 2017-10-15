@@ -311,7 +311,7 @@ class SyncTestCases extends TestCases {
 }
 
 async function findTagFolder(tag) {
-  let db = await PlacesUtils.promiseDBConnection()
+  let db = await PlacesUtils.promiseDBConnection();
   let results = await db.executeCached(`
   SELECT guid
   FROM moz_bookmarks

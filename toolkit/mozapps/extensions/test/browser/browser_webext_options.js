@@ -37,7 +37,7 @@ async function runTest(installer) {
 
   ok(browser, "Grid should have a browser descendant");
   is(browser.localName, "browser", "Grid should have a browser descendant");
-  is(url, element.mAddon.optionsURL, "Browser has the expected options URL loaded")
+  is(url, element.mAddon.optionsURL, "Browser has the expected options URL loaded");
 
   is(browser.clientWidth, browser.parentNode.clientWidth,
      "Browser should be the same width as its direct parent");

@@ -70,7 +70,7 @@ add_task(async function test1b() {
   let button1 = gPrivateWindow.PopupNotifications.panel.firstChild._primaryButton;
   let button2 = gPrivateWindow.PopupNotifications.panel.firstChild._secondaryButton;
   is(button1.getAttribute("action"), "_singleActivateNow", "Test 1b, Blocked plugin in private window should have a activate now button");
-  ok(button2.hidden, "Test 1b, Blocked plugin in a private window should not have a secondary button")
+  ok(button2.hidden, "Test 1b, Blocked plugin in a private window should not have a secondary button");
 
   gPrivateWindow.close();
   BrowserTestUtils.loadURI(gTestBrowser, gHttpTestRoot + "plugin_test.html");

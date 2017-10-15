@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 add_task(async function() {
   info("Bug 479348 - Properties on a root should be read-only.");

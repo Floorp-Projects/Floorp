@@ -72,6 +72,6 @@ MozSelfSupportInterface.prototype = {
     return new this._window.Promise(
       (resolve, reject) => promise.then(resolve, reject));
   },
-}
+};
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozSelfSupportInterface]);

@@ -155,7 +155,7 @@ add_test(function() {
         run_next_test();
       });
     }
-  }
+  };
   gProvider.installs[0].addTestListener(listener);
   gProvider.installs[1].addTestListener(listener);
   gProvider.installs[2].addTestListener(listener);

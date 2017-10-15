@@ -10,7 +10,7 @@ async function importFromFixture(fixture, replace) {
 async function treeEquals(guid, expected, message) {
   let root = await PlacesUtils.promiseBookmarksTree(guid);
   let bookmarks = (function nodeToEntry(node) {
-    let entry = { guid: node.guid, index: node.index }
+    let entry = { guid: node.guid, index: node.index };
     if (node.children) {
       entry.children = node.children.map(nodeToEntry);
     }

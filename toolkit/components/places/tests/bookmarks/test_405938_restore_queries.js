@@ -179,7 +179,7 @@ var test = {
       do_check_eq(subFolder.childCount, 1);
       var child = subFolder.getChild(0);
       do_check_eq(child.title, "bookmark" + i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)))
+      do_check_true(uri(child.uri).equals(uri("http://" + i)));
     }
 
     // validate folder shortcut
@@ -221,8 +221,8 @@ var test = {
     do_check_eq(aNode.childCount, this._count);
     for (var i = 0; i < aNode.childCount; i++) {
       var child = aNode.getChild(i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)))
-      do_check_eq(child.title, "bookmark" + i)
+      do_check_true(uri(child.uri).equals(uri("http://" + i)));
+      do_check_eq(child.title, "bookmark" + i);
     }
     aNode.containerOpen = false;
   },
@@ -236,8 +236,8 @@ var test = {
     do_check_eq(aNode.childCount, this._count);
     for (var i = 0; i < aNode.childCount; i++) {
       var child = aNode.getChild(i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)))
-      do_check_eq(child.title, "bookmark" + i)
+      do_check_true(uri(child.uri).equals(uri("http://" + i)));
+      do_check_eq(child.title, "bookmark" + i);
     }
     aNode.containerOpen = false;
   },
@@ -256,7 +256,7 @@ var test = {
     }
     aNode.containerOpen = false;
   },
-}
+};
 tests.push(test);
 
 add_task(async function() {

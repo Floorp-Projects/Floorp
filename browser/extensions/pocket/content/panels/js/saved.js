@@ -78,7 +78,7 @@ var PKT_SAVED_OVERLAY = function(options) {
                 }
             }
         });
-    }
+    };
     this.initAutoCloseEvents = function() {
         this.wrapper.on("mouseenter", function() {
             myself.mouseInside = true;
@@ -414,7 +414,7 @@ var PKT_SAVED_OVERLAY = function(options) {
         this.wrapper.addClass("pkt_ext_container_detailactive pkt_ext_container_finalstate pkt_ext_container_finalerrorstate");
         this.preventCloseTimerCancel = true;
         this.startCloseTimer(myself.autocloseTimingFinalState);
-    }
+    };
     this.getTranslations = function() {
         this.dictJSON = window.pocketStrings;
     };
@@ -531,7 +531,7 @@ PKT_SAVED.prototype = {
         });
 
     }
-}
+};
 
 $(function() {
     if (!window.thePKT_SAVED) {

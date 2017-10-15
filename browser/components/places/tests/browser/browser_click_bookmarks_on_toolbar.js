@@ -34,7 +34,7 @@ function waitForNewTab(url, inBackground) {
     }
 
     return BrowserTestUtils.removeTab(tab);
-  })
+  });
 }
 
 add_task(async function setup() {
@@ -103,7 +103,7 @@ add_task(async function middleclick() {
 add_task(async function clickWithPrefSet() {
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_LOAD_BOOKMARKS_IN_TABS, true]
-  ]})
+  ]});
 
   let promise = waitForNewTab(TEST_PAGES[0], false);
   EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {

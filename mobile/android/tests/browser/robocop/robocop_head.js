@@ -469,7 +469,7 @@ function todo_check_null(condition, stack = Components.stack.caller) {
 function do_check_matches(pattern, value, stack = Components.stack.caller, todo = false) {
   var matcher = pattern_matcher(pattern);
   var text = "VALUE: " + uneval(value) + "\nPATTERN: " + uneval(pattern) + "\n";
-  var diagnosis = []
+  var diagnosis = [];
   if (matcher(value, diagnosis)) {
     do_report_result(true, "value matches pattern:\n" + text, stack, todo);
   } else {
@@ -511,7 +511,7 @@ function pattern_matcher(pattern) {
     // we picked it up in the array comprehension, above.
     ld = Object.getOwnPropertyDescriptor(pattern, "length");
     if (ld && !ld.enumerable) {
-      matchers.push(["length", pattern_matcher(pattern.length)])
+      matchers.push(["length", pattern_matcher(pattern.length)]);
     }
     return function(value, diagnosis) {
       if (!(value && typeof value == "object")) {

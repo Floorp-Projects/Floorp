@@ -69,10 +69,10 @@ AutoCompleteInput.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 async function ensure_results(uris, searchTerm) {
-  await PlacesTestUtils.promiseAsyncUpdates()
+  await PlacesTestUtils.promiseAsyncUpdates();
   await ensure_results_internal(uris, searchTerm);
 }
 

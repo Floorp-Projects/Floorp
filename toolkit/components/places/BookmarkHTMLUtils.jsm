@@ -231,7 +231,7 @@ this.BookmarkHTMLUtils = Object.freeze({
     try {
       return Services.prefs.getCharPref("browser.bookmarks.file");
     } catch (ex) {}
-    return OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html")
+    return OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
   }
 });
 

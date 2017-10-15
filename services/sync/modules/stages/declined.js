@@ -26,7 +26,7 @@ this.DeclinedEngines = function(service) {
   this._log.level = Log.Level[new Preferences(PREFS_BRANCH).get("log.logger.declined")];
 
   this.service = service;
-}
+};
 this.DeclinedEngines.prototype = {
   updateDeclined(meta, engineManager = this.service.engineManager) {
     let enabled = new Set(engineManager.getEnabled().map(e => e.name));

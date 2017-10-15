@@ -302,7 +302,7 @@ for (let test of testParams) {
 
       run_next_test();
     });
-  }
+  };
 
   // Checks that we see no compatibility information when there is none.
   add_test(function run_test_4() {
@@ -384,7 +384,7 @@ for (let test of testParams) {
       a3.uninstall();
       run_next_test();
     });
-  }
+  };
 
   // Test that background update checks work
   let continue_test_6;
@@ -426,7 +426,7 @@ for (let test of testParams) {
       "onInstallStarted",
       "onInstallEnded",
     ], callback_soon(check_test_6));
-  }
+  };
 
   check_test_6 = (install) => {
     do_check_eq(install.existingAddon.pendingUpgrade.install, install);
@@ -439,7 +439,7 @@ for (let test of testParams) {
       a1.uninstall();
       run_next_test();
     });
-  }
+  };
 
   // Verify the parameter escaping in update urls.
   add_test(function run_test_8() {
@@ -766,7 +766,7 @@ for (let test of testParams) {
       a7.uninstall();
       run_next_test();
     });
-  }
+  };
 
   // Test that background update checks doesn't update an add-on that isn't
   // allowed to update automatically.
@@ -866,7 +866,7 @@ for (let test of testParams) {
 
       run_next_test();
     });
-  }
+  };
 
   // Test that background update checks doesn't update an add-on that is
   // pending uninstall
@@ -963,7 +963,7 @@ for (let test of testParams) {
 
       run_next_test();
     });
-  }
+  };
 
   add_test(function run_test_16() {
     restartManager();
@@ -1163,7 +1163,7 @@ for (let test of testParams) {
       "onInstallStarted",
       "onInstallEnded",
     ], callback_soon(check_test_20));
-  }
+  };
 
   check_test_20 = (install) => {
     do_check_eq(install.existingAddon.pendingUpgrade.install, install);
@@ -1177,10 +1177,10 @@ for (let test of testParams) {
 
       do_execute_soon(() => {
         restartManager();
-        run_next_test()
+        run_next_test();
       });
     });
-  }
+  };
 
   add_task(async function cleanup() {
     let addons = await AddonManager.getAddonsByTypes(["extension"]);

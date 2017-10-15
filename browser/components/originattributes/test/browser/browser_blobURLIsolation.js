@@ -84,7 +84,7 @@ function doTest(blobify, deblobify) {
     let result = await deblobify(browser, blobURL);
     blobURL = null;
     return result;
-  }
+  };
 }
 
 let tests = [];

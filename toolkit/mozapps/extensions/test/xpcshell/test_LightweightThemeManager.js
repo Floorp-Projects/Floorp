@@ -555,9 +555,9 @@ function run_test() {
     do_check_eq(ltm.usedThemes[1].id, "builtInTheme0");
     do_check_eq(ltm.usedThemes[2].id, "builtInTheme1");
 
-    Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")) },
+    Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")); },
       "Exception is thrown adding a duplicate theme");
-    Assert.throws(() => { ltm.addBuiltInTheme("not a theme object") },
+    Assert.throws(() => { ltm.addBuiltInTheme("not a theme object"); },
       "Exception is thrown adding an invalid theme");
 
     AddonManager.getAddonByID("x0@personas.mozilla.org", x0Addon => {

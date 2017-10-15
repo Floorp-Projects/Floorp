@@ -99,7 +99,7 @@ function run_test_1() {
       },
 
       onUpdateAvailable(unused, install) {
-        do_check_eq(install.version, "2.0")
+        do_check_eq(install.version, "2.0");
       },
 
       onUpdateFinished() {
@@ -125,7 +125,7 @@ function run_test_2() {
       },
 
       onUpdateAvailable(unused, install) {
-        do_check_eq(install.version, "2.0")
+        do_check_eq(install.version, "2.0");
       },
 
       onUpdateFinished() {
@@ -173,7 +173,7 @@ function run_test_4() {
       },
 
       onUpdateAvailable(unused, install) {
-        do_check_eq(install.version, "2.0")
+        do_check_eq(install.version, "2.0");
       },
 
       onUpdateFinished() {

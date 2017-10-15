@@ -384,7 +384,7 @@ add_task(async function test_sync_syncAndReportErrors_server_maintenance_error()
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:sync:error")
+  await syncAndReportErrorsAndWait("weave:ui:sync:error");
 
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   do_check_eq(Status.sync, SERVER_MAINTENANCE);
@@ -414,7 +414,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_server_m
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -446,7 +446,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_server_mainte
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -480,7 +480,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_serv
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -512,7 +512,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_server
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -544,7 +544,7 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_server_mainten
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -580,7 +580,7 @@ add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_e
 
   Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:sync:error")
+  await syncAndReportErrorsAndWait("weave:ui:sync:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -609,7 +609,7 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_server_maintenan
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:sync:error")
+  await syncAndReportErrorsAndWait("weave:ui:sync:error");
 
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   do_check_eq(Status.sync, SERVER_MAINTENANCE);
@@ -641,7 +641,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_prolonge
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -675,7 +675,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_prolonged_ser
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -711,7 +711,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_prol
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -745,7 +745,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_prolon
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -779,7 +779,7 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_prolonged_serv
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  await syncAndReportErrorsAndWait("weave:ui:login:error")
+  await syncAndReportErrorsAndWait("weave:ui:login:error");
 
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);

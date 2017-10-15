@@ -778,6 +778,6 @@ var PrintUtils = {
         Components.interfaces.nsIWebProgressListener.STATE_STOP, 0);
     }
   },
-}
+};
 
 PrintUtils.init();

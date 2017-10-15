@@ -1624,7 +1624,7 @@ this.PlacesUtils = {
    * @rejects if aItemId is invalid.
    */
   promiseItemGuid(aItemId) {
-    return GuidHelper.getItemGuid(aItemId)
+    return GuidHelper.getItemGuid(aItemId);
   },
 
   /**
@@ -1638,7 +1638,7 @@ this.PlacesUtils = {
    * @rejects if there's no item for the given GUID.
    */
   promiseItemId(aGuid) {
-    return GuidHelper.getItemId(aGuid)
+    return GuidHelper.getItemId(aGuid);
   },
 
   /**
@@ -1661,7 +1661,7 @@ this.PlacesUtils = {
    *        an item id
    */
   invalidateCachedGuidFor(aItemId) {
-    GuidHelper.invalidateCacheForItemId(aItemId)
+    GuidHelper.invalidateCacheForItemId(aItemId);
   },
 
   /**
@@ -2355,7 +2355,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
         _onKeywordChanged(guid, keyword, href) {
           if (keyword.length == 0) {
             // We are removing a keyword.
-            let keywords = keywordsForHref(href)
+            let keywords = keywordsForHref(href);
             for (let kw of keywords) {
               cache.delete(kw);
             }
@@ -2715,11 +2715,11 @@ this.PlacesAggregatedTransaction =
         aTxnCount = countTransactions(txn.childTransactions, aTxnCount);
     }
     return aTxnCount;
-  }
+  };
 
   let txnCount = countTransactions(this.childTransactions, 0);
   this._useBatch = txnCount >= MIN_TRANSACTIONS_FOR_BATCH;
-}
+};
 
 PlacesAggregatedTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -2784,7 +2784,7 @@ this.PlacesCreateFolderTransaction =
   this.item.index = aIndex;
   this.item.annotations = aAnnotations;
   this.childTransactions = aChildTransactions;
-}
+};
 
 PlacesCreateFolderTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -2861,7 +2861,7 @@ this.PlacesCreateBookmarkTransaction =
   this.item.postData = aPostData;
   this.item.annotations = aAnnotations;
   this.childTransactions = aChildTransactions;
-}
+};
 
 PlacesCreateBookmarkTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -2922,7 +2922,7 @@ this.PlacesCreateSeparatorTransaction =
   this.item = new TransactionItemCache();
   this.item.parentId = aParentId;
   this.item.index = aIndex;
-}
+};
 
 PlacesCreateSeparatorTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -2968,7 +2968,7 @@ this.PlacesCreateLivemarkTransaction =
   this.item.parentId = aParentId;
   this.item.index = aIndex;
   this.item.annotations = aAnnotations;
-}
+};
 
 PlacesCreateLivemarkTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3083,7 +3083,7 @@ this.PlacesMoveItemTransaction =
   this.new = new TransactionItemCache();
   this.new.parentId = aNewParentId;
   this.new.index = aNewIndex;
-}
+};
 
 PlacesMoveItemTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3160,7 +3160,7 @@ this.PlacesRemoveItemTransaction =
   this.item.dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this.item.id);
   this.item.lastModified =
     PlacesUtils.bookmarks.getItemLastModified(this.item.id);
-}
+};
 
 PlacesRemoveItemTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3255,7 +3255,7 @@ this.PlacesEditItemTitleTransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.title = aNewTitle;
-}
+};
 
 PlacesEditItemTitleTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3287,7 +3287,7 @@ this.PlacesEditBookmarkURITransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.uri = aNewURI;
-}
+};
 
 PlacesEditBookmarkURITransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3336,7 +3336,7 @@ this.PlacesSetItemAnnotationTransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.annotations = [aAnnotationObject];
-}
+};
 
 PlacesSetItemAnnotationTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3390,7 +3390,7 @@ this.PlacesSetPageAnnotationTransaction =
   this.item.uri = aURI;
   this.new = new TransactionItemCache();
   this.new.annotations = [aAnnotationObject];
-}
+};
 
 PlacesSetPageAnnotationTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3449,8 +3449,8 @@ this.PlacesEditBookmarkKeywordTransaction =
   this.item.href = (PlacesUtils.bookmarks.getBookmarkURI(aItemId)).spec;
   this.new = new TransactionItemCache();
   this.new.keyword = aNewKeyword;
-  this.new.postData = aNewPostData
-}
+  this.new.postData = aNewPostData;
+};
 
 PlacesEditBookmarkKeywordTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3520,7 +3520,7 @@ this.PlacesEditBookmarkPostDataTransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.postData = aPostData;
-}
+};
 
 PlacesEditBookmarkPostDataTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3558,7 +3558,7 @@ this.PlacesEditItemDateAddedTransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.dateAdded = aNewDateAdded;
-}
+};
 
 PlacesEditItemDateAddedTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3594,7 +3594,7 @@ this.PlacesEditItemLastModifiedTransaction =
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
   this.new.lastModified = aNewLastModified;
-}
+};
 
 PlacesEditItemLastModifiedTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3630,7 +3630,7 @@ this.PlacesSortFolderByNameTransaction =
  function PlacesSortFolderByNameTransaction(aFolderId) {
   this.item = new TransactionItemCache();
   this.item.id = aFolderId;
-}
+};
 
 PlacesSortFolderByNameTransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3714,7 +3714,7 @@ this.PlacesTagURITransaction =
   this.item = new TransactionItemCache();
   this.item.uri = aURI;
   this.item.tags = aTags;
-}
+};
 
 PlacesTagURITransaction.prototype = {
   __proto__: BaseTransaction.prototype,
@@ -3771,7 +3771,7 @@ this.PlacesUntagURITransaction =
     }
     this.item.tags = tags;
   }
-}
+};
 
 PlacesUntagURITransaction.prototype = {
   __proto__: BaseTransaction.prototype,

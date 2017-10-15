@@ -96,4 +96,4 @@ var TabsProgressListener = {
       this.callback.apply(null, countTabs());
     }
   }
-}
+};

@@ -179,7 +179,7 @@ add_task(async function() {
     executeSoon(function() {
       checkPopupShow();
       resolve();
-    })
+    });
   });
 
   gBrowser.removeCurrentTab();

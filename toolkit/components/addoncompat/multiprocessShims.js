@@ -155,7 +155,7 @@ AddonInterpositionService.prototype = {
       desc.writable = false;
       desc.value = function(...args) {
         return interp.methods[prop](addon, target, ...args);
-      }
+      };
 
       return desc;
     } else if ("getters" in interp && prop in interp.getters) {

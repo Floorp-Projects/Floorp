@@ -10,7 +10,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var { InlineSpellChecker, SpellCheckHelper } =
   Cu.import("resource://gre/modules/InlineSpellChecker.jsm", {});
 
-this.EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ]
+this.EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
 
 var InlineSpellCheckerContent = {
   _spellChecker: null,
@@ -35,7 +35,7 @@ var InlineSpellCheckerContent = {
         new InlineSpellChecker(event.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
     }
 
-    this._spellChecker.initFromEvent(event.rangeParent, event.rangeOffset)
+    this._spellChecker.initFromEvent(event.rangeParent, event.rangeOffset);
 
     this._addMessageListeners();
 

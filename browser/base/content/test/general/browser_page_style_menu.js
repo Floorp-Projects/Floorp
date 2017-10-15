@@ -19,7 +19,7 @@ function promiseStylesheetsUpdated(browser) {
           content.setTimeout(resolve, 0);
         }
       });
-    })
+    });
   });
 }
 

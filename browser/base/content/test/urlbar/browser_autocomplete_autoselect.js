@@ -83,11 +83,11 @@ add_task(async function() {
   is_selected(1);
 
   info("Page Up will go up the list, but not wrap");
-  EventUtils.synthesizeKey("VK_PAGE_UP", {})
+  EventUtils.synthesizeKey("VK_PAGE_UP", {});
   is_selected(0);
 
   info("Page Up again will wrap around to the end of the list");
-  EventUtils.synthesizeKey("VK_PAGE_UP", {})
+  EventUtils.synthesizeKey("VK_PAGE_UP", {});
   is_selected(maxResults - 1);
 
   EventUtils.synthesizeKey("VK_ESCAPE", {});

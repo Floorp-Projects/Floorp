@@ -24,4 +24,4 @@ function testWorkerFetchAndAbort() {
 
 self.onmessage = function(e) {
   self[e.data]();
-}
+};

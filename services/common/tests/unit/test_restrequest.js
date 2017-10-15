@@ -236,7 +236,7 @@ add_test(function test_post_utf8() {
               .createInstance(Ci.nsIScriptableInputStream);
     sis.init(req.bodyInputStream);
     let body = sis.read(sis.available());
-    sis.close()
+    sis.close();
     res.write(body);
   }});
 
@@ -248,7 +248,7 @@ add_test(function test_post_utf8() {
     do_check_eq(request1.response.status, 200);
     deepEqual(JSON.parse(request1.response.body), data);
     do_check_eq(request1.response.headers["content-type"],
-                "application/json; charset=utf-8")
+                "application/json; charset=utf-8");
 
     server.stop(run_next_test);
   });

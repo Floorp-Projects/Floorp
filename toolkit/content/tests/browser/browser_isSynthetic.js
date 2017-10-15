@@ -17,7 +17,7 @@ LocationChangeListener.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference])
-}
+};
 
 const FILES = gTestPath.replace("browser_isSynthetic.js", "")
                        .replace("chrome://mochitests/content/", "http://example.com/");
@@ -29,7 +29,7 @@ function waitForPageShow(browser) {
       let listener = () => {
         removeEventListener("pageshow", listener, true);
         resolve();
-      }
+      };
       addEventListener("pageshow", listener, true);
     });
   });

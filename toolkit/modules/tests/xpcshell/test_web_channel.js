@@ -22,7 +22,7 @@ var MockWebChannelBroker = {
     }
   },
   unregisterChannel(channelToRemove) {
-    this._channelMap.delete(channelToRemove)
+    this._channelMap.delete(channelToRemove);
   }
 };
 

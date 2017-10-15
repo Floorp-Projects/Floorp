@@ -203,7 +203,7 @@ add_test(function test_reset_nonexistent_pref_branch() {
 
 add_test(function test_observe_prefs_function() {
   let observed = false;
-  let observer = function() { observed = !observed };
+  let observer = function() { observed = !observed; };
 
   Preferences.observe("test_observe_prefs_function", observer);
   Preferences.set("test_observe_prefs_function.subpref", "something");
@@ -282,7 +282,7 @@ add_test(function test_observe_prefs_nsIObserver() {
 // passes the preference's new value but not its name.
 add_test(function test_observe_exact_pref() {
   let observed = false;
-  let observer = function() { observed = !observed };
+  let observer = function() { observed = !observed; };
 
   Preferences.observe("test_observe_exact_pref", observer);
   Preferences.set("test_observe_exact_pref.sub-pref", "something");
@@ -296,7 +296,7 @@ add_test(function test_observe_exact_pref() {
 });
 
 add_test(function test_observe_value_of_set_pref() {
-  let observer = function(newVal) { do_check_eq(newVal, "something") };
+  let observer = function(newVal) { do_check_eq(newVal, "something"); };
 
   Preferences.observe("test_observe_value_of_set_pref", observer);
   Preferences.set("test_observe_value_of_set_pref.subpref", "somethingelse");
@@ -311,7 +311,7 @@ add_test(function test_observe_value_of_set_pref() {
 });
 
 add_test(function test_observe_value_of_reset_pref() {
-  let observer = function(newVal) { do_check_true(typeof newVal == "undefined") };
+  let observer = function(newVal) { do_check_true(typeof newVal == "undefined"); };
 
   Preferences.set("test_observe_value_of_reset_pref", "something");
   Preferences.observe("test_observe_value_of_reset_pref", observer);

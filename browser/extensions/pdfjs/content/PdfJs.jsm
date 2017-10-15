@@ -101,7 +101,7 @@ function initializeDefaultPreferences() {
   "enablePrintAutoRotate": false,
   "disablePageMode": false,
   "disablePageLabels": false
-}
+};
 
 
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");

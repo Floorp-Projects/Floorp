@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 function test() {
   waitForExplicitFinish();
 
-  is(Debugging.fake, false, "Battery spoofing is initially false")
+  is(Debugging.fake, false, "Battery spoofing is initially false");
 
   GetBattery().then(function(battery) {
     for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {

@@ -129,7 +129,7 @@ var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
 var createBlockedPage = function(aWindow, aBrowser, aTopUrl, aUrl) {
   (async function() {
     await BrowserTestUtils.loadURI(aBrowser, aTopUrl);
-    await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded")
+    await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded");
 
     let doc = aWindow.gBrowser.contentDocument;
     let ignoreWarningLink = doc.getElementById("ignore_warning_link");

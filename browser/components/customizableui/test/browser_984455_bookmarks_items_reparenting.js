@@ -23,7 +23,7 @@ function bookmarksMenuPanelShown() {
         bookmarksMenuPopup.removeEventListener("popupshown", onPopupShown);
         resolve();
       }
-    }
+    };
     bookmarksMenuPopup.addEventListener("popupshown", onPopupShown);
   });
 }
@@ -74,7 +74,7 @@ function checkSpecialContextMenus() {
     let shownPromise = bookmarksMenuPanelShown();
 
     EventUtils.synthesizeMouseAtCenter(bookmarksMenuButton, {});
-    info("Waiting for bookmarks menu popup to show after clicking dropmarker.")
+    info("Waiting for bookmarks menu popup to show after clicking dropmarker.");
     await shownPromise;
 
     for (let menuID in kSpecialItemIDs) {
@@ -219,7 +219,7 @@ add_task(async function testOverflowingBookmarksItemsContextMenu() {
   await checkPlacesContextMenu(bookmarksToolbarItems);
 
   await overflowEverything();
-  checkOverflowing(kBookmarksItems)
+  checkOverflowing(kBookmarksItems);
 
   await gCustomizeMode.addToPanel(bookmarksToolbarItems);
 

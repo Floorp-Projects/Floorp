@@ -37,7 +37,7 @@ this.LightweightThemeConsumer =
   Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
   this._win.addEventListener("resize", this);
-}
+};
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
@@ -55,7 +55,7 @@ LightweightThemeConsumer.prototype = {
 
   disable() {
     // Dance to keep the data, but reset the applied styles:
-    let lastData = this._lastData
+    let lastData = this._lastData;
     this._update(null);
     this._enabled = false;
     this._lastData = lastData;
@@ -175,7 +175,7 @@ LightweightThemeConsumer.prototype = {
     }
     return cssColor;
   }
-}
+};
 
 function _setImage(aRoot, aActive, aVariableName, aURLs) {
   if (aURLs && !Array.isArray(aURLs)) {

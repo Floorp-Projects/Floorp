@@ -24,7 +24,7 @@
         var caption = document.createElement("caption");
         caption.textContent = "table caption";
         getNode(aTableID).appendChild(caption);
-      }
+      };
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, aTableID)
@@ -42,11 +42,11 @@
             ] }
           ] };
         testAccessibleTree(aTableID, tree);
-      }
+      };
 
       this.getID = function appendCaption_getID() {
         return "append caption";
-      }
+      };
     }
 
     function doTest() {

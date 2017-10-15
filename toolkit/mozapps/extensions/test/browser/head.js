@@ -611,7 +611,7 @@ CategoryUtilities.prototype = {
   openType(aCategoryType, aCallback) {
     return this.open(this.get(aCategoryType), aCallback);
   }
-}
+};
 
 function CertOverrideListener(host, bits) {
   this.host = host;
@@ -643,7 +643,7 @@ CertOverrideListener.prototype = {
     cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);
     return true;
   }
-}
+};
 
 // Add overrides for the bad certificates
 function addCertOverride(host, bits) {
@@ -732,7 +732,7 @@ MockProvider.prototype = {
     let requiresRestart = (aAddon.operationsRequiringRestart &
                            AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             oldAddon, requiresRestart)
+                                             oldAddon, requiresRestart);
   },
 
   /**

@@ -12,7 +12,7 @@ registerCleanupFunction(() => {
 function testWithAPI(task) {
   return async function() {
     await BrowserTestUtils.withNewTab(TESTPAGE, task);
-  }
+  };
 }
 
 function API_uninstallByID(browser, id) {

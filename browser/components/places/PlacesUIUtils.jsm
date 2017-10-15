@@ -495,7 +495,7 @@ this.PlacesUIUtils = {
         } else if (aAnno.name == PlacesUtils.LMANNO_SITEURI) {
           siteURI = PlacesUtils._uri(aAnno.value);
         }
-        return this._copyableAnnotations.includes(aAnno.name)
+        return this._copyableAnnotations.includes(aAnno.name);
       }, this);
     }
 

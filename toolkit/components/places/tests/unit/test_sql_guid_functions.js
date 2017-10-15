@@ -23,7 +23,7 @@ function check_invariants(aGuid) {
 function test_guid_invariants() {
   const kExpectedChars = 64;
   const kAllowedChars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
   do_check_eq(kAllowedChars.length, kExpectedChars);
   const kGuidLength = 12;
 

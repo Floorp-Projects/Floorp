@@ -85,8 +85,8 @@ function wrapNodeByIdAndParent(aItemId, aParentId) {
 }
 
 add_test(function test_text_paste() {
-  const TEST_URL = "http://places.moz.org/"
-  const TEST_TITLE = "Places bookmark"
+  const TEST_URL = "http://places.moz.org/";
+  const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemAdded", function(aData) {
     do_check_eq(aData.title, TEST_TITLE);
@@ -107,7 +107,7 @@ add_test(function test_text_paste() {
 });
 
 add_test(function test_container() {
-  const TEST_TITLE = "Places folder"
+  const TEST_TITLE = "Places folder";
 
   waitForBookmarkNotification("onItemChanged", function(aChangedData) {
     do_check_eq(aChangedData.title, TEST_TITLE);
@@ -214,8 +214,8 @@ add_test(function test_separator() {
 });
 
 add_test(function test_bookmark() {
-  const TEST_URL = "http://places.moz.org/"
-  const TEST_TITLE = "Places bookmark"
+  const TEST_URL = "http://places.moz.org/";
+  const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemChanged", function(aChangedData) {
     do_check_eq(aChangedData.title, TEST_TITLE);
@@ -275,8 +275,8 @@ add_test(function test_bookmark() {
 });
 
 add_test(function test_visit() {
-  const TEST_URL = "http://places.moz.org/"
-  const TEST_TITLE = "Places bookmark"
+  const TEST_URL = "http://places.moz.org/";
+  const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemAdded", function(aAddedData) {
     do_check_eq(aAddedData.title, TEST_TITLE);

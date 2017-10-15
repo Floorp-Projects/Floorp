@@ -48,7 +48,7 @@ add_test(function simple_callback_test() {
     onError(errorCode) {
       do_throw("search callback returned error: " + errorCode);
     }
-  }
+  };
   Services.search.addEngine(gDataUrl + "engine.xml", null,
                             null, false, searchCallback);
 });
@@ -64,7 +64,7 @@ add_test(function duplicate_failure_test() {
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
       run_next_test();
     }
-  }
+  };
   // Re-add the same engine added in the previous test
   Services.search.addEngine(gDataUrl + "engine.xml", null,
                             null, false, searchCallback);
@@ -81,7 +81,7 @@ add_test(function load_failure_test() {
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
       run_next_test();
     }
-  }
+  };
   // Try adding an engine that doesn't exist
   Services.search.addEngine("http://invalid/data/engine.xml", null,
                             null, false, searchCallback);

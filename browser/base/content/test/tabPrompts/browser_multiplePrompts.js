@@ -21,7 +21,7 @@ add_task(async function() {
     });
     window.postMessage("ping", "*");
   };
-  let url = "data:text/html,<script>(" + encodeURIComponent(contentScript.toSource()) + ")();</script>"
+  let url = "data:text/html,<script>(" + encodeURIComponent(contentScript.toSource()) + ")();</script>";
 
   let promptsOpenedPromise = new Promise(function(resolve) {
     let unopenedPromptCount = PROMPTCOUNT;

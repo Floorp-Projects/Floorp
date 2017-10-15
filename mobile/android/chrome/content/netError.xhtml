@@ -223,11 +223,11 @@
 
           // Now create the actual links.
           if (domainResult) {
-            createLink(sd, "cert_domain_link", domainResult[1])
+            createLink(sd, "cert_domain_link", domainResult[1]);
             // Append text for anything between the two links.
             sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length, codeResult.index)));
           }
-          createLink(sd, "errorCode", codeResult[1])
+          createLink(sd, "errorCode", codeResult[1]);
 
           // Finally, append text for anything after the last closing </a>.
           sd.appendChild(document.createTextNode(desc.slice(desc.lastIndexOf("</a>") + "</a>".length)));

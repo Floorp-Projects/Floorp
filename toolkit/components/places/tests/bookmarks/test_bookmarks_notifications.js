@@ -558,7 +558,7 @@ function expectNotifications() {
             return arg;
           });
           notifications.push({ name, arguments: args });
-        }
+        };
       }
 
       if (name in target)

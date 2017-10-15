@@ -43,7 +43,7 @@ function checkUpdates(aData) {
   let extension = aData.manifestExtension || "json";
 
   let path = `/updates/${aData.id}.${extension}`;
-  let updateUrl = `http://localhost:${gPort}${path}`
+  let updateUrl = `http://localhost:${gPort}${path}`;
 
   let addonData = {};
   if ("updates" in aData)

@@ -148,7 +148,7 @@ XULStore.prototype = {
     }
 
     if (value.length > 4096) {
-      Services.console.logStringMessage("XULStore: Warning, truncating long attribute value")
+      Services.console.logStringMessage("XULStore: Warning, truncating long attribute value");
       value = value.substr(0, 4096);
     }
 

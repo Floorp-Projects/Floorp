@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 async function check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   // Check case-insensitivity.
@@ -71,7 +71,7 @@ function expectBookmarkNotifications() {
             return arg;
           });
           notifications.push({ name, arguments: args });
-        }
+        };
       }
 
       if (name in target)

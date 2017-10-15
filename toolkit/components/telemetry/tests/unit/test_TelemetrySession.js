@@ -245,7 +245,7 @@ function checkScalars(processes) {
         Assert.ok(false,
                   name + " contains an unsupported value type (" + valueType + ")");
     }
-  }
+  };
 
   // Check that we have valid scalar entries.
   const scalars = parentProcess.scalars;
@@ -941,7 +941,7 @@ add_task(async function test_checkSubsessionData() {
   let incrementActiveTicks = () => {
     TelemetrySession.observe(null, "user-interaction-active");
     ++expectedActiveTicks;
-  }
+  };
 
   await TelemetryController.testReset();
 
@@ -1507,11 +1507,11 @@ add_task(async function test_sendFirstShutdownPing() {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     let pings = await Promise.all(
       pendingPings.map(async (p) => {
-        return TelemetryStorage.loadPendingPing(p.id)
+        return TelemetryStorage.loadPendingPing(p.id);
       })
     );
-    return pings.find(p => p.type == "first-shutdown")
-  }
+    return pings.find(p => p.type == "first-shutdown");
+  };
 
   let checkShutdownNotSent = async function() {
     // The failure-mode of the ping-sender is used to check that a ping was
@@ -1533,7 +1533,7 @@ add_task(async function test_sendFirstShutdownPing() {
     Services.obs.notifyObservers(null, "quit-application-forced");
     await TelemetryController.testShutdown();
     Assert.ok(await storageContainsFirstShutdown(),
-              "The 'first-shutdown' ping must be saved to disk.")
+              "The 'first-shutdown' ping must be saved to disk.");
 
     await TelemetryStorage.testClearPendingPings();
 
@@ -1545,7 +1545,7 @@ add_task(async function test_sendFirstShutdownPing() {
     Services.obs.notifyObservers(null, "quit-application-forced");
     await TelemetryController.testShutdown();
     Assert.ok(!(await storageContainsFirstShutdown()),
-              "The 'first-shutdown' ping should only be written during first run.")
+              "The 'first-shutdown' ping should only be written during first run.");
 
     await TelemetryStorage.testClearPendingPings();
 
@@ -1557,7 +1557,7 @@ add_task(async function test_sendFirstShutdownPing() {
     await TelemetryController.testReset();
     await TelemetryController.testShutdown();
     Assert.ok(!(await storageContainsFirstShutdown()),
-              "The 'first-shutdown' ping should only be written if enabled")
+              "The 'first-shutdown' ping should only be written if enabled");
 
     await TelemetryStorage.testClearPendingPings();
 
@@ -1570,13 +1570,13 @@ add_task(async function test_sendFirstShutdownPing() {
     await TelemetryController.testReset();
     await TelemetryController.testShutdown();
     Assert.ok(!(await storageContainsFirstShutdown()),
-              "The 'first-shutdown' ping should only be written if ping-sender is enabled")
+              "The 'first-shutdown' ping should only be written if ping-sender is enabled");
 
     // Clear the state and prepare for the next test.
     await TelemetryStorage.testClearPendingPings();
     PingServer.clearRequests();
     PingServer.resetPingHandler();
-  }
+  };
 
   // Remove leftover pending pings from other tests
   await TelemetryStorage.testClearPendingPings();
@@ -1585,7 +1585,7 @@ add_task(async function test_sendFirstShutdownPing() {
 
   // Set testing invariants for FirstShutdownPingEnabled
   Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false)
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
 
   // Set primary conditions of the 'first-shutdown' ping
   Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);

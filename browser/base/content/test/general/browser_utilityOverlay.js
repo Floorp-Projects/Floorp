@@ -19,7 +19,7 @@ function runNextTest() {
   if (gTests.length) {
     let testFun = gTests.shift();
     info("Running " + testFun.name);
-    testFun()
+    testFun();
   } else {
     finish();
   }
@@ -32,7 +32,7 @@ function test_eventMatchesKey() {
     e.stopPropagation();
     e.preventDefault();
     eventMatchResult = eventMatchesKey(e, key);
-  }
+  };
   document.addEventListener("keypress", checkEvent);
 
   try {

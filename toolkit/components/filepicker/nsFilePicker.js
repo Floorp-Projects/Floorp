@@ -304,7 +304,7 @@ nsFilePicker.prototype = {
 
     return null;
   }
-}
+};
 
 if (DEBUG)
   debug = function(s) { dump("-*- filepicker: " + s + "\n"); };

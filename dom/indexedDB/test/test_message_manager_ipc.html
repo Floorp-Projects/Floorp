@@ -324,7 +324,7 @@ function setup() {
           iframe.addEventListener("mozbrowserloadend", function() {
             info("Starting tests");
 
-            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe)
+            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
             parentFrameScript(mm);
           });
 

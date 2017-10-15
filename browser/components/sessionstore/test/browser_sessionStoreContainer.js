@@ -14,7 +14,7 @@ add_task(async function() {
     let tab2 = gBrowser.duplicateTab(tab);
     Assert.equal(tab2.getAttribute("usercontextid"), i);
     let browser2 = tab2.linkedBrowser;
-    await promiseTabRestored(tab2)
+    await promiseTabRestored(tab2);
 
     await ContentTask.spawn(browser2, { expectedId: i }, async function(args) {
       let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
@@ -37,7 +37,7 @@ add_task(async function() {
 
   let tab2 = gBrowser.duplicateTab(tab);
   let browser2 = tab2.linkedBrowser;
-  await promiseTabRestored(tab2)
+  await promiseTabRestored(tab2);
 
   await ContentTask.spawn(browser2, { expectedId: 1 }, async function(args) {
     Assert.equal(docShell.getOriginAttributes().userContextId,

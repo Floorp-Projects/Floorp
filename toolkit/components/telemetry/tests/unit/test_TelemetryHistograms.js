@@ -75,18 +75,18 @@ function check_histogram(histogram_type, name, min, max, bucket_count) {
   var hgrams = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                             false,
                                             false).parent;
-  let gh = hgrams[name]
+  let gh = hgrams[name];
   do_check_eq(gh.histogram_type, histogram_type);
 
-  do_check_eq(gh.min, min)
-  do_check_eq(gh.max, max)
+  do_check_eq(gh.min, min);
+  do_check_eq(gh.max, max);
 
   // Check that booleans work with nonboolean histograms
   h.add(false);
   h.add(true);
   s = h.snapshot().counts;
-  do_check_eq(s[0], 2)
-  do_check_eq(s[1], 2)
+  do_check_eq(s[0], 2);
+  do_check_eq(s[1], 2);
 
   // Check that clearing works.
   h.clear();
@@ -127,12 +127,12 @@ function test_instantiate() {
 });
 
 add_task(async function test_parameterChecks() {
-  let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
-  let testNames = ["TELEMETRY_TEST_EXPONENTIAL", "TELEMETRY_TEST_LINEAR"]
+  let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR];
+  let testNames = ["TELEMETRY_TEST_EXPONENTIAL", "TELEMETRY_TEST_LINEAR"];
   for (let i = 0; i < kinds.length; i++) {
     let histogram_type = kinds[i];
     let test_type = testNames[i];
-    let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
+    let [min, max, bucket_count] = [1, INT_MAX - 1, 10];
     check_histogram(histogram_type, test_type, min, max, bucket_count);
   }
 });
@@ -186,7 +186,7 @@ add_task(async function test_boolean_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
   var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
-  do_check_eq(uneval(r), uneval([0, 1, 2]))
+  do_check_eq(uneval(r), uneval([0, 1, 2]));
   for (var i = 0;i < r.length;i++) {
     var v = r[i];
     h.add(v);

@@ -152,7 +152,7 @@ LoginManagerPrompter.prototype = {
       persistWhileVisible: true,
       timeout: Date.now() + 10000,
       actionText: actionText
-    }
+    };
 
     let win = (this._browser && this._browser.contentWindow) || this._window;
     DoorHanger.show(win, aBody, "password", aButtons, options, "LOGIN");

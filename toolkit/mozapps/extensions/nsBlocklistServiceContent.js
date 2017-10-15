@@ -11,7 +11,7 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const kMissingAPIMessage = "Unsupported blocklist call in the child process."
+const kMissingAPIMessage = "Unsupported blocklist call in the child process.";
 
 /*
  * A lightweight blocklist proxy for the content process that traps plugin
