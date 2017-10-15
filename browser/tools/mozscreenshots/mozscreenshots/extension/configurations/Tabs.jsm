@@ -21,6 +21,7 @@ this.Tabs = {
 
   configurations: {
     fiveTabs: {
+      selectors: ["#tabbrowser-tabs"],
       async applyConfig() {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -32,6 +33,7 @@ this.Tabs = {
     },
 
     fourPinned: {
+      selectors: ["#tabbrowser-tabs"],
       async applyConfig() {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -58,6 +60,7 @@ this.Tabs = {
     },
 
     twoPinnedWithOverflow: {
+      selectors: ["#tabbrowser-tabs"],
       async applyConfig() {
         fiveTabsHelper();
 

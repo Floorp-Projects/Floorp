@@ -16,6 +16,7 @@ this.AppMenu = {
 
   configurations: {
     appMenuClosed: {
+      selectors: ["#appMenu-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.PanelUI.hide();
@@ -23,6 +24,7 @@ this.AppMenu = {
     },
 
     appMenuMainView: {
+      selectors: ["#appMenu-popup"],
       applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         let promise = browserWindow.PanelUI.show();
@@ -32,6 +34,7 @@ this.AppMenu = {
     },
 
     appMenuHistorySubview: {
+      selectors: ["#appMenu-popup"],
       applyConfig() {
         // History has a footer
         if (isCustomizing()) {
@@ -49,6 +52,7 @@ this.AppMenu = {
     },
 
     appMenuHelpSubview: {
+      selectors: ["#appMenu-popup"],
       applyConfig() {
         if (isCustomizing()) {
           return Promise.reject("Can't show subviews while customizing");
