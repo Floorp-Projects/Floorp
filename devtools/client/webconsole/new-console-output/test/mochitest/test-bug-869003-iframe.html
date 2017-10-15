@@ -9,7 +9,8 @@
       window.onload = function testConsoleLogging()
       {
         var o = { hello: "world!", bug: 869003 };
-        console.log("foobar", o);
+        var f = Object.assign(function func(arg){}, o);
+        console.log("foobar", o, f);
       };
     // --></script>
   </head>
