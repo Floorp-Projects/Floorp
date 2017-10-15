@@ -9,6 +9,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "nsHttpChannel.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -23,20 +24,95 @@ namespace mozilla {
 namespace extensions {
 
 /*****************************************************************************
+ * Event queueing helpers
+ *****************************************************************************/
+
+using net::ChannelEvent;
+using net::ChannelEventQueue;
+
+namespace {
+
+// Define some simple ChannelEvent sub-classes that store the appropriate
+// EventTarget and delegate their Run methods to a wrapped Runnable or lambda
+// function.
+
+class ChannelEventWrapper : public ChannelEvent
+{
+public:
+  ChannelEventWrapper(nsIEventTarget* aTarget)
+    : mTarget(aTarget)
+  {}
+
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
+  {
+    return do_AddRef(mTarget.get());
+  }
+
+protected:
+  ~ChannelEventWrapper() override = default;
+
+private:
+  nsCOMPtr<nsIEventTarget> mTarget;
+};
+
+class ChannelEventFunction final : public ChannelEventWrapper
+{
+public:
+  ChannelEventFunction(nsIEventTarget* aTarget, std::function<void()>&& aFunc)
+    : ChannelEventWrapper(aTarget)
+    , mFunc(Move(aFunc))
+  {}
+
+  void Run() override
+  {
+    mFunc();
+  }
+
+protected:
+  ~ChannelEventFunction() override = default;
+
+private:
+  std::function<void()> mFunc;
+};
+
+class ChannelEventRunnable final : public ChannelEventWrapper
+{
+public:
+  ChannelEventRunnable(nsIEventTarget* aTarget, already_AddRefed<Runnable> aRunnable)
+    : ChannelEventWrapper(aTarget)
+    , mRunnable(aRunnable)
+  {}
+
+  void Run() override
+  {
+    nsresult rv = mRunnable->Run();
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
+protected:
+  ~ChannelEventRunnable() override = default;
+
+private:
+  RefPtr<Runnable> mRunnable;
+};
+
+} // anonymous namespace
+
+/*****************************************************************************
  * Initialization
  *****************************************************************************/
 
 StreamFilterParent::StreamFilterParent()
   : mMainThread(GetCurrentThreadEventTarget())
   , mIOThread(mMainThread)
+  , mQueue(new ChannelEventQueue(static_cast<nsIStreamListener*>(this)))
   , mBufferMutex("StreamFilter buffer mutex")
   , mReceivedStop(false)
   , mSentStop(false)
   , mContext(nullptr)
   , mOffset(0)
   , mState(State::Uninitialized)
-{
-}
+{}
 
 StreamFilterParent::~StreamFilterParent()
 {
@@ -121,8 +197,11 @@ StreamFilterParent::CheckListenerChain()
 {
   AssertIsMainThread();
 
-  // Disable thread retargeting due to segments being delivbered out-of-order.
-  // See bug 1405286.
+  nsCOMPtr<nsIThreadRetargetableStreamListener> trsl =
+    do_QueryInterface(mOrigListener);
+  if (trsl) {
+    return trsl->CheckListenerChain();
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -162,13 +241,9 @@ StreamFilterParent::RecvClose()
 
   if (!mSentStop) {
     RefPtr<StreamFilterParent> self(this);
-    // Make a trip through the IO thread to be sure OnStopRequest is emitted
-    // after the last OnDataAvailable event.
-    RunOnIOThread(FUNC, [=] {
-      RunOnMainThread(FUNC, [=] {
-        nsresult rv = self->EmitStopRequest(NS_OK);
-        Unused << NS_WARN_IF(NS_FAILED(rv));
-      });
+    RunOnMainThread(FUNC, [=] {
+      nsresult rv = self->EmitStopRequest(NS_OK);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
     });
   }
 
@@ -240,7 +315,7 @@ StreamFilterParent::RecvDisconnect()
   AssertIsActorThread();
 
   if (mState == State::Suspended) {
-  RefPtr<StreamFilterParent> self(this);
+    RefPtr<StreamFilterParent> self(this);
     RunOnMainThread(FUNC, [=] {
       self->mChannel->Resume();
     });
@@ -282,16 +357,12 @@ StreamFilterParent::RecvWrite(Data&& aData)
 {
   AssertIsActorThread();
 
-  if (IsIOThread()) {
-    Write(aData);
-  } else {
-    IOThread()->Dispatch(
-      NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
-                                this,
-                                &StreamFilterParent::WriteMove,
-                                Move(aData)),
-      NS_DISPATCH_NORMAL);
-  }
+
+  RunOnIOThread(
+    NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
+                              this,
+                              &StreamFilterParent::WriteMove,
+                              Move(aData)));
   return IPC_OK();
 }
 
@@ -342,7 +413,16 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     });
   }
 
-  return mOrigListener->OnStartRequest(aRequest, aContext);
+  nsresult rv = mOrigListener->OnStartRequest(aRequest, aContext);
+
+  // Important: Do this only *after* running the next listener in the chain, so
+  // that we get the final delivery target after any retargeting that it may do.
+  if (nsCOMPtr<nsIThreadRetargetableRequest> req = do_QueryInterface(aRequest)) {
+    Unused << req->GetDeliveryTarget(getter_AddRefs(mIOThread));
+    MOZ_ASSERT(mIOThread);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -397,13 +477,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
                                     uint64_t aOffset,
                                     uint32_t aCount)
 {
-  // Note: No AssertIsIOThread here. Whatever thread we're on now is, by
-  // definition, the IO thread.
-  if (OnSocketThread()) {
-    mIOThread = nullptr;
-  } else {
-    mIOThread = NS_GetCurrentThread();
-  }
+  AssertIsIOThread();
 
   if (mState == State::Disconnected) {
     // If we're offloading data in a thread pool, it's possible that we'll
@@ -481,32 +555,34 @@ StreamFilterParent::FlushBufferedData()
  * Thread helpers
  *****************************************************************************/
 
-void
-StreamFilterParent::AssertIsActorThread()
-{
-  MOZ_ASSERT(OnSocketThread());
-}
-
 nsIEventTarget*
 StreamFilterParent::ActorThread()
 {
   return gSocketTransportService;
 }
 
+bool
+StreamFilterParent::IsActorThread()
+{
+  return ActorThread()->IsOnCurrentThread();
+}
+
+void
+StreamFilterParent::AssertIsActorThread()
+{
+  MOZ_ASSERT(IsActorThread());
+}
+
 nsIEventTarget*
 StreamFilterParent::IOThread()
 {
-  if (mIOThread) {
-    return mIOThread;
-  }
-  return gSocketTransportService;
+  return mIOThread;
 }
 
 bool
 StreamFilterParent::IsIOThread()
 {
-  return (mIOThread ? NS_GetCurrentThread() == mIOThread
-                    : OnSocketThread());
+  return mIOThread->IsOnCurrentThread();
 }
 
 void
@@ -517,26 +593,55 @@ StreamFilterParent::AssertIsIOThread()
 
 template<typename Function>
 void
-StreamFilterParent::RunOnActorThread(const char* aName, Function&& aFunc)
+StreamFilterParent::RunOnMainThread(const char* aName, Function&& aFunc)
 {
-  if (OnSocketThread()) {
-    aFunc();
-  } else {
-    gSocketTransportService->Dispatch(
-      Move(NS_NewRunnableFunction(aName, aFunc)),
-      NS_DISPATCH_NORMAL);
-  }
+  mQueue->RunOrEnqueue(new ChannelEventFunction(mMainThread, Move(aFunc)));
+}
+
+void
+StreamFilterParent::RunOnMainThread(already_AddRefed<Runnable> aRunnable)
+{
+  mQueue->RunOrEnqueue(new ChannelEventRunnable(mMainThread, Move(aRunnable)));
 }
 
 template<typename Function>
 void
 StreamFilterParent::RunOnIOThread(const char* aName, Function&& aFunc)
 {
-  if (mIOThread) {
-    mIOThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                        NS_DISPATCH_NORMAL);
+  mQueue->RunOrEnqueue(new ChannelEventFunction(mIOThread, Move(aFunc)));
+}
+
+void
+StreamFilterParent::RunOnIOThread(already_AddRefed<Runnable> aRunnable)
+{
+  mQueue->RunOrEnqueue(new ChannelEventRunnable(mIOThread, Move(aRunnable)));
+}
+
+template<typename Function>
+void
+StreamFilterParent::RunOnActorThread(const char* aName, Function&& aFunc)
+{
+  // We don't use mQueue for dispatch to the actor thread.
+  //
+  // The main thread and IO thread are used for dispatching events to the
+  // wrapped stream listener, and those events need to be processed
+  // consistently, in the order they were dispatched. An event dispatched to the
+  // main thread can't be run before events that were dispatched to the IO
+  // thread before it.
+  //
+  // Additionally, the IO thread is likely to be a thread pool, which means that
+  // without thread-safe queuing, it's possible for multiple events dispatched
+  // to it to be processed in parallel, or out of order.
+  //
+  // The actor thread, however, is always a serial event target. Its events are
+  // always processed in order, and events dispatched to the actor thread are
+  // independent of the events in the output event queue.
+  if (IsActorThread()) {
+    aFunc();
   } else {
-    RunOnActorThread(aName, Move(aFunc));
+    ActorThread()->Dispatch(
+      Move(NS_NewRunnableFunction(aName, aFunc)),
+      NS_DISPATCH_NORMAL);
   }
 }
 
