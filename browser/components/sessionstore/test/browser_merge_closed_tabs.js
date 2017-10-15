@@ -16,7 +16,7 @@ add_task(async function() {
         { state: { entries: [{ ID: 1001, url: "about:blank", triggeringPrincipal_base64 }]} }
       ]
     }]
-  }
+  };
 
   const restoreState = {
     windows: [{
@@ -29,7 +29,7 @@ add_task(async function() {
         { state: { entries: [{ ID: 1004, url: "about:robots", triggeringPrincipal_base64 }]} }
       ]
     }]
-  }
+  };
 
   const maxTabsUndo = 4;
   gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", maxTabsUndo);

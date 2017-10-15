@@ -62,7 +62,7 @@ this.AddonRepository_SQLiteMigrator = {
     this._retrieveStoredData((results) => {
       this._closeConnection();
       let resultArray = Object.keys(results).map(k => results[k]);
-      logger.debug(resultArray.length + " addons imported.")
+      logger.debug(resultArray.length + " addons imported.");
       aCallback(resultArray);
     });
 
@@ -187,7 +187,7 @@ this.AddonRepository_SQLiteMigrator = {
           getAllDevelopers();
         }
       });
-    }
+    };
 
     // Retrieve all data from the developer table
     let getAllDevelopers = () => {
@@ -221,7 +221,7 @@ this.AddonRepository_SQLiteMigrator = {
           getAllScreenshots();
         }
       });
-    }
+    };
 
     // Retrieve all data from the screenshot table
     let getAllScreenshots = () => {
@@ -254,7 +254,7 @@ this.AddonRepository_SQLiteMigrator = {
           getAllCompatOverrides();
         }
       });
-    }
+    };
 
     let getAllCompatOverrides = () => {
       this.getAsyncStatement("getAllCompatOverrides").executeAsync({
@@ -286,7 +286,7 @@ this.AddonRepository_SQLiteMigrator = {
           getAllIcons();
         }
       });
-    }
+    };
 
     let getAllIcons = () => {
       this.getAsyncStatement("getAllIcons").executeAsync({
@@ -324,7 +324,7 @@ this.AddonRepository_SQLiteMigrator = {
           aCallback(returnedAddons);
         }
       });
-    }
+    };
 
     // Begin asynchronous process
     getAllAddons();
@@ -397,7 +397,7 @@ this.AddonRepository_SQLiteMigrator = {
     let addon = { icons: {} };
 
     for (let prop of PROP_SINGLE) {
-      addon[prop] = aRow.getResultByName(prop)
+      addon[prop] = aRow.getResultByName(prop);
     }
 
     return addon;
@@ -412,7 +412,7 @@ this.AddonRepository_SQLiteMigrator = {
    */
   _makeDeveloperFromAsyncRow(aRow) {
     let name = aRow.getResultByName("name");
-    let url = aRow.getResultByName("url")
+    let url = aRow.getResultByName("url");
     return new AddonManagerPrivate.AddonAuthor(name, url);
   },
 
@@ -519,4 +519,4 @@ this.AddonRepository_SQLiteMigrator = {
     this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS icon_idx " +
                                      "ON icon (addon_internal_id)");
   }
-}
+};

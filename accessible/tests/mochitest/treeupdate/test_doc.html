@@ -47,7 +47,7 @@
           ]
         };
         testAccessibleTree(getDocNode(aID), tree);
-      }
+      };
     }
 
     function rootContentRemoved(aID) {
@@ -60,7 +60,7 @@
         // Set up target for hide event before we invoke.
         var text = getAccessible(getAccessible(getDocNode(aID)).firstChild);
         this.eventSeq[0].target = text;
-      }
+      };
 
       this.finalCheck = function rootContentRemoved_finalCheck() {
         var tree = {
@@ -68,7 +68,7 @@
           children: [ ]
         };
         testAccessibleTree(getDocNode(aID), tree);
-      }
+      };
     }
 
     function rootContentInserted(aID, aTextName) {
@@ -88,7 +88,7 @@
           ]
         };
         testAccessibleTree(getDocNode(aID), tree);
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////
@@ -105,11 +105,11 @@
         var script = docNode.createElement("script");
         script.textContent = "document.open(); document.write('hello'); document.close();";
         docNode.body.appendChild(script);
-      }
+      };
 
       this.getID = function writeIFrameDoc_getID() {
         return "write document";
-      }
+      };
     }
 
     /**
@@ -126,7 +126,7 @@
         var newHTMLNode = docNode.createElement("html");
         newHTMLNode.innerHTML = `<body><p>New Wave</p></body`;
         docNode.replaceChild(newHTMLNode, docNode.documentElement);
-      }
+      };
 
       this.finalCheck = function replaceIFrameHTMLElm_finalCheck() {
         var tree = {
@@ -144,11 +144,11 @@
           ]
         };
         testAccessibleTree(getDocNode(aID), tree);
-      }
+      };
 
       this.getID = function replaceIFrameHTMLElm_getID() {
         return "replace HTML element";
-      }
+      };
     }
 
     /**
@@ -163,11 +163,11 @@
         var newTextNode = docNode.createTextNode("New Hello");
         newBodyNode.appendChild(newTextNode);
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
-      }
+      };
 
       this.getID = function replaceIFrameBody_getID() {
         return "replace body";
-      }
+      };
     }
 
     /**
@@ -184,11 +184,11 @@
         newBodyNode.appendChild(newTextNode);
         newBodyNode.setAttribute("role", "button");
         docNode.documentElement.replaceChild(newBodyNode, docNode.body);
-      }
+      };
 
       this.getID = function replaceIFrameBodyOnARIARoleBody_getID() {
         return "replace body on body having ARIA role";
-      }
+      };
     }
 
     /**
@@ -205,11 +205,11 @@
         var script = docNode.createElement("script");
         script.textContent = "function closeMe() { document.write('Works?'); document.close(); } window.closeMe = closeMe; document.open();";
         docNode.body.appendChild(script);
-      }
+      };
 
       this.getID = function openIFrameDoc_getID() {
         return "open document";
-      }
+      };
     }
 
     function closeIFrameDoc(aID) {
@@ -218,11 +218,11 @@
       this.invoke = function closeIFrameDoc_invoke() {
         // Write and close document.
         getDocNode(aID).write("Works?"); getDocNode(aID).close();
-      }
+      };
 
       this.getID = function closeIFrameDoc_getID() {
         return "close document";
-      }
+      };
     }
 
     /**
@@ -237,11 +237,11 @@
         // Remove HTML element.
         var docNode = getDocNode(aID);
         docNode.firstChild.remove();
-      }
+      };
 
       this.getID = function removeHTMLFromIFrameDoc_getID() {
         return "remove HTML element";
-      }
+      };
     }
 
     function insertHTMLToIFrameDoc(aID) {
@@ -256,11 +256,11 @@
         body.appendChild(text);
         html.appendChild(body);
         docNode.appendChild(html);
-      }
+      };
 
       this.getID = function insertHTMLToIFrameDoc_getID() {
         return "insert HTML element document";
-      }
+      };
     }
 
     /**
@@ -275,11 +275,11 @@
         // Remove body element.
         var docNode = getDocNode(aID);
         docNode.documentElement.removeChild(docNode.body);
-      }
+      };
 
       this.getID = function removeBodyFromIFrameDoc_getID() {
         return "remove body element";
-      }
+      };
     }
 
     function insertElmUnderDocElmWhileBodyMissed(aID) {
@@ -297,7 +297,7 @@
         this.docNode = getDocNode(aID);
         this.inputNode = this.docNode.createElement("input");
         this.docNode.documentElement.appendChild(this.inputNode);
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -308,11 +308,11 @@
 
         // Remove aftermath of this test before next test starts.
         this.docNode.documentElement.removeChild(this.inputNode);
-      }
+      };
 
       this.getID = function getID() {
         return "Insert element under document element while body is missed.";
-      }
+      };
     }
 
     function insertBodyToIFrameDoc(aID) {
@@ -325,11 +325,11 @@
         var text = docNode.createTextNode("Yo ho ho i butylka roma!");
         body.appendChild(text);
         docNode.documentElement.appendChild(body);
-      }
+      };
 
       this.getID = function insertBodyToIFrameDoc_getID() {
         return "insert body element";
-      }
+      };
     }
 
     function changeSrc(aID) {
@@ -341,7 +341,7 @@
 
       this.invoke = function changeSrc_invoke() {
         this.containerNode.src = "data:text/html,<html><input></html>";
-      }
+      };
 
       this.finalCheck = function changeSrc_finalCheck() {
         var tree =
@@ -351,11 +351,11 @@
             ] }
           ] };
         testAccessibleTree(this.containerNode, tree);
-      }
+      };
 
       this.getID = function changeSrc_getID() {
         return "change src on iframe";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

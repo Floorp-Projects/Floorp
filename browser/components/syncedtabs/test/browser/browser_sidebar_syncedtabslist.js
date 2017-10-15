@@ -93,7 +93,7 @@ add_task(async function testSyncedTabsSidebarList() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
+    getTabClients() { return Promise.resolve([]); },
     syncTabs() { return Promise.resolve(); },
   };
 
@@ -146,7 +146,7 @@ add_task(async function testSyncedTabsSidebarFilteredList() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
+    getTabClients() { return Promise.resolve([]); },
     syncTabs() { return Promise.resolve(); },
   };
 
@@ -268,7 +268,7 @@ add_task(async function testSyncedTabsSidebarContextMenu() {
   SyncedTabs._internal = {
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
-    getTabClients() { return Promise.resolve([]) },
+    getTabClients() { return Promise.resolve([]); },
     syncTabs() { return Promise.resolve(); },
   };
 

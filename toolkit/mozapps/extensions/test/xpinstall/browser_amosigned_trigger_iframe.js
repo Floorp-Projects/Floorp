@@ -45,8 +45,8 @@ const finish_test = async function(count) {
     return {
       return: content.frames[0].document.getElementById("return").textContent,
       status: content.frames[0].document.getElementById("status").textContent,
-    }
-  })
+    };
+  });
 
   is(results.return, "true", "installTrigger in iframe should have claimed success");
   is(results.status, "0", "Callback in iframe should have seen a success");

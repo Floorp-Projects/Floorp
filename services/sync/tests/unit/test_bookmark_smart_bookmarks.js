@@ -45,7 +45,7 @@ add_task(async function setup() {
   Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
 
   await generateNewKeys(Service.collectionKeys);
-})
+});
 
 add_task(async function setup() {
   await Service.engineManager.register(BookmarksEngine);

@@ -27,7 +27,7 @@ function startup(data, reason) {
     onFakeEvent: () => {
       gUpgrade.install();
     }
-  })
+  });
 }
 
 function shutdown(data, reason) {}

@@ -222,7 +222,7 @@ DownloadNotification.prototype = {
         this._updateOptionsForStatic(options, "alertDownloadsStart2");
       } else {
         let buttons = this.download.hasPartialData ? [kButtons.PAUSE, kButtons.CANCEL] :
-                                                     [kButtons.CANCEL]
+                                                     [kButtons.CANCEL];
         this._updateOptionsForOngoing(options, buttons);
       }
     } else if (this._paused) {

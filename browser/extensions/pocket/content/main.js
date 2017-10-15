@@ -270,12 +270,12 @@ var pktUI = (function() {
                         // If there is no error message in the error use a
                         // complete catch-all
                         var errorMessage = error.message || "There was an error when trying to save to Pocket.";
-                        var panelError = { message: errorMessage}
+                        var panelError = { message: errorMessage};
 
                         // Send error message to panel
                         pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, panelError);
                     }
-                }
+                };
 
                 // Add title if given
                 if (typeof title !== "undefined") {
@@ -451,13 +451,13 @@ var pktUI = (function() {
                         value: {
                             suggestedTags
                         }
-                    }
+                    };
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, successResponse);
                 },
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, error);
                 }
-            })
+            });
         });
 
         // Pass url and array list of tags, add to existing save item accordingly
@@ -487,7 +487,7 @@ var pktUI = (function() {
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
                 }
-            })
+            });
         });
 
         var _initL10NMessageId = "initL10N";
@@ -696,11 +696,11 @@ var pktUIMessaging = (function() {
         // happens, it means some race condition occurred where the panel was
         // trying to communicate before it should.
         if (panelId === 0) {
-            console.warn("Tried to send message to panel with id 0.")
+            console.warn("Tried to send message to panel with id 0.");
             return false;
         }
 
-        return true
+        return true;
     }
 
     function isPocketPanelFrameValid(panelFrame) {
@@ -741,5 +741,5 @@ var pktUIMessaging = (function() {
         sendResponseMessageToPanel,
         sendErrorMessageToPanel,
         sendErrorResponseMessageToPanel
-    }
+    };
 }());

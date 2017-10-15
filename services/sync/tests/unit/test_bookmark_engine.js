@@ -40,7 +40,7 @@ async function fetchAllSyncIds() {
 add_task(async function setup() {
   initTestLogging("Trace");
   await generateNewKeys(Service.collectionKeys);
-})
+});
 
 add_task(async function test_delete_invalid_roots_from_server() {
   _("Ensure that we delete the Places and Reading List roots from the server.");
@@ -176,7 +176,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
 
     let error;
     try {
-      await sync_engine_and_validate_telem(engine, true)
+      await sync_engine_and_validate_telem(engine, true);
     } catch (ex) {
       error = ex;
     }

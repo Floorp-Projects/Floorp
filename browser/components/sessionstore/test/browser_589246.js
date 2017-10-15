@@ -117,7 +117,7 @@ function test() {
 
 function runNextTestOrFinish() {
   if (tests.length) {
-    setupForTest(tests.shift())
+    setupForTest(tests.shift());
   } else {
     // some state is cleaned up at the end of each test, but not all
     ["browser.tabs.warnOnClose", "browser.startup.page"].forEach(function(p) {

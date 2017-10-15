@@ -20,7 +20,7 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://tps/logger.jsm");
 
 async function DumpBookmarks() {
-  let [bookmarks, ] = await PlacesBackups.getBookmarksTree()
+  let [bookmarks, ] = await PlacesBackups.getBookmarksTree();
   Logger.logInfo("Dumping Bookmarks...\n" + JSON.stringify(bookmarks, undefined, 2) + "\n\n");
 }
 
@@ -100,7 +100,7 @@ PlacesItem.prototype = {
         var ret = [];
         for (var i in props) {
           if (that.props[props[i]]) {
-            ret.push(props[i] + ": " + that.props[props[i]])
+            ret.push(props[i] + ": " + that.props[props[i]]);
           }
         }
         return ret;
@@ -480,7 +480,7 @@ Bookmark.prototype = {
   async SetUri(uri) {
     if (uri) {
       let url = Services.io.newURI(uri);
-      await PlacesUtils.bookmarks.update({guid: this.props.guid, url})
+      await PlacesUtils.bookmarks.update({guid: this.props.guid, url});
     }
   },
 

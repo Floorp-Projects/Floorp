@@ -560,7 +560,7 @@ var EventTargetParent = {
               return knownProps[name];
             return event[name];
           }
-        }
+        };
         let proxyEvent = new Proxy({
           currentTarget: target,
           target: eventTarget,
@@ -858,7 +858,7 @@ RemoteBrowserElementInterposition.getters.sessionHistory = function(addon, targe
                      addon, CompatWarning.warnings.content);
 
   return getSessionHistory(target);
-}
+};
 
 // We use this in place of the real browser.contentWindow if we
 // haven't yet received a CPOW for the child process's window. This
@@ -1054,7 +1054,7 @@ RemoteWebNavigationInterposition.getters.sessionHistory = function(addon, target
   let browser = impl._browser;
 
   return getSessionHistory(browser);
-}
+};
 
 var RemoteAddonsParent = {
   init() {

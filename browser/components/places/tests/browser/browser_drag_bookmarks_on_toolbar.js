@@ -74,7 +74,7 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
     });
   });
 
-  var prevent = function(aEvent) { aEvent.preventDefault(); }
+  var prevent = function(aEvent) { aEvent.preventDefault(); };
 
   var xIncrement = 0;
   var yIncrement = 0;

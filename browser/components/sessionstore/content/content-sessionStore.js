@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
 
 Cu.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
 XPCOMUtils.defineLazyGetter(this, "gContentRestore",
-                            () => { return new ContentRestore(this) });
+                            () => { return new ContentRestore(this); });
 
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
               .getService(Ci.nsISessionStoreUtils);

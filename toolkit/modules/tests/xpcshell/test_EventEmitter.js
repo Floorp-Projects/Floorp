@@ -13,7 +13,7 @@ add_task(async function test_extractFiles() {
   testEmitter(decorated);
 
   await testPromise();
-})
+});
 
 
 function testEmitter(emitter) {

@@ -84,9 +84,9 @@
         };
         xhr.onerror = function() {
           postMessage({ status: "error" });
-        }
+        };
         xhr.send(compositeBlob);
-      }
+      };
     }
 
     let workerScriptUrl =

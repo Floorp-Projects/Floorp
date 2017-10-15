@@ -83,7 +83,7 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 
   aBrowserWin.gNavToolbox.addEventListener("customizationready", function() {
     executeSoon(function() {
-      aCallback(aBrowserWin)
+      aCallback(aBrowserWin);
     });
   }, {once: true});
 }

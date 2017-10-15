@@ -49,7 +49,7 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
       }
 
     createRestoreAllEntry(doc, fragment, aPrefixRestoreAll, false,
-                          aRestoreAllLabel, closedTabs.length, aTagName)
+                          aRestoreAllLabel, closedTabs.length, aTagName);
     }
     return fragment;
   },

@@ -45,7 +45,7 @@ var ReaderParent = {
             message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
               url: message.data.url,
               faviconUrl: favicon.path.replace(/^favicon:/, "")
-            })
+            });
           },
           function onRejection(reason) {
             Cu.reportError("Error requesting favicon URL for about:reader content: " + reason);

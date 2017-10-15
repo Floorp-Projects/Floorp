@@ -41,7 +41,7 @@ add_test(function() {
   info("Testing update security checking warning");
 
   var pref = "extensions.checkUpdateSecurity";
-  info("Setting " + pref + " pref to false")
+  info("Setting " + pref + " pref to false");
   Services.prefs.setBoolPref(pref, false);
 
   open_manager(null, function(aWindow) {

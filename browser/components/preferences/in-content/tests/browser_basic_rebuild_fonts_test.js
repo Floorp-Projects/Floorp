@@ -8,7 +8,7 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
   let doc = gBrowser.contentDocument;
-  var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data
+  var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data;
   is(doc.getElementById("font.language.group").value, langGroup,
      "Language group should be set correctly.");
 

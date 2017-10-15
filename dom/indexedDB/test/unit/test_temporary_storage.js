@@ -52,22 +52,22 @@ function* testSteps()
            "Reached quota limit");
         event.preventDefault();
         testGenerator.next(false);
-      }
+      };
       request.onupgradeneeded = function(event) {
         event.target.transaction.onabort = function(e) {
           gotUpgradeIncomplete = true;
           is(e.target.error.name, "QuotaExceededError", "Reached quota limit");
-        }
+        };
         event.target.transaction.oncomplete = function() {
           gotUpgradeComplete = true;
-        }
-      }
+        };
+      };
       request.onsuccess = function(event) {
         let db = event.target.result;
         is(db.version, finalVersion, "Correct version " + finalVersion);
         databases.push(db);
         testGenerator.next(true);
-      }
+      };
 
       let shouldContinue = yield undefined;
       if (shouldContinue) {
@@ -99,22 +99,22 @@ function* testSteps()
            "Reached quota limit");
         event.preventDefault();
         testGenerator.next(false);
-      }
+      };
       request.onupgradeneeded = function(event) {
         event.target.transaction.onabort = function(e) {
           gotUpgradeIncomplete = true;
           is(e.target.error.name, "QuotaExceededError", "Reached quota limit");
-        }
+        };
         event.target.transaction.oncomplete = function() {
           gotUpgradeComplete = true;
-        }
-      }
+        };
+      };
       request.onsuccess = function(event) {
         let db = event.target.result;
         is(db.version, finalVersion, "Correct version " + finalVersion);
         databases.push(db);
         testGenerator.next(true);
-      }
+      };
 
       let shouldContinue = yield undefined;
       if (shouldContinue) {
@@ -238,7 +238,7 @@ function* testSteps()
         if (!event.oldVersion) {
           newDatabaseCount++;
         }
-      }
+      };
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 

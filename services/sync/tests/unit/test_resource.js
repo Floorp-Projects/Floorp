@@ -211,7 +211,7 @@ add_task(async function test() {
   logger.debug = function(msg) {
     debugMessages.push(msg);
     dbg.call(this, msg);
-  }
+  };
 
   // Since we didn't receive proper JSON data, accessing content.obj
   // will result in a SyntaxError from JSON.parse.
@@ -316,7 +316,7 @@ add_task(async function test() {
   _("DELETE a resource");
   let res6 = new Resource(server.baseURI + "/delete");
   content = await res6.delete();
-  do_check_eq(content, "This resource has been deleted")
+  do_check_eq(content, "This resource has been deleted");
   do_check_eq(content.status, 200);
 
   _("JSON conversion of response body");
@@ -426,7 +426,7 @@ add_task(async function test() {
   };
   res18._onProgress = onProgress;
   let warnings = [];
-  res18._log.warn = function(msg) { warnings.push(msg) };
+  res18._log.warn = function(msg) { warnings.push(msg); };
   error = undefined;
   try {
     content = await res18.get();
@@ -451,7 +451,7 @@ add_task(async function test() {
   res18._onProgress = onProgress;
   let oldWarn = res18._log.warn;
   warnings = [];
-  res18._log.warn = function(msg) { warnings.push(msg) };
+  res18._log.warn = function(msg) { warnings.push(msg); };
   error = undefined;
   try {
     content = await res18.get();

@@ -132,7 +132,7 @@ var updateListener = {
     if (--this.pendingCount == 0)
       server.stop(do_test_finished);
   }
-}
+};
 
 var requestHandler = {
   handle(metadata, response) {
@@ -147,7 +147,7 @@ var requestHandler = {
     }
     response.setStatusLine(metadata.httpVersion, 404, "Not Found");
   }
-}
+};
 
 function run_test() {
   do_test_pending();

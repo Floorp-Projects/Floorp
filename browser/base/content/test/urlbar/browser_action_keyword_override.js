@@ -3,7 +3,7 @@ add_task(async function() {
                                                 url: "http://example.com/?q=%s",
                                                 title: "test" });
   await PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" })
+                                      url: "http://example.com/?q=%s" });
 
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);

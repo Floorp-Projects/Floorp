@@ -6,7 +6,7 @@
   var request = indexedDB.open(opener.location, 2);
   request.onblocked = function() {
     res.blockedFired = true;
-  }
+  };
   request.onupgradeneeded  = function(e) {
     var db = e.target.result;
     res.version = db.version;
@@ -15,10 +15,10 @@
     var trans = request.transaction;
     trans.objectStore("mystore").get(42).onsuccess = function(e) {
       res.value = JSON.stringify(e.target.result);
-    }
+    };
     trans.oncomplete = function() {
       opener.postMessage(JSON.stringify(res), "http://mochi.test:8888");
-    }
+    };
   };
 
   </script>

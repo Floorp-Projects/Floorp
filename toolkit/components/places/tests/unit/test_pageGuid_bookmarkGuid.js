@@ -218,7 +218,7 @@ add_task(async function test_emptyGUIDFails() {
       title: "test folder",
       type: PlacesUtils.bookmarks.TYPE_FOLDER
     });
-    do_throw("Adding a folder with an empty guid should fail")
+    do_throw("Adding a folder with an empty guid should fail");
   } catch (ex) {
   }
 });

@@ -57,7 +57,7 @@ var testCases = [
 function getDefaultScope(aFolderId) {
   switch (aFolderId) {
     case PlacesUIUtils.leftPaneQueries.History:
-      return "scopeBarHistory"
+      return "scopeBarHistory";
     case PlacesUIUtils.leftPaneQueries.Downloads:
       return "scopeBarDownloads";
     default:

@@ -15,7 +15,7 @@ const CHROME_NAME = "mochikit";
 
 function getChromeRoot(path) {
   if (path === undefined) {
-    return "chrome://" + CHROME_NAME + "/content/browser/" + RELATIVE_DIR
+    return "chrome://" + CHROME_NAME + "/content/browser/" + RELATIVE_DIR;
   }
   return getRootDirectory(path);
 }
@@ -315,7 +315,7 @@ var Harness = {
         this.waitingForEvent = false;
         if (this.pendingCount == 0)
           this.endTest();
-      }
+      };
       mm.addMessageListener("Test:GotNewInstallEvent", listener);
     }
   },
@@ -447,4 +447,4 @@ var Harness = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIWindowMediatorListener,
                                          Ci.nsISupports])
-}
+};

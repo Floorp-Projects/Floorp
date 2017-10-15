@@ -8,7 +8,7 @@
     // This should never be called
     db.onversionchange = function(e) {
       db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
-    }
+    };
     var trans = e.target.transaction;
     if (db.objectStoreNames.contains("mystore")) {
       db.deleteObjectStore("mystore");
@@ -17,7 +17,7 @@
     store.add({ hello: "world" }, 42);
     trans.oncomplete = function() {
       opener.postMessage("go", "http://mochi.test:8888");
-    }
+    };
   };
   </script>
 </head>

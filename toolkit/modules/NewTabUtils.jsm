@@ -650,7 +650,7 @@ var PlacesProvider = {
     options.maxResults = this.maxNumLinks;
 
     // Sort by frecency, descending.
-    options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING
+    options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
 
     let links = [];
 
@@ -763,7 +763,7 @@ var PlacesProvider = {
   },
 
   onClearHistory() {
-    this._callObservers("onClearHistory")
+    this._callObservers("onClearHistory");
   },
 
   /**
@@ -1805,7 +1805,7 @@ var Links = {
     // Make sure to update open about:newtab instances. If there are no opened
     // pages we can just wait for the next new tab to populate the cache again.
     if (AllPages.length && AllPages.enabled)
-      this.populateCache(function() { AllPages.update() }, true);
+      this.populateCache(function() { AllPages.update(); }, true);
     else
       this.resetCache();
   },

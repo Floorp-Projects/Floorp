@@ -44,7 +44,7 @@
         testAccessibleTree(aContainerID, tree);
 
         getNode(aParentID).style.visibility = "hidden";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -54,11 +54,11 @@
             ] }
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "hide parent while child stays visible";
-      }
+      };
     }
 
     /**
@@ -89,7 +89,7 @@
         testAccessibleTree(aContainerID, tree);
 
         getNode(aGrandParentID).style.visibility = "hidden";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -102,11 +102,11 @@
             ] }
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "hide grand parent while its children stay visible";
-      }
+      };
     }
 
     /**
@@ -140,7 +140,7 @@
         getNode(aContainerID).style.color = "red";
         getNode(aParentID).style.visibility = "hidden";
         getNode(aParent2ID).style.visibility = "hidden";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -153,11 +153,11 @@
             ] }
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "change container style, hide parents while their children stay visible";
-      }
+      };
     }
 
     /**
@@ -182,7 +182,7 @@
 
         getNode(aContainerID).style.color = "red";
         getNode(aChildID).style.visibility = "visible";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -198,11 +198,11 @@
           ] }
         ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "change container style, make visible child insdie the table";
-      }
+      };
     }
 
     /**
@@ -233,7 +233,7 @@
         testAccessibleTree(aContainerID, tree);
 
         getNode(aSubContainerID).style.visibility = "hidden";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -243,11 +243,11 @@
             ] }
           ] };
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "hide subcontainer while child inside the table stays visible";
-      }
+      };
     }
 
     /**
@@ -280,7 +280,7 @@
 
         // invoke
         getNode(aSubContainerID).style.visibility = "hidden";
-      }
+      };
 
       this.finalCheck = function finalCheck() {
         var tree =
@@ -291,11 +291,11 @@
               { TEXT_LEAF: [] } ]} ]};
 
         testAccessibleTree(aContainerID, tree);
-      }
+      };
 
       this.getID = function getID() {
         return "hide subcontainer while its child and child inside the nested table stays visible";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

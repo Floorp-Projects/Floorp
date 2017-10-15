@@ -8,7 +8,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 const sampleAddon = {
   id: "webextension1@tests.mozilla.org",
   name: "webextension_1",
-}
+};
 
 const manifestSample = {
   id: "bootstrap1@tests.mozilla.org",
@@ -36,7 +36,7 @@ add_task(async function test_reloading_a_temp_addon() {
     return;
   await promiseRestartManager();
   await AddonManager.installTemporaryAddon(do_get_addon(sampleAddon.name));
-  const addon = await promiseAddonByID(sampleAddon.id)
+  const addon = await promiseAddonByID(sampleAddon.id);
 
   var receivedOnUninstalled = false;
   var receivedOnUninstalling = false;
@@ -66,7 +66,7 @@ add_task(async function test_reloading_a_temp_addon() {
         AddonManager.removeAddonListener(listener);
         resolve();
       },
-    }
+    };
     AddonManager.addAddonListener(listener);
   });
 
@@ -96,13 +96,13 @@ add_task(async function test_can_reload_permanent_addon() {
   AddonManager.addAddonListener({
     onDisabled: (aAddon) => {
       do_check_false(enabledCalled);
-      disabledCalled = true
+      disabledCalled = true;
     },
     onEnabled: (aAddon) => {
       do_check_true(disabledCalled);
-      enabledCalled = true
+      enabledCalled = true;
     }
-  })
+  });
 
   await Promise.all([
     addon.reload(),

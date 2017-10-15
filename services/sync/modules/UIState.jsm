@@ -36,7 +36,7 @@ const TOPICS = [
   "fxaccounts:profilechange",
 ];
 
-const ON_UPDATE = "sync-ui-state:update"
+const ON_UPDATE = "sync-ui-state:update";
 
 const STATUS_NOT_CONFIGURED = "not_configured";
 const STATUS_LOGIN_FAILED = "login_failed";

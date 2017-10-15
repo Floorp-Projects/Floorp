@@ -65,4 +65,4 @@ var gSafeBrowsing = {
     }
     return SafeBrowsing.getReportURL(name, reportInfo);
   }
-}
+};

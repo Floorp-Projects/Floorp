@@ -50,7 +50,7 @@ add_task(async function test_syncID() {
   } finally {
     Svc.Prefs.resetBranch("");
   }
-})
+});
 
 add_task(async function test_lastSync() {
   _("SyncEngine.lastSync and SyncEngine.lastSyncLocal correspond to preferences");
@@ -80,7 +80,7 @@ add_task(async function test_lastSync() {
   } finally {
     Svc.Prefs.resetBranch("");
   }
-})
+});
 
 add_task(async function test_toFetch() {
   _("SyncEngine.toFetch corresponds to file on disk");

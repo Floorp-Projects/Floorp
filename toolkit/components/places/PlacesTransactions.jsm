@@ -1250,7 +1250,7 @@ PT.Move.prototype = Object.seal({
     let originalInfo = await PlacesUtils.bookmarks.fetch(guid);
     if (!originalInfo)
       throw new Error("Cannot move a non-existent item");
-    let updateInfo = { guid, parentGuid: newParentGuid, index: newIndex }
+    let updateInfo = { guid, parentGuid: newParentGuid, index: newIndex };
     updateInfo = await PlacesUtils.bookmarks.update(updateInfo);
 
     // Moving down in the same parent takes in count removal of the item
@@ -1643,7 +1643,7 @@ PT.Copy.prototype = {
     };
     this.redo = async function() {
       await createItemsFromBookmarksTree(newItemInfo, true);
-    }
+    };
 
     return newItemGuid;
   }

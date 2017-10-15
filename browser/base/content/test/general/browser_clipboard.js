@@ -54,7 +54,7 @@ add_task(async function() {
         // The data is empty as the selection is copied during the event default phase.
         Assert.equal(event.clipboardData.mozItemCount, 0, "Zero items on clipboard");
         resolve();
-      }, true)
+      }, true);
 
       sendKey("c");
     });
@@ -73,7 +73,7 @@ add_task(async function() {
           "t <b>Bold</b>" + arg.htmlPostfix, "text/html value");
         Assert.equal(clipboardData.getData("text/plain"), "t Bold", "text/plain value");
         resolve();
-      }, true)
+      }, true);
       sendKey("v");
     });
 
@@ -91,7 +91,7 @@ add_task(async function() {
         selection.deleteFromDocument();
         event.preventDefault();
         resolve();
-      }, true)
+      }, true);
       sendKey("x");
     });
 
@@ -109,7 +109,7 @@ add_task(async function() {
           "<i>Italic</i> " + arg.htmlPostfix, "text/html value 2");
         Assert.equal(clipboardData.getData("text/plain"), "Some text", "text/plain value 2");
         resolve();
-      }, true)
+      }, true);
       sendKey("v");
     });
 
@@ -152,7 +152,7 @@ add_task(async function() {
           reject("Clipboard Data did not contain an image, was " + clipboardData.getData("text/html"));
         }
         resolve();
-      }, true)
+      }, true);
 
       const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                            .getInterface(Components.interfaces.nsIDOMWindowUtils);

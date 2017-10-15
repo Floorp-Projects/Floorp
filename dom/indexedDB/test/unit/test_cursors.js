@@ -29,7 +29,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   objectStore = db.createObjectStore("autoIncrementKeyPath",
@@ -41,7 +41,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   objectStore = db.createObjectStore("keyPath", { keyPath: "foo" });
@@ -51,7 +51,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   objectStore = db.createObjectStore("foo");
@@ -61,7 +61,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     ok(!event.target.result, "No results");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   let keyIndex = 0;
@@ -109,7 +109,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all added items");
@@ -137,7 +137,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, 8, "Saw all the expected keys");
@@ -169,7 +169,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all the expected keys");
@@ -201,7 +201,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all the expected keys");
@@ -234,7 +234,7 @@ function* testSteps()
       ok(cursor === null, "The request result should be null.");
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all the expected keys");
@@ -271,7 +271,7 @@ function* testSteps()
       ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all the expected keys");
@@ -322,7 +322,7 @@ function* testSteps()
       ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, keys.length, "Saw all the expected keys");
@@ -367,7 +367,7 @@ function* testSteps()
       ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, -1, "Saw all added items");

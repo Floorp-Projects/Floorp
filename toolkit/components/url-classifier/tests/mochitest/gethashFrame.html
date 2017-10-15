@@ -11,7 +11,7 @@ function checkLoads() {
   var title = document.getElementById("title");
   title.textContent = window.parent.shouldLoad ?
                       "The following should be hidden:" :
-                      "The following should not be hidden:"
+                      "The following should not be hidden:";
 
   if (window.parent.shouldLoad) {
     window.parent.is(scriptItem, "loaded malware javascript!", "Should load bad javascript");

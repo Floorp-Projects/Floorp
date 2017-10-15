@@ -389,7 +389,7 @@ var ActionBarHandler = {
         if (element) {
           // If we have an active composition string, commit it, and
           // ensure proper element focus.
-          let editor = ActionBarHandler._getEditor(element, win)
+          let editor = ActionBarHandler._getEditor(element, win);
           if (editor.composing) {
             element.blur();
             element.focus();

@@ -38,8 +38,8 @@ this.NLP = {
     if (!l2)
       return l1 * costDel;
 
-    let p1 = new Array(l2 + 1)
-    let p2 = new Array(l2 + 1)
+    let p1 = new Array(l2 + 1);
+    let p2 = new Array(l2 + 1);
 
     let i1, i2, c0, c1, c2, tmp;
 

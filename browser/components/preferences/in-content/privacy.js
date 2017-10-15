@@ -894,7 +894,7 @@ var gPrivacyPane = {
     var params = {
       blockVisible: false, sessionVisible: false, allowVisible: true,
       prefilledHost: "", permissionType: "popup"
-    }
+    };
     params.windowTitle = bundlePreferences.getString("popuppermissionstitle2");
     params.introText = bundlePreferences.getString("popuppermissionstext");
 

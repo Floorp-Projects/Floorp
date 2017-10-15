@@ -121,7 +121,7 @@ function createManifestTemporarily(tempDir, manifestText) {
     gChromeReg.checkForNewChrome();
     gChromeReg.refreshSkins();
     gPrefs.clearUserPref(XUL_CACHE_PREF);
-  }
+  };
 }
 
 // Register a chrome manifest temporarily and return a function which un-does
@@ -142,7 +142,7 @@ function registerManifestTemporarily(manifestURI) {
     gChromeReg.checkForNewChrome();
     gChromeReg.refreshSkins();
     gPrefs.clearUserPref(XUL_CACHE_PREF);
-  }
+  };
 }
 
 function registerManifestPermanently(manifestURI) {

@@ -6,7 +6,7 @@
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
 const TEST_PATH = "http://example.net/browser/browser/" +
-                  "components/resistfingerprinting/test/browser/"
+                  "components/resistfingerprinting/test/browser/";
 
 var spoofedUserAgent;
 
@@ -42,7 +42,7 @@ async function testNavigator() {
   is(result.pluginsLength, 0, "Navigator.plugins has a length of 0.");
   is(result.oscpu, SPOOFED_OSCPU, "Navigator.oscpu is correctly spoofed.");
   is(result.buildID, SPOOFED_BUILDID, "Navigator.buildID is correctly spoofed.");
-  is(result.hardwareConcurrency, SPOOFED_HW_CONCURRENCY, "Navigator.hardwareConcurrency is correctly spoofed.")
+  is(result.hardwareConcurrency, SPOOFED_HW_CONCURRENCY, "Navigator.hardwareConcurrency is correctly spoofed.");
 
   is(result.appCodeName, CONST_APPCODENAME, "Navigator.appCodeName reports correct constant value.");
   is(result.product, CONST_PRODUCT, "Navigator.product reports correct constant value.");
@@ -76,7 +76,7 @@ async function testWorkerNavigator() {
   is(result.appVersion, SPOOFED_APPVERSION, "Navigator.appVersion is correctly spoofed.");
   is(result.platform, SPOOFED_PLATFORM, "Navigator.platform is correctly spoofed.");
   is(result.userAgent, spoofedUserAgent, "Navigator.userAgent is correctly spoofed.");
-  is(result.hardwareConcurrency, SPOOFED_HW_CONCURRENCY, "Navigator.hardwareConcurrency is correctly spoofed.")
+  is(result.hardwareConcurrency, SPOOFED_HW_CONCURRENCY, "Navigator.hardwareConcurrency is correctly spoofed.");
 
   is(result.appCodeName, CONST_APPCODENAME, "Navigator.appCodeName reports correct constant value.");
   is(result.product, CONST_PRODUCT, "Navigator.product reports correct constant value.");

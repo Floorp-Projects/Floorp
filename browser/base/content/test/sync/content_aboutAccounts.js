@@ -20,7 +20,7 @@ addEventListener("load", function load(event) {
   // it send a message back to the test so we know it was called.
   content.openPrefs = function() {
     sendAsyncMessage("test:openPrefsCalled");
-  }
+  };
 }, true);
 
 addEventListener("DOMContentLoaded", function domContentLoaded(event) {

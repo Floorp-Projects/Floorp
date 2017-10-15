@@ -48,7 +48,7 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
   do_check_true(await promiseIsURIVisited(TEST_URI));
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Frecency should be positive.")
+  do_print("Frecency should be positive.");
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
@@ -99,7 +99,7 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   do_check_true(await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.")
+  do_print("Frecency should be positive.");
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
@@ -144,7 +144,7 @@ add_task(async function remove_visits_unbookmarked_uri() {
   do_check_true(await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.")
+  do_print("Frecency should be positive.");
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
@@ -193,9 +193,9 @@ add_task(async function remove_visits_bookmarked_uri() {
 
   do_print("asyncHistory.isURIVisited should return true.");
   do_check_true(await promiseIsURIVisited(TEST_URI));
-  await PlacesTestUtils.promiseAsyncUpdates()
+  await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.")
+  do_print("Frecency should be positive.");
   do_check_true(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
@@ -283,7 +283,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   do_check_true(await PlacesUtils.bookmarks.fetch({url: TEST_URI}));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be smaller.")
+  do_print("Frecency should be smaller.");
   do_check_true(frecencyForUrl(TEST_URI) < initialFrecency);
 
   await cleanup();
@@ -308,7 +308,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
 
   do_print("URI should still exist in moz_places.");
   do_check_true(page_in_database(TEST_URI.spec));
-  do_print("Frecency should be zero.")
+  do_print("Frecency should be zero.");
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
   await cleanup();

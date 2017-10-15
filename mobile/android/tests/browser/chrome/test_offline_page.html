@@ -71,7 +71,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     yield promiseOffline(true);
 
     // Load our test web page
-    browser.loadURI(kUniqueURI.spec, null, null)
+    browser.loadURI(kUniqueURI.spec, null, null);
     yield promiseBrowserEvent(browser, "DOMContentLoaded");
 
     // This is an error page.

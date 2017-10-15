@@ -74,7 +74,7 @@ function setPrefs(prefs) {
         break;
 
       default:
-        throw new TypeError(`Unexpected type (${type}) for preference ${name}.`)
+        throw new TypeError(`Unexpected type (${type}) for preference ${name}.`);
     }
   });
 }
@@ -139,7 +139,7 @@ let syncTourChecker = {
   uninit() {
     this.unregister();
   },
-}
+};
 
 /**
  * Listen and process events from content.

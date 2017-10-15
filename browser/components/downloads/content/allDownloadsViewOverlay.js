@@ -764,7 +764,7 @@ for (let methodName of ["load", "applyFilter", "selectNode", "selectItems"]) {
   DownloadsPlacesView.prototype[methodName] = function() {
     throw new Error("|" + methodName +
                     "| is not implemented by the downloads view.");
-  }
+  };
 }
 
 function goUpdateDownloadCommands() {

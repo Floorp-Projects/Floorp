@@ -185,7 +185,7 @@ this.WebChannel = function(id, originOrPermission) {
       let perm = Services.perms.testExactPermissionFromPrincipal(requestPrincipal,
                                                                  originOrPermission);
       return perm == Ci.nsIPermissionManager.ALLOW_ACTION;
-    }
+    };
   } else {
     // Accept events from any origin matching the given URI.
     // We deliberately use `originNoSuffix` here because we only want to
@@ -193,7 +193,7 @@ this.WebChannel = function(id, originOrPermission) {
     // such as containers or private browsing.
     this._originCheckCallback = requestPrincipal => {
       return originOrPermission.prePath === requestPrincipal.originNoSuffix;
-    }
+    };
   }
   this._originOrPermission = originOrPermission;
 };

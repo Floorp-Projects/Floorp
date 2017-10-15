@@ -51,7 +51,7 @@ this.readCertPrefs =
   }
 
   return certs;
-}
+};
 
 /**
  * Verifies that an nsIX509Cert matches the expected certificate attribute
@@ -112,7 +112,7 @@ this.validateCert =
     Cu.reportError(certCheckErr);
     throw new Ce(certCheckErr, Cr.NS_ERROR_ILLEGAL_VALUE);
   }
-}
+};
 
 /**
  * Checks if the connection must be HTTPS and if so, only allows built-in
@@ -167,7 +167,7 @@ this.checkCert =
 
   if (!issuerCert.isBuiltInRoot)
     throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
-}
+};
 
 /**
  * This class implements nsIBadCertListener.  Its job is to prevent "bad cert"
@@ -181,7 +181,7 @@ this.checkCert =
 this.BadCertHandler =
   function BadCertHandler(aAllowNonBuiltInCerts) {
   this.allowNonBuiltInCerts = aAllowNonBuiltInCerts;
-}
+};
 BadCertHandler.prototype = {
 
   // nsIChannelEventSink

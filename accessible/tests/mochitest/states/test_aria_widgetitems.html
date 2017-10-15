@@ -25,18 +25,18 @@
 
       this.invoke = function focusARIAItem_invoke() {
         this.DOMNode.focus();
-      }
+      };
 
       this.check = function focusARIAItem_check(aEvent) {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
-      }
+      };
 
       this.getID = function focusARIAItem_getID() {
         return "Focused ARIA widget item with aria-selected='" +
                 (aIsSelected ? "true', should" : "false', shouldn't") +
                 " have selected state on " + prettyName(aID);
-      }
+      };
     }
 
     function focusActiveDescendantItem(aItemID, aWidgetID, aIsSelected) {
@@ -46,18 +46,18 @@
       this.invoke = function focusActiveDescendantItem_invoke() {
         this.widgetDOMNode.setAttribute("aria-activedescendant", aItemID);
         this.widgetDOMNode.focus();
-      }
+      };
 
       this.check = function focusActiveDescendantItem_check(aEvent) {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
-      }
+      };
 
       this.getID = function tabActiveDescendant_getID() {
         return "ARIA widget item managed by activedescendant " +
                 (aIsSelected ? "should" : "shouldn't") +
                 " have the selected state on " + prettyName(aItemID);
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

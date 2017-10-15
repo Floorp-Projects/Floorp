@@ -216,7 +216,7 @@ XPCOMUtils.defineLazyGetter(this, "gInstructionSet", function aus_gIS() {
     return instructionSet;
   }
 
-  return "NA"
+  return "NA";
 });
 
 /* Windows only getter that returns the processor architecture. */

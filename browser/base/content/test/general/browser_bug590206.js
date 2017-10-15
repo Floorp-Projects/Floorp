@@ -132,7 +132,7 @@ add_task(async function test_resource_uri() {
 
 add_task(async function test_data_uri() {
   let oldTab = gBrowser.selectedTab;
-  let dataURI = "data:text/html,hi"
+  let dataURI = "data:text/html,hi";
 
   let newTab = await loadNewTab(dataURI);
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
@@ -148,7 +148,7 @@ add_task(async function test_data_uri() {
 
 add_task(async function test_about_uri() {
   let oldTab = gBrowser.selectedTab;
-  let aboutURI = "about:robots"
+  let aboutURI = "about:robots";
 
   let newTab = await loadNewTab(aboutURI);
   is(getConnectionState(), "file", "Connection should be file");

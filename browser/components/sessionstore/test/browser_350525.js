@@ -4,7 +4,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]]
   });
-})
+});
 
 add_task(async function() {
   /** Test for Bug 350525 **/
@@ -91,7 +91,7 @@ add_task(async function() {
 
   // undoCloseTab
   tab = test(() => ss.undoCloseTab(window, 0));
-  ok(tab, "undoCloseTab doesn't throw")
+  ok(tab, "undoCloseTab doesn't throw");
 
   await promiseTabRestored(tab);
   is(tab.linkedBrowser.currentURI.spec, testURL, "correct tab was reopened");

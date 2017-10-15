@@ -424,7 +424,7 @@ var CastingApps = {
           aCallback(null);
         }
       });
-    }
+    };
 
     // If we didn't find a good URI directly, let's look using async methods.
     if (asyncURIs.length > 0) {

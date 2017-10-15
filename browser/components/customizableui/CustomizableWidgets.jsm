@@ -867,7 +867,7 @@ const CustomizableWidgets = [
       let getPanel = () => {
         let {PanelUI} = document.ownerGlobal;
         return PanelUI.overflowPanel;
-      }
+      };
 
       if (CustomizableUI.getAreaType(this.currentArea) == CustomizableUI.TYPE_MENU_PANEL) {
         getPanel().addEventListener("popupshowing", updateButton);
@@ -911,7 +911,7 @@ const CustomizableWidgets = [
     tooltiptext: "email-link-button.tooltiptext3",
     onCommand(aEvent) {
       let win = aEvent.view;
-      win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser)
+      win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
     }
   }];
 

@@ -83,7 +83,7 @@ SecurityReporter.prototype = {
       build: Services.appinfo.appBuildID,
       product: Services.appinfo.name,
       channel: UpdateUtils.UpdateChannel
-    }
+    };
 
     fetch(endpoint, {
       method: "POST",

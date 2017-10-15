@@ -28,7 +28,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
         minVersion: "1",
         maxVersion: "1"
       }]
-    }
+    };
 
     gServer.registerPathHandler("/updaterdf", function(request, response) {
       let updateData = {};
@@ -56,7 +56,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
     let xpifile = createTempXPIFile(addonData);
     let install = await AddonManager.getInstallForFile(xpifile);
     do_check_eq(install.addon.multiprocessCompatible, !!multiprocessCompatible);
-    do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false)
+    do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false);
     await promiseCompleteAllInstalls([install]);
 
     if (!bootstrap) {
@@ -88,7 +88,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
     await promiseRestartManager();
 
     gServer.registerPathHandler("/updaterdf", null);
-  }
+  };
 }
 
 /* Builds a set of tests to run the same steps for every combination of:
@@ -118,7 +118,7 @@ add_task(async function test_disable() {
       minVersion: "1",
       maxVersion: "1"
     }]
-  }
+  };
 
   let xpi1 = createTempXPIFile(Object.assign({
     id: ID_MPC,

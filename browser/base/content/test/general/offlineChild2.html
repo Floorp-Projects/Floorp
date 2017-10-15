@@ -7,9 +7,9 @@ function finish(success) {
   window.parent.postMessage(success ? "success" : "failure", "*");
 }
 
-applicationCache.oncached = function() { finish(true); }
-applicationCache.onnoupdate = function() { finish(true); }
-applicationCache.onerror = function() { finish(false); }
+applicationCache.oncached = function() { finish(true); };
+applicationCache.onnoupdate = function() { finish(true); };
+applicationCache.onerror = function() { finish(false); };
 
 </script>
 </head>

@@ -15,11 +15,11 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
 
     this.invoke = function loadXULTree_invoke() {
       this.treeNode.view = aTreeView;
-    }
+    };
 
     this.getID = function loadXULTree_getID() {
       return "Load XUL tree " + prettyName(aTreeID);
-    }
+    };
   }
 
   gXULTreeLoadContext.queue = new eventQueue();
@@ -27,7 +27,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
   gXULTreeLoadContext.queue.onFinish = function() {
     SimpleTest.executeSoon(doTestFunc);
     return DO_NOT_FINISH_TEST;
-  }
+  };
   gXULTreeLoadContext.queue.invoke();
 }
 

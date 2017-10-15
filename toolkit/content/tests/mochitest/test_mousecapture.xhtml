@@ -175,7 +175,7 @@ function runTests() {
 
   var body = frames[0].document.body;
   var fixed = frames[0].document.getElementById("fixed");
-  function captureOnBody() { body.setCapture() }
+  function captureOnBody() { body.setCapture(); }
   body.addEventListener("mousedown", captureOnBody, true);
   synthesizeMouse(body, 8, 8, { type: "mousedown" }, frames[0]);
   body.removeEventListener("mousedown", captureOnBody, true);

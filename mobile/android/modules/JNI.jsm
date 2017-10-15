@@ -8,7 +8,7 @@
 
 var EXPORTED_SYMBOLS = ["JNI", "android_log"];
 
-Components.utils.import("resource://gre/modules/ctypes.jsm")
+Components.utils.import("resource://gre/modules/ctypes.jsm");
 
 var liblog = ctypes.open("liblog.so");
 var android_log = liblog.declare("__android_log_write",

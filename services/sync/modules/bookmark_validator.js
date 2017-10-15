@@ -435,7 +435,7 @@ class BookmarkValidator {
         folders.push(record);
 
         if (new Set(record.children).size !== record.children.length) {
-          problemData.duplicateChildren.push(record.id)
+          problemData.duplicateChildren.push(record.id);
         }
 
         // The children array stores special guids as their local guid values,

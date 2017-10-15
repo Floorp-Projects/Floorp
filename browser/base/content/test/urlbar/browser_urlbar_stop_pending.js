@@ -64,7 +64,7 @@ add_task(async function() {
     let link = content.document.createElement("a");
     link.href = URL;
     link.textContent = "click me to open a slow page";
-    link.id = "clickme"
+    link.id = "clickme";
     content.document.body.appendChild(link);
   });
   info("added link");
@@ -111,7 +111,7 @@ add_task(async function() {
     let link = content.document.createElement("a");
     link.href = URL;
     link.textContent = "click me to open a slow page";
-    link.id = "clickme"
+    link.id = "clickme";
     content.document.body.appendChild(link);
   });
   info("added link");

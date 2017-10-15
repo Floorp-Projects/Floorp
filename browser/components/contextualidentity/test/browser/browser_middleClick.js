@@ -28,7 +28,7 @@ add_task(async function() {
   let newTab = await new Promise((resolve, reject) => {
     gBrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
       resolve(openEvent.target);
-    }, {once: true})
+    }, {once: true});
 
     BrowserTestUtils.synthesizeMouseAtCenter("#clickMe", { button: 1 }, browser);
   });

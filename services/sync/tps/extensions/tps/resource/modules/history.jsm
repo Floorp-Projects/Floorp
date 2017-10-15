@@ -187,7 +187,7 @@ var HistoryEntry = {
       };
       PlacesUtils.history.removeVisitsByFilter(filter)
       .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex.message))
-      .then(result => { cb(null, result) }, err => { cb(err) });
+      .then(result => { cb(null, result); }, err => { cb(err); });
       Async.waitForSyncCallback(cb);
     } else {
       Logger.AssertTrue(false, "invalid entry in delete history");

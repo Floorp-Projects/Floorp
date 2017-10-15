@@ -1,4 +1,4 @@
-const DG_BACKGROUND = "/desktop/gnome/background"
+const DG_BACKGROUND = "/desktop/gnome/background";
 const DG_IMAGE_KEY = DG_BACKGROUND + "/picture_filename";
 const DG_OPTION_KEY = DG_BACKGROUND + "/picture_options";
 const DG_DRAW_BG_KEY = DG_BACKGROUND + "/draw_background";
@@ -20,7 +20,7 @@ function onPageLoad() {
 
   // Backup the existing wallpaper so that this test doesn't change the user's
   // settings.
-  var wpFileBackup = homeDir.clone()
+  var wpFileBackup = homeDir.clone();
   wpFileBackup.append(brandName + "_wallpaper.png.backup");
 
   if (wpFileBackup.exists())

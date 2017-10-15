@@ -58,7 +58,7 @@ MockStorageManager.prototype = {
     this.accountData = null;
     return Promise.resolve();
   }
-}
+};
 
 function MockFxAccountsClient(device) {
   this._email = "nobody@example.com";
@@ -93,7 +93,7 @@ function MockFxAccountsClient(device) {
 }
 MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype
-}
+};
 
 function MockFxAccounts(device = {}) {
   return new FxAccounts({

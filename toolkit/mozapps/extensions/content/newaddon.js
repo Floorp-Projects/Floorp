@@ -19,7 +19,7 @@ var EnableListener = {
     if (aAddon.id == gAddon.id)
       window.close();
   }
-}
+};
 AddonManager.addAddonListener(EnableListener);
 
 function initialize() {

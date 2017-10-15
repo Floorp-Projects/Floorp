@@ -51,7 +51,7 @@ function check_autoplay_audio_onplay() {
       ok(true, "Doesn't receive play event when media was blocked.");
       autoPlay.onplay = null;
       resolve();
-    }, 1000)
+    }, 1000);
   });
 }
 

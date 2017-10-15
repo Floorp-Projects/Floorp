@@ -109,7 +109,7 @@ add_task(async function() {
   is(resetButton.disabled, true, "The reset button should be disabled when in default state");
 
   setToolbarVisibility(menubar, true);
-  is(resetButton.disabled, false, "The reset button should be enabled when not in default state")
+  is(resetButton.disabled, false, "The reset button should be enabled when not in default state");
   ok(!CustomizableUI.inDefaultState, "No longer in default state when the menubar is shown");
 
   await gCustomizeMode.reset();

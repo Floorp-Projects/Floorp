@@ -22,7 +22,7 @@ function openViewSourceWindow(aURI, aCallback) {
 function loadViewSourceWindow(URL) {
   return new Promise((resolve) => {
     openViewSourceWindow(URL, resolve);
-  })
+  });
 }
 
 function closeViewSourceWindow(aWindow, aCallback) {

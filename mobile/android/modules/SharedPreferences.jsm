@@ -123,7 +123,7 @@ SharedPreferencesImpl.prototype = Object.freeze({
       profileName: this._profileName,
       branch: this._branch,
     }, {
-      onSuccess: values => { result = values },
+      onSuccess: values => { result = values; },
       onError: msg => { throw new Error("Cannot get preference: " + msg); },
     });
 

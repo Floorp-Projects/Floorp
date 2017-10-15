@@ -28,7 +28,7 @@
 
       this.invoke = function addSelection_invoke() {
         this.hyperText.addSelection(aStartOffset, aEndOffset);
-      }
+      };
 
       this.finalCheck = function addSelection_finalCheck() {
         is(this.hyperText.selectionCount, 1,
@@ -40,11 +40,11 @@
            "addSelection: Wrong start offset for " + aID);
         is(endOffset.value, aEndOffset,
            "addSelection: Wrong end offset for " + aID);
-      }
+      };
 
       this.getID = function addSelection_getID() {
         return "nsIAccessibleText::addSelection test for " + aID;
-      }
+      };
     }
 
     function changeSelection(aID, aStartOffset, aEndOffset) {
@@ -57,7 +57,7 @@
 
       this.invoke = function changeSelection_invoke() {
         this.hyperText.setSelectionBounds(0, aStartOffset, aEndOffset);
-      }
+      };
 
       this.finalCheck = function changeSelection_finalCheck() {
         is(this.hyperText.selectionCount, 1,
@@ -69,11 +69,11 @@
            "setSelectionBounds: Wrong start offset for " + aID);
         is(endOffset.value, aEndOffset,
            "setSelectionBounds: Wrong end offset for " + aID);
-      }
+      };
 
       this.getID = function changeSelection_getID() {
         return "nsIAccessibleText::setSelectionBounds test for " + aID;
-      }
+      };
     }
 
     function removeSelection(aID) {
@@ -85,16 +85,16 @@
 
       this.invoke = function removeSelection_invoke() {
         this.hyperText.removeSelection(0);
-      }
+      };
 
       this.finalCheck = function removeSelection_finalCheck() {
         is(this.hyperText.selectionCount, 0,
            "removeSelection: Wrong selection count for " + aID);
-      }
+      };
 
       this.getID = function removeSelection_getID() {
         return "nsIAccessibleText::removeSelection test for " + aID;
-      }
+      };
     }
 
     function changeDOMSelection(aID, aNodeID1, aNodeOffset1,
@@ -112,7 +112,7 @@
         range.setStart(getNode(aNodeID1), aNodeOffset1);
         range.setEnd(getNode(aNodeID2), aNodeOffset2);
         sel.addRange(range);
-      }
+      };
 
       this.finalCheck = function changeDOMSelection_finalCheck() {
         for (var i = 0; i < aTests.length; i++) {
@@ -127,11 +127,11 @@
           is(endOffset.value, aTests[i][2],
              "setSelectionBounds: Wrong end offset for " + aID);
         }
-      }
+      };
 
       this.getID = function changeDOMSelection_getID() {
         return "DOM selection change for " + aID;
-      }
+      };
     }
 
     function onfocusEventSeq(aID) {

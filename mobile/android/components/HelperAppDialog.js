@@ -186,7 +186,7 @@ HelperAppLauncherDialog.prototype = {
         // get run in the saveToDisk case.
         aLauncher.cancel(Cr.NS_BINDING_ABORTED);
       }
-    }
+    };
 
     // See if the user already marked something as the default for this mimetype,
     // and if that app is still installed.

@@ -247,7 +247,7 @@ add_task(async function testClearHistory() {
   // Close the context menu.
   EventUtils.synthesizeKey("VK_ESCAPE", {});
 
-  let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
+  let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory");
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
   controller.doCommand("cmd_clearhistory");
   let count = await countEntries();

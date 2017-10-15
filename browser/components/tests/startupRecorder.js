@@ -33,7 +33,7 @@ function startupRecorder() {
     },
     code: {}
   };
-  this.done = new Promise(resolve => { this._resolve = resolve });
+  this.done = new Promise(resolve => { this._resolve = resolve; });
 }
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),

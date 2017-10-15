@@ -29,6 +29,6 @@ function test() {
     });
 
     finish();
-  }
+  };
   browser.addEventListener("load", onLoad, true);
 }

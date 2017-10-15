@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm")
+                                  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", function() {
   return new TextDecoder();
@@ -61,7 +61,7 @@ XPCOMUtils.defineLazyGetter(this, "gTextEncoder", function() {
 this.DownloadStore = function(aList, aPath) {
   this.list = aList;
   this.path = aPath;
-}
+};
 
 this.DownloadStore.prototype = {
   /**

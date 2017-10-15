@@ -527,7 +527,7 @@ add_task(async function test_autoconnect_mp_locked() {
   Utils.ensureMPUnlocked = () => {
     _("Faking Master Password entry cancelation.");
     return false;
-  }
+  };
   let origCanFetchKeys = Service.identity._canFetchKeys;
   Service.identity._canFetchKeys = () => false;
 
@@ -948,7 +948,7 @@ add_task(async function test_loginError_recoverable_reschedules() {
   do_check_true(scheduler.syncTimer.delay <= scheduler.syncInterval);
 
   Svc.Obs.remove("weave:service:sync:start", onSyncStart);
-  await cleanUpAndGo()
+  await cleanUpAndGo();
 });
 
 add_task(async function test_loginError_fatal_clearsTriggers() {

@@ -58,4 +58,4 @@ this.runTest = function() {
 
   do_test_pending();
   testGenerator.next();
-}
+};

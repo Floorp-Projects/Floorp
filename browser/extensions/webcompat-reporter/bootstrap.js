@@ -48,7 +48,7 @@ function startup(aData, aReason) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (win && win.gBrowserInit &&
         win.gBrowserInit.delayedStartupFinished) {
-      requestReporterInit()
+      requestReporterInit();
     } else {
       Services.obs.addObserver(onDelayedStartupFinished,
         DELAYED_STARTUP_FINISHED);

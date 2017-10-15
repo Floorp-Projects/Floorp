@@ -21,7 +21,7 @@ function promiseNotification(aBrowser, value, expected, input) {
           notificationObserver = null;
           resolve();
         }
-      }
+      };
       if (notificationObserver) {
         notificationObserver.disconnect();
       }
@@ -180,7 +180,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
         waitForFocus(resolve, window);
       });
     }
-  }
+  };
 }
 
 add_task(get_test_function_for_localhost_with_hostname("localhost"));

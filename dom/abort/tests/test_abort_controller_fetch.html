@@ -41,7 +41,7 @@ function testWorkerAbortedFetch() {
   w.onmessage = function(e) {
     ok(e.data, "Abort + Fetch works in workers");
     next();
-  }
+  };
   w.postMessage("testWorkerAbortedFetch");
 }
 
@@ -50,7 +50,7 @@ function testWorkerFetchAndAbort() {
   w.onmessage = function(e) {
     ok(e.data, "Abort + Fetch works in workers");
     next();
-  }
+  };
   w.postMessage("testWorkerFetchAndAbort");
 }
 

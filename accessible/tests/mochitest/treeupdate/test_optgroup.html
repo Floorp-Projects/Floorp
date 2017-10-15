@@ -35,7 +35,7 @@
         this.selectNode.add(optGroup, null);
         var option = document.createElement("option");
         this.selectNode.add(option, null);
-      }
+      };
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.selectList)
@@ -57,11 +57,11 @@
             ] }
           ] };
         testAccessibleTree(this.select, tree);
-      }
+      };
 
       this.getID = function addOptGroup_getID() {
         return "test optgroup's insertion into a select";
-      }
+      };
     }
 
     function removeOptGroup(aID) {
@@ -72,7 +72,7 @@
       this.invoke = function removeOptGroup_invoke() {
         this.option1Node = this.selectNode.firstChild.firstChild;
         this.selectNode.firstChild.remove();
-      }
+      };
 
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, this.selectList)
@@ -87,11 +87,11 @@
           ] };
         testAccessibleTree(this.select, tree);
         is(isAccessible(this.option1Node), false, "removed option shouldn't be accessible anymore!");
-      }
+      };
 
       this.getID = function removeOptGroup_getID() {
         return "test optgroup's removal from a select";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true;

@@ -125,7 +125,7 @@ function ensureSnippetsMapThen(aCallback) {
       callback(gSnippetsMap);
     }
     gSnippetsMapCallbacks.length = 0;
-  }
+  };
 
   let openRequest = indexedDB.open(DATABASE_NAME, {version: DATABASE_VERSION,
                                                    storage: DATABASE_STORAGE});
@@ -142,19 +142,19 @@ function ensureSnippetsMapThen(aCallback) {
     if (!db.objectStoreNames.contains(SNIPPETS_OBJECTSTORE_NAME)) {
       db.createObjectStore(SNIPPETS_OBJECTSTORE_NAME);
     }
-  }
+  };
 
   openRequest.onsuccess = function(event) {
     let db = event.target.result;
 
     db.onerror = function() {
       invokeCallbacks();
-    }
+    };
 
     db.onversionchange = function(versionChangeEvent) {
       versionChangeEvent.target.close();
       invokeCallbacks();
-    }
+    };
 
     let cache = new Map();
     let cursorRequest;
@@ -169,7 +169,7 @@ function ensureSnippetsMapThen(aCallback) {
 
     cursorRequest.onerror = function() {
       invokeCallbacks();
-    }
+    };
 
     cursorRequest.onsuccess = function(cursorRequestEvent) {
       let cursor = cursorRequestEvent.target.result;
@@ -204,8 +204,8 @@ function ensureSnippetsMapThen(aCallback) {
       });
 
       setTimeout(invokeCallbacks, 0);
-    }
-  }
+    };
+  };
 }
 
 function onSearchSubmit(aEvent) {

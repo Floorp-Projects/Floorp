@@ -55,7 +55,7 @@ var DEFAULT_PREFERENCES =
   "enablePrintAutoRotate": false,
   "disablePageMode": false,
   "disablePageLabels": false
-}
+};
 
 
 var PdfjsChromeUtils = {

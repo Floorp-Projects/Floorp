@@ -8,7 +8,7 @@ const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
 const kIconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const kDescription = "Test Description";
-const kAlias = "alias_foo"
+const kAlias = "alias_foo";
 const kSearchTerm = "foo";
 const kExtensionID = "test@example.com";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";

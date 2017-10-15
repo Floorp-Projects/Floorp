@@ -299,7 +299,7 @@ function arraysOK(actual, expected, cmp) {
 function arraysOfArraysOK(actual, expected, cmp) {
   cmp = cmp || equal;
   arraysOK(actual, expected, function(act, exp) {
-    arraysOK(act, exp, cmp)
+    arraysOK(act, exp, cmp);
   });
 }
 

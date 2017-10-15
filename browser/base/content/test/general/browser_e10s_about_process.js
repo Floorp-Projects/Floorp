@@ -5,23 +5,23 @@ const CHROME = {
   id: "cb34538a-d9da-40f3-b61a-069f0b2cb9fb",
   path: "test-chrome",
   flags: 0,
-}
+};
 const CANREMOTE = {
   id: "2480d3e1-9ce4-4b84-8ae3-910b9a95cbb3",
   path: "test-allowremote",
   flags: Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD,
-}
+};
 const MUSTREMOTE = {
   id: "f849cee5-e13e-44d2-981d-0fb3884aaead",
   path: "test-mustremote",
   flags: Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD,
-}
+};
 
 const TEST_MODULES = [
   CHROME,
   CANREMOTE,
   MUSTREMOTE
-]
+];
 
 function AboutModule() {
 }

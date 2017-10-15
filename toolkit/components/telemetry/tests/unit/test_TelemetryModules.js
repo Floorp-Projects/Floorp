@@ -16,7 +16,7 @@ const MAX_NAME_LENGTH = 64;
 // instructions on how to build them.
 const libModules = ctypes.libraryName("modules-test");
 const libUnicode = ctypes.libraryName("modμles-test");
-const libLongName = "lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_Fusce_sit_amet_tellus_non_magna_euismod_vestibulum_Vivamus_turpis_duis.dll"
+const libLongName = "lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_Fusce_sit_amet_tellus_non_magna_euismod_vestibulum_Vivamus_turpis_duis.dll";
 const libUnicodePDB = Services.appinfo.is64Bit ? "testUnicodePDB64.dll" : "testUnicodePDB32.dll";
 const libNoPDB = Services.appinfo.is64Bit ? "testNoPDB64.dll" : "testNoPDB32.dll";
 const libxul = OS.Path.basename(OS.Constants.Path.libxul);

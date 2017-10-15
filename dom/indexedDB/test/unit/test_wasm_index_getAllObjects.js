@@ -92,7 +92,7 @@ function* testSteps()
       if (++addedCount == wasmData.length) {
         continueToNextStep();
       }
-    }
+    };
   }
   yield undefined;
 

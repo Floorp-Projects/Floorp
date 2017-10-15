@@ -72,7 +72,7 @@ this.DownloadsViewUI.BaseView = class {
  * HistoryDownloadElementShell and the DownloadsViewItem for the panel. The
  * history view may use a HistoryDownload object in place of a Download object.
  */
-this.DownloadsViewUI.DownloadElementShell = function() {}
+this.DownloadsViewUI.DownloadElementShell = function() {};
 
 this.DownloadsViewUI.DownloadElementShell.prototype = {
   /**

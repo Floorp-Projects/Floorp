@@ -509,4 +509,4 @@ var gSearchResultsPane = {
     }
     this.listSearchMenuitemIndicators.clear();
   }
-}
+};
