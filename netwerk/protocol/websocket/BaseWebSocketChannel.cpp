@@ -359,6 +359,19 @@ BaseWebSocketChannel::RetargetDeliveryTo(nsIEventTarget* aTargetThread)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BaseWebSocketChannel::GetDeliveryTarget(nsIEventTarget** aTargetThread)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIEventTarget> target = mTargetThread;
+  if (!target) {
+    target = GetCurrentThreadEventTarget();
+  }
+  target.forget(aTargetThread);
+  return NS_OK;
+}
+
 BaseWebSocketChannel::ListenerAndContextContainer::ListenerAndContextContainer(
                                                nsIWebSocketListener* aListener,
                                                nsISupports* aContext)

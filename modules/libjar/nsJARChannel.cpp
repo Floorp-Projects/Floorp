@@ -1175,6 +1175,19 @@ nsJARChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget)
 }
 
 NS_IMETHODIMP
+nsJARChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIThreadRetargetableRequest> request = do_QueryInterface(mRequest);
+  if (!request) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return request->GetDeliveryTarget(aEventTarget);
+}
+
+NS_IMETHODIMP
 nsJARChannel::CheckListenerChain()
 {
   MOZ_ASSERT(NS_IsMainThread());
