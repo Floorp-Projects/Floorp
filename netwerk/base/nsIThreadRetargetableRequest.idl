@@ -32,4 +32,12 @@ interface nsIThreadRetargetableRequest : nsISupports
    * the new target thread.
    */
   void retargetDeliveryTo(in nsIEventTarget aNewTarget);
+
+  /**
+   * Returns the event target where OnDataAvailable events will be dispatched.
+   *
+   * This is only valid after OnStartRequest has been called. Any time before
+   * that point, the value may be changed by `retargetDeliveryTo` calls.
+   */
+  readonly attribute nsIEventTarget deliveryTarget;
 };
