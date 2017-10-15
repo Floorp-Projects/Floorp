@@ -447,7 +447,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "57b4b9b19515"
+        "revision": "315e4c217a7c"
     }, 
     "hy-AM": {
         "platforms": [
@@ -612,7 +612,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "f98d60c7e000"
+        "revision": "2f1d4db616c6"
     }, 
     "ml": {
         "platforms": [
