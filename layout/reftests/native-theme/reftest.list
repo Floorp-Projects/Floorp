@@ -30,7 +30,7 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 != 427122-1.html 427122-1-ref.html
 
 # 403458 is a Windows-only bug
-skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
+fails-if(stylo) skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul # stylo: bug 1408235
 
 fails-if(stylo||styloVsGecko) == 470711-1.xul 470711-1-ref.xul # bug 1408235
 
@@ -63,7 +63,7 @@ random-if(d2d) == resizer-bottomstart.xul resizer-bottomleft.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-left.xul
 fails-if(stylo) != resizer-bottomstart.xul resizer-bottomstart-rtl.xul # bug 1408235
 skip-if(gtkWidget) != resizer-bottomstart-rtl.xul blank-window.xul
-skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
+fails-if(stylo) skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul # bug 1408235
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html

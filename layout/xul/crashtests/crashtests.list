@@ -29,7 +29,7 @@ load 346083-1.xul
 load 346281-1.xul
 load 350460.xul
 load 360642-1.xul
-asserts-if(stylo,4) load 365151.xul # bug 1397644
+asserts-if(stylo,3-4) load 365151.xul # bug 1397644
 load 366112-1.xul
 asserts(0-50) load 366203-1.xul # bug 1217984
 load 367185-1.xhtml

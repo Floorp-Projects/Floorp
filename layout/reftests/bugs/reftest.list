@@ -290,7 +290,7 @@ fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 269908-5.html 269908-5-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
-== 272646-1.xul 272646-1-ref.xul
+fails-if(stylo&&cocoaWidget) == 272646-1.xul 272646-1-ref.xul # bug 1408824
 fails-if(styloVsGecko) == 272646-2a.xul 272646-2-ref.xul # bug 1408824
 fails-if(styloVsGecko) == 272646-2b.xul 272646-2-ref.xul # bug 1408824
 fails-if(styloVsGecko) == 272646-2c.xul 272646-2-ref.xul # bug 1408824
@@ -317,7 +317,7 @@ random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) fuzzy-if(webrender
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
 fails-if(styloVsGecko) == 299837-2.xul 299837-2-ref.xul # bug 1408235
-random-if(d2d) asserts-if(stylo,24-48) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
+random-if(d2d) asserts-if(stylo,24-48) asserts-if(styloVsGecko,24-128) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
@@ -412,7 +412,7 @@ fuzzy-if(Android,2,18) == 315920-17.html 315920-17-ref.html
 == 320979-1.html 320979-1-ref.html
 != 321402-1.html about:blank
 != 321402-2.html about:blank
-== 321402-3.xul 321402-3-ref.xul
+fails-if(stylo&&!gtkWidget) == 321402-3.xul 321402-3-ref.xul # bug 1408235
 == 321402-4.xul 321402-4-ref.xul
 == 321402-5.xul 321402-5-ref.xul
 == 321402-6.xul 321402-6-ref.xul
@@ -1002,7 +1002,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421069-ref.html 421069-ref2.html
 == 421203-1.xul 421203-1-ref.html
 == 421203-2.xul 421203-1-ref.html
-== 421203-3.xul 321402-3-ref.xul
+fails-if(stylo&&!gtkWidget) == 421203-3.xul 321402-3-ref.xul # bug 1408235
 == 421203-4.xul 321402-4-ref.xul
 == 421203-5.xul 321402-5-ref.xul
 == 421203-6.xul 321402-6-ref.xul
@@ -1688,7 +1688,7 @@ fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha b
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 fuzzy-if(skiaContent,1,3500) == 660682-1.html 660682-1-ref.html
-fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) fails-if(styloVsGecko) asserts-if(stylo,17-18) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131, stylo: bug 1397644
+fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) fails-if(styloVsGecko) asserts-if(stylo,16-18) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131, stylo: bug 1397644
 == 665597-1.html 665597-1-ref.html
 == 665597-2.html 665597-2-ref.html
 == 667079-1.html 667079-1-ref.html

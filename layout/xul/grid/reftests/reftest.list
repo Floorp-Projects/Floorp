@@ -14,6 +14,6 @@ fuzzy-if(skiaContent,1,50000) fails-if(stylo||styloVsGecko) == not-full-row-grou
 fuzzy-if(skiaContent,1,60000) fails-if(stylo||styloVsGecko) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml
 fuzzy-if(skiaContent,1,50000) fails-if(stylo||styloVsGecko) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
 fuzzy-if(skiaContent,1,80000) fails-if(stylo||styloVsGecko) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
-random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597
+random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) fails-if(stylo&&!gtkWidget) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597, stylo: bug 1408235
 fails == scrollable-rows.xul scrollable-rows-ref.xhtml
 fails-if(styloVsGecko) == sizing-2d.xul sizing-2d-ref.xul # bug 1408235
