@@ -139,12 +139,13 @@ private:
     NS_DECL_NSICACHEENTRYMETADATAVISITOR
 
     CacheabilityAction(nsIURI *targetURI, uint32_t httpStatus,
-                       const nsCString &method, bool isTracking,
+                       const nsCString &method, bool isTracking, bool couldVary,
                        Predictor *predictor)
       :mTargetURI(targetURI)
       ,mHttpStatus(httpStatus)
       ,mMethod(method)
       ,mIsTracking(isTracking)
+      ,mCouldVary(couldVary)
       ,mPredictor(predictor)
     { }
 
@@ -155,6 +156,7 @@ private:
     uint32_t mHttpStatus;
     nsCString mMethod;
     bool mIsTracking;
+    bool mCouldVary;
     RefPtr<Predictor> mPredictor;
     nsTArray<nsCString> mKeysToCheck;
     nsTArray<nsCString> mValuesToCheck;
@@ -426,7 +428,7 @@ private:
   void UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                   uint32_t httpStatus, const nsCString &method,
                                   const OriginAttributes& originAttributes,
-                                  bool isTracking);
+                                  bool isTracking, bool couldVary);
 
   // Make sure our prefs are in their expected range of values
   void SanitizePrefs();
