@@ -785,6 +785,16 @@ this.PlacesDBUtils = {
     };
     cleanupStatements.push(fixMissingHashes);
 
+    // L.6 fix invalid Place GUIDs.
+    let fixInvalidPlaceGuids = {
+      query:
+      `UPDATE moz_places
+       SET guid = GENERATE_GUID()
+       WHERE guid IS NULL OR
+             NOT IS_VALID_GUID(guid)`
+    };
+    cleanupStatements.push(fixInvalidPlaceGuids);
+
     // MOZ_BOOKMARKS
     // S.1 fix invalid GUIDs for synced bookmarks.
     //     This requires multiple related statements.

@@ -39,11 +39,12 @@ function cleanDatabase() {
   mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " + defaultBookmarksMaxId);
 }
 
-function addPlace(aUrl, aFavicon) {
+function addPlace(aUrl, aFavicon, aGuid = PlacesUtils.history.makeGuid()) {
   let href = new URL(aUrl || "http://www.mozilla.org").href;
   let stmt = mDBConn.createStatement(
-    "INSERT INTO moz_places (url, url_hash) VALUES (:url, hash(:url))");
+    "INSERT INTO moz_places (url, url_hash, guid) VALUES (:url, hash(:url), :guid)");
   stmt.params.url = href;
+  stmt.params.guid = aGuid;
   stmt.execute();
   stmt.finalize();
   let id = mDBConn.lastInsertRowID;
@@ -1236,6 +1237,49 @@ tests.push({
   async check() {
     Assert.ok((await this._getHash()) > 0);
   }
+});
+
+// ------------------------------------------------------------------------------
+
+tests.push({
+  name: "L.6",
+  desc: "fix invalid Place GUIDs",
+  _placeIds: [],
+
+  async setup() {
+    let placeWithValidGuid = addPlace("http://example.com/a", null,
+                                      "placeAAAAAAA");
+    this._placeIds.push(placeWithValidGuid);
+
+    let placeWithEmptyGuid = addPlace("http://example.com/b", null, "");
+    this._placeIds.push(placeWithEmptyGuid);
+
+    let placeWithoutGuid = addPlace("http://example.com/c", null, null);
+    this._placeIds.push(placeWithoutGuid);
+
+    let placeWithInvalidGuid = addPlace("http://example.com/c", null,
+                                        "{123456}");
+    this._placeIds.push(placeWithInvalidGuid);
+  },
+
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let updatedRows = await db.execute(`
+      SELECT id, guid
+      FROM moz_places
+      WHERE id IN (?, ?, ?, ?)`,
+      this._placeIds);
+
+    for (let row of updatedRows) {
+      let id = row.getResultByName("id");
+      let guid = row.getResultByName("guid");
+      if (id == this._placeIds[0]) {
+        do_check_eq(guid, "placeAAAAAAA");
+      } else {
+        do_check_true(PlacesUtils.isValidGuid(guid));
+      }
+    }
+  },
 });
 
 // ------------------------------------------------------------------------------
