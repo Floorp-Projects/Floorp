@@ -8,4 +8,5 @@ description = "Cubeb Backend for talking to remote cubeb server."
 audioipc = { path="../audioipc" }
 cubeb-backend = { path="../../cubeb-rs/cubeb-backend" }
 cubeb-core = { path="../../cubeb-rs/cubeb-core" }
+libc = "0.2"
 log = "^0.3.6"
