@@ -10,4 +10,5 @@ from ..vcs import VCSHelper
 def run_empty_try(message='{msg}', push=True, **kwargs):
     vcs = VCSHelper.create()
     msg = 'No try selector specified, use "Add New Jobs" to select tasks.'
-    return vcs.push_to_try('empty', message.format(msg=msg), [], push=push)
+    return vcs.push_to_try('empty', message.format(msg=msg), [], push=push,
+                           closed_tree=kwargs["closed_tree"])

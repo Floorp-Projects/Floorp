@@ -42,6 +42,11 @@ class BaseTryParser(ArgumentParser):
           'default': False,
           'help': 'List available preset selections.',
           }],
+        [['--closed-tree'],
+         {'action': 'store_true',
+          'default': False,
+          'help': 'Push despite a closed try tree',
+          }],
     ]
     arguments = []
     templates = []

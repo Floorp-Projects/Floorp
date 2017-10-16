@@ -97,8 +97,11 @@ class VCSHelper(object):
             print(UNCOMMITTED_CHANGES)
             sys.exit(1)
 
-    def push_to_try(self, method, msg, labels=None, templates=None, push=True):
-        commit_message = '%s\n\nPushed via `mach try %s`' % (msg, method)
+    def push_to_try(self, method, msg, labels=None, templates=None, push=True,
+                    closed_tree=False):
+        closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
+        commit_message = ('%s%s\n\nPushed via `mach try %s`' %
+                          (msg, closed_tree_string, method))
 
         self.check_working_directory(push)
 
