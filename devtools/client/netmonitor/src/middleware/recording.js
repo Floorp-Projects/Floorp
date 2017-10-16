@@ -8,15 +8,32 @@ const {
   TOGGLE_RECORDING,
 } = require("../constants");
 
+const {
+  getRecordingState,
+} = require("../selectors/index");
+
 /**
  * Start/stop HTTP traffic recording.
+ *
+ * The UI state of the toolbar toggle button is stored in UI
+ * reducer and the backend connection is managed here in the
+ * middleware.
  */
-function recordingMiddleware(store) {
-  return next => action => {
+function recordingMiddleware(connector) {
+  return store => next => action => {
     const res = next(action);
+
+    // Pause/resume HTTP monitoring according to
+    // the user action.
     if (action.type === TOGGLE_RECORDING) {
-      // TODO connect/disconnect the backend.
+      let recording = getRecordingState(store.getState());
+      if (recording) {
+        connector.resume();
+      } else {
+        connector.pause();
+      }
     }
+
     return res;
   };
 }
