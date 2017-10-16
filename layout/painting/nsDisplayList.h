@@ -6295,6 +6295,33 @@ private:
   AutoTArray<nsDisplayItem*, 10> mStack;
 };
 
+/**
+ * A display item that for webrender to handle SVG
+ */
+class nsDisplaySVGWrapper : public nsDisplayWrapList {
+public:
+  NS_DISPLAY_DECL_NAME("SVGWrapper", TYPE_SVG_WRAPPER)
+
+  nsDisplaySVGWrapper(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    nsDisplayList* aList);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVGWrapper();
+#endif
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
+};
+
 namespace mozilla {
 
 class PaintTelemetry
