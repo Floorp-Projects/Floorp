@@ -42,8 +42,6 @@ class GeckoInstance(object):
         # AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         "extensions.autoDisableScopes": 0,
         "extensions.enabledScopes": 5,
-        # don't block add-ons for e10s
-        "extensions.e10sBlocksEnabling": False,
         # Disable metadata caching for installed add-ons by default
         "extensions.getAddons.cache.enabled": False,
         # Disable intalling any distribution add-ons
