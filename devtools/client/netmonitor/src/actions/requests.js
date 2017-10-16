@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { sendHTTPRequest } = require("../connector/index");
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
@@ -47,7 +46,7 @@ function cloneSelectedRequest() {
 /**
  * Send a new HTTP request using the data in the custom request form.
  */
-function sendCustomRequest() {
+function sendCustomRequest(connector) {
   return (dispatch, getState) => {
     const selected = getSelectedRequest(getState());
 
@@ -68,7 +67,7 @@ function sendCustomRequest() {
       data.body = selected.requestPostData.postData.text;
     }
 
-    sendHTTPRequest(data, (response) => {
+    connector.sendHTTPRequest(data, (response) => {
       return dispatch({
         type: SEND_CUSTOM_REQUEST,
         id: response.eventActor.actor,
