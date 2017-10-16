@@ -15,6 +15,8 @@
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIXULDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
@@ -1972,6 +1974,16 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   nsCOMPtr<nsIDocument> document = aPopup->GetUncomposedDoc();
   if (!document) {
     return;
+  }
+
+  // When a menu is opened, make sure that command updating is unlocked first.
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(document);
+  if (xulDoc) {
+    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
+    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+    if (xulCommandDispatcher) {
+      xulCommandDispatcher->Unlock();
+    }
   }
 
   for (nsCOMPtr<nsIContent> grandChild = aPopup->GetFirstChild();
