@@ -345,6 +345,51 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
 }
 
 static void
+PaintByLayer(nsDisplayItem* aItem,
+             nsDisplayListBuilder* aDisplayListBuilder,
+             RefPtr<BasicLayerManager>& aManager,
+             gfxContext* aContext,
+             const std::function<void()>& aPaintFunc)
+{
+  if (aManager == nullptr) {
+    aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+  }
+
+  FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
+  layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
+  layerBuilder->DidBeginRetainedLayerTransaction(aManager);
+
+  aManager->BeginTransactionWithTarget(aContext);
+
+  ContainerLayerParameters param;
+  RefPtr<Layer> layer = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
+  if (layer) {
+    UniquePtr<LayerProperties> props;
+    props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
+
+    aManager->SetRoot(layer);
+    layerBuilder->WillEndTransaction();
+
+    aPaintFunc();
+  }
+
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Basic layer tree for painting contents of display item %s(%p):\n", aItem->Name(), aItem->Frame());
+    std::stringstream stream;
+    aManager->Dump(stream, "", gfxEnv::DumpPaintToFile());
+    fprint_stderr(gfxUtils::sDumpPaintFile, stream);  // not a typo, fprint_stderr declared in LayersLogging.h
+  }
+#endif
+
+  if (aManager->InTransaction()) {
+    aManager->AbortTransaction();
+  }
+
+  aManager->SetTarget(nullptr);
+}
+
+static void
 PaintItemByDrawTarget(nsDisplayItem* aItem,
                       gfx::DrawTarget* aDT,
                       const LayerRect& aImageRect,
@@ -368,78 +413,21 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
     break;
   case DisplayItemType::TYPE_SVG_WRAPPER:
     {
-      if (aManager == nullptr) {
-        aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-      }
-
-      FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
-      layerBuilder->DidBeginRetainedLayerTransaction(aManager);
-
-      aManager->BeginTransactionWithTarget(context);
-
-      ContainerLayerParameters param;
-      RefPtr<Layer> layer =
-        static_cast<nsDisplayFilter*>(aItem)->BuildLayer(aDisplayListBuilder,
-                                                         aManager, param);
-      if (layer) {
-        UniquePtr<LayerProperties> props;
-        props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
-        aManager->SetRoot(layer);
-        layerBuilder->WillEndTransaction();
+      PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
         aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aDisplayListBuilder);
-      }
-
-      if (aManager->InTransaction()) {
-        aManager->AbortTransaction();
-      }
-      aManager->SetTarget(nullptr);
+      });
       break;
     }
 
   case DisplayItemType::TYPE_FILTER:
     {
-      if (aManager == nullptr) {
-        aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-      }
-
-      FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
-      layerBuilder->DidBeginRetainedLayerTransaction(aManager);
-
-      aManager->BeginTransactionWithTarget(context);
-
-      ContainerLayerParameters param;
-      RefPtr<Layer> layer =
-        static_cast<nsDisplayFilter*>(aItem)->BuildLayer(aDisplayListBuilder,
-                                                         aManager, param);
-
-      if (layer) {
-        UniquePtr<LayerProperties> props;
-        props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
-
-        aManager->SetRoot(layer);
-        layerBuilder->WillEndTransaction();
-
+      PaintByLayer(aItem, aDisplayListBuilder, aManager, context, [&]() {
         static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aDisplayListBuilder,
                                                            context, aManager);
-      }
-
-#ifdef MOZ_DUMP_PAINTING
-      if (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) {
-        fprintf_stderr(gfxUtils::sDumpPaintFile, "Basic layer tree for painting contents of display item %s(%p):\n", aItem->Name(), aItem->Frame());
-        std::stringstream stream;
-        aManager->Dump(stream, "", gfxEnv::DumpPaintToFile());
-        fprint_stderr(gfxUtils::sDumpPaintFile, stream);  // not a typo, fprint_stderr declared in LayersLogging.h
-      }
-#endif
-
-      if (aManager->InTransaction()) {
-        aManager->AbortTransaction();
-      }
-      aManager->SetTarget(nullptr);
+      });
       break;
     }
+
   default:
     aItem->Paint(aDisplayListBuilder, context);
     break;
