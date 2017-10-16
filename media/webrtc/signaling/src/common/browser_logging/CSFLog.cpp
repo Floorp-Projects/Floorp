@@ -82,6 +82,6 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
 int CSFLogTestLevel(CSFLogLevel priority)
 {
-  mozilla::LogLevel level = static_cast<mozilla::LogLevel>(priority);
-  return MOZ_LOG_TEST(gSignalingLog, level);
+  return MOZ_LOG_TEST(gSignalingLog,
+                      static_cast<mozilla::LogLevel>(priority));
 }
