@@ -31,37 +31,3 @@ class TestMarionette(MarionetteTestCase):
         start_time = time.time()
         self.assertFalse(self.marionette.wait_for_port(timeout=5))
         self.assertLess(time.time() - start_time, 5)
-
-
-class TestProtocol2Errors(MarionetteTestCase):
-    def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.op = self.marionette.protocol
-        self.marionette.protocol = 2
-
-    def tearDown(self):
-        self.marionette.protocol = self.op
-        MarionetteTestCase.tearDown(self)
-
-    def test_malformed_packet(self):
-        req = ["error", "message", "stacktrace"]
-        ps = []
-        for p in [p for i in range(0, len(req) + 1) for p in itertools.permutations(req, i)]:
-            ps.append(dict((x, None) for x in p))
-
-        for p in filter(lambda p: len(p) < 3, ps):
-            self.assertRaises(KeyError, self.marionette._handle_error, p)
-
-    def test_known_error_status(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": errors.NoSuchElementException.status,
-                 "message": None,
-                 "stacktrace": None})
-
-    def test_unknown_error_status(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error(
-                {"error": "barbera",
-                 "message": None,
-                 "stacktrace": None})
