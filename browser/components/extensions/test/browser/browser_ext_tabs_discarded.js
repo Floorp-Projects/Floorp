@@ -32,6 +32,28 @@ add_task(async function test_discarded() {
         browser.test.assertEq(false, updatedTab.discarded, "lazy to non-lazy update discard property");
         browser.test.assertEq(false, discardedEventData[0], "lazy to non-lazy onUpdated discard property");
 
+        await browser.tabs.update(tabs[1].id, {active: true});
+        await browser.tabs.discard(tabs[2].id);
+        let discardedTab = await browser.tabs.get(tabs[2].id);
+        browser.test.assertEq(true, discardedTab.discarded, "discarded tab discard property");
+        browser.test.assertEq(true, discardedEventData[1], "discarded tab onUpdated discard property");
+
+        try {
+          await browser.tabs.discard(tabs[2].id);
+          browser.test.succeed("attempting to discard an already discarded tab should not throw error");
+        } catch (e) {
+          browser.test.fail("attempting to discard an already discarded tab should not throw error");
+        }
+
+        await browser.tabs.update(tabs[2].id, {active: true});
+        await browser.tabs.update(tabs[1].id, {active: true});
+        await browser.test.assertRejects(browser.tabs.discard(999999999), /Invalid tab ID/,
+          "attempt to discard invalid tabId should throw");
+        await browser.test.assertRejects(browser.tabs.discard([999999999, tabs[2].id]), /Invalid tab ID/,
+          "attempt to discard a valid and invalid tabId should throw");
+        discardedTab = await browser.tabs.get(tabs[2].id);
+        browser.test.assertEq(false, discardedTab.discarded, "tab is still not discarded");
+
         browser.test.notifyPass("test-finished");
       }
 
