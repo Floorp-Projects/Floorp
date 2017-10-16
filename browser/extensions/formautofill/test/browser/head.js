@@ -98,6 +98,44 @@ async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function focusAndWaitForFieldsIdentified(browser, selector) {
+  /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
+  const {previouslyFocused, previouslyIdentified} = await ContentTask.spawn(browser, {selector}, async function({selector}) {
+    Components.utils.import("resource://gre/modules/FormLikeFactory.jsm");
+    const input = content.document.querySelector(selector);
+    const rootElement = FormLikeFactory.findRootForField(input);
+    const previouslyFocused = content.document.activeElement == input;
+    const previouslyIdentified = rootElement.hasAttribute("test-formautofill-identified");
+
+    input.focus();
+
+    return {previouslyFocused, previouslyIdentified};
+  });
+
+  if (previouslyIdentified) {
+    return;
+  }
+
+  // Once the input is previously focused, no more FormAutofill:FieldsIdentified will be
+  // sent as the message goes along with focus event.
+  if (!previouslyFocused) {
+    await new Promise(resolve => {
+      Services.mm.addMessageListener("FormAutofill:FieldsIdentified", function onIdentified() {
+        Services.mm.removeMessageListener("FormAutofill:FieldsIdentified", onIdentified);
+        resolve();
+      });
+    });
+  }
+  // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
+  await sleep();
+  await ContentTask.spawn(browser, {}, async function() {
+    Components.utils.import("resource://gre/modules/FormLikeFactory.jsm");
+    FormLikeFactory
+      .findRootForField(content.document.activeElement)
+      .setAttribute("test-formautofill-identified", "true");
+  });
+}
+
 async function expectPopupOpen(browser) {
   const {autoCompletePopup} = browser;
   const listItemElems = getDisplayedPopupItems(browser);
@@ -116,23 +154,7 @@ async function expectPopupOpen(browser) {
 
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
-  /* eslint no-shadow: ["error", { "allow": ["selector"] }] */
-  const identified = await ContentTask.spawn(browser, {selector}, async function({selector}) {
-    const input = content.document.querySelector(selector);
-    const forms = content.document.getElementsByTagName("form");
-    const rootElement = [...forms].find(form => form.contains(input)) || content.document.body;
-
-    input.focus();
-    if (rootElement.hasAttribute("test-formautofill-identified")) {
-      return true;
-    }
-    rootElement.setAttribute("test-formautofill-identified", "true");
-    return false;
-  });
-  // Wait 2 seconds for identifyAutofillFields if the form hasn't been identified yet.
-  if (!identified) {
-    await sleep(2000);
-  }
+  await focusAndWaitForFieldsIdentified(browser, selector);
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   await expectPopupOpen(browser);
 }
