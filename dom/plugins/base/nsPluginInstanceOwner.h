@@ -8,6 +8,7 @@
 #define nsPluginInstanceOwner_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
 #include "npapi.h"
 #include "nsCOMPtr.h"
 #include "nsIKeyEventInPluginCallback.h"
