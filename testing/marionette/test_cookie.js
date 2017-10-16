@@ -24,7 +24,7 @@ cookie.manager = {
     cookie.manager.cookies.push(newCookie);
   },
 
-  remove: function (host, name, path, blocked, originAttributes) {;
+  remove: function (host, name, path, blocked, originAttributes) {
     for (let i = 0; i < this.cookies.length; ++i) {
       let candidate = this.cookies[i];
       if (candidate.host === host &&
@@ -248,11 +248,39 @@ add_test(function test_remove() {
 add_test(function test_iter() {
   cookie.manager.cookies = [];
 
-  cookie.add({name: "0", value: "", domain: "foo.example.com"});
-  cookie.add({name: "1", value: "", domain: "bar.example.com"});
+  cookie.add({
+    session: false,
+    name: "0",
+    value: "",
+    domain: "foo.example.com",
+  });
+  cookie.add({
+    session: false,
+    name: "1",
+    value: "",
+    domain: "bar.example.com",
+  });
+
   let fooCookies = [...cookie.iter("foo.example.com")];
   equal(1, fooCookies.length);
   equal(".foo.example.com", fooCookies[0].domain);
+  equal(true, fooCookies[0].hasOwnProperty("expiry"));
+
+  // here we're explicitly setting session to true as a workaround until
+  // bug 1408962 has been fixed. when that bug has been fixed the cookie
+  // will be created as session cookie simply by leaving out the 'expiry'
+  // property.
+  cookie.add({
+    session: true,
+    name: "aSessionCookie",
+    value: "",
+    domain: "session.com",
+  });
+
+  let sessionCookies = [...cookie.iter("session.com")];
+  equal(1, sessionCookies.length);
+  equal("aSessionCookie", sessionCookies[0].name);
+  equal(false, sessionCookies[0].hasOwnProperty("expiry"));
 
   run_next_test();
 });
