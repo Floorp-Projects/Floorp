@@ -517,18 +517,17 @@ var PerformanceController = {
    * @return {object}
    */
   getMultiprocessStatus: function () {
-    // If testing, set both supported and enabled to true so we
-    // have realtime rendering tests in non-e10s. This function is
-    // overridden wholesale in tests when we want to test multiprocess support
+    // If testing, set enabled to true so we have realtime rendering tests
+    // in non-e10s. This function is overridden wholesale in tests
+    // when we want to test multiprocess support
     // specifically.
     if (flags.testing) {
-      return { supported: true, enabled: true };
+      return { enabled: true };
     }
-    let supported = system.constants.E10S_TESTING_ONLY;
     // This is only checked on tool startup -- requires a restart if
     // e10s subsequently enabled.
     let enabled = this._e10s;
-    return { supported, enabled };
+    return { enabled };
   },
 
   /**
@@ -556,12 +555,9 @@ var PerformanceController = {
    * if e10s is not possible on the platform. If e10s is on, no attribute is set.
    */
   _setMultiprocessAttributes: function () {
-    let { enabled, supported } = this.getMultiprocessStatus();
-    if (!enabled && supported) {
+    let { enabled } = this.getMultiprocessStatus();
+    if (!enabled) {
       $("#performance-view").setAttribute("e10s", "disabled");
-    } else if (!enabled && !supported) {
-      // Could be a chance where the directive goes away yet e10s is still on
-      $("#performance-view").setAttribute("e10s", "unsupported");
     }
   },
 
