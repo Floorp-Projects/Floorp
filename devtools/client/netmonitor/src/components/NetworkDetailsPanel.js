@@ -14,8 +14,8 @@ const Actions = require("../actions/index");
 const { getSelectedRequest } = require("../selectors/index");
 
 // Components
-const CustomRequestPanel = createFactory(require("./custom-request-panel"));
-const TabboxPanel = createFactory(require("./tabbox-panel"));
+const CustomRequestPanel = createFactory(require("./CustomRequestPanel"));
+const TabboxPanel = createFactory(require("./TabboxPanel"));
 
 const { div } = DOM;
 
