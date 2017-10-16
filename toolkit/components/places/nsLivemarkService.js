@@ -354,9 +354,6 @@ LivemarkService.prototype = {
     });
   },
 
-  skipDescendantsOnItemRemoval: false,
-  skipTags: true,
-
   // nsINavHistoryObserver
 
   onPageChanged() {},

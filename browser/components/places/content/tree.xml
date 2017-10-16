@@ -500,7 +500,7 @@
 
               // Avoid the potentially expensive call to getChildIndex
               // if we know this container doesn't allow insertion
-              if (PlacesControllerDragHelper.disallowInsertion(container, this))
+              if (PlacesControllerDragHelper.disallowInsertion(container))
                 return null;
 
               var queryOptions = PlacesUtils.asQuery(result.root).queryOptions;
@@ -523,7 +523,7 @@
             }
           }
 
-          if (PlacesControllerDragHelper.disallowInsertion(container, this))
+          if (PlacesControllerDragHelper.disallowInsertion(container))
             return null;
 
           // TODO (Bug 1160193): properly support dropping on a tag root.
@@ -733,7 +733,7 @@
 
           // If this node is child of a readonly container (e.g. a livemark)
           // or cannot be moved, we must force a copy.
-          if (!PlacesControllerDragHelper.canMoveNode(node, this)) {
+          if (!PlacesControllerDragHelper.canMoveNode(node)) {
             event.dataTransfer.effectAllowed = "copyLink";
             break;
           }
