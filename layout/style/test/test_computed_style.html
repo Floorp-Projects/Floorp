@@ -713,6 +713,10 @@ var noframe_container = document.getElementById("content");
     [ "polygon(calc(10px - 20px) 0px, 100px 100px, 0px 100px)",
       "polygon(-10px 0px, 100px 100px, 0px 100px)",
       "polygon with negative calc() coordinates" ],
+    // inset:
+    [ "inset(calc(10px - 20px))",
+      "inset(-10px)",
+      "inset with negative calc() coordinates" ],
   ];
 
   var p = document.createElement("p");
