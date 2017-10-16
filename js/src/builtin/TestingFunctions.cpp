@@ -2771,7 +2771,7 @@ class CloneBufferObject : public NativeObject {
             nbytes = JS_GetStringLength(str);
         }
 
-        if (nbytes % sizeof(uint64_t) != 0) {
+        if (nbytes == 0 || (nbytes % sizeof(uint64_t) != 0)) {
             JS_ReportErrorASCII(cx, "Invalid length for clonebuffer data");
             return false;
         }
