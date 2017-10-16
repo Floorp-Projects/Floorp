@@ -494,6 +494,30 @@ class FormAutofillSection {
   }
 
   /**
+   * Clear value and highlight style of all filled fields.
+   *
+   * @param {Object} focusedInput
+   *        A focused input element for determining credit card or address fields.
+   */
+  clearPopulatedForm(focusedInput) {
+    let fieldDetails = this.getFieldDetailsByElement(focusedInput);
+    for (let fieldDetail of fieldDetails) {
+      let element = fieldDetail.elementWeakRef.get();
+      if (!element) {
+        log.warn(fieldDetail.fieldName, "is unreachable");
+        continue;
+      }
+
+      // Only reset value for input element.
+      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED &&
+          element instanceof Ci.nsIDOMHTMLInputElement) {
+        element.setUserInput("");
+      }
+      this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+    }
+  }
+
+  /**
    * Change the state of a field to correspond with different presentations.
    *
    * @param {Object} fieldDetail
@@ -871,6 +895,11 @@ class FormAutofillHandler {
   clearPreviewedFormFields(focusedInput) {
     let section = this.getSectionByElement(focusedInput);
     section.clearPreviewedFormFields(focusedInput);
+  }
+
+  clearPopulatedForm(focusedInput) {
+    let section = this.getSectionByElement(focusedInput);
+    section.clearPopulatedForm(focusedInput);
   }
 
   getFilledRecordGUID(focusedInput) {
