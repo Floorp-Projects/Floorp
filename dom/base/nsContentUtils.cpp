@@ -6922,9 +6922,10 @@ nsContentUtils::FlushLayoutForTree(nsPIDOMWindowOuter* aWindow)
     docShell->GetChildCount(&i_end);
     for (; i < i_end; ++i) {
       nsCOMPtr<nsIDocShellTreeItem> item;
-      docShell->GetChildAt(i, getter_AddRefs(item));
-      if (nsCOMPtr<nsPIDOMWindowOuter> win = item->GetWindow()) {
-        FlushLayoutForTree(win);
+      if (docShell->GetChildAt(i, getter_AddRefs(item)) == NS_OK && item) {
+        if (nsCOMPtr<nsPIDOMWindowOuter> win = item->GetWindow()) {
+          FlushLayoutForTree(win);
+        }
       }
     }
   }
