@@ -152,7 +152,7 @@ gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval)
 
     // set up timer
     if (!mTimer) {
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+        mTimer = NS_NewTimer();
         if (!mTimer) {
             NS_WARNING("Failure to create font info loader timer");
             return;
