@@ -14,7 +14,6 @@ const {
   REMOVE_SELECTED_CUSTOM_REQUEST,
   SELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
-  TOGGLE_RECORDING,
   UPDATE_REQUEST,
   UPDATE_PROPS,
 } = require("../constants");
@@ -69,8 +68,6 @@ const Requests = I.Record({
   // Auxiliary fields to hold requests stats
   firstStartedMillis: +Infinity,
   lastEndedMillis: -Infinity,
-  // Recording state
-  recording: true,
 });
 
 /**
@@ -123,64 +120,6 @@ function requestsReducer(state = new Requests(), action) {
         }
       });
     }
-    case CLEAR_REQUESTS: {
-      return new Requests({
-        recording: state.recording
-      });
-    }
-    case CLONE_SELECTED_REQUEST: {
-      let { requests, selectedId } = state;
-
-      if (!selectedId) {
-        return state;
-      }
-
-      let clonedRequest = requests.get(selectedId);
-      if (!clonedRequest) {
-        return state;
-      }
-
-      let newRequest = new Request({
-        id: clonedRequest.id + "-clone",
-        method: clonedRequest.method,
-        url: clonedRequest.url,
-        urlDetails: clonedRequest.urlDetails,
-        requestHeaders: clonedRequest.requestHeaders,
-        requestPostData: clonedRequest.requestPostData,
-        isCustom: true
-      });
-
-      return state.withMutations(st => {
-        st.requests = requests.set(newRequest.id, newRequest);
-        st.selectedId = newRequest.id;
-      });
-    }
-    case OPEN_NETWORK_DETAILS: {
-      if (!action.open) {
-        return state.set("selectedId", null);
-      }
-
-      if (!state.selectedId && !state.requests.isEmpty()) {
-        return state.set("selectedId", state.requests.first().id);
-      }
-
-      return state;
-    }
-    case REMOVE_SELECTED_CUSTOM_REQUEST: {
-      return closeCustomRequest(state);
-    }
-    case SELECT_REQUEST: {
-      return state.set("selectedId", action.id);
-    }
-    case SEND_CUSTOM_REQUEST: {
-      // When a new request with a given id is added in future, select it immediately.
-      // where we know in advance the ID of the request, at a time when it
-      // wasn't sent yet.
-      return closeCustomRequest(state.set("preselectedId", action.id));
-    }
-    case TOGGLE_RECORDING: {
-      return state.set("recording", !state.recording);
-    }
     case UPDATE_REQUEST: {
       let { requests, lastEndedMillis } = state;
 
@@ -220,6 +159,59 @@ function requestsReducer(state = new Requests(), action) {
         st.requests = requests.set(updatedRequest.id, updatedRequest);
         st.lastEndedMillis = lastEndedMillis;
       });
+    }
+    case CLEAR_REQUESTS: {
+      return new Requests();
+    }
+    case SELECT_REQUEST: {
+      return state.set("selectedId", action.id);
+    }
+    case CLONE_SELECTED_REQUEST: {
+      let { requests, selectedId } = state;
+
+      if (!selectedId) {
+        return state;
+      }
+
+      let clonedRequest = requests.get(selectedId);
+      if (!clonedRequest) {
+        return state;
+      }
+
+      let newRequest = new Request({
+        id: clonedRequest.id + "-clone",
+        method: clonedRequest.method,
+        url: clonedRequest.url,
+        urlDetails: clonedRequest.urlDetails,
+        requestHeaders: clonedRequest.requestHeaders,
+        requestPostData: clonedRequest.requestPostData,
+        isCustom: true
+      });
+
+      return state.withMutations(st => {
+        st.requests = requests.set(newRequest.id, newRequest);
+        st.selectedId = newRequest.id;
+      });
+    }
+    case REMOVE_SELECTED_CUSTOM_REQUEST: {
+      return closeCustomRequest(state);
+    }
+    case SEND_CUSTOM_REQUEST: {
+      // When a new request with a given id is added in future, select it immediately.
+      // where we know in advance the ID of the request, at a time when it
+      // wasn't sent yet.
+      return closeCustomRequest(state.set("preselectedId", action.id));
+    }
+    case OPEN_NETWORK_DETAILS: {
+      if (!action.open) {
+        return state.set("selectedId", null);
+      }
+
+      if (!state.selectedId && !state.requests.isEmpty()) {
+        return state.set("selectedId", state.requests.first().id);
+      }
+
+      return state;
     }
 
     default:
