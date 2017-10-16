@@ -13,6 +13,7 @@ const React = require("react");
 const ReactDOM = require("react-dom");
 const { bindActionCreators } = require("redux");
 const { bootstrap, renderRoot } = require("devtools-launchpad");
+const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 const { Services: { appinfo, pref }} = require("devtools-modules");
 
 // Initialize preferences as early as possible
@@ -38,17 +39,15 @@ pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 pref("devtools.netmonitor.persistlog", false);
 pref("devtools.styleeditor.enabled", true);
 
+const { configureStore } = require("./src/utils/create-store");
+
 require("./src/assets/styles/netmonitor.css");
 
-const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 EventEmitter.decorate(window);
-
-const { configureStore } = require("./src/utils/create-store");
 const App = require("./src/components/app");
-const { Connector } = require("./src/connector/index");
-const connector = new Connector();
-const store = configureStore(connector);
+const store = configureStore();
 const actions = bindActionCreators(require("./src/actions"), store.dispatch);
+const { onConnect } = require("./src/connector");
 
 // Inject to global window for testing
 window.store = store;
@@ -81,7 +80,6 @@ bootstrap(React, ReactDOM).then((connection) => {
   if (!connection) {
     return;
   }
-
-  renderRoot(React, ReactDOM, App, store, {connector});
-  connector.connect(connection, actions, store.getState);
+  renderRoot(React, ReactDOM, App, store);
+  onConnect(connection, actions, store.getState);
 });
