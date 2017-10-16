@@ -513,6 +513,16 @@ var FormAutofillContent = {
     );
   },
 
+  clearForm() {
+    let focusedInput = formFillController.focusedInput || ProfileAutocomplete._lastAutoCompleteFocusedInput;
+    if (!focusedInput) {
+      return;
+    }
+
+    let formHandler = this.getFormHandler(focusedInput);
+    formHandler.clearPopulatedForm(focusedInput);
+  },
+
   previewProfile(doc) {
     let docWin = doc.ownerGlobal;
     let selectedIndex = ProfileAutocomplete._getSelectedIndex(docWin);
@@ -577,11 +587,13 @@ var FormAutofillContent = {
 
     let selectedIndex = ProfileAutocomplete._getSelectedIndex(e.target.ownerGlobal);
     let selectedRowStyle = lastAutoCompleteResult.getStyleAt(selectedIndex);
-    if (selectedRowStyle == "autofill-footer") {
-      focusedInput.addEventListener("DOMAutoComplete", () => {
+    focusedInput.addEventListener("DOMAutoComplete", () => {
+      if (selectedRowStyle == "autofill-footer") {
         Services.cpmm.sendAsyncMessage("FormAutofill:OpenPreferences");
-      }, {once: true});
-    }
+      } else if (selectedRowStyle == "autofill-clear-button") {
+        FormAutofillContent.clearForm();
+      }
+    }, {once: true});
   },
 };
 
