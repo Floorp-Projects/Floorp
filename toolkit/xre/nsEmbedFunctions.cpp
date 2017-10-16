@@ -116,6 +116,10 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #include "jprof.h"
 #endif
 
+#if defined(XP_WIN) && defined(MOZ_ENABLE_SKIA_PDF)
+#include "mozilla/widget/PDFiumProcessChild.h"
+#endif
+
 using namespace mozilla;
 
 using mozilla::ipc::BrowserProcessSubThread;
@@ -605,6 +609,7 @@ XRE_InitChildProcess(int aArgc,
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
   case GeckoProcessType_GMPlugin:
+  case GeckoProcessType_PDFium:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
       break;
   default:
@@ -652,6 +657,11 @@ XRE_InitChildProcess(int aArgc,
         process = new gmp::GMPProcessChild(parentPID);
         break;
 
+#if defined(XP_WIN) && defined(MOZ_ENABLE_SKIA_PDF)
+      case GeckoProcessType_PDFium:
+        process = new widget::PDFiumProcessChild(parentPID);
+        break;
+#endif
       case GeckoProcessType_GPU:
         process = new gfx::GPUProcessImpl(parentPID);
         break;

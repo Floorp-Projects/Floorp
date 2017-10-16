@@ -26,6 +26,7 @@ EXPORTS.mozilla.widget += [
     'PDFiumChild.h',
     'PDFiumEngineShim.h',
     'PDFiumParent.h',
+    'PDFiumProcessChild.h',
     'PDFViaEMFPrintHelper.h',
     'WinCompositorWidget.h',
     'WinMessages.h',
@@ -108,6 +109,8 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
         'PDFiumChild.cpp',
         'PDFiumEngineShim.cpp',
         'PDFiumParent.cpp',
+        'PDFiumProcessChild.cpp',
+        'PDFiumProcessParent.cpp',
         'PDFViaEMFPrintHelper.cpp',
         'WindowsEMF.cpp',
     ]
