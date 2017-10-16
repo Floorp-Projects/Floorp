@@ -623,9 +623,19 @@ var Impl = {
     // Configure base Telemetry recording.
     // Unified Telemetry makes it opt-out. If extended Telemetry is enabled, base recording
     // is always on as well.
-    const enabled = Utils.isTelemetryEnabled;
-    Telemetry.canRecordBase = enabled || IS_UNIFIED_TELEMETRY;
-    Telemetry.canRecordExtended = enabled;
+    if (IS_UNIFIED_TELEMETRY) {
+      // Enable extended Telemetry on pre-release channels and disable it
+      // on Release/ESR.
+      const isPrereleaseChannel =
+        ["nightly", "aurora", "beta"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
+      Telemetry.canRecordBase = true;
+      Telemetry.canRecordExtended = isPrereleaseChannel ||
+        Services.prefs.getBoolPref(TelemetryUtils.Preferences.OverridePreRelease, false);
+    } else {
+      // We're not on unified Telemetry, stick to the old behaviour for
+      // supporting Fennec.
+      Telemetry.canRecordBase = Telemetry.canRecordExtended = Utils.isTelemetryEnabled;
+    }
 
     this._log.config("enableTelemetryRecording - canRecordBase:" + Telemetry.canRecordBase +
                      ", canRecordExtended: " + Telemetry.canRecordExtended);
