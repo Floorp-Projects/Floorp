@@ -6,6 +6,7 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
 
+const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -49,6 +50,13 @@ class DOMElement extends Element {
   }
 }
 
+class SVGElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = SVGNS;
+  }
+}
+
 class XULElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
@@ -64,6 +72,7 @@ class XBLElement extends XULElement {
 }
 
 const domEl = new DOMElement("p");
+const svgEl = new SVGElement("rect");
 const xulEl = new XULElement("browser");
 const xblEl = new XBLElement("framebox");
 
@@ -108,6 +117,7 @@ add_test(function test_isSelected() {
 
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
+  ok(!element.isDOMElement(svgEl));
   ok(!element.isDOMElement(xulEl));
   ok(!element.isDOMElement(domWin));
   ok(!element.isDOMElement(domFrame));
@@ -118,10 +128,24 @@ add_test(function test_isDOMElement() {
   run_next_test();
 });
 
+add_test(function test_isSVGElement() {
+  ok(element.isSVGElement(svgEl));
+  ok(!element.isSVGElement(domEl));
+  ok(!element.isSVGElement(xulEl));
+  ok(!element.isSVGElement(domWin));
+  ok(!element.isSVGElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isSVGElement(typ));
+  }
+
+  run_next_test();
+});
+
 add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
   ok(element.isXULElement(xblEl));
   ok(!element.isXULElement(domEl));
+  ok(!element.isXULElement(svgEl));
   ok(!element.isDOMElement(domWin));
   ok(!element.isDOMElement(domFrame));
   for (let typ of [true, 42, {}, [], undefined, null]) {
@@ -135,6 +159,7 @@ add_test(function test_isDOMWindow() {
   ok(element.isDOMWindow(domWin));
   ok(element.isDOMWindow(domFrame));
   ok(!element.isDOMWindow(domEl));
+  ok(!element.isDOMWindow(svgEl));
   ok(!element.isDOMWindow(xulEl));
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isDOMWindow(typ));
