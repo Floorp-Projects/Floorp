@@ -35,14 +35,6 @@ class ChromeConnector {
     this.connector.disconnect();
   }
 
-  pause() {
-    this.disconnect();
-  }
-
-  resume() {
-    this.setup();
-  }
-
   /**
    * currently all events are about "navigation" is not support on CDP
    */

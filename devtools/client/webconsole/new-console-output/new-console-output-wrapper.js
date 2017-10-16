@@ -139,7 +139,9 @@ NewConsoleOutputWrapper.prototype = {
         ),
         openNetworkPanel: (requestId) => {
           return this.toolbox.selectTool("netmonitor").then((panel) => {
-            return panel.panelWin.Netmonitor.inspectRequest(requestId);
+            let { inspectRequest } = panel.panelWin.windowRequire(
+              "devtools/client/netmonitor/src/connector/index");
+            return inspectRequest(requestId);
           });
         },
         sourceMapService: this.toolbox ? this.toolbox.sourceMapURLService : null,
