@@ -40,7 +40,7 @@ class VROculusSession
   friend class VRDisplayOculus;
 public:
   VROculusSession();
-  void Refresh();
+  void Refresh(bool aForceRefresh = false);
   bool IsTrackingReady() const;
   bool IsRenderReady() const;
   ovrSession Get();
@@ -65,6 +65,7 @@ private:
   TimeStamp mLastPresentationEnd;
   VRTelemetry mTelemetry;
   bool mPresenting;
+  bool mDrawBlack;
 
   ~VROculusSession();
   void Uninitialize(bool aUnloadLib);
