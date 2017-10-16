@@ -440,10 +440,10 @@ AccessibleCaretEventHub::Init()
   mDocShell = static_cast<nsDocShell*>(docShell);
 
   if (sUseLongTapInjector) {
-    mLongTapInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mLongTapInjectorTimer = NS_NewTimer();
   }
 
-  mScrollEndInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mScrollEndInjectorTimer = NS_NewTimer();
 
   mManager = MakeUnique<AccessibleCaretManager>(mPresShell);
 
