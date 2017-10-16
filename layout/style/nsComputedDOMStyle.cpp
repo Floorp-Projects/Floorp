@@ -3616,7 +3616,7 @@ nsComputedDOMStyle::GetScrollSnapPoints(const nsStyleCoord& aCoord)
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsAutoString argumentString;
-    SetCssTextToCoord(argumentString, aCoord);
+    SetCssTextToCoord(argumentString, aCoord, true);
     nsAutoString tmp;
     tmp.AppendLiteral("repeat(");
     tmp.Append(argumentString);
@@ -6310,10 +6310,10 @@ nsComputedDOMStyle::BoxValuesToString(nsAString& aString,
 {
   MOZ_ASSERT(aBoxValues.Length() == 4, "wrong number of box values");
   nsAutoString value1, value2, value3, value4;
-  SetCssTextToCoord(value1, aBoxValues[0]);
-  SetCssTextToCoord(value2, aBoxValues[1]);
-  SetCssTextToCoord(value3, aBoxValues[2]);
-  SetCssTextToCoord(value4, aBoxValues[3]);
+  SetCssTextToCoord(value1, aBoxValues[0], true);
+  SetCssTextToCoord(value2, aBoxValues[1], true);
+  SetCssTextToCoord(value3, aBoxValues[2], true);
+  SetCssTextToCoord(value4, aBoxValues[3], true);
 
   // nsROCSSPrimitiveValue do not have binary comparison operators.
   // Compare string results instead.
@@ -6381,11 +6381,13 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
           shapeFunctionString.AppendLiteral(", ");
         }
         SetCssTextToCoord(coordString,
-                          aStyleBasicShape->Coordinates()[i]);
+                          aStyleBasicShape->Coordinates()[i],
+                          true);
         shapeFunctionString.Append(coordString);
         shapeFunctionString.Append(' ');
         SetCssTextToCoord(coordString,
-                          aStyleBasicShape->Coordinates()[i + 1]);
+                          aStyleBasicShape->Coordinates()[i + 1],
+                          true);
         shapeFunctionString.Append(coordString);
       }
       break;
@@ -6504,11 +6506,11 @@ nsComputedDOMStyle::DoGetShapeOutside()
 
 void
 nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
-                                      const nsStyleCoord& aCoord)
+                                      const nsStyleCoord& aCoord,
+                                      bool aClampNegativeCalc)
 {
   RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-  bool clampNegativeCalc = true;
-  SetValueToCoord(value, aCoord, clampNegativeCalc);
+  SetValueToCoord(value, aCoord, aClampNegativeCalc);
   value->GetCssText(aCssText);
 }
 
@@ -6544,7 +6546,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
     shadowValue->GetCssText(argumentString, dummy);
   } else {
     // Filter function argument.
-    SetCssTextToCoord(argumentString, aStyleFilter.GetFilterParameter());
+    SetCssTextToCoord(argumentString, aStyleFilter.GetFilterParameter(), true);
   }
   filterFunctionString.Append(argumentString);
 
