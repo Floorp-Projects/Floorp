@@ -218,6 +218,8 @@ var ignoreFunctions = {
     "uint32 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
     "void js::Nursery::freeMallocedBuffers()" : true,
 
+    "void mozilla::dom::workers::WorkerPrivate::AssertIsOnWorkerThread() const" : true,
+
     // It would be cool to somehow annotate that nsTHashtable<T> will use
     // nsTHashtable<T>::s_MatchEntry for its matchEntry function pointer, but
     // there is no mechanism for that. So we will just annotate a particularly
@@ -391,6 +393,8 @@ function isOverridableField(initialCSU, csu, field)
     if (field == "GetGlobalJSObject")
         return false;
     if (field == "GetIsMainThread")
+        return false;
+    if (field == "GetThreadFromPRThread")
         return false;
     if (initialCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
         return false;
