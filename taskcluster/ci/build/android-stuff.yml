@@ -63,23 +63,14 @@ android-lint/opt:
             PERFHERDER_EXTRA_OPTIONS: android-lint
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
-          - name: public/android/lint/lint-results-officialAustralisDebug.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
-            type: file
-          - name: public/android/lint/lint-results-officialAustralisDebug.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
-            type: file
-          - name: public/android/lint/lint-results-officialAustralisDebug_files
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
-            type: directory
           - name: public/android/lint/lint-results-officialPhotonDebug.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.html
             type: file
           - name: public/android/lint/lint-results-officialPhotonDebug.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.xml
             type: file
           - name: public/android/lint/lint-results-officialPhotonDebug_files
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug_files
             type: directory
           - name: public/build
             path: /builds/worker/artifacts/
@@ -183,17 +174,11 @@ android-findbugs/opt:
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
-          - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
-            type: file
-          - name: public/android/findbugs/findbugs-officialAustralisDebug-output.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.xml
-            type: file
           - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.html
             type: file
           - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
-            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.xml
             type: file
           - name: public/build
             path: /builds/worker/artifacts/
