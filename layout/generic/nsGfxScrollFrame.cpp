@@ -3392,18 +3392,20 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // area to the dispatch to content layer event regions) necessary to activate
   // a scroll frame so it creates a scrollable layer.
   bool couldBuildLayer = false;
-  if (mWillBuildScrollableLayer) {
-    couldBuildLayer = true;
-  } else {
-    couldBuildLayer =
-      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
-      WantAsyncScroll() &&
-      // If we are using containers for root frames, and we are the root
-      // scroll frame for the display root, then we don't need a scroll
-      // info layer. nsDisplayList::PaintForFrame already calls
-      // ComputeFrameMetrics for us.
-      (!(gfxPrefs::LayoutUseContainersForRootFrames() && mIsRoot) ||
-       (aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext()));
+  if (aBuilder->IsPaintingToWindow()) {
+    if (mWillBuildScrollableLayer) {
+      couldBuildLayer = true;
+    } else {
+      couldBuildLayer =
+        nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
+        WantAsyncScroll() &&
+        // If we are using containers for root frames, and we are the root
+        // scroll frame for the display root, then we don't need a scroll
+        // info layer. nsDisplayList::PaintForFrame already calls
+        // ComputeFrameMetrics for us.
+        (!(gfxPrefs::LayoutUseContainersForRootFrames() && mIsRoot) ||
+         (aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext()));
+    }
   }
 
   // Now display the scrollbars and scrollcorner. These parts are drawn
@@ -3505,7 +3507,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
-    if (mWillBuildScrollableLayer) {
+    if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
       asrSetter.EnterScrollFrame(sf);
     }
 
@@ -3521,7 +3523,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsRect scrolledRectClip =
         GetUnsnappedScrolledRectInternal(mScrolledFrame->GetScrollableOverflowRect(),
                                          mScrollPort.Size()) + mScrolledFrame->GetPosition();
-      if (mWillBuildScrollableLayer) {
+      if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
         // Clip the contents to the display port.
         // The dirty rect already acts kind of like a clip, in that
         // FrameLayerBuilder intersects item bounds and opaque regions with
@@ -3569,7 +3571,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // above (where the idSetter variable is created).
       //
       // This is not compatible when using containes for root scrollframes.
-      MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent());
+      MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent() &&
+        aBuilder->IsPaintingToWindow());
       if (!mWillBuildScrollableLayer) {
         // Set a displayport so next paint we don't have to force layerization
         // after the fact.
@@ -3591,7 +3594,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  if (mWillBuildScrollableLayer) {
+  if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
     aBuilder->ForceLayerForScrollParent();
   }
 
