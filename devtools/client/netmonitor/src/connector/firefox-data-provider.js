@@ -428,6 +428,8 @@ class FirefoxDataProvider {
           });
         break;
     }
+
+    emit(EVENTS.NETWORK_EVENT_UPDATED, actor);
   }
 
   /**
