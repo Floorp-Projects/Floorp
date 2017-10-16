@@ -6,14 +6,9 @@
 
 const Services = require("Services");
 const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
-
-// Middleware
 const batching = require("../middleware/batching");
 const prefs = require("../middleware/prefs");
 const thunk = require("../middleware/thunk");
-const recording = require("../middleware/recording");
-
-// Reducers
 const rootReducer = require("../reducers/index");
 const { FilterTypes, Filters } = require("../reducers/filters");
 const { Requests } = require("../reducers/requests");
@@ -21,40 +16,21 @@ const { Sort } = require("../reducers/sort");
 const { TimingMarkers } = require("../reducers/timing-markers");
 const { UI, Columns } = require("../reducers/ui");
 
-/**
- * Configure state and middleware for the Network monitor tool.
- */
-function configureStore(connector) {
-  // Prepare initial state.
-  const initialState = {
-    filters: new Filters({
-      requestFilterTypes: getFilterState()
-    }),
-    requests: new Requests(),
-    sort: new Sort(),
-    timingMarkers: new TimingMarkers(),
-    ui: new UI({
-      columns: getColumnState()
-    }),
+function configureStore() {
+  const getPref = (pref) => {
+    try {
+      return JSON.parse(Services.prefs.getCharPref(pref));
+    } catch (_) {
+      return [];
+    }
   };
 
-  // Prepare middleware.
-  let middleware = applyMiddleware(
-    thunk,
-    prefs,
-    batching,
-    recording(connector)
-  );
+  let activeFilters = {};
+  let filters = getPref("devtools.netmonitor.filters");
+  filters.forEach((filter) => {
+    activeFilters[filter] = true;
+  });
 
-  return createStore(rootReducer, initialState, middleware);
-}
-
-// Helpers
-
-/**
- * Get column state from preferences.
- */
-function getColumnState() {
   let columns = new Columns();
   let visibleColumns = getPref("devtools.netmonitor.visibleColumns");
 
@@ -64,27 +40,19 @@ function getColumnState() {
     });
   }
 
-  return columns;
-}
+  const initialState = {
+    filters: new Filters({
+      requestFilterTypes: new FilterTypes(activeFilters)
+    }),
+    requests: new Requests(),
+    sort: new Sort(),
+    timingMarkers: new TimingMarkers(),
+    ui: new UI({
+      columns,
+    }),
+  };
 
-/**
- * Get filter state from preferences.
- */
-function getFilterState() {
-  let activeFilters = {};
-  let filters = getPref("devtools.netmonitor.filters");
-  filters.forEach((filter) => {
-    activeFilters[filter] = true;
-  });
-  return new FilterTypes(activeFilters);
-}
-
-function getPref(pref) {
-  try {
-    return JSON.parse(Services.prefs.getCharPref(pref));
-  } catch (_) {
-    return [];
-  }
+  return createStore(rootReducer, initialState, applyMiddleware(thunk, prefs, batching));
 }
 
 exports.configureStore = configureStore;

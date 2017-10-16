@@ -19,11 +19,10 @@ const TabboxPanel = createFactory(require("./tabbox-panel"));
 
 const { div } = DOM;
 
-/**
+/*
  * Network details panel component
  */
 function NetworkDetailsPanel({
-  connector,
   activeTabId,
   cloneSelectedRequest,
   request,
@@ -41,14 +40,12 @@ function NetworkDetailsPanel({
         TabboxPanel({
           activeTabId,
           cloneSelectedRequest,
-          connector,
-          openLink,
           request,
           selectTab,
           sourceMapService,
+          openLink,
         }) :
         CustomRequestPanel({
-          connector,
           request,
         })
     )
@@ -58,12 +55,12 @@ function NetworkDetailsPanel({
 NetworkDetailsPanel.displayName = "NetworkDetailsPanel";
 
 NetworkDetailsPanel.propTypes = {
-  connector: PropTypes.object.isRequired,
   activeTabId: PropTypes.string,
   cloneSelectedRequest: PropTypes.func.isRequired,
   open: PropTypes.bool,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
+  // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
   openLink: PropTypes.func,
 };
