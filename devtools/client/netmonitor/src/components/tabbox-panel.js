@@ -31,18 +31,17 @@ const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
 const STACK_TRACE_TITLE = L10N.getStr("netmonitor.tab.stackTrace");
 const TIMINGS_TITLE = L10N.getStr("netmonitor.tab.timings");
 
-/**
+/*
  * Tabbox panel component
  * Display the network request details
  */
 function TabboxPanel({
   activeTabId,
-  cloneSelectedRequest = () => {},
-  connector,
-  openLink,
+  cloneSelectedRequest = ()=>{},
   request,
   selectTab,
   sourceMapService,
+  openLink,
 }) {
   if (!request) {
     return null;
@@ -91,7 +90,7 @@ function TabboxPanel({
         id: PANELS.STACK_TRACE,
         title: STACK_TRACE_TITLE,
       },
-        StackTracePanel({ request, sourceMapService, openLink, connector }),
+        StackTracePanel({ request, sourceMapService, openLink }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({
@@ -109,11 +108,11 @@ TabboxPanel.displayName = "TabboxPanel";
 TabboxPanel.propTypes = {
   activeTabId: PropTypes.string,
   cloneSelectedRequest: PropTypes.func,
-  connector: PropTypes.object.isRequired,
-  openLink: PropTypes.func,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
+  // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
+  openLink: PropTypes.func,
 };
 
 module.exports = connect()(TabboxPanel);

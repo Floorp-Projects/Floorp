@@ -88,7 +88,6 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
 StatusBar.displayName = "StatusBar";
 
 StatusBar.propTypes = {
-  connector: PropTypes.object.isRequired,
   openStatistics: PropTypes.func.isRequired,
   summary: PropTypes.object.isRequired,
   timingMarkers: PropTypes.object.isRequired,
@@ -103,7 +102,7 @@ module.exports = connect(
       load: getDisplayedTimingMarker(state, "firstDocumentLoadTimestamp"),
     },
   }),
-  (dispatch, props) => ({
-    openStatistics: () => dispatch(Actions.openStatistics(props.connector, true)),
+  (dispatch) => ({
+    openStatistics: () => dispatch(Actions.openStatistics(true)),
   }),
 )(StatusBar);
