@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1518975126211000);
+const PRTime gPreloadListExpirationTime = INT64_C(1519019249394000);
 %%
 0.me.uk, 1
 00001.am, 1
@@ -258,6 +258,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1518975126211000);
 38888msc.com, 1
 393335.ml, 1
 398.info, 1
+3ags.de, 1
 3bakayottu.com, 1
 3bigking.com, 1
 3c-d.de, 1
@@ -798,6 +799,7 @@ adzuna.nl, 1
 adzuna.pl, 1
 adzuna.ru, 1
 adzuna.sg, 1
+aebian.org, 1
 aegee-utrecht.nl, 1
 aegisalarm.co.uk, 1
 aegisalarm.com, 1
@@ -2021,7 +2023,6 @@ astutr.co, 1
 asucrews.com, 1
 asuhe.cc, 1
 asuhe.win, 1
-asuhe.xyz, 1
 asuka.io, 1
 asun.co, 1
 asurepay.cc, 1
@@ -4183,6 +4184,7 @@ canihavesome.coffee, 1
 canlidoviz.com, 1
 cannabis-marijuana.com, 1
 cannarobotics.com, 1
+cannyfoxx.me, 1
 canoonic.se, 1
 cantatio.ch, 1
 canterberry.cc, 1
@@ -5412,6 +5414,7 @@ compredietlight.com.br, 1
 comprefitasadere.com.br, 1
 comprehensiveihc.com, 1
 compsmag.com, 1
+compubench.com, 1
 compucastell.ch, 1
 compucorner.mx, 1
 compuplast.cz, 1
@@ -5715,7 +5718,6 @@ crazydomains.co.nz, 1
 crazydomains.co.uk, 1
 crazydomains.com.au, 1
 crazydomains.in, 1
-crazyker.com, 1
 crazymeeshu.com, 1
 crazypaul.com, 1
 crazyprojects.es, 1
@@ -6564,8 +6566,12 @@ deliver.moe, 1
 delogo.nl, 1
 deloittequant.com, 1
 delphine.dance, 1
+delta-data.ch, 1
+delta-smart.ch, 1
 delta.ru, 1
 deltaacademy.org, 1
+deltadata.ch, 1
+deltasmart.ch, 1
 deltava.org, 1
 demarle.ch, 1
 dementiapraecox.de, 1
@@ -6989,7 +6995,7 @@ discofitta.com, 1
 disconformity.net, 1
 discord-chan.net, 1
 discordapp.com, 1
-discotek.club, 0
+discotek.club, 1
 discount24.de, 1
 discountmania.eu, 1
 discountmetaux.fr, 1
@@ -7303,6 +7309,7 @@ dounats.com, 1
 douzer.de, 1
 dovenzorgmalawi.nl, 1
 dovro.de, 1
+dowc.org, 1
 downloadaja.com, 1
 downloadgamemods.com, 1
 downloadgram.com, 1
@@ -8886,6 +8893,7 @@ fantasticcleaners.com.au, 1
 fantasticgardenersmelbourne.com.au, 1
 fantastichandymanmelbourne.com.au, 1
 fantasticpestcontrolmelbourne.com.au, 1
+fantasyescortsbirmingham.co.uk, 1
 fantasyspectrum.com, 1
 fantopia.club, 1
 fanvoice.com, 1
@@ -9655,6 +9663,7 @@ freaksites.dk, 1
 frebi.org, 1
 frebib.net, 1
 freddythechick.uk, 1
+frederik-braun.com, 1
 frederikschoell.de, 0
 fredliang.cn, 1
 fredloya.com, 1
@@ -10361,6 +10370,7 @@ gflclan.ru, 1
 gforce.ninja, 1
 gfoss.eu, 1
 gfoss.gr, 1
+gfxbench.com, 1
 ggdcpt.com, 1
 gginin.today, 1
 ggl-luzern.ch, 1
@@ -10682,7 +10692,6 @@ gpo.gov, 0
 gprs.uk.com, 1
 gps.com.br, 1
 gpsarena.ro, 1
-gpsvideocanada.com, 1
 gpws.ovh, 1
 gr.search.yahoo.com, 0
 gra2.com, 1
@@ -12199,6 +12208,7 @@ ieeesbe.nl, 1
 ieeespmb.org, 1
 ieji.de, 0
 iemas.azurewebsites.net, 1
+iemb.cf, 1
 iemb.tk, 1
 ieval.ro, 1
 iewar.com, 1
@@ -12236,11 +12246,14 @@ igimusic.com, 1
 igm-be.ch, 1
 ignace72.eu, 1
 ignat.by, 1
+ignatovich.by, 1
+ignatovich.me, 1
 ignitedmindz.in, 1
 igorw.org, 1
 igotoffer.com, 0
 igrivi.com, 1
 igsmgmt.com, 1
+iguana.com.ec, 0
 ih8sn0w.com, 1
 ihacklabs.com, 1
 ihatethissh.it, 1
@@ -13620,6 +13633,7 @@ jpslconsulting.ca, 1
 jr5devdoug.xyz, 1
 jr5devdouglas.xyz, 1
 jr5proxdoug.xyz, 1
+jrc9.ca, 1
 jreb.nl, 1
 jreinert.com, 1
 jross.me, 1
@@ -13767,6 +13781,7 @@ kaashosting.nl, 1
 kaatha-kamrater.se, 1
 kab-s.de, 1
 kabashop.com.br, 1
+kabat-fans.cz, 0
 kabeltv.co.nz, 1
 kabeuchi.com, 1
 kaboom.pw, 1
@@ -14337,6 +14352,7 @@ kngk-group.ru, 1
 kngk.org, 1
 kngkng.com, 1
 kniga.market, 1
+knight-industries.org, 1
 knightsblog.de, 1
 knightsbridge.net, 1
 knightsweep.com, 1
@@ -14786,6 +14802,7 @@ lancyvbc.ch, 1
 land.nrw, 0
 landbetweenthelakes.us, 1
 landflair-magazin.de, 1
+landofelves.net, 1
 lanetix.com, 1
 langatang.com, 1
 langbein.org, 1
@@ -15510,7 +15527,6 @@ loanstreet.be, 1
 loanstreet.nl, 1
 lobivia.de, 1
 lobosdomain.no-ip.info, 1
-lobste.rs, 1
 locais.org, 1
 local360.net, 1
 localbandz.com, 1
@@ -15944,6 +15960,7 @@ mademoiselle-emma.be, 1
 mademoiselle-emma.fr, 1
 mademoiselledemargaux.com, 1
 mader.jp, 1
+madesoftware.com.br, 1
 madesurveying.co.uk, 1
 madin.ru, 1
 madirc.net, 1
@@ -15987,7 +16004,6 @@ magictable.com, 1
 magilio.com, 1
 magnacumlaude.co, 1
 magnatronic.com.br, 1
-magneticanvil.com, 1
 magneticattraction.com.au, 1
 magnets.jp, 1
 magnettracker.com, 1
@@ -16421,7 +16437,6 @@ mattli.us, 1
 mattmccutchen.net, 1
 mattonline.me, 1
 mattwb65.com, 1
-mattwservices.co.uk, 1
 matviet.vn, 1
 matze.co, 1
 matze.org, 1
@@ -16502,7 +16517,6 @@ mbs-journey.com, 1
 mbsec.net, 1
 mbweir.com, 1
 mbwemmel-usedcars.be, 1
-mc-team.org, 1
 mc-venture.net, 0
 mcadmin.net, 1
 mcatnnlo.org, 1
@@ -17139,7 +17153,6 @@ miukimodafeminina.com, 1
 mivzakim.net, 1
 mixnshake.com, 1
 mixposure.com, 1
-mixtape.moe, 1
 miya.io, 1
 miyako-kyoto.jp, 1
 miyatore.com, 1
@@ -18034,7 +18047,6 @@ nathaliebaron.ch, 1
 nathaliebaroncoaching.ch, 1
 nathan.io, 1
 nathankonopinski.com, 1
-nathanmfarrugia.com, 1
 nathansmetana.com, 1
 nathumarket.com.br, 1
 nationalcentereg.org, 1
@@ -18394,7 +18406,6 @@ nexicafiles.com, 1
 nexlab.org, 1
 next-log.ru, 0
 next-taxi.ru, 1
-next24.io, 1
 nextads.ch, 1
 nextcairn.com, 1
 nextcloud.com, 1
@@ -18669,7 +18680,6 @@ noop.ch, 1
 noordsee.de, 1
 noorsolidarity.com, 1
 nootropic.com, 1
-nootropicsource.com, 1
 nopaste.xyz, 1
 nord-sud.be, 1
 nordakademie.de, 1
@@ -19016,6 +19026,7 @@ ogocare.com, 1
 oguya.ch, 1
 oh14.de, 1
 ohadsoft.com, 1
+ohai.su, 1
 ohayosoro.me, 1
 ohchouette.com, 1
 ohd.dk, 1
@@ -19747,7 +19758,7 @@ patralos.at, 0
 patriaco.net, 1
 patric-lenhart.de, 1
 patrick-othmer.de, 1
-patrick-robrecht.de, 1
+patrick-robrecht.de, 0
 patrick.dark.name, 1
 patrickaudley.ca, 1
 patrickaudley.com, 1
@@ -20922,6 +20933,7 @@ propertyone.mk, 1
 propipesystem.com, 1
 proplan.co.il, 1
 propmag.co, 1
+proposalonline.com, 1
 propr.no, 1
 propseller.com, 1
 proslimdiets.com, 1
@@ -21884,7 +21896,6 @@ riceglue.com, 1
 richardb.me, 1
 richardcrosby.co.uk, 1
 richardhering.de, 1
-richardjgreen.net, 1
 richardlangworth.com, 1
 richardlugten.nl, 1
 richardrblocker.net, 1
@@ -23199,9 +23210,6 @@ seriousclimbing.com, 1
 sernate.com, 1
 serrano-chris.ch, 1
 servdiscount.com, 1
-serve-a.com.au, 1
-servea.com.au, 1
-serveatechnologies.com, 1
 servecrypt.com, 1
 servecrypt.net, 1
 servecrypt.ru, 1
@@ -23316,7 +23324,6 @@ shadowsocks.software, 1
 shadowsocksvpn.com, 1
 shadowsworldonline.co.uk, 1
 shag-shag.ru, 1
-shagi29.ru, 1
 shaharyaranjum.com, 1
 shahbeat.com, 1
 shaitan.eu, 1
@@ -23644,7 +23651,6 @@ simetal.ch, 1
 simfed.org, 1
 simlau.net, 1
 simmis.fr, 1
-simnovo.net, 1
 simoesgoulart.com.br, 1
 simon-hofmann.org, 1
 simon-mueller.de, 1
@@ -23833,7 +23839,6 @@ skydragoness.com, 1
 skydrive.live.com, 0
 skylgenet.nl, 1
 skylightcreative.com.au, 1
-skyline.tw, 1
 skylinertech.com, 1
 skyloisirs.ch, 1
 skyminds.net, 1
@@ -23865,7 +23870,6 @@ slash64.uk, 1
 slashbits.no, 1
 slaughterhouse.fr, 1
 slaws.io, 1
-sleeklounge.com, 1
 sleeplessbeastie.eu, 1
 sleepmap.de, 1
 sleepstar.co.uk, 1
@@ -24269,7 +24273,6 @@ southwestrda.org.uk, 1
 souvik.me, 1
 soved.eu, 1
 sowingseasons.com, 1
-sowncloud.de, 1
 soz6.com, 1
 sozai-good.com, 1
 sozialy.com, 1
@@ -24953,7 +24956,6 @@ sundaycooks.com, 1
 sundayfundayjapan.com, 1
 suneilpatel.com, 1
 sunfireshop.com.br, 1
-sunflyer.cn, 0
 sunfox.cz, 1
 sunfulong.me, 1
 sungo.wtf, 1
@@ -26650,6 +26652,7 @@ treker.us, 1
 trekfriend.com, 1
 tremlor.com, 1
 tremolosoftware.com, 1
+tremoureux.fr, 1
 trendingpulse.com, 1
 trendisland.de, 1
 trendkraft.de, 1
@@ -28048,6 +28051,7 @@ watermonitor.gov, 1
 watersb.org, 1
 watertrails.io, 1
 watsonwork.me, 1
+wattechweb.com, 1
 wave-ola.es, 1
 wavesboardshop.com, 1
 wavesoftime.com, 1
@@ -29086,6 +29090,7 @@ xn--lsupp-mra.net, 1
 xn--manuela-stsser-psb.de, 1
 xn--maraa-rta.org, 1
 xn--mentaltraining-fr-musiker-uwc.ch, 1
+xn--mgbbh2a9fub.xn--ngbc5azd, 0
 xn--mllers-wxa.info, 1
 xn--n8j7dygrbu0c31a5861bq8qb.com, 1
 xn--n8jp5083dnzs.net, 1
@@ -29147,7 +29152,6 @@ xoda.pw, 1
 xolphin.nl, 1
 xombitgames.com, 1
 xombitmusic.com, 1
-xombra.com, 1
 xonn.de, 1
 xotika.tv, 1
 xp2.de, 1
@@ -29556,6 +29560,7 @@ zappbuildapps.com, 1
 zaratan.fr, 1
 zarmarket.org, 1
 zarpo.com.br, 1
+zary.me, 1
 zaufanatrzeciastrona.pl, 1
 zavec.com.ec, 1
 zavetaji.lv, 1
@@ -29645,7 +29650,6 @@ zgrep.org, 1
 zhang-hao.com, 1
 zhang.nz, 1
 zhangfangzhou.com, 1
-zhangge.net, 1
 zhanghao.me, 1
 zhangsidan.com, 1
 zhangsir.net, 1
@@ -29715,6 +29719,7 @@ zojadravai.com, 1
 zoki.art, 1
 zokster.net, 1
 zolokar.xyz, 1
+zolotoy-standart.com.ua, 1
 zombiesecured.com, 1
 zomerschoen.nl, 1
 zone-produkte.de, 1
