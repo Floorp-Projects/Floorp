@@ -17,6 +17,7 @@
 #ifdef XP_WIN
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "nsIIdleService.h"
 #include "nsISimpleEnumerator.h"
@@ -174,16 +175,9 @@ public:
     // idle observer too early, it will be registered before the fake idle
     // service is installed when running in xpcshell, and this interferes with
     // the fake idle service, causing xpcshell-test failures.
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (NS_WARN_IF(!mTimer)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = mTimer->Init(this,
-                               SCHEDULE_TIMEOUT_MS,
-                               nsITimer::TYPE_ONE_SHOT);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    MOZ_TRY_VAR(mTimer, NS_NewTimerWithObserver(this,
+                                                SCHEDULE_TIMEOUT_MS,
+                                                nsITimer::TYPE_ONE_SHOT));
 
     // Register shutdown observer so we can cancel the timer if we shutdown before
     // the timer runs.

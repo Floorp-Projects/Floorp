@@ -145,7 +145,7 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
       NS_IdleDispatchToCurrentThread(runnable.forget());
     } else {
       if (!mScheduleTimer) {
-        mScheduleTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+        mScheduleTimer = NS_NewTimer();
         if (!mScheduleTimer) {
           return;
         }
@@ -190,7 +190,7 @@ IdleTaskRunner::SetTimerInternal(uint32_t aDelay)
   }
 
   if (!mTimer) {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer = NS_NewTimer();
   } else {
     mTimer->Cancel();
   }
