@@ -116,14 +116,14 @@ ClientPaintedLayer::UpdatePaintRegion(PaintState& aState)
 uint32_t
 ClientPaintedLayer::GetPaintFlags()
 {
-  uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
+  uint32_t flags = ContentClient::PAINT_CAN_DRAW_ROTATED;
   #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
    if (ClientManager()->CompositorMightResample()) {
-     flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
+     flags |= ContentClient::PAINT_WILL_RESAMPLE;
    }
-   if (!(flags & RotatedContentBuffer::PAINT_WILL_RESAMPLE)) {
+   if (!(flags & ContentClient::PAINT_WILL_RESAMPLE)) {
      if (MayResample()) {
-       flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
+       flags |= ContentClient::PAINT_WILL_RESAMPLE;
      }
    }
   #endif
@@ -148,7 +148,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
   }
 
   bool didUpdate = false;
-  RotatedContentBuffer::DrawIterator iter;
+  RotatedBuffer::DrawIterator iter;
   while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
     if (!target || !target->IsValid()) {
       if (target) {
@@ -218,7 +218,7 @@ ClientPaintedLayer::PaintOffMainThread()
   }
 
   bool didUpdate = false;
-  RotatedContentBuffer::DrawIterator iter;
+  RotatedBuffer::DrawIterator iter;
 
   // Debug Protip: Change to BorrowDrawTargetForPainting if using sync OMTP.
   while (RefPtr<CapturedPaintState> captureState =
@@ -255,7 +255,7 @@ ClientPaintedLayer::PaintOffMainThread()
 
     captureState->mCapture = captureDT.forget();
     PaintThread::Get()->PaintContents(captureState,
-                                      RotatedContentBuffer::PrepareDrawTargetForPainting);
+                                      ContentClient::PrepareDrawTargetForPainting);
 
     mContentClient->ReturnDrawTargetToBuffer(target);
 

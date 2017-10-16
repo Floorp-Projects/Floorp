@@ -76,6 +76,8 @@ class CapturedPaintState;
 class ContentClient : public CompositableClient
 {
 public:
+  typedef gfxContentType ContentType;
+
   /**
    * Creates, configures, and returns a new content client. If necessary, a
    * message will be sent to the compositor to create a corresponding content
@@ -83,67 +85,185 @@ public:
    */
   static already_AddRefed<ContentClient> CreateContentClient(CompositableForwarder* aFwd);
 
-  explicit ContentClient(CompositableForwarder* aForwarder)
-  : CompositableClient(aForwarder),
-    mInAsyncPaint(false)
+  /**
+   * Controls the size of the backing buffer of this.
+   * - SizedToVisibleBounds: the backing buffer is exactly the same
+   *   size as the bounds of PaintedLayer's visible region
+   * - ContainsVisibleBounds: the backing buffer is large enough to
+   *   fit visible bounds.  May be larger.
+   */
+  enum BufferSizePolicy {
+    SizedToVisibleBounds,
+    ContainsVisibleBounds
+  };
+
+  explicit ContentClient(CompositableForwarder* aForwarder,
+                         BufferSizePolicy aBufferSizePolicy)
+  : CompositableClient(aForwarder)
+  , mBufferSizePolicy(aBufferSizePolicy)
+  , mInAsyncPaint(false)
   {}
   virtual ~ContentClient()
   {}
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  virtual void Clear() = 0;
-  virtual RotatedContentBuffer::PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                                            uint32_t aFlags) = 0;
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(RotatedContentBuffer::PaintState& aPaintState,
-                                                       RotatedContentBuffer::DrawIterator* aIter = nullptr) = 0;
-  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) = 0;
+  virtual void Clear();
+
+  /**
+   * This is returned by BeginPaint. The caller should draw into mTarget.
+   * mRegionToDraw must be drawn. mRegionToInvalidate has been invalidated
+   * by RotatedContentBuffer and must be redrawn on the screen.
+   * mRegionToInvalidate is set when the buffer has changed from
+   * opaque to transparent or vice versa, since the details of rendering can
+   * depend on the buffer type.
+   */
+  struct PaintState {
+    PaintState()
+      : mRegionToDraw()
+      , mRegionToInvalidate()
+      , mMode(SurfaceMode::SURFACE_NONE)
+      , mClip(DrawRegionClip::NONE)
+      , mContentType(gfxContentType::SENTINEL)
+    {}
+
+    nsIntRegion mRegionToDraw;
+    nsIntRegion mRegionToInvalidate;
+    SurfaceMode mMode;
+    DrawRegionClip mClip;
+    gfxContentType mContentType;
+  };
+
+  enum {
+    PAINT_WILL_RESAMPLE = 0x01,
+    PAINT_NO_ROTATION = 0x02,
+    PAINT_CAN_DRAW_ROTATED = 0x04
+  };
+
+  /**
+   * Start a drawing operation. This returns a PaintState describing what
+   * needs to be drawn to bring the buffer up to date in the visible region.
+   * This queries aLayer to get the currently valid and visible regions.
+   * The returned mTarget may be null if mRegionToDraw is empty.
+   * Otherwise it must not be null.
+   * mRegionToInvalidate will contain mRegionToDraw.
+   * @param aFlags when PAINT_WILL_RESAMPLE is passed, this indicates that
+   * buffer will be resampled when rendering (i.e the effective transform
+   * combined with the scale for the resolution is not just an integer
+   * translation). This will disable buffer rotation (since we don't want
+   * to resample across the rotation boundary) and will ensure that we
+   * make the entire buffer contents valid (since we don't want to sample
+   * invalid pixels outside the visible region, if the visible region doesn't
+   * fill the buffer bounds).
+   * PAINT_CAN_DRAW_ROTATED can be passed if the caller supports drawing
+   * rotated content that crosses the physical buffer boundary. The caller
+   * will need to call BorrowDrawTargetForPainting multiple times to achieve
+   * this.
+   */
+  PaintState BeginPaintBuffer(PaintedLayer* aLayer, uint32_t aFlags);
+
+  /**
+   * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
+   * this. See notes on BorrowDrawTargetForQuadrantUpdate.
+   * May return null. If the return value is non-null, it must be
+   * 'un-borrowed' using ReturnDrawTarget.
+   *
+   * If PAINT_CAN_DRAW_ROTATED was specified for BeginPaint, then the caller
+   * must call this function repeatedly (with an iterator) until it returns
+   * nullptr. The caller should draw the mDrawRegion of the iterator instead
+   * of mRegionToDraw in the PaintState.
+   *
+   * @param aPaintState Paint state data returned by a call to BeginPaint
+   * @param aIter Paint state iterator. Only required if PAINT_CAN_DRAW_ROTATED
+   * was specified to BeginPaint.
+   */
+  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(
+    PaintState& aPaintState,
+    RotatedBuffer::DrawIterator* aIter = nullptr);
+
+  /**
+   * Borrow a draw target for recording. The required transform for correct painting
+   * is not applied to the returned DrawTarget by default, BUT it is
+   * required to be whenever drawing does happen.
+   */
   virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(
-    RotatedContentBuffer::PaintState& aPaintState,
-    RotatedContentBuffer::DrawIterator* aIter) = 0;
+    PaintState& aPaintState,
+    RotatedBuffer::DrawIterator* aIter,
+    bool aSetTransform = false);
+
+  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned);
 
   // Called as part of the layers transation reply. Conveys data about our
   // buffer(s) from the compositor. If appropriate we should swap references
   // to our buffers.
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) {}
 
-  // call before and after painting into this content client
+  // Call before and after painting into this content client
   virtual void BeginPaint() {}
   virtual void BeginAsyncPaint();
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
 
+  nsIntRegion ExpandDrawRegion(PaintState& aPaintState,
+                               RotatedBuffer::DrawIterator* aIter,
+                               gfx::BackendType aBackendType);
+
+  static bool PrepareDrawTargetForPainting(CapturedPaintState*);
+
+  enum {
+    BUFFER_COMPONENT_ALPHA = 0x02 // Dual buffers should be created for drawing with
+                                  // component alpha.
+  };
+
 protected:
+  struct BufferDecision {
+    nsIntRegion mNeededRegion;
+    nsIntRegion mValidRegion;
+    gfx::IntRect mBufferRect;
+    SurfaceMode mBufferMode;
+    gfxContentType mBufferContentType;
+    bool mCanReuseBuffer;
+    bool mCanKeepBufferContents;
+  };
+
+  BufferDecision CalculateBufferForPaint(PaintedLayer* aLayer,
+                                         uint32_t aFlags);
+
+  /**
+   * Return the buffer's content type.  Requires a valid buffer or
+   * buffer provider.
+   */
+  gfxContentType BufferContentType();
+  bool BufferSizeOkFor(const gfx::IntSize& aSize);
+
+  OpenMode LockMode() const;
+
+  /**
+   * Any actions that should be performed at the last moment before we begin
+   * rendering the next frame. I.e., after we calculate what we will draw,
+   * but before we rotate the buffer and possibly create new buffers.
+   * aRegionToDraw is the region which is guaranteed to be overwritten when
+   * drawing the next frame.
+   */
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+
+  virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
+                                             const gfx::IntRect& aRect,
+                                             uint32_t aFlags) = 0;
+
+  RefPtr<RotatedBuffer> mBuffer;
+  BufferSizePolicy      mBufferSizePolicy;
   bool mInAsyncPaint;
 };
 
-// thin wrapper around RotatedContentBuffer, for on-mtc
+// Thin wrapper around DrawTargetRotatedBuffer, for on-mtc
 class ContentClientBasic final : public ContentClient
-                               , protected RotatedContentBuffer
 {
 public:
   explicit ContentClientBasic(gfx::BackendType aBackend);
 
-  typedef RotatedContentBuffer::PaintState PaintState;
-  typedef RotatedContentBuffer::ContentType ContentType;
-
-  virtual void Clear() override { RotatedContentBuffer::Clear(); }
-  virtual PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                      uint32_t aFlags) override
-  {
-    return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
-  }
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
-                                                       RotatedContentBuffer::DrawIterator* aIter = nullptr) override
-  {
-    return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
-  }
   virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                                  RotatedContentBuffer::DrawIterator* aIter) override;
-
-  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) override
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
-  }
+                                                                  RotatedBuffer::DrawIterator* aIter,
+                                                                  bool aSetTransform) override;
 
   void DrawTo(PaintedLayer* aLayer,
               gfx::DrawTarget* aTarget,
@@ -152,13 +272,15 @@ public:
               gfx::SourceSurface* aMask,
               const gfx::Matrix* aMaskTransform);
 
-  virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
-                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
-
   virtual TextureInfo GetTextureInfo() const override
   {
     MOZ_CRASH("GFX: Should not be called on non-remote ContentClient");
   }
+
+protected:
+  virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
+                                             const gfx::IntRect& aRect,
+                                             uint32_t aFlags) override;
 
 private:
   gfx::BackendType mBackend;
@@ -181,50 +303,21 @@ private:
  */
 // Version using new texture clients
 class ContentClientRemoteBuffer : public ContentClient
-                                , protected RotatedContentBuffer
 {
-  using RotatedContentBuffer::BufferRect;
-  using RotatedContentBuffer::BufferRotation;
 public:
   explicit ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
-    : ContentClient(aForwarder)
-    , RotatedContentBuffer(ContainsVisibleBounds)
+    : ContentClient(aForwarder, ContainsVisibleBounds)
     , mIsNewBuffer(false)
-    , mSurfaceFormat(gfx::SurfaceFormat::B8G8R8A8)
   {}
-
-  typedef RotatedContentBuffer::PaintState PaintState;
-  typedef RotatedContentBuffer::ContentType ContentType;
-
-  virtual void Clear() override
-  {
-    RotatedContentBuffer::Clear();
-    mTextureClient = nullptr;
-    mTextureClientOnWhite = nullptr;
-  }
 
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
                     bool aDumpHtml=false,
                     TextureDumpMode aCompress=TextureDumpMode::Compress) override;
 
-  virtual PaintState BeginPaintBuffer(PaintedLayer* aLayer,
-                                      uint32_t aFlags) override
-  {
-    return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
-  }
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(PaintState& aPaintState,
-                                                       RotatedContentBuffer::DrawIterator* aIter = nullptr) override
-  {
-    return RotatedContentBuffer::BorrowDrawTargetForPainting(aPaintState, aIter);
-  }
   virtual RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                                  RotatedContentBuffer::DrawIterator* aIter) override;
-
-  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) override
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
-  }
+                                                                  RotatedBuffer::DrawIterator* aIter,
+                                                                  bool aSetTransform) override;
 
   /**
    * Begin/End Paint map a gfxASurface from the texture client
@@ -241,64 +334,33 @@ public:
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion);
 
-  // Expose these protected methods from the superclass.
-  virtual const gfx::IntRect& BufferRect() const
-  {
-    return RotatedContentBuffer::BufferRect();
-  }
-  virtual const nsIntPoint& BufferRotation() const
-  {
-    return RotatedContentBuffer::BufferRotation();
-  }
-
-  virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
-                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
-
   virtual TextureFlags ExtraTextureFlags() const
   {
     return TextureFlags::IMMEDIATE_UPLOAD;
   }
 
 protected:
-  void DestroyBuffers();
-
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
                                        const nsIntRegion& aVisibleRegion);
-
-  void BuildTextureClients(gfx::SurfaceFormat aFormat,
-                           const gfx::IntRect& aRect,
-                           uint32_t aFlags);
-
-  void CreateBackBuffer(const gfx::IntRect& aBufferRect);
 
   // Ensure we have a valid back buffer if we have a valid front buffer (i.e.
   // if a backbuffer has been created.)
   virtual void EnsureBackBufferIfFrontBuffer() {}
 
-  // Create the front buffer for the ContentClient/Host pair if necessary
-  // and notify the compositor that we have created the buffer(s).
-  virtual void DestroyFrontBuffer() {}
+  virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
+                                             const gfx::IntRect& aRect,
+                                             uint32_t aFlags) override;
 
-  virtual void AbortTextureClientCreation()
+  RefPtr<RotatedBuffer> CreateBufferInternal(const gfx::IntRect& aRect,
+                                             gfx::SurfaceFormat aFormat,
+                                             TextureFlags aFlags);
+
+  RemoteRotatedBuffer* GetRemoteBuffer() const
   {
-    mTextureClient = nullptr;
-    mTextureClientOnWhite = nullptr;
-    mIsNewBuffer = false;
+    return static_cast<RemoteRotatedBuffer*>(mBuffer.get());
   }
 
-  virtual bool LockBuffers() override;
-  virtual void UnlockBuffers() override;
-
-  RefPtr<TextureClient> mTextureClient;
-  RefPtr<TextureClient> mTextureClientOnWhite;
-  // keep a record of texture clients we have created and need to keep around
-  // (for RotatedBuffer to access), then unlock and remove them when we are done
-  // painting.
-  nsTArray<RefPtr<TextureClient> > mOldTextures;
-
   bool mIsNewBuffer;
-  gfx::IntSize mSize;
-  gfx::SurfaceFormat mSurfaceFormat;
 };
 
 /**
@@ -322,10 +384,15 @@ public:
 
   virtual ~ContentClientDoubleBuffered() {}
 
+  virtual void Dump(std::stringstream& aStream,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false,
+                    TextureDumpMode aCompress=TextureDumpMode::Compress) override;
+
   virtual void Clear() override
   {
-    ContentClientRemoteBuffer::Clear();
-    mFrontBuffer = Nothing();
+    ContentClient::Clear();
+    mFrontBuffer = nullptr;
   }
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
@@ -342,23 +409,8 @@ public:
     return TextureInfo(CompositableType::CONTENT_DOUBLE, mTextureFlags);
   }
 
-  virtual void Dump(std::stringstream& aStream,
-                    const char* aPrefix="",
-                    bool aDumpHtml=false,
-                    TextureDumpMode aCompress=TextureDumpMode::Compress) override;
-protected:
-  virtual void DestroyFrontBuffer() override;
-
 private:
-
-  virtual void AbortTextureClientCreation() override
-  {
-    mTextureClient = nullptr;
-    mTextureClientOnWhite = nullptr;
-    mFrontBuffer = Nothing();
-  }
-
-  Maybe<RemoteRotatedBuffer> mFrontBuffer;
+  RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;
 };
