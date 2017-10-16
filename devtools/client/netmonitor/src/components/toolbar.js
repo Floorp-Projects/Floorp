@@ -16,6 +16,7 @@ const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
   getDisplayedRequestsSummary,
+  getRecordingState,
   getRequestFilterTypes,
   getTypeFilteredRequests,
   isNetworkDetailsToggleButtonDisabled,
@@ -29,12 +30,15 @@ const SearchBox = createFactory(require("devtools/client/shared/components/Searc
 
 const { button, div, input, label, span } = DOM;
 
-const COLLPASE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
+// Localization
+const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const EXPAND_DETAILS_PANE = L10N.getStr("expandDetailsPane");
 const SEARCH_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.filterFreetext.key");
 const SEARCH_PLACE_HOLDER = L10N.getStr("netmonitor.toolbar.filterFreetext.label");
 const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
+const TOOLBAR_TOGGLE_RECORDING = L10N.getStr("netmonitor.toolbar.toggleRecording");
 
+// Preferences
 const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
 const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
 const TOOLBAR_FILTER_LABELS = FILTER_TAGS.concat("all").reduce((o, tag) =>
@@ -46,14 +50,18 @@ const ENABLE_PERSISTENT_LOGS_LABEL =
 const DISABLE_CACHE_TOOLTIP = L10N.getStr("netmonitor.toolbar.disableCache.tooltip");
 const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label");
 
-/*
- * Network monitor toolbar component
+/**
+ * Network monitor toolbar component.
+ *
  * Toolbar contains a set of useful tools to control network requests
+ * as well as set of filters for filtering the content.
  */
 const Toolbar = createClass({
   displayName: "Toolbar",
 
   propTypes: {
+    toggleRecording: PropTypes.func.isRequired,
+    recording: PropTypes.bool.isRequired,
     clearRequests: PropTypes.func.isRequired,
     requestFilterTypes: PropTypes.array.isRequired,
     setRequestFilterText: PropTypes.func.isRequired,
@@ -70,8 +78,40 @@ const Toolbar = createClass({
     filteredRequests: PropTypes.object.isRequired,
   },
 
+  componentDidMount() {
+    Services.prefs.addObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+                               this.updatePersistentLogsEnabled);
+    Services.prefs.addObserver(DEVTOOLS_DISABLE_CACHE_PREF,
+                               this.updateBrowserCacheDisabled);
+  },
+
+  componentWillUnmount() {
+    Services.prefs.removeObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
+                                  this.updatePersistentLogsEnabled);
+    Services.prefs.removeObserver(DEVTOOLS_DISABLE_CACHE_PREF,
+                                  this.updateBrowserCacheDisabled);
+  },
+
+  toggleRequestFilterType(evt) {
+    if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
+      return;
+    }
+    this.props.toggleRequestFilterType(evt.target.dataset.key);
+  },
+
+  updatePersistentLogsEnabled() {
+    this.props.enablePersistentLogs(
+      Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF));
+  },
+
+  updateBrowserCacheDisabled() {
+    this.props.disableBrowserCache(
+      Services.prefs.getBoolPref(DEVTOOLS_DISABLE_CACHE_PREF));
+  },
+
   render() {
     let {
+      toggleRecording,
       clearRequests,
       requestFilterTypes,
       setRequestFilterText,
@@ -83,16 +123,19 @@ const Toolbar = createClass({
       toggleBrowserCache,
       browserCacheDisabled,
       filteredRequests,
+      recording,
     } = this.props;
 
     let toggleButtonClassName = [
       "network-details-panel-toggle",
       "devtools-button",
     ];
+
     if (!networkDetailsOpen) {
       toggleButtonClassName.push("pane-collapsed");
     }
 
+    // Render list of filter-buttons.
     let buttons = requestFilterTypes.map(([type, checked]) => {
       let classList = ["devtools-button", `requests-list-filter-${type}-button`];
       checked && classList.push("checked");
@@ -111,9 +154,22 @@ const Toolbar = createClass({
       );
     });
 
+    // Calculate class-list for toggle recording button. The button
+    // has two states: pause/play.
+    let toggleButtonClassList = [
+      "devtools-button",
+      recording ? "devtools-pause-icon" : "devtools-play-icon",
+    ];
+
+    // Render the entire toolbar.
     return (
       span({ className: "devtools-toolbar devtools-toolbar-container" },
         span({ className: "devtools-toolbar-group" },
+          button({
+            className: toggleButtonClassList.join(" "),
+            title: TOOLBAR_TOGGLE_RECORDING,
+            onClick: toggleRecording,
+          }),
           button({
             className: "devtools-button devtools-clear-icon requests-list-clear-button",
             title: TOOLBAR_CLEAR,
@@ -161,7 +217,7 @@ const Toolbar = createClass({
           }),
           button({
             className: toggleButtonClassName.join(" "),
-            title: networkDetailsOpen ? COLLPASE_DETAILS_PANE : EXPAND_DETAILS_PANE,
+            title: networkDetailsOpen ? COLLAPSE_DETAILS_PANE : EXPAND_DETAILS_PANE,
             disabled: networkDetailsToggleDisabled,
             tabIndex: "0",
             onClick: toggleNetworkDetails,
@@ -170,37 +226,6 @@ const Toolbar = createClass({
       )
     );
   },
-
-  componentDidMount() {
-    Services.prefs.addObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
-                               this.updatePersistentLogsEnabled);
-    Services.prefs.addObserver(DEVTOOLS_DISABLE_CACHE_PREF,
-                               this.updateBrowserCacheDisabled);
-  },
-
-  componentWillUnmount() {
-    Services.prefs.removeObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
-                                  this.updatePersistentLogsEnabled);
-    Services.prefs.removeObserver(DEVTOOLS_DISABLE_CACHE_PREF,
-                                  this.updateBrowserCacheDisabled);
-  },
-
-  toggleRequestFilterType(evt) {
-    if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
-      return;
-    }
-    this.props.toggleRequestFilterType(evt.target.dataset.key);
-  },
-
-  updatePersistentLogsEnabled() {
-    this.props.enablePersistentLogs(
-      Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF));
-  },
-
-  updateBrowserCacheDisabled() {
-    this.props.disableBrowserCache(
-                        Services.prefs.getBoolPref(DEVTOOLS_DISABLE_CACHE_PREF));
-  }
 });
 
 module.exports = connect(
@@ -209,18 +234,20 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     persistentLogsEnabled: state.ui.persistentLogsEnabled,
     browserCacheDisabled: state.ui.browserCacheDisabled,
+    recording: getRecordingState(state),
     requestFilterTypes: getRequestFilterTypes(state),
     filteredRequests: getTypeFilteredRequests(state),
     summary: getDisplayedRequestsSummary(state),
   }),
   (dispatch) => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
-    setRequestFilterText: (text) => dispatch(Actions.setRequestFilterText(text)),
-    toggleRequestFilterType: (type) => dispatch(Actions.toggleRequestFilterType(type)),
-    toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
-    enablePersistentLogs: (enabled) => dispatch(Actions.enablePersistentLogs(enabled)),
-    togglePersistentLogs: () => dispatch(Actions.togglePersistentLogs()),
     disableBrowserCache: (disabled) => dispatch(Actions.disableBrowserCache(disabled)),
+    enablePersistentLogs: (enabled) => dispatch(Actions.enablePersistentLogs(enabled)),
+    setRequestFilterText: (text) => dispatch(Actions.setRequestFilterText(text)),
     toggleBrowserCache: () => dispatch(Actions.toggleBrowserCache()),
+    toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
+    toggleRecording: () => dispatch(Actions.toggleRecording()),
+    togglePersistentLogs: () => dispatch(Actions.togglePersistentLogs()),
+    toggleRequestFilterType: (type) => dispatch(Actions.toggleRequestFilterType(type)),
   }),
 )(Toolbar);
