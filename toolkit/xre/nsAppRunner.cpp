@@ -5091,7 +5091,7 @@ enum {
   // kE10sDisabledForAccessibility = 4,
   // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
   // kE10sDisabledForBidi = 6, removed in bug 1309599
-  kE10sDisabledForAddons = 7,
+  // kE10sDisabledForAddons = 7, removed in bug 1406212
   kE10sForceDisabled = 8,
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
   // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
