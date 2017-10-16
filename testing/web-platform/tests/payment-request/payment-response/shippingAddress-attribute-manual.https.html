@@ -67,6 +67,10 @@ async function runManualTest(button, options = {}, expected = {}, id) {
 </script>
 <h2>shippingAddress attribute</h2>
 <p>
+  Click on each button in sequence from top to bottom without refreshing the page.
+  Each button will bring up the Payment Request UI window.
+</p>
+<p>
   When prompted, please enter "web platform test" as recipient, at address "1 wpt street" in "Kabul, Afghanistan", zip/postal code 1001.
 </p>
 <ol>
@@ -91,3 +95,7 @@ async function runManualTest(button, options = {}, expected = {}, id) {
     </button>
   </li>
 </ol>
+<small>
+  If you find a buggy test, please <a href="https://github.com/w3c/web-platform-tests/issues">file a bug</a>
+  and tag one of the <a href="https://github.com/w3c/web-platform-tests/blob/master/payment-request/OWNERS">owners</a>.
+</small>
