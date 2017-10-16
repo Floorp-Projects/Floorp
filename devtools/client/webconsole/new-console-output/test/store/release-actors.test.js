@@ -91,13 +91,19 @@ describe("Release actor enhancer:", () => {
       dispatch(actions.messageAdd(evaluationResultPacket));
       const thirdMessageActor = evaluationResultPacket.result.actor;
 
+      // Add a message with a long string messageText property.
+      const longStringPacket = stubPackets.get("TypeError longString message");
+      dispatch(actions.messageAdd(longStringPacket));
+      const fourthMessageActor = longStringPacket.pageError.errorMessage.actor;
+
       // Kick-off the actor release.
       dispatch(actions.messagesClear());
 
-      expect(releasedActors.length).toBe(3);
+      expect(releasedActors.length).toBe(4);
       expect(releasedActors).toInclude(firstMessageActor);
       expect(releasedActors).toInclude(secondMessageActor);
       expect(releasedActors).toInclude(thirdMessageActor);
+      expect(releasedActors).toInclude(fourthMessageActor);
     });
   });
 });
