@@ -528,10 +528,9 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
         LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300); // ms
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
-      mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mOpenTimer->SetTarget(
-          mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
-      mOpenTimer->InitWithCallback(mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT);
+      NS_NewTimerWithCallback(getter_AddRefs(mOpenTimer),
+                              mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT,
+                              mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
     }
   }
 
@@ -1242,10 +1241,9 @@ nsMenuFrame::StartBlinking(WidgetGUIEvent* aEvent, bool aFlipChecked)
   }
 
   // Set up a timer to blink back on.
-  mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mBlinkTimer->SetTarget(
-      mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
-  mBlinkTimer->InitWithCallback(mTimerMediator, kBlinkDelay, nsITimer::TYPE_ONE_SHOT);
+  NS_NewTimerWithCallback(getter_AddRefs(mBlinkTimer),
+                          mTimerMediator, kBlinkDelay, nsITimer::TYPE_ONE_SHOT,
+                          mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
   mBlinkState = 1;
 }
 

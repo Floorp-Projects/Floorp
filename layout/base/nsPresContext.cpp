@@ -2782,18 +2782,13 @@ nsPresContext::CreateTimer(nsTimerCallbackFunc aCallback,
                            const char* aName,
                            uint32_t aDelay)
 {
-  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
-  timer->SetTarget(Document()->EventTargetFor(TaskCategory::Other));
-  if (timer) {
-    nsresult rv = timer->InitWithNamedFuncCallback(aCallback, this, aDelay,
-                                                   nsITimer::TYPE_ONE_SHOT,
-                                                   aName);
-    if (NS_SUCCEEDED(rv)) {
-      return timer.forget();
-    }
-  }
-
-  return nullptr;
+  nsCOMPtr<nsITimer> timer;
+  NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
+                              aCallback, this, aDelay,
+                              nsITimer::TYPE_ONE_SHOT,
+                              aName,
+                              Document()->EventTargetFor(TaskCategory::Other));
+  return timer.forget();
 }
 
 static bool sGotInterruptEnv = false;
@@ -3430,21 +3425,20 @@ nsRootPresContext::EnsureEventualDidPaintEvent(uint64_t aTransactionId)
     }
   }
 
-  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
-  timer->SetTarget(Document()->EventTargetFor(TaskCategory::Other));
-  if (timer) {
-    RefPtr<nsRootPresContext> self = this;
-    nsresult rv = timer->InitWithCallback(
-      NewNamedTimerCallback([self, aTransactionId](){
-        nsAutoScriptBlocker blockScripts;
-        self->NotifyDidPaintForSubtree(aTransactionId);
-    }, "NotifyDidPaintForSubtree"), 100, nsITimer::TYPE_ONE_SHOT);
+  nsCOMPtr<nsITimer> timer;
+  RefPtr<nsRootPresContext> self = this;
+  nsresult rv = NS_NewTimerWithCallback(
+    getter_AddRefs(timer),
+    NewNamedTimerCallback([self, aTransactionId](){
+      nsAutoScriptBlocker blockScripts;
+      self->NotifyDidPaintForSubtree(aTransactionId);
+     }, "NotifyDidPaintForSubtree"), 100, nsITimer::TYPE_ONE_SHOT,
+    Document()->EventTargetFor(TaskCategory::Other));
 
-    if (NS_SUCCEEDED(rv)) {
-      NotifyDidPaintTimer* t = mNotifyDidPaintTimers.AppendElement();
-      t->mTransactionId = aTransactionId;
-      t->mTimer = timer;
-    }
+  if (NS_SUCCEEDED(rv)) {
+    NotifyDidPaintTimer* t = mNotifyDidPaintTimers.AppendElement();
+    t->mTransactionId = aTransactionId;
+    t->mTimer = timer;
   }
 }
 

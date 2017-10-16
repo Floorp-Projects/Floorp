@@ -2606,7 +2606,7 @@ void ScrollFrameHelper::TriggerDisplayPortExpiration()
   }
 
   if (!mDisplayPortExpiryTimer) {
-    mDisplayPortExpiryTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mDisplayPortExpiryTimer = NS_NewTimer();
   }
   ResetDisplayPortExpiryTimer();
 }
@@ -2726,13 +2726,11 @@ void
 ScrollFrameHelper::ScheduleSyntheticMouseMove()
 {
   if (!mScrollActivityTimer) {
-    mScrollActivityTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mScrollActivityTimer = NS_NewTimer(
+      mOuter->PresContext()->Document()->EventTargetFor(TaskCategory::Other));
     if (!mScrollActivityTimer) {
       return;
     }
-
-    mScrollActivityTimer->SetTarget(
-      mOuter->PresContext()->Document()->EventTargetFor(TaskCategory::Other));
   }
 
   mScrollActivityTimer->InitWithNamedFuncCallback(
