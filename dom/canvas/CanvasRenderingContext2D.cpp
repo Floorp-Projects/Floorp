@@ -127,7 +127,6 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/layers/CanvasClient.h"
-#include "mozilla/ServoCSSParser.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -746,28 +745,17 @@ CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr, ErrorRes
     return;
   }
 
-  nscolor color;
-  bool ok;
-
-  nsIPresShell* shell = mContext ? mContext->GetPresShell() : nullptr;
-  ServoStyleSet* servoStyleSet = shell && shell->StyleSet()
-    ? shell->StyleSet()->GetAsServo()
-    : nullptr;
-
-  if (servoStyleSet) {
-    ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColorstr,
-                                      &color);
-  } else {
-    nsCSSValue value;
-    nsCSSParser parser;
-
-    nsPresContext* presContext = shell ? shell->GetPresContext() : nullptr;
-
-    ok = parser.ParseColorString(aColorstr, nullptr, 0, value) &&
-         nsRuleNode::ComputeColor(value, presContext, nullptr, color);
+  nsCSSValue value;
+  nsCSSParser parser;
+  if (!parser.ParseColorString(aColorstr, nullptr, 0, value)) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
   }
 
-  if (!ok) {
+  nscolor color;
+  nsCOMPtr<nsIPresShell> presShell = mContext ? mContext->GetPresShell() : nullptr;
+  if (!nsRuleNode::ComputeColor(value, presShell ? presShell->GetPresContext() : nullptr,
+                                nullptr, color)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
