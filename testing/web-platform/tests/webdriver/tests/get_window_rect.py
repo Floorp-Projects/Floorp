@@ -7,7 +7,7 @@ alert_doc = inline("<script>window.alert()</script>")
 
 
 def get_window_rect(session):
-    return session.transport.send("POST", "session/%s/window/rect" % session.session_id)
+    return session.transport.send("GET", "session/%s/window/rect" % session.session_id)
 
 
 # 10.7.1 Get Window Rect
@@ -102,7 +102,7 @@ def test_handle_prompt_missing_value(session, create_dialog):
 
     response = get_window_rect(session)
 
-    assert_error(result, "unexpected alert open")
+    assert_error(response, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog("confirm", text="dismiss #2", result_var="dismiss2")

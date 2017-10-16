@@ -134,7 +134,7 @@ def test_title_handle_prompt_missing_value(session, create_dialog):
 
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
-    assert read_global(session, "accept1") == None
+    assert read_global(session, "dismiss1") == None
 
     create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
 
