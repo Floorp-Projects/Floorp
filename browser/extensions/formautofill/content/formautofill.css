@@ -4,7 +4,8 @@
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"],
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-clear-button"] {
   display: block;
   margin: 0;
   padding: 0;
@@ -24,11 +25,15 @@
   -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-creditcard-insecure-field");
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-clear-button"] {
+  -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-clear-button");
+}
 /* Treat @collpased="true" as display: none similar to how it is for XUL elements.
  * https://developer.mozilla.org/en-US/docs/Web/CSS/visibility#Values */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"][collapsed="true"],
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-footer"][collapsed="true"],
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"][collapsed="true"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-insecureWarning"][collapsed="true"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-clear-button"][collapsed="true"] {
   display: none;
 }
 
