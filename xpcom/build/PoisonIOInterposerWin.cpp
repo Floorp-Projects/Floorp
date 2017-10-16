@@ -149,7 +149,6 @@ public:
         aOp, sReference, !IsDebugFile(reinterpret_cast<intptr_t>(aFileHandle)))
     , mFileHandle(aFileHandle)
     , mHasQueriedFilename(false)
-    , mFilename(nullptr)
   {
     if (mShouldReport) {
       mOffset.QuadPart = aOffset ? aOffset->QuadPart : 0;
@@ -160,12 +159,11 @@ public:
     : IOInterposeObserver::Observation(aOp, sReference)
     , mFileHandle(nullptr)
     , mHasQueriedFilename(false)
-    , mFilename(nullptr)
   {
     if (mShouldReport) {
       nsAutoString dosPath;
       if (NtPathToDosPath(aFilename, dosPath)) {
-        mFilename = ToNewUnicode(dosPath);
+        mFilename = dosPath;
         mHasQueriedFilename = true;
       }
       mOffset.QuadPart = 0;
@@ -173,46 +171,39 @@ public:
   }
 
   // Custom implementation of IOInterposeObserver::Observation::Filename
-  const char16_t* Filename() override;
+  void Filename(nsAString& aFilename) override;
 
   ~WinIOAutoObservation()
   {
     Report();
-    if (mFilename) {
-      MOZ_ASSERT(mHasQueriedFilename);
-      free(mFilename);
-      mFilename = nullptr;
-    }
   }
 
 private:
   HANDLE              mFileHandle;
   LARGE_INTEGER       mOffset;
   bool                mHasQueriedFilename;
-  char16_t*           mFilename;
+  nsString            mFilename;
   static const char*  sReference;
 };
 
 const char* WinIOAutoObservation::sReference = "PoisonIOInterposer";
 
 // Get filename for this observation
-const char16_t*
-WinIOAutoObservation::Filename()
+void
+WinIOAutoObservation::Filename(nsAString& aFilename)
 {
   // If mHasQueriedFilename is true, then filename is already stored in mFilename
   if (mHasQueriedFilename) {
-    return mFilename;
+    aFilename = mFilename;
   }
 
-  nsAutoString utf16Filename;
-  if (HandleToFilename(mFileHandle, mOffset, utf16Filename)) {
-    // Heap allocate with leakable memory
-    mFilename = ToNewUnicode(utf16Filename);
+  nsAutoString filename;
+  if (HandleToFilename(mFileHandle, mOffset, filename)) {
+    mFilename = filename;
   }
   mHasQueriedFilename = true;
 
-  // Return filename
-  return mFilename;
+  aFilename = mFilename;
 }
 
 /*************************** IO Interposing Methods ***************************/
