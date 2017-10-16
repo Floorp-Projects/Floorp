@@ -69,12 +69,12 @@ function processDirectory(pathString) {
   ).then(
     () => {
       iterator.close();
-      logger.info("Processing " + results.length + " reports...")
+      logger.info("Processing " + results.length + " reports...");
 
       // Sequentially submit all reports that we found. Note that doing this
       // with Promise.all would not result in a sequential ordering and would
       // cause multiple requests to be sent to the server at once.
-      let requests = Promise.resolve()
+      let requests = Promise.resolve();
       results.forEach(
         (result) => {
           requests = requests.then(
@@ -82,14 +82,14 @@ function processDirectory(pathString) {
             // so our chain is not interrupted if one of the reports couldn't
             // be submitted for some reason.
             () => submitReport(result.path).then(
-              () => { logger.info("Successfully submitted " + result.path) },
-              (e) => { logger.error("Failed to submit " + result.path + ". Reason: " + e) },
+              () => { logger.info("Successfully submitted " + result.path); },
+              (e) => { logger.error("Failed to submit " + result.path + ". Reason: " + e); },
             )
-          )
+          );
         }
-      )
+      );
 
-      requests.then(() => logger.info("Done processing reports."))
+      requests.then(() => logger.info("Done processing reports."));
     },
     (e) => {
       iterator.close();
@@ -103,7 +103,7 @@ function submitReport(reportFile) {
   return OS.File.read(reportFile).then(submitToServer).then(
     () => {
       // Mark as submitted only if we successfully submitted it to the server.
-      return OS.File.move(reportFile, reportFile + ".submitted")
+      return OS.File.move(reportFile, reportFile + ".submitted");
     }
   );
 }
@@ -125,7 +125,7 @@ function submitToServer(data) {
         Services.appinfo.version,
         Services.appinfo.appBuildID,
         (AppConstants.SOURCE_REVISION_URL || "unknown")
-      ]
+      ];
 
       // Concatenate all relevant information as our server only
       // has one field available for version information.
@@ -143,7 +143,7 @@ function submitToServer(data) {
         os,
         client,
         tool: "asan-nightly-program"
-      }
+      };
 
       var xhr = new XMLHttpRequest();
       xhr.open("POST", api_url, true);

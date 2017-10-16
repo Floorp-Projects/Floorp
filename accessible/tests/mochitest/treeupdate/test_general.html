@@ -35,7 +35,7 @@
         var button = document.createElement("input");
         button.setAttribute("type", "button");
         getNode(aContainer).appendChild(button);
-      }
+      };
 
       this.finalCheck = function prependAppend_finalCheck() {
         var accTree =
@@ -45,11 +45,11 @@
             { PUSHBUTTON: [ ] }
           ] };
         testAccessibleTree(aContainer, accTree);
-      }
+      };
 
       this.getID = function prependAppend_getID() {
         return "prepends a child and appends a child";
-      }
+      };
     }
 
     function removeRemove(aContainer) {
@@ -59,7 +59,7 @@
 
       this.invoke = function removeRemove_invoke() {
         getNode(aContainer).firstChild.remove();
-      }
+      };
 
       this.finalCheck = function removeRemove_finalCheck() {
         var accTree =
@@ -67,11 +67,11 @@
             { PUSHBUTTON: [ ] }
           ] };
         testAccessibleTree(aContainer, accTree);
-      }
+      };
 
       this.getID = function removeRemove_getID() {
         return "remove first and second children";
-      }
+      };
     }
 
     function insertInaccessibleAccessibleSiblings() {
@@ -82,7 +82,7 @@
       this.invoke = function insertInaccessibleAccessibleSiblings_invoke() {
         getNode("c3").appendChild(document.createElement("span"));
         getNode("c3").appendChild(document.createElement("input"));
-      }
+      };
 
       this.finalCheck = function insertInaccessibleAccessibleSiblings_finalCheck() {
         var accTree =
@@ -93,11 +93,11 @@
             { ENTRY: [ ] }
           ] };
         testAccessibleTree("c3", accTree);
-      }
+      };
 
       this.getID = function insertInaccessibleAccessibleSiblings_getID() {
         return "insert inaccessible and then accessible siblings";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

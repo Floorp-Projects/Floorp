@@ -207,13 +207,13 @@ amManager.prototype = {
             callbackID: payload.callbackID,
             resolve: value
           });
-        }
+        };
         let reject = (value) => {
           mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
             callbackID: payload.callbackID,
             reject: value
           });
-        }
+        };
 
         let API = AddonManager.webAPI;
         if (payload.type in API) {

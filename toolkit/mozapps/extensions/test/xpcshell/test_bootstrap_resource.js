@@ -35,7 +35,7 @@ function run_test() {
                   AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
       addon.userDisabled = true;
       ensure_test_completed();
-      do_check_false(resourceProtocol.hasSubstitution("test-addon-1"))
+      do_check_false(resourceProtocol.hasSubstitution("test-addon-1"));
 
       prepare_test({
         "addon6@tests.mozilla.org": [

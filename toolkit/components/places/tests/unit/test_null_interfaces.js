@@ -51,7 +51,7 @@ function run_test() {
       }
 
       return true;
-    }
+    };
 
     do_print(`Generating an array of functions to test service: ${s}`);
     for (let n of Object.keys(s).filter(i => okName(i)).sort()) {

@@ -8,6 +8,6 @@ var offlineByDefault = {
   reset() {
     this.prefBranch.setBoolPref("offline-apps.allow_by_default", this.defaultValue);
   }
-}
+};
 
 offlineByDefault.set(false);

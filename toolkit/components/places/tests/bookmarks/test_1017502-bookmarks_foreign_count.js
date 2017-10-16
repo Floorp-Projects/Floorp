@@ -48,7 +48,7 @@ add_task(async function add_remove_change_bookmark_test() {
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 1);
 
   // Change first bookmark's URI
-  const URI2 = Services.io.newURI("http://www.mozilla.org")
+  const URI2 = Services.io.newURI("http://www.mozilla.org");
   bm1.url = URI2;
   bm1 = await PlacesUtils.bookmarks.update(bm1);
   // Check foreign count for original URI

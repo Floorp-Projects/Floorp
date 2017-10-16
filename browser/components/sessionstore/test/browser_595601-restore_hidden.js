@@ -94,7 +94,7 @@ var TabsProgressListener = {
 
     return [needsRestore, isRestoring];
   }
-}
+};
 
 // ----------
 function newWindowWithState(state, callback) {

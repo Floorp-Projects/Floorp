@@ -45,7 +45,7 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   var firstvalue = "first", secondvalue = "second", fourthvalue = "fourth";
   if (element.localName == "menulist" && element.editable) {
     firstvalue = "First Item";
-    secondvalue = "Second Item"
+    secondvalue = "Second Item";
     fourthvalue = "Fourth Item";
   }
 

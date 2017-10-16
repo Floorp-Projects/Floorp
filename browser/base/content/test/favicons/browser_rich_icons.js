@@ -3,7 +3,7 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/"
+const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 
 add_task(async function test_richIcons() {
   const URL = ROOT + "file_rich_icon.html";

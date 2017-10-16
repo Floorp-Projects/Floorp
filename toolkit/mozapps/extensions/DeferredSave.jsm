@@ -164,7 +164,7 @@ this.DeferredSave = function(aPath, aDataProvider, aOptions = {}) {
   this._finalize = this._finalize.bind(this);
   this._finalizeAt.addBlocker(`DeferredSave: writing data to ${aPath}`,
                               this._finalize);
-}
+};
 
 this.DeferredSave.prototype = {
   get dirty() {

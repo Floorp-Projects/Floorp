@@ -64,7 +64,7 @@ AutoCompleteInputBase.prototype = {
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
-}
+};
 
 /**
  * nsIAutoCompleteResult implementation
@@ -117,7 +117,7 @@ AutoCompleteResultBase.prototype = {
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
-}
+};
 
 /**
  * nsIAutoCompleteSearch implementation that always returns
@@ -155,7 +155,7 @@ AutoCompleteSearchBase.prototype = {
   createInstance(outer, iid) {
     return this.QueryInterface(iid);
   }
-}
+};
 
 function AutocompletePopupBase(input) {
   this.input = input;

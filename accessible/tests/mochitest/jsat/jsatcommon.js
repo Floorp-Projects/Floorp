@@ -381,7 +381,7 @@ var ContentMessages = {
         rule: (aRule || "Simple"),
         adjustRange: true
       }
-    }
+    };
   },
 
   moveOrAdjustDown: function moveOrAdjustUp(aRule) {
@@ -394,7 +394,7 @@ var ContentMessages = {
         rule: (aRule || "Simple"),
         adjustRange: true
       }
-    }
+    };
   },
 
   androidScrollForward: function adjustUp() {
@@ -554,7 +554,7 @@ ExpectedPresent.prototype.is = function(aReceived, aInfo) {
 
   for (var presenter of ["b2g", "android"]) {
     if (!this.options["no_" + presenter]) {
-      var todo = this.options.todo || this.options[presenter + "_todo"]
+      var todo = this.options.todo || this.options[presenter + "_todo"];
       SimpleTest[todo ? "todo" : "ok"].apply(
         SimpleTest, this.lazyCompare(received[presenter],
           this.json[presenter], aInfo + " (" + presenter + ")"));
@@ -571,7 +571,7 @@ ExpectedPresent.prototype.extract_presenters = function(aReceived) {
     }
   }
 
-  return received
+  return received;
 };
 
 ExpectedPresent.prototype.ignore = function(aMessage) {

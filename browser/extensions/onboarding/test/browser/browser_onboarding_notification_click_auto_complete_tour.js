@@ -14,7 +14,7 @@ add_task(async function test_show_click_auto_complete_tour_in_notification() {
   // Trigger CTA button to mark the tour as complete
   let expectedPrefUpdates = [
     promisePrefUpdated(`browser.onboarding.tour.onboarding-tour-customize.completed`, true),
-  ]
+  ];
   BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize", {}, tab.linkedBrowser);
   BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize-button", {}, tab.linkedBrowser);
   await Promise.all(expectedPrefUpdates);

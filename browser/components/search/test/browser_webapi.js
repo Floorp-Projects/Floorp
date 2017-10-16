@@ -21,7 +21,7 @@ function promiseDialogOpened() {
                         .getInterface(Ci.nsIDOMWindow);
         waitForFocus(() => {
           if (win.location == "chrome://global/content/commonDialog.xul")
-            resolve(win)
+            resolve(win);
           else
             reject();
         }, win);
@@ -73,7 +73,7 @@ add_task(async function test_invalid() {
   let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
-     "Should have seen the right error message")
+     "Should have seen the right error message");
   dialog.document.documentElement.acceptDialog();
 
   gBrowser.removeCurrentTab();
@@ -86,7 +86,7 @@ add_task(async function test_missing() {
   let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_loading_engine_msg2", brandName, url),
-     "Should have seen the right error message")
+     "Should have seen the right error message");
   dialog.document.documentElement.acceptDialog();
 
   gBrowser.removeCurrentTab();
@@ -99,7 +99,7 @@ add_task(async function test_missing_namespace() {
   let dialog = await promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
-     "Should have seen the right error message")
+     "Should have seen the right error message");
   dialog.document.documentElement.acceptDialog();
 
   gBrowser.removeCurrentTab();

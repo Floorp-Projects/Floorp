@@ -190,7 +190,7 @@ const PROBE_TESTS = [
       await BrowserTestUtils.browserLoaded(browser);
     },
   },
-]
+];
 
 /**
  * Takes a Telemetry histogram snapshot and makes sure

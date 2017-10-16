@@ -100,7 +100,7 @@ async function testInstall(browser, args, steps, description) {
             eventWaiter = () => {
               eventWaiter = null;
               check();
-            }
+            };
             return;
           }
           prevEvent = received.event;

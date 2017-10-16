@@ -736,7 +736,7 @@ add_task(async function test_sync_server_maintenance_error() {
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   let ping = await sync_and_validate_telem(true);
   equal(ping.status.sync, SERVER_MAINTENANCE);
-  deepEqual(ping.engines.find(e => e.failureReason).failureReason, { name: "httperror", code: 503 })
+  deepEqual(ping.engines.find(e => e.failureReason).failureReason, { name: "httperror", code: 503 });
 
   await promiseObserved;
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
@@ -770,7 +770,7 @@ add_task(async function test_info_collections_login_server_maintenance_error() {
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:ui:clear-error")
+  let promiseObserved = promiseOneObserver("weave:ui:clear-error");
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   await Service.sync();

@@ -49,11 +49,11 @@ function enableResistFingerprinting() {
 }
 
 function promisePopupShown() {
-  return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown")
+  return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 }
 
 function promisePopupHidden() {
-  return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden")
+  return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
 }
 
 function extractCanvasData(grantPermission) {

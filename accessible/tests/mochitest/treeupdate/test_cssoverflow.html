@@ -41,7 +41,7 @@
       this.invoke = function changeScrollRange_invoke() {
         this.scrollAreaNode.style.width = "20px";
         this.containerNode.appendChild(document.createElement("input"));
-      }
+      };
 
       this.finalCheck = function changeScrollRange_finalCheck() {
         var accTree =
@@ -52,11 +52,11 @@
             { ENTRY: [] } // inserted input
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function changeScrollRange_getID() {
         return "change scroll range for " + prettyName(aScrollAreaID);
-      }
+      };
     }
 
     /**
@@ -78,7 +78,7 @@
         testAccessibleTree(this.container, accTree);
 
         this.scrollAreaNode.style.overflow = "auto";
-      }
+      };
 
       this.finalCheck = function changeScrollbarStyles_finalCheck() {
         var accTree =
@@ -86,11 +86,11 @@
             { SECTION: [] } // scroll area
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function changeScrollbarStyles_getID() {
         return "change scrollbar styles " + prettyName(aScrollAreaID);
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

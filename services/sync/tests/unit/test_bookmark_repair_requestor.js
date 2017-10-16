@@ -11,13 +11,13 @@ function makeClientRecord(id, fields = {}) {
     type: fields.type || "desktop",
     stale: fields.stale || false,
     serverLastModified: fields.serverLastModified || 0,
-  }
+  };
 }
 
 class MockClientsEngine {
   constructor(clientList) {
     this._clientList = clientList;
-    this._sentCommands = {}
+    this._sentCommands = {};
   }
 
   get remoteClients() {
@@ -95,7 +95,7 @@ add_task(async function test_requestor_no_clients() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
 
   await requestor.startRepairs(validationInfo, flowID);
@@ -127,7 +127,7 @@ add_task(async function test_requestor_one_client_no_response() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
   // the command should now be outgoing.
@@ -188,7 +188,7 @@ add_task(async function test_requestor_one_client_no_sync() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
   // the command should now be outgoing.
@@ -241,7 +241,7 @@ add_task(async function test_requestor_latest_client_used() {
       ],
       orphans: [],
     }
-  }
+  };
   await requestor.startRepairs(validationInfo, Utils.makeGUID());
   // the repair command should be outgoing to the most-recent client.
   checkOutgoingCommand(mockService, "client-late");
@@ -265,7 +265,7 @@ add_task(async function test_requestor_client_vanishes() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
   // the command should now be outgoing.
@@ -289,7 +289,7 @@ add_task(async function test_requestor_client_vanishes() {
     flowID: requestor._flowID,
     clientID: "client-b",
     ids: ["a", "b", "c", "x"],
-  }
+  };
   await requestor.continueRepairs(response);
 
   // We should be finished as we got all our IDs.
@@ -343,7 +343,7 @@ add_task(async function test_requestor_success_responses() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
   // the command should now be outgoing.
@@ -359,7 +359,7 @@ add_task(async function test_requestor_success_responses() {
     clientID: "client-a",
     flowID: requestor._flowID,
     ids: ["a", "b"],
-  }
+  };
   await requestor.continueRepairs(response);
   // We should have moved on to client 2.
   checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
@@ -372,7 +372,7 @@ add_task(async function test_requestor_success_responses() {
     clientID: "client-b",
     flowID: requestor._flowID,
     ids: ["c", "x"],
-  }
+  };
   await requestor.continueRepairs(response);
 
   // We should be finished as we got all our IDs.
@@ -438,7 +438,7 @@ add_task(async function test_requestor_already_repairing_at_start() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
 
   ok(!(await requestor.startRepairs(validationInfo, flowID)),
@@ -448,7 +448,7 @@ add_task(async function test_requestor_already_repairing_at_start() {
 });
 
 add_task(async function test_requestor_already_repairing_continue() {
-  let clientB = makeClientRecord("client-b")
+  let clientB = makeClientRecord("client-b");
   let mockService = new MockService({
     "client-a": makeClientRecord("client-a"),
     "client-b": clientB
@@ -463,7 +463,7 @@ add_task(async function test_requestor_already_repairing_continue() {
       ],
       orphans: [],
     }
-  }
+  };
   let flowID = Utils.makeGUID();
   await requestor.startRepairs(validationInfo, flowID);
   // the command should now be outgoing.

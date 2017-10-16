@@ -17,7 +17,7 @@ add_task(async function test_switchtab_override() {
     } catch (ex) { /* tabs may have already been closed in case of failure */ }
   });
 
-  info("Wait for autocomplete")
+  info("Wait for autocomplete");
   let deferred = PromiseUtils.defer();
   let onSearchComplete = gURLBar.onSearchComplete;
   registerCleanupFunction(() => {
@@ -27,7 +27,7 @@ add_task(async function test_switchtab_override() {
     ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
     onSearchComplete.apply(gURLBar);
     deferred.resolve();
-  }
+  };
 
   gURLBar.focus();
   gURLBar.value = "dummy_pag";

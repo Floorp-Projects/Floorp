@@ -51,6 +51,6 @@ function run_test() {
     mostRecentBackupFile.remove(false);
     do_check_false(mostRecentBackupFile.exists());
 
-    do_test_finished()
+    do_test_finished();
   })();
 }

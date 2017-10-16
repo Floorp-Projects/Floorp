@@ -70,7 +70,7 @@ add_task(async function run_test() {
     server.registerPathHandler(path, mock(handlers[path]));
     return {
       restore() { server.registerPathHandler(path, handlers[path]); }
-    }
+    };
   }
 
   let server = httpd_setup(handlers);
@@ -128,7 +128,7 @@ add_task(async function run_test() {
           meta: 1
         }
       };
-    }
+    };
 
     _("Checking that remoteSetup recovers on 404 on get /meta/global after clear cached one.");
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));

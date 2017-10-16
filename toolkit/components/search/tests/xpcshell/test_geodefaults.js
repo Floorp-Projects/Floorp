@@ -195,9 +195,9 @@ add_task(async function should_recheck_when_broken_hash() {
 
   // Synchronously check the current default engine, to force a sync init.
   // The hash is wrong, so we should fallback to the default engine from prefs.
-  do_check_false(Services.search.isInitialized)
+  do_check_false(Services.search.isInitialized);
   do_check_eq(Services.search.currentEngine.name, getDefaultEngineName(false));
-  do_check_true(Services.search.isInitialized)
+  do_check_true(Services.search.isInitialized);
 
   await reInitPromise;
   checkRequest();

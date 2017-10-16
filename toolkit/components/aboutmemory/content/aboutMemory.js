@@ -79,7 +79,7 @@ const gAssertionFailureMsgPrefix = "aboutMemory.js assertion failed: ";
 // this file if they do.
 function assert(aCond, aMsg) {
   if (!aCond) {
-    reportAssertionFailure(aMsg)
+    reportAssertionFailure(aMsg);
     throw new Error(gAssertionFailureMsgPrefix + aMsg);
   }
 }
@@ -163,7 +163,7 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aShowTimestamp,
 
   let msgElement;
   if (aMsg) {
-    let className = "section"
+    let className = "section";
     if (aClassName) {
       className = className + " " + aClassName;
     }
@@ -512,17 +512,17 @@ function updateAboutMemoryFromReporters() {
                                   aAmount, aDescription) {
         aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                       aDescription, /* presence = */ undefined);
-      }
+      };
 
       let displayReportsAndFooter = function() {
         updateTitleMainAndFooter("live measurement", "", NO_TIMESTAMP,
                                  SHOW_FOOTER);
         aDisplayReports();
-      }
+      };
 
       gMgr.getReports(handleReport, null, displayReportsAndFooter, null,
                       gAnonymize.checked);
-    }
+    };
 
     // Process the reports from the live memory reporters.
     appendAboutMemoryMain(processLiveMemoryReports,
@@ -580,7 +580,7 @@ function updateAboutMemoryFromJSONObject(aObj) {
                       r.description, r._presence);
       }
       aDisplayReports();
-    }
+    };
     appendAboutMemoryMain(processMemoryReportsFromFile,
                           aObj.hasMozMallocUsableSize);
   } catch (ex) {
@@ -1200,7 +1200,7 @@ function fillInTree(aRoot) {
       aT._amount = kidBytes;
       aT._description = kid._description;
       if (kid._nMerged !== undefined) {
-        aT._nMerged = kid._nMerged
+        aT._nMerged = kid._nMerged;
       }
       assert(!aT._hideKids && !kid._hideKids, "_hideKids set when merging");
 
@@ -1228,7 +1228,7 @@ function fillInTree(aRoot) {
         delete aT._presence;
       } else {
         assert(aT._amount === undefined,
-               "_amount already set for non-leaf node")
+               "_amount already set for non-leaf node");
         aT._amount = kidsBytes;
       }
       aT._description = "The sum of all entries below this one.";
@@ -1444,7 +1444,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
 
     // This gives nice spacing when we copy and paste.
     appendElementWithText(aP, "span", "", "\n");
-  }
+  };
 
   appendElementWithText(aP, "h1", "", aProcess);
   appendLink("start", "end", kDownwardsArrow);
@@ -1879,7 +1879,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       d.onclick = toggle;
       sep = showSubtrees ? kShowKidsSep : kHideKidsSep;
     } else {
-      assert(!aT._hideKids, "leaf node with _hideKids set")
+      assert(!aT._hideKids, "leaf node with _hideKids set");
       sep = kNoKidsSep;
       d = aP;
     }
@@ -1965,10 +1965,10 @@ function saveReportsToFile() {
     let finishDumping = () => {
       updateMainAndFooter("Saved memory reports to " + file.path,
                           SHOW_TIMESTAMP, HIDE_FOOTER);
-    }
+    };
     dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null,
                                         gAnonymize.checked);
-  }
+  };
 
   let fpCallback = function(aResult) {
     if (aResult == Ci.nsIFilePicker.returnOK ||

@@ -86,7 +86,7 @@ function bug523784_test2(win) {
          "More Info link should link to the general blocklist page.");
       cancelButton.doCommand();
       executeSoon(finish);
-    })
+    });
     }, {once: true});
   };
   Services.ww.registerNotification(windowObserver);

@@ -93,7 +93,7 @@ this.AddonManagerTesting = {
     return new Promise((resolve, reject) => {
 
       AddonManager.getInstallForURL(url, (install) => {
-        let fail = () => { reject(new Error("Add-on install failed.")) };
+        let fail = () => { reject(new Error("Add-on install failed.")); };
 
         let listener = {
           onDownloadCancelled: fail,

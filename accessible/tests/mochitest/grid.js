@@ -6,18 +6,18 @@ const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
 function grid(aTableIdentifier) {
   this.getRowCount = function getRowCount() {
     return this.table.rows.length - (this.table.tHead ? 1 : 0);
-  }
+  };
   this.getColsCount = function getColsCount() {
     return this.table.rows[0].cells.length;
-  }
+  };
 
   this.getRowAtIndex = function getRowAtIndex(aIndex) {
     return this.table.rows[this.table.tHead ? aIndex + 1 : aIndex];
-  }
+  };
 
   this.getMaxIndex = function getMaxIndex() {
     return this.getRowCount() * this.getColsCount() - 1;
-  }
+  };
 
   this.getCellAtIndex = function getCellAtIndex(aIndex) {
     var colsCount = this.getColsCount();
@@ -27,7 +27,7 @@ function grid(aTableIdentifier) {
 
     var row = this.getRowAtIndex(rowIdx);
     return row.cells[colIdx];
-  }
+  };
 
   this.getIndexByCell = function getIndexByCell(aCell) {
     var colIdx = aCell.cellIndex;
@@ -38,7 +38,7 @@ function grid(aTableIdentifier) {
 
     var colsCount = this.getColsCount();
     return rowIdx * colsCount + colIdx;
-  }
+  };
 
   this.getCurrentCell = function getCurrentCell() {
     var rowCount = this.table.rows.length;
@@ -51,19 +51,19 @@ function grid(aTableIdentifier) {
       }
     }
     return null;
-  }
+  };
 
   this.initGrid = function initGrid() {
     this.table.addEventListener("keypress", this);
     this.table.addEventListener("click", this);
-  }
+  };
 
   this.handleEvent = function handleEvent(aEvent) {
     if (aEvent instanceof nsIDOMKeyEvent)
       this.handleKeyEvent(aEvent);
     else
       this.handleClickEvent(aEvent);
-  }
+  };
 
   this.handleKeyEvent = function handleKeyEvent(aEvent) {
     if (aEvent.target.localName != "td")
@@ -115,7 +115,7 @@ function grid(aTableIdentifier) {
         }
         break;
     }
-  }
+  };
 
   this.handleClickEvent = function handleClickEvent(aEvent) {
     if (aEvent.target.localName != "td")
@@ -129,7 +129,7 @@ function grid(aTableIdentifier) {
       cell.setAttribute("tabindex", "0");
       cell.focus();
     }
-  }
+  };
 
   this.table = getNode(aTableIdentifier);
   this.initGrid();

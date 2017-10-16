@@ -431,7 +431,7 @@ this.DownloadHistoryList = function(publicList, place) {
                                                   queries.value.length,
                                                   options.value);
   result.addObserver(this);
-}
+};
 
 this.DownloadHistoryList.prototype = {
   __proto__: DownloadList.prototype,

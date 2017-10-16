@@ -772,7 +772,7 @@ FinderHighlighter.prototype = {
         return true;
       }
       node = node.parentNode;
-    } while (node && node != document.documentElement)
+    } while (node && node != document.documentElement);
 
     return false;
   },

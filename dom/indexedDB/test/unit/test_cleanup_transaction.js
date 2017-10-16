@@ -54,7 +54,7 @@ function* testSteps()
 
     let obj = {
       name: "foo"
-    }
+    };
 
     if (!blobs) {
       obj.data = getRandomView(dataSize);
@@ -72,17 +72,17 @@ function* testSteps()
       request.onerror = function(event)
       {
         event.stopPropagation();
-      }
+      };
 
       trans.oncomplete = function(event) {
         i++;
         j++;
         testGenerator.next(true);
-      }
+      };
       trans.onabort = function(event) {
         is(trans.error.name, "QuotaExceededError", "Reached quota limit");
         testGenerator.next(false);
-      }
+      };
 
       let completeFired = yield undefined;
       if (completeFired) {
@@ -119,7 +119,7 @@ function* testSteps()
     db = request.result;
     db.onerror = errorHandler;
 
-    info("Deleting some data")
+    info("Deleting some data");
 
     let trans = db.transaction(objectStoreName, "cleanup");
     trans.objectStore(objectStoreName).delete(1);
@@ -129,7 +129,7 @@ function* testSteps()
 
     yield undefined;
 
-    info("Adding data again")
+    info("Adding data again");
 
     trans = db.transaction(objectStoreName, "readwrite");
     trans.objectStore(objectStoreName).add(obj, 1);

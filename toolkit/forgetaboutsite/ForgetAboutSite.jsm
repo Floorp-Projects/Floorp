@@ -247,4 +247,4 @@ this.ForgetAboutSite = {
     if (ErrorCount !== 0)
       throw new Error(`There were a total of ${ErrorCount} errors during removal`);
   }
-}
+};

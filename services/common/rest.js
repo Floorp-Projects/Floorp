@@ -91,7 +91,7 @@ this.RESTRequest = function RESTRequest(uri) {
   this._log = Log.repository.getLogger(this._logName);
   this._log.level =
     Log.Level[Prefs.get("log.logger.rest.request")];
-}
+};
 RESTRequest.prototype = {
 
   _logName: "Services.Common.RESTRequest",
@@ -648,7 +648,7 @@ this.RESTResponse = function RESTResponse() {
   this._log = Log.repository.getLogger(this._logName);
   this._log.level =
     Log.Level[Prefs.get("log.logger.rest.response")];
-}
+};
 RESTResponse.prototype = {
 
   _logName: "Services.Common.RESTResponse",
@@ -750,7 +750,7 @@ this.TokenAuthenticatedRESTRequest =
   RESTRequest.call(this, uri);
   this.authToken = authToken;
   this.extra = extra || {};
-}
+};
 TokenAuthenticatedRESTRequest.prototype = {
   __proto__: RESTRequest.prototype,
 

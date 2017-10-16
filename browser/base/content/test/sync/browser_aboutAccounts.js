@@ -430,7 +430,7 @@ function setSignedInUser(data) {
       kA: "beef",
       kB: "cafe",
       verified: true
-    }
+    };
   }
  return fxAccounts.setSignedInUser(data);
 }

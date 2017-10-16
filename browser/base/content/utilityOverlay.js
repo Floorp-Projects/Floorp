@@ -828,7 +828,7 @@ function openFeedbackPage() {
 }
 
 function openTourPage() {
-  let scope = {}
+  let scope = {};
   Components.utils.import("resource:///modules/UITour.jsm", scope);
   openUILinkIn(scope.UITour.url, "tab");
 }

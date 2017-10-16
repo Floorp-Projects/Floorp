@@ -18,8 +18,8 @@ function waitForFilePicker() {
       MockFilePicker.showCallback = null;
       ok(true, "Saw the file picker");
       resolve();
-    }
-  })
+    };
+  });
 }
 
 /**

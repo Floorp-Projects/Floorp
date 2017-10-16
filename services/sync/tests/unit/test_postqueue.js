@@ -8,7 +8,7 @@ initTestLogging("Trace");
 function makeRecord(nbytes) {
   return {
     toJSON: () => ({ payload: "x".repeat(nbytes) }),
-  }
+  };
 }
 
 // Note: This is 14 bytes. Tests make assumptions about this (even if it's just
@@ -121,9 +121,9 @@ function makePostQueue(config, lastModTime, responseGenerator) {
     }
 
     return Promise.resolve(nextResponse);
-  }
+  };
 
-  let done = () => {}
+  let done = () => {};
   let pq = new PostQueue(poster, lastModTime, config, getTestLogger(), done);
   return { pq, stats };
 }
@@ -132,7 +132,7 @@ add_task(async function test_simple() {
   let config = {
     max_request_bytes: 1000,
     max_record_payload_bytes: 1000,
-  }
+  };
 
   const time = 11111111;
 
@@ -159,7 +159,7 @@ add_task(async function test_simple() {
     didCommit: true,
     batch: "true",
     serverBatch: false
-  }])
+  }]);
 });
 
 // Test we do the right thing when we need to make multiple posts when there
@@ -168,7 +168,7 @@ add_task(async function test_max_request_bytes_no_batch() {
   let config = {
     max_request_bytes: 50,
     max_record_payload_bytes: 50,
-  }
+  };
 
   const time = 11111111;
   function* responseGenerator() {
@@ -199,7 +199,7 @@ add_task(async function test_max_request_bytes_no_batch() {
       batch: null,
     }
   ]);
-  equal(stats.batches.filter(x => x.didCommit).length, 0)
+  equal(stats.batches.filter(x => x.didCommit).length, 0);
   equal(pq.lastModified, time + 200);
 });
 
@@ -207,7 +207,7 @@ add_task(async function test_max_record_payload_bytes_no_batch() {
   let config = {
     max_request_bytes: 100,
     max_record_payload_bytes: 50,
-  }
+  };
 
   const time = 11111111;
 
@@ -218,7 +218,7 @@ add_task(async function test_max_record_payload_bytes_no_batch() {
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
   // Should trigger when the record really is too large to fit
   let {enqueued} = await pq.enqueue(makeRecord(51));
-  ok(!enqueued)
+  ok(!enqueued);
   // Shouldn't trigger when the encoded record is too big
   ok((await pq.enqueue(makeRecord(50 - makeRecord.nonPayloadOverhead))).enqueued); // total size now 52 bytes - "[" + record + "]"
   ok((await pq.enqueue(makeRecord(46 - makeRecord.nonPayloadOverhead))).enqueued); // total size now 99 bytes - "[" + record0 + "," + record1 + "]"
@@ -260,7 +260,7 @@ add_task(async function test_single_batch() {
     max_post_records: 100,
     max_total_records: 200,
     max_record_payload_bytes: 1000,
-  }
+  };
   const time = 11111111;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
@@ -303,7 +303,7 @@ add_task(async function test_max_post_bytes_batch() {
     max_total_records: 100,
     max_record_payload_bytes: 50,
     max_request_bytes: 4000,
-  }
+  };
 
   const time = 11111111;
   function* responseGenerator() {
@@ -422,7 +422,7 @@ add_task(async function test_max_total_bytes_batch() {
     max_total_records: 100,
     max_record_payload_bytes: 50,
     max_request_bytes: 500,
-  }
+  };
 
   const time0 = 11111111;
   const time1 = 22222222;
@@ -580,7 +580,7 @@ add_task(async function test_max_records_batch() {
     max_total_records: 5,
     max_record_payload_bytes: 1000,
     max_request_bytes: 10000,
-  }
+  };
 
   const time0 = 11111111;
   const time1 = 22222222;

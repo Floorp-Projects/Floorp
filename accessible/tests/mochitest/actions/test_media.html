@@ -31,10 +31,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       this.target = aAcc;
       this.getID = function focusChecker_getID() {
         return "focus handling";
-      }
+      };
       this.check = function focusChecker_check(aEvent) {
         testStates(this.target, STATE_FOCUSED);
-      }
+      };
     }
 
     function nameChecker(aAcc, aName) {
@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       this.check = function nameChecker_check(aEvent) {
         is(aEvent.accessible.name, aName,
            "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
-      }
+      };
     }
 
     function doTest() {

@@ -105,7 +105,7 @@ this.PropertyListUtils = Object.freeze({
           } finally {
             aCallback(root);
           }
-        }
+        };
         fileReader.addEventListener("loadend", onLoadEnd);
         fileReader.readAsArrayBuffer(aFile);
       }
@@ -816,5 +816,5 @@ function LazyMapProxyHandler() {
           return target[name];
       }
     }
-  }
+  };
 }

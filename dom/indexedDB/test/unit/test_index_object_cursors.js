@@ -95,16 +95,16 @@ function* testSteps()
           cursor.update(obj).onsuccess = function(event) {
             ok(true, "Object updated");
             cursor.continue();
-            keyIndex++
-          }
+            keyIndex++;
+          };
           return;
         }
 
         cursor.delete().onsuccess = function(event) {
           ok(true, "Object deleted");
           cursor.continue();
-          keyIndex++
-        }
+          keyIndex++;
+        };
       };
       yield undefined;
 

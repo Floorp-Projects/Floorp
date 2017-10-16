@@ -30,7 +30,7 @@ const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
-const PERSISTED_ACTIONS_CURRENT_VERSION = 1
+const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
 
 
 this.PageActions = {

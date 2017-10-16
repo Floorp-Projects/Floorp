@@ -341,7 +341,7 @@ var gEditItemOverlay = {
       let curentURITags = PlacesUtils.tagging.getTagsForURI(uri);
       for (let tag of commonTags) {
         if (!curentURITags.includes(tag)) {
-          commonTags.delete(tag)
+          commonTags.delete(tag);
           if (commonTags.size == 0)
             return this._paneInfo.cachedCommonTags = [];
         }
@@ -742,7 +742,7 @@ var gEditItemOverlay = {
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = false;
     } else {
-      expander.className = "expander-up"
+      expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
       folderTreeRow.collapsed = false;

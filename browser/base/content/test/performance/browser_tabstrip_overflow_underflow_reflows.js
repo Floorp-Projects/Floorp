@@ -46,7 +46,7 @@ add_task(async function() {
         false, e => e.propertyName === "max-width");
     await switchDone;
     await BrowserTestUtils.waitForCondition(() => {
-      return gBrowser.tabContainer.mTabstrip.hasAttribute("scrolledtoend")
+      return gBrowser.tabContainer.mTabstrip.hasAttribute("scrolledtoend");
     });
   }, EXPECTED_OVERFLOW_REFLOWS, window);
 

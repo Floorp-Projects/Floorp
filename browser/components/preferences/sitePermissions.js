@@ -107,7 +107,7 @@ var gSitePermissionsManager = {
       stringKey = "cannot";
       break;
     case Services.perms.PROMPT_ACTION:
-      stringKey = "prompt"
+      stringKey = "prompt";
       break;
     }
     return this._bundle.getString(stringKey);
@@ -176,7 +176,7 @@ var gSitePermissionsManager = {
     row.appendChild(hbox);
     row.appendChild(menulist);
     richlistitem.appendChild(row);
-    this._list.appendChild(richlistitem)
+    this._list.appendChild(richlistitem);
   },
 
   onWindowKeyPress(event) {

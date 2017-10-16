@@ -29,8 +29,8 @@ function frameScript() {
         return original(name, ...args);
       }
       throw new Components.Exception("Simulated OOM", Cr.NS_ERROR_OUT_OF_MEMORY);
-    }
-  }
+    };
+  };
 
   mm.sendAsyncMessage = wrap(mm.sendAsyncMessage);
   mm.sendSyncMessage = wrap(mm.sendSyncMessage);
@@ -54,7 +54,7 @@ add_task(async function() {
   let promiseFlushed = TabStateFlusher.flush(browser);
   promiseFlushed.then((success) => {
     if (success) {
-      throw new Error("Flush should have failed")
+      throw new Error("Flush should have failed");
     }
   });
 

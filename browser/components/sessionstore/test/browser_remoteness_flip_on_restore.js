@@ -114,7 +114,7 @@ async function runScenarios(scenarios) {
         // The window starts with one tab, so we need to create
         // any of the additional ones required by this test.
         info("Opening a new tab");
-        tab = await BrowserTestUtils.openNewForegroundTab(tabbrowser)
+        tab = await BrowserTestUtils.openNewForegroundTab(tabbrowser);
       } else {
         info("Using the selected tab");
         tab = tabbrowser.selectedTab;

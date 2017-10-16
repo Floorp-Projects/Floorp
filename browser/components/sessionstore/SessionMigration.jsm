@@ -85,7 +85,7 @@ var SessionMigrationInternal = {
     let bytes = gEncoder.encode(JSON.stringify(aState));
     return OS.File.writeAtomic(aPath, bytes, {tmpPath: aPath + ".tmp", compression: "lz4"});
   }
-}
+};
 
 var SessionMigration = {
   /**

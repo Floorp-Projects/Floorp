@@ -48,7 +48,7 @@ this.UrlClassifierTestUtils = {
       }
     ];
 
-    let tableIndex = 0
+    let tableIndex = 0;
     let doOneUpdate = () => {
       if (tableIndex == tables.length) {
         return Promise.resolve();
@@ -64,7 +64,7 @@ this.UrlClassifierTestUtils = {
           })
           .then(doOneUpdate);
         });
-    }
+    };
 
     return doOneUpdate();
   },

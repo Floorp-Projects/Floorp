@@ -27,7 +27,7 @@ add_task(async function test_defaultEngine() {
 
   search.defaultEngine = engine1;
   do_check_eq(search.defaultEngine, engine1);
-  search.defaultEngine = engine2
+  search.defaultEngine = engine2;
   do_check_eq(search.defaultEngine, engine2);
   search.defaultEngine = engine1;
   do_check_eq(search.defaultEngine, engine1);

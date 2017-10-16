@@ -7,10 +7,10 @@ onconnect = function(e) {
     request.onsuccess = function(event) {
       e.target.postMessage({ status: "success",
                              isIDBDatabase: (event.target.result instanceof IDBDatabase) });
-    }
+    };
 
     request.onerror = function(event) {
       e.target.postMessage({ status: "error", error: event.target.error.name });
-    }
-  }
-}
+    };
+  };
+};

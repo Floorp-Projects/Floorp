@@ -47,19 +47,19 @@ function run_test() {
 
         let file = rootUri + "install.rdf";
         do_check_true(a1.hasResource("install.rdf"));
-        uri = a1.getResourceURI("install.rdf")
+        uri = a1.getResourceURI("install.rdf");
         do_check_eq(uri.spec, file);
 
         file = rootUri + "icon.png";
         do_check_true(a1.hasResource("icon.png"));
-        uri = a1.getResourceURI("icon.png")
+        uri = a1.getResourceURI("icon.png");
         do_check_eq(uri.spec, file);
 
         do_check_false(a1.hasResource("missing.txt"));
 
         file = rootUri + "subdir/subfile.txt";
         do_check_true(a1.hasResource("subdir/subfile.txt"));
-        uri = a1.getResourceURI("subdir/subfile.txt")
+        uri = a1.getResourceURI("subdir/subfile.txt");
         do_check_eq(uri.spec, file);
 
         do_check_false(a1.hasResource("subdir/missing.txt"));

@@ -8,7 +8,7 @@ var gResults = [];
 function frame_script() {
   /* globals addMessageListener, sendAsyncMessage*/
   addMessageListener("Test:StartInstall", () => {
-    content.document.getElementById("installnow").click()
+    content.document.getElementById("installnow").click();
   });
 
   addEventListener("load", () => {

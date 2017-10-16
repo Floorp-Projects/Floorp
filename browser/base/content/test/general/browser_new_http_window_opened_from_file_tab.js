@@ -34,9 +34,9 @@ add_task(async function() {
   });
   ok(win, "Check that an http window loaded when using window.open.");
   ok(win.menubar.visible,
-     "Check that the menu bar on the new window is visible.")
+     "Check that the menu bar on the new window is visible.");
   ok(win.toolbar.visible,
-     "Check that the tool bar on the new window is visible.")
+     "Check that the tool bar on the new window is visible.");
 
   // Open new http window from a link in file:// page and check that we get a
   // new window with the correct page and features.
@@ -48,7 +48,7 @@ add_task(async function() {
   });
   ok(win2, "Check that an http window loaded when using link.");
   ok(win2.menubar.visible,
-     "Check that the menu bar on the new window is visible.")
+     "Check that the menu bar on the new window is visible.");
   ok(win2.toolbar.visible,
-     "Check that the tool bar on the new window is visible.")
+     "Check that the tool bar on the new window is visible.");
 });

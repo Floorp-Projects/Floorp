@@ -75,12 +75,12 @@ function* testSteps()
           cursor.value.index = unique ? 30 : 35;
           cursor.update(cursor.value).onsuccess = function(event) {
             cursor.continue();
-          }
+          };
         }
         else {
           continueToNextStep();
         }
-      }
+      };
       yield undefined;
 
       is(sawEntry, true, "Saw entry for key value " + modifiedEntry);
@@ -110,12 +110,12 @@ function* testSteps()
           cursor.update(cursor.value).onsuccess = function(event) {
             indexCount--;
             cursor.continue();
-          }
+          };
         }
         else {
           continueToNextStep();
         }
-      }
+      };
       yield undefined;
 
       is(sawEntry, true, "Saw entry for key value " + modifiedEntry);

@@ -23,7 +23,7 @@
         let store = tx.objectStore("TestStore");
         tx.oncomplete = () => window.dispatchEvent(new Event("test-indexedDB-done"));
         store.put({ id: "test_id", description: "Site Data Test"});
-      }
+      };
     </script>
   </body>
 </html>

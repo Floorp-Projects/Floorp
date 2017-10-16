@@ -38,7 +38,7 @@ App.prototype = {
     HelperApps._launchApp(this, uri, callback);
     return false;
   }
-}
+};
 
 var HelperApps =  {
   get defaultBrowsers() {

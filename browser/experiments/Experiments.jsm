@@ -1874,7 +1874,7 @@ Experiments.ExperimentEntry.prototype = {
 
       ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
         .forEach(what => {
-          listener[what] = eventInstall => failureHandler(eventInstall, what)
+          listener[what] = eventInstall => failureHandler(eventInstall, what);
         });
 
       install.addListener(listener);
@@ -2157,7 +2157,7 @@ this.Experiments.PreviousExperimentProvider = function(experiments) {
   this._log = Log.repository.getLoggerWithMessagePrefix(
     "Browser.Experiments.Experiments",
     "PreviousExperimentProvider #" + gPreviousProviderCounter++ + "::");
-}
+};
 
 this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
   name: "PreviousExperimentProvider",
@@ -2262,7 +2262,7 @@ PreviousExperimentAddon.prototype = Object.freeze({
   },
 
   get blocklistState() {
-    Ci.nsIBlocklistService.STATE_NOT_BLOCKED
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
   get creator() {

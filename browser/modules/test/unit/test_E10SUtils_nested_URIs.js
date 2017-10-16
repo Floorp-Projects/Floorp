@@ -10,7 +10,7 @@ var TEST_PREFERRED_REMOTE_TYPES = [
   E10SUtils.WEB_REMOTE_TYPE,
   E10SUtils.NOT_REMOTE,
   "fakeRemoteType",
-]
+];
 
 // These test cases give a nestedURL and a plainURL that should always load in
 // the same remote type. By making these tests comparisons, they should work
@@ -60,7 +60,7 @@ var TEST_CASES = [
     nestedURL: "view-source:pcast:http://some.site",
     plainURL: "http://some.site",
   },
-]
+];
 
 function run_test() {
   for (let testCase of TEST_CASES) {

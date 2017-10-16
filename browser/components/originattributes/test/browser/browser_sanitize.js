@@ -66,7 +66,7 @@ function checkCacheExists(aShouldExist) {
       is(cacheURIs.includes(TEST_DOMAIN), aShouldExist, TEST_DOMAIN + " should "
         + (aShouldExist ? "not " : "") + "be cached for all origin attributes." + i++);
     }
-  }
+  };
 }
 
 add_task(async function setup() {

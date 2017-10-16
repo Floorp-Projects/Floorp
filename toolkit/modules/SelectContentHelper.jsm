@@ -54,7 +54,7 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
-}
+};
 
 Object.defineProperty(SelectContentHelper, "open", {
   get() {
@@ -372,7 +372,7 @@ this.SelectContentHelper.prototype = {
     }
   }
 
-}
+};
 
 function getComputedStyles(element) {
   return element.ownerGlobal.getComputedStyle(element);

@@ -22,7 +22,7 @@ add_task(async function test_bug1174036() {
       function waitForFind() {
         return new Promise(resolve => {
           listener.onFindResult = resolve;
-        })
+        });
       }
 
       // Find the first 'e' (which should be in the second textarea).

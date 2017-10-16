@@ -1488,6 +1488,6 @@ function setupShutdown(phaseName) {
 // profile-before-change only exists in the parent, and OS.File should
 // not be used in the child process anyways.
 if (!isContent) {
-  setupShutdown("profileBeforeChange")
+  setupShutdown("profileBeforeChange");
 }
 File.shutdown = Barriers.shutdown.client;

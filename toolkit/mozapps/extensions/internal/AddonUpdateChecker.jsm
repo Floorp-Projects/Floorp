@@ -21,8 +21,8 @@ const PREFIX_NS_EM          = "http://www.mozilla.org/2004/em-rdf#";
 const PREFIX_ITEM           = "urn:mozilla:item:";
 const PREFIX_EXTENSION      = "urn:mozilla:extension:";
 const PREFIX_THEME          = "urn:mozilla:theme:";
-const TOOLKIT_ID            = "toolkit@mozilla.org"
-const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
+const TOOLKIT_ID            = "toolkit@mozilla.org";
+const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
@@ -105,9 +105,9 @@ RDFSerializer.prototype = {
     var items = aContainer.GetElements();
     while (items.hasMoreElements()) {
       var item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-      result += aIndent + "<RDF:li>\n"
+      result += aIndent + "<RDF:li>\n";
       result += this.serializeResource(aDs, item, aIndent + this.INDENT);
-      result += aIndent + "</RDF:li>\n"
+      result += aIndent + "</RDF:li>\n";
     }
     return result;
   },
@@ -212,7 +212,7 @@ RDFSerializer.prototype = {
     result += aIndent + "</RDF:" + type + ">\n";
     return result;
   }
-}
+};
 
 /**
  * Sanitizes the update URL in an update item, as returned by
@@ -500,7 +500,7 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
     // "gecko" is currently the only supported application entry. If
     // it's missing, skip this update.
     if (!("gecko" in applications)) {
-      logger.debug("gecko not in application entry, skipping update of ${addon}")
+      logger.debug("gecko not in application entry, skipping update of ${addon}");
       continue;
     }
 

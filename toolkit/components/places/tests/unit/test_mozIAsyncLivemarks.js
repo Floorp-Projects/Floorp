@@ -251,7 +251,7 @@ add_task(async function test_addLivemark_bogusParentGuid_fails() {
       });
     do_throw("Adding a livemark with a bogus parent should fail");
   } catch (ex) {}
-})
+});
 
 add_task(async function test_addLivemark_intoLivemark_fails() {
   let livemark = await PlacesUtils.livemarks.addLivemark(

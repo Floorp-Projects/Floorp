@@ -31,11 +31,11 @@ add_task(async function() {
   let level1 = root.getChild(0);
   do_check_eq(level1.title, "f1");
   do_print("Checking second level");
-  PlacesUtils.asContainer(level1).containerOpen = true
+  PlacesUtils.asContainer(level1).containerOpen = true;
   let level2 = level1.getChild(0);
   do_check_eq(level2.title, "f2");
   do_print("Checking bookmark");
-  PlacesUtils.asContainer(level2).containerOpen = true
+  PlacesUtils.asContainer(level2).containerOpen = true;
   let bookmark = level2.getChild(0);
   do_check_eq(bookmark.title, "bookmark");
   level2.containerOpen = false;

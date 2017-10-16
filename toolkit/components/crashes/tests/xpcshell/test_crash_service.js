@@ -73,7 +73,7 @@ add_task(async function test_addCrash() {
   Assert.equal(crash.metadata.ProcessType, "content");
   Assert.equal(crash.metadata.MinidumpSha256Hash,
     "24b0ea7794b2d2523c46c9aea72c03ccbb0ab88ad76d8258d3752c7b71d233ff");
-  Assert.ok(crash.metadata.StackTraces, "The StackTraces field is present.\n")
+  Assert.ok(crash.metadata.StackTraces, "The StackTraces field is present.\n");
 
   try {
     let stackTraces = JSON.parse(crash.metadata.StackTraces);

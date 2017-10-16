@@ -42,7 +42,7 @@ function testAbortEvent() {
   ac.signal.onabort = function(e) {
     is(e.type, "abort", "Abort received");
     next();
-  }
+  };
   ac.abort();
 }
 

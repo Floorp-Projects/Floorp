@@ -124,7 +124,7 @@ add_task(async function test_bookmark_update_notifications() {
   // Test live update of the exposed date apis.
   await PlacesUtils.bookmarks.update({guid: bookmark.guid, dateAdded: PAST_DATE});
   do_check_eq(childNode.dateAdded, PlacesUtils.toPRTime(PAST_DATE));
-  await PlacesUtils.bookmarks.update({guid: bookmark.guid, lastModified: PAST_DATE})
+  await PlacesUtils.bookmarks.update({guid: bookmark.guid, lastModified: PAST_DATE});
   do_check_eq(childNode.lastModified, PlacesUtils.toPRTime(PAST_DATE));
 
   root.containerOpen = false;

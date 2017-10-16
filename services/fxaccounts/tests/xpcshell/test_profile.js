@@ -56,7 +56,7 @@ let mockClient = function(fxa) {
   let options = {
     serverURL: "http://127.0.0.1:1111/v1",
     fxa,
-  }
+  };
   return new FxAccountsProfileClient(options);
 };
 
@@ -102,7 +102,7 @@ function CreateFxAccountsProfile(fxa = null, client = null) {
   let options = {
     fxa,
     profileServerUrl: "http://127.0.0.1:1111/v1"
-  }
+  };
   if (client) {
     options.profileClient = client;
   }
@@ -117,7 +117,7 @@ add_test(function cacheProfile_change() {
     do_check_eq(data.profile.avatar, "myurl");
     do_check_eq(data.etag, "bogusetag");
     return Promise.resolve();
-  }
+  };
   let profile = CreateFxAccountsProfile(fxa);
 
   makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
@@ -328,7 +328,7 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   profile._fetchAndCacheProfile = async () => {
     await origFetchAndCatch.call(profile);
     backgroundFetchDone.resolve();
-  }
+  };
   await profile.getProfile();
   await backgroundFetchDone.promise;
   do_check_eq(numFetches, 2);
@@ -357,7 +357,7 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   profile._fetchAndCacheProfile = async () => {
     await origFetchAndCatch.call(profile);
     backgroundFetchDone.resolve();
-  }
+  };
   await profile.getProfile();
   await backgroundFetchDone.promise;
   do_check_eq(numFetches, 2);

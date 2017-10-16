@@ -29,7 +29,7 @@ add_task(async function() {
         }, {once: true});
       }
     }
-  }
+  };
 
   Services.ww.registerNotification(observerWindowOpened);
 

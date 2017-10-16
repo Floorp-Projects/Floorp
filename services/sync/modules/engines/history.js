@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
 
 this.HistoryRec = function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-}
+};
 HistoryRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.History",
@@ -40,7 +40,7 @@ Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
 this.HistoryEngine = function HistoryEngine(service) {
   SyncEngine.call(this, "History", service);
-}
+};
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _recordObj: HistoryRec,
@@ -211,7 +211,7 @@ HistoryStore.prototype = {
     records.length = k; // truncate array
 
     if (records.length) {
-      await PlacesUtils.history.insertMany(records)
+      await PlacesUtils.history.insertMany(records);
     }
 
     return failed;

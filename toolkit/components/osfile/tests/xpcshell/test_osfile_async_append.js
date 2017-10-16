@@ -27,7 +27,7 @@ async function test_append(mode) {
                           "test_osfile_async_append.tmp");
 
   // Clear any left-over files from previous runs.
-  await removeTestFile(path)
+  await removeTestFile(path);
 
   try {
     mode = setup_mode(mode);
@@ -50,7 +50,7 @@ async function test_append(mode) {
       await file.close();
     }
   } catch (ex) {
-    await removeTestFile(path)
+    await removeTestFile(path);
   }
 }
 
@@ -60,7 +60,7 @@ async function test_no_append(mode) {
                           "test_osfile_async_noappend.tmp");
 
   // Clear any left-over files from previous runs.
-  await removeTestFile(path)
+  await removeTestFile(path);
 
   try {
     mode = setup_mode(mode);
@@ -83,7 +83,7 @@ async function test_no_append(mode) {
       await file.close();
     }
   } finally {
-    await removeTestFile(path)
+    await removeTestFile(path);
   }
 }
 

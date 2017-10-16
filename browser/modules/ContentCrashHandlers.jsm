@@ -249,7 +249,7 @@ this.TabCrashHandler = {
    */
   onSelectedBrowserCrash(browser) {
     if (!browser.isRemoteBrowser) {
-      Cu.reportError("Selected crashed browser is not remote.")
+      Cu.reportError("Selected crashed browser is not remote.");
       return;
     }
     if (!browser.frameLoader) {
@@ -375,7 +375,7 @@ this.TabCrashHandler = {
     let childID = this.browserMap.get(browser);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
-      return
+      return;
 
     if (!message.data.sendReport) {
       Services.telemetry.getHistogramById("FX_CONTENT_CRASH_NOT_SUBMITTED").add(1);
@@ -554,7 +554,7 @@ this.TabCrashHandler = {
 
     return this.childMap.get(this.browserMap.get(browser));
   },
-}
+};
 
 /**
  * This component is responsible for scanning the pending

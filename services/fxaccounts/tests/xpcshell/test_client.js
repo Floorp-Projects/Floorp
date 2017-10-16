@@ -261,7 +261,7 @@ add_task(async function test_signIn() {
   });
 
   // Note this strings must be unicode and not already utf-8 encoded.
-  let unicodeUsername = "m\xe9@example.com" // 'mé@example.com'
+  let unicodeUsername = "m\xe9@example.com"; // 'mé@example.com'
   let server = httpd_setup({
     "/account/login": function(request, response) {
       let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);

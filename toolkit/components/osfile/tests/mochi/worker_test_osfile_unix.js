@@ -198,5 +198,5 @@ function test_passing_undefined() {
     }
   }
 
-  ok(exceptionRaised, "test_passing_undefined: exception gets thrown")
+  ok(exceptionRaised, "test_passing_undefined: exception gets thrown");
 }

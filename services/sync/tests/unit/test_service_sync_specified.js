@@ -9,7 +9,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-let syncedEngines = []
+let syncedEngines = [];
 
 function SteamEngine() {
   SyncEngine.call(this, "Steam", Service);
@@ -109,7 +109,7 @@ add_task(async function test_oneEngine() {
 
     _("Sync with 1 engine specified.");
     await Service.sync(["steam"]);
-    deepEqual(syncedEngines, ["steam"])
+    deepEqual(syncedEngines, ["steam"]);
 
   } finally {
     await Service.startOver();
@@ -126,7 +126,7 @@ add_task(async function test_bothEnginesSpecified() {
   try {
     _("Sync with both engines specified.");
     await Service.sync(["steam", "stirling"]);
-    deepEqual(syncedEngines, ["steam", "stirling"])
+    deepEqual(syncedEngines, ["steam", "stirling"]);
 
   } finally {
     await Service.startOver();
@@ -143,7 +143,7 @@ add_task(async function test_bothEnginesSpecified() {
   try {
     _("Sync with both engines specified.");
     await Service.sync(["stirling", "steam"]);
-    deepEqual(syncedEngines, ["stirling", "steam"])
+    deepEqual(syncedEngines, ["stirling", "steam"]);
 
   } finally {
     await Service.startOver();
@@ -159,7 +159,7 @@ add_task(async function test_bothEnginesDefault() {
 
   try {
     await Service.sync();
-    deepEqual(syncedEngines, ["steam", "stirling"])
+    deepEqual(syncedEngines, ["steam", "stirling"]);
 
   } finally {
     await Service.startOver();

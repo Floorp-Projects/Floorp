@@ -136,7 +136,7 @@ const USER_DEFINED = "searchTerms";
 
 // Custom search parameters
 const MOZ_PARAM_LOCALE         = "moz:locale";
-const MOZ_PARAM_DIST_ID        = "moz:distributionID"
+const MOZ_PARAM_DIST_ID        = "moz:distributionID";
 const MOZ_PARAM_OFFICIAL       = "moz:official";
 
 // Supported OpenSearch parameters
@@ -339,7 +339,7 @@ loadListener.prototype = {
   // nsIProgressEventSink
   onProgress(aRequest, aContext, aProgress, aProgressMax) {},
   onStatus(aRequest, aContext, aStatus, aStatusArg) {}
-}
+};
 
 function isPartnerBuild() {
   try {
@@ -756,7 +756,7 @@ function getVerificationHash(aName) {
     "engine selection processes, and in a way which does not circumvent " +
     "user consent. I acknowledge that any attempt to change this file " +
     "from outside of $appName is a malicious act, and will be responded " +
-    "to accordingly."
+    "to accordingly.";
 
   let salt = OS.Path.basename(OS.Constants.Path.profileDir) + aName +
              disclaimer.replace(/\$appName/g, Services.appinfo.name);
@@ -1724,7 +1724,7 @@ Engine.prototype = {
         }
 
         if (aWidth && aHeight) {
-          this._addIconToMap(aWidth, aHeight, aIconURL)
+          this._addIconToMap(aWidth, aHeight, aIconURL);
         }
         break;
       case "http":
@@ -1754,7 +1754,7 @@ Engine.prototype = {
           aEngine._iconURI = makeURI(dataURL);
 
           if (aWidth && aHeight) {
-            aEngine._addIconToMap(aWidth, aHeight, dataURL)
+            aEngine._addIconToMap(aWidth, aHeight, dataURL);
           }
 
           notifyAction(aEngine, SEARCH_ENGINE_CHANGED);
@@ -2578,7 +2578,7 @@ Submission.prototype = {
     return this._postData;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchSubmission])
-}
+};
 
 // nsISearchParseSubmissionResult
 function ParseSubmissionResult(aEngine, aTerms, aTermsOffset, aTermsLength) {
@@ -2601,7 +2601,7 @@ ParseSubmissionResult.prototype = {
     return this._termsLength;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchParseSubmissionResult]),
-}
+};
 
 const gEmptyParseSubmissionResult =
       Object.freeze(new ParseSubmissionResult(null, "", -1, 0));
@@ -3537,7 +3537,7 @@ SearchService.prototype = {
   },
 
   _findJAREngines: function SRCH_SVC_findJAREngines() {
-    LOG("_findJAREngines: looking for engines in JARs")
+    LOG("_findJAREngines: looking for engines in JARs");
 
     let chan = makeChannel(APP_SEARCH_PREFIX + "list.json");
     if (!chan) {
@@ -3570,7 +3570,7 @@ SearchService.prototype = {
    * succeeds.
    */
   async _asyncFindJAREngines() {
-    LOG("_asyncFindJAREngines: looking for engines in JARs")
+    LOG("_asyncFindJAREngines: looking for engines in JARs");
 
     let listURL = APP_SEARCH_PREFIX + "list.json";
     let chan = makeChannel(listURL);
@@ -3595,7 +3595,7 @@ SearchService.prototype = {
         request.onerror = function(aEvent) {
           LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
           resolve("");
-        }
+        };
         request.open("GET", Services.io.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
         request.send();
       };

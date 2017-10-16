@@ -15,7 +15,7 @@ const Cu = Components.utils;
 this.InlineSpellChecker = function InlineSpellChecker(aEditor) {
   this.init(aEditor);
   this.mAddedWordStack = []; // We init this here to preserve it between init/uninit calls
-}
+};
 
 InlineSpellChecker.prototype = {
   // Call this function to initialize for a given editor
@@ -153,7 +153,7 @@ InlineSpellChecker.prototype = {
       item.setAttribute("value", suggestion);
       // this function thing is necessary to generate a callback with the
       // correct binding of "val" (the index in this loop).
-      var callback = function(me, val) { return function(evt) { me.replaceMisspelling(val); } };
+      var callback = function(me, val) { return function(evt) { me.replaceMisspelling(val); }; };
       item.addEventListener("command", callback(this, i), true);
       item.setAttribute("class", "spell-suggestion");
       menu.insertBefore(item, insertBefore);
@@ -233,7 +233,7 @@ InlineSpellChecker.prototype = {
             var spellcheckChangeEvent = new view.CustomEvent(
                   "spellcheck-changed", {detail: { dictionary: dictName}});
             menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
-          }
+          };
         };
         item.addEventListener("command", callback(this, i, sortedList[i].id), true);
       }
@@ -522,7 +522,7 @@ RemoteSpellChecker.prototype = {
     return next.value;
   },
 
-  get currentDictionary() { return this._spellInfo.currentDictionary },
+  get currentDictionary() { return this._spellInfo.currentDictionary; },
   get dictionaryList() { return this._spellInfo.dictionaryList.slice(); },
 
   selectDictionary(index) {

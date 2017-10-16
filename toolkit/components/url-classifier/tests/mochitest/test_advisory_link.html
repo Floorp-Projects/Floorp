@@ -84,7 +84,7 @@ function testOnWindow(aTestData) {
 
       let browser = win.gBrowser.selectedBrowser;
       await BrowserTestUtils.loadURI(browser, aTestData.url);
-      await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded")
+      await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
 
       let doc = win.gBrowser.contentDocument;
       let advisoryEl = doc.getElementById("advisory_provider");

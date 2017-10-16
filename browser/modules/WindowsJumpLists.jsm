@@ -24,7 +24,7 @@ const PREF_TASKBAR_REFRESH   = "refreshInSeconds";
 const LIST_TYPE = {
   FREQUENT: 0,
   RECENT: 1
-}
+};
 
 /**
  * Exports

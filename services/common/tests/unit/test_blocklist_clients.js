@@ -187,7 +187,7 @@ add_task(async function test_sends_reload_message_when_blocklist_has_changes() {
   for (let {client} of gBlocklistClients) {
     let received = await new Promise((resolve, reject) => {
       Services.ppmm.addMessageListener("Blocklist:reload-from-disk", {
-        receiveMessage(aMsg) { resolve(aMsg) }
+        receiveMessage(aMsg) { resolve(aMsg); }
       });
 
       client.maybeSync(2000, Date.now() - 1000, {loadDump: false});

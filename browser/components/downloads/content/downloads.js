@@ -1031,7 +1031,7 @@ var DownloadsView = {
 
     aEvent.stopPropagation();
   },
-}
+};
 
 XPCOMUtils.defineConstant(this, "DownloadsView", DownloadsView);
 

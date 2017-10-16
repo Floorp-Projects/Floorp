@@ -20,7 +20,7 @@ function getRandomBuffer(size)
   let buffer = getBuffer(size);
   let view = new Uint8Array(buffer);
   for (let i = 0; i < size; i++) {
-    view[i] = parseInt(Math.random() * 255)
+    view[i] = parseInt(Math.random() * 255);
   }
   return buffer;
 }
@@ -37,7 +37,7 @@ function getRandomView(size)
 {
   let view = getView(size);
   for (let i = 0; i < size; i++) {
-    view[i] = parseInt(Math.random() * 255)
+    view[i] = parseInt(Math.random() * 255);
   }
   return view;
 }
@@ -145,7 +145,7 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler)
           testGenerator.next();
         }
       }
-    }
+    };
   }
 
   let reader = new FileReader();
@@ -161,7 +161,7 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler)
         testGenerator.next();
       }
     }
-  }
+  };
 }
 
 function verifyBlobArray(blobs1, blobs2, expectedFileIds)

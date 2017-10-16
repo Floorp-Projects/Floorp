@@ -287,7 +287,7 @@ add_task(async function test_fetchGuidForURL() {
   //    It then compares the URL with the URL that is on the visits info.
   // 2- By creating a new GUID, changing the GUID for the visit, fetching the GUID and comparing them.
   for (let url of arrayOfURLsToVisit) {
-    let guid = await PlacesSyncUtils.history.fetchGuidForURL(url)
+    let guid = await PlacesSyncUtils.history.fetchGuidForURL(url);
     let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(guid);
 
     let newGuid = makeGuid();
@@ -1150,7 +1150,7 @@ add_task(async function test_insert_livemark() {
       });
       let bmk = await PlacesUtils.bookmarks.fetch({
         guid: await PlacesSyncUtils.bookmarks.syncIdToGuid(livemark.syncId),
-      })
+      });
       equal(bmk.type, PlacesUtils.bookmarks.TYPE_FOLDER,
         "Livemarks should be stored as folders");
     }
@@ -2909,7 +2909,7 @@ add_task(async function test_ensureMobileQuery() {
   let allBookmarkGuid = allBookmarksGuids[0];
 
   do_print("Try creating query after organizer is ready");
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
   let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
     "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
   equal(queryGuids.length, 1, "Should create query without any mobile bookmarks");
@@ -2930,7 +2930,7 @@ add_task(async function test_ensureMobileQuery() {
     guid: queryGuid,
     title: "renamed query",
   });
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
   let rootInfo = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.mobileGuid);
   equal(rootInfo.title, "Mobile Bookmarks", "Should fix root title");
   queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
@@ -2941,7 +2941,7 @@ add_task(async function test_ensureMobileQuery() {
     guid: queryGuid,
     url: "place:folder=BOOKMARKS_MENU",
   });
-  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery();
   queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
   equal(queryInfo.url.href, `place:folder=MOBILE_BOOKMARKS`,
     "Should fix query URL to point to mobile root");

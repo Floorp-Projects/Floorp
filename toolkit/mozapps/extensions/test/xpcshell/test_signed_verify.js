@@ -33,7 +33,7 @@ function verifySignatures() {
     let observer = (subject, topic, data) => {
       Services.obs.removeObserver(observer, "xpi-signature-changed");
       resolve(JSON.parse(data));
-    }
+    };
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     do_print("Verifying signatures");

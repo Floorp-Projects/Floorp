@@ -29,7 +29,7 @@ this.FxAccountsStorageManager = function(options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
     baseDir: options.baseDir || OS.Constants.Path.profileDir,
-  }
+  };
   this.plainStorage = new JSONStorage(this.options);
   // Tests may want to pretend secure storage isn't available.
   let useSecure = "useSecure" in options ? options.useSecure : true;
@@ -43,7 +43,7 @@ this.FxAccountsStorageManager = function(options = {}) {
   this._promiseInitialized = Promise.reject("initialize not called");
   // A promise to avoid storage races - see _queueStorageOperation
   this._promiseStorageComplete = Promise.resolve();
-}
+};
 
 this.FxAccountsStorageManager.prototype = {
   _initialized: false,
@@ -112,7 +112,7 @@ this.FxAccountsStorageManager.prototype = {
       this._promiseInitialized = null;
       this._clearCachedData();
       log.trace("StorageManager finalized");
-    })
+    });
   },
 
   // We want to make sure we don't end up doing multiple storage requests
@@ -288,7 +288,7 @@ this.FxAccountsStorageManager.prototype = {
     // XXX - this would be a good use-case for a RuntimeAssert or similar, as
     // being added in bug 1080457.
     if (Object.keys(this.cachedPlain).length != 0) {
-      throw new Error("should be impossible to have cached data already.")
+      throw new Error("should be impossible to have cached data already.");
     }
     for (let [name, value] of Object.entries(got.accountData)) {
       this.cachedPlain[name] = value;
@@ -339,7 +339,7 @@ this.FxAccountsStorageManager.prototype = {
           }
         }
         if (needWrite) {
-          log.debug("successfully read secure data; writing updated data back")
+          log.debug("successfully read secure data; writing updated data back");
           await this._doWriteSecure();
         }
       }
@@ -367,7 +367,7 @@ this.FxAccountsStorageManager.prototype = {
     let toWritePlain = {
       version: DATA_FORMAT_VERSION,
       accountData: this.cachedPlain,
-    }
+    };
     await this.plainStorage.set(toWritePlain);
 
     // If we have no secure storage manager we are done.
@@ -395,7 +395,7 @@ this.FxAccountsStorageManager.prototype = {
     let toWriteSecure = {
       version: DATA_FORMAT_VERSION,
       accountData: this.cachedSecure,
-    }
+    };
     try {
       await this.secureStorage.set(this.cachedPlain.uid, toWriteSecure);
     } catch (ex) {
@@ -424,7 +424,7 @@ this.FxAccountsStorageManager.prototype = {
     this._clearCachedData();
     log.debug("account data reset");
   },
-}
+};
 
 /**
  * JSONStorage constructor that creates instances that may set/get
@@ -596,4 +596,4 @@ LoginManagerStorage.prototype = {
     }
     return null;
   },
-}
+};

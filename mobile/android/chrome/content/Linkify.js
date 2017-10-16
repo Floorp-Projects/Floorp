@@ -83,7 +83,7 @@ Linkifier.prototype = {
          node.parentNode.tagName != "TEXTAREA")
         return NodeFilter.FILTER_ACCEPT;
       return NodeFilter.FILTER_REJECT;
-    }
+    };
 
     let nodeWalker = aDoc.createTreeWalker(aDoc.body, NodeFilter.SHOW_TEXT, filterNode, false);
     let parseNode = () => {

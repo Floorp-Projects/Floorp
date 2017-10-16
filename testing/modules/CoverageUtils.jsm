@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = [
   "CoverageCollector",
-]
+];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -36,7 +36,7 @@ this.CoverageCollector = function(prefix) {
   this._encoder = new TextEncoder();
 
   this._testIndex = 0;
-}
+};
 
 CoverageCollector.prototype._getLinesCovered = function() {
   let coveredLines = {};
@@ -93,7 +93,7 @@ CoverageCollector.prototype._getLinesCovered = function() {
   }
 
   return coveredLines;
-}
+};
 
 CoverageCollector.prototype._getUncoveredLines = function() {
   let uncoveredLines = {};
@@ -124,7 +124,7 @@ CoverageCollector.prototype._getUncoveredLines = function() {
   }
 
   return uncoveredLines;
-}
+};
 
 CoverageCollector.prototype._getMethodNames = function() {
   let methodNames = {};
@@ -158,7 +158,7 @@ CoverageCollector.prototype._getMethodNames = function() {
   });
 
   return methodNames;
-}
+};
 
 /**
  * Implements an iterator for objects. It is
@@ -218,7 +218,7 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
   let path = this._prefix + "/jscov_" + Date.now() + ".json";
   dump("Writing coverage to: " + path + "\n");
   return OS.File.writeAtomic(path, arr, {tmpPath: path + ".tmp"});
-}
+};
 
 /**
  * Tear down the debugger after all tests are complete.
@@ -226,4 +226,4 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
 CoverageCollector.prototype.finalize = function() {
   this._dbg.removeAllDebuggees();
   this._dbg.enabled = false;
-}
+};

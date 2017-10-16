@@ -1015,7 +1015,7 @@ add_task(async function test_visit_notifies() {
         if (++callbackCount == 2) {
           resolve();
         }
-      }
+      };
       let visitObserver = new VisitObserver(place.uri, place.guid,
                                             function(aVisitDate,
                                                      aTransitionType) {

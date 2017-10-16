@@ -88,7 +88,7 @@ Finder.prototype = {
 
     if (options.storeResult) {
       this._searchString = options.searchString;
-      this.clipboardSearchString = options.searchString
+      this.clipboardSearchString = options.searchString;
     }
 
     let foundLink = this._fastFind.foundLink;
@@ -323,7 +323,7 @@ Finder.prototype = {
         fm.setFocus(fastFind.foundEditable, fm.FLAG_NOSCROLL);
         fastFind.collapseSelection();
       } else {
-        this._getWindow().focus()
+        this._getWindow().focus();
       }
     } catch (e) {}
   },

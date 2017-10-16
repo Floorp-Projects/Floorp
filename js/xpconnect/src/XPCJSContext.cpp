@@ -583,9 +583,7 @@ IsWebExtensionContentScript(BasePrincipal* principal, nsAString& addonId)
 
     auto expanded = principal->As<ExpandedPrincipal>();
 
-    nsTArray<nsCOMPtr<nsIPrincipal>>* principals;
-    expanded->GetWhiteList(&principals);
-    for (auto prin : *principals) {
+    for (auto& prin : expanded->WhiteList()) {
         if (IsWebExtensionPrincipal(prin, addonId)) {
             return true;
         }

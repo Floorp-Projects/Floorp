@@ -56,7 +56,7 @@ AutoCompleteInput.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 // Get tagging service
 try {

@@ -27,15 +27,15 @@
 
       this.invoke = function removeElm_invoke() {
         this.node.remove();
-      }
+      };
 
       this.check = function removeElm_check() {
         testAbsentCSSAttrs(this.accessible);
-      }
+      };
 
       this.getID = function removeElm_getID() {
         return "test CSS-based attributes on removed accessible";
-      }
+      };
     }
 
     function doTest() {

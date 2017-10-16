@@ -9,7 +9,7 @@ var gContainer;
 window.onload = function() {
   gContainer = document.getElementById("abouts");
   findAbouts();
-}
+};
 
 function findAbouts() {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);

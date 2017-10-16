@@ -329,7 +329,7 @@ var SessionFileInternal = {
       this.read();
     }
     await this._deferredInitialized.promise;
-    return SessionWorker.post(...args)
+    return SessionWorker.post(...args);
   },
 
   write(aData) {

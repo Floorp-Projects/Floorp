@@ -566,7 +566,7 @@ var PlacesCommandHook = {
         resolve(msg.data);
       });
 
-      mm.sendAsyncMessage("Bookmarks:GetPageDetails", { })
+      mm.sendAsyncMessage("Bookmarks:GetPageDetails", { });
     });
   },
 
@@ -1309,11 +1309,11 @@ var LibraryUI = {
     if (!this._libraryButtonAnimationEndListeners[animation]) {
       this._libraryButtonAnimationEndListeners[animation] = event => {
         this._libraryButtonAnimationEndListener(event, animation);
-      }
+      };
     }
     animatableBox.addEventListener("animationend", this._libraryButtonAnimationEndListeners[animation]);
 
-    window.addEventListener("resize", this._onWindowResize)
+    window.addEventListener("resize", this._onWindowResize);
   },
 
   _libraryButtonAnimationEndListeners: {},
