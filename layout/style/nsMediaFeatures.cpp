@@ -637,7 +637,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_start_backward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_start_backward },
     GetSystemMetric
   },
@@ -645,7 +645,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_start_forward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_start_forward },
     GetSystemMetric
   },
@@ -653,7 +653,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_end_backward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_end_backward },
     GetSystemMetric
   },
@@ -661,7 +661,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_end_forward,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_end_forward },
     GetSystemMetric
   },
@@ -669,7 +669,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_scrollbar_thumb_proportional,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::scrollbar_thumb_proportional },
     GetSystemMetric
   },
