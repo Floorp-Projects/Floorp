@@ -9692,6 +9692,66 @@ nsDisplayFilter::PrintEffects(nsACString& aTo)
 }
 #endif
 
+nsDisplaySVGWrapper::nsDisplaySVGWrapper(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList)
+{
+  MOZ_COUNT_CTOR(nsDisplaySVGWrapper);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplaySVGWrapper::~nsDisplaySVGWrapper() {
+  MOZ_COUNT_DTOR(nsDisplaySVGWrapper);
+}
+#endif
+
+LayerState
+nsDisplaySVGWrapper::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters)
+{
+  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager && layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return LAYER_ACTIVE_FORCE;
+  }
+  return LAYER_NONE;
+}
+
+bool
+nsDisplaySVGWrapper::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
+{
+  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager && layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return false;
+  }
+  return true;
+}
+
+already_AddRefed<Layer>
+nsDisplaySVGWrapper::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aContainerParameters)
+{
+  ContainerLayerParameters newContainerParameters = aContainerParameters;
+  newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+
+  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+                           newContainerParameters, nullptr);
+
+  return container.forget();
+}
+
+bool
+nsDisplaySVGWrapper::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                             const StackingContextHelper& aSc,
+                                             mozilla::layers::WebRenderLayerManager* aManager,
+                                             nsDisplayListBuilder* aDisplayListBuilder)
+{
+  return false;
+}
+
 namespace mozilla {
 
 uint32_t PaintTelemetry::sPaintLevel = 0;
