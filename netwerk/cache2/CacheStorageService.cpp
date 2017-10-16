@@ -1235,7 +1235,7 @@ CacheStorageService::SchedulePurgeOverMemoryLimit()
     return;
   }
 
-  mPurgeTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mPurgeTimer = NS_NewTimer();
   if (mPurgeTimer) {
     nsresult rv;
     rv = mPurgeTimer->InitWithCallback(this, 1000, nsITimer::TYPE_ONE_SHOT);

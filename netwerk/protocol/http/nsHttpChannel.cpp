@@ -3933,9 +3933,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
         };
 
-        mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
         // calls nsHttpChannel::Notify after `mCacheOpenDelay` milliseconds
-        mCacheOpenTimer->InitWithCallback(this, mCacheOpenDelay, nsITimer::TYPE_ONE_SHOT);
+        NS_NewTimerWithCallback(getter_AddRefs(mCacheOpenTimer),
+                                this, mCacheOpenDelay,
+                                nsITimer::TYPE_ONE_SHOT);
 
     }
     NS_ENSURE_SUCCESS(rv, rv);
@@ -9267,7 +9268,7 @@ nsHttpChannel::TriggerNetworkWithDelay(uint32_t aDelay)
     }
 
     if (!mNetworkTriggerTimer) {
-        mNetworkTriggerTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+        mNetworkTriggerTimer = NS_NewTimer();
     }
     mNetworkTriggerTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
     return NS_OK;
