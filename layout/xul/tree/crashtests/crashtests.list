@@ -1,5 +1,5 @@
 # All stylo assertions below are bug 1397644
-asserts-if(stylo,4) load 307298-1.xul
+asserts-if(stylo,3-4) load 307298-1.xul
 asserts-if(stylo,8) load 309732-1.xul
 asserts-if(stylo,8) load 309732-2.xul
 asserts-if(stylo,13-23) load 366583-1.xul
