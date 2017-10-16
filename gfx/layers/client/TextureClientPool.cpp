@@ -62,8 +62,8 @@ TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
 {
   TCP_LOG("TexturePool %p created with maximum unused texture clients %u\n",
       this, mInitialPoolSize);
-  mShrinkTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mClearTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mShrinkTimer = NS_NewTimer();
+  mClearTimer = NS_NewTimer();
   if (aFormat == gfx::SurfaceFormat::UNKNOWN) {
     gfxWarning() << "Creating texture pool for SurfaceFormat::UNKNOWN format";
   }
