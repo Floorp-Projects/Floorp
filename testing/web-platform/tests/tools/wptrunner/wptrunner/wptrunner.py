@@ -261,6 +261,12 @@ def run_tests(config, test_paths, product, **kwargs):
                 logger.suite_end()
     return unexpected_total == 0
 
+
+def check_stability(**kwargs):
+    import stability
+    return stability.check_stability(logger, **kwargs)
+
+
 def start(**kwargs):
     if kwargs["list_test_groups"]:
         list_test_groups(**kwargs)
@@ -268,8 +274,11 @@ def start(**kwargs):
         list_disabled(**kwargs)
     elif kwargs["list_tests"]:
         list_tests(**kwargs)
+    elif kwargs["verify"]:
+        check_stability(**kwargs)
     else:
         return not run_tests(**kwargs)
+
 
 def main():
     """Main entry point when calling from the command line"""
