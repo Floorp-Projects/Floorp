@@ -5012,7 +5012,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 #endif
 
   RefPtr<ChannelMediaDecoder> decoder =
-    DecoderTraits::CreateDecoder(decoderInit, &diagnostics);
+    ChannelMediaDecoder::Create(decoderInit, &diagnostics);
   if (!decoder) {
     reportCanPlay(false);
     return NS_ERROR_FAILURE;
