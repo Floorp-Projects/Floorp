@@ -42,15 +42,9 @@ public:
 
   nsresult Init()
   {
-    nsresult rv;
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(mTimer);
-    rv = mTimer->SetTarget(mTarget);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
+    return NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                                   this, mDelay, nsITimer::TYPE_ONE_SHOT,
+                                   mTarget);
   }
 
   nsresult DoRun()
