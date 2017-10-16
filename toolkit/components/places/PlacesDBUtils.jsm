@@ -852,6 +852,22 @@ this.PlacesDBUtils = {
        WHERE guid IN (SELECT guid FROM moz_bookmarks)`,
     });
 
+    // S.3 set missing added and last modified dates.
+    cleanupStatements.push({
+      query:
+      `UPDATE moz_bookmarks
+       SET dateAdded = COALESCE(dateAdded, lastModified, (
+             SELECT MIN(visit_date) FROM moz_historyvisits
+             WHERE place_id = fk
+           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
+           lastModified = COALESCE(lastModified, dateAdded, (
+             SELECT MAX(visit_date) FROM moz_historyvisits
+             WHERE place_id = fk
+           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
+       WHERE dateAdded IS NULL OR
+             lastModified IS NULL`,
+    });
+
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
     return cleanupStatements;
