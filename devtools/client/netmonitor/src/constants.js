@@ -265,6 +265,19 @@ const FILTER_FLAGS = [
   "regexp",
 ];
 
+const FILTER_TAGS = [
+  "html",
+  "css",
+  "js",
+  "xhr",
+  "fonts",
+  "images",
+  "media",
+  "flash",
+  "ws",
+  "other",
+];
+
 const REQUESTS_WATERFALL = {
   BACKGROUND_TICKS_MULTIPLE: 5, // ms
   BACKGROUND_TICKS_SCALES: 3,
@@ -292,6 +305,7 @@ const general = {
   HEADERS,
   RESPONSE_HEADERS,
   FILTER_FLAGS,
+  FILTER_TAGS,
   SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE: 51200, // 50 KB in bytes
   REQUESTS_WATERFALL,
   PANELS,

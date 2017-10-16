@@ -391,7 +391,7 @@ protected:
   Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIContent& aListItem, bool* aOutOfList = nullptr);
   nsresult RemoveListStructure(Element& aList);
-  nsresult CacheInlineStyles(nsIDOMNode* aNode);
+  nsresult CacheInlineStyles(nsINode* aNode);
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
   void AdjustSpecialBreaks();
@@ -459,7 +459,7 @@ protected:
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
    * aStyleCache.
    */
-  nsresult GetInlineStyles(nsIDOMNode* aNode,
+  nsresult GetInlineStyles(nsINode* aNode,
                            StyleCache aStyleCache[SIZE_STYLE_TABLE]);
 
 protected:
