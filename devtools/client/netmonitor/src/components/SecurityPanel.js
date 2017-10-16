@@ -14,7 +14,7 @@ const { getUrlHost } = require("../utils/request-utils");
 
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div, input, span } = DOM;
 const NOT_AVAILABLE = L10N.getStr("netmonitor.security.notAvailable");

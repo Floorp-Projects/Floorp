@@ -18,7 +18,7 @@ const {
 } = require("../utils/request-utils");
 
 // Components
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div, img } = DOM;
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
