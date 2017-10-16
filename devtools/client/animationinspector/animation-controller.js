@@ -235,7 +235,8 @@ var AnimationsController = {
                                    !this.mutationsDetectedWhileHidden)) {
       return;
     }
-    this.isMutationsEventOccuredDuringHidden = false;
+
+    this.mutationsDetectedWhileHidden = false;
 
     this.nodeFront = gInspector.selection.nodeFront;
     let done = gInspector.updating("animationscontroller");
