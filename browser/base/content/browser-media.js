@@ -70,7 +70,7 @@ var gEMEHandler = {
       case "api-disabled":
       case "cdm-disabled":
         notificationId = "drmContentDisabled";
-        buttonCallback = gEMEHandler.ensureEMEEnabled.bind(gEMEHandler, browser, keySystem)
+        buttonCallback = gEMEHandler.ensureEMEEnabled.bind(gEMEHandler, browser, keySystem);
         params = [this.getLearnMoreLink(notificationId)];
         break;
 
@@ -271,7 +271,7 @@ let gDecoderDoctorHandler = {
     type = type.toLowerCase();
     // Error out early on invalid ReportId
     if (!(/^\w+$/mi).test(decoderDoctorReportId)) {
-      return
+      return;
     }
     let title = gDecoderDoctorHandler.getLabelForNotificationBox(type);
     if (!title) {
@@ -375,7 +375,7 @@ let gDecoderDoctorHandler = {
       histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SOLVED);
     }
   },
-}
+};
 
 window.getGroupMessageManager("browsers").addMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
 window.getGroupMessageManager("browsers").addMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);

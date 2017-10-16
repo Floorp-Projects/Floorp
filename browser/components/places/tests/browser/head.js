@@ -169,7 +169,7 @@ function promiseBookmarksNotification(notification, conditionFn) {
             } else {
               info(`promiseBookmarksNotification: skip cause condition doesn't apply to ${JSON.stringify(args)}`);
             }
-          }
+          };
         return () => {};
       }
     });
@@ -190,7 +190,7 @@ function promiseHistoryNotification(notification, conditionFn) {
               PlacesUtils.history.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);
             }
-          }
+          };
         return () => {};
       }
     });
@@ -364,7 +364,7 @@ var openContextMenuForContentSelector = async function(browser, selector) {
                                                      "popupshown");
   await ContentTask.spawn(browser, { selector }, async function(args) {
     let doc = content.document;
-    let elt = doc.querySelector(args.selector)
+    let elt = doc.querySelector(args.selector);
     dump(`openContextMenuForContentSelector: found ${elt}\n`);
 
     /* Open context menu so chrome can access the element */
@@ -476,7 +476,7 @@ function promisePlacesInitComplete() {
   const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
                          .getService(Ci.nsIObserver);
 
-  let placesInitCompleteObserved = TestUtils.topicObserved("places-browser-init-complete")
+  let placesInitCompleteObserved = TestUtils.topicObserved("places-browser-init-complete");
 
   gBrowserGlue.observe(null, "browser-glue-test",
     "places-browser-init-complete");

@@ -133,7 +133,7 @@ Observer.prototype = {
     } else // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
   }
-}
+};
 
 
 function Subject(object) {

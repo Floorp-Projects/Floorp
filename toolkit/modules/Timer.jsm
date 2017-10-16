@@ -59,7 +59,7 @@ function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
 this.setTimeout = function setTimeout(aCallback, aMilliseconds, ...aArgs) {
   return _setTimeoutOrIsInterval(
     aCallback, aMilliseconds, false, null, aArgs);
-}
+};
 
 this.setTimeoutWithTarget = function setTimeoutWithTarget(aCallback,
                                                           aMilliseconds,
@@ -67,12 +67,12 @@ this.setTimeoutWithTarget = function setTimeoutWithTarget(aCallback,
                                                           ...aArgs) {
   return _setTimeoutOrIsInterval(
     aCallback, aMilliseconds, false, aTarget, aArgs);
-}
+};
 
 this.setInterval = function setInterval(aCallback, aMilliseconds, ...aArgs) {
   return _setTimeoutOrIsInterval(
     aCallback, aMilliseconds, true, null, aArgs);
-}
+};
 
 this.setIntervalWithTarget = function setIntervalWithTarget(aCallback,
                                                             aMilliseconds,
@@ -80,11 +80,11 @@ this.setIntervalWithTarget = function setIntervalWithTarget(aCallback,
                                                             ...aArgs) {
   return _setTimeoutOrIsInterval(
     aCallback, aMilliseconds, true, aTarget, aArgs);
-}
+};
 
 this.clearInterval = this.clearTimeout = function clearTimeout(aId) {
   if (gTimerTable.has(aId)) {
     gTimerTable.get(aId).cancel();
     gTimerTable.delete(aId);
   }
-}
+};

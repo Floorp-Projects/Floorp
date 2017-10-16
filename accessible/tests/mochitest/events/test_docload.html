@@ -51,7 +51,7 @@
 
       this.invoke = function changeIframeSrc_invoke() {
         this.DOMNode.src = aURL;
-      }
+      };
 
       this.finalCheck = function changeIframeSrc_finalCheck() {
         var accTree = {
@@ -65,11 +65,11 @@
         };
 
         testAccessibleTree(this.DOMNode, accTree);
-      }
+      };
 
       this.getID = function changeIframeSrc_getID() {
         return "change iframe src on " + aURL;
-      }
+      };
 
       function getIframeDoc() {
         return getAccessible(getNode(aIdentifier).contentDocument);
@@ -104,7 +104,7 @@
         } else {
           this.IFrameContainerDOMNode.removeChild(this.DOMNode);
         }
-      }
+      };
 
       this.finalCheck = function morphIFrame_finalCheck() {
         var accTree = {
@@ -121,7 +121,7 @@
         };
 
         testAccessibleTree(this.IFrameContainerDOMNode, accTree);
-      }
+      };
 
       this.getID = function morphIFrame_getID() {
         if (aAction == kRemove)
@@ -129,7 +129,7 @@
 
         return "change display style of iframe to " +
           ((aAction == kHide) ? "none" : "block");
-      }
+      };
     }
 
     function makeIFrameVisible(aID) {
@@ -141,11 +141,11 @@
 
       this.invoke = function makeIFrameVisible_invoke() {
         this.DOMNode.style.visibility = "visible";
-      }
+      };
 
       this.getID = function makeIFrameVisible_getID() {
         return "The accessible for DOM document loaded before it's shown shouldn't have busy state.";
-      }
+      };
     }
 
     function openDialogWnd(aURL) {
@@ -167,11 +167,11 @@
 
       this.invoke = function openDialogWnd_invoke() {
         this.mDialog = window.openDialog(aURL);
-      }
+      };
 
       this.finalCheck = function openDialogWnd_finalCheck() {
         this.finalCheckImpl();
-      }
+      };
 
       this.finalCheckImpl = function openDialogWnd_finalCheckImpl() {
         var accTree = {
@@ -205,11 +205,11 @@
           ok(!isAccessibleInCache(dlgDoc),
              "The document accessible for '" + aURL + "' is in cache still!");
         });
-      }
+      };
 
       this.getID = function openDialogWnd_getID() {
         return "open dialog '" + aURL + "'";
-      }
+      };
     }
 
     function openWndShutdownDoc() {
@@ -244,7 +244,7 @@
         // be shut down.
         ok(!isAccessibleInCache(this.iframeDoc),
            "The document accessible for iframe is in cache still!");
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

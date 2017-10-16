@@ -53,7 +53,7 @@
           ] };
 
         testAccessibleTree(this.containerNode, tree);
-      }
+      };
 
       this.invoke = function setOnClickAttr_invoke() {
         var tree =
@@ -68,11 +68,11 @@
         testAccessibleTree(this.containerNode, tree);
 
         this.containerNode.removeChild(this.imgNode);
-      }
+      };
 
       this.getID = function setOnClickAttr_getID() {
         return "remove middle img";
-      }
+      };
     }
 
     /**
@@ -114,7 +114,7 @@
         testAccessibleTree(this.topNode, tree);
 
         this.containerNode.appendChild(this.imgNode);
-      }
+      };
 
       this.finalCheck = function insertImg_finalCheck() {
         var tree =
@@ -129,11 +129,11 @@
           ] };
 
         testAccessibleTree(this.topNode, tree);
-      }
+      };
 
       this.getID = function appendImg_getID() {
         return "insert img into internal container";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

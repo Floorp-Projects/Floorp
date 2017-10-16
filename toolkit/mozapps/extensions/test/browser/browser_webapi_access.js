@@ -25,7 +25,7 @@ add_task(async function test_not_available() {
     async function test_not_available(browser) {
       let available = await check_availability(browser);
       ok(!available, "API should not be available.");
-    })
+    });
 });
 
 // Test that with testing on the API is available in the test domain
@@ -36,7 +36,7 @@ add_task(async function test_available() {
     async function test_not_available(browser) {
       let available = await check_availability(browser);
       ok(available, "API should be available.");
-    })
+    });
 });
 
 // Test that the API is not available in a bad domain
@@ -45,7 +45,7 @@ add_task(async function test_bad_domain() {
     async function test_not_available(browser) {
       let available = await check_availability(browser);
       ok(!available, "API should not be available.");
-    })
+    });
 });
 
 // Test that the API is only available in https sites
@@ -54,7 +54,7 @@ add_task(async function test_not_available_http() {
     async function test_not_available(browser) {
       let available = await check_availability(browser);
       ok(!available, "API should not be available.");
-    })
+    });
 });
 
 // Test that the API is available when in a frame of the test domain
@@ -63,7 +63,7 @@ add_task(async function test_available_framed() {
     async function test_available(browser) {
       let available = await check_frame_availability(browser);
       ok(available, "API should be available.");
-    })
+    });
 });
 
 // Test that if the external frame is http then the inner frame doesn't have
@@ -73,7 +73,7 @@ add_task(async function test_not_available_http_framed() {
     async function test_not_available(browser) {
       let available = await check_frame_availability(browser);
       ok(!available, "API should not be available.");
-    })
+    });
 });
 
 // Test that if the external frame is a bad domain then the inner frame doesn't
@@ -83,7 +83,7 @@ add_task(async function test_not_available_framed() {
     async function test_not_available(browser) {
       let available = await check_frame_availability(browser);
       ok(!available, "API should not be available.");
-    })
+    });
 });
 
 // Test that a window navigated to a bad domain doesn't allow access to the API
@@ -113,7 +113,7 @@ add_task(async function test_navigated_window() {
       ok(!available, "API should not be available.");
 
       gBrowser.removeTab(tab);
-    })
+    });
 });
 
 // Check that if a page is embedded in a chrome content UI that it can still
@@ -123,5 +123,5 @@ add_task(async function test_chrome_frame() {
     async function test_available(browser) {
       let available = await check_frame_availability(browser);
       ok(available, "API should be available.");
-    })
+    });
 });

@@ -211,7 +211,7 @@ var gTests = [
           is(id, "echo");
           is(message.command, "unsolicited");
 
-          resolve()
+          resolve();
         });
       });
 
@@ -396,7 +396,7 @@ var gTests = [
             ok(!sawString);
             sawString = true;
           } else {
-            reject(new Error(`Unknown message type: ${message.type}`))
+            reject(new Error(`Unknown message type: ${message.type}`));
           }
           if (sawObject && sawString) {
             resolve();

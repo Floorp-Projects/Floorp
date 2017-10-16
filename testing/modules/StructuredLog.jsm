@@ -27,7 +27,7 @@ this.StructuredLogger = function(name, dumpFun = dump, mutators = []) {
   this.name = name;
   this._dumpFun = dumpFun;
   this._mutatorFuns = mutators;
-}
+};
 
 /**
  * Log functions producing messages in the format specified by mozlog

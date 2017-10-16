@@ -58,7 +58,7 @@ function test_paste(aCurrentTest) {
       element.value = "";
       setTimeout(next_test, 0);
     }
-  }
+  };
   element.addEventListener("input", inputListener);
 
   // Focus the window.

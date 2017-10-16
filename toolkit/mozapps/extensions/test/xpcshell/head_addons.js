@@ -337,7 +337,7 @@ this.BootstrapMonitor = {
       }
 
       this.installed.delete(id);
-      this.uninstalled.set(id, info)
+      this.uninstalled.set(id, info);
     } else if (info.event == "startup") {
       this.started.set(id, info);
 
@@ -350,7 +350,7 @@ this.BootstrapMonitor = {
       this.startupPromises = [];
     }
   }
-}
+};
 
 AddonTestUtils.on("addon-manager-shutdown", () => BootstrapMonitor.shutdownCheck());
 
@@ -762,7 +762,7 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
 function promiseWriteWebManifestForExtension(aData, aDir, aId = aData.applications.gecko.id) {
   let files = {
     "manifest.json": JSON.stringify(aData),
-  }
+  };
   return AddonTestUtils.promiseWriteFilesToExtension(aDir.path, aId, files);
 }
 
@@ -1297,7 +1297,7 @@ function callback_soon(aFunction) {
     do_execute_soon(function() {
       aFunction.apply(null, args);
     }, aFunction.name ? "delayed callback " + aFunction.name : "delayed callback");
-  }
+  };
 }
 
 function writeProxyFileToDir(aDir, aAddon, aId) {
@@ -1305,7 +1305,7 @@ function writeProxyFileToDir(aDir, aAddon, aId) {
 
   let file = aDir.clone();
   file.append(aId);
-  return file
+  return file;
 }
 
 async function serveSystemUpdate(xml, perform_update, testserver) {

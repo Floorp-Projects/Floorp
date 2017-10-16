@@ -24,15 +24,15 @@ function focusLink(aID, aSelectedAfter) {
     testStates(aID, expectedStates, 0, unexpectedStates, 0);
 
     this.node.focus();
-  }
+  };
 
   this.finalCheck = function focusLink_finalCheck() {
     var expectedStates = (aSelectedAfter ? STATE_FOCUSABLE | STATE_FOCUSED : 0);
     var unexpectedStates = (!aSelectedAfter ? STATE_FOCUSABLE | STATE_FOCUSED : 0);
     testStates(aID, expectedStates, 0, unexpectedStates, 0);
-  }
+  };
 
   this.getID = function focusLink_getID() {
     return "focus hyperlink " + prettyName(aID);
-  }
+  };
 }

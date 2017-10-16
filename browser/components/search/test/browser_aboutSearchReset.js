@@ -106,7 +106,7 @@ var gTests = [
   async run() {
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
-                                                     "about:preferences")
+                                                     "about:preferences");
     gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     await loadPromise;
 

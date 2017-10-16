@@ -45,7 +45,7 @@
         // spellchecker.enableRealTimeSpell = true;
 
         this.DOMNode.value = "valid text inalid tixt";
-      }
+      };
 
       this.finalCheck = function spelledTextInvoker_finalCheck() {
         var defAttrs = buildDefaultTextAttrs(this.DOMNode, kInputFontSize,
@@ -62,11 +62,11 @@
         testTextAttrs(aID, 11, misspelledAttrs, defAttrs, 11, 17);
         testTextAttrs(aID, 17, attrs, defAttrs, 17, 18);
         testTextAttrs(aID, 18, misspelledAttrs, defAttrs, 18, 22);
-      }
+      };
 
       this.getID = function spelledTextInvoker_getID() {
         return "text attribute change for misspelled text";
-      }
+      };
     }
 
     /**

@@ -176,7 +176,7 @@ add_task({
 }, function test_CaptureStacksDoesNotAllowBadKey() {
   for (let badKey of [null, "KEY-!@\"#$%^&*()_"]) {
     let stacks = captureStacks(badKey);
-    let captureData = stacks.captures.find(capture => capture[0] === badKey)
+    let captureData = stacks.captures.find(capture => capture[0] === badKey);
     Assert.ok(!captureData, `"${badKey}" should not be allowed as a key`);
   }
 });

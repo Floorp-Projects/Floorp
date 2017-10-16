@@ -233,7 +233,7 @@ add_test(function test_dh_details() {
     onItemAnnotationSet() {},
     onPageAnnotationRemoved() {},
     onItemAnnotationRemoved() {}
-  }
+  };
 
   let historyObserver = {
     onBeginUpdateBatch() {},

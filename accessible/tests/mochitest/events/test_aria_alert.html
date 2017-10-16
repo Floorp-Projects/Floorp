@@ -36,15 +36,15 @@
     }
 
     function changeAlert(aID) {
-      this.__defineGetter__("DOMNode", function() { return getNode(aID) });
+      this.__defineGetter__("DOMNode", function() { return getNode(aID); });
 
       this.invoke = function changeAlert_invoke() {
         this.DOMNode.textContent = "new alert";
-      }
+      };
 
       this.getID = function showAlert_getID() {
         return "Change ARIA alert " + aID;
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

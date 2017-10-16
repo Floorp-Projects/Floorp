@@ -144,7 +144,7 @@ this.CrashMonitor = {
       throw new Error("CrashMonitor must be initialized before getting previous checkpoints");
     }
 
-    return CrashMonitorInternal.previousCheckpoints
+    return CrashMonitorInternal.previousCheckpoints;
   },
 
   /**

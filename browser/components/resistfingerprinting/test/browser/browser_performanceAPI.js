@@ -4,7 +4,7 @@
  */
 
 const TEST_PATH = "http://example.net/browser/browser/" +
-                  "components/resistfingerprinting/test/browser/"
+                  "components/resistfingerprinting/test/browser/";
 
 const PERFORMANCE_TIMINGS = [
   "navigationStart",
@@ -76,7 +76,7 @@ add_task(async function runTestsForWorker() {
           ok(false, "Unknown message type");
           resolve();
         }
-      }
+      };
       worker.postMessage({type: "runTests"});
     });
   });

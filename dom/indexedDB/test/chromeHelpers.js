@@ -16,7 +16,7 @@ if (!window.runTest) {
     SimpleTest.waitForExplicitFinish();
 
     testGenerator.next();
-  }
+  };
 }
 
 function finishTest()

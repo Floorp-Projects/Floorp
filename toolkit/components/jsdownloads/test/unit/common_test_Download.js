@@ -2227,7 +2227,7 @@ add_task(async function test_launcherPath_invalid() {
   try {
     download.launch();
     await promiseDownloadLaunched;
-    do_throw("Can't launch file with invalid custom launcher")
+    do_throw("Can't launch file with invalid custom launcher");
   } catch (ex) {
     if (!(ex instanceof Components.Exception)) {
       throw ex;

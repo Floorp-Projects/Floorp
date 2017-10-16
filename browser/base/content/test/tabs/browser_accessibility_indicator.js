@@ -49,7 +49,7 @@ async function initAccessibilityService() {
         data === "1" && resolve();
       };
       Services.obs.addObserver(observe, "a11y-init-or-shutdown");
-    })
+    });
   }
 
   return accService;
@@ -68,7 +68,7 @@ async function shutdownAccessibilityService() {
         data === "0" && resolve();
       };
       Services.obs.addObserver(observe, "a11y-init-or-shutdown");
-    })
+    });
   }
 }
 

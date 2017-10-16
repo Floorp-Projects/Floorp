@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
 
 this.TabSetRecord = function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
-}
+};
 TabSetRecord.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Tabs",
@@ -35,7 +35,7 @@ Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
 
 this.TabEngine = function TabEngine(service) {
   SyncEngine.call(this, "Tabs", service);
-}
+};
 TabEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: TabStore,

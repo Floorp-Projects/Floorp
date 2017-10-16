@@ -16,7 +16,7 @@ QuietStore.prototype = {
   async getAllIDs() {
     return [];
   }
-}
+};
 
 function SteamEngine() {
   SyncEngine.call(this, "Steam", Service);

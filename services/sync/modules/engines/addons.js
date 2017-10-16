@@ -116,7 +116,7 @@ this.AddonsEngine = function AddonsEngine(service) {
   SyncEngine.call(this, "Addons", service);
 
   this._reconciler = new AddonsReconciler();
-}
+};
 AddonsEngine.prototype = {
   __proto__:              SyncEngine.prototype,
   _storeObj:              AddonsStore,

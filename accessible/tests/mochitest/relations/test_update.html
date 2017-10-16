@@ -68,18 +68,18 @@
           document.body.appendChild(this.dependentNode);
           document.body.appendChild(this.hostNode);
         }
-      }
+      };
 
       this.finalCheck = function insertRelated_finalCheck() {
         testRelation(this.dependentNode, aDependentRelation, this.hostNode);
         if (aHostRelation)
           testRelation(this.hostNode, aHostRelation, this.dependentNode);
-      }
+      };
 
       this.getID = function insertRelated_getID() {
         return "Insert " + aHostRelAttr + "='" + aDependentID + "' node" +
           (aInsertHostFirst ? " before" : "after") + " dependent node";
-      }
+      };
     }
 
     /**
@@ -102,16 +102,16 @@
         testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
 
         this.containerNode.style.overflow = "visible";
-      }
+      };
 
       this.finalCheck = function recreateRelatives_finalCheck() {
         testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
         testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
-      }
+      };
 
       this.getID = function recreateRelatives_getID() {
         return "recreate relatives ";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true; // debug

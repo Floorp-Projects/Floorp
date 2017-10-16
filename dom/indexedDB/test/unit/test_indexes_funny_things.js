@@ -67,7 +67,7 @@ function* testSteps()
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }
-    }
+    };
   }
   event = yield undefined;
   // Now create the indexes.
@@ -126,7 +126,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataTypeSort.length, "Saw all the expected keys");
@@ -157,7 +157,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataLengthSort.length, "Saw all the expected keys");

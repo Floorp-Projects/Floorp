@@ -71,7 +71,7 @@ const SEARCH_SCORE_MATCH_SUBSTRING = 3;
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
 const UPDATES_RELEASENOTES_TRANSFORMFILE = "chrome://mozapps/content/extensions/updateinfo.xsl";
 
-const XMLURI_PARSE_ERROR = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
+const XMLURI_PARSE_ERROR = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 var gViewDefault = "addons://discover/";
 
@@ -1095,7 +1095,7 @@ var gViewController = {
           } else {
             document.getElementById("updates-installed").hidden = false;
           }
-        }
+        };
 
         var updateInstallListener = {
           onDownloadFailed() {
@@ -1266,7 +1266,7 @@ var gViewController = {
                   addon: aAddon,
                   icon: aAddon.iconURL,
                   permissions: perms,
-                  resolve() { aAddon.userDisabled = false },
+                  resolve() { aAddon.userDisabled = false; },
                   reject() {},
                 },
               },
@@ -1829,7 +1829,7 @@ function getAddonsAndInstalls(aType, aCallback) {
     });
 
     if (addons != null)
-      aCallback(addons, installs)
+      aCallback(addons, installs);
   });
 }
 
@@ -2188,7 +2188,7 @@ var gDiscoverView = {
         this._loadURL(this.homepageURL.spec, false, notifyInitialized);
       else
         notifyInitialized();
-    }
+    };
 
     if (Services.prefs.getBoolPref(PREF_GETADDONS_CACHE_ENABLED) == false) {
       setURL(url);
@@ -2212,7 +2212,7 @@ var gDiscoverView = {
           userDisabled: addon.userDisabled,
           isCompatible: addon.isCompatible,
           isBlocklisted: addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED
-        }
+        };
       }
 
       setURL(url + "#" + JSON.stringify(list));
@@ -2496,7 +2496,7 @@ var gSearchView = {
 
         elements.push(item);
       }
-    }
+    };
 
     let finishSearch = (createdCount) => {
       if (elements.length > 0) {
@@ -2511,7 +2511,7 @@ var gSearchView = {
 
       if (!this.isSearching)
         gViewController.notifyViewChanged();
-    }
+    };
 
     getAddonsAndInstalls(null, function(aAddons, aInstalls) {
       if (gViewController && aRequest != gViewController.currentViewRequest)
@@ -3278,7 +3278,7 @@ var gDetailView = {
     var reviews = document.getElementById("detail-reviews");
     if (aAddon.reviewURL) {
       var text = gStrings.ext.GetStringFromName("numReviews");
-      text = PluralForm.get(aAddon.reviewCount, text)
+      text = PluralForm.get(aAddon.reviewCount, text);
       text = text.replace("#1", aAddon.reviewCount);
       reviews.value = text;
       reviews.hidden = false;
@@ -3627,7 +3627,7 @@ var gDetailView = {
         if (aScrollToPreferences)
           gDetailView.scrollToPreferencesRows();
       });
-    }
+    };
 
     // This function removes and returns the text content of aNode without
     // removing any child elements. Removing the text nodes ensures any XBL

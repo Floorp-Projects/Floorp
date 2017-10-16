@@ -24,7 +24,7 @@ add_task(async function() {
   function waitForFind(which = "onFindResult") {
     return new Promise(resolve => {
       listener[which] = resolve;
-    })
+    });
   }
 
   let promiseFind = waitForFind("onHighlightFinished");

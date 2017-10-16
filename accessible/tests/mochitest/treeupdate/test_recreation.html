@@ -52,11 +52,11 @@
 
       this.invoke = function changeAttr_invoke() {
         this.node.setAttribute(aAttr, aValue);
-      }
+      };
 
       this.getID = function changeAttr_getID() {
         return "change " + aAttr + "attribute for " + aID;
-      }
+      };
     }
 
     function removeAttr(aID, aAttr) {
@@ -64,11 +64,11 @@
 
       this.invoke = function remvoeAttr_invoke() {
         this.node.removeAttribute(aAttr);
-      }
+      };
 
       this.getID = function remvoeAttr_getID() {
         return "remove " + aAttr + "attribute for " + aID;
-      }
+      };
     }
 
     function changeRole(aID, aHasAccessible) {

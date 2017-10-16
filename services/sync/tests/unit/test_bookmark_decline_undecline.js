@@ -28,7 +28,7 @@ function getBookmarkWBO(server, guid) {
 add_task(async function setup() {
   initTestLogging("Trace");
   await generateNewKeys(Service.collectionKeys);
-})
+});
 
 add_task(async function test_decline_undecline() {
   let engine = Service.engineManager.get("bookmarks");

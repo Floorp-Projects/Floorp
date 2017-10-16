@@ -221,11 +221,11 @@ function run_test() {
 function run_abstract_class_tests() {
   // Test that ctypes.CType is an abstract constructor that throws.
   do_check_throws(function() { ctypes.CType(); }, TypeError);
-  do_check_throws(function() { new ctypes.CType() }, TypeError);
+  do_check_throws(function() { new ctypes.CType(); }, TypeError);
 
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, TypeError);
-  do_check_throws(function() { new ctypes.CType.prototype() }, TypeError);
+  do_check_throws(function() { new ctypes.CType.prototype(); }, TypeError);
 
   do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
@@ -255,7 +255,7 @@ function run_abstract_class_tests() {
 
   // Test that ctypes.CData is an abstract constructor that throws.
   do_check_throws(function() { ctypes.CData(); }, TypeError);
-  do_check_throws(function() { new ctypes.CData() }, TypeError);
+  do_check_throws(function() { new ctypes.CData(); }, TypeError);
 
   do_check_true(ctypes.CData.__proto__ === ctypes.CType.prototype);
   do_check_true(ctypes.CData instanceof ctypes.CType);
@@ -1304,8 +1304,8 @@ function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps
     do_check_throws(function() { t.prototype[p]; }, TypeError);
   }
   for (let f of instanceFns) {
-    do_check_throws(function() { t.prototype.__proto__[f]() }, TypeError);
-    do_check_throws(function() { t.prototype[f]() }, TypeError);
+    do_check_throws(function() { t.prototype.__proto__[f](); }, TypeError);
+    do_check_throws(function() { t.prototype[f](); }, TypeError);
   }
 
   // Check that 't.prototype' has the correct special properties.
@@ -1712,7 +1712,7 @@ function run_PointerType_tests() {
   // but that the former cannot be dereferenced.
   let z_t = ctypes.int32_t.array().ptr;
   do_check_eq(ptrValue(z_t()), 0);
-  do_check_throws(function() { z_t().contents }, TypeError);
+  do_check_throws(function() { z_t().contents; }, TypeError);
   z_t = ctypes.int32_t.array(0).ptr;
   do_check_eq(ptrValue(z_t()), 0);
   let z = ctypes.int32_t.array(0)().address();
@@ -1747,7 +1747,7 @@ function run_PointerType_tests() {
                              [new Int32Array(c_shared_arraybuffer), ctypes.int32_t],
                              [new Uint32Array(c_shared_arraybuffer), ctypes.uint32_t],
                              [new Float32Array(c_shared_arraybuffer), ctypes.float32_t],
-                             [new Float64Array(c_shared_arraybuffer), ctypes.float64_t])
+                             [new Float64Array(c_shared_arraybuffer), ctypes.float64_t]);
   }
 
   // Check that you can convert (Shared)ArrayBuffer or typed array to a C array
@@ -2543,7 +2543,7 @@ function run_closure_tests(library) {
       return 1;
     }
     let fn_t = ctypes.FunctionType(ctypes.winapi_abi, ctypes.int32_t, []).ptr;
-    do_check_throws(function() { fn_t(closure_fn) }, Error);
+    do_check_throws(function() { fn_t(closure_fn); }, Error);
   }
 }
 

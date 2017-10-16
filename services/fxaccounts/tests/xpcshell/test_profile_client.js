@@ -43,7 +43,7 @@ let mockFxa = {
     do_check_eq(options.scope, "profile");
     return "token";
   }
-}
+};
 
 const PROFILE_OPTIONS = {
   serverURL: "http://127.0.0.1:1111/v1",
@@ -190,7 +190,7 @@ add_test(function server401ResponseThenSuccess() {
       do_check_eq(parseInt(options.token), lastToken);
       ++numTokensRemoved;
     }
-  }
+  };
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
     fxa: mockFxaWithRemove,
@@ -228,7 +228,7 @@ add_test(function server401ResponseThenSuccess() {
         this.onComplete();
       }
     };
-  }
+  };
 
   client.fetchProfile()
     .then(result => {
@@ -264,7 +264,7 @@ add_test(function server401ResponsePersists() {
       do_check_eq(parseInt(options.token), lastToken);
       ++numTokensRemoved;
     }
-  }
+  };
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
     fxa: mockFxaWithRemove,
@@ -292,7 +292,7 @@ add_test(function server401ResponsePersists() {
         this.onComplete();
       }
     };
-  }
+  };
 
   client.fetchProfile().catch(function(e) {
       do_check_eq(e.name, "FxAccountsProfileClientError");

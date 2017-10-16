@@ -58,7 +58,7 @@ function expectNotifications() {
             return arg;
           });
           notifications.push({ name, arguments: args });
-        }
+        };
       }
 
       return target[name];

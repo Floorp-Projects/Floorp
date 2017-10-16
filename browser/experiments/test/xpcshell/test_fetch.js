@@ -61,7 +61,7 @@ add_task(async function test_fetchInvalid() {
   Assert.notEqual(ex._experiments.size, 0, "There should be experiments");
 
   Services.prefs.setCharPref(PREF_MANIFEST_URI, gHttpRoot + "invalid.manifest");
-  await ex.updateManifest()
+  await ex.updateManifest();
   Assert.notEqual(ex._experiments.size, 0, "There should still be experiments: fetch failure shouldn't remove them.");
 
   await promiseRestartManager();

@@ -618,7 +618,7 @@ Sanitizer.prototype = {
               return false;
             }
             return undefined;
-          }
+          };
           newWindow.addEventListener("fullscreen", onFullScreen);
         }
 
@@ -644,7 +644,7 @@ Sanitizer.prototype = {
               TelemetryStopwatch.finish("FX_SANITIZE_OPENWINDOWS", refObj);
               resolve();
             }
-          }
+          };
 
           let numWindowsClosing = windowList.length;
           let onWindowClosed = function() {
@@ -657,7 +657,7 @@ Sanitizer.prototype = {
                 resolve();
               }
             }
-          }
+          };
           Services.obs.addObserver(onWindowOpened, "browser-delayed-startup-finished");
           Services.obs.addObserver(onWindowClosed, "xul-window-destroyed");
         });

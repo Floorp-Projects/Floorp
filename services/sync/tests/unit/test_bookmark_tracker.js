@@ -41,7 +41,7 @@ async function resetTracker() {
 
 async function cleanup() {
   engine.lastSync = 0;
-  engine._needWeakUpload.clear()
+  engine._needWeakUpload.clear();
   await store.wipe();
   await resetTracker();
   await stopTracking();
@@ -96,7 +96,7 @@ async function dumpBookmarks() {
       dump("All bookmarks:\n");
       dump(JSON.stringify(all, undefined, 2));
     });
-  })
+  });
 }
 
 async function insertBookmarksToMigrate() {

@@ -129,7 +129,7 @@ add_task(async function run_test() {
     let orig_updateLightWeightTheme = store._updateLightWeightTheme;
     store._updateLightWeightTheme = function(themeID) {
       lastThemeID = themeID;
-    }
+    };
     try {
       record = new PrefRec("prefs", PREFS_GUID);
       record.value = {

@@ -55,7 +55,7 @@ add_task(async function test_refreshState_signedin() {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
     getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
     hasLocalSession: () => Promise.resolve(true),
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -81,7 +81,7 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
     getSignedInUserProfile: () => Promise.reject(new Error("Profile unavailable")),
     hasLocalSession: () => Promise.resolve(true),
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -103,7 +103,7 @@ add_task(async function test_refreshState_unconfigured() {
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve(null),
     getSignedInUserProfile
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -127,7 +127,7 @@ add_task(async function test_refreshState_unverified() {
     getSignedInUser: () => Promise.resolve({ verified: false, email: "foo@bar.com" }),
     getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(true),
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -151,7 +151,7 @@ add_task(async function test_refreshState_unverified_nosession() {
     getSignedInUser: () => Promise.resolve({ verified: false, email: "foo@bar.com" }),
     getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(false),
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -178,7 +178,7 @@ add_task(async function test_refreshState_loginFailed() {
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
     getSignedInUserProfile
-  }
+  };
 
   let state = await UIState.refresh();
 
@@ -225,7 +225,7 @@ async function configureUIState(syncing, lastSync = new Date()) {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
     getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
     hasLocalSession: () => Promise.resolve(true),
-  }
+  };
   await UIState.refresh();
   UIStateInternal.fxAccounts = fxAccountsOrig;
 }
@@ -285,7 +285,7 @@ function observeUIUpdate() {
       Services.obs.removeObserver(obs, aTopic);
       const state = UIState.get();
       resolve(state);
-    }
+    };
     Services.obs.addObserver(obs, UIState.ON_UPDATE);
   });
 }

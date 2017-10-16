@@ -34,7 +34,7 @@ onmessage = async function(msg) {
       let filePathResponse = await fetch(filePath);
       let fileContents = await filePathResponse.blob();
       let fileData = await new Promise(resolve => {
-        reader.onloadend = function() { resolve(reader.result) };
+        reader.onloadend = function() { resolve(reader.result); };
         reader.readAsArrayBuffer(fileContents);
       });
       let profileDirPath = OS.Constants.Path.profileDir;
@@ -63,4 +63,4 @@ onmessage = async function(msg) {
       "exception": e.message
     });
   }
-}
+};

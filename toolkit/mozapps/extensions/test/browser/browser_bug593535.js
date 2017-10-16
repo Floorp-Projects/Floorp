@@ -103,7 +103,7 @@ add_test(function() {
     onInstallEnded() {
       ok(false, "Install should have failed");
     }
-  }
+  };
 
   search(QUERY, function() {
     var list = gManagerWindow.document.getElementById("search-list");

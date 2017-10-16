@@ -11,7 +11,7 @@ testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
 testserver.start();
 var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/"
+           testserver.identity.primaryPort + "/data/";
 Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
 
 let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);

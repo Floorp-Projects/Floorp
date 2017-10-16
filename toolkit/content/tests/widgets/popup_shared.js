@@ -160,7 +160,7 @@ function eventOccurred(event) {
          test.testname + " " + event.type + " state");
 
     if (matches) {
-      gTestEventIndex++
+      gTestEventIndex++;
       if (events.length <= gTestEventIndex)
         setTimeout(checkResult, 0);
     }

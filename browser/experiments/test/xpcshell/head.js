@@ -68,7 +68,7 @@ const EXPERIMENT1A_NAME     = "Test experiment 1.1";
 const EXPERIMENT1A_PATH     = getExperimentPath(EXPERIMENT1A_XPI_NAME);
 const EXPERIMENT1A_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT1A_PATH);
 
-const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
+const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 const EXPERIMENT2_PATH     = getExperimentPath(EXPERIMENT2_XPI_NAME);
 const EXPERIMENT2_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT2_PATH);

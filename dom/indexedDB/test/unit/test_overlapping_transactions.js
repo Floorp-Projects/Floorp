@@ -38,7 +38,7 @@ function* testSteps()
       is(stepNumber, 1, "This callback came first");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
-    }
+    };
 
     request = db.transaction(["foo"], "readwrite")
                 .objectStore("foo")
@@ -48,7 +48,7 @@ function* testSteps()
       is(stepNumber, 2, "This callback came second");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
-    }
+    };
 
     request = db.transaction(["foo", "bar"], "readwrite")
                 .objectStore("bar")
@@ -58,7 +58,7 @@ function* testSteps()
       is(stepNumber, 3, "This callback came third");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
-    }
+    };
 
     request = db.transaction(["foo", "bar"], "readwrite")
                 .objectStore("bar")
@@ -68,7 +68,7 @@ function* testSteps()
       is(stepNumber, 4, "This callback came fourth");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
-    }
+    };
 
     request = db.transaction(["bar"], "readwrite")
                 .objectStore("bar")
@@ -78,7 +78,7 @@ function* testSteps()
       is(stepNumber, 5, "This callback came fifth");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
-    }
+    };
 
     stepNumber++;
     yield undefined; yield undefined; yield undefined; yield undefined; yield undefined;

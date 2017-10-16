@@ -59,7 +59,7 @@ MediaPlayerApp.prototype = {
     }
   },
 
-}
+};
 
 /* RemoteMedia provides a proxy to a native media player session.
  */
@@ -126,7 +126,7 @@ RemoteMedia.prototype = {
         "MediaPlayer:Paused",
       ]);
       this._status = "started";
-    })
+    });
   },
 
   get status() {
@@ -158,4 +158,4 @@ RemoteMedia.prototype = {
     data.id = this._id;
     send(msg, data, callback);
   }
-}
+};

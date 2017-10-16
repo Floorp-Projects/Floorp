@@ -24,7 +24,7 @@ add_task(async function test_screenshot() {
     let preview = doc.getElementById("screenshot-preview");
     is(urlParam, args.TEST_PAGE, "Reported page is correctly added to the url param");
 
-    is(preview.innerText, "Pass", "A Blob object was successfully transferred to the test page.")
+    is(preview.innerText, "Pass", "A Blob object was successfully transferred to the test page.");
     ok(preview.style.backgroundImage.startsWith("url(\"data:image/png;base64,iVBOR"), "A green screenshot was successfully postMessaged");
   });
 

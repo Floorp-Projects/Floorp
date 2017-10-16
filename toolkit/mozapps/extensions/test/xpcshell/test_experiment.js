@@ -11,7 +11,7 @@ function getXS() {
 }
 
 function getBootstrappedAddons() {
-  let obj = {}
+  let obj = {};
   for (let addon of getXS().bootstrappedAddons()) {
     obj[addon.id] = addon;
   }

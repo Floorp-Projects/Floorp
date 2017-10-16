@@ -384,7 +384,7 @@ this.TelemetryStopwatchImpl = {
     }
 
     try {
-      let delta = Components.utils.now() - startTime
+      let delta = Components.utils.now() - startTime;
       return Math.round(delta);
     } catch (e) {
       if (!this._suppressErrors) {
@@ -419,4 +419,4 @@ this.TelemetryStopwatchImpl = {
 
     return Timers.delete(histogram, object, key);
   }
-}
+};

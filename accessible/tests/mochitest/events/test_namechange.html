@@ -28,11 +28,11 @@
       this.eventSeq = [ aChecker ];
       this.invoke = function setAttr_invoke() {
         getNode(aID).setAttribute(aAttr, aValue);
-      }
+      };
 
       this.getID = function setAttr_getID() {
         return "set attr '" + aAttr + "', value '" + aValue + "'";
-      }
+      };
     }
 
     /**
@@ -46,11 +46,11 @@
       this.invoke = function setAttr_recreate_invoke() {
         todo(false, "No accessible recreation should happen, just name change event");
         getNode(aID).setAttribute(aAttr, aValue);
-      }
+      };
 
       this.getID = function setAttr_recreate_getID() {
         return "set attr '" + aAttr + "', value '" + aValue + "'";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

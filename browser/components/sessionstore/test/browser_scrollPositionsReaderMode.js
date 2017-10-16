@@ -3,7 +3,7 @@
 
 "use strict";
 
-const BASE = "http://example.com/browser/browser/components/sessionstore/test/"
+const BASE = "http://example.com/browser/browser/components/sessionstore/test/";
 const READER_MODE_URL = "about:reader?url=" +
   encodeURIComponent(BASE + "browser_scrollPositions_readerModeArticle.html");
 

@@ -85,7 +85,7 @@ var invalidTagChildTest = {
     do_check_eq(tags.length, 1);
     do_check_eq(tags[0], this._tag);
   }
-}
+};
 tests.push(invalidTagChildTest);
 
 add_task(async function() {

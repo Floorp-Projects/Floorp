@@ -28,7 +28,7 @@ this.TranslationContentHandler = function(global, docShell) {
   global.addMessageListener("Translation:ShowTranslation", this);
   global.addMessageListener("Translation:ShowOriginal", this);
   this.global = global;
-}
+};
 
 TranslationContentHandler.prototype = {
   handleEvent(aEvent) {

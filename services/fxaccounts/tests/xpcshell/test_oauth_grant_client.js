@@ -51,13 +51,13 @@ var mockResponseError = function(error) {
 add_test(function missingParams() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   try {
-    client.getTokenFromAssertion()
+    client.getTokenFromAssertion();
   } catch (e) {
     do_check_eq(e.message, "Missing 'assertion' parameter");
   }
 
   try {
-    client.getTokenFromAssertion("assertion")
+    client.getTokenFromAssertion("assertion");
   } catch (e) {
     do_check_eq(e.message, "Missing 'scope' parameter");
   }

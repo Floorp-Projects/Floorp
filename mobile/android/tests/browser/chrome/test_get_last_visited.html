@@ -37,7 +37,7 @@ var browser = BrowserApp.addTab("about:blank").browser;
   let observe = function(subject, topic, data) {
     var uri = subject.QueryInterface(Ci.nsIURI);
     info("Witnessed " + topic + " notification from Gecko with URI " + uri.spec);
-  }
+  };
   Services.obs.addObserver(observe, "link-visited");
 
   SimpleTest.registerCleanupFunction(function cleanup() {

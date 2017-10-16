@@ -1006,7 +1006,7 @@ this.DownloadObserver = {
 this.DownloadHistoryObserver = function(aList) {
   this._list = aList;
   PlacesUtils.history.addObserver(this);
-}
+};
 
 this.DownloadHistoryObserver.prototype = {
   /**
@@ -1056,7 +1056,7 @@ this.DownloadAutoSaveView = function(aList, aStore) {
   this._writer = new DeferredTask(() => this._store.save(), kSaveDelayMs);
   AsyncShutdown.profileBeforeChange.addBlocker("DownloadAutoSaveView: writing data",
                                                () => this._writer.finalize());
-}
+};
 
 this.DownloadAutoSaveView.prototype = {
   /**

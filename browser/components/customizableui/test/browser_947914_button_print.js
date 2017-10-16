@@ -40,7 +40,7 @@ add_task(async function() {
       if (gInPrintPreviewMode) {
         PrintUtils.exitPrintPreview();
         await waitForCondition(() => !window.gInPrintPreviewMode);
-        info("Exited print preview")
+        info("Exited print preview");
       }
     }
   });

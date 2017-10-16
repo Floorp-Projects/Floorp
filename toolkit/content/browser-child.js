@@ -354,7 +354,7 @@ var WebNavigation =  {
     if (baseURI)
       baseURI = Services.io.newURI(baseURI);
     if (triggeringPrincipal)
-      triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal)
+      triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal);
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
                                                    postData, headers, baseURI, triggeringPrincipal);
@@ -425,9 +425,9 @@ var ControllerCommands = {
         break;
     }
   }
-}
+};
 
-ControllerCommands.init()
+ControllerCommands.init();
 
 addEventListener("DOMTitleChanged", function(aEvent) {
   if (!aEvent.isTrusted || aEvent.target.defaultView != content)

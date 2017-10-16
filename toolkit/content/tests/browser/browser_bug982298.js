@@ -30,7 +30,7 @@ add_task(async function() {
     const scrollTest =
       "var textarea = content.document.getElementById(\"textarea1\");" +
       "textarea.scrollTop = textarea.scrollHeight;" +
-      "sendAsyncMessage(\"ScrollDone\", { });"
+      "sendAsyncMessage(\"ScrollDone\", { });";
     browser.messageManager.loadFrameScript("data:text/javascript;base64," +
                                            btoa(scrollTest), false);
     await awaitScrollDone;

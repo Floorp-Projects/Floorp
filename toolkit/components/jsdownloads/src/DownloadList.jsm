@@ -25,7 +25,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 this.DownloadList = function() {
   this._downloads = [];
   this._views = new Set();
-}
+};
 
 this.DownloadList.prototype = {
   /**
@@ -251,7 +251,7 @@ this.DownloadCombinedList = function(aPublicList, aPrivateList) {
   this._privateList = aPrivateList;
   aPublicList.addView(this).catch(Cu.reportError);
   aPrivateList.addView(this).catch(Cu.reportError);
-}
+};
 
 this.DownloadCombinedList.prototype = {
   __proto__: DownloadList.prototype,
@@ -339,7 +339,7 @@ this.DownloadCombinedList.prototype = {
 this.DownloadSummary = function() {
   this._downloads = [];
   this._views = new Set();
-}
+};
 
 this.DownloadSummary.prototype = {
   /**

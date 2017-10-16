@@ -22,11 +22,11 @@
         var request = indexedDB.open(window.location.pathname, 1);
         request.onupgradeneeded = function(event) {
           event.target.result.createObjectStore("foo");
-        }
+        };
         request.onsuccess = function(event) {
           db = event.target.result;
           createAndStoreBlob();
-        }
+        };
       }
       catch (e) {
 dump("EXCEPTION IN CREATION: " + e + "\n " + e.stack + "\n");
@@ -59,7 +59,7 @@ dump("EXCEPTION IN CREATION: " + e + "\n " + e.stack + "\n");
           // Send any message so we can serialize and keep our runtime behaviour
           // consistent.
           postMessage("kung fu death grip established");
-        }
+        };
       }
 
       var url =

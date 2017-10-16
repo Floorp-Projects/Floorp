@@ -239,7 +239,7 @@ function queryData(obj) {
 }
 
 // All attributes are set in the constructor above
-queryData.prototype = { }
+queryData.prototype = { };
 
 
 /**

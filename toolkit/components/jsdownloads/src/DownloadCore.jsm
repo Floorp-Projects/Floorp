@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm")
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -110,7 +110,7 @@ const kProgressUpdateIntervalMs = 400;
  */
 this.Download = function() {
   this._deferSucceeded = PromiseUtils.defer();
-}
+};
 
 this.Download.prototype = {
   /**
@@ -1194,7 +1194,7 @@ Download.fromSerializable = function(aSerializable) {
 /**
  * Represents the source of a download, for example a document or an URI.
  */
-this.DownloadSource = function() {}
+this.DownloadSource = function() {};
 
 this.DownloadSource.prototype = {
   /**
@@ -1318,7 +1318,7 @@ this.DownloadSource.fromSerializable = function(aSerializable) {
  * Represents the target of a download, for example a file in the global
  * downloads directory, or a file in the system temporary directory.
  */
-this.DownloadTarget = function() {}
+this.DownloadTarget = function() {};
 
 this.DownloadTarget.prototype = {
   /**
@@ -1509,7 +1509,7 @@ this.DownloadError = function(aProperties) {
   }
 
   this.stack = new Error().stack;
-}
+};
 
 /**
  * These constants are used by the reputationCheckVerdict property and indicate
@@ -1632,7 +1632,7 @@ this.DownloadError.fromSerializable = function(aSerializable) {
 /**
  * Template for an object that actually transfers the data for the download.
  */
-this.DownloadSaver = function() {}
+this.DownloadSaver = function() {};
 
 this.DownloadSaver.prototype = {
   /**
@@ -1779,7 +1779,7 @@ this.DownloadSaver.fromSerializable = function(aSerializable) {
 /**
  * Saver object that simply copies the entire source file to the target.
  */
-this.DownloadCopySaver = function() {}
+this.DownloadCopySaver = function() {};
 
 this.DownloadCopySaver.prototype = {
   __proto__: DownloadSaver.prototype,
@@ -2248,7 +2248,7 @@ this.DownloadCopySaver.fromSerializable = function(aSerializable) {
 this.DownloadLegacySaver = function() {
   this.deferExecuted = PromiseUtils.defer();
   this.deferCanceled = PromiseUtils.defer();
-}
+};
 
 this.DownloadLegacySaver.prototype = {
   __proto__: DownloadSaver.prototype,
@@ -2602,7 +2602,7 @@ this.DownloadLegacySaver.fromSerializable = function() {
  * be persisted across sessions, unless the download already succeeded.
  */
 this.DownloadPDFSaver = function() {
-}
+};
 
 this.DownloadPDFSaver.prototype = {
   __proto__: DownloadSaver.prototype,

@@ -47,7 +47,7 @@ function getEngineModules() {
     Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
     Tab: {module: "tabs.js", symbol: "TabEngine"},
     ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
-  }
+  };
   if (Svc.Prefs.get("engine.addresses.available", false)) {
     result.Addresses = {
       module: "resource://formautofill/FormAutofillSync.jsm",
@@ -514,7 +514,7 @@ Sync11Service.prototype = {
     // Always check for errors; this is also where we look for X-Weave-Alert.
     this.errorHandler.checkServerError(info);
     if (!info.success) {
-      this._log.error("Aborting sync: failed to get collections.")
+      this._log.error("Aborting sync: failed to get collections.");
       throw info;
     }
     return info;

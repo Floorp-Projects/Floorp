@@ -41,7 +41,7 @@ function onAlertShowing() {
   Services.obs.addObserver(permObserver, "perm-changed");
   alertWindow.addEventListener("beforeunload", onAlertClosing);
   disableForOriginMenuItem.click();
-  info("Clicked on disable-for-origin menuitem")
+  info("Clicked on disable-for-origin menuitem");
 }
 
 function permObserver(subject, topic, data) {

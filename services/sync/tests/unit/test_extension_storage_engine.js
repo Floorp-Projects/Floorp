@@ -18,7 +18,7 @@ function mock(options) {
   let ret = function() {
     calls.push(arguments);
     return options.returns;
-  }
+  };
   Object.setPrototypeOf(ret, {
     __proto__: Function.prototype,
     get calls() {

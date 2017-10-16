@@ -75,7 +75,7 @@ var CustomChromeProtocol = {
       Ci.nsIFactory
     ])
   }
-}
+};
 
 function test() {
   waitForExplicitFinish();
@@ -160,7 +160,7 @@ function test() {
       let optionsBtn =
         aManager.document.getAnonymousElementByAttribute(addonItem, "anonid",
                                                          "preferences-btn");
-      is(optionsBtn.hidden, false, "Prefs button should be visible.")
+      is(optionsBtn.hidden, false, "Prefs button should be visible.");
 
       addonList.ensureElementIsVisible(addonItem);
       EventUtils.synthesizeMouseAtCenter(optionsBtn, { }, aManager);

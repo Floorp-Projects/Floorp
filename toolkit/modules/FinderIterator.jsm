@@ -36,7 +36,7 @@ this.FinderIterator = {
   running: false,
 
   // Expose `kIterationSizeMax` to the outside world for unit tests to use.
-  get kIterationSizeMax() { return kIterationSizeMax },
+  get kIterationSizeMax() { return kIterationSizeMax; },
 
   get params() {
     if (!this._currentParams && !this._previousParams)
