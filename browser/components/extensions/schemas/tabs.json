@@ -877,6 +877,28 @@
         ]
       },
       {
+        "name": "discard",
+        "type": "function",
+        "description": "discards one or more tabs.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "tabIds",
+            "description": "The tab or list of tabs to discard.",
+            "choices": [
+              {"type": "integer", "minimum": 0},
+              {"type": "array", "items": {"type": "integer", "minimum": 0}}
+            ]
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      },
+      {
         "name": "detectLanguage",
         "type": "function",
         "description": "Detects the primary language of the content in a tab.",
