@@ -308,7 +308,7 @@ private:
   RefPtr<nsPluginHost>      mPluginHost;
 
 #ifdef XP_MACOSX
-  static nsCOMPtr<nsITimer>                *sCATimer;
+  static mozilla::StaticRefPtr<nsITimer>    sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   bool                                      mSentInitialTopLevelWindowEvent;
   bool                                      mLastWindowIsActive;
