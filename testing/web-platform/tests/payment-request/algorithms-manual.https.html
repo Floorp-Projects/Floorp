@@ -70,52 +70,27 @@ function testFireEvent(button, details, eventName, expectRequestProps) {
   promise_test(async t => {
     new PaymentRequest(methods, detailsNoShippingOptions, options);
     const request = new PaymentRequest(methods, details, options);
-    const events = [];
-    const p1 = new Promise(resolve => {
+    const handlerPromise = new Promise(resolve => {
       request[`on${eventName}`] = event => {
-        events.push(event);
-        resolve("handler");
+        // "prevent immediate propagation" flag is set.
+        // This listener below won't fire!
         event.updateWith(details);
+        resolve(event);
       };
     });
-    const p2 = new Promise(resolve => {
-      request.addEventListener(eventName, event => {
-        events.push(event);
-        resolve("listener-1");
-      });
-    });
-    const p3 = new Promise(resolve => {
-      request.addEventListener(eventName, event => {
-        events.push(event);
-        resolve("listener-2");
-      });
-    });
+    // This listener should never fire because the
+    // the event handler caused "prevent immediate propagation" to be set.
+    request.addEventListener(
+      eventName,
+      t.unreached_func("Second event listener should never fire")
+    );
     const response = await request.show();
-    response.complete("success");
-    const [handler, listener1, listener2] = await Promise.all([p1, p2, p3]);
-    assert_equals(
-      handler,
-      "handler",
-      "Expected p1 to have resolved with 'handler'"
-    );
-    assert_equals(
-      listener1,
-      "listener-1",
-      "Expected p2 to have resolved with 'listener-1'"
-    );
-    assert_equals(
-      listener2,
-      "listener-2",
-      "Expected p3 to have resolved with 'listener-2'"
-    );
-    const [e1, e2, e3] = events;
-    assert_equals(e1, e2);
-    assert_equals(e2, e3);
-    assert_equals(e1, e3);
+    const event = await handlerPromise;
     assert_true(
-      events.every(e => e instanceof window.PaymentRequestUpdateEvent),
+      event instanceof window.PaymentRequestUpdateEvent,
       "Expected instances of PaymentRequestUpdateEvent"
     );
+    await response.complete("success");
   }, button.textContent.trim());
 }
 
@@ -130,12 +105,18 @@ async function runAbortTest(button) {
     await promise_rejects(t, "InvalidStateError", request.show());
   }, testName.trim());
 }
-
 </script>
+<h2>
+  Tests for "algorithms" section
+</h2>
+<p>
+  Click on each button in sequence from top to bottom without refreshing the page.
+  Each button will bring up the Payment Request UI window.
+</p>
 <section>
-  <h2 id="abort-algo">
+  <h3 id="abort-algo">
     User aborts the payment request algorithm
-  </h2>
+  </h3>
   <link rel="help" href="https://w3c.github.io/payment-request/#user-aborts-the-payment-request-algorithm">
   <p>
     When presented with the payment sheet, abort the payment request (e.g., by hitting the esc key or pressing a UA provided button).
@@ -150,7 +131,7 @@ async function runAbortTest(button) {
 </section>
 
 <section>
-  <h2 id="shipping-address-changed-algo">Shipping address changed algorithm</h2>
+  <h3 id="shipping-address-changed-algo">Shipping address changed algorithm</h3>
   <link rel="help" href="https://www.w3.org/TR/payment-request/#shipping-address-changed-algorithm">
   <p>
     When prompted, please change or enter a new shipping address and then select Pay.
@@ -165,7 +146,7 @@ async function runAbortTest(button) {
 </section>
 
 <section>
-  <h2 id="shipping-option-changed-algo">Shipping option changed algorithm</h2>
+  <h3 id="shipping-option-changed-algo">Shipping option changed algorithm</h3>
   <link rel="help" href="https://w3c.github.io/payment-request/#shipping-option-changed-algorithm">
   <p>
     Finally, when prompted, please select "shipping option 2" and then select Pay.
@@ -178,3 +159,8 @@ async function runAbortTest(button) {
     </li>
   </ol>
 </section>
+
+<small>
+  If you find a buggy test, please <a href="https://github.com/w3c/web-platform-tests/issues">file a bug</a>
+  and tag one of the <a href="https://github.com/w3c/web-platform-tests/blob/master/payment-request/OWNERS">owners</a>.
+</small>
