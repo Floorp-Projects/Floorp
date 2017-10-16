@@ -10,6 +10,7 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/ServoCSSParser.h"
 
 namespace mozilla {
 namespace dom {
@@ -116,6 +117,11 @@ DOMIntersectionObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 bool
 DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
 {
+  if (mDocument && mDocument->IsStyledByServo()) {
+    return ServoCSSParser::ParseIntersectionObserverRootMargin(aString,
+                                                               &mRootMargin);
+  }
+
   // By not passing a CSS Loader object we make sure we don't parse in quirks
   // mode so that pixel/percent and unit-less values will be differentiated.
   nsCSSParser parser(nullptr);

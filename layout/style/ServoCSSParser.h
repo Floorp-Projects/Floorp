@@ -38,6 +38,17 @@ public:
                            nscolor aCurrentColor,
                            const nsAString& aValue,
                            nscolor* aResultColor);
+
+  /**
+   * Parses a IntersectionObserver's initialization dictionary's rootMargin
+   * property.
+   *
+   * @param aValue The rootMargin value.
+   * @param aResult The nsCSSRect object to write the result into.
+   * @return Whether the value was successfully parsed.
+   */
+  static bool ParseIntersectionObserverRootMargin(const nsAString& aValue,
+                                                  nsCSSRect* aResult);
 };
 
 } // namespace mozilla
