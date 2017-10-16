@@ -1213,6 +1213,7 @@ class MochitestDesktop(object):
         if self.websocketProcessBridge is not None:
             try:
                 self.websocketProcessBridge.kill()
+                self.websocketProcessBridge.wait()
                 self.log.info('Stopping websocket/process bridge')
             except Exception:
                 self.log.critical('Exception stopping websocket/process bridge')
