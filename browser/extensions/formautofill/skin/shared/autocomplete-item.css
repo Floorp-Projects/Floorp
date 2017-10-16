@@ -10,7 +10,8 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-i
   background-color: #F2F2F2;
 }
 
-xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-option-button {
+xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button,
+xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autofill-item-box > .autofill-button {
   background-color: #DCDCDE;
 }
 
@@ -27,14 +28,14 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --label-text-color: #262626;
   --comment-text-color: #646464;
   --warning-text-color: #646464;
-  --option-btn-text-color: -moz-FieldText;
+  --btn-text-color: -moz-FieldText;
 
   --default-font-size: 12;
   --label-affix-font-size: 10;
   --label-font-size: 12;
   --comment-font-size: 10;
   --warning-font-size: 10;
-  --option-btn-font-size: 11;
+  --btn-font-size: 11;
 }
 
 .autofill-item-box[size="small"] {
@@ -148,13 +149,13 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   font-size: calc(var(--warning-font-size) / var(--default-font-size) * 1em);
 }
 
-.autofill-footer > .autofill-option-button {
+.autofill-footer > .autofill-button {
   box-sizing: border-box;
   padding: 0 10px;
   min-height: 40px;
   background-color: #EDEDED;
-  font-size: calc(var(--option-btn-font-size) / var(--default-font-size) * 1em);
-  color: var(--option-btn-text-color);
+  font-size: calc(var(--btn-font-size) / var(--default-font-size) * 1em);
+  color: var(--btn-text-color);
   text-align: center;
 }
 
