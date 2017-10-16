@@ -228,11 +228,14 @@ var AnimationsController = {
   }),
 
   onNewNodeFront: Task.async(function* () {
-    // Ignore if the panel isn't visible or the node selection hasn't changed.
-    if (!this.isPanelVisible() ||
-        this.nodeFront === gInspector.selection.nodeFront) {
+    // Ignore if the panel isn't visible.
+    // Or the node selection hasn't changed and no animation mutations event occurs during
+    // hidden.
+    if (!this.isPanelVisible() || (this.nodeFront === gInspector.selection.nodeFront &&
+                                   !this.mutationsDetectedWhileHidden)) {
       return;
     }
+    this.isMutationsEventOccuredDuringHidden = false;
 
     this.nodeFront = gInspector.selection.nodeFront;
     let done = gInspector.updating("animationscontroller");
@@ -361,8 +364,14 @@ var AnimationsController = {
       }
     }
 
-    // Let the UI know the list has been updated.
-    this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
+    if (this.isPanelVisible()) {
+      // Let the UI know the list has been updated.
+      this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
+    } else {
+      // Avoid updating the UI while the panel is hidden.
+      // This avoids unnecessary work.
+      this.mutationsDetectedWhileHidden = true;
+    }
   },
 
   /**
