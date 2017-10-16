@@ -50,12 +50,6 @@
   --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
 }
 
-/* Icons */
-:root {
-  --play-icon-url: url("chrome://devtools/skin/images/play.svg");
-  --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");
-}
-
 /* General */
 
 * {
@@ -101,14 +95,6 @@ body,
 .requests-list-filter-buttons {
   display: flex;
   flex-wrap: wrap;
-}
-
-.devtools-button.devtools-pause-icon::before {
-  background-image: var(--pause-icon-url);
-}
-
-.devtools-button.devtools-play-icon::before {
-  background-image: var(--play-icon-url);
 }
 
 /* Learn more links */
