@@ -813,9 +813,10 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  * Gets the element's container element.
  *
  * An element container is defined by the WebDriver
- * specification to be an <option> element in a valid element context
- * (https://html.spec.whatwg.org/#concept-element-contexts), meaning
- * that it has an ancestral element that is either <datalist> or <select>.
+ * specification to be an <tt>&lt;option&gt;</tt> element in a
+ * <a href="https://html.spec.whatwg.org/#concept-element-contexts">valid
+ * element context</a>, meaning that it has an ancestral element
+ * that is either <tt>&lt;datalist&gt;</tt> or <tt>&lt;select&gt;</tt>.
  *
  * If the element does not have a valid context, its container element
  * is itself.
