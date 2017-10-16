@@ -263,7 +263,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         el = self.marionette.find_element(By.ID, el_id)
         self._test_minimum_select_one_character(el)
 
-    def _test_minimum_select_one_character(self, el, x=None, y=None):
+    def _test_minimum_select_one_character(self, el):
         sel = SelectionManager(el)
         original_content = sel.content
         words = original_content.split()
@@ -278,13 +278,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Goal: Select the first character.
         target_content = original_content[0]
 
-        if x and y:
-            # If we got x and y from the arguments, use it as a hint of the
-            # location of the first word
-            pass
-        else:
-            x, y = self.word_location(el, 0)
-        self.long_press_on_location(el, x, y)
+        self.long_press_on_word(el, 0)
 
         # Drag the second caret to the end of the content.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
