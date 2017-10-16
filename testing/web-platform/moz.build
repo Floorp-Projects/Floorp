@@ -106,9 +106,6 @@ with Files("tests/annotation-vocab/**"):
 with Files("tests/apng/**"):
     BUG_COMPONENT = ("Core", "ImageLib")
 
-with Files("tests/assumptions/**"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
 with Files("tests/background-fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
@@ -213,10 +210,6 @@ with Files("tests/encrypted-media/**"):
 with Files("tests/eventsource/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/ext-xhtml-pubid/**"):
-    BUG_COMPONENT = ("Core", "XML")
-
-# usb and payments ?
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
@@ -345,42 +338,14 @@ with Files("tests/offscreen-canvas/**"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
 
 # No tests are run here
-with Files("tests/old-tests/submission/Infraware/Session_History/**"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
-
-with Files("tests/old-tests/submission/Infraware/Forms/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
-with Files("tests/old-tests/submission/Opera/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
-# No tests are run here
-with Files("tests/old-tests/submission/Microsoft/dragdrop/**"):
-    BUG_COMPONENT = ("Core", "Drag & Drop")
-
-# No tests are run here
 with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
 with Files("tests/old-tests/submission/Microsoft/history/**"):
     BUG_COMPONENT = ("Core", "Document Navigation")
 
-with Files("tests/old-tests/submission/Microsoft/images/**"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
-with Files("tests/old-tests/submission/Microsoft/sandbox/**"):
-    BUG_COMPONENT = ("Core", "DOM: Security")
-
-# No tests are run here
 with Files("tests/old-tests/submission/Microsoft/selection/**"):
     BUG_COMPONENT = ("Core", "Selection")
-
-with Files("tests/old-tests/submission/Microsoft/structuredclone/**"):
-    BUG_COMPONENT = ("Core", "Javascript Engine")
-
-# No tests are run here
-with Files("tests/old-tests/submission/Microsoft/xhtml5/**"):
-    BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/old-tests/submission/migration.txt"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -418,9 +383,6 @@ with Files("tests/preload/**"):
 
 with Files("tests/presentation-api/**"):
     BUG_COMPONENT = ("Core", "DOM")
-
-with Files("tests/progress-events/**"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/proximity/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")

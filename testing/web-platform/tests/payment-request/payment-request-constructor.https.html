@@ -350,14 +350,6 @@ test(() => {
     const details = Object.assign({}, defaultDetails, {
       shippingOptions: [invalidShippingOption],
     });
-    const request = new PaymentRequest(defaultMethods, details, {
-      requestShipping: false,
-    });
-    assert_equals(
-      request.shippingOption,
-      null,
-      "shippingOption must be null, because requestShipping is false"
-    );
     assert_throws(
       new TypeError(),
       () => {

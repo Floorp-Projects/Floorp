@@ -27,6 +27,8 @@ function assert_worker_construction_fails(test_desc, mime_type, worker_code) {
     });
     w.onerror = t.step_func_done(function(e) {
       assert_true(true, 'Should throw ' + e.message);
+      // Stop the error from being propagated to the WPT test harness
+      e.preventDefault();
     });
   }, test_desc);
 }
