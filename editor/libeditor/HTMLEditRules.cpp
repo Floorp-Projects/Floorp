@@ -378,7 +378,7 @@ HTMLEditRules::BeforeEdit(EditAction action,
         IsStyleCachePreservingAction(action)) {
       nsCOMPtr<nsINode> selNode =
         aDirection == nsIEditor::eNext ? selEndNode : selStartNode;
-      nsresult rv = CacheInlineStyles(GetAsDOMNode(selNode));
+      nsresult rv = CacheInlineStyles(selNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -7296,7 +7296,7 @@ HTMLEditRules::GetTopEnclosingMailCite(nsINode& aNode)
 }
 
 nsresult
-HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
+HTMLEditRules::CacheInlineStyles(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
@@ -7310,7 +7310,7 @@ HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
 }
 
 nsresult
-HTMLEditRules::GetInlineStyles(nsIDOMNode* aNode,
+HTMLEditRules::GetInlineStyles(nsINode* aNode,
                                StyleCache aStyleCache[SIZE_STYLE_TABLE])
 {
   MOZ_ASSERT(aNode);
@@ -7336,9 +7336,10 @@ HTMLEditRules::GetInlineStyles(nsIDOMNode* aNode,
     if (!useCSS || (aStyleCache[j].tag == nsGkAtoms::font &&
                     aStyleCache[j].attr.EqualsLiteral("size"))) {
       NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->IsTextPropertySetByContent(aNode, aStyleCache[j].tag,
-                                              &(aStyleCache[j].attr), nullptr,
-                                              isSet, &outValue);
+      isSet = mHTMLEditor->IsTextPropertySetByContent(aNode, aStyleCache[j].tag,
+                                                      &(aStyleCache[j].attr),
+                                                      nullptr,
+                                                      &outValue);
     } else {
       NS_ENSURE_STATE(mHTMLEditor);
       isSet = mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
@@ -7386,9 +7387,7 @@ HTMLEditRules::ReapplyCachedStyles()
 
   StyleCache styleAtInsertionPoint[SIZE_STYLE_TABLE];
   InitStyleCacheArray(styleAtInsertionPoint);
-  nsCOMPtr<nsIDOMNode> selDOMNode = do_QueryInterface(selNode);
-  MOZ_ASSERT(selDOMNode);
-  nsresult rv = GetInlineStyles(selDOMNode, styleAtInsertionPoint);
+  nsresult rv = GetInlineStyles(selNode, styleAtInsertionPoint);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
