@@ -23,40 +23,40 @@ table td {
     Here, the spanning cell is the only cell in its row.
     </p>
     <table id="one">
-    	<tr id="spanningRowRef">
-    		<td rowspan="5">B<br>B<br>B<br>B<br>B</td>
-    	</tr>
-    	<tr id="firstRowRef">
-    		<td>aaaa</td>
-    	</tr>
-    	<tr>
-    		<td>bbbb</td>
-    	</tr>
-    	<tr id="thirdRowRef">
-    		<td>cccc</td>
-    	</tr>
-    	<tr id="fourthRowRef">
-    		<td>dddd</td>
-    	</tr>
+        <tr id="spanningRowRef">
+            <td rowspan="5">B<br>B<br>B<br>B<br>B</td>
+        </tr>
+        <tr id="firstRowRef">
+            <td>aaaa</td>
+        </tr>
+        <tr>
+            <td>bbbb</td>
+        </tr>
+        <tr id="thirdRowRef">
+            <td>cccc</td>
+        </tr>
+        <tr id="fourthRowRef">
+            <td>dddd</td>
+        </tr>
     </table>
     Bottom table is identical to top except second row has been collapsed.
     The spanning cell's height shrinks and is clipped.
     <table id="two">
-    	<tr id="spanningRow">
-    		<td rowspan="5" id="spanningCell">B<br>B<br>B<br>B<br>B</td>
-    	</tr>
-    	<tr id="firstRow">
-    		<td>aaaa</td>
-    	</tr>
-    	<tr id="secondRow" style="visibility: collapse">
-    		<td>bbbb</td>
-    	</tr>
-    	<tr id="thirdRow">
-    		<td>cccc</td>
-    	</tr>
-    	<tr id="fourthRow">
-    		<td>dddd</td>
-    	</tr>
+        <tr id="spanningRow">
+            <td rowspan="5" id="spanningCell">B<br>B<br>B<br>B<br>B</td>
+        </tr>
+        <tr id="firstRow">
+            <td>aaaa</td>
+        </tr>
+        <tr id="secondRow" style="visibility: collapse">
+            <td>bbbb</td>
+        </tr>
+        <tr id="thirdRow">
+            <td>cccc</td>
+        </tr>
+        <tr id="fourthRow">
+            <td>dddd</td>
+        </tr>
     </table>
 
     This text should not intersect with the table.
@@ -71,12 +71,12 @@ table td {
             "spanning row visibility:collapse doesn't change table width"
         ],
         [
-        	document.getElementById('fourthRow').offsetHeight,
+            document.getElementById('fourthRow').offsetHeight,
             document.getElementById('fourthRowRef').offsetHeight,
             "fourth row stays the same height"
         ],
         [
-        	document.getElementById('thirdRow').offsetHeight,
+            document.getElementById('thirdRow').offsetHeight,
             document.getElementById('thirdRowRef').offsetHeight,
             "third row stays the same height"
         ],
@@ -84,8 +84,8 @@ table td {
             0,
             "spanning row visibility:collapse makes row height 0"
         ],
-       	[
-       		document.getElementById('firstRow').offsetHeight,
+           [
+               document.getElementById('firstRow').offsetHeight,
             document.getElementById('firstRowRef').offsetHeight,
             "first row stays the same height"
         ],

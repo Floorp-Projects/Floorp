@@ -32,6 +32,13 @@ test(function() {
   var xmlString = serializer.serializeToString(root);
   assert_equals(xmlString, '<root><another xmlns="urn:foo"><child1 xmlns="">value1</child1></another></root>');
 }, 'Check if the default namespace is correctly reset.');
-  </script>
+
+test(function() {
+  var input = '<root xmlns="urn:bar"><outer xmlns=""><inner>value1</inner></outer></root>';
+  var root = (new DOMParser()).parseFromString(input, 'text/xml').documentElement;
+  var xmlString = (new XMLSerializer()).serializeToString(root);
+  assert_equals(xmlString, '<root xmlns="urn:bar"><outer xmlns=""><inner>value1</inner></outer></root>');
+}, 'Check if there is no redundant empty namespace declaration.');
+</script>
  </body>
 </html>
