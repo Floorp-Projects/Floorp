@@ -82,7 +82,6 @@
                   "[test]"
                ]
             ],
-            "AXAPI" : [],
             "IAccessible2" : [
                [
                   "property",
@@ -110,7 +109,7 @@
   </head>
   <body>
   <p>This test examines the ARIA properties for aria-atomic=true.</p>
-    <div role='group' id='test' aria-atomic='true'>
+    <div role='group' id='test' aria-atomic='true' aria-live='polite'>
     <div role='group' id='child'>content</div>
   </div>
 
@@ -119,4 +118,3 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
-

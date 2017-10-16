@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>errormessage object in valid state</title>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -27,9 +28,9 @@
             "AXAPI" : [
                [
                   "property",
-                  "TBD",
+                  "AXValidationError",
                   "is",
-                  "TBD"
+                  "<nil>"
                ]
             ],
             "IAccessible2" : [
@@ -70,8 +71,7 @@
                   "doesNotContain",
                   "IA2_RELATION_ERROR_FOR"
                ]
-            ],
-            "UIA" : []
+            ]
          },
          "title" : "step 2",
          "type" : "test"
@@ -99,4 +99,3 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
-
