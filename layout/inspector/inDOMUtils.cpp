@@ -52,6 +52,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleRuleMap.h"
+#include "mozilla/ServoCSSParser.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1036,9 +1037,13 @@ inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
 NS_IMETHODIMP
 inDOMUtils::IsValidCSSColor(const nsAString& aColorString, bool *_retval)
 {
+#ifdef MOZ_STYLO
+  *_retval = ServoCSSParser::IsValidCSSColor(aColorString);
+#else
   nsCSSParser cssParser;
   nsCSSValue cssValue;
   *_retval = cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true);
+#endif
   return NS_OK;
 }
 
