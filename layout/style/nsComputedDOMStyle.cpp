@@ -6306,14 +6306,15 @@ nsComputedDOMStyle::DoGetStopColor()
 
 void
 nsComputedDOMStyle::BoxValuesToString(nsAString& aString,
-                                      const nsTArray<nsStyleCoord>& aBoxValues)
+                                      const nsTArray<nsStyleCoord>& aBoxValues,
+                                      bool aClampNegativeCalc)
 {
   MOZ_ASSERT(aBoxValues.Length() == 4, "wrong number of box values");
   nsAutoString value1, value2, value3, value4;
-  SetCssTextToCoord(value1, aBoxValues[0], true);
-  SetCssTextToCoord(value2, aBoxValues[1], true);
-  SetCssTextToCoord(value3, aBoxValues[2], true);
-  SetCssTextToCoord(value4, aBoxValues[3], true);
+  SetCssTextToCoord(value1, aBoxValues[0], aClampNegativeCalc);
+  SetCssTextToCoord(value2, aBoxValues[1], aClampNegativeCalc);
+  SetCssTextToCoord(value3, aBoxValues[2], aClampNegativeCalc);
+  SetCssTextToCoord(value4, aBoxValues[3], aClampNegativeCalc);
 
   // nsROCSSPrimitiveValue do not have binary comparison operators.
   // Compare string results instead.
@@ -6344,8 +6345,8 @@ nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
     vertical.AppendElement(
       aCorners.Get(FullToHalfCorner(corner, true)));
   }
-  BoxValuesToString(horizontalString, horizontal);
-  BoxValuesToString(verticalString, vertical);
+  BoxValuesToString(horizontalString, horizontal, true);
+  BoxValuesToString(verticalString, vertical, true);
   aCssText.Append(horizontalString);
   if (horizontalString == verticalString) {
     return;
@@ -6418,7 +6419,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       break;
     }
     case StyleBasicShapeType::Inset: {
-      BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
+      BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates(), true);
       if (aStyleBasicShape->HasRadius()) {
         shapeFunctionString.AppendLiteral(" round ");
         nsAutoString radiiString;

@@ -713,7 +713,8 @@ private:
   already_AddRefed<CSSValue> CreatePrimitiveValueForBasicShape(
     const mozilla::UniquePtr<mozilla::StyleBasicShape>& aStyleBasicShape);
   void BoxValuesToString(nsAString& aString,
-                         const nsTArray<nsStyleCoord>& aBoxValues);
+                         const nsTArray<nsStyleCoord>& aBoxValues,
+                         bool aClampNegativeCalc);
   void BasicShapeRadiiToString(nsAString& aCssText,
                                const nsStyleCorners& aCorners);
 
