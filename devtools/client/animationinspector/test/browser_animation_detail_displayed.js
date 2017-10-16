@@ -12,6 +12,7 @@
 // 4. Display from first time if displayed animation is only one.
 // 5. Close the animation-detail element by clicking on close button.
 // 6. Stay selected animation even if refresh all UI.
+// 7. Close the animation-detail element again and click selected animation again.
 
 requestLongerTimeout(5);
 
@@ -28,7 +29,7 @@ add_task(function* () {
   ok(animationDetailEl, "The animation-detail element should exist");
 
   // 2. Hidden at first if multiple animations were displayed.
-  const win = animationDetailEl.ownerDocument.defaultView;
+  const win = timelineComponent.rootWrapperEl.ownerGlobal;
   is(win.getComputedStyle(splitboxControlledEl).display, "none",
      "The animation-detail element should be hidden at first "
      + "if multiple animations were displayed");
@@ -45,10 +46,7 @@ add_task(function* () {
 
   // 5. Close the animation-detail element by clicking on close button.
   const previousHeight = animationDetailEl.offsetHeight;
-  const button = animationDetailEl.querySelector(".animation-detail-header button");
-  const onclosed = timelineComponent.once("animation-detail-closed");
-  EventUtils.sendMouseEvent({type: "click"}, button, win);
-  yield onclosed;
+  yield clickCloseButtonForDetailPanel(timelineComponent, animationDetailEl);
   is(win.getComputedStyle(splitboxControlledEl).display, "none",
      "animation-detail element should not display");
 
@@ -64,4 +62,24 @@ add_task(function* () {
   yield clickTimelineRewindButton(panel);
   ok(animationDetailEl.querySelector(".property"),
      "The property in animation-detail element should stay as is");
+
+  // 7. Close the animation-detail element again and click selected animation again.
+  yield clickCloseButtonForDetailPanel(timelineComponent, animationDetailEl);
+  yield clickOnAnimation(panel, 0);
+  isnot(win.getComputedStyle(splitboxControlledEl).display, "none",
+     "animation-detail element should display again");
 });
+
+/**
+ * Click close button for animation-detail panel.
+ *
+ * @param {AnimationTimeline} AnimationTimeline component
+ * @param {DOMNode} animation-detail element
+ * @return {Promise} which wait for close the detail pane
+ */
+function* clickCloseButtonForDetailPanel(timeline, element) {
+  const button = element.querySelector(".animation-detail-header button");
+  const onclosed = timeline.once("animation-detail-closed");
+  EventUtils.sendMouseEvent({type: "click"}, button, element.ownerDocument.defaultView);
+  return yield onclosed;
+}
