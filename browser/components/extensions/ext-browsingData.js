@@ -88,6 +88,13 @@ const clearIndexedDB = async function(options) {
 
   await new Promise(resolve => {
     quotaManagerService.getUsage(request => {
+      if (request.resultCode != Components.results.NS_OK) {
+        // We are probably shutting down. We don't want to propagate the error,
+        // rejecting the promise.
+        resolve();
+        return;
+      }
+
       for (let item of request.result) {
         let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
         let uri = principal.URI;
