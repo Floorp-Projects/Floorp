@@ -7,10 +7,6 @@
 <!ENTITY  blockPopups.label           "Block pop-up windows">
 <!ENTITY  blockPopups.accesskey       "B">
 
-<!ENTITY  notificationsDoNotDisturb.label      "Do not disturb me">
-<!ENTITY  notificationsDoNotDisturb.accesskey  "n">
-<!ENTITY  notificationsDoNotDisturbDetails.value "No notification will be shown until you restart &brandShortName;">
-
 <!ENTITY  popupExceptions.label                                 "Exceptions…">
 <!ENTITY  popupExceptions.accesskey                             "E">
 
