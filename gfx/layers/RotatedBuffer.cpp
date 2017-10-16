@@ -289,19 +289,6 @@ WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
   }
 }
 
-static IntRect
-ComputeBufferRect(const IntRect& aRequestedRect)
-{
-  IntRect rect(aRequestedRect);
-  // Set a minimum width to guarantee a minimum size of buffers we
-  // allocate (and work around problems on some platforms with smaller
-  // dimensions). 64 used to be the magic number needed to work around
-  // a rendering glitch on b2g (see bug 788411). Now that we don't support
-  // this device anymore we should be fine with 8 pixels as the minimum.
-  rect.SetWidth(std::max(aRequestedRect.Width(), 8));
-  return rect;
-}
-
 bool
 RotatedBuffer::AdjustTo(const gfx::IntRect& aDestBufferRect,
                         const gfx::IntRect& aDrawBounds,
@@ -469,6 +456,18 @@ RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
   return mLoanedDrawTarget;
 }
 
+gfx::SurfaceFormat
+RemoteRotatedBuffer::GetFormat() const
+{
+  return mClient->GetFormat();
+}
+
+bool
+RemoteRotatedBuffer::IsLocked()
+{
+  return mClient->IsLocked();
+}
+
 bool
 RemoteRotatedBuffer::Lock(OpenMode aMode)
 {
@@ -519,6 +518,15 @@ RemoteRotatedBuffer::Unlock()
 }
 
 void
+RemoteRotatedBuffer::SyncWithObject(SyncObjectClient* aSyncObject)
+{
+  mClient->SyncWithObject(aSyncObject);
+  if (mClientOnWhite) {
+    mClientOnWhite->SyncWithObject(aSyncObject);
+  }
+}
+
+void
 RemoteRotatedBuffer::Clear()
 {
   MOZ_ASSERT(!mTarget && !mTargetOnWhite);
@@ -549,6 +557,12 @@ RemoteRotatedBuffer::GetDTBufferOnWhite() const
   return mTargetOnWhite;
 }
 
+gfx::SurfaceFormat
+DrawTargetRotatedBuffer::GetFormat() const
+{
+  return mTarget->GetFormat();
+}
+
 already_AddRefed<gfx::SourceSurface>
 DrawTargetRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 {
@@ -572,6 +586,12 @@ DrawTargetRotatedBuffer::GetDTBufferOnWhite() const
   return mTargetOnWhite;
 }
 
+gfx::SurfaceFormat
+SourceRotatedBuffer::GetFormat() const
+{
+  return mSource->GetFormat();
+}
+
 already_AddRefed<SourceSurface>
 SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 {
@@ -585,457 +605,6 @@ SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 
   MOZ_ASSERT(surf);
   return surf.forget();
-}
-
-RotatedContentBuffer::BufferDecision
-RotatedContentBuffer::CalculateBufferForPaint(PaintedLayer* aLayer,
-                                              uint32_t aFlags)
-{
-  ContentType layerContentType =
-    aLayer->CanUseOpaqueSurface() ? gfxContentType::COLOR :
-                                    gfxContentType::COLOR_ALPHA;
-
-  SurfaceMode mode;
-  ContentType contentType;
-  IntRect destBufferRect;
-  nsIntRegion neededRegion;
-  nsIntRegion validRegion = aLayer->GetValidRegion();
-
-  bool canReuseBuffer = HaveBuffer();
-  bool canKeepBufferContents = true;
-
-  while (true) {
-    mode = aLayer->GetSurfaceMode();
-    neededRegion = aLayer->GetVisibleRegion().ToUnknownRegion();
-    canReuseBuffer &= BufferSizeOkFor(neededRegion.GetBounds().Size());
-    contentType = layerContentType;
-
-    if (canReuseBuffer) {
-      if (mBufferRect.Contains(neededRegion.GetBounds())) {
-        // We don't need to adjust mBufferRect.
-        destBufferRect = mBufferRect;
-      } else if (neededRegion.GetBounds().Size() <= mBufferRect.Size()) {
-        // The buffer's big enough but doesn't contain everything that's
-        // going to be visible. We'll move it.
-        destBufferRect = IntRect(neededRegion.GetBounds().TopLeft(), mBufferRect.Size());
-      } else {
-        destBufferRect = neededRegion.GetBounds();
-      }
-    } else {
-      // We won't be reusing the buffer.  Compute a new rect.
-      destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
-    }
-
-    if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-#if defined(MOZ_GFX_OPTIMIZE_MOBILE)
-      mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
-#else
-      if (!aLayer->GetParent() ||
-          !aLayer->GetParent()->SupportsComponentAlphaChildren() ||
-          !aLayer->AsShadowableLayer() ||
-          !aLayer->AsShadowableLayer()->HasShadow()) {
-        mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
-      } else {
-        contentType = gfxContentType::COLOR;
-      }
-#endif
-    }
-
-    if ((aFlags & PAINT_WILL_RESAMPLE) &&
-        (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
-         neededRegion.GetNumRects() > 1))
-    {
-      // The area we add to neededRegion might not be painted opaquely.
-      if (mode == SurfaceMode::SURFACE_OPAQUE) {
-        contentType = gfxContentType::COLOR_ALPHA;
-        mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
-      }
-
-      // We need to validate the entire buffer, to make sure that only valid
-      // pixels are sampled.
-      neededRegion = destBufferRect;
-    }
-
-    // If we have an existing buffer, but the content type has changed or we
-    // have transitioned into/out of component alpha, then we need to recreate it.
-    if (canReuseBuffer &&
-        (contentType != BufferContentType() ||
-        (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != HaveBufferOnWhite()))
-    {
-      // Restart the decision process; we won't re-enter since we guard on
-      // being able to re-use the buffer.
-      canReuseBuffer = false;
-      canKeepBufferContents = false;
-      validRegion.SetEmpty();
-      continue;
-    }
-
-    break;
-  }
-
-  NS_ASSERTION(destBufferRect.Contains(neededRegion.GetBounds()),
-               "Destination rect doesn't contain what we need to paint");
-
-  BufferDecision dest;
-  dest.mNeededRegion = Move(neededRegion);
-  dest.mValidRegion = Move(validRegion);
-  dest.mBufferRect = destBufferRect;
-  dest.mBufferMode = mode;
-  dest.mBufferContentType = contentType;
-  dest.mCanReuseBuffer = canReuseBuffer;
-  dest.mCanKeepBufferContents = canKeepBufferContents;
-  return dest;
-}
-
-gfxContentType
-RotatedContentBuffer::BufferContentType()
-{
-  if (mBufferProvider || (mDTBuffer && mDTBuffer->IsValid())) {
-    SurfaceFormat format = SurfaceFormat::B8G8R8A8;
-
-    if (mBufferProvider) {
-      format = mBufferProvider->GetFormat();
-    } else if (mDTBuffer && mDTBuffer->IsValid()) {
-      format = mDTBuffer->GetFormat();
-    }
-
-    return ContentForFormat(format);
-  }
-  return gfxContentType::SENTINEL;
-}
-
-bool
-RotatedContentBuffer::BufferSizeOkFor(const IntSize& aSize)
-{
-  return (aSize == mBufferRect.Size() ||
-          (SizedToVisibleBounds != mBufferSizePolicy &&
-           aSize < mBufferRect.Size()));
-}
-
-bool
-RotatedContentBuffer::EnsureBuffer()
-{
-  NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
-  if (!mDTBuffer || !mDTBuffer->IsValid()) {
-    if (mBufferProvider) {
-      mDTBuffer = mBufferProvider->BorrowDrawTarget();
-    }
-  }
-
-  NS_WARNING_ASSERTION(mDTBuffer && mDTBuffer->IsValid(), "no buffer");
-  return !!mDTBuffer;
-}
-
-bool
-RotatedContentBuffer::EnsureBufferOnWhite()
-{
-  NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
-  if (!mDTBufferOnWhite) {
-    if (mBufferProviderOnWhite) {
-      mDTBufferOnWhite =
-        mBufferProviderOnWhite->BorrowDrawTarget();
-    }
-  }
-
-  NS_WARNING_ASSERTION(mDTBufferOnWhite, "no buffer");
-  return !!mDTBufferOnWhite;
-}
-
-bool
-RotatedContentBuffer::HaveBuffer() const
-{
-  return mBufferProvider || (mDTBuffer && mDTBuffer->IsValid());
-}
-
-bool
-RotatedContentBuffer::HaveBufferOnWhite() const
-{
-  return mBufferProviderOnWhite || (mDTBufferOnWhite && mDTBufferOnWhite->IsValid());
-}
-
-void
-RotatedContentBuffer::FlushBuffers()
-{
-  if (mDTBuffer) {
-    mDTBuffer->Flush();
-  }
-  if (mDTBufferOnWhite) {
-    mDTBufferOnWhite->Flush();
-  }
-}
-
-RotatedContentBuffer::PaintState
-RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
-                                 uint32_t aFlags)
-{
-  PaintState result;
-
-  BufferDecision dest = CalculateBufferForPaint(aLayer, aFlags);
-  result.mContentType = dest.mBufferContentType;
-
-  if (!dest.mCanKeepBufferContents) {
-    // We're effectively clearing the valid region, so we need to draw
-    // the entire needed region now.
-    MOZ_ASSERT(!dest.mCanReuseBuffer);
-    MOZ_ASSERT(dest.mValidRegion.IsEmpty());
-
-    result.mRegionToInvalidate = aLayer->GetValidRegion();
-    Clear();
-
-#if defined(MOZ_DUMP_PAINTING)
-    if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      if (result.mContentType != BufferContentType()) {
-        printf_stderr("Invalidating entire rotated buffer (layer %p): content type changed\n", aLayer);
-      } else if ((dest.mBufferMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != HaveBufferOnWhite()) {
-        printf_stderr("Invalidating entire rotated buffer (layer %p): component alpha changed\n", aLayer);
-      }
-    }
-#endif
-  }
-
-  result.mRegionToDraw.Sub(dest.mNeededRegion,
-                           dest.mValidRegion);
-
-  if (result.mRegionToDraw.IsEmpty())
-    return result;
-
-  if (HaveBuffer()) {
-    if (LockBuffers()) {
-      // Do not modify result.mRegionToDraw or result.mContentType after this call.
-      // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
-      // or call CreateBuffer before this call.
-      FinalizeFrame(result.mRegionToDraw);
-    } else {
-      // Abandon everything and redraw it all. Ideally we'd reallocate and copy
-      // the old to the new and then call FinalizeFrame on the new buffer so that
-      // we only need to draw the latest bits, but we need a big refactor to support
-      // that ordering.
-      result.mRegionToDraw = dest.mNeededRegion;
-      dest.mCanReuseBuffer = false;
-      Clear();
-    }
-  }
-
-  // We need to disable rotation if we're going to be resampled when
-  // drawing, because we might sample across the rotation boundary.
-  // Also disable buffer rotation when using webrender.
-  bool canHaveRotation = gfxPlatform::BufferRotationEnabled() &&
-                         !(aFlags & (PAINT_WILL_RESAMPLE | PAINT_NO_ROTATION)) &&
-                         !(aLayer->Manager()->AsWebRenderLayerManager());
-  bool canDrawRotated = aFlags & PAINT_CAN_DRAW_ROTATED;
-
-  IntRect drawBounds = result.mRegionToDraw.GetBounds();
-  RefPtr<DrawTarget> destDTBuffer;
-  RefPtr<DrawTarget> destDTBufferOnWhite;
-  uint32_t bufferFlags = 0;
-  if (dest.mBufferMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    bufferFlags |= BUFFER_COMPONENT_ALPHA;
-  }
-  if (dest.mCanReuseBuffer) {
-    if (!EnsureBuffer() ||
-        (HaveBufferOnWhite() && !EnsureBufferOnWhite())) {
-      return result;
-    }
-
-    if (!AdjustTo(dest.mBufferRect,
-                  drawBounds,
-                  canHaveRotation,
-                  canDrawRotated)) {
-      dest.mBufferRect = ComputeBufferRect(dest.mNeededRegion.GetBounds());
-      CreateBuffer(result.mContentType, dest.mBufferRect, bufferFlags,
-                   &destDTBuffer, &destDTBufferOnWhite);
-
-      if (!destDTBuffer ||
-          (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
-        if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
-          gfxCriticalNote << "Failed 1 buffer db=" << hexa(destDTBuffer.get())
-                          << " dw=" << hexa(destDTBufferOnWhite.get())
-                          << " for " << dest.mBufferRect.x << ", "
-                          << dest.mBufferRect.y << ", "
-                          << dest.mBufferRect.Width() << ", "
-                          << dest.mBufferRect.Height();
-        }
-        return result;
-      }
-    }
-  } else {
-    // The buffer's not big enough, so allocate a new one
-    CreateBuffer(result.mContentType, dest.mBufferRect, bufferFlags,
-                 &destDTBuffer, &destDTBufferOnWhite);
-    if (!destDTBuffer ||
-        (!destDTBufferOnWhite && (bufferFlags & BUFFER_COMPONENT_ALPHA))) {
-      if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
-        gfxCriticalNote << "Failed 2 buffer db=" << hexa(destDTBuffer.get())
-                        << " dw=" << hexa(destDTBufferOnWhite.get())
-                        << " for " << dest.mBufferRect.x << ", "
-                        << dest.mBufferRect.y << ", "
-                        << dest.mBufferRect.Width() << ", "
-                        << dest.mBufferRect.Height();
-      }
-      return result;
-    }
-  }
-
-  NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || dest.mBufferRect == dest.mNeededRegion.GetBounds(),
-               "If we're resampling, we need to validate the entire buffer");
-
-  // If needed, copy the old buffer over to the new one
-  if (destDTBuffer) {
-    if ((HaveBuffer() && EnsureBuffer()) &&
-        (dest.mBufferMode != SurfaceMode::SURFACE_COMPONENT_ALPHA || (HaveBufferOnWhite() && EnsureBufferOnWhite()))) {
-      DrawTargetRotatedBuffer oldBuffer = DrawTargetRotatedBuffer(mDTBuffer, mDTBufferOnWhite,
-                                                                  mBufferRect, mBufferRotation);
-
-      mDTBuffer = destDTBuffer.forget();
-      mDTBufferOnWhite = destDTBufferOnWhite.forget();
-      mBufferRect = dest.mBufferRect;
-      mBufferRotation = IntPoint(0,0);
-
-      UpdateDestinationFrom(oldBuffer, nsIntRegion(mBufferRect));
-    } else {
-      mDTBuffer = destDTBuffer.forget();
-      mDTBufferOnWhite = destDTBufferOnWhite.forget();
-      mBufferRect = dest.mBufferRect;
-      mBufferRotation = IntPoint(0,0);
-    }
-  }
-  NS_ASSERTION(canHaveRotation || mBufferRotation == IntPoint(0,0),
-               "Rotation disabled, but we have nonzero rotation?");
-
-  nsIntRegion invalidate;
-  invalidate.Sub(aLayer->GetValidRegion(), dest.mBufferRect);
-  result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
-
-  result.mClip = DrawRegionClip::DRAW;
-  result.mMode = dest.mBufferMode;
-
-  return result;
-}
-
-RefPtr<CapturedPaintState>
-RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                   DrawIterator* aIter,
-                                                   bool aSetTransform)
-{
-  if (aPaintState.mMode == SurfaceMode::SURFACE_NONE ||
-      !EnsureBuffer() ||
-      (HaveBufferOnWhite() && !EnsureBufferOnWhite())) {
-    return nullptr;
-  }
-
-  Matrix transform;
-  DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
-                                                         BUFFER_BOTH, aIter,
-                                                         aSetTransform,
-                                                         &transform);
-  if (!result) {
-    return nullptr;
-  }
-
-  nsIntRegion regionToDraw =
-    ExpandDrawRegion(aPaintState, aIter, result->GetBackendType());
-
-  RefPtr<CapturedPaintState> state =
-    new CapturedPaintState(regionToDraw,
-                           result,
-                           mDTBufferOnWhite,
-                           transform,
-                           aPaintState.mMode,
-                           aPaintState.mContentType);
-  return state;
-}
-
-/*static */ bool
-RotatedContentBuffer::PrepareDrawTargetForPainting(CapturedPaintState* aState)
-{
-  MOZ_ASSERT(aState);
-  RefPtr<DrawTarget> target = aState->mTarget;
-  RefPtr<DrawTarget> whiteTarget = aState->mTargetOnWhite;
-
-  if (aState->mSurfaceMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    if (!target || !target->IsValid() ||
-        !whiteTarget || !whiteTarget->IsValid()) {
-      // This can happen in release builds if allocating one of the two buffers
-      // failed. This in turn can happen if unreasonably large textures are
-      // requested.
-      return false;
-    }
-    for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& rect = iter.Get();
-      target->FillRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()),
-                            ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-      whiteTarget->FillRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()),
-                                 ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-    }
-  } else if (aState->mContentType == gfxContentType::COLOR_ALPHA &&
-             target->IsValid()) {
-    // HaveBuffer() => we have an existing buffer that we must clear
-    for (auto iter = aState->mRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& rect = iter.Get();
-      target->ClearRect(Rect(rect.x, rect.y, rect.Width(), rect.Height()));
-    }
-  }
-
-  return true;
-}
-
-nsIntRegion
-RotatedContentBuffer::ExpandDrawRegion(PaintState& aPaintState,
-                                       DrawIterator* aIter,
-                                       BackendType aBackendType)
-{
-  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
-  if (aIter) {
-    // The iterators draw region currently only contains the bounds of the region,
-    // this makes it the precise region.
-    aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
-    drawPtr = &aIter->mDrawRegion;
-  }
-  if (aBackendType == BackendType::DIRECT2D ||
-      aBackendType == BackendType::DIRECT2D1_1) {
-    // Simplify the draw region to avoid hitting expensive drawing paths
-    // for complex regions.
-    drawPtr->SimplifyOutwardByArea(100 * 100);
-  }
-  return *drawPtr;
-}
-
-DrawTarget*
-RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
-                                                  DrawIterator* aIter /* = nullptr */)
-{
-  RefPtr<CapturedPaintState> capturedState =
-    BorrowDrawTargetForRecording(aPaintState, aIter, true);
-
-  if (!capturedState) {
-    return nullptr;
-  }
-
-  if (!RotatedContentBuffer::PrepareDrawTargetForPainting(capturedState)) {
-    return nullptr;
-  }
-
-  return capturedState->mTarget;
-}
-
-already_AddRefed<SourceSurface>
-RotatedContentBuffer::GetSourceSurface(ContextSource aSource) const
-{
-  if (!mDTBuffer || !mDTBuffer->IsValid()) {
-    gfxCriticalNote << "Invalid buffer in RotatedContentBuffer::GetSourceSurface " << gfx::hexa(mDTBuffer);
-    return nullptr;
-  }
-
-  if (aSource == BUFFER_BLACK) {
-    return mDTBuffer->Snapshot();
-  } else {
-    if (!mDTBufferOnWhite || !mDTBufferOnWhite->IsValid()) {
-    gfxCriticalNote << "Invalid buffer on white in RotatedContentBuffer::GetSourceSurface " << gfx::hexa(mDTBufferOnWhite);
-      return nullptr;
-    }
-    MOZ_ASSERT(aSource == BUFFER_WHITE);
-    return mDTBufferOnWhite->Snapshot();
-  }
 }
 
 } // namespace layers
