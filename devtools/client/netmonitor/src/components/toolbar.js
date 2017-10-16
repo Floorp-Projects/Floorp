@@ -158,7 +158,6 @@ const Toolbar = createClass({
     // has two states: pause/play.
     let toggleButtonClassList = [
       "devtools-button",
-      "requests-list-pause-button",
       recording ? "devtools-pause-icon" : "devtools-play-icon",
     ];
 
