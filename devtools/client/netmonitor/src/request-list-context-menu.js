@@ -11,10 +11,6 @@ const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
 const {
-  getLongString,
-  getTabTarget,
-} = require("./connector/index");
-const {
   getSelectedRequest,
   getSortedRequests,
 } = require("./selectors/index");
@@ -28,9 +24,13 @@ const {
 
 function RequestListContextMenu({
   cloneSelectedRequest,
+  getLongString,
+  getTabTarget,
   openStatistics,
 }) {
   this.cloneSelectedRequest = cloneSelectedRequest;
+  this.getLongString = getLongString;
+  this.getTabTarget = getTabTarget;
   this.openStatistics = openStatistics;
 }
 
@@ -239,7 +239,7 @@ RequestListContextMenu.prototype = {
    * Opens selected item in the debugger
    */
   openInDebugger() {
-    let toolbox = gDevTools.getToolbox(getTabTarget());
+    let toolbox = gDevTools.getToolbox(this.getTabTarget());
     toolbox.viewSourceInDebugger(this.selectedRequest.url, 0);
   },
 
@@ -247,7 +247,7 @@ RequestListContextMenu.prototype = {
    * Opens selected item in the style editor
    */
   openInStyleEditor() {
-    let toolbox = gDevTools.getToolbox(getTabTarget());
+    let toolbox = gDevTools.getToolbox(this.getTabTarget());
     toolbox.viewSourceInStyleEditor(this.selectedRequest.url, 0);
   },
 
@@ -387,11 +387,11 @@ RequestListContextMenu.prototype = {
   },
 
   getDefaultHarOptions() {
-    let form = getTabTarget().form;
+    let form = this.getTabTarget().form;
     let title = form.title || form.url;
 
     return {
-      getString: getLongString,
+      getString: this.getLongString,
       items: this.sortedRequests,
       title: title
     };
