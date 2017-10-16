@@ -267,6 +267,38 @@ this.PlacesDBUtils = {
   async _getBoundCoherenceStatements() {
     let cleanupStatements = [];
 
+    // Create triggers for updating Sync metadata. The "sync change" trigger
+    // bumps the parent's change counter when we update a GUID or move an item
+    // to a different folder, since Sync stores the list of child GUIDs on the
+    // parent. The "sync tombstone" trigger inserts tombstones for deleted
+    // synced bookmarks.
+    cleanupStatements.push({
+      query:
+      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_sync_change_temp_trigger
+       AFTER UPDATE of guid, parent, position ON moz_bookmarks
+       FOR EACH ROW
+       BEGIN
+         UPDATE moz_bookmarks
+         SET syncChangeCounter = syncChangeCounter + 1
+         WHERE id = NEW.parent OR
+               (OLD.parent <> NEW.parent AND
+                id = OLD.parent);
+      END`,
+    });
+    cleanupStatements.push({
+      query:
+      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_sync_tombstone_temp_trigger
+       AFTER DELETE ON moz_bookmarks
+       FOR EACH ROW WHEN OLD.guid NOT NULL AND
+                         OLD.syncStatus <> 1
+       BEGIN
+         INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
+         VALUES(OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000);
+      END`,
+    });
+
+    // MAINTENANCE STATEMENTS SHOULD GO BELOW THIS POINT!
+
     // MOZ_ANNO_ATTRIBUTES
     // A.1 remove obsolete annotations from moz_annos.
     // The 'weave0' idiom exploits character ordering (0 follows /) to
@@ -491,7 +523,10 @@ this.PlacesDBUtils = {
     // D.4 move orphan items to unsorted folder
     let fixOrphanItems = {
       query:
-      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE guid NOT IN (
+      `UPDATE moz_bookmarks SET
+         parent = :unsorted_folder,
+         syncChangeCounter = syncChangeCounter + 1
+       WHERE guid NOT IN (
          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT b.id FROM moz_bookmarks b
@@ -514,7 +549,10 @@ this.PlacesDBUtils = {
     //     will move eventual children to unsorted bookmarks.
     let fixBookmarksAsFolders = {
       query:
-      `UPDATE moz_bookmarks SET type = :bookmark_type WHERE guid NOT IN (
+      `UPDATE moz_bookmarks
+       SET type = :bookmark_type,
+           syncChangeCounter = syncChangeCounter + 1
+       WHERE guid NOT IN (
          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
@@ -538,7 +576,10 @@ this.PlacesDBUtils = {
     //     folders.
     let fixFoldersAsBookmarks = {
       query:
-      `UPDATE moz_bookmarks SET type = :folder_type WHERE guid NOT IN (
+      `UPDATE moz_bookmarks
+       SET type = :folder_type,
+           syncChangeCounter = syncChangeCounter + 1
+       WHERE guid NOT IN (
          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
@@ -561,7 +602,10 @@ this.PlacesDBUtils = {
     //     as parent, if they have bad parent move them to unsorted bookmarks.
     let fixInvalidParents = {
       query:
-      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE guid NOT IN (
+      `UPDATE moz_bookmarks SET
+         parent = :unsorted_folder,
+         syncChangeCounter = syncChangeCounter + 1
+       WHERE guid NOT IN (
          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
@@ -820,17 +864,6 @@ this.PlacesDBUtils = {
     });
     cleanupStatements.push({
       query:
-      `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_fix_guids_temp_trigger
-       AFTER UPDATE of guid ON moz_bookmarks
-       FOR EACH ROW
-       BEGIN
-         UPDATE moz_bookmarks
-         SET syncChangeCounter = syncChangeCounter + 1
-         WHERE id = NEW.parent;
-      END`,
-    });
-    cleanupStatements.push({
-      query:
       `UPDATE moz_bookmarks
        SET guid = GENERATE_GUID(),
            syncChangeCounter = syncChangeCounter + 1,
@@ -840,9 +873,6 @@ this.PlacesDBUtils = {
       params: {
         syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
       },
-    });
-    cleanupStatements.push({
-      query: "DROP TRIGGER moz_bm_fix_guids_temp_trigger",
     });
 
     // S.2 drop tombstones for bookmarks that aren't deleted.
@@ -869,6 +899,13 @@ this.PlacesDBUtils = {
     });
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
+
+    cleanupStatements.push({
+      query: "DROP TRIGGER moz_bm_sync_change_temp_trigger",
+    });
+    cleanupStatements.push({
+      query: "DROP TRIGGER moz_bm_sync_tombstone_temp_trigger",
+    });
 
     return cleanupStatements;
   },

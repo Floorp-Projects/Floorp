@@ -37,6 +37,7 @@ function cleanDatabase() {
   mDBConn.executeSimpleSQL("DELETE FROM moz_icons");
   mDBConn.executeSimpleSQL("DELETE FROM moz_pages_w_icons");
   mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " + defaultBookmarksMaxId);
+  mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks_deleted");
 }
 
 function addPlace(aUrl, aFavicon, aGuid = PlacesUtils.history.makeGuid()) {
@@ -404,7 +405,8 @@ tests.push({
 
   _validItemId: null,
   _invalidItemId: null,
-  _placeId: null,
+  _invalidSyncedItemId: null,
+  placeId: null,
 
   setup() {
     // Add a place to ensure place_id = 1 is valid
@@ -413,9 +415,13 @@ tests.push({
     this._validItemId = addBookmark(this.placeId);
     // Insert a bookmark with an invalid place
     this._invalidItemId = addBookmark(1337);
+    // Insert a synced bookmark with an invalid place. We should write a
+    // tombstone when we remove it.
+    this._invalidSyncedItemId = addBookmark(1337, null, null, null, null, null,
+      "bookmarkAAAA", PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
   },
 
-  check() {
+  async check() {
     // Check that valid bookmark is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id");
     stmt.params.item_id = this._validItemId;
@@ -424,7 +430,13 @@ tests.push({
     // Check that invalid bookmark has been removed
     stmt.params.item_id = this._invalidItemId;
     do_check_false(stmt.executeStep());
+    stmt.reset();
+    stmt.params.item_id = this._invalidSyncedItemId;
+    do_check_false(stmt.executeStep());
     stmt.finalize();
+
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    do_check_matches(tombstones.map(info => info.guid), ["bookmarkAAAA"]);
   }
 });
 
@@ -528,7 +540,7 @@ tests.push({
   _bookmarkId: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
     this._placeId = addPlace();
     // Insert an orphan bookmark
@@ -541,25 +553,41 @@ tests.push({
     this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK, this._orphanFolderId);
   },
 
-  check() {
-    // Check that bookmarks are now children of a real folder (unsorted)
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND parent = :parent");
-    stmt.params.item_id = this._orphanBookmarkId;
-    stmt.params.parent = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params.item_id = this._orphanSeparatorId;
-    stmt.params.parent = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params.item_id = this._orphanFolderId;
-    stmt.params.parent = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params.item_id = this._bookmarkId;
-    stmt.params.parent = this._orphanFolderId;
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
+  async check() {
+    // Check that bookmarks are now children of a real folder (unfiled)
+    let expectedInfos = [{
+      id: this._orphanBookmarkId,
+      parent: bs.unfiledBookmarksFolder,
+      syncChangeCounter: 1,
+    }, {
+      id: this._orphanSeparatorId,
+      parent: bs.unfiledBookmarksFolder,
+      syncChangeCounter: 1,
+    }, {
+      id: this._orphanFolderId,
+      parent: bs.unfiledBookmarksFolder,
+      syncChangeCounter: 1,
+    }, {
+      id: this._bookmarkId,
+      parent: this._orphanFolderId,
+      syncChangeCounter: 0,
+    }, {
+      id: bs.unfiledBookmarksFolder,
+      parent: bs.placesRoot,
+      syncChangeCounter: 3,
+    }];
+    let db = await PlacesUtils.promiseDBConnection();
+    for (let { id, parent, syncChangeCounter } of expectedInfos) {
+      let rows = await db.executeCached(`
+        SELECT id, syncChangeCounter
+        FROM moz_bookmarks
+        WHERE id = :item_id AND parent = :parent`,
+        { item_id: id, parent });
+      do_check_eq(rows.length, 1);
+
+      let actualChangeCounter = rows[0].getResultByName("syncChangeCounter");
+      do_check_eq(actualChangeCounter, syncChangeCounter);
+    }
   }
 });
 
@@ -617,15 +645,20 @@ tests.push({
 
   check() {
     // Check valid bookmark
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND type = :type");
+    let stmt = mDBConn.createStatement(`
+      SELECT id, syncChangeCounter
+      FROM moz_bookmarks
+      WHERE id = :item_id AND type = :type`);
     stmt.params.item_id = this._validBookmarkId;
     stmt.params.type = bs.TYPE_BOOKMARK;
     do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.syncChangeCounter, 0);
     stmt.reset();
     // Check invalid bookmark has been converted to a folder
     stmt.params.item_id = this._invalidBookmarkId;
     stmt.params.type = bs.TYPE_FOLDER;
     do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.syncChangeCounter, 1);
     stmt.finalize();
   }
 });
@@ -642,7 +675,7 @@ tests.push({
   _bookmarkId2: null,
   _placeId: null,
 
-  setup() {
+  async setup() {
     // Add a place to ensure place_id = 1 is valid
     this._placeId = addPlace();
     // Insert a bookmark
@@ -654,17 +687,33 @@ tests.push({
     this._bookmarkId2 = addBookmark(this._placeId, bs.TYPE_BOOKMARK, this._separatorId);
   },
 
-  check() {
-    // Check that bookmarks are now children of a real folder (unsorted)
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND parent = :parent");
-    stmt.params.item_id = this._bookmarkId1;
-    stmt.params.parent = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params.item_id = this._bookmarkId2;
-    stmt.params.parent = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
+  async check() {
+    // Check that bookmarks are now children of a real folder (unfiled)
+    let expectedInfos = [{
+      id: this._bookmarkId1,
+      parent: bs.unfiledBookmarksFolder,
+      syncChangeCounter: 1,
+    }, {
+      id: this._bookmarkId2,
+      parent: bs.unfiledBookmarksFolder,
+      syncChangeCounter: 1,
+    }, {
+      id: bs.unfiledBookmarksFolder,
+      parent: bs.placesRoot,
+      syncChangeCounter: 2,
+    }];
+    let db = await PlacesUtils.promiseDBConnection();
+    for (let { id, parent, syncChangeCounter } of expectedInfos) {
+      let rows = await db.executeCached(`
+        SELECT id, syncChangeCounter
+        FROM moz_bookmarks
+        WHERE id = :item_id AND parent = :parent`,
+        { item_id: id, parent });
+      do_check_eq(rows.length, 1);
+
+      let actualChangeCounter = rows[0].getResultByName("syncChangeCounter");
+      do_check_eq(actualChangeCounter, syncChangeCounter);
+    }
   }
 });
 
@@ -677,7 +726,7 @@ tests.push({
   _unfiledBookmarks: [],
   _toolbarBookmarks: [],
 
-  setup() {
+  async setup() {
     const NUM_BOOKMARKS = 20;
     bs.runInBatchMode({
       runBatched(aUserData) {
@@ -685,12 +734,14 @@ tests.push({
         for (let i = 0; i < NUM_BOOKMARKS; i++) {
           bs.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                             NetUtil.newURI("http://example.com/"),
-                            bs.DEFAULT_INDEX, "testbookmark");
+                            bs.DEFAULT_INDEX, "testbookmark", null,
+                            PlacesUtils.bookmarks.SOURCES.SYNC);
         }
         for (let i = 0; i < NUM_BOOKMARKS; i++) {
           bs.insertBookmark(PlacesUtils.toolbarFolderId,
                             NetUtil.newURI("http://example.com/"),
-                            bs.DEFAULT_INDEX, "testbookmark");
+                            bs.DEFAULT_INDEX, "testbookmark", null,
+                            PlacesUtils.bookmarks.SOURCES.SYNC);
         }
       }
     }, null);
@@ -730,32 +781,44 @@ tests.push({
     randomize_positions(PlacesUtils.unfiledBookmarksFolderId,
                         this._unfiledBookmarks);
     randomize_positions(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
+
+    let syncInfos = await PlacesTestUtils.fetchBookmarkSyncFields(
+      PlacesUtils.bookmarks.unfiledGuid, PlacesUtils.bookmarks.toolbarGuid);
+    do_check_true(syncInfos.every(info => info.syncChangeCounter === 0));
   },
 
-  check() {
-    function check_order(aParent, aResultArray) {
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+
+    async function check_order(aParent, aResultArray) {
       // Build the expected ordered list of bookmarks.
-      let stmt = mDBConn.createStatement(
-        `SELECT id, position FROM moz_bookmarks WHERE parent = :parent
-         ORDER BY position ASC`
+      let childRows = await db.executeCached(
+        `SELECT id, position, syncChangeCounter FROM moz_bookmarks
+         WHERE parent = :parent
+         ORDER BY position ASC`,
+        { parent: aParent }
       );
-      stmt.params.parent = aParent;
-      let pass = true;
-      while (stmt.executeStep()) {
-        print(stmt.row.id + "\t" + stmt.row.position);
-        if (aResultArray.indexOf(stmt.row.id) != stmt.row.position) {
-          pass = false;
+      for (let row of childRows) {
+        let id = row.getResultByName("id");
+        let position = row.getResultByName("position");
+        if (aResultArray.indexOf(id) != position) {
+          dump_table("moz_bookmarks");
+          do_throw("Unexpected unfiled bookmarks order.");
         }
       }
-      stmt.finalize();
-      if (!pass) {
-        dump_table("moz_bookmarks");
-        do_throw("Unexpected unfiled bookmarks order.");
+
+      let parentRows = await db.executeCached(
+        `SELECT syncChangeCounter FROM moz_bookmarks
+         WHERE id = :parent`,
+        { parent: aParent });
+      for (let row of parentRows) {
+        let actualChangeCounter = row.getResultByName("syncChangeCounter");
+        do_check_true(actualChangeCounter > 0);
       }
     }
 
-    check_order(PlacesUtils.unfiledBookmarksFolderId, this._unfiledBookmarks);
-    check_order(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
+    await check_order(PlacesUtils.unfiledBookmarksFolderId, this._unfiledBookmarks);
+    await check_order(PlacesUtils.toolbarFolderId, this._toolbarBookmarks);
   }
 });
 
@@ -1290,8 +1353,6 @@ tests.push({
   _bookmarkInfos: [],
 
   async setup() {
-    await PlacesTestUtils.markBookmarksAsSynced();
-
     let folderWithInvalidGuid = addBookmark(
       null, PlacesUtils.bookmarks.TYPE_FOLDER,
       PlacesUtils.bookmarks.bookmarksMenuFolder, /* aKeywordId */ null,
@@ -1370,8 +1431,6 @@ tests.push({
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     do_check_matches(tombstones.map(info => info.guid),
       ["bookmarkAAAA\n", "{123456}"]);
-
-    await PlacesSyncUtils.bookmarks.reset();
   },
 });
 
@@ -1623,6 +1682,8 @@ add_task(async function test_preventive_maintenance() {
   do_check_true(defaultBookmarksMaxId > 0);
 
   for (let test of tests) {
+    await PlacesTestUtils.markBookmarksAsSynced();
+
     dump("\nExecuting test: " + test.name + "\n*** " + test.desc + "\n");
     await test.setup();
 
