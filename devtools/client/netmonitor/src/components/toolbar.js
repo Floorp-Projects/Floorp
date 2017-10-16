@@ -13,7 +13,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
-const { FILTER_SEARCH_DELAY } = require("../constants");
+const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
   getDisplayedRequestsSummary,
   getRequestFilterTypes,
@@ -37,6 +37,14 @@ const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
 
 const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
 const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
+const TOOLBAR_FILTER_LABELS = FILTER_TAGS.concat("all").reduce((o, tag) =>
+  Object.assign(o, { [tag]: L10N.getStr(`netmonitor.toolbar.filter.${tag}`) }), {});
+const ENABLE_PERSISTENT_LOGS_TOOLTIP =
+  L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip");
+const ENABLE_PERSISTENT_LOGS_LABEL =
+  L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label");
+const DISABLE_CACHE_TOOLTIP = L10N.getStr("netmonitor.toolbar.disableCache.tooltip");
+const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label");
 
 /*
  * Network monitor toolbar component
@@ -98,7 +106,7 @@ const Toolbar = createClass({
           "aria-pressed": checked,
           "data-key": type,
         },
-          L10N.getStr(`netmonitor.toolbar.filter.${type}`)
+          TOOLBAR_FILTER_LABELS[type]
         )
       );
     });
@@ -115,7 +123,7 @@ const Toolbar = createClass({
           label(
             {
               className: "devtools-checkbox-label",
-              title: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip"),
+              title: ENABLE_PERSISTENT_LOGS_TOOLTIP,
             },
             input({
               id: "devtools-persistlog-checkbox",
@@ -124,12 +132,12 @@ const Toolbar = createClass({
               checked: persistentLogsEnabled,
               onClick: togglePersistentLogs,
             }),
-            L10N.getStr("netmonitor.toolbar.enablePersistentLogs.label"),
+            ENABLE_PERSISTENT_LOGS_LABEL
           ),
           label(
             {
               className: "devtools-checkbox-label",
-              title: L10N.getStr("netmonitor.toolbar.disableCache.tooltip"),
+              title: DISABLE_CACHE_TOOLTIP,
             },
             input({
               id: "devtools-cache-checkbox",
@@ -138,7 +146,7 @@ const Toolbar = createClass({
               checked: browserCacheDisabled,
               onClick: toggleBrowserCache,
             }),
-            L10N.getStr("netmonitor.toolbar.disableCache.label"),
+            DISABLE_CACHE_LABEL,
           ),
         ),
         span({ className: "devtools-toolbar-group" },

@@ -9,21 +9,13 @@ const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
+  FILTER_TAGS
 } = require("../constants");
 
-const FilterTypes = I.Record({
-  all: false,
-  html: false,
-  css: false,
-  js: false,
-  xhr: false,
-  fonts: false,
-  images: false,
-  media: false,
-  flash: false,
-  ws: false,
-  other: false,
-});
+const FilterTypes = I.Record(["all"]
+  .concat(FILTER_TAGS)
+  .reduce((o, tag) => Object.assign(o, { [tag]: false }), {})
+);
 
 const Filters = I.Record({
   requestFilterTypes: new FilterTypes({ all: true }),
