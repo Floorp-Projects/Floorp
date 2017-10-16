@@ -319,11 +319,9 @@ namespace {
     {
       MOZ_ASSERT(aTarget);
       MOZ_ASSERT(!mTimer);
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      if (mTimer) {
-        mTimer->SetTarget(aTarget);
-        mTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
-      }
+      NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                              this, aDelay, nsITimer::TYPE_ONE_SHOT,
+                              aTarget);
     }
 
   protected:

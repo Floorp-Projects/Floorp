@@ -1402,20 +1402,14 @@ nsContentSink::WillInterruptImpl()
         // Convert to milliseconds
         delay /= PR_USEC_PER_MSEC;
 
-        mNotificationTimer = do_CreateInstance("@mozilla.org/timer;1",
-                                               &result);
-        if (NS_SUCCEEDED(result)) {
+        NS_NewTimerWithCallback(getter_AddRefs(mNotificationTimer),
+                                this, delay,
+                                nsITimer::TYPE_ONE_SHOT);
+        if (mNotificationTimer) {
           SINK_TRACE(static_cast<LogModule*>(gContentSinkLogModuleInfo),
                      SINK_TRACE_REFLOW,
                      ("nsContentSink::WillInterrupt: setting up timer with "
                       "delay %d", delay));
-
-          result =
-            mNotificationTimer->InitWithCallback(this, delay,
-                                                 nsITimer::TYPE_ONE_SHOT);
-          if (NS_FAILED(result)) {
-            mNotificationTimer = nullptr;
-          }
         }
       }
     }

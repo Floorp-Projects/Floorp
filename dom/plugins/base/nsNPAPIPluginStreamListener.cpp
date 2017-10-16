@@ -272,14 +272,10 @@ nsNPAPIPluginStreamListener::ResumeRequest()
 nsresult
 nsNPAPIPluginStreamListener::StartDataPump()
 {
-  nsresult rv;
-  mDataPumpTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Start pumping data to the plugin every 100ms until it obeys and
   // eats the data.
-  return mDataPumpTimer->InitWithCallback(this, 100,
-                                          nsITimer::TYPE_REPEATING_SLACK);
+  return NS_NewTimerWithCallback(getter_AddRefs(mDataPumpTimer),
+                                 this, 100, nsITimer::TYPE_REPEATING_SLACK);
 }
 
 void

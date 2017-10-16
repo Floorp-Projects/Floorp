@@ -1288,7 +1288,7 @@ NPEventModel nsPluginInstanceOwner::GetEventModel()
 
 #define DEFAULT_REFRESH_RATE 20 // 50 FPS
 
-nsCOMPtr<nsITimer>               *nsPluginInstanceOwner::sCATimer = nullptr;
+StaticRefPtr<nsITimer>            nsPluginInstanceOwner::sCATimer;
 nsTArray<nsPluginInstanceOwner*> *nsPluginInstanceOwner::sCARefreshListeners = nullptr;
 
 void nsPluginInstanceOwner::CARefresh(nsITimer *aTimer, void *aClosure) {
@@ -1334,15 +1334,11 @@ void nsPluginInstanceOwner::AddToCARefreshTimer() {
 
   sCARefreshListeners->AppendElement(this);
 
-  if (!sCATimer) {
-    sCATimer = new nsCOMPtr<nsITimer>();
-  }
-
   if (sCARefreshListeners->Length() == 1) {
-    *sCATimer = do_CreateInstance("@mozilla.org/timer;1");
-    (*sCATimer)->InitWithNamedFuncCallback(CARefresh, nullptr,
-                                           DEFAULT_REFRESH_RATE, nsITimer::TYPE_REPEATING_SLACK,
-                                           "nsPluginInstanceOwner::CARefresh");
+    NS_NewTimerWithFuncCallback(getter_AddRefs(sCATimer),
+                                CARefresh, nullptr,
+                                DEFAULT_REFRESH_RATE, nsITimer::TYPE_REPEATING_SLACK,
+                                "nsPluginInstanceOwner::CARefresh");
   }
 }
 
@@ -1355,8 +1351,7 @@ void nsPluginInstanceOwner::RemoveFromCARefreshTimer() {
 
   if (sCARefreshListeners->Length() == 0) {
     if (sCATimer) {
-      (*sCATimer)->Cancel();
-      delete sCATimer;
+      sCATimer->Cancel();
       sCATimer = nullptr;
     }
     delete sCARefreshListeners;

@@ -55,8 +55,8 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   nsresult rv = NS_OK;
 
   if (!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mTimer = NS_NewTimer();
+    NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t earlyMicros = 0;
     MOZ_ALWAYS_SUCCEEDS(mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));

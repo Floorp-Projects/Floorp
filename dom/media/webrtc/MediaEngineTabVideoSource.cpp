@@ -51,8 +51,9 @@ nsresult
 MediaEngineTabVideoSource::StartRunnable::Run()
 {
   mVideoSource->Draw();
-  mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
+  NS_NewTimerWithCallback(getter_AddRefs(mVideoSource->mTimer),
+                          mVideoSource, mVideoSource->mTimePerFrame,
+                          nsITimer::TYPE_REPEATING_SLACK);
   if (mVideoSource->mTabSource) {
     mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
   }
