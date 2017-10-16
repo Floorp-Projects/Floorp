@@ -98,16 +98,11 @@ MessageLoopIdleTask::MessageLoopIdleTask(nsIRunnable* aTask,
 nsresult
 MessageLoopIdleTask::Init(uint32_t aEnsureRunsAfterMS)
 {
-  mTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (NS_WARN_IF(!mTimer)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   RefPtr<MessageLoopTimerCallback> callback =
     new MessageLoopTimerCallback(this);
-
-  return mTimer->InitWithCallback(callback, aEnsureRunsAfterMS,
-                                  nsITimer::TYPE_ONE_SHOT);
+  return NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                                 callback, aEnsureRunsAfterMS,
+                                 nsITimer::TYPE_ONE_SHOT);
 }
 
 NS_IMETHODIMP
