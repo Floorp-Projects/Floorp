@@ -6382,12 +6382,12 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
         }
         SetCssTextToCoord(coordString,
                           aStyleBasicShape->Coordinates()[i],
-                          true);
+                          false);
         shapeFunctionString.Append(coordString);
         shapeFunctionString.Append(' ');
         SetCssTextToCoord(coordString,
                           aStyleBasicShape->Coordinates()[i + 1],
-                          true);
+                          false);
         shapeFunctionString.Append(coordString);
       }
       break;
