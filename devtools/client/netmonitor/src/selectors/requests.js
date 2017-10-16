@@ -127,19 +127,10 @@ function getDisplayedRequestById(state, id) {
   return getDisplayedRequests(state).find(r => r.id === id);
 }
 
-/**
- * Returns the current recording boolean state (HTTP traffic is
- * monitored or not monitored)
- */
-function getRecordingState(state) {
-  return state.requests.recording;
-}
-
 module.exports = {
   getDisplayedRequestById,
   getDisplayedRequests,
   getDisplayedRequestsSummary,
-  getRecordingState,
   getRequestById,
   getSelectedRequest,
   getSortedRequests,

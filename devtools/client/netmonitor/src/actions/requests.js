@@ -11,7 +11,6 @@ const {
   CLONE_SELECTED_REQUEST,
   REMOVE_SELECTED_CUSTOM_REQUEST,
   SEND_CUSTOM_REQUEST,
-  TOGGLE_RECORDING,
   UPDATE_REQUEST,
 } = require("../constants");
 const { getSelectedRequest } = require("../selectors/index");
@@ -93,21 +92,11 @@ function clearRequests() {
   };
 }
 
-/**
- * Toggle monitoring
- */
-function toggleRecording() {
-  return {
-    type: TOGGLE_RECORDING
-  };
-}
-
 module.exports = {
   addRequest,
   clearRequests,
   cloneSelectedRequest,
   removeSelectedCustomRequest,
   sendCustomRequest,
-  toggleRecording,
   updateRequest,
 };
