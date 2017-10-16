@@ -306,10 +306,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ExtensionProtocolHandler,
 NS_GENERIC_FACTORY_CONSTRUCTOR(SubstitutingURL)
 } // namespace mozilla
 
-#include "nsDeviceProtocolHandler.h"
-typedef mozilla::net::nsDeviceProtocolHandler nsDeviceProtocolHandler;
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceProtocolHandler)
-
 #include "nsViewSourceHandler.h"
 typedef mozilla::net::nsViewSourceHandler nsViewSourceHandler;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
@@ -919,7 +915,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_WIFI_MONITOR_COMPONENT_CID, false, nullptr, nsWifiMonitorConstructor },
 #endif
     { &kNS_DATAPROTOCOLHANDLER_CID, false, nullptr, nsDataHandler::Create },
-    { &kNS_DEVICEPROTOCOLHANDLER_CID, false, nullptr, nsDeviceProtocolHandlerConstructor},
     { &kNS_VIEWSOURCEHANDLER_CID, false, nullptr, nsViewSourceHandlerConstructor },
     { &kNS_WYCIWYGPROTOCOLHANDLER_CID, false, nullptr, nsWyciwygProtocolHandlerConstructor },
     { &kNS_WEBSOCKETPROTOCOLHANDLER_CID, false, nullptr,
