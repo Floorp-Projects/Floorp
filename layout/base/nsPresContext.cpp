@@ -95,7 +95,6 @@
 #include "nsBidi.h"
 
 #include "mozilla/dom/URL.h"
-#include "mozilla/ServoCSSParser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -147,29 +146,17 @@ private:
 nscolor
 nsPresContext::MakeColorPref(const nsString& aColor)
 {
-  bool ok;
-  nscolor result;
-
-  ServoStyleSet* servoStyleSet = mShell && mShell->StyleSet()
-    ? mShell->StyleSet()->GetAsServo()
-    : nullptr;
-
-  if (servoStyleSet) {
-    ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColor,
-                                      &result);
-  } else {
-    nsCSSParser parser;
-    nsCSSValue value;
-    ok = parser.ParseColorString(aColor, nullptr, 0, value) &&
-         nsRuleNode::ComputeColor(value, this, nullptr, result);
-  }
-
-  if (!ok) {
+  nsCSSParser parser;
+  nsCSSValue value;
+  if (!parser.ParseColorString(aColor, nullptr, 0, value)) {
     // Any better choices?
-    result = NS_RGB(0, 0, 0);
+    return NS_RGB(0, 0, 0);
   }
 
-  return result;
+  nscolor color;
+  return nsRuleNode::ComputeColor(value, this, nullptr, color)
+    ? color
+    : NS_RGB(0, 0, 0);
 }
 
 bool
