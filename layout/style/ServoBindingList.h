@@ -682,14 +682,6 @@ SERVO_BINDING_FUNC(Servo_ReleaseArcStringData, void,
 SERVO_BINDING_FUNC(Servo_CloneArcStringData, mozilla::ServoRawOffsetArc<RustString>,
                    const mozilla::ServoRawOffsetArc<RustString>* string);
 
-// CSS parsing utility functions.
-SERVO_BINDING_FUNC(Servo_IsValidCSSColor, bool, const nsAString* value);
-SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
-                   RawServoStyleSetBorrowedOrNull set,
-                   nscolor current_color,
-                   const nsAString* value,
-                   nscolor* result_color);
-
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
   SERVO_BINDING_FUNC(Servo_##name_##_AddRef, void, type_##Borrowed) \
