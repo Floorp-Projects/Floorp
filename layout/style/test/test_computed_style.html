@@ -702,6 +702,32 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
+(function test_bug_1378368() {
+  // Test that negative results of calc()s in basic-shapes (e.g. polygon()) should
+  // not be clamped to 0px.
+  var clipPaths = [
+    // [ specified style,
+    //   expected computed style,
+    //   descriptionOfTestcase ],
+    // polygon:
+    [ "polygon(calc(10px - 20px) 0px, 100px 100px, 0px 100px)",
+      "polygon(-10px 0px, 100px 100px, 0px 100px)",
+      "polygon with negative calc() coordinates" ],
+  ];
+
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (let test of clipPaths) {
+    p.style.clipPath = test[0];
+    is(cs.clipPath, test[1],
+       "computed value of clip-path for basic-shapes (" + test[2] + ")");
+  }
+
+  p.remove();
+})();
+
 </script>
 </pre>
 </body>
