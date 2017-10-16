@@ -151,7 +151,7 @@ function addVisits(aPlaceInfo, aWindow, aCallback, aStack) {
   } else if (Array.isArray(aPlaceInfo)) {
     places = places.concat(aPlaceInfo);
   } else {
-    places.push(aPlaceInfo)
+    places.push(aPlaceInfo);
   }
 
   // Create mozIVisitInfo for each entry.

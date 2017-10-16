@@ -44,7 +44,7 @@ AutoCompleteInput.prototype = {
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
-}
+};
 
 // Get tagging service
 try {
@@ -88,7 +88,7 @@ function ensure_tag_results(uris, searchTerm) {
       do_check_eq(controller.getStyleAt(i), "bookmark-tag");
     }
     // Sort the results then check if we have the right items
-    vals.sort().forEach((val, i) => do_check_eq(val, uris[i]))
+    vals.sort().forEach((val, i) => do_check_eq(val, uris[i]));
 
     if (current_test < (tests.length - 1)) {
       current_test++;

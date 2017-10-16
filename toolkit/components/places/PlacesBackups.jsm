@@ -608,4 +608,4 @@ this.PlacesBackups = {
 
     return PlacesUtils.bookmarks.eraseEverything(options);
   },
-}
+};

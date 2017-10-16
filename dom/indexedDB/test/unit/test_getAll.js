@@ -38,7 +38,7 @@ function* testSteps()
       if (++addedCount == values.length) {
         executeSoon(function() { testGenerator.next(); });
       }
-    }
+    };
   }
   yield undefined;
   yield undefined;

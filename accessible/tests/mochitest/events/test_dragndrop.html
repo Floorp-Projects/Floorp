@@ -32,15 +32,15 @@
         if (aGrabValue != undefined) {
           this.DOMNode.setAttribute("aria-grabbed", aGrabValue);
         }
-      }
+      };
 
       this.check = function changeGrabbed_check() {
         testAttrs(aNodeOrID, {"grabbed": aGrabValue}, true);
-      }
+      };
 
       this.getID = function changeGrabbed_getID() {
         return prettyName(aNodeOrID) + " aria-grabbed changed";
-      }
+      };
     }
 
     // aria dropeffect invoker
@@ -51,15 +51,15 @@
         if (aDropeffectValue != undefined) {
           this.DOMNode.setAttribute("aria-dropeffect", aDropeffectValue);
         }
-      }
+      };
 
       this.check = function changeDropeffect_check() {
         testAttrs(aNodeOrID, {"dropeffect": aDropeffectValue}, true);
-      }
+      };
 
       this.getID = function changeDropeffect_getID() {
         return prettyName(aNodeOrID) + " aria-dropeffect changed";
-      }
+      };
     }
 
     function doTests() {

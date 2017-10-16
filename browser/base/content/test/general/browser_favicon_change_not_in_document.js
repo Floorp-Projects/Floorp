@@ -1,6 +1,6 @@
 "use strict";
 
-const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change_not_in_document.html"
+const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change_not_in_document.html";
 
 /*
  * This test tests a link element won't fire DOMLinkChanged/DOMLinkAdded unless

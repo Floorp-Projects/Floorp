@@ -610,7 +610,7 @@ this.BrowserUtils = {
    * @throws if nor url nor postData accept a param, but a param was provided.
    */
   async parseUrlAndPostData(url, postData, param) {
-    let hasGETParam = /%s/i.test(url)
+    let hasGETParam = /%s/i.test(url);
     let decodedPostData = postData ? unescape(postData) : "";
     let hasPOSTParam = /%s/i.test(decodedPostData);
 

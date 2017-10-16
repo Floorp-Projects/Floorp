@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Preferences.jsm")
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
@@ -21,7 +21,7 @@ var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductA
 do_get_profile();
 
 function run_test() {
- Cu.import("resource://gre/modules/Preferences.jsm")
+ Cu.import("resource://gre/modules/Preferences.jsm");
   Preferences.set("media.gmp.log.dump", true);
   Preferences.set("media.gmp.log.level", 0);
   run_next_test();
@@ -243,7 +243,7 @@ add_task(async function test_checkForAddons_singleAddon() {
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
@@ -276,7 +276,7 @@ add_task(async function test_checkForAddons_singleAddonWithSize() {
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
@@ -345,7 +345,7 @@ add_task(async function test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() 
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               notversion=\"9.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
@@ -393,7 +393,7 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
@@ -446,7 +446,7 @@ async function test_checkForAddons_installAddon(id, includeSize, wantInstallReje
     (includeSize ? " size=\"" + fileSize + "\"" : "") +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
@@ -517,7 +517,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
@@ -534,7 +534,7 @@ add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
-    "</updates>"
+    "</updates>";
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
@@ -549,7 +549,7 @@ add_task(async function test_simpleCheckAndInstall_tooFrequent() {
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
-    "</updates>"
+    "</updates>";
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
@@ -574,7 +574,7 @@ add_test(function test_installAddon_noServer() {
     "               hashValue=\"11221cbda000347b054028b527a60e578f919cb10f322ef8077d3491c6fcb474\"" +
     "               version=\"1.1\"/>" +
     "  </addons>" +
-    "</updates>"
+    "</updates>";
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();

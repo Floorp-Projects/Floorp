@@ -152,7 +152,7 @@ this.IntegrationPoint = function() {
       throw ex;
     },
   };
-}
+};
 
 this.IntegrationPoint.prototype = {
   /**

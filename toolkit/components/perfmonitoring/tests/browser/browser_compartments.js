@@ -118,7 +118,7 @@ function monotinicity_tester(source, testName) {
     ]) {
       SilentAssert.equal(typeof next[probe][k], "number", `Sanity check (${testName}): ${k} is a number.`);
       SilentAssert.leq(prev[probe][k], next[probe][k], `Sanity check (${testName}): ${k} is monotonic.`);
-      SilentAssert.leq(0, next[probe][k], `Sanity check (${testName}): ${k} is >= 0.`)
+      SilentAssert.leq(0, next[probe][k], `Sanity check (${testName}): ${k} is >= 0.`);
     }
     SilentAssert.equal(prev.jank.durations.length, next.jank.durations.length,
                        `Sanity check (${testName}): Jank durations should be equal`);
@@ -130,7 +130,7 @@ function monotinicity_tester(source, testName) {
     }
     for (let i = 0; i < next.jank.durations.length - 1; ++i) {
       SilentAssert.leq(next.jank.durations[i + 1], next.jank.durations[i],
-        `Sanity check (${testName}): durations[${i}] >= durations[${i + 1}].`)
+        `Sanity check (${testName}): durations[${i}] >= durations[${i + 1}].`);
     }
   };
   let iteration = 0;

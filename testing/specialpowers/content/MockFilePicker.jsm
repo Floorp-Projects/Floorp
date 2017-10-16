@@ -34,7 +34,7 @@ var newFactory = function(window) {
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
   };
-}
+};
 
 this.MockFilePicker = {
   returnOK: Ci.nsIFilePicker.returnOK,

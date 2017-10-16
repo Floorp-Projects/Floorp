@@ -50,7 +50,7 @@
 
       this.process = function hideProcessor_process() {
         this.liNode.style.display = "none";
-      }
+      };
 
       this.onProcessed = function hideProcessor_onProcessed() {
         window.setTimeout(
@@ -62,7 +62,7 @@
           },
           0, this.li, this.liNode, this.bullet
         );
-      }
+      };
     }
 
     function showProcessor() {
@@ -70,12 +70,12 @@
 
       this.process = function showProcessor_process() {
         this.liNode.style.display = "list-item";
-      }
+      };
 
       this.onProcessed = function showProcessor_onProcessed() {
         testLiAccessibleTree();
         gSequence.processNext();
-      }
+      };
     }
 
     function textReplaceProcessor() {
@@ -83,7 +83,7 @@
 
       this.process = function textReplaceProcessor_process() {
         this.liNode.textContent = "hey";
-      }
+      };
 
       this.onProcessed = function textReplaceProcessor_onProcessed() {
         var tree = {
@@ -94,7 +94,7 @@
         };
         testAccessibleTree(this.liNode, tree);
         SimpleTest.finish();
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

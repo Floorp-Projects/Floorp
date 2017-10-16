@@ -86,7 +86,7 @@ function search(aQuery, aFinishImmediately, aCallback, aCategoryType) {
     aCallback();
   });
 
-  finishImmediately = false
+  finishImmediately = false;
   if (!aFinishImmediately)
     check_is_searching(true);
 }

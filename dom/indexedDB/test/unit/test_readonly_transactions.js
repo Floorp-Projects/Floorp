@@ -33,7 +33,7 @@ function* testSteps()
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     key1 = event.target.result;
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction(osName, "readwrite").objectStore(osName).add({});
@@ -42,7 +42,7 @@ function* testSteps()
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     key2 = event.target.result;
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction([osName], "readwrite")
@@ -52,7 +52,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction(osName, "readwrite")
@@ -62,7 +62,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction([osName], "readwrite")
@@ -72,7 +72,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction(osName, "readwrite")
@@ -82,7 +82,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction([osName], "readwrite")
@@ -92,7 +92,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   request = db.transaction(osName, "readwrite")
@@ -102,7 +102,7 @@ function* testSteps()
   request.onsuccess = function(event) {
     is(event.target.transaction.mode, "readwrite", "Correct mode");
     testGenerator.next();
-  }
+  };
   yield undefined;
 
   try {

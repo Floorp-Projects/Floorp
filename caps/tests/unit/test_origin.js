@@ -8,7 +8,7 @@ function makeURI(uri) { return Services.io.newURI(uri); }
 
 function checkThrows(f) {
   var threw = false;
-  try { f(); } catch (e) { threw = true }
+  try { f(); } catch (e) { threw = true; }
   do_check_true(threw);
 }
 

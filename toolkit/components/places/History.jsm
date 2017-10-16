@@ -543,7 +543,7 @@ this.History = Object.freeze({
     guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
     let isGuid = typeof guidOrURI == "string";
     let sqlFragment = isGuid ? "guid = :val"
-                             : "url_hash = hash(:val) AND url = :val "
+                             : "url_hash = hash(:val) AND url = :val ";
 
     return PlacesUtils.promiseDBConnection().then(async db => {
       let rows = await db.executeCached(`SELECT 1 FROM moz_places
@@ -960,7 +960,7 @@ var fetch = async function(db, guidOrURL, options) {
 
   let visitSelectionFragment = "";
   let joinFragment = "";
-  let visitOrderFragment = ""
+  let visitOrderFragment = "";
   if (options.includeVisits) {
     visitSelectionFragment = ", v.visit_date, v.visit_type";
     joinFragment = "JOIN moz_historyvisits v ON h.id = v.place_id";
@@ -992,7 +992,7 @@ var fetch = async function(db, guidOrURL, options) {
         };
       }
       if (options.includeMeta) {
-        pageInfo.description = row.getResultByName("description") || ""
+        pageInfo.description = row.getResultByName("description") || "";
         let previewImageURL = row.getResultByName("preview_image_url");
         pageInfo.previewImageURL = previewImageURL ? new URL(previewImageURL) : null;
       }
@@ -1311,7 +1311,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
         date: PlacesUtils.toDate(visit.visitDate),
         transition: visit.transitionType,
         referrer: (visit.referrerURI) ? new URL(visit.referrerURI.spec) : null
-      }
+      };
     });
   }
   return pageInfo;
@@ -1365,7 +1365,7 @@ var insertMany = function(db, pageInfos, onResult, onError) {
         if (updatedCount > 0) {
           resolve();
         } else {
-          reject({message: "No items were added to history."})
+          reject({message: "No items were added to history."});
         }
       }
     }, true);
@@ -1399,4 +1399,4 @@ var update = async function(db, pageInfo) {
                SET ${updateFragments.join(", ")}
                ${whereClauseFragment}`;
   await db.execute(query, info);
-}
+};

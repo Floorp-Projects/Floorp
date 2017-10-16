@@ -59,7 +59,7 @@ function testSimpleSub() {
     "urlsExist": [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
     "subsDontExist": [ "foo.com/a" ]
-  }
+  };
 
   doTest([addUpdate, subUpdate], assertions);
 
@@ -84,7 +84,7 @@ function testSubEmptiesAdd() {
     "urlsExist": [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
     "subsDontExist": [ "foo.com/a" ] // this sub was found, it shouldn't exist anymore
-  }
+  };
 
   doTest([subUpdate, addUpdate], assertions);
 }
@@ -109,7 +109,7 @@ function testSubPartiallyEmptiesAdd() {
     "urlsExist": [ "foo.com/b", "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
     "subsDontExist": [ "foo.com/a" ] // this sub was found, it shouldn't exist anymore
-  }
+  };
 
   doTest([subUpdate, addUpdate], assertions);
 }
@@ -139,7 +139,7 @@ function testPendingSubRemoved() {
     "tableData": "test-phish-simple;a:1-2:s:1",
     "urlsExist": [ "foo.com/a", "foo.com/b" ],
     "subsDontExist": [ "foo.com/a", "foo.com/b" ] // this sub was found, it shouldn't exist anymore
-  }
+  };
 
   doTest([subUpdate, addUpdate1, addUpdate2], assertions);
 }
@@ -166,7 +166,7 @@ function testPendingSubExpire() {
     "tableData": "test-phish-simple;a:1",
     "urlsExist": [ "foo.com/a", "foo.com/b" ],
     "subsDontExist": [ "foo.com/a", "foo.com/b" ] // this sub was expired
-  }
+  };
 
   doTest([subUpdate, expireUpdate, addUpdate], assertions);
 }
@@ -190,7 +190,7 @@ function testDuplicateAdds() {
     "tableData": "test-phish-simple;a:1-2:s:3",
     "urlsExist": [ "foo.com/a"],
     "subsDontExist": [ "foo.com/a"]
-  }
+  };
 
   doTest([addUpdate1, addUpdate2, subUpdate], assertions);
 }

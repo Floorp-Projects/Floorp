@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MockDocument"]
+this.EXPORTED_SYMBOLS = ["MockDocument"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 

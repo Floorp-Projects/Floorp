@@ -140,7 +140,7 @@ add_task(async function() {
         wasInformedCorrectlyOfAreaDisappearing = (aReason === CustomizableUI.REASON_AREA_UNREGISTERED);
       }
     },
-  }
+  };
   CustomizableUI.addListener(listener);
   removeCustomToolbars();
   ok(wasInformedCorrectlyOfAreaDisappearing, "Should be told about area being unregistered.");

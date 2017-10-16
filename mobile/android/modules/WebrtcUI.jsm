@@ -123,7 +123,7 @@ var WebrtcUI = {
         notificationOptions.icon = "drawable:alert_mic";
       } else {
         // somethings wrong. lets throw
-        throw "Couldn't find any cameras or microphones being used"
+        throw "Couldn't find any cameras or microphones being used";
       }
 
       if (this._notificationId)
@@ -242,7 +242,7 @@ var WebrtcUI = {
           defaultCount++;
           return Strings.browser.formatStringFromName("getUserMedia." + aType + ".default", [defaultCount], 1);
         }
-        return device.name
+        return device.name;
       }, this);
   },
 
@@ -349,4 +349,4 @@ var WebrtcUI = {
 
     DoorHanger.show(aContentWindow, message, "webrtc-request", buttons, options, "WEBRTC");
   }
-}
+};

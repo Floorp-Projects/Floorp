@@ -461,7 +461,7 @@ const configController = {
   },
   onEvent: function onEvent(event) {
   }
-}
+};
 
 function updateContextMenu() {
   var lockCol = PREF_IS_LOCKED;

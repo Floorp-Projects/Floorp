@@ -209,7 +209,7 @@ add_task(async function test_new_channel() {
   locationURL = server.baseURI + "/resource";
 
   let request = new AsyncResource(server.baseURI + "/redirect");
-  let content = await request.get()
+  let content = await request.get();
   do_check_true(resourceRequested);
   do_check_eq(200, content.status);
   do_check_true("content-type" in content.headers);
@@ -273,7 +273,7 @@ add_task(async function test_get() {
   resLogger.debug = function(msg) {
     debugMessages.push(msg);
     dbg.call(this, msg);
-  }
+  };
 
   // Since we didn't receive proper JSON data, accessing content.obj
   // will result in a SyntaxError from JSON.parse
@@ -303,7 +303,7 @@ add_test(function test_basicauth() {
 add_task(async function test_get_protected_fail() {
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
   let res2 = new AsyncResource(server.baseURI + "/protected");
-  let content = await res2.get()
+  let content = await res2.get();
   do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
   do_check_false(content.success);

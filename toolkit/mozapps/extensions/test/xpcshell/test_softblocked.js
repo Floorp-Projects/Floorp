@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 // Allow insecure updates
-Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false)
+Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 const testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;

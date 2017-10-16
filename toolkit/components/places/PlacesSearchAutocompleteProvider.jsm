@@ -81,7 +81,7 @@ const SearchAutocompleteProviderInternal = {
       this.defaultMatch = {
         engineName: currentEngine.name,
         iconUrl: currentEngine.iconURI ? currentEngine.iconURI.spec : null,
-      }
+      };
     }
 
     // The search engines will always be processed in the order returned by the
@@ -125,7 +125,7 @@ const SearchAutocompleteProviderInternal = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
-}
+};
 
 function SearchSuggestionControllerWrapper(engine, searchToken,
                                            inPrivateContext,

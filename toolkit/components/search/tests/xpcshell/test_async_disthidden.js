@@ -7,7 +7,7 @@
 
 function run_test() {
   let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
-  defaultBranch.setCharPref("ignoredJAREngines", "engine")
+  defaultBranch.setCharPref("ignoredJAREngines", "engine");
   Services.prefs.setCharPref("distribution.id", "partner-1");
 
   // The test engines used in this test need to be recognized as 'default'

@@ -1,5 +1,5 @@
 
-Components.utils.import("resource://gre/modules/addons/AddonSettings.jsm")
+Components.utils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
 let profileDir;
 add_task(async function setup() {
@@ -203,7 +203,7 @@ add_task(async function test_two_ids() {
         id: GOOD_ID
       }
     }
-  }
+  };
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest,
@@ -240,7 +240,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "1"
       },
     },
-  }
+  };
   let testManifest = Object.assign(apps, MANIFEST);
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -266,7 +266,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "2"
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -292,7 +292,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "1"
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -317,7 +317,7 @@ add_task(async function test_strict_min_max() {
         strict_min_version: "2"
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -342,7 +342,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "1"
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -368,7 +368,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "2"
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -392,7 +392,7 @@ add_task(async function test_strict_min_max() {
         strict_min_version: "1",
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -417,7 +417,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "2",
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({
@@ -443,7 +443,7 @@ add_task(async function test_strict_min_max() {
           strict_min_version: version,
         },
       },
-    }
+    };
 
     let minStarTestManifest = Object.assign(minStarApps, MANIFEST);
 
@@ -470,7 +470,7 @@ add_task(async function test_strict_min_max() {
         strict_max_version: "1",
       },
     },
-  }
+  };
   testManifest = Object.assign(apps, MANIFEST);
 
   extension = ExtensionTestUtils.loadExtension({

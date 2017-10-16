@@ -466,7 +466,7 @@ async function sync_engine_and_validate_telem(engine, allowErrorPings, onError) 
       } else {
         resolve(ping.syncs[0]);
       }
-    }
+    };
   });
   // neuter the scheduler as it interacts badly with some of the tests - the
   // engine being synced usually isn't the registered engine, so we see
@@ -498,8 +498,8 @@ function promiseOneObserver(topic, callback) {
     let observer = function(subject, data) {
       Svc.Obs.remove(topic, observer);
       resolve({ subject, data });
-    }
-    Svc.Obs.add(topic, observer)
+    };
+    Svc.Obs.add(topic, observer);
   });
 }
 

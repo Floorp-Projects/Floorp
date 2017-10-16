@@ -129,7 +129,7 @@ this.BulkKeyBundle = function BulkKeyBundle(collection) {
   KeyBundle.call(this);
 
   this._collection = collection;
-}
+};
 
 BulkKeyBundle.prototype = {
   __proto__: KeyBundle.prototype,

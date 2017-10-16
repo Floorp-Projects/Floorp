@@ -374,7 +374,7 @@ function getNodeForSidebarItem(aItemId, aValidator) {
       if (!tree.view.hasNextSibling(aContainerIndex + 1, i))
         break;
     }
-    return [null, null, false]
+    return [null, null, false];
   }
 
   // Root node is hidden, so we need to manually walk the first level.
@@ -406,11 +406,11 @@ function getViewsForFolder(aFolderId) {
 
   switch (rootId) {
     case PlacesUtils.toolbarFolderId:
-      return ["toolbar", "sidebar"]
+      return ["toolbar", "sidebar"];
     case PlacesUtils.bookmarksMenuFolderId:
-      return ["menu", "sidebar"]
+      return ["menu", "sidebar"];
     case PlacesUtils.unfiledBookmarksFolderId:
-      return ["sidebar"]
+      return ["sidebar"];
   }
   return [];
 }

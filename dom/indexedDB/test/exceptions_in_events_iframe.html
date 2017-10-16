@@ -61,7 +61,7 @@
       request.onupgradeneeded = function() {
         let transaction = request.transaction;
         transaction.oncomplete = unexpectedSuccessHandler;
-        transaction.onabort = grabEventAndContinueHandler
+        transaction.onabort = grabEventAndContinueHandler;
         throw "STOP";
       };
 

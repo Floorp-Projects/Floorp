@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 

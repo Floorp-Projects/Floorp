@@ -546,4 +546,4 @@ this.EnsureFxAccountsWebChannel = () => {
       log.error("Failed to create FxA WebChannel", ex);
     }
   }
-}
+};

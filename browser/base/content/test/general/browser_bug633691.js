@@ -24,7 +24,7 @@ add_task(async function test() {
       let aP = doc.getElementById("badCertAdvancedPanel");
       ok(aP, "Advanced content should exist");
       void is_hidden; // Quiet eslint warnings (actual use under is_element_hidden)
-      is_element_hidden(aP, "Advanced content should not be visible by default")
+      is_element_hidden(aP, "Advanced content should not be visible by default");
     });
   });
 });

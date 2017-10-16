@@ -55,7 +55,7 @@ MainProcessSingleton.prototype = {
         return;
 
       Services.search.addEngine(engineURL.spec, null, iconURL ? iconURL.spec : null, true);
-    })
+    });
   },
 
   observe(subject, topic, data) {

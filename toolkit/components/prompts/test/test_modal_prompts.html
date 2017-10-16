@@ -1071,7 +1071,7 @@ async function runTests() {
                Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
         authenticationScheme: "basic",
         realm: ""
-    }
+    };
     state = {
         msg: "http://example.com is requesting your username and password. " +
               "WARNING: Your password will not be sent to the website you are currently visiting!",
@@ -1114,7 +1114,7 @@ async function runTests() {
         flags: Ci.nsIAuthInformation.AUTH_HOST | Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
         authenticationScheme: "basic",
         realm: "Something!!!"
-    }
+    };
     state = {
         msg: "http://example.com is requesting your username and password. " +
               "WARNING: Your password will not be sent to the website you are currently visiting!",

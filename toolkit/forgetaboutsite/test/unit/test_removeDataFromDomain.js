@@ -94,7 +94,7 @@ function check_cookie_exists(aDomain, aExists) {
     host: aDomain,
     name: COOKIE_NAME,
     path: COOKIE_PATH
-  }
+  };
   let checker = aExists ? do_check_true : do_check_false;
   checker(cm.cookieExists(cookie));
 }

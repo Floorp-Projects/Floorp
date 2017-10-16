@@ -69,7 +69,7 @@ function hasDupeCommand(commands, action) {
 
 this.ClientsRec = function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-}
+};
 ClientsRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Clients",
@@ -91,7 +91,7 @@ this.ClientEngine = function ClientEngine(service) {
   this.resetLastSync();
   this.fxAccounts = fxAccounts;
   this.addClientCommandQueue = Promise.resolve();
-}
+};
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: ClientStore,
@@ -263,7 +263,7 @@ ClientEngine.prototype = {
 
   async _prepareCommandsForUpload() {
     try {
-      await Utils.jsonMove("commands", "commands-syncing", this)
+      await Utils.jsonMove("commands", "commands-syncing", this);
     } catch (e) {
       // Ignore errors
     }
@@ -301,7 +301,7 @@ ClientEngine.prototype = {
         const localCommands = await this._readCommands();
         const localClientCommands = localCommands[clientId] || [];
         const remoteClient = this._store._remoteClients[clientId];
-        let remoteClientCommands = []
+        let remoteClientCommands = [];
         if (remoteClient && remoteClient.commands) {
           remoteClientCommands = remoteClient.commands;
         }
@@ -618,7 +618,7 @@ ClientEngine.prototype = {
       this._log.warn("Could not delete commands.json", err);
     }
     try {
-      await Utils.jsonRemove("commands-syncing", this)
+      await Utils.jsonRemove("commands-syncing", this);
     } catch (err) {
       this._log.warn("Could not delete commands-syncing.json", err);
     }
@@ -974,7 +974,7 @@ ClientStore.prototype = {
       // Optional fields.
       record.os = Services.appinfo.OS;             // "Darwin"
       record.appPackage = Services.appinfo.ID;
-      record.application = this.engine.brandName   // "Nightly"
+      record.application = this.engine.brandName;   // "Nightly"
 
       // We can't compute these yet.
       // record.device = "";            // Bug 1100723

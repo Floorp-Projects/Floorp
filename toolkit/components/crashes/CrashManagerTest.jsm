@@ -50,7 +50,7 @@ this.sleep = function(wait) {
 
 this.TestingCrashManager = function(options) {
   CrashManager.call(this, options);
-}
+};
 
 this.TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,

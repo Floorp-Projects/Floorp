@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change.html"
+const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change.html";
 
 add_task(async function() {
   let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);

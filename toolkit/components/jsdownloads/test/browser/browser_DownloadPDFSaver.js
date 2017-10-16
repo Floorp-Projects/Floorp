@@ -55,7 +55,7 @@ async function test_createDownload_common(aPrivate, aType) {
   }
 
   win.gBrowser.removeTab(tab);
-  win.close()
+  win.close();
 }
 
 add_task(async function test_createDownload_pdf_private() {
@@ -90,7 +90,7 @@ add_task(async function test_cancel_pdf_download() {
   await download.cancel();
   await test_download_state_complete(tab, download, false, true);
 
-  let exists = await OS.File.exists(download.target.path)
+  let exists = await OS.File.exists(download.target.path);
   ok(!exists, "Target file does not exist");
 
   gBrowser.removeTab(tab);

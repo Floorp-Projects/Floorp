@@ -431,7 +431,7 @@ function assertDeleted(id) {
   } catch (e) {
     error = e;
   }
-  equal(error.result, Cr.NS_ERROR_ILLEGAL_VALUE)
+  equal(error.result, Cr.NS_ERROR_ILLEGAL_VALUE);
 }
 
 add_task(async function test_delete_buffering() {

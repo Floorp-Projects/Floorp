@@ -323,7 +323,7 @@
         c.remove();
     c = document.createElement("canvas");
     c.id = "c";
-    document.body.insertBefore(c, document.body.firstChild)
+    document.body.insertBefore(c, document.body.firstChild);
 
     // Trigger the run with specified args, with callback function to process the result
     startTest(alpha, antialias, function(intervals) {
@@ -394,9 +394,9 @@
         setupAndRun(true, false, "2.WebGL-terrain-alpha-yes-AA-no", function() {
           setupAndRun(true, true, "3.WebGL-terrain-alpha-yes-AA-yes", function() {
             reportResults(gResults);
-          })
-        })
-      })
+          });
+        });
+      });
     });
   }
 </script>

@@ -31,7 +31,7 @@ function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
     opts.video = {
       mozMediaSource: aShare,
       mediaSource: aShare
-    }
+    };
   } else if (useFakeStreams) {
     opts.fake = true;
   }
@@ -39,14 +39,14 @@ function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   if (aVideo && aBadDevice) {
     opts.video = {
       deviceId: "bad device"
-    }
+    };
     opts.fake = true;
   }
 
   if (aAudio && aBadDevice) {
     opts.audio = {
       deviceId: "bad device"
-    }
+    };
     opts.fake = true;
   }
 

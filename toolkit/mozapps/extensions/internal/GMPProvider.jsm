@@ -180,7 +180,7 @@ GMPWrapper.prototype = {
   get scope() { return AddonManager.SCOPE_APPLICATION; },
   get pendingOperations() { return AddonManager.PENDING_NONE; },
 
-  get operationsRequiringRestart() { return AddonManager.OP_NEEDS_RESTART_NONE },
+  get operationsRequiringRestart() { return AddonManager.OP_NEEDS_RESTART_NONE; },
 
   get permissions() {
     let permissions = 0;
@@ -196,7 +196,7 @@ GMPWrapper.prototype = {
     let time = Number(GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 0,
                                       this._plugin.id));
     if (this.isInstalled) {
-      return new Date(time * 1000)
+      return new Date(time * 1000);
     }
     return null;
   },

@@ -88,7 +88,7 @@ Lang.prototype = {
   toString() {
     return this._label;
   }
-}
+};
 
 var gTranslationExceptions = {
   onLoad() {

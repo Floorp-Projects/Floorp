@@ -433,7 +433,7 @@ this.FxAccountsClient.prototype = {
    */
   notifyDevices(sessionTokenHex, deviceIds, excludedIds, payload, TTL = 0) {
     if (deviceIds && excludedIds) {
-      throw new Error("You cannot specify excluded devices if deviceIds is set.")
+      throw new Error("You cannot specify excluded devices if deviceIds is set.");
     }
     const body = {
       to: deviceIds || "all",

@@ -58,7 +58,7 @@ var gProgressListener = {
       finishTest();
     }
   }
-}
+};
 
 function test() {
   todo(false, "temp. disabled");

@@ -58,6 +58,6 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
 add_task(checkSubviewButtonClass("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
 
 registerCleanupFunction(function() {
-  tempElement.classList.remove(kCustomClass)
+  tempElement.classList.remove(kCustomClass);
   tempElement = null;
 });

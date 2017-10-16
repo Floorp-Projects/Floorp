@@ -42,7 +42,7 @@ function run_test() {
       this.isCancelled = true;
       XPIProvider.doing(getsCancelled);
     }
-  }
+  };
   XPIProvider.doing(addsAnother);
   XPIProvider.cancelAll();
   do_check_true(addsAnother.isCancelled);
@@ -58,7 +58,7 @@ function run_test() {
       this.isCancelled = true;
       XPIProvider.done(doesntGetCancelled);
     }
-  }
+  };
   XPIProvider.doing(removesAnother);
   XPIProvider.doing(doesntGetCancelled);
   XPIProvider.cancelAll();

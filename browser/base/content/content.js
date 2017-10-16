@@ -223,7 +223,7 @@ var AboutBlockedSiteListener = {
     anchorEl.setAttribute("href", advisoryUrl);
     anchorEl.textContent = advisoryLinkText;
   },
-}
+};
 
 var AboutNetAndCertErrorListener = {
   init(chromeGlobal) {
@@ -421,7 +421,7 @@ var AboutNetAndCertErrorListener = {
 
     }
   },
-}
+};
 
 AboutNetAndCertErrorListener.init(this);
 AboutBlockedSiteListener.init(this);
@@ -500,7 +500,7 @@ var ClickEventHandler = {
           }
         }
       }
-      json.noReferrer = BrowserUtils.linkHasNoReferrer(node)
+      json.noReferrer = BrowserUtils.linkHasNoReferrer(node);
 
       // Check if the link needs to be opened with mixed content allowed.
       // Only when the owner doc has |mixedContentChannel| and the same origin
@@ -692,7 +692,7 @@ var PageMetadataMessenger = {
       }
     }
   }
-}
+};
 PageMetadataMessenger.init();
 
 addMessageListener("Bookmarks:GetPageDetails", (message) => {

@@ -89,7 +89,7 @@ this.ServerBSO = function ServerBSO(id, payload, modified) {
 
   this.payload = payload;
   this.modified = modified || new_timestamp();
-}
+};
 ServerBSO.prototype = {
   FIELDS: [
     "id",
@@ -290,7 +290,7 @@ this.StorageServerCollection =
   this._timestamp = timestamp;
 
   this._log = Log.repository.getLogger(STORAGE_HTTP_LOGGER);
-}
+};
 StorageServerCollection.prototype = {
   BATCH_MAX_COUNT: 100,         // # of records.
   BATCH_MAX_SIZE: 1024 * 1024,  // # bytes.
@@ -892,7 +892,7 @@ this.StorageServer = function StorageServer(callback) {
   // whole URL space.
   let handler = this.server._handler;
   handler._handleDefault = this.handleDefault.bind(this, handler);
-}
+};
 StorageServer.prototype = {
   DEFAULT_QUOTA: 1024 * 1024, // # bytes.
 
@@ -1193,7 +1193,7 @@ StorageServer.prototype = {
     let createContents   = this.createContents.bind(this, username);
     let modified         = function(collectionName) {
       return collection(collectionName).timestamp;
-    }
+    };
     let deleteCollections = this.deleteCollections.bind(this, username);
     let quota             = this.getQuota.bind(this, username);
     return {
@@ -1688,4 +1688,4 @@ this.storageServerForUsers =
   }
   server.start();
   return server;
-}
+};

@@ -195,7 +195,7 @@ GMPInstallManager.prototype = {
     } else {
       let secondsBetweenChecks =
         GMPPrefs.getInt(GMPPrefs.KEY_SECONDS_BETWEEN_CHECKS,
-                        DEFAULT_SECONDS_BETWEEN_CHECKS)
+                        DEFAULT_SECONDS_BETWEEN_CHECKS);
       let secondsSinceLast = this._getTimeSinceLastCheck();
       log.info("Last check was: " + secondsSinceLast +
                " seconds ago, minimum seconds: " + secondsBetweenChecks);
@@ -399,7 +399,7 @@ GMPExtractor.prototype = {
       }
       log.info("Successfully extracted zip file: " + zipPath);
       return deferredPromise.resolve(msg.data.extractedPaths);
-    }
+    };
     worker.postMessage({zipPath, relativeInstallPath});
     return this._deferred.promise;
   }

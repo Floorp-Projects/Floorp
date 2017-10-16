@@ -276,7 +276,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     .then(testLoad.bind(null, liebchenURIStr, navigateWithSrc))
     .then(testLoad.bind(null, cheriseURIStr, navigateWithSrc))
     .then(SimpleTest.finish.bind(SimpleTest),
-          function(e) { ok(false, "rejected promise: " + e); SimpleTest.finish() }
+          function(e) { ok(false, "rejected promise: " + e); SimpleTest.finish(); }
     );
   });
 

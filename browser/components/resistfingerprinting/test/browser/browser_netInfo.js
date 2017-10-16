@@ -4,7 +4,7 @@
  */
 
 const TEST_PATH = "http://example.net/browser/browser/" +
-                  "components/resistfingerprinting/test/browser/"
+                  "components/resistfingerprinting/test/browser/";
 
 
 async function testWindow() {
@@ -40,7 +40,7 @@ async function testWorker() {
           ok(false, "Unknown message type");
           resolve();
         }
-      }
+      };
       worker.postMessage({type: "runTests"});
     });
   });

@@ -39,7 +39,7 @@ add_task(async function test() {
         content.window.bc.onmessage = function(e) {
           content.document.title += e.data;
           resolve();
-        }
+        };
       });
     }
   );

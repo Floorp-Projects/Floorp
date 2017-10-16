@@ -129,7 +129,7 @@ add_task(async function test_scheme_and_www() {
     ["https://www.bar.com/", "Tile"],
   ];
 
-  let titlesMap = new Map(sites)
+  let titlesMap = new Map(sites);
 
   autocompleteObject.populatePreloadedSiteStorage(sites);
 

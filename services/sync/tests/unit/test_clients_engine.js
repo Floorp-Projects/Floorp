@@ -77,7 +77,7 @@ add_task(async function test_bad_hmac() {
     onCollectionDeleted(username, coll) {
       deletedCollections.push(coll);
     }
-  }
+  };
   let server = await serverForFoo(engine, callback);
   let user   = server.user("foo");
 
@@ -422,7 +422,7 @@ add_task(async function test_send_command() {
 
   let action = "testCommand";
   let args = ["foo", "bar"];
-  let extra = { flowID: "flowy" }
+  let extra = { flowID: "flowy" };
 
   await engine._sendCommandToClient(action, args, remoteId, extra);
 
@@ -1316,7 +1316,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     const oldUploadOutgoing = SyncEngine.prototype._uploadOutgoing;
     SyncEngine.prototype._uploadOutgoing = async () => engine._onRecordsWritten([], [deviceBID]);
     let commandsProcessed = 0;
-    engine._handleDisplayURIs = (uris) => { commandsProcessed = uris.length };
+    engine._handleDisplayURIs = (uris) => { commandsProcessed = uris.length; };
 
     await syncClientsEngine(server);
     await engine.processIncomingCommands(); // Not called by the engine.sync(), gotta call it ourselves
@@ -1360,7 +1360,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     await engine.initialize();
 
     commandsProcessed = 0;
-    engine._handleDisplayURIs = (uris) => { commandsProcessed = uris.length };
+    engine._handleDisplayURIs = (uris) => { commandsProcessed = uris.length; };
     await syncClientsEngine(server);
     await engine.processIncomingCommands();
     equal(commandsProcessed, 1, "We processed one command (the other were cleared)");
@@ -1559,11 +1559,11 @@ add_task(async function test_command_sync() {
 });
 
 add_task(async function ensureSameFlowIDs() {
-  let events = []
+  let events = [];
   let origRecordTelemetryEvent = Service.recordTelemetryEvent;
   Service.recordTelemetryEvent = (object, method, value, extra) => {
     events.push({ object, method, value, extra });
-  }
+  };
 
   let server = await serverForFoo(engine);
   try {
@@ -1653,11 +1653,11 @@ add_task(async function ensureSameFlowIDs() {
 });
 
 add_task(async function test_duplicate_commands_telemetry() {
-  let events = []
+  let events = [];
   let origRecordTelemetryEvent = Service.recordTelemetryEvent;
   Service.recordTelemetryEvent = (object, method, value, extra) => {
     events.push({ object, method, value, extra });
-  }
+  };
 
   let server = await serverForFoo(engine);
   try {
@@ -1761,7 +1761,7 @@ add_task(async function device_disconnected_notification_updates_known_stale_cli
   ok(!clients[2].stale);
   spyUpdate.reset();
 
-  ok(engine._knownStaleFxADeviceIds)
+  ok(engine._knownStaleFxADeviceIds);
   Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
                                JSON.stringify({ isLocalDevice: false }));
   ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");

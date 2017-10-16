@@ -83,7 +83,7 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
   // Sync is not configured - verify that state is reflected.
-  let subpanel = document.getElementById(expectedPanelId)
+  let subpanel = document.getElementById(expectedPanelId);
   ok(!subpanel.hidden, "sync setup element is visible");
 
   // Find and click the "setup" button.
@@ -99,7 +99,7 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
       }
       gBrowser.selectedBrowser.removeEventListener("load", handler, true);
       resolve();
-    }
+    };
     gBrowser.selectedBrowser.addEventListener("load", handler, true);
 
   });
@@ -142,7 +142,7 @@ add_task(asyncCleanup);
 // When Sync is configured in a "needs reauthentication" state.
 add_task(async function() {
   gSync.updateAllUI({ status: UIState.STATUS_LOGIN_FAILED, email: "foo@bar.com" });
-  await openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "synced-tabs")
+  await openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "synced-tabs");
 });
 
 // Test the mobile promo links
@@ -213,7 +213,7 @@ add_task(async function() {
   await Promise.all([tabsUpdatedPromise, viewShownPromise]);
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
-  let subpanel = document.getElementById("PanelUI-remotetabs-main")
+  let subpanel = document.getElementById("PanelUI-remotetabs-main");
   ok(!subpanel.hidden, "main pane is visible");
   let deck = document.getElementById("PanelUI-remotetabs-deck");
 
@@ -224,7 +224,7 @@ add_task(async function() {
   // Tell the widget there are tabs available, but with zero clients.
   mockedInternal.getTabClients = () => {
     return Promise.resolve([]);
-  }
+  };
   mockedInternal.hasSyncedThisSession = true;
   await updateTabsPanel();
   // The UI should be showing the "no clients" pane.
@@ -332,7 +332,7 @@ add_task(async function() {
   gSync.doSync = function() {
     didSync = true;
     gSync.doSync = oldDoSync;
-  }
+  };
 
   let syncNowButton = document.getElementById("PanelUI-remotetabs-syncnow");
   is(syncNowButton.disabled, false);
@@ -377,7 +377,7 @@ add_task(async function() {
 
   // Check pre-conditions
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
-  let subpanel = document.getElementById("PanelUI-remotetabs-main")
+  let subpanel = document.getElementById("PanelUI-remotetabs-main");
   ok(!subpanel.hidden, "main pane is visible");
   let deck = document.getElementById("PanelUI-remotetabs-deck");
   is(deck.selectedIndex, DECKINDEX_TABS, "we should be showing tabs");

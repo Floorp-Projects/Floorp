@@ -50,7 +50,7 @@ FeedListener.prototype = {
 
     run_next_test();
   }
-}
+};
 
 function createTest(data) {
   return function() {
@@ -78,7 +78,7 @@ function createTest(data) {
     } finally {
       stream.close();
     }
-  }
+  };
 }
 
 function run_test() {

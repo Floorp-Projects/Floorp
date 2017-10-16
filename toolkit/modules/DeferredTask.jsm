@@ -122,7 +122,7 @@ this.DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   if (aTaskFn.isGenerator()) {
     Cu.reportError(new Error("Unexpected generator function passed to DeferredTask"));
   }
-}
+};
 
 this.DeferredTask.prototype = {
   /**

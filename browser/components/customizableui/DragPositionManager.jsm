@@ -373,10 +373,10 @@ AreaPositionManager.prototype = {
     let rv = aNode;
     do {
       rv = rv[aDirection + "Sibling"];
-    } while (rv && rv.getAttribute("hidden") == "true")
+    } while (rv && rv.getAttribute("hidden") == "true");
     return rv;
   }
-}
+};
 
 var DragPositionManager = {
   start(aWindow) {

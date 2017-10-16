@@ -88,7 +88,7 @@ var pktApi = (function() {
                 }
             }
         return out;
-    }
+    };
 
     var parseJSON = function(jsonString) {
         try {
@@ -514,10 +514,10 @@ var pktApi = (function() {
         var tagsFromSettings = function() {
             var tagsJSON = getSetting("tags");
             if (typeof tagsJSON !== "undefined") {
-                return JSON.parse(tagsJSON)
+                return JSON.parse(tagsJSON);
             }
             return [];
-        }
+        };
 
         var sortedUsedTagsFromSettings = function() {
             // Get and Sort used tags
@@ -548,7 +548,7 @@ var pktApi = (function() {
             }
 
             return usedTags;
-        }
+        };
 
         if (callback) {
             var tags = tagsFromSettings();
@@ -604,7 +604,7 @@ var pktApi = (function() {
      * Helper function to get current signup AB group the user is in
      */
     function getSignupPanelTabTestVariant() {
-        return getMultipleTestOption("panelSignUp", {control: 1, v1: 8, v2: 1 })
+        return getMultipleTestOption("panelSignUp", {control: 1, v1: 8, v2: 1 });
     }
 
     function getMultipleTestOption(testName, testOptions) {

@@ -353,7 +353,7 @@ var PopupBlocking = {
           } else {
             // Limit 500 chars to be sent because the URI will be cropped
             // by the UI anyway, and data: URIs can be significantly larger.
-            popupWindowURIspec = popupWindowURIspec.substring(0, 500)
+            popupWindowURIspec = popupWindowURIspec.substring(0, 500);
           }
 
           popupData.push({popupWindowURIspec});
@@ -715,7 +715,7 @@ var Printing = {
           this.printPreviewInitializingInfo = null;
           sendAsyncMessage("Printing:Preview:Entered", { failed: true });
         }
-      }
+      };
 
       // If printPreviewInitializingInfo.entered is not set we are still in the
       // initial setup of a previous preview request. We delay this one until
@@ -834,7 +834,7 @@ var Printing = {
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {},
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {},
   onSecurityChange(aWebProgress, aRequest, aState) {},
-}
+};
 Printing.init();
 
 function SwitchDocumentDirection(aWindow) {
@@ -900,7 +900,7 @@ var FindBar = {
       let win = focusedWindow.value;
       should = BrowserUtils.shouldFastFind(elt, win);
     }
-    return { can, should }
+    return { can, should };
   },
 
   _onKeypress(event) {
@@ -1679,7 +1679,7 @@ let AutoCompletePopup = {
 
     return results;
   },
-}
+};
 
 AutoCompletePopup.init();
 
@@ -1835,7 +1835,7 @@ let DateTimePickerListener = {
         break;
     }
   },
-}
+};
 
 DateTimePickerListener.init();
 
@@ -1887,7 +1887,7 @@ let ExtFind = {
         break;
     }
   },
-}
+};
 
 ExtFind.init();
 

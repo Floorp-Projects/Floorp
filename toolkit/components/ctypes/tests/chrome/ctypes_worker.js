@@ -14,4 +14,4 @@ onmessage = function(event) {
   importScripts("test_jsctypes.js");
   run_test();
   postMessage("Done!");
-}
+};

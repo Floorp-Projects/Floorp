@@ -40,7 +40,7 @@
         areaElm.setAttribute("shape", "rect");
 
         this.mapNode.insertBefore(areaElm, this.mapNode.firstChild);
-      }
+      };
 
       this.finalCheck = function insertArea_finalCheck() {
         var accTree =
@@ -57,11 +57,11 @@
             },
           ] };
         testAccessibleTree(this.imageMap, accTree);
-      }
+      };
 
       this.getID = function insertArea_getID() {
         return "insert area element";
-      }
+      };
     }
 
     function appendArea(aImageMapID, aMapID) {
@@ -86,7 +86,7 @@
         areaElm.setAttribute("shape", "rect");
 
         this.mapNode.appendChild(areaElm);
-      }
+      };
 
       this.finalCheck = function appendArea_finalCheck() {
         var accTree =
@@ -108,11 +108,11 @@
             }
           ] };
         testAccessibleTree(this.imageMap, accTree);
-      }
+      };
 
       this.getID = function appendArea_getID() {
         return "append area element";
-      }
+      };
     }
 
     function removeArea(aImageMapID, aMapID) {
@@ -132,7 +132,7 @@
       this.invoke = function removeArea_invoke() {
         this.area = this.imageMap.firstChild;
         this.mapNode.removeChild(this.mapNode.firstElementChild);
-      }
+      };
 
       this.finalCheck = function removeArea_finalCheck() {
         var accTree =
@@ -149,11 +149,11 @@
             }
           ] };
         testAccessibleTree(this.imageMap, accTree);
-      }
+      };
 
       this.getID = function removeArea_getID() {
         return "remove area element";
-      }
+      };
     }
 
     function removeNameOnMap(aImageMapContainerID, aImageMapID, aMapID) {
@@ -171,7 +171,7 @@
 
       this.invoke = function removeNameOnMap_invoke() {
         this.mapNode.removeAttribute("name");
-      }
+      };
 
       this.finalCheck = function removeNameOnMap_finalCheck() {
         var accTree =
@@ -179,11 +179,11 @@
             { GRAPHIC: [ ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function removeNameOnMap_getID() {
         return "remove @name on map element";
-      }
+      };
     }
 
     function restoreNameOnMap(aImageMapContainerID, aImageMapID, aMapID) {
@@ -209,7 +209,7 @@
 
         // XXXhack: force repainting of the image (see bug 745788 for details).
         waveOverImageMap(aImageMapID);
-      }
+      };
 
       this.finalCheck = function removeNameOnMap_finalCheck() {
         var accTree =
@@ -220,11 +220,11 @@
             ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function removeNameOnMap_getID() {
         return "restore @name on map element";
-      }
+      };
     }
 
     function removeMap(aImageMapContainerID, aImageMapID, aMapID) {
@@ -247,7 +247,7 @@
       this.invoke = function removeMap_invoke() {
         this.imageMap = getAccessible(aImageMapID);
         this.mapNode.remove();
-      }
+      };
 
       this.finalCheck = function removeMap_finalCheck() {
         var accTree =
@@ -255,11 +255,11 @@
             { GRAPHIC: [ ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function removeMap_getID() {
         return "remove map element";
-      }
+      };
     }
 
     function insertMap(aImageMapContainerID, aImageID) {
@@ -285,7 +285,7 @@
         map.setAttribute("name", "atoz_map");
         map.setAttribute("id", "map");
 
-        var area = document.createElement("area")
+        var area = document.createElement("area");
         area.setAttribute("href",
                           "http://www.bbc.co.uk/radio4/atoz/index.shtml#b");
         area.setAttribute("coords", "17,0,30,14");
@@ -295,7 +295,7 @@
         map.appendChild(area);
 
         this.containerNode.appendChild(map);
-      }
+      };
 
       this.finalCheck = function insertMap_finalCheck() {
         var accTree =
@@ -305,11 +305,11 @@
             ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function insertMap_getID() {
         return "insert map element";
-      }
+      };
     }
 
     function hideImageMap(aContainerID, aImageID) {
@@ -329,17 +329,17 @@
       this.invoke = function hideImageMap_invoke() {
         this.imageMap = getAccessible(this.imageMapNode);
         this.imageMapNode.style.display = "none";
-      }
+      };
 
       this.finalCheck = function hideImageMap_finalCheck() {
         var accTree =
           { SECTION: [ ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function hideImageMap_getID() {
         return "display:none image";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true; // debug stuff

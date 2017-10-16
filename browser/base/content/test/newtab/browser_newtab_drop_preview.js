@@ -35,7 +35,7 @@ add_task(async function() {
     });
   });
 
-  let expectedSites = "3,1p,2p,4,0p,5p,6,7,8"
+  let expectedSites = "3,1p,2p,4,0p,5p,6,7,8";
   is(foundSites, expectedSites, "grid status = " + expectedSites);
 });
 

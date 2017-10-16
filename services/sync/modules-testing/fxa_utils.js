@@ -33,14 +33,14 @@ this.initializeIdentityWithTokenServerResponse = function(response) {
       this.response = response;
       callback.call(this);
     }
-  }
+  };
   // The mocked TokenServer client which will get the response.
   function MockTSC() { }
   MockTSC.prototype = new TokenServerClient();
   MockTSC.prototype.constructor = MockTSC;
   MockTSC.prototype.newRESTRequest = function(url) {
     return new MockRESTRequest(url);
-  }
+  };
   // Arrange for the same observerPrefix as browserid_identity uses.
   MockTSC.prototype.observerPrefix = "weave:service";
 
@@ -52,7 +52,7 @@ this.initializeIdentityWithTokenServerResponse = function(response) {
   if (!(browseridManager instanceof BrowserIDManager)) {
     throw new Error("sync isn't configured for browserid_identity");
   }
-  let mockTSC = new MockTSC()
+  let mockTSC = new MockTSC();
   configureFxAccountIdentity(browseridManager);
   browseridManager._tokenServerClient = mockTSC;
-}
+};

@@ -340,7 +340,7 @@ var gSync = {
         this.remoteClients.map(client => client.id);
 
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
-    }
+    };
 
     function addTargetDevice(clientId, name, clientType, lastModified) {
       const targetDevice = createDeviceNodeFn(clientId, name, clientType, lastModified);
