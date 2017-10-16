@@ -1071,7 +1071,7 @@ const boolEls = {
  * Tests if the attribute is a boolean attribute on element.
  *
  * @param {DOMElement} el
- *     Element to test if |attr| is a boolean attribute on.
+ *     Element to test if <var>attr</var> is a boolean attribute on.
  * @param {string} attr
  *     Attribute to test is a boolean attribute.
  *
