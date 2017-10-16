@@ -169,6 +169,10 @@ var ParentUtils = {
 
 Services.obs.addObserver(ParentUtils, "formautofill-storage-changed");
 
+Services.mm.addMessageListener("FormAutofill:FieldsIdentified", () => {
+  sendAsyncMessage("FormAutofillTest:FieldsIdentified");
+});
+
 addMessageListener("FormAutofillTest:AddAddress", (msg) => {
   ParentUtils.operateAddress("add", msg, "FormAutofillTest:AddressAdded");
 });
