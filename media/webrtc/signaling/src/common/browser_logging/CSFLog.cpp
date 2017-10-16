@@ -26,7 +26,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   vprintf(format, args);
 #else
 
-  mozilla::LogLevel level = static_cast<mozilla::LogLevel>(priority);
+  mozilla::LogLevel level = static_cast<mozilla::LogLevel>(static_cast<unsigned int>(priority));
 
   // Skip doing any of this work if we're not logging the indicated level...
   if (!MOZ_LOG_TEST(gSignalingLog, level)) {
@@ -83,5 +83,5 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 int CSFLogTestLevel(CSFLogLevel priority)
 {
   return MOZ_LOG_TEST(gSignalingLog,
-                      static_cast<mozilla::LogLevel>(priority));
+                      static_cast<mozilla::LogLevel>(static_cast<unsigned int>(priority)));
 }
