@@ -388,7 +388,8 @@ module.exports = {
   getIsGlobalScope(ancestors) {
     for (let parent of ancestors) {
       if (parent.type == "FunctionExpression" ||
-          parent.type == "FunctionDeclaration") {
+          parent.type == "FunctionDeclaration" ||
+          parent.type == "ArrowFunctionExpression") {
         return false;
       }
     }
