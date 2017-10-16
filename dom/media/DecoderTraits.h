@@ -7,19 +7,14 @@
 #ifndef DecoderTraits_h_
 #define DecoderTraits_h_
 
-#include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
 
-class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class MediaContainerType;
-struct MediaDecoderInit;
 struct MediaFormatReaderInit;
-class MediaDecoderOwner;
 class MediaFormatReader;
-class MediaResource;
 
 enum CanPlayStatus {
   CANPLAY_NO,
@@ -39,12 +34,6 @@ public:
   // false here even if CanHandleMediaType would return true.
   static bool ShouldHandleMediaType(const char* aMIMEType,
                                     DecoderDoctorDiagnostics* aDiagnostics);
-
-  // Create a decoder for the given aType. Returns null if we
-  // were unable to create the decoder.
-  static already_AddRefed<ChannelMediaDecoder> CreateDecoder(
-    MediaDecoderInit& aInit,
-    DecoderDoctorDiagnostics* aDiagnostics);
 
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
