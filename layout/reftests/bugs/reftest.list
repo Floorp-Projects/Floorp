@@ -317,7 +317,7 @@ random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) fuzzy-if(webrender
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
 fails-if(styloVsGecko) == 299837-2.xul 299837-2-ref.xul # bug 1408235
-random-if(d2d) asserts-if(stylo,24-48) asserts-if(styloVsGecko,12-64) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
+random-if(d2d) asserts-if(stylo,24-128) asserts-if(styloVsGecko,12-64) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
