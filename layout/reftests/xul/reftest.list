@@ -7,7 +7,7 @@ random-if(Android) fails-if(winWidget||stylo||styloVsGecko) == menulist-shrinkwr
 fails-if(styloVsGecko) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658, stylo: bug 1408235
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) fails-if(styloVsGecko) == accesskey.xul accesskey-ref.xul # stylo: bug 1408811
-fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) asserts-if(stylo,13-26) fails-if(styloVsGecko) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832, stylo: bug 1397644
+fails-if(cocoaWidget&&!stylo) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) asserts-if(stylo,13-26) fails-if(styloVsGecko) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832, stylo: bug 1397644
 skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
 asserts-if(stylo,13-26) fails-if(stylo||styloVsGecko) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # stylo: bug 1397644
 == text-crop.xul text-crop-ref.xul
