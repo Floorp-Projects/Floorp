@@ -9,6 +9,7 @@ extern crate bytes;
 extern crate cubeb;
 extern crate cubeb_core;
 extern crate lazycell;
+extern crate libc;
 extern crate mio;
 extern crate mio_uds;
 extern crate slab;
@@ -706,13 +707,14 @@ impl Server {
 // it as an Evented that we can send/recv file descriptors (or HANDLEs on
 // Windows) over.
 pub fn run(running: Arc<AtomicBool>) -> Result<()> {
+    let path = audioipc::get_uds_path(1);
 
     // Ignore result.
-    let _ = std::fs::remove_file(audioipc::get_uds_path());
+    let _ = std::fs::remove_file(&path);
 
     // TODO: Use a SEQPACKET, wrap it in UnixStream?
     let mut poll = mio::Poll::new()?;
-    let mut server = Server::new(UnixListener::bind(audioipc::get_uds_path())?);
+    let mut server = Server::new(UnixListener::bind(&path)?);
 
     poll.register(
         &server.socket,
@@ -723,10 +725,15 @@ pub fn run(running: Arc<AtomicBool>) -> Result<()> {
 
     loop {
         if !running.load(Ordering::SeqCst) {
+            let _ = std::fs::remove_file(&path);
             bail!("server quit due to ctrl-c");
         }
 
-        try!(server.poll(&mut poll));
+        let r = server.poll(&mut poll);
+        if r.is_err() {
+            let _ = std::fs::remove_file(&path);
+            return r;
+        }
     }
 
     //poll.deregister(&server.socket).unwrap();
@@ -739,6 +746,7 @@ fn error(error: cubeb::Error) -> ClientMessage {
 struct ServerWrapper {
     thread_handle: std::thread::JoinHandle<()>,
     sender_ctl: channel::SenderCtl,
+    path: std::path::PathBuf,
 }
 
 impl ServerWrapper {
@@ -746,21 +754,26 @@ impl ServerWrapper {
         // Dropping SenderCtl here will notify the other end.
         drop(self.sender_ctl);
         self.thread_handle.join().unwrap();
+        // Ignore result.
+        let _ = std::fs::remove_file(self.path);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn audioipc_server_start() -> *mut c_void {
+    let pid = unsafe { libc::getpid() };
+    let path = audioipc::get_uds_path(pid as u64);
 
     let (tx, rx) = channel::ctl_pair();
 
     let handle = thread::spawn(move || {
+        let path = audioipc::get_uds_path(pid as u64);
         // Ignore result.
-        let _ = std::fs::remove_file(audioipc::get_uds_path());
+        let _ = std::fs::remove_file(&path);
 
         // TODO: Use a SEQPACKET, wrap it in UnixStream?
         let mut poll = mio::Poll::new().unwrap();
-        let mut server = Server::new(UnixListener::bind(audioipc::get_uds_path()).unwrap());
+        let mut server = Server::new(UnixListener::bind(&path).unwrap());
 
         poll.register(
             &server.socket,
@@ -781,7 +794,8 @@ pub extern "C" fn audioipc_server_start() -> *mut c_void {
 
     let wrapper = ServerWrapper {
         thread_handle: handle,
-        sender_ctl: tx
+        sender_ctl: tx,
+        path: path
     };
 
     Box::into_raw(Box::new(wrapper)) as *mut _

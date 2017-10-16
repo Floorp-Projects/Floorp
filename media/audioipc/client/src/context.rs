@@ -15,6 +15,7 @@ use std::os::raw::c_void;
 use std::os::unix::net::UnixStream;
 use std::sync::{Mutex, MutexGuard};
 use stream;
+use libc;
 
 #[derive(Debug)]
 pub struct ClientContext {
@@ -43,7 +44,12 @@ impl Context for ClientContext {
     fn init(_context_name: Option<&CStr>) -> Result<*mut ffi::cubeb> {
         assert_not_in_callback();
         // TODO: encapsulate connect, etc inside audioipc.
-        let stream = t!(UnixStream::connect(audioipc::get_uds_path()));
+        let ppid = unsafe { libc::getppid() };
+        let path = audioipc::get_uds_path(ppid as u64);
+        let stream = match UnixStream::connect(path) {
+            Ok(stream) => stream,
+            _ => t!(UnixStream::connect(audioipc::get_uds_path(1)))
+        };
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,
             connection: Mutex::new(Connection::new(stream))
@@ -52,18 +58,14 @@ impl Context for ClientContext {
     }
 
     fn backend_id(&self) -> &'static CStr {
-        // HACK: This is called reentrantly from Gecko's AudioStream::DataCallback.
-        //assert_not_in_callback();
+        assert_not_in_callback();
         unsafe { CStr::from_ptr(b"remote\0".as_ptr() as *const _) }
     }
 
     fn max_channel_count(&self) -> Result<u32> {
-        // HACK: This needs to be reentrant as MSG calls it from within data_callback.
-        //assert_not_in_callback();
-        //let mut conn = self.connection();
-        //send_recv!(conn, ContextGetMaxChannelCount => ContextMaxChannelCount())
-        warn!("Context::max_channel_count lying about result until reentrancy issues resolved.");
-        Ok(2)
+        assert_not_in_callback();
+        let mut conn = self.connection();
+        send_recv!(conn, ContextGetMaxChannelCount => ContextMaxChannelCount())
     }
 
     fn min_latency(&self, params: &StreamParams) -> Result<u32> {
