@@ -5,6 +5,5 @@
 DevToolsModules(
     'batching.js',
     'prefs.js',
-    'recording.js',
     'thunk.js',
 )
