@@ -23,22 +23,22 @@ table td {
     Here the spanning cell and another cell are in the same row.
     </p>
     <table id="one">
-    	<tr id="firstRowRef">
+        <tr id="firstRowRef">
             <td>aaaa</td>
-    	</tr>
-    	<tr id="secondRowRef">
-    		<td>bbbb</td>
-    	</tr>
-    	<tr id="collapsedRowRef">
+        </tr>
+        <tr id="secondRowRef">
+            <td>bbbb</td>
+        </tr>
+        <tr id="collapsedRowRef">
             <td rowspan="2">spanning</td>
-    		<td>cccc</td>
-    	</tr>
-    	<tr id="fourthRowRef">
-    		<td>dddd</td>
-    	</tr>
-    	<tr id="fifthRowRef">
-    		<td>eeee</td>
-    	</tr>
+            <td>cccc</td>
+        </tr>
+        <tr id="fourthRowRef">
+            <td>dddd</td>
+        </tr>
+        <tr id="fifthRowRef">
+            <td>eeee</td>
+        </tr>
     </table>
     Bottom table is identical to top except third row has been collapsed.
     <table id="two">
@@ -74,7 +74,7 @@ table td {
             "collapsed row has zero height"
         ],
         [
-        	document.getElementById('firstRow').offsetHeight,
+            document.getElementById('firstRow').offsetHeight,
             document.getElementById('firstRowRef').offsetHeight,
             "first row height doesn't change"
         ],
