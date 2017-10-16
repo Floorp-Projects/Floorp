@@ -1287,7 +1287,6 @@ NPEventModel nsPluginInstanceOwner::GetEventModel()
 }
 
 #define DEFAULT_REFRESH_RATE 20 // 50 FPS
-
 StaticRefPtr<nsITimer>            nsPluginInstanceOwner::sCATimer;
 nsTArray<nsPluginInstanceOwner*> *nsPluginInstanceOwner::sCARefreshListeners = nullptr;
 
@@ -1335,10 +1334,12 @@ void nsPluginInstanceOwner::AddToCARefreshTimer() {
   sCARefreshListeners->AppendElement(this);
 
   if (sCARefreshListeners->Length() == 1) {
-    NS_NewTimerWithFuncCallback(getter_AddRefs(sCATimer),
+    nsCOMPtr<nsITimer> timer;
+    NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
                                 CARefresh, nullptr,
                                 DEFAULT_REFRESH_RATE, nsITimer::TYPE_REPEATING_SLACK,
                                 "nsPluginInstanceOwner::CARefresh");
+    sCATimer = timer.forget();
   }
 }
 
