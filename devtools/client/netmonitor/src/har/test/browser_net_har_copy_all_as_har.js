@@ -15,11 +15,10 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { connector, store, windowRequire } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
-  let { getLongString, getTabTarget } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -27,8 +26,7 @@ add_task(function* () {
   tab.linkedBrowser.reload();
   yield wait;
 
-  let contextMenu = new RequestListContextMenu({ getTabTarget, getLongString });
-
+  let contextMenu = new RequestListContextMenu({});
   yield contextMenu.copyAllAsHar();
 
   let jsonString = SpecialPowers.getClipboardData("text/unicode");
