@@ -324,11 +324,10 @@ WheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
 WheelTransaction::SetTimeout()
 {
   if (!sTimer) {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!timer) {
+    sTimer = NS_NewTimer().take();
+    if (!sTimer) {
       return;
     }
-    timer.swap(sTimer);
   }
   sTimer->Cancel();
   DebugOnly<nsresult> rv =

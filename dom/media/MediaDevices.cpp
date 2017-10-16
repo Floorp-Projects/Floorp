@@ -234,7 +234,7 @@ MediaDevices::OnDeviceChange()
 
   if (!mFuzzTimer)
   {
-    mFuzzTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mFuzzTimer = NS_NewTimer();
   }
 
   if (!mFuzzTimer) {

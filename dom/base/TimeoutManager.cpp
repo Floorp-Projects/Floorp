@@ -1309,19 +1309,12 @@ TimeoutManager::MaybeStartThrottleTimeout()
           ("TimeoutManager %p delaying tracking timeout throttling by %dms\n",
            this, gTimeoutThrottlingDelay));
 
-  mThrottleTimeoutsTimer =
-    do_CreateInstance("@mozilla.org/timer;1");
-  if (!mThrottleTimeoutsTimer) {
-    return;
-  }
-
   nsCOMPtr<nsITimerCallback> callback =
     new ThrottleTimeoutsCallback(&mWindow);
 
-  mThrottleTimeoutsTimer->SetTarget(EventTarget());
-
-  mThrottleTimeoutsTimer->InitWithCallback(
-    callback, gTimeoutThrottlingDelay, nsITimer::TYPE_ONE_SHOT);
+  NS_NewTimerWithCallback(getter_AddRefs(mThrottleTimeoutsTimer),
+                          callback, gTimeoutThrottlingDelay, nsITimer::TYPE_ONE_SHOT,
+                          EventTarget());
 }
 
 void
