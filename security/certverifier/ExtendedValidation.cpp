@@ -177,41 +177,6 @@ static const struct EVInfo kEVInfos[] = {
     "ALtAHEP1Xk+w",
   },
   {
-    // CN=StartCom Certification Authority,OU=Secure Digital Certificate Signing,O=StartCom Ltd.,C=IL
-    "1.3.6.1.4.1.23223.1.1.1",
-    "StartCom EV OID",
-    { 0xC7, 0x66, 0xA9, 0xBE, 0xF2, 0xD4, 0x07, 0x1C, 0x86, 0x3A, 0x31,
-      0xAA, 0x49, 0x20, 0xE8, 0x13, 0xB2, 0xD1, 0x98, 0x60, 0x8C, 0xB7,
-      0xB7, 0xCF, 0xE2, 0x11, 0x43, 0xB8, 0x36, 0xDF, 0x09, 0xEA },
-    "MH0xCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQL"
-    "EyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMSkwJwYDVQQDEyBT"
-    "dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
-    "AQ==",
-  },
-  {
-    // CN=StartCom Certification Authority,OU=Secure Digital Certificate Signing,O=StartCom Ltd.,C=IL
-    "1.3.6.1.4.1.23223.1.1.1",
-    "StartCom EV OID",
-    { 0xE1, 0x78, 0x90, 0xEE, 0x09, 0xA3, 0xFB, 0xF4, 0xF4, 0x8B, 0x9C,
-      0x41, 0x4A, 0x17, 0xD6, 0x37, 0xB7, 0xA5, 0x06, 0x47, 0xE9, 0xBC,
-      0x75, 0x23, 0x22, 0x72, 0x7F, 0xCC, 0x17, 0x42, 0xA9, 0x11 },
-    "MH0xCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQL"
-    "EyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMSkwJwYDVQQDEyBT"
-    "dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
-    "LQ==",
-  },
-  {
-    // CN=StartCom Certification Authority G2,O=StartCom Ltd.,C=IL
-    "1.3.6.1.4.1.23223.1.1.1",
-    "StartCom EV OID",
-    { 0xC7, 0xBA, 0x65, 0x67, 0xDE, 0x93, 0xA7, 0x98, 0xAE, 0x1F, 0xAA,
-      0x79, 0x1E, 0x71, 0x2D, 0x37, 0x8F, 0xAE, 0x1F, 0x93, 0xC4, 0x39,
-      0x7F, 0xEA, 0x44, 0x1B, 0xB7, 0xCB, 0xE6, 0xFD, 0x59, 0x95 },
-    "MFMxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSwwKgYDVQQD"
-    "EyNTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSBHMg==",
-    "Ow==",
-  },
-  {
     // CN=VeriSign Class 3 Public Primary Certification Authority - G5,OU="(c) 2006 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
     "2.16.840.1.113733.1.7.23.6",
     "VeriSign EV OID",
