@@ -81,7 +81,7 @@ function test() {
       PlacesUtils.bookmarks.setItemTitle(query.concreteId, "badName");
   }
 
-  restoreLeftPaneGetters();
+  PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
 
   // Open Library, this will kick-off left pane code.
   openLibrary(onLibraryReady);
