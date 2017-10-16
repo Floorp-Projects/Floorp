@@ -19,7 +19,7 @@ const {
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   clickedOnEllipseEdge,
-  clickedOnPoint
+  clickedOnPoint,
   distanceToLine,
   getDistance,
   projection,
