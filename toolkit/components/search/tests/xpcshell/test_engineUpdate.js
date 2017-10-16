@@ -13,7 +13,7 @@ function run_test() {
 
 add_task(async function test_engineUpdate() {
   const KEYWORD = "keyword";
-  const FILENAME = "engine.xml"
+  const FILENAME = "engine.xml";
   const TOPIC = "browser-search-engine-modified";
   const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 

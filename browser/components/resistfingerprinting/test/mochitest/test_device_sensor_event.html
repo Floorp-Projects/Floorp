@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1369319
         ]
       }, doTest);
     }, window);
-  }
+  };
 
   function doTest() {
     window.addEventListener("devicemotion", () => {
-      ok(false, "The device motion event should not be fired.")
+      ok(false, "The device motion event should not be fired.");
     }, {once: true});
 
     window.addEventListener("TestEvent", () => {

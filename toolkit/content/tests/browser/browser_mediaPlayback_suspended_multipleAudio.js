@@ -63,12 +63,12 @@ function check_autoplay_audio_pause_state(expectedPauseState) {
     autoPlay.onpause = function() {
       autoPlay.onpause = null;
       ok(true, "Audio is paused correctly, checking from onpause.");
-    }
+    };
   } else {
     autoPlay.onplay = function() {
       autoPlay.onplay = null;
       ok(true, "Audio is resumed correctly, checking from onplay.");
-    }
+    };
   }
 }
 
@@ -84,7 +84,7 @@ function play_nonautoplay_audio_should_be_paused() {
       nonAutoPlay.onpause = null;
       is(nonAutoPlay.ended, false, "Audio can't be playback.");
       resolve();
-    }
+    };
   });
 }
 
@@ -122,7 +122,7 @@ function play_nonautoplay_audio_should_play_until_ended() {
       nonAutoPlay.onended = null;
       ok(true, "Audio can be playback until ended.");
       resolve();
-    }
+    };
   });
 }
 

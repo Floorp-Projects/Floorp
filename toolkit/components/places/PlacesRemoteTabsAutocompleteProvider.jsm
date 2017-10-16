@@ -141,4 +141,4 @@ this.PlacesRemoteTabsAutocompleteProvider = {
     }
     return Promise.resolve(matches);
   },
-}
+};

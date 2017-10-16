@@ -138,7 +138,7 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
     search: "http://www.be",
     autofilled: "http://www.bean.search",
     completed: "http://www.bean.search"
-  })
+  });
 
   do_print("Should autoFill search engine if search string has www prefix.");
   await check_autocomplete({

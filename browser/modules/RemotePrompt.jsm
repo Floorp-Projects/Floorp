@@ -30,7 +30,7 @@ var RemotePrompt = {
         if (message.data.uri) {
           this.openModalWindow(message.data, message.target);
         } else {
-          this.openTabPrompt(message.data, message.target)
+          this.openTabPrompt(message.data, message.target);
         }
         break;
     }
@@ -38,7 +38,7 @@ var RemotePrompt = {
 
   openTabPrompt(args, browser) {
     let window = browser.ownerGlobal;
-    let tabPrompt = window.gBrowser.getTabModalPromptBox(browser)
+    let tabPrompt = window.gBrowser.getTabModalPromptBox(browser);
     let newPrompt;
     let needRemove = false;
     let promptId = args._remoteId;

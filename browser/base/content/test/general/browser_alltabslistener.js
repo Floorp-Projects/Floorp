@@ -35,7 +35,7 @@ var gFrontProgressListener = {
     is(state, gFrontNotifications[gFrontNotificationsPos], "Got a notification for the front notifications listener");
     gFrontNotificationsPos++;
   }
-}
+};
 
 var gAllProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -76,7 +76,7 @@ var gAllProgressListener = {
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
     gAllNotificationsPos++;
   }
-}
+};
 
 var gFrontNotifications, gAllNotifications, gFrontNotificationsPos, gAllNotificationsPos;
 var gBackgroundTab, gForegroundTab, gBackgroundBrowser, gForegroundBrowser, gTestBrowser;

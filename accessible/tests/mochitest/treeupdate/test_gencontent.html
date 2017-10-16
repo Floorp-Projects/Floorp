@@ -48,7 +48,7 @@
         node.textContent = "text";
         node.setAttribute("class", "gentext");
         this.containerNode.appendChild(node);
-      }
+      };
 
       this.finalCheck = function insertNodeHavingGenContent_finalCheck() {
         var accTree =
@@ -60,11 +60,11 @@
             ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function insertNodeHavingGenContent_getID() {
         return "insert node having generated content to " + prettyName(aContainerID);
-      }
+      };
     }
 
     /**
@@ -82,7 +82,7 @@
 
       this.invoke = function addGenContent_invoke() {
         this.node.setAttribute("class", "gentext");
-      }
+      };
 
       this.finalCheck = function insertNodeHavingGenContent_finalCheck() {
         var accTree =
@@ -94,11 +94,11 @@
             ] }
           ] };
         testAccessibleTree(this.container, accTree);
-      }
+      };
 
       this.getID = function addGenContent_getID() {
         return "add generated content to" + prettyName(aNodeID);
-      }
+      };
     }
 
     /**

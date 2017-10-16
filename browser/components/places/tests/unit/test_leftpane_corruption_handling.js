@@ -60,7 +60,7 @@ add_task(async function() {
     Object.defineProperty(PlacesUIUtils, "allBookmarksFolderId", gAllBookmarksFolderIdGetter);
 
     // Check the new left pane folder.
-    let leftPaneHierarchy = folderIdToHierarchy(gLeftPaneFolderId)
+    let leftPaneHierarchy = folderIdToHierarchy(gLeftPaneFolderId);
     Assert.equal(gReferenceHierarchy, leftPaneHierarchy);
 
     folder = await PlacesUtils.bookmarks.fetch({guid: folder.guid});
@@ -156,9 +156,9 @@ function folderIdToHierarchy(aFolderId) {
 }
 
 function hierarchyToObj(aNode) {
-  let o = {}
+  let o = {};
   o.title = aNode.title;
-  o.annos = PlacesUtils.getAnnotationsForItem(aNode.itemId)
+  o.annos = PlacesUtils.getAnnotationsForItem(aNode.itemId);
   if (PlacesUtils.nodeIsURI(aNode)) {
     o.uri = aNode.uri;
   } else if (PlacesUtils.nodeIsFolder(aNode)) {

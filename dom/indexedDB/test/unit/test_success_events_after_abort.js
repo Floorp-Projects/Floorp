@@ -35,7 +35,7 @@ function* testSteps()
     is(event.target.error.name, "AbortError", "Good error");
     sawError = true;
     event.preventDefault();
-  }
+  };
 
   transaction.abort();
 

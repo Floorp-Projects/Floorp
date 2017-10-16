@@ -246,11 +246,11 @@ function* testSteps()
   request = objectStore.add({}, 1);
   request.onsuccess = function() {
     ok(false, "inserting duplicate key should fail");
-  }
+  };
   request.onerror = function(event) {
     ok(true, "inserting duplicate key should fail");
     event.preventDefault();
-  }
+  };
   transaction.oncomplete = grabEventAndContinueHandler;
   yield undefined;
 
@@ -287,7 +287,7 @@ function* testSteps()
   transaction.objectStore("foo").get(1).onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
   transaction.objectStore("foo").get(1).onerror = abortErrorHandler;
-  expectedAbortEventCount++
+  expectedAbortEventCount++;
   transaction.abort();
   try {
     transaction.abort();
@@ -303,11 +303,11 @@ function* testSteps()
     event.preventDefault();
 
     transaction.objectStore("foo").get(1).onerror = abortErrorHandler;
-    expectedAbortEventCount++
+    expectedAbortEventCount++;
 
     transaction.abort();
     continueToNextStep();
-  }
+  };
   yield undefined;
 
   // In between callbacks

@@ -11,7 +11,7 @@ testserver.registerDirectory("/data/", do_get_file("data/productaddons"));
 testserver.start();
 var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/"
+           testserver.identity.primaryPort + "/data/";
 
 /**
  * Compares binary data of 2 arrays and returns true if they are the same
@@ -171,7 +171,7 @@ add_task(async function test_download_noverify() {
 
   let stat = await OS.File.stat(path);
   do_check_false(stat.isDir);
-  do_check_eq(stat.size, 452)
+  do_check_eq(stat.size, 452);
 
   do_check_true(compareFiles(do_get_file("data/productaddons/unsigned.xpi"), new LocalFile(path)));
 

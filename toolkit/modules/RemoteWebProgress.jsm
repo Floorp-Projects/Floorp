@@ -56,10 +56,10 @@ RemoteWebProgress.prototype = {
   NOTIFY_REFRESH:        0x00000100,
   NOTIFY_ALL:            0x000001ff,
 
-  get isLoadingDocument() { return this._isLoadingDocument },
+  get isLoadingDocument() { return this._isLoadingDocument; },
   get DOMWindow() { return this._DOMWindow; },
   get DOMWindowID() { return this._DOMWindowID; },
-  get isTopLevel() { return this._isTopLevel },
+  get isTopLevel() { return this._isTopLevel; },
   get loadType() { return this._loadType; },
 
   addProgressListener(aListener, aNotifyMask) {
@@ -151,7 +151,7 @@ RemoteWebProgressManager.prototype = {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"]
                     .getService(Components.interfaces.nsISerializationHelper);
 
-      deserialized = helper.deserializeObject(aStatus)
+      deserialized = helper.deserializeObject(aStatus);
       deserialized.QueryInterface(Ci.nsISSLStatus);
     }
 

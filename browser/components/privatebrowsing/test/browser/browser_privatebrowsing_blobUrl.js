@@ -18,7 +18,7 @@ add_task(async function test() {
   info("Creating a blob URL...");
   await ContentTask.spawn(tab, null, function() {
     return Promise.resolve(content.window.URL.createObjectURL(new content.window.Blob([123])));
-  }).then(newURL => { blobURL = newURL });
+  }).then(newURL => { blobURL = newURL; });
 
   info("Blob URL: " + blobURL);
 
@@ -31,8 +31,8 @@ add_task(async function test() {
   await ContentTask.spawn(privateTab, blobURL, function(url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
-      xhr.onerror = function() { resolve("SendErrored"); }
-      xhr.onload = function() { resolve("SendLoaded"); }
+      xhr.onerror = function() { resolve("SendErrored"); };
+      xhr.onload = function() { resolve("SendLoaded"); };
       xhr.open("GET", url);
       xhr.send();
     });

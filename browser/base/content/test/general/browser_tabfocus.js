@@ -26,7 +26,7 @@ EventStore.prototype = {
       this["main-window"].push(event);
     }
   }
-}
+};
 
 var tab1 = null;
 var tab2 = null;
@@ -465,8 +465,8 @@ function compareFocusResults() {
 
 async function expectFocusShiftAfterTabSwitch(tab, expectedWindow, expectedElement, focusChanged, testid) {
   let tabSwitchPromise = null;
-  await expectFocusShift(() => { tabSwitchPromise = BrowserTestUtils.switchTab(gBrowser, tab) },
-                         expectedWindow, expectedElement, focusChanged, testid)
+  await expectFocusShift(() => { tabSwitchPromise = BrowserTestUtils.switchTab(gBrowser, tab); },
+                         expectedWindow, expectedElement, focusChanged, testid);
   await tabSwitchPromise;
 }
 

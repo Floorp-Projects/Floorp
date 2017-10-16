@@ -37,7 +37,7 @@ add_task(async function test_time_keyFromString() {
   }
   do_check_true(!!o);
   _("Done.");
-})
+});
 
 add_test(function test_set_invalid_values() {
   _("Ensure that setting invalid encryption and HMAC key values is caught.");

@@ -74,7 +74,7 @@ URLFetcher.prototype = {
       this._xhr.abort();
     }
   },
-}
+};
 
 function LoginObserver(captivePortalDetector) {
   const LOGIN_OBSERVER_STATE_DETACHED = 0; /* Should not monitor network activity since no ongoing login procedure */
@@ -205,7 +205,7 @@ function CaptivePortalDetector() {
     this._canonicalSiteExpectedContent =
       Services.prefs.getCharPref("captivedetect.canonicalContent");
   } catch (e) {
-    debug("canonicalURL or canonicalContent not set.")
+    debug("canonicalURL or canonicalContent not set.");
   }
 
   this._maxWaitingTime =

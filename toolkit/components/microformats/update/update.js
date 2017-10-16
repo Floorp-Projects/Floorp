@@ -133,7 +133,7 @@ function addNewFiles( pathList, deployDirResolved ) {
 function getRepoVersion() {
   var pack = fs.readFileSync(path.resolve(tempDir, "package.json"), {encoding: "utf8"});
   if (pack) {
-    pack = JSON.parse(pack)
+    pack = JSON.parse(pack);
     if (pack && pack.version) {
       return pack.version;
     }
@@ -228,13 +228,13 @@ function addExportedSymbol( path ) {
 function replaceInFile( path, findStr, replaceStr ) {
   readFile(deployDirResolved + path, function(err, fileStr) {
     if (fileStr) {
-      fileStr = fileStr.replace(findStr, replaceStr)
+      fileStr = fileStr.replace(findStr, replaceStr);
       writeFile(deployDirResolved + path, fileStr);
       console.log("replaced " + findStr + " with " + replaceStr + " in " + path);
     } else {
       console.log("error replaced strings in " + path);
     }
-  })
+  });
 }
 
 

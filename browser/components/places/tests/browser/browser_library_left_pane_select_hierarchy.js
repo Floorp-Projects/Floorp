@@ -30,7 +30,7 @@ add_task(async function() {
 
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(items[0]);
-    await promiseLibraryClosed(library)
+    await promiseLibraryClosed(library);
   });
 
   library.PlacesOrganizer.selectLeftPaneContainerByHierarchy(hierarchy);

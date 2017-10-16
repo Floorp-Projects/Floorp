@@ -49,7 +49,7 @@ let gContainersPane = {
 
       let title = bundlePreferences.getString("removeContainerAlertTitle");
       let message = PluralForm.get(count, bundlePreferences.getString("removeContainerMsg"))
-                              .replace("#S", count)
+                              .replace("#S", count);
       let okButton = bundlePreferences.getString("removeContainerOkButton");
       let cancelButton = bundlePreferences.getString("removeContainerButton2");
 

@@ -24,7 +24,7 @@ add_task(async function test_chrome_opens_window() {
 
   await ContentTask.spawn(browser, null, async function() {
     Assert.ok(!content.document.nodePrincipal.isSystemPrincipal,
-              "We should not have a system principal.")
+              "We should not have a system principal.");
     Assert.equal(content.document.nodePrincipal.origin,
                  "http://example.com",
                  "Should have the example.com principal");

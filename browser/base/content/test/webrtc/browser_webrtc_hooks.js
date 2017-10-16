@@ -211,7 +211,7 @@ var gTests = [
       let blocker2Called = false, blocker2 = params => {
         blocker2Called = true;
         return "allow";
-      }
+      };
       webrtcUI.addPeerConnectionBlocker(blocker2);
 
       await tryPeerConnection(browser, "NotAllowedError");

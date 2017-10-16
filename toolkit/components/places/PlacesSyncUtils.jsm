@@ -1212,7 +1212,7 @@ var reparentOrphans = async function(db, item) {
         orphanGuids[i]} to ${item.syncId}`, ex);
     }
   }
-}
+};
 
 // Inserts a synced bookmark into the database.
 async function insertSyncBookmark(db, insertInfo) {

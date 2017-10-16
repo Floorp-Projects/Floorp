@@ -508,4 +508,4 @@ var gViewSourceUtils = {
     tempFile.append(leafName);
     return tempFile;
   }
-}
+};

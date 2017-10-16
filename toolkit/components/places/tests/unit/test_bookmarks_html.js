@@ -320,7 +320,7 @@ function checkItem(aExpected, aNode) {
           break;
         case "url":
           if (!("feedUrl" in aExpected))
-            do_check_eq(aNode.uri, aExpected.url)
+            do_check_eq(aNode.uri, aExpected.url);
           break;
         case "icon":
           let {data} = await getFaviconDataForPage(aExpected.url);

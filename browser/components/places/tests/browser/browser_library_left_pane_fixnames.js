@@ -59,7 +59,7 @@ function test() {
                                                   PlacesUIUtils.ORGANIZER_QUERY_ANNO);
     var query = { name: queryName,
                   itemId,
-                  correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) }
+                  correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) };
     switch (queryName) {
       case "BookmarksToolbar":
         query.concreteId = PlacesUtils.toolbarFolderId;

@@ -26,7 +26,7 @@
 
       this.invoke = function focusElmWhileSubdocIsFocused_invoke() {
         this.DOMNode.focus();
-      }
+      };
 
       this.eventSeq = [
         new focusChecker(this.DOMNode)
@@ -38,7 +38,7 @@
 
       this.getID = function focusElmWhileSubdocIsFocused_getID() {
         return "Focus element while subdocument is focused " + prettyName(aID);
-      }
+      };
     }
 
     function imageMapChecker(aID) {
@@ -46,21 +46,21 @@
       this.type = EVENT_FOCUS;
       this.match = function imageMapChecker_match(aEvent) {
         return aEvent.DOMNode == node;
-      }
+      };
     }
 
     function topMenuChecker() {
       this.type = EVENT_FOCUS;
       this.match = function topMenuChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_PARENT_MENUITEM;
-      }
+      };
     }
 
     function contextMenuChecker() {
       this.type = EVENT_MENUPOPUP_START;
       this.match = function contextMenuChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_MENUPOPUP;
-      }
+      };
     }
 
     function focusContextMenuItemChecker() {
@@ -68,7 +68,7 @@
 
       this.match = function focusContextMenuItemChecker_match(aEvent) {
         return aEvent.accessible.role == ROLE_MENUITEM;
-      }
+      };
     }
 
     /**

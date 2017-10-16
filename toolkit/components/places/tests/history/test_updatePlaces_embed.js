@@ -3,7 +3,7 @@
 
 // Tests that updatePlaces properly handled callbacks for embed visits.
 
-"use strict"
+"use strict";
 
 add_task(async function test_embed_visit() {
   let place = {

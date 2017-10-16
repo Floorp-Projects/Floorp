@@ -204,7 +204,7 @@ RemoteFinder.prototype = {
                                                   { searchString: aSearchString,
                                                     linksOnly: aLinksOnly });
   }
-}
+};
 
 function RemoteFinderListener(global) {
   let {Finder} = Cu.import("resource://gre/modules/Finder.jsm", {});

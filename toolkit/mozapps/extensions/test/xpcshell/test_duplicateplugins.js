@@ -95,7 +95,7 @@ var PluginHost = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 

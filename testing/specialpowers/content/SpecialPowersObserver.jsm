@@ -22,9 +22,9 @@ if (typeof(Cc) == "undefined") {
   const Ci = Components.interfaces;
 }
 
-const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js"
-const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js"
-const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js"
+const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
+const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
+const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
 
 // Glue to add in the observer API to this object.  This allows us to share code with chrome tests
@@ -37,7 +37,7 @@ this.SpecialPowersObserver = function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
   this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
                          getService(Ci.nsIMessageBroadcaster);
-}
+};
 
 
 SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
@@ -310,7 +310,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
 this.SpecialPowersObserverFactory = Object.freeze({
   createInstance(outer, id) {
-    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION }
+    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION; }
     return new SpecialPowersObserver();
   },
   loadFactory(lock) {},

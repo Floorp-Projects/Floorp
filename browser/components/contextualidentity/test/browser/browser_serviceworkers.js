@@ -84,7 +84,7 @@ function promiseAllRegistered() {
           resolve();
         }
       }
-    }
+    };
     swm.addListener(listener);
   });
 }

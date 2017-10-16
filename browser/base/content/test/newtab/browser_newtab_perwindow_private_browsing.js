@@ -35,7 +35,7 @@ add_task(async function() {
 
   // check that the grid is the same as before entering pb mode
   await addNewTabPageTab();
-  await checkGrid("0,2,3,4,5,6,7,8")
+  await checkGrid("0,2,3,4,5,6,7,8");
 });
 
 var windowsToClose = [];

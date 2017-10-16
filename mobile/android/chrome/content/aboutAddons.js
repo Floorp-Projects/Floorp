@@ -8,7 +8,7 @@
 
 var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm")
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -569,7 +569,7 @@ var Addons = {
           let id = aListItem.getAttribute("addonID");
           Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
         }
-      }
+      };
       xhr.send(null);
     } catch (e) {
       Cu.reportError(e);
@@ -810,7 +810,7 @@ var Addons = {
 
   onDownloadCancelled: function(aInstall) {
   }
-}
+};
 
 window.addEventListener("load", init);
 window.addEventListener("unload", uninit);

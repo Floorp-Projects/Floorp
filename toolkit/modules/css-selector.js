@@ -111,4 +111,4 @@ const findCssSelector = function(ele) {
   }
 
   return selector;
-}
+};

@@ -9,7 +9,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
   // NB: CPOW usage because new tab pages can be preloaded, in which case no
   // load events fire.
-  await BrowserTestUtils.waitForCondition(() => !tab.linkedBrowser.contentDocument.hidden)
+  await BrowserTestUtils.waitForCondition(() => !tab.linkedBrowser.contentDocument.hidden);
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   gURLBar.value = input;
   gURLBar.select();
@@ -32,7 +32,7 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
   // NB: CPOW usage because new tab pages can be preloaded, in which case no
   // load events fire.
-  await BrowserTestUtils.waitForCondition(() => !tab.linkedBrowser.contentDocument.hidden)
+  await BrowserTestUtils.waitForCondition(() => !tab.linkedBrowser.contentDocument.hidden);
   let errorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   gURLBar.value = input;
   gURLBar.select();

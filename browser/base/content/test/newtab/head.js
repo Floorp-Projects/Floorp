@@ -308,7 +308,7 @@ async function addNewTabPageTab() {
   let browser = tab.linkedBrowser;
 
   // Wait for the document to become visible in case it was preloaded.
-  await waitForCondition(() => !browser.contentDocument.hidden)
+  await waitForCondition(() => !browser.contentDocument.hidden);
 
   await new Promise(resolve => {
     if (NewTabUtils.allPages.enabled) {
@@ -491,7 +491,7 @@ function whenSearchInitDone() {
             if (content.gSearch._contentSearchController.defaultEngine) {
               resolve();
             }
-          }
+          };
           content.setTimeout(resolver, 0);
         }
       });

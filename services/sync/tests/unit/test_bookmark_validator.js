@@ -54,7 +54,7 @@ add_task(async function test_isr_orphansMultiParents() {
 
   ])).problemData;
   deepEqual(c.orphans, [{ id: "A", parent: "D" }]);
-  equal(c.multipleParents.length, 1)
+  equal(c.multipleParents.length, 1);
   ok(c.multipleParents[0].parents.indexOf("B") >= 0);
   ok(c.multipleParents[0].parents.indexOf("C") >= 0);
 });
@@ -83,7 +83,7 @@ add_task(async function test_isr_badChildren() {
     { id: "A", type: "bookmark", parentid: "places", children: ["B", "C"] },
     { id: "C", type: "bookmark", parentid: "A" }
   ])).problemData;
-  deepEqual(c.childrenOnNonFolder, ["A"])
+  deepEqual(c.childrenOnNonFolder, ["A"]);
   deepEqual(c.missingChildren, [{parent: "A", child: "B"}]);
   deepEqual(c.parentNotFolder, ["C"]);
 });
@@ -434,7 +434,7 @@ add_task(async function test_telemetry_integration() {
   let bme = ping.engines.find(e => e.name === "bookmarks");
   ok(bme);
   ok(bme.validation);
-  ok(bme.validation.problems)
+  ok(bme.validation.problems);
   equal(bme.validation.checked, server.length);
   equal(bme.validation.took, duration);
   bme.validation.problems.sort((a, b) => String(a.name).localeCompare(b.name));

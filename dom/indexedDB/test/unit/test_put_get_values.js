@@ -44,7 +44,7 @@ function* testSteps()
     request.onsuccess = function(event) {
       is(event.target.result, testInt.value, "Got the right value");
     };
-  }
+  };
 
   // Wait for success
   yield undefined;

@@ -130,7 +130,7 @@ add_test(function() {
       item.addEventListener("RelNotesToggle", function() {
         info("Release notes now closed");
         info("Setting Release notes URI to something that should load");
-        gProvider.installs[0].releaseNotesURI = Services.io.newURI(TESTROOT + "releaseNotes.xhtml")
+        gProvider.installs[0].releaseNotesURI = Services.io.newURI(TESTROOT + "releaseNotes.xhtml");
 
         info("Re-opening release notes");
         item.addEventListener("RelNotesToggle", function() {

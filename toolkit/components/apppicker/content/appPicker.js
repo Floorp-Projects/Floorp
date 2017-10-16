@@ -206,7 +206,7 @@ AppPicker.prototype =
       });
       return true;
     }
-}
+};
 
 // Global object
 var g_dialog = new AppPicker();

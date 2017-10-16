@@ -45,4 +45,4 @@ LightweightThemeConsumer.prototype = {
                        { type: "LightweightTheme:Disable" };
     EventDispatcher.instance.sendRequest(msg);
   }
-}
+};

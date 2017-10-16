@@ -304,7 +304,7 @@
             closeBrowserWindow();
             SimpleTest.finish();
           });
-        }, doc.defaultView)
+        }, doc.defaultView);
       });
       iframe.src = "data:text/html;charset=utf-8," + doc.defaultView.frameContents;
       doc.getElementById("appframe").appendChild(iframe);
@@ -325,7 +325,7 @@
                 ["dom.mozBrowserFramesEnabled", true],
                 ["browser.pagethumbnails.capturing_disabled", true]
               ]
-            }, doTest)
+            }, doTest);
           },
           getRootDirectory(window.location.href) + "doc_content_integration.html");
         });

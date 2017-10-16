@@ -45,7 +45,7 @@ nsFindInstData.prototype =
   window,
   _root: null,
   _current: null
-}
+};
 
 // browser is the <browser> element
 // rootSearchWindow is the window to constrain the search to (normally window.content)

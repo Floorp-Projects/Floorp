@@ -433,7 +433,7 @@ HistoryListener.prototype = {
   OnIndexChanged(aIndex) {
     // Ignore, the method is implemented so that XPConnect doesn't throw!
   },
-}
+};
 
 /**
  * This class informs SessionStore.jsm whenever the network requests for a

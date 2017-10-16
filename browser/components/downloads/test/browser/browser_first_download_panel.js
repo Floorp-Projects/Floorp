@@ -43,7 +43,7 @@ add_task(async function test_first_download_panel() {
   DownloadsPanel.hidePanel();
 
   ok(DownloadsCommon.getData(window).panelHasShownBefore,
-     "Should have recorded that the panel was opened on a download.")
+     "Should have recorded that the panel was opened on a download.");
 
   // Next, make sure that if we start another download, we don't open the
   // panel automatically.

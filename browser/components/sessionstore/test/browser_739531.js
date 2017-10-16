@@ -31,7 +31,7 @@ function test() {
         info(e);
       }
 
-      is(gBrowser.tabs.length, 3, "there should be 3 tabs")
+      is(gBrowser.tabs.length, 3, "there should be 3 tabs");
 
       ok(!caughtError, "duplicateTab didn't throw");
 

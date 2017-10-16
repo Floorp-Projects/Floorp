@@ -12,7 +12,7 @@ RemoteCanvas.CANVAS_HEIGHT = 200;
 
 RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
   return compareSnapshots(this.snapshot, otherCanvas.snapshot, expected)[0];
-}
+};
 
 RemoteCanvas.prototype.load = function(callback) {
   var iframe = document.createElement("iframe");

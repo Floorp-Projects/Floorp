@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict"
+"use strict";
 
 const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Components;
 
@@ -34,7 +34,7 @@ TabSource.prototype = {
     }
 
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let title = bundle.GetStringFromName("tabshare.title")
+    let title = bundle.GetStringFromName("tabshare.title");
 
     let prompt = new Prompt({
       window: win,
@@ -48,7 +48,7 @@ TabSource.prototype = {
       else
         label = tab.originalURI.displaySpec;
       return { label: label,
-               icon: "thumbnail:" + tab.id }
+               icon: "thumbnail:" + tab.id };
     }));
 
     let result = null;

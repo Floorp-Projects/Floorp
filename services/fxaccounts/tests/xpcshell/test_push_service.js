@@ -195,7 +195,7 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
         async getUserAccountData() {
           return { deviceId };
         }
-      }
+      };
     },
     signOut() {
       signoutCalled = true;
@@ -245,7 +245,7 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
         async getUserAccountData() {
           return { deviceId: "thelocaldevice" };
         }
-      }
+      };
     },
     signOut() {
       signoutCalled = true;
@@ -378,7 +378,7 @@ add_test(function observePushTopicPasswordChanged() {
 
   pushService._onPasswordChanged = function() {
     run_next_test();
-  }
+  };
 
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
@@ -401,7 +401,7 @@ add_test(function observePushTopicPasswordReset() {
 
   pushService._onPasswordChanged = function() {
     run_next_test();
-  }
+  };
 
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });

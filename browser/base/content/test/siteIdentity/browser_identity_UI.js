@@ -58,7 +58,7 @@ var tests = [
     location: "http://127.0.0.1:8888/",
     effectiveHost: "127.0.0.1"
   },
-]
+];
 
 var gCurrentTest, gCurrentTestIndex = -1, gTestDesc, gPopupHidden;
 // Go through the tests in both directions, to add additional coverage for

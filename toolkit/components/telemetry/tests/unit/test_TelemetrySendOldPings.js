@@ -7,7 +7,7 @@
  * after delayed init.
  */
 
-"use strict"
+"use strict";
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);

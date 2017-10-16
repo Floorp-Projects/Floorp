@@ -11,34 +11,24 @@
 #include "nsStringBuffer.h"
 
 #define NS_STATIC_ATOM(buffer_name, atom_ptr) \
-  { (nsStringBuffer*) &buffer_name, atom_ptr }
+  { buffer_name, atom_ptr }
 
+// Note that |str_data| is an 8-bit string, and so |sizeof(str_data)| is equal
+// to the number of chars (including the terminating '\0'). The |u""| prefix
+// converts |str_data| to a 16-bit string, which is assigned.
 #define NS_STATIC_ATOM_BUFFER(buffer_name, str_data) \
-  static nsFakeStringBuffer<sizeof(str_data)> buffer_name = \
-    { 1, sizeof(str_data) * sizeof(char16_t), (u"" str_data) };
+  static const char16_t buffer_name[sizeof(str_data)] = u"" str_data; \
+  static_assert(sizeof(str_data[0]) == 1, "non-8-bit static atom literal");
 
 /**
  * Holds data used to initialize large number of atoms during startup. Use
  * the above macros to initialize these structs. They should never be accessed
- * directly other than from AtomTable.cpp
+ * directly other than from AtomTable.cpp.
  */
 struct nsStaticAtom
 {
-  // mStringBuffer points to the string buffer for a permanent atom, and is
-  // therefore safe as a non-owning reference.
-  nsStringBuffer* MOZ_NON_OWNING_REF mStringBuffer;
-  nsAtom** mAtom;
-};
-
-/**
- * This is a struct with the same binary layout as a nsStringBuffer.
- */
-template<uint32_t size>
-struct nsFakeStringBuffer
-{
-  int32_t mRefCnt;
-  uint32_t mSize;
-  char16_t mStringData[size];
+  const char16_t* const mString;
+  nsAtom** const mAtom;
 };
 
 // Register an array of static atoms with the atom table

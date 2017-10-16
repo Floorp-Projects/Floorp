@@ -882,7 +882,7 @@ add_task(async function test_create_item_with_childTxn() {
     do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
     do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
     do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name))
+    do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name));
     do_check_eq(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name), itemChildAnnoObj.value);
 
     itemWChildTxn.undoTransaction();
@@ -895,7 +895,7 @@ add_task(async function test_create_item_with_childTxn() {
     do_check_eq(observer._itemAddedId, newId);
     do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
     do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name))
+    do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name));
     do_check_eq(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name), itemChildAnnoObj.value);
 
     itemWChildTxn.undoTransaction();

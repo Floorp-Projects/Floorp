@@ -301,7 +301,7 @@ add_test(function test_bad_json() {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
 
-      let body = '{"id": "id", baz}'
+      let body = '{"id": "id", baz}';
       response.bodyOutputStream.write(body, body.length);
     }
   });

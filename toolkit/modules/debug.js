@@ -77,4 +77,4 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
   }
 
   dump(assertionText + stackText);
-}
+};

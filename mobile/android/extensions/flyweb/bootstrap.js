@@ -54,7 +54,7 @@ function Factory(component) {
   };
   this.unregister = function() {
     Cm.unregisterFactory(component.prototype.classID, this);
-  }
+  };
   Object.freeze(this);
   this.register();
 }

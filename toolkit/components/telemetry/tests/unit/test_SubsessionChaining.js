@@ -115,7 +115,7 @@ add_task(async function test_subsessionsChaining() {
     let ms = minutes * MILLISECONDS_PER_MINUTE;
     now = fakeNow(futureDate(now, ms));
     monotonicNow = fakeMonotonicNow(monotonicNow + ms);
-  }
+  };
 
   // Keep track of the ping reasons we're expecting in this test.
   let expectedReasons = [];

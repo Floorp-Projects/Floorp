@@ -3,7 +3,7 @@
 
 "use strict";
 
-const BASE = "http://example.com/browser/browser/components/sessionstore/test/"
+const BASE = "http://example.com/browser/browser/components/sessionstore/test/";
 const URL = BASE + "browser_scrollPositions_sample.html";
 const URL2 = BASE + "browser_scrollPositions_sample2.html";
 const URL_FRAMESET = BASE + "browser_scrollPositions_sample_frameset.html";

@@ -68,7 +68,7 @@ classifierHelper.waitForInit = function() {
     };
     dbService.lookup(principal, table, listener);
   });
-}
+};
 
 // This function is used to allow completion for specific "list",
 // some lists like "test-malware-simple" is default disabled to ask for complete.
@@ -89,7 +89,7 @@ classifierHelper.allowCompletion = function(lists, url) {
 
   // Set get hash url
   Services.prefs.setCharPref(PREFS.PROVIDER_GETHASHURL, url);
-}
+};
 
 // Pass { url: ..., db: ... } to add url to database,
 // Returns a Promise.
@@ -114,7 +114,7 @@ classifierHelper.addUrlToDB = function(updateData) {
   }
 
   return classifierHelper._update(testUpdate);
-}
+};
 
 // This API is used to expire all add/sub chunks we have updated
 // by using addUrlToDB.
@@ -133,7 +133,7 @@ classifierHelper.resetDatabase = function() {
 
 classifierHelper.reloadDatabase = function() {
   dbService.reloadDatabase();
-}
+};
 
 classifierHelper._update = function(update) {
   return (async function() {

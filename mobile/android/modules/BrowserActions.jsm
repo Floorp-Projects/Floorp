@@ -144,4 +144,4 @@ var BrowserActions = {
     delete this._browserActionTitles[uuid];
     this._maybeUnregisterListeners();
   }
-}
+};

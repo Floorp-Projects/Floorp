@@ -33,7 +33,7 @@
 
       gQueue.onFinish = function onFinish() {
         closeBrowserWindow();
-      }
+      };
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("paragraph-1"))));

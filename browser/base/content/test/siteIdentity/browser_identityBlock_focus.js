@@ -16,9 +16,9 @@ function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
 add_task(async function testWithoutNotifications() {
   await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
-    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true});
     is(document.activeElement, gIdentityHandler._identityBox,
        "identity block should be focused");
   });
@@ -34,12 +34,12 @@ add_task(async function testWithoutNotifications() {
     BrowserTestUtils.synthesizeMouseAtCenter("#geo", {}, browser);
     await popupshown;
 
-    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+    await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
     let geoIcon = document.getElementById("geo-notification-icon");
-    await synthesizeKeyAndWaitForFocus(geoIcon, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(geoIcon, "VK_TAB", {shiftKey: true});
     is(document.activeElement, geoIcon, "notification anchor should be focused");
-    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true});
     is(document.activeElement, gIdentityHandler._identityBox,
        "identity block should be focused");
   });
@@ -52,10 +52,10 @@ add_task(async function testInvalidPageProxyState() {
     // Loading about:blank will automatically focus the urlbar, which, however, can
     // race with the test code. So we only send the shortcut if the urlbar isn't focused yet.
     if (document.activeElement != gURLBar.inputField) {
-      await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
+      await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
     }
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
-    await synthesizeKeyAndWaitForFocus(gBrowser.getTabForBrowser(browser), "VK_TAB", {shiftKey: true})
+    await synthesizeKeyAndWaitForFocus(gBrowser.getTabForBrowser(browser), "VK_TAB", {shiftKey: true});
     isnot(document.activeElement, gIdentityHandler._identityBox,
           "identity block should not be focused");
     // Restore focus to the url bar.

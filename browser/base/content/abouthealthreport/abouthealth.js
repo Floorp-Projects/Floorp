@@ -97,7 +97,7 @@ var healthReportWrapper = {
     let data = {
       type,
       content
-    }
+    };
 
     let iframe = document.getElementById("remote-report");
     iframe.contentWindow.postMessage(data, reportUrl);
@@ -156,7 +156,7 @@ var healthReportWrapper = {
   reportFailure(error) {
     let details = {
       errorType: error,
-    }
+    };
     healthReportWrapper.injectData("error", details);
   },
 
@@ -167,6 +167,6 @@ var healthReportWrapper = {
   handlePayloadFailure() {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PAYLOAD_FAILED);
   },
-}
+};
 
 window.addEventListener("load", function() { healthReportWrapper.init(); });

@@ -30,7 +30,7 @@ function destroy(request, response) {
   sis.close();
   let token = body.token;
   ok(activeTokens.delete(token));
-  print("after destroy have", activeTokens.size, "tokens left.")
+  print("after destroy have", activeTokens.size, "tokens left.");
   response.setStatusLine("1.1", 200, "OK");
   response.write("{}");
 }
@@ -58,7 +58,7 @@ add_task(async function getAndRevokeToken() {
     let clientOptions = {
       serverURL: "http://localhost:" + server.identity.primaryPort + "/v1",
       client_id: "abc123",
-    }
+    };
 
     let client = new FxAccountsOAuthGrantClient(clientOptions);
     let result = await client.getTokenFromAssertion("assertion", "scope");

@@ -74,7 +74,7 @@ var FeedHandler = {
           window: browser.contentWindow,
           title: Strings.browser.GetStringFromName("feedHandler.chooseFeed")
         }).setSingleChoiceItems(feeds.map(function(feed) {
-          return { label: feed.title || feed.href }
+          return { label: feed.title || feed.href };
         })).show(data => {
           feedIndex = data.button;
           if (feedIndex == -1)

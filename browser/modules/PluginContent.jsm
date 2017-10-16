@@ -120,7 +120,7 @@ PluginContent.prototype = {
         this.NPAPIPluginCrashReportSubmitted({
           runID: msg.data.runID,
           state: msg.data.state,
-        })
+        });
         break;
       case "BrowserPlugins:Test:ClearCrashData":
         // This message should ONLY ever be sent by automated tests.
@@ -943,7 +943,7 @@ PluginContent.prototype = {
         return getTrueFullScreenElement(fullScreenIframe.contentDocument.mozFullScreenElement);
       }
       return fullScreenIframe;
-    }
+    };
 
     if (fullScreenElement.tagName === "IFRAME") {
       fullScreenElement = getTrueFullScreenElement(fullScreenElement);

@@ -20,7 +20,7 @@ var gLanguagesDialog = {
   forceReflow() {
     this._activeLanguages.style.fontKerning = "none";
     setTimeout(() => {
-      this._activeLanguages.style.removeProperty("font-kerning")
+      this._activeLanguages.style.removeProperty("font-kerning");
     }, 0);
   },
 
