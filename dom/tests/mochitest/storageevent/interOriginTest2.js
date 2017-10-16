@@ -31,8 +31,8 @@ function onMessageReceived(event)
         masterFrame.postMessage("step", "*");
       else if (slaveFrame)
         slaveFrame.postMessage("step", "*");
-      else if (SpecialPowers.wrap(masterFrame).slaveFrame)
-        SpecialPowers.wrap(masterFrame).slaveFrame.postMessage("step", "*");
+      else if (masterFrame.slaveFrame)
+        masterFrame.slaveFrame.postMessage("step", "*");
       callMasterFrame = !callMasterFrame;
       break;
 
