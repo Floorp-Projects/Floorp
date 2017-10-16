@@ -455,11 +455,11 @@ public:
     // We need to listen to both the xpcom shutdown message and our timer, and
     // fire when the first of either of these two messages is received.
     nsresult rv;
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    rv = NS_NewTimerWithObserver(getter_AddRefs(mTimer),
+                                 this, 500, nsITimer::TYPE_ONE_SHOT);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
-    mTimer->Init(this, 500, nsITimer::TYPE_ONE_SHOT);
 
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1");
