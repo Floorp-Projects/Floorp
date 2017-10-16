@@ -14,10 +14,11 @@ function* throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
-  let { store, windowRequire, connector } = monitor.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
   let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
-  let { setPreferences, triggerActivity } = connector;
+  let { setPreferences, triggerActivity } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");

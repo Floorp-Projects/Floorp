@@ -176,8 +176,9 @@ function waitForTimelineMarkers(monitor) {
  */
 function waitForAllRequestsFinished(monitor) {
   let window = monitor.panelWin;
-  let { connector } = window;
-  let { getNetworkRequest } = connector;
+  let { windowRequire } = window;
+  let { getNetworkRequest } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
 
   return new Promise(resolve => {
     // Key is the request id, value is a boolean - is request finished or not?
@@ -289,7 +290,9 @@ function teardown(monitor) {
 function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
   return new Promise((resolve) => {
     let panel = monitor.panelWin;
-    let { getNetworkRequest } = panel.connector;
+    let { windowRequire } = panel;
+    let { getNetworkRequest } =
+      windowRequire("devtools/client/netmonitor/src/connector/index");
     let progress = {};
     let genericEvents = 0;
     let postEvents = 0;
