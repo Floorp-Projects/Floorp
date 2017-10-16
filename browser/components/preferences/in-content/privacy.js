@@ -176,10 +176,19 @@ var gPrivacyPane = {
     setEventListener("notificationsDoNotDisturb", "command",
       gPrivacyPane.toggleDoNotDisturbNotifications);
 
+    let bundlePrefs = document.getElementById("bundlePreferences");
+
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbBox =
         document.getElementById("notificationsDoNotDisturbBox");
       notificationsDoNotDisturbBox.removeAttribute("hidden");
+      let checkbox = document.getElementById("notificationsDoNotDisturb");
+      let brandName = document.getElementById("bundleBrand")
+        .getString("brandShortName");
+      checkbox.setAttribute("label",
+        bundlePrefs.getFormattedString("pauseNotifications.label",
+          [brandName]));
+      checkbox.setAttribute("accesskey", bundlePrefs.getString("pauseNotifications.accesskey"));
       if (AlertsServiceDND.manualDoNotDisturb) {
         let notificationsDoNotDisturb =
           document.getElementById("notificationsDoNotDisturb");
@@ -201,7 +210,6 @@ var gPrivacyPane = {
         gPrivacyPane.removeOfflineApp);
       setEventListener("clearOfflineAppCacheButton", "command",
         gPrivacyPane.clearOfflineAppCache);
-      let bundlePrefs = document.getElementById("bundlePreferences");
       document.getElementById("offlineAppsList")
         .style.height = bundlePrefs.getString("offlineAppsList.height");
       let offlineGroup = document.getElementById("offlineGroup");
@@ -254,7 +262,6 @@ var gPrivacyPane = {
     setEventListener("submitHealthReportBox", "command",
       gPrivacyPane.updateSubmitHealthReport);
     this._initA11yState();
-    let bundlePrefs = document.getElementById("bundlePreferences");
     let signonBundle = document.getElementById("signonBundle");
     let pkiBundle = document.getElementById("pkiBundle");
     appendSearchKeywords("passwordExceptions", [

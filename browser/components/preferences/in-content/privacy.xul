@@ -651,14 +651,11 @@
     </rows>
   </grid>
 
-  <separator flex="1"/>
-
   <vbox id="notificationsDoNotDisturbBox" hidden="true">
-    <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
-              accesskey="&notificationsDoNotDisturb.accesskey;"/>
-    <description id="notificationsDoNotDisturbDetails"
-           class="indent tip-caption">&notificationsDoNotDisturbDetails.value;</description>
+    <checkbox id="notificationsDoNotDisturb" class="indent"/>
   </vbox>
+
+  <separator flex="1"/>
 
   <hbox align="start">
     <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
