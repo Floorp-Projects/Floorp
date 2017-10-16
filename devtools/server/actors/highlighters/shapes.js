@@ -4,25 +4,17 @@
 
 "use strict";
 
-const {
-  CanvasFrameAnonymousContentHelper,
-  createNode,
-  createSVGNode,
-  getComputedStyle,
-} = require("./utils/markup");
-const {
-  getAdjustedQuads,
-  getCurrentZoom,
-  getFrameOffsets,
-  setIgnoreLayoutChanges,
-} = require("devtools/shared/layout/utils");
+const { CanvasFrameAnonymousContentHelper,
+        createSVGNode, createNode, getComputedStyle } = require("./utils/markup");
+const { setIgnoreLayoutChanges, getCurrentZoom,
+        getAdjustedQuads } = require("devtools/shared/layout/utils");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
-  clickedOnEllipseEdge,
-  clickedOnPoint
-  distanceToLine,
   getDistance,
+  clickedOnEllipseEdge,
+  distanceToLine,
   projection,
+  clickedOnPoint
 } = require("devtools/server/actors/utils/shapes-geometry-utils");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
@@ -213,20 +205,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    let { target, type, pageX, pageY } = event;
-
-    // For events on highlighted nodes in an iframe, when the event takes place
-    // outside the iframe. Check if event target belongs to the iframe. If it doesn't,
-    // adjust pageX/pageY to be relative to the iframe rather than the parent.
-    if (target.ownerDocument !== this.currentNode.ownerDocument) {
-      let [xOffset, yOffset] = getFrameOffsets(target.ownerGlobal, this.currentNode);
-      // xOffset/yOffset are relative to the viewport, so first find the top/left
-      // edges of the viewport relative to the page.
-      let viewportLeft = pageX - event.clientX;
-      let viewportTop = pageY - event.clientY;
-      pageX -= viewportLeft + xOffset;
-      pageY -= viewportTop + yOffset;
-    }
+    const { target, type, pageX, pageY } = event;
 
     switch (type) {
       case "pagehide":
