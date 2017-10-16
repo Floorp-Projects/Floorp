@@ -143,7 +143,7 @@ fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
 == 817406-3.html 817406-1-ref.html
 == 817406-4.html 817406-4-ref.html
 == 847242-1.html 847242-1-ref.html
-fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) fails-if(stylo||styloVsGecko) asserts-if(stylo,25-26) == 869833-1.xul 869833-1-ref.xul # stylo: bug 1397644
+fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) fails-if(stylo||styloVsGecko) asserts-if(stylo,24-26) == 869833-1.xul 869833-1-ref.xul # stylo: bug 1397644
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html
 == 1067268-1.html 1067268-1-ref.html

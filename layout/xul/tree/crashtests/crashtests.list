@@ -18,7 +18,7 @@ load 430394-1.xul
 asserts-if(stylo,12) load 454186-1.xul
 asserts-if(stylo,3) load 479931-1.xhtml
 asserts-if(stylo,3) load 509602-1.xul
-asserts-if(stylo,27) load 585815.html
+asserts-if(stylo,27-34) load 585815.html
 load 601427.html
 asserts-if(stylo,3) load 730441-1.xul
 asserts-if(stylo,3) load 730441-2.xul
