@@ -480,17 +480,23 @@ function limitTopLevelMessageCount(state, logLimit) {
  * @return {Array} An array containing all the actors logged in a message.
  */
 function getAllActorsInMessage(message, state) {
-  // Messages without argument cannot be associated with backend actors.
-  if (!message || !Array.isArray(message.parameters) || message.parameters.length === 0) {
-    return [];
+  const {
+    parameters,
+    messageText,
+  } = message;
+
+  let actors = [];
+  if (Array.isArray(parameters)) {
+    message.parameters.forEach(parameter => {
+      if (parameter.actor) {
+        actors.push(parameter.actor);
+      }
+    });
   }
 
-  const actors = [...message.parameters.reduce((res, parameter) => {
-    if (parameter.actor) {
-      res.push(parameter.actor);
-    }
-    return res;
-  }, [])];
+  if (messageText && messageText.actor) {
+    actors.push(messageText.actor);
+  }
 
   return actors;
 }
