@@ -6,7 +6,7 @@
 //! See the [`Builder`](./struct.Builder.html) struct for usage.
 
 #![deny(missing_docs)]
-#![deny(warnings)]
+// #![deny(warnings)]
 #![deny(unused_extern_crates)]
 
 // We internally use the deprecated BindgenOptions all over the place. Once we
