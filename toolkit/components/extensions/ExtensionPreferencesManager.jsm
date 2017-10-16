@@ -25,6 +25,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
                                   "resource://gre/modules/ExtensionSettingsStore.jsm");
@@ -35,12 +36,20 @@ XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
   return new Preferences({defaultBranch: true});
 });
 
+const ADDON_REPLACE_REASONS = new Set([
+  "ADDON_DOWNGRADE",
+  "ADDON_UPGRADE",
+]);
+
 /* eslint-disable mozilla/balanced-listeners */
 Management.on("shutdown", (type, extension) => {
   switch (extension.shutdownReason) {
     case "ADDON_DISABLE":
     case "ADDON_DOWNGRADE":
     case "ADDON_UPGRADE":
+      if (ADDON_REPLACE_REASONS.has(extension.shutdownReason)) {
+        Services.obs.notifyObservers(null, "web-extension-preferences-replacing");
+      }
       this.ExtensionPreferencesManager.disableAll(extension);
       break;
 
@@ -50,9 +59,13 @@ Management.on("shutdown", (type, extension) => {
   }
 });
 
-Management.on("startup", (type, extension) => {
+Management.on("startup", async (type, extension) => {
   if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(extension.startupReason)) {
-    this.ExtensionPreferencesManager.enableAll(extension);
+    const enablePromise = this.ExtensionPreferencesManager.enableAll(extension);
+    if (ADDON_REPLACE_REASONS.has(extension.startupReason)) {
+      await enablePromise;
+      Services.obs.notifyObservers(null, "web-extension-preferences-replaced");
+    }
   }
 });
 /* eslint-enable mozilla/balanced-listeners */
