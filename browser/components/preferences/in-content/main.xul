@@ -172,10 +172,6 @@
               name="layout.spellcheckDefault"
               type="int"/>
 
-  <preference id="toolkit.telemetry.enabled"
-              name="toolkit.telemetry.enabled"
-              type="bool"/>
-
   <preference id="browser.preferences.defaultPerformanceSettings.enabled"
               name="browser.preferences.defaultPerformanceSettings.enabled"
               type="bool"/>
