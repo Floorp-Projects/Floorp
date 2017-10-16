@@ -352,7 +352,7 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
   MessageLoop* loop = VRListenerThreadHolder::Loop();
 
   loop->PostTask(NewRunnableMethod<const uint32_t>(
-    "gfx::VRLayerParent::SubmitFrame",
+    "gfx::VRManager::NotifyVRVsync",
     vm, &VRManager::NotifyVRVsync, mDisplayInfo.mDisplayID
   ));
 #endif
