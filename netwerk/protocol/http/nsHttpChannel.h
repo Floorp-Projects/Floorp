@@ -200,8 +200,6 @@ public:
     HttpChannelSecurityWarningReporter* GetWarningReporter();
 public: /* internal necko use only */
 
-    using InitLocalBlockListCallback = std::function<void(bool)>;
-
     uint32_t GetRequestTime() const
     {
         return mRequestTime;
@@ -336,8 +334,6 @@ private:
     MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
 
     void OnClassOfServiceUpdated();
-
-    bool InitLocalBlockList(const InitLocalBlockListCallback& aCallback);
 
     // redirection specific methods
     void     HandleAsyncRedirect();
