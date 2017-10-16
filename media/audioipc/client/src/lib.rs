@@ -7,6 +7,7 @@ extern crate audioipc;
 extern crate cubeb_core;
 #[macro_use]
 extern crate cubeb_backend;
+extern crate libc;
 #[macro_use]
 extern crate log;
 
