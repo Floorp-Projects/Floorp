@@ -1401,6 +1401,139 @@ tests.push({
   },
 });
 
+tests.push({
+  name: "S.3",
+  desc: "set missing added and last modified dates",
+  _placeVisits: [],
+  _bookmarksWithDates: [],
+
+  async setup() {
+    let placeIdWithVisits = addPlace();
+    this._placeVisits.push({
+      placeId: placeIdWithVisits,
+      visitDate: PlacesUtils.toPRTime(new Date(2017, 9, 4)),
+    }, {
+      placeId: placeIdWithVisits,
+      visitDate: PlacesUtils.toPRTime(new Date(2017, 9, 8)),
+    });
+
+    this._bookmarksWithDates.push({
+      guid: "bookmarkAAAA",
+      placeId: null,
+      parentId: bs.bookmarksMenuFolder,
+      dateAdded: null,
+      lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 1)),
+    }, {
+      guid: "bookmarkBBBB",
+      placeId: null,
+      parentId: bs.bookmarksMenuFolder,
+      dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 2)),
+      lastModified: null,
+    }, {
+      guid: "bookmarkCCCC",
+      placeId: null,
+      parentId: bs.unfiledBookmarksFolder,
+      dateAdded: null,
+      lastModified: null,
+    }, {
+      guid: "bookmarkDDDD",
+      placeId: placeIdWithVisits,
+      parentId: bs.mobileFolder,
+      dateAdded: null,
+      lastModified: null,
+    }, {
+      guid: "bookmarkEEEE",
+      placeId: placeIdWithVisits,
+      parentId: bs.unfiledBookmarksFolder,
+      dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 3)),
+      lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 6)),
+    });
+
+    await PlacesUtils.withConnectionWrapper(
+      "Insert bookmarks and visits with dates",
+      db => db.executeTransaction(async () => {
+        await db.executeCached(`
+          INSERT INTO moz_historyvisits(place_id, visit_date)
+          VALUES(:placeId, :visitDate)`,
+          this._placeVisits);
+
+        await db.executeCached(`
+          INSERT INTO moz_bookmarks(fk, type, parent, guid, dateAdded,
+                                    lastModified)
+          VALUES(:placeId, 1, :parentId, :guid, :dateAdded,
+                 :lastModified)`,
+          this._bookmarksWithDates);
+      })
+    );
+  },
+
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let updatedRows = await db.executeCached(`
+      SELECT guid, dateAdded, lastModified
+      FROM moz_bookmarks
+      WHERE guid IN (?, ?, ?, ?, ?)`,
+      this._bookmarksWithDates.map(info => info.guid));
+
+    for (let row of updatedRows) {
+      let guid = row.getResultByName("guid");
+
+      let dateAdded = row.getResultByName("dateAdded");
+      do_check_true(Number.isInteger(dateAdded));
+
+      let lastModified = row.getResultByName("lastModified");
+      do_check_true(Number.isInteger(lastModified));
+
+      switch (guid) {
+        // Last modified date exists, so we should use it for date added.
+        case "bookmarkAAAA": {
+          let expectedInfo = this._bookmarksWithDates[0];
+          do_check_eq(dateAdded, expectedInfo.lastModified);
+          do_check_eq(lastModified, expectedInfo.lastModified);
+          break;
+        }
+
+        // Date added exists, so we should use it for last modified date.
+        case "bookmarkBBBB": {
+          let expectedInfo = this._bookmarksWithDates[1];
+          do_check_eq(dateAdded, expectedInfo.dateAdded);
+          do_check_eq(lastModified, expectedInfo.dateAdded);
+          break;
+        }
+
+        // Neither date added nor last modified exists, and no visits, so we
+        // should fall back to the current time for both.
+        case "bookmarkCCCC": {
+          let nowAsPRTime = PlacesUtils.toPRTime(new Date());
+          do_check_eq(dateAdded, lastModified);
+          do_check_true(dateAdded <= nowAsPRTime);
+          break;
+        }
+
+        // Neither date added nor last modified exists, but we have two
+        // visits, so we should fall back to the earliest and latest visit
+        // dates.
+        case "bookmarkDDDD": {
+          let oldestVisit = this._placeVisits[0];
+          do_check_eq(dateAdded, oldestVisit.visitDate);
+          let newestVisit = this._placeVisits[1];
+          do_check_eq(lastModified, newestVisit.visitDate);
+          break;
+        }
+
+        // We have two visits, but both date added and last modified exist,
+        // so we shouldn't update them.
+        case "bookmarkEEEE": {
+          let expectedInfo = this._bookmarksWithDates[4];
+          do_check_eq(dateAdded, expectedInfo.dateAdded);
+          do_check_eq(lastModified, expectedInfo.lastModified);
+          break;
+        }
+      }
+    }
+  },
+});
+
 // ------------------------------------------------------------------------------
 
 tests.push({
