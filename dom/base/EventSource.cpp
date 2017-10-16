@@ -1202,7 +1202,7 @@ EventSourceImpl::SetReconnectionTimeout()
 
   // the timer will be used whenever the requests are going finished.
   if (!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mTimer = NS_NewTimer();
     NS_ENSURE_STATE(mTimer);
   }
 

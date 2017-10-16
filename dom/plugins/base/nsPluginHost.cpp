@@ -657,7 +657,7 @@ void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag)
       if (aPluginTag->mUnloadTimer) {
         aPluginTag->mUnloadTimer->Cancel();
       } else {
-        aPluginTag->mUnloadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+        aPluginTag->mUnloadTimer = NS_NewTimer();
       }
       uint32_t unloadTimeout = Preferences::GetUint(kPrefUnloadPluginTimeoutSecs,
                                                     kDefaultPluginUnloadingTimeout);

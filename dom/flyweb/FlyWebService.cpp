@@ -670,12 +670,12 @@ FlyWebMDNSService::Init()
 {
   MOZ_ASSERT(mDiscoveryState == DISCOVERY_IDLE);
 
-  mDiscoveryStartTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mDiscoveryStartTimer = NS_NewTimer();
   if (!mDiscoveryStartTimer) {
     return NS_ERROR_FAILURE;
   }
 
-  mDiscoveryStopTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mDiscoveryStopTimer = NS_NewTimer();
   if (!mDiscoveryStopTimer) {
     return NS_ERROR_FAILURE;
   }

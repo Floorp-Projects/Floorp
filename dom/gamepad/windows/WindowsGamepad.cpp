@@ -354,9 +354,9 @@ class WindowsGamepadService
  public:
   WindowsGamepadService()
   {
-    mDirectInputTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mXInputTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mDeviceChangeTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mDirectInputTimer = NS_NewTimer();
+    mXInputTimer = NS_NewTimer();
+    mDeviceChangeTimer = NS_NewTimer();
   }
   virtual ~WindowsGamepadService()
   {

@@ -11992,7 +11992,7 @@ DatabaseUpdateFunction::UpdateInternal(int64_t aId,
 
 ConnectionPool::ConnectionPool()
   : mDatabasesMutex("ConnectionPool::mDatabasesMutex")
-  , mIdleTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+  , mIdleTimer(NS_NewTimer())
   , mNextTransactionId(0)
   , mTotalThreadCount(0)
   , mShutdownRequested(false)
