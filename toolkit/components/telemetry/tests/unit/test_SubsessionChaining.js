@@ -91,7 +91,7 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
 
-  Preferences.set(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Preferences.set(TelemetryUtils.Preferences.OverridePreRelease, true);
 });
 
 add_task(async function test_subsessionsChaining() {
