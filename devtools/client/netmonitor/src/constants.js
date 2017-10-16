@@ -54,7 +54,6 @@ const EVENTS = {
   // See https://developer.mozilla.org/docs/Tools/Web_Console/remoting for
   // more information about what each packet is supposed to deliver.
   NETWORK_EVENT: "NetMonitor:NetworkEvent",
-  NETWORK_EVENT_UPDATED: "NetMonitor:NetworkEventUpdated",
   TIMELINE_EVENT: "NetMonitor:TimelineEvent",
 
   // When a network event is added to the view
