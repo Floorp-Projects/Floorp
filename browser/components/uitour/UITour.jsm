@@ -1688,7 +1688,7 @@ this.UITour = {
     })().catch(err => {
       log.error(err);
       this.sendPageCallback(aMessageManager, aCallbackID, {});
-    })
+    });
   },
 
   getAvailableTargets(aMessageManager, aChromeWindow, aCallbackID) {

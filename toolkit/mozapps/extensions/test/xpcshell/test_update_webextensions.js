@@ -69,7 +69,7 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
   provide(aData, "addon.manifest.applications.gecko.id", id);
 
   let updatePath = `/updates/${id}.json`.replace(/[{}]/g, "");
-  let updateUrl = `http://localhost:${gPort}${updatePath}`
+  let updateUrl = `http://localhost:${gPort}${updatePath}`;
 
   let addonData = { updates: [] };
   let manifestJSON = {

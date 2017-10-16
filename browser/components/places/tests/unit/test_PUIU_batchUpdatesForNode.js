@@ -44,7 +44,7 @@ add_task(async function test_over_batch_threshold() {
     Assert.ok(resultNode.onEndUpdateBatch.notCalled,
       "onEndUpdateBatch should not have been called before the function");
 
-    return Promise.resolve()
+    return Promise.resolve();
   });
   let resultNode = {
     QueryInterface() {

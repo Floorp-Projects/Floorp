@@ -466,7 +466,7 @@ function doEnabling() {
   if (filePickerMode != nsIFilePicker.modeGetFolder)
   // Maybe add check if textInput.value would resolve to an existing
   // file or directory in .modeOpen. Too costly I think.
-    okButton.disabled = (textInput.value == "")
+    okButton.disabled = (textInput.value == "");
 }
 
 function onTreeFocus(event) {

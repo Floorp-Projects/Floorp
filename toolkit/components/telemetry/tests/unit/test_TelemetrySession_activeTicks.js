@@ -30,7 +30,7 @@ add_task(async function test_record_activeTicks() {
       Assert.equal(payload.processes.parent.scalars["browser.engagement.active_ticks"], expected,
                    "TelemetrySession must record the expected number of active ticks (in scalars).");
     }
-  }
+  };
 
   for (let i = 0; i < 3; i++) {
     Services.obs.notifyObservers(null, "user-interaction-active");

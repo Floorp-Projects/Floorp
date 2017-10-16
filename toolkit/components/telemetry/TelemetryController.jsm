@@ -110,7 +110,7 @@ var Policy = {
   now: () => new Date(),
   generatePingId: () => Utils.generateUUID(),
   getCachedClientID: () => ClientID.getCachedClientID(),
-}
+};
 
 this.EXPORTED_SYMBOLS = ["TelemetryController"];
 
@@ -938,7 +938,7 @@ var Impl = {
   },
 
   getCurrentPingData(aSubsession) {
-    this._log.trace("getCurrentPingData - subsession: " + aSubsession)
+    this._log.trace("getCurrentPingData - subsession: " + aSubsession);
 
     // Telemetry is disabled, don't gather any data.
     if (!Telemetry.canRecordBase) {

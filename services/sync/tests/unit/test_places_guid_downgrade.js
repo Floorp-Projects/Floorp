@@ -153,7 +153,7 @@ add_task(async function test_history_guids() {
         do_throw("Unexpected error in adding visit.");
       },
       handleResult: function handleResult() {},
-      handleCompletion: () => { onVisitAdded().then(resolve, reject) },
+      handleCompletion: () => { onVisitAdded().then(resolve, reject); },
     });
   });
 });

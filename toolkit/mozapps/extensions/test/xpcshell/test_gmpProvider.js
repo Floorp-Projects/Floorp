@@ -259,7 +259,7 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
 if (![].includes) {
   Array.prototype.includes = function(element) {
     return Object(this).indexOf(element) != -1;
-  }
+  };
 }
 
 add_task(async function test_pluginRegistration() {
@@ -273,7 +273,7 @@ add_task(async function test_pluginRegistration() {
 
     let addedPaths = [];
     let removedPaths = [];
-    let clearPaths = () => { addedPaths = []; removedPaths = []; }
+    let clearPaths = () => { addedPaths = []; removedPaths = []; };
 
     let MockGMPService = {
       addPluginDirectory: path => {

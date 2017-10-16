@@ -256,7 +256,7 @@ function eventQueue(aEventType) {
    */
   this.push = function eventQueue_push(aEventInvoker) {
     this.mInvokers.push(aEventInvoker);
-  }
+  };
 
   /**
    * Start the queue processing.
@@ -267,14 +267,14 @@ function eventQueue(aEventType) {
     // XXX: Intermittent test_events_caretmove.html fails withouth timeout,
     // see bug 474952.
     this.processNextInvokerInTimeout(true);
-  }
+  };
 
   /**
    * This function is called when all events in the queue were handled.
    * Override it if you need to be notified of this.
    */
   this.onFinish = function eventQueue_finish() {
-  }
+  };
 
   // private
 
@@ -427,7 +427,7 @@ function eventQueue(aEventType) {
 
     if (this.hasUnexpectedEventsScenario())
       this.processNextInvokerInTimeout(true);
-  }
+  };
 
   this.processNextInvokerInTimeout =
     function eventQueue_processNextInvokerInTimeout(aUncondProcess) {
@@ -445,7 +445,7 @@ function eventQueue(aEventType) {
     // Check in timeout invoker didn't fire registered events.
     window.setTimeout(function(aQueue) { aQueue.processNextInvoker(); }, 300,
                       this);
-  }
+  };
 
   /**
    * Handle events for the current invoker.
@@ -573,7 +573,7 @@ function eventQueue(aEventType) {
       this.setInvokerStatus(kInvokerCanceled,
                             "Cancel the scheduled invoker in case of match");
     }
-  }
+  };
 
   // Helpers
   this.processMatchedChecker =
@@ -586,7 +586,7 @@ function eventQueue(aEventType) {
     eventQueue.logEvent(aEvent, aMatchedChecker, aScenarioIdx, aEventIdx,
                         this.areExpectedEventsLeft(),
                         this.mNextInvokerStatus);
-  }
+  };
 
   this.getNextExpectedEvent =
     function eventQueue_getNextExpectedEvent(aEventSeq) {
@@ -603,7 +603,7 @@ function eventQueue(aEventType) {
     }
 
     return aEventSeq.idx != aEventSeq.length ? aEventSeq[aEventSeq.idx] : null;
-  }
+  };
 
   this.areExpectedEventsLeft =
     function eventQueue_areExpectedEventsLeft(aScenario) {
@@ -628,7 +628,7 @@ function eventQueue(aEventType) {
           return true;
       }
       return false;
-    }
+    };
 
   this.areAllEventsExpected =
     function eventQueue_areAllEventsExpected() {
@@ -641,7 +641,7 @@ function eventQueue(aEventType) {
     }
 
     return true;
-  }
+  };
 
   this.isUnexpectedEventScenario =
     function eventQueue_isUnexpectedEventsScenario(aScenario) {
@@ -651,7 +651,7 @@ function eventQueue(aEventType) {
     }
 
     return idx == aScenario.length;
-  }
+  };
 
   this.hasUnexpectedEventsScenario =
     function eventQueue_hasUnexpectedEventsScenario() {
@@ -664,7 +664,7 @@ function eventQueue(aEventType) {
     }
 
     return false;
-  }
+  };
 
   this.hasMatchedScenario =
     function eventQueue_hasMatchedScenario() {
@@ -674,15 +674,15 @@ function eventQueue(aEventType) {
         return true;
     }
     return false;
-  }
+  };
 
   this.getInvoker = function eventQueue_getInvoker() {
     return this.mInvokers[this.mIndex];
-  }
+  };
 
   this.getNextInvoker = function eventQueue_getNextInvoker() {
     return this.mInvokers[++this.mIndex];
-  }
+  };
 
   this.setEventHandler = function eventQueue_setEventHandler(aInvoker) {
     if (!("scenarios" in aInvoker) || aInvoker.scenarios.length == 0) {
@@ -762,7 +762,7 @@ function eventQueue(aEventType) {
     }
 
     return true;
-  }
+  };
 
   this.clearEventHandler = function eventQueue_clearEventHandler() {
     if (!this.mScenarios)
@@ -785,7 +785,7 @@ function eventQueue(aEventType) {
       }
     }
     this.mScenarios = null;
-  }
+  };
 
   this.getEventID = function eventQueue_getEventID(aChecker) {
     if ("getID" in aChecker)
@@ -793,14 +793,14 @@ function eventQueue(aEventType) {
 
     var invoker = this.getInvoker();
     return invoker.getID();
-  }
+  };
 
   this.setInvokerStatus = function eventQueue_setInvokerStatus(aStatus, aLogMsg) {
     this.mNextInvokerStatus = aStatus;
 
     // Uncomment it to debug invoker processing logic.
     // gLogger.log(eventQueue.invokerStatusToMsg(aStatus, aLogMsg));
-  }
+  };
 
   this.mDefEventType = aEventType;
 
@@ -828,7 +828,7 @@ eventQueue.getEventTypeAsString =
 
   return (typeof aEventOrChecker.type == "string") ?
     aEventOrChecker.type : eventTypeToString(aEventOrChecker.type);
-}
+};
 
 eventQueue.getEventTargetDescr =
   function eventQueue_getEventTargetDescr(aEventOrChecker, aDontForceTarget) {
@@ -847,18 +847,18 @@ eventQueue.getEventTargetDescr =
 
   var target = ("target" in aEventOrChecker) ? aEventOrChecker.target : null;
   return prettyName(target);
-}
+};
 
 eventQueue.getEventPhase = function eventQueue_getEventPhase(aChecker) {
   return ("phase" in aChecker) ? aChecker.phase : true;
-}
+};
 
 eventQueue.compareEventTypes =
   function eventQueue_compareEventTypes(aChecker, aEvent) {
   var eventType = (aEvent instanceof nsIDOMEvent) ?
     aEvent.type : aEvent.eventType;
   return aChecker.type == eventType;
-}
+};
 
 eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent) {
   if (!eventQueue.compareEventTypes(aChecker, aEvent))
@@ -882,7 +882,7 @@ eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent) {
   var target2 = (aEvent instanceof nsIDOMEvent) ?
     aEvent.originalTarget : aEvent.DOMNode;
   return target1 == target2;
-}
+};
 
 eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent) {
   // We don't have stored info about handled event other than its type and
@@ -891,7 +891,7 @@ eventQueue.isSameEvent = function eventQueue_isSameEvent(aChecker, aEvent) {
   return this.compareEvents(aChecker, aEvent) &&
     !(aEvent instanceof nsIAccessibleTextChangeEvent) &&
     !(aEvent instanceof nsIAccessibleStateChangeEvent);
-}
+};
 
 eventQueue.invokerStatusToMsg =
   function eventQueue_invokerStatusToMsg(aInvokerStatus, aMsg) {
@@ -912,7 +912,7 @@ eventQueue.invokerStatusToMsg =
     msg += " (" + aMsg + ")";
 
   return msg;
-}
+};
 
 eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
                                                    aScenarioIdx, aEventIdx,
@@ -939,7 +939,7 @@ eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
   var msg = "EQ event, type: " + currType + ", target: " + currTargetDescr +
     ", " + infoMsg;
   gLogger.logToDOM(msg, true, emphText);
-}
+};
 
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -968,7 +968,7 @@ function sequence() {
                                          aItemID) {
     var item = new sequenceItem(aProcessor, aEventType, aTarget, aItemID);
     this.items.push(item);
-  }
+  };
 
   /**
    * Process next sequence item.
@@ -982,7 +982,7 @@ function sequence() {
     }
 
     this.items[this.idx].startProcess();
-  }
+  };
 
   this.items = [];
   this.idx = -1;
@@ -1060,16 +1060,16 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
         x = targetNode.boxObject.width - 1;
     }
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});
-  }
+  };
 
   this.finalCheck = function synthClick_finalCheck() {
     // Scroll top window back.
     window.top.scrollTo(0, 0);
-  }
+  };
 
   this.getID = function synthClick_getID() {
     return prettyName(aNodeOrID) + " click";
-  }
+  };
 }
 
 /**
@@ -1081,11 +1081,11 @@ function synthMouseMove(aID, aCheckerOrEventSeq) {
   this.invoke = function synthMouseMove_invoke() {
     synthesizeMouse(this.DOMNode, 1, 1, { type: "mousemove" });
     synthesizeMouse(this.DOMNode, 2, 2, { type: "mousemove" });
-  }
+  };
 
   this.getID = function synthMouseMove_getID() {
     return prettyName(aID) + " mouse move";
-  }
+  };
 }
 
 /**
@@ -1096,7 +1096,7 @@ function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq) {
 
   this.invoke = function synthKey_invoke() {
     synthesizeKey(this.mKey, this.mArgs, this.mWindow);
-  }
+  };
 
   this.getID = function synthKey_getID() {
     var key = this.mKey;
@@ -1138,7 +1138,7 @@ function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq) {
         key += " alt";
     }
     return prettyName(aNodeOrID) + " '" + key + " ' key";
-  }
+  };
 
   this.mKey = aKey;
   this.mArgs = aArgs ? aArgs : {};
@@ -1229,7 +1229,7 @@ function synthOpenComboboxKey(aID, aCheckerOrEventSeq) {
 
   this.getID = function synthOpenComboboxKey_getID() {
     return "open combobox (atl + down arrow) " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1247,11 +1247,11 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
       this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
     }
     this.DOMNode.focus();
-  }
+  };
 
   this.getID = function synthFocus_getID() {
     return prettyName(aNodeOrID) + " focus";
-  }
+  };
 }
 
 /**
@@ -1265,11 +1265,11 @@ function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq) {
 
   this.invoke = function synthFocus_invoke() {
     this.DOMNode.body.focus();
-  }
+  };
 
   this.getID = function synthFocus_getID() {
     return prettyName(aNodeOrID) + " frame document focus";
-  }
+  };
 }
 
 /**
@@ -1320,16 +1320,16 @@ function changeCurrentItem(aID, aItemID) {
       ok(false, "Error in test: proposed current item is already current" + prettyName(aID));
 
     controlNode.currentItem = itemNode;
-  }
+  };
 
   this.getID = function changeCurrentItem_getID() {
     return "current item change for " + prettyName(aID);
-  }
+  };
 
   this.reportError = function changeCurrentItem_reportError() {
     ok(false,
        "Error in test: proposed current item '" + aItemID + "' is already current");
-  }
+  };
 }
 
 /**
@@ -1341,7 +1341,7 @@ function toggleTopMenu(aID, aCheckerOrEventSeq) {
 
   this.getID = function toggleTopMenu_getID() {
     return "toggle top menu on " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1353,7 +1353,7 @@ function synthContextMenu(aID, aCheckerOrEventSeq) {
 
   this.getID = function synthContextMenu_getID() {
     return "context menu on " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1367,11 +1367,11 @@ function openCombobox(aComboboxID) {
   this.invoke = function openCombobox_invoke() {
     getNode(aComboboxID).focus();
     synthesizeKey("VK_DOWN", { altKey: true });
-  }
+  };
 
   this.getID = function openCombobox_getID() {
     return "open combobox " + prettyName(aComboboxID);
-  }
+  };
 }
 
 /**
@@ -1384,11 +1384,11 @@ function closeCombobox(aComboboxID) {
 
   this.invoke = function closeCombobox_invoke() {
     synthesizeKey("VK_ESCAPE", { });
-  }
+  };
 
   this.getID = function closeCombobox_getID() {
     return "close combobox " + prettyName(aComboboxID);
-  }
+  };
 }
 
 
@@ -1406,11 +1406,11 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
     } else {
       window.getSelection().selectAllChildren(this.DOMNode);
     }
-  }
+  };
 
   this.getID = function synthSelectAll_getID() {
     return aNodeOrID + " selectall";
-  }
+  };
 }
 
 /**
@@ -1427,7 +1427,7 @@ function moveToLineEnd(aID, aCaretOffset) {
 
   this.getID = function moveToLineEnd_getID() {
     return "move to line end in " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1443,11 +1443,11 @@ function moveToPrevLineEnd(aID, aCaretOffset) {
       synthesizeKey("VK_RIGHT", { metaKey: true });
     else
       synthesizeKey("VK_END", { });
-  }
+  };
 
   this.getID = function moveToPrevLineEnd_getID() {
     return "move to previous line end in " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1464,7 +1464,7 @@ function moveToLineStart(aID, aCaretOffset) {
 
   this.getID = function moveToLineEnd_getID() {
     return "move to line start in " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1481,7 +1481,7 @@ function moveToTextStart(aID) {
 
   this.getID = function moveToTextStart_getID() {
     return "move to text start in " + prettyName(aID);
-  }
+  };
 }
 
 /**
@@ -1506,17 +1506,17 @@ function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
 
     selection.removeRange(selRange);
     selection.addRange(selRange);
-  }
+  };
 
   this.getID = function moveCaretToDOMPoint_getID() {
    return "Set caret on " + prettyName(aID) + " at point: " +
      prettyName(aDOMPointNodeID) + " node with offset " + aDOMPointOffset;
-  }
+  };
 
   this.finalCheck = function moveCaretToDOMPoint_finalCheck() {
     if (aCheckFunc)
       aCheckFunc.call();
-  }
+  };
 
   this.eventSeq = [
     new caretMoveChecker(aExpectedOffset, this.target)
@@ -1536,11 +1536,11 @@ function setCaretOffset(aID, aOffset, aFocusTargetID) {
 
   this.invoke = function setCaretOffset_invoke() {
     this.target.caretOffset = this.offset;
-  }
+  };
 
   this.getID = function setCaretOffset_getID() {
    return "Set caretOffset on " + prettyName(aID) + " at " + this.offset;
-  }
+  };
 
   this.eventSeq = [
     new caretMoveChecker(this.offset, this.target)
@@ -1637,7 +1637,7 @@ function focusChecker(aTargetOrFunc, aTargetFuncArg) {
 
   this.check = function focusChecker_check(aEvent) {
     testStates(aEvent.accessible, STATE_FOCUSED);
-  }
+  };
 }
 
 function nofocusChecker(aID) {
@@ -1688,7 +1688,7 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
     if (typeof aFromUser != "undefined")
       is(aEvent.isFromUserInput, aFromUser,
          "wrong value of isFromUserInput() for " + prettyName(aID));
-  }
+  };
 }
 
 /**
@@ -1703,7 +1703,7 @@ function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg,
     is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
        aCaretOffset,
        "Wrong caret offset for " + prettyName(aEvent.accessible));
-  }
+  };
 }
 
 function asyncCaretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg) {
@@ -1723,7 +1723,7 @@ function textSelectionChecker(aID, aStartOffset, aEndOffset) {
     } else {
       testTextGetSelection(aID, aStartOffset, aEndOffset, 0);
     }
-  }
+  };
 }
 
 /**
@@ -1797,7 +1797,7 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
     var unxpdState = aIsEnabled ? 0 : (aIsExtraState ? 0 : aState);
     var unxpdExtraState = aIsEnabled ? 0 : (aIsExtraState ? aState : 0);
     testStates(event.accessible, state, extraState, unxpdState, unxpdExtraState);
-  }
+  };
 
   this.match = function stateChangeChecker_match(aEvent) {
     if (aEvent instanceof nsIAccessibleStateChangeEvent) {
@@ -1806,7 +1806,7 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
         (scEvent.state == aState);
     }
     return false;
-  }
+  };
 }
 
 function asyncStateChangeChecker(aState, aIsExtraState, aIsEnabled,
@@ -1841,7 +1841,7 @@ function expandedStateChecker(aIsEnabled, aTargetOrFunc, aTargetFuncArg) {
 
     testStates(event.accessible,
                (aIsEnabled ? STATE_EXPANDED : STATE_COLLAPSED));
-  }
+  };
 }
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -2128,13 +2128,13 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID) {
 
   this.startProcess = function sequenceItem_startProcess() {
     this.queue.invoke();
-  }
+  };
 
   this.queue = new eventQueue();
   this.queue.onFinish = function() {
     aProcessor.onProcessed();
     return DO_NOT_FINISH_TEST;
-  }
+  };
 
   var invoker = {
     invoke: function invoker_invoke() {
@@ -2173,5 +2173,5 @@ function synthAction(aNodeOrID, aEventsObj) {
       defineScenario(this, scenarios[i]);
   }
 
-  this.getID = function synthAction_getID() { return prettyName(aNodeOrID) + " action"; }
+  this.getID = function synthAction_getID() { return prettyName(aNodeOrID) + " action"; };
 }

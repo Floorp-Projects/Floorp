@@ -69,7 +69,7 @@ add_task(async function test_reentrant() {
       do_print("Waiting until we have entered the inner blocker");
       await deferredInner.promise;
 
-      do_print("Allowing the lock to resolve")
+      do_print("Allowing the lock to resolve");
       deferredBlockInner.resolve();
     })();
 

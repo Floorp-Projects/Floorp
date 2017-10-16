@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict"
+"use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -44,9 +44,9 @@ function Prompt(aOptions) {
   }
 
   if (aOptions.priority === 1)
-    this.msg.type = "Prompt:ShowTop"
+    this.msg.type = "Prompt:ShowTop";
   else
-    this.msg.type = "Prompt:Show"
+    this.msg.type = "Prompt:Show";
 
   if ("title" in aOptions && aOptions.title != null)
     this.msg.title = aOptions.title;
@@ -248,7 +248,7 @@ Prompt.prototype = {
     return this._setListItems(aItems);
   },
 
-}
+};
 
 var DoorHanger = {
   _getTabId: function(aWindow, aBrowserApp) {

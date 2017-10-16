@@ -27,7 +27,7 @@ keyWordData.prototype = {
 
     this.method = (this.postData ? "POST" : "GET");
   }
-}
+};
 
 function bmKeywordData(aKeyWord, aURL, aPostData, aSearchWord) {
   this.init(aKeyWord, aURL, aPostData, aSearchWord);

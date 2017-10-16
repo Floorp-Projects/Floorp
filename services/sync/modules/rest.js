@@ -18,7 +18,7 @@ this.SyncStorageRequest = function SyncStorageRequest(uri) {
   RESTRequest.call(this, uri);
 
   this.authenticator = null;
-}
+};
 SyncStorageRequest.prototype = {
 
   __proto__: RESTRequest.prototype,

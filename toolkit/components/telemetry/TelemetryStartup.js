@@ -33,7 +33,7 @@ TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
     TelemetryEnvironment.registerChangeListener("CrashAnnotator", annotateEnvironment);
     TelemetryEnvironment.onInitialized().then(() => annotateEnvironment());
   }
-}
+};
 
 function annotateEnvironment() {
   try {

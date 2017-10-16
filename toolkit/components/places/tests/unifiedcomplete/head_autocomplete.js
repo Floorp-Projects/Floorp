@@ -102,7 +102,7 @@ AutoCompleteInput.prototype = {
   onTextReverted: () => false,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
-}
+};
 
 /**
  * A helper for check_autocomplete to check a specific match against data from
@@ -193,7 +193,7 @@ async function check_autocomplete(test) {
     input.onSearchComplete = () => {
       do_print("onSearchComplete received");
       resolve();
-    }
+    };
   });
   let expectedSearches = 1;
   if (test.incompleteSearch) {
@@ -220,13 +220,13 @@ async function check_autocomplete(test) {
       let firstIndexToCheck = 0;
       if (test.searchParam && test.searchParam.includes("enable-actions")) {
         firstIndexToCheck = 1;
-        do_print("Checking first match is first autocomplete entry")
+        do_print("Checking first match is first autocomplete entry");
         let result = {
           value: controller.getValueAt(0),
           comment: controller.getCommentAt(0),
           style: controller.getStyleAt(0),
           image: controller.getImageAt(0),
-        }
+        };
         do_print(`First match is "${result.value}", "${result.comment}"`);
         Assert.ok(await _check_autocomplete_matches(matches[0], result), "first item is correct");
         do_print("Checking rest of the matches");
@@ -238,7 +238,7 @@ async function check_autocomplete(test) {
           comment: controller.getCommentAt(i),
           style: controller.getStyleAt(i),
           image: controller.getImageAt(i),
-        }
+        };
         do_print(`Found value: "${result.value}", comment: "${result.comment}", style: "${result.style}" in results...`);
         let lowerBound = test.checkSorting ? i : firstIndexToCheck;
         let upperBound = test.checkSorting ? i + 1 : matches.length;
@@ -382,7 +382,7 @@ function makeSearchMatch(input, extra = {}) {
     uri: makeActionURI("searchengine", params),
     title: params.engineName,
     style,
-  }
+  };
 }
 
 // Creates a full "match" entry for a search result, suitable for passing as
@@ -394,7 +394,7 @@ function makeVisitMatch(input, url, extra = {}) {
   let params = {
     url,
     input,
-  }
+  };
   let style = [ "action", "visiturl" ];
   if (extra.heuristic) {
     style.push("heuristic");
@@ -403,7 +403,7 @@ function makeVisitMatch(input, url, extra = {}) {
     uri: makeActionURI("visiturl", params),
     title: extra.title || url,
     style,
-  }
+  };
 }
 
 function makeSwitchToTabMatch(url, extra = {}) {
@@ -411,7 +411,7 @@ function makeSwitchToTabMatch(url, extra = {}) {
     uri: makeActionURI("switchtab", {url}),
     title: extra.title || url,
     style: [ "action", "switchtab" ],
-  }
+  };
 }
 
 function makeExtensionMatch(extra = {}) {

@@ -46,7 +46,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
 var CreateXHR = function() {
   return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
     createInstance(Ci.nsISupports);
-}
+};
 
 var logger = Log.repository.getLogger("addons.productaddons");
 
@@ -455,4 +455,4 @@ const ProductAddonChecker = {
       throw e;
     }
   }
-}
+};

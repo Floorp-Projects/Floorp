@@ -212,7 +212,7 @@ if (!window.runTest) {
   {
     SimpleTest.waitForExplicitFinish();
     testHarnessGenerator.next();
-  }
+  };
 }
 
 function finishTest()
@@ -484,7 +484,7 @@ function workerScript() {
   {
     this._name = _name_;
     this._preventDefault = _preventDefault_;
-  }
+  };
   self.ExpectError.prototype = {
     handleEvent(_event_)
     {
@@ -525,14 +525,14 @@ function workerScript() {
     }
 
     return false;
-  }
+  };
 
   self.getRandomBuffer = function(_size_) {
     let buffer = new ArrayBuffer(_size_);
     is(buffer.byteLength, _size_, "Correct byte length");
     let view = new Uint8Array(buffer);
     for (let i = 0; i < _size_; i++) {
-      view[i] = parseInt(Math.random() * 255)
+      view[i] = parseInt(Math.random() * 255);
     }
     return buffer;
   };
@@ -547,7 +547,7 @@ function workerScript() {
   self.clearAllDatabases = function(_callback_) {
     self._clearAllDatabasesCallback = _callback_;
     self.postMessage({ op: "clearAllDatabases" });
-  }
+  };
 
   self.onerror = function(_message_, _file_, _line_) {
     if (self._expectingUncaughtException) {
@@ -566,25 +566,25 @@ function workerScript() {
 
   self.isWasmSupported = function() {
     return self.wasmSupported;
-  }
+  };
 
   self.getWasmBinarySync = function(_text_) {
     self.ok(false, "This can't be used on workers");
-  }
+  };
 
   self.getWasmBinary = function(_text_) {
     self.postMessage({ op: "getWasmBinary", text: _text_ });
-  }
+  };
 
   self.getWasmModule = function(_binary_) {
     let module = new WebAssembly.Module(_binary_);
     return module;
-  }
+  };
 
   self.verifyWasmModule = function(_module) {
     self.todo(false, "Need a verifyWasmModule implementation on workers");
     self.continueToNextStep();
-  }
+  };
 
   self.onmessage = function(_event_) {
     let message = _event_.data;

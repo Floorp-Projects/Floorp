@@ -57,7 +57,7 @@ function one_test(delay, continuation) {
         ok(true, "Finished save (" + delayStr + ") but might have crashed.");
         continuation();
       }
-    }
+    };
 
     function doSave() {
       wbp.saveDocument(doc, tmpFile, tmpDir, null, 0, 0);

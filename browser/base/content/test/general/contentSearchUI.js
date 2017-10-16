@@ -95,7 +95,7 @@ var messageHandlers = {
     let event = {
       type: "mousemove",
       clickcount: 0,
-    }
+    };
     row.addEventListener("mousemove", function() {
       ack("mousemove");
     }, {once: true});

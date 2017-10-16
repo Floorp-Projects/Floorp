@@ -47,7 +47,7 @@
 
         getNode("t1_container").
           setAttribute("aria-owns", "t1_button t1_subdiv");
-      }
+      };
 
       this.finalCheck = function setARIAOwns_finalCheck() {
         // children are swapped again, button and subdiv are appended to
@@ -59,11 +59,11 @@
               { SECTION: [ ] } // subdiv from the subtree, ARIA owned
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function setARIAOwns_getID() {
         return "Change @aria-owns attribute";
-      }
+      };
     }
 
     function removeARIAOwns() {
@@ -80,7 +80,7 @@
 
       this.invoke = function removeARIAOwns_invoke() {
         getNode("t1_container").removeAttribute("aria-owns");
-      }
+      };
 
       this.finalCheck = function removeARIAOwns_finalCheck() {
         // children follow the DOM order
@@ -92,11 +92,11 @@
               ] }
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function removeARIAOwns_getID() {
         return "Remove @aria-owns attribute";
-      }
+      };
     }
 
     function setARIAOwns() {
@@ -111,7 +111,7 @@
       this.invoke = function setARIAOwns_invoke() {
         getNode("t1_container").
           setAttribute("aria-owns", "t1_button t1_subdiv");
-      }
+      };
 
       this.finalCheck = function setARIAOwns_finalCheck() {
         // children are swapped again, button and subdiv are appended to
@@ -123,11 +123,11 @@
               { SECTION: [ ] } // subdiv from the subtree, ARIA owned
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function setARIAOwns_getID() {
         return "Set @aria-owns attribute";
-      }
+      };
     }
 
     function addIdToARIAOwns() {
@@ -140,7 +140,7 @@
       this.invoke = function addIdToARIAOwns_invoke() {
         getNode("t1_container").
           setAttribute("aria-owns", "t1_button t1_subdiv t1_group");
-      }
+      };
 
       this.finalCheck = function addIdToARIAOwns_finalCheck() {
         // children are swapped again, button and subdiv are appended to
@@ -153,11 +153,11 @@
               { GROUPING: [ ] } // group from outside, t1_group
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function addIdToARIAOwns_getID() {
         return "Add id to @aria-owns attribute value";
-      }
+      };
     }
 
     function appendEl() {
@@ -169,9 +169,9 @@
       this.invoke = function appendEl_invoke() {
         var div = document.createElement("div");
         div.setAttribute("id", "t1_child3");
-        div.setAttribute("role", "radio")
+        div.setAttribute("role", "radio");
         getNode("t1_container").appendChild(div);
-      }
+      };
 
       this.finalCheck = function appendEl_finalCheck() {
         // children are invalidated, they includes aria-owns swapped kids and
@@ -185,11 +185,11 @@
               { GROUPING: [ ] } // ARIA owned, t1_group
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function appendEl_getID() {
         return "Append child under @aria-owns element";
-      }
+      };
     }
 
     function removeEl() {
@@ -202,7 +202,7 @@
       this.invoke = function removeEl_invoke() {
         // remove a container of t1_subdiv
         getNode("t1_span").remove();
-      }
+      };
 
       this.finalCheck = function removeEl_finalCheck() {
         // subdiv should go away
@@ -214,11 +214,11 @@
               { GROUPING: [ ] } // ARIA owned, t1_group
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function removeEl_getID() {
         return "Remove a container of ARIA owned element";
-      }
+      };
     }
 
     function removeId() {
@@ -230,7 +230,7 @@
 
       this.invoke = function removeId_invoke() {
         getNode("t1_group").removeAttribute("id");
-      }
+      };
 
       this.finalCheck = function removeId_finalCheck() {
         var tree =
@@ -240,11 +240,11 @@
               { PUSHBUTTON: [ ] } // ARIA owned, t1_button
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function removeId_getID() {
         return "Remove ID from ARIA owned element";
-      }
+      };
     }
 
     function setId() {
@@ -256,7 +256,7 @@
 
       this.invoke = function setId_invoke() {
         getNode("t1_grouptmp").setAttribute("id", "t1_group");
-      }
+      };
 
       this.finalCheck = function setId_finalCheck() {
         var tree =
@@ -267,11 +267,11 @@
               { GROUPING: [ ] } // ARIA owned, t1_group, previously t1_grouptmp
           ] };
         testAccessibleTree("t1_container", tree);
-      }
+      };
 
       this.getID = function setId_getID() {
         return "Set ID that is referred by ARIA owns";
-      }
+      };
     }
 
     /**
@@ -291,18 +291,18 @@
         testAccessibleTree("t2_container1", tree);
 
         getNode("t2_container2").removeChild(getNode("t2_container3"));
-      }
+      };
 
       this.finalCheck = function removeA11eteiner_finalCheck() {
         var tree =
           { SECTION: [
           ] };
         testAccessibleTree("t2_container1", tree);
-      }
+      };
 
       this.getID = function removeA11eteiner_getID() {
         return "Remove an accessible DOM element containing an element referred by ARIA owns";
-      }
+      };
     }
 
     /**
@@ -317,7 +317,7 @@
 
       this.invoke = function stealFromOtherARIAOwns_invoke() {
         getNode("t3_container3").setAttribute("aria-owns", "t3_child t3_child2");
-      }
+      };
 
       this.finalCheck = function stealFromOtherARIAOwns_finalCheck() {
         var tree =
@@ -338,11 +338,11 @@
             ] }
           ] };
         testAccessibleTree("t3_container3", tree);
-      }
+      };
 
       this.getID = function stealFromOtherARIAOwns_getID() {
         return "Steal an element from other ARIA owns element";
-      }
+      };
     }
 
     function appendElToRecacheChildren() {
@@ -352,9 +352,9 @@
 
       this.invoke = function appendElToRecacheChildren_invoke() {
         var div = document.createElement("div");
-        div.setAttribute("role", "radio")
+        div.setAttribute("role", "radio");
         getNode("t3_container3").appendChild(div);
-      }
+      };
 
       this.finalCheck = function appendElToRecacheChildren_finalCheck() {
         var tree =
@@ -368,11 +368,11 @@
             { CHECKBUTTON: [ ] } // ARIA owned
           ] };
         testAccessibleTree("t3_container3", tree);
-      }
+      };
 
       this.getID = function appendElToRecacheChildren_getID() {
         return "Append a child under @aria-owns element to trigger children recache";
-      }
+      };
     }
 
     function showHiddenElement() {
@@ -388,7 +388,7 @@
         testAccessibleTree("t4_container1", tree);
 
         getNode("t4_child1").style.display = "block";
-      }
+      };
 
       this.finalCheck = function showHiddenElement_finalCheck() {
         var tree =
@@ -397,11 +397,11 @@
             { RADIOBUTTON: [] }
           ] };
         testAccessibleTree("t4_container1", tree);
-      }
+      };
 
       this.getID = function showHiddenElement_getID() {
         return "Show hidden ARIA owns referred element";
-      }
+      };
     }
 
     function rearrangeARIAOwns(aContainer, aAttr, aIdList, aRoleList) {
@@ -417,7 +417,7 @@
 
       this.invoke = function rearrangeARIAOwns_invoke() {
         getNode(aContainer).setAttribute("aria-owns", aAttr);
-      }
+      };
 
       this.finalCheck = function rearrangeARIAOwns_finalCheck() {
         var tree = { SECTION: [ ] };
@@ -427,11 +427,11 @@
           tree.SECTION.push(ch);
         }
         testAccessibleTree(aContainer, tree);
-      }
+      };
 
       this.getID = function rearrangeARIAOwns_getID() {
         return `Rearrange @aria-owns attribute to '${aAttr}'`;
-      }
+      };
     }
 
     function removeNotARIAOwnedEl(aContainer, aChild) {
@@ -449,7 +449,7 @@
         testAccessibleTree(aContainer, tree);
 
         getNode(aContainer).removeChild(getNode(aChild));
-      }
+      };
 
       this.finalCheck = function removeNotARIAOwnedEl_finalCheck() {
         var tree = {
@@ -458,11 +458,11 @@
           ]
         };
         testAccessibleTree(aContainer, tree);
-      }
+      };
 
       this.getID = function removeNotARIAOwnedEl_getID() {
         return `remove not ARIA owned child`;
-      }
+      };
     }
 
     function setARIAOwnsOnElToRemove(aParent, aChild) {
@@ -474,11 +474,11 @@
         getNode(aChild).setAttribute("aria-owns", "no_id");
         getNode(aParent).removeChild(getNode(aChild));
         getNode(aParent).remove();
-      }
+      };
 
       this.getID = function setARIAOwnsOnElToRemove_getID() {
         return `set ARIA owns on an element, and then remove it, and then remove its parent`;
-      }
+      };
     }
 
     /**
@@ -502,7 +502,7 @@
         testAccessibleTree("t8_container", tree);
 
         getNode(t8_container).setAttribute("aria-owns", "t8_span t8_button");
-      }
+      };
 
       this.finalCheck = function test8_finalCheck() {
         var tree =
@@ -515,11 +515,11 @@
             { PUSHBUTTON: [] }
           ] };
         testAccessibleTree("t8_container", tree);
-      }
+      };
 
       this.getID = function test8_getID() {
         return `Set ARIA owns on inaccessible span element that contains accessible children`;
-      }
+      };
     }
 
     function test9_prepare() {
@@ -540,7 +540,7 @@
             el.innerHTML = "<input id='input'>";
             document.documentElement.appendChild(el);
           <\/script></html>`;
-      }
+      };
 
       this.finalCheck = () => {
         var tree =
@@ -552,11 +552,11 @@
             ] }
           ] };
         testAccessibleTree("t9_container", tree);
-      }
+      };
 
       this.getID = () => {
         return `Set ARIA owns on a document (part1)`;
-      }
+      };
     }
 
     function test9_setARIAOwns() {
@@ -570,7 +570,7 @@
       this.invoke = () => {
         let doc = getNode("t9_container").contentDocument;
         doc.body.setAttribute("aria-owns", "input");
-      }
+      };
 
       this.finalCheck = () => {
         var tree =
@@ -581,11 +581,11 @@
             ] }
           ] };
         testAccessibleTree("t9_container", tree);
-      }
+      };
 
       this.getID = () => {
         return `Set ARIA owns on a document (part2)`;
-      }
+      };
     }
 
     function test9_finish() {
@@ -599,7 +599,7 @@
         // trigger a tree update.
         let doc = getNode("t9_container").contentDocument;
         doc.body.appendChild(document.createElement("p"));
-      }
+      };
 
       this.finalCheck = () => {
         var tree =
@@ -611,11 +611,11 @@
             ] }
           ] };
         testAccessibleTree("t9_container", tree);
-      }
+      };
 
       this.getID = () => {
         return `Set ARIA owns on a document (part3)`;
-      }
+      };
     }
 
     /**
@@ -636,11 +636,11 @@
         testAccessibleTree("t10_container", tree);
 
         getNode("t10_owner").remove();
-      }
+      };
 
       this.getID = () => {
         return "Put aria owned child back when aria owner removed";
-      }
+      };
     }
 
     function test10_finishTest() {
@@ -651,7 +651,7 @@
       this.invoke = () => {
         // trigger a tree update.
         getNode("t10_container").append(document.createElement("p"));
-      }
+      };
 
       this.finalCheck = () => {
         let tree =
@@ -661,11 +661,11 @@
           ] };
         testAccessibleTree("t10_container", tree);
         todo(false, "Input accessible has be moved back in the tree");
-      }
+      };
 
       this.getID = () => {
         return `Put aria owned child back when aria owner removed (finish test)`;
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

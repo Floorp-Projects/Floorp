@@ -485,7 +485,7 @@ InternalPrompt.prototype = {
         }
         self._doAsyncPrompt();
       }
-    }
+    };
 
     Services.tm.dispatchToMainThread(runnable);
   },
@@ -523,7 +523,7 @@ InternalPrompt.prototype = {
         level: aLevel,
         inProgress: false,
         prompter: this
-      }
+      };
 
       this._asyncPrompts[hashKey] = asyncPrompt;
       this._doAsyncPrompt();
@@ -591,9 +591,9 @@ var PromptUtils = {
   },
 
   canSaveLogin: function pu_canSaveLogin(aHostname, aSavePassword) {
-    let canSave = !this._inPrivateBrowsing && this.pwmgr.getLoginSavingEnabled(aHostname)
+    let canSave = !this._inPrivateBrowsing && this.pwmgr.getLoginSavingEnabled(aHostname);
     if (aSavePassword)
-      canSave = canSave && (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY)
+      canSave = canSave && (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY);
     return canSave;
   },
 
@@ -764,7 +764,7 @@ var PromptUtils = {
     else
       username.value = aAuthInfo.username;
 
-    password.value = aAuthInfo.password
+    password.value = aAuthInfo.password;
 
     return [username, password];
   },

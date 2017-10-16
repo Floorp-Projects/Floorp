@@ -5,7 +5,7 @@ function worker_handler(worker) {
   worker.onerror = function(error) {
     error.preventDefault();
     ok(false, "error " + error);
-  }
+  };
   worker.onmessage = function(msg) {
     ok(true, "MAIN: onmessage " + JSON.stringify(msg.data));
     switch (msg.data.kind) {

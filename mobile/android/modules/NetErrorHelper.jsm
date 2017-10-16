@@ -47,7 +47,7 @@ function NetErrorHelper(browser) {
 
 NetErrorHelper.attachToBrowser = function(browser) {
   return new NetErrorHelper(browser);
-}
+};
 
 NetErrorHelper.prototype = {
   handleClick: function(event) {
@@ -62,7 +62,7 @@ NetErrorHelper.prototype = {
       node = node.parentNode;
     }
   },
-}
+};
 
 handlers.searchbutton = {
   onPageShown: function(browser) {
@@ -171,5 +171,5 @@ handlers.wifi = {
       }, 500);
     }
   }
-}
+};
 

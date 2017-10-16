@@ -16,7 +16,7 @@ function promiseNotification(topic) {
     let observe = () => {
       Services.obs.removeObserver(observe, topic);
       resolve();
-    }
+    };
     Services.obs.addObserver(observe, topic);
   });
 }
@@ -55,7 +55,7 @@ MockStorageManager.prototype = {
     this.accountData = null;
     return Promise.resolve();
   }
-}
+};
 
 
 // Just enough mocks so we can avoid hawk etc.
@@ -78,7 +78,7 @@ function MockFxAccountsClient() {
 
 MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype
-}
+};
 
 function MockFxAccounts(device = {}) {
   return new FxAccounts({
@@ -126,7 +126,7 @@ add_task(async function testCacheStorage() {
 
   // Hook what the impl calls to save to disk.
   let cas = fxa.internal.currentAccountState;
-  let origPersistCached = cas._persistCachedTokens.bind(cas)
+  let origPersistCached = cas._persistCachedTokens.bind(cas);
   cas._persistCachedTokens = function() {
     return origPersistCached().then(() => {
       Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done");

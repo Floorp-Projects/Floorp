@@ -44,7 +44,7 @@
       is(event.target.error.name, "AbortError", "Good error");
       sawError = true;
       event.stopPropagation();
-    }
+    };
 
     fileHandle.abort();
 

@@ -32,7 +32,7 @@ this.EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
 const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
-const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled"
+const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled";
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerformance.url";
@@ -40,7 +40,7 @@ const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.bro
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
-const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema"
+const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema";
 
 const PREF_METADATA_LASTUPDATE           = "extensions.getAddons.cache.lastUpdate";
 const PREF_METADATA_UPDATETHRESHOLD_SEC  = "extensions.getAddons.cache.updateThreshold";
@@ -61,7 +61,7 @@ const BLANK_DB = function() {
     addons: new Map(),
     schema: DB_SCHEMA
   };
-}
+};
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
 
@@ -122,7 +122,7 @@ async function getAddonsToCache(aIds) {
 
   types = types.split(",");
 
-  let addons = await AddonManager.getAddonsByIDs(aIds)
+  let addons = await AddonManager.getAddonsByIDs(aIds);
   let enabledIds = [];
 
   for (let [i, addon] of addons.entries()) {
@@ -456,7 +456,7 @@ AddonSearchResult.prototype = {
 
     return json;
   }
-}
+};
 
 /**
  * The add-on repository is a source of add-ons that can be installed. It can
@@ -847,7 +847,7 @@ this.AddonRepository = {
 
       // aTotalResults irrelevant
       this._reportSuccess(results, -1);
-    }
+    };
 
     this._beginSearch(url, ids.length, aCallback, handleResults, aTimeout);
   },
@@ -887,7 +887,7 @@ this.AddonRepository = {
         // aTotalResults irrelevant
         this._parseAddons(aElements, -1, aLocalAddonIds);
       });
-    }
+    };
 
     this._beginSearch(url, aMaxResults, aCallback, handleResults);
   },
@@ -924,7 +924,7 @@ this.AddonRepository = {
       this._getLocalAddonIds(aLocalAddonIds => {
         this._parseAddons(aElements, aTotalResults, aLocalAddonIds);
       });
-    }
+    };
 
     this._beginSearch(url, aMaxResults, aCallback, handleResults);
   },
@@ -1145,7 +1145,7 @@ this.AddonRepository = {
             addon.contributionURL = meetDevelopers;
             addon.contributionAmount = suggestedAmount;
           }
-          break
+          break;
         case "payment_data":
           let link = this._getDescendantTextContent(node, "link");
           let amountTag = this._getUniqueDescendant(node, "amount");
@@ -1156,7 +1156,7 @@ this.AddonRepository = {
             addon.purchaseAmount = amount;
             addon.purchaseDisplayAmount = displayAmount;
           }
-          break
+          break;
         case "rating":
           let averageRating = parseInt(this._getTextContent(node));
           if (averageRating >= 0)
@@ -1308,7 +1308,7 @@ this.AddonRepository = {
         pendingResults--;
         if (pendingResults == 0)
           this._reportSuccess(results, aTotalResults);
-      }
+      };
 
       if (result.xpiURL) {
         AddonManager.getInstallForURL(result.xpiURL, callback,
@@ -1552,7 +1552,7 @@ var AddonDatabase = {
        let inputDB, schema;
 
        try {
-         let data = await OS.File.read(this.jsonFile, { encoding: "utf-8"})
+         let data = await OS.File.read(this.jsonFile, { encoding: "utf-8"});
          inputDB = JSON.parse(data);
 
          if (!inputDB.hasOwnProperty("addons") ||
@@ -1670,7 +1670,7 @@ var AddonDatabase = {
     let json = {
       schema: this.DB.schema,
       addons: []
-    }
+    };
 
     for (let [, value] of this.DB.addons)
       json.addons.push(value);

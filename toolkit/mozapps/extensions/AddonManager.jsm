@@ -200,7 +200,7 @@ function safeCall(aCallback, ...aArgs) {
 function makeSafe(aCallback) {
   return function(...aArgs) {
     safeCall(aCallback, ...aArgs);
-  }
+  };
 }
 
 /**
@@ -449,7 +449,7 @@ AddonAuthor.prototype = {
   toString() {
     return this.name || "";
   }
-}
+};
 
 /**
  * This represents an screenshot for an add-on
@@ -493,7 +493,7 @@ AddonScreenshot.prototype = {
   toString() {
     return this.url || "";
   }
-}
+};
 
 
 /**
@@ -2678,7 +2678,7 @@ var AddonManagerInternal = {
           // Claim configurability to maintain the proxy invariants.
           configurable: true,
           enumerable: true
-        }
+        };
       },
 
       preventExtensions(target) {
@@ -2940,7 +2940,7 @@ var AddonManagerInternal = {
             } else if (event == "onDownloadCancelled" || event == "onInstallCancelled") {
               reject({message: "install cancelled"});
             }
-          }
+          };
         });
       });
 
@@ -3040,7 +3040,7 @@ var AddonManagerInternal = {
         let callback = () => resolve(result);
         if (Services.prefs.getBoolPref(PREF_WEBEXT_PERM_PROMPTS, false)) {
           let subject = {wrappedJSObject: {target, addon, callback}};
-          Services.obs.notifyObservers(subject, "webextension-install-notify")
+          Services.obs.notifyObservers(subject, "webextension-install-notify");
         } else {
           callback();
         }

@@ -239,7 +239,7 @@ this.PageThumbs = {
       let resultFunc = function(aMsg) {
         mm.removeMessageListener("Browser:Thumbnail:CheckState:Response", resultFunc);
         aCallback(aMsg.data.result);
-      }
+      };
       mm.addMessageListener("Browser:Thumbnail:CheckState:Response", resultFunc);
       try {
         mm.sendAsyncMessage("Browser:Thumbnail:CheckState");
@@ -327,12 +327,12 @@ this.PageThumbs = {
             resolve({
               thumbnail
             });
-          }
+          };
           image.src = reader.result;
         });
         // xxx wish there was a way to skip this encoding step
         reader.readAsDataURL(imageBlob);
-      }
+      };
 
       // Send a thumbnail request
       mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
@@ -835,7 +835,7 @@ var PageThumbsExpiration = {
 
     for (let filter of this._filters) {
       if (typeof filter == "function")
-        filter(filterCallback)
+        filter(filterCallback);
       else
         filter.filterForThumbnailExpiration(filterCallback);
     }

@@ -65,7 +65,7 @@ add_task(async function changeuri_visited_bookmark() {
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
     url: TEST_URL2,
-  })
+  });
 
   await PlacesTestUtils.promiseAsyncUpdates();
 
@@ -100,7 +100,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
     url: TEST_URL2
-  })
+  });
 
   await PlacesTestUtils.promiseAsyncUpdates();
 
@@ -124,7 +124,7 @@ add_task(async function changeuri_nonexistent_bookmark() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
     url: TEST_URL0,
-  })
+  });
 
   await PlacesUtils.bookmarks.remove(bookmark.guid);
 

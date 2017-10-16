@@ -40,7 +40,7 @@ add_task(async function() {
   await browserLoaded;
   is(gBrowser.currentURI.spec, TEST_PATH + "dummy_history_item.html", "Should have expected page load");
 
-  await panelHiddenPromise
+  await panelHiddenPromise;
   await BrowserTestUtils.removeTab(tab);
   info("Menu panel was closed");
 });

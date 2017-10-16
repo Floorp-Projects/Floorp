@@ -31,7 +31,7 @@ function getEstimateChars() {
 add_task(async function test_telemetry() {
   Services.telemetry.canRecordExtended = true;
 
-  let prev = getEstimateChars()
+  let prev = getEstimateChars();
 
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;

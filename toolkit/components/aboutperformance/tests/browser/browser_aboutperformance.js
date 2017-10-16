@@ -61,7 +61,7 @@ function frameScript() {
           sendAsyncMessage("aboutperformance-test:closeTab", { ok: true, found });
         }
       }
-    }
+    };
     Services.obs.addObserver(observer, "about:performance-update-complete");
     Services.obs.notifyObservers(null, "test-about:performance-test-driver", JSON.stringify(options));
   });
@@ -89,7 +89,7 @@ function frameScript() {
           throw new Error(`Item ${selector} doesn't match regexp ${re}: ${elt.textContent}`);
         }
         return match;
-      }
+      };
 
       // Additional sanity check
       let deltas = content.document.querySelectorAll(".delta");
@@ -183,7 +183,7 @@ function frameScript() {
       } finally {
         sendAsyncMessage("aboutperformance-test:hasItems", {hasTitleInWebpages, mode});
       }
-    }
+    };
     Services.obs.addObserver(observer, "about:performance-update-complete");
     Services.obs.notifyObservers(null, "test-about:performance-test-driver", JSON.stringify(options));
   });
@@ -252,13 +252,13 @@ add_task(async function test_close_tab() {
   };
   let promiseTabClosed = function(tab) {
     return new Promise(resolve => tabs.set(tab, resolve));
-  }
+  };
   window.gBrowser.tabContainer.addEventListener("TabClose", closeObserver);
   let promiseTabReloaded = function(tab) {
     return new Promise(resolve =>
       tab.linkedBrowser.contentDocument.addEventListener("readystatechange", resolve)
     );
-  }
+  };
   for (let displayRecent of [true, false]) {
     for (let mode of ["close", "reload"]) {
       let URL = `about:about?display-recent=${displayRecent}&mode=${mode}&salt=${Math.random()}`;

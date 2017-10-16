@@ -195,7 +195,7 @@ this.YandexTranslator.prototype = {
         Services.console.logStringMessage("YandexTranslator: Result is " + result.code);
         return false;
       }
-      results = result.text
+      results = result.text;
     } catch (e) {
       return false;
     }

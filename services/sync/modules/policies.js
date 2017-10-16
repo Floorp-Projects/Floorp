@@ -36,7 +36,7 @@ function getThrottledIntervalPreference(prefName) {
 this.SyncScheduler = function SyncScheduler(service) {
   this.service = service;
   this.init();
-}
+};
 SyncScheduler.prototype = {
   _log: Log.repository.getLogger("Sync.SyncScheduler"),
 
@@ -110,7 +110,7 @@ SyncScheduler.prototype = {
 
   },
   set numClients(value) {
-    throw new Error("Don't set numClients - the clients engine manages it.")
+    throw new Error("Don't set numClients - the clients engine manages it.");
   },
 
   init: function init() {
@@ -578,7 +578,7 @@ SyncScheduler.prototype = {
 this.ErrorHandler = function ErrorHandler(service) {
   this.service = service;
   this.init();
-}
+};
 ErrorHandler.prototype = {
   MINIMUM_ALERT_INTERVAL_MSEC: 604800000,   // One week.
 
@@ -751,7 +751,7 @@ ErrorHandler.prototype = {
     try {
       addons = await AddonManager.getAddonsByTypes(["extension"]);
     } catch (e) {
-      this._log.warn("Failed to dump addons", e)
+      this._log.warn("Failed to dump addons", e);
     }
 
     let relevantAddons = addons.filter(x => x.isActive && !x.hidden);

@@ -16,7 +16,7 @@ add_task(async function() {
       event.clipboardData.setData("application/x-moz-file", "Sample");
       event.preventDefault();
       resolve();
-    }, {capture: true, once: true})
+    }, {capture: true, once: true});
 
     EventUtils.synthesizeKey("c", { accelKey: true });
   });

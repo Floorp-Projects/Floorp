@@ -51,7 +51,7 @@ var quotesTest = {
     // clean up
     toolbar.containerOpen = false;
   }
-}
+};
 tests.push(quotesTest);
 
 add_task(async function() {

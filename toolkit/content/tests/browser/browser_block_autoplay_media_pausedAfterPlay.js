@@ -25,7 +25,7 @@ function check_audio_pause_state(expectPause) {
   }
 
   is(audio.paused, expectPause,
-    "The pause state of audio is corret.")
+    "The pause state of audio is corret.");
 }
 
 add_task(async function setup_test_preference() {

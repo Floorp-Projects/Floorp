@@ -65,6 +65,9 @@ public:
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aLength <= mData.Length());
+
+    // XXX: Bug 1408793 suggests encapsulating the following sequence within
+    //      DOMString.
     nsStringBuffer* buf = nsStringBuffer::FromString(mData);
     if (buf) {
       // We have to use SetEphemeralStringBuffer, because once we release our

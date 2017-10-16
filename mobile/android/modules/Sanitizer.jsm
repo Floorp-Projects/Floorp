@@ -219,7 +219,7 @@ Sanitizer.prototype = {
     searchHistory: {
       clear: function() {
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
-          .catch(e => Cu.reportError("Java-side search history clearing failed: " + e))
+          .catch(e => Cu.reportError("Java-side search history clearing failed: " + e));
       },
 
       get canClear() {
@@ -351,7 +351,7 @@ Sanitizer.prototype = {
       canClear: function(aCallback) {
         Accounts.anySyncAccountsExist().then(aCallback)
           .catch(function(err) {
-            Cu.reportError("Java-side synced tabs clearing failed: " + err)
+            Cu.reportError("Java-side synced tabs clearing failed: " + err);
             aCallback(false);
           });
       }

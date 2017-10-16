@@ -1,7 +1,7 @@
 "use strict";
 
-const META_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_meta.sjs"
-const HEADER_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_header.sjs"
+const META_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_meta.sjs";
+const HEADER_PAGE = "http://example.org/browser/browser/base/content/test/general/refresh_header.sjs";
 const TARGET_PAGE = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 const PREF = "accessibility.blockautorefresh";
 

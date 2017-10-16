@@ -1732,7 +1732,7 @@ BrowserGlue.prototype = {
       if (topic != "alertclickcallback")
         return;
       this._openPreferences("sync", { origin: "doorhanger" });
-    }
+    };
     this.AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
 
@@ -1787,7 +1787,7 @@ BrowserGlue.prototype = {
           } else {
             // Just append.
             currentset = currentset.replace(/(^|,)window-controls($|,)/,
-                                            "$1bookmarks-menu-button,window-controls$2")
+                                            "$1bookmarks-menu-button,window-controls$2");
           }
           xulStore.setValue(BROWSER_DOCURL, "nav-bar", "currentset", currentset);
         }
@@ -2441,7 +2441,7 @@ BrowserGlue.prototype = {
         } else if (allSameDevice) {
           tabArrivingBody = "unnamedTabsArrivingNotification2.body";
         } else {
-          tabArrivingBody = "unnamedTabsArrivingNotificationMultiple2.body"
+          tabArrivingBody = "unnamedTabsArrivingNotificationMultiple2.body";
         }
 
         body = bundle.GetStringFromName(tabArrivingBody);
@@ -2454,7 +2454,7 @@ BrowserGlue.prototype = {
         if (obsTopic == "alertclickcallback") {
           win.gBrowser.selectedTab = firstTab;
         }
-      }
+      };
 
       // Specify an icon because on Windows no icon is shown at the moment
       let imageURL;
@@ -2532,7 +2532,7 @@ BrowserGlue.prototype = {
       if (topic != "alertclickcallback")
         return;
       this._openPreferences("sync", { origin: "devDisconnectedAlert"});
-    }
+    };
     this.AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
 
@@ -2596,7 +2596,7 @@ BrowserGlue.prototype = {
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: BrowserGlueServiceFactory,
-}
+};
 
 /**
  * ContentPermissionIntegration is responsible for showing the user
@@ -2700,7 +2700,7 @@ ContentPermissionPrompt.prototype = {
 };
 
 var DefaultBrowserCheck = {
-  get OPTIONPOPUP() { return "defaultBrowserNotificationPopup" },
+  get OPTIONPOPUP() { return "defaultBrowserNotificationPopup"; },
 
   closePrompt(aNode) {
     if (this._notification) {

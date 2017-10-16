@@ -35,7 +35,7 @@ var state = {windows: [{tabs: [{entries: [
       }
     ]
   }
-]}]}]}
+]}]}]};
 
 function test() {
   registerCleanupFunction(function() {

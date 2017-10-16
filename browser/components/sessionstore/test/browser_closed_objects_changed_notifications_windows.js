@@ -89,7 +89,7 @@ add_task(async function test_closedObjectsChangedNotifications() {
   await openAndCloseWindow("about:robots");
   assertNotificationCount(7);
 
-  info("Setting browser state to trigger change onIdleDaily.")
+  info("Setting browser state to trigger change onIdleDaily.");
   let state = Cu.cloneInto(JSON.parse(ss.getBrowserState()), {});
   state._closedWindows[0].closedAt = 1;
   await promiseBrowserState(state);
@@ -107,7 +107,7 @@ add_task(async function test_closedObjectsChangedNotifications() {
   await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
   assertNotificationCount(11);
 
-  info("Setting window state.")
+  info("Setting window state.");
   win = await openWindow("about:mozilla");
   await awaitNotification(() => SessionStore.setWindowState(win, closedState));
   assertNotificationCount(12);

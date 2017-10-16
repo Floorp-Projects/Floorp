@@ -179,7 +179,14 @@ public:
     MOZ_ASSERT(!mStringBuffer, "Setting stringbuffer twice?");
     MOZ_ASSERT(aAtom || aNullHandling != eNullNotExpected);
     if (aNullHandling == eNullNotExpected || aAtom) {
-      SetStringBuffer(aAtom->GetStringBuffer(), aAtom->GetLength());
+      if (aAtom->IsStaticAtom()) {
+        // XXX: bug 1407858 will replace this with a direct assignment of the
+        // static atom that doesn't go via nsString.
+        AsAString().AssignLiteral(aAtom->GetUTF16String(), aAtom->GetLength());
+      } else {
+        // Dynamic atoms always have a string buffer.
+        SetStringBuffer(aAtom->GetStringBuffer(), aAtom->GetLength());
+      }
     } else if (aNullHandling == eTreatNullAsNull) {
       SetNull();
     }

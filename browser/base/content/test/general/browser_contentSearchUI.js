@@ -396,7 +396,7 @@ add_task(async function cycleEngines() {
         resolve();
       }, "browser-search-engine-modified");
     });
-  }
+  };
 
   let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
   await msg("key", { key: "VK_DOWN", modifiers: { accelKey: true }});
@@ -444,7 +444,7 @@ add_task(async function search() {
   eventData.selection = {
     index: 1,
     kind: "key",
-  }
+  };
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   await promiseTab();
@@ -540,7 +540,7 @@ add_task(async function search() {
   p = msg("waitForSearch");
   await msg("key", { key: "VK_RETURN", modifiers });
   mesg = await p;
-  eventData.searchString = "x"
+  eventData.searchString = "x";
   eventData.originalEvent = modifiers;
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
   delete eventData.selection;

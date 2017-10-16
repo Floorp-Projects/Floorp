@@ -1364,7 +1364,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
       throw new Error("oops");
     }
     return oldCreateRecord.call(engine._store, id, col);
-  }
+  };
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};

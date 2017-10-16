@@ -67,7 +67,7 @@ AutoCompleteInput.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 
 
@@ -135,7 +135,7 @@ AutoCompleteResult.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 
 /**
@@ -185,7 +185,7 @@ AutoCompleteSearch.prototype = {
   createInstance(outer, iid) {
     return this.QueryInterface(iid);
   }
-}
+};
 
 
 /**

@@ -70,7 +70,7 @@ AutoCompleteInput.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 add_task(async function test_autocomplete_non_english() {
   await PlacesTestUtils.addVisits(url);

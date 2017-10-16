@@ -89,7 +89,7 @@ function tab_checker_for_webcompat(expectedParams) {
     let urlString = openedTab.linkedBrowser.currentURI.spec;
     let endpoint = Services.prefs.getStringPref("media.decoder-doctor.new-issue-endpoint", "");
     ok(urlString.startsWith(endpoint),
-       `Expected URL starting with '${endpoint}', got '${urlString}'`)
+       `Expected URL starting with '${endpoint}', got '${urlString}'`);
     let params = new URL(urlString).searchParams;
     for (let k in expectedParams) {
       if (!params.has(k)) {

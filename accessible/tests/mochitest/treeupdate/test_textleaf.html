@@ -33,7 +33,7 @@
         var textLeaf = getAccessible(this.node).firstChild;
         is(textLeaf.actionCount, (aIsTextLeafLinkable ? 1 : 0),
            "Wrong action numbers!");
-      }
+      };
     }
 
     function setOnClickAttr(aID) {
@@ -57,11 +57,11 @@
       this.invoke = function setOnClickAttr_invoke() {
         this.node.setAttribute("role", "link");
         this.node.setAttribute("onclick", "alert(3);");
-      }
+      };
 
       this.getID = function setOnClickAttr_getID() {
         return "make " + prettyName(aID) + " linkable";
-      }
+      };
     }
 
     function removeTextData(aID, aRole) {
@@ -85,7 +85,7 @@
         testAccessibleTree(this.containerNode, tree);
 
         this.textNode.data = "";
-      }
+      };
 
       this.finalCheck = function removeTextData_finalCheck() {
         var tree = {
@@ -93,11 +93,11 @@
           children: []
         };
         testAccessibleTree(this.containerNode, tree);
-      }
+      };
 
       this.getID = function removeTextData_finalCheck() {
         return "remove text data of text node inside '" + aID + "'.";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

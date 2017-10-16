@@ -307,7 +307,7 @@ this.Store = function Store(name, engine) {
   XPCOMUtils.defineLazyGetter(this, "_timer", function() {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   });
-}
+};
 Store.prototype = {
 
   /**
@@ -490,7 +490,7 @@ this.EngineManager = function EngineManager(service) {
   this._declined = new Set();
   this._log = Log.repository.getLogger("Sync.EngineManager");
   this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.engines", "Debug")];
-}
+};
 EngineManager.prototype = {
   get(name) {
     // Return an array of engines if we have an array of names
@@ -662,7 +662,7 @@ this.Engine = function Engine(name, service) {
   this._modified = this.emptyChangeset();
   this._tracker; // initialize tracker to load previously changed IDs
   this._log.debug("Engine constructed");
-}
+};
 Engine.prototype = {
   // _storeObj, and _trackerObj should to be overridden in subclasses
   _storeObj: Store,
@@ -793,7 +793,7 @@ this.SyncEngine = function SyncEngine(name, service) {
   // Additionally, we use this as the set of items to upload for bookmark
   // repair reponse, which has similar constraints.
   this._needWeakUpload = new Map();
-}
+};
 
 // Enumeration to define approaches to handling bad records.
 // Attached to the constructor to allow use as a kind of static enumeration.
@@ -1776,7 +1776,7 @@ SyncEngine.prototype = {
         // a 412 posting just means another client raced - but we don't want
         // to treat that as a sync error - the next sync is almost certain
         // to work.
-        this._log.warn("412 error during sync - will retry.")
+        this._log.warn("412 error during sync - will retry.");
       }
     } finally {
       await this._syncCleanup();

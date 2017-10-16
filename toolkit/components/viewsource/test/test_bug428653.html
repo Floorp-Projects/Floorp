@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428653
       doc.open("text/html", "replace");
       opened = true;
     } catch (e) {
-      is(e.name, "SecurityError", "Unexpected exception")
+      is(e.name, "SecurityError", "Unexpected exception");
     }
     is(opened, false, "Shouldn't have opened document");
 

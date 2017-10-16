@@ -45,7 +45,7 @@ this.PlacesTestUtils = Object.freeze({
     } else if (Array.isArray(placeInfo)) {
       places = places.concat(placeInfo);
     } else if (typeof placeInfo == "object" && placeInfo.uri) {
-      places.push(placeInfo)
+      places.push(placeInfo);
     } else {
       throw new Error("Unsupported type passed to addVisits");
     }
@@ -345,7 +345,7 @@ this.PlacesTestUtils = Object.freeze({
                 PlacesUtils[type].removeObserver(proxifiedObserver);
                 resolve();
               }
-            }
+            };
           if (name == "skipTags" || name == "skipDescendantsOnItemRemoval") {
             return false;
           }

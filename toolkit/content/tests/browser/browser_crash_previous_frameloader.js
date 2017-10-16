@@ -86,7 +86,7 @@ add_task(async function test_crash_in_previous_frameloader() {
         privateNoteIntentionalCrash();
         let zero = new ctypes.intptr_t(8);
         let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-        badptr.contents
+        badptr.contents;
       };
 
       // When the parent flips the remoteness of the browser, the

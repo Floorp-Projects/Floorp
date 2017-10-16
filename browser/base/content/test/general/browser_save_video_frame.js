@@ -38,7 +38,7 @@ function waitForTransferComplete() {
     mockTransferCallback = () => {
       ok(true, "Transfer completed");
       resolve();
-    }
+    };
   });
 }
 
@@ -115,7 +115,7 @@ add_task(async function() {
   info("Popup fired popupshown");
 
   let saveSnapshotCommand = document.getElementById("context-video-saveimage");
-  let promiseTransfer = waitForTransferComplete()
+  let promiseTransfer = waitForTransferComplete();
   info("Firing save snapshot command");
   saveSnapshotCommand.doCommand();
   context.hidePopup();

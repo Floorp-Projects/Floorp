@@ -23,7 +23,7 @@ function runfile(file) {
   var fileReader = new FileReader();
   fileReader.onload = function(e) {
     runContents(result, e.target.result);
-  }
+  };
   fileReader.readAsText(file, "iso-8859-1");
 }
 

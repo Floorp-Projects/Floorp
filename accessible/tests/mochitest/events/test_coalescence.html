@@ -43,7 +43,7 @@
           this.invokeAction(this.parentNode, aParentAction);
           this.invokeAction(this.childNode, aChildAction);
         }
-      }
+      };
 
       this.getID = function coalescenceBase_getID() {
         var childAction = this.getActionName(aChildAction) + " child";
@@ -53,7 +53,7 @@
           return childAction + " and then " + parentAction;
 
         return parentAction + " and then " + childAction;
-      }
+      };
 
       this.finalCheck = function coalescenceBase_check() {
         if (this.getEventType(aChildAction) == EVENT_HIDE) {
@@ -62,7 +62,7 @@
         if (this.getEventType(aParentAction) == EVENT_HIDE) {
           testIsDefunct(this.parent);
         }
-      }
+      };
 
       // Implementation details
 
@@ -90,7 +90,7 @@
           default:
             return INVOKER_ACTION_FAILED;
         }
-      }
+      };
 
       this.getEventType = function coalescenceBase_getEventType(aAction) {
         switch (aAction) {
@@ -99,7 +99,7 @@
           case kAddElm: case kShowElm:
             return EVENT_SHOW;
         }
-      }
+      };
 
       this.getActionName = function coalescenceBase_getActionName(aAction) {
         switch (aAction) {
@@ -114,7 +114,7 @@
           default:
             return "??";
         }
-      }
+      };
 
       this.initSequence = function coalescenceBase_initSequence() {
         // expected events
@@ -129,7 +129,7 @@
           new invokerChecker(this.getEventType(aChildAction), this.childNode),
           new invokerChecker(EVENT_REORDER, this.parentNode)
         ];
-      }
+      };
     }
 
     /**
@@ -147,7 +147,7 @@
         this.child = getAccessible(this.childNode);
         this.parent = getAccessible(this.parentNode);
         this.hostNode = this.parentNode.parentNode;
-      }
+      };
 
       // Initalization
 
@@ -239,7 +239,7 @@
         this.parentNode = document.createElement("select");
         this.childNode = document.createElement("option");
         this.childNode.textContent = "testing";
-      }
+      };
 
       this.__proto__ = new coalescenceBase(kAddElm, kAddElm,
                                            aPerformActionOnChildInTheFirstPlace);
@@ -257,7 +257,7 @@
         this.parentNode = getNode(aParentID);
         this.hostNode = this.parentNode.parentNode;
         this.childNode = getNode(aChildID);
-      }
+      };
 
       this.__proto__ = new coalescenceBase(kShowElm, kShowElm,
                                            aPerformActionOnChildInTheFirstPlace);
@@ -276,7 +276,7 @@
         this.hostNode = this.parentNode.parentNode;
         this.childNode = document.createElement("option");
         this.childNode.textContent = "testing";
-      }
+      };
 
       this.__proto__ = new coalescenceBase(kAddElm, kShowElm,
                                            aPerformActionOnChildInTheFirstPlace);
@@ -305,11 +305,11 @@
         this.child1.remove();
         this.child2.remove();
         this.parent.hidden = true;
-      }
+      };
 
       this.getID = function removeGrandChildrenNHideParent_getID() {
         return "remove grand children of different parents and then hide their grand parent";
-      }
+      };
     }
 
     /**
@@ -329,16 +329,16 @@
       this.invoke = function test3_invoke() {
         getNode("t3_o").textContent = "";
         getNode("t3_lb").removeChild(getNode("t3_o"));
-      }
+      };
 
       this.finalCheck = function test3_finalCheck() {
         testIsDefunct(this.o);
         testIsDefunct(this.ofc);
-      }
+      };
 
       this.getID = function test3_getID() {
         return "remove a child, and then its parent";
-      }
+      };
     }
 
     /**
@@ -363,17 +363,17 @@
         getNode("t4_o1").textContent = "";
         getNode("t4_o2").textContent = "";
         getNode("t4_lb").removeChild(getNode("t4_o2"));
-      }
+      };
 
       this.finalCheck = function test4_finalCheck() {
         testIsDefunct(this.o1fc);
         testIsDefunct(this.o2);
         testIsDefunct(this.o2fc);
-      }
+      };
 
       this.getID = function test4_getID() {
         return "remove children, and then a parent of 2nd child";
-      }
+      };
     }
 
     /**
@@ -398,17 +398,17 @@
         getNode("t5_o").textContent = "";
         getNode("t5").removeChild(getNode("t5_b"));
         getNode("t5_lb").removeChild(getNode("t5_o"));
-      }
+      };
 
       this.finalCheck = function test5_finalCheck() {
         testIsDefunct(this.ofc);
         testIsDefunct(this.o);
         testIsDefunct(this.b);
-      }
+      };
 
       this.getID = function test5_getID() {
         return "remove a child, remove a parent sibling, remove the parent";
-      }
+      };
     }
 
     /**

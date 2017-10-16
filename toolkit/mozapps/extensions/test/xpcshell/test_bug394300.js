@@ -25,7 +25,7 @@ var updateListener = {
     if (++this._count == 2)
       server.stop(do_test_finished);
   },
-}
+};
 
 function run_test() {
   // Setup for test

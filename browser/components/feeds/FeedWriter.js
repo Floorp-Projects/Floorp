@@ -441,10 +441,10 @@ FeedWriter.prototype = {
         enclosureDiv.appendChild(this._document.createTextNode( " (" + type_text + ", " + size_text + ")"));
 
       else if (type_text)
-        enclosureDiv.appendChild(this._document.createTextNode( " (" + type_text + ")"))
+        enclosureDiv.appendChild(this._document.createTextNode( " (" + type_text + ")"));
 
       else if (size_text)
-        enclosureDiv.appendChild(this._document.createTextNode( " (" + size_text + ")"))
+        enclosureDiv.appendChild(this._document.createTextNode( " (" + size_text + ")"));
 
       enclosuresDiv.appendChild(enclosureDiv);
     }
@@ -968,7 +968,7 @@ FeedWriter.prototype = {
       LOG(`FeedWriter:SetFeedPrefsAndSubscribe - ${JSON.stringify(settings)}`);
       this._mm.sendAsyncMessage("FeedWriter:SetFeedPrefsAndSubscribe",
                                 settings);
-    }
+    };
 
     // Show the file picker before subscribing if the
     // choose application menuitem was chosen using the keyboard

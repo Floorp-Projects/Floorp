@@ -141,7 +141,7 @@ DownloadListView.prototype = {
     var compare = (a, b) => {
       // active downloads always before stopped downloads
       if (a.stopped != b.stopped) {
-        return b.stopped ? -1 : 1
+        return b.stopped ? -1 : 1;
       }
       // most recent downloads first
       return b.startTime - a.startTime;
@@ -369,5 +369,5 @@ DownloadItem.prototype = {
 
 window.addEventListener("DOMContentLoaded", event => {
     contextMenu.init();
-    downloadLists.init()
+    downloadLists.init();
 });

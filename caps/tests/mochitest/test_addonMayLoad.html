@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
   let addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI("moz-extension://addonB/"), {}),
                               {wantGlobalProperties: ["XMLHttpRequest"]});
 
-  function uriForDomain(d) { return d + "/tests/caps/tests/mochitest/file_data.txt" }
+  function uriForDomain(d) { return d + "/tests/caps/tests/mochitest/file_data.txt"; }
 
   tryLoad(addonA, uriForDomain("http://test4.example.org"))
   .then(function(success) {

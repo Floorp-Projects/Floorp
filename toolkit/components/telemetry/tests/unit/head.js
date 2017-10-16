@@ -129,7 +129,7 @@ const PingServer = {
 function decodeRequestPayload(request) {
   let s = request.bodyInputStream;
   let payload = null;
-  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
+  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
   if (request.hasHeader("content-encoding") &&
       request.getHeader("content-encoding") == "gzip") {

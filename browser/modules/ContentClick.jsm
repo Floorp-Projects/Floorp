@@ -24,7 +24,7 @@ var ContentClick = {
   receiveMessage(message) {
     switch (message.name) {
       case "Content:Click":
-        this.contentAreaClick(message.json, message.target)
+        this.contentAreaClick(message.json, message.target);
         break;
     }
   },

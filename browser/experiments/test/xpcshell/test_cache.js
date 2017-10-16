@@ -52,7 +52,7 @@ add_task(async function test_setup() {
 });
 
 function checkExperimentListsEqual(list, list2) {
-  Assert.equal(list.length, list2.length, "Lists should have the same length.")
+  Assert.equal(list.length, list2.length, "Lists should have the same length.");
 
   for (let i = 0; i < list.length; ++i) {
     for (let k of Object.keys(list[i])) {

@@ -104,7 +104,7 @@ function readJsonFile(jsonFile = DIRECTORY_LINKS_FILE) {
   return OS.File.read(directoryLinksFilePath).then(array => {
     let json = decoder.decode(array);
     return JSON.parse(json);
-  }, () => { return "" });
+  }, () => { return ""; });
 }
 
 function cleanJsonFile(jsonFile = DIRECTORY_LINKS_FILE) {
@@ -213,9 +213,9 @@ add_task(async function test_fetchAndCacheLinks_malformedURI() {
   let someJunk = "some junk";
   try {
     await DirectoryLinksProvider._fetchAndCacheLinks(someJunk);
-    do_throw("Malformed URIs should fail")
+    do_throw("Malformed URIs should fail");
   } catch (e) {
-    do_check_eq(e, "Error fetching " + someJunk)
+    do_check_eq(e, "Error fetching " + someJunk);
   }
 
   // File should be empty.
@@ -231,7 +231,7 @@ add_task(async function test_fetchAndCacheLinks_unknownHost() {
     await DirectoryLinksProvider._fetchAndCacheLinks(nonExistentServer);
     do_throw("BAD URIs should fail");
   } catch (e) {
-    do_check_true(e.startsWith("Fetching " + nonExistentServer + " results in error code: "))
+    do_check_true(e.startsWith("Fetching " + nonExistentServer + " results in error code: "));
   }
 
   // File should be empty.

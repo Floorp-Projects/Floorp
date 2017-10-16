@@ -24,8 +24,8 @@ add_task(async function test_tags() {
     return {
       title: `bm${index}`,
       url: uri,
-    }
-  })
+    };
+  });
 
   // Note: we insert the uris in reverse order, so that we end up with the
   // display in "logical" order of bm0 at the top, and bm2 at the bottom.

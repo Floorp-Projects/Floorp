@@ -22,12 +22,12 @@ add_task(async function() {
   document.getElementById("widget-overflow").hidePopup();
 
   let fullscreenButton = document.getElementById("fullscreen-button");
-  ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
+  ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.");
   ok(!isFullscreenSizeMode(), "Should not be in fullscreen sizemode before we enter fullscreen.");
 
   BrowserFullScreen();
   await waitForCondition(() => isFullscreenSizeMode());
-  ok(fullscreenButton.checked, "Fullscreen button should be checked when in fullscreen.")
+  ok(fullscreenButton.checked, "Fullscreen button should be checked when in fullscreen.");
 
   await startCustomizing();
 
@@ -42,6 +42,6 @@ add_task(async function() {
   BrowserFullScreen();
   fullscreenButton = document.getElementById("fullscreen-button");
   await waitForCondition(() => !isFullscreenSizeMode());
-  ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
+  ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.");
   CustomizableUI.reset();
 });

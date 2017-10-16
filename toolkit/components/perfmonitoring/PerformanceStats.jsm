@@ -228,7 +228,7 @@ var Probes = {
         totalCPUTime: xpcom.totalUserTime + xpcom.totalSystemTime,
         durations,
         longestDuration: lastNonZero(durations)
-      }
+      };
     },
     isEqual(a, b) {
       // invariant: `a` and `b` are both non-null
@@ -402,7 +402,7 @@ function PerformanceMonitor(probes) {
   // `this` object, a notification of `FINALIZATION_TOPIC` will be triggered
   // with `id` as message.
   this._id = PerformanceMonitor.makeId();
-  this._finalizer = finalizer.make(FINALIZATION_TOPIC, this._id)
+  this._finalizer = finalizer.make(FINALIZATION_TOPIC, this._id);
   PerformanceMonitor._monitors.set(this._id, probes);
 }
 PerformanceMonitor.prototype = {
@@ -552,14 +552,14 @@ PerformanceMonitor.dispose = function(id) {
   for (let probe of probes) {
     probe.release();
   }
-}
+};
 
 // Generate a unique id for each PerformanceMonitor. Used during
 // finalization.
 PerformanceMonitor._counter = 0;
 PerformanceMonitor.makeId = function() {
   return "PerformanceMonitor-" + (this._counter++);
-}
+};
 
 // Once a `PerformanceMonitor` has been garbage-collected,
 // release the probes unless `dispose()` has already been called.
@@ -950,7 +950,7 @@ var Process = {
         return;
       }
       if (data.data) {
-        collected.push(data.data)
+        collected.push(data.data);
       }
       if (--expecting > 0) {
         // We are still waiting for at least one response.

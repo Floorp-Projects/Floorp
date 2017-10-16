@@ -333,7 +333,7 @@ async function test_browser_swapping(tab, browser) {
     gBrowser,
     url: "about:blank",
   }, async function(newBrowser) {
-    await test_swapped_browser_while_playing(tab, newBrowser)
+    await test_swapped_browser_while_playing(tab, newBrowser);
 
     // Now, test swapping with a muted but not playing tab.
     // Note that the tab remains muted, so we only need to pause playback.

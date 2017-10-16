@@ -92,7 +92,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
  */
 this.DownloadPrompter = function(aParent) {
   this._prompter = Services.ww.getNewPrompter(aParent);
-}
+};
 
 this.DownloadPrompter.prototype = {
   /**

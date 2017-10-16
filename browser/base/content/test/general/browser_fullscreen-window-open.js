@@ -213,7 +213,7 @@ function waitForTabOpen(aOptions) {
       newBrowser.removeTab(tab);
       finalize();
     });
-  }
+  };
   newBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
 
   let finalize = function() {

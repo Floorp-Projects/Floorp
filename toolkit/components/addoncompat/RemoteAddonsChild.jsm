@@ -113,7 +113,7 @@ var NotificationTracker = {
           enumerate(tracked[component], path);
         }
       }
-    }
+    };
     enumerate(tracked, prefix);
 
     return result;

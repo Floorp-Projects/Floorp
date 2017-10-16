@@ -91,7 +91,7 @@ function* testSteps()
     if (writeAborted) {
       continueToNextStep();
     }
-  }
+  };
 
   cursor = event.target.result;
   is(cursor.value, data1, "Got correct data for readwrite transaction");

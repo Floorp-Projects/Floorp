@@ -35,7 +35,7 @@ function getAudio(browser) {
 function playAudio(browser) {
   let audio = getAudio(browser);
   if (!audio) {
-    ok(false, "can't get the audio!")
+    ok(false, "can't get the audio!");
   }
   return audio.play();
 }
@@ -43,7 +43,7 @@ function playAudio(browser) {
 function stopAudio(browser) {
   let audio = getAudio(browser);
   if (!audio) {
-    ok(false, "can't get the audio!")
+    ok(false, "can't get the audio!");
   }
   audio.pause();
 }
@@ -51,7 +51,7 @@ function stopAudio(browser) {
 function isAudioStarted(browser) {
   let audio = getAudio(browser);
   if (!audio) {
-    ok(false, "can't get the audio!")
+    ok(false, "can't get the audio!");
   }
   return !audio.paused;
 }

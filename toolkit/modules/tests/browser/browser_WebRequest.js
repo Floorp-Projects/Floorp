@@ -87,7 +87,7 @@ function onBeforeRedirect(details) {
     is(details.browser, expected_browser, "correct <browser> element");
     checkType(details);
 
-    let expectedUrl = details.url.replace("_redirect.", "_good.").replace(/\w+_redirection\..*/, "dummy_page.html")
+    let expectedUrl = details.url.replace("_redirect.", "_good.").replace(/\w+_redirection\..*/, "dummy_page.html");
     is(details.redirectUrl, expectedUrl, "Correct redirectUrl value");
   }
   let id = windowIDs.get(details.url);

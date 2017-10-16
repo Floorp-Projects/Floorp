@@ -79,7 +79,7 @@ const sanityFilter = function filter(c) {
     throw Error("No .telemetryEnvironment.build");
   }
   return true;
-}
+};
 
 // Utility function to generate build ID for previous/next date.
 function addDate(buildId, diff) {

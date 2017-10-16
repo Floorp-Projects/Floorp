@@ -32,7 +32,7 @@ add_task(async function() {
         resolve(read(...args));
       });
     });
-  }
+  };
 
   await blocklist._preloadBlocklist();
   do_check_true(blocklist._isBlocklistLoaded());

@@ -603,7 +603,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.firstChild;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
+    success = (e.result == Components.results.NS_ERROR_FAILURE);
   }
   ok(success, "firstChild" + msg);
 
@@ -612,7 +612,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.lastChild;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
+    success = (e.result == Components.results.NS_ERROR_FAILURE);
   }
   ok(success, "lastChild" + msg);
 
@@ -621,7 +621,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.childCount;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
+    success = (e.result == Components.results.NS_ERROR_FAILURE);
   }
   ok(success, "childCount" + msg);
 
@@ -630,7 +630,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.children;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
+    success = (e.result == Components.results.NS_ERROR_FAILURE);
   }
   ok(success, "children" + msg);
 
@@ -680,7 +680,7 @@ function statesToString(aStates, aExtraStates) {
     str += list.item(index) + ", ";
 
   if (list.length != 0)
-    str += list.item(index)
+    str += list.item(index);
 
   return str;
 }

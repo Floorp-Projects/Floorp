@@ -28,7 +28,7 @@
         this.dialog = window.openDialog("about:mozilla",
                                         "AboutMozilla",
                                         "chrome,width=600,height=600");
-      }
+      };
 
       this.finalCheck = function openWnd_finalCheck() {
         var app = getApplicationAccessible();
@@ -36,11 +36,11 @@
            "Wrong focused child");
 
         this.dialog.close();
-      }
+      };
 
       this.getID = function openWnd_getID() {
         return "focusedChild for application accessible";
-      }
+      };
 
       function getDialogAccessible(aInvoker) {
         return getAccessible(aInvoker.dialog.document);
@@ -56,7 +56,7 @@
 
       gQueue.push(new openWnd());
 
-      gQueue.onFinish = function() { disableLogging(); }
+      gQueue.onFinish = function() { disableLogging(); };
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 

@@ -22,10 +22,9 @@
 
 class nsIFile;
 
-#ifndef have_PrefChangedFunc_typedef
-typedef void (*PrefChangedFunc)(const char*, void*);
-#define have_PrefChangedFunc_typedef
-#endif
+// The callback function will get passed the pref name which triggered the call
+// and the void* data which was passed to the registered callback function.
+typedef void (*PrefChangedFunc)(const char* aPref, void* aData);
 
 #ifdef DEBUG
 enum pref_initPhase

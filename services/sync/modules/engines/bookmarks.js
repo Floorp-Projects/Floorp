@@ -96,7 +96,7 @@ function getTypeObject(type) {
 this.PlacesItem = function PlacesItem(collection, id, type) {
   CryptoWrapper.call(this, collection, id);
   this.type = type || "item";
-}
+};
 PlacesItem.prototype = {
   async decrypt(keyBundle) {
     // Do the normal CryptoWrapper decrypt, but change types before returning
@@ -153,7 +153,7 @@ Utils.deferGetSet(PlacesItem,
 
 this.Bookmark = function Bookmark(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "bookmark");
-}
+};
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Sync.Record.Bookmark",
@@ -187,7 +187,7 @@ Utils.deferGetSet(Bookmark,
 
 this.BookmarkQuery = function BookmarkQuery(collection, id) {
   Bookmark.call(this, collection, id, "query");
-}
+};
 BookmarkQuery.prototype = {
   __proto__: Bookmark.prototype,
   _logName: "Sync.Record.BookmarkQuery",
@@ -212,7 +212,7 @@ Utils.deferGetSet(BookmarkQuery,
 
 this.BookmarkFolder = function BookmarkFolder(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "folder");
-}
+};
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Sync.Record.Folder",
@@ -237,7 +237,7 @@ Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title",
 
 this.Livemark = function Livemark(collection, id) {
   BookmarkFolder.call(this, collection, id, "livemark");
-}
+};
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
   _logName: "Sync.Record.Livemark",
@@ -262,7 +262,7 @@ Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
 
 this.BookmarkSeparator = function BookmarkSeparator(collection, id) {
   PlacesItem.call(this, collection, id, "separator");
-}
+};
 BookmarkSeparator.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Sync.Record.Separator",
@@ -277,7 +277,7 @@ Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");
 
 this.BookmarksEngine = function BookmarksEngine(service) {
   SyncEngine.call(this, "Bookmarks", service);
-}
+};
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _recordObj: PlacesItem,

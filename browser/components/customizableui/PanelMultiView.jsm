@@ -231,7 +231,7 @@ this.PanelMultiView = class {
    *                     dispatched.
    */
   get current() {
-    return this._viewShowing || this._currentSubView
+    return this._viewShowing || this._currentSubView;
   }
   get _currentSubView() {
     return this.panelViews ? this.panelViews.currentView : this.__currentSubView;
@@ -1127,7 +1127,7 @@ this.PanelMultiView = class {
         // check here.
         do {
           buttonIndex = buttonIndex + (isDown ? 1 : -1);
-        } while (buttons[buttonIndex] && buttons[buttonIndex].disabled)
+        } while (buttons[buttonIndex] && buttons[buttonIndex].disabled);
         if (isDown && buttonIndex > maxIdx)
           buttonIndex = 0;
         else if (!isDown && buttonIndex < 0)
@@ -1382,4 +1382,4 @@ this.PanelMultiView = class {
       element.style.height = bounds.height + "px";
     }
   }
-}
+};

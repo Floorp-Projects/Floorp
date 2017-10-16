@@ -45,7 +45,7 @@ var workerManager = {
         this.flushWorker();
 
       return result;
-    })
+    });
   },
 
   _worker: null,

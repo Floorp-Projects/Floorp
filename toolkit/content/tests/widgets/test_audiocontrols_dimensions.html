@@ -24,7 +24,7 @@
     await new Promise(resolve => {
       audio.addEventListener("loadedmetadata", resolve, {once: true});
       audio.src = "audio.wav";
-    })
+    });
   });
 
   add_task(async function check_audio_height() {

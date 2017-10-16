@@ -274,7 +274,7 @@ var ExtensionSearchHandler = Object.freeze({
       current: "currentTab",
       tab: "newForegroundTab",
       tabshifted: "newBackgroundTab",
-    }
+    };
     let disposition = dispositionMap[where];
 
     if (!disposition) {
@@ -285,7 +285,7 @@ var ExtensionSearchHandler = Object.freeze({
     // we only want to send the text that follows.
     text = text.substring(keyword.length + 1);
 
-    gActiveInputSession.end(this.MSG_INPUT_ENTERED, text, disposition)
+    gActiveInputSession.end(this.MSG_INPUT_ENTERED, text, disposition);
     gActiveInputSession = null;
   },
 

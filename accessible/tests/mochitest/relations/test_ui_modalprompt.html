@@ -45,18 +45,18 @@
           function() {
             currentTabDocument().defaultView.alert("hello");
           }, 0);
-      }
+      };
 
       this.check = function showAlert_finalCheck(aEvent) {
         var dialog = aEvent.accessible.DOMNode;
         var info = dialog.ui.infoBody;
         testRelation(info, RELATION_DESCRIPTION_FOR, dialog);
         testRelation(dialog, RELATION_DESCRIBED_BY, info);
-      }
+      };
 
       this.getID = function showAlert_getID() {
         return "show alert";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true; // debug
@@ -68,7 +68,7 @@
       gQueue.onFinish = function() {
         synthesizeKey("VK_RETURN", {}, browserWindow());
         closeBrowserWindow();
-      }
+      };
       gQueue.invoke(); // will call SimpleTest.finish()
     }
 

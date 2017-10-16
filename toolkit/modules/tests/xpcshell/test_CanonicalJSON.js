@@ -68,7 +68,7 @@ add_task(async function test_canonicalJSON_preserves_data() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
     {"bar": "baz", "last_modified": "45678", "id": "2"},
-  ]
+  ];
   const expected = '[{"foo":"bar","id":"1","last_modified":"12345"},' +
                    '{"bar":"baz","id":"2","last_modified":"45678"}]';
   do_check_eq(CanonicalJSON.stringify(records), expected);
@@ -78,7 +78,7 @@ add_task(async function test_canonicalJSON_does_not_add_space_separators() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
     {"bar": "baz", "last_modified": "45678", "id": "2"},
-  ]
+  ];
   const serialized = CanonicalJSON.stringify(records);
   do_check_false(serialized.includes(" "));
 });
@@ -131,7 +131,7 @@ add_task(async function test_canonicalJSON_with_deeply_nested_dicts() {
         "f": [2, 3, 1],
         "g": {2: 2, 3: 3, 1: {
           "b": "b", "a": "a", "c": "c"}}}},
-    "id": "1"}]
+    "id": "1"}];
   const expected =
     '[{"a":{"a":"a","b":"b","c":{"a":"a","b":"b","c":["b","a","c"],' +
     '"d":{"a":"a","b":"b"},"e":1,"f":[2,3,1],"g":{' +

@@ -18,7 +18,7 @@ function run_test() {
   // Verify that functions cannot be replaced
   AddonManager.isInstallEnabled = function() {
     do_throw("Should not be able to replace a function");
-  }
+  };
   AddonManager.isInstallEnabled("application/x-xpinstall");
 
   // Verify that properties cannot be added

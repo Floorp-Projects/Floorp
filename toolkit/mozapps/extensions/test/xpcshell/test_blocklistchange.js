@@ -380,7 +380,7 @@ function Pbackground_update() {
 
         resolve();
       }
-    })
+    });
 
     Services.obs.addObserver(function observer() {
       Services.obs.removeObserver(observer, "addons-background-update-complete");
@@ -416,7 +416,7 @@ function Pmanual_update(aVersion) {
         install.addListener({
           onDownloadCancelled: resolve,
           onInstallEnded: resolve
-        })
+        });
       }));
 
       AddonManager.installAddonFromAOM(null, null, install);

@@ -36,7 +36,7 @@ let toMsg = function(alerts) {
     result.push({source: serializableSource, details: serializableDetails});
   }
   return result;
-}
+};
 
 PerformanceWatcher.addPerformanceListener({windowId: 0}, alerts => {
   Services.cpmm.sendAsyncMessage("performancewatcher-propagate-notifications",

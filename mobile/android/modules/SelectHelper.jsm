@@ -88,7 +88,7 @@ var SelectHelper = {
     }
 
     p.show((data) => {
-      this._promptCallBack(data, element)
+      this._promptCallBack(data, element);
     });
   },
 

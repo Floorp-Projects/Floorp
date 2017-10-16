@@ -90,7 +90,7 @@ add_task(async function hmac_error_during_404() {
     _("---------------------------");
 
     // Two rotary items, one client record... no errors.
-    do_check_eq(hmacErrorCount, 0)
+    do_check_eq(hmacErrorCount, 0);
   } finally {
     tracker.clearChangedIDs();
     Service.engineManager.unregister(engine);
@@ -159,7 +159,7 @@ add_task(async function hmac_error_during_node_reassignment() {
   function onSyncError() {
     do_throw("Should not get a sync error!");
   }
-  let onSyncFinished = function() {}
+  let onSyncFinished = function() {};
   let obs = {
     observe: function observe(subject, topic, data) {
       switch (topic) {
@@ -215,7 +215,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
           onSyncFinished = function() {
             // Two rotary items, one client record... no errors.
-            do_check_eq(hmacErrorCount, 0)
+            do_check_eq(hmacErrorCount, 0);
 
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);

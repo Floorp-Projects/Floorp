@@ -19,11 +19,11 @@ this.EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
 // The individual requestors/responders, lazily loaded.
 const REQUESTORS = {
   bookmarks: ["bookmark_repair.js", "BookmarkRepairRequestor"],
-}
+};
 
 const RESPONDERS = {
   bookmarks: ["bookmark_repair.js", "BookmarkRepairResponder"],
-}
+};
 
 // Should we maybe enforce the requestors being a singleton?
 function _getRepairConstructor(which, collection) {

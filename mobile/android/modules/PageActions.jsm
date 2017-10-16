@@ -81,7 +81,7 @@ var PageActions = {
   },
 
   add: function(aOptions) {
-    let id = aOptions.id || uuidgen.generateUUID().toString()
+    let id = aOptions.id || uuidgen.generateUUID().toString();
 
     EventDispatcher.instance.sendRequest({
       type: "PageActions:Add",
@@ -115,4 +115,4 @@ var PageActions = {
     delete this._items[id];
     this._maybeUninitialize();
   }
-}
+};

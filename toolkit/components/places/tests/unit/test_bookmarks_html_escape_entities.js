@@ -22,7 +22,7 @@ add_task(async function() {
     url,
     title: unescaped
   });
-  await PlacesUtils.keywords.insert({ url, keyword: unescaped, postData: unescaped })
+  await PlacesUtils.keywords.insert({ url, keyword: unescaped, postData: unescaped });
   let uri = Services.io.newURI(url);
   PlacesUtils.tagging.tagURI(uri, [unescaped]);
   await PlacesUtils.setCharsetForURI(uri, unescaped);
@@ -77,5 +77,5 @@ add_task(async function() {
         break;
     }
   }
-  Assert.equal(checksCount, 0, "All the checks ran")
+  Assert.equal(checksCount, 0, "All the checks ran");
 });

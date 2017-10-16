@@ -147,7 +147,7 @@ Notification.prototype = {
     };
     EventDispatcher.instance.dispatch("Notification:Hide", msg);
   }
-}
+};
 
 var Notifications = {
   get idService() {

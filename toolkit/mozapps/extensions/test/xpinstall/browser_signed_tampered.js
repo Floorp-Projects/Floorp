@@ -39,8 +39,8 @@ const finish_test = async function(count) {
     return {
       return: content.document.getElementById("return").textContent,
       status: content.document.getElementById("status").textContent,
-    }
-  })
+    };
+  });
 
   is(results.return, "true", "installTrigger should have claimed success");
   is(results.status, "0", "Callback should have seen a success");

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict"
+"use strict";
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
@@ -34,7 +34,7 @@ PresentationRequestUIGlue.prototype = {
       /* XXX: Currently, Fennec only support 1-UA devices. Remove this
        * Promise.reject() when it starts to support 2-UA devices.
        */
-      log("Not an 1-UA device.")
+      log("Not an 1-UA device.");
       return new Promise.reject();
     }
 
@@ -75,7 +75,7 @@ PresentationRequestUIGlue.prototype = {
       Services.obs.notifyObservers(null,
                                    TOPIC_PRESENTATION_RECEIVER_LAUNCH,
                                    JSON.stringify(data));
-    })
+    });
   },
 
   classID: Components.ID("9c550ef7-3ff6-4bd1-9ad1-5a3735b90d21"),

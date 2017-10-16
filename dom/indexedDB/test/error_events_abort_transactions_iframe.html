@@ -84,7 +84,7 @@
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = function(event) {
         // Don't do anything! ConstraintError is expected in window.onerror.
-      }
+      };
       event = yield undefined;
 
       is(event.type, "abort", "Got a transaction abort event");
@@ -150,7 +150,7 @@
       request.onerror = function(event) {
         // Expected, but prevent the abort.
         event.preventDefault();
-      }
+      };
       event = yield undefined;
 
       is(event.type, "complete", "Got a transaction complete event");

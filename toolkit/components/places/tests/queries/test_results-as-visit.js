@@ -64,7 +64,7 @@ add_task(async function test_results_as_visit() {
 
    // If that passes, check liveupdate
    // Add to the query set
-   do_print("Adding item to query")
+   do_print("Adding item to query");
    var tmp = [];
    for (let i = 0; i < 2; i++) {
      tmp.push({ isVisit: true,

@@ -239,7 +239,7 @@ var TPS = {
         case "weave:service:sync:start":
           // Ensure that the sync operation has been started by TPS
           if (!this._triggeredSync) {
-            this.DumpError("Automatic sync got triggered, which is not allowed.")
+            this.DumpError("Automatic sync got triggered, which is not allowed.");
           }
 
           this._syncActive = true;
@@ -819,7 +819,7 @@ var TPS = {
 
       stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       let schema = jsonReader.decodeFromStream(stream, stream.available());
-      Logger.logInfo("Successfully loaded schema")
+      Logger.logInfo("Successfully loaded schema");
 
       // Importing resource://testing-common/* isn't possible from within TPS,
       // so we load Ajv manually.
@@ -1085,7 +1085,7 @@ var TPS = {
         Logger.logInfo("Observed " + aEventName);
         Svc.Obs.remove(aEventName, handler);
         resolve();
-      }
+      };
       Svc.Obs.add(aEventName, handler);
     });
   },
