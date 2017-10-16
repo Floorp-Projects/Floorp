@@ -7,10 +7,6 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-wasm-sourcemaps.html");
 
-  // NOTE: wait for page load -- attempt to fight the intermittent failure:
-  // "A promise chain failed to handle a rejection: Debugger.Frame is not live"
-  await waitForSource(dbg, "doc-wasm-sourcemaps");
-
   await reload(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
