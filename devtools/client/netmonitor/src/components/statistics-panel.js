@@ -5,6 +5,7 @@
 "use strict";
 
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { FILTER_TAGS } = require("../constants");
 const {
   createClass,
   createFactory,
@@ -167,9 +168,7 @@ const StatisticsPanel = createClass({
   },
 
   sanitizeChartDataSource(requests, emptyCache) {
-    const data = [
-      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
-    ].map((type) => ({
+    const data = FILTER_TAGS.map((type) => ({
       cached: 0,
       count: 0,
       label: type,

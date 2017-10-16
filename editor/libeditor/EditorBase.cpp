@@ -3720,24 +3720,6 @@ EditorBase::GetTag(nsIDOMNode* aNode)
   return content->NodeInfo()->NameAtom();
 }
 
-nsresult
-EditorBase::GetTagString(nsIDOMNode* aNode,
-                         nsAString& outString)
-{
-  if (!aNode) {
-    NS_NOTREACHED("null node passed to EditorBase::GetTagString()");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsAtom *atom = GetTag(aNode);
-  if (!atom) {
-    return NS_ERROR_FAILURE;
-  }
-
-  atom->ToString(outString);
-  return NS_OK;
-}
-
 bool
 EditorBase::NodesSameType(nsIDOMNode* aNode1,
                           nsIDOMNode* aNode2)

@@ -582,9 +582,9 @@ protected:
    * @param aValue     The value of aAttribute, example: blue in
    *                   <FONT color="blue"> May be null.  Ignored if aAttribute
    *                   is null.
-   * @param aIsSet     [OUT] true if <aProperty aAttribute=aValue> effects
-   *                         aNode.
    * @param outValue   [OUT] the value of the attribute, if aIsSet is true
+   * @return           true if <aProperty aAttribute=aValue> effects
+   *                   aNode.
    *
    * The nsIContent variant returns aIsSet instead of using an out parameter.
    */
@@ -592,13 +592,6 @@ protected:
                                   nsAtom* aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,
-                                  nsAString* outValue = nullptr);
-
-  void IsTextPropertySetByContent(nsIDOMNode* aNode,
-                                  nsAtom* aProperty,
-                                  const nsAString* aAttribute,
-                                  const nsAString* aValue,
-                                  bool& aIsSet,
                                   nsAString* outValue = nullptr);
 
   // Methods for handling plaintext quotations
