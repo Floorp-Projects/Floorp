@@ -16,8 +16,7 @@ function setE10sPrefs() {
     SpecialPowers.pushPrefEnv({
       set: [
         ["browser.tabs.remote.autostart", true],
-        ["browser.tabs.remote.force-enable", true],
-        ["extensions.e10sBlocksEnabling", false]
+        ["browser.tabs.remote.force-enable", true]
       ]
     }, resolve));
 }

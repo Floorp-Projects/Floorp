@@ -347,9 +347,6 @@ user_pref("browser.tabs.delayHidingAudioPlayingIconMS", 0);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 
-// Don't block add-ons for e10s
-user_pref("extensions.e10sBlocksEnabling", false);
-
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
 user_pref("lightweightThemes.selectedThemeID", "");

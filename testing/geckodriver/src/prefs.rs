@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 82] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 81] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -145,9 +145,6 @@ lazy_static! {
         // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         ("extensions.autoDisableScopes", Pref::new(0)),
         ("extensions.enabledScopes", Pref::new(5)),
-
-        // don't block add-ons for e10s
-        ("extensions.e10sBlocksEnabling", Pref::new(false)),
 
         // Disable metadata caching for installed add-ons by default
         ("extensions.getAddons.cache.enabled", Pref::new(false)),
