@@ -145,7 +145,6 @@ class Nursery
     unsigned numChunks() const { return chunks_.length(); }
 
     bool exists() const { return maxChunks() != 0; }
-    size_t nurserySize() const { return maxChunks() << ChunkShift; }
 
     void enable();
     void disable();
@@ -418,8 +417,6 @@ class Nursery
     struct Canary;
     Canary* lastCanary_;
 #endif
-
-    NurseryChunk* allocChunk();
 
     NurseryChunk& chunk(unsigned index) const {
         return *chunks_[index];
