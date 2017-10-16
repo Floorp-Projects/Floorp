@@ -47,6 +47,17 @@ var tests = (function*() {
   // check the second test
   yield checkResults(finalizePreloadReuse);
 
+  // reset the counter
+  yield resetCounter();
+
+  // load the third test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = 'file_bug704320_preload_attr.html';
+
+  // check the third test
+  yield checkResults(finalizePreloadReferrerPolicyAttr);
+
   // complete.
   SimpleTest.finish();
 })();
@@ -121,6 +132,34 @@ function finalizePreloadReuse(results) {
   advance();
 }
 
+/**
+ * This checks the third test: a test where preload requests of image, style
+ * should use referrerpolicy attribute and we expect the preloads should not
+ * be reused
+ */
+function finalizePreloadReferrerPolicyAttr(results) {
+  var expected = {'css': {'count': 1, 'referrers': ['origin']},
+                  'img': {'count': 1, 'referrers': ['origin']}};
+
+  for (var x in expected) {
+    ok(x in results, "some " + x + " loads required in results object.");
+
+    is(results[x].count, expected[x].count,
+       "Expected " + expected[x].count + " loads for " + x + " requests.");
+
+    // 'origin' is required
+    ok(results[x].referrers.indexOf('origin') >= 0,
+       "One load for " + x + " should have had 'origin' referrer.");
+
+    // no other values should be in the referrers.
+    is(results[x].referrers.indexOf('none'), -1,
+       "No loads for " + x + " should have a missing referrer.");
+    is(results[x].referrers.indexOf('full'), -1,
+       "No loads for " + x + " should have an 'full' referrer.")
+  }
+
+  advance();
+}
 
 /**
  * Grabs the results via XHR and passes to checker.
