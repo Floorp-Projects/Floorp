@@ -366,6 +366,37 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   case DisplayItemType::TYPE_MASK:
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
     break;
+  case DisplayItemType::TYPE_SVG_WRAPPER:
+    {
+      if (aManager == nullptr) {
+        aManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+      }
+
+      FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
+      layerBuilder->Init(aDisplayListBuilder, aManager, nullptr, true);
+      layerBuilder->DidBeginRetainedLayerTransaction(aManager);
+
+      aManager->BeginTransactionWithTarget(context);
+
+      ContainerLayerParameters param;
+      RefPtr<Layer> layer =
+        static_cast<nsDisplayFilter*>(aItem)->BuildLayer(aDisplayListBuilder,
+                                                         aManager, param);
+      if (layer) {
+        UniquePtr<LayerProperties> props;
+        props = Move(LayerProperties::CloneFrom(aManager->GetRoot()));
+        aManager->SetRoot(layer);
+        layerBuilder->WillEndTransaction();
+        aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aDisplayListBuilder);
+      }
+
+      if (aManager->InTransaction()) {
+        aManager->AbortTransaction();
+      }
+      aManager->SetTarget(nullptr);
+      break;
+    }
+
   case DisplayItemType::TYPE_FILTER:
     {
       if (aManager == nullptr) {
@@ -476,6 +507,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   // region is unknown until we traverse the displaylist contained by it.
   if (geometry && !fallbackData->IsInvalid() &&
       aItem->GetType() != DisplayItemType::TYPE_FILTER &&
+      aItem->GetType() != DisplayItemType::TYPE_SVG_WRAPPER &&
       scale == fallbackData->GetScale()) {
     nsRect invalid;
     nsRegion invalidRegion;
