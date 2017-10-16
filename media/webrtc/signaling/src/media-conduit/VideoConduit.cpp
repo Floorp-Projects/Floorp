@@ -274,7 +274,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mRecvSSRCSetInProgress(false)
   , mSendCodecPlugin(nullptr)
   , mRecvCodecPlugin(nullptr)
-  , mVideoStatsTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+  , mVideoStatsTimer(NS_NewTimer())
 {
   mRecvStreamConfig.renderer = this;
 
