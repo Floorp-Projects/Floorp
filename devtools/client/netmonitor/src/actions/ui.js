@@ -15,6 +15,7 @@ const {
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
 } = require("../constants");
+const { triggerActivity } = require("../connector/index");
 
 /**
  * Change network details panel.
@@ -55,12 +56,11 @@ function disableBrowserCache(disabled) {
 /**
  * Change performance statistics panel open state.
  *
- * @param {Object} connector - connector object to the backend
  * @param {boolean} visible - expected performance statistics panel open state
  */
-function openStatistics(connector, open) {
+function openStatistics(open) {
   if (open) {
-    connector.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+    triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
   }
   return {
     type: OPEN_STATISTICS,
@@ -139,9 +139,9 @@ function toggleBrowserCache() {
 /**
  * Toggle performance statistics panel.
  */
-function toggleStatistics(connector) {
+function toggleStatistics() {
   return (dispatch, getState) =>
-    dispatch(openStatistics(connector, !getState().ui.statisticsOpen));
+    dispatch(openStatistics(!getState().ui.statisticsOpen));
 }
 
 module.exports = {
