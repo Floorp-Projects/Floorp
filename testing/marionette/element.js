@@ -855,19 +855,20 @@ element.getContainer = function(el) {
  *
  * This means an element is considered to be in view, but not necessarily
  * pointer-interactable, if it is found somewhere in the
- * |elementsFromPoint| list at |el|'s in-view centre coordinates.
+ * <code>elementsFromPoint</code> list at <var>el</var>'s in-view
+ * centre coordinates.
  *
- * Before running the check, we change |el|'s pointerEvents style property
- * to "auto", since elements without pointer events enabled do not turn
- * up in the paint tree we get from document.elementsFromPoint.  This is
- * a specialisation that is only relevant when checking if the element is
- * in view.
+ * Before running the check, we change <var>el</var>'s pointerEvents
+ * style property to "auto", since elements without pointer events
+ * enabled do not turn up in the paint tree we get from
+ * document.elementsFromPoint.  This is a specialisation that is only
+ * relevant when checking if the element is in view.
  *
  * @param {Element} el
  *     Element to check if is in view.
  *
  * @return {boolean}
- *     True if |el| is inside the viewport, or false otherwise.
+ *     True if <var>el</var> is inside the viewport, or false otherwise.
  */
 element.isInView = function(el) {
   let originalPointerEvents = el.style.pointerEvents;
