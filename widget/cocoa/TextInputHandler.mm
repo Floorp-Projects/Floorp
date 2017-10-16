@@ -2916,7 +2916,7 @@ IMEInputHandler::ResetTimer()
   if (mTimer) {
     mTimer->Cancel();
   } else {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer = NS_NewTimer();
     NS_ENSURE_TRUE(mTimer, );
   }
   mTimer->InitWithNamedFuncCallback(FlushPendingMethods, this, 0,
