@@ -451,8 +451,8 @@ Predictor::InstallObserver()
   Preferences::AddBoolVarCache(&mDoingTests, PREDICTOR_DOING_TESTS_PREF, false);
 
   if (!mCleanedUp) {
-    mCleanupTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mCleanupTimer->Init(this, 60 * 1000, nsITimer::TYPE_ONE_SHOT);
+    NS_NewTimerWithObserver(getter_AddRefs(mCleanupTimer),
+                            this, 60 * 1000, nsITimer::TYPE_ONE_SHOT);
   }
 
   return rv;

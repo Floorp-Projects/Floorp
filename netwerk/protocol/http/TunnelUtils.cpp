@@ -424,7 +424,7 @@ TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
   }
 
   if(!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mTimer = NS_NewTimer();
   }
 
   mNudgeCallback = aCallback;

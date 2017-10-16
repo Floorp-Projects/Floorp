@@ -226,12 +226,9 @@ nsIncrementalDownload::CallOnStopRequest()
 nsresult
 nsIncrementalDownload::StartTimer(int32_t interval)
 {
-  nsresult rv;
-  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return mTimer->Init(this, interval * 1000, nsITimer::TYPE_ONE_SHOT);
+  return NS_NewTimerWithObserver(getter_AddRefs(mTimer),
+                                 this, interval * 1000,
+                                 nsITimer::TYPE_ONE_SHOT);
 }
 
 nsresult
