@@ -30,7 +30,7 @@ var ContentAreaUtils = {
     return this.stringBundle =
       Services.strings.createBundle("chrome://global/locale/contentAreaCommands.properties");
   }
-}
+};
 
 function urlSecurityCheck(aURL, aPrincipal, aFlags) {
   return BrowserUtils.urlSecurityCheck(aURL, aPrincipal, aFlags);
@@ -260,7 +260,7 @@ function DownloadListener(win, transfer) {
   function makeClosure(name) {
     return function() {
       transfer[name].apply(transfer, arguments);
-    }
+    };
   }
 
   this.window = win;
@@ -294,7 +294,7 @@ DownloadListener.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 const kSaveAsType_Complete = 0; // Save document with attached objects.
 XPCOMUtils.defineConstant(this, "kSaveAsType_Complete", 0);
@@ -1216,7 +1216,7 @@ function openURL(aURL) {
           return this;
         throw Components.results.NS_ERROR_NO_INTERFACE;
       }
-    }
+    };
     loadgroup.groupObserver = loadListener;
 
     var uriListener = {
@@ -1233,7 +1233,7 @@ function openURL(aURL) {
           return loadgroup;
         throw Components.results.NS_ERROR_NO_INTERFACE;
       }
-    }
+    };
 
     var channel = NetUtil.newChannel({
       uri,

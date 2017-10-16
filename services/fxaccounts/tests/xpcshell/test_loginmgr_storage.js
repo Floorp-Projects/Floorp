@@ -126,7 +126,7 @@ add_task(async function test_MPLocked() {
   Assert.ok(!("kB" in data.accountData), "kB not stored in clear text");
 
   Assert.strictEqual(getLoginMgrData(), null, "login mgr data doesn't exist");
-  await fxa.signOut(/* localOnly = */ true)
+  await fxa.signOut(/* localOnly = */ true);
 });
 
 
@@ -179,7 +179,7 @@ add_task(async function test_consistentWithMPEdgeCases() {
   Assert.strictEqual(accountData.email, creds2.email);
   // we should have no kA at all.
   Assert.strictEqual(accountData.kA, undefined, "stale kA wasn't used");
-  await fxa.signOut(/* localOnly = */ true)
+  await fxa.signOut(/* localOnly = */ true);
 });
 
 // A test for the fact we will accept either a UID or email when looking in

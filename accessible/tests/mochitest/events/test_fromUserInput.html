@@ -33,12 +33,12 @@
         this.DOMNode.setSelectionRange(aStart, aEnd);
 
         synthesizeKey("VK_DELETE", {});
-      }
+      };
 
       this.getID = function removeTextFromInput_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -61,12 +61,12 @@
         selection.addRange(range);
 
         synthesizeKey("VK_DELETE", {});
-      }
+      };
 
       this.getID = function removeTextFromContentEditable_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

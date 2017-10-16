@@ -47,4 +47,4 @@ add_task(async function test_crypto_random() {
 
   if (this.gczeal)
     gczeal(0);
-})
+});

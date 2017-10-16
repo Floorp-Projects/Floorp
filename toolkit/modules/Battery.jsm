@@ -28,7 +28,7 @@ var gFakeBattery = {
   chargingTime: 0,
   dischargingTime: Infinity,
   level: 1,
-}
+};
 
 // BackendPass-exported object for toggling spoofing
 this.Debugging = {
@@ -38,7 +38,7 @@ this.Debugging = {
    * for testing or debugging purposes.
    */
   fake: false
-}
+};
 
 this.GetBattery = function() {
   return new Services.appShell.hiddenDOMWindow.Promise(function(resolve, reject) {
@@ -69,5 +69,5 @@ for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
       }
       gFakeBattery[prop] = fakeSetting;
     }
-  })
+  });
 }

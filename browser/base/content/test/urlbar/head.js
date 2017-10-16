@@ -138,7 +138,7 @@ function runHttpServer(scheme, host, port = -1) {
     port = httpserver.identity.primaryPort;
     httpserver.identity.setPrimary(scheme, host, port);
   } catch (ex) {
-    info("We can't launch our http server successfully.")
+    info("We can't launch our http server successfully.");
   }
   is(httpserver.identity.has(scheme, host, port), true, `${scheme}://${host}:${port} is listening.`);
   return httpserver;

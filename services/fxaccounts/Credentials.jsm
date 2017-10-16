@@ -123,7 +123,7 @@ this.Credentials = Object.freeze({
 
         log.debug("Credentials set up after " + (Date.now() - start) + " ms");
         resolve(result);
-      }
+      };
 
       Services.tm.dispatchToMainThread(runnable);
       log.debug("Dispatched thread for credentials setup crypto work");

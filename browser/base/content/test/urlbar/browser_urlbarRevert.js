@@ -11,7 +11,7 @@ function test() {
         executeSoon(checkURLBarRevert);
       }
     }
-  }
+  };
 
   gBrowser.addProgressListener(pageLoaded);
   tab = BrowserTestUtils.addTab(gBrowser, "http://example.com");

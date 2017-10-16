@@ -17,7 +17,7 @@ add_task(async function test_key_memoization() {
   cryptoGlobal.subtle.importKey = function(format, keyData, algo, extractable, usages) {
     c++;
     return oldImport.call(cryptoGlobal.subtle, format, keyData, algo, extractable, usages);
-  }
+  };
 
   // Encryption should cause a single counter increment.
   do_check_eq(c, 0);

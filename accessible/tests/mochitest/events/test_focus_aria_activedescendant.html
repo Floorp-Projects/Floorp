@@ -29,11 +29,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
         getNode(aID).setAttribute("aria-activedescendant", aItemID);
-      }
+      };
 
       this.getID = function changeARIAActiveDescendant_getID() {
         return "change aria-activedescendant on " + aItemID;
-      }
+      };
     }
 
     function insertItemNFocus(aID, aNewItemID) {
@@ -50,11 +50,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
         container.appendChild(itemNode);
 
         container.setAttribute("aria-activedescendant", aNewItemID);
-      }
+      };
 
       this.getID = function insertItemNFocus_getID() {
         return "insert new node and focus it with ID: " + aNewItemID;
-      }
+      };
     }
 
     var gQueue = null;

@@ -90,7 +90,7 @@ add_task(async function init() {
     let addOps = kValues.map(value => {
  return {op: "add",
                                              fieldname: "searchbar-history",
-                                             value}
+                                             value};
                                    });
     searchbar.FormHistory.update(addOps, {
       handleCompletion() {
@@ -100,7 +100,7 @@ add_task(async function init() {
             kValues.map(value => {
  return {op: "remove",
                                            fieldname: "searchbar-history",
-                                           value}
+                                           value};
                                  });
           searchbar.FormHistory.update(removeOps);
         });

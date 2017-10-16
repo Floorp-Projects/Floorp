@@ -29,7 +29,7 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
 
     is(browser.currentURI.spec, endURL, "Should have made it to the final URL");
     is(browser.isRemoteBrowser, endProcessIsRemote, "Should be displayed in the right process");
-  }
+  };
 }
 
 const CHROME_PROCESS = Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;

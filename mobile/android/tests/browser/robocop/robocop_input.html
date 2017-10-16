@@ -23,7 +23,7 @@
         designMode.contentDocument.designMode = "on";
       } catch (e) {
         // Setting designMode above sometimes fails, so try again later.
-        setTimeout(function() { designMode.contentDocument.designMode = "on" }, 0);
+        setTimeout(function() { designMode.contentDocument.designMode = "on"; }, 0);
       }
 
       // Add key listeners to trigger dummy key synthesis.

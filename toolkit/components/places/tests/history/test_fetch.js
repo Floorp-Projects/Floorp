@@ -102,8 +102,8 @@ add_task(async function test_fetch_page_meta_info() {
 
   includeMeta = false;
   pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeMeta});
-  Assert.ok(!("description" in pageInfo), "fetch should not return a description if includeMeta is false")
-  Assert.ok(!("previewImageURL" in pageInfo), "fetch should not return a previewImageURL if includeMeta is false")
+  Assert.ok(!("description" in pageInfo), "fetch should not return a description if includeMeta is false");
+  Assert.ok(!("previewImageURL" in pageInfo), "fetch should not return a previewImageURL if includeMeta is false");
 });
 
 add_task(async function test_fetch_nonexistent() {

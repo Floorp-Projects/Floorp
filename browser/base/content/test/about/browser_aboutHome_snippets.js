@@ -42,7 +42,7 @@ add_task(async function() {
   await withSnippetsMap(null, function() {
     let doc = content.document;
     let snippetsElt = doc.getElementById("snippets");
-    ok(snippetsElt, "Found snippets element")
+    ok(snippetsElt, "Found snippets element");
     is(snippetsElt.getElementsByTagName("span").length, 1,
        "A default snippet is present.");
   });
@@ -88,7 +88,7 @@ add_task(async function() {
     snippetsMap => snippetsMap.set("snippets", "test"),
     function(args) {
       let doc = content.document;
-      let snippetsMap = content.gSnippetsMap
+      let snippetsMap = content.gSnippetsMap;
 
       let snippetsElt = doc.getElementById("snippets");
       ok(snippetsElt, "Found snippets element");

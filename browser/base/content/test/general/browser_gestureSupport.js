@@ -611,7 +611,7 @@ function test_rotateGesturesOnTab() {
     if (rotation < 0)
       rotation += 360;
     return rotation;
-  }
+  };
 
   for (var initRot = 0; initRot < 360; initRot += 90) {
     // Test each case: at each 90 degree snap; cl/ccl;

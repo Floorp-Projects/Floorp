@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 add_task(async function() {
   info("Bug 475529 - Add is the default button for the new folder dialog + " +

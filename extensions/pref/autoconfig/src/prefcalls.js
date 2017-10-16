@@ -148,7 +148,7 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
                                   .createInstance(nsILDAPSyncQuery);
         // default to LDAP v3
         if (!gVersion)
-          gVersion = Components.interfaces.nsILDAPConnection.VERSION3
+          gVersion = Components.interfaces.nsILDAPConnection.VERSION3;
         // user supplied method
         processLDAPValues(ldapquery.getQueryResults(url, gVersion));
     } catch (e) {

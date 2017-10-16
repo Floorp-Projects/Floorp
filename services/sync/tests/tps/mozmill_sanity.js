@@ -7,11 +7,11 @@ Components.utils.import("resource://tps/tps.jsm");
 var setupModule = function(module) {
   module.controller = mozmill.getBrowserController();
   assert.ok(true, "SetupModule passes");
-}
+};
 
 var setupTest = function(module) {
   assert.ok(true, "SetupTest passes");
-}
+};
 
 var testTestStep = function() {
   assert.ok(true, "test Passes");
@@ -19,12 +19,12 @@ var testTestStep = function() {
 
   TPS.Login();
   TPS.Sync(ACTIONS.ACTION_SYNC_WIPE_CLIENT);
-}
+};
 
 var teardownTest = function() {
   assert.ok(true, "teardownTest passes");
-}
+};
 
 var teardownModule = function() {
   assert.ok(true, "teardownModule passes");
-}
+};

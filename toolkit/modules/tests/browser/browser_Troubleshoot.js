@@ -71,7 +71,7 @@ var tests = [
 
   function unicodePreferences(done) {
     let name = "font.name.sans-serif.x-western";
-    let utf8Value = "\xc4\x8capk\xc5\xafv Krasopis"
+    let utf8Value = "\xc4\x8capk\xc5\xafv Krasopis";
     let unicodeValue = "\u010Capk\u016Fv Krasopis";
 
     // set/getCharPref work with 8bit strings (utf8)

@@ -28,7 +28,7 @@ function test_audio_in_browser() {
   return {
     computedVolume: audio.computedVolume,
     computedMuted: audio.computedMuted
-  }
+  };
 }
 
 async function test_on_browser(url, browser) {

@@ -22,7 +22,7 @@ function addTest(test) {
 
 function runNextTest() {
   if (_tests.length == 0) {
-    SimpleTest.finish()
+    SimpleTest.finish();
     return;
   }
   _tests.shift()();
@@ -31,7 +31,7 @@ function runNextTest() {
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
 addTest(function findAllCssSelectors() {
   var nodes = document.querySelectorAll("*");
@@ -52,7 +52,7 @@ addTest(function findCssSelectorNotContainedInDocument() {
   unattached.id = "unattached";
   try {
     findCssSelector(unattached);
-    ok(false, "Unattached node did not throw")
+    ok(false, "Unattached node did not throw");
   } catch (e) {
     ok(e, "Unattached node throws an exception");
   }
@@ -61,7 +61,7 @@ addTest(function findCssSelectorNotContainedInDocument() {
   unattached.appendChild(unattachedChild);
   try {
     findCssSelector(unattachedChild);
-    ok(false, "Unattached child node did not throw")
+    ok(false, "Unattached child node did not throw");
   } catch (e) {
     ok(e, "Unattached child node throws an exception");
   }
@@ -69,7 +69,7 @@ addTest(function findCssSelectorNotContainedInDocument() {
   var unattachedBody = document.createElement("body");
   try {
     findCssSelector(unattachedBody);
-    ok(false, "Unattached body node did not throw")
+    ok(false, "Unattached body node did not throw");
   } catch (e) {
     ok(e, "Unattached body node throws an exception");
   }

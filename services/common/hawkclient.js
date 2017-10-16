@@ -96,7 +96,7 @@ this.HawkClient = function(host) {
   // Clock offset in milliseconds between our client's clock and the date
   // reported in responses from our host.
   this._localtimeOffsetMsec = 0;
-}
+};
 
 this.HawkClient.prototype = {
 
@@ -346,4 +346,4 @@ this.HawkClient.prototype = {
     return new HAWKAuthenticatedRESTRequest(uri, credentials, extra);
   },
 
-}
+};

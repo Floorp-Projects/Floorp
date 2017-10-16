@@ -50,13 +50,13 @@
 
       this.invoke = function changeText_invoke() {
         this.textNode.data = aValue;
-      }
+      };
 
       this.getID = function changeText_getID() {
         return "change text '" + shortenString(this.textData) + "' -> '" +
           shortenString(this.textNode.data) + "' for " +
           prettyName(this.containerNode);
-      }
+      };
     }
 
     function expStr(x, doublings) {

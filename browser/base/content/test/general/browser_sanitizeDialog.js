@@ -398,7 +398,7 @@ add_task(async function test_no_formdata_history_to_clear() {
        "and will be checked from previous preference.");
 
     this.acceptDialog();
-  }
+  };
   wh.open();
   await wh.promiseClosed;
   await promiseSanitized;
@@ -640,7 +640,7 @@ var now_uSec = now_mSec * 1000;
  */
 function WindowHelper(aWin) {
   this.win = aWin;
-  this.promiseClosed = new Promise(resolve => { this._resolveClosed = resolve });
+  this.promiseClosed = new Promise(resolve => { this._resolveClosed = resolve; });
 }
 
 WindowHelper.prototype = {
@@ -681,7 +681,7 @@ WindowHelper.prototype = {
        (hidden ? "" : "not ") + "hidden");
     let height = 0;
     if (!hidden) {
-      ok(list.boxObject.height > 30, "listbox has sufficient size")
+      ok(list.boxObject.height > 30, "listbox has sufficient size");
       height += list.boxObject.height;
     }
     if (this.isWarningPanelVisible())
@@ -902,7 +902,7 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
                            resolve(name);
                          }
                        })
-   )
+   );
 }
 
 /**

@@ -8,7 +8,7 @@
 "use strict";
 
 add_task(async function test() {
-  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html"
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html";
   const TITLE_1 = "Title 1";
   const TITLE_2 = "Title 2";
 

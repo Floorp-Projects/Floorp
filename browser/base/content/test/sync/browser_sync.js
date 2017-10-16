@@ -160,7 +160,7 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
   if (fxastatus) {
     is(statusNode.getAttribute("fxastatus"), fxastatus, "fxa fxastatus has the right value");
   } else {
-    ok(!statusNode.hasAttribute("fxastatus"), "fxastatus is unset")
+    ok(!statusNode.hasAttribute("fxastatus"), "fxastatus is unset");
   }
   if (avatarURL) {
     is(avatar.style.listStyleImage, `url("${avatarURL}")`, "fxa avatar URL is set");
@@ -225,7 +225,7 @@ function promiseObserver(topic) {
     let obs = (aSubject, aTopic, aData) => {
       Services.obs.removeObserver(obs, aTopic);
       resolve(aSubject);
-    }
+    };
     Services.obs.addObserver(obs, topic);
   });
 }

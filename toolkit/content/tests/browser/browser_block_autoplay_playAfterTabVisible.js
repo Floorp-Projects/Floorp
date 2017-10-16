@@ -24,7 +24,7 @@ function check_audio_pause_state(expectPause) {
   }
 
   is(audio.paused, expectPause,
-    "The pause state of audio is corret.")
+    "The pause state of audio is corret.");
 }
 
 function play_audio() {
@@ -39,7 +39,7 @@ function play_audio() {
       audio.onplay = null;
       ok(true, "Audio starts playing.");
       resolve();
-    }
+    };
   });
 }
 

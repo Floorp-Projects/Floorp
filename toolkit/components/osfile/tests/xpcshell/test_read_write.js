@@ -93,7 +93,7 @@ add_test_pair(async function read_write_all() {
       await OS.File.remove(DEST_PATH);
       await OS.File.remove(TMP_PATH);
     })();
-  }
+  };
 
   await test_with_options({tmpPath: TMP_PATH}, "Renaming, not flushing");
   await test_with_options({tmpPath: TMP_PATH, flush: true}, "Renaming, flushing");

@@ -23,4 +23,4 @@ self.onmessage = function(e) {
   } else {
     ok(false, "Unknown message type");
   }
-}
+};

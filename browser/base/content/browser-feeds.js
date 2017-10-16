@@ -438,7 +438,7 @@ var FeedHandler = {
   // nsIObserver
   observe(subject, topic, data) {
     if (topic == "nsPref:changed") {
-      LOG(`Pref changed ${data}`)
+      LOG(`Pref changed ${data}`);
       if (this._prefChangeCallback) {
         this._prefChangeCallback.disarm();
       }

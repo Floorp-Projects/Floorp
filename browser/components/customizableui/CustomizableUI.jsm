@@ -466,7 +466,7 @@ var CustomizableUIInternal = {
       return;
     // we're upgrading, update state if necessary
     for (let id in ObsoleteBuiltinButtons) {
-      let version = ObsoleteBuiltinButtons[id]
+      let version = ObsoleteBuiltinButtons[id];
       if (version == kVersion) {
         gSeenWidgets.add(id);
         gDirty = true;
@@ -578,7 +578,7 @@ var CustomizableUIInternal = {
       // Check aProperties instead of props because this check is only interested
       // in the passed arguments, not the state of a potentially pre-existing area.
       if (!aInternalCaller && aProperties.defaultCollapsed) {
-        throw new Error("defaultCollapsed is only allowed for default toolbars.")
+        throw new Error("defaultCollapsed is only allowed for default toolbars.");
       }
       if (!props.has("defaultCollapsed")) {
         props.set("defaultCollapsed", true);
@@ -1297,7 +1297,7 @@ var CustomizableUIInternal = {
   _getSpecialIdForNode(aNode) {
     if (typeof aNode == "object" && aNode.localName) {
       if (aNode.id) {
-        return aNode.id
+        return aNode.id;
       }
       if (aNode.localName.startsWith("toolbar")) {
         return aNode.localName.substring(7);
@@ -2555,7 +2555,7 @@ var CustomizableUIInternal = {
       let widgetNode = window.document.getElementById(aWidgetId) ||
                        window.gNavToolbox.palette.getElementsByAttribute("id", aWidgetId)[0];
       if (widgetNode) {
-        let container = widgetNode.parentNode
+        let container = widgetNode.parentNode;
         this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null,
                              container, true);
         widgetNode.remove();

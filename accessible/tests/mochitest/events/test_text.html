@@ -48,11 +48,11 @@
       this.invoke = function removeChildSpan_invoke() {
         // remove HTML span, a first child of the node
         this.DOMNode.firstChild.remove();
-      }
+      };
 
       this.getID = function removeChildSpan_getID() {
         return "Remove inaccessible span containing accessible nodes" + prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -86,12 +86,12 @@
           sSpan.textContent = "22";
           topSpan.appendChild(sSpan);
         }
-      }
+      };
 
       this.getID = function insertChildSpan_getID() {
        return "Insert inaccessible span containing accessibles" +
           prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -108,12 +108,12 @@
         getAccessible(childDiv);
 
         this.DOMNode.removeChild(childDiv);
-      }
+      };
 
       this.getID = function removeChildDiv_getID() {
         return "Remove accessible div from the middle of text accessible " +
           prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -125,12 +125,12 @@
       this.invoke = function insertChildDiv_invoke() {
         var childDiv = document.createElement("div");
         this.DOMNode.insertBefore(childDiv, this.DOMNode.childNodes[1]);
-      }
+      };
 
       this.getID = function insertChildDiv_getID() {
         return "Insert accessible div into the middle of text accessible " +
           prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -148,12 +148,12 @@
           while (this.DOMNode.firstChild)
             this.DOMNode.firstChild.remove();
         }
-      }
+      };
 
       this.getID = function removeChildren_getID() {
         return "remove children of " + prettyName(aID) +
           (aLastToFirst ? " from last to first" : " from first to last");
-      }
+      };
     }
 
     /**
@@ -170,12 +170,12 @@
         this.DOMNode.setSelectionRange(aStart, aEnd);
 
         synthesizeKey("VK_DELETE", {});
-      }
+      };
 
       this.getID = function removeTextFromInput_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -190,11 +190,11 @@
       this.invoke = function insertTextIntoInput_invoke() {
         this.DOMNode.focus();
         synthesizeKey("a", {});
-      }
+      };
 
       this.getID = function insertTextIntoInput_getID() {
         return "Insert text to " + aStart + " for " + prettyName(aID);
-      }
+      };
     }
 
     /**
@@ -213,12 +213,12 @@
         selection.addRange(range);
 
         synthesizeKey("VK_DELETE", {});
-      }
+      };
 
       this.getID = function removeTextFromEditable_getID() {
         return "Remove text from " + aStart + " to " + aEnd + " for " +
           prettyName(aID);
-      }
+      };
 
       this.textNode = getNode(aTextNode);
     }

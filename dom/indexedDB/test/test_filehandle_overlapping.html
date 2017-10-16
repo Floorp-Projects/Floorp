@@ -39,21 +39,21 @@
         is(stepNumber, 1, "This callback came first");
         stepNumber++;
         event.target.fileHandle.oncomplete = grabEventAndContinueHandler;
-      }
+      };
 
       request = mutableFile.open("readwrite").append("string2");
       request.onsuccess = function(event) {
         is(stepNumber, 2, "This callback came second");
         stepNumber++;
         event.target.fileHandle.oncomplete = grabEventAndContinueHandler;
-      }
+      };
 
       request = mutableFile.open("readwrite").append("string3");
       request.onsuccess = function(event) {
         is(stepNumber, 3, "This callback came third");
         stepNumber++;
         event.target.fileHandle.oncomplete = grabEventAndContinueHandler;
-      }
+      };
 
       stepNumber++;
       yield undefined; yield undefined; yield undefined;

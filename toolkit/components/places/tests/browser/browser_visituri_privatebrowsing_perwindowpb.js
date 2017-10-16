@@ -30,7 +30,7 @@ add_task(async function setup() {
   Services.obs.addObserver(observer, "uri-visit-saved");
 
   registerCleanupFunction(async function() {
-    await PlacesTestUtils.clearHistory()
+    await PlacesTestUtils.clearHistory();
   });
 });
 

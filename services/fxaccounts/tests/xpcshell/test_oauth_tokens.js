@@ -15,7 +15,7 @@ function promiseNotification(topic) {
     let observe = () => {
       Services.obs.removeObserver(observe, topic);
       resolve();
-    }
+    };
     Services.obs.addObserver(observe, topic);
   });
 }
@@ -54,7 +54,7 @@ MockStorageManager.prototype = {
     this.accountData = null;
     return Promise.resolve();
   }
-}
+};
 
 function MockFxAccountsClient() {
   this._email = "nobody@example.com";
@@ -75,7 +75,7 @@ function MockFxAccountsClient() {
 
 MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype
-}
+};
 
 function MockFxAccounts(mockGrantClient) {
   return new FxAccounts({
@@ -147,7 +147,7 @@ MockFxAccountsOAuthGrantClient.prototype = {
   // and some stuff used only for tests.
   numTokenFetches: 0,
   activeTokens: null,
-}
+};
 
 add_task(async function testRevoke() {
   let client = new MockFxAccountsOAuthGrantClient();

@@ -23,21 +23,21 @@
       this.invoke = function insertBefore_invoke() {
         testText(aId, 0, -1, aTextBefore);
         getNode(aId).insertBefore(aEl, getNode(aId).firstChild);
-      }
+      };
 
       this.finalCheck = function insertBefore_finalCheck() {
         testText(aId, aStartIdx, aEndIdx, aTextAfter);
-      }
+      };
 
       this.getID = function insertTextBefore_getID() {
         return "insert " + prettyName(aEl) + " before";
-      }
+      };
     }
 
     function insertTextBefore(aId, aTextBefore, aText) {
       var el = document.createTextNode(aText);
       this.__proto__ = new insertBefore(aId, el, aTextBefore,
-                                        aText + aTextBefore, 0, -1)
+                                        aText + aTextBefore, 0, -1);
     }
 
     function insertImgBefore(aId, aTextBefore) {
@@ -46,12 +46,12 @@
       el.setAttribute("alt", "mozilla");
 
       this.__proto__ = new insertBefore(aId, el, aTextBefore,
-                                        kEmbedChar + aTextBefore, 0, -1)
+                                        kEmbedChar + aTextBefore, 0, -1);
     }
 
     function insertTextBefore2(aId) {
       var el = document.createTextNode("hehe");
-      this.__proto__ = new insertBefore(aId, el, "ho", "ho", 4, -1)
+      this.__proto__ = new insertBefore(aId, el, "ho", "ho", 4, -1);
     }
 
     var gQueue = null;

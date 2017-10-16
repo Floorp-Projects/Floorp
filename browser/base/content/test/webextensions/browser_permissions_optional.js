@@ -9,7 +9,7 @@ add_task(async function test_request_permissions_without_prompt() {
                               `${NO_PROMPT_PERM} permission was granted.`);
       let perms = await browser.permissions.getAll();
       browser.test.assertTrue(perms.permissions.includes(NO_PROMPT_PERM),
-                              `${NO_PROMPT_PERM} permission exists.`)
+                              `${NO_PROMPT_PERM} permission exists.`);
       browser.test.sendMessage("permsGranted");
       }, {once: true});
     browser.test.sendMessage("pageReady");

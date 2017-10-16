@@ -25,7 +25,7 @@ add_task(async function checkBackFromInvalidURI() {
     let promiseOtherPageLoaded = BrowserTestUtils.waitForEvent(tab.linkedBrowser, "pageshow", false,
       // Be paranoid we *are* actually seeing this other page load, not some kind of race
       // for if/when we do start firing pageshow for the error page...
-      function(e) { return gBrowser.currentURI.spec == "about:robots" }
+      function(e) { return gBrowser.currentURI.spec == "about:robots"; }
     );
     gBrowser.goBack();
     await promiseOtherPageLoaded;

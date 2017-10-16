@@ -23,7 +23,7 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     bookmarkPanel.removeAttribute("animate");
   });
-})
+});
 
 async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
                                 shouldAutoClose, popupHideFn, isBookmarkRemoved}) {

@@ -42,7 +42,7 @@ function expectNotifications(skipDescendants) {
             return arg;
           });
           notifications.push({ name, arguments: { guid: args[5] }});
-        }
+        };
       }
 
       if (name in target)

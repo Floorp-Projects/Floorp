@@ -25,7 +25,7 @@ function check_audio_pause_state(expectPause) {
   }
 
   is(audio.paused, expectPause,
-    "The pause state of audio is corret.")
+    "The pause state of audio is corret.");
 }
 
 function play_not_in_tree_audio() {

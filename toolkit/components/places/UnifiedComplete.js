@@ -1029,7 +1029,7 @@ Search.prototype = {
       if (!SwitchToTabStorage.updating) {
         conn.interrupt();
       }
-    }
+    };
 
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, this);
     TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, this);
@@ -1248,7 +1248,7 @@ Search.prototype = {
       return site.uri.host.startsWith(this._searchStringFromWWW)
              && matchScheme(site, this);
     }
-    let site = PreloadedSiteStorage.sites.find(matchStrict, this)
+    let site = PreloadedSiteStorage.sites.find(matchStrict, this);
     if (site) {
       let match = {
         // We keep showing prefix that user typed, then what we match on
@@ -1696,7 +1696,7 @@ Search.prototype = {
         // by "remote" matches.
         frecency: FRECENCY_DEFAULT + 1,
         icon,
-      }
+      };
       this._addMatch(match);
     }
   },
@@ -2384,7 +2384,7 @@ Search.prototype = {
       this._autocompleteSearch = null;
     }
   },
-}
+};
 
 // UnifiedComplete class
 // component @mozilla.org/autocomplete/search;1?name=unifiedcomplete

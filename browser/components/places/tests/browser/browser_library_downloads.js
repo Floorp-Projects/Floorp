@@ -30,7 +30,7 @@ function test() {
       { uri: NetUtil.newURI("http://ubuntu.org"),
         visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_DOWNLOAD) ]
       },
-    ]
+    ];
     PlacesUtils.asyncHistory.updatePlaces(places, {
       handleResult() {},
       handleError() {
@@ -53,8 +53,8 @@ function test() {
         win.close();
         PlacesTestUtils.clearHistory().then(finish);
       }
-    })
-  }
+    });
+  };
 
   openLibrary(onLibraryReady, "Downloads");
 }
@@ -65,4 +65,4 @@ function VisitInfo(aTransitionType) {
       PlacesUtils.history.TRANSITION_LINK : aTransitionType;
   this.visitDate = now++ * 1000;
 }
-VisitInfo.prototype = {}
+VisitInfo.prototype = {};

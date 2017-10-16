@@ -32,7 +32,7 @@ add_test(function test_findCluster() {
     });
 
     Service.identity._ensureValidToken = () => Promise.resolve(true);
-    Service.identity._token = { endpoint: "http://weave.user.node" }
+    Service.identity._token = { endpoint: "http://weave.user.node" };
 
     _("_findCluster() returns the user's cluster node");
     let cluster = Service._clusterManager._findCluster();

@@ -28,7 +28,7 @@ function* testSteps()
   db.onversionchange = function(event) {
     info("Got versionchange event for db 1");
     event.target.close();
-  }
+  };
 
   executeSoon(continueToNextStepSync);
   yield undefined;

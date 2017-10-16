@@ -439,7 +439,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
       item.setAttribute("value", option.index);
 
       if (parentElement) {
-        item.classList.add("contentSelectDropdown-ingroup")
+        item.classList.add("contentSelectDropdown-ingroup");
       }
     }
   }

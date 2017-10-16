@@ -38,7 +38,7 @@ add_task(async function test_sends_serialized_data() {
                    "featureStatus:BLOCKED_DRIVER_VERSION\tos:WINNT 6.1\tvendor:0x10de\t" +
                    "versionRange:0,*";
   let received;
-  const observe = (subject, topic, data) => { received = data };
+  const observe = (subject, topic, data) => { received = data; };
   Services.obs.addObserver(observe, EVENT_NAME);
   blocklist._notifyObserversBlocklistGFX();
   equal(received, expected);
@@ -74,7 +74,7 @@ add_task(async function test_empty_values_are_ignored() {
   "</blocklist>";
   const blocklist = Blocklist();
   let received;
-  const observe = (subject, topic, data) => { received = data };
+  const observe = (subject, topic, data) => { received = data; };
   Services.obs.addObserver(observe, EVENT_NAME);
   blocklist._loadBlocklistFromString(input);
   ok(received.indexOf("os" < 0));
@@ -91,7 +91,7 @@ add_task(async function test_empty_devices_are_ignored() {
   "</blocklist>";
   const blocklist = Blocklist();
   let received;
-  const observe = (subject, topic, data) => { received = data };
+  const observe = (subject, topic, data) => { received = data; };
   Services.obs.addObserver(observe, EVENT_NAME);
   blocklist._loadBlocklistFromString(input);
   ok(received.indexOf("devices" < 0));

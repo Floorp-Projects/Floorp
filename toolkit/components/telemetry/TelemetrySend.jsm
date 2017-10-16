@@ -530,7 +530,7 @@ var SendScheduler = {
         nextSendDelay = this._backoffDelay;
       }
 
-      this._log.trace("_doSendTask - waiting for next send opportunity, timeout is " + nextSendDelay)
+      this._log.trace("_doSendTask - waiting for next send opportunity, timeout is " + nextSendDelay);
       this._sendTaskState = "wait on next send opportunity";
       const cancelled = await CancellableTimeout.promiseWaitOnTimeout(nextSendDelay);
       if (cancelled) {

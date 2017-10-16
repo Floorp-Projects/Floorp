@@ -20,7 +20,7 @@ function registerPopupEventHandler(eventName, callback, win) {
     delete gActiveListeners[eventName];
 
     callback.call(win.PopupNotifications.panel);
-  }
+  };
   win.PopupNotifications.panel.addEventListener(eventName,
                                                 gActiveListeners[eventName]);
 }

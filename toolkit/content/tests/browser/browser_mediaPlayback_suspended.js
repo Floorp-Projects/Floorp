@@ -17,7 +17,7 @@ function wait_for_event(browser, event) {
 function check_audio_suspended(suspendedType) {
   var list = content.document.getElementsByTagName("audio");
   if (list.length != 1) {
-    ok(false, "There should be only one audio element in page!")
+    ok(false, "There should be only one audio element in page!");
   }
 
   var audio = list[0];
@@ -28,7 +28,7 @@ function check_audio_suspended(suspendedType) {
 function check_audio_pause_state(expectedPauseState) {
   var list = content.document.getElementsByTagName("audio");
   if (list.length != 1) {
-    ok(false, "There should be only one audio element in page!")
+    ok(false, "There should be only one audio element in page!");
   }
 
   var audio = list[0];

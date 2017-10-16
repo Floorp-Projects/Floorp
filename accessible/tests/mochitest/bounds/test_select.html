@@ -32,15 +32,15 @@
       this.invoke = function openComboboxNCheckBounds_invoke() {
         getNode(aID).focus();
         synthesizeKey("VK_DOWN", { altKey: true });
-      }
+      };
 
       this.finalCheck = function openComboboxNCheckBounds_invoke() {
         testBounds(this.comboboxOption);
-      }
+      };
 
       this.getID = function openComboboxNCheckBounds_getID() {
         return "open combobox and test boundaries";
-      }
+      };
     }
 
     // gA11yEventDumpToConsole = true;

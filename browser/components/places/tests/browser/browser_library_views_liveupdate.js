@@ -185,7 +185,7 @@ let bookmarksObserver = {
         let cellText = tree.view.getCellText(aTreeRowIndex,
                                              tree.columns.getColumnAt(0));
         return cellText == aNewValue;
-      }
+      };
       let [node, , valid] = getNodeForTreeItem(aItemId, gLibrary.PlacesOrganizer._places, validator);
       if (node) // Only visible nodes.
         ok(valid, "Title cell value has been correctly updated");
@@ -238,7 +238,7 @@ function getNodeForTreeItem(aItemId, aTree, aValidator) {
       if (!aTree.view.hasNextSibling(aContainerIndex + 1, i))
         break;
     }
-    return [null, null, false]
+    return [null, null, false];
   }
 
   // Root node is hidden, so we need to manually walk the first level.

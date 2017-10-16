@@ -33,15 +33,15 @@
         // ensure we start with no subtree
         testAccessibleTree("canvas", { CANVAS: [] });
         getNode("dialog").style.display = "block";
-      }
+      };
 
       this.finalCheck = function addSubtree_finalCheck() {
         testAccessibleTree("dialog", { DIALOG: [] });
-      }
+      };
 
       this.getID = function addSubtree_getID() {
         return "show canvas subdom";
-      }
+      };
     }
 
     // //////////////////////////////////////////////////////////////////////////

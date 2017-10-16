@@ -254,7 +254,7 @@ Observer.prototype = {
     this._monitor.dispose();
     this.observe = function poison() {
       throw new Error("Internal error: I should have stopped receiving notifications");
-    }
+    };
   },
 };
 

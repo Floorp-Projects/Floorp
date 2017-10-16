@@ -55,7 +55,7 @@ const ServerSocket = Components.Constructor(
 const BinaryOutputStream = Components.Constructor(
                                       "@mozilla.org/binaryoutputstream;1",
                                       "nsIBinaryOutputStream",
-                                      "setOutputStream")
+                                      "setOutputStream");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
                                    "@mozilla.org/mime;1",
@@ -133,7 +133,7 @@ function getTempFile(aLeafName) {
 
   do_register_cleanup(function() {
     try {
-      file.remove(false)
+      file.remove(false);
     } catch (e) {
       if (!(e instanceof Components.Exception &&
             (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED ||

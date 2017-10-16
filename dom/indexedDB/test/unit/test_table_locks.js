@@ -82,7 +82,7 @@ function doReadOnlyTransaction(db, key, remaining)
         key = 0;
       }
       doReadOnlyTransaction(db, key, remaining - 1);
-    }
+    };
   };
 }
 
@@ -110,6 +110,6 @@ function doReadWriteTransaction(db, key, remaining)
         key = 0;
       }
       doReadWriteTransaction(db, key, remaining - 1);
-    }
+    };
   };
 }

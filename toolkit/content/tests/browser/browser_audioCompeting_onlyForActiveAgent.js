@@ -93,7 +93,7 @@ function play_audio1_from_page() {
       audio1.onplay = null;
       ok(true, "Audio1 started playing.");
       resolve();
-    }
+    };
   });
 }
 
@@ -110,7 +110,7 @@ function stop_audio1_from_page() {
       audio1.onpause = null;
       ok(true, "Audio1 stopped playing.");
       resolve();
-    }
+    };
   });
 }
 

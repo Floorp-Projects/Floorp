@@ -12,7 +12,7 @@ registerCleanupFunction(() => {
 function testWithAPI(task) {
   return async function() {
     await BrowserTestUtils.withNewTab(TESTPAGE, task);
-  }
+  };
 }
 
 let gProvider = new MockProvider();

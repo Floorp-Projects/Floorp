@@ -25,7 +25,7 @@
           "initial current mode is correct");
         AccessFu.Input.quickNavMode.next();
         _expectMode(aNextMode, AccessFuTest.nextTest);
-      }
+      };
     }
 
     function prevMode(aCurrentMode, aNextMode) {
@@ -34,7 +34,7 @@
           "initial current mode is correct");
         AccessFu.Input.quickNavMode.previous();
         _expectMode(aNextMode, AccessFuTest.nextTest);
-      }
+      };
     }
 
     function setMode(aModeIndex, aExpectedMode) {
@@ -44,7 +44,7 @@
           function() {
             _expectMode(aExpectedMode, AccessFuTest.nextTest);
         });
-      }
+      };
     }
 
     function reconfigureModes() {

@@ -105,7 +105,7 @@ function makeSafe(aCallback) {
     } catch (ex) {
       logger.warn("XPI Database callback failed", ex);
     }
-  }
+  };
 }
 
 /**
@@ -1619,7 +1619,7 @@ this.XPIDatabaseReconcile = {
         XPIProvider.allAppGlobal = false;
 
       let isActive = !currentAddon.disabled && !currentAddon.pendingUninstall;
-      let wasActive = previousAddon ? previousAddon.active : currentAddon.active
+      let wasActive = previousAddon ? previousAddon.active : currentAddon.active;
 
       if (!previousAddon) {
         // If we had a manifest for this add-on it was a staged install and
@@ -1761,4 +1761,4 @@ this.XPIDatabaseReconcile = {
 
     return true;
   },
-}
+};

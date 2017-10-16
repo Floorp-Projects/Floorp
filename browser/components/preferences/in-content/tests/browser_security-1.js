@@ -8,10 +8,10 @@ const PREFS = [
   "browser.safebrowsing.downloads.remote.block_uncommon"
 ];
 
-let originals = PREFS.map(pref => [pref, Services.prefs.getBoolPref(pref)])
+let originals = PREFS.map(pref => [pref, Services.prefs.getBoolPref(pref)]);
 let originalMalwareTable = Services.prefs.getCharPref("urlclassifier.malwareTable");
 registerCleanupFunction(function() {
-  originals.forEach(([pref, val]) => Services.prefs.setBoolPref(pref, val))
+  originals.forEach(([pref, val]) => Services.prefs.setBoolPref(pref, val));
   Services.prefs.setCharPref("urlclassifier.malwareTable", originalMalwareTable);
 });
 

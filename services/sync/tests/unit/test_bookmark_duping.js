@@ -99,7 +99,7 @@ async function validate(collection, expectedFailures = []) {
       }
     }
     return false;
-  }
+  };
   let expected = [];
   let unexpected = [];
   for (let elt of summary) {

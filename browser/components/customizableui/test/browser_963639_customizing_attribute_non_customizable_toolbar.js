@@ -13,7 +13,7 @@ add_task(async function() {
   toolbar.id = kToolbar;
   gNavToolbox.appendChild(toolbar);
 
-  let testToolbar = document.getElementById(kToolbar)
+  let testToolbar = document.getElementById(kToolbar);
   ok(testToolbar, "Toolbar was created.");
   is(gNavToolbox.getElementsByAttribute("id", kToolbar).length, 1,
      "Toolbar was added to the navigator toolbox");

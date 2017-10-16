@@ -324,7 +324,7 @@ this.DownloadsCommon = {
       slowestSpeed: Infinity,
       rawTimeLeft: -1,
       percentComplete: -1
-    }
+    };
 
     for (let download of downloads) {
       summary.numActive++;
@@ -1433,4 +1433,4 @@ DownloadsSummaryData.prototype = {
         this._lastTimeLeft);
     }
   },
-}
+};

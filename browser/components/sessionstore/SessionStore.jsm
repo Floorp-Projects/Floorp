@@ -1996,7 +1996,7 @@ var SessionStoreInternal = {
       title: aTab.label,
       userTypedValue: browser.userTypedValue || "",
       userTypedClear: browser.userTypedClear || 0
-    }
+    };
   },
 
   /**
@@ -2849,7 +2849,7 @@ var SessionStoreInternal = {
     // at this point.
     if (browser.isRemoteBrowser) {
       throw new Error("SessionStore.reviveCrashedTab: " +
-                      "Somehow a crashed browser is still remote.")
+                      "Somehow a crashed browser is still remote.");
     }
 
     // We put the browser at about:blank in case the user is
@@ -2999,7 +2999,7 @@ var SessionStoreInternal = {
     // Don't continue if the tab was closed before TabStateFlusher.flush resolves.
     if (tab.linkedBrowser) {
       let tabState = TabState.collect(tab);
-      return { index: tabState.index - 1, entries: tabState.entries }
+      return { index: tabState.index - 1, entries: tabState.entries };
     }
     return null;
   },
@@ -3153,8 +3153,8 @@ var SessionStoreInternal = {
         // prepend the last non-popup browser window, so that if the user loads more tabs
         // at startup we don't accidentally add them to a popup window
         do {
-          total.unshift(lastClosedWindowsCopy.shift())
-        } while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
+          total.unshift(lastClosedWindowsCopy.shift());
+        } while (total[0].isPopup && lastClosedWindowsCopy.length > 0);
       }
     }
 
@@ -4853,7 +4853,7 @@ var TabRestoreQueue = {
         let definition = {value, configurable: true};
         Object.defineProperty(this, "restoreOnDemand", definition);
         return value;
-      }
+      };
 
       const PREF = "browser.sessionstore.restore_on_demand";
       Services.prefs.addObserver(PREF, updateValue);
@@ -4867,7 +4867,7 @@ var TabRestoreQueue = {
         let definition = {value, configurable: true};
         Object.defineProperty(this, "restorePinnedTabsOnDemand", definition);
         return value;
-      }
+      };
 
       const PREF = "browser.sessionstore.restore_pinned_tabs_on_demand";
       Services.prefs.addObserver(PREF, updateValue);
@@ -4881,7 +4881,7 @@ var TabRestoreQueue = {
         let definition = {value, configurable: true};
         Object.defineProperty(this, "restoreHiddenTabs", definition);
         return value;
-      }
+      };
 
       const PREF = "browser.sessionstore.restore_hidden_tabs";
       Services.prefs.addObserver(PREF, updateValue);

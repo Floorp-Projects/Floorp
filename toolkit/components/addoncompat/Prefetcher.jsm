@@ -151,7 +151,7 @@ PropertyOp.prototype.addObject = function(database, obj) {
   if (has && !isPrimitive(propValue) && this.outputTable) {
     database.add(this.outputTable, propValue);
   }
-}
+};
 
 PropertyOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, , propValue] = item;
@@ -163,7 +163,7 @@ PropertyOp.prototype.makeCacheEntry = function(item, cache) {
   }
   let propMap = cache.get(obj);
   propMap.set(this.prop, desc);
-}
+};
 
 function MethodOp(outputTable, inputTable, method, ...args) {
   this.outputTable = outputTable;
@@ -186,7 +186,7 @@ MethodOp.prototype.addObject = function(database, obj) {
   if (!isPrimitive(result) && this.outputTable) {
     database.add(this.outputTable, result);
   }
-}
+};
 
 MethodOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, result] = item;
@@ -212,7 +212,7 @@ MethodOp.prototype.makeCacheEntry = function(item, cache) {
 
   let desc = { configurable: false, enumerable: true, writable: false, value: methodImpl };
   propMap.set(this.method, desc);
-}
+};
 
 function CollectionOp(outputTable, inputTable) {
   this.outputTable = outputTable;
@@ -238,7 +238,7 @@ CollectionOp.prototype.addObject = function(database, obj) {
       database.add(this.outputTable, elements[i]);
     }
   }
-}
+};
 
 CollectionOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, ...elements] = item;
@@ -255,7 +255,7 @@ CollectionOp.prototype.makeCacheEntry = function(item, cache) {
     let desc = { configurable: false, enumerable: true, writable: false, value: elements[i] };
     propMap.set(i, desc);
   }
-}
+};
 
 function CopyOp(outputTable, inputTable) {
   this.outputTable = outputTable;
@@ -264,7 +264,7 @@ function CopyOp(outputTable, inputTable) {
 
 CopyOp.prototype.addObject = function(database, obj) {
   database.add(this.outputTable, obj);
-}
+};
 
 function Database(trigger, addons) {
   // Create a map of rules that apply to this specific trigger and set

@@ -51,7 +51,7 @@ var formdata_new = [
   { fieldname: "new-field",
     value: "new-value"
   }
-]
+];
 /*
  * Test phases
  */

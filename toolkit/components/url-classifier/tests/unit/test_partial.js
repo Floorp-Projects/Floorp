@@ -36,7 +36,7 @@ complete(partialHash, gethashUrl, tableName, cb) {
         }
       }
     cb.completionFinished(0);
-  }
+  };
   do_execute_soon(doCallback);
 },
 
@@ -125,7 +125,7 @@ gAssertions.completerQueried = function(data, cb) {
   var completer = data[0];
   completer.compareQueries(data[1]);
   cb();
-}
+};
 
 function doTest(updates, assertions) {
   doUpdateTest(updates, assertions, runNextTest, updateError);
@@ -518,7 +518,7 @@ function testCachedResultsWithSub() {
       var assertions = {
         "urlsDontExist": ["foo.com/a"],
         "completerQueried": [newCompleter, []]
-      }
+      };
 
       doTest([removeUpdate], assertions);
     });
@@ -537,7 +537,7 @@ function testCachedResultsWithExpire() {
       var assertions = {
         "urlsDontExist": ["foo.com/a"],
         "completerQueried": [newCompleter, []]
-      }
+      };
       doTest([expireUpdate], assertions);
     });
 }

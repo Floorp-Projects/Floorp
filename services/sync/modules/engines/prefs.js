@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "PREFS_GUID",
 
 this.PrefRec = function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-}
+};
 PrefRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Pref",
@@ -38,7 +38,7 @@ Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
 
 this.PrefsEngine = function PrefsEngine(service) {
   SyncEngine.call(this, "Prefs", service);
-}
+};
 PrefsEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: PrefStore,

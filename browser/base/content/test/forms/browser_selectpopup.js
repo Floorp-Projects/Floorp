@@ -160,7 +160,7 @@ async function doSelectTests(contentType, content) {
   is(menulist.selectedIndex, isWindows ? 9 : 1, "Select or skip disabled item selectedIndex");
 
   for (let i = 0; i < 10; i++) {
-    is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled")
+    is(menulist.getItemAtIndex(i).disabled, i >= 4 && i <= 7, "item " + i + " disabled");
   }
 
   EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
@@ -180,7 +180,7 @@ async function doSelectTests(contentType, content) {
   // Backspace should not go back
   let handleKeyPress = function(event) {
     ok(false, "Should not get keypress event");
-  }
+  };
   window.addEventListener("keypress", handleKeyPress);
   EventUtils.synthesizeKey("VK_BACK_SPACE", { });
   window.removeEventListener("keypress", handleKeyPress);
@@ -561,7 +561,7 @@ async function performLargePopupTests(win) {
   if (navigator.platform.indexOf("Mac") == 0) {
     await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
-      doc.body.style = "padding-top: 400px;"
+      doc.body.style = "padding-top: 400px;";
 
       let select = doc.getElementById("one");
       select.options[41].selected = true;

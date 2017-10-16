@@ -32,7 +32,7 @@ function verifySignatures() {
     let observer = (subject, topic, data) => {
       Services.obs.removeObserver(observer, "xpi-signature-changed");
       resolve(JSON.parse(data));
-    }
+    };
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     do_print("Verifying signatures");
@@ -121,7 +121,7 @@ add_task(async function() {
   await promiseShutdownManager();
 
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
-  gAppInfo.version = 5.0
+  gAppInfo.version = 5.0;
   startupManager(true);
 
   addon = await promiseAddonByID(ID);

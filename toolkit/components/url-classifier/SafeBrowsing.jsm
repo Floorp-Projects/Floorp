@@ -271,7 +271,7 @@ this.SafeBrowsing = {
                                              flashTable,
                                              flashExceptTable,
                                              flashSubDocTable,
-                                             flashSubDocExceptTable)
+                                             flashSubDocExceptTable);
 
     if (obsoleteLists) {
       let newLists = [this.phishingLists,

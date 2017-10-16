@@ -14,7 +14,7 @@
 function uri_in_db(aURI) {
   var options = PlacesUtils.history.getNewQueryOptions();
   options.maxResults = 1;
-  options.resultType = options.RESULTS_AS_URI
+  options.resultType = options.RESULTS_AS_URI;
   var query = PlacesUtils.history.getNewQuery();
   query.uri = aURI;
   var result = PlacesUtils.history.executeQuery(query, options);

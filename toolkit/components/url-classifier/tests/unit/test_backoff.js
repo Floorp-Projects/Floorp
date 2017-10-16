@@ -8,7 +8,7 @@ var _Datenow = jslibDate.now;
 function setNow(time) {
   jslibDate.now = function() {
     return time;
-  }
+  };
 }
 
 function run_test() {

@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 add_task(async function test_keyword_bookmarklet() {
   let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -20,7 +20,7 @@ add_task(async function test_keyword_bookmarklet() {
 
   let originalPrincipalURI = await getPrincipalURI();
 
-  await PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:'1';" })
+  await PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:'1';" });
 
   // Enter bookmarklet keyword in the URL bar
   gURLBar.value = "bm";

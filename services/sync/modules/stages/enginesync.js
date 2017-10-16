@@ -28,7 +28,7 @@ this.EngineSynchronizer = function EngineSynchronizer(service) {
   this._log.level = Log.Level[Svc.Prefs.get("log.logger.synchronizer")];
 
   this.service = service;
-}
+};
 
 EngineSynchronizer.prototype = {
   async sync(engineNamesToSync) {

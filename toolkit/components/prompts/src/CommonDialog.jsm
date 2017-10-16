@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "EnableDelayHelper",
 this.CommonDialog = function CommonDialog(args, ui) {
     this.args = args;
     this.ui   = ui;
-}
+};
 
 CommonDialog.prototype = {
     args: null,

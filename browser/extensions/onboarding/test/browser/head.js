@@ -157,7 +157,7 @@ function promiseTourNotificationClosed(browser) {
         }
         resolve(false);
       });
-    })
+    });
   };
   return BrowserTestUtils.waitForCondition(
     condition,

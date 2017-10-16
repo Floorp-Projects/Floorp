@@ -429,4 +429,4 @@ var SimpleServiceDiscovery = {
       discovery.stopDiscovery();
     }
   },
-}
+};

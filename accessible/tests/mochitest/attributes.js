@@ -208,26 +208,26 @@ function testTextAttrsWrongOffset(aID, aOffset) {
 }
 
 const kNormalFontWeight =
-  function equalsToNormal(aWeight) { return aWeight <= 400 ; }
+  function equalsToNormal(aWeight) { return aWeight <= 400 ; };
 
 const kBoldFontWeight =
-  function equalsToBold(aWeight) { return aWeight > 400; }
+  function equalsToBold(aWeight) { return aWeight > 400; };
 
 // The pt font size of the input element can vary by Linux distro.
 const kInputFontSize = WIN ?
   "10pt" : (MAC ? "8pt" : function() { return true; });
 
 const kAbsentFontFamily =
-  function(aFontFamily) { return aFontFamily != "sans-serif"; }
+  function(aFontFamily) { return aFontFamily != "sans-serif"; };
 const kInputFontFamily =
-  function(aFontFamily) { return aFontFamily != "sans-serif"; }
+  function(aFontFamily) { return aFontFamily != "sans-serif"; };
 
 const kMonospaceFontFamily =
-  function(aFontFamily) { return aFontFamily != "monospace"; }
+  function(aFontFamily) { return aFontFamily != "monospace"; };
 const kSansSerifFontFamily =
-  function(aFontFamily) { return aFontFamily != "sans-serif"; }
+  function(aFontFamily) { return aFontFamily != "sans-serif"; };
 const kSerifFontFamily =
-  function(aFontFamily) { return aFontFamily != "serif"; }
+  function(aFontFamily) { return aFontFamily != "serif"; };
 
 const kCursiveFontFamily = LINUX ? "DejaVu Serif" : "Comic Sans MS";
 

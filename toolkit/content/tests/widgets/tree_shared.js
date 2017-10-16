@@ -396,7 +396,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   for (let t = 0; t < 3; t++) {
     let testidmod = "";
     if (t == 2)
-      testidmod = " with accel"
+      testidmod = " with accel";
     else if (t == 1)
       testidmod = " rev";
     var keymod = (t == 2) ? { accelKey: true } : { };
@@ -673,7 +673,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
     synthesizeKeyExpectEvent(key, {}, tree, "!select", "key " + key + " with editing");
     is(tree.editingRow == rowIndex && tree.editingColumn == ecolumn && tree.currentIndex == ci,
                   true, testid + "key " + key + " while editing");
-  }
+  };
 
   testKey("VK_DOWN");
   testKey("VK_UP");
@@ -895,25 +895,25 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
   // methods to test along with the functions which determine the expected value
   var checkRowMethods =
   {
-    isContainer(row) { return row.container },
-    isContainerOpen(row) { return false },
-    isContainerEmpty(row) { return (row.children != null && row.children.rows.length == 0) },
-    isSeparator(row) { return row.separator },
-    getRowProperties(row) { return row.properties },
-    getLevel(row) { return row.level },
-    getParentIndex(row) { return row.parent },
+    isContainer(row) { return row.container; },
+    isContainerOpen(row) { return false; },
+    isContainerEmpty(row) { return (row.children != null && row.children.rows.length == 0); },
+    isSeparator(row) { return row.separator; },
+    getRowProperties(row) { return row.properties; },
+    getLevel(row) { return row.level; },
+    getParentIndex(row) { return row.parent; },
     hasNextSibling(row) { return r < startRow + length - 1; }
   };
 
   var checkCellMethods =
   {
-    getCellText(row, cell) { return cell.label },
-    getCellValue(row, cell) { return cell.value },
-    getCellProperties(row, cell) { return cell.properties },
-    isEditable(row, cell) { return cell.editable },
-    isSelectable(row, cell) { return cell.selectable },
-    getImageSrc(row, cell) { return cell.image },
-    getProgressMode(row, cell) { return cell.mode }
+    getCellText(row, cell) { return cell.label; },
+    getCellValue(row, cell) { return cell.value; },
+    getCellProperties(row, cell) { return cell.properties; },
+    isEditable(row, cell) { return cell.editable; },
+    isSelectable(row, cell) { return cell.selectable; },
+    getImageSrc(row, cell) { return cell.image; },
+    getProgressMode(row, cell) { return cell.mode; }
   };
 
   var failedMethods = { };

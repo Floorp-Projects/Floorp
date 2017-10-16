@@ -57,7 +57,7 @@ function* testSteps()
       if (++addedData == objectStoreData.length) {
         testGenerator.next(event);
       }
-    }
+    };
   }
   event = yield undefined;
 
@@ -73,9 +73,9 @@ function* testSteps()
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == badObjectStoreData.length) {
-        executeSoon(function() { testGenerator.next() });
+        executeSoon(function() { testGenerator.next(); });
       }
-    }
+    };
   }
   yield undefined;
   yield undefined;
@@ -101,7 +101,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreDataWeightSort.length, "Saw all weights");
@@ -119,7 +119,7 @@ function* testSteps()
     else {
       testGenerator.next();
     }
-  }
+  };
   yield undefined;
 
   is(keyIndex, objectStoreData.length + badObjectStoreData.length,

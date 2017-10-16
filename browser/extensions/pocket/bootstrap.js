@@ -70,7 +70,7 @@ function createElementWithAttrs(document, type, attrs) {
   let element = document.createElement(type);
   Object.keys(attrs).forEach(function(attr) {
     element.setAttribute(attr, attrs[attr]);
-  })
+  });
   return element;
 }
 
@@ -318,7 +318,7 @@ var PocketContextMenu = {
     }
     menu.hidden = !showSaveLinkToPocket;
   }
-}
+};
 
 // PocketReader
 // Listen for reader mode setup and add our button to the reader toolbar
@@ -377,7 +377,7 @@ var PocketReader = {
       }
     }
   }
-}
+};
 
 
 function pktUIGetter(prop, window) {
@@ -511,7 +511,7 @@ var PocketOverlay = {
     utils.removeSheet(gPocketStyleURI, this._sheetType);
   }
 
-}
+};
 
 // use enabled pref as a way for tests (e.g. test_contextmenu.html) to disable
 // the addon when running.

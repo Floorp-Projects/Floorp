@@ -264,7 +264,7 @@ var CaptivePortalWatcher = {
         return;
       }
       gBrowser.removeTab(tab);
-    }
+    };
     Services.obs.addObserver(tabCloser, "captive-portal-login-abort");
     Services.obs.addObserver(tabCloser, "captive-portal-login-success");
   },

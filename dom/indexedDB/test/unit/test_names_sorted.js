@@ -45,7 +45,7 @@ function* testSteps()
 
   event = yield undefined;
 
-  let objectStoreNames = []
+  let objectStoreNames = [];
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
     objectStoreNames.push(info.name);
@@ -80,7 +80,7 @@ function* testSteps()
 
   db = event.target.result;
 
-  objectStoreNames = []
+  objectStoreNames = [];
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
     objectStoreNames.push(info.name);

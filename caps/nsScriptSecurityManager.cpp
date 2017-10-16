@@ -20,6 +20,7 @@
 #include "nspr.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/BasePrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "SystemPrincipal.h"
 #include "NullPrincipal.h"
 #include "DomainPolicy.h"
@@ -668,12 +669,11 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     nsCOMPtr<nsIURI> sourceURI;
     aPrincipal->GetURI(getter_AddRefs(sourceURI));
     if (!sourceURI) {
-        nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aPrincipal);
-        if (expanded) {
-            nsTArray< nsCOMPtr<nsIPrincipal> > *whiteList;
-            expanded->GetWhiteList(&whiteList);
-            for (uint32_t i = 0; i < whiteList->Length(); ++i) {
-                nsresult rv = CheckLoadURIWithPrincipal((*whiteList)[i],
+        auto* basePrin = BasePrincipal::Cast(aPrincipal);
+        if (basePrin->Is<ExpandedPrincipal>()) {
+            auto expanded = basePrin->As<ExpandedPrincipal>();
+            for (auto& prin : expanded->WhiteList()) {
+                nsresult rv = CheckLoadURIWithPrincipal(prin,
                                                         aTargetURI,
                                                         aFlags);
                 if (NS_SUCCEEDED(rv)) {

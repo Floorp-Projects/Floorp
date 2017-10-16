@@ -22,7 +22,7 @@ function check_audio_volume_and_mute(expectedMute) {
 
   let expectedVolume = expectedMute ? 0.0 : 1.0;
   is(expectedVolume, audio.computedVolume, "Audio's volume is correct!");
-  is(expectedMute, audio.computedMuted, "Audio's mute state is correct!")
+  is(expectedMute, audio.computedMuted, "Audio's mute state is correct!");
 }
 
 function check_audio_suspended(suspendedType) {

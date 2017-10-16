@@ -12,11 +12,11 @@ const PREF = "browser.sessionstore.restore_on_demand";
 const PREF2 = "media.block-autoplay-until-in-foreground";
 
 add_task(async function test() {
-  Services.prefs.setBoolPref(PREF, true)
+  Services.prefs.setBoolPref(PREF, true);
   registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
 
   // Since we need to test 'activemedia-blocked' attribute.
-  Services.prefs.setBoolPref(PREF2, true)
+  Services.prefs.setBoolPref(PREF2, true);
   registerCleanupFunction(() => Services.prefs.clearUserPref(PREF2));
 
   // Add a new tab with a nice icon.

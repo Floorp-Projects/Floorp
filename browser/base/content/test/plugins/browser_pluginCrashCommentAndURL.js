@@ -151,7 +151,7 @@ function promisePluginCrashed() {
         resolve();
       });
     });
-  })
+  });
 }
 
 function onSubmitStatus(aSubject, aData) {

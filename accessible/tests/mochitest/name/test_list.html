@@ -31,7 +31,7 @@
         li.setAttribute("id", "li_start");
         li.textContent = "list start";
         getNode("list").insertBefore(li, getNode("li_end"));
-      }
+      };
 
       this.finalCheck = function bulletUpdate_finalCheck() {
         testName("li_start", "1. list start");
@@ -44,11 +44,11 @@
 
         testName("li_start", kDiscBulletText + "list start");
         testName("li_end", kDiscBulletText + "list end");
-      }
+      };
 
       this.getID = function bulletUpdate_getID() {
         return "Update bullet of list items";
-      }
+      };
     }
 
     var gQueue = null;

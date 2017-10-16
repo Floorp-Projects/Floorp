@@ -32,7 +32,7 @@ add_task(async function() {
     return () => {
       tab.removeEventListener("TabAttrModified", TabAttrModifiedListener);
       is(JSON.stringify(seenLabels), JSON.stringify(expectedLabels || []), "observed tab label changes");
-    }
+    };
   }
 
   info("setting test browser state");

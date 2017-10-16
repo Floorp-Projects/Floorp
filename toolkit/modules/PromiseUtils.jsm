@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict"
+"use strict";
 
 this.EXPORTED_SYMBOLS = ["PromiseUtils"];
 
@@ -45,7 +45,7 @@ this.PromiseUtils = {
         timeout);
     });
   },
-}
+};
 
 /**
  * The definition of Deferred object which is returned by PromiseUtils.defer(),

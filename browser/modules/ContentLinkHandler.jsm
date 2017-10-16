@@ -223,7 +223,7 @@ function handleFaviconLink(aLink, aIsRichIcon, aChromeGlobal, aFaviconLoads) {
 
   if (aFaviconLoads.has(pageUrl)) {
     let load = aFaviconLoads.get(pageUrl);
-    load.iconInfos.push(iconInfo)
+    load.iconInfos.push(iconInfo);
     // Re-initialize the timer
     load.timer.delay = FAVICON_PARSING_TIMEOUT;
   } else {

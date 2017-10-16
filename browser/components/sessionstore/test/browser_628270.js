@@ -4,11 +4,11 @@
 function test() {
   let assertNumberOfTabs = function(num, msg) {
     is(gBrowser.tabs.length, num, msg);
-  }
+  };
 
   let assertNumberOfVisibleTabs = function(num, msg) {
     is(gBrowser.visibleTabs.length, num, msg);
-  }
+  };
 
   waitForExplicitFinish();
 

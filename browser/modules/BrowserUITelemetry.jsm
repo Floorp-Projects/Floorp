@@ -133,7 +133,7 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
     "search-go-button",
     "soundplaying-icon",
     "restore-tabs-button",
-  ]
+  ];
   return DEFAULT_ITEMS.concat(PALETTE_ITEMS)
                       .concat(SPECIAL_CASES);
 });
@@ -408,7 +408,7 @@ this.BrowserUITelemetry = {
 
   _menubarMouseUp(aEvent) {
     let target = aEvent.originalTarget;
-    let tag = target.localName
+    let tag = target.localName;
     let result = (tag == "menu" || tag == "menuitem") ? tag : "other";
     this._countMouseUpEvent("click-menubar", result, aEvent.button);
   },
@@ -859,7 +859,7 @@ this.BrowserUITelemetry = {
     function reduce(aUnitLength, aSymbol) {
       if (aTimeMS >= aUnitLength) {
         let units = Math.floor(aTimeMS / aUnitLength);
-        aTimeMS = aTimeMS - (units * aUnitLength)
+        aTimeMS = aTimeMS - (units * aUnitLength);
         timeStr += units + aSymbol;
       }
     }

@@ -20,7 +20,7 @@ add_task(async function testMalformedXml() {
       async cleanup() {
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         is(gBrowser.selectedBrowser.currentURI.spec,
-           URL_MANUAL_UPDATE, "Landed on manual update page.")
+           URL_MANUAL_UPDATE, "Landed on manual update page.");
         gBrowser.removeTab(gBrowser.selectedTab);
       }
     },

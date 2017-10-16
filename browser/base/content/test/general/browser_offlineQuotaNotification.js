@@ -69,7 +69,7 @@ function test() {
       newTabBrowser.addEventListener("Initialized", function() {
         executeSoon(function() {
           checkInContentPreferences(newTabBrowser.contentWindow);
-        })
+        });
       }, {capture: true, once: true});
     });
     onCachedAttached.then(function() {

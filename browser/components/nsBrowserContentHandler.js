@@ -663,7 +663,7 @@ nsBrowserContentHandler.prototype = {
         // We don't have to show the instruction page.
         throw NS_ERROR_ABORT;
       }
-      cmdLine.handleFlag("osint", false)
+      cmdLine.handleFlag("osint", false);
     }
   },
 };

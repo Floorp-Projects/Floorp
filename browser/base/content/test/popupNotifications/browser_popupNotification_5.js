@@ -131,7 +131,7 @@ var tests = [
       // Notification should persist after attempt to dismiss by clicking on the
       // content area.
       let browser = gBrowser.selectedBrowser;
-      await BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser)
+      await BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser);
 
       // Notification should be hidden after dismissal via Don't Allow.
       this.complete = true;

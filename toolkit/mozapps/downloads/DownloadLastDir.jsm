@@ -101,7 +101,7 @@ this.DownloadLastDir = function DownloadLastDir(aWindow) {
   this.fakeContext = loadContext.usePrivateBrowsing ?
                        privateLoadContext :
                        nonPrivateLoadContext;
-}
+};
 
 DownloadLastDir.prototype = {
   isPrivate: function DownloadLastDir_isPrivate() {

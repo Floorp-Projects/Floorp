@@ -719,7 +719,7 @@ function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
     if ("attrs" in expected) {
       for (let name in expected.attrs) {
         Assert.ok(actual.hasAttribute(name));
-        let attrVal = actual.getAttribute(name)
+        let attrVal = actual.getAttribute(name);
         if (name == "label") {
           attrVal = attrVal.normalize("NFKC"); // There's a bug with …
         }

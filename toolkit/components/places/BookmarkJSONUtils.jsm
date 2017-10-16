@@ -354,13 +354,13 @@ async function fixupQuery(aQueryURI, aFolderIdMap) {
   let queryFolderGuids = [];
   for (let folderString of found) {
     let existingFolderId = folderString.match(re)[0];
-    queryFolderGuids.push(aFolderIdMap[existingFolderId])
+    queryFolderGuids.push(aFolderIdMap[existingFolderId]);
   }
 
   let newFolderIds = await PlacesUtils.promiseManyItemIds(queryFolderGuids);
   let convert = function(str, p1) {
     return "folder=" + newFolderIds.get(aFolderIdMap[p1]);
-  }
+  };
   return uri.replace(reGlobal, convert);
 }
 

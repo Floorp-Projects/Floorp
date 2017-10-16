@@ -61,7 +61,7 @@ function* testSteps()
 
     let obj = {
       name: "foo"
-    }
+    };
 
     if (!blobs) {
       obj.data = getRandomView(dataSize);
@@ -80,7 +80,7 @@ function* testSteps()
       request.onerror = function(event)
       {
         event.stopPropagation();
-      }
+      };
 
       trans.oncomplete = function(event) {
         if (iter == 1) {
@@ -88,11 +88,11 @@ function* testSteps()
         }
         j++;
         testGenerator.next(true);
-      }
+      };
       trans.onabort = function(event) {
         is(trans.error.name, "QuotaExceededError", "Reached quota limit");
         testGenerator.next(false);
-      }
+      };
 
       let completeFired = yield undefined;
       if (completeFired) {
@@ -126,7 +126,7 @@ function* testSteps()
             cursor.delete();
             cursor.continue();
           }
-        }
+        };
       }
 
       trans.onabort = unexpectedSuccessHandler;

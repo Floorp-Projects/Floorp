@@ -476,7 +476,7 @@ function testAboutModuleRegistration() {
       });
       mm.loadFrameScript("data:,(" + testConnection.toString() + ")();", false);
     });
-  }
+  };
 
   // Here's where the actual test is performed.
   return new Promise((resolve, reject) => {

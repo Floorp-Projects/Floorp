@@ -29,7 +29,7 @@ MockTabsEngine.prototype = {
   getOpenURLs() {
     return new Set();
   },
-}
+};
 
 let tabsEngine;
 
@@ -52,7 +52,7 @@ let MockClientsEngine = {
     }
     return tabsEngine.clients[id].clientName;
   },
-}
+};
 
 function configureClients(clients, clientSettings = {}) {
   // each client record is expected to have an id.

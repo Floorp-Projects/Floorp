@@ -786,7 +786,7 @@ ModalPrompter.prototype = {
             checkLabel,
             checked:    checkValue.value,
             ok:         false,
-        }
+        };
 
         this.openPrompt(args);
 

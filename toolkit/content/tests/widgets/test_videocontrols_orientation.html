@@ -24,14 +24,14 @@ let onLoaded = event => {
     {"set": [["full-screen-api.allow-trusted-requests-only", false],
              ["media.videocontrols.lock-video-orientation", true]]},
     startMediaLoad);
-}
+};
 window.addEventListener("load", onLoaded);
 
 let startMediaLoad = () => {
   // Kick off test once video has loaded, in its canplaythrough event handler.
   video.src = "video.ogg";
   video.addEventListener("canplaythrough", runTest);
-}
+};
 
 function runTest() {
   is(document.mozFullScreenElement, null, "should not be in fullscreen initially");

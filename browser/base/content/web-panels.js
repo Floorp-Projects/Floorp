@@ -72,7 +72,7 @@ function load() {
     panelBrowser.webProgress.addProgressListener(panelProgressListener,
                                                  Ci.nsIWebProgress.NOTIFY_ALL);
     panelBrowser.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
-    var cachedurl = panelBrowser.getAttribute("cachedurl")
+    var cachedurl = panelBrowser.getAttribute("cachedurl");
     if (cachedurl) {
         panelBrowser.webNavigation
                     .loadURI(cachedurl, nsIWebNavigation.LOAD_FLAGS_NONE, null,
@@ -87,7 +87,7 @@ function unload() {
 }
 
 function PanelBrowserStop() {
-    getPanelBrowser().webNavigation.stop(nsIWebNavigation.STOP_ALL)
+    getPanelBrowser().webNavigation.stop(nsIWebNavigation.STOP_ALL);
 }
 
 function PanelBrowserReload() {

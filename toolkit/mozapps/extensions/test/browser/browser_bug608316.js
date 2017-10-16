@@ -36,7 +36,7 @@ add_test(function() {
       sawUninstall = true;
       aAddon.cancelUninstall();
     }
-  }
+  };
 
   // Important to add this before opening the UI so it gets its events first
   AddonManager.addAddonListener(listener);

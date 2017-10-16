@@ -31,7 +31,7 @@ var _lastTopLevelWindowID = 0;
 // Exported symbol
 this.trackBrowserWindow = function trackBrowserWindow(aWindow) {
   WindowHelper.addWindow(aWindow);
-}
+};
 
 // Global methods
 function debug(s) {

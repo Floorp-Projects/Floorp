@@ -145,7 +145,7 @@ add_task(async function test_tabsHistogram() {
   let openedTabs = [];
   let tabCountHist = getAndClearHistogram("TAB_COUNT");
 
-  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0], "TAB_COUNT telemetry - initial tab counts")
+  checkTabCountHistogram(tabCountHist.snapshot(), [0, 0], "TAB_COUNT telemetry - initial tab counts");
 
   // Add a new tab and check that the count is right.
   BrowserUsageTelemetry._lastRecordTabCount = 0;

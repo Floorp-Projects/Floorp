@@ -128,7 +128,7 @@ var PluginHost = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
-}
+};
 
 function registerFakePluginHost() {
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
@@ -822,7 +822,7 @@ function checkExperimentsSection(data) {
 
     // Check that we have valid experiment info.
     let experimentData = experiments[id];
-    Assert.ok("branch" in experimentData, "The experiment must have branch data.")
+    Assert.ok("branch" in experimentData, "The experiment must have branch data.");
     Assert.ok(checkString(experimentData.branch), "The experiment data must be valid.");
     if ("type" in experimentData) {
       Assert.ok(checkString(experimentData.type));

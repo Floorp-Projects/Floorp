@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = ["Point", "Rect"];
  */
 this.Point = function Point(x, y) {
   this.set(x, y);
-}
+};
 
 Point.prototype = {
   clone: function clone() {

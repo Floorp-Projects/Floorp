@@ -69,7 +69,7 @@ add_UITour_task(async function test_highligh_between_buttonOnAppMenu_and_buttonO
   let pageActionPanelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);
   let highlightHiddenPromise = elementHiddenPromise(highlight, "Should hide highlight");
   gContentAPI.hideHighlight();
-  await pageActionPanelHiddenPromise
+  await pageActionPanelHiddenPromise;
   await highlightHiddenPromise;
   is(appMenu.state, "closed", "Shouldn't open the app menu after hiding highlight");
   is(pageActionPanel.state, "closed", "Should close the page action panel after hiding highlight");

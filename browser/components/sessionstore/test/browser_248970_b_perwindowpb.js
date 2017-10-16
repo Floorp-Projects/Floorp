@@ -102,7 +102,7 @@ function test() {
     promiseBrowserLoaded(tab_A.linkedBrowser).then(() => {
       // make sure that the next closed tab will increase getClosedTabCount
       Services.prefs.setIntPref(
-        "browser.sessionstore.max_tabs_undo", max_tabs_undo + 1)
+        "browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
 
       // populate tab_A with form data
       for (let i in fieldList)

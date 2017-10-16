@@ -170,9 +170,9 @@ var Authentication = {
       await FxAccountsConfig.ensureConfigured();
 
       let client = new FxAccountsClient();
-      let credentials = await client.signIn(account.username, account.password, true)
+      let credentials = await client.signIn(account.username, account.password, true);
       await fxAccounts.setSignedInUser(credentials);
-      await this._completeVerification(account.username)
+      await this._completeVerification(account.username);
 
       if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
         Logger.logInfo("Logging into Weave.");

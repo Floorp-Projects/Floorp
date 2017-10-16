@@ -59,7 +59,7 @@ function countEntries(name, message, check) {
     let count;
     FormHistory.count(obj, { handleResult: result => count = result,
                              handleError(error) {
-                               reject(error)
+                               reject(error);
                                throw new Error("Error occurred searching form history: " + error);
                              },
                              handleCompletion(reason) {
@@ -127,8 +127,8 @@ async function onHistoryReady() {
   ok((await promiseIsURIVisited(makeURI("http://before-today.com"))),
     "Pretend visit to before-today.com should still exist");
 
-  let checkZero = function(num, message) { is(num, 0, message); }
-  let checkOne = function(num, message) { is(num, 1, message); }
+  let checkZero = function(num, message) { is(num, 0, message); };
+  let checkOne = function(num, message) { is(num, 1, message); };
 
   await countEntries("10minutes", "10minutes form entry should be deleted", checkZero);
   await countEntries("1hour", "1hour form entry should still exist", checkOne);
@@ -600,7 +600,7 @@ async function setupFormHistory() {
   await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
 
   var checks = 0;
-  let checkOne = function(num, message) { is(num, 1, message); checks++; }
+  let checkOne = function(num, message) { is(num, 1, message); checks++; };
 
   // Sanity check.
   await countEntries("10minutes", "Checking for 10minutes form history entry creation", checkOne);

@@ -195,7 +195,7 @@ Preferences.isSet = function(prefName) {
  * which is equivalent.
  * @deprecated
  */
-Preferences.modified = function(prefName) { return this.isSet(prefName) },
+Preferences.modified = function(prefName) { return this.isSet(prefName); },
 
 Preferences.reset = function(prefName) {
   if (Array.isArray(prefName)) {

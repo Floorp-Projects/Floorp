@@ -97,11 +97,11 @@ add_task(async function test_closedObjectsChangedNotifications() {
   await openAndCloseTab(win, "http://example.com/");
   assertNotificationCount(7);
 
-  info("Purging domain data with no matches.")
+  info("Purging domain data with no matches.");
   Services.obs.notifyObservers(null, "browser:purge-domain-data", "mozilla.com");
   assertNotificationCount(7);
 
-  info("Purging domain data with matches.")
+  info("Purging domain data with matches.");
   await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-domain-data", "example.com"));
   assertNotificationCount(8);
 

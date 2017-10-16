@@ -466,7 +466,7 @@ const gSessionHistoryObserver = {
     window.messageManager.broadcastAsyncMessage("Browser:HideSessionRestoreButton");
 
     // Clear undo history of the URL bar
-    gURLBar.editor.transactionManager.clear()
+    gURLBar.editor.transactionManager.clear();
   }
 };
 
@@ -504,7 +504,7 @@ const gStoragePressureObserver = {
       Services.prefs.getIntPref("browser.storageManager.pressureNotification.usageThresholdGB");
     let msg = "";
     let buttons = [];
-    let usage = subject.QueryInterface(Ci.nsISupportsPRUint64).data
+    let usage = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     let prefStrBundle = document.getElementById("bundle_preferences");
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
     buttons.push({
@@ -947,7 +947,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
     let message = gNavigatorBundle.getFormattedString(
       "keywordURIFixup.message", [hostName]);
     let yesMessage = gNavigatorBundle.getFormattedString(
-      "keywordURIFixup.goTo", [hostName])
+      "keywordURIFixup.goTo", [hostName]);
 
     let buttons = [
       {
@@ -1126,7 +1126,7 @@ function _loadURIWithFlags(browser, uri, params) {
         remoteType: requiredRemoteType,
         postData,
         newFrameloader,
-      }
+      };
 
       if (params.userContextId) {
         loadParams.userContextId = params.userContextId;
@@ -2286,7 +2286,7 @@ function openLocation() {
     var win = getTopWin();
     if (win) {
       // If there's an open browser window, it should handle this command
-      win.focus()
+      win.focus();
       win.openLocation();
     } else {
       // If there are no open browser windows, open a new one
@@ -2665,7 +2665,7 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     } else {
       top.gViewSourceUtils.viewSource(args);
     }
-  }
+  };
 
   // Check if external view source is enabled.  If so, try it.  If it fails,
   // fallback to internal view source.
@@ -3054,7 +3054,7 @@ var BrowserOnClick = {
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                            .getService(Ci.nsISerializationHelper);
     let transportSecurityInfo = serhelper.deserializeObject(securityInfo);
-    transportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+    transportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
 
     let errorReporter = Cc["@mozilla.org/securityreporter;1"]
                           .getService(Ci.nsISecurityReporter);
@@ -3563,7 +3563,7 @@ var PrintPreviewListener = {
   activateBrowser(browser) {
     gBrowser.activateBrowserForPrintPreview(browser);
   },
-}
+};
 
 function getMarkupDocumentViewer() {
   return gBrowser.markupDocumentViewer;
@@ -3610,7 +3610,7 @@ var homeButtonObserver = {
     },
   onDragExit(aEvent) {
     }
-}
+};
 
 function openHomeDialog(aURL) {
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
@@ -3649,7 +3649,7 @@ var newTabButtonObserver = {
       }
     }
   }
-}
+};
 
 var newWindowButtonObserver = {
   onDragOver(aEvent) {
@@ -3666,7 +3666,7 @@ var newWindowButtonObserver = {
       }
     }
   }
-}
+};
 const DOMEventHandler = {
   init() {
     let mm = window.messageManager;
@@ -3730,7 +3730,7 @@ const DOMEventHandler = {
 
     BrowserSearch.addEngine(aBrowser, aEngine, makeURI(aURL));
   },
-}
+};
 
 const BrowserSearch = {
   addEngine(browser, engine, uri) {
@@ -3800,7 +3800,7 @@ const BrowserSearch = {
             BrowserSearch.webSearch();
             Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
           }
-        }
+        };
         win = window.openDialog(getBrowserURL(), "_blank",
                                 "chrome,all,dialog=no", "about:blank");
         Services.obs.addObserver(observer, "browser-delayed-startup-finished");
@@ -4691,7 +4691,7 @@ var XULBrowserWindow = {
       var shouldDisableFind = function(aDocument) {
         let docElt = aDocument.documentElement;
         return docElt && docElt.getAttribute("disablefastfind") == "true";
-      }
+      };
 
       var disableFindCommands = function(aDisable) {
         let findCommands = [document.getElementById("cmd_find"),
@@ -4703,7 +4703,7 @@ var XULBrowserWindow = {
           else
             elt.removeAttribute("disabled");
         }
-      }
+      };
 
       var onContentRSChange = function(e) {
         if (e.target.readyState != "interactive" && e.target.readyState != "complete")
@@ -4711,7 +4711,7 @@ var XULBrowserWindow = {
 
         e.target.removeEventListener("readystatechange", onContentRSChange);
         disableFindCommands(shouldDisableFind(e.target));
-      }
+      };
 
       // Disable find commands in documents that ask for them to be disabled.
       if (!gMultiProcessBrowser && aLocationURI &&
@@ -5207,7 +5207,7 @@ var TabsProgressListener = {
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
   },
-}
+};
 
 function nsBrowserAccess() { }
 
@@ -5395,7 +5395,7 @@ nsBrowserAccess.prototype = {
     var userContextId = aParams.openerOriginAttributes &&
                         ("userContextId" in aParams.openerOriginAttributes)
                           ? aParams.openerOriginAttributes.userContextId
-                          : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID
+                          : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 
     let referrer = aParams.referrer ? makeURI(aParams.referrer) : null;
     return this._openURIInNewTab(aURI, referrer,
@@ -5414,7 +5414,7 @@ nsBrowserAccess.prototype = {
   canClose() {
     return CanCloseWindow();
   },
-}
+};
 
 function getTogglableToolbars() {
   let toolbarNodes = Array.slice(gNavToolbox.childNodes);
@@ -6923,7 +6923,7 @@ function BrowserOpenAddonsMgr(aView) {
         emWindow = aSubject;
         browserWindow = browserWin;
       }
-    }
+    };
     Services.obs.addObserver(receivePong, "EM-pong");
     Services.obs.notifyObservers(null, "EM-ping");
     Services.obs.removeObserver(receivePong, "EM-pong");
@@ -6980,7 +6980,7 @@ function AddKeywordForSearchField() {
                                                      "tags",
                                                      "loadInSidebar" ]
                                      }, window);
-  }
+  };
   mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
 
   mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData", {}, { target: gContextMenu.target });
@@ -7131,7 +7131,7 @@ function ReportFalseDeceptiveSite() {
                             bundle.formatStringFromName("errorReportFalseDeceptiveMessage",
                                                         [message.data.blockedInfo.provider], 1));
         }
-    }
+    };
     mm.addMessageListener("DeceptiveBlockedDetails:Result", onMessage);
 
     mm.sendAsyncMessage("DeceptiveBlockedDetails");
@@ -8155,7 +8155,7 @@ const gRemoteControl = {
 function getNotificationBox(aWindow) {
   var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
   if (foundBrowser)
-    return gBrowser.getNotificationBox(foundBrowser)
+    return gBrowser.getNotificationBox(foundBrowser);
   return null;
 }
 
@@ -8871,7 +8871,7 @@ var ToolbarIconColor = {
         toolbar.setAttribute("brighttext", "true");
     }
   }
-}
+};
 
 var PanicButtonNotifier = {
   init() {
