@@ -2763,8 +2763,8 @@ class PreferencesPane extends React.PureComponent {
                 titleString: nestedPref.titleString,
                 labelClassName: `icon ${nestedPref.icon}` }))
             )),
-            React.createElement("hr", null),
-            React.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
+            !prefs.disableSnippets && React.createElement("hr", null),
+            !prefs.disableSnippets && React.createElement(PreferencesInput, { className: "showSnippets", prefName: "feeds.snippets",
               value: prefs["feeds.snippets"], onChange: this.handlePrefChange,
               titleString: { id: "settings_pane_snippets_header" },
               descString: { id: "settings_pane_snippets_body" } })
@@ -3888,13 +3888,13 @@ function addSnippetsSubscriber(store) {
     // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
     // state.Snippets.initialized             Is the snippets data initialized?
     // snippets.initialized:                  Is SnippetsProvider currently initialised?
-    if (state.Prefs.values["feeds.snippets"] && state.Snippets.initialized && !snippets.initialized &&
+    if (state.Prefs.values["feeds.snippets"] && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
     // Don't call init multiple times
     !initializing) {
       initializing = true;
       await snippets.init({ appData: state.Snippets });
       initializing = false;
-    } else if (state.Prefs.values["feeds.snippets"] === false && snippets.initialized) {
+    } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true) && snippets.initialized) {
       snippets.uninit();
     }
   });
