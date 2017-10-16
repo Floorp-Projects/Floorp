@@ -91,6 +91,7 @@ public:
     MOZ_ASSERT(aMediaDataDecoderID);
     MOZ_ASSERT(!aGPUCrashTime.IsNull());
     MOZ_ASSERT(!aErrorNotifiedTime.IsNull());
+    StaticMutexAutoLock lock(sGPUCrashMapMutex);
     auto it = sGPUCrashDataMap.find(aMediaDecoderOwnerID);
     if (it == sGPUCrashDataMap.end()) {
       sGPUCrashDataMap.insert(std::make_pair(aMediaDecoderOwnerID,
@@ -106,6 +107,7 @@ public:
   {
     MOZ_ASSERT(aMediaDecoderOwnerID);
     MOZ_ASSERT(aMediaDataDecoderID);
+    StaticMutexAutoLock lock(sGPUCrashMapMutex);
     auto it = sGPUCrashDataMap.find(aMediaDecoderOwnerID);
     if (it != sGPUCrashDataMap.end() &&
         it->second.mMediaDataDecoderID != aMediaDataDecoderID) {
@@ -121,10 +123,12 @@ public:
 
 private:
   static std::map<MediaDecoderOwnerID, GPUCrashData> sGPUCrashDataMap;
+  static StaticMutex sGPUCrashMapMutex;
 };
 
 std::map<MediaDecoderOwnerID, GPUProcessCrashTelemetryLogger::GPUCrashData>
 GPUProcessCrashTelemetryLogger::sGPUCrashDataMap;
+StaticMutex GPUProcessCrashTelemetryLogger::sGPUCrashMapMutex;
 
 /**
  * This is a singleton which controls the number of decoders that can be
