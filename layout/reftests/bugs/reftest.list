@@ -1182,7 +1182,7 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
 == 449362-1.html 449362-1-ref.html
-fuzzy-if(webrender,3,360) == 449519-1.html 449519-1-ref.html
+fuzzy-if(webrender,4,361) == 449519-1.html 449519-1-ref.html
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
 == 451876-1.html 451876-1-ref.html
