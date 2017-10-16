@@ -1007,19 +1007,25 @@ NS_IMETHODIMP
 inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
                         JS::MutableHandle<JS::Value> aValue)
 {
-  nscolor color = 0;
+  nscolor color = NS_RGB(0, 0, 0);
+
+#ifdef MOZ_STYLO
+  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorString,
+                                    &color)) {
+    aValue.setNull();
+    return NS_OK;
+  }
+#else
   nsCSSParser cssParser;
   nsCSSValue cssValue;
 
-  bool isColor = cssParser.ParseColorString(aColorString, nullptr, 0,
-                                            cssValue, true);
-
-  if (!isColor) {
+  if (!cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true)) {
     aValue.setNull();
     return NS_OK;
   }
 
   nsRuleNode::ComputeColor(cssValue, nullptr, nullptr, color);
+#endif
 
   InspectorRGBATuple tuple;
   tuple.mR = NS_GET_R(color);

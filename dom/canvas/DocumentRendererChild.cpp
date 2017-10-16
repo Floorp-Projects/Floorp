@@ -25,6 +25,7 @@
 #include "nsCSSValue.h"
 #include "nsRuleNode.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/ServoCSSParser.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -59,15 +60,24 @@ DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
     if (!presContext)
         return false;
 
-    nsCSSParser parser;
-    nsCSSValue bgColorValue;
-    if (!parser.ParseColorString(aBGColor, nullptr, 0, bgColorValue)) {
-        return false;
-    }
-
     nscolor bgColor;
-    if (!nsRuleNode::ComputeColor(bgColorValue, presContext, nullptr, bgColor)) {
+
+    ServoStyleSet* servoStyleSet = presContext->StyleSet()
+      ? presContext->StyleSet()->GetAsServo()
+      : nullptr;
+
+    if (servoStyleSet) {
+      if (!ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0),
+                                        aBGColor, &bgColor)) {
         return false;
+      }
+    } else {
+      nsCSSParser parser;
+      nsCSSValue bgColorValue;
+      if (!parser.ParseColorString(aBGColor, nullptr, 0, bgColorValue) ||
+          !nsRuleNode::ComputeColor(bgColorValue, presContext, nullptr, bgColor)) {
+        return false;
+      }
     }
 
     // Draw directly into the output array.
