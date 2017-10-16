@@ -161,20 +161,15 @@ public final class TestHelper {
 
 
     /********* Main View Menu Item Locators ***********/
-    public static UiObject RightsItem = mDevice.findObject(new UiSelector()
-            .className("android.widget.LinearLayout")
-            .instance(2));
-    public static UiObject AboutItem = mDevice.findObject(new UiSelector()
-            .className("android.widget.LinearLayout")
-            .instance(0)
+    public static UiObject whatsNewItem = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/whats_new")
             .enabled(true));
     public static UiObject HelpItem = mDevice.findObject(new UiSelector()
-            .className("android.widget.LinearLayout")
-            .instance(1)
+            .resourceId("org.mozilla.focus.debug:id/help")
             .enabled(true));
     public static UiObject settingsMenuItem = mDevice.findObject(new UiSelector()
-            .className("android.widget.LinearLayout")
-            .instance(3));
+            .resourceId("org.mozilla.focus.debug:id/settings")
+            .enabled(true));
     static UiObject blockCounterItem = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/trackers_count"));
     static UiObject blockToggleSwitch = mDevice.findObject(new UiSelector()

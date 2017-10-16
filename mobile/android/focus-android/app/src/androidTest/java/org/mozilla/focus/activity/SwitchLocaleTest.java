@@ -18,7 +18,9 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,13 +60,23 @@ public class SwitchLocaleTest {
     public SwitchLocaleTest() throws UiObjectNotFoundException {
     }
 
+    @BeforeClass
+    public static void setupBeforeClass() throws Exception {
+        changeLocale("fr");
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        changeLocale("en");
+    }
+
     @After
     public void tearDown() throws Exception {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @SuppressWarnings("deprecation")
-    public void changeLocale(String locale) {
+    public static void changeLocale(String locale) {
         Context context = InstrumentationRegistry.getInstrumentation()
                 .getTargetContext();
 
@@ -140,8 +152,8 @@ public class SwitchLocaleTest {
         Assert.assertTrue(frenchTitle.exists());
 
         openMenu();
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.settingsMenuItem), "Paramètres");
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.HelpItem), "Aide");
+        Assert.assertEquals(TestHelper.settingsMenuItem.getText(), "Paramètres");
+        Assert.assertEquals(TestHelper.HelpItem.getText(), "Aide");
         TestHelper.settingsMenuItem.click();
 
         /* re-enter settings, change it back to system locale, verify the locale is changed */
@@ -160,10 +172,8 @@ public class SwitchLocaleTest {
         englishTitle.waitForExists(waitingTime);
         Assert.assertTrue(englishTitle.exists());
         TestHelper.menuButton.perform(click());
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.settingsMenuItem), "Settings");
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.AboutItem), "About");
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.HelpItem), "Help");
-        Assert.assertEquals(TestHelper.getMenuItemText(TestHelper.RightsItem), "Your Rights");
+        Assert.assertEquals(TestHelper.settingsMenuItem.getText(), "Settings");
+        Assert.assertEquals(TestHelper.HelpItem.getText(), "Help");
     }
 
     @Test
@@ -180,10 +190,9 @@ public class SwitchLocaleTest {
                 .text("English (United States)"));
 
         /* Go to Settings */
-        changeLocale("fr");
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
 
-        openMenu();
+        openSettings();
         LanguageSelection.waitForExists(waitingTime);
 
         /* system locale is in French, check it is now set to system locale */
