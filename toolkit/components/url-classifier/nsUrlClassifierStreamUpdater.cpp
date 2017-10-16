@@ -19,6 +19,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ResultExtensions.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Telemetry.h"
@@ -218,23 +219,17 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
       "timeout. Disabling these update timeouts.");
     return NS_OK;
   }
-  mResponseTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = mResponseTimeoutTimer->InitWithCallback(this,
-                                                 sResponseTimeoutMs,
-                                                 nsITimer::TYPE_ONE_SHOT);
-  }
+  MOZ_TRY_VAR(mResponseTimeoutTimer,
+              NS_NewTimerWithCallback(this, sResponseTimeoutMs,
+                                      nsITimer::TYPE_ONE_SHOT));
 
-  mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  MOZ_TRY_VAR(mTimeoutTimer,
+              NS_NewTimerWithCallback(this, sTimeoutMs,
+                                      nsITimer::TYPE_ONE_SHOT));
 
-  if (NS_SUCCEEDED(rv)) {
-    if (sTimeoutMs < DEFAULT_TIMEOUT_MS) {
-      LOG(("Download update timeout %d ms (< %d ms) would be too small",
-           sTimeoutMs, DEFAULT_TIMEOUT_MS));
-    }
-    rv = mTimeoutTimer->InitWithCallback(this,
-                                         sTimeoutMs,
-                                         nsITimer::TYPE_ONE_SHOT);
+  if (sTimeoutMs < DEFAULT_TIMEOUT_MS) {
+    LOG(("Download update timeout %d ms (< %d ms) would be too small",
+         sTimeoutMs, DEFAULT_TIMEOUT_MS));
   }
 
   return NS_OK;
@@ -333,13 +328,9 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
     // We cannot guarantee that we will be notified when DBService is done
     // processing the current update, so we fire a retry timer on our own.
-    nsresult rv;
-    mFetchNextRequestTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mFetchNextRequestTimer->InitWithCallback(this,
-                                                    FETCH_NEXT_REQUEST_RETRY_DELAY_MS,
-                                                    nsITimer::TYPE_ONE_SHOT);
-    }
+    MOZ_TRY_VAR(mFetchNextRequestTimer,
+                NS_NewTimerWithCallback(this, FETCH_NEXT_REQUEST_RETRY_DELAY_MS,
+                                        nsITimer::TYPE_ONE_SHOT));
 
     return NS_OK;
   }
@@ -497,11 +488,8 @@ nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
   // scheduling the next time we pull the list from the server. That's a different
   // timer in listmanager.js (see bug 1110891).
   nsresult rv;
-  mFetchIndirectUpdatesTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = mFetchIndirectUpdatesTimer->InitWithCallback(this, requestedDelay,
-                                                      nsITimer::TYPE_ONE_SHOT);
-  }
+  rv = NS_NewTimerWithCallback(getter_AddRefs(mFetchIndirectUpdatesTimer),
+                               this, requestedDelay, nsITimer::TYPE_ONE_SHOT);
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Unable to initialize timer, fetching next safebrowsing item immediately");

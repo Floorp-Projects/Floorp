@@ -167,7 +167,7 @@ nsFaviconService::Init()
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
 
-  mExpireUnassociatedIconsTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mExpireUnassociatedIconsTimer = NS_NewTimer();
   NS_ENSURE_STATE(mExpireUnassociatedIconsTimer);
 
   // Check if there are still icon payloads to be converted.
