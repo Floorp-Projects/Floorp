@@ -328,12 +328,15 @@ AnimationsTimeline.prototype = {
         continue;
       }
       if (i === index) {
-        // Already the animation is selected.
-        this.emit("animation-already-selected", this.animations[i]);
-        return;
+        if (this.animationRootEl.classList.contains("animation-detail-visible")) {
+          // Already the animation is selected.
+          this.emit("animation-already-selected", this.animations[i]);
+          return;
+        }
+      } else {
+        animationEl.classList.remove("selected");
+        this.emit("animation-unselected", this.animations[i]);
       }
-      animationEl.classList.remove("selected");
-      this.emit("animation-unselected", this.animations[i]);
       break;
     }
 
