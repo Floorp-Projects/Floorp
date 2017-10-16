@@ -3572,68 +3572,35 @@ HTMLEditor::IsTextPropertySetByContent(nsINode* aNode,
                                        nsAString* outValue)
 {
   MOZ_ASSERT(aNode && aProperty);
-  bool isSet;
-  IsTextPropertySetByContent(aNode->AsDOMNode(), aProperty, aAttribute, aValue,
-                             isSet, outValue);
-  return isSet;
-}
 
-void
-HTMLEditor::IsTextPropertySetByContent(nsIDOMNode* aNode,
-                                       nsAtom* aProperty,
-                                       const nsAString* aAttribute,
-                                       const nsAString* aValue,
-                                       bool& aIsSet,
-                                       nsAString* outValue)
-{
-  aIsSet = false;  // must be initialized to false for code below to work
-  nsAutoString propName;
-  aProperty->ToString(propName);
-  nsCOMPtr<nsIDOMNode>node = aNode;
-
-  while (node) {
-    nsCOMPtr<nsIDOMElement>element;
-    element = do_QueryInterface(node);
-    if (element) {
-      nsAutoString tag, value;
-      element->GetTagName(tag);
-      if (propName.Equals(tag, nsCaseInsensitiveStringComparator())) {
-        bool found = false;
-        if (aAttribute && !aAttribute->IsEmpty()) {
-          element->GetAttribute(*aAttribute, value);
-          if (outValue) {
-            *outValue = value;
-          }
-          if (!value.IsEmpty()) {
-            if (!aValue) {
-              found = true;
-            } else {
-              nsString tString(*aValue);
-              if (tString.Equals(value, nsCaseInsensitiveStringComparator())) {
-                found = true;
-              } else {
-                // We found the prop with the attribute, but the value doesn't
-                // match.
-                break;
-              }
-            }
-          }
-        } else {
-          found = true;
+  while (aNode) {
+    if (aNode->IsElement()) {
+      Element* element = aNode->AsElement();
+      if (aProperty == element->NodeInfo()->NameAtom()) {
+        if (!aAttribute || aAttribute->IsEmpty()) {
+          return true;
         }
-        if (found) {
-          aIsSet = true;
+        nsAutoString value;
+        element->GetAttribute(*aAttribute, value);
+        if (outValue) {
+          *outValue = value;
+        }
+        if (!value.IsEmpty()) {
+          if (!aValue) {
+            return true;
+          }
+          if (aValue->Equals(value, nsCaseInsensitiveStringComparator())) {
+            return true;
+          }
+          // We found the prop with the attribute, but the value doesn't
+          // match.
           break;
         }
       }
     }
-    nsCOMPtr<nsIDOMNode>temp;
-    if (NS_SUCCEEDED(node->GetParentNode(getter_AddRefs(temp))) && temp) {
-      node = temp;
-    } else {
-      node = nullptr;
-    }
+    aNode = aNode->GetParentNode();
   }
+  return false;
 }
 
 bool
