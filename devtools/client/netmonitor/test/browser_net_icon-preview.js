@@ -12,9 +12,10 @@ add_task(function* () {
   const SELECTOR = ".requests-list-icon[src]";
   info("Starting test... ");
 
-  let { document, store, windowRequire, connector } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { triggerActivity } = connector;
+  let { triggerActivity } =
+    windowRequire("devtools/client/netmonitor/src/connector/index");
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
 
   store.dispatch(Actions.batchEnable(false));
