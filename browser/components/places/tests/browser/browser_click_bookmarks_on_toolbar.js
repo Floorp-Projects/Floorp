@@ -128,3 +128,36 @@ add_task(async function clickWithPrefSet() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+// Open a tab, then quickly open the context menu to ensure that the command
+// enabled state of the menuitems is updated properly.
+add_task(async function quickContextMenu() {
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_LOAD_BOOKMARKS_IN_TABS, true]
+  ]});
+
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, TEST_PAGES[0]);
+
+  EventUtils.synthesizeMouseAtCenter(gBookmarkElements[0], {
+    button: 0
+  });
+  let newTab = await tabPromise;
+
+  let placesContext = document.getElementById("placesContext");
+  let promise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
+    button: 2,
+    type: "contextmenu"
+  });
+  await promise;
+
+  Assert.ok(!document.getElementById("placesContext_open").disabled,
+            "Commands in context menu are enabled");
+
+  promise = BrowserTestUtils.waitForEvent(placesContext, "popuphidden");
+  placesContext.hidePopup();
+  await promise;
+  await BrowserTestUtils.removeTab(newTab);
+
+  await SpecialPowers.popPrefEnv();
+});

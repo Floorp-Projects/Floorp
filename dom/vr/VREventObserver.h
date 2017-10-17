@@ -34,8 +34,7 @@ public:
 private:
   ~VREventObserver();
 
-  // Weak pointer, instance is owned by mWindow.
-  nsGlobalWindow* MOZ_NON_OWNING_REF mWindow;
+  RefPtr<nsGlobalWindow> mWindow;
   // For WebVR telemetry for tracking users who view content
   // in the 2D view.
   TimeStamp mSpendTimeIn2DView;

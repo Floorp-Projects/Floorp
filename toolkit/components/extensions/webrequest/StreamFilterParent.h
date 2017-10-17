@@ -30,6 +30,7 @@ namespace dom {
   class ContentParent;
 }
 namespace net {
+  class ChannelEventQueue;
   class nsHttpChannel;
 }
 
@@ -137,6 +138,8 @@ private:
 
   inline bool IsIOThread();
 
+  inline bool IsActorThread();
+
   inline void AssertIsActorThread();
 
   inline void AssertIsIOThread();
@@ -148,12 +151,9 @@ private:
   }
 
   template<typename Function>
-  void
-  RunOnMainThread(const char* aName, Function&& aFunc)
-  {
-    mMainThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                          NS_DISPATCH_NORMAL);
-  }
+  void RunOnMainThread(const char* aName, Function&& aFunc);
+
+  void RunOnMainThread(already_AddRefed<Runnable> aRunnable);
 
   template<typename Function>
   void RunOnActorThread(const char* aName, Function&& aFunc);
@@ -161,11 +161,15 @@ private:
   template<typename Function>
   void RunOnIOThread(const char* aName, Function&& aFunc);
 
+  void RunOnIOThread(already_AddRefed<Runnable>);
+
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mOrigListener;
 
   nsCOMPtr<nsIEventTarget> mMainThread;
   nsCOMPtr<nsIEventTarget> mIOThread;
+
+  RefPtr<net::ChannelEventQueue> mQueue;
 
   Mutex mBufferMutex;
 

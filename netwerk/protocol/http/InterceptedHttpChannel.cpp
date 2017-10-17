@@ -1079,6 +1079,15 @@ InterceptedHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget)
+{
+  if (!mPump) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return mPump->GetDeliveryTarget(aEventTarget);
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::CheckListenerChain()
 {
   MOZ_ASSERT(NS_IsMainThread());

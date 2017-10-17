@@ -3386,6 +3386,19 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpChannelChild::GetDeliveryTarget(nsIEventTarget** aEventTarget)
+{
+  MutexAutoLock lock(mEventTargetMutex);
+
+  nsCOMPtr<nsIEventTarget> target = mODATarget;
+  if (!mODATarget) {
+    target = GetCurrentThreadEventTarget();
+  }
+  target.forget(aEventTarget);
+  return NS_OK;
+}
+
 void
 HttpChannelChild::ResetInterception()
 {

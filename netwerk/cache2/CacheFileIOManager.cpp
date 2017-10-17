@@ -1524,11 +1524,9 @@ CacheFileIOManager::ScheduleMetadataWriteInternal(CacheFile * aFile)
   nsresult rv;
 
   if (!mMetadataWritesTimer) {
-    mMetadataWritesTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mMetadataWritesTimer->InitWithCallback(
-      this, kMetadataWriteDelay, nsITimer::TYPE_ONE_SHOT);
+    rv = NS_NewTimerWithCallback(getter_AddRefs(mMetadataWritesTimer),
+                                 this, kMetadataWriteDelay,
+                                 nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3439,25 +3437,17 @@ CacheFileIOManager::StartRemovingTrash()
 
   uint32_t elapsed = (TimeStamp::NowLoRes() - mStartTime).ToMilliseconds();
   if (elapsed < kRemoveTrashStartDelay) {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIEventTarget> ioTarget = IOTarget();
     MOZ_ASSERT(ioTarget);
 
-    rv = timer->SetTarget(ioTarget);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = timer->InitWithNamedFuncCallback(
+    return NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mTrashTimer),
       CacheFileIOManager::OnTrashTimer,
       nullptr,
       kRemoveTrashStartDelay - elapsed,
       nsITimer::TYPE_ONE_SHOT,
-      "net::CacheFileIOManager::StartRemovingTrash");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mTrashTimer.swap(timer);
-    return NS_OK;
+      "net::CacheFileIOManager::StartRemovingTrash",
+      ioTarget);
   }
 
   nsCOMPtr<nsIRunnable> ev;

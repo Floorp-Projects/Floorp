@@ -29,44 +29,32 @@ nsPagePrintTimer::~nsPagePrintTimer()
 nsresult
 nsPagePrintTimer::StartTimer(bool aUseDelay)
 {
-  nsresult result;
-  mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
-  if (NS_FAILED(result)) {
-    NS_WARNING("unable to start the timer");
-  } else {
-    uint32_t delay = 0;
-    if (aUseDelay) {
-      if (mFiringCount < 10) {
-        // Longer delay for the few first pages.
-        delay = mDelay + ((10 - mFiringCount) * 100);
-      } else {
-        delay = mDelay;
-      }
+  uint32_t delay = 0;
+  if (aUseDelay) {
+    if (mFiringCount < 10) {
+      // Longer delay for the few first pages.
+      delay = mDelay + ((10 - mFiringCount) * 100);
+    } else {
+      delay = mDelay;
     }
-    mTimer->SetTarget(mDocument->EventTargetFor(TaskCategory::Other));
-    mTimer->InitWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);
   }
-  return result;
+  return NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                                 this, delay, nsITimer::TYPE_ONE_SHOT,
+                                 mDocument->EventTargetFor(TaskCategory::Other));
 }
 
 nsresult
 nsPagePrintTimer::StartWatchDogTimer()
 {
-  nsresult result;
   if (mWatchDogTimer) {
     mWatchDogTimer->Cancel();
   }
-  mWatchDogTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
-  if (NS_FAILED(result)) {
-    NS_WARNING("unable to start the timer");
-  } else {
-    // Instead of just doing one timer for a long period do multiple so we
-    // can check if the user cancelled the printing.
-    mWatchDogTimer->SetTarget(mDocument->EventTargetFor(TaskCategory::Other));
-    mWatchDogTimer->InitWithCallback(this, WATCH_DOG_INTERVAL,
-                                     nsITimer::TYPE_ONE_SHOT);
-  }
-  return result;
+  // Instead of just doing one timer for a long period do multiple so we
+  // can check if the user cancelled the printing.
+  return NS_NewTimerWithCallback(getter_AddRefs(mWatchDogTimer),
+                                 this, WATCH_DOG_INTERVAL,
+                                 nsITimer::TYPE_ONE_SHOT,
+                                 mDocument->EventTargetFor(TaskCategory::Other));
 }
 
 void
@@ -179,11 +167,9 @@ nsPagePrintTimer::Notify(nsITimer *timer)
 void
 nsPagePrintTimer::WaitForRemotePrint()
 {
-  nsresult result;
-  mWaitingForRemotePrint = do_CreateInstance("@mozilla.org/timer;1", &result);
-  if (NS_FAILED(result)) {
+  mWaitingForRemotePrint = NS_NewTimer();
+  if (!mWaitingForRemotePrint) {
     NS_WARNING("Failed to wait for remote print, we might time-out.");
-    mWaitingForRemotePrint = nullptr;
   }
 }
 

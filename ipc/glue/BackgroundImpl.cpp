@@ -1030,9 +1030,8 @@ ParentImpl::CreateBackgroundThread()
   nsCOMPtr<nsITimer> newShutdownTimer;
 
   if (!sShutdownTimer) {
-    nsresult rv;
-    newShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    newShutdownTimer = NS_NewTimer();
+    if (!newShutdownTimer) {
       return false;
     }
   }

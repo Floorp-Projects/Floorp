@@ -62,8 +62,8 @@ public:
 
     if (!mStop) {
       if (!mTimer) {
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
-        mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+        mTimer = NS_NewTimer(
+          SystemGroup::EventTargetFor(TaskCategory::Other));
       }
       mTimer->InitWithCallback(this, 16, nsITimer::TYPE_ONE_SHOT);
     }

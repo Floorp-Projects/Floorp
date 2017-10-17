@@ -29,18 +29,16 @@ namespace mozilla {
 MOZ_MTLOG_MODULE("mtransport")
 
 nsresult TransportLayerLoopback::Init() {
-  timer_ = do_CreateInstance(NS_TIMER_CONTRACTID);
-  MOZ_ASSERT(timer_);
-  if (!timer_)
-    return NS_ERROR_FAILURE;
-
   nsresult rv;
   target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!NS_SUCCEEDED(rv))
     return rv;
 
-  timer_->SetTarget(target_);
+  timer_ = NS_NewTimer(target_);
+  MOZ_ASSERT(timer_);
+  if (!timer_)
+    return NS_ERROR_FAILURE;
 
   packets_lock_ = PR_NewLock();
   MOZ_ASSERT(packets_lock_);
