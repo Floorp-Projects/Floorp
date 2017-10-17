@@ -32,7 +32,7 @@ public:
 
   ChildDNSService();
 
-  static ChildDNSService* GetSingleton();
+  static already_AddRefed<ChildDNSService> GetSingleton();
 
   void NotifyRequestDone(DNSRequestChild *aDnsRequest);
 

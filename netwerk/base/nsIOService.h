@@ -64,8 +64,7 @@ public:
 
     // Gets the singleton instance of the IO Service, creating it as needed
     // Returns nullptr on out of memory or failure to initialize.
-    // Returns an addrefed pointer.
-    static nsIOService* GetInstance();
+    static already_AddRefed<nsIOService> GetInstance();
 
     nsresult Init();
     nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,

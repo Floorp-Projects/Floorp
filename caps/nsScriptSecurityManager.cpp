@@ -1437,13 +1437,12 @@ nsScriptSecurityManager::InitStatics()
 // Currently this nsGenericFactory constructor is used only from FastLoad
 // (XPCOM object deserialization) code, when "creating" the system principal
 // singleton.
-SystemPrincipal *
+already_AddRefed<SystemPrincipal>
 nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
-    nsIPrincipal *sysprin = nullptr;
     if (gScriptSecMan)
-        NS_ADDREF(sysprin = gScriptSecMan->mSystemPrincipal);
-    return static_cast<SystemPrincipal*>(sysprin);
+        return do_AddRef(gScriptSecMan->mSystemPrincipal.get()).downcast<SystemPrincipal>();
+    return nullptr;
 }
 
 struct IsWhitespace {

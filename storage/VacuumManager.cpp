@@ -311,7 +311,7 @@ NS_IMPL_ISUPPORTS(
 VacuumManager *
 VacuumManager::gVacuumManager = nullptr;
 
-VacuumManager *
+already_AddRefed<VacuumManager>
 VacuumManager::getSingleton()
 {
   //Don't allocate it in the child Process.
@@ -319,15 +319,10 @@ VacuumManager::getSingleton()
     return nullptr;
   }
 
-  if (gVacuumManager) {
-    NS_ADDREF(gVacuumManager);
-    return gVacuumManager;
+  if (!gVacuumManager) {
+    gVacuumManager = new VacuumManager();
   }
-  gVacuumManager = new VacuumManager();
-  if (gVacuumManager) {
-    NS_ADDREF(gVacuumManager);
-  }
-  return gVacuumManager;
+  return do_AddRef(gVacuumManager);
 }
 
 VacuumManager::VacuumManager()
