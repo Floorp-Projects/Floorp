@@ -1,3 +1,19 @@
+job-defaults:
+    instance-size: xlarge
+    max-run-time: 5400
+    mozharness:
+        script: web_platform_tests.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - web_platform_tests/prod_config_windows_taskcluster.py
+                macosx.*:
+                    - web_platform_tests/prod_config.py
+                default:
+                    - web_platform_tests/prod_config.py
+                    - remove_executables.py
+
 web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
@@ -8,24 +24,12 @@ web-platform-tests:
         macosx64/debug: 10
         default: 12
     max-run-time: 7200
-    instance-size: xlarge
     e10s:
         by-test-platform:
             windows7-32/debug: both
             default: true
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
         chunked: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             - --test-type=testharness
 
@@ -43,21 +47,9 @@ web-platform-tests-headless:
             macosx.*: true
             default: true
     max-run-time: 7200
-    instance-size: xlarge
     run-on-projects: [] # disabled pending releng approval
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
         chunked: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             by-test-platform:
                 windows.*:
@@ -73,8 +65,6 @@ web-platform-tests-reftests:
     description: "Web platform reftest run"
     suite: web-platform-tests-reftests
     treeherder-symbol: tc-W(Wr)
-    max-run-time: 5400
-    instance-size: xlarge
     chunks:
       by-test-platform:
         macosx.*: 1
@@ -85,17 +75,6 @@ web-platform-tests-reftests:
             windows7-32/debug: both
             default: true
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             - --test-type=reftest
 
@@ -103,8 +82,6 @@ web-platform-tests-reftests-headless:
     description: "Web platform reftest headless run"
     suite: web-platform-tests-reftests
     treeherder-symbol: tc-W(WrH)
-    max-run-time: 5400
-    instance-size: xlarge
     chunks:
       by-test-platform:
         macosx.*: 1
@@ -116,17 +93,6 @@ web-platform-tests-reftests-headless:
             default: true
     run-on-projects: [] # disabled pending releng approval
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             by-test-platform:
                 windows.*:
@@ -141,20 +107,7 @@ web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: tc-W(Wd)
-    max-run-time: 5400
-    instance-size: xlarge
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             - --test-type=wdspec
 
@@ -162,21 +115,8 @@ web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: tc-W(WdH)
-    max-run-time: 5400
-    instance-size: xlarge
     run-on-projects: [] # disabled pending releng approval
     mozharness:
-        script: web_platform_tests.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - web_platform_tests/prod_config_windows_taskcluster.py
-                macosx.*:
-                    - web_platform_tests/prod_config.py
-                default:
-                    - web_platform_tests/prod_config.py
-                    - remove_executables.py
         extra-options:
             by-test-platform:
                 windows.*:
@@ -187,4 +127,3 @@ web-platform-tests-wdspec-headless:
                 default:
                     - --test-type=wdspec
                     - --headless
-

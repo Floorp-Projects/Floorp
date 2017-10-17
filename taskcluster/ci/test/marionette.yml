@@ -1,6 +1,8 @@
+job-defaults:
+    suite: marionette
+
 marionette:
     description: "Marionette unittest run"
-    suite: marionette
     treeherder-symbol: tc(Mn)
     max-run-time:
         by-test-platform:
@@ -44,11 +46,9 @@ marionette:
 
 marionette-headless:
     description: "Marionette headless unittest run"
-    suite: marionette
     treeherder-symbol: tc(MnH)
     max-run-time: 5400
     instance-size: default
-    chunks: 1
     mozharness:
         script: marionette.py
         no-read-buildbot-config: true
