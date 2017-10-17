@@ -1456,31 +1456,31 @@ impl MarionetteConnection {
         let mut bytes = 0usize;
 
         // TODO(jgraham): Check before we unwrap?
-        let mut stream = self.stream.as_mut().unwrap();
+        let stream = self.stream.as_mut().unwrap();
         loop {
-            let mut buf = &mut [0 as u8];
+            let buf = &mut [0 as u8];
             let num_read = try!(stream.read(buf));
             let byte = match num_read {
                 0 => {
-                    return Err(IoError::new(ErrorKind::Other,
-                                            "EOF reading marionette message"))
-                },
+                    return Err(IoError::new(
+                        ErrorKind::Other,
+                        "EOF reading marionette message",
+                    ))
+                }
                 1 => buf[0] as char,
-                _ => panic!("Expected one byte got more")
+                _ => panic!("Expected one byte got more"),
             };
             match byte {
                 '0'...'9' => {
                     bytes = bytes * 10;
                     bytes += byte as usize - '0' as usize;
-                },
-                ':' => {
-                    break
                 }
+                ':' => break,
                 _ => {}
             }
         }
 
-        let mut buf = &mut [0 as u8; 8192];
+        let buf = &mut [0 as u8; 8192];
         let mut payload = Vec::with_capacity(bytes);
         let mut total_read = 0;
         while total_read < bytes {
