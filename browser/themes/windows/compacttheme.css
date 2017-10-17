@@ -18,6 +18,17 @@
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: visible;
   }
+
+  /* Prevent accent color overriding the window background for
+   * light and dark theme on Aero Basic. This is copied from browser-aero.css. */
+  @media (-moz-windows-default-theme) {
+    #main-window {
+      background-color: rgb(185,209,234) !important;
+    }
+    #main-window:-moz-window-inactive {
+      background-color: rgb(215,228,242) !important;
+    }
+  }
 }
 
 #toolbar-menubar {
