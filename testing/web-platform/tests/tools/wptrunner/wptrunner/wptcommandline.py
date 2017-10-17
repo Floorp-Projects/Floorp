@@ -199,6 +199,11 @@ scheme host and port.""")
     gecko_group.add_argument("--reftest-screenshot", dest="reftest_screenshot", action="store",
                              choices=["always", "fail", "unexpected"], default="unexpected",
                              help="With --reftest-internal, when to take a screenshot")
+    gecko_group.add_argument("--chaos", dest="chaos_mode_flags", action="store",
+                             nargs="?", const=0xFFFFFFFF, type=int,
+                             help="Enable chaos mode with the specified feature flag "
+                             "(see http://searchfox.org/mozilla-central/source/mfbt/ChaosMode.h for "
+                             "details). If no value is supplied, all features are activated")
 
     servo_group = parser.add_argument_group("Servo-specific")
     servo_group.add_argument("--user-stylesheet",

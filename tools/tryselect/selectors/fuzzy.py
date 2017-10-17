@@ -249,4 +249,5 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
 
     query = " with query: {}".format(query) if query else ""
     msg = "Fuzzy{}".format(query)
-    return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push)
+    return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
+                           closed_tree=kwargs["closed_tree"])
