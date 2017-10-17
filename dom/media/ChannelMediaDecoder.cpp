@@ -30,8 +30,7 @@ ChannelMediaDecoder::ResourceCallback::Connect(ChannelMediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mDecoder = aDecoder;
-  mTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mTimer->SetTarget(mAbstractMainThread->AsEventTarget());
+  mTimer = NS_NewTimer(mAbstractMainThread->AsEventTarget());
 }
 
 void

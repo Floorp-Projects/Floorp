@@ -47,7 +47,7 @@ nsAndroidHistory::nsAndroidHistory()
 {
   LoadPrefs();
 
-  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mTimer = NS_NewTimer();
 }
 
 NS_IMETHODIMP

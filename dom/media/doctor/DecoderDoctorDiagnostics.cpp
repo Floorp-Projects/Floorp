@@ -227,15 +227,8 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mTimer) {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (NS_WARN_IF(!mTimer)) {
-      return;
-    }
-    if (NS_WARN_IF(NS_FAILED(
-          mTimer->InitWithCallback(
-            this, sAnalysisPeriod_ms, nsITimer::TYPE_ONE_SHOT)))) {
-      mTimer = nullptr;
-    }
+    NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                            this, sAnalysisPeriod_ms, nsITimer::TYPE_ONE_SHOT);
   }
 }
 

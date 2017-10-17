@@ -153,7 +153,7 @@ LazyIdleThread::EnsureThread()
     }
   }
 
-  mIdleTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  mIdleTimer = NS_NewTimer();
   if (NS_WARN_IF(!mIdleTimer)) {
     return NS_ERROR_UNEXPECTED;
   }

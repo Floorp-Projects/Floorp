@@ -87,10 +87,7 @@ DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock)
     return;
   }
   if (!gIPCTimer) {
-    CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
-    if (gIPCTimer) {
-      gIPCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
-    }
+    gIPCTimer = NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other)).take();
   }
   if (gIPCTimer) {
     gIPCTimer->InitWithNamedFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,

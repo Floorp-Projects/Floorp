@@ -80,13 +80,9 @@ Tickler::Init()
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsITimer> tmpTimer(do_CreateInstance(NS_TIMER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = tmpTimer->SetTarget(mThread);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsITimer> tmpTimer = NS_NewTimer(mThread);
+  if (!tmpTimer)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mTimer.swap(tmpTimer);
 

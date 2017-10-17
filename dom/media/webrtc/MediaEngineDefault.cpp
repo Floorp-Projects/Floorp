@@ -178,7 +178,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     return NS_ERROR_FAILURE;
   }
 
-  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mTimer = NS_NewTimer();
   if (!mTimer) {
     return NS_ERROR_FAILURE;
   }

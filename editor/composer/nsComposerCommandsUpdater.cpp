@@ -225,9 +225,8 @@ nsresult
 nsComposerCommandsUpdater::PrimeUpdateTimer()
 {
   if (!mUpdateTimer) {
-    nsresult rv = NS_OK;
-    mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mUpdateTimer = NS_NewTimer();;
+    NS_ENSURE_TRUE(mUpdateTimer, NS_ERROR_OUT_OF_MEMORY);
   }
 
   const uint32_t kUpdateTimerDelay = 150;

@@ -636,7 +636,7 @@ nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
   timeout = std::min(mAnimatedContentTimeout, timeout);
 
   if (!mAnimatedContentTimer) {
-    mAnimatedContentTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mAnimatedContentTimer = NS_NewTimer();
     NS_ENSURE_TRUE(mAnimatedContentTimer, false);
   }
 

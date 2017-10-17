@@ -89,16 +89,13 @@ nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader)
   }
 
   if (loadTimeout > 0) {
-    mLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mLoadTimer) {
-      mLoadTimer->SetTarget(
-        mFontFaceSet->Document()->EventTargetFor(TaskCategory::Other));
-      mLoadTimer->InitWithNamedFuncCallback(LoadTimerCallback,
-                                            static_cast<void*>(this),
-                                            loadTimeout,
-                                            nsITimer::TYPE_ONE_SHOT,
-                                            "LoadTimerCallback");
-    }
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mLoadTimer),
+                                LoadTimerCallback,
+                                static_cast<void*>(this),
+                                loadTimeout,
+                                nsITimer::TYPE_ONE_SHOT,
+                                "LoadTimerCallback",
+                                mFontFaceSet->Document()->EventTargetFor(TaskCategory::Other));
   } else {
     mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
   }

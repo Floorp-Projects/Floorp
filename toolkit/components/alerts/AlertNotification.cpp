@@ -298,12 +298,9 @@ AlertImageRequest::Start()
 
   nsresult rv;
   if (mTimeout > 0) {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (NS_WARN_IF(!mTimer)) {
-      return NotifyMissing();
-    }
-    rv = mTimer->InitWithCallback(this, mTimeout,
-                                  nsITimer::TYPE_ONE_SHOT);
+    rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                                 this, mTimeout,
+                                 nsITimer::TYPE_ONE_SHOT);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NotifyMissing();
     }

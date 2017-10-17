@@ -89,7 +89,7 @@ ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
   AssertIsOnMainThread();
   MOZ_ASSERT(aInfo);
 
-  mIdleWorkerTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mIdleWorkerTimer = NS_NewTimer();
   MOZ_ASSERT(mIdleWorkerTimer);
 }
 
@@ -1100,13 +1100,8 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
     MOZ_ASSERT(!mTimer);
 
     nsresult rv;
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    rv = timer->SetTarget(aWorkerPrivate->ControlEventTarget());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsCOMPtr<nsITimer> timer = NS_NewTimer(aWorkerPrivate->ControlEventTarget());
+    if (NS_WARN_IF(!timer)) {
       return;
     }
 

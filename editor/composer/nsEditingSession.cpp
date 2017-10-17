@@ -967,16 +967,16 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
             mLoadBlankDocTimer = nullptr;
           }
 
-          mLoadBlankDocTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          mEditorStatus = eEditorCreationInProgress;
-          mLoadBlankDocTimer->InitWithNamedFuncCallback(
+          rv = NS_NewTimerWithFuncCallback(
+            getter_AddRefs(mLoadBlankDocTimer),
             nsEditingSession::TimerCallback,
             static_cast<void*>(mDocShell.get()),
             10,
             nsITimer::TYPE_ONE_SHOT,
             "nsEditingSession::EndDocumentLoad");
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          mEditorStatus = eEditorCreationInProgress;
         }
       }
     }

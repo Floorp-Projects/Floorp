@@ -50,6 +50,7 @@
 #endif
 
 #include "nsNativeThemeGTK.h"
+#include "HeadlessThemeGTK.h"
 
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
@@ -87,11 +88,8 @@ static nsresult
 nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
-    if (gfxPlatform::IsHeadless()) {
-        return NS_ERROR_NO_INTERFACE;
-    }
     nsresult rv;
-    nsNativeThemeGTK * inst;
+    nsCOMPtr<nsITheme> inst;
 
     if (gDisableNativeTheme)
         return NS_ERROR_NO_INTERFACE;
@@ -101,15 +99,16 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
         rv = NS_ERROR_NO_AGGREGATION;
         return rv;
     }
-
-    inst = new nsNativeThemeGTK();
+    if (gfxPlatform::IsHeadless()) {
+        inst = new HeadlessThemeGTK();
+    } else {
+        inst = new nsNativeThemeGTK();
+    }
     if (nullptr == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;
     }
-    NS_ADDREF(inst);
     rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
 
     return rv;
 }
