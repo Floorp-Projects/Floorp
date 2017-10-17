@@ -395,10 +395,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
       for (i = aInCount; i > 0; i--) {
         char* str = *(inp++);
         if (str) {
-          if (!(*(outp++) = (char*)nsMemory::Clone(
-                              str, (strlen(str) + 1) * sizeof(char)))) {
-            goto bad;
-          }
+          *(outp++) = moz_xstrdup(str);
         } else {
           *(outp++) = nullptr;
         }
@@ -413,10 +410,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
       for (i = aInCount; i > 0; i--) {
         char16_t* str = *(inp++);
         if (str) {
-          if (!(*(outp++) = (char16_t*)nsMemory::Clone(
-                              str, (NS_strlen(str) + 1) * sizeof(char16_t)))) {
-            goto bad;
-          }
+          *(outp++) = NS_strdup(str);
         } else {
           *(outp++) = nullptr;
         }
