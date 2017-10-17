@@ -120,6 +120,15 @@ public:
   void DetachManager();
 
 private:
+
+  bool OnTaskQueue() const
+  {
+    MOZ_ASSERT(mParent);
+    auto taskQueue = mParent->GetTaskQueue();
+    MOZ_ASSERT(taskQueue);
+    return taskQueue->IsCurrentThreadIn();
+  }
+
   RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
   RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(
