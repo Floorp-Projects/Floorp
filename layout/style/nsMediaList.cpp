@@ -274,7 +274,7 @@ nsDocumentRuleResultCacheKey::Matches(
 
 #ifdef DEBUG
   for (css::DocumentRule* rule : mMatchingRules) {
-    MOZ_ASSERT(aRules.BinaryIndexOf(rule) != aRules.NoIndex,
+    MOZ_ASSERT(aRules.ContainsSorted(rule),
                "aRules must contain all rules in mMatchingRules");
   }
 #endif
