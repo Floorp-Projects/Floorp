@@ -2983,6 +2983,8 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
     JSObjectMovedOp op = dst->getClass()->extObjectMovedOp();
     MOZ_ASSERT_IF(src->is<ProxyObject>(), op == proxy_ObjectMoved);
     if (op) {
+        // Tell the hazard analysis that the object moved hook can't GC.
+        JS::AutoSuppressGCAnalysis nogc;
         tenuredSize += op(dst, src);
     } else {
         MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
