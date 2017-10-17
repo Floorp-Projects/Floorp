@@ -129,3 +129,11 @@ nsID::ToProvidedString(char (&aDest)[NSID_LENGTH]) const
 }
 
 #endif // XPCOM_GLUE_AVOID_NSPR
+
+nsID*
+nsID::Clone() const
+{
+  auto id = static_cast<nsID*>(moz_xmalloc(sizeof(nsID)));
+  *id = *this;
+  return id;
+}

@@ -45,12 +45,7 @@ nsSupportsID::GetData(nsID** aData)
 {
   NS_ASSERTION(aData, "Bad pointer");
 
-  if (mData) {
-    *aData = static_cast<nsID*>(nsMemory::Clone(mData, sizeof(nsID)));
-  } else {
-    *aData = nullptr;
-  }
-
+  *aData = mData ? mData->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -61,12 +56,7 @@ nsSupportsID::SetData(const nsID* aData)
     free(mData);
   }
 
-  if (aData) {
-    mData = static_cast<nsID*>(nsMemory::Clone(aData, sizeof(nsID)));
-  } else {
-    mData = nullptr;
-  }
-
+  mData = aData ? aData->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -715,12 +705,7 @@ nsSupportsInterfacePointer::GetDataIID(nsID** aIID)
 {
   NS_ASSERTION(aIID, "Bad pointer");
 
-  if (mIID) {
-    *aIID = static_cast<nsID*>(nsMemory::Clone(mIID, sizeof(nsID)));
-  } else {
-    *aIID = nullptr;
-  }
-
+  *aIID = mIID ? mIID->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -731,12 +716,7 @@ nsSupportsInterfacePointer::SetDataIID(const nsID* aIID)
     free(mIID);
   }
 
-  if (aIID) {
-    mIID = static_cast<nsID*>(nsMemory::Clone(aIID, sizeof(nsID)));
-  } else {
-    mIID = nullptr;
-  }
-
+  mIID = aIID ? aIID->Clone() : nullptr;
   return NS_OK;
 }
 
