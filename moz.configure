@@ -14,17 +14,6 @@ include('build/moz.configure/init.configure')
 # - Spidermonkey-specific options and rules should go in js/moz.configure.
 # - etc.
 
-# Multiprocess Firefox Testing UI - Nightly and Aurora
-# To be removed in Bug 1003313
-@depends(milestone)
-def e10s_testing_only(milestone):
-    if not milestone.is_release_or_beta:
-        return True
-
-set_config('E10S_TESTING_ONLY', e10s_testing_only)
-set_define('E10S_TESTING_ONLY', e10s_testing_only)
-
-
 option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
        help='Download and use prebuilt binary artifacts.')
 
