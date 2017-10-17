@@ -78,8 +78,7 @@ JSValIsInterfaceOfType(JSContext* cx, HandleValue v, REFNSIID iid)
 char*
 xpc::CloneAllAccess()
 {
-    static const char allAccess[] = "AllAccess";
-    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+    return moz_xstrdup("AllAccess");
 }
 
 char*
@@ -170,9 +169,8 @@ nsXPCComponents_Interfaces::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_Interfaces");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -395,9 +393,8 @@ nsXPCComponents_InterfacesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_InterfacesByID";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_InterfacesByID");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -622,9 +619,8 @@ nsXPCComponents_Classes::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_Classes::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Classes";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_Classes");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -837,9 +833,8 @@ nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_ClassesByID";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_ClassesByID");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1067,9 +1062,8 @@ nsXPCComponents_Results::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Results";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_Results");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1257,9 +1251,8 @@ nsXPCComponents_ID::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_ID";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_ID");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1454,9 +1447,8 @@ nsXPCComponents_Exception::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Exception";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_Exception");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1818,9 +1810,8 @@ nsXPCConstructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCConstructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCConstructor";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCConstructor");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2040,9 +2031,8 @@ nsXPCComponents_Constructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Constructor";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("XPCComponents_Constructor");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
