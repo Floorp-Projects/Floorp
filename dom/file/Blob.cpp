@@ -189,11 +189,16 @@ Blob::GetType(nsAString &aType)
 already_AddRefed<Blob>
 Blob::Slice(const Optional<int64_t>& aStart,
             const Optional<int64_t>& aEnd,
-            const nsAString& aContentType,
+            const Optional<nsAString>& aContentType,
             ErrorResult& aRv)
 {
+  nsAutoString contentType;
+  if (aContentType.WasPassed()) {
+    contentType = aContentType.Value();
+  }
+
   RefPtr<BlobImpl> impl =
-    mImpl->Slice(aStart, aEnd, aContentType, aRv);
+    mImpl->Slice(aStart, aEnd, contentType, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

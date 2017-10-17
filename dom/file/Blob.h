@@ -122,7 +122,7 @@ public:
 
   already_AddRefed<Blob> Slice(const Optional<int64_t>& aStart,
                                const Optional<int64_t>& aEnd,
-                               const nsAString& aContentType,
+                               const Optional<nsAString>& aContentType,
                                ErrorResult& aRv);
 
   size_t GetAllocationSize() const;
