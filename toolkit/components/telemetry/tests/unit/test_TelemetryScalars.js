@@ -598,24 +598,70 @@ add_task(function* test_dynamicScalars_registration() {
       "evaluation": /Invalid or missing 'kind'/,
       "description": "No scalar must be registered if the batch contains an invalid one"
     },
-    {
-      "category": "telemetry.test",
-      "data": {
-        "unsigned_int_kind": {
-          kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
-          keyed: false,
-          record_on_release: true
-        },
-      },
-      "evaluation": /already registered/,
-      "description": "Registration must fail if a scalar with the same name exists already"
-    },
   ];
 
   for (let testCase of TEST_CASES) {
     Assert.throws(() => Telemetry.registerScalars(testCase.category, testCase.data),
                   testCase.evaluation, testCase.description);
   }
+});
+
+add_task(function* test_dynamicScalars_doubleRegistration() {
+  Telemetry.clearScalars();
+
+  // Register a test scalar.
+  Telemetry.registerScalars("telemetry.test.dynamic", {
+    "double_registration_1": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      record_on_release: true
+    },
+  });
+
+  // Verify that we can record the scalar.
+  Telemetry.scalarSet("telemetry.test.dynamic.double_registration_1", 1);
+
+  // Register the same scalar again, along with a second scalar.
+  // This must not throw.
+  Telemetry.registerScalars("telemetry.test.dynamic", {
+    "double_registration_1": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      record_on_release: true
+    },
+    "double_registration_2": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      record_on_release: true
+    },
+  });
+
+  // Set the dynamic scalars to some test values.
+  Telemetry.scalarAdd("telemetry.test.dynamic.double_registration_1", 1);
+  Telemetry.scalarSet("telemetry.test.dynamic.double_registration_2", 3);
+
+  // Get a snapshot of the scalars and check that the dynamic ones were correctly set.
+  let scalars =
+    getProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, "dynamic", false, false);
+
+  Assert.equal(scalars["telemetry.test.dynamic.double_registration_1"], 2,
+               "The recorded scalar must contain the right value.");
+  Assert.equal(scalars["telemetry.test.dynamic.double_registration_2"], 3,
+               "The recorded scalar must contain the right value.");
+
+  // Register an existing scalar again, only change the definition
+  // to make it expire.
+  Telemetry.registerScalars("telemetry.test.dynamic", {
+    "double_registration_2": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      record_on_release: true,
+      expired: true
+    },
+  });
+
+  // Attempt to record and make sure that no recording happens.
+  Telemetry.scalarAdd("telemetry.test.dynamic.double_registration_2", 1);
+  scalars =
+    getProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, "dynamic", false, false);
+  Assert.equal(scalars["telemetry.test.dynamic.double_registration_2"], 3,
+               "The recorded scalar must contain the right value.");
 });
 
 add_task(function* test_dynamicScalars_recording() {
