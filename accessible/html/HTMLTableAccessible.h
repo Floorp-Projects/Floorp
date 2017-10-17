@@ -11,6 +11,7 @@
 #include "TableCellAccessible.h"
 
 class nsITableCellLayout;
+class nsTableCellFrame;
 
 namespace mozilla {
 namespace a11y {
@@ -52,6 +53,11 @@ protected:
    * Return nsITableCellLayout of the table cell frame.
    */
   nsITableCellLayout* GetCellLayout() const;
+
+  /**
+   * Return the table cell frame.
+   */
+  nsTableCellFrame* GetCellFrame() const;
 
   /**
    * Return row and column indices of the cell.
