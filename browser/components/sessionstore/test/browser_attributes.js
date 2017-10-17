@@ -30,9 +30,9 @@ add_task(async function test() {
     return gBrowser.getIcon(tab) != null;
   }, "wait for favicon load to finish", 100, 5);
 
-  // Check that the tab has 'image' and 'iconLoadingPrincipal' attributes.
+  // Check that the tab has 'image' and 'iconloadingprincipal' attributes.
   ok(tab.hasAttribute("image"), "tab.image exists");
-  ok(tab.hasAttribute("iconLoadingPrincipal"), "tab.iconLoadingPrincipal exists");
+  ok(tab.hasAttribute("iconloadingprincipal"), "tab.iconloadingprincipal exists");
 
   tab.toggleMuteAudio();
   // Check that the tab has a 'muted' attribute.
@@ -45,11 +45,11 @@ add_task(async function test() {
   // Make sure we do not persist 'image','muted' and 'activemedia-blocked' attributes.
   ss.persistTabAttribute("image");
   ss.persistTabAttribute("muted");
-  ss.persistTabAttribute("iconLoadingPrincipal");
+  ss.persistTabAttribute("iconloadingprincipal");
   ss.persistTabAttribute("activemedia-blocked");
   let {attributes} = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
-  ok(!("iconLoadingPrincipal" in attributes), "'iconLoadingPrincipal' attribute not saved");
+  ok(!("iconloadingprincipal" in attributes), "'iconloadingprincipal' attribute not saved");
   ok(!("muted" in attributes), "'muted' attribute not saved");
   ok(!("custom" in attributes), "'custom' attribute not saved");
   ok(!("activemedia-blocked" in attributes), "'activemedia-blocked' attribute not saved");
