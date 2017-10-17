@@ -240,7 +240,7 @@ tasks.whenTaskAdded { task ->
 }
 
 // -------------------------------------------------------------------------------------------------
-// Adjust: Read token from environment variable (Only release builds)
+// Adjust: Read token from locale file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
 android.applicationVariants.all { variant ->
@@ -249,12 +249,11 @@ android.applicationVariants.all { variant ->
     print("Adjust token (" + variantName + "): ")
 
     if (variantName.contains("Release") && variantName.contains("focus")) {
-        def token = System.getenv("ADJUST_TOKEN_FOCUS") ?: null
-
-        if (token != null) {
+        try {
+            def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
-            println "(Added from environment variable)"
-        } else {
+            println "(Added from .adjust_token file"
+        } catch (java.io.FileNotFoundException e) {
             buildConfigField 'String', 'ADJUST_TOKEN', 'null'
             println("X_X")
         }
