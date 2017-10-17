@@ -269,8 +269,8 @@ evaluate.toJSON = function(obj, seenEls) {
   } else if (element.isCollection(obj)) {
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
-  // HTMLElement
-  } else if ("nodeType" in obj && obj.nodeType == obj.ELEMENT_NODE) {
+  // Element, SVGElement, XULElement
+  } else if (element.isElement(obj)) {
     let uuid = seenEls.add(obj);
     return element.makeWebElement(uuid);
 
