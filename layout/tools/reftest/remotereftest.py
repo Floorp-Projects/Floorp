@@ -450,7 +450,10 @@ def run_test_harness(parser, options):
     retVal = 0
     try:
         dm.recordLogcat()
-        retVal = reftest.runTests(options.tests, options)
+        if options.verify:
+            retVal = reftest.verifyTests(options.tests, options)
+        else:
+            retVal = reftest.runTests(options.tests, options)
     except:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
