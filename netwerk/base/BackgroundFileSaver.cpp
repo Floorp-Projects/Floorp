@@ -620,10 +620,9 @@ BackgroundFileSaver::ProcessStateChange()
                                    PR_WRONLY | creationIoFlags, 0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  outputStream = NS_BufferOutputStream(outputStream, BUFFERED_IO_SIZE);
-  if (!outputStream) {
-    return NS_ERROR_FAILURE;
-  }
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(outputStream),
+                                  outputStream.forget(), BUFFERED_IO_SIZE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Wrap the output stream so that it feeds the digest context if needed.
   if (mDigestContext) {

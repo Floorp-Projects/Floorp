@@ -270,9 +270,9 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, int32_t aIoFlags)
         return rv;
     }
 
-    rv = NS_NewBufferedOutputStream(getter_AddRefs(mStream), stream, 64 * 1024);
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(mStream), stream.forget(),
+                                    64 * 1024);
     if (NS_FAILED(rv)) {
-        stream->Close();
         mHeaders.Clear();
         mEntryHash.Clear();
         return rv;

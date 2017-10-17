@@ -664,8 +664,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     // objects which may or many not play well with NS_InputStreamIsBuffered().
     if (!NS_OutputStreamIsBuffered(responseBody)) {
       nsCOMPtr<nsIOutputStream> buffered;
-      rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered), responseBody,
-           kCopySegmentSize);
+      rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered),
+                                      responseBody.forget(), kCopySegmentSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
       }
