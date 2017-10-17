@@ -152,7 +152,8 @@ NativeObject::copyDenseElements(uint32_t dstStart, const Value* src, uint32_t co
                                         src[i]);
         }
     } else {
-        memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
+        memcpy(reinterpret_cast<Value*>(&elements_[dstStart]), src,
+               count * sizeof(Value));
         elementsRangeWriteBarrierPost(dstStart, count);
     }
 }
@@ -181,7 +182,7 @@ NativeObject::initDenseElements(const Value* src, uint32_t count)
         checkStoredValue(src[i]);
 #endif
 
-    memcpy(elements_, src, count * sizeof(HeapSlot));
+    memcpy(reinterpret_cast<Value*>(elements_), src, count * sizeof(Value));
     elementsRangeWriteBarrierPost(0, count);
 }
 
@@ -256,7 +257,8 @@ NativeObject::moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t c
                 dst->set(this, HeapSlot::Element, dst - elements_ + numShifted, *src);
         }
     } else {
-        memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
+        memmove(reinterpret_cast<Value*>(elements_ + dstStart), elements_ + srcStart,
+                count * sizeof(Value));
         elementsRangeWriteBarrierPost(dstStart, count);
     }
 }
@@ -271,7 +273,8 @@ NativeObject::moveDenseElementsNoPreBarrier(uint32_t dstStart, uint32_t srcStart
     MOZ_ASSERT(!denseElementsAreCopyOnWrite());
     MOZ_ASSERT(!denseElementsAreFrozen());
 
-    memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(Value));
+    memmove(reinterpret_cast<Value*>(elements_ + dstStart), elements_ + srcStart,
+            count * sizeof(Value));
     elementsRangeWriteBarrierPost(dstStart, count);
 }
 
