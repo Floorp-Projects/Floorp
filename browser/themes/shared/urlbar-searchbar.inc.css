@@ -14,7 +14,6 @@
   padding: 0;
   margin: 3px 5px;
   min-height: 30px;
-  cursor: default;
   overflow: -moz-hidden-unscrollable;
 }
 
@@ -56,6 +55,11 @@
 
 #urlbar-container {
   -moz-box-align: center;
+}
+
+.urlbar-input-box,
+.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
+  margin: 0;
 }
 
 #urlbar-search-splitter {
