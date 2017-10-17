@@ -11,6 +11,8 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
+struct ComputedFlexLineInfo;
+
 namespace mozilla {
 namespace dom {
 
@@ -21,7 +23,8 @@ class FlexLine : public nsISupports
                , public nsWrapperCache
 {
 public:
-  explicit FlexLine(Flex* aParent);
+  explicit FlexLine(Flex* aParent,
+                    const ComputedFlexLineInfo* aLine);
 
 protected:
   virtual ~FlexLine() = default;
@@ -45,6 +48,12 @@ public:
 
 protected:
   RefPtr<Flex> mParent;
+
+  FlexLineGrowthState mGrowthState;
+  double mCrossSize;
+  double mFirstBaselineOffset;
+  double mLastBaselineOffset;
+
   nsTArray<RefPtr<FlexItem>> mItems;
 };
 
