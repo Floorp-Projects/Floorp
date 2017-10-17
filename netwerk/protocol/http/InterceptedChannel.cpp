@@ -351,15 +351,12 @@ InterceptedChannelContent::CancelInterception(nsresult aStatus)
   if (mClosed) {
     return NS_ERROR_FAILURE;
   }
+  mClosed = true;
 
   mReportCollector->FlushConsoleReports(mChannel);
 
-  // we need to use AsyncAbort instead of Cancel since there's no active pump
-  // to cancel which will provide OnStart/OnStopRequest to the channel.
-  nsresult rv = mChannel->AsyncAbort(aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Unused << mChannel->Cancel(aStatus);
   mStreamListener = nullptr;
-  mClosed = true;
 
   return NS_OK;
 }
