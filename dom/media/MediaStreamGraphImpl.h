@@ -198,6 +198,14 @@ public:
    */
   bool OneIteration(GraphTime aStateEnd);
 
+  /**
+   * Called from the driver, when the graph thread is about to stop, to tell
+   * the main thread to attempt to begin cleanup.  The main thread may either
+   * shutdown or revive the graph depending on whether it receives new
+   * messages.
+   */
+  void SignalMainThreadCleanup();
+
   bool Running() const
   {
     return LifecycleStateRef() == LIFECYCLE_RUNNING;
@@ -724,8 +732,9 @@ public:
   };
 
   /**
-   * Modified on the main and graph thread (in UpdateMainThreadState() when
-   * we're about to shutdown) in mMonitor. mMonitor must be held when accessed.
+   * Modified only in mMonitor.  Transitions to
+   * LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP occur on the graph thread at
+   * the end of an iteration.  All other transitions occur on the main thread.
    */
   LifecycleState mLifecycleState;
   LifecycleState& LifecycleStateRef()
