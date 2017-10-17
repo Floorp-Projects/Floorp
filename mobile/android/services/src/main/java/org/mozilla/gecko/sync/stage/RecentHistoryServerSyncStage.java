@@ -95,7 +95,9 @@ public class RecentHistoryServerSyncStage extends HistoryServerSyncStage {
                 getAllowedMultipleBatches(),
                 getAllowedToUseHighWaterMark(),
                 getRepositoryStateProvider(),
-                false);
+                false,
+                false
+        );
     }
 
     /**

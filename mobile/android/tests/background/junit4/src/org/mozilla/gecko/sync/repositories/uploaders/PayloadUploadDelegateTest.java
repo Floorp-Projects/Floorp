@@ -142,7 +142,8 @@ public class PayloadUploadDelegateTest {
                         Uri.parse("https://example.com"),
                         0L,
                         mock(InfoConfiguration.class),
-                        mock(AuthHeaderProvider.class)
+                        mock(AuthHeaderProvider.class),
+                        false
                 )
         );
 

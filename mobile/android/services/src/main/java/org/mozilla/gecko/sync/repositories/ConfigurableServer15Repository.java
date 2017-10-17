@@ -28,6 +28,7 @@ public class ConfigurableServer15Repository extends Server15Repository {
   private final ServerSyncStage.MultipleBatches multipleBatches;
   private final ServerSyncStage.HighWaterMark highWaterMark;
   private final boolean forceFullFetch;
+  private final boolean abortOnStoreFailure;
   public ConfigurableServer15Repository(
           String collection,
           long syncDeadline,
@@ -40,7 +41,8 @@ public class ConfigurableServer15Repository extends Server15Repository {
           ServerSyncStage.MultipleBatches multipleBatches,
           ServerSyncStage.HighWaterMark highWaterMark,
           RepositoryStateProvider stateProvider,
-          boolean forceFullFetch) throws URISyntaxException {
+          boolean forceFullFetch,
+          boolean abortOnStoreFailure) throws URISyntaxException {
     super(
             collection,
             syncDeadline,
@@ -55,6 +57,7 @@ public class ConfigurableServer15Repository extends Server15Repository {
     this.multipleBatches = multipleBatches;
     this.highWaterMark = highWaterMark;
     this.forceFullFetch = forceFullFetch;
+    this.abortOnStoreFailure = abortOnStoreFailure;
 
     // Sanity check: let's ensure we're configured correctly. At this point in time, it doesn't make
     // sense to use H.W.M. with a non-persistent state provider. This might change if we start retrying
@@ -87,6 +90,11 @@ public class ConfigurableServer15Repository extends Server15Repository {
   @Override
   public boolean getFullFetchForced() {
     return forceFullFetch;
+  }
+
+  @Override
+  public boolean getAbortOnStoreFailure() {
+    return abortOnStoreFailure;
   }
 
 }
