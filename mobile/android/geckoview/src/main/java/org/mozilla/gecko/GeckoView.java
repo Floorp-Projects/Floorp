@@ -1649,7 +1649,7 @@ public class GeckoView extends LayerView {
              * Called by the prompt implementation when the multiple-choice list is
              * dismissed by the user.
              *
-             * @param id IDs of the selected items.
+             * @param ids IDs of the selected items.
              */
             void confirm(String[] ids);
 
@@ -1666,7 +1666,7 @@ public class GeckoView extends LayerView {
              * Called by the prompt implementation when the multiple-choice list is
              * dismissed by the user.
              *
-             * @param item Bundle array representing the selected items; must be original
+             * @param items Bundle array representing the selected items; must be original
              *             GeckoBundle objects that were passed to the implementation.
              */
             void confirm(GeckoBundle[] items);
