@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "InterceptedChannel.h"
+#include "nsICancelable.h"
 #include "nsInputStreamPump.h"
 #include "nsIPipe.h"
 #include "nsIStreamListener.h"
@@ -18,6 +19,7 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "nsIChannelEventSink.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -311,11 +313,11 @@ InterceptedChannelContent::StartSynthesizedResponse(nsIInputStream* aBody,
   bool equal = false;
   originalURI->Equals(responseURI, &equal);
   if (!equal) {
-    mChannel->ForceIntercepted(mSynthesizedInput);
+    mChannel->ForceIntercepted(aBody, aBodyCallback);
     mChannel->BeginNonIPCRedirect(responseURI, *mSynthesizedResponseHead.ptr());
   } else {
     mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(),
-                                              mSynthesizedInput,
+                                              aBody, aBodyCallback,
                                               mStreamListener);
   }
 

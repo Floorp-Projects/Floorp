@@ -164,8 +164,116 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 
 namespace {
 
-struct RespondWithClosure;
-void RespondWithCopyComplete(void* aClosure, nsresult aStatus);
+struct RespondWithClosure
+{
+  nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
+  const nsString mRequestURL;
+  const nsCString mRespondWithScriptSpec;
+  const uint32_t mRespondWithLineNumber;
+  const uint32_t mRespondWithColumnNumber;
+
+  RespondWithClosure(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
+                     const nsAString& aRequestURL,
+                     const nsACString& aRespondWithScriptSpec,
+                     uint32_t aRespondWithLineNumber,
+                     uint32_t aRespondWithColumnNumber)
+    : mInterceptedChannel(aChannel)
+    , mRegistration(aRegistration)
+    , mRequestURL(aRequestURL)
+    , mRespondWithScriptSpec(aRespondWithScriptSpec)
+    , mRespondWithLineNumber(aRespondWithLineNumber)
+    , mRespondWithColumnNumber(aRespondWithColumnNumber)
+  {
+  }
+};
+
+class FinishResponse final : public Runnable
+{
+  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+
+public:
+  explicit FinishResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
+    : Runnable("dom::workers::FinishResponse")
+    , mChannel(aChannel)
+  {
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    AssertIsOnMainThread();
+
+    nsresult rv = mChannel->FinishSynthesizedResponse();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
+      return NS_OK;
+    }
+
+    TimeStamp timeStamp = TimeStamp::Now();
+    mChannel->SetHandleFetchEventEnd(timeStamp);
+    mChannel->SetFinishSynthesizedResponseEnd(timeStamp);
+    mChannel->SaveTimeStamps();
+
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    if (obsService) {
+      nsCOMPtr<nsIChannel> underlyingChannel;
+      nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
+
+      obsService->NotifyObservers(underlyingChannel, "service-worker-synthesized-response", nullptr);
+    }
+
+    return rv;
+  }
+};
+
+class BodyCopyHandle final : public nsIInterceptedBodyCallback
+{
+  UniquePtr<RespondWithClosure> mClosure;
+
+  ~BodyCopyHandle()
+  {
+  }
+
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit BodyCopyHandle(UniquePtr<RespondWithClosure>&& aClosure)
+    : mClosure(Move(aClosure))
+  {
+  }
+
+  NS_IMETHOD
+  BodyComplete(nsresult aRv) override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIRunnable> event;
+    if (NS_WARN_IF(NS_FAILED(aRv))) {
+      AsyncLog(mClosure->mInterceptedChannel, mClosure->mRespondWithScriptSpec,
+               mClosure->mRespondWithLineNumber,
+               mClosure->mRespondWithColumnNumber,
+               NS_LITERAL_CSTRING("InterceptionFailedWithURL"),
+               mClosure->mRequestURL);
+      event = new CancelChannelRunnable(mClosure->mInterceptedChannel,
+                                        mClosure->mRegistration,
+                                        NS_ERROR_INTERCEPTION_FAILED);
+    } else {
+      event = new FinishResponse(mClosure->mInterceptedChannel);
+    }
+
+    mClosure.reset();
+
+    event->Run();
+
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(BodyCopyHandle, nsIInterceptedBodyCallback)
 
 class StartResponse final : public Runnable
 {
@@ -239,59 +347,16 @@ public:
     auto castLoadInfo = static_cast<LoadInfo*>(loadInfo.get());
     castLoadInfo->SynthesizeServiceWorkerTainting(mInternalResponse->GetTainting());
 
-    rv = mChannel->StartSynthesizedResponse(nullptr, nullptr,
+    nsCOMPtr<nsIInputStream> body;
+    mInternalResponse->GetUnfilteredBody(getter_AddRefs(body));
+    RefPtr<BodyCopyHandle> copyHandle;
+    copyHandle = new BodyCopyHandle(Move(mClosure));
+
+    rv = mChannel->StartSynthesizedResponse(body, copyHandle,
                                             mResponseURLSpec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
-    }
-
-    // Only start copying after we have begun synthesizing the response.
-    // Some of the necko invariants can fail if we trigger an OnDataAvailable
-    // too early.
-    nsCOMPtr<nsIInputStream> body;
-    mInternalResponse->GetUnfilteredBody(getter_AddRefs(body));
-    // Errors and redirects may not have a body.
-    if (body) {
-      nsCOMPtr<nsIOutputStream> responseBody;
-      rv = mChannel->GetResponseBody(getter_AddRefs(responseBody));
-      if (NS_WARN_IF(NS_FAILED(rv)) || !responseBody) {
-        return rv;
-      }
-
-      const uint32_t kCopySegmentSize = 4096;
-
-      // Depending on how the Response passed to .respondWith() was created, we may
-      // get a non-buffered input stream.  In addition, in some configurations the
-      // destination channel's output stream can be unbuffered.  We wrap the output
-      // stream side here so that NS_AsyncCopy() works.  Wrapping the output side
-      // provides the most consistent operation since there are fewer stream types
-      // we are writing to.  The input stream can be a wide variety of concrete
-      // objects which may or many not play well with NS_InputStreamIsBuffered().
-      if (!NS_OutputStreamIsBuffered(responseBody)) {
-        nsCOMPtr<nsIOutputStream> buffered;
-        rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered), responseBody,
-             kCopySegmentSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        responseBody = buffered;
-      }
-
-      nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-      if (NS_WARN_IF(!stsThread)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // XXXnsm, Fix for Bug 1141332 means that if we decide to make this
-      // streaming at some point, we'll need a different solution to that bug.
-      rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
-                        kCopySegmentSize, RespondWithCopyComplete, mClosure.release());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      RespondWithCopyComplete(mClosure.release(), NS_OK);
     }
 
     return rv;
@@ -318,47 +383,6 @@ public:
                                    nullptr, &decision);
     NS_ENSURE_SUCCESS(rv, false);
     return decision == nsIContentPolicy::ACCEPT;
-  }
-};
-
-class FinishResponse final : public Runnable
-{
-  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-
-public:
-  explicit FinishResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
-    : Runnable("dom::workers::FinishResponse")
-    , mChannel(aChannel)
-  {
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    AssertIsOnMainThread();
-
-    nsresult rv = mChannel->FinishSynthesizedResponse();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
-      return NS_OK;
-    }
-
-    TimeStamp timeStamp = TimeStamp::Now();
-    mChannel->SetHandleFetchEventEnd(timeStamp);
-    mChannel->SetFinishSynthesizedResponseEnd(timeStamp);
-    mChannel->SaveTimeStamps();
-
-    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-    if (obsService) {
-      nsCOMPtr<nsIChannel> underlyingChannel;
-      nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
-
-      obsService->NotifyObservers(underlyingChannel, "service-worker-synthesized-response", nullptr);
-    }
-
-    return rv;
   }
 };
 
@@ -435,56 +459,6 @@ private:
     }
   }
 };
-
-struct RespondWithClosure
-{
-  nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
-  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
-  const nsString mRequestURL;
-  const nsCString mRespondWithScriptSpec;
-  const uint32_t mRespondWithLineNumber;
-  const uint32_t mRespondWithColumnNumber;
-
-  RespondWithClosure(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
-                     const nsAString& aRequestURL,
-                     const nsACString& aRespondWithScriptSpec,
-                     uint32_t aRespondWithLineNumber,
-                     uint32_t aRespondWithColumnNumber)
-    : mInterceptedChannel(aChannel)
-    , mRegistration(aRegistration)
-    , mRequestURL(aRequestURL)
-    , mRespondWithScriptSpec(aRespondWithScriptSpec)
-    , mRespondWithLineNumber(aRespondWithLineNumber)
-    , mRespondWithColumnNumber(aRespondWithColumnNumber)
-  {
-  }
-};
-
-void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
-{
-  UniquePtr<RespondWithClosure> data(static_cast<RespondWithClosure*>(aClosure));
-  nsCOMPtr<nsIRunnable> event;
-  if (NS_WARN_IF(NS_FAILED(aStatus))) {
-    AsyncLog(data->mInterceptedChannel, data->mRespondWithScriptSpec,
-             data->mRespondWithLineNumber, data->mRespondWithColumnNumber,
-             NS_LITERAL_CSTRING("InterceptionFailedWithURL"),
-             data->mRequestURL);
-    event = new CancelChannelRunnable(data->mInterceptedChannel,
-                                      data->mRegistration,
-                                      NS_ERROR_INTERCEPTION_FAILED);
-  } else {
-    event = new FinishResponse(data->mInterceptedChannel);
-  }
-
-  // In theory this can happen after the worker thread is terminated.
-  if (NS_IsMainThread()) {
-    event->Run();
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event.forget()));
-}
 
 class MOZ_STACK_CLASS AutoCancel
 {

@@ -74,6 +74,7 @@ private:
   nsCOMPtr<nsIOutputStream> mBodyWriter;
   nsCOMPtr<nsISupports> mReleaseHandle;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
+  nsCOMPtr<nsIInterceptedBodyCallback> mBodyCallback;
   RefPtr<nsInputStreamPump> mPump;
   RefPtr<ADivertableParentChannel> mParentChannel;
   TimeStamp mFinishResponseStart;
@@ -125,6 +126,9 @@ private:
   void
   MaybeCallStatusAndProgress();
 
+  void
+  MaybeCallBodyCallback();
+
 public:
   static already_AddRefed<InterceptedHttpChannel>
   CreateForInterception(PRTime aCreationTime, const TimeStamp& aCreationTimestamp,
@@ -132,6 +136,7 @@ public:
 
   static already_AddRefed<InterceptedHttpChannel>
   CreateForSynthesis(const nsHttpResponseHead* aHead, nsIInputStream* aBody,
+                     nsIInterceptedBodyCallback* aBodyCallback,
                      PRTime aCreationTime,
                      const TimeStamp& aCreationTimestamp,
                      const TimeStamp& aAsyncOpenTimestamp);
