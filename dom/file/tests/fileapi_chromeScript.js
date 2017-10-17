@@ -1,14 +1,15 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.importGlobalProperties(["File"]);
 
-var fileNum = 1;
-
 function createFileWithData(fileData) {
   var willDelete = fileData === null;
+
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
   var testFile = dirSvc.get("ProfD", Ci.nsIFile);
-  testFile.append("fileAPItestfile" + fileNum);
-  fileNum++;
+  testFile.append("fileAPItestfile");
+  testFile.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
+
   var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0o666, 0);
