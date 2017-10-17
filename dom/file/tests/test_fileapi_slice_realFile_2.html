@@ -16,6 +16,7 @@
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
 
 let canvasData;
 
@@ -26,7 +27,7 @@ createCanvasURL()
 })
 
 .then(file => {
-  return testSlice(file, canvasData.length, "", canvasData, "fileFile");
+  return testSlice(file, canvasData.length, "", canvasData, "fileFile", RANGE_2);
 })
 
 .then(SimpleTest.finish);
