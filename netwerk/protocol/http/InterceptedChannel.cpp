@@ -321,7 +321,7 @@ InterceptedChannelContent::StartSynthesizedResponse(const nsACString& aFinalURLS
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelContent::FinishSynthesizedResponse()
 {
   if (NS_WARN_IF(mClosed)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -333,9 +333,6 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
   mResponseBody->Close();
 
   mReportCollector->FlushConsoleReports(mChannel);
-
-  nsresult rv = StartSynthesizedResponse(aFinalURLSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mResponseBody = nullptr;
   mStreamListener = nullptr;
