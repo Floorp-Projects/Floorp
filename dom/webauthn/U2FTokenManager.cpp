@@ -160,7 +160,7 @@ U2FTokenManager::Get()
 void
 U2FTokenManager::AbortTransaction(const nsresult& aError)
 {
-  Unused << mTransactionParent->SendCancel(aError);
+  Unused << mTransactionParent->SendAbort(aError);
   ClearTransaction();
 }
 
