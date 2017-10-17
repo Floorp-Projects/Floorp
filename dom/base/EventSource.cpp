@@ -51,6 +51,8 @@ namespace dom {
 
 using namespace workers;
 
+static LazyLogModule gEventSourceLog("EventSource");
+
 #define SPACE_CHAR           (char16_t)0x0020
 #define CR_CHAR              (char16_t)0x000D
 #define LF_CHAR              (char16_t)0x000A
@@ -953,8 +955,7 @@ EventSourceImpl::SetupHttpChannel()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
-  DebugOnly<nsresult> rv =
-    mHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
+  nsresult rv = mHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   /* set the http request headers */
@@ -965,11 +966,19 @@ EventSourceImpl::SetupHttpChannel()
 
   // LOAD_BYPASS_CACHE already adds the Cache-Control: no-cache header
 
-  if (!mLastEventID.IsEmpty()) {
-    rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Last-Event-ID"),
-      NS_ConvertUTF16toUTF8(mLastEventID), false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (mLastEventID.IsEmpty()) {
+    return;
   }
+  NS_ConvertUTF16toUTF8 eventId(mLastEventID);
+  rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Last-Event-ID"),
+                                      eventId, false);
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gEventSourceLog, LogLevel::Warning,
+            ("SetupHttpChannel. rv=%x (%s)", uint32_t(rv), eventId.get()));
+  }
+#endif
+  Unused << rv;
 }
 
 nsresult
