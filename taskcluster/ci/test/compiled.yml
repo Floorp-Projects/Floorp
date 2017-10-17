@@ -1,0 +1,110 @@
+
+cppunit:
+    description: "CPP Unit Tests"
+    suite: cppunittest
+    e10s: false
+    treeherder-symbol: tc(Cpp)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []  # as an exception to windows.*
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: built-projects
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=cppunittest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --cppunittest-suite=cppunittest
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+gtest:
+    description: "GTests run"
+    suite: gtest
+    e10s: false
+    treeherder-symbol: tc(GTest)
+    instance-size: xlarge
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            windows.*-pgo/.*: [] # permafails on pgo
+            windows.*-nightly/.*: [] # permafails on nightly too
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --gtest-suite=gtest
+    tier:
+        by-test-platform:
+            windows7-32-pgo.*: 3
+            windows10-64-pgo.*: 3
+            windows10-64-asan.*: 3
+            default: default
+
+jittest:
+    description: "JIT Test run"
+    suite: jittest/jittest-chunked
+    e10s: false
+    treeherder-symbol: tc(Jit)
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: built-projects
+    chunks:
+        by-test-platform:
+            windows.*: 1
+            macosx.*: 1
+            default: 6
+    mozharness:
+        chunked:
+          by-test-platform:
+            windows.*: false
+            macosx.*: false
+            default: true
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --jittest-suite=jittest-chunked
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default

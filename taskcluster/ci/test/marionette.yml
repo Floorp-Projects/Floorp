@@ -1,0 +1,70 @@
+marionette:
+    description: "Marionette unittest run"
+    suite: marionette
+    treeherder-symbol: tc(Mn)
+    max-run-time:
+        by-test-platform:
+            android.*: 3600
+            default: 5400
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    tier:
+        by-test-platform:
+            android.*: 2
+            windows10-64-asan.*: 3
+            default: default
+    chunks:
+        by-test-platform:
+            android.*: 10
+            default: 1
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=marionette
+            default:
+                script: marionette.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - marionette/windows_taskcluster_config.py
+                        macosx.*:
+                            - marionette/prod_config.py
+                            - marionette/mac_taskcluster_config.py
+                        default:
+                            - marionette/prod_config.py
+                            - remove_executables.py
+
+marionette-headless:
+    description: "Marionette headless unittest run"
+    suite: marionette
+    treeherder-symbol: tc(MnH)
+    max-run-time: 5400
+    instance-size: default
+    chunks: 1
+    mozharness:
+        script: marionette.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - marionette/windows_taskcluster_config.py
+                macosx.*:
+                    - marionette/prod_config.py
+                    - marionette/mac_taskcluster_config.py
+                default:
+                    - marionette/prod_config.py
+                    - remove_executables.py
+        extra-options:
+            - --headless
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
