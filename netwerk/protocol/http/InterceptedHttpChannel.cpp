@@ -50,7 +50,6 @@ InterceptedHttpChannel::ReleaseListeners()
   mSynthesizedResponseHead.reset();
   mRedirectChannel = nullptr;
   mBodyReader = nullptr;
-  mBodyWriter = nullptr;
   mReleaseHandle = nullptr;
   mProgressSink = nullptr;
   mBodyCallback = nullptr;
@@ -806,9 +805,8 @@ InterceptedHttpChannel::FinishSynthesizedResponse()
     return NS_OK;
   }
 
-  if (mBodyWriter) {
-    mBodyWriter->Close();
-  }
+  // TODO: Remove this API after interception moves to the parent process in
+  //       e10s mode.
 
   return NS_OK;
 }
@@ -817,23 +815,6 @@ NS_IMETHODIMP
 InterceptedHttpChannel::CancelInterception(nsresult aStatus)
 {
   return Cancel(aStatus);
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::GetResponseBody(nsIOutputStream** aResponseBody)
-{
-  if (!mBodyWriter) {
-    nsresult rv = NS_NewPipe(getter_AddRefs(mBodyReader),
-                             getter_AddRefs(mBodyWriter),
-                             0,          // default segment size
-                             UINT32_MAX, // infinite pipe length
-                             true,       // non-blocking reader
-                             true);      // non-blocking writer
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  nsCOMPtr<nsIOutputStream> ref(mBodyWriter);
-  ref.forget(aResponseBody);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
