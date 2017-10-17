@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/fallible.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryChecking.h"
@@ -121,6 +122,19 @@ public:
     return s;
   }
 
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool DebugContains(void* aPtr)
+  {
+    for (auto arena = mHead.next; arena; arena = arena->next) {
+      if (arena->DebugContains(aPtr)) {
+        return true;
+      }
+    }
+    return false;
+  }
+#endif
+
 private:
   struct ArenaHeader
   {
@@ -165,6 +179,15 @@ private:
     size_t Available() const {
       return header.tail - header.offset;
     }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    bool DebugContains(void* aPtr)
+    {
+      uintptr_t ptr = reinterpret_cast<uintptr_t>(aPtr);
+      return ptr >= reinterpret_cast<uintptr_t>(this + 1) &&
+             ptr < header.offset;
+    }
+#endif
   };
 
   /**
