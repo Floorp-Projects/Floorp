@@ -55,11 +55,20 @@ interface nsIFaviconService : nsISupports
   void expireAllFavicons();
 
   /**
+   * Sets the default size returned by preferredSizeFromURI when the uri doesn't
+   * specify a size ref. If this is not invoked first, or 0 is passed to it,
+   * preferredSizeFromURI() will return UINT16_MAX, that matches the biggest
+   * icon available.
+   */
+  void setDefaultIconURIPreferredSize(in unsigned short aDefaultSize);
+
+  /**
    * Tries to extract the preferred size from an icon uri ref fragment.
    *
    * @param aURI
    *        The URI to parse.
-   * @return The preferred size, or UINT16_MAX if not present.
+   * @return The preferred size, or a default size set through
+   *         setDefaultIconURIPreferredSize, or UINT16_MAX if neither are set.
    */
   unsigned short preferredSizeFromURI(in nsIURI aURI);
 
