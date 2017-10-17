@@ -108,6 +108,7 @@ class TsBase(Test):
         'xperf_stackwalk',
         'tpmozafterpaint',
         'fnbpaint',
+        'profile',
         'firstpaint',
         'userready',
         'testeventmap',
@@ -153,6 +154,14 @@ class ts_paint(TsBase):
 class ts_paint_webext(ts_paint):
     webextensions = '${talos}/webextensions/dummy/dummy-signed.xpi'
     preferences = {'xpinstall.signatures.required': False}
+
+
+@register_test()
+class ts_paint_heavy(ts_paint):
+    """
+    ts_paint test ran against a heavy-user profile
+    """
+    profile = 'simple'
 
 
 @register_test()
@@ -243,7 +252,7 @@ class PageloaderTest(Test):
             'tpscrolltest', 'xperf_counters', 'timeout', 'shutdown', 'responsiveness',
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'lower_is_better', 'alert_threshold', 'unit', 'webextensions']
+            'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile']
 
 
 class QuantumPageloadTest(PageloaderTest):
@@ -917,11 +926,27 @@ class tp6_google(QuantumPageloadTest):
 
 
 @register_test()
+class tp6_google_heavy(tp6_google):
+    """
+    tp6_google test ran against a heavy-user profile
+    """
+    profile = 'simple'
+
+
+@register_test()
 class tp6_youtube(QuantumPageloadTest):
     """
     Quantum Pageload Test - YouTube
     """
     tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_youtube.manifest'
+
+
+@register_test()
+class tp6_youtube_heavy(tp6_youtube):
+    """
+    tp6_youtube test ran against a heavy-user profile
+    """
+    profile = 'simple'
 
 
 @register_test()
@@ -933,8 +958,24 @@ class tp6_amazon(QuantumPageloadTest):
 
 
 @register_test()
+class tp6_amazon_heavy(tp6_amazon):
+    """
+    tp6_amazon test ran against a heavy-user profile
+    """
+    profile = 'simple'
+
+
+@register_test()
 class tp6_facebook(QuantumPageloadTest):
     """
     Quantum Pageload Test - Facebook
     """
     tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_facebook.manifest'
+
+
+@register_test()
+class tp6_facebook_heavy(tp6_facebook):
+    """
+    tp6_facebook test ran against a heavy-user profile
+    """
+    profile = 'simple'

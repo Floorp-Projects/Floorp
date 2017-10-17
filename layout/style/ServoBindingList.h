@@ -689,6 +689,9 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
                    nscolor current_color,
                    const nsAString* value,
                    nscolor* result_color);
+SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
+                   const nsAString* value,
+                   nsCSSRect* result);
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

@@ -17,6 +17,31 @@ const TreeViewClass = require("devtools/client/shared/components/tree/TreeView")
 const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, input, span } = DOM;
+const NOT_AVAILABLE = L10N.getStr("netmonitor.security.notAvailable");
+const ERROR_LABEL = L10N.getStr("netmonitor.security.error");
+const CIPHER_SUITE_LABEL = L10N.getStr("netmonitor.security.cipherSuite");
+const WARNING_CIPHER_LABEL = L10N.getStr("netmonitor.security.warning.cipher");
+const ENABLED_LABEL = L10N.getStr("netmonitor.security.enabled");
+const DISABLED_LABEL = L10N.getStr("netmonitor.security.disabled");
+const CONNECTION_LABEL = L10N.getStr("netmonitor.security.connection");
+const PROTOCOL_VERSION_LABEL = L10N.getStr("netmonitor.security.protocolVersion");
+const KEA_GROUP_LABEL = L10N.getStr("netmonitor.security.keaGroup");
+const SIGNATURE_SCHEME_LABEL = L10N.getStr("netmonitor.security.signatureScheme");
+const HSTS_LABEL = L10N.getStr("netmonitor.security.hsts");
+const HPKP_LABEL = L10N.getStr("netmonitor.security.hpkp");
+const CERTIFICATE_LABEL = L10N.getStr("netmonitor.security.certificate");
+const SUBJECT_INFO_LABEL = L10N.getStr("certmgr.subjectinfo.label");
+const CERT_DETAIL_COMMON_NAME_LABEL = L10N.getStr("certmgr.certdetail.cn");
+const CERT_DETAIL_ORG_LABEL = L10N.getStr("certmgr.certdetail.o");
+const CERT_DETAIL_ORG_UNIT_LABEL = L10N.getStr("certmgr.certdetail.ou");
+const ISSUER_INFO_LABEL = L10N.getStr("certmgr.issuerinfo.label");
+const PERIOD_OF_VALIDITY_LABEL = L10N.getStr("certmgr.periodofvalidity.label");
+const BEGINS_LABEL = L10N.getStr("certmgr.begins");
+const EXPIRES_LABEL = L10N.getStr("certmgr.expires");
+const FINGERPRINTS_LABEL = L10N.getStr("certmgr.fingerprints.label");
+const SHA256_FINGERPRINT_LABEL =
+  L10N.getStr("certmgr.certdetail.sha256fingerprint");
+const SHA1_FINGERPRINT_LABEL = L10N.getStr("certmgr.certdetail.sha1fingerprint");
 
 /*
  * Security panel component
@@ -34,67 +59,66 @@ function SecurityPanel({
     return null;
   }
 
-  const notAvailable = L10N.getStr("netmonitor.security.notAvailable");
   let object;
 
   if (securityInfo.state === "secure" || securityInfo.state === "weak") {
     const { subject, issuer, validity, fingerprint } = securityInfo.cert;
-    const enabledLabel = L10N.getStr("netmonitor.security.enabled");
-    const disabledLabel = L10N.getStr("netmonitor.security.disabled");
+    const HOST_HEADER_LABEL = L10N.getFormatStr("netmonitor.security.hostHeader",
+      getUrlHost(url));
 
     object = {
-      [L10N.getStr("netmonitor.security.connection")]: {
-        [L10N.getStr("netmonitor.security.protocolVersion")]:
-          securityInfo.protocolVersion || notAvailable,
-        [L10N.getStr("netmonitor.security.cipherSuite")]:
-          securityInfo.cipherSuite || notAvailable,
-        [L10N.getStr("netmonitor.security.keaGroup")]:
-          securityInfo.keaGroupName || notAvailable,
-        [L10N.getStr("netmonitor.security.signatureScheme")]:
-          securityInfo.signatureSchemeName || notAvailable,
+      [CONNECTION_LABEL]: {
+        [PROTOCOL_VERSION_LABEL]:
+          securityInfo.protocolVersion || NOT_AVAILABLE,
+        [CIPHER_SUITE_LABEL]:
+          securityInfo.cipherSuite || NOT_AVAILABLE,
+        [KEA_GROUP_LABEL]:
+          securityInfo.keaGroupName || NOT_AVAILABLE,
+        [SIGNATURE_SCHEME_LABEL]:
+          securityInfo.signatureSchemeName || NOT_AVAILABLE,
       },
-      [L10N.getFormatStr("netmonitor.security.hostHeader", getUrlHost(url))]: {
-        [L10N.getStr("netmonitor.security.hsts")]:
-          securityInfo.hsts ? enabledLabel : disabledLabel,
-        [L10N.getStr("netmonitor.security.hpkp")]:
-          securityInfo.hpkp ? enabledLabel : disabledLabel,
+      [HOST_HEADER_LABEL]: {
+        [HSTS_LABEL]:
+          securityInfo.hsts ? ENABLED_LABEL : DISABLED_LABEL,
+        [HPKP_LABEL]:
+          securityInfo.hpkp ? ENABLED_LABEL : DISABLED_LABEL,
       },
-      [L10N.getStr("netmonitor.security.certificate")]: {
-        [L10N.getStr("certmgr.subjectinfo.label")]: {
-          [L10N.getStr("certmgr.certdetail.cn")]:
-            subject.commonName || notAvailable,
-          [L10N.getStr("certmgr.certdetail.o")]:
-            subject.organization || notAvailable,
-          [L10N.getStr("certmgr.certdetail.ou")]:
-            subject.organizationUnit || notAvailable,
+      [CERTIFICATE_LABEL]: {
+        [SUBJECT_INFO_LABEL]: {
+          [CERT_DETAIL_COMMON_NAME_LABEL]:
+            subject.commonName || NOT_AVAILABLE,
+          [CERT_DETAIL_ORG_LABEL]:
+            subject.organization || NOT_AVAILABLE,
+          [CERT_DETAIL_ORG_UNIT_LABEL]:
+            subject.organizationUnit || NOT_AVAILABLE,
         },
-        [L10N.getStr("certmgr.issuerinfo.label")]: {
-          [L10N.getStr("certmgr.certdetail.cn")]:
-            issuer.commonName || notAvailable,
-          [L10N.getStr("certmgr.certdetail.o")]:
-            issuer.organization || notAvailable,
-          [L10N.getStr("certmgr.certdetail.ou")]:
-            issuer.organizationUnit || notAvailable,
+        [ISSUER_INFO_LABEL]: {
+          [CERT_DETAIL_COMMON_NAME_LABEL]:
+            issuer.commonName || NOT_AVAILABLE,
+          [CERT_DETAIL_ORG_LABEL]:
+            issuer.organization || NOT_AVAILABLE,
+          [CERT_DETAIL_ORG_UNIT_LABEL]:
+            issuer.organizationUnit || NOT_AVAILABLE,
         },
-        [L10N.getStr("certmgr.periodofvalidity.label")]: {
-          [L10N.getStr("certmgr.begins")]:
-            validity.start || notAvailable,
-          [L10N.getStr("certmgr.expires")]:
-            validity.end || notAvailable,
+        [PERIOD_OF_VALIDITY_LABEL]: {
+          [BEGINS_LABEL]:
+            validity.start || NOT_AVAILABLE,
+          [EXPIRES_LABEL]:
+            validity.end || NOT_AVAILABLE,
         },
-        [L10N.getStr("certmgr.fingerprints.label")]: {
-          [L10N.getStr("certmgr.certdetail.sha256fingerprint")]:
-            fingerprint.sha256 || notAvailable,
-          [L10N.getStr("certmgr.certdetail.sha1fingerprint")]:
-            fingerprint.sha1 || notAvailable,
+        [FINGERPRINTS_LABEL]: {
+          [SHA256_FINGERPRINT_LABEL]:
+            fingerprint.sha256 || NOT_AVAILABLE,
+          [SHA1_FINGERPRINT_LABEL]:
+            fingerprint.sha1 || NOT_AVAILABLE,
         },
       },
     };
   } else {
     object = {
-      [L10N.getStr("netmonitor.security.error")]:
+      [ERROR_LABEL]:
         new DOMParser().parseFromString(securityInfo.errorMessage, "text/html")
-          .body.textContent || notAvailable
+          .body.textContent || NOT_AVAILABLE
     };
   }
 
@@ -125,7 +149,7 @@ function renderValue(props, weaknessReasons = []) {
   }
 
   return span({ className: "security-info-value" },
-    member.name === L10N.getStr("netmonitor.security.error") ?
+    member.name === ERROR_LABEL ?
       // Display multiline text for security error
       value
       :
@@ -137,12 +161,12 @@ function renderValue(props, weaknessReasons = []) {
       })
     ,
     weaknessReasons.indexOf("cipher") !== -1 &&
-    member.name === L10N.getStr("netmonitor.security.cipherSuite") ?
+    member.name === CIPHER_SUITE_LABEL ?
       // Display an extra warning icon after the cipher suite
       div({
         id: "security-warning-cipher",
         className: "security-warning-icon",
-        title: L10N.getStr("netmonitor.security.warning.cipher"),
+        title: WARNING_CIPHER_LABEL,
       })
       :
       null

@@ -150,6 +150,20 @@
                 "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
                 "--firstNonBlankPaint"
             ]
+        },
+        "h1-e10s": {
+            "tests": ["ts_paint_heavy"]
+            },
+        "h2-e10s": {
+            "tests": ["tp6_google_heavy", "tp6_youtube_heavy", "tp6_amazon_heavy", "tp6_facebook_heavy"],
+            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
+            "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
+            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
+            "talos_options": [
+                "--mitmproxy",
+                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
+                "--firstNonBlankPaint"
+            ]
         }
     }
 }

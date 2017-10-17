@@ -787,7 +787,7 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
     // and it provides the necessary memory fence.
     AutoLockFutexAPI lock;
 
-    SharedMem<int32_t*>(addr) = view->viewDataShared().cast<int32_t*>() + offset;
+    SharedMem<int32_t*> addr = view->viewDataShared().cast<int32_t*>() + offset;
     if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
         r.setString(cx->names().futexNotEqual);
         return true;

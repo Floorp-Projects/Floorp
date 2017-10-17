@@ -24,50 +24,54 @@ SinfParser::SinfParser(Box& aBox)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("schm")) {
-      ParseSchm(box);
+      mozilla::Unused << ParseSchm(box);
     } else if (box.IsType("schi")) {
-      ParseSchi(box);
+      mozilla::Unused << ParseSchi(box);
     }
   }
 }
 
-void
+Result<Ok, nsresult>
 SinfParser::ParseSchm(Box& aBox)
 {
   BoxReader reader(aBox);
 
   if (reader->Remaining() < 8) {
-    return;
+    return Err(NS_ERROR_FAILURE);
   }
 
-  mozilla::Unused << reader->ReadU32(); // flags -- ignore
-  mSinf.mDefaultEncryptionType = reader->ReadU32();
+  MOZ_TRY(reader->ReadU32()); // flags -- ignore
+  MOZ_TRY_VAR(mSinf.mDefaultEncryptionType, reader->ReadU32());
+  return Ok();
 }
 
-void
+Result<Ok, nsresult>
 SinfParser::ParseSchi(Box& aBox)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("tenc")) {
-      ParseTenc(box);
+    if (box.IsType("tenc") && ParseTenc(box).isErr()) {
+      return Err(NS_ERROR_FAILURE);
     }
   }
+  return Ok();
 }
 
-void
+Result<Ok, nsresult>
 SinfParser::ParseTenc(Box& aBox)
 {
   BoxReader reader(aBox);
 
   if (reader->Remaining() < 24) {
-    return;
+    return Err(NS_ERROR_FAILURE);
   }
 
-  mozilla::Unused << reader->ReadU32(); // flags -- ignore
+  MOZ_TRY(reader->ReadU32()); // flags -- ignore
 
-  uint32_t isEncrypted = reader->ReadU24();
-  mSinf.mDefaultIVSize = reader->ReadU8();
+  uint32_t isEncrypted;
+  MOZ_TRY_VAR(isEncrypted, reader->ReadU24());
+  MOZ_TRY_VAR(mSinf.mDefaultIVSize, reader->ReadU8());
   memcpy(mSinf.mDefaultKeyID, reader->Read(16), 16);
+  return Ok();
 }
 
 }
