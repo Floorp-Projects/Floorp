@@ -86,6 +86,7 @@ VMPst	= 39; # VOWEL_MOD_POST
 VMPre	= 23; # VOWEL_MOD_PRE
 SMAbv	= 41; # SYM_MOD_ABOVE
 SMBlw	= 42; # SYM_MOD_BELOW
+CS	= 43; # CONS_WITH_STACKER
 
 
 consonant_modifiers = CMAbv* CMBlw* ((H B | SUB) VS? CMAbv? CMBlw*)*;
@@ -96,12 +97,12 @@ vowel_modifiers = VMPre* VMAbv* VMBlw* VMPst*;
 final_consonants = FAbv* FBlw* FPst* FM?;
 
 virama_terminated_cluster =
-	R? (B | GB) VS?
+	(R|CS)? (B | GB) VS?
 	consonant_modifiers
 	H
 ;
 standard_cluster =
-	R? (B | GB) VS?
+	(R|CS)? (B | GB) VS?
 	consonant_modifiers
 	medial_consonants
 	dependent_vowels
