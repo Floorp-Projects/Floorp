@@ -1666,7 +1666,6 @@ EnvironmentCache.prototype = {
       os: this._getOSData(),
       hdd: this._getHDDData(),
       gfx: this._getGFXData(),
-      hasTouchbar: getSysinfoProperty("hasTouchbar", false),
     };
 
     if (AppConstants.platform === "win") {
