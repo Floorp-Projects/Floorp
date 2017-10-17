@@ -97,11 +97,6 @@ interface nsIInterceptedChannel : nsISupports
     void cancelInterception(in nsresult status);
 
     /**
-     * The synthesized response body to be produced.
-     */
-    readonly attribute nsIOutputStream responseBody;
-
-    /**
      * The underlying channel object that was intercepted.
      */
     readonly attribute nsIChannel channel;
