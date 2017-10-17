@@ -68,8 +68,18 @@ class WebAuthnManager final : public nsIIPCBackgroundChildCreateCallback,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+
   static WebAuthnManager* GetOrCreate();
   static WebAuthnManager* Get();
+
+  already_AddRefed<Promise>
+  MakeCredential(nsPIDOMWindowInner* aParent,
+                 const MakePublicKeyCredentialOptions& aOptions);
+
+  already_AddRefed<Promise>
+  GetAssertion(nsPIDOMWindowInner* aParent,
+               const PublicKeyCredentialRequestOptions& aOptions);
 
   void
   FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer);
@@ -81,25 +91,15 @@ public:
   void
   RequestAborted(const nsresult& aError);
 
-  already_AddRefed<Promise>
-  MakeCredential(nsPIDOMWindowInner* aParent,
-                 const MakePublicKeyCredentialOptions& aOptions);
+  void ActorDestroyed();
 
-  already_AddRefed<Promise>
-  GetAssertion(nsPIDOMWindowInner* aParent,
-               const PublicKeyCredentialRequestOptions& aOptions);
+private:
+  WebAuthnManager();
+  virtual ~WebAuthnManager();
 
   void StartRegister();
   void StartSign();
   void StartCancel();
-
-  // nsIIPCbackgroundChildCreateCallback methods
-  void ActorCreated(PBackgroundChild* aActor) override;
-  void ActorFailed() override;
-  void ActorDestroyed();
-private:
-  WebAuthnManager();
-  virtual ~WebAuthnManager();
 
   void Cancel(const nsresult& aError);
   void MaybeClearTransaction();

@@ -59,14 +59,10 @@ class U2FManager final : public nsIIPCBackgroundChildCreateCallback
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+
   static U2FManager* GetOrCreate();
   static U2FManager* Get();
-
-  void FinishRegister(nsTArray<uint8_t>& aRegBuffer);
-  void FinishSign(nsTArray<uint8_t>& aCredentialId,
-                  nsTArray<uint8_t>& aSigBuffer);
-  void Cancel(const nsresult& aError);
-  void RequestAborted(const nsresult& aError);
 
   already_AddRefed<U2FPromise> Register(nsPIDOMWindowInner* aParent,
               const nsCString& aRpId,
@@ -79,17 +75,22 @@ public:
               const uint32_t& aTimeoutMillis,
               const nsTArray<WebAuthnScopedCredentialDescriptor>& aKeyList);
 
-  void StartRegister();
-  void StartSign();
-  void StartCancel();
+  void FinishRegister(nsTArray<uint8_t>& aRegBuffer);
+  void FinishSign(nsTArray<uint8_t>& aCredentialId,
+                  nsTArray<uint8_t>& aSigBuffer);
+  void RequestAborted(const nsresult& aError);
 
-  // nsIIPCbackgroundChildCreateCallback methods
-  void ActorCreated(PBackgroundChild* aActor) override;
-  void ActorFailed() override;
+  void Cancel(const nsresult& aError);
+
   void ActorDestroyed();
+
 private:
   U2FManager();
   virtual ~U2FManager();
+
+  void StartRegister();
+  void StartSign();
+  void StartCancel();
 
   void MaybeClearTransaction();
   nsresult PopulateTransactionInfo(const nsCString& aRpId,
