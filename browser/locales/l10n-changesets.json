@@ -97,7 +97,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0050e7be5302"
+        "revision": "859695b841ec"
     }, 
     "bn-IN": {
         "platforms": [
@@ -127,7 +127,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "169ccf583d3d"
+        "revision": "113447381833"
     }, 
     "ca": {
         "platforms": [
@@ -257,7 +257,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a18e4e12193e"
+        "revision": "ccc8d55e5dc4"
     }, 
     "es-ES": {
         "platforms": [
@@ -277,7 +277,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b3ba135c8c23"
+        "revision": "ceb0887a1619"
     }, 
     "et": {
         "platforms": [
@@ -287,7 +287,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "1c3d7b4871ec"
+        "revision": "7ce29c364e0b"
     }, 
     "eu": {
         "platforms": [
@@ -467,7 +467,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e1a329385291"
+        "revision": "f2c70a547470"
     }, 
     "is": {
         "platforms": [
@@ -487,7 +487,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b928a5ec94e2"
+        "revision": "b85ee1bdeab8"
     }, 
     "ja": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "404aeb403ebe"
+        "revision": "9b95b29ca71d"
     }, 
     "kk": {
         "platforms": [
@@ -552,7 +552,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "05f94466362b"
+        "revision": "1a41e2449ae4"
     }, 
     "ko": {
         "platforms": [
@@ -672,7 +672,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "b172610d06ee"
+        "revision": "37fd4a5b7471"
     }, 
     "nn-NO": {
         "platforms": [
@@ -712,7 +712,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "16832a527864"
+        "revision": "a41126ea596f"
     }, 
     "pt-BR": {
         "platforms": [
@@ -752,7 +752,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "d831ef286afe"
+        "revision": "1f96d59bfb10"
     }, 
     "ru": {
         "platforms": [
@@ -872,7 +872,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "a69aa228c1cc"
+        "revision": "ea50dbfc0572"
     }, 
     "uk": {
         "platforms": [
