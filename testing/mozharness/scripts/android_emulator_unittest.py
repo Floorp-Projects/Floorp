@@ -750,6 +750,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'crashtest-debug': 'crashtest',
         }
 
+        verify_args = []
         suites = self._query_suites()
         for (verify_suite, suite) in suites:
             self.test_suite = suite
