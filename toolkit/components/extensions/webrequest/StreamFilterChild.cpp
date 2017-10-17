@@ -267,6 +267,8 @@ StreamFilterChild::MaybeStopRequest()
     return;
 
   case State::Disconnecting:
+  case State::Closing:
+  case State::Closed:
     break;
 
   default:

@@ -6,6 +6,9 @@
 // This defines a common base class for nsITheme implementations, to reduce
 // code duplication.
 
+#ifndef _NSNATIVETHEME_H_
+#define _NSNATIVETHEME_H_
+
 #include "nsAlgorithm.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
@@ -187,3 +190,5 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
   nsCOMPtr<nsITimer> mAnimatedContentTimer;
   AutoTArray<nsCOMPtr<nsIContent>, 20> mAnimatedContentList;
 };
+
+#endif // _NSNATIVETHEME_H_

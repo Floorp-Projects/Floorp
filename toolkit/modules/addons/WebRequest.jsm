@@ -166,7 +166,7 @@ class ResponseHeaderChanger extends HeaderChanger {
 }
 
 const MAYBE_CACHED_EVENTS = new Set([
-  "onResponseStarted", "onBeforeRedirect", "onCompleted", "onErrorOccurred",
+  "onResponseStarted", "onHeadersReceived", "onBeforeRedirect", "onCompleted", "onErrorOccurred",
 ]);
 
 const OPTIONAL_PROPERTIES = [

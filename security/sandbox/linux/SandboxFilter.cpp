@@ -730,6 +730,8 @@ public:
 
       // Rust's stdlib seems to use FIOCLEX instead of equivalent fcntls.
       return If(request == FIOCLEX, Allow())
+        // Rust's stdlib also uses FIONBIO instead of equivalent fcntls.
+        .ElseIf(request == FIONBIO, Allow())
         // ffmpeg, and anything else that calls isatty(), will be told
         // that nothing is a typewriter:
         .ElseIf(request == TCGETS, Error(ENOTTY))

@@ -19,8 +19,8 @@
 #include "nsIClipboard.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIBinaryInputStream.h"
-#include "nsIBinaryOutputStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIStorageStream.h"
 #include "nsStringStream.h"
 #include "nsCRT.h"
@@ -996,7 +996,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
   transferable->Init(aLoadContext);
 
   nsCOMPtr<nsIStorageStream> storageStream;
-  nsCOMPtr<nsIBinaryOutputStream> stream;
+  nsCOMPtr<nsIObjectOutputStream> stream;
 
   bool added = false;
   bool handlingCustomFormats = true;
@@ -1087,8 +1087,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
               nsCOMPtr<nsIOutputStream> outputStream;
               storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
 
-              stream = do_CreateInstance("@mozilla.org/binaryoutputstream;1");
-              stream->SetOutputStream(outputStream);
+              stream = NS_NewObjectOutputStream(outputStream);
             }
 
             CheckedInt<uint32_t> formatLength =
@@ -1593,14 +1592,8 @@ DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
   nsCOMPtr<nsIInputStream> stringStream;
   NS_NewCStringInputStream(getter_AddRefs(stringStream), str);
 
-  nsCOMPtr<nsIBinaryInputStream> stream =
-    do_CreateInstance("@mozilla.org/binaryinputstream;1");
-  if (!stream) {
-    return;
-  }
-
-  rv = stream->SetInputStream(stringStream);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  nsCOMPtr<nsIObjectInputStream> stream =
+    NS_NewObjectInputStream(stringStream);
 
   uint32_t type;
   do {

@@ -1279,11 +1279,8 @@ nsDiskCacheMap::InitCacheClean(nsIFile *  cacheDirectory,
 
     // Create a timer that will be used to validate the cache
     // as long as an activity threshold was met
-    mCleanCacheTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-        mCleanCacheTimer->SetTarget(nsCacheService::GlobalInstance()->mCacheIOThread);
-        rv = ResetCacheTimer();
-    }
+    mCleanCacheTimer = NS_NewTimer(nsCacheService::GlobalInstance()->mCacheIOThread);
+    rv = mCleanCacheTimer ? ResetCacheTimer() : NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv)) {
         NS_WARNING("Could not create cache clean timer");

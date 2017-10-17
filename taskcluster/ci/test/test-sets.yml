@@ -329,3 +329,6 @@ android-x86-tests:
 
 devtools-tests:
     - mochitest-devtools-chrome
+
+mochitest-headless:
+    - mochitest-plain-headless

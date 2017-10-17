@@ -440,7 +440,7 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
 
   if (aTimeout && helper->mRequest) {
     if (!mTimer)
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+      mTimer = NS_NewTimer();
     if (mTimer) {
       mTimer->SetTarget(mMainThreadEventTarget);
       mTimer->InitWithCallback(helper, aTimeout, nsITimer::TYPE_ONE_SHOT);

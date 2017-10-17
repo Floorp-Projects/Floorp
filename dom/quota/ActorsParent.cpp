@@ -8,8 +8,8 @@
 
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
-#include "nsIBinaryInputStream.h"
-#include "nsIBinaryOutputStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIObserverService.h"
@@ -2140,18 +2140,14 @@ GetBinaryOutputStream(nsIFile* aFile,
     return rv;
   }
 
-  nsCOMPtr<nsIBinaryOutputStream> binaryStream =
-    do_CreateInstance("@mozilla.org/binaryoutputstream;1");
-  if (NS_WARN_IF(!binaryStream)) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!outputStream)) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  rv = binaryStream->SetOutputStream(outputStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIObjectOutputStream> objectOutputStream =
+    NS_NewObjectOutputStream(outputStream);
 
-  binaryStream.forget(aStream);
+  objectOutputStream.forget(aStream);
   return NS_OK;
 }
 
@@ -3623,7 +3619,7 @@ QuotaManager::Init(const nsAString& aBasePath)
 
   // Make a timer here to avoid potential failures later. We don't actually
   // initialize the timer until shutdown.
-  mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mShutdownTimer = NS_NewTimer();
   if (NS_WARN_IF(!mShutdownTimer)) {
     return NS_ERROR_FAILURE;
   }

@@ -46,21 +46,18 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
 
   nsresult rv;
   nsAutoPtr<Context> ctx(new Context());
-  ctx->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+
+  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(ctx->mTimer),
+                                   &GMPTimerParent::GMPTimerExpired,
+                                   ctx,
+                                   aTimeoutMs,
+                                   nsITimer::TYPE_ONE_SHOT,
+                                   "gmp::GMPTimerParent::RecvSetTimer",
+                                   mGMPEventTarget);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ctx->mId = aTimerId;
-  rv = ctx->mTimer->SetTarget(mGMPEventTarget);
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
   ctx->mParent = this;
-
-  rv =
-    ctx->mTimer->InitWithNamedFuncCallback(&GMPTimerParent::GMPTimerExpired,
-                                           ctx,
-                                           aTimeoutMs,
-                                           nsITimer::TYPE_ONE_SHOT,
-                                           "gmp::GMPTimerParent::RecvSetTimer");
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   mTimers.PutEntry(ctx.forget());
 

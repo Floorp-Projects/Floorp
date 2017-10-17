@@ -963,8 +963,8 @@ DataStorage::SetTimer()
 
   nsresult rv;
   if (!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    mTimer = NS_NewTimer();
+    if (NS_WARN_IF(!mTimer)) {
       return;
     }
   }

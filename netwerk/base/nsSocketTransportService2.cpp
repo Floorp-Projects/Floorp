@@ -1433,10 +1433,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
         }
     } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
         if (mSleepPhase && !mAfterWakeUpTimer) {
-            mAfterWakeUpTimer = do_CreateInstance("@mozilla.org/timer;1");
-            if (mAfterWakeUpTimer) {
-                mAfterWakeUpTimer->Init(this, 2000, nsITimer::TYPE_ONE_SHOT);
-            }
+            NS_NewTimerWithObserver(getter_AddRefs(mAfterWakeUpTimer),
+                                    this, 2000, nsITimer::TYPE_ONE_SHOT);
         }
     } else if (!strcmp(topic, "xpcom-shutdown-threads")) {
         ShutdownThread();
@@ -1665,9 +1663,9 @@ nsSocketTransportService::StartPollWatchdog()
          // signal a pollable event again.
          MOZ_ASSERT(gIOService->IsNetTearingDown());
          if (self->mPolling && !self->mPollRepairTimer) {
-             self->mPollRepairTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-             self->mPollRepairTimer->Init(self, REPAIR_POLLABLE_EVENT_TIME,
-                                          nsITimer::TYPE_REPEATING_SLACK);
+             NS_NewTimerWithObserver(getter_AddRefs(self->mPollRepairTimer),
+                                     self, REPAIR_POLLABLE_EVENT_TIME,
+                                     nsITimer::TYPE_REPEATING_SLACK);
          }
     }));
 }

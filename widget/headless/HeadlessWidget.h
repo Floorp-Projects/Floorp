@@ -11,6 +11,35 @@
 #include "nsBaseWidget.h"
 #include "CompositorWidget.h"
 
+// The various synthesized event values are hardcoded to avoid pulling
+// in the platform specific widget code.
+#if defined(MOZ_WIDGET_GTK)
+#define MOZ_HEADLESS_MOUSE_MOVE 3 // GDK_MOTION_NOTIFY
+#define MOZ_HEADLESS_MOUSE_DOWN 4 // GDK_BUTTON_PRESS
+#define MOZ_HEADLESS_MOUSE_UP   7 // GDK_BUTTON_RELEASE
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 3
+#elif defined(XP_WIN)
+#define MOZ_HEADLESS_MOUSE_MOVE 1 // MOUSEEVENTF_MOVE
+#define MOZ_HEADLESS_MOUSE_DOWN 2 // MOUSEEVENTF_LEFTDOWN
+#define MOZ_HEADLESS_MOUSE_UP   4 // MOUSEEVENTF_LEFTUP
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
+#elif defined(XP_MACOSX)
+#define MOZ_HEADLESS_MOUSE_MOVE 5 // NSMouseMoved
+#define MOZ_HEADLESS_MOUSE_DOWN 1 // NSLeftMouseDown
+#define MOZ_HEADLESS_MOUSE_UP   2 // NSLeftMouseUp
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
+#elif defined(ANDROID)
+#define MOZ_HEADLESS_MOUSE_MOVE 7 // ACTION_HOVER_MOVE
+#define MOZ_HEADLESS_MOUSE_DOWN 5 // ACTION_POINTER_DOWN
+#define MOZ_HEADLESS_MOUSE_UP   6 // ACTION_POINTER_UP
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER 1
+#else
+#define MOZ_HEADLESS_MOUSE_MOVE -1
+#define MOZ_HEADLESS_MOUSE_DOWN -1
+#define MOZ_HEADLESS_MOUSE_UP   -1
+#define MOZ_HEADLESS_SCROLL_MULTIPLIER = -1
+#endif
+
 namespace mozilla {
 namespace widget {
 
@@ -40,6 +69,7 @@ public:
 
   virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
+  virtual void Destroy() override;
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
   virtual void Move(double aX, double aY) override;
@@ -91,10 +121,35 @@ public:
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
 
+  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                              uint32_t aNativeMessage,
+                                              uint32_t aModifierFlags,
+                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                             nsIObserver* aObserver) override
+                   { return SynthesizeNativeMouseEvent(aPoint, MOZ_HEADLESS_MOUSE_MOVE, 0, aObserver); };
+
+  virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
+                                                    uint32_t aNativeMessage,
+                                                    double aDeltaX,
+                                                    double aDeltaY,
+                                                    double aDeltaZ,
+                                                    uint32_t aModifierFlags,
+                                                    uint32_t aAdditionalFlags,
+                                                    nsIObserver* aObserver) override;
+
+  virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                              TouchPointerState aPointerState,
+                                              LayoutDeviceIntPoint aPoint,
+                                              double aPointerPressure,
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override;
+
 private:
   ~HeadlessWidget();
   bool mEnabled;
   bool mVisible;
+  bool mDestroyed;
   nsIWidget* mTopLevel;
   HeadlessCompositorWidget* mCompositorWidget;
   // The size mode before entering fullscreen mode.
@@ -102,6 +157,7 @@ private:
   // The last size mode set while the window was visible.
   nsSizeMode mEffectiveSizeMode;
   InputContext mInputContext;
+  mozilla::UniquePtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
   // In headless there is no window manager to track window bounds
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;
@@ -109,7 +165,12 @@ private:
   // Similarly, we must track the active window ourselves in order
   // to dispatch (de)activation events properly.
   void RaiseWindow();
-  static HeadlessWidget* sActiveWindow;
+  // The top level widgets are tracked for window ordering. They are
+  // stored in order of activation where the last element is always the
+  // currently active widget.
+  static StaticAutoPtr<nsTArray<HeadlessWidget*>> sActiveWindows;
+  // Get the most recently activated widget or null if there are none.
+  static already_AddRefed<HeadlessWidget>GetActiveWindow();
 };
 
 } // namespace widget

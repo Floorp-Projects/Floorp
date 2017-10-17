@@ -861,6 +861,37 @@ mochitest-media:
             windows10-64-asan.*: 3
             default: default
 
+mochitest-plain-headless:
+    description: "Mochitest plain headless run"
+    suite: mochitest/plain-chunked
+    treeherder-symbol: tc-M(h)
+    loopback-video: true
+    instance-size: legacy # Bug 1281241: migrating to m3.large instances
+    chunks:
+        by-test-platform:
+            linux.*: 10
+    e10s: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    tier: default
+    mozharness:
+        mochitest-flavor: plain
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=plain-chunked
+            - --headless
+
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
     suite: mochitest/valgrind-plain

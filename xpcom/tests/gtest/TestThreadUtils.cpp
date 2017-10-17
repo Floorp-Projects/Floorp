@@ -591,9 +591,9 @@ public:
   {
     CheckExecutedMethods("Method3", 3);
 
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mTimer->InitWithNamedFuncCallback(
-      Method4, this, 10, nsITimer::TYPE_ONE_SHOT, "IdleObject::Method3");
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer),
+                                Method4, this, 10, nsITimer::TYPE_ONE_SHOT,
+                                "IdleObject::Method3");
     NS_IdleDispatchToCurrentThread(
       NewIdleRunnableMethodWithTimer("IdleObject::Method5", this, &IdleObject::Method5), 50);
     NS_IdleDispatchToCurrentThread(

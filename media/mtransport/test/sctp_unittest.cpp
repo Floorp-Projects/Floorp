@@ -68,7 +68,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         flow_(new TransportFlow()),
         loopback_(new TransportLayerLoopback()),
         sctp_(usrsctp_socket(AF_CONN, SOCK_STREAM, IPPROTO_SCTP, receive_cb, nullptr, 0, nullptr)),
-        timer_(do_CreateInstance(NS_TIMER_CONTRACTID)),
+        timer_(NS_NewTimer()),
         periodic_(nullptr),
         test_utils_(utils) {
     std::cerr << "Creating TransportTestPeer; flow=" <<

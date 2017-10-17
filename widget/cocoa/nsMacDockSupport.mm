@@ -17,7 +17,7 @@ nsMacDockSupport::nsMacDockSupport()
 , mProgressState(STATE_NO_PROGRESS)
 , mProgressFraction(0.0)
 {
-  mProgressTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mProgressTimer = NS_NewTimer();
 }
 
 nsMacDockSupport::~nsMacDockSupport()
@@ -133,7 +133,7 @@ bool nsMacDockSupport::InitProgress()
   }
 
   if (!mAppIcon) {
-    mProgressTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mProgressTimer = NS_NewTimer();
     mAppIcon = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
     mProgressBackground = [mAppIcon copyWithZone:nil];
     mTheme = new nsNativeThemeCocoa();

@@ -20,7 +20,7 @@ NS_IMPL_RELEASE_WITH_DESTROY(MediaTimer, DispatchDestroy())
 
 MediaTimer::MediaTimer()
   : mMonitor("MediaTimer Monitor")
-  , mTimer(do_CreateInstance("@mozilla.org/timer;1"))
+  , mTimer(NS_NewTimer())
   , mCreationTimeStamp(TimeStamp::Now())
   , mUpdateScheduled(false)
 {

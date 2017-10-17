@@ -159,16 +159,15 @@ private:
             nsTimerCallbackFunc aCallbackFunc,
             const char* aName)
   {
-    mPickerCallbackTimer = do_CreateInstance("@mozilla.org/timer;1");
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mPickerCallbackTimer),
+                                aCallbackFunc,
+                                aTarget,
+                                kDialogTimerTimeout,
+                                nsITimer::TYPE_REPEATING_SLACK,
+                                aName);
     if (!mPickerCallbackTimer) {
       NS_WARNING("do_CreateInstance for timer failed??");
-      return;
     }
-    mPickerCallbackTimer->InitWithNamedFuncCallback(aCallbackFunc,
-                                                    aTarget,
-                                                    kDialogTimerTimeout,
-                                                    nsITimer::TYPE_REPEATING_SLACK,
-                                                    aName);
   }
   nsCOMPtr<nsITimer> mPickerCallbackTimer;
 };

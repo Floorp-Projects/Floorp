@@ -177,13 +177,11 @@ public:
     mContent = nsIPresShell::GetCapturingContent();
 
     if (!mTimer) {
-      nsresult result;
-      mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
-      mTimer->SetTarget(
+      mTimer = NS_NewTimer(
         mPresContext->Document()->EventTargetFor(TaskCategory::Other));
 
-      if (NS_FAILED(result)) {
-        return result;
+      if (!mTimer) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
     }
 

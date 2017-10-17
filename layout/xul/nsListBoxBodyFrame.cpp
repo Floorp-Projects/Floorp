@@ -122,20 +122,19 @@ nsListScrollSmoother::Start()
   };
 
   Stop();
-  mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
-  nsIContent* content = nullptr;
+  nsIEventTarget* target = nullptr;
   if (mOuter) {
-    content = mOuter->GetContent();
+    if (nsIContent* content = mOuter->GetContent()) {
+      target = content->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+    }
   }
-  if (content) {
-    mRepeatTimer->SetTarget(
-        content->OwnerDoc()->EventTargetFor(TaskCategory::Other));
-  }
-  mRepeatTimer->InitWithNamedFuncCallback(scrollSmootherCallback,
-                                          this,
-                                          SMOOTH_INTERVAL,
-                                          nsITimer::TYPE_ONE_SHOT,
-                                          "scrollSmootherCallback");
+  NS_NewTimerWithFuncCallback(getter_AddRefs(mRepeatTimer),
+                              scrollSmootherCallback,
+                              this,
+                              SMOOTH_INTERVAL,
+                              nsITimer::TYPE_ONE_SHOT,
+                              "scrollSmootherCallback",
+                              target);
 }
 
 void

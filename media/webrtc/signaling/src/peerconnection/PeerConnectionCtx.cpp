@@ -370,13 +370,12 @@ PeerConnectionCtx::UpdateNetworkState(bool online) {
 nsresult PeerConnectionCtx::Initialize() {
   initGMP();
 
-  mTelemetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  MOZ_ASSERT(mTelemetryTimer);
-  nsresult rv = mTelemetryTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+  nsresult rv = NS_NewTimerWithFuncCallback(getter_AddRefs(mTelemetryTimer),
+                                            EverySecondTelemetryCallback_m, this, 1000,
+                                            nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+                                            "EverySecondTelemetryCallback_m",
+                                            SystemGroup::EventTargetFor(TaskCategory::Other));
   NS_ENSURE_SUCCESS(rv, rv);
-  mTelemetryTimer->InitWithNamedFuncCallback(EverySecondTelemetryCallback_m, this, 1000,
-                                             nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-                                             "EverySecondTelemetryCallback_m");
 
   if (XRE_IsContentProcess()) {
     WebrtcGlobalChild::Create();
