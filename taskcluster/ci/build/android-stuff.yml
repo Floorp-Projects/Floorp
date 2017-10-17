@@ -6,8 +6,8 @@ android-test/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         kind: build
-        tier: 2
-        symbol: tc(test)
+        tier: 1
+        symbol: tc-A(test)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -53,8 +53,8 @@ android-lint/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         kind: build
-        tier: 2
-        symbol: tc(lint)
+        tier: 1
+        symbol: tc-A(lint)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -121,8 +121,8 @@ android-checkstyle/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         kind: build
-        tier: 2
-        symbol: tc(checkstyle)
+        tier: 1
+        symbol: tc-A(checkstyle)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -173,8 +173,8 @@ android-findbugs/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         kind: build
-        tier: 2
-        symbol: tc(findbugs)
+        tier: 1
+        symbol: tc-A(findbugs)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
