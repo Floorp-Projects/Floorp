@@ -42,6 +42,7 @@ ca498c1c7a74dd37a576f353312d1e68d490978de4395fa28f1cbd46a364e658  mpfr-3.1.5.tar
 EOF
 
 prepare
+prepare_mingw
 build_binutils
 build_gcc_and_mingw
 
