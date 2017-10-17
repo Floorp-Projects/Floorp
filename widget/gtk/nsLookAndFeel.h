@@ -32,6 +32,8 @@ public:
     virtual char16_t GetPasswordCharacterImpl();
     virtual bool GetEchoPasswordImpl();
 
+    bool IsCSDAvailable() const { return sCSDAvailable; }
+
 protected:
 
     // Cached fonts
