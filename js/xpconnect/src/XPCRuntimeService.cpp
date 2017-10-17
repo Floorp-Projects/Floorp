@@ -127,9 +127,8 @@ BackstagePass::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 BackstagePass::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "BackstagePass";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("BackstagePass");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
