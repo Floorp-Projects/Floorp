@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for File API + Slice (in file)</title>
+  <title>Test for File API + Slice</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="common_blob.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -17,7 +17,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
+// Create files containing data we'll test with. We'll want long
+// strings to ensure they span multiple buffers while loading
+
 let canvasData;
+let fileData;
 
 createCanvasURL()
 .then(data => {
@@ -26,7 +30,14 @@ createCanvasURL()
 })
 
 .then(file => {
-  return testSlice(file, canvasData.length, "", canvasData, "fileFile");
+  fileData = file;
+  return testSlice(fileData, canvasData.length, "", canvasData, "fileFile");
+})
+
+.then(file => {
+  let cx = $("canvas").getContext('2d');
+  let memFile = cx.canvas.mozGetAsFile("image/png");
+  return testSlice(memFile, canvasData.length, "image/png", canvasData, "memFile");
 })
 
 .then(SimpleTest.finish);
