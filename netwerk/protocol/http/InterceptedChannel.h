@@ -187,6 +187,7 @@ public:
                             bool aSecureUpgrade);
 
   NS_IMETHOD ResetInterception() override;
+  NS_IMETHOD StartSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
   NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
