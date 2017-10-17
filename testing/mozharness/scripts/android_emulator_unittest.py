@@ -37,6 +37,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         ["--test-suite"],
         {"action": "store",
          "dest": "test_suite",
+         "default": None
         }
     ], [
         ["--adb-path"],
@@ -119,7 +120,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self.test_suite = c.get('test_suite')
         self.this_chunk = c.get('this_chunk')
         self.total_chunks = c.get('total_chunks')
-        if self.test_suite not in self.config["suite_definitions"]:
+        if self.test_suite and self.test_suite not in self.config["suite_definitions"]:
             # accept old-style test suite name like "mochitest-3"
             m = re.match("(.*)-(\d*)", self.test_suite)
             if m:
@@ -153,6 +154,10 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         dirs['abs_emulator_dir'] = abs_dirs['abs_work_dir']
         dirs['abs_mochitest_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'mochitest')
+        dirs['abs_reftest_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'reftest')
+        dirs['abs_xpcshell_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'xpcshell')
         dirs['abs_marionette_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'marionette', 'harness', 'marionette_harness')
         dirs['abs_marionette_tests_dir'] = os.path.join(
@@ -461,10 +466,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
-        cmd.extend(self.query_tests_args(
-            self.config["suite_definitions"][self.test_suite].get("tests"),
-            None,
-            try_tests))
+        if self.config.get('verify') != True:
+            cmd.extend(self.query_tests_args(
+                self.config["suite_definitions"][self.test_suite].get("tests"),
+                None,
+                try_tests))
 
         return cmd
 
@@ -658,9 +664,9 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
         """
-        super(AndroidEmulatorTest, self).download_and_extract(suite_categories=[self.test_suite])
+        super(AndroidEmulatorTest, self).download_and_extract(suite_categories=self._query_suite_categories())
         dirs = self.query_abs_dirs()
-        if self.test_suite.startswith('robocop'):
+        if self.test_suite and self.test_suite.startswith('robocop'):
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
             self.info("Downloading robocop...")
             self.download_file(robocop_url, 'robocop.apk', dirs['abs_work_dir'], error_level=FATAL)
@@ -681,7 +687,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Install APKs on the emulator
         """
-        install_needed = self.config["suite_definitions"][self.test_suite].get("install")
+        install_needed = (not self.test_suite) or self.config["suite_definitions"][self.test_suite].get("install")
         if install_needed == False:
             self.info("Skipping apk installation for %s" % self.test_suite)
             return
@@ -699,7 +705,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 (self.installer_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
 
         # Install Robocop if required
-        if self.test_suite.startswith('robocop'):
+        if self.test_suite and self.test_suite.startswith('robocop'):
             install_ok = self._retry(3, 30, self._install_robocop_apk, "Install Robocop APK")
             if not install_ok:
                 self.fatal('INFRA-ERROR: Failed to install %s on %s' %
@@ -707,45 +713,107 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
         self.info("Finished installing apps for %s" % self.emulator["name"])
 
+    def _query_suites(self):
+        if self.test_suite:
+            return [(self.test_suite, self.test_suite)]
+        # test-verification: determine test suites to be verified
+        all = [('mochitest', {'plain': 'mochitest',
+                              'chrome': 'mochitest-chrome',
+                              'plain-clipboard': 'mochitest-plain-clipboard',
+                              'plain-gpu': 'mochitest-plain-gpu'}),
+               ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
+               ('xpcshell', {'xpcshell': 'xpcshell'})]
+        suites = []
+        for (category, all_suites) in all:
+            cat_suites = self.query_verify_category_suites(category, all_suites)
+            for k in cat_suites.keys():
+                suites.append((k, cat_suites[k]))
+        return suites
+
+    def _query_suite_categories(self):
+        if self.test_suite:
+            categories = [self.test_suite]
+        else:
+            # test-verification
+            categories = ['mochitest', 'reftest', 'xpcshell']
+        return categories
+
     def run_tests(self):
         """
         Run the tests
         """
-        cmd = self._build_command()
-
-        try:
-            cwd = self._query_tests_dir()
-        except:
-            self.fatal("Don't know how to run --test-suite '%s'!" % self.test_suite)
-        env = self.query_env()
-        if self.query_minidump_stackwalk():
-            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
-        env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
-        env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
-        env['RUST_BACKTRACE'] = 'full'
-
-        self.info("Running on %s the command %s" % (self.emulator["name"], subprocess.list2cmdline(cmd)))
-        self.info("##### %s log begins" % self.test_suite)
-
-        # TinderBoxPrintRe does not know about the '-debug' categories
+        self.start_time = datetime.datetime.now()
+        max_verify_time = datetime.timedelta(minutes=60)
         aliases = {
             'reftest-debug': 'reftest',
             'jsreftest-debug': 'jsreftest',
             'crashtest-debug': 'crashtest',
         }
-        suite_category = aliases.get(self.test_suite, self.test_suite)
-        parser = self.get_test_output_parser(
-            suite_category,
-            config=self.config,
-            log_obj=self.log_obj,
-            error_list=self.error_list)
-        self.run_command(cmd, cwd=cwd, env=env, output_parser=parser)
-        tbpl_status, log_level = parser.evaluate_parser(0)
-        parser.append_tinderboxprint_line(self.test_suite)
 
-        self.info("##### %s log ends" % self.test_suite)
-        self._dump_emulator_log()
-        self.buildbot_status(tbpl_status, level=log_level)
+        suites = self._query_suites()
+        for (verify_suite, suite) in suites:
+            self.test_suite = suite
+
+            cmd = self._build_command()
+
+            try:
+                cwd = self._query_tests_dir()
+            except:
+                self.fatal("Don't know how to run --test-suite '%s'!" % self.test_suite)
+            env = self.query_env()
+            if self.query_minidump_stackwalk():
+                env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+            env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
+            env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
+            env['RUST_BACKTRACE'] = 'full'
+
+            for verify_args in self.query_verify_args(verify_suite):
+                if (datetime.datetime.now() - self.start_time) > max_verify_time:
+                    # Verification has run out of time. That is okay! Stop running
+                    # tests so that a task timeout is not triggered, and so that
+                    # (partial) results are made available in a timely manner.
+                    self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
+                    # Signal verify time exceeded, to break out of suites and
+                    # suite categories loops also.
+                    return False
+
+                final_cmd = copy.copy(cmd)
+                if len(verify_args) > 0:
+                    # in verify mode, remove any chunk arguments from command
+                    for arg in final_cmd:
+                        if 'total-chunk' in arg or 'this-chunk' in arg:
+                            final_cmd.remove(arg)
+                final_cmd.extend(verify_args)
+
+                self.info("Running on %s the command %s" % (self.emulator["name"],
+                          subprocess.list2cmdline(final_cmd)))
+                self.info("##### %s log begins" % self.test_suite)
+
+                # TinderBoxPrintRe does not know about the '-debug' categories
+                suite_category = aliases.get(self.test_suite, self.test_suite)
+                parser = self.get_test_output_parser(
+                    suite_category,
+                    config=self.config,
+                    log_obj=self.log_obj,
+                    error_list=self.error_list)
+                self.run_command(final_cmd, cwd=cwd, env=env, output_parser=parser)
+                tbpl_status, log_level = parser.evaluate_parser(0)
+                parser.append_tinderboxprint_line(self.test_suite)
+
+                self.info("##### %s log ends" % self.test_suite)
+
+                if len(verify_args) > 0:
+                    self.buildbot_status(tbpl_status, level=log_level)
+                    self.log_verify_status(verify_args[-1], tbpl_status, log_level)
+                else:
+                    self._dump_emulator_log()
+                    self.buildbot_status(tbpl_status, level=log_level)
+                    self.log("The %s suite: %s ran with return status: %s" %
+                             (suite_category, suite, tbpl_status), level=log_level)
+
+        if len(verify_args) > 0:
+            self._dump_emulator_log()
+
 
     @PostScriptAction('run-tests')
     def stop_emulator(self, action, success=None):
