@@ -660,6 +660,11 @@ function checkSystemSection(data) {
     Assert.equal(features.opengl, gfxData.features.opengl);
     Assert.equal(features.webgl, gfxData.features.webgl);
   } catch (e) {}
+
+  if (gIsMac) {
+    Assert.equal(typeof data.system.hasTouchbar, "boolean",
+      "hasTouchbar must be available on Mac and have the correct type.");
+  }
 }
 
 function checkActiveAddon(data, partialRecord) {
