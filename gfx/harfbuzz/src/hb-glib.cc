@@ -383,6 +383,13 @@ hb_glib_get_unicode_funcs (void)
 }
 
 #if GLIB_CHECK_VERSION(2,31,10)
+
+static void
+_hb_g_bytes_unref (void *data)
+{
+  g_bytes_unref ((GBytes *) data);
+}
+
 /**
  * hb_glib_blob_create:
  *
@@ -397,6 +404,6 @@ hb_glib_blob_create (GBytes *gbytes)
 			 size,
 			 HB_MEMORY_MODE_READONLY,
 			 g_bytes_ref (gbytes),
-			 (hb_destroy_func_t) g_bytes_unref);
+			 _hb_g_bytes_unref);
 }
 #endif

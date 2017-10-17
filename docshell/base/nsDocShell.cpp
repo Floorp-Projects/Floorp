@@ -9959,10 +9959,13 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     isTargetTopLevelDocShell = true;
   }
 
+  nsIDocument* doc = mContentViewer ? mContentViewer->GetDocument()
+                                    : nullptr;
   if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
         aURI,
         contentType,
         aTriggeringPrincipal,
+        doc,
         (aLoadType == LOAD_NORMAL_EXTERNAL),
         !aFileName.IsVoid())) {
     // logging to console happens within AllowTopLevelNavigationToDataURI
@@ -10097,8 +10100,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
   }
 
-  const nsIDocument* doc = mContentViewer ? mContentViewer->GetDocument()
-                                          : nullptr;
   const bool isDocumentAuxSandboxed = doc &&
     (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 

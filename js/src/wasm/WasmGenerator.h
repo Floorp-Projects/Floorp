@@ -161,7 +161,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     LinkData                        linkData_;
     MetadataTier*                   metadataTier_; // Owned by metadata_
     MutableMetadata                 metadata_;
-    UniqueJumpTable                 jumpTable_;
 
     // Data scoped to the ModuleGenerator's lifetime
     ExclusiveCompileTaskState       taskState_;
@@ -188,24 +187,21 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        batchedBytecode_;
 
     // Assertions
-    DebugOnly<bool>                 startedFuncDefs_;
     DebugOnly<bool>                 finishedFuncDefs_;
 
     bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
     bool funcIsCompiled(uint32_t funcIndex) const;
     const CodeRange& funcCodeRange(uint32_t funcIndex) const;
-
     bool linkCallSites();
     void noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRange);
     bool linkCompiledCode(const CompiledCode& code);
     bool finishTask(CompileTask* task);
     bool launchBatchCompile();
     bool finishOutstandingTask();
-
-    bool finishLinking();
+    bool finishCode();
     bool finishMetadata(const ShareableBytes& bytecode);
-    UniqueCodeSegment finishCodeSegment(const ShareableBytes& bytecode);
+    UniqueCodeSegment finish(const ShareableBytes& bytecode);
     UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     bool isAsmJS() const { return env_->isAsmJS(); }
@@ -217,20 +213,23 @@ class MOZ_STACK_CLASS ModuleGenerator
     ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env,
                     Atomic<bool>* cancelled, UniqueChars* error);
     ~ModuleGenerator();
-    MOZ_MUST_USE bool init(size_t codeSectionSize, Metadata* maybeAsmJSMetadata = nullptr);
+    MOZ_MUST_USE bool init(Metadata* maybeAsmJSMetadata = nullptr);
 
-    // After initialization, startFuncDefs() shall be called before one call to
-    // compileFuncDef() for each funcIndex in the range [0, env->numFuncDefs),
-    // followed by finishFuncDefs().
+    // Before finishFuncDefs() is called, compileFuncDef() must be called once
+    // for each funcIndex in the range [0, env->numFuncDefs()).
 
-    MOZ_MUST_USE bool startFuncDefs();
     MOZ_MUST_USE bool compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
                                      const uint8_t* begin, const uint8_t* end,
                                      Uint32Vector&& callSiteLineNums = Uint32Vector());
+
+    // Must be called after the last compileFuncDef() and before finishModule()
+    // or finishTier2().
+
     MOZ_MUST_USE bool finishFuncDefs();
 
-    // After finishFuncDefs(), one of the following is called, depending on the
-    // CompileMode: finishModule for Once or Tier1, finishTier2 for Tier2.
+    // If env->mode is Once or Tier1, finishModule() must be called to generate
+    // a new Module. Otherwise, if env->mode is Tier2, finishTier2() must be
+    // called to augment the given Module with tier 2 code.
 
     SharedModule finishModule(const ShareableBytes& bytecode);
     MOZ_MUST_USE bool finishTier2(Module& module);

@@ -28,6 +28,48 @@ MacroAssembler::move64(Imm64 imm, Register64 dest)
     movePtr(ImmWord(imm.value), dest.reg);
 }
 
+void
+MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
+{
+    MOZ_CRASH("NYI: moveDoubleToGPR64");
+}
+
+void
+MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
+{
+    MOZ_CRASH("NYI: moveGPR64ToDouble");
+}
+
+void
+MacroAssembler::move64To32(Register64 src, Register dest)
+{
+    MOZ_CRASH("NYI: move64To32");
+}
+
+void
+MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
+{
+    MOZ_CRASH("NYI: move32To64ZeroExtend");
+}
+
+void
+MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_CRASH("NYI: move8To64SignExtend");
+}
+
+void
+MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_CRASH("NYI: move16To64SignExtend");
+}
+
+void
+MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
+{
+    MOZ_CRASH("NYI: move32To64SignExtend");
+}
+
 // ===============================================================
 // Logical instructions
 

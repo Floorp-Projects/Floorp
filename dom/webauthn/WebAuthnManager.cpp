@@ -442,10 +442,9 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             WebAuthnManager* mgr = WebAuthnManager::Get();
-            if (!mgr) {
-              return;
+            if (mgr && mgr->mChild) {
+              mgr->mChild->SendRequestRegister(mgr->mInfo.ref());
             }
-            mgr->StartRegister();
           },
           []() {
             // This case can't actually happen, we'll have crashed if the child
@@ -458,33 +457,6 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   ListenForVisibilityEvents(aParent, this);
 
   return promise.forget();
-}
-
-void
-WebAuthnManager::StartRegister() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mChild) {
-    mChild->SendRequestRegister(mInfo.ref());
-  }
-}
-
-void
-WebAuthnManager::StartSign() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mChild) {
-    mChild->SendRequestSign(mInfo.ref());
-  }
-}
-
-void
-WebAuthnManager::StartCancel() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mChild) {
-    mChild->SendRequestCancel();
-  }
 }
 
 already_AddRefed<Promise>
@@ -620,10 +592,9 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             WebAuthnManager* mgr = WebAuthnManager::Get();
-            if (!mgr) {
-              return;
+            if (mgr && mgr->mChild) {
+              mgr->mChild->SendRequestSign(mgr->mInfo.ref());
             }
-            mgr->StartSign();
           },
           []() {
             // This case can't actually happen, we'll have crashed if the child
@@ -867,6 +838,14 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 }
 
 void
+WebAuthnManager::RequestAborted(const nsresult& aError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  Cancel(aError);
+}
+
+void
 WebAuthnManager::Cancel(const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -883,6 +862,7 @@ WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(mChild);
 
   nsAutoString type;
   aEvent->GetType(type);
@@ -898,7 +878,8 @@ WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
     MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug,
             ("Visibility change: WebAuthn window is hidden, cancelling job."));
 
-    StartCancel();
+    mChild->SendRequestCancel();
+
     Cancel(NS_ERROR_ABORT);
   }
 
