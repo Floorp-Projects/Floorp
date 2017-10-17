@@ -341,6 +341,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                 # See bug 1404482.
                 options.leakThresholds["tab"] = 100
 
+
 class DesktopArgumentsParser(ReftestArgumentsParser):
     def __init__(self, **kwargs):
         super(DesktopArgumentsParser, self).__init__(**kwargs)
