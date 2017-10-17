@@ -903,6 +903,14 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 }
 
 void
+WebAuthnManager::RequestAborted(const nsresult& aError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  Cancel(aError);
+}
+
+void
 WebAuthnManager::Cancel(const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
