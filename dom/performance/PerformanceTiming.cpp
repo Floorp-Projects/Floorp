@@ -71,7 +71,6 @@ PerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
 {
   if (aChannel) {
     aChannel->GetAsyncOpen(&mAsyncOpen);
-    aChannel->GetDispatchFetchEventStart(&mWorkerStart);
     aChannel->GetAllRedirectsSameOrigin(&mAllRedirectsSameOrigin);
     aChannel->GetRedirectCount(&mRedirectCount);
     aChannel->GetRedirectStart(&mRedirectStart);
@@ -86,6 +85,12 @@ PerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
     aChannel->GetCacheReadStart(&mCacheReadStart);
     aChannel->GetResponseEnd(&mResponseEnd);
     aChannel->GetCacheReadEnd(&mCacheReadEnd);
+
+    aChannel->GetDispatchFetchEventStart(&mWorkerStart);
+    aChannel->GetHandleFetchEventStart(&mWorkerRequestStart);
+    // TODO: Track when FetchEvent.respondWith() promise resolves as
+    //       ServiceWorker interception responseStart?
+    aChannel->GetHandleFetchEventEnd(&mWorkerResponseEnd);
 
     // The performance timing api essentially requires that the event timestamps
     // have a strict relation with each other. The truth, however, is the browser
@@ -399,6 +404,11 @@ PerformanceTiming::RequestStartHighRes()
       nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
+
+  if (mRequestStart.IsNull()) {
+    mRequestStart = mWorkerRequestStart;
+  }
+
   return TimeStampToDOMHighResOrFetchStart(mRequestStart);
 }
 
@@ -443,6 +453,9 @@ PerformanceTiming::ResponseEndHighRes()
   if (mResponseEnd.IsNull() ||
      (!mCacheReadEnd.IsNull() && mCacheReadEnd < mResponseEnd)) {
     mResponseEnd = mCacheReadEnd;
+  }
+  if (mResponseEnd.IsNull()) {
+    mResponseEnd = mWorkerResponseEnd;
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return ResponseStart when null
   return mResponseEnd.IsNull() ? ResponseStartHighRes()

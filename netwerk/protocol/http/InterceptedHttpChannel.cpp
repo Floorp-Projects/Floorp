@@ -1001,7 +1001,6 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
   if (!mProgressSink) {
     GetCallback(mProgressSink);
   }
-  mTransactionTimings.responseStart = TimeStamp::Now();
   if (mListener) {
     mListener->OnStartRequest(this, mListenerContext);
   }
@@ -1026,8 +1025,6 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
   // progress immediately.  The extra runnable will then do nothing thanks
   // to the ReleaseListeners() call below.
   MaybeCallStatusAndProgress();
-
-  mTransactionTimings.responseEnd = TimeStamp::Now();
 
   mIsPending = false;
 
