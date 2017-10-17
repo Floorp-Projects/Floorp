@@ -288,6 +288,14 @@ function openLinkIn(url, where, params) {
   aTriggeringPrincipal = useOAForPrincipal(aTriggeringPrincipal);
 
   if (!w || where == "window") {
+    let features = "chrome,dialog=no,all";
+    if (aIsPrivate) {
+      features += ",private";
+      // To prevent regular browsing data from leaking to private browsing sites,
+      // strip the referrer when opening a new private window. (See Bug: 1409226)
+      aNoReferrer = true;
+    }
+
     // This propagates to window.arguments.
     var sa = Cc["@mozilla.org/array;1"].
              createInstance(Ci.nsIMutableArray);
@@ -331,11 +339,6 @@ function openLinkIn(url, where, params) {
     sa.appendElement(userContextIdSupports);
     sa.appendElement(aPrincipal);
     sa.appendElement(aTriggeringPrincipal);
-
-    let features = "chrome,dialog=no,all";
-    if (aIsPrivate) {
-      features += ",private";
-    }
 
     const sourceWindow = (w || window);
     let win;
