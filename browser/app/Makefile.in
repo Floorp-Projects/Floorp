@@ -107,4 +107,4 @@ endif
 
 .PHONY: features
 tools features::
-	$(PYTHON) -c 'import os, json; listing = {"system": os.listdir("$(DIST)/bin/browser/features")}; print json.dumps(listing)' > $(DIST)/bin/browser/chrome/browser/content/browser/built_in_addons.json
+	$(PYTHON) -c 'import os, json; listing = {"system": sorted(os.listdir("$(DIST)/bin/browser/features"))}; print json.dumps(listing)' > $(DIST)/bin/browser/chrome/browser/content/browser/built_in_addons.json
