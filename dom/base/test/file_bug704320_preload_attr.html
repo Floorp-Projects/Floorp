@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test whether the speculative parser should use the referrerpolicy attribute
+https://bugzilla.mozilla.org/show_bug.cgi?id=1399780
+-->
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="file_bug704320_preload_common.js"></script>
+  <script language="javascript" type="text/javascript">
+    // interfere doc.write(meta referrer) to the down side preloads
+    document.write("<meta name='referrer' content='unsafe-url'>");
+  </script>
+
+  <link rel="stylesheet"
+        href="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=css"
+        onload="incrementLoad2('link', 2);"
+        referrerpolicy="origin"/>
+
+  <img src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=img"
+       onload="incrementLoad2('img', 2);"
+       referrerpolicy="origin"/>
+
+</head>
+<body>
+</body>
+</html>
