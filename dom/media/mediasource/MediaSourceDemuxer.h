@@ -138,11 +138,15 @@ private:
   media::TimeUnit GetNextRandomAccessPoint();
 
   RefPtr<MediaSourceDemuxer> mParent;
-  RefPtr<TrackBuffersManager> mManager;
   TrackInfo::TrackType mType;
   // Monitor protecting members below accessed from multiple threads.
   Monitor mMonitor;
   media::TimeUnit mNextRandomAccessPoint;
+  // Would be accessed in MFR's demuxer proxy task queue and TaskQueue, and
+  // only be set on the TaskQueue. It can be accessed while on TaskQueue without
+  // the need for the lock.
+  RefPtr<TrackBuffersManager> mManager;
+
   Maybe<RefPtr<MediaRawData>> mNextSample;
   // Set to true following a reset. Ensure that the next sample demuxed
   // is available at position 0.

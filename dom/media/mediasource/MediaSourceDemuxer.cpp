@@ -302,9 +302,9 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
                                                  TrackInfo::TrackType aType,
                                                  TrackBuffersManager* aManager)
   : mParent(aParent)
-  , mManager(aManager)
   , mType(aType)
   , mMonitor("MediaSourceTrackDemuxer")
+  , mManager(aManager)
   , mReset(true)
   , mPreRoll(TimeUnit::FromMicroseconds(
       OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType)
@@ -386,6 +386,7 @@ MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(
 media::TimeIntervals
 MediaSourceTrackDemuxer::GetBuffered()
 {
+  MonitorAutoLock mon(mMonitor);
   if (!mManager) {
     return media::TimeIntervals();
   }
@@ -554,6 +555,7 @@ void
 MediaSourceTrackDemuxer::DetachManager()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MonitorAutoLock mon(mMonitor);
   mManager = nullptr;
 }
 
