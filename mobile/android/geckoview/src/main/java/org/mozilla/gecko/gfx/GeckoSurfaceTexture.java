@@ -21,30 +21,28 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
     private int mHandle;
     private boolean mIsSingleBuffer;
-
-    private long mAttachedContext;
     private int mTexName;
-
     private GeckoSurfaceTexture.Callbacks mListener;
     private AtomicInteger mUseCount;
 
-    private GeckoSurfaceTexture(int handle) {
-        super(0);
-        init(handle, false);
+    @WrapForJNI(dispatchTo = "current")
+    private static native int nativeAcquireTexture();
+
+    private GeckoSurfaceTexture(int handle, int texName) {
+        super(texName);
+        init(handle, texName, false);
     }
 
-    private GeckoSurfaceTexture(int handle, boolean singleBufferMode) {
-        super(0, singleBufferMode);
-        init(handle, singleBufferMode);
+    private GeckoSurfaceTexture(int handle, int texName, boolean singleBufferMode) {
+        super(texName, singleBufferMode);
+        init(handle, texName, singleBufferMode);
     }
 
-    private void init(int handle, boolean singleBufferMode) {
+    private void init(int handle, int texName, boolean singleBufferMode) {
         mHandle = handle;
         mIsSingleBuffer = singleBufferMode;
+        mTexName = texName;
         mUseCount = new AtomicInteger(1);
-
-        // Start off detached
-        detachFromGLContext();
     }
 
     @WrapForJNI
@@ -55,31 +53,6 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     @WrapForJNI
     public int getTexName() {
         return mTexName;
-    }
-
-    @WrapForJNI(exceptionMode = "nsresult")
-    public void attachToGLContext(long context, int texName) {
-        if (context == mAttachedContext && texName == mTexName) {
-            return;
-        }
-
-        attachToGLContext(texName);
-
-        mAttachedContext = context;
-        mTexName = texName;
-    }
-
-    @Override
-    @WrapForJNI(exceptionMode = "nsresult")
-    public void detachFromGLContext() {
-        super.detachFromGLContext();
-
-        mAttachedContext = mTexName = 0;
-    }
-
-    @WrapForJNI
-    public boolean isAttachedToGLContext(long context) {
-        return mAttachedContext == context;
     }
 
     @WrapForJNI
@@ -157,12 +130,13 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
         }
 
         int handle = sNextHandle++;
+        int texName = nativeAcquireTexture();
 
         final GeckoSurfaceTexture gst;
         if (isSingleBufferSupported()) {
-            gst = new GeckoSurfaceTexture(handle, singleBufferMode);
+            gst = new GeckoSurfaceTexture(handle, texName, singleBufferMode);
         } else {
-            gst = new GeckoSurfaceTexture(handle);
+            gst = new GeckoSurfaceTexture(handle, texName);
         }
 
         synchronized (sSurfaceTextures) {
