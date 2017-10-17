@@ -335,7 +335,7 @@ private:
   uint32_t mBitField;
 
 #ifdef DEBUG
-  uint64_t mVersion;
+  uint64_t mVersion = 0;
 #endif
 };
 
