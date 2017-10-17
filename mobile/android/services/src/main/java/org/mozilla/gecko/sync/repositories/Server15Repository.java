@@ -115,6 +115,10 @@ public class Server15Repository extends Repository {
     return false;
   }
 
+  public boolean getAbortOnStoreFailure() {
+    return false;
+  }
+
   /**
    * A point in time by which this repository's session must complete fetch and store operations.
    * Particularly pertinent for batching downloads performed by the session (should we fetch

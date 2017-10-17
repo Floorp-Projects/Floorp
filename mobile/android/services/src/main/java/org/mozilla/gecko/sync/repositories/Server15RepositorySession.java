@@ -43,7 +43,7 @@ public class Server15RepositorySession extends RepositorySession {
     this.uploader = new BatchingUploader(
             this, storeWorkQueue, storeDelegate, Uri.parse(serverRepository.collectionURI.toString()),
             serverRepository.getCollectionLastModified(), serverRepository.getInfoConfiguration(),
-            serverRepository.authHeaderProvider);
+            serverRepository.authHeaderProvider, serverRepository.getAbortOnStoreFailure());
   }
 
   private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
