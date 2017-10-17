@@ -230,5 +230,20 @@ FocusTarget::operator==(const FocusTarget& aRhs) const
          mData == aRhs.mData;
 }
 
+const char*
+FocusTarget::Type() const
+{
+  if (mData.is<RefLayerId>()) {
+    return "RefLayerId";
+  }
+  if (mData.is<ScrollTargets>()) {
+    return "ScrollTargets";
+  }
+  if (mData.is<NoFocusTarget>()) {
+    return "NoFocusTarget";
+  }
+  return "<unknown>";
+}
+
 } // namespace layers
 } // namespace mozilla

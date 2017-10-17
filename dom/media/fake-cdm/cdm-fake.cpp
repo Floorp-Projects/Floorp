@@ -52,6 +52,10 @@ void* CreateCdmInstance(int cdm_interface_version,
                         GetCdmHostFunc get_cdm_host_func,
                         void* user_data)
 {
+  if (cdm_interface_version != cdm::ContentDecryptionModule_8::kVersion) {
+    // Only support CDM version 8 currently.
+    return nullptr;
+  }
   cdm::Host_8* host = static_cast<cdm::Host_8*>(
     get_cdm_host_func(cdm_interface_version, user_data));
   return new FakeDecryptor(host);

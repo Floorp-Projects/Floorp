@@ -66,8 +66,16 @@ protected:
   RefPtr<ResourceCallback> mResourceCallback;
   RefPtr<BaseMediaResource> mResource;
 
-public:
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
+
+public:
+
+  // Create a decoder for the given aType. Returns null if we were unable
+  // to create the decoder, for example because the requested MIME type in
+  // the init struct was unsupported.
+  static already_AddRefed<ChannelMediaDecoder> Create(
+    MediaDecoderInit& aInit,
+    DecoderDoctorDiagnostics* aDiagnostics);
 
   void Shutdown() override;
 

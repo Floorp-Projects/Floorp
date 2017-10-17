@@ -147,10 +147,17 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   // words, we consider one turbulence base period to be 1 / fX user space
   // units wide and 1 / fY user space units high. We do not scale the frequency
   // depending on the filter primitive region.
-  gfxRect firstPeriodInUserSpace(0, 0, 1 / fX, 1 / fY);
+  // We now convert the frequency from user space to filter space.
+  // If a frequency in user space units is zero, then it will also be zero in
+  // filter space. During the conversion we use a dummy period length of 1
+  // for those frequencies but then ignore the converted length and use 0
+  // for the converted frequency. This avoids division by zero.
+  gfxRect firstPeriodInUserSpace(0, 0,
+                                 fX == 0 ? 1 : (1 / fX),
+                                 fY == 0 ? 1 : (1 / fY));
   gfxRect firstPeriodInFilterSpace = aInstance->UserSpaceToFilterSpace(firstPeriodInUserSpace);
-  Size frequencyInFilterSpace(1 / firstPeriodInFilterSpace.width,
-                              1 / firstPeriodInFilterSpace.height);
+  Size frequencyInFilterSpace(fX == 0 ? 0 : (1 / firstPeriodInFilterSpace.width),
+                              fY == 0 ? 0 : (1 / firstPeriodInFilterSpace.height));
   gfxPoint offset = firstPeriodInFilterSpace.TopLeft();
 
   FilterPrimitiveDescription descr(PrimitiveType::Turbulence);

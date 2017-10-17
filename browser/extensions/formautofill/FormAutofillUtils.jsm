@@ -178,7 +178,7 @@ this.FormAutofillUtils = {
     return doc.querySelectorAll("input, select");
   },
 
-  ALLOWED_TYPES: ["text", "email", "tel", "number"],
+  ALLOWED_TYPES: ["text", "email", "tel", "number", "month"],
   isFieldEligibleForAutofill(element) {
     let tagName = element.tagName;
     if (tagName == "INPUT") {

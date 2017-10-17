@@ -9,7 +9,6 @@
 const promise = require("promise");
 const Services = require("Services");
 const {Task} = require("devtools/shared/task");
-const {Tools} = require("devtools/client/definitions");
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
@@ -18,7 +17,6 @@ const ElementStyle = require("devtools/client/inspector/rules/models/element-sty
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
 const ClassListPreviewer = require("devtools/client/inspector/rules/views/class-list-previewer");
-const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {
   VIEW_NODE_SELECTOR_TYPE,
@@ -41,7 +39,6 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
 const FILTER_CHANGED_TIMEOUT = 150;
-const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
 // This is used to parse user input when filtering.
 const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
@@ -157,10 +154,8 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
-  this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.");
-  this._prefObserver.on(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
   this._prefObserver.on(PREF_UA_STYLES, this._handlePrefChange);
   this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
 
@@ -558,20 +553,6 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Update source links when pref for showing original sources changes
-   */
-  _onSourcePrefChanged: function () {
-    if (this._elementStyle && this._elementStyle.rules) {
-      for (let rule of this._elementStyle.rules) {
-        if (rule.editor) {
-          rule.editor.updateSourceLink();
-        }
-      }
-      this.inspector.emit("rule-view-sourcelinks-updated");
-    }
-  },
-
-  /**
    * Set the filter style search value.
    * @param {String} value
    *        The search value.
@@ -682,7 +663,6 @@ CssRuleView.prototype = {
 
     this._dummyElement = null;
 
-    this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
     this._prefObserver.off(PREF_UA_STYLES, this._handlePrefChange);
     this._prefObserver.off(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
     this._prefObserver.destroy();
@@ -1606,7 +1586,6 @@ function RuleViewTool(inspector, window) {
 
   this.clearUserProperties = this.clearUserProperties.bind(this);
   this.refresh = this.refresh.bind(this);
-  this.onLinkClicked = this.onLinkClicked.bind(this);
   this.onMutations = this.onMutations.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);
   this.onPropertyChanged = this.onPropertyChanged.bind(this);
@@ -1616,7 +1595,6 @@ function RuleViewTool(inspector, window) {
 
   this.view.on("ruleview-changed", this.onPropertyChanged);
   this.view.on("ruleview-refreshed", this.onViewRefreshed);
-  this.view.on("ruleview-linked-clicked", this.onLinkClicked);
 
   this.inspector.selection.on("detached-front", this.onSelected);
   this.inspector.selection.on("new-node-front", this.onSelected);
@@ -1688,33 +1666,6 @@ RuleViewTool.prototype = {
     }
   },
 
-  onLinkClicked: function (e, rule) {
-    let sheet = rule.parentStyleSheet;
-
-    // Chrome stylesheets are not listed in the style editor, so show
-    // these sheets in the view source window instead.
-    if (!sheet || sheet.isSystem) {
-      let href = rule.nodeHref || rule.href;
-      let toolbox = gDevTools.getToolbox(this.inspector.target);
-      toolbox.viewSource(href, rule.line);
-      return;
-    }
-
-    let location = promise.resolve(rule.location);
-    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
-      location = rule.getOriginalLocation();
-    }
-    location.then(({ source, href, line, column }) => {
-      let target = this.inspector.target;
-      if (Tools.styleEditor.isTargetSupported(target)) {
-        gDevTools.showToolbox(target, "styleeditor").then(function (toolbox) {
-          let url = source || href;
-          toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
-        });
-      }
-    });
-  },
-
   onPropertyChanged: function () {
     this.inspector.markDirty();
   },
@@ -1757,7 +1708,6 @@ RuleViewTool.prototype = {
       this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
     }
 
-    this.view.off("ruleview-linked-clicked", this.onLinkClicked);
     this.view.off("ruleview-changed", this.onPropertyChanged);
     this.view.off("ruleview-refreshed", this.onViewRefreshed);
 

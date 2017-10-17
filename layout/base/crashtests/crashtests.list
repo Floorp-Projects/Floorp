@@ -70,8 +70,8 @@ load 317934-1.html
 load 320459-1.html
 load 321058-1.xul
 load 321058-2.xul
-load 321077-1.xul
-load 321077-2.xul
+asserts-if(stylo,3) load 321077-1.xul # bug 1397644
+asserts-if(stylo,3) load 321077-2.xul # bug 1397644
 load 322436-1.html
 load 325967-1.html
 load 325984-1.xhtml

@@ -5336,6 +5336,10 @@ pref("dom.vr.puppet.enabled", false);
 // Allow displaying the result of vr submitframe (0: disable, 1: store the
 // result as a base64 image, 2: show it on the screen).
 pref("dom.vr.puppet.submitframe", 0);
+// The number of milliseconds since last frame start before triggering a new frame.
+// When content is failing to submit frames on time or the lower level VR platform API's
+// are rejecting frames, it determines the rate at which RAF callbacks will be called.
+pref("dom.vr.display.rafMaxDuration", 50);
 // VR test system.
 pref("dom.vr.test.enabled", false);
 

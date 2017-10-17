@@ -14,7 +14,8 @@
     <script>
       "use strict";
 
-      const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
+      const { BrowserLoader } = Components.utils.import(
+        "resource://devtools/client/shared/browser-loader.js", {});
       const require = window.windowRequire = BrowserLoader({
         baseURI: "resource://devtools/client/netmonitor/",
         window,
@@ -25,15 +26,23 @@
       const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
       const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
       const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
+      const { Connector } = require("./src/connector/index");
       const { configureStore } = require("./src/utils/create-store");
-      const store = configureStore();
-      const actions = bindActionCreators(require("./src/actions/index"), store.dispatch);
-      const { onFirefoxConnect, onDisconnect } = require("./src/connector/index");
+      const App = createFactory(require("./src/components/app"));
+      const { getDisplayedRequestById } = require("./src/selectors/index");
+      const { EVENTS } = require("./src/constants");
 
       // Inject EventEmitter into global window.
       EventEmitter.decorate(window);
+
+      // Configure store/state object.
+      let connector = new Connector();
+      const store = configureStore(connector);
+      const actions = bindActionCreators(require("./src/actions/index"), store.dispatch);
+
       // Inject to global window for testing
       window.store = store;
+      window.connector = connector;
 
       window.Netmonitor = {
         bootstrap({ toolbox }) {
@@ -53,17 +62,57 @@
             top.openUILinkIn(link, "tab");
           };
 
-          const App = createFactory(require("./src/components/app"));
+          // Render the root Application component.
           const sourceMapService = toolbox.sourceMapURLService;
-          const app = App({ sourceMapService, openLink });
+          const app = App({ connector, openLink, sourceMapService });
           render(Provider({ store }, app), this.mount);
-          return onFirefoxConnect(connection, actions, store.getState);
+
+          // Connect to the Firefox backend by default.
+          return connector.connectFirefox(connection, actions, store.getState);
         },
 
         destroy() {
           unmountComponentAtNode(this.mount);
-          return onDisconnect();
+          return connector.disconnect();
         },
+
+        /**
+         * Selects the specified request in the waterfall and opens the details view.
+         * This is a firefox toolbox specific API, which providing an ability to inspect
+         * a network request directly from other internal toolbox panel.
+         *
+         * @param {string} requestId The actor ID of the request to inspect.
+         * @return {object} A promise resolved once the task finishes.
+         */
+        inspectRequest(requestId) {
+          // Look for the request in the existing ones or wait for it to appear, if
+          // the network monitor is still loading.
+          return new Promise((resolve) => {
+            let request = null;
+            let inspector = () => {
+              request = getDisplayedRequestById(store.getState(), requestId);
+              if (!request) {
+                // Reset filters so that the request is visible.
+                actions.toggleRequestFilterType("all");
+                request = getDisplayedRequestById(store.getState(), requestId);
+              }
+
+              // If the request was found, select it. Otherwise this function will be
+              // called again once new requests arrive.
+              if (request) {
+                window.off(EVENTS.REQUEST_ADDED, inspector);
+                actions.selectRequest(request.id);
+                resolve();
+              }
+            };
+
+            inspector();
+
+            if (!request) {
+              window.on(EVENTS.REQUEST_ADDED, inspector);
+            }
+          });
+        }
       };
 
       // Implement support for:

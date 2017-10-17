@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
     TYPE_LENGTH: "10px",
     TYPE_PERCENTAGE: "50%",
     TYPE_COLOR: "rgb(3,3,3)",
-    TYPE_URL: "url(mozilla.org)",
+    TYPE_URL: "url(http://example.org/)",
     TYPE_ANGLE: "90deg",
     TYPE_FREQUENCY: "10kHz",
     TYPE_TIME: "1000ms",
@@ -74,6 +74,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
       TYPE_LENGTH: "'something' 23px",
       TYPE_PERCENTAGE: "'something' 23%"
     },
+    "cursor": {
+      TYPE_URL: testValues.TYPE_URL + ", pointer"
+    },
+    "-moz-force-broken-image-icon": {
+      TYPE_NUMBER: "1"
+    }
   };
 
 
@@ -102,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
 
       let supported =
         utils.cssPropertySupportsType(propertyName, utils[iter]);
-      let parsed = utils.cssPropertyIsValid(propertyName, testValue);
+      let parsed = CSS.supports(propertyName, testValue);
       is(supported, parsed, propertyName + " supports " + iter);
     }
   }

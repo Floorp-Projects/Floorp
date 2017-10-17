@@ -59,6 +59,8 @@ public:
 
   bool operator==(const FocusTarget& aRhs) const;
 
+  const char* Type() const;
+
 public:
   // The content sequence number recorded at the time of this class's creation
   uint64_t mSequenceNumber;
