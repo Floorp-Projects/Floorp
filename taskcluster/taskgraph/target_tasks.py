@@ -382,16 +382,6 @@ def target_tasks_nightly_desktop(full_task_graph, parameters):
     )
 
 
-# Opt DMD builds should only run nightly
-@_target_task('nightly_dmd')
-def target_tasks_dmd(full_task_graph, parameters):
-    """Target DMD that run nightly on the m-c branch."""
-    def filter(task):
-        platform = task.attributes.get('build_platform', '')
-        return platform.endswith('-dmd')
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
 @_target_task('file_update')
 def target_tasks_file_update(full_task_graph, parameters):
     """Select the set of tasks required to perform nightly in-tree file updates
