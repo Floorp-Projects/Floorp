@@ -1352,9 +1352,6 @@ protected:
   // Used by streams captured from this element.
   nsTArray<DecoderPrincipalChangeObserver*> mDecoderPrincipalChangeObservers;
 
-  // State-watching manager.
-  WatchManager<HTMLMediaElement> mWatchManager;
-
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
