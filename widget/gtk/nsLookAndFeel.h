@@ -82,6 +82,10 @@ protected:
     char16_t sInvisibleCharacter;
     float   sCaretRatio;
     bool    sMenuSupportsDrag;
+    bool    sCSDAvailable;
+    bool    sCSDMaximizeButton;
+    bool    sCSDMinimizeButton;
+    bool    sCSDCloseButton;
     bool    mInitialized;
 
     void EnsureInit();

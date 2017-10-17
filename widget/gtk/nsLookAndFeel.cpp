@@ -639,6 +639,22 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ContextMenuOffsetHorizontal:
         aResult = 2;
         break;
+    case eIntID_GTKCSDAvailable:
+        EnsureInit();
+        aResult = sCSDAvailable;
+        break;
+    case eIntID_GTKCSDMaximizeButton:
+        EnsureInit();
+        aResult = sCSDMaximizeButton;
+        break;
+    case eIntID_GTKCSDMinimizeButton:
+        EnsureInit();
+        aResult = sCSDMinimizeButton;
+        break;
+    case eIntID_GTKCSDCloseButton:
+        EnsureInit();
+        aResult = sCSDCloseButton;
+        break;
     default:
         aResult = 0;
         res     = NS_ERROR_FAILURE;
