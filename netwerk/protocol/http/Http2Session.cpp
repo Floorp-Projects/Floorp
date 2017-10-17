@@ -118,6 +118,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mUseH2Deps(false)
   , mAttemptingEarlyData(attemptingEarlyData)
   , mOriginFrameActivated(false)
+  , mTlsHandshakeFinished(false)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -392,6 +393,11 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
 
   if (!mConnection) {
     mConnection = aHttpTransaction->Connection();
+  }
+
+  if (!mFirstHttpTransaction && !mTlsHandshakeFinished) {
+    mFirstHttpTransaction = aHttpTransaction->QueryHttpTransaction();
+    LOG3(("Http2Session::AddStream first session=%p trans=%p ", this, mFirstHttpTransaction.get()));
   }
 
   if (mClosed || mShouldGoAway) {
@@ -2667,19 +2673,20 @@ Http2Session::OnTransportStatus(nsITransport* aTransport,
   case NS_NET_STATUS_TLS_HANDSHAKE_STARTING:
   case NS_NET_STATUS_TLS_HANDSHAKE_ENDED:
   {
-    Http2Stream *target = mStreamIDHash.Get(mUseH2Deps ? 0xF : 0x3);
-    if (!target) {
-      // any transaction will do if we can't find the low numbered one
-      // generally this happens when the initial transaction hasn't been
-      // assigned a stream id yet.
-      auto iter = mStreamTransactionHash.Iter();
-      if (!iter.Done()) {
-        target = iter.Data();
-      }
+
+    if (!mFirstHttpTransaction) {
+      // if we still do not have a HttpTransaction store timings info in
+      // a HttpConnection.
+      RefPtr<nsHttpConnection> conn = mConnection->HttpConnection();
+      conn->SetEvent(aStatus);
+    } else {
+      mFirstHttpTransaction->OnTransportStatus(aTransport, aStatus, aProgress);
     }
-    nsAHttpTransaction *transaction = target ? target->Transaction() : nullptr;
-    if (transaction)
-      transaction->OnTransportStatus(aTransport, aStatus, aProgress);
+
+    if (aStatus == NS_NET_STATUS_TLS_HANDSHAKE_ENDED) {
+      mFirstHttpTransaction = nullptr;
+      mTlsHandshakeFinished = true;
+    }
     break;
   }
 

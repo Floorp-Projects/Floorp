@@ -1617,9 +1617,15 @@ public:
 private:
 #define GLYPH_BUFFER_SIZE (2048/sizeof(Glyph))
 
+    Glyph* GlyphBuffer()
+    {
+        return *mGlyphBuffer.addr();
+    }
+
+
     Glyph *AppendGlyph()
     {
-        return &mGlyphBuffer[mNumGlyphs++];
+        return &GlyphBuffer()[mNumGlyphs++];
     }
 
     static DrawMode
@@ -1640,13 +1646,13 @@ private:
         }
 
         if (mRunParams.isRTL) {
-            Glyph *begin = &mGlyphBuffer[0];
-            Glyph *end = &mGlyphBuffer[mNumGlyphs];
+            Glyph *begin = &GlyphBuffer()[0];
+            Glyph *end = &GlyphBuffer()[mNumGlyphs];
             std::reverse(begin, end);
         }
 
         gfx::GlyphBuffer buf;
-        buf.mGlyphs = mGlyphBuffer;
+        buf.mGlyphs = GlyphBuffer();
         buf.mNumGlyphs = mNumGlyphs;
 
         const gfxContext::AzureState &state = mRunParams.context->CurrentState();
@@ -1788,7 +1794,9 @@ private:
                                     mFontParams.renderingOptions);
     }
 
-    Glyph        mGlyphBuffer[GLYPH_BUFFER_SIZE];
+    // Allocate space for a buffer of Glyph records, without initializing them.
+    AlignedStorage2<Glyph[GLYPH_BUFFER_SIZE]> mGlyphBuffer;
+
     unsigned int mNumGlyphs;
 
 #undef GLYPH_BUFFER_SIZE

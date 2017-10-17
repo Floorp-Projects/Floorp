@@ -128,6 +128,12 @@ hb_blob_create (const char        *data,
   return blob;
 }
 
+static void
+_hb_blob_destroy (void *data)
+{
+  hb_blob_destroy ((hb_blob_t *) data);
+}
+
 /**
  * hb_blob_create_sub_blob:
  * @parent: Parent blob.
@@ -164,7 +170,7 @@ hb_blob_create_sub_blob (hb_blob_t    *parent,
 			 MIN (length, parent->length - offset),
 			 HB_MEMORY_MODE_READONLY,
 			 hb_blob_reference (parent),
-			 (hb_destroy_func_t) hb_blob_destroy);
+			 _hb_blob_destroy);
 
   return blob;
 }

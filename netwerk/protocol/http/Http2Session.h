@@ -558,6 +558,11 @@ private:
     nsHttpRequestHead mRequestHead;
   };
 
+  // A h2 session will be created before all socket events are trigered,
+  // e.g. NS_NET_STATUS_TLS_HANDSHAKE_ENDED and for TFO many others.
+  // We should propagate this events to the first nsHttpTransaction.
+  RefPtr<nsHttpTransaction> mFirstHttpTransaction;
+  bool mTlsHandshakeFinished;
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);

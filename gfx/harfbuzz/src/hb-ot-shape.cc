@@ -693,9 +693,9 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
 static inline void
 hb_ot_position_complex (hb_ot_shape_context_t *c)
 {
-  hb_ot_layout_position_start (c->font, c->buffer);
-
   unsigned int count = c->buffer->len;
+  hb_glyph_info_t *info = c->buffer->info;
+  hb_glyph_position_t *pos = c->buffer->pos;
 
   /* If the font has no GPOS, AND, no fallback positioning will
    * happen, AND, direction is forward, then when zeroing mark
@@ -710,6 +710,17 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
 				     !c->plan->shaper->fallback_position &&
 				     HB_DIRECTION_IS_FORWARD (c->buffer->props.direction);
 
+  /* We change glyph origin to what GPOS expects (horizontal), apply GPOS, change it back. */
+
+  /* The nil glyph_h_origin() func returns 0, so no need to apply it. */
+  if (c->font->has_glyph_h_origin_func ())
+    for (unsigned int i = 0; i < count; i++)
+      c->font->add_glyph_h_origin (info[i].codepoint,
+				   &pos[i].x_offset,
+				   &pos[i].y_offset);
+
+  hb_ot_layout_position_start (c->font, c->buffer);
+
   switch (c->plan->shaper->zero_width_marks)
   {
     case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY:
@@ -723,29 +734,7 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
   }
 
   if (likely (!c->fallback_positioning))
-  {
-    hb_glyph_info_t *info = c->buffer->info;
-    hb_glyph_position_t *pos = c->buffer->pos;
-
-    /* Change glyph origin to what GPOS expects (horizontal), apply GPOS, change it back. */
-
-    /* The nil glyph_h_origin() func returns 0, so no need to apply it. */
-    if (c->font->has_glyph_h_origin_func ())
-      for (unsigned int i = 0; i < count; i++)
-	c->font->add_glyph_h_origin (info[i].codepoint,
-				     &pos[i].x_offset,
-				     &pos[i].y_offset);
-
     c->plan->position (c->font, c->buffer);
-
-    /* The nil glyph_h_origin() func returns 0, so no need to apply it. */
-    if (c->font->has_glyph_h_origin_func ())
-      for (unsigned int i = 0; i < count; i++)
-	c->font->subtract_glyph_h_origin (info[i].codepoint,
-					  &pos[i].x_offset,
-					  &pos[i].y_offset);
-
-  }
 
   switch (c->plan->shaper->zero_width_marks)
   {
@@ -763,6 +752,13 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
   hb_ot_layout_position_finish_advances (c->font, c->buffer);
   hb_ot_zero_width_default_ignorables (c);
   hb_ot_layout_position_finish_offsets (c->font, c->buffer);
+
+  /* The nil glyph_h_origin() func returns 0, so no need to apply it. */
+  if (c->font->has_glyph_h_origin_func ())
+    for (unsigned int i = 0; i < count; i++)
+      c->font->subtract_glyph_h_origin (info[i].codepoint,
+					&pos[i].x_offset,
+					&pos[i].y_offset);
 }
 
 static inline void

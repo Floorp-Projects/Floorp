@@ -105,12 +105,12 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     eventClipState->ClipContainingBlockDescendants(rect, hasRadii ? radii : nullptr);
   }
 
-  nsDisplayList onTop;
+  nsDisplayList onTop(aBuilder);
   if (IsVisibleForPainting(aBuilder)) {
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
   }
 
-  nsDisplayListCollection set;
+  nsDisplayListCollection set(aBuilder);
 
   // Do not allow the child subtree to receive events.
   if (!isForEventDelivery || aBuilder->HitTestShouldStopAtFirstOpaque()) {

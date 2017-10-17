@@ -458,8 +458,10 @@ _hb_ot_font_create (hb_face_t *face)
 }
 
 static void
-_hb_ot_font_destroy (hb_ot_font_t *ot_font)
+_hb_ot_font_destroy (void *data)
 {
+  hb_ot_font_t *ot_font = (hb_ot_font_t *) data;
+
   ot_font->cmap.fini ();
   ot_font->h_metrics.fini ();
   ot_font->v_metrics.fini ();
@@ -627,5 +629,5 @@ hb_ot_font_set_funcs (hb_font_t *font)
   hb_font_set_funcs (font,
 		     _hb_ot_get_font_funcs (),
 		     ot_font,
-		     (hb_destroy_func_t) _hb_ot_font_destroy);
+		     _hb_ot_font_destroy);
 }

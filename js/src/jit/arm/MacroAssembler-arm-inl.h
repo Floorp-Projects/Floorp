@@ -52,6 +52,55 @@ MacroAssembler::move16SignExtend(Register src, Register dest)
     as_sxth(dest, src, 0);
 }
 
+void
+MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
+{
+    ma_vxfer(src, dest.low, dest.high);
+}
+
+void
+MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
+{
+    ma_vxfer(src.low, src.high, dest);
+}
+
+void
+MacroAssembler::move64To32(Register64 src, Register dest)
+{
+    if (src.low != dest)
+        move32(src.low, dest);
+}
+
+void
+MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
+{
+    if (src != dest.low)
+        move32(src, dest.low);
+    move32(Imm32(0), dest.high);
+}
+
+void
+MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
+{
+    as_sxtb(dest.low, src, 0);
+    ma_asr(Imm32(31), dest.low, dest.high);
+}
+
+void
+MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
+{
+    as_sxth(dest.low, src, 0);
+    ma_asr(Imm32(31), dest.low, dest.high);
+}
+
+void
+MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
+{
+    if (src != dest.low)
+        move32(src, dest.low);
+    ma_asr(Imm32(31), dest.low, dest.high);
+}
+
 // ===============================================================
 // Logical instructions
 

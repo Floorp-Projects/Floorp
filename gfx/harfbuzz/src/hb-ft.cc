@@ -95,14 +95,16 @@ _hb_ft_font_create (FT_Face ft_face, bool symbol, bool unref)
 }
 
 static void
-_hb_ft_face_destroy (FT_Face ft_face)
+_hb_ft_face_destroy (void *data)
 {
-  FT_Done_Face (ft_face);
+  FT_Done_Face ((FT_Face) data);
 }
 
 static void
-_hb_ft_font_destroy (hb_ft_font_t *ft_font)
+_hb_ft_font_destroy (void *data)
 {
+  hb_ft_font_t *ft_font = (hb_ft_font_t *) data;
+
   if (ft_font->unref)
     _hb_ft_face_destroy (ft_font->ft_face);
 
@@ -124,7 +126,7 @@ hb_ft_font_set_load_flags (hb_font_t *font, int load_flags)
   if (font->immutable)
     return;
 
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (font->destroy != _hb_ft_font_destroy)
     return;
 
   hb_ft_font_t *ft_font = (hb_ft_font_t *) font->user_data;
@@ -144,7 +146,7 @@ hb_ft_font_set_load_flags (hb_font_t *font, int load_flags)
 int
 hb_ft_font_get_load_flags (hb_font_t *font)
 {
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (font->destroy != _hb_ft_font_destroy)
     return 0;
 
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
@@ -155,7 +157,7 @@ hb_ft_font_get_load_flags (hb_font_t *font)
 FT_Face
 hb_ft_font_get_face (hb_font_t *font)
 {
-  if (font->destroy != (hb_destroy_func_t) _hb_ft_font_destroy)
+  if (font->destroy != _hb_ft_font_destroy)
     return NULL;
 
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
@@ -474,7 +476,7 @@ retry:
   hb_font_set_funcs (font,
 		     funcs,
 		     _hb_ft_font_create (ft_face, symbol, unref),
-		     (hb_destroy_func_t) _hb_ft_font_destroy);
+		     _hb_ft_font_destroy);
 }
 
 
@@ -553,7 +555,7 @@ hb_face_t *
 hb_ft_face_create_referenced (FT_Face ft_face)
 {
   FT_Reference_Face (ft_face);
-  return hb_ft_face_create (ft_face, (hb_destroy_func_t) _hb_ft_face_destroy);
+  return hb_ft_face_create (ft_face, _hb_ft_face_destroy);
 }
 
 static void
@@ -608,6 +610,19 @@ hb_ft_font_create (FT_Face           ft_face,
   font = hb_font_create (face);
   hb_face_destroy (face);
   _hb_ft_font_set_funcs (font, ft_face, false);
+  hb_ft_font_changed (font);
+  return font;
+}
+
+void
+hb_ft_font_changed (hb_font_t *font)
+{
+  if (font->destroy != _hb_ft_font_destroy)
+    return;
+
+  hb_ft_font_t *ft_font = (hb_ft_font_t *) font->user_data;
+  FT_Face ft_face = ft_font->ft_face;
+
   hb_font_set_scale (font,
 		     (int) (((uint64_t) ft_face->size->metrics.x_scale * (uint64_t) ft_face->units_per_EM + (1u<<15)) >> 16),
 		     (int) (((uint64_t) ft_face->size->metrics.y_scale * (uint64_t) ft_face->units_per_EM + (1u<<15)) >> 16));
@@ -638,8 +653,6 @@ hb_ft_font_create (FT_Face           ft_face,
     free (mm_var);
   }
 #endif
-
-  return font;
 }
 
 /**
@@ -655,7 +668,7 @@ hb_font_t *
 hb_ft_font_create_referenced (FT_Face ft_face)
 {
   FT_Reference_Face (ft_face);
-  return hb_ft_font_create (ft_face, (hb_destroy_func_t) _hb_ft_face_destroy);
+  return hb_ft_font_create (ft_face, _hb_ft_face_destroy);
 }
 
 

@@ -71,6 +71,7 @@ class MochiRemote(MochitestDesktop):
         if blobberUploadDir:
             self._dm.getDirectory(self.remoteMozLog, blobberUploadDir)
         MochitestDesktop.cleanup(self, options)
+        self.localProfile = None
 
     def findPath(self, paths, filename=None):
         for path in paths:
@@ -315,6 +316,7 @@ def run_test_harness(parser, options):
     dm = options.dm
     auto.setDeviceManager(dm)
     mochitest = MochiRemote(auto, dm, options)
+    options.dm = None
 
     log = mochitest.log
     message_logger.logger = log
@@ -369,7 +371,10 @@ def run_test_harness(parser, options):
     mochitest.mozLogName = "moz.log"
     try:
         dm.recordLogcat()
-        retVal = mochitest.runTests(options)
+        if options.verify:
+            retVal = mochitest.verifyTests(options)
+        else:
+            retVal = mochitest.runTests(options)
     except:
         log.error("Automation Error: Exception caught while running tests")
         traceback.print_exc()

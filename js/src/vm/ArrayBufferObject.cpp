@@ -52,6 +52,7 @@
 
 #include "jsatominlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

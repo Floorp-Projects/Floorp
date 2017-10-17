@@ -135,7 +135,7 @@ nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  nsDisplayListCollection set;
+  nsDisplayListCollection set(aBuilder);
   BuildDisplayListInternal(aBuilder, set);
 
   nsOptionEventGrabberWrapper wrapper;

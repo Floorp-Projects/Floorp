@@ -178,7 +178,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayOverflowContainers(aBuilder, aLists);
   }
 
-  nsDisplayListCollection contentDisplayItems;
+  nsDisplayListCollection contentDisplayItems(aBuilder);
   if (nsIFrame* inner = GetInner()) {
     // Collect the inner frame's display items into their own collection.
     // We need to be calling BuildDisplayList on it before the legend in
