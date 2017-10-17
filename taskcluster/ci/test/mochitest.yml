@@ -1,0 +1,553 @@
+mochitest:
+    description: "Mochitest plain run"
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/plain-chunked-coverage
+            default: mochitest/plain-chunked
+    treeherder-symbol: tc-M()
+    loopback-video: true
+    instance-size:
+        by-test-platform:
+            linux64-jsdcov/opt: xlarge
+            android.*: xlarge
+            default: default
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 48
+            android.*: 20
+            macosx.*: 5
+            windows.*: 5
+            linux32/debug: 16
+            linux32-stylo-disabled/debug: 16
+            linux.*: 10
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows7-32/debug: both
+            default: true
+    max-run-time:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 7200
+            linux64-jsdcov/opt: 10800
+            default: 5400
+    allow-software-gl-layers: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: plain
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=mochitest
+            default:
+                mochitest-flavor: plain
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    by-test-platform:
+                        linux64-jsdcov/opt:
+                            - --mochitest-suite=plain-chunked-coverage
+                        default:
+                            - --mochitest-suite=plain-chunked
+
+mochitest-a11y:
+    description: "Mochitest a11y run"
+    suite: mochitest/a11y
+    treeherder-symbol: tc-M(a11y)
+    loopback-video: true
+    e10s: false
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: built-projects
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: false
+        mochitest-flavor: a11y
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=a11y
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-browser-chrome:
+    description: "Mochitest browser-chrome run"
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/browser-chrome-coverage
+            default: mochitest/browser-chrome-chunked
+    treeherder-symbol: tc-M(bc)
+    loopback-video: true
+    chunks:
+        by-test-platform:
+            linux64/debug: 16
+            linux64-stylo-disabled/debug: 16
+            linux64-asan/opt: 16
+            linux64-jsdcov/opt: 35
+            linux32/debug: 16
+            linux32-stylo-disabled/debug: 16
+            default: 7
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows7-32/debug: both
+            default: true
+    max-run-time:
+        by-test-platform:
+            linux64-jsdcov/opt: 7200
+            linux64-ccov/opt: 7200
+            linux64/debug: 5400
+            linux64-stylo-disabled/debug: 5400
+            linux32/debug: 5400
+            linux32-stylo-disabled/debug: 5400
+            default: 3600
+    mozharness:
+        mochitest-flavor: browser
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            by-test-platform:
+                linux64-jsdcov/opt:
+                    - --mochitest-suite=browser-chrome-coverage
+                default:
+                    - --mochitest-suite=browser-chrome-chunked
+    # Bug 1281241: migrating to m3.large instances
+    instance-size:
+        by-test-platform:
+            linux64-jsdcov/opt: xlarge
+            default: legacy
+    allow-software-gl-layers: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-browser-screenshots:
+    description: "Mochitest Browser Screenshots"
+    suite: mochitest/browser-chrome-screenshots
+    treeherder-symbol: tc-M(ss)
+    loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            windows.*/opt: ['mozilla-central', 'try']
+            linux64/opt: ['mozilla-central', 'try']
+            macosx.*/opt: ['mozilla-central', 'try']
+            windows7-32-devedition/opt: []
+            windows10-64-devedition/opt: []
+            default: []
+    max-run-time: 3600
+    mozharness:
+        mochitest-flavor: browser
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=browser-chrome-screenshots
+    allow-software-gl-layers: false
+
+mochitest-chrome:
+    description: "Mochitest chrome run"
+    suite: mochitest/chrome
+    treeherder-symbol: tc-M(c)
+    loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 4
+            android.*: 2
+            default: 3
+    max-run-time: 3600
+    e10s: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: chrome
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        android-4.2-x86/opt:
+                            - android/androidx86.py
+                        default:
+                            - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=mochitest-chrome
+            default:
+                mochitest-flavor: chrome
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=chrome
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-clipboard:
+    description: "Mochitest clipboard run"
+    suite: mochitest/clipboard
+    treeherder-symbol: tc-M(cl)
+    loopback-video: true
+    virtualization: hardware
+    instance-size: xlarge
+    worker-type:
+        by-test-platform:
+            windows7-32.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
+            default: null
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: plain
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-plain-clipboard
+            default:
+                mochitest-flavor: plain
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: false
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
+
+mochitest-devtools-chrome:
+    description: "Mochitest devtools-chrome run"
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/mochitest-devtools-chrome-coverage
+            default: mochitest/mochitest-devtools-chrome-chunked
+    treeherder-symbol: tc-M(dt)
+    loopback-video: true
+    max-run-time: 5400
+    chunks:
+        by-test-platform:
+            windows.*: 8
+            macosx.*: 8
+            default: 10
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows7-32/debug: both
+            default: true
+    mozharness:
+        mochitest-flavor: chrome
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            by-test-platform:
+                linux64-jsdcov/opt:
+                    - --mochitest-suite=mochitest-devtools-chrome-coverage
+                default:
+                    - --mochitest-suite=mochitest-devtools-chrome-chunked
+    instance-size:
+        by-test-platform:
+            # Bug 1281241: migrating to m3.large instances
+            linux64-asan/opt: legacy
+            default: default
+    # Bug 1296086: high number of intermittents observed with software GL and large instances
+    allow-software-gl-layers: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-gpu:
+    description: "Mochitest GPU run"
+    suite: mochitest/gpu
+    treeherder-symbol: tc-M(gpu)
+    loopback-video: true
+    virtualization: virtual-with-gpu
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: plain
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-plain-gpu
+            default:
+                mochitest-flavor: plain
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: false
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-media:
+    description: "Mochitest media run"
+    suite: mochitest/mochitest-media
+    treeherder-symbol: tc-M(mda)
+    max-run-time: 5400
+    loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: large
+    chunks:
+        by-test-platform:
+            android.*: 3
+            macosx64.*: 1
+            windows10-64.*: 1
+            default: 3
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: plain
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=mochitest-media
+            default:
+                mochitest-flavor: plain
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked:
+                  by-test-platform:
+                    macosx64.*: false
+                    windows10-64.*: false
+                    default: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=mochitest-media
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
+
+mochitest-plain-headless:
+    description: "Mochitest plain headless run"
+    suite: mochitest/plain-chunked
+    treeherder-symbol: tc-M(h)
+    loopback-video: true
+    instance-size: legacy # Bug 1281241: migrating to m3.large instances
+    chunks:
+        by-test-platform:
+            linux.*: 10
+    e10s: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    tier: default
+    mozharness:
+        mochitest-flavor: plain
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=plain-chunked
+            - --headless
+
+mochitest-valgrind:
+    description: "Mochitest plain Valgrind run"
+    suite: mochitest/valgrind-plain
+    treeherder-symbol: tc-M-V()
+    run-on-projects: []
+    tier: 3
+    loopback-video: true
+    chunks: 40
+    max-run-time: 14400
+    # We could re-enable e10s later.
+    # There's no intrinsic reason not to use it.
+    e10s: false
+    allow-software-gl-layers: false
+    mozharness:
+        mochitest-flavor: plain
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=valgrind-plain
+
+mochitest-webgl:
+    description: "Mochitest webgl run"
+    suite: mochitest/mochitest-gl
+    treeherder-symbol: tc-M(gl)
+    virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android.*: 10
+            windows.*: 8
+            default: 3
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    loopback-video: true
+    max-run-time:
+        by-test-platform:
+            windows.*: 5400
+            android.*: 7200
+            default: 3600
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                mochitest-flavor: plain
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=mochitest-gl
+            default:
+                mochitest-flavor: plain
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=mochitest-gl
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
