@@ -1683,7 +1683,7 @@ protected:
   EncryptionInfo mPendingEncryptedInitData;
 
   // True if the media's channel's download has been suspended.
-  Watchable<bool> mDownloadSuspendedByCache;
+  bool mDownloadSuspendedByCache = false;
 
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
