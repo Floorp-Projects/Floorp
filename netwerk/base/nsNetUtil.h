@@ -517,24 +517,10 @@ NS_NewBufferedInputStream(nsIInputStream **result,
 
 // note: the resulting stream can be QI'ed to nsISafeOutputStream iff the
 // provided stream supports it.
-nsresult NS_NewBufferedOutputStream(nsIOutputStream **result,
-                                    nsIOutputStream  *str,
-                                    uint32_t          bufferSize);
+nsresult NS_NewBufferedOutputStream(nsIOutputStream** aResult,
+                                    already_AddRefed<nsIOutputStream> aOutputStream,
+                                    uint32_t aBufferSize);
 
-/**
- * Attempts to buffer a given stream.  If this fails, it returns the
- * passed-in stream.
- *
- * @param aOutputStream
- *        The output stream we want to buffer.  This cannot be null.
- * @param aBufferSize
- *        The size of the buffer for the buffered output stream.
- * @returns an nsIOutputStream that is buffered with the specified buffer size,
- *          or is aOutputStream if creating the new buffered stream failed.
- */
-already_AddRefed<nsIOutputStream>
-NS_BufferOutputStream(nsIOutputStream *aOutputStream,
-                      uint32_t aBufferSize);
 already_AddRefed<nsIInputStream>
 NS_BufferInputStream(nsIInputStream *aInputStream,
                       uint32_t aBufferSize);

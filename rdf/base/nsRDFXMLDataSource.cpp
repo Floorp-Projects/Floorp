@@ -766,7 +766,8 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIOutputStream> bufferedOut;
-            rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);
+            rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut),
+                                            out.forget(), 4096);
             if (NS_FAILED(rv)) return rv;
 
             rv = Serialize(bufferedOut);

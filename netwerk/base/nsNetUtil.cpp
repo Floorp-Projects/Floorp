@@ -1337,36 +1337,22 @@ NS_NewLocalFileStream(nsIFileStream **result,
 }
 
 nsresult
-NS_NewBufferedOutputStream(nsIOutputStream **result,
-                           nsIOutputStream  *str,
-                           uint32_t          bufferSize)
+NS_NewBufferedOutputStream(nsIOutputStream** aResult,
+                           already_AddRefed<nsIOutputStream> aOutputStream,
+                           uint32_t aBufferSize)
 {
+    nsCOMPtr<nsIOutputStream> outputStream = Move(aOutputStream);
+
     nsresult rv;
     nsCOMPtr<nsIBufferedOutputStream> out =
         do_CreateInstance(NS_BUFFEREDOUTPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = out->Init(str, bufferSize);
+        rv = out->Init(outputStream, aBufferSize);
         if (NS_SUCCEEDED(rv)) {
-            out.forget(result);
+            out.forget(aResult);
         }
     }
     return rv;
-}
-
-already_AddRefed<nsIOutputStream>
-NS_BufferOutputStream(nsIOutputStream *aOutputStream,
-                      uint32_t aBufferSize)
-{
-    NS_ASSERTION(aOutputStream, "No output stream given!");
-
-    nsCOMPtr<nsIOutputStream> bos;
-    nsresult rv = NS_NewBufferedOutputStream(getter_AddRefs(bos), aOutputStream,
-                                             aBufferSize);
-    if (NS_SUCCEEDED(rv))
-        return bos.forget();
-
-    bos = aOutputStream;
-    return bos.forget();
 }
 
 MOZ_MUST_USE nsresult
