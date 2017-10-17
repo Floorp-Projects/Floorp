@@ -2561,12 +2561,11 @@ XMLHttpRequestMainThread::MaybeLowerChannelPriority()
 }
 
 nsresult
-XMLHttpRequestMainThread::InitiateFetch(already_AddRefed<nsIInputStream> aUploadStream,
+XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
                                         int64_t aUploadLength,
                                         nsACString& aUploadContentType)
 {
   nsresult rv;
-  nsCOMPtr<nsIInputStream> uploadStream = Move(aUploadStream);
 
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
   // in turn keeps STOP button from becoming active.  If the consumer passed in
@@ -2616,16 +2615,16 @@ XMLHttpRequestMainThread::InitiateFetch(already_AddRefed<nsIInputStream> aUpload
       }
     }
 
-    if (uploadStream) {
+    if (aUploadStream) {
       // If necessary, wrap the stream in a buffered stream so as to guarantee
       // support for our upload when calling ExplicitSetUploadStream.
-      if (!NS_InputStreamIsBuffered(uploadStream)) {
-        nsCOMPtr<nsIInputStream> bufferedStream;
+      nsCOMPtr<nsIInputStream> bufferedStream;
+      if (!NS_InputStreamIsBuffered(aUploadStream)) {
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                       uploadStream.forget(), 4096);
+                                       aUploadStream, 4096);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        uploadStream = bufferedStream;
+        aUploadStream = bufferedStream;
       }
 
       // We want to use a newer version of the upload channel that won't
@@ -2634,7 +2633,7 @@ XMLHttpRequestMainThread::InitiateFetch(already_AddRefed<nsIInputStream> aUpload
       // This assertion will fire if buggy extensions are installed
       NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel2");
       if (uploadChannel2) {
-          uploadChannel2->ExplicitSetUploadStream(uploadStream,
+          uploadChannel2->ExplicitSetUploadStream(aUploadStream,
                                                   aUploadContentType,
                                                   mUploadTotal, mRequestMethod,
                                                   false);
@@ -2646,7 +2645,7 @@ XMLHttpRequestMainThread::InitiateFetch(already_AddRefed<nsIInputStream> aUpload
         }
         nsCOMPtr<nsIUploadChannel> uploadChannel =
           do_QueryInterface(httpChannel);
-        uploadChannel->SetUploadStream(uploadStream, aUploadContentType,
+        uploadChannel->SetUploadStream(aUploadStream, aUploadContentType,
                                        mUploadTotal);
         // Reset the method to its original value
         rv = httpChannel->SetRequestMethod(mRequestMethod);
@@ -3054,7 +3053,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
     }
   }
 
-  rv = InitiateFetch(uploadStream.forget(), mUploadTotal, uploadContentType);
+  rv = InitiateFetch(uploadStream, mUploadTotal, uploadContentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Start our timeout

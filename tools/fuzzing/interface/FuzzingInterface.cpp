@@ -31,7 +31,7 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc) 
       if (!NS_InputStreamIsBuffered(inputStream)) {
         nsCOMPtr<nsIInputStream> bufStream;
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                       inputStream.forget(), 1024);
+                                       inputStream, 1024);
         MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         inputStream = bufStream;
       }
