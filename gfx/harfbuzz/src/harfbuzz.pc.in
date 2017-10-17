@@ -8,6 +8,6 @@ Description: HarfBuzz text shaping library
 Version: %VERSION%
 
 Libs: -L${libdir} -lharfbuzz
-Libs.private: %libs_private%
+Libs.private: -lm %libs_private%
 Requires.private: %requires_private%
 Cflags: -I${includedir}/harfbuzz

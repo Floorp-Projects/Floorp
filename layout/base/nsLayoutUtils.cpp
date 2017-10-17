@@ -2986,7 +2986,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                nsDisplayListBuilderMode::TRANSFORM_COMPUTATION,
                                false/*don't build caret*/);
   builder.BeginFrame();
-  nsDisplayList list;
+  nsDisplayList list(&builder);
   nsDisplayTransform* item =
     new (&builder) nsDisplayTransform(&builder, aFrame, &list, nsRect());
 
@@ -3269,7 +3269,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
                                nsDisplayListBuilderMode::EVENT_DELIVERY,
                                false);
   builder.BeginFrame();
-  nsDisplayList list;
+  nsDisplayList list(&builder);
 
   if (aFlags & IGNORE_PAINT_SUPPRESSION) {
     builder.IgnorePaintSuppression();
@@ -3659,7 +3659,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     visibleRegion = aDirtyRegion;
   }
 
-  nsDisplayList list;
+  nsDisplayList list(&builder);
 
   // If the root has embedded plugins, flag the builder so we know we'll need
   // to update plugin geometry after painting.

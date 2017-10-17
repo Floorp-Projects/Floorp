@@ -254,3 +254,15 @@ with only_when('--enable-compile-environment'):
 
     set_config('LIBFUZZER', enable_libfuzzer)
     set_define('LIBFUZZER', enable_libfuzzer)
+
+# Enable pipeline operator
+# ===================================================
+js_option('--enable-pipeline-operator', default=False, help='Enable pipeline operator')
+
+@depends('--enable-pipeline-operator')
+def enable_pipeline_operator(value):
+    if value:
+        return True
+
+set_config('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
+set_define('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)

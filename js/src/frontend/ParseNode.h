@@ -129,6 +129,7 @@ class ObjectBox;
      * Binary operators. \
      * These must be in the same order as TOK_OR and friends in TokenStream.h. \
      */ \
+    F(PIPELINE) \
     F(OR) \
     F(AND) \
     F(BITOR) \
@@ -186,7 +187,7 @@ enum ParseNodeKind : uint16_t
     FOR_EACH_PARSE_NODE_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
     PNK_LIMIT, /* domain size */
-    PNK_BINOP_FIRST = PNK_OR,
+    PNK_BINOP_FIRST = PNK_PIPELINE,
     PNK_BINOP_LAST = PNK_POW,
     PNK_ASSIGNMENT_START = PNK_ASSIGN,
     PNK_ASSIGNMENT_LAST = PNK_POWASSIGN

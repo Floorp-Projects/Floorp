@@ -1,3 +1,38 @@
+Overview of changes leading to 1.6.0
+Friday, October the 13th, 2017
+====================================
+
+- Update to Unicode 10.
+
+- Various Indic and Universal Shaping Engine fixes as a result of
+  HarfBuzz Hackfest with Jonathan Kew at Web Engines Hackfest at
+  the Igalia offices in A Coruña, Spain.  Thanks Igalia for having
+  us!
+
+- Implement Unicode Arabic Mark Ordering Algorithm UTR#53.
+
+- Implement optical sizing / tracking in CoreText backend, using
+  new API hb_font_set_ptem().
+
+- Allow notifying hb_font_t that underlying FT_Face changed sizing,
+  using new API hb_ft_font_changed().
+
+- More Graphite backend RTL fixes.
+
+- Fix caching of variable font shaping plans.
+
+- hb-view / hb-shape now accept following new arguments:
+
+  o --unicodes: takes a list of hex numbers that represent Unicode
+    codepoints.
+
+New API:
++hb_face_get_table_tags()
++hb_font_set_ptem()
++hb_font_get_ptem()
++hb_ft_font_changed()
+
+
 Overview of changes leading to 1.5.1
 Tuesday, September 5, 2017
 ====================================

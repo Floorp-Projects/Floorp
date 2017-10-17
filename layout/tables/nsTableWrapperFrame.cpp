@@ -180,7 +180,7 @@ nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  nsDisplayListCollection set;
+  nsDisplayListCollection set(aBuilder);
   BuildDisplayListForInnerTable(aBuilder, set);
 
   nsDisplayListSet captionSet(set, set.BlockBorderBackgrounds());

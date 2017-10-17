@@ -4758,12 +4758,10 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 
     MOZ_ASSERT((trans == mSocketTransport) || (trans == mBackupTransport));
     MOZ_ASSERT(mEnt);
-
     if (mTransaction) {
-        RefPtr<PendingTransactionInfo> info = FindTransactionHelper(false);
         if ((trans == mSocketTransport) ||
             ((trans == mBackupTransport) && (status == NS_NET_STATUS_CONNECTED_TO) &&
-            info)) {
+             mSocketTransport)) {
             // Send this status event only if the transaction is still pending,
             // i.e. it has not found a free already connected socket.
             // Sockets in halfOpen state can only get following events:
@@ -4772,6 +4770,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
             // mBackupTransport is only started after
             // NS_NET_STATUS_CONNECTING_TO of mSocketTransport, so ignore all
             // mBackupTransport events until NS_NET_STATUS_CONNECTED_TO.
+            // mBackupTransport must be connected before mSocketTransport.
             mTransaction->OnTransportStatus(trans, status, progress);
         }
     }

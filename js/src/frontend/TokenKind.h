@@ -155,8 +155,9 @@
      * Binary operators tokens, TOK_OR thru TOK_POW. These must be in the same \
      * order as F(OR) and friends in FOR_EACH_PARSE_NODE_KIND in ParseNode.h. \
      */ \
+    macro(PIPELINE,     "'|>'") \
+    range(BINOP_FIRST,  PIPELINE) \
     macro(OR,           "'||'")   /* logical or */ \
-    range(BINOP_FIRST, OR) \
     macro(AND,          "'&&'")   /* logical and */ \
     macro(BITOR,        "'|'")    /* bitwise-or */ \
     macro(BITXOR,       "'^'")    /* bitwise-xor */ \
@@ -196,7 +197,7 @@
     macro(DIV,          "'/'") \
     macro(MOD,          "'%'") \
     macro(POW,          "'**'") \
-    range(BINOP_LAST, POW) \
+    range(BINOP_LAST,   POW) \
     \
     /* Unary operation tokens. */ \
     macro(TYPEOF,       "keyword 'typeof'") \
