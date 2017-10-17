@@ -1,173 +1,94 @@
-function test_setup() {
-  return new Promise(resolve => {
-    const minFileSize = 20000;
-
-    // Create strings containing data we'll test with. We'll want long
-    // strings to ensure they span multiple buffers while loading
-    let testTextData = "asd b\tlah\u1234w\u00a0r";
-    while (testTextData.length < minFileSize) {
-      testTextData = testTextData + testTextData;
-    }
-
-    let testASCIIData = "abcdef 123456\n";
-    while (testASCIIData.length < minFileSize) {
-      testASCIIData = testASCIIData + testASCIIData;
-    }
-
-    let testBinaryData = "";
-    for (let i = 0; i < 256; i++) {
-      testBinaryData += String.fromCharCode(i);
-    }
-    while (testBinaryData.length < minFileSize) {
-      testBinaryData = testBinaryData + testBinaryData;
-    }
-
-    let dataurldata0 = testBinaryData.substr(0, testBinaryData.length -
-                                             testBinaryData.length % 3);
-    let dataurldata1 = testBinaryData.substr(0, testBinaryData.length - 2 -
-                                             testBinaryData.length % 3);
-    let dataurldata2 = testBinaryData.substr(0, testBinaryData.length - 1 -
-                                             testBinaryData.length % 3);
-
-
-    //Set up files for testing
-    let openerURL = SimpleTest.getTestFileURL("fileapi_chromeScript.js");
-    let opener = SpecialPowers.loadChromeScript(openerURL);
-
-    opener.addMessageListener("files.opened", message => {
-      let [
-        asciiFile,
-        binaryFile,
-        nonExistingFile,
-        utf8TextFile,
-        utf16TextFile,
-        emptyFile,
-        dataUrlFile0,
-        dataUrlFile1,
-        dataUrlFile2,
-      ] = message;
-
-      resolve({ blobs:{ asciiFile, binaryFile, nonExistingFile, utf8TextFile,
-                        utf16TextFile, emptyFile, dataUrlFile0, dataUrlFile1,
-                        dataUrlFile2 },
-                data: { text: testTextData,
-                        ascii: testASCIIData,
-                        binary: testBinaryData,
-                        url0: dataurldata0,
-                        url1: dataurldata1,
-                        url2: dataurldata2, }});
-    });
-
-    opener.sendAsyncMessage("files.open", [
-      testASCIIData,
-      testBinaryData,
-      null,
-      convertToUTF8(testTextData),
-      convertToUTF16(testTextData),
-      "",
-      dataurldata0,
-      dataurldata1,
-      dataurldata2,
-    ]);
-  });
-}
-
-function runTests(data) {
+function runTests(asciiFile, binaryFile, nonExistingFile, utf8TextFile,
+                  utf16TextFile, emptyFile, dataUrlFile0, dataUrlFile1,
+                  dataUrlFile2, testTextData) {
   return test_basic()
     .then(() => {
-      return test_readAsText(data.blobs.asciiFile, data.data.ascii);
+      return test_readAsText(asciiFile, testASCIIData);
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.asciiFile, data.data.ascii,
-                                         data.data.ascii.length, "");
+      return test_readAsTextWithEncoding(asciiFile, testASCIIData,
+                                         testASCIIData.length, "");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.asciiFile, data.data.ascii,
-                                         data.data.ascii.length, "iso8859-1");
+      return test_readAsTextWithEncoding(asciiFile, testASCIIData,
+                                         testASCIIData.length, "iso8859-1");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.utf8TextFile, data.data.text,
-                                         convertToUTF8(data.data.text).length,
+      return test_readAsTextWithEncoding(utf8TextFile, testTextData,
+                                         convertToUTF8(testTextData).length,
                                          "utf8");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.utf16TextFile, data.data.text,
-                                         convertToUTF16(data.data.text).length,
+      return test_readAsTextWithEncoding(utf16TextFile, testTextData,
+                                         convertToUTF16(testTextData).length,
                                          "utf-16");
     })
     .then(() => {
-      return test_readAsBinaryString(data.blobs.binaryFile, data.data.binary);
+      return test_readAsBinaryString(binaryFile, testBinaryData);
     })
     .then(() => {
-      return test_readAsArrayBuffer(data.blobs.binaryFile, data.data.binary);
+      return test_readAsArrayBuffer(binaryFile, testBinaryData);
     })
     .then(() => {
       return test_onlyResult()
     })
     .then(() => {
-      return test_readAsText(data.blobs.emptyFile, "");
+      return test_readAsText(emptyFile, "");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.emptyFile, "", 0, "");
+      return test_readAsTextWithEncoding(emptyFile, "", 0, "");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.emptyFile, "", 0, "utf8");
+      return test_readAsTextWithEncoding(emptyFile, "", 0, "utf8");
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.emptyFile, "", 0, "utf-16");
+      return test_readAsTextWithEncoding(emptyFile, "", 0, "utf-16");
     })
     .then(() => {
-      return test_readAsBinaryString(data.blobs.emptyFile, "");
+      return test_readAsBinaryString(emptyFile, "");
     })
     .then(() => {
-      return test_readAsArrayBuffer(data.blobs.emptyFile, "");
+      return test_readAsArrayBuffer(emptyFile, "");
     })
     .then(() => {
-      return test_readAsDataURL(data.blobs.emptyFile, convertToDataURL(""), 0);
+      return test_readAsDataURL(emptyFile, convertToDataURL(""), 0);
     })
     .then(() => {
-      return test_readAsTextTwice(data.blobs.asciiFile, data.data.ascii);
+      return test_readAsTextTwice(asciiFile, testASCIIData);
     })
     .then(() => {
-      return test_readAsBinaryStringTwice(data.blobs.binaryFile,
-                                          data.data.binary);
+      return test_readAsBinaryStringTwice(binaryFile, testBinaryData);
     })
     .then(() => {
-      return test_readAsDataURLTwice(data.blobs.binaryFile,
-                                     convertToDataURL(data.data.binary),
-                                     data.data.binary.length);
+      return test_readAsDataURLTwice(binaryFile, convertToDataURL(testBinaryData),
+                                     testBinaryData.length);
     })
     .then(() => {
-      return test_readAsArrayBufferTwice(data.blobs.binaryFile,
-                                         data.data.binary);
+      return test_readAsArrayBufferTwice(binaryFile, testBinaryData);
     })
     .then(() => {
-      return test_readAsArrayBufferTwice2(data.blobs.binaryFile,
-                                          data.data.binary);
+      return test_readAsArrayBufferTwice2(binaryFile, testBinaryData);
     })
     .then(() => {
-      return test_readAsDataURL_customLength(data.blobs.dataUrlFile0,
-                                             convertToDataURL(data.data.url0),
-                                             data.data.url0.length, 0);
+      return test_readAsDataURL_customLength(dataUrlFile0, convertToDataURL(dataurldata0),
+                                             dataurldata0.length, 0);
     })
     .then(() => {
-      return test_readAsDataURL_customLength(data.blobs.dataUrlFile1,
-                                             convertToDataURL(data.data.url1),
-                                             data.data.url1.length, 1);
+      return test_readAsDataURL_customLength(dataUrlFile1, convertToDataURL(dataurldata1),
+                                             dataurldata1.length, 1);
     })
     .then(() => {
-      return test_readAsDataURL_customLength(data.blobs.dataUrlFile2,
-                                             convertToDataURL(data.data.url2),
-                                             data.data.url2.length, 2);
+      return test_readAsDataURL_customLength(dataUrlFile2, convertToDataURL(dataurldata2),
+                                             dataurldata2.length, 2);
     })
     .then(() => {
-      return test_abort(data.blobs.asciiFile);
+      return test_abort(asciiFile);
     })
     .then(() => {
-      return test_abort_readAsX(data.blobs.asciiFile, data.data.ascii);
+      return test_abort_readAsX(asciiFile, testASCIIData);
     })
     .then(() => {
-      return test_nonExisting(data.blobs.nonExistingFile);
+      return test_nonExisting(nonExistingFile);
     });
 }
 
@@ -212,15 +133,13 @@ function loadEventHandler_arrayBuffer(event, resolve, reader, data, testName) {
      "array buffer contents in test " + testName);
   u8v = null;
 
-  if ("SpecialPowers" in self) {
-    SpecialPowers.gc();
+  SpecialPowers.gc();
 
-    is(event.target.result.byteLength, data.length,
-       "array buffer size after gc in test " + testName);
-    u8v = new Uint8Array(event.target.result);
-    is(String.fromCharCode.apply(String, u8v), data,
-       "array buffer contents after gc in test " + testName);
-  }
+  is(event.target.result.byteLength, data.length,
+     "array buffer size after gc in test " + testName);
+  u8v = new Uint8Array(event.target.result);
+  is(String.fromCharCode.apply(String, u8v), data,
+     "array buffer contents after gc in test " + testName);
 
   resolve();
 }
