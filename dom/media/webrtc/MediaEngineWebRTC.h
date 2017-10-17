@@ -501,7 +501,9 @@ public:
                                     mozilla::AudioInput* aAudioInput,
                                     int aIndex,
                                     const char* name,
-                                    const char* uuid);
+                                    const char* uuid,
+                                    bool aDelayAgnostic,
+                                    bool aExtendedFilter);
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
@@ -624,6 +626,8 @@ private:
 
   int mCapIndex;
   int mChannel;
+  bool mDelayAgnostic;
+  bool mExtendedFilter;
   MOZ_INIT_OUTSIDE_CTOR TrackID mTrackID;
   bool mStarted;
 
@@ -678,6 +682,8 @@ private:
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
   bool mFullDuplex;
+  bool mDelayAgnostic;
+  bool mExtendedFilter;
   bool mHasTabVideoSource;
 
   // Store devices we've already seen in a hashtable for quick return.
