@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   Feeds: "resource:///modules/Feeds.jsm",
@@ -156,14 +157,8 @@ var AboutBlockedSiteListener = {
       return;
     }
 
-    let provider = "";
-    if (docShell.failedChannel) {
-      let classifiedChannel = docShell.failedChannel.
-                              QueryInterface(Ci.nsIClassifiedChannel);
-      if (classifiedChannel) {
-        provider = classifiedChannel.matchedProvider;
-      }
-    }
+    let blockedInfo = getSiteBlockedErrorDetails(docShell);
+    let provider = blockedInfo.provider || "";
 
     let doc = content.document;
 
@@ -182,7 +177,8 @@ var AboutBlockedSiteListener = {
     switch (aEvent.detail.err) {
       case "malware":
         doc.getElementById("report_detection").setAttribute("href",
-          "https://www.stopbadware.org/firefox");
+          (SafeBrowsing.getReportURL("MalwareMistake", blockedInfo) ||
+           "https://www.stopbadware.org/firefox"));
         doc.getElementById("learn_more_link").setAttribute("href",
           "https://www.stopbadware.org/firefox");
         break;
@@ -192,7 +188,8 @@ var AboutBlockedSiteListener = {
         break;
       case "phishing":
         doc.getElementById("report_detection").setAttribute("href",
-          "https://safebrowsing.google.com/safebrowsing/report_error/?tpl=mozilla");
+          (SafeBrowsing.getReportURL("PhishMistake", blockedInfo) ||
+           "https://safebrowsing.google.com/safebrowsing/report_error/?tpl=mozilla"));
         doc.getElementById("learn_more_link").setAttribute("href",
           "https://www.antiphishing.org//");
         break;
