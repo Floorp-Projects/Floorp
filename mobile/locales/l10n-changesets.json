@@ -76,7 +76,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "dc10c2536a50"
+        "revision": "c3593bbd06d0"
     }, 
     "ca": {
         "platforms": [
@@ -196,7 +196,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b3ba135c8c23"
+        "revision": "4e5088224f0f"
     }, 
     "et": {
         "platforms": [
@@ -204,7 +204,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b896b77bb053"
+        "revision": "3f07488d58b5"
     }, 
     "eu": {
         "platforms": [
@@ -348,7 +348,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "43f32a2929a7"
+        "revision": "f2c70a547470"
     }, 
     "is": {
         "platforms": [
@@ -491,7 +491,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "1e78b266892a"
+        "revision": "2c33496c2292"
     }, 
     "nl": {
         "platforms": [
@@ -499,7 +499,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "9b89c956e6d8"
+        "revision": "37fd4a5b7471"
     }, 
     "nn-NO": {
         "platforms": [
@@ -531,7 +531,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "16832a527864"
+        "revision": "a41126ea596f"
     }, 
     "pt-BR": {
         "platforms": [
@@ -563,7 +563,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "d831ef286afe"
+        "revision": "1f96d59bfb10"
     }, 
     "ru": {
         "platforms": [
@@ -627,7 +627,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "d492be8ee534"
+        "revision": "ccac6b77e1c2"
     }, 
     "te": {
         "platforms": [
@@ -651,7 +651,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "7f392bff0891"
+        "revision": "b345576f10a4"
     }, 
     "trs": {
         "platforms": [
