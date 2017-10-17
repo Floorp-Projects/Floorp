@@ -115,6 +115,19 @@ add_test(function test_isSelected() {
   run_next_test();
 });
 
+add_test(function test_isElement() {
+  ok(element.isElement(domEl));
+  ok(element.isElement(svgEl));
+  ok(element.isElement(xulEl));
+  ok(!element.isElement(domWin));
+  ok(!element.isElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isElement(typ));
+  }
+
+  run_next_test();
+});
+
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
   ok(!element.isDOMElement(svgEl));
