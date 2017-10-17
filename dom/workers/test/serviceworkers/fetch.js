@@ -6,6 +6,8 @@ addEventListener('fetch', function(event) {
   }
 });
 
-addEventListener("activate", function(event) {
-  event.waitUntil(clients.claim());
+addEventListener('message', function(event) {
+  if (event.data === 'claim') {
+    event.waitUntil(clients.claim());
+  }
 });
