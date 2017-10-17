@@ -514,6 +514,15 @@ JSRope::flattenInternal(JSContext* maybecx)
         return nullptr;
     }
 
+    if (!isTenured() && maybecx) {
+        JSRuntime* rt = maybecx->runtime();
+        if (!rt->gc.nursery().registerMallocedBuffer(wholeChars)) {
+            js_free(wholeChars);
+            ReportOutOfMemory(maybecx);
+            return nullptr;
+        }
+    }
+
     pos = wholeChars;
     first_visit_node: {
         if (b == WithIncrementalBarrier) {

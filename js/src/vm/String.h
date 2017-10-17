@@ -702,6 +702,7 @@ class JSLinearString : public JSString
 {
     friend class JSString;
     friend class js::AutoStableStringChars;
+    friend class js::TenuringTracer;
 
     /* Vacuous and therefore unimplemented. */
     JSLinearString* ensureLinear(JSContext* cx) = delete;
