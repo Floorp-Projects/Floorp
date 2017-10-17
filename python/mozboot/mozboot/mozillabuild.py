@@ -45,7 +45,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         import stylo
-        self.install_tooltool_clang_package(state_dir, checkout_root, stylo.WINDOWS)
+        self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS)
 
     def _update_package_manager(self):
         pass
