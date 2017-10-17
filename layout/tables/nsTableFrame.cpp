@@ -1416,7 +1416,7 @@ PaintRowGroupBackgroundByColIdx(nsTableRowGroupFrame* aRowGroup,
     }
     for (nsTableCellFrame* cell = row->GetFirstCell(); cell; cell = cell->GetNextCell()) {
       uint32_t curColIdx = cell->ColIndex();
-      if (!aColIdx.Contains(curColIdx)) {
+      if (!aColIdx.ContainsSorted(curColIdx)) {
         if (curColIdx > aColIdx.LastElement()) {
           // We can just stop looking at this row.
           break;

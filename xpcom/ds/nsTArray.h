@@ -1149,6 +1149,13 @@ public:
     return IndexOf(aItem, 0, aComp) != NoIndex;
   }
 
+  // Like Contains(), but assumes a sorted array.
+  template<class Item, class Comparator>
+  bool ContainsSorted(const Item& aItem, const Comparator& aComp) const
+  {
+    return BinaryIndexOf(aItem, aComp) != NoIndex;
+  }
+
   // This method searches for the first element in this array that is equal
   // to the given element.  This method assumes that 'operator==' is defined
   // for elem_type.
@@ -1158,6 +1165,13 @@ public:
   bool Contains(const Item& aItem) const
   {
     return IndexOf(aItem) != NoIndex;
+  }
+
+  // Like Contains(), but assumes a sorted array.
+  template<class Item>
+  bool ContainsSorted(const Item& aItem) const
+  {
+    return BinaryIndexOf(aItem) != NoIndex;
   }
 
   // This method searches for the offset of the first element in this
