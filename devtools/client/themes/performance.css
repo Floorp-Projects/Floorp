@@ -247,11 +247,13 @@
   margin: 3px 2px;
 }
 
+.realtime-disabled-message,
 .realtime-disabled-on-e10s-message {
   display: none;
 }
 
-#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
+#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message,
+#performance-view[e10s="unsupported"] .realtime-disabled-message {
   display: initial;
   opacity: 0.5;
 }
