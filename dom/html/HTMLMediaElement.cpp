@@ -3972,7 +3972,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   : nsGenericHTMLElement(aNodeInfo),
     mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other)),
     mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
-    mWatchManager(this, mAbstractMainThread),
     mSrcStreamTracksAvailable(false),
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
