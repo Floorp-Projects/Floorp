@@ -3160,6 +3160,28 @@ SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end,
     return true;
 }
 
+static JSObject*
+SliceArguments(JSContext* cx, Handle<ArgumentsObject*> argsobj, uint32_t begin, uint32_t count)
+{
+    MOZ_ASSERT(!argsobj->hasOverriddenLength() && !argsobj->isAnyElementDeleted());
+    MOZ_ASSERT(begin + count <= argsobj->initialLength());
+
+    ArrayObject* result = NewDenseFullyAllocatedArray(cx, count);
+    if (!result)
+        return nullptr;
+    result->setDenseInitializedLength(count);
+
+    MOZ_ASSERT(result->group()->unknownProperties(),
+               "The default array group has unknown properties, so we can directly initialize the"
+               "dense elements without needing to update the indexed type set.");
+
+    for (uint32_t index = 0; index < count; index++) {
+        const Value& v = argsobj->element(begin + index);
+        result->initDenseElement(index, v);
+    }
+    return result;
+}
+
 template <typename T, typename ArrayLength>
 static inline ArrayLength
 NormalizeSliceTerm(T value, ArrayLength length)
@@ -3196,6 +3218,19 @@ ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end
 
         rval.setObject(*narr);
         return true;
+    }
+
+    if (obj->is<ArgumentsObject>()) {
+        Handle<ArgumentsObject*> argsobj = obj.as<ArgumentsObject>();
+        if (!argsobj->hasOverriddenLength() && !argsobj->isAnyElementDeleted()) {
+            MOZ_ASSERT(begin <= UINT32_MAX, "begin is limited by |argsobj|'s length");
+            JSObject* narr = SliceArguments(cx, argsobj, uint32_t(begin), count);
+            if (!narr)
+                return false;
+
+            rval.setObject(*narr);
+            return true;
+        }
     }
 
     RootedArrayObject narr(cx, NewPartlyAllocatedArrayTryReuseGroup(cx, obj, count));
