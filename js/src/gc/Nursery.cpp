@@ -389,7 +389,7 @@ js::Nursery::allocateBuffer(Zone* zone, size_t nbytes)
     }
 
     void* buffer = zone->pod_malloc<uint8_t>(nbytes);
-    if (buffer && !mallocedBuffers.putNew(buffer)) {
+    if (buffer && !registerMallocedBuffer(buffer)) {
         js_free(buffer);
         return nullptr;
     }
@@ -512,8 +512,10 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
   : JSTracer(rt, JSTracer::TracerKindTag::Tenuring, TraceWeakMapKeysValues)
   , nursery_(*nursery)
   , tenuredSize(0)
-  , head(nullptr)
-  , tail(&head)
+  , objHead(nullptr)
+  , objTail(&objHead)
+  , stringHead(nullptr)
+  , stringTail(&stringHead)
 {
 }
 
@@ -909,6 +911,13 @@ js::Nursery::FreeMallocedBuffersTask::run()
     for (MallocedBuffersSet::Range r = buffers_.all(); !r.empty(); r.popFront())
         fop_->free_(r.front());
     buffers_.clear();
+}
+
+bool
+js::Nursery::registerMallocedBuffer(void* buffer)
+{
+    MOZ_ASSERT(buffer);
+    return mallocedBuffers.putNew(buffer);
 }
 
 void

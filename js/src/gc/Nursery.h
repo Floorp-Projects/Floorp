@@ -77,16 +77,18 @@ class TenuringTracer : public JSTracer
     // Amount of data moved to the tenured generation during collection.
     size_t tenuredSize;
 
-    // This list is threaded through the Nursery using the space from already
-    // moved things. The list is used to fix up the moved things and to find
-    // things held live by intra-Nursery pointers.
-    gc::RelocationOverlay* head;
-    gc::RelocationOverlay** tail;
+    // These lists are threaded through the Nursery using the space from
+    // already moved things. The lists are used to fix up the moved things and
+    // to find things held live by intra-Nursery pointers.
+    gc::RelocationOverlay* objHead;
+    gc::RelocationOverlay** objTail;
+    gc::RelocationOverlay* stringHead;
+    gc::RelocationOverlay** stringTail;
 
     TenuringTracer(JSRuntime* rt, Nursery* nursery);
 
   public:
-    const Nursery& nursery() const { return nursery_; }
+    Nursery& nursery() { return nursery_; }
 
     template <typename T> void traverse(T** thingp);
     template <typename T> void traverse(T* thingp);
@@ -95,18 +97,21 @@ class TenuringTracer : public JSTracer
     void traceObject(JSObject* src);
     void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
     void traceSlots(JS::Value* vp, uint32_t nslots);
+    void traceString(JSString* src);
 
   private:
-    Nursery& nursery() { return nursery_; }
-
-    inline void insertIntoFixupList(gc::RelocationOverlay* entry);
+    inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
+    inline void insertIntoStringFixupList(gc::RelocationOverlay* entry);
     template <typename T>
     inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
 
     inline JSObject* movePlainObjectToTenured(PlainObject* src);
     JSObject* moveToTenuredSlow(JSObject* src);
+    JSString* moveToTenured(JSString* src);
+
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
+    size_t moveStringToTenured(JSString* dst, JSString* src, gc::AllocKind dstKind);
 
     void traceSlots(JS::Value* vp, JS::Value* end);
 };
@@ -240,17 +245,24 @@ class Nursery
     void collect(JS::gcreason::Reason reason);
 
     /*
-     * Check if the thing at |*ref| in the Nursery has been forwarded. If so,
-     * sets |*ref| to the new location of the object and returns true. Otherwise
-     * returns false and leaves |*ref| unset.
+     * If the thing at |*ref| in the Nursery has been forwarded, set |*ref| to
+     * the new location and return true. Otherwise return false and leave
+     * |*ref| unset.
      */
-    MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(JSObject** ref);
+    MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(js::gc::Cell** ref);
 
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot** pSlotsElems);
 
     inline void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct);
     inline void setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct);
+
+    /*
+     * Register a malloced buffer that is held by a nursery object, which
+     * should be freed at the end of a minor GC. Buffers are unregistered when
+     * their owning objects are tenured.
+     */
+    bool registerMallocedBuffer(void* buffer);
 
     /* Mark a malloced buffer as no longer needing to be freed. */
     void removeMallocedBuffer(void* buffer) {
