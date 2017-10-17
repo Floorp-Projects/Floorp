@@ -122,6 +122,18 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     false, 0 },
   { "ui.contextMenuOffsetHorizontal",
     eIntID_ContextMenuOffsetHorizontal,
+    false, 0 },
+  { "ui.GtkCSDAvailable",
+    eIntID_GTKCSDAvailable,
+    false, 0 },
+  { "ui.GtkCSDMinimizeButton",
+    eIntID_GTKCSDMinimizeButton,
+    false, 0 },
+  { "ui.GtkCSDMaximizeButton",
+    eIntID_GTKCSDMaximizeButton,
+    false, 0 },
+  { "ui.GtkCSDCloseButton",
+    eIntID_GTKCSDCloseButton,
     false, 0 }
 };
 
