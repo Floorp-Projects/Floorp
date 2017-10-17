@@ -11,6 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
+#include <functional>
+
 class nsIChannel;
 class nsIHttpChannelInternal;
 class nsIDocument;
@@ -50,7 +52,7 @@ public:
     // Check a tracking URI against the local blacklist and whitelist.
     // Returning NS_OK means the check will be processed
     // and the caller should wait for the result.
-    nsresult CheckIsTrackerWithLocalTable(nsIURIClassifierCallback* aCallback);
+    nsresult CheckIsTrackerWithLocalTable(std::function<void()>&& aCallback);
 
     // Helper function to create a whitelist URL.
     already_AddRefed<nsIURI> CreateWhiteListURI() const;

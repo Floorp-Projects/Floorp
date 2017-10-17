@@ -634,7 +634,6 @@
 #endif
 
       <tabs id="tabbrowser-tabs"
-            class="tabbrowser-tabs"
             tabbrowser="content"
             flex="1"
             setfocus="false"

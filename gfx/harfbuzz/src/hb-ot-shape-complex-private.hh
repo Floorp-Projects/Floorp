@@ -39,6 +39,8 @@
 #define complex_var_u8_1()	var2.u8[3]
 
 
+#define HB_OT_SHAPE_COMPLEX_MAX_COMBINING_MARKS 32
+
 enum hb_ot_shape_zero_width_marks_type_t {
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY,
@@ -154,6 +156,16 @@ struct hb_ot_complex_shaper_t
    */
   bool (*disable_otl) (const hb_ot_shape_plan_t *plan);
 
+  /* reorder_marks()
+   * Called during shape().
+   * Shapers can use to modify ordering of combining marks.
+   * May be NULL.
+   */
+  void (*reorder_marks) (const hb_ot_shape_plan_t *plan,
+			 hb_buffer_t              *buffer,
+			 unsigned int              start,
+			 unsigned int              end);
+
   hb_ot_shape_zero_width_marks_type_t zero_width_marks;
 
   bool fallback_position;
@@ -253,10 +265,12 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     case HB_SCRIPT_SINHALA:
 
       /* If the designer designed the font for the 'DFLT' script,
-       * use the default shaper.  Otherwise, use the specific shaper.
+       * (or we ended up arbitrarily pick 'latn'), use the default shaper.
+       * Otherwise, use the specific shaper.
        * Note that for some simple scripts, there may not be *any*
        * GSUB/GPOS needed, so there may be no scripts found! */
-      if (planner->map.chosen_script[0] == HB_TAG ('D','F','L','T'))
+      if (planner->map.chosen_script[0] == HB_TAG ('D','F','L','T') ||
+	  planner->map.chosen_script[0] == HB_TAG ('l','a','t','n'))
 	return &_hb_ot_complex_shaper_default;
       else
 	return &_hb_ot_complex_shaper_indic;
@@ -362,11 +376,18 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     case HB_SCRIPT_MARCHEN:
     case HB_SCRIPT_NEWA:
 
+    /* Unicode-10.0 additions */
+    case HB_SCRIPT_MASARAM_GONDI:
+    case HB_SCRIPT_SOYOMBO:
+    case HB_SCRIPT_ZANABAZAR_SQUARE:
+
       /* If the designer designed the font for the 'DFLT' script,
-       * use the default shaper.  Otherwise, use the specific shaper.
+       * (or we ended up arbitrarily pick 'latn'), use the default shaper.
+       * Otherwise, use the specific shaper.
        * Note that for some simple scripts, there may not be *any*
        * GSUB/GPOS needed, so there may be no scripts found! */
-      if (planner->map.chosen_script[0] == HB_TAG ('D','F','L','T'))
+      if (planner->map.chosen_script[0] == HB_TAG ('D','F','L','T') ||
+	  planner->map.chosen_script[0] == HB_TAG ('l','a','t','n'))
 	return &_hb_ot_complex_shaper_default;
       else
 	return &_hb_ot_complex_shaper_use;

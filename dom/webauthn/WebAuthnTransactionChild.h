@@ -27,7 +27,7 @@ public:
   mozilla::ipc::IPCResult RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer) override;
   mozilla::ipc::IPCResult RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
                                           nsTArray<uint8_t>&& aBuffer) override;
-  mozilla::ipc::IPCResult RecvCancel(const nsresult& aError) override;
+  mozilla::ipc::IPCResult RecvAbort(const nsresult& aError) override;
   void ActorDestroy(ActorDestroyReason why) override;
 private:
   ~WebAuthnTransactionChild() = default;

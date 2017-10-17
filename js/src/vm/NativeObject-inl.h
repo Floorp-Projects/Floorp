@@ -648,6 +648,27 @@ NativeObject::setLastProperty(JSContext* cx, Shape* shape)
     return true;
 }
 
+inline js::gc::AllocKind
+NativeObject::allocKindForTenure() const
+{
+    using namespace js::gc;
+    AllocKind kind = GetGCObjectFixedSlotsKind(numFixedSlots());
+    MOZ_ASSERT(!IsBackgroundFinalized(kind));
+    if (!CanBeFinalizedInBackground(kind, getClass()))
+        return kind;
+    return GetBackgroundAllocKind(kind);
+}
+
+inline js::gc::AllocKind
+PlainObject::allocKindForTenure() const
+{
+    using namespace js::gc;
+    AllocKind kind = GetGCObjectFixedSlotsKind(numFixedSlots());
+    MOZ_ASSERT(!IsBackgroundFinalized(kind));
+    MOZ_ASSERT(CanBeFinalizedInBackground(kind, getClass()));
+    return GetBackgroundAllocKind(kind);
+}
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline PlainObject*
 CopyInitializerObject(JSContext* cx, HandlePlainObject baseobj, NewObjectKind newKind = GenericObject)

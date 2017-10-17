@@ -2463,6 +2463,10 @@ class MOZ_STACK_CLASS ModuleValidator
         for (const Func& func : funcDefs_)
             codeSectionSize += func.bytes().length();
 
+        env_.codeSection.emplace();
+        env_.codeSection->start = 0;
+        env_.codeSection->size = codeSectionSize;
+
         // asm.js does not have any wasm bytecode to save; view-source is
         // provided through the ScriptSource.
         SharedBytes bytes = cx_->new_<ShareableBytes>();
@@ -2470,10 +2474,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return nullptr;
 
         ModuleGenerator mg(*args, &env_, nullptr, nullptr);
-        if (!mg.init(codeSectionSize, asmJSMetadata_.get()))
-            return nullptr;
-
-        if (!mg.startFuncDefs())
+        if (!mg.init(asmJSMetadata_.get()))
             return nullptr;
 
         for (Func& func : funcDefs_) {

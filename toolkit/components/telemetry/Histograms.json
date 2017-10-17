@@ -7765,14 +7765,6 @@
     "n_buckets": 100,
     "description": "Life-span of a new tab without suggested tile: time delta between first-visible and unload events (half-seconds)."
   },
-  "NEWTAB_PAGE_LIFE_SPAN_SUGGESTED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 1200,
-    "n_buckets": 100,
-    "description": "Life-span of a new tab with suggested tile: time delta between first-visible and unload events (half-seconds)."
-  },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",

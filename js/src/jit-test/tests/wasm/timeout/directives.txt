@@ -1,2 +1,2 @@
-|jit-test| test-also-no-wasm-baseline
+|jit-test| test-also-no-wasm-baseline; test-also-no-wasm-ion
 

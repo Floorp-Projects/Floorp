@@ -116,7 +116,7 @@ js::Nursery::Nursery(JSRuntime* rt)
 {}
 
 bool
-js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
+js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
 {
     if (!mallocedBuffers.init())
         return false;
@@ -132,8 +132,7 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
     if (maxNurseryChunks_ == 0)
         return true;
 
-    AutoMaybeStartBackgroundAllocation maybeBgAlloc;
-    updateNumChunksLocked(1, maybeBgAlloc, lock);
+    updateNumChunksLocked(1, lock);
     if (numChunks() == 0)
         return false;
 
@@ -393,7 +392,7 @@ js::Nursery::freeBuffer(void* buffer)
 }
 
 void
-Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
+Nursery::setIndirectForwardingPointer(void* oldData, void* newData)
 {
     MOZ_ASSERT(isInside(oldData));
 
@@ -402,37 +401,15 @@ Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
     // newData pointer will appear to be "inside" the nursery.
     MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & ChunkMask) == 0);
 
-    if (direct) {
-        *reinterpret_cast<void**>(oldData) = newData;
-    } else {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
-            oomUnsafe.crash("Nursery::setForwardingPointer");
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
+        oomUnsafe.crash("Nursery::setForwardingPointer");
 #ifdef DEBUG
-        if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
-            MOZ_ASSERT(p->value() == newData);
+    if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
+        MOZ_ASSERT(p->value() == newData);
 #endif
-        if (!forwardedBuffers.put(oldData, newData))
-            oomUnsafe.crash("Nursery::setForwardingPointer");
-    }
-}
-
-void
-Nursery::setSlotsForwardingPointer(HeapSlot* oldSlots, HeapSlot* newSlots, uint32_t nslots)
-{
-    // Slot arrays always have enough space for a forwarding pointer, since the
-    // number of slots is never zero.
-    MOZ_ASSERT(nslots > 0);
-    setForwardingPointer(oldSlots, newSlots, /* direct = */ true);
-}
-
-void
-Nursery::setElementsForwardingPointer(ObjectElements* oldHeader, ObjectElements* newHeader,
-                                      uint32_t capacity)
-{
-    // Only use a direct forwarding pointer if there is enough space for one.
-    setForwardingPointer(oldHeader->elements(), newHeader->elements(),
-                         capacity > 0);
+    if (!forwardedBuffers.put(oldData, newData))
+        oomUnsafe.crash("Nursery::setForwardingPointer");
 }
 
 #ifdef DEBUG
@@ -1047,16 +1024,14 @@ void
 js::Nursery::updateNumChunks(unsigned newCount)
 {
     if (numChunks() != newCount) {
-        AutoMaybeStartBackgroundAllocation maybeBgAlloc;
-        AutoLockGC lock(runtime());
-        updateNumChunksLocked(newCount, maybeBgAlloc, lock);
+        AutoLockGCBgAlloc lock(runtime());
+        updateNumChunksLocked(newCount, lock);
     }
 }
 
 void
 js::Nursery::updateNumChunksLocked(unsigned newCount,
-                                   AutoMaybeStartBackgroundAllocation& maybeBgAlloc,
-                                   AutoLockGC& lock)
+                                   AutoLockGCBgAlloc& lock)
 {
     // The GC nursery is an optimization and so if we fail to allocate nursery
     // chunks we do not report an error.
@@ -1079,7 +1054,7 @@ js::Nursery::updateNumChunksLocked(unsigned newCount,
         return;
 
     for (unsigned i = priorCount; i < newCount; i++) {
-        auto newChunk = runtime()->gc.getOrAllocChunk(lock, maybeBgAlloc);
+        auto newChunk = runtime()->gc.getOrAllocChunk(lock);
         if (!newChunk) {
             chunks_.shrinkTo(i);
             return;

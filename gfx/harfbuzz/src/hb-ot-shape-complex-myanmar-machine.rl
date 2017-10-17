@@ -41,7 +41,7 @@
 A    = 10;
 As   = 18;
 C    = 1;
-D    = 19;
+D    = 32;
 D0   = 20;
 DB   = 3;
 GB   = 11;
@@ -62,6 +62,7 @@ ZWJ  = 6;
 ZWNJ = 5;
 Ra   = 16;
 P    = 31;
+CS   = 19;
 
 j = ZWJ|ZWNJ;			# Joiners
 k = (Ra As H);			# Kinzi
@@ -76,7 +77,7 @@ pwo_tone_group = PT A* DB? As?;
 complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* pwo_tone_group* V* j?;
 syllable_tail = (H | complex_syllable_tail);
 
-consonant_syllable =	k? (c|IV|D|GB).VS? (H (c|IV).VS?)* syllable_tail;
+consonant_syllable =	(k|CS)? (c|IV|D|GB).VS? (H (c|IV).VS?)* syllable_tail;
 punctuation_cluster = 	P V;
 broken_cluster =	k? VS? syllable_tail;
 other =			any;

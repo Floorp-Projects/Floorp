@@ -1087,7 +1087,9 @@ struct MarkBasePosFormat1
     do {
       if (!skippy_iter.prev ()) return_trace (false);
       /* We only want to attach to the first of a MultipleSubst sequence.  Reject others. */
-      if (0 == _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx])) break;
+      if (!_hb_glyph_info_multiplied (&buffer->info[skippy_iter.idx]) ||
+	  0 == _hb_glyph_info_get_lig_comp (&buffer->info[skippy_iter.idx]))
+	break;
       skippy_iter.reject ();
     } while (1);
 

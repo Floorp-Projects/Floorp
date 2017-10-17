@@ -55,6 +55,7 @@ struct Zone;
 namespace js {
 
 class ObjectElements;
+class PlainObject;
 class NativeObject;
 class Nursery;
 class HeapSlot;
@@ -98,8 +99,6 @@ class TenuringTracer : public JSTracer
     template <typename T> void traverse(T** thingp);
     template <typename T> void traverse(T* thingp);
 
-    void insertIntoFixupList(gc::RelocationOverlay* entry);
-
     // The store buffers need to be able to call these directly.
     void traceObject(JSObject* src);
     void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
@@ -108,8 +107,12 @@ class TenuringTracer : public JSTracer
   private:
     Nursery& nursery() { return nursery_; }
 
-    JSObject* moveToTenured(JSObject* src);
-    size_t moveObjectToTenured(JSObject* dst, JSObject* src, gc::AllocKind dstKind);
+    inline void insertIntoFixupList(gc::RelocationOverlay* entry);
+    template <typename T>
+    inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
+
+    inline JSObject* movePlainObjectToTenured(PlainObject* src);
+    JSObject* moveToTenuredSlow(JSObject* src);
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
 
@@ -139,7 +142,7 @@ class Nursery
     explicit Nursery(JSRuntime* rt);
     ~Nursery();
 
-    MOZ_MUST_USE bool init(uint32_t maxNurseryBytes, AutoLockGC& lock);
+    MOZ_MUST_USE bool init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock);
 
     unsigned maxChunks() const { return maxNurseryChunks_; }
     unsigned numChunks() const { return chunks_.length(); }
@@ -216,15 +219,8 @@ class Nursery
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot** pSlotsElems);
 
-    void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct) {
-        if (trc->isTenuringTracer())
-            setForwardingPointerWhileTenuring(oldData, newData, direct);
-    }
-
-    void setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct) {
-        if (isInside(oldData))
-            setForwardingPointer(oldData, newData, direct);
-    }
+    inline void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct);
+    inline void setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct);
 
     /* Mark a malloced buffer as no longer needing to be freed. */
     void removeMallocedBuffer(void* buffer) {
@@ -443,8 +439,7 @@ class Nursery
 
     void updateNumChunks(unsigned newCount);
     void updateNumChunksLocked(unsigned newCount,
-                               gc::AutoMaybeStartBackgroundAllocation& maybeBgAlloc,
-                               AutoLockGC& lock);
+                               AutoLockGCBgAlloc& lock);
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
         MOZ_ASSERT(numChunks() > 0);
@@ -476,11 +471,14 @@ class Nursery
     void collectToFixedPoint(TenuringTracer& trc, gc::TenureCountCache& tenureCounts);
 
     /* Handle relocation of slots/elements pointers stored in Ion frames. */
-    void setForwardingPointer(void* oldData, void* newData, bool direct);
+    inline void setForwardingPointer(void* oldData, void* newData, bool direct);
 
-    void setSlotsForwardingPointer(HeapSlot* oldSlots, HeapSlot* newSlots, uint32_t nslots);
-    void setElementsForwardingPointer(ObjectElements* oldHeader, ObjectElements* newHeader,
-                                      uint32_t capacity);
+    inline void setDirectForwardingPointer(void* oldData, void* newData);
+    void setIndirectForwardingPointer(void* oldData, void* newData);
+
+    inline void setSlotsForwardingPointer(HeapSlot* oldSlots, HeapSlot* newSlots, uint32_t nslots);
+    inline void setElementsForwardingPointer(ObjectElements* oldHeader, ObjectElements* newHeader,
+                                             uint32_t capacity);
 
     /* Free malloced pointers owned by freed things in the nursery. */
     void freeMallocedBuffers();

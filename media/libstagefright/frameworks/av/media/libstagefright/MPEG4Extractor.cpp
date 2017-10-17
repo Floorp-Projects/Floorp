@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <ctype.h>
+#include <inttypes.h>
 #include <limits>
 #include <stdint.h>
 #include <stdlib.h>

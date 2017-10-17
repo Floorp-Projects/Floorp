@@ -235,6 +235,8 @@ public:
 
     void SetFastOpenStatus(uint8_t tfoStatus);
 
+    void SetEvent(nsresult aStatus);
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {

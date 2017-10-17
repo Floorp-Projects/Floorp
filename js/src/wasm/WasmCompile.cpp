@@ -54,9 +54,6 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
 {
-    if (!mg.startFuncDefs())
-        return false;
-
     if (!env->codeSection) {
         if (env->numFuncDefs() != 0)
             return d.fail("expected function bodies");
@@ -414,7 +411,7 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
     env.setModeAndTier(mode, tier);
 
     ModuleGenerator mg(args, &env, nullptr, error);
-    if (!mg.init(bytecode.length()))
+    if (!mg.init())
         return nullptr;
 
     if (!DecodeCodeSection(d, mg, &env))
@@ -439,7 +436,7 @@ wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancel
         return false;
 
     ModuleGenerator mg(args, &env, cancelled, &error);
-    if (!mg.init(module.bytecode().length()))
+    if (!mg.init())
         return false;
 
     if (!DecodeCodeSection(d, mg, &env))

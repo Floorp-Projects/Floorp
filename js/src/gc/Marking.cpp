@@ -38,6 +38,7 @@
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
@@ -2668,8 +2669,18 @@ TenuringTracer::traverse(JSObject** objp)
     // We only ever visit the internals of objects after moving them to tenured.
     MOZ_ASSERT(!nursery().isInside(objp));
 
-    if (IsInsideNursery(*objp) && !nursery().getForwardedPointer(objp))
-        *objp = moveToTenured(*objp);
+    JSObject* obj = *objp;
+    if (!IsInsideNursery(obj) || nursery().getForwardedPointer(objp))
+        return;
+
+    // Take a fast path for tenuring a plain object which is by far the most
+    // common case.
+    if (obj->is<PlainObject>()) {
+        *objp = movePlainObjectToTenured(&obj->as<PlainObject>());
+        return;
+    }
+
+    *objp = moveToTenuredSlow(obj);
 }
 
 template <typename S>
@@ -2831,58 +2842,6 @@ js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const
         mover.traverse(edge);
 }
 
-/* Insert the given relocation entry into the list of things to visit. */
-void
-js::TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
-    *tail = entry;
-    tail = &entry->nextRef();
-    *tail = nullptr;
-}
-
-JSObject*
-js::TenuringTracer::moveToTenured(JSObject* src)
-{
-    MOZ_ASSERT(IsInsideNursery(src));
-    MOZ_ASSERT(!src->zone()->usedByHelperThread());
-
-    AllocKind dstKind = src->allocKindForTenure(nursery());
-    Zone* zone = src->zone();
-
-    TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
-    if (!t) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        t = runtime()->gc.refillFreeListInGC(zone, dstKind);
-        if (!t)
-            oomUnsafe.crash(ChunkSize, "Failed to allocate object while tenuring.");
-    }
-    JSObject* dst = reinterpret_cast<JSObject*>(t);
-    tenuredSize += moveObjectToTenured(dst, src, dstKind);
-
-    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
-    overlay->forwardTo(dst);
-    insertIntoFixupList(overlay);
-
-    TracePromoteToTenured(src, dst);
-    return dst;
-}
-
-void
-js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenureCounts)
-{
-    for (RelocationOverlay* p = mover.head; p; p = p->next()) {
-        JSObject* obj = static_cast<JSObject*>(p->forwardingAddress());
-        mover.traceObject(obj);
-
-        TenureCount& entry = tenureCounts.findEntry(obj->groupRaw());
-        if (entry.group == obj->groupRaw()) {
-            entry.count++;
-        } else if (!entry.group) {
-            entry.group = obj->groupRaw();
-            entry.count = 1;
-        }
-    }
-}
-
 struct TenuringFunctor
 {
     template <typename T>
@@ -2942,11 +2901,39 @@ OffsetToChunkEnd(void* p)
 }
 #endif
 
-size_t
-js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind dstKind)
+/* Insert the given relocation entry into the list of things to visit. */
+inline void
+js::TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
+    *tail = entry;
+    tail = &entry->nextRef();
+    *tail = nullptr;
+}
+
+template <typename T>
+inline T*
+js::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
+    TenuredCell* t = zone->arenas.allocateFromFreeList(kind, Arena::thingSize(kind));
+    if (!t) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        t = runtime()->gc.refillFreeListInGC(zone, kind);
+        if (!t)
+            oomUnsafe.crash(ChunkSize, "Failed to allocate object while tenuring.");
+    }
+    return static_cast<T*>(static_cast<Cell*>(t));
+}
+
+JSObject*
+js::TenuringTracer::moveToTenuredSlow(JSObject* src)
 {
+    MOZ_ASSERT(IsInsideNursery(src));
+    MOZ_ASSERT(!src->zone()->usedByHelperThread());
+    MOZ_ASSERT(!src->is<PlainObject>());
+
+    AllocKind dstKind = src->allocKindForTenure(nursery());
+    auto dst = allocTenured<JSObject>(src->zone(), dstKind);
+
     size_t srcSize = Arena::thingSize(dstKind);
-    size_t tenuredSize = srcSize;
+    size_t dstSize = srcSize;
 
     /*
      * Arrays do not necessarily have the same AllocKind between src and dst.
@@ -2958,7 +2945,7 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
      * even if they are inlined.
      */
     if (src->is<ArrayObject>()) {
-        tenuredSize = srcSize = sizeof(NativeObject);
+        dstSize = srcSize = sizeof(NativeObject);
     } else if (src->is<TypedArrayObject>()) {
         TypedArrayObject* tarray = &src->as<TypedArrayObject>();
         // Typed arrays with inline data do not necessarily have the same
@@ -2975,6 +2962,8 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
             srcSize = headerSize + tarray->byteLength();
         }
     }
+
+    tenuredSize += dstSize;
 
     // Copy the Cell contents.
     MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
@@ -2994,13 +2983,52 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
     JSObjectMovedOp op = dst->getClass()->extObjectMovedOp();
     MOZ_ASSERT_IF(src->is<ProxyObject>(), op == proxy_ObjectMoved);
     if (op) {
+        // Tell the hazard analysis that the object moved hook can't GC.
+        JS::AutoSuppressGCAnalysis nogc;
         tenuredSize += op(dst, src);
     } else {
         MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
                       CanNurseryAllocateFinalizedClass(src->getClass()));
     }
 
-    return tenuredSize;
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+    overlay->forwardTo(dst);
+    insertIntoFixupList(overlay);
+
+    TracePromoteToTenured(src, dst);
+    return dst;
+}
+
+inline JSObject*
+js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
+{
+    // Fast path version of moveToTenuredSlow() for specialized for PlainObject.
+
+    MOZ_ASSERT(IsInsideNursery(src));
+    MOZ_ASSERT(!src->zone()->usedByHelperThread());
+
+    AllocKind dstKind = src->allocKindForTenure();
+    auto dst = allocTenured<PlainObject>(src->zone(), dstKind);
+
+    size_t srcSize = Arena::thingSize(dstKind);
+    tenuredSize += srcSize;
+
+    // Copy the Cell contents.
+    MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
+    js_memcpy(dst, src, srcSize);
+
+    // Move the slots and elements.
+    tenuredSize += moveSlotsToTenured(dst, src, dstKind);
+    tenuredSize += moveElementsToTenured(dst, src, dstKind);
+
+    MOZ_ASSERT(!dst->getClass()->extObjectMovedOp());
+
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+    overlay->forwardTo(dst);
+    insertIntoFixupList(overlay);
+
+    TracePromoteToTenured(src, dst);
+    return dst;
 }
 
 size_t
@@ -3079,6 +3107,23 @@ js::TenuringTracer::moveElementsToTenured(NativeObject* dst, NativeObject* src, 
     nursery().setElementsForwardingPointer(srcHeader, dst->getElementsHeader(),
                                            srcHeader->capacity);
     return nslots * sizeof(HeapSlot);
+}
+
+void
+js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenureCounts)
+{
+    for (RelocationOverlay* p = mover.head; p; p = p->next()) {
+        JSObject* obj = static_cast<JSObject*>(p->forwardingAddress());
+        mover.traceObject(obj);
+
+        TenureCount& entry = tenureCounts.findEntry(obj->groupRaw());
+        if (entry.group == obj->groupRaw()) {
+            entry.count++;
+        } else if (!entry.group) {
+            entry.group = obj->groupRaw();
+            entry.count = 1;
+        }
+    }
 }
 
 

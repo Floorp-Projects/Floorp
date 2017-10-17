@@ -182,6 +182,7 @@ public:
     NS_IMETHOD GetDomainLookupStart(mozilla::TimeStamp *aDomainLookupStart) override;
     NS_IMETHOD GetDomainLookupEnd(mozilla::TimeStamp *aDomainLookupEnd) override;
     NS_IMETHOD GetConnectStart(mozilla::TimeStamp *aConnectStart) override;
+    NS_IMETHOD GetTcpConnectEnd(mozilla::TimeStamp *aTcpConnectEnd) override;
     NS_IMETHOD GetSecureConnectionStart(mozilla::TimeStamp *aSecureConnectionStart) override;
     NS_IMETHOD GetConnectEnd(mozilla::TimeStamp *aConnectEnd) override;
     NS_IMETHOD GetRequestStart(mozilla::TimeStamp *aRequestStart) override;
@@ -199,8 +200,6 @@ public:
     void SetWarningReporter(HttpChannelSecurityWarningReporter *aReporter);
     HttpChannelSecurityWarningReporter* GetWarningReporter();
 public: /* internal necko use only */
-
-    using InitLocalBlockListCallback = std::function<void(bool)>;
 
     uint32_t GetRequestTime() const
     {
@@ -336,8 +335,6 @@ private:
     MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
 
     void OnClassOfServiceUpdated();
-
-    bool InitLocalBlockList(const InitLocalBlockListCallback& aCallback);
 
     // redirection specific methods
     void     HandleAsyncRedirect();

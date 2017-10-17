@@ -1754,6 +1754,10 @@ pref("network.http.connection-retry-timeout", 250);
 // to give up if the OS does not give up first
 pref("network.http.connection-timeout", 90);
 
+// Close a connection if tls handshake does not finish in given number of
+// seconds.
+pref("network.http.tls-handshake-timeout", 30);
+
 // The number of seconds to allow active connections to prove that they have
 // traffic before considered stalled, after a network change has been detected
 // and signalled.

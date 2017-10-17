@@ -26,6 +26,7 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   nsIURI* aURI,
   nsContentPolicyType aContentPolicyType,
   nsIPrincipal* aTriggeringPrincipal,
+  nsIDocument* aDoc,
   bool aLoadFromExternal,
   bool aIsDownLoad)
 {
@@ -73,8 +74,7 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   const char16_t* params[] = { specUTF16.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
-                                  // no doc available, log to browser console
-                                  nullptr,
+                                  aDoc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   "BlockTopLevelDataURINavigation",
                                   params, ArrayLength(params));
@@ -584,6 +584,7 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
           uri,
           newLoadInfo->GetExternalContentPolicyType(),
           nullTriggeringPrincipal,
+          nullptr, // no doc available, log to browser console
           false,
           false)) {
         // logging to console happens within AllowTopLevelNavigationToDataURI
