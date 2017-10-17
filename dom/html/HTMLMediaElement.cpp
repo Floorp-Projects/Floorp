@@ -6035,17 +6035,21 @@ static const char* const gReadyStateToString[] = {
   "HAVE_ENOUGH_DATA"
 };
 
-void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
+void
+HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 {
-  nsMediaReadyState oldState = mReadyState;
-  mReadyState = aState;
-
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY ||
-      oldState == mReadyState) {
+  if (mReadyState == aState) {
     return;
   }
 
-  LOG(LogLevel::Debug, ("%p Ready state changed to %s", this, gReadyStateToString[aState]));
+  nsMediaReadyState oldState = mReadyState;
+  mReadyState = aState;
+  LOG(LogLevel::Debug,
+      ("%p Ready state changed to %s", this, gReadyStateToString[aState]));
+
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+    return;
+  }
 
   UpdateAudioChannelPlayingState();
 
