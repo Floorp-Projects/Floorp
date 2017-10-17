@@ -405,6 +405,11 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
                   "some parent node without recurring to test this node");
 
+      case PNK_PIPELINE:
+        MOZ_ASSERT(node->isArity(PN_LIST));
+        *result = false;
+        return true;
+
       case PNK_LIMIT: // invalid sentinel value
         MOZ_CRASH("unexpected PNK_LIMIT in node");
     }
@@ -1722,6 +1727,9 @@ Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler, char16_t>& parser,
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         if (ParseNode*& expr = pn->pn_kid)
             return Fold(cx, &expr, parser, inGenexpLambda);
+        return true;
+
+      case PNK_PIPELINE:
         return true;
 
       case PNK_AND:
