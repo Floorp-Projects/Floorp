@@ -12,7 +12,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
-const { triggerActivity } = require("../connector/index");
 const { ACTIVITY_TYPE } = require("../constants");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
@@ -37,6 +36,7 @@ const RequestListEmptyNotice = createClass({
   displayName: "RequestListEmptyNotice",
 
   propTypes: {
+    connector: PropTypes.object.isRequired,
     onReloadClick: PropTypes.func.isRequired,
     onPerfClick: PropTypes.func.isRequired,
   },
@@ -75,8 +75,9 @@ const RequestListEmptyNotice = createClass({
 
 module.exports = connect(
   undefined,
-  dispatch => ({
-    onPerfClick: () => dispatch(Actions.openStatistics(true)),
-    onReloadClick: () => triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
+  (dispatch, props) => ({
+    onPerfClick: () => dispatch(Actions.openStatistics(props.connector, true)),
+    onReloadClick: () => props.connector.triggerActivity(
+      ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);

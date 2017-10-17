@@ -97,6 +97,9 @@ private:
   WebAuthnManager();
   virtual ~WebAuthnManager();
 
+  already_AddRefed<Promise>
+  Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
+
   void StartRegister();
   void StartSign();
   void StartCancel();

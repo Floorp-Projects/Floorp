@@ -82,15 +82,11 @@ var openStyleEditor = Task.async(function* (tab) {
   let panel = toolbox.getPanel("styleeditor");
   let ui = panel.UI;
 
-  // This event is sometimes needed by tests, but may be emitted before the list
-  // animation is done. So we listen to it here so tests don't have to and can't miss it.
-  let onMediaListChanged = ui.once("media-list-changed");
-
   // The stylesheet list appears with an animation. Let this animation finish.
   let animations = ui._root.getAnimations({subtree: true});
   yield Promise.all(animations.map(a => a.finished));
 
-  return { toolbox, panel, ui, onMediaListChanged };
+  return { toolbox, panel, ui };
 });
 
 /**

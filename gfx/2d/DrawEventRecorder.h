@@ -8,6 +8,7 @@
 
 #include "2D.h"
 #include "RecordedEvent.h"
+#include "RecordingTypes.h"
 #include <ostream>
 #include <fstream>
 
@@ -39,7 +40,11 @@ public:
   }
 
   template<class S>
-  void WriteHeader(S &aStream);
+  void WriteHeader(S& aStream) {
+    WriteElement(aStream, kMagicInt);
+    WriteElement(aStream, kMajorRevision);
+    WriteElement(aStream, kMinorRevision);
+  }
 
   virtual void RecordEvent(const RecordedEvent &aEvent) = 0;
   void WritePath(const PathRecording *aPath);

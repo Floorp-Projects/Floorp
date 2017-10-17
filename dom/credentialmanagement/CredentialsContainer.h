@@ -34,6 +34,8 @@ public:
   Get(const CredentialRequestOptions& aOptions);
   already_AddRefed<Promise>
   Create(const CredentialCreationOptions& aOptions);
+  already_AddRefed<Promise>
+  Store(const Credential& aCredential);
 
 private:
   ~CredentialsContainer();

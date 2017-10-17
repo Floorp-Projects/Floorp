@@ -215,7 +215,6 @@ UNIFIED_SOURCES += [
     'ChannelMediaDecoder.cpp',
     'ChannelMediaResource.cpp',
     'CloneableWithRangeMediaResource.cpp',
-    'CubebUtils.cpp',
     'DOMMediaStream.cpp',
     'FileBlockCache.cpp',
     'FileMediaResource.cpp',
@@ -278,8 +277,11 @@ if CONFIG['OS_TARGET'] == 'WINNT':
       'ThreadPoolCOMListener.cpp',
   ]
 
+# CubebUtils.cpp needs to be built separately due to what appears to be some kind
+# of compiler bug on Android 4.2 x86 opt. See bug 1408459.
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 SOURCES += [
+    'CubebUtils.cpp',
     'DecoderTraits.cpp',
 ]
 

@@ -13,12 +13,12 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
-  let { store, windowRequire } = monitor.panelWin;
+  let { store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  let { getLongString } = windowRequire("devtools/client/netmonitor/src/connector/index");
+  let { getLongString } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 

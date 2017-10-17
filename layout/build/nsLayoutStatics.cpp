@@ -116,7 +116,6 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "TouchManager.h"
-#include "MediaDecoder.h"
 #include "MediaPrefs.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
@@ -295,8 +294,6 @@ nsLayoutStatics::Initialize()
   GeckoStyleContext::Initialize();
   mozilla::LayerAnimationInfo::Initialize();
 #endif
-
-  MediaDecoder::InitStatics();
 
   PromiseDebugging::Init();
 

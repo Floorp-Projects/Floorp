@@ -54,10 +54,11 @@ void*
 ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData)
 {
   GMP_LOG("ChromiumCdmHostFunc(%d, %p)", aHostInterfaceVersion, aUserData);
-  if (aHostInterfaceVersion != cdm::Host_8::kVersion) {
+  if (aHostInterfaceVersion != cdm::Host_8::kVersion &&
+      aHostInterfaceVersion != cdm::Host_9::kVersion) {
     return nullptr;
   }
-  return static_cast<cdm::Host_8*>(aUserData);
+  return aUserData;
 }
 
 #define STRINGIFY(s) _STRINGIFY(s)
@@ -121,7 +122,9 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
           aPluginAPI,
           aDecryptorId,
           this);
-  if (!strcmp(aAPIName, CHROMIUM_CDM_API)) {
+  bool isCDM9 = !strcmp(aAPIName, CHROMIUM_CDM_API);
+  bool isCDM8 = !strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT);
+  if (isCDM8 || isCDM9) {
     auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
@@ -135,23 +138,26 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
       return GMPGenericErr;
     }
 
-    auto cdm = reinterpret_cast<cdm::ContentDecryptionModule_8*>(
-      create(cdm::ContentDecryptionModule_8::kVersion,
+    int version = isCDM8 ? cdm::ContentDecryptionModule_8::kVersion :
+                           cdm::ContentDecryptionModule_9::kVersion;
+    void* cdm =
+      create(version,
              kEMEKeySystemWidevine.get(),
              kEMEKeySystemWidevine.Length(),
              &ChromiumCdmHost,
-             aHostAPI));
+             aHostAPI);
     if (!cdm) {
       GMP_LOG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
-              "FAILED to create cdm",
+              "FAILED to create cdm version %d",
               aAPIName,
               aHostAPI,
               aPluginAPI,
               aDecryptorId,
-              this);
+              this,
+              version);
       return GMPGenericErr;
     }
-    GMP_LOG("cdm: 0x%p", cdm);
+    GMP_LOG("cdm: 0x%p, version: %d", cdm, version);
     *aPluginAPI = cdm;
   }
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
@@ -177,8 +183,10 @@ ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
                              int32_t aHostVersion)
 {
   return aModuleVersion == CDM_MODULE_VERSION &&
-         aInterfaceVersion == cdm::ContentDecryptionModule_8::kVersion &&
-         aHostVersion == cdm::Host_8::kVersion;
+         (aInterfaceVersion == cdm::ContentDecryptionModule_8::kVersion ||
+         aInterfaceVersion == cdm::ContentDecryptionModule_9::kVersion) &&
+         (aHostVersion == cdm::Host_8::kVersion ||
+         aHostVersion == cdm::Host_9::kVersion);
 }
 
 #ifdef XP_WIN

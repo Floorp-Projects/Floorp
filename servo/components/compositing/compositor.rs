@@ -13,7 +13,7 @@ use image::{DynamicImage, ImageFormat, RgbImage};
 use ipc_channel::ipc::{self, IpcSharedMemory};
 use msg::constellation_msg::{PipelineId, PipelineIndex, PipelineNamespaceId};
 use net_traits::image::base::{Image, PixelFormat};
-use nonzero::NonZeroU32;
+use nonzero::NonZero;
 use profile_traits::time::{self, ProfilerCategory, profile};
 use script_traits::{AnimationState, AnimationTickType, ConstellationControlMsg};
 use script_traits::{ConstellationMsg, LayoutControlMsg, MouseButton};
@@ -62,7 +62,7 @@ impl ConvertPipelineIdFromWebRender for webrender_api::PipelineId {
     fn from_webrender(&self) -> PipelineId {
         PipelineId {
             namespace_id: PipelineNamespaceId(self.0),
-            index: PipelineIndex(NonZeroU32::new(self.1).expect("Webrender pipeline zero?")),
+            index: PipelineIndex(NonZero::new(self.1).expect("Webrender pipeline zero?")),
         }
     }
 }
@@ -1502,9 +1502,9 @@ impl<Window: WindowMethods> IOCompositor<Window> {
     pub fn toggle_webrender_debug(&mut self, option: WebRenderDebugOption) {
         let mut flags = self.webrender.get_debug_flags();
         let flag = match option {
-            WebRenderDebugOption::Profiler => webrender::PROFILER_DBG,
-            WebRenderDebugOption::TextureCacheDebug => webrender::TEXTURE_CACHE_DBG,
-            WebRenderDebugOption::RenderTargetDebug => webrender::RENDER_TARGET_DBG,
+            WebRenderDebugOption::Profiler => webrender::DebugFlags::PROFILER_DBG,
+            WebRenderDebugOption::TextureCacheDebug => webrender::DebugFlags::TEXTURE_CACHE_DBG,
+            WebRenderDebugOption::RenderTargetDebug => webrender::DebugFlags::RENDER_TARGET_DBG,
         };
         flags.toggle(flag);
         self.webrender.set_debug_flags(flags);

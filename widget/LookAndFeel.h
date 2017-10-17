@@ -388,13 +388,6 @@ public:
      */
     eIntID_SwipeAnimationEnabled,
 
-    /*
-     * A boolean value indicating whether or not the device has a hardware
-     * home button. Used on gaia to determine whether a home button
-     * is shown.
-     */
-     eIntID_PhysicalHomeButton,
-
      /*
       * Controls whether overlay scrollbars display when the user moves
       * the mouse in a scrollable frame.
