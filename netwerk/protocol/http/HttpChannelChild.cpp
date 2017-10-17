@@ -3560,15 +3560,16 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
     return;
   }
 
-  // In our current implementation, the FetchEvent handler will copy the
-  // response stream completely into the pipe backing the input stream so we
-  // can treat the available as the length of the stream.
-  uint64_t available;
-  nsresult rv = aSynthesizedInput->Available(&available);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  // For progress we trust the content-length for the "maximum" size.
+  // We can't determine the full size from the stream itself since we
+  // only receive the data incrementally.  We can't trust Available()
+  // here.
+  // TODO: We could implement an nsIFixedLengthInputStream interface and
+  //       QI to it here.  This would let us determine the total length
+  //       for streams that support it.  See bug 1388774.
+  nsresult rv = GetContentLength(&mSynthesizedStreamLength);
+  if (NS_FAILED(rv)) {
     mSynthesizedStreamLength = -1;
-  } else {
-    mSynthesizedStreamLength = int64_t(available);
   }
 
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
