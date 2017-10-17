@@ -11,6 +11,8 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
+struct ComputedFlexItemInfo;
+
 namespace mozilla {
 namespace dom {
 
@@ -20,7 +22,8 @@ class FlexItem : public nsISupports
                , public nsWrapperCache
 {
 public:
-  explicit FlexItem(FlexLine* aParent);
+  explicit FlexItem(FlexLine* aParent,
+                    const ComputedFlexItemInfo* aItem);
 
 protected:
   virtual ~FlexItem() = default;
@@ -45,6 +48,15 @@ public:
 
 protected:
   RefPtr<FlexLine> mParent;
+  RefPtr<nsINode> mNode;
+
+  // These sizes are all CSS pixel units.
+  double mMainBaseSize;
+  double mMainDeltaSize;
+  double mMainMinSize;
+  double mMainMaxSize;
+  double mCrossMinSize;
+  double mCrossMaxSize;
 };
 
 } // namespace dom

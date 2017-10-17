@@ -28,7 +28,19 @@ Flex::Flex(Element* aParent,
   MOZ_ASSERT(aFrame,
     "Should never be instantiated with a null nsFlexContainerFrame");
 
-  // Eagerly create mLines.
+  // Eagerly create property values from aFrame, because we're not
+  // going to keep it around.
+  const ComputedFlexContainerInfo* containerInfo =
+    aFrame->GetFlexContainerInfo();
+  MOZ_ASSERT(containerInfo, "Should only be passed a frame with info.");
+
+  mLines.SetLength(containerInfo->mLines.Length());
+  uint32_t index = 0;
+  for (auto&& l : containerInfo->mLines) {
+    FlexLine* line = new FlexLine(this, &l);
+    mLines.ElementAt(index) = line;
+    index++;
+  }
 }
 
 JSObject*
