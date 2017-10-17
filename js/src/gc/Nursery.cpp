@@ -392,7 +392,7 @@ js::Nursery::freeBuffer(void* buffer)
 }
 
 void
-Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
+Nursery::setIndirectForwardingPointer(void* oldData, void* newData)
 {
     MOZ_ASSERT(isInside(oldData));
 
@@ -401,37 +401,15 @@ Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
     // newData pointer will appear to be "inside" the nursery.
     MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & ChunkMask) == 0);
 
-    if (direct) {
-        *reinterpret_cast<void**>(oldData) = newData;
-    } else {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
-            oomUnsafe.crash("Nursery::setForwardingPointer");
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
+        oomUnsafe.crash("Nursery::setForwardingPointer");
 #ifdef DEBUG
-        if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
-            MOZ_ASSERT(p->value() == newData);
+    if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
+        MOZ_ASSERT(p->value() == newData);
 #endif
-        if (!forwardedBuffers.put(oldData, newData))
-            oomUnsafe.crash("Nursery::setForwardingPointer");
-    }
-}
-
-void
-Nursery::setSlotsForwardingPointer(HeapSlot* oldSlots, HeapSlot* newSlots, uint32_t nslots)
-{
-    // Slot arrays always have enough space for a forwarding pointer, since the
-    // number of slots is never zero.
-    MOZ_ASSERT(nslots > 0);
-    setForwardingPointer(oldSlots, newSlots, /* direct = */ true);
-}
-
-void
-Nursery::setElementsForwardingPointer(ObjectElements* oldHeader, ObjectElements* newHeader,
-                                      uint32_t capacity)
-{
-    // Only use a direct forwarding pointer if there is enough space for one.
-    setForwardingPointer(oldHeader->elements(), newHeader->elements(),
-                         capacity > 0);
+    if (!forwardedBuffers.put(oldData, newData))
+        oomUnsafe.crash("Nursery::setForwardingPointer");
 }
 
 #ifdef DEBUG

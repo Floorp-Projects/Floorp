@@ -29,6 +29,62 @@ js::Nursery::getForwardedPointer(JSObject** ref)
     return true;
 }
 
+inline void
+js::Nursery::maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct)
+{
+    if (trc->isTenuringTracer())
+        setForwardingPointerWhileTenuring(oldData, newData, direct);
+}
+
+inline void
+js::Nursery::setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct)
+{
+    if (isInside(oldData))
+        setForwardingPointer(oldData, newData, direct);
+}
+
+inline void
+js::Nursery::setSlotsForwardingPointer(HeapSlot* oldSlots, HeapSlot* newSlots, uint32_t nslots)
+{
+    // Slot arrays always have enough space for a forwarding pointer, since the
+    // number of slots is never zero.
+    MOZ_ASSERT(nslots > 0);
+    setDirectForwardingPointer(oldSlots, newSlots);
+}
+
+inline void
+js::Nursery::setElementsForwardingPointer(ObjectElements* oldHeader, ObjectElements* newHeader,
+                                          uint32_t capacity)
+{
+    // Only use a direct forwarding pointer if there is enough space for one.
+    setForwardingPointer(oldHeader->elements(), newHeader->elements(),
+                         capacity > 0);
+}
+
+inline void
+js::Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
+{
+    if (direct) {
+        setDirectForwardingPointer(oldData, newData);
+        return;
+    }
+
+    setIndirectForwardingPointer(oldData, newData);
+}
+
+inline void
+js::Nursery::setDirectForwardingPointer(void* oldData, void* newData)
+{
+    MOZ_ASSERT(isInside(oldData));
+
+    // Bug 1196210: If a zero-capacity header lands in the last 2 words of a
+    // jemalloc chunk abutting the start of a nursery chunk, the (invalid)
+    // newData pointer will appear to be "inside" the nursery.
+    MOZ_ASSERT(!isInside(newData) || (uintptr_t(newData) & js::gc::ChunkMask) == 0);
+
+    *reinterpret_cast<void**>(oldData) = newData;
+}
+
 namespace js {
 
 // The allocation methods below will not run the garbage collector. If the
