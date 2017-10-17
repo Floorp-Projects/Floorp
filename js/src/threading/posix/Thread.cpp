@@ -74,8 +74,16 @@ js::Thread::Id::operator==(const Id& aOther) const
           pthread_equal(self.ptThread, other.ptThread));
 }
 
-js::Thread::Thread(Thread&& aOther)
+js::Thread::~Thread()
 {
+  LockGuard<Mutex> lock(idMutex_);
+  MOZ_RELEASE_ASSERT(!joinable(lock));
+}
+
+js::Thread::Thread(Thread&& aOther)
+  : idMutex_(mutexid::ThreadId)
+{
+  LockGuard<Mutex> lock(aOther.idMutex_);
   id_ = aOther.id_;
   aOther.id_ = Id();
   options_ = aOther.options_;
@@ -84,7 +92,8 @@ js::Thread::Thread(Thread&& aOther)
 js::Thread&
 js::Thread::operator=(Thread&& aOther)
 {
-  MOZ_RELEASE_ASSERT(!joinable());
+  LockGuard<Mutex> lock(idMutex_);
+  MOZ_RELEASE_ASSERT(!joinable(lock));
   id_ = aOther.id_;
   aOther.id_ = Id();
   options_ = aOther.options_;
@@ -94,6 +103,8 @@ js::Thread::operator=(Thread&& aOther)
 bool
 js::Thread::create(void* (*aMain)(void*), void* aArg)
 {
+  LockGuard<Mutex> lock(idMutex_);
+
   pthread_attr_t attrs;
   int r = pthread_attr_init(&attrs);
   MOZ_RELEASE_ASSERT(!r);
@@ -101,29 +112,51 @@ js::Thread::create(void* (*aMain)(void*), void* aArg)
     r = pthread_attr_setstacksize(&attrs, options_.stackSize());
     MOZ_RELEASE_ASSERT(!r);
   }
-  id_.platformData()->hasThread = true;
   r = pthread_create(&id_.platformData()->ptThread, &attrs, aMain, aArg);
   if (r) {
     // |pthread_create| may leave id_ in an undefined state.
     id_ = Id();
     return false;
   }
+  id_.platformData()->hasThread = true;
   return true;
 }
 
 void
 js::Thread::join()
 {
-  MOZ_RELEASE_ASSERT(joinable());
+  LockGuard<Mutex> lock(idMutex_);
+  MOZ_RELEASE_ASSERT(joinable(lock));
   int r = pthread_join(id_.platformData()->ptThread, nullptr);
   MOZ_RELEASE_ASSERT(!r);
   id_ = Id();
 }
 
+js::Thread::Id
+js::Thread::get_id()
+{
+  LockGuard<Mutex> lock(idMutex_);
+  return id_;
+}
+
+bool
+js::Thread::joinable(LockGuard<Mutex>& lock)
+{
+  return id_ != Id();
+}
+
+bool
+js::Thread::joinable()
+{
+  LockGuard<Mutex> lock(idMutex_);
+  return joinable(lock);
+}
+
 void
 js::Thread::detach()
 {
-  MOZ_RELEASE_ASSERT(joinable());
+  LockGuard<Mutex> lock(idMutex_);
+  MOZ_RELEASE_ASSERT(joinable(lock));
   int r = pthread_detach(id_.platformData()->ptThread);
   MOZ_RELEASE_ASSERT(!r);
   id_ = Id();
