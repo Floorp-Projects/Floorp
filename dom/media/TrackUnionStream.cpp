@@ -174,7 +174,7 @@ TrackUnionStream::TrackUnionStream()
     TrackID id;
     if (IsTrackIDExplicit(id = aPort->GetDestinationTrackId())) {
       MOZ_ASSERT(id >= mNextAvailableTrackID &&
-                 mUsedTracks.BinaryIndexOf(id) == mUsedTracks.NoIndex,
+                 !mUsedTracks.ContainsSorted(id),
                  "Desired destination id taken. Only provide a destination ID "
                  "if you can assure its availability, or we may not be able "
                  "to bind to the correct DOM-side track.");
@@ -191,7 +191,7 @@ TrackUnionStream::TrackUnionStream()
       mUsedTracks.InsertElementSorted(id);
     } else if ((id = aTrack->GetID()) &&
                id > mNextAvailableTrackID &&
-               mUsedTracks.BinaryIndexOf(id) == mUsedTracks.NoIndex) {
+               !mUsedTracks.ContainsSorted(id)) {
       // Input id available. Mark it used in mUsedTracks.
       mUsedTracks.InsertElementSorted(id);
     } else {
