@@ -52,7 +52,7 @@ public:
   void Go()
   {
     mSurface =
-      ImageOps::DecodeToSurface(mInputStream.forget(),
+      ImageOps::DecodeToSurface(mInputStream,
                                 nsDependentCString(mimeType.c_str()),
                                 imgIContainer::DECODE_FLAGS_DEFAULT);
     if (!mSurface)

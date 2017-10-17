@@ -497,7 +497,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // Wrap the channel's input stream in a buffered stream to ensure that
     // ReadSegments is implemented (which OnDataAvailable expects).
     nsCOMPtr<nsIInputStream> bufStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), in.forget(),
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), in,
                                    4096 /* buffer size */);
     if (NS_FAILED(rv)) return rv;
 

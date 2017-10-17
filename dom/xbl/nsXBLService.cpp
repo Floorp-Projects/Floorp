@@ -1116,8 +1116,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   rv = channel->Open2(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsSyncLoadService::PushSyncStreamToListener(in.forget(), listener,
-                                                   channel);
+  rv = nsSyncLoadService::PushSyncStreamToListener(in, listener, channel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   doc.swap(*aResult);

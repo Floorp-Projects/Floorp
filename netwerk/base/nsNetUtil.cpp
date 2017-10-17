@@ -1356,22 +1356,36 @@ NS_NewBufferedOutputStream(nsIOutputStream** aResult,
 }
 
 MOZ_MUST_USE nsresult
-NS_NewBufferedInputStream(nsIInputStream** aResult,
-                          already_AddRefed<nsIInputStream> aInputStream,
-                          uint32_t aBufferSize)
+NS_NewBufferedInputStream(nsIInputStream **result,
+                          nsIInputStream  *str,
+                          uint32_t         bufferSize)
 {
-    nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
-
     nsresult rv;
     nsCOMPtr<nsIBufferedInputStream> in =
         do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(inputStream, aBufferSize);
+        rv = in->Init(str, bufferSize);
         if (NS_SUCCEEDED(rv)) {
-            in.forget(aResult);
+            in.forget(result);
         }
     }
     return rv;
+}
+
+already_AddRefed<nsIInputStream>
+NS_BufferInputStream(nsIInputStream *aInputStream,
+                      uint32_t aBufferSize)
+{
+    NS_ASSERTION(aInputStream, "No input stream given!");
+
+    nsCOMPtr<nsIInputStream> bis;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bis), aInputStream,
+                                            aBufferSize);
+    if (NS_SUCCEEDED(rv))
+        return bis.forget();
+
+    bis = aInputStream;
+    return bis.forget();
 }
 
 nsresult
@@ -1390,8 +1404,7 @@ NS_NewPostDataStream(nsIInputStream  **result,
             rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
             if (NS_SUCCEEDED(rv)) {
                 // wrap the file stream with a buffered input stream
-                rv = NS_NewBufferedInputStream(result, fileStream.forget(),
-                                               8192);
+                rv = NS_NewBufferedInputStream(result, fileStream, 8192);
             }
         }
         return rv;

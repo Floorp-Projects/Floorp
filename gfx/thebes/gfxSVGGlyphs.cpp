@@ -333,8 +333,7 @@ CreateBufferedStream(const uint8_t *aBuffer, uint32_t aBufLen,
 
     nsCOMPtr<nsIInputStream> aBufferedStream;
     if (!NS_InputStreamIsBuffered(stream)) {
-        rv = NS_NewBufferedInputStream(getter_AddRefs(aBufferedStream),
-                                       stream.forget(), 4096);
+        rv = NS_NewBufferedInputStream(getter_AddRefs(aBufferedStream), stream, 4096);
         NS_ENSURE_SUCCESS(rv, rv);
         stream = aBufferedStream;
     }
