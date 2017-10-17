@@ -1973,25 +1973,35 @@ test-verify:
             default: built-projects
     tier:
         by-test-platform:
+            android.*: 3
             macosx.*: 3
             windows.*: 3
             # windows10-64-asan.*: 3
             default: 2
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - remove_executables.py
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --verify
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                config:
+                    - android/androidarm_4_3.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --verify
+            default:
+                script: desktop_unittest.py
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --verify
 
 web-platform-tests:
     description: "Web platform test run"
