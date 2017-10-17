@@ -10,7 +10,6 @@ const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
-const Services = require("Services");
 const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const {createChild} = require("devtools/client/inspector/shared/utils");
@@ -36,8 +35,6 @@ const BoxModelApp = createFactory(require("devtools/client/inspector/boxmodel/co
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
-
-const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
 const FILTER_CHANGED_TIMEOUT = 150;
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -205,9 +202,7 @@ function CssComputedView(inspector, document, pageStyle) {
   // Refresh panel when color unit changed or pref for showing
   // original sources changes.
   this._handlePrefChange = this._handlePrefChange.bind(this);
-  this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
   this._prefObserver = new PrefObserver("devtools.");
-  this._prefObserver.on(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
   this._prefObserver.on("devtools.defaultColorUnit", this._handlePrefChange);
 
   // The element that we're inspecting, and the document that it comes from.
@@ -602,14 +597,6 @@ CssComputedView.prototype = {
                                  CssLogic.FILTER.USER;
   },
 
-  _onSourcePrefChanged: function () {
-    this._handlePrefChange();
-    for (let propView of this.propertyViews) {
-      propView.updateSourceLinks();
-    }
-    this.inspector.emit("computed-view-sourcelinks-updated");
-  },
-
   /**
    * Render the box model view.
    */
@@ -753,7 +740,6 @@ CssComputedView.prototype = {
     this._viewedElement = null;
     this._outputParser = null;
 
-    this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
     this._prefObserver.off("devtools.defaultColorUnit", this._handlePrefChange);
     this._prefObserver.destroy();
 
@@ -1096,15 +1082,14 @@ PropertyView.prototype = {
         .getMatchedSelectors(this.tree._viewedElement, this.name)
         .then(matched => {
           if (!this.matchedExpanded) {
-            return promise.resolve(undefined);
+            return;
           }
 
           this._matchedSelectorResponse = matched;
 
-          return this._buildMatchedSelectors().then(() => {
-            this.matchedExpander.setAttribute("open", "");
-            this.tree.inspector.emit("computed-view-property-expanded");
-          });
+          this._buildMatchedSelectors();
+          this.matchedExpander.setAttribute("open", "");
+          this.tree.inspector.emit("computed-view-property-expanded");
         }).catch(console.error);
     }
 
@@ -1119,7 +1104,6 @@ PropertyView.prototype = {
   },
 
   _buildMatchedSelectors: function () {
-    let promises = [];
     let frag = this.element.ownerDocument.createDocumentFragment();
 
     for (let selector of this.matchedSelectorViews) {
@@ -1157,12 +1141,10 @@ PropertyView.prototype = {
         class: "fix-get-selection computed-other-property-value theme-fg-color1"
       });
       valueDiv.appendChild(selector.outputFragment);
-      promises.push(selector.ready);
     }
 
     this.matchedSelectorsContainer.innerHTML = "";
     this.matchedSelectorsContainer.appendChild(frag);
-    return promise.all(promises);
   },
 
   /**
@@ -1178,19 +1160,6 @@ PropertyView.prototype = {
       }, this);
     }
     return this._matchedSelectorViews;
-  },
-
-  /**
-   * Update all the selector source links to reflect whether we're linking to
-   * original sources (e.g. Sass files).
-   */
-  updateSourceLinks: function () {
-    if (!this._matchedSelectorViews) {
-      return;
-    }
-    for (let view of this._matchedSelectorViews) {
-      view.updateSourceLink();
-    }
   },
 
   /**
@@ -1225,6 +1194,12 @@ PropertyView.prototype = {
    * Destroy this property view, removing event listeners
    */
   destroy: function () {
+    if (this._matchedSelectorViews) {
+      for (let view of this._matchedSelectorViews) {
+        view.destroy();
+      }
+    }
+
     this.element.removeEventListener("dblclick", this.onMatchedToggle);
     this.shortcuts.destroy();
     this.element = null;
@@ -1253,8 +1228,26 @@ function SelectorView(tree, selectorInfo) {
   this._cacheStatusNames();
 
   this.openStyleEditor = this.openStyleEditor.bind(this);
+  this._updateLocation = this._updateLocation.bind(this);
 
-  this.ready = this.updateSourceLink();
+  const rule = this.selectorInfo.rule;
+  if (!rule || !rule.parentStyleSheet || rule.type == ELEMENT_STYLE) {
+    this.source = CssLogic.l10n("rule.sourceElement");
+  } else {
+    // This always refers to the generated location.
+    const sheet = rule.parentStyleSheet;
+    this.source = CssLogic.shortSource(sheet) + ":" + rule.line;
+
+    const url = sheet.href || sheet.nodeHref;
+    this.currentLocation = {
+      href: url,
+      line: rule.line,
+      column: rule.column,
+    };
+    this.generatedLocation = this.currentLocation;
+    this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
+    this.sourceMapURLService.subscribe(url, rule.line, rule.column, this._updateLocation);
+  }
 }
 
 /**
@@ -1344,50 +1337,43 @@ SelectorView.prototype = {
 
   /**
    * Update the text of the source link to reflect whether we're showing
-   * original sources or not.
+   * original sources or not.  This is a callback for
+   * SourceMapURLService.subscribe, which see.
+   *
+   * @param {Boolean} enabled
+   *        True if the passed-in location should be used; this means
+   *        that source mapping is in use and the remaining arguments
+   *        are the original location.  False if the already-known
+   *        (stored) location should be used.
+   * @param {String} url
+   *        The original URL
+   * @param {Number} line
+   *        The original line number
+   * @param {number} column
+   *        The original column number
    */
-  updateSourceLink: function () {
-    return this.updateSource().then((oldSource) => {
-      if (oldSource !== this.source && this.tree.element) {
-        let selector = '[sourcelocation="' + oldSource + '"]';
-        let link = this.tree.element.querySelector(selector);
-        if (link) {
-          link.textContent = this.source;
-          link.setAttribute("sourcelocation", this.source);
-        }
-      }
-    });
-  },
-
-  /**
-   * Update the 'source' store based on our original sources preference.
-   */
-  updateSource: function () {
-    let rule = this.selectorInfo.rule;
-    this.sheet = rule.parentStyleSheet;
-
-    if (!rule || !this.sheet) {
-      let oldSource = this.source;
-      this.source = CssLogic.l10n("rule.sourceElement");
-      return promise.resolve(oldSource);
+  _updateLocation: function (enabled, url, line, column) {
+    if (!this.tree.element) {
+      return;
     }
 
-    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
-
-    if (showOrig && rule.type !== ELEMENT_STYLE) {
-      // set as this first so we show something while we're fetching
-      this.source = CssLogic.shortSource(this.sheet) + ":" + rule.line;
-
-      return rule.getOriginalLocation().then(({href, line}) => {
-        let oldSource = this.source;
-        this.source = CssLogic.shortSource({href: href}) + ":" + line;
-        return oldSource;
-      });
+    // Update |currentLocation| to be whichever location is being
+    // displayed at the moment.
+    if (enabled) {
+      this.currentLocation = { href: url, line, column };
+    } else {
+      this.currentLocation = this.generatedLocation;
     }
 
-    let oldSource = this.source;
-    this.source = CssLogic.shortSource(this.sheet) + ":" + rule.line;
-    return promise.resolve(oldSource);
+    let selector = '[sourcelocation="' + this.source + '"]';
+    let link = this.tree.element.querySelector(selector);
+    if (link) {
+      let text = CssLogic.shortSource(this.currentLocation) +
+          ":" + this.currentLocation.line;
+      link.textContent = text;
+    }
+
+    this.tree.inspector.emit("computed-view-sourcelinks-updated");
   },
 
   /**
@@ -1414,21 +1400,26 @@ SelectorView.prototype = {
       return;
     }
 
-    let location = promise.resolve(rule.location);
-    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
-      location = rule.getOriginalLocation();
+    let {href, line, column} = this.currentLocation;
+    let target = inspector.target;
+    if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
+      gDevTools.showToolbox(target, "styleeditor").then(function (toolbox) {
+        toolbox.getCurrentPanel().selectStyleSheet(href, line, column);
+      });
     }
+  },
 
-    location.then(({source, href, line, column}) => {
-      let target = inspector.target;
-      if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
-        gDevTools.showToolbox(target, "styleeditor").then(function (toolbox) {
-          let sheet = source || href;
-          toolbox.getCurrentPanel().selectStyleSheet(sheet, line, column);
-        });
-      }
-    });
-  }
+  /**
+   * Destroy this selector view, removing event listeners
+   */
+  destroy: function () {
+    let rule = this.selectorInfo.rule;
+    if (rule && rule.parentStyleSheet && rule.type != ELEMENT_STYLE) {
+      const url = rule.parentStyleSheet.href || rule.parentStyleSheet.nodeHref;
+      this.sourceMapURLService.unsubscribe(url, rule.line,
+                                           rule.column, this._updateLocation);
+    }
+  },
 };
 
 function ComputedViewTool(inspector, window) {

@@ -52,6 +52,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleRuleMap.h"
+#include "mozilla/ServoCSSParser.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -1006,19 +1007,25 @@ NS_IMETHODIMP
 inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
                         JS::MutableHandle<JS::Value> aValue)
 {
-  nscolor color = 0;
+  nscolor color = NS_RGB(0, 0, 0);
+
+#ifdef MOZ_STYLO
+  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorString,
+                                    &color)) {
+    aValue.setNull();
+    return NS_OK;
+  }
+#else
   nsCSSParser cssParser;
   nsCSSValue cssValue;
 
-  bool isColor = cssParser.ParseColorString(aColorString, nullptr, 0,
-                                            cssValue, true);
-
-  if (!isColor) {
+  if (!cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true)) {
     aValue.setNull();
     return NS_OK;
   }
 
   nsRuleNode::ComputeColor(cssValue, nullptr, nullptr, color);
+#endif
 
   InspectorRGBATuple tuple;
   tuple.mR = NS_GET_R(color);
@@ -1036,34 +1043,13 @@ inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
 NS_IMETHODIMP
 inDOMUtils::IsValidCSSColor(const nsAString& aColorString, bool *_retval)
 {
+#ifdef MOZ_STYLO
+  *_retval = ServoCSSParser::IsValidCSSColor(aColorString);
+#else
   nsCSSParser cssParser;
   nsCSSValue cssValue;
   *_retval = cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMUtils::CssPropertyIsValid(const nsAString& aPropertyName,
-                               const nsAString& aPropertyValue,
-                               bool *_retval)
-{
-  nsCSSPropertyID propertyID = nsCSSProps::
-    LookupProperty(aPropertyName, CSSEnabledState::eIgnoreEnabledState);
-
-  if (propertyID == eCSSProperty_UNKNOWN) {
-    *_retval = false;
-    return NS_OK;
-  }
-
-  if (propertyID == eCSSPropertyExtra_variable) {
-    *_retval = true;
-    return NS_OK;
-  }
-
-  // Get a parser, parse the property.
-  nsCSSParser parser;
-  *_retval = parser.IsValueValidForProperty(propertyID, aPropertyValue);
-
+#endif
   return NS_OK;
 }
 

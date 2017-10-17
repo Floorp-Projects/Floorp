@@ -1,7 +1,7 @@
 == box-ordinal-with-out-of-flow-1.html box-ordinal-with-out-of-flow-1-ref.html
 == dynamic-1-remove-to-none-grouped.xul dynamic-1-ref.xul
 == dynamic-1-add-to-one-grouped.xul dynamic-1-ref.xul
-== dynamic-1-remove-to-one-grouped-1.xul dynamic-1-ref.xul
+fails-if(stylo||styloVsGecko) == dynamic-1-remove-to-one-grouped-1.xul dynamic-1-ref.xul # bug 1408235
 fails == dynamic-1-remove-to-one-grouped-2.xul dynamic-1-ref.xul # bug 575500
-== dynamic-1-add-to-two-grouped-1.xul dynamic-1-ref.xul
-== dynamic-1-add-to-two-grouped-2.xul dynamic-1-ref.xul
+fails-if(stylo||styloVsGecko) == dynamic-1-add-to-two-grouped-1.xul dynamic-1-ref.xul # bug 1408235
+fails-if(stylo||styloVsGecko) == dynamic-1-add-to-two-grouped-2.xul dynamic-1-ref.xul # bug 1408235

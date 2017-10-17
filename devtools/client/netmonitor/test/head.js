@@ -60,6 +60,7 @@ const CURL_URL = EXAMPLE_URL + "html_copy-as-curl.html";
 const CURL_UTILS_URL = EXAMPLE_URL + "html_curl-utils.html";
 const SEND_BEACON_URL = EXAMPLE_URL + "html_send-beacon.html";
 const CORS_URL = EXAMPLE_URL + "html_cors-test-page.html";
+const PAUSE_URL = EXAMPLE_URL + "html_pause-test-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
 const SIMPLE_UNSORTED_COOKIES_SJS = EXAMPLE_URL + "sjs_simple-unsorted-cookies-test-server.sjs";
@@ -176,9 +177,8 @@ function waitForTimelineMarkers(monitor) {
  */
 function waitForAllRequestsFinished(monitor) {
   let window = monitor.panelWin;
-  let { windowRequire } = window;
-  let { getNetworkRequest } =
-    windowRequire("devtools/client/netmonitor/src/connector/index");
+  let { connector } = window;
+  let { getNetworkRequest } = connector;
 
   return new Promise(resolve => {
     // Key is the request id, value is a boolean - is request finished or not?
@@ -290,9 +290,7 @@ function teardown(monitor) {
 function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
   return new Promise((resolve) => {
     let panel = monitor.panelWin;
-    let { windowRequire } = panel;
-    let { getNetworkRequest } =
-      windowRequire("devtools/client/netmonitor/src/connector/index");
+    let { getNetworkRequest } = panel.connector;
     let progress = {};
     let genericEvents = 0;
     let postEvents = 0;

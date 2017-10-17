@@ -134,6 +134,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
       forms.forEach((form, formIndex) => {
         let formInfo = FormAutofillHeuristics.getFormInfo(form);
         do_print("FieldName Prediction Results: " + formInfo.map(i => i.fieldName));
+        do_print("FieldName Expected Results:   " + testPattern.expectedResult[formIndex].map(i => i.fieldName));
         Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
         formInfo.forEach((field, fieldIndex) => {
           let expectedField = testPattern.expectedResult[formIndex][fieldIndex];

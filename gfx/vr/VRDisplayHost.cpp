@@ -4,10 +4,12 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRDisplayHost.h"
+#include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
+#include "VRThread.h"
 
 #if defined(XP_WIN)
 
@@ -196,7 +198,7 @@ VRDisplayHost::NotifyVSync()
   /**
    * We will trigger a new frame immediately after a successful frame texture
    * submission.  If content fails to call VRDisplay.submitFrame after
-   * kVRDisplayRAFMaxDuration milliseconds has elapsed since the last
+   * dom.vr.display.rafMaxDuration milliseconds has elapsed since the last
    * VRDisplay.requestAnimationFrame, we act as a "watchdog" and kick-off
    * a new VRDisplay.requestAnimationFrame to avoid a render loop stall and
    * to give content a chance to recover.
@@ -208,13 +210,7 @@ VRDisplayHost::NotifyVSync()
    * potentially extreme frame rates.  To ensure that content has a chance to
    * resume its presentation when the frames are accepted once again, we rely
    * on this "watchdog" to act as a VR refresh driver cycling at a rate defined
-   * by kVRDisplayRAFMaxDuration.
-   *
-   * kVRDisplayRAFMaxDuration is the number of milliseconds since last frame
-   * start before triggering a new frame.  When content is failing to submit
-   * frames on time or the lower level VR platform API's are rejecting frames,
-   * kVRDisplayRAFMaxDuration determines the rate at which RAF callbacks
-   * will be called.
+   * by dom.vr.display.rafMaxDuration.
    *
    * This number must be larger than the slowest expected frame time during
    * normal VR presentation, but small enough not to break content that
@@ -222,12 +218,10 @@ VRDisplayHost::NotifyVSync()
    *
    * The slowest expected refresh rate for a VR display currently is an
    * Oculus CV1 when ASW (Asynchronous Space Warp) is enabled, at 45hz.
-   * A kVRDisplayRAFMaxDuration value of 50 milliseconds results in a 20hz
+   * A dom.vr.display.rafMaxDuration value of 50 milliseconds results in a 20hz
    * rate, which avoids inadvertent triggering of the watchdog during
    * Oculus ASW even if every second frame is dropped.
    */
-  const double kVRDisplayRAFMaxDuration = 50;
-
   bool bShouldStartFrame = false;
 
   if (mDisplayInfo.mPresentingGroups == 0) {
@@ -241,7 +235,7 @@ VRDisplayHost::NotifyVSync()
       bShouldStartFrame = true;
     } else {
       TimeDuration duration = TimeStamp::Now() - mLastFrameStart;
-      if (duration.ToMilliseconds() > kVRDisplayRAFMaxDuration) {
+      if (duration.ToMilliseconds() > gfxPrefs::VRDisplayRafMaxDuration()) {
         bShouldStartFrame = true;
       }
     }
@@ -273,7 +267,6 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
     return;
   }
   mFrameStarted = false;
-
   switch (aTexture.type()) {
 
 #if defined(XP_WIN)
@@ -345,7 +338,6 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
   }
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-
   /**
    * Trigger the next VSync immediately after we are successfully
    * submitting frames.  As SubmitFrame is responsible for throttling
@@ -356,9 +348,13 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
    * frames to continue at a lower refresh rate until frame submission
    * succeeds again.
    */
-  VRManager *vm = VRManager::Get();
-  MOZ_ASSERT(vm);
-  vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  VRManager* vm = VRManager::Get();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
+
+  loop->PostTask(NewRunnableMethod<const uint32_t>(
+    "gfx::VRManager::NotifyVRVsync",
+    vm, &VRManager::NotifyVRVsync, mDisplayInfo.mDisplayID
+  ));
 #endif
 }
 

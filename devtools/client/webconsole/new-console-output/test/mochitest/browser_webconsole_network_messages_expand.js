@@ -63,13 +63,12 @@ async function testNetworkMessage(messageNode) {
 
   // Select Response tab and check the content. CodeMirror initialization
   // is delayed  to prevent UI freeze, so wait for a little while.
-  // TODO: Bug 1406100 - The 'responseContent' network event update is missing sometimes
-  /* responseTab.click();
+  responseTab.click();
   await waitForSourceEditor(messageNode);
   let responseContent = messageNode.querySelector(
     "#response-panel .editor-row-container .CodeMirror");
   ok(responseContent, "Response content is available");
-  ok(responseContent.textContent, "Response text is available"); */
+  ok(responseContent.textContent, "Response text is available");
 
   // Select Timings tab and check the content.
   timingsTab.click();
@@ -92,9 +91,9 @@ async function waitForNetworkUpdates(toolbox) {
   });
 }
 
-/* async function waitForSourceEditor(messageNode) {
+async function waitForSourceEditor(messageNode) {
   return waitUntil(() => {
     return !!messageNode.querySelector(
       "#response-panel .editor-row-container .CodeMirror");
   });
-} */
+}

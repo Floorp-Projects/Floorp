@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Heuristics cc-exp field test page</title>
+</head>
+<body>
+  <h1>Heuristics cc-exp field test page</h1>
+  <form id="form">
+    <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
+    <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
+    <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
+  </form>
+  <form id="formB">
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p><label>Expiration Date: <input autocomplete="cc-exp"></label></p>
+  </form>
+  <form id="formC">
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p><label>Expiration Date: <input type="text"></label></p>
+  </form>
+  <form id="formD">
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p>
+      <label>Exp:
+        <select>
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="5"></option>
+          <option value="6"></option>
+          <option value="7"></option>
+          <option value="8"></option>
+          <option value="9"></option>
+          <option value="10"></option>
+          <option value="11"></option>
+          <option value="12"></option>
+        </select>
+      </label>
+    </p>
+    <p>
+      <label>Exp:
+        <select>
+          <option value="2015"></option>
+          <option value="2016"></option>
+          <option value="2017"></option>
+          <option value="2018"></option>
+          <option value="2019"></option>
+          <option value="2020"></option>
+          <option value="2021"></option>
+          <option value="2022"></option>
+          <option value="2023"></option>
+          <option value="2024"></option>
+          <option value="2025"></option>
+        </select>
+      </label>
+    </p>
+  </form>
+</body>
+</html>

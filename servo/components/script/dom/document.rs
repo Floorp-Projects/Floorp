@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use cookie_rs;
-use core::nonzero::NonZero;
 use devtools_traits::ScriptToDevtoolsControlMsg;
 use document_loader::{DocumentLoader, LoadType};
 use dom::activation::{ActivationSource, synthetic_click_activation};
@@ -24,6 +23,7 @@ use dom::bindings::codegen::Bindings::WindowBinding::{FrameRequestCallback, Scro
 use dom::bindings::codegen::UnionTypes::NodeOrString;
 use dom::bindings::error::{Error, ErrorResult, Fallible};
 use dom::bindings::inheritance::{Castable, ElementTypeId, HTMLElementTypeId, NodeTypeId};
+use dom::bindings::nonnull::NonNullJSObjectPtr;
 use dom::bindings::num::Finite;
 use dom::bindings::refcounted::{Trusted, TrustedPromise};
 use dom::bindings::reflector::{DomObject, reflect_dom_object};
@@ -99,7 +99,7 @@ use html5ever::{LocalName, Namespace, QualName};
 use hyper::header::{Header, SetCookie};
 use hyper_serde::Serde;
 use ipc_channel::ipc::{self, IpcSender};
-use js::jsapi::{JSContext, JSObject, JSRuntime};
+use js::jsapi::{JSContext, JSRuntime};
 use js::jsapi::JS_GetRuntime;
 use msg::constellation_msg::{ALT, CONTROL, SHIFT, SUPER};
 use msg::constellation_msg::{BrowsingContextId, Key, KeyModifiers, KeyState, TopLevelBrowsingContextId};
@@ -2312,20 +2312,24 @@ impl Document {
                referrer: Option<String>,
                referrer_policy: Option<ReferrerPolicy>)
                -> DomRoot<Document> {
-        let document = reflect_dom_object(box Document::new_inherited(window,
-                                                                      has_browsing_context,
-                                                                      url,
-                                                                      origin,
-                                                                      doctype,
-                                                                      content_type,
-                                                                      last_modified,
-                                                                      activity,
-                                                                      source,
-                                                                      doc_loader,
-                                                                      referrer,
-                                                                      referrer_policy),
-                                          window,
-                                          DocumentBinding::Wrap);
+        let document = reflect_dom_object(
+            Box::new(Document::new_inherited(
+                window,
+                has_browsing_context,
+                url,
+                origin,
+                doctype,
+                content_type,
+                last_modified,
+                activity,
+                source,
+                doc_loader,
+                referrer,
+                referrer_policy
+            )),
+            window,
+            DocumentBinding::Wrap
+        );
         {
             let node = document.upcast::<Node>();
             node.set_owner_doc(&document);
@@ -3344,7 +3348,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-images
     fn Images(&self) -> DomRoot<HTMLCollection> {
         self.images.or_init(|| {
-            let filter = box ImagesFilter;
+            let filter = Box::new(ImagesFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3352,7 +3356,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-embeds
     fn Embeds(&self) -> DomRoot<HTMLCollection> {
         self.embeds.or_init(|| {
-            let filter = box EmbedsFilter;
+            let filter = Box::new(EmbedsFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3365,7 +3369,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-links
     fn Links(&self) -> DomRoot<HTMLCollection> {
         self.links.or_init(|| {
-            let filter = box LinksFilter;
+            let filter = Box::new(LinksFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3373,7 +3377,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-forms
     fn Forms(&self) -> DomRoot<HTMLCollection> {
         self.forms.or_init(|| {
-            let filter = box FormsFilter;
+            let filter = Box::new(FormsFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3381,7 +3385,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-scripts
     fn Scripts(&self) -> DomRoot<HTMLCollection> {
         self.scripts.or_init(|| {
-            let filter = box ScriptsFilter;
+            let filter = Box::new(ScriptsFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3389,7 +3393,7 @@ impl DocumentMethods for Document {
     // https://html.spec.whatwg.org/multipage/#dom-document-anchors
     fn Anchors(&self) -> DomRoot<HTMLCollection> {
         self.anchors.or_init(|| {
-            let filter = box AnchorsFilter;
+            let filter = Box::new(AnchorsFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3398,7 +3402,7 @@ impl DocumentMethods for Document {
     fn Applets(&self) -> DomRoot<HTMLCollection> {
         // FIXME: This should be return OBJECT elements containing applets.
         self.applets.or_init(|| {
-            let filter = box AppletsFilter;
+            let filter = Box::new(AppletsFilter);
             HTMLCollection::create(&self.window, self.upcast(), filter)
         })
     }
@@ -3532,7 +3536,7 @@ impl DocumentMethods for Document {
 
     #[allow(unsafe_code)]
     // https://html.spec.whatwg.org/multipage/#dom-tree-accessors:dom-document-nameditem-filter
-    unsafe fn NamedGetter(&self, _cx: *mut JSContext, name: DOMString) -> Option<NonZero<*mut JSObject>> {
+    unsafe fn NamedGetter(&self, _cx: *mut JSContext, name: DOMString) -> Option<NonNullJSObjectPtr> {
         #[derive(HeapSizeOf, JSTraceable)]
         struct NamedElementFilter {
             name: Atom,
@@ -3600,7 +3604,7 @@ impl DocumentMethods for Document {
                 if elements.peek().is_none() {
                     // TODO: Step 2.
                     // Step 3.
-                    return Some(NonZero::new_unchecked(first.reflector().get_jsobject().get()));
+                    return Some(NonNullJSObjectPtr::new_unchecked(first.reflector().get_jsobject().get()));
                 }
             } else {
                 return None;
@@ -3610,8 +3614,8 @@ impl DocumentMethods for Document {
         let filter = NamedElementFilter {
             name: name,
         };
-        let collection = HTMLCollection::create(self.window(), root, box filter);
-        Some(NonZero::new_unchecked(collection.reflector().get_jsobject().get()))
+        let collection = HTMLCollection::create(self.window(), root, Box::new(filter));
+        Some(NonNullJSObjectPtr::new_unchecked(collection.reflector().get_jsobject().get()))
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-tree-accessors:supported-property-names

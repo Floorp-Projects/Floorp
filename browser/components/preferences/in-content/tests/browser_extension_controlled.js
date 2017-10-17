@@ -32,17 +32,22 @@ function installAddon(xpiName) {
   });
 }
 
-function waitForMessageChange(messageId, cb) {
+function waitForMutation(target, opts, cb) {
   return new Promise((resolve) => {
-    let target = gBrowser.contentDocument.getElementById(messageId);
     let observer = new MutationObserver(() => {
-      if (cb(target)) {
+      if (!cb || cb(target)) {
         observer.disconnect();
         resolve();
       }
     });
-    observer.observe(target, { attributes: true, attributeFilter: ["hidden"] });
+    observer.observe(target, opts);
   });
+}
+
+function waitForMessageChange(messageId, cb) {
+  return waitForMutation(
+    gBrowser.contentDocument.getElementById(messageId),
+    { attributes: true, attributeFilter: ["hidden"] }, cb);
 }
 
 function waitForMessageHidden(messageId) {
@@ -89,6 +94,146 @@ add_task(async function testExtensionControlledHomepage() {
   is(homepagePref(), originalHomepagePref, "homepage is set back to default");
   is(doc.getElementById("browserHomePage").disabled, false, "The homepage input is enabled");
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
+  let addon = await AddonManager.getAddonByID("@set_homepage");
+  // Enable the extension so we get the UNINSTALL event, which is needed by
+  // ExtensionPreferencesManager to clean up properly.
+  // FIXME: See https://bugzilla.mozilla.org/show_bug.cgi?id=1408226.
+  addon.userDisabled = false;
+  await waitForMessageShown("browserHomePageExtensionContent");
+  // Do the uninstall now that the enable code has been run.
+  addon.uninstall();
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function testPrefLockedHomepage() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+  is(gBrowser.currentURI.spec, "about:preferences#general",
+     "#general should be in the URI for about:preferences");
+
+  let homePagePref = "browser.startup.homepage";
+  let buttonPrefs = [
+    "pref.browser.homepage.disable_button.current_page",
+    "pref.browser.homepage.disable_button.bookmark_page",
+    "pref.browser.homepage.disable_button.restore_default",
+  ];
+  let homePageInput = doc.getElementById("browserHomePage");
+  let prefs = Services.prefs.getDefaultBranch(null);
+  let mutationOpts = {attributes: true, attributeFilter: ["disabled"]};
+  let controlledContent = doc.getElementById("browserHomePageExtensionContent");
+
+  // Helper functions.
+  let getButton = pref => doc.querySelector(`.homepage-button[preference="${pref}"`);
+  let waitForAllMutations = () => Promise.all(
+    buttonPrefs.map(pref => waitForMutation(getButton(pref), mutationOpts))
+    .concat([waitForMutation(homePageInput, mutationOpts)]));
+  let getHomepage = () => Services.prefs.getCharPref("browser.startup.homepage");
+
+  let originalHomepage = getHomepage();
+  let extensionHomepage = "https://developer.mozilla.org/";
+  let lockedHomepage = "http://www.yahoo.com";
+
+  let lockPrefs = () => {
+    buttonPrefs.forEach(pref => {
+      prefs.setBoolPref(pref, true);
+      prefs.lockPref(pref);
+    });
+    // Do the homepage last since that's the only pref that triggers a UI update.
+    prefs.setCharPref(homePagePref, lockedHomepage);
+    prefs.lockPref(homePagePref);
+  };
+  let unlockPrefs = () => {
+    buttonPrefs.forEach(pref => {
+      prefs.unlockPref(pref);
+      prefs.setBoolPref(pref, false);
+    });
+    // Do the homepage last since that's the only pref that triggers a UI update.
+    prefs.unlockPref(homePagePref);
+    prefs.setCharPref(homePagePref, originalHomepage);
+  };
+
+  ok(originalHomepage != extensionHomepage, "The extension will change the homepage");
+
+  // Install an extension that sets the homepage to MDN.
+  await installAddon("set_homepage.xpi");
+  await waitForMessageShown(controlledContent.id);
+
+  // Check that everything is still disabled, homepage didn't change.
+  is(getHomepage(), extensionHomepage, "The reported homepage is set by the extension");
+  is(homePageInput.value, extensionHomepage, "The homepage is set by the extension");
+  is(homePageInput.disabled, true, "Homepage is disabled when set by extension");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, true, `${pref} is disabled when set by extension`);
+  });
+  is(controlledContent.hidden, false, "The extension controlled message is shown");
+
+  // Lock all of the prefs, wait for the UI to update.
+  let messageHidden = waitForMessageHidden(controlledContent.id);
+  lockPrefs();
+  await messageHidden;
+
+  // Check that everything is now disabled.
+  is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
+  is(homePageInput.value, lockedHomepage, "The homepage is set by the pref");
+  is(homePageInput.disabled, true, "The homepage is disabed when the pref is locked");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, true, `The ${pref} button is disabled when locked`);
+  });
+  is(controlledContent.hidden, true, "The extension controlled message is hidden when locked");
+
+  // Unlock the prefs, wait for the UI to update.
+  let messageShown = waitForMessageShown(controlledContent.id);
+  unlockPrefs();
+  await messageShown;
+
+  // Verify that the UI is showing the extension's settings.
+  is(homePageInput.value, extensionHomepage, "The homepage is set by the extension");
+  is(homePageInput.disabled, true, "Homepage is disabled when set by extension");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, true, `${pref} is disabled when set by extension`);
+  });
+  is(controlledContent.hidden, false, "The extension controlled message is shown when unlocked");
+
+  // Uninstall the add-on.
+  let addon = await AddonManager.getAddonByID("@set_homepage");
+  addon.uninstall();
+  await waitForMessageHidden(controlledContent.id);
+
+  // Check that everything is now enabled again.
+  is(getHomepage(), originalHomepage, "The reported homepage is reset to original value");
+  is(homePageInput.value, "", "The homepage is empty");
+  is(homePageInput.disabled, false, "The homepage is enabled after clearing lock");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, false, `The ${pref} button is enabled when unlocked`);
+  });
+
+  // Lock the prefs without an extension.
+  lockPrefs();
+  await waitForAllMutations();
+
+  // Check that everything is now disabled.
+  is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");
+  is(homePageInput.value, lockedHomepage, "The homepage is set by the pref");
+  is(homePageInput.disabled, true, "The homepage is disabed when the pref is locked");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, true, `The ${pref} button is disabled when locked`);
+  });
+
+  // Unlock the prefs without an extension.
+  unlockPrefs();
+  await waitForAllMutations();
+
+  // Check that everything is enabled again.
+  is(getHomepage(), originalHomepage, "The homepage is reset to the original value");
+  is(homePageInput.value, "", "The homepage is clear after being unlocked");
+  is(homePageInput.disabled, false, "The homepage is enabled after clearing lock");
+  buttonPrefs.forEach(pref => {
+    is(getButton(pref).disabled, false, `The ${pref} button is enabled when unlocked`);
+  });
+  is(controlledContent.hidden, true,
+     "The extension controlled message is hidden when unlocked with no extension");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -14,7 +14,7 @@
     </style>
     <script type="text/javascript">
       function almostEqual(aX, aY) {
-        var epsilon = 2;
+        var epsilon = 2.6;
         return Math.abs(aX - aY) < epsilon;
       }
 
@@ -34,11 +34,9 @@
            against the reference mtext elements. */
         var ref = document.getElementById("ref");
         var inline = document.getElementById("inline");
-        var display = document.getElementById("display");
         var cell = document.getElementById("cell");
         for (var i = 0; i < ref.children.length; i++) {
           verifySize(inline.children[i], ref.children[i]);
-          verifySize(display.children[i], ref.children[i]);
           verifySize(cell.children[i], ref.children[i]);
         }
 
@@ -63,21 +61,23 @@ should have the same size as inline math
       <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
       <mo>+</mo>
     </mrow>
-  </math>, display math
-<math display="block">
-    <mrow id="display">
-      <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
-      <mo>+</mo>
-    </mrow>
   </math>'
-or math in a table: <math><mtable><mtr>
+or math in a table: '<math><mtable><mtr>
     <mtd>
       <mrow id="cell">
         <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
         <mo>+</mo>
       </mrow>
     </mtd>
-  </mtr></mtable></math>
+  </mtr></mtable></math>'
+(but not necessarily the same size as block-level math
+<math display="block">
+    <mrow id="display">
+      <mtext style="font-family: dtls-1" mathvariant="fraktur">a</mtext>
+      <mo>+</mo>
+    </mrow>
+  </math>
+because it forms a BFC and hence is its own inflation container.)
 Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo

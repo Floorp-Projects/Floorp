@@ -75,6 +75,9 @@ NS_IMETHODIMP SandboxReportWrapper::GetProcType(nsACString& aProcType)
   case SandboxReport::ProcType::CONTENT:
     aProcType.AssignLiteral("content");
     return NS_OK;
+  case SandboxReport::ProcType::FILE:
+    aProcType.AssignLiteral("file");
+    return NS_OK;
   case SandboxReport::ProcType::MEDIA_PLUGIN:
     aProcType.AssignLiteral("mediaPlugin");
     return NS_OK;

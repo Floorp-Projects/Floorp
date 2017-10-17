@@ -1,11 +1,11 @@
 # access-key tests are no use on OS X because access keys are not indicated visually
 # no real XUL theme on Android so we just skip
-skip-if(cocoaWidget||Android) != accesskey-1.xul accesskey-1-notref.xul
-skip-if(cocoaWidget||Android) fails-if(webrender) == accesskey-2.xul accesskey-2-ref.xul
+skip-if(cocoaWidget||Android) fails-if(styloVsGecko) != accesskey-1.xul accesskey-1-notref.xul # stylo: bug 1408811
+skip-if(cocoaWidget||Android) fails-if(webrender) fails-if(stylo||styloVsGecko) == accesskey-2.xul accesskey-2-ref.xul # stylo: bug 1408811
 # accesskey-3 fails because of defects in XUL bidi support
-fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3-ref.xul
-skip-if(cocoaWidget||Android) != accesskey-3.xul accesskey-3-notref.xul
-skip-if(cocoaWidget||Android) fails-if(webrender) == accesskey-4.xul accesskey-4-ref.xul
-skip-if(cocoaWidget||Android) != accesskey-4.xul accesskey-4-notref.xul
-skip-if(Android) == align-baseline-1.xul align-baseline-1-ref.xul # test for bug 494901
-skip-if(Android) == setsize.xul setsize-ref.xul
+fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) fails-if(styloVsGecko) == accesskey-3.xul accesskey-3-ref.xul # stylo: bug 1408811
+skip-if(cocoaWidget||Android) fails-if(styloVsGecko) != accesskey-3.xul accesskey-3-notref.xul # stylo: bug 1408811
+skip-if(cocoaWidget||Android) fails-if(webrender) fails-if(stylo||styloVsGecko) == accesskey-4.xul accesskey-4-ref.xul # stylo: bug 1408811
+skip-if(cocoaWidget||Android) fails-if(styloVsGecko) != accesskey-4.xul accesskey-4-notref.xul # stylo: bug 1408811
+skip-if(Android) fails-if(styloVsGecko) == align-baseline-1.xul align-baseline-1-ref.xul # test for bug 494901, stylo: bug 1408811
+skip-if(Android) fails-if(stylo||styloVsGecko) == setsize.xul setsize-ref.xul # bug 1408235 for stylo

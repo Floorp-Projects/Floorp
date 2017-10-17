@@ -302,6 +302,10 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
     filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters)
 
     def filter(task):
+        attr = task.attributes.get
+        # Don't ship single locale fennec anymore - Bug 1408083
+        if attr("locale") or attr("chunk_locales"):
+            return False
         if task.kind not in ['balrog']:
             return task.attributes.get('nightly', False)
 

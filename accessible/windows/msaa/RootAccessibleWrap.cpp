@@ -124,6 +124,9 @@ RootAccessibleWrap::accNavigate(
   if (!pvarEndUpAt) {
     return E_INVALIDARG;
   }
+  if (IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   Accessible* target = nullptr;
   // Get the document in the active tab.

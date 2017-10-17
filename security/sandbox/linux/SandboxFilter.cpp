@@ -533,11 +533,6 @@ public:
     : mBroker(aBroker),
       mSyscallWhitelist(aSyscallWhitelist) {}
   ~ContentSandboxPolicy() override = default;
-  ResultExpr PrctlPolicy() const override {
-    // Ideally this should be restricted to a whitelist, but content
-    // uses enough things that it's not trivial to determine it.
-    return Allow();
-  }
   Maybe<ResultExpr> EvaluateSocketCall(int aCall) const override {
     switch(aCall) {
     case SYS_RECVFROM:
@@ -714,6 +709,10 @@ public:
 #endif
       return Allow();
 
+#ifdef MOZ_ALSA
+    case __NR_ioctl:
+      return Allow();
+#else
     case __NR_ioctl: {
       static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
       static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
@@ -734,11 +733,15 @@ public:
         // ffmpeg, and anything else that calls isatty(), will be told
         // that nothing is a typewriter:
         .ElseIf(request == TCGETS, Error(ENOTTY))
+        // Bug 1408498: libgio uses FIONREAD on inotify fds.
+        // (We should stop using inotify: bug 1408497.)
+        .ElseIf(request == FIONREAD, Allow())
         // Allow anything that isn't a tty ioctl, for now; bug 1302711
         // will cover changing this to a default-deny policy.
         .ElseIf(shifted_type != kTtyIoctls, Allow())
         .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
     }
+#endif // !MOZ_ALSA
 
     CASES_FOR_fcntl:
       // Some fcntls have significant side effects like sending
@@ -836,11 +839,6 @@ public:
       // NSPR will start a thread to wait for child processes even if
       // fork() fails; see bug 227246 and bug 1299581.
       return Error(ECHILD);
-
-#ifdef __NR_arch_prctl
-    case __NR_arch_prctl:
-#endif
-      return Allow();
 
     case __NR_eventfd2:
     case __NR_inotify_init:

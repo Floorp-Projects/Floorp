@@ -35,6 +35,7 @@ const RequestListContent = createClass({
   displayName: "RequestListContent",
 
   propTypes: {
+    connector: PropTypes.object.isRequired,
     columns: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
@@ -51,10 +52,12 @@ const RequestListContent = createClass({
   },
 
   componentWillMount() {
-    const { dispatch } = this.props;
+    const { dispatch, connector } = this.props;
     this.contextMenu = new RequestListContextMenu({
       cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-      openStatistics: (open) => dispatch(Actions.openStatistics(open)),
+      getTabTarget: connector.getTabTarget,
+      getLongString: connector.getLongString,
+      openStatistics: (open) => dispatch(Actions.openStatistics(connector, open)),
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
   },
@@ -156,8 +159,9 @@ const RequestListContent = createClass({
       return false;
     }
 
+    let { connector } = this.props;
     if (requestItem.responseContent && target.closest(".requests-list-icon")) {
-      return setTooltipImageContent(tooltip, itemEl, requestItem);
+      return setTooltipImageContent(connector, tooltip, itemEl, requestItem);
     }
 
     return false;

@@ -633,11 +633,11 @@ function run() {
   should_not_apply("(grid: -1)");
 
   // System metrics
-  expression_should_be_parseable("-moz-scrollbar-start-backward");
-  expression_should_be_parseable("-moz-scrollbar-start-forward");
-  expression_should_be_parseable("-moz-scrollbar-end-backward");
-  expression_should_be_parseable("-moz-scrollbar-end-forward");
-  expression_should_be_parseable("-moz-scrollbar-thumb-proportional");
+  expression_should_not_be_parseable("-moz-scrollbar-start-backward");
+  expression_should_not_be_parseable("-moz-scrollbar-start-forward");
+  expression_should_not_be_parseable("-moz-scrollbar-end-backward");
+  expression_should_not_be_parseable("-moz-scrollbar-end-forward");
+  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional");
   expression_should_be_parseable("-moz-overlay-scrollbars");
   expression_should_be_parseable("-moz-windows-default-theme");
   expression_should_be_parseable("-moz-mac-graphite-theme");
@@ -649,11 +649,11 @@ function run() {
   expression_should_be_parseable("-moz-touch-enabled");
   expression_should_be_parseable("-moz-swipe-animation-enabled");
 
-  expression_should_be_parseable("-moz-scrollbar-start-backward: 0");
-  expression_should_be_parseable("-moz-scrollbar-start-forward: 0");
-  expression_should_be_parseable("-moz-scrollbar-end-backward: 0");
-  expression_should_be_parseable("-moz-scrollbar-end-forward: 0");
-  expression_should_be_parseable("-moz-scrollbar-thumb-proportional: 0");
+  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 0");
+  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 0");
+  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 0");
+  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 0");
+  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 0");
   expression_should_be_parseable("-moz-overlay-scrollbars: 0");
   expression_should_be_parseable("-moz-windows-default-theme: 0");
   expression_should_be_parseable("-moz-mac-graphite-theme: 0");
@@ -665,11 +665,11 @@ function run() {
   expression_should_be_parseable("-moz-touch-enabled: 0");
   expression_should_be_parseable("-moz-swipe-animation-enabled: 0");
 
-  expression_should_be_parseable("-moz-scrollbar-start-backward: 1");
-  expression_should_be_parseable("-moz-scrollbar-start-forward: 1");
-  expression_should_be_parseable("-moz-scrollbar-end-backward: 1");
-  expression_should_be_parseable("-moz-scrollbar-end-forward: 1");
-  expression_should_be_parseable("-moz-scrollbar-thumb-proportional: 1");
+  expression_should_not_be_parseable("-moz-scrollbar-start-backward: 1");
+  expression_should_not_be_parseable("-moz-scrollbar-start-forward: 1");
+  expression_should_not_be_parseable("-moz-scrollbar-end-backward: 1");
+  expression_should_not_be_parseable("-moz-scrollbar-end-forward: 1");
+  expression_should_not_be_parseable("-moz-scrollbar-thumb-proportional: 1");
   expression_should_be_parseable("-moz-overlay-scrollbars: 1");
   expression_should_be_parseable("-moz-windows-default-theme: 1");
   expression_should_be_parseable("-moz-mac-graphite-theme: 1");

@@ -18,36 +18,40 @@ class GMPContentChild;
 
 class ChromiumCDMChild : public PChromiumCDMChild
                        , public cdm::Host_8
+                       , public cdm::Host_9
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMChild);
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
-  void Init(cdm::ContentDecryptionModule_8* aCDM);
+  void Init(cdm::ContentDecryptionModule_9* aCDM);
 
   void TimerExpired(void* aContext);
 
-  // cdm::Host_8
+  // cdm::Host_9 implementation
   cdm::Buffer* Allocate(uint32_t aCapacity) override;
   void SetTimer(int64_t aDelayMs, void* aContext) override;
   cdm::Time GetCurrentWallTime() override;
+  // cdm::Host_9 interface
+  void OnResolveKeyStatusPromise(uint32_t aPromiseId,
+                                 cdm::KeyStatus aKeyStatus) override;
   void OnResolveNewSessionPromise(uint32_t aPromiseId,
                                   const char* aSessionId,
                                   uint32_t aSessionIdSize) override;
   void OnResolvePromise(uint32_t aPromiseId) override;
+  // cdm::Host_9 interface
   void OnRejectPromise(uint32_t aPromiseId,
-                       cdm::Error aError,
+                       cdm::Exception aException,
                        uint32_t aSystemCode,
                        const char* aErrorMessage,
                        uint32_t aErrorMessageSize) override;
+  // cdm::Host_9 interface
   void OnSessionMessage(const char* aSessionId,
                         uint32_t aSessionIdSize,
                         cdm::MessageType aMessageType,
                         const char* aMessage,
-                        uint32_t aMessageSize,
-                        const char* aLegacyDestinationUrl,
-                        uint32_t aLegacyDestinationUrlLength) override;
+                        uint32_t aMessageSize) override;
   void OnSessionKeysChange(const char* aSessionId,
                            uint32_t aSessionIdSize,
                            bool aHasAdditionalUsableKey,
@@ -58,12 +62,6 @@ public:
                           cdm::Time aNewExpiryTime) override;
   void OnSessionClosed(const char* aSessionId,
                        uint32_t aSessionIdSize) override;
-  void OnLegacySessionError(const char* aSessionId,
-                            uint32_t aSessionIdLength,
-                            cdm::Error aError,
-                            uint32_t aSystemCode,
-                            const char* aErrorMessage,
-                            uint32_t aErrorMessageLength) override;
   void SendPlatformChallenge(const char* aServiceId,
                              uint32_t aServiceIdSize,
                              const char* aChallenge,
@@ -72,7 +70,30 @@ public:
   void QueryOutputProtectionStatus() override {}
   void OnDeferredInitializationDone(cdm::StreamType aStreamType,
                                     cdm::Status aDecoderStatus) override {}
+  // cdm::Host_9 interface
+  // TODO: sync with unpstream, the interface has changed.
+  void RequestStorageId() override {}
   cdm::FileIO* CreateFileIO(cdm::FileIOClient* aClient) override;
+
+  // cdm::Host_8 implementation
+  void OnSessionMessage(const char* aSessionId,
+                        uint32_t aSessionIdSize,
+                        cdm::MessageType aMessageType,
+                        const char* aMessage,
+                        uint32_t aMessageSize,
+                        const char* aLegacyDestinationUrl,
+                        uint32_t aLegacyDestinationUrlLength) override;
+  void OnRejectPromise(uint32_t aPromiseId,
+                       cdm::Error aError,
+                       uint32_t aSystemCode,
+                       const char* aErrorMessage,
+                       uint32_t aErrorMessageSize) override;
+  void OnLegacySessionError(const char* aSessionId,
+                            uint32_t aSessionIdLength,
+                            cdm::Error aError,
+                            uint32_t aSystemCode,
+                            const char* aErrorMessage,
+                            uint32_t aErrorMessageLength) override;
 
   void GiveBuffer(ipc::Shmem&& aBuffer);
 
@@ -128,7 +149,7 @@ protected:
   void CallOnMessageLoopThread(const char* const, MethodType, ParamType&&...);
 
   GMPContentChild* mPlugin = nullptr;
-  cdm::ContentDecryptionModule_8* mCDM = nullptr;
+  cdm::ContentDecryptionModule_9* mCDM = nullptr;
 
   typedef SimpleMap<uint64_t> DurationMap;
   DurationMap mFrameDurations;

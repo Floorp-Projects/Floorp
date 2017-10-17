@@ -177,8 +177,7 @@ class HTMLElement(object):
             of the DOMRect of the ``HTMLElement``.
         """
         body = {"id": self.id}
-        return self.marionette._send_message(
-            "getElementRect", body, key="value" if self.marionette.protocol == 1 else None)
+        return self.marionette._send_message("getElementRect", body)
 
     def value_of_css_property(self, property_name):
         """Gets the value of the specified CSS property name.
@@ -741,15 +740,7 @@ class Marionette(object):
             raise errors.MarionetteException("Please start a session")
 
         try:
-            if self.protocol < 3:
-                data = {"name": name}
-                if params is not None:
-                    data["parameters"] = params
-                self.client.send(data)
-                msg = self.client.receive()
-
-            else:
-                msg = self.client.request(name, params)
+            msg = self.client.request(name, params)
 
         except IOError:
             self.delete_session(send_request=False)
@@ -777,18 +768,9 @@ class Marionette(object):
             return value
 
     def _handle_error(self, obj):
-        if self.protocol == 1:
-            if "error" not in obj or not isinstance(obj["error"], dict):
-                raise errors.MarionetteException(
-                    "Malformed packet, expected key 'error' to be a dict: {}".format(obj))
-            error = obj["error"].get("status")
-            message = obj["error"].get("message")
-            stacktrace = obj["error"].get("stacktrace")
-
-        else:
-            error = obj["error"]
-            message = obj["message"]
-            stacktrace = obj["stacktrace"]
+        error = obj["error"]
+        message = obj["message"]
+        stacktrace = obj["stacktrace"]
 
         raise errors.lookup(error)(message, stacktrace=stacktrace)
 
@@ -1260,7 +1242,7 @@ class Marionette(object):
 
         resp = self._send_message("newSession", body)
         self.session_id = resp["sessionId"]
-        self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
+        self.session = resp["capabilities"]
         # fallback to processId can be removed in Firefox 55
         self.process_id = self.session.get("moz:processID", self.session.get("processId"))
         self.profile = self.session.get("moz:profile")
@@ -1404,8 +1386,7 @@ class Marionette(object):
         """
         warnings.warn("get_window_position() has been deprecated, please use get_window_rect()",
                       DeprecationWarning)
-        return self._send_message(
-            "getWindowPosition", key="value" if self.protocol == 1 else None)
+        return self._send_message("getWindowPosition")
 
     def set_window_position(self, x, y):
         """Set the position of the current window
@@ -1461,8 +1442,7 @@ class Marionette(object):
 
         :returns: Unordered list of unique window handles as strings
         """
-        return self._send_message(
-            "getWindowHandles", key="value" if self.protocol == 1 else None)
+        return self._send_message("getWindowHandles")
 
     @property
     def chrome_window_handles(self):
@@ -1473,8 +1453,7 @@ class Marionette(object):
 
         :returns: Unordered list of unique chrome window handles as strings
         """
-        return self._send_message(
-            "getChromeWindowHandles", key="value" if self.protocol == 1 else None)
+        return self._send_message("getChromeWindowHandles")
 
     @property
     def page_source(self):
@@ -1903,13 +1882,10 @@ class Marionette(object):
         body = {"value": target, "using": method}
         if id:
             body["element"] = id
-        return self._send_message(
-            "findElements", body, key="value" if self.protocol == 1 else None)
+        return self._send_message("findElements", body)
 
     def get_active_element(self):
         el_or_ref = self._send_message("getActiveElement", key="value")
-        if self.protocol < 3:
-            return HTMLElement(self, el_or_ref)
         return el_or_ref
 
     def add_cookie(self, cookie):
@@ -1975,7 +1951,7 @@ class Marionette(object):
 
         :returns: A list of cookies for the current domain.
         """
-        return self._send_message("getCookies", key="value" if self.protocol == 1 else None)
+        return self._send_message("getCookies")
 
     def screenshot(self, element=None, highlights=None, format="base64",
                    full=True, scroll=True):
@@ -2070,8 +2046,7 @@ class Marionette(object):
         """
         warnings.warn("window_size property has been deprecated, please use get_window_rect()",
                       DeprecationWarning)
-        return self._send_message("getWindowSize",
-                                  key="value" if self.protocol == 1 else None)
+        return self._send_message("getWindowSize")
 
     def set_window_size(self, width, height):
         """Resize the browser window currently in focus.

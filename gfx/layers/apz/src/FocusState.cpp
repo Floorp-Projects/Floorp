@@ -43,10 +43,10 @@ FocusState::Update(uint64_t aRootLayerTreeId,
                    uint64_t aOriginatingLayersId,
                    const FocusTarget& aState)
 {
-  FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%d, %" PRIu64 ")\n",
+  FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%s, %" PRIu64 ")\n",
          aRootLayerTreeId,
          aOriginatingLayersId,
-         static_cast<int>(aState.mType),
+         aState.Type(),
          aState.mSequenceNumber);
 
   // Update the focus tree with the latest target

@@ -138,7 +138,8 @@ SourceMapURLService.prototype._onNewStyleSheet = function (sheet) {
     return;
   }
 
-  let {href: url, sourceMapURL, actor: id} = sheet._form;
+  let {href, nodeHref, sourceMapURL, actorID: id} = sheet;
+  let url = href || nodeHref;
   this._urls.set(url, { id, url, sourceMapURL});
   this._idMap.set(id, url);
 };

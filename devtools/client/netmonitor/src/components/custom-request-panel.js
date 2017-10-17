@@ -148,6 +148,7 @@ function CustomRequestPanel({
 CustomRequestPanel.displayName = "CustomRequestPanel";
 
 CustomRequestPanel.propTypes = {
+  connector: PropTypes.object.isRequired,
   removeSelectedCustomRequest: PropTypes.func.isRequired,
   request: PropTypes.object,
   sendCustomRequest: PropTypes.func.isRequired,
@@ -249,9 +250,9 @@ function updateCustomRequestFields(evt, request, updateRequest) {
 
 module.exports = connect(
   (state) => ({ request: getSelectedRequest(state) }),
-  (dispatch) => ({
+  (dispatch, props) => ({
     removeSelectedCustomRequest: () => dispatch(Actions.removeSelectedCustomRequest()),
-    sendCustomRequest: () => dispatch(Actions.sendCustomRequest()),
+    sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     updateRequest: (id, data, batch) => dispatch(Actions.updateRequest(id, data, batch)),
   })
 )(CustomRequestPanel);

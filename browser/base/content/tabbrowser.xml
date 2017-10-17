@@ -3954,20 +3954,6 @@
         </body>
       </method>
 
-      <!-- Opens a given tab to a non-remote window. -->
-      <method name="openNonRemoteWindow">
-        <parameter name="aTab"/>
-        <body>
-          <![CDATA[
-            if (!AppConstants.E10S_TESTING_ONLY) {
-              throw "This method is intended only for e10s testing!";
-            }
-            let url = aTab.linkedBrowser.currentURI.spec;
-            return window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no,non-remote", url);
-          ]]>
-        </body>
-      </method>
-
       <method name="moveTabTo">
         <parameter name="aTab"/>
         <parameter name="aIndex"/>
@@ -5544,14 +5530,11 @@
             }
           } else {
             label = tab._fullLabel || tab.getAttribute("label");
-            if (AppConstants.E10S_TESTING_ONLY &&
+            if (AppConstants.NIGHTLY_BUILD &&
                 tab.linkedBrowser &&
-                tab.linkedBrowser.isRemoteBrowser) {
-              label += " - e10s";
-              if (tab.linkedBrowser.frameLoader &&
-                  Services.appinfo.maxWebProcessCount > 1) {
-                label += " (" + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
-              }
+                tab.linkedBrowser.isRemoteBrowser &&
+                tab.linkedBrowser.frameLoader) {
+              label += " (pid " + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
             }
             if (tab.userContextId) {
               label = this.mStringBundle.getFormattedString("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)]);

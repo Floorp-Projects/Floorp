@@ -17,19 +17,6 @@
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
 
 <preferences id="mainPreferences" hidden="true" data-category="paneGeneral">
-
-#ifdef E10S_TESTING_ONLY
-    <preference id="browser.tabs.remote.autostart"
-                name="browser.tabs.remote.autostart"
-                type="bool"/>
-    <preference id="e10sTempPref"
-                name="browser.tabs.remote.autostart.2"
-                type="bool"/>
-    <preference id="e10sForceEnable"
-                name="browser.tabs.remote.force-enable"
-                type="bool"/>
-#endif
-
     <!-- Startup -->
     <preference id="browser.startup.page"
                 name="browser.startup.page"
@@ -296,11 +283,6 @@
       </deck>
     </hbox>
   </vbox>
-#endif
-
-#ifdef E10S_TESTING_ONLY
-  <checkbox id="e10sAutoStart"
-            label="&e10sEnabled.label;"/>
 #endif
 
 #ifdef HAVE_SHELL_SERVICE

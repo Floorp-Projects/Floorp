@@ -14,7 +14,6 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
-const { getLongString } = require("../connector/index");
 const { getFormDataSections } = require("../utils/request-utils");
 const { getSelectedRequest } = require("../selectors/index");
 
@@ -26,7 +25,7 @@ const Toolbar = createFactory(require("./toolbar"));
 const { div } = DOM;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
 
-/*
+/**
  * Monitor panel component
  * The main panel for displaying various network request information
  */
@@ -34,11 +33,11 @@ const MonitorPanel = createClass({
   displayName: "MonitorPanel",
 
   propTypes: {
+    connector: PropTypes.object.isRequired,
     isEmpty: PropTypes.bool.isRequired,
     networkDetailsOpen: PropTypes.bool.isRequired,
     openNetworkDetails: PropTypes.func.isRequired,
     request: PropTypes.object,
-    // Service to enable the source map feature.
     sourceMapService: PropTypes.object,
     openLink: PropTypes.func,
     updateRequest: PropTypes.func.isRequired,
@@ -72,7 +71,7 @@ const MonitorPanel = createClass({
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
-        getLongString,
+        this.props.connector.getLongString,
       ).then((newFormDataSections) => {
         updateRequest(
           request.id,
@@ -106,6 +105,7 @@ const MonitorPanel = createClass({
 
   render() {
     let {
+      connector,
       isEmpty,
       networkDetailsOpen,
       sourceMapService,
@@ -126,9 +126,10 @@ const MonitorPanel = createClass({
           minSize: "50px",
           maxSize: "80%",
           splitterSize: "1px",
-          startPanel: RequestList({ isEmpty }),
+          startPanel: RequestList({ isEmpty, connector }),
           endPanel: networkDetailsOpen && NetworkDetailsPanel({
             ref: "endPanel",
+            connector,
             sourceMapService,
             openLink,
           }),

@@ -8,19 +8,18 @@ const {
   setImageTooltip,
   getImageDimensions,
 } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const { getLongString } = require("./connector/index");
 const { formDataURI } = require("./utils/request-utils");
 
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px
 
-async function setTooltipImageContent(tooltip, itemEl, requestItem) {
+async function setTooltipImageContent(connector, tooltip, itemEl, requestItem) {
   let { mimeType, text, encoding } = requestItem.responseContent.content;
 
   if (!mimeType || !mimeType.includes("image/")) {
     return false;
   }
 
-  let string = await getLongString(text);
+  let string = await connector.getLongString(text);
   let src = formDataURI(mimeType, encoding, string);
   let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
   let { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);

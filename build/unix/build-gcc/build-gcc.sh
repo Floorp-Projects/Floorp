@@ -66,8 +66,26 @@ prepare() {
   popd
 }
 
+prepare_mingw() {
+  export install_dir=$root_dir/tools/gcc/
+  mkdir -p $install_dir
+  export PATH=$PATH:$install_dir/bin/
+
+  cd $root_dir
+
+  git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
+  pushd mingw-w64
+  git checkout $mingw_version # Asserts the integrity of the checkout (Right?)
+  popd
+}
+
 apply_patch() {
-  pushd $root_dir/gcc-$gcc_version
+  if [ $# -ge 2 ]; then
+    pushd $root_dir/$1
+    shift
+  else
+    pushd $root_dir/gcc-$gcc_version
+  fi
   patch -p1 < $1
   popd
 }
@@ -102,17 +120,6 @@ build_gcc() {
 }
 
 build_gcc_and_mingw() {
-  export install_dir=$root_dir/tools/gcc/
-  mkdir -p $install_dir
-  export PATH=$PATH:$install_dir/bin/
-
-  cd $root_dir
-
-  git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
-  pushd mingw-w64
-  git checkout $mingw_version # Asserts the integrity of the checkout (Right?)
-  popd
-
   mkdir gcc-objdir
   pushd gcc-objdir
   ../gcc-$gcc_version/configure --prefix=$install_dir --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --disable-multilib --enable-threads=posix

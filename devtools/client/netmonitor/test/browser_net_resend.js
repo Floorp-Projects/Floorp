@@ -16,7 +16,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, store, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSelectedRequest,
@@ -51,7 +51,7 @@ add_task(function* () {
 
   // send the new request
   wait = waitForNetworkEvents(monitor, 0, 1);
-  store.dispatch(Actions.sendCustomRequest());
+  store.dispatch(Actions.sendCustomRequest(connector));
   yield wait;
 
   let sentItem = getSelectedRequest(store.getState());

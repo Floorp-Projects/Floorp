@@ -81,7 +81,7 @@ action.Chain.prototype.dispatchActions = function (
 
   return new Promise(resolve => {
     this.actions(commandArray, touchId, 0, keyModifiers, resolve);
-  }).catch(this.resetValues);
+  }).catch(this.resetValues.bind(this));
 };
 
 /**

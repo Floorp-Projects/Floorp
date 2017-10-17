@@ -120,6 +120,11 @@ use style::values::{CSSFloat, Either};
 use style::values::{specified, computed};
 use stylesheet_loader::StylesheetOwner;
 use task::TaskOnce;
+use xml5ever::serialize as xmlSerialize;
+use xml5ever::serialize::SerializeOpts as XmlSerializeOpts;
+use xml5ever::serialize::TraversalScope as XmlTraversalScope;
+use xml5ever::serialize::TraversalScope::ChildrenOnly as XmlChildrenOnly;
+use xml5ever::serialize::TraversalScope::IncludeNode as XmlIncludeNode;
 
 // TODO: Update focus state when the top-level browsing context gains or loses system focus,
 // and when the element enters or leaves a browsing context container.
@@ -276,7 +281,7 @@ impl Element {
                prefix: Option<Prefix>,
                document: &Document) -> DomRoot<Element> {
         Node::reflect_node(
-            box Element::new_inherited(local_name, namespace, prefix, document),
+            Box::new(Element::new_inherited(local_name, namespace, prefix, document)),
             document,
             ElementBinding::Wrap)
     }
@@ -999,6 +1004,19 @@ impl Element {
                             ..Default::default()
                         }) {
             // FIXME(ajeffrey): Directly convert UTF8 to DOMString
+            Ok(()) => Ok(DOMString::from(String::from_utf8(writer).unwrap())),
+            Err(_) => panic!("Cannot serialize element"),
+        }
+    }
+
+    pub fn xmlSerialize(&self, traversal_scope: XmlTraversalScope) -> Fallible<DOMString> {
+        let mut writer = vec![];
+        match xmlSerialize::serialize(&mut writer,
+                        &self.upcast::<Node>(),
+                        XmlSerializeOpts {
+                            traversal_scope: traversal_scope,
+                            ..Default::default()
+                        }) {
             Ok(()) => Ok(DOMString::from(String::from_utf8(writer).unwrap())),
             Err(_) => panic!("Cannot serialize element"),
         }
@@ -2047,11 +2065,14 @@ impl ElementMethods for Element {
 
     /// https://w3c.github.io/DOM-Parsing/#widl-Element-innerHTML
     fn GetInnerHTML(&self) -> Fallible<DOMString> {
-        // XXX TODO: XML case
         let qname = QualName::new(self.prefix().clone(),
                                   self.namespace().clone(),
                                   self.local_name().clone());
-        self.serialize(ChildrenOnly(Some(qname)))
+        if document_from_node(self).is_html_document() {
+            return self.serialize(ChildrenOnly(Some(qname)));
+        } else {
+            return self.xmlSerialize(XmlChildrenOnly(Some(qname)));
+        }
     }
 
     /// https://w3c.github.io/DOM-Parsing/#widl-Element-innerHTML
@@ -2071,7 +2092,11 @@ impl ElementMethods for Element {
 
     // https://dvcs.w3.org/hg/innerhtml/raw-file/tip/index.html#widl-Element-outerHTML
     fn GetOuterHTML(&self) -> Fallible<DOMString> {
-        self.serialize(IncludeNode)
+        if document_from_node(self).is_html_document() {
+            return self.serialize(IncludeNode);
+        } else {
+            return self.xmlSerialize(XmlIncludeNode);
+        }
     }
 
     // https://w3c.github.io/DOM-Parsing/#dom-element-outerhtml
@@ -3040,11 +3065,11 @@ pub struct ElementPerformFullscreenEnter {
 
 impl ElementPerformFullscreenEnter {
     pub fn new(element: Trusted<Element>, promise: TrustedPromise, error: bool) -> Box<ElementPerformFullscreenEnter> {
-        box ElementPerformFullscreenEnter {
+        Box::new(ElementPerformFullscreenEnter {
             element: element,
             promise: promise,
             error: error,
-        }
+        })
     }
 }
 
@@ -3083,10 +3108,10 @@ pub struct ElementPerformFullscreenExit {
 
 impl ElementPerformFullscreenExit {
     pub fn new(element: Trusted<Element>, promise: TrustedPromise) -> Box<ElementPerformFullscreenExit> {
-        box ElementPerformFullscreenExit {
+        Box::new(ElementPerformFullscreenExit {
             element: element,
             promise: promise,
-        }
+        })
     }
 }
 

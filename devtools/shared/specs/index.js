@@ -190,7 +190,7 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/styles",
   },
   {
-    types: ["originalsource", "mediarule", "stylesheet", "stylesheets"],
+    types: ["mediarule", "stylesheet", "stylesheets"],
     spec: "devtools/shared/specs/stylesheets",
     front: "devtools/shared/fronts/stylesheets",
   },

@@ -16,12 +16,11 @@ function* throttleUploadTest(actuallyThrottle) {
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
-  let { store, windowRequire } = monitor.panelWin;
+  let { connector, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { setPreferences } =
-    windowRequire("devtools/client/netmonitor/src/connector/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/src/request-list-context-menu");
+  let { getLongString, getTabTarget, setPreferences } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -54,7 +53,7 @@ function* throttleUploadTest(actuallyThrottle) {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let contextMenu = new RequestListContextMenu({});
+  let contextMenu = new RequestListContextMenu({ getTabTarget, getLongString });
   let jsonString = yield contextMenu.copyAllAsHar();
   let har = JSON.parse(jsonString);
 
