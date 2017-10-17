@@ -7,6 +7,7 @@
 #include "FlexItem.h"
 
 #include "mozilla/dom/FlexBinding.h"
+#include "nsFlexContainerFrame.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +20,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexItem)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-FlexItem::FlexItem(FlexLine* aParent)
+FlexItem::FlexItem(FlexLine* aParent,
+                   const ComputedFlexItemInfo* aItem)
   : mParent(aParent)
 {
+  MOZ_ASSERT(aItem,
+    "Should never be instantiated with a null ComputedFlexLineInfo.");
+
+  // Eagerly copy values from aItem, because we're not
+  // going to keep it around.
+  mNode = aItem->mNode;
+
+  // Convert app unit sizes to css pixel sizes.
+  mMainBaseSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mMainBaseSize);
+  mMainDeltaSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mMainDeltaSize);
+  mMainMinSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mMainMinSize);
+  mMainMaxSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mMainMaxSize);
+  mCrossMinSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mCrossMinSize);
+  mCrossMaxSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aItem->mCrossMaxSize);
 }
 
 JSObject*
@@ -33,43 +55,43 @@ FlexItem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 nsINode*
 FlexItem::GetNode() const
 {
-  return nullptr;
+  return mNode;
 }
 
 double
 FlexItem::MainBaseSize() const
 {
-  return 0;
+  return mMainBaseSize;
 }
 
 double
 FlexItem::MainDeltaSize() const
 {
-  return 0;
+  return mMainDeltaSize;
 }
 
 double
 FlexItem::MainMinSize() const
 {
-  return 0;
+  return mMainMinSize;
 }
 
 double
 FlexItem::MainMaxSize() const
 {
-  return 0;
+  return mMainMaxSize;
 }
 
 double
 FlexItem::CrossMinSize() const
 {
-  return 0;
+  return mCrossMinSize;
 }
 
 double
 FlexItem::CrossMaxSize() const
 {
-  return 0;
+  return mCrossMaxSize;
 }
 
 } // namespace dom

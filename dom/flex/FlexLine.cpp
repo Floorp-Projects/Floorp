@@ -8,6 +8,7 @@
 
 #include "FlexItem.h"
 #include "mozilla/dom/FlexBinding.h"
+#include "nsFlexContainerFrame.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,9 +21,43 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexLine)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-FlexLine::FlexLine(Flex* aParent)
+FlexLine::FlexLine(Flex* aParent,
+                   const ComputedFlexLineInfo* aLine)
   : mParent(aParent)
 {
+  MOZ_ASSERT(aLine,
+    "Should never be instantiated with a null ComputedFlexLineInfo.");
+
+  // Eagerly copy values from aLine, because we're not
+  // going to keep it around.
+  switch (aLine->mGrowthState) {
+    case ComputedFlexLineInfo::GrowthState::SHRINKING:
+      mGrowthState = FlexLineGrowthState::Shrinking;
+      break;
+
+    case ComputedFlexLineInfo::GrowthState::GROWING:
+      mGrowthState = FlexLineGrowthState::Growing;
+      break;
+
+    default:
+      mGrowthState = FlexLineGrowthState::Unchanged;
+  };
+
+  // Convert all the app unit values into css pixels.
+  mCrossSize = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aLine->mCrossSize);
+  mFirstBaselineOffset = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aLine->mFirstBaselineOffset);
+  mLastBaselineOffset = nsPresContext::AppUnitsToDoubleCSSPixels(
+    aLine->mLastBaselineOffset);
+
+  mItems.SetLength(aLine->mItems.Length());
+  uint32_t index = 0;
+  for (auto&& i : aLine->mItems) {
+    FlexItem* item = new FlexItem(this, &i);
+    mItems.ElementAt(index) = item;
+    index++;
+  }
 }
 
 JSObject*
@@ -34,25 +69,25 @@ FlexLine::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 FlexLineGrowthState
 FlexLine::GrowthState() const
 {
-  return FlexLineGrowthState::Unchanged;
+  return mGrowthState;
 }
 
 double
 FlexLine::CrossSize() const
 {
-  return 0;
+  return mCrossSize;
 }
 
 double
 FlexLine::FirstBaselineOffset() const
 {
-  return 0;
+  return mFirstBaselineOffset;
 }
 
 double
 FlexLine::LastBaselineOffset() const
 {
-  return 0;
+  return mLastBaselineOffset;
 }
 
 void
