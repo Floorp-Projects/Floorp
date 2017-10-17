@@ -71,7 +71,6 @@ private:
   UniquePtr<nsHttpResponseHead> mSynthesizedResponseHead;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIInputStream> mBodyReader;
-  nsCOMPtr<nsIOutputStream> mBodyWriter;
   nsCOMPtr<nsISupports> mReleaseHandle;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIInterceptedBodyCallback> mBodyCallback;

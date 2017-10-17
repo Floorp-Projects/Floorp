@@ -50,13 +50,6 @@ InterceptedChannelBase::~InterceptedChannelBase()
 {
 }
 
-NS_IMETHODIMP
-InterceptedChannelBase::GetResponseBody(nsIOutputStream** aStream)
-{
-  NS_IF_ADDREF(*aStream = mResponseBody);
-  return NS_OK;
-}
-
 void
 InterceptedChannelBase::EnsureSynthesizedResponse()
 {
@@ -229,11 +222,6 @@ InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
 void
 InterceptedChannelContent::NotifyController()
 {
-  nsresult rv = NS_NewPipe(getter_AddRefs(mSynthesizedInput),
-                           getter_AddRefs(mResponseBody),
-                           0, UINT32_MAX, true, true);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
   DoNotifyController();
 }
 
@@ -253,10 +241,6 @@ InterceptedChannelContent::ResetInterception()
 
   mReportCollector->FlushConsoleReports(mChannel);
 
-  mResponseBody->Close();
-  mResponseBody = nullptr;
-  mSynthesizedInput = nullptr;
-
   mChannel->ResetInterception();
 
   mClosed = true;
@@ -267,7 +251,7 @@ InterceptedChannelContent::ResetInterception()
 NS_IMETHODIMP
 InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus, const nsACString& aReason)
 {
-  if (!mResponseBody) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -277,7 +261,7 @@ InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus, const nsACString& 
 NS_IMETHODIMP
 InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACString& aValue)
 {
-  if (!mResponseBody) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -331,14 +315,8 @@ InterceptedChannelContent::FinishSynthesizedResponse()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Make sure the body output stream is always closed.  If the channel was
-  // intercepted with a null-body response then its possible the synthesis
-  // completed without a stream copy operation.
-  mResponseBody->Close();
-
   mReportCollector->FlushConsoleReports(mChannel);
 
-  mResponseBody = nullptr;
   mStreamListener = nullptr;
   mClosed = true;
 
