@@ -83,7 +83,6 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     outstanding_(0),
     currentTask_(nullptr),
     batchedBytecode_(0),
-    startedFuncDefs_(false),
     finishedFuncDefs_(false)
 {
     MOZ_ASSERT(IsCompilingWasm());
@@ -138,8 +137,6 @@ ModuleGenerator::~ModuleGenerator()
 bool
 ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset)
 {
-    MOZ_ASSERT(!startedFuncDefs_);
-
     CheckedInt<uint32_t> newGlobalDataLength(metadata_->globalDataLength);
 
     newGlobalDataLength += ComputeByteAlignment(newGlobalDataLength.value(), align);
@@ -157,7 +154,7 @@ ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* g
 }
 
 bool
-ModuleGenerator::init(size_t codeSectionSize, Metadata* maybeAsmJSMetadata)
+ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
 {
     // Perform fallible metadata, linkdata, assumption allocations.
 
@@ -200,6 +197,8 @@ ModuleGenerator::init(size_t codeSectionSize, Metadata* maybeAsmJSMetadata)
     // final reallocs. In particular, the MacroAssembler can be enormous, so be
     // extra conservative. Note, podResizeToFit calls at the end will trim off
     // unneeded capacity.
+
+    uint32_t codeSectionSize = env_->codeSection ? env_->codeSection->size : 0;
 
     if (!masm_.reserve(size_t(1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize))))
         return false;
@@ -311,6 +310,44 @@ ModuleGenerator::init(size_t codeSectionSize, Metadata* maybeAsmJSMetadata)
         metadataTier_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex);
     }
 
+    // Determine whether parallel or sequential compilation is to be used and
+    // initialize the CompileTasks that will be used in either mode.
+
+    GlobalHelperThreadState& threads = HelperThreadState();
+    MOZ_ASSERT(threads.threadCount > 1);
+
+    uint32_t numTasks;
+    if (CanUseExtraThreads() && threads.cpuCount > 1) {
+        parallel_ = true;
+        numTasks = 2 * threads.maxWasmCompilationThreads();
+    } else {
+        numTasks = 1;
+    }
+
+    if (!tasks_.initCapacity(numTasks))
+        return false;
+    for (size_t i = 0; i < numTasks; i++)
+        tasks_.infallibleEmplaceBack(*env_, taskState_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+
+    if (!freeTasks_.reserve(numTasks))
+        return false;
+    for (size_t i = 0; i < numTasks; i++)
+        freeTasks_.infallibleAppend(&tasks_[i]);
+
+    // Fill in function stubs for each import so that imported functions can be
+    // used in all the places that normal function definitions can (table
+    // elements, export calls, etc).
+
+    CompiledCode& importCode = tasks_[0].output;
+    MOZ_ASSERT(importCode.empty());
+
+    if (!GenerateImportFunctions(*env_, metadataTier_->funcImports, &importCode))
+        return false;
+
+    if (!linkCompiledCode(importCode))
+        return false;
+
+    importCode.clear();
     return true;
 }
 
@@ -574,53 +611,6 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
     return true;
 }
 
-bool
-ModuleGenerator::startFuncDefs()
-{
-    MOZ_ASSERT(!startedFuncDefs_);
-    MOZ_ASSERT(!finishedFuncDefs_);
-
-    GlobalHelperThreadState& threads = HelperThreadState();
-    MOZ_ASSERT(threads.threadCount > 1);
-
-    uint32_t numTasks;
-    if (CanUseExtraThreads() && threads.cpuCount > 1) {
-        parallel_ = true;
-        numTasks = 2 * threads.maxWasmCompilationThreads();
-    } else {
-        numTasks = 1;
-    }
-
-    if (!tasks_.initCapacity(numTasks))
-        return false;
-    for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, taskState_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
-
-    if (!freeTasks_.reserve(numTasks))
-        return false;
-    for (size_t i = 0; i < numTasks; i++)
-        freeTasks_.infallibleAppend(&tasks_[i]);
-
-    // Fill in function stubs for each import so that imported functions can be
-    // used in all the places that normal function definitions can (table
-    // elements, export calls, etc).
-
-    CompiledCode& importCode = tasks_[0].output;
-    MOZ_ASSERT(importCode.empty());
-
-    if (!GenerateImportFunctions(*env_, metadataTier_->funcImports, &importCode))
-        return false;
-
-    if (!linkCompiledCode(importCode))
-        return false;
-
-    importCode.clear();
-
-    startedFuncDefs_ = true;
-    MOZ_ASSERT(!finishedFuncDefs_);
-    return true;
-}
-
 static bool
 ExecuteCompileTask(CompileTask* task, UniqueChars* error)
 {
@@ -746,9 +736,8 @@ ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
                                 const uint8_t* begin, const uint8_t* end,
                                 Uint32Vector&& lineNums)
 {
-    MOZ_ASSERT(startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
-    MOZ_ASSERT_IF(mode() == CompileMode::Tier1, funcIndex < env_->numFuncs());
+    MOZ_ASSERT(funcIndex < env_->numFuncs());
 
     if (!currentTask_) {
         if (freeTasks_.empty() && !finishOutstandingTask())
@@ -777,33 +766,21 @@ ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
 bool
 ModuleGenerator::finishFuncDefs()
 {
-    MOZ_ASSERT(startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
     if (currentTask_ && !launchBatchCompile())
         return false;
-
-    while (outstanding_ > 0) {
-        if (!finishOutstandingTask())
-            return false;
-    }
 
     finishedFuncDefs_ = true;
     return true;
 }
 
 bool
-ModuleGenerator::finishLinking()
+ModuleGenerator::finishCode()
 {
-    // All functions and traps CodeRanges should have been processed.
-
-#ifdef DEBUG
-    for (uint32_t codeRangeIndex : funcToCodeRange_)
-        MOZ_ASSERT(codeRangeIndex != BAD_CODE_RANGE);
-#endif
-
     // Now that all functions and stubs are generated and their CodeRanges
-    // known, patch all calls (which can emit far jumps) and far jumps.
+    // known, patch all calls (which can emit far jumps) and far jumps. Linking
+    // can emit tiny far-jump stubs, so there is an ordering dependency here.
 
     if (!linkCallSites())
         return false;
@@ -921,9 +898,19 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 }
 
 UniqueCodeSegment
-ModuleGenerator::finishCodeSegment(const ShareableBytes& bytecode)
+ModuleGenerator::finish(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(finishedFuncDefs_);
+
+    while (outstanding_ > 0) {
+        if (!finishOutstandingTask())
+            return nullptr;
+    }
+
+#ifdef DEBUG
+    for (uint32_t codeRangeIndex : funcToCodeRange_)
+        MOZ_ASSERT(codeRangeIndex != BAD_CODE_RANGE);
+#endif
 
     // Now that all imports/exports are known, we can generate a special
     // CompiledCode containing stubs.
@@ -937,11 +924,9 @@ ModuleGenerator::finishCodeSegment(const ShareableBytes& bytecode)
     if (!linkCompiledCode(stubCode))
         return nullptr;
 
-    // Now that all code is linked in masm_, patch calls and far jumps and
-    // finish the metadata. Linking can emit tiny far-jump stubs, so there is an
-    // ordering dependency here.
+    // All functions and stubs have been compiled, finish linking and metadata.
 
-    if (!finishLinking())
+    if (!finishCode())
         return nullptr;
 
     if (!finishMetadata(bytecode))
@@ -975,7 +960,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
-    UniqueCodeSegment codeSegment = finishCodeSegment(bytecode);
+    UniqueCodeSegment codeSegment = finish(bytecode);
     if (!codeSegment)
         return nullptr;
 
@@ -1030,7 +1015,7 @@ ModuleGenerator::finishTier2(Module& module)
     if (cancelled_ && *cancelled_)
         return false;
 
-    UniqueCodeSegment codeSegment = finishCodeSegment(module.bytecode());
+    UniqueCodeSegment codeSegment = finish(module.bytecode());
     if (!codeSegment)
         return false;
 
