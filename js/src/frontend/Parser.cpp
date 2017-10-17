@@ -7997,33 +7997,34 @@ BinaryOpTokenKindToParseNodeKind(TokenKind tok)
 }
 
 static const int PrecedenceTable[] = {
-    1, /* PNK_OR */
-    2, /* PNK_AND */
-    3, /* PNK_BITOR */
-    4, /* PNK_BITXOR */
-    5, /* PNK_BITAND */
-    6, /* PNK_STRICTEQ */
-    6, /* PNK_EQ */
-    6, /* PNK_STRICTNE */
-    6, /* PNK_NE */
-    7, /* PNK_LT */
-    7, /* PNK_LE */
-    7, /* PNK_GT */
-    7, /* PNK_GE */
-    7, /* PNK_INSTANCEOF */
-    7, /* PNK_IN */
-    8, /* PNK_LSH */
-    8, /* PNK_RSH */
-    8, /* PNK_URSH */
-    9, /* PNK_ADD */
-    9, /* PNK_SUB */
-    10, /* PNK_STAR */
-    10, /* PNK_DIV */
-    10, /* PNK_MOD */
-    11  /* PNK_POW */
+    1, /* PNK_PIPELINE */
+    2, /* PNK_OR */
+    3, /* PNK_AND */
+    4, /* PNK_BITOR */
+    5, /* PNK_BITXOR */
+    6, /* PNK_BITAND */
+    7, /* PNK_STRICTEQ */
+    7, /* PNK_EQ */
+    7, /* PNK_STRICTNE */
+    7, /* PNK_NE */
+    8, /* PNK_LT */
+    8, /* PNK_LE */
+    8, /* PNK_GT */
+    8, /* PNK_GE */
+    8, /* PNK_INSTANCEOF */
+    8, /* PNK_IN */
+    9, /* PNK_LSH */
+    9, /* PNK_RSH */
+    9, /* PNK_URSH */
+    10, /* PNK_ADD */
+    10, /* PNK_SUB */
+    11, /* PNK_STAR */
+    11, /* PNK_DIV */
+    11, /* PNK_MOD */
+    12  /* PNK_POW */
 };
 
-static const int PRECEDENCE_CLASSES = 11;
+static const int PRECEDENCE_CLASSES = 12;
 
 static int
 Precedence(ParseNodeKind pnk) {

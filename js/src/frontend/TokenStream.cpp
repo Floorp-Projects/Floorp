@@ -1730,6 +1730,10 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
       case '|':
         if (matchChar('|'))
             tp->type = TOK_OR;
+#ifdef ENABLE_PIPELINE_OPERATOR
+        else if (matchChar('>'))
+            tp->type = TOK_PIPELINE;
+#endif
         else
             tp->type = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
         goto out;
