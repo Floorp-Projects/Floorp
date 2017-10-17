@@ -14,31 +14,21 @@ config = {
     "emulator_manifest": """
         [
         {
-        "size": 140097024,
-        "digest": "51781032335c09103e8509b1a558bf22a7119392cf1ea301c49c01bdf21ff0ceb37d260bc1c322cd9b903252429fb01830fc27e4632be30cd345c95bf4b1a39b",
+        "size": 38451805,
+        "digest": "ac3000aa6846dd1b09a420a1ba84727e393036f49da1419d6c9e5ec2490fc6105c74ca18b616c465dbe693992e2939afd88bc2042d961a9050a3cafd2a673ff4",
         "algorithm": "sha512",
-        "filename": "android-sdk_r24.0.2-linux.tgz",
-        "unpack": "True"
-        }
-        ] """,
-    "tools_manifest": """
-        [
-        {
-        "size": 193383673,
-        "digest": "6609e8b95db59c6a3ad60fc3dcfc358b2c8ec8b4dda4c2780eb439e1c5dcc5d550f2e47ce56ba14309363070078d09b5287e372f6e95686110ff8a2ef1838221",
-        "algorithm": "sha512",
-        "filename": "android-sdk18_0.r18moz1.orig.tar.gz",
+        "filename": "android-sdk_r24.0.2a-linux.tar.gz",
         "unpack": "True"
         }
         ] """,
     "emulator_process_name": "emulator64-arm",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket",
     "exes": {
-        'adb': '%(abs_work_dir)s/android-sdk18/platform-tools/adb',
+        'adb': '%(abs_work_dir)s/android-sdk-linux/platform-tools/adb',
     },
     "env": {
         "DISPLAY": ":0.0",
-        "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk18/platform-tools",
+        "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk-linux/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps"
     },
     "default_actions": [
