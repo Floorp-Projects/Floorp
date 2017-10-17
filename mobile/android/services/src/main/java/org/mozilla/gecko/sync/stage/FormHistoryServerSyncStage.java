@@ -76,6 +76,7 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
             getAllowedMultipleBatches(),
             getAllowedToUseHighWaterMark(),
             getRepositoryStateProvider(),
+            false,
             false
     );
   }

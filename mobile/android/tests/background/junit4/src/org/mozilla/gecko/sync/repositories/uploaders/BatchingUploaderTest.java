@@ -611,24 +611,17 @@ public class BatchingUploaderTest {
     }
 
     class MockUploader extends BatchingUploader {
-        boolean abortOnRecordFail;
         MockUploader(final RepositorySession repositorySession, final ExecutorService workQueue,
                      final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
                      final Long localCollectionLastModified, final InfoConfiguration infoConfiguration,
                      final AuthHeaderProvider authHeaderProvider, final boolean abortOnRecordFail) {
             super(repositorySession, workQueue, sessionStoreDelegate, baseCollectionUri,
-                    localCollectionLastModified, infoConfiguration, authHeaderProvider);
-            this.abortOnRecordFail = abortOnRecordFail;
+                    localCollectionLastModified, infoConfiguration, authHeaderProvider, abortOnRecordFail);
         }
 
         @Override
         PayloadDispatcher createPayloadDispatcher(ExecutorService workQueue, Long localCollectionLastModified) {
             return new MockPayloadDispatcher(workQueue, this, localCollectionLastModified);
-        }
-
-        @Override
-        boolean shouldFailBatchOnFailure(Record r) {
-            return abortOnRecordFail;
         }
     }
 
