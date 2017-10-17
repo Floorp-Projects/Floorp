@@ -68,11 +68,6 @@ static const uint8_t StartComCertificationAuthorityG2DN[85] = {
   0x72, 0x69, 0x74, 0x79, 0x20, 0x47, 0x32,
 };
 
-struct DataAndLength {
-  const uint8_t* data;
-  uint32_t len;
-};
-
 static const DataAndLength StartComAndWoSignDNs[]= {
  { CAWoSignRootDN,
    sizeof(CAWoSignRootDN) },
