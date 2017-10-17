@@ -6,10 +6,10 @@
  *
  * on files with these headers:
  *
- * # ArabicShaping-9.0.0.txt
- * # Date: 2016-02-24, 22:25:00 GMT [RP]
- * # Blocks-9.0.0.txt
- * # Date: 2016-02-05, 23:48:00 GMT [KW]
+ * # ArabicShaping-10.0.0.txt
+ * # Date: 2017-02-16, 00:00:00 GMT [RP, KW]
+ * # Blocks-10.0.0.txt
+ * # Date: 2017-04-12, 17:30:00 GMT [KW]
  * UnicodeData.txt does not have a header.
  */
 
@@ -72,7 +72,10 @@ static const uint8_t joining_table[] =
   /* Mandaic */
 
   /* 0840 */ R,D,D,D,D,D,R,R,D,R,D,D,D,D,D,D,D,D,D,D,R,D,U,U,U,X,X,X,X,X,X,X,
-  /* 0860 */ X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+
+  /* Syriac Supplement */
+
+  /* 0860 */ D,U,D,D,D,D,U,R,D,R,R,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
   /* 0880 */ X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
 
   /* Arabic Extended-A */
@@ -130,7 +133,7 @@ static const uint8_t joining_table[] =
   /* 1E920 */ D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,
   /* 1E940 */ D,D,D,D,
 
-}; /* Table items: 1214; occupancy: 54% */
+}; /* Table items: 1214; occupancy: 55% */
 
 
 static unsigned int

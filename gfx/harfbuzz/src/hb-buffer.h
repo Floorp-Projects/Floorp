@@ -504,7 +504,7 @@ typedef enum { /*< flags >*/
 } hb_buffer_diff_flags_t;
 
 /* Compare the contents of two buffers, report types of differences. */
-hb_buffer_diff_flags_t
+HB_EXTERN hb_buffer_diff_flags_t
 hb_buffer_diff (hb_buffer_t *buffer,
 		hb_buffer_t *reference,
 		hb_codepoint_t dottedcircle_glyph,

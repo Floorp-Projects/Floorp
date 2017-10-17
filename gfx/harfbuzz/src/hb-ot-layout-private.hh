@@ -347,6 +347,8 @@ _hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
   return _hb_glyph_info_is_unicode_mark (info) ? info->unicode_props()>>8 : 0;
 }
 
+#define info_cc(info) (_hb_glyph_info_get_modified_combining_class (&(info)))
+
 static inline bool
 _hb_glyph_info_is_unicode_space (const hb_glyph_info_t *info)
 {

@@ -389,7 +389,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
   }
   else
   {
-    curradvx = gr_seg_advance_X(seg);
+    curradvx = gr_seg_advance_X(seg) * xscale;
     for (is = gr_seg_first_slot (seg); is; pPos++, info++, is = gr_slot_next_in_segment (is))
     {
       if (info->cluster != currclus)
