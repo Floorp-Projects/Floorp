@@ -54,16 +54,20 @@ interface nsIInterceptedChannel : nsISupports
      */
     void synthesizeHeader(in ACString name, in ACString value);
 
-    void startSynthesizedResponse(in ACString finalURLSpec);
-
     /**
-     * Instruct a channel that has been intercepted that a response has been
-     * synthesized and can now be read. No further header modification is allowed
+     * Instruct a channel that has been intercepted that a response is
+     * starting to be synthesized.  No further header modification is allowed
      * after this point. The caller may optionally pass a spec for a URL that
      * this response originates from; an empty string will cause the original
      * intercepted request's URL to be used instead.
      */
-    void finishSynthesizedResponse(in ACString finalURLSpec);
+    void startSynthesizedResponse(in ACString finalURLSpec);
+
+    /**
+     * Instruct a channel that has been intercepted that response synthesis
+     * has completed and all outstanding resources can be closed.
+     */
+    void finishSynthesizedResponse();
 
     /**
      * Cancel the pending intercepted request.

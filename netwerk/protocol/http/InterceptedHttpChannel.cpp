@@ -738,7 +738,7 @@ InterceptedHttpChannel::StartSynthesizedResponse(const nsACString& aFinalURLSpec
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedHttpChannel::FinishSynthesizedResponse()
 {
   if (mCanceled) {
     return mStatus;
@@ -748,7 +748,7 @@ InterceptedHttpChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpe
     mBodyWriter->Close();
   }
 
-  return StartSynthesizedResponse(aFinalURLSpec);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
