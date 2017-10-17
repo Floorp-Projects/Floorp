@@ -249,10 +249,9 @@ U2FManager::Register(nsPIDOMWindowInner* aParent, const nsCString& aRpId,
   p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             U2FManager* mgr = U2FManager::Get();
-            if (!mgr) {
-              return;
+            if (mgr && mgr->mChild) {
+              mgr->mChild->SendRequestRegister(mgr->mInfo.ref());
             }
-            mgr->StartRegister();
           },
           []() {
             // This case can't actually happen, we'll have crashed if the child
@@ -287,10 +286,9 @@ U2FManager::Sign(nsPIDOMWindowInner* aParent,
   p->Then(GetMainThreadSerialEventTarget(), __func__,
           []() {
             U2FManager* mgr = U2FManager::Get();
-            if (!mgr) {
-              return;
+            if (mgr && mgr->mChild) {
+              mgr->mChild->SendRequestSign(mgr->mInfo.ref());
             }
-            mgr->StartSign();
           },
           []() {
             // This case can't actually happen, we'll have crashed if the child
@@ -303,27 +301,6 @@ U2FManager::Sign(nsPIDOMWindowInner* aParent,
   mCurrentParent = aParent;
   ListenForVisibilityEvents(aParent, this);
   return promise.forget();
-}
-
-void
-U2FManager::StartRegister() {
-  if (mChild) {
-    mChild->SendRequestRegister(mInfo.ref());
-  }
-}
-
-void
-U2FManager::StartSign() {
-  if (mChild) {
-    mChild->SendRequestSign(mInfo.ref());
-  }
-}
-
-void
-U2FManager::StartCancel() {
-  if (mChild) {
-    mChild->SendRequestCancel();
-  }
 }
 
 void
@@ -452,7 +429,9 @@ U2FManager::Cancel(const nsresult& aError)
 NS_IMETHODIMP
 U2FManager::HandleEvent(nsIDOMEvent* aEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(mChild);
 
   nsAutoString type;
   aEvent->GetType(type);
@@ -468,7 +447,8 @@ U2FManager::HandleEvent(nsIDOMEvent* aEvent)
     MOZ_LOG(gU2FManagerLog, LogLevel::Debug,
             ("Visibility change: U2F window is hidden, cancelling job."));
 
-    StartCancel();
+    mChild->SendRequestCancel();
+
     Cancel(NS_ERROR_DOM_TIMEOUT_ERR);
   }
 

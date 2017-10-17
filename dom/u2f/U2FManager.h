@@ -88,10 +88,6 @@ private:
   U2FManager();
   virtual ~U2FManager();
 
-  void StartRegister();
-  void StartSign();
-  void StartCancel();
-
   void MaybeClearTransaction();
   nsresult PopulateTransactionInfo(const nsCString& aRpId,
                     const nsCString& aClientDataJSON,
