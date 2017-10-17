@@ -8,6 +8,7 @@
 
 interface nsIChannel;
 interface nsIConsoleReportCollector;
+interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIURI;
 
@@ -25,6 +26,16 @@ class ChannelInfo;
 native TimeStamp(mozilla::TimeStamp);
 
 [ptr] native ChannelInfo(mozilla::dom::ChannelInfo);
+
+/**
+ * Interface allowing the nsIInterceptedChannel to callback when it is
+ * done reading from the body stream.
+ */
+[scriptable, uuid(51039eb6-bea0-40c7-b523-ccab56cc4fde)]
+interface nsIInterceptedBodyCallback : nsISupports
+{
+  void bodyComplete(in nsresult aRv);
+};
 
 /**
  * Interface to allow implementors of nsINetworkInterceptController to control the behaviour
@@ -57,11 +68,20 @@ interface nsIInterceptedChannel : nsISupports
     /**
      * Instruct a channel that has been intercepted that a response is
      * starting to be synthesized.  No further header modification is allowed
-     * after this point. The caller may optionally pass a spec for a URL that
-     * this response originates from; an empty string will cause the original
-     * intercepted request's URL to be used instead.
+     * after this point.  There are a few parameters:
+     * - A body stream may be optionally passed.  If nullptr, then an
+     *   empty body is assumed.
+     * - A callback may be optionally passed.  It will be invoked
+     *   when the body is complete.  For a nullptr body this may be
+     *   synchronously on the current thread.  Otherwise it will be invoked
+     *   asynchronously on the current thread.
+     * - The caller may optionally pass a spec for a URL that this response
+     *   originates from; an empty string will cause the original
+     *   intercepted request's URL to be used instead.
      */
-    void startSynthesizedResponse(in ACString finalURLSpec);
+    void startSynthesizedResponse(in nsIInputStream body,
+                                  in nsIInterceptedBodyCallback callback,
+                                  in ACString finalURLSpec);
 
     /**
      * Instruct a channel that has been intercepted that response synthesis
