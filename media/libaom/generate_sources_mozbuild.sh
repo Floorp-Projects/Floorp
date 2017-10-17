@@ -29,24 +29,23 @@ function write_license {
 # The build does not support duplicate file names.
 function find_duplicates {
   local readonly duplicate_file_names=$(find \
-    $BASE_DIR/$LIBAOM_SRC_DIR/vp8 \
-    $BASE_DIR/$LIBAOM_SRC_DIR/vp9 \
-    $BASE_DIR/$LIBAOM_SRC_DIR/av1 \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_dsp \
-    -type f -name \*.c  | xargs -I {} basename {} | sort | uniq -d \
+    $BASE_DIR/$LIBAOM_SRC_DIR/av1 \
+    -type f -name \*.c -o -name \*.asm | \
+    xargs -I {} basename -s .c {} | \
+    xargs -I {} basename -s .asm {} | \
+    sort | uniq -d \
   )
 
   if [ -n "${duplicate_file_names}" ]; then
     echo "ERROR: DUPLICATE FILES FOUND"
     for file in  ${duplicate_file_names}; do
       find \
-        $BASE_DIR/$LIBAOM_SRC_DIR/vp8 \
-        $BASE_DIR/$LIBAOM_SRC_DIR/vp9 \
-        $BASE_DIR/$LIBAOM_SRC_DIR/av1 \
         $BASE_DIR/$LIBAOM_SRC_DIR/aom \
         $BASE_DIR/$LIBAOM_SRC_DIR/aom_dsp \
-        -name $file
+        $BASE_DIR/$LIBAOM_SRC_DIR/av1 \
+        -name $file\.*
     done
     exit 1
   fi
