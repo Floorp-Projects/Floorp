@@ -309,6 +309,7 @@ android-common-tests:
     - mochitest-gpu
     - mochitest-media
     - reftest
+    - test-verify
     - xpcshell
 
 android-debug-tests:
@@ -322,6 +323,7 @@ android-gradle-tests:
     - mochitest-chrome
     - robocop
     - geckoview
+    - test-verify
 
 android-x86-tests:
     - mochitest-chrome
