@@ -199,58 +199,6 @@ panelview {
   -moz-box-flex: 1;
 }
 
-/* This section is to anchor all the drop down panels at the same height, shift the
-  panel`s top margin according to its positioning and the uidensity of the window. */
-#downloadsPanel,
-#widget-overflow,
-#appMenu-popup,
-#customizationui-widget-panel {
-  margin-top: -6px;
-}
-
-/* The difference between the toolbar buttons` padding and the urlbar-icons` padding,
-   then subtract 6px. */
-#pageActionActivatedActionPanel,
-#pageActionPanel,
-#editBookmarkPanel,
-.browser-extension-panel {
-  margin-top: calc(var(--toolbarbutton-inner-padding) - var(--urlbar-icon-padding) - 6px)
-}
-
-/* The identity popup does not have any padding of its own,
-   otherwise would use the same formula as above. */
-#identity-popup {
-  margin-top: calc(var(--toolbarbutton-inner-padding) - 6px);
-}
-
-/* The bookmarks toolbar is too thin to have the panels overlap 6px. */
-#downloadsPanel.bookmarks-toolbar,
-#widget-overflow.bookmarks-toolbar,
-#appMenu-popup.bookmarks-toolbar,
-#customizationui-widget-panel.bookmarks-toolbar {
-  margin-top: -1px;
-}
-
-/* The BMB_bookmarksPopup is unique because it is built into the
-   bookmarks-menu-button, resulting in many edge cases. */
-#BMB_bookmarksPopup {
-  margin-top: -8px;
-}
-
-:root:not([uidensity]) #nav-bar #BMB_bookmarksPopup {
-  margin-top: -11px;
-}
-
-:root[uidensity=touch] #nav-bar #BMB_bookmarksPopup,
-:root[uidensity=touch] #TabsToolbar #BMB_bookmarksPopup,
-:root[uidensity=compact] #BMB_bookmarksPopup {
-  margin-top: -9px;
-}
-
-:root[uidensity=compact] #TabsToolbar #BMB_bookmarksPopup {
-  margin-top: -7px;
-}
-
 .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
