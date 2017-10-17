@@ -257,10 +257,7 @@ public:
         return gSystemPrincipal;
     }
 
-    // This returns an AddRef'd pointer. It does not do this with an 'out' param
-    // only because this form is required by the generic module macro:
-    // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
-    static nsXPConnect* GetSingleton();
+    static already_AddRefed<nsXPConnect> GetSingleton();
 
     // Called by module code in dll startup
     static void InitStatics();
