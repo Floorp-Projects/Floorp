@@ -72,9 +72,14 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
   }
 
-  void ReadAsText(Blob& aBlob, const nsAString& aLabel, ErrorResult& aRv)
+  void ReadAsText(Blob& aBlob, const Optional<nsAString>& aLabel,
+                  ErrorResult& aRv)
   {
-    ReadFileContent(aBlob, aLabel, FILE_AS_TEXT, aRv);
+    if (aLabel.WasPassed()) {
+      ReadFileContent(aBlob, aLabel.Value(), FILE_AS_TEXT, aRv);
+    } else {
+      ReadFileContent(aBlob, EmptyString(), FILE_AS_TEXT, aRv);
+    }
   }
 
   void ReadAsDataURL(Blob& aBlob, ErrorResult& aRv)
