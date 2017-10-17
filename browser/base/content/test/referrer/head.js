@@ -78,6 +78,23 @@ function getReferrerTest(aTestNumber) {
 }
 
 /**
+ * Returns shimmed test object for a given test number.
+ *
+ * @param aTestNumber The test number - 0, 1, 2, ...
+ * @return The test object with result hard-coded to "",
+ *          or undefined if the number is out of range.
+ */
+function getRemovedReferrerTest(aTestNumber) {
+  let testCase = _referrerTests[aTestNumber];
+  if (testCase) {
+    // We want all the referrer tests to fail!
+    testCase.result = "";
+  }
+
+  return testCase;
+}
+
+/**
  * Returns a brief summary of the test, for logging.
  * @param aTestNumber The test number - 0, 1, 2...
  * @return The test description.
