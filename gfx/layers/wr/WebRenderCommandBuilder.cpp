@@ -114,7 +114,8 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
   EventRegions eventRegions;
 
-  for (nsDisplayItem* i = aDisplayList->GetBottom(); i; i = i->GetAbove()) {
+  FlattenedDisplayItemIterator iter(aDisplayListBuilder, aDisplayList);
+  while (nsDisplayItem* i = iter.GetNext()) {
     nsDisplayItem* item = i;
     DisplayItemType itemType = item->GetType();
 
@@ -132,7 +133,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     // if necessary.
     AutoTArray<nsDisplayItem*, 1> mergedItems;
     mergedItems.AppendElement(item);
-    for (nsDisplayItem* peek = item->GetAbove(); peek; peek = peek->GetAbove()) {
+    while (nsDisplayItem* peek = iter.PeekNext()) {
       if (!item->CanMerge(peek)) {
         break;
       }
@@ -140,7 +141,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       mergedItems.AppendElement(peek);
 
       // Move the iterator forward since we will merge this item.
-      i = peek;
+      i = iter.GetNext();
     }
 
     if (mergedItems.Length() > 1) {
@@ -212,21 +213,14 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
-    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
-      MOZ_ASSERT(childItems);
-      CreateWebRenderCommandsFromDisplayList(childItems, aDisplayListBuilder, aSc,
-                                             aBuilder, aResources);
-    } else {
-      // ensure the scope of ScrollingLayersHelper is maintained
-      ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, apzEnabled);
+    // ensure the scope of ScrollingLayersHelper is maintained
+    ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, apzEnabled);
 
-      // Note: this call to CreateWebRenderCommands can recurse back into
-      // this function if the |item| is a wrapper for a sublist.
-      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
-                                         aDisplayListBuilder)) {
-        PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
-      }
+    // Note: this call to CreateWebRenderCommands can recurse back into
+    // this function if the |item| is a wrapper for a sublist.
+    if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
+                                       aDisplayListBuilder)) {
+      PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
     }
 
     if (apzEnabled) {
