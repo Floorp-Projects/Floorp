@@ -76,10 +76,6 @@ Version Control Caches
    directory. If you are using ``hg robustcheckout``, pass this directory to the
    ``--sharebase`` option.
 
-``level-{{level}}-{{project}}-tc-vcs`` (deprecated)
-    This cache is used internally by ``tc-vcs``.  This tool is deprecated and
-    should be replaced with ``hg robustcheckout``.
-
 Workspace Caches
 ::::::::::::::::
 
