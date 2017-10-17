@@ -1,6 +1,3 @@
-const RANGE_1 = 1;
-const RANGE_2 = 2;
-
 function testBlob(file, contents, testName) {
   // Load file using FileReader
   return new Promise(resolve => {
@@ -86,7 +83,7 @@ function testBlob(file, contents, testName) {
   });
 }
 
-function testSlice(file, size, type, contents, fileType, range) {
+function testSlice(file, size, type, contents, fileType) {
   is(file.type, type, fileType + " file is correct type");
   is(file.size, size, fileType + " file is correct size");
   ok(file instanceof File, fileType + " file is a File");
@@ -112,38 +109,27 @@ function testSlice(file, size, type, contents, fileType, range) {
   is(slice.slice(0, 10, "hello/world").size, 10, fileType + " slice-slice hello/world size");
 
   // Start, end, expected size
-  var indexes_range_1 = [[0, size, size],
-                         [0, 1234, 1234],
-                         [size-500, size, 500],
-                         [size-500, size+500, 500],
-                         [size+500, size+1500, 0],
-                         [0, 0, 0],
-                         [1000, 1000, 0],
-                         [size, size, 0],
-                         [undefined, undefined, size],
-                         [0, undefined, size],
-                        ];
-
-  var indexes_range_2 = [[100, undefined, size-100],
-                         [-100, undefined, 100],
-                         [100, -100, size-200],
-                         [-size-100, undefined, size],
-                         [-2*size-100, 500, 500],
-                         [0, -size-100, 0],
-                         [100, -size-100, 0],
-                         [50, -size+100, 50],
-                         [0, 33000, 33000],
-                         [1000, 34000, 33000],
-                        ];
-
-  let indexes;
-  if (range == RANGE_1) {
-    indexes = indexes_range_1;
-  } else if (range == RANGE_2) {
-    indexes = indexes_range_2;
-  } else {
-    throw "Invalid range!"
-  }
+  var indexes = [[0, size, size],
+                 [0, 1234, 1234],
+                 [size-500, size, 500],
+                 [size-500, size+500, 500],
+                 [size+500, size+1500, 0],
+                 [0, 0, 0],
+                 [1000, 1000, 0],
+                 [size, size, 0],
+                 [undefined, undefined, size],
+                 [0, undefined, size],
+                 [100, undefined, size-100],
+                 [-100, undefined, 100],
+                 [100, -100, size-200],
+                 [-size-100, undefined, size],
+                 [-2*size-100, 500, 500],
+                 [0, -size-100, 0],
+                 [100, -size-100, 0],
+                 [50, -size+100, 50],
+                 [0, 33000, 33000],
+                 [1000, 34000, 33000],
+                ];
 
   function runNextTest() {
     if (indexes.length == 0) {
