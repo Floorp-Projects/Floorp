@@ -15,7 +15,7 @@
      z-index on original page */
   z-index: 20999;
   color: #4d4d4d;
-  background: rgb(54, 57, 89, 0.8); /* #363959, 0.8 opacity */
+  background: rgb(245, 245, 247, 0.9); /* #f7f7f5, 0.9 opacity */
   display: none;
 }
 
@@ -137,8 +137,8 @@
 #onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog {
   width: 960px;
   height: 510px;
-  background: #f5f5f7;
-  border: 1px solid rgba(9, 6, 13, 0.1); /* #09060D, 0.1 opacity */
+  background: #fff;
+  border: 1px solid rgba(9, 6, 13, 0.2); /* #09060D, 0.2 opacity */
   border-radius: 3px;
   position: relative;
   margin: 0 calc(50% - 480px);
@@ -146,6 +146,11 @@
   display: grid;
   grid-template-rows: [dialog-start] 70px [page-start] 1fr [footer-start] 30px [dialog-end];
   grid-template-columns: [dialog-start] 230px [page-start] 1fr [dialog-end];
+  box-shadow: 0 3px rgba(0, 0, 0, 0.04);
+}
+
+#onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog:-moz-focusring {
+  outline: none;
 }
 
 @media (max-height: 510px) {
