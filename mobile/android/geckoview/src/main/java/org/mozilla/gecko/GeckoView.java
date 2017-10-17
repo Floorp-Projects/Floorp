@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 public class GeckoView extends LayerView {
 
@@ -308,6 +310,7 @@ public class GeckoView extends LayerView {
 
     private PromptDelegate mPromptDelegate;
     private InputConnectionListener mInputConnectionListener;
+    private boolean mIsResettingFocus;
 
     private GeckoViewSettings mSettings;
 
@@ -688,6 +691,45 @@ public class GeckoView extends LayerView {
 
     public GeckoViewSettings getSettings() {
         return mSettings;
+    }
+
+    @Override
+    public void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+
+        if (gainFocus && !mIsResettingFocus) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (!isFocused()) {
+                        return;
+                    }
+
+                    final InputMethodManager imm = InputMethods.getInputMethodManager(getContext());
+                    // Bug 1404111:
+                    // Through View#onFocusChanged, the InputMethodManager queues up a checkFocus
+                    // call for the next spin of the message loop, so by posting this Runnable after
+                    // super#onFocusChanged, the IMM should have completed its focus change handling
+                    // at this point and we should be the active view for input handling.
+
+                    // If however onViewDetachedFromWindow for the previously active view gets
+                    // called *after* onFocusChanged, but *before* the focus change has been fully
+                    // processed by the IMM with the help of checkFocus, the IMM will lose track of
+                    // the currently active view, which means that we can't interact with the IME.
+                    if (!imm.isActive(GeckoView.this)) {
+                        // If that happens, we bring the IMM's internal state back into sync by
+                        // clearing and resetting our focus.
+                        mIsResettingFocus = true;
+                        clearFocus();
+                        // After calling clearFocus we might regain focus automatically, but we
+                        // explicitly request it again in case this doesn't happen.
+                        // If we've already got the focus back, this will then be a no-op anyway.
+                        requestFocus();
+                        mIsResettingFocus = false;
+                    }
+                }
+            });
+        }
     }
 
     @Override
