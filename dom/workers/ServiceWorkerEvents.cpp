@@ -233,7 +233,13 @@ public:
     auto castLoadInfo = static_cast<LoadInfo*>(loadInfo.get());
     castLoadInfo->SynthesizeServiceWorkerTainting(mInternalResponse->GetTainting());
 
-    rv = mChannel->FinishSynthesizedResponse(mResponseURLSpec);
+    rv = mChannel->StartSynthesizedResponse(mResponseURLSpec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
+      return NS_OK;
+    }
+
+    rv = mChannel->FinishSynthesizedResponse();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
