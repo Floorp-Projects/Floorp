@@ -16,17 +16,18 @@
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(4);
 
 let canvasData;
 
 createCanvasURL()
 .then(data => {
   canvasData = data;
-  return createFile(data, "basicTestFile");
+  return createFile(data, "basicTestFile2");
 })
 
 .then(file => {
-  return testSlice(file, canvasData.length, "", canvasData, "fileFile");
+  return testSlice(file, canvasData.length, "", canvasData, "fileFile", RANGE_2);
 })
 
 .then(SimpleTest.finish);
