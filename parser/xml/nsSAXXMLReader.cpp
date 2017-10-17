@@ -486,12 +486,13 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
 
   // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsresult rv;
-  nsCOMPtr<nsIInputStream> bufferedStream;
-  if (!NS_InputStreamIsBuffered(aStream)) {
+  nsCOMPtr<nsIInputStream> stream = aStream;
+  if (!NS_InputStreamIsBuffered(stream)) {
+    nsCOMPtr<nsIInputStream> bufferedStream;
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                   aStream, 4096);
+                                   stream.forget(), 4096);
     NS_ENSURE_SUCCESS(rv, rv);
-    aStream = bufferedStream;
+    stream = bufferedStream;
   }
  
   rv = EnsureBaseURI();
@@ -504,7 +505,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   nsCOMPtr<nsIChannel> parserChannel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel),
                                 mBaseURI,
-                                aStream,
+                                stream,
                                 nullPrincipal,
                                 nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                                 nsIContentPolicy::TYPE_OTHER,
@@ -536,7 +537,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   uint64_t offset = 0;
   while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
     uint64_t available;
-    rv = aStream->Available(&available);
+    rv = stream->Available(&available);
     if (rv == NS_BASE_STREAM_CLOSED) {
       rv = NS_OK;
       available = 0;
@@ -552,7 +553,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
       available = UINT32_MAX;
 
     rv = mListener->OnDataAvailable(parserChannel, nullptr,
-                                    aStream,
+                                    stream,
                                     offset,
                                     (uint32_t)available);
     if (NS_SUCCEEDED(rv))
