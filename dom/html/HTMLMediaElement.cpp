@@ -14,6 +14,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/EMEUtils.h"
+#include "mozilla/Sprintf.h"
 
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
