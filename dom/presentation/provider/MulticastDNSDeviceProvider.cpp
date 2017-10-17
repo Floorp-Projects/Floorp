@@ -144,14 +144,14 @@ MulticastDNSDeviceProvider::Init()
     return rv;
   }
 
-  mDiscoveryTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  mDiscoveryTimer = NS_NewTimer();
+  if (NS_WARN_IF(!mDiscoveryTimer)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mServerRetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  mServerRetryTimer = NS_NewTimer();
+  if (NS_WARN_IF(!mServerRetryTimer)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   Preferences::AddStrongObservers(this, kObservedPrefs);
 

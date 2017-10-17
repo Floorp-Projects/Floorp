@@ -388,7 +388,7 @@ IndexedDatabaseManager::Init()
       obs->AddObserver(this, DISKSPACEWATCHER_OBSERVER_TOPIC, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mDeleteTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mDeleteTimer = NS_NewTimer();
     NS_ENSURE_STATE(mDeleteTimer);
 
     if (QuotaManager* quotaManager = QuotaManager::Get()) {

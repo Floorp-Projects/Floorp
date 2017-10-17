@@ -11,8 +11,8 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/Unused.h"
-#include "nsIBinaryInputStream.h"
-#include "nsIBinaryOutputStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIFile.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"
@@ -420,14 +420,10 @@ LockedDirectoryPaddingWrite(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType,
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsCOMPtr<nsIBinaryOutputStream> binaryStream =
-    do_CreateInstance("@mozilla.org/binaryoutputstream;1");
-  if (NS_WARN_IF(!binaryStream)) { return NS_ERROR_FAILURE; }
+  nsCOMPtr<nsIObjectOutputStream> objectStream =
+    NS_NewObjectOutputStream(outputStream);
 
-  rv = binaryStream->SetOutputStream(outputStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = binaryStream->Write64(aPaddingSize);
+  rv = objectStream->Write64(aPaddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
@@ -744,15 +740,11 @@ LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut)
   rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 512);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsCOMPtr<nsIBinaryInputStream> binaryStream =
-    do_CreateInstance("@mozilla.org/binaryinputstream;1");
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = binaryStream->SetInputStream(bufferedStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  nsCOMPtr<nsIObjectInputStream> objectStream =
+    NS_NewObjectInputStream(bufferedStream);
 
   uint64_t paddingSize = 0;
-  rv = binaryStream->Read64(&paddingSize);
+  rv = objectStream->Read64(&paddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   *aPaddingSizeOut = paddingSize;

@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
 if widget_dir == 'gtk':
     UNIFIED_SOURCES += [
         'HeadlessLookAndFeelGTK.cpp',
+        'HeadlessThemeGTK.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

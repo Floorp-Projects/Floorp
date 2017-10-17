@@ -113,11 +113,41 @@ class CppEclipseBackend(CommonBackend):
 
         self._write_launch_files(launch_dir)
 
-        # This will show up as an 'unmanged' formatter. This can be named by generating
-        # another file.
-        formatter_prefs_path = os.path.join(settings_dir, 'org.eclipse.cdt.core.prefs')
-        with open(formatter_prefs_path, 'wb') as fh:
-            fh.write(FORMATTER_SETTINGS);
+        core_resources_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.resources.prefs')
+        with open(core_resources_prefs_path, 'wb') as fh:
+            fh.write(STATIC_CORE_RESOURCES_PREFS);
+
+        core_runtime_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
+        with open(core_runtime_prefs_path, 'wb') as fh:
+            fh.write(STATIC_CORE_RUNTIME_PREFS);
+
+        ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
+        with open(ui_prefs_path, 'wb') as fh:
+            fh.write(STATIC_UI_PREFS);
+
+        cdt_ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.ui.prefs')
+        cdt_ui_prefs = STATIC_CDT_UI_PREFS
+        # Here we generate the code formatter that will show up in the UI with
+        # the name "Mozilla".  The formatter is stored as a single line of XML
+        # in the org.eclipse.cdt.ui.formatterprofiles pref.
+        cdt_ui_prefs += """org.eclipse.cdt.ui.formatterprofiles=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\\n<profiles version\="1">\\n<profile kind\="CodeFormatterProfile" name\="Mozilla" version\="1">\\n"""
+        XML_PREF_TEMPLATE = """<setting id\="@PREF_NAME@" value\="@PREF_VAL@"/>\\n"""
+        for line in FORMATTER_SETTINGS.splitlines():
+            [pref, val] = line.split("=")
+            cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@", pref).replace("@PREF_VAL@", val)
+        cdt_ui_prefs += "</profile>\\n</profiles>\\n"
+        with open(cdt_ui_prefs_path, 'wb') as fh:
+            fh.write(cdt_ui_prefs);
+
+        cdt_core_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.core.prefs')
+        with open(cdt_core_prefs_path, 'wb') as fh:
+            cdt_core_prefs = STATIC_CDT_CORE_PREFS
+            # When we generated the code formatter called "Mozilla" above, we
+            # also set it to be the active formatter.  When a formatter is set
+            # as the active formatter all its prefs are set in this prefs file,
+            # so we need add those now:
+            cdt_core_prefs += FORMATTER_SETTINGS
+            fh.write(cdt_core_prefs);
 
         editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs");
         with open(editor_prefs_path, 'wb') as fh:
@@ -197,6 +227,8 @@ class CppEclipseBackend(CommonBackend):
 
         project = project.replace('@PROJECT_NAME@', self._project_name)
         project = project.replace('@PROJECT_TOPSRCDIR@', self.environment.topsrcdir)
+        project = project.replace('@GENERATED_IPDL_FILES@', os.path.join(self.environment.topobjdir, "ipc", "ipdl"))
+        project = project.replace('@GENERATED_WEBIDL_FILES@', os.path.join(self.environment.topobjdir, "dom", "bindings"))
         fh.write(project)
 
     def _write_cproject(self, fh):
@@ -252,6 +284,16 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                         <name>tree</name>
                         <type>2</type>
                         <location>@PROJECT_TOPSRCDIR@</location>
+                </link>
+                <link>
+                        <name>generated-ipdl</name>
+                        <type>2</type>
+                        <location>@GENERATED_IPDL_FILES@</location>
+                </link>
+                <link>
+                        <name>generated-webidl</name>
+                        <type>2</type>
+                        <location>@GENERATED_WEBIDL_FILES@</location>
                 </link>
         </linkedResources>
         <filteredResources>
@@ -325,7 +367,7 @@ CPROJECT_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="n
                                 <configuration artifactName="${ProjName}" buildProperties="" description="" id="0.1674256904" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
                                         <folderInfo id="0.1674256904." name="/" resourcePath="">
                                                 <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1276586933" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
-                                                        <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.710759961" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+                                                        <targetPlatform archList="all" binaryParser="" id="cdt.managedbuild.targetPlatform.gnu.cross.710759961" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder arguments="--log-no-times build" buildPath="@PROJECT_TOPSRCDIR@" command="@MACH_COMMAND@" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                                                 </toolChain>
                                         </folderInfo>
@@ -515,8 +557,23 @@ tabWidth=2
 undoHistorySize=200
 """
 
-FORMATTER_SETTINGS = """eclipse.preferences.version=1
-org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
+
+STATIC_CORE_RESOURCES_PREFS="""eclipse.preferences.version=1
+refresh.enabled=true
+"""
+
+STATIC_CORE_RUNTIME_PREFS="""eclipse.preferences.version=1
+content-types/org.eclipse.cdt.core.cxxSource/file-extensions=mm
+"""
+
+STATIC_UI_PREFS="""eclipse.preferences.version=1
+showIntro=false
+"""
+
+STATIC_CDT_CORE_PREFS="""eclipse.preferences.version=1
+"""
+
+FORMATTER_SETTINGS = """org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
 org.eclipse.cdt.core.formatter.alignment_for_assignment=16
 org.eclipse.cdt.core.formatter.alignment_for_base_clause_in_type_declaration=80
 org.eclipse.cdt.core.formatter.alignment_for_binary_expression=16
@@ -678,6 +735,14 @@ org.eclipse.cdt.core.formatter.put_empty_statement_on_new_line=true
 org.eclipse.cdt.core.formatter.tabulation.char=space
 org.eclipse.cdt.core.formatter.tabulation.size=2
 org.eclipse.cdt.core.formatter.use_tabs_only_for_leading_indentations=false
+"""
+
+STATIC_CDT_UI_PREFS="""eclipse.preferences.version=1
+ensureNewlineAtEOF=false
+formatter_profile=_Mozilla
+formatter_settings_version=1
+org.eclipse.cdt.ui.formatterprofiles.version=1
+scalability.numberOfLines=15000
 """
 
 NOINDEX_TEMPLATE = """eclipse.preferences.version=1

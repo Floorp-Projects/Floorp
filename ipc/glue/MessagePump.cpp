@@ -86,7 +86,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
   nsIThread* thisThread = NS_GetCurrentThread();
   MOZ_ASSERT(thisThread);
 
-  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
+  mDelayedWorkTimer = NS_NewTimer();
   MOZ_ASSERT(mDelayedWorkTimer);
 
   base::ScopedNSAutoreleasePool autoReleasePool;
@@ -162,7 +162,7 @@ MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
                      || mEventTarget->IsOnCurrentThread());
 
   if (!mDelayedWorkTimer) {
-    mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
+    mDelayedWorkTimer = NS_NewTimer();
     if (!mDelayedWorkTimer) {
         // Called before XPCOM has started up? We can't do this correctly.
         NS_WARNING("Delayed task might not run!");
@@ -310,12 +310,8 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
   nsIThread* thread = NS_GetCurrentThread();
   MOZ_RELEASE_ASSERT(mEventTarget->IsOnCurrentThread());
 
-  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
+  mDelayedWorkTimer = NS_NewTimer(mEventTarget);
   MOZ_ASSERT(mDelayedWorkTimer);
-
-  if (NS_FAILED(mDelayedWorkTimer->SetTarget(mEventTarget))) {
-    MOZ_CRASH("Failed to set timer target!");
-  }
 
   // Chromium event notifications to be processed will be received by this
   // event loop as a DoWorkRunnables via ScheduleWork. Chromium events that

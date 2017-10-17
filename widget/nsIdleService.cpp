@@ -154,7 +154,7 @@ nsIdleServiceDaily::Observe(nsISupports *,
 
 nsIdleServiceDaily::nsIdleServiceDaily(nsIIdleService* aIdleService)
   : mIdleService(aIdleService)
-  , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+  , mTimer(NS_NewTimer())
   , mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY)
   , mShutdownInProgress(false)
   , mExpectedTriggerTime(0)
@@ -451,9 +451,8 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
 
   // Create our timer callback if it's not there already.
   if (!mTimer) {
-    nsresult rv;
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mTimer = NS_NewTimer();
+    NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Check if the newly added observer has a smaller wait time than what we

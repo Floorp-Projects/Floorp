@@ -1250,15 +1250,13 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
     int rescanInterval = FcConfigGetRescanInterval(nullptr);
     if (rescanInterval) {
         mLastConfig = FcConfigGetCurrent();
-        mCheckFontUpdatesTimer = do_CreateInstance("@mozilla.org/timer;1");
-        if (mCheckFontUpdatesTimer) {
-          mCheckFontUpdatesTimer->InitWithNamedFuncCallback(
-            CheckFontUpdates,
-            this,
-            (rescanInterval + 1) * 1000,
-            nsITimer::TYPE_REPEATING_SLACK,
-            "gfxFcPlatformFontList::gfxFcPlatformFontList");
-        } else {
+        NS_NewTimerWithFuncCallback(getter_AddRefs(mCheckFontUpdatesTimer),
+                                    CheckFontUpdates,
+                                    this,
+                                    (rescanInterval + 1) * 1000,
+                                    nsITimer::TYPE_REPEATING_SLACK,
+                                    "gfxFcPlatformFontList::gfxFcPlatformFontList");
+        if (!mCheckFontUpdatesTimer) {
             NS_WARNING("Failure to create font updates timer");
         }
     }

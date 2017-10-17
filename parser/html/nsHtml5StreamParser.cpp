@@ -181,7 +181,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
   , mFeedChardet(false)
   , mInitialEncodingWasFromParentFrame(false)
-  , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
+  , mFlushTimer(NS_NewTimer())
   , mFlushTimerMutex("nsHtml5StreamParser mFlushTimerMutex")
   , mFlushTimerArmed(false)
   , mFlushTimerEverFired(false)

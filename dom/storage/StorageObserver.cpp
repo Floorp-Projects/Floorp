@@ -211,14 +211,8 @@ StorageObserver::Observe(nsISupports* aSubject,
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->RemoveObserver(this, kStartupTopic);
 
-    mDBThreadStartDelayTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!mDBThreadStartDelayTimer) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    mDBThreadStartDelayTimer->Init(this, nsITimer::TYPE_ONE_SHOT, kStartupDelay);
-
-    return NS_OK;
+    return NS_NewTimerWithObserver(getter_AddRefs(mDBThreadStartDelayTimer),
+                                   this, nsITimer::TYPE_ONE_SHOT, kStartupDelay);
   }
 
   // Timer callback used to start the database a short timer after startup
