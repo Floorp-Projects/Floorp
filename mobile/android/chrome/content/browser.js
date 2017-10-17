@@ -495,6 +495,14 @@ var BrowserApp = {
       InitLater(() => AccessFu.attach(window), window, "AccessFu");
     }
 
+    InitLater(() => {
+      Task.spawn(function* () {
+        let downloadsDir = yield Downloads.getPreferredDownloadsDirectory();
+        let logsDir = OS.Path.join(downloadsDir, "memory-reports");
+        yield OS.File.removeDir(logsDir);
+      });
+    });
+
     // Don't delay loading content.js because when we restore reader mode tabs,
     // we require the reader mode scripts in content.js right away.
     let mm = window.getGroupMessageManager("browsers");
