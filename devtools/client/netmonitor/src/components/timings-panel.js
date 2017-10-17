@@ -24,14 +24,12 @@ function TimingsPanel({ request }) {
     return null;
   }
 
-  const { timings, totalTime } = request.eventTimings;
+  const { timings, totalTime, offsets } = request.eventTimings;
   const timelines = types.map((type, idx) => {
     // Determine the relative offset for each timings box. For example, the
     // offset of third timings box will be 0 + blocked offset + dns offset
-    const offset = types
-      .slice(0, idx)
-      .reduce((acc, cur) => (acc + timings[cur] || 0), 0);
-    const offsetScale = offset / totalTime || 0;
+
+    const offsetScale = offsets[type] / totalTime || 0;
     const timelineScale = timings[type] / totalTime || 0;
 
     return div({

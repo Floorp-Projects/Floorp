@@ -70,12 +70,7 @@ pref("browser.cache.disk.max_entry_size", 4096); // kilobytes
 pref("browser.cache.disk.smart_size.enabled", true);
 pref("browser.cache.disk.smart_size.first_run", true);
 
-#ifdef MOZ_PKG_SPECIAL
-// low memory devices
-pref("browser.cache.memory.enable", false);
-#else
 pref("browser.cache.memory.enable", true);
-#endif
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
 pref("browser.cache.memory_limit", 5120); // 5 MB
@@ -383,20 +378,7 @@ pref("geo.enabled", true);
 // browser (bug 669346).
 pref("javascript.options.gc_on_memory_pressure", false);
 
-#ifdef MOZ_PKG_SPECIAL
-// low memory devices
-pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 120);
-pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 120);
-pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 40);
-pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
-pref("javascript.options.mem.gc_low_frequency_heap_growth", 120);
-pref("javascript.options.mem.high_water_mark", 16);
-pref("javascript.options.mem.gc_allocation_threshold_mb", 3);
-pref("javascript.options.mem.gc_min_empty_chunk_count", 1);
-pref("javascript.options.mem.gc_max_empty_chunk_count", 2);
-#else
 pref("javascript.options.mem.high_water_mark", 32);
-#endif
 
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 pref("dom.max_script_run_time", 20);
@@ -758,12 +740,6 @@ pref("browser.chrome.dynamictoolbar", true);
 
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
-
-#ifdef MOZ_PKG_SPECIAL
-// Disable webgl on ARMv6 because running the reftests takes
-// too long for some reason (bug 843738)
-pref("webgl.disabled", true);
-#endif
 
 // initial web feed readers list
 pref("browser.contentHandlers.types.0.title", "chrome://browser/locale/region.properties");

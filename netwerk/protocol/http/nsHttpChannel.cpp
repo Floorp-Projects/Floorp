@@ -335,7 +335,6 @@ nsHttpChannel::nsHttpChannel()
     , mUsedNetwork(0)
     , mAuthConnectionRestartable(0)
     , mPushedStream(nullptr)
-    , mLocalBlocklist(false)
     , mOnTailUnblock(nullptr)
     , mWarningReporter(nullptr)
     , mIsReadingFromCache(false)
@@ -546,10 +545,10 @@ nsHttpChannel::Connect()
     }
 
     bool isTrackingResource = mIsTrackingResource; // is atomic
-    LOG(("nsHttpChannel %p tracking resource=%d, local blocklist=%d, cos=%u",
-          this, isTrackingResource, mLocalBlocklist, mClassOfService));
+    LOG(("nsHttpChannel %p tracking resource=%d, cos=%u",
+          this, isTrackingResource, mClassOfService));
 
-    if (isTrackingResource || mLocalBlocklist) {
+    if (isTrackingResource) {
         AddClassFlags(nsIClassOfService::Tail);
     }
 
@@ -890,11 +889,11 @@ nsHttpChannel::SpeculativeConnect()
     // Before we take the latency hit of dealing with the cache, try and
     // get the TCP (and SSL) handshakes going so they can overlap.
 
-    // don't speculate if we are on a local blocklist, on uses of the offline
-    // application cache, if we are offline, when doing http upgrade (i.e.
+    // don't speculate if we are on uses of the offline application cache,
+    // if we are offline, when doing http upgrade (i.e.
     // websockets bootstrap), or if we can't do keep-alive (because then we
     // couldn't reuse the speculative connection anyhow).
-    if (mLocalBlocklist || mApplicationCache || gIOService->IsOffline() ||
+    if (mApplicationCache || gIOService->IsOffline() ||
         mUpgradeProtocolCallback || !(mCaps & NS_HTTP_ALLOW_KEEPALIVE))
         return;
 
@@ -6151,41 +6150,6 @@ nsHttpChannel::AsyncOpenOnTailUnblock()
     return AsyncOpen(mListener, mListenerContext);
 }
 
-namespace {
-
-class InitLocalBlockListXpcCallback final : public nsIURIClassifierCallback {
-public:
-  using CallbackType = nsHttpChannel::InitLocalBlockListCallback;
-
-  explicit InitLocalBlockListXpcCallback(const CallbackType& aCallback)
-    : mCallback(aCallback)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIURICLASSIFIERCALLBACK
-
-private:
-  ~InitLocalBlockListXpcCallback() = default;
-
-  CallbackType mCallback;
-};
-
-NS_IMPL_ISUPPORTS(InitLocalBlockListXpcCallback, nsIURIClassifierCallback)
-
-/*virtual*/ nsresult
-InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult aErrorCode, // Only this matters.
-                                               const nsACString& /*aLists*/,
-                                               const nsACString& /*aProvider*/,
-                                               const nsACString& /*aPrefix*/)
-{
-    bool localBlockList = aErrorCode == NS_ERROR_TRACKING_URI;
-    mCallback(localBlockList);
-    return NS_OK;
-}
-
-} // end of unnamed namespace/
-
 already_AddRefed<nsChannelClassifier>
 nsHttpChannel::GetOrCreateChannelClassifier()
 {
@@ -6197,35 +6161,6 @@ nsHttpChannel::GetOrCreateChannelClassifier()
 
     RefPtr<nsChannelClassifier> classifier = mChannelClassifier;
     return classifier.forget();
-}
-
-bool
-nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
-{
-    mLocalBlocklist = false;
-
-    if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
-        return false;
-    }
-
-    LOG(("nsHttpChannel::InitLocalBlockList this=%p", this));
-
-    // Check to see if this principal exists on local blocklists.
-    RefPtr<nsChannelClassifier> channelClassifier =
-        GetOrCreateChannelClassifier();
-
-    // We skip speculative connections by setting mLocalBlocklist only
-    // when tracking protection is enabled. Though we could do this for
-    // both phishing and malware, it is not necessary for correctness,
-    // since no network events will be received while the
-    // nsChannelClassifier is in progress. See bug 1122691.
-    RefPtr<InitLocalBlockListXpcCallback> xpcCallback
-        = new InitLocalBlockListXpcCallback(aCallback);
-    if (NS_FAILED(channelClassifier->CheckIsTrackerWithLocalTable(xpcCallback))) {
-        return false;
-    }
-
-    return true;
 }
 
 NS_IMETHODIMP
@@ -6485,31 +6420,29 @@ nsHttpChannel::BeginConnectContinue()
         return ContinueBeginConnectWithResult();
     }
 
-    // We are about to do a async lookup to check if the URI is a
-    // tracker. The result will be delivered along with the callback.
-    // Chances are the lookup is not needed so InitLocalBlockList()
-    // will return false and then we can BeginConnectActual() right away.
+    // We are about to do a sync lookup to check if the URI is a
+    // tracker. If yes, this channel will be canceled by channel classifier.
+    // Chances are the lookup is not needed so CheckIsTrackerWithLocalTable()
+    // will return an error and then we can BeginConnectActual() right away.
+    RefPtr<nsChannelClassifier> channelClassifier =
+        GetOrCreateChannelClassifier();
     RefPtr<nsHttpChannel> self = this;
-    bool willCallback = InitLocalBlockList([self](bool aLocalBlockList) -> void  {
-        MOZ_ASSERT(self->mLocalBlocklist <= aLocalBlockList, "Unmarking local block-list flag?");
-
-        self->mLocalBlocklist = aLocalBlockList;
-
-        LOG(("nsHttpChannel %p on-local-blacklist=%d", self.get(), aLocalBlockList));
-
-        nsresult rv = self->BeginConnectActual();
-        if (NS_FAILED(rv)) {
-            // Since this error is thrown asynchronously so that the caller
-            // of BeginConnect() will not do clean up for us. We have to do
-            // it on our own.
-            self->CloseCacheEntry(false);
-            Unused << self->AsyncAbort(rv);
-        }
-    });
+    bool willCallback =
+        NS_SUCCEEDED(channelClassifier->CheckIsTrackerWithLocalTable(
+            [self] () -> void  {
+                nsresult rv = self->BeginConnectActual();
+                if (NS_FAILED(rv)) {
+                    // Since this error is thrown asynchronously so that the caller
+                    // of BeginConnect() will not do clean up for us. We have to do
+                    // it on our own.
+                    self->CloseCacheEntry(false);
+                    Unused << self->AsyncAbort(rv);
+                }
+            }));
 
     if (!willCallback) {
-        // We can do BeginConnectActual immediately if mLocalBlockList is initialized
-        // synchronously. Note that we don't need to handle the failure because
+        // We can do BeginConnectActual immediately if CheckIsTrackerWithLocalTable
+        // is failed. Note that we don't need to handle the failure because
         // BeginConnect() will return synchronously and the caller will be responsible
         // for handling it.
         return BeginConnectActual();
@@ -6525,7 +6458,7 @@ nsHttpChannel::BeginConnectActual()
         return mStatus;
     }
 
-    if (!mLocalBlocklist && !mConnectionInfo->UsingHttpProxy() &&
+    if (!mConnectionInfo->UsingHttpProxy() &&
         !(mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE))) {
         // Start a DNS lookup very early in case the real open is queued the DNS can
         // happen in parallel. Do not do so in the presence of an HTTP proxy as
@@ -6549,33 +6482,18 @@ nsHttpChannel::BeginConnectActual()
         mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 
-    // mLocalBlocklist is true only if tracking protection is enabled and the
-    // URI is a tracking domain, it makes no guarantees about phishing or
-    // malware, so if LOAD_CLASSIFY_URI is true we must call
-    // nsChannelClassifier to catch phishing and malware URIs.
-    bool callContinueBeginConnect = true;
-    if (!mLocalBlocklist) {
-        // Here we call ContinueBeginConnectWithResult and not
-        // ContinueBeginConnect so that in the case of an error we do not start
-        // channelClassifier.
-        nsresult rv = ContinueBeginConnectWithResult();
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        callContinueBeginConnect = false;
+    nsresult rv = ContinueBeginConnectWithResult();
+    if (NS_FAILED(rv)) {
+        return rv;
     }
-    // nsChannelClassifier calls ContinueBeginConnect if it has not already
-    // been called, after optionally cancelling the channel once we have a
-    // remote verdict. We call a concrete class instead of an nsI* that might
-    // be overridden.
+
+    // Start nsChannelClassifier to catch phishing and malware URIs.
     RefPtr<nsChannelClassifier> channelClassifier =
         GetOrCreateChannelClassifier();
     LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
          channelClassifier.get(), this));
     channelClassifier->Start();
-    if (callContinueBeginConnect) {
-        return ContinueBeginConnectWithResult();
-    }
+
     return NS_OK;
 }
 
@@ -6857,6 +6775,15 @@ nsHttpChannel::GetConnectStart(TimeStamp* _retval) {
         *_retval = mTransaction->GetConnectStart();
     else
         *_retval = mTransactionTimings.connectStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetTcpConnectEnd(TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->GetTcpConnectEnd();
+    else
+        *_retval = mTransactionTimings.tcpConnectEnd;
     return NS_OK;
 }
 

@@ -27,7 +27,7 @@ interface Blob {
   [Throws]
   Blob slice([Clamp] optional long long start,
              [Clamp] optional long long end,
-             optional DOMString contentType = "");
+             optional DOMString contentType);
 };
 
 enum EndingTypes { "transparent", "native" };

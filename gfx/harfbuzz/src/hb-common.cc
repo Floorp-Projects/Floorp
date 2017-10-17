@@ -32,6 +32,9 @@
 #include "hb-object-private.hh"
 
 #include <locale.h>
+#ifdef HAVE_XLOCALE_H
+#include <xlocale.h>
+#endif
 
 
 /* hb_options_t */
@@ -246,8 +249,8 @@ struct hb_language_item_t {
 static hb_language_item_t *langs;
 
 #ifdef HB_USE_ATEXIT
-static
-void free_langs (void)
+static void
+free_langs (void)
 {
   while (langs) {
     hb_language_item_t *next = langs->next;
@@ -694,6 +697,48 @@ parse_uint32 (const char **pp, const char *end, uint32_t *pv)
   return true;
 }
 
+#if defined (HAVE_NEWLOCALE) && defined (HAVE_STRTOD_L)
+#define USE_XLOCALE 1
+#endif
+
+#ifdef USE_XLOCALE
+
+static locale_t C_locale;
+
+#ifdef HB_USE_ATEXIT
+static void
+free_C_locale (void)
+{
+  if (C_locale)
+    freelocale (C_locale);
+}
+#endif
+
+static locale_t
+get_C_locale (void)
+{
+retry:
+  locale_t C = (locale_t) hb_atomic_ptr_get (&C_locale);
+
+  if (unlikely (!C))
+  {
+    C = newlocale (LC_ALL_MASK, "C", NULL);
+
+    if (!hb_atomic_ptr_cmpexch (&C_locale, NULL, C))
+    {
+      freelocale (C_locale);
+      goto retry;
+    }
+
+#ifdef HB_USE_ATEXIT
+    atexit (free_C_locale); /* First person registers atexit() callback. */
+#endif
+  }
+
+  return C;
+}
+#endif
+
 static bool
 parse_float (const char **pp, const char *end, float *pv)
 {
@@ -707,7 +752,11 @@ parse_float (const char **pp, const char *end, float *pv)
   float v;
 
   errno = 0;
+#ifdef USE_XLOCALE
+  v = strtod_l (p, &pend, get_C_locale ());
+#else
   v = strtod (p, &pend);
+#endif
   if (errno || p == pend)
     return false;
 

@@ -835,6 +835,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitSuperElemOperands(ParseNode* pn,
                                             EmitElemOption opts = EmitElemOption::Get);
     MOZ_MUST_USE bool emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall = false);
+
+    MOZ_MUST_USE bool emitCallee(ParseNode* callee, ParseNode* call, bool spread, bool* callop);
+
+    MOZ_MUST_USE bool emitPipeline(ParseNode* pn);
 };
 
 } /* namespace frontend */

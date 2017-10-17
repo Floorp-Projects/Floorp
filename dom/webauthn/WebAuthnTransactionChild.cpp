@@ -38,11 +38,11 @@ WebAuthnTransactionChild::RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionChild::RecvCancel(const nsresult& aError)
+WebAuthnTransactionChild::RecvAbort(const nsresult& aError)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->Cancel(aError);
+  mgr->RequestAborted(aError);
   return IPC_OK();
 }
 

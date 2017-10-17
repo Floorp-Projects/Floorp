@@ -30,6 +30,48 @@ MacroAssembler::move64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::moveDoubleToGPR64(FloatRegister src, Register64 dest)
+{
+    vmovq(src, dest.reg);
+}
+
+void
+MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
+{
+    vmovq(src.reg, dest);
+}
+
+void
+MacroAssembler::move64To32(Register64 src, Register dest)
+{
+    movl(src.reg, dest);
+}
+
+void
+MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
+{
+    movl(src, dest.reg);
+}
+
+void
+MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
+{
+    movsbq(Operand(src), dest.reg);
+}
+
+void
+MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
+{
+    movswq(Operand(src), dest.reg);
+}
+
+void
+MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
+{
+    movslq(src, dest.reg);
+}
+
+void
 MacroAssembler::andPtr(Register src, Register dest)
 {
     andq(src, dest);

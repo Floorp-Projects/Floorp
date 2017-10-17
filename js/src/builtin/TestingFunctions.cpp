@@ -567,6 +567,29 @@ WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmCompileMode(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // We default to ion if nothing is enabled, as does the Wasm compiler.
+    JSString* result;
+    if (!wasm::HasSupport(cx))
+        result = JS_NewStringCopyZ(cx, "disabled");
+    else if (cx->options().wasmBaseline() && cx->options().wasmIon())
+        result = JS_NewStringCopyZ(cx, "baseline-or-ion");
+    else if (cx->options().wasmBaseline())
+        result = JS_NewStringCopyZ(cx, "baseline");
+    else
+        result = JS_NewStringCopyZ(cx, "ion");
+
+    if (!result)
+        return false;
+
+    args.rval().setString(result);
+    return true;
+}
+
+static bool
 WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5246,6 +5269,11 @@ gc::ZealModeHelpText),
 "wasmThreadsSupported()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
 "  supported on the current device."),
+
+    JS_FN_HELP("wasmCompileMode", WasmCompileMode, 0, 0,
+"wasmCompileMode()",
+"  Returns a string indicating the available compile policy: 'baseline', 'ion',\n"
+"  'baseline-or-ion', or 'disabled' (if wasm is not available at all)."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",

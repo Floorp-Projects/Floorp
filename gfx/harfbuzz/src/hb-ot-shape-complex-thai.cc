@@ -378,6 +378,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_thai =
   NULL, /* compose */
   NULL, /* setup_masks */
   NULL, /* disable_otl */
+  NULL, /* reorder_marks */
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE,
   false,/* fallback_position */
 };
