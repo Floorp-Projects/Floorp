@@ -121,8 +121,6 @@ tasks:
 
         maxRunTime: 1800
 
-        # TODO use mozilla-unified for the base repository once the tc-vcs
-        # tar.gz archives are created or tc-vcs isn't being used.
         command:
           - /builds/worker/bin/run-task
           - '--vcs-checkout=/builds/worker/checkouts/gecko'
@@ -132,9 +130,6 @@ tasks:
           - -cx
           - $let:
               extraArgs: {$if: 'tasks_for == "cron"', then: '${cron.quoted_args}', else: ''}
-            # NOTE: the explicit reference to mozilla-central below is required because android-stuff
-            # still uses tc-vcs, which does not support mozilla-unified
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=1383973
             in:
               $if: 'tasks_for == "action"'
               then: >
@@ -151,7 +146,7 @@ tasks:
                 --message="$GECKO_COMMIT_MSG"
                 --owner='${ownerEmail}'
                 --level='${repository.level}'
-                --base-repository='https://hg.mozilla.org/mozilla-central'
+                --base-repository="$GECKO_BASE_REPOSITORY"
                 --head-repository="$GECKO_HEAD_REPOSITORY"
                 --head-ref="$GECKO_HEAD_REF"
                 --head-rev="$GECKO_HEAD_REV"
