@@ -4076,8 +4076,7 @@ function FillHistoryMenu(aParent) {
       if (j != index) {
         // Use list-style-image rather than the image attribute in order to
         // allow CSS to override this.
-        item.style.listStyleImage =
-          "url(" + PlacesUtils.urlWithSizeRef(window, "page-icon:" + uri, 16) + ")";
+        item.style.listStyleImage = `url(page-icon:${uri})`;
       }
 
       if (j < index) {
