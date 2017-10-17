@@ -165,6 +165,7 @@ public:
 
   inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp) const
   {
+    MOZ_ASSERT(!aStamp.IsNull(), "The timestamp should not be null");
     if (aStamp.IsNull()) {
       return 0;
     }
