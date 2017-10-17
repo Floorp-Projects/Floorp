@@ -191,13 +191,17 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     mozilla::AudioInput* aAudioInput,
     int aIndex,
     const char* name,
-    const char* uuid)
+    const char* uuid,
+    bool aDelayAgnostic,
+    bool aExtendedFilter)
   : MediaEngineAudioSource(kReleased)
   , mVoiceEngine(aVoiceEnginePtr)
   , mAudioInput(aAudioInput)
   , mMonitor("WebRTCMic.Monitor")
   , mCapIndex(aIndex)
   , mChannel(-1)
+  , mDelayAgnostic(aDelayAgnostic)
+  , mExtendedFilter(aExtendedFilter)
   , mTrackID(TRACK_NONE)
   , mStarted(false)
   , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
@@ -781,6 +785,10 @@ MediaEngineWebRTCMicrophoneSource::InitEngine()
   mVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
 
   mVoEBase->Init();
+  webrtc::Config config;
+  config.Set<webrtc::ExtendedFilter>(new webrtc::ExtendedFilter(mExtendedFilter));
+  config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
+  mVoEBase->audio_processing()->SetExtraOptions(config);
 
   mVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
   if (mVoERender) {
