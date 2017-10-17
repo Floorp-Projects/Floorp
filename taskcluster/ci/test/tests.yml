@@ -1974,9 +1974,7 @@ test-verify:
     tier:
         by-test-platform:
             android.*: 3
-            macosx.*: 3
-            windows.*: 3
-            # windows10-64-asan.*: 3
+            windows10-64-asan.*: 3
             default: 2
     mozharness:
         by-test-platform:
