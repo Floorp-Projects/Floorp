@@ -203,6 +203,7 @@ Structure:
               },
             },
           },
+        hasTouchbar: <bool>, // Mac only
       },
       addons: {
         activeAddons: { // the currently enabled add-ons

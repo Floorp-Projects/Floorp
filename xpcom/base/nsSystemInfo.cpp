@@ -680,6 +680,22 @@ nsSystemInfo::Init()
     rv = SetPropertyAsAString(NS_LITERAL_STRING("countryCode"), countryCode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  bool hasTouchbar = false;
+  len = 0;
+  sysctlbyname("hw.model", nullptr, &len, nullptr, 0);
+  if (len) {
+    char* model = (char*)malloc(len * sizeof(char));
+    sysctlbyname("hw.model", model, &len, nullptr, 0);
+    if (strcmp(model, "MacBookPro13,2") == 0 || // i5, late-2016
+        strcmp(model, "MacBookPro13,3") == 0 || // i7, late-2016
+        strcmp(model, "MacBookPro14,2") == 0 || // i5, mid-2017
+        strcmp(model, "MacBookPro14,3") == 0) { // i7, mid-2017
+      hasTouchbar = true;
+    }
+    free(model);
+  }
+  SetPropertyAsBool(NS_LITERAL_STRING("hasTouchbar"), hasTouchbar);
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
