@@ -5,20 +5,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
-// We need to cache this before test runs...
-var cachedLeftPaneFolderIdGetter;
-var getter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
-if (!cachedLeftPaneFolderIdGetter && typeof(getter) == "function") {
-  cachedLeftPaneFolderIdGetter = getter;
+// We need to cache these before test runs...
+let leftPaneGetters = new Map([["leftPaneFolderId", null],
+                               ["allBookmarksFolderId", null]]);
+for (let [key, val] of leftPaneGetters) {
+  if (!val) {
+    let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
+    if (typeof getter == "function") {
+      leftPaneGetters.set(key, getter);
+    }
+  }
 }
 
-// ...And restore it when test ends.
-registerCleanupFunction(function() {
-  let updatedGetter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
-  if (cachedLeftPaneFolderIdGetter && typeof(updatedGetter) != "function") {
-    PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
+// ...And restore them when test ends.
+function restoreLeftPaneGetters() {
+  for (let [key, getter] of leftPaneGetters) {
+    Object.defineProperty(PlacesUIUtils, key, {
+      enumerable: true, configurable: true, get: getter
+    });
   }
-});
+}
+registerCleanupFunction(restoreLeftPaneGetters);
 
 function openLibrary(callback, aLeftPaneRoot) {
   let library = window.openDialog("chrome://browser/content/places/places.xul",

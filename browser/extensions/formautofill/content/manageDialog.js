@@ -412,8 +412,8 @@ class ManageCreditCards extends ManageRecords {
       this._elements.showHideCreditCards.setAttribute("disabled", true);
     }
     this._elements.showHideCreditCards.textContent =
-      this._isDecrypted ? FormAutofillUtils.stringBundle.GetStringFromName("hideCreditCards") :
-                          FormAutofillUtils.stringBundle.GetStringFromName("showCreditCards");
+      this._isDecrypted ? FormAutofillUtils.stringBundle.GetStringFromName("hideCreditCardsBtnLabel") :
+                          FormAutofillUtils.stringBundle.GetStringFromName("showCreditCardsBtnLabel");
   }
 
   handleClick(event) {

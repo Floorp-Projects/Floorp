@@ -44,19 +44,29 @@
     SimpleTest.waitForExplicitFinish();
 
     function runTest() {
-      // We need to cache and restore this getter in order to simulate
-      // Bug 510634
-      let cachedLeftPaneFolderIdGetter =
-        PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
-      // Must also cache and restore this getter as it is affected by
-      // leftPaneFolderId, from bug 564900.
-      let cachedAllBookmarksFolderIdGetter =
-        PlacesUIUtils.__lookupGetter__("allBookmarksFolderId");
+      // We need to cache and restore the getters in order to simulate
+      // Bug 510634.
+      let leftPaneGetters = new Map([["leftPaneFolderId", null],
+                               ["allBookmarksFolderId", null]]);
+      for (let [key, val] of leftPaneGetters) {
+        if (!val) {
+          let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
+          if (typeof getter == "function") {
+            leftPaneGetters.set(key, getter);
+          }
+        }
+      }
+
+      function restoreLeftPaneGetters() {
+        for (let [key, getter] of leftPaneGetters) {
+          Object.defineProperty(PlacesUIUtils, key, {
+            enumerable: true, configurable: true, get: getter
+          });
+        }
+      }
 
       let leftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
-
-      // restore the getter
-      PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
+      restoreLeftPaneGetters();
 
       // Setup the places tree contents.
       let tree = document.getElementById("tree");
@@ -87,9 +97,7 @@
       tree.result.root.containerOpen = false;
 
       // Restore the getters for the next test.
-      PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
-      PlacesUIUtils.__defineGetter__("allBookmarksFolderId",
-                                     cachedAllBookmarksFolderIdGetter);
+      restoreLeftPaneGetters();
 
       SimpleTest.finish();
     }

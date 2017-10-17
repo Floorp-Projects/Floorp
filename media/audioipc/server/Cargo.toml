@@ -11,6 +11,7 @@ cubeb = { path = "../../cubeb-rs/cubeb-api" }
 bytes = "0.4"
 error-chain = "0.10.0"
 lazycell = "^0.4"
+libc = "0.2"
 log = "^0.3.6"
 mio = "0.6.7"
 mio-uds = "0.6.4"

@@ -35,9 +35,8 @@ class SourceBufferResource;
 class SourceBufferTaskQueue
 {
 public:
-  SourceBufferTaskQueue()
-  : mMutex("SourceBufferTaskQueue")
-  {}
+  SourceBufferTaskQueue() { }
+
   ~SourceBufferTaskQueue()
   {
     MOZ_ASSERT(mQueue.IsEmpty(), "All tasks must have been processed");
@@ -45,13 +44,11 @@ public:
 
   void Push(SourceBufferTask* aTask)
   {
-    MutexAutoLock mut(mMutex);
     mQueue.AppendElement(aTask);
   }
 
   already_AddRefed<SourceBufferTask> Pop()
   {
-    MutexAutoLock mut(mMutex);
     if (!mQueue.Length()) {
       return nullptr;
     }
@@ -62,12 +59,9 @@ public:
 
   nsTArray<SourceBufferTask>::size_type Length() const
   {
-    MutexAutoLock mut(mMutex);
     return mQueue.Length();
   }
-
 private:
-  mutable Mutex mMutex;
   nsTArray<RefPtr<SourceBufferTask>> mQueue;
 };
 

@@ -23,7 +23,6 @@ LOCAL_INCLUDES += [
     '/netwerk/mime',
     '/netwerk/protocol/about',
     '/netwerk/protocol/data',
-    '/netwerk/protocol/device',
     '/netwerk/protocol/file',
     '/netwerk/protocol/ftp',
     '/netwerk/protocol/http',

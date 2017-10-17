@@ -638,7 +638,8 @@ class AutoTry(object):
         if kwargs["verbose"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        self.vcs.push_to_try('syntax', kwargs["message"].format(msg=msg), push=kwargs['push'])
+        self.vcs.push_to_try('syntax', kwargs["message"].format(msg=msg), push=kwargs['push'],
+                             closed_tree=kwargs["closed_tree"])
 
         if kwargs["save"]:
             assert msg.startswith("try: ")

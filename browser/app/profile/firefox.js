@@ -890,6 +890,8 @@ pref("browser.sessionstore.debug.no_auto_updates", false);
 pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
 // Maximum number of bytes of DOMSessionStorage data we collect per origin.
 pref("browser.sessionstore.dom_storage_limit", 2048);
+// Amount of failed SessionFile writes until we restart the worker.
+pref("browser.sessionstore.max_write_failures", 5);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
