@@ -226,15 +226,15 @@ SOURCES += [
     'src/google/protobuf/extension_set_heavy.cc',
     'src/google/protobuf/generated_message_table_driven.cc',
     'src/google/protobuf/generated_message_table_driven_lite.cc',
-    'src/google/protobuf/stubs/time.cc',
+    'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/util/internal/json_escaping.cc',
     'src/google/protobuf/util/internal/json_objectwriter.cc',
     'src/google/protobuf/util/internal/json_stream_parser.cc',
-    'src/google/protobuf/util/internal/proto_writer.cc',
-    'src/google/protobuf/util/internal/protostream_objectsource.cc',
-    'src/google/protobuf/util/internal/protostream_objectwriter.cc',
+    'src/google/protobuf/util/internal/proto_writer.cc',  # GetCurrentTime conflict in winbase.h
+    'src/google/protobuf/util/internal/protostream_objectsource.cc',  # GetCurrentTime conflict in winbase.h
+    'src/google/protobuf/util/internal/protostream_objectwriter.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/util/message_differencer.cc',
-    'src/google/protobuf/util/time_util.cc',
+    'src/google/protobuf/util/time_util.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/wire_format.cc',
 ]
 
