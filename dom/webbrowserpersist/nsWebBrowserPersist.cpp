@@ -2321,9 +2321,8 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     rv = fileOutputStream->Init(aFile, ioFlags, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewBufferedOutputStream(aOutputStream, fileOutputStream.forget(),
-                                    BUFFERED_OUTPUT_SIZE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    *aOutputStream = NS_BufferOutputStream(fileOutputStream,
+                                           BUFFERED_OUTPUT_SIZE).take();
 
     if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
     {

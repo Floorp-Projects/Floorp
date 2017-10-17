@@ -105,7 +105,7 @@ public:
       // Get a buffered output stream 4096 bytes big, to optimize writes.
       nsCOMPtr<nsIOutputStream> bufferedOutputStream;
       res = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                                       outStream.forget(), 4096);
+                                       outStream, 4096);
       if (NS_FAILED(res)) {
         return res;
       }
