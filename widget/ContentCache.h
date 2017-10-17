@@ -410,6 +410,12 @@ private:
   IMENotification mPendingLayoutChange;
   IMENotification mPendingCompositionUpdate;
 
+#ifdef MOZ_CRASHREPORTER
+  // Log of event messages to be output to crash report.
+  nsTArray<EventMessage> mDispatchedEventMessages;
+  nsTArray<EventMessage> mReceivedEventMessages;
+#endif // #ifdef MOZ_CRASHREPORTER
+
   // mTabParent is owner of the instance.
   dom::TabParent& MOZ_NON_OWNING_REF mTabParent;
   // mCompositionString is composition string which were sent to the remote
@@ -464,6 +470,19 @@ private:
                          LayoutDeviceIntRect& aUnionTextRect) const;
 
   void FlushPendingNotifications(nsIWidget* aWidget);
+
+#ifdef MOZ_CRASHREPORTER
+  /**
+   * Remove unnecessary messages from mDispatchedEventMessages and
+   * mReceivedEventMessages.
+   */
+  void RemoveUnnecessaryEventMessageLog();
+
+  /**
+   * Append event message log to aLog.
+   */
+  void AppendEventMessageLog(nsACString& aLog) const;
+#endif // #ifdef MOZ_CRASHREPORTER
 };
 
 } // namespace mozilla

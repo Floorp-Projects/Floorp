@@ -154,9 +154,13 @@ import java.nio.ByteBuffer;
 
     @Override
     public boolean isTunneledPlaybackSupported(final String mimeType) {
-        return mCodec.getCodecInfo()
-                     .getCapabilitiesForType(mimeType)
-                     .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
+        try {
+            return mCodec.getCodecInfo()
+                         .getCapabilitiesForType(mimeType)
+                         .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

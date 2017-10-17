@@ -2586,7 +2586,7 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
                               uint32_t httpStatus,
                               nsHttpRequestHead &requestHead,
                               nsHttpResponseHead *responseHead,
-                              nsILoadContextInfo *lci)
+                              nsILoadContextInfo *lci, bool isTracking)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2610,7 +2610,8 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
     nsAutoCString method;
     requestHead.Method(method);
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
-                                     method, *lci->OriginAttributesPtr());
+                                     method, *lci->OriginAttributesPtr(),
+                                     isTracking);
   }
 }
 
@@ -2618,7 +2619,8 @@ void
 Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       uint32_t httpStatus,
                                       const nsCString &method,
-                                      const OriginAttributes& originAttributes)
+                                      const OriginAttributes& originAttributes,
+                                      bool isTracking)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
 
@@ -2655,7 +2657,8 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                        nsICacheStorage::OPEN_SECRETLY |
                        nsICacheStorage::CHECK_MULTITHREADED;
   RefPtr<Predictor::CacheabilityAction> action =
-    new Predictor::CacheabilityAction(targetURI, httpStatus, method, this);
+    new Predictor::CacheabilityAction(targetURI, httpStatus, method, isTracking,
+                                      this);
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
@@ -2730,7 +2733,9 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
     }
 
     if (strTargetURI.Equals(uri)) {
-      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") && !hasQueryString) {
+      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") &&
+          !hasQueryString &&
+          !mIsTracking) {
         PREDICTOR_LOG(("    marking %s cacheable", key));
         flags |= FLAG_PREFETCHABLE;
       } else {

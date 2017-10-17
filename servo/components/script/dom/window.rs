@@ -123,7 +123,7 @@ use timers::{IsInterval, TimerCallback};
 use tinyfiledialogs::{self, MessageBoxIcon};
 use url::Position;
 use webdriver_handlers::jsval_to_webdriver;
-use webrender_api::ClipId;
+use webrender_api::{ClipId, DocumentId};
 use webvr_traits::WebVRMsg;
 
 /// Current state of the window object
@@ -289,6 +289,9 @@ pub struct Window {
     test_worklet: MutNullableDom<Worklet>,
     /// https://drafts.css-houdini.org/css-paint-api-1/#paint-worklet
     paint_worklet: MutNullableDom<Worklet>,
+    /// The Webrender Document id associated with this window.
+    #[ignore_heap_size_of = "defined in webrender_api"]
+    webrender_document: DocumentId,
 }
 
 impl Window {
@@ -344,7 +347,7 @@ impl Window {
 
     pub fn new_script_pair(&self) -> (Box<ScriptChan + Send>, Box<ScriptPort + Send>) {
         let (tx, rx) = channel();
-        (box SendableMainThreadScriptChan(tx), box rx)
+        (Box::new(SendableMainThreadScriptChan(tx)), Box::new(rx))
     }
 
     pub fn image_cache(&self) -> Arc<ImageCache> {
@@ -805,6 +808,7 @@ impl WindowMethods for Window {
 
     #[allow(unsafe_code)]
     fn Trap(&self) {
+        #[cfg(feature = "unstable")]
         unsafe { ::std::intrinsics::breakpoint() }
     }
 
@@ -1297,9 +1301,9 @@ impl Window {
                 let (responder, responder_listener) = ipc::channel().unwrap();
                 let pipeline = self.upcast::<GlobalScope>().pipeline_id();
                 let image_cache_chan = self.image_cache_chan.clone();
-                ROUTER.add_route(responder_listener.to_opaque(), box move |message| {
+                ROUTER.add_route(responder_listener.to_opaque(), Box::new(move |message| {
                     let _ = image_cache_chan.send((pipeline, message.to().unwrap()));
-                });
+                }));
                 self.image_cache.add_listener(id, ImageResponder::new(responder, id));
                 nodes.push(Dom::from_ref(&*node));
             }
@@ -1760,6 +1764,10 @@ impl Window {
             .send(msg)
             .unwrap();
     }
+
+    pub fn webrender_document(&self) -> DocumentId {
+        self.webrender_document
+    }
 }
 
 impl Window {
@@ -1794,6 +1802,7 @@ impl Window {
         webgl_chan: WebGLChan,
         webvr_chan: Option<IpcSender<WebVRMsg>>,
         microtask_queue: Rc<MicrotaskQueue>,
+        webrender_document: DocumentId,
     ) -> DomRoot<Self> {
         let layout_rpc: Box<LayoutRPC + Send> = {
             let (rpc_send, rpc_recv) = channel();
@@ -1804,7 +1813,7 @@ impl Window {
             pipelineid,
             script_chan: Arc::new(Mutex::new(control_chan)),
         };
-        let win = box Self {
+        let win = Box::new(Self {
             globalscope: GlobalScope::new_inherited(
                 pipelineid,
                 devtools_chan,
@@ -1868,7 +1877,8 @@ impl Window {
             unminified_js_dir: Default::default(),
             test_worklet: Default::default(),
             paint_worklet: Default::default(),
-        };
+            webrender_document,
+        });
 
         unsafe {
             WindowBinding::Wrap(runtime.cx(), win)
@@ -1982,7 +1992,7 @@ impl Window {
         // TODO(#12718): Use the "posted message task source".
         let _ = self.script_chan.send(CommonScriptMsg::Task(
             ScriptThreadEventCategory::DomEvent,
-            box self.task_canceller().wrap_task(task),
+            Box::new(self.task_canceller().wrap_task(task)),
         ));
     }
 }

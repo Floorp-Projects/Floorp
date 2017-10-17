@@ -23,6 +23,11 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType) {
   return LoadEvent(aStream, aType);
 }
 
+RecordedEvent *
+RecordedEvent::LoadEventFromStream(EventStream& aStream, EventType aType) {
+  return LoadEvent(aStream, aType);
+}
+
 string
 RecordedEvent::GetEventName(EventType aType)
 {

@@ -23,7 +23,8 @@ INSTALLER_FILES += \
 endif
 
 BRANDING_FILES = \
-	bgstub.bmp \
+	bgstub.jpg \
+	bgstub_2x.jpg \
 	branding.nsi \
 	firefox64.ico \
 	wizHeader.bmp \

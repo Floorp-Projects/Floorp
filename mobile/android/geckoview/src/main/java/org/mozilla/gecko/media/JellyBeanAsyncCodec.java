@@ -311,10 +311,14 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
     @Override
     public boolean isTunneledPlaybackSupported(final String mimeType) {
-        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP
-               && mCodec.getCodecInfo()
-                        .getCapabilitiesForType(mimeType)
-                        .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
+        try {
+            return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP
+                   && mCodec.getCodecInfo()
+                            .getCapabilitiesForType(mimeType)
+                            .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void assertCallbacks() {

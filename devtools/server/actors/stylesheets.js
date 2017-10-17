@@ -12,9 +12,8 @@ const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
-const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
+const {mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
-const {SourceMapConsumer} = require("source-map");
 const {
   addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
 
@@ -57,64 +56,6 @@ exports.UPDATE_GENERAL = UPDATE_GENERAL;
 // is used so that navigation by the user will eventually cause the
 // edited text to be collected.
 let modifiedStyleSheets = new WeakMap();
-
-/**
- * Actor representing an original source of a style sheet that was specified
- * in a source map.
- */
-var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
-  initialize: function (url, sourceMap, parentActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this.url = url;
-    this.sourceMap = sourceMap;
-    this.parentActor = parentActor;
-    this.conn = this.parentActor.conn;
-
-    this.text = null;
-  },
-
-  form: function () {
-    return {
-      actor: this.actorID, // actorID is set when it's added to a pool
-      url: this.url,
-      relatedStyleSheet: this.parentActor.form()
-    };
-  },
-
-  _getText: function () {
-    if (this.text) {
-      return promise.resolve(this.text);
-    }
-    let content = this.sourceMap.sourceContentFor(this.url);
-    if (content) {
-      this.text = content;
-      return promise.resolve(content);
-    }
-    let options = {
-      // Make sure to use TYPE_OTHER - we are not fetching necessarily
-      // even fetching a style sheet, and anyway we're not planning to
-      // use it as a style sheet per se but rather just for its text;
-      // and this avoids problems with X-Content-Type-Options:
-      // nosniff.  See bug 1330383.
-      policy: Ci.nsIContentPolicy.TYPE_OTHER,
-      window: this.window
-    };
-    return fetch(this.url, options).then(({content: text}) => {
-      this.text = text;
-      return text;
-    });
-  },
-
-  /**
-   * Protocol method to get the text of this source.
-   */
-  getText: function () {
-    return this._getText().then((text) => {
-      return new LongStringActor(this.conn, text || "");
-    });
-  }
-});
 
 /**
  * A MediaRuleActor lives on the server and provides access to properties
@@ -191,9 +132,6 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
  * A StyleSheetActor represents a stylesheet on the server.
  */
 var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
-  /* List of original sources that generated this stylesheet */
-  _originalSources: null,
-
   toString: function () {
     return "[StyleSheetActor " + this.actorID + "]";
   },
@@ -498,145 +436,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     return result;
   }),
-
-  /**
-   * Protocol method to get the original source (actors) for this
-   * stylesheet if it has uses source maps.
-   */
-  getOriginalSources: function () {
-    if (this._originalSources) {
-      return promise.resolve(this._originalSources);
-    }
-    return this._fetchOriginalSources();
-  },
-
-  /**
-   * Fetch the original sources (actors) for this style sheet using its
-   * source map. If they've already been fetched, returns cached array.
-   *
-   * @return {Promise}
-   *         Promise that resolves with an array of OriginalSourceActors
-   */
-  _fetchOriginalSources: function () {
-    this._clearOriginalSources();
-    this._originalSources = [];
-
-    return this.getSourceMap().then((sourceMap) => {
-      if (!sourceMap) {
-        return null;
-      }
-      for (let url of sourceMap.sources) {
-        let actor = new OriginalSourceActor(url, sourceMap, this);
-
-        this.manage(actor);
-        this._originalSources.push(actor);
-      }
-      return this._originalSources;
-    });
-  },
-
-  /**
-   * Get the SourceMapConsumer for this stylesheet's source map, if
-   * it exists. Saves the consumer for later queries.
-   *
-   * @return {Promise}
-   *         A promise that resolves with a SourceMapConsumer, or null.
-   */
-  getSourceMap: function () {
-    if (this._sourceMap) {
-      return this._sourceMap;
-    }
-    return this._fetchSourceMap();
-  },
-
-  /**
-   * Fetch the source map for this stylesheet.
-   *
-   * @return {Promise}
-   *         A promise that resolves with a SourceMapConsumer, or null.
-   */
-  _fetchSourceMap: function () {
-    let deferred = defer();
-
-    let url = this.rawSheet.sourceMapURL;
-    if (!url) {
-      // no source map for this stylesheet
-      deferred.resolve(null);
-      return deferred.promise;
-    }
-
-    url = normalize(url, this.safeHref);
-    let options = {
-      loadFromCache: false,
-      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-      window: this.window
-    };
-
-    let map = fetch(url, options).then(({content}) => {
-      // Fetching the source map might have failed with a 404 or other. When
-      // this happens, SourceMapConsumer may fail with a JSON.parse error.
-      let consumer;
-      try {
-        consumer = new SourceMapConsumer(content,
-                                         this._getSourceMapRoot(url, this.safeHref));
-      } catch (e) {
-        deferred.reject(new Error(
-          `Source map at ${url} not found or invalid`));
-        return null;
-      }
-      this._sourceMap = promise.resolve(consumer);
-
-      deferred.resolve(consumer);
-      return consumer;
-    }, deferred.reject);
-
-    this._sourceMap = map;
-
-    return deferred.promise;
-  },
-
-  /**
-   * Clear and unmanage the original source actors for this stylesheet.
-   */
-  _clearOriginalSources: function () {
-    for (let actor in this._originalSources) {
-      this.unmanage(actor);
-    }
-    this._originalSources = null;
-  },
-
-  /**
-   * Compute the URL to pass to the SourceMapConsumer constructor as
-   * the "source map's URL".
-   */
-  _getSourceMapRoot: function (absSourceMapURL, scriptURL) {
-    // Pass in the source map URL; except if it is a data: or blob:
-    // URL, fall back to using the source's URL, if possible.
-    if (scriptURL && (absSourceMapURL.startsWith("data:") ||
-                      absSourceMapURL.startsWith("blob:"))) {
-      return scriptURL;
-    }
-    return absSourceMapURL;
-  },
-
-  /**
-   * Protocol method that gets the location in the original source of a
-   * line, column pair in this stylesheet, if its source mapped, otherwise
-   * a promise of the same location.
-   */
-  getOriginalLocation: function (line, column) {
-    return this.getSourceMap().then((sourceMap) => {
-      if (sourceMap) {
-        return sourceMap.originalPositionFor({ line: line, column: column });
-      }
-      return {
-        fromSourceMap: false,
-        source: this.href,
-        line: line,
-        column: column
-      };
-    });
-  },
 
   /**
    * Protocol method to get the media rules for the stylesheet.
@@ -1043,15 +842,3 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 });
 
 exports.StyleSheetsActor = StyleSheetsActor;
-
-/**
- * Normalize multiple relative paths towards the base paths on the right.
- */
-function normalize(...urls) {
-  let base = Services.io.newURI(urls.pop());
-  let url;
-  while ((url = urls.pop())) {
-    base = Services.io.newURI(url, null, base);
-  }
-  return base.spec;
-}

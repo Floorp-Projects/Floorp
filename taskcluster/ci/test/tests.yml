@@ -128,7 +128,7 @@ crashtest:
             default: 1
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            windows10-64/debug: both
             default: true
     mozharness:
         by-test-platform:
@@ -317,7 +317,7 @@ jsreftest:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows7-32/debug: both
+            windows10-64/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -973,7 +973,7 @@ reftest:
             default: 8
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            windows10-64/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -1062,7 +1062,7 @@ reftest-no-accel:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows7-32/debug: both
+            windows10-64/debug: both
             default: true
     mozharness:
         script: desktop_unittest.py

@@ -59,7 +59,7 @@ function EvaluationResult(props) {
     messageBody = GripMessageBody({
       dispatch,
       messageId,
-      grip: parameters,
+      grip: parameters[0],
       serviceContainer,
       useQuotes: true,
       escapeWhitespace: false,

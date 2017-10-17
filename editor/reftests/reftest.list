@@ -1,5 +1,7 @@
 # include the XUL reftests
-include xul/reftest.list
+# All tests in this dir are affected by bug 1408811 on Stylo.
+# Some of them are != which pass on stylo but fails on styloVsGecko.
+skip-if(stylo) fails-if(styloVsGecko) include xul/reftest.list
 
 != newline-1.html newline-ref.html
 == newline-2.html newline-ref.html

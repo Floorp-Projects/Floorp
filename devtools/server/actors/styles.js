@@ -1111,8 +1111,14 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       let declarations = parseNamedDeclarations(isCssPropertyKnown,
                                                 form.authoredText || form.cssText,
                                                 true);
+
+      // We need to grab CSS from the window, since calling supports() on the
+      // one from the current global will fail due to not being an HTML global.
+      let CSS = this.pageStyle.inspector.tabActor.window.CSS;
       form.declarations = declarations.map(decl => {
-        decl.isValid = DOMUtils.cssPropertyIsValid(decl.name, decl.value);
+        // Use the 1-arg CSS.supports() call so that we also accept !important
+        // in the value.
+        decl.isValid = CSS.supports(`${decl.name}:${decl.value}`);
         return decl;
       });
     }

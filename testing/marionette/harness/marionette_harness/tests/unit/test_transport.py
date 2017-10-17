@@ -11,7 +11,7 @@ from marionette_driver.transport import (
     Response,
 )
 
-from marionette_harness import MarionetteTestCase, skip_unless_protocol
+from marionette_harness import MarionetteTestCase
 
 
 get_current_url = ("getCurrentUrl", None)
@@ -32,19 +32,6 @@ class TestMessageSequencing(MarionetteTestCase):
         cmd = Command(self.last_id, name, params)
         self.marionette.client.send(cmd)
         return self.last_id
-
-    @skip_unless_protocol("Skip for level < 3", lambda level: level >= 3)
-    def test_discard_older_messages(self):
-        first = self.send(*get_current_url)
-        second = self.send(*execute_script)
-        resp = self.marionette.client.receive()
-        self.assertEqual(second, resp.id)
-
-    @skip_unless_protocol("Skip for level < 3", lambda level: level >= 3)
-    def test_last_id_incremented(self):
-        before = self.last_id
-        self.send(*get_current_url)
-        self.assertGreater(self.last_id, before)
 
 
 class MessageTestCase(MarionetteTestCase):

@@ -38,6 +38,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
     #content :hover .child::after {
       content: "link child" !important;
     }
+
+    #dynamic-test {
+      width: 100px;
+      height: 100px;
+      background: green;
+    }
+
+    #dynamic-test > * {
+      width: 100%;
+      height: 100%;
+      background: red;
+    }
+
+    #dynamic-test:hover > * {
+      background: rgb(0, 255, 0);
+    }
   </style>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
@@ -75,6 +91,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
       test(document.getElementById("label"), false);
       test(document.getElementById("link"), true);
       test(document.getElementById("div"), false);
+      // Dynamic change test.
+      // Trigger the :hover pseudo-class.
+      synthesizeMouseAtCenter(document.getElementById('dynamic-test'), {type: "mousemove"});
+      is(getComputedStyle(document.getElementById('should-be-green-on-hover')).backgroundColor,
+         "rgb(0, 255, 0)",
+         "Dynamic change should invalidate properly");
       SimpleTest.finish();
     });
   </script>
@@ -82,6 +104,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
 <body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783213">Mozilla Bug 783213</a>
   <p id="display"></p>
+  <div id="dynamic-test">
+    <div id="should-be-green-on-hover"></div>
+  </div>
   <div id="content">
     <span id="span">Span<span class="child"></span></span><br>
     <label id="label">Label<span class="child"></span></label><br>

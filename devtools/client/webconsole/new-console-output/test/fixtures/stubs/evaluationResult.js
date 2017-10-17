@@ -21,19 +21,21 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
   "type": "result",
   "helperType": null,
   "level": "log",
-  "parameters": {
-    "type": "object",
-    "actor": "server1.conn0.child1/obj30",
-    "class": "Date",
-    "extensible": true,
-    "frozen": false,
-    "sealed": false,
-    "ownPropertyLength": 0,
-    "preview": {
-      "timestamp": 0
+  "parameters": [
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj30",
+      "class": "Date",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "timestamp": 0
+      }
     }
-  },
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  ],
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
@@ -51,10 +53,12 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
   "helperType": null,
   "level": "error",
   "messageText": "ReferenceError: asdf is not defined",
-  "parameters": {
-    "type": "undefined"
-  },
-  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "parameters": [
+    {
+      "type": "undefined"
+    }
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -77,10 +81,12 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
   "helperType": null,
   "level": "error",
   "messageText": "SyntaxError: illegal character",
-  "parameters": {
-    "type": "undefined"
-  },
-  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "parameters": [
+    {
+      "type": "undefined"
+    }
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -102,31 +108,33 @@ stubPreparedMessages.set("inspect({a: 1})", new ConsoleMessage({
   "type": "result",
   "helperType": "inspectObject",
   "level": "log",
-  "parameters": {
-    "type": "object",
-    "actor": "server1.conn0.child1/obj35",
-    "class": "Object",
-    "extensible": true,
-    "frozen": false,
-    "sealed": false,
-    "ownPropertyLength": 1,
-    "preview": {
-      "kind": "Object",
-      "ownProperties": {
-        "a": {
-          "configurable": true,
-          "enumerable": true,
-          "writable": true,
-          "value": 1
-        }
-      },
-      "ownSymbols": [],
-      "ownPropertiesLength": 1,
-      "ownSymbolsLength": 0,
-      "safeGetterValues": {}
+  "parameters": [
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj35",
+      "class": "Object",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 1,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "a": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": 1
+          }
+        },
+        "ownSymbols": [],
+        "ownPropertiesLength": 1,
+        "ownSymbolsLength": 0,
+        "safeGetterValues": {}
+      }
     }
-  },
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  ],
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
@@ -149,10 +157,12 @@ stubPreparedMessages.set("longString message Error", new ConsoleMessage({
     "length": 110007,
     "actor": "server1.conn0.child1/longString37"
   },
-  "parameters": {
-    "type": "undefined"
-  },
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":{\"type\":\"undefined\"},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "parameters": [
+    {
+      "type": "undefined"
+    }
+  ],
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,

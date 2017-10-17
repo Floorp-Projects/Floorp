@@ -95,6 +95,7 @@
 #include "nsBidi.h"
 
 #include "mozilla/dom/URL.h"
+#include "mozilla/ServoCSSParser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -146,17 +147,29 @@ private:
 nscolor
 nsPresContext::MakeColorPref(const nsString& aColor)
 {
-  nsCSSParser parser;
-  nsCSSValue value;
-  if (!parser.ParseColorString(aColor, nullptr, 0, value)) {
-    // Any better choices?
-    return NS_RGB(0, 0, 0);
+  bool ok;
+  nscolor result;
+
+  ServoStyleSet* servoStyleSet = mShell && mShell->StyleSet()
+    ? mShell->StyleSet()->GetAsServo()
+    : nullptr;
+
+  if (servoStyleSet) {
+    ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColor,
+                                      &result);
+  } else {
+    nsCSSParser parser;
+    nsCSSValue value;
+    ok = parser.ParseColorString(aColor, nullptr, 0, value) &&
+         nsRuleNode::ComputeColor(value, this, nullptr, result);
   }
 
-  nscolor color;
-  return nsRuleNode::ComputeColor(value, this, nullptr, color)
-    ? color
-    : NS_RGB(0, 0, 0);
+  if (!ok) {
+    // Any better choices?
+    result = NS_RGB(0, 0, 0);
+  }
+
+  return result;
 }
 
 bool
@@ -1356,7 +1369,10 @@ nsPresContext::UpdateEffectiveTextZoom()
 
   mEffectiveTextZoom = newZoom;
 
-  if (HasCachedStyleData()) {
+  // In case of servo, stylist.device might have already generated the default
+  // computed values with the previous effective text zoom value even if the
+  // pres shell has not initialized yet.
+  if (mDocument->IsStyledByServo() || HasCachedStyleData()) {
     // Media queries could have changed, since we changed the meaning
     // of 'em' units in them.
     MediaFeatureValuesChanged(eRestyle_ForceDescendants,

@@ -173,6 +173,28 @@ ChannelMediaDecoder::ChannelMediaDecoder(MediaDecoderInit& aInit)
   mWatchManager.Watch(mLogicallySeeking, &ChannelMediaDecoder::SeekingChanged);
 }
 
+/* static */
+already_AddRefed<ChannelMediaDecoder>
+ChannelMediaDecoder::Create(MediaDecoderInit& aInit,
+                            DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<ChannelMediaDecoder> decoder;
+
+  const MediaContainerType& type = aInit.mContainerType;
+  if (DecoderTraits::IsSupportedType(type)) {
+    decoder = new ChannelMediaDecoder(aInit);
+    return decoder.forget();
+  }
+
+  if (DecoderTraits::IsHttpLiveStreamingType(type)) {
+    // We don't have an HLS decoder.
+    Telemetry::Accumulate(Telemetry::MEDIA_HLS_DECODER_SUCCESS, false);
+  }
+
+  return nullptr;
+}
+
 bool
 ChannelMediaDecoder::CanClone()
 {

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use canvas_traits::webgl::{webgl_channel, WebGLReceiver, WebVRCommand};
-use core::ops::Deref;
 use dom::bindings::callback::ExceptionHandling;
 use dom::bindings::cell::DomRefCell;
 use dom::bindings::codegen::Bindings::PerformanceBinding::PerformanceBinding::PerformanceMethods;
@@ -38,6 +37,7 @@ use script_runtime::CommonScriptMsg;
 use script_runtime::ScriptThreadEventCategory::WebVREvent;
 use std::cell::Cell;
 use std::mem;
+use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::mpsc;
 use std::thread;
@@ -122,7 +122,7 @@ impl VRDisplay {
     }
 
     pub fn new(global: &GlobalScope, display: WebVRDisplayData) -> DomRoot<VRDisplay> {
-        reflect_dom_object(box VRDisplay::new_inherited(&global, display),
+        reflect_dom_object(Box::new(VRDisplay::new_inherited(&global, display)),
                            global,
                            VRDisplayBinding::Wrap)
     }
@@ -512,9 +512,9 @@ impl VRDisplay {
                 // Run RAF callbacks on JavaScript thread
                 let this = address.clone();
                 let sender = raf_sender.clone();
-                let task = box task!(handle_vrdisplay_raf: move || {
+                let task = Box::new(task!(handle_vrdisplay_raf: move || {
                     this.root().handle_raf(&sender);
-                });
+                }));
                 js_sender.send(CommonScriptMsg::Task(WebVREvent, task)).unwrap();
 
                 // Run Sync Poses in parallell on Render thread

@@ -7,31 +7,27 @@
 
 // See Bug 734061.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/browser/test-console.html";
+const TEST_URI = "data:text/html,Testing jsterm focus";
 
 add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
-
+  let hud = yield openNewTabAndConsole(TEST_URI);
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
 
-  is(input.getAttribute("focused"), "true", "input has focus");
+  is(hasFocus(input), true, "input has focus");
   EventUtils.synthesizeKey("VK_TAB", {});
-  is(input.getAttribute("focused"), "", "focus moved away");
+  is(hasFocus(input), false, "focus moved away");
 
   // Test user changed something
   input.focus();
   EventUtils.synthesizeKey("A", {});
   EventUtils.synthesizeKey("VK_TAB", {});
-  is(input.getAttribute("focused"), "true", "input is still focused");
+  is(hasFocus(input), true, "input is still focused");
 
   // Test non empty input but not changed since last focus
   input.blur();
   input.focus();
   EventUtils.synthesizeKey("VK_RIGHT", {});
   EventUtils.synthesizeKey("VK_TAB", {});
-  is(input.getAttribute("focused"), "", "input moved away");
+  is(hasFocus(input), false, "focus moved away");
 });

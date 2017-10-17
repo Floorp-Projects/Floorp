@@ -567,17 +567,12 @@ pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 // apz.fling_friction and apz.fling_stopped_threshold are currently ignored by Fennec.
 pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.0");
+pref("apz.frame_delay.enabled", true);
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.overscroll.enabled", true);
 pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
-
-#ifdef NIGHTLY_BUILD
-pref("apz.frame_delay.enabled", true);
-#else
-pref("apz.frame_delay.enabled", false);
-#endif
 
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);

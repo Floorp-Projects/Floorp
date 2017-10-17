@@ -509,9 +509,9 @@ tabbrowser {
 
 /* Pinned tab separators need position: absolute when positioned (during overflow). */
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::after {
-  height: 100%;
   position: absolute;
   top: 0;
+  bottom: 0;
   right: 0;
 }
 
@@ -558,14 +558,8 @@ tabbrowser {
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
   border-left: 1px solid;
-  /* Vertical margin doesn't work here for positioned pinned tabs, see
-     bug 1198236 and bug 1300410. We're using linear-gradient instead
-     to cut off the border at the top and at the bottom. */
-  border-image: linear-gradient(transparent 6px,
-                                currentColor 6px,
-                                currentColor calc(100% - 5px),
-                                transparent calc(100% - 5px));
-  border-image-slice: 1;
+  margin-top: 5px;
+  margin-bottom: 4px;
   opacity: 0.3;
 }
 
@@ -579,11 +573,8 @@ tabbrowser {
 /* Show full height tab separators on hover. */
 .tabbrowser-tab:hover::after,
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab[beforehovered]::after {
-  border-image: linear-gradient(transparent calc(1px + var(--tabs-top-border-width)),
-                                currentColor calc(1px + var(--tabs-top-border-width)),
-                                currentColor calc(100% - 1px),
-                                transparent calc(100% - 1px));
-  border-image-slice: 1;
+  margin-top: var(--tabs-top-border-width);
+  margin-bottom: 0;
 }
 
 /* Show full height tab separators on selected tabs. */
@@ -591,10 +582,8 @@ tabbrowser {
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[visuallyselected]::before,
 .tabbrowser-tab[visuallyselected]::after {
   border-color: var(--tabs-border);
-  border-image: linear-gradient(transparent 1px,
-                                var(--tabs-border) 1px,
-                                var(--tabs-border) calc(100% - 1px - var(--tab-toolbar-navbar-overlap)),
-                                transparent calc(100% - 1px - var(--tab-toolbar-navbar-overlap))) 1 !important;
+  margin-top: 0;
+  margin-bottom: var(--tab-toolbar-navbar-overlap);
   opacity: 1;
 }
 

@@ -301,7 +301,7 @@ linux64-android-gradle-dependencies:
         - linux64-android-sdk-linux-repack
         - linux64-proguard-jar-repack
 
-linux64-rust-1.20:
+linux64-rust-1.21:
     description: "rust repack"
     treeherder:
         kind: build
@@ -318,12 +318,36 @@ linux64-rust-1.20:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.20.0',
+            '--channel', '1.21.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
         ]
         toolchain-alias: linux64-rust
+        toolchain-artifact: public/build/rustc.tar.xz
+
+linux64-rust-1.20:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust-1.20)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 7200
+        env:
+          UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', '1.20.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
         toolchain-artifact: public/build/rustc.tar.xz
 
 linux64-rust-1.19:
@@ -350,7 +374,7 @@ linux64-rust-1.19:
         ]
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-macos-1.20:
+linux64-rust-macos-1.21:
     description: "rust repack with macos-cross support"
     treeherder:
         kind: build
@@ -367,7 +391,7 @@ linux64-rust-macos-1.20:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-           '--channel', '1.20.0',
+           '--channel', '1.21.0',
            '--host', 'x86_64-unknown-linux-gnu',
            '--target', 'x86_64-unknown-linux-gnu',
            '--target', 'x86_64-apple-darwin',
@@ -375,7 +399,7 @@ linux64-rust-macos-1.20:
         toolchain-alias: linux64-rust-macos
         toolchain-artifact: public/build/rustc.tar.xz
 
-linux64-rust-android-1.20:
+linux64-rust-android-1.21:
     description: "rust repack with android-cross support"
     treeherder:
         kind: build
@@ -392,7 +416,7 @@ linux64-rust-android-1.20:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-           '--channel', '1.20.0',
+           '--channel', '1.21.0',
            '--host', 'x86_64-unknown-linux-gnu',
            '--target', 'x86_64-unknown-linux-gnu',
            '--target', 'armv7-linux-androideabi',

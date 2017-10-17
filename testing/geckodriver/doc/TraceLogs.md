@@ -165,7 +165,7 @@ Ruby
 The Selenium [Ruby client] comes with an [`Options`] helper to
 generate the correct [`moz:firefoxOptions`] capabilities object:
 
-	Selenium::WebDriver.logger.level = :trace
+	Selenium::WebDriver.logger.level = :debug
 	opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
 	driver = Selenium::WebDriver.for :firefox, options: opts
 

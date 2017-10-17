@@ -23,7 +23,6 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StateMirroring.h"
 #include "mozilla/StateWatching.h"
-#include "necko-config.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -99,9 +98,6 @@ public:
     PLAY_STATE_ENDED,
     PLAY_STATE_SHUTDOWN
   };
-
-  // Must be called exactly once, on the main thread, during startup.
-  static void InitStatics();
 
   explicit MediaDecoder(MediaDecoderInit& aInit);
 

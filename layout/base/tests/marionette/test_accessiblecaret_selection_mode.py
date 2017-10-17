@@ -263,7 +263,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         el = self.marionette.find_element(By.ID, el_id)
         self._test_minimum_select_one_character(el)
 
-    def _test_minimum_select_one_character(self, el, x=None, y=None):
+    def _test_minimum_select_one_character(self, el):
         sel = SelectionManager(el)
         original_content = sel.content
         words = original_content.split()
@@ -278,13 +278,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Goal: Select the first character.
         target_content = original_content[0]
 
-        if x and y:
-            # If we got x and y from the arguments, use it as a hint of the
-            # location of the first word
-            pass
-        else:
-            x, y = self.word_location(el, 0)
-        self.long_press_on_location(el, x, y)
+        self.long_press_on_word(el, 0)
 
         # Drag the second caret to the end of the content.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
@@ -321,24 +315,26 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_content_id + '_to_' + _contenteditable_id,
                    el1_id=_content_id, el2_id=_contenteditable_id)
     def test_long_press_changes_focus_from(self, el1_id, el2_id):
-        '''Test the focus could be changed from el1 to el2 by long press.
+        self.open_test_html(self._selection_html)
+        el1 = self.marionette.find_element(By.ID, el1_id)
+        el2 = self.marionette.find_element(By.ID, el2_id)
 
-        If the focus is changed to e2 successfully, the carets should appear and
-        could be dragged.
+        # Compute the content of the first word in el2.
+        sel = SelectionManager(el2)
+        original_content = sel.content
+        words = original_content.split()
+        target_content = words[0]
 
-        '''
-        # Goal: Tap to focus el1, and then select the first character on
-        # el2.
+        # Goal: Tap to focus el1, and then select the first word on el2.
 
         # We want to collect the location of the first word in el2 here
         # since self.word_location() has the side effect which would
         # change the focus.
-        self.open_test_html(self._selection_html)
-        el1 = self.marionette.find_element(By.ID, el1_id)
-        el2 = self.marionette.find_element(By.ID, el2_id)
         x, y = self.word_location(el2, 0)
+
         el1.tap()
-        self._test_minimum_select_one_character(el2, x=x, y=y)
+        self.long_press_on_location(el2, x, y)
+        self.assertEqual(target_content, sel.selected_content)
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
