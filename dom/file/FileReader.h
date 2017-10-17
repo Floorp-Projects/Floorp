@@ -183,7 +183,6 @@ private:
   bool mTimerIsActive;
 
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-  nsCOMPtr<nsIInputStream> mBufferedStream;
 
   RefPtr<DOMException> mError;
 
