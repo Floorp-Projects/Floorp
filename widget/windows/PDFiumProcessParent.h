@@ -11,6 +11,15 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 class nsIRunnable;
+class nsDeviceContextSpecWin;
+
+#ifdef MOZ_ENABLE_SKIA_PDF
+namespace mozilla {
+namespace widget {
+class PDFiumParent;
+}
+}
+#endif
 
 namespace mozilla {
 namespace widget {
@@ -30,6 +39,9 @@ public:
 private:
 
   DISALLOW_COPY_AND_ASSIGN(PDFiumProcessParent);
+
+  RefPtr<PDFiumParent> mPDFiumParentActor;
+  nsCOMPtr<nsIThread> mLaunchThread;
 };
 
 } // namespace widget
