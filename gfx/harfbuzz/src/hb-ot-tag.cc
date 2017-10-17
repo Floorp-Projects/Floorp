@@ -270,28 +270,36 @@ static const LangTag ot_languages[] = {
   {"cak",	HB_TAG('C','A','K',' ')},	/* Kaqchikel */
   {"cbk",	HB_TAG('C','B','K',' ')},	/* Chavacano */
   {"cbl",	HB_TAG('Q','I','N',' ')},	/* Bualkhaw Chin */
+  {"cco",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"ce",	HB_TAG('C','H','E',' ')},	/* Chechen */
   {"ceb",	HB_TAG('C','E','B',' ')},	/* Cebuano */
   {"cfm",	HB_TAG('H','A','L',' ')},	/* Halam/Falam Chin */
   {"cgg",	HB_TAG('C','G','G',' ')},	/* Chiga */
   {"ch",	HB_TAG('C','H','A',' ')},	/* Chamorro */
+  {"chj",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"chk",	HB_TAG('C','H','K','0')},	/* Chuukese */
   {"cho",	HB_TAG('C','H','O',' ')},	/* Choctaw */
   {"chp",	HB_TAG('C','H','P',' ')},	/* Chipewyan */
+  {"chq",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"chr",	HB_TAG('C','H','R',' ')},	/* Cherokee */
   {"chy",	HB_TAG('C','H','Y',' ')},	/* Cheyenne */
+  {"chz",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cja",	HB_TAG('C','J','A',' ')},	/* Western Cham */
   {"cjm",	HB_TAG('C','J','M',' ')},	/* Eastern Cham */
   {"cka",	HB_TAG('Q','I','N',' ')},	/* Khumi Awa Chin */
   {"ckb",	HB_TAG('K','U','R',' ')},	/* Central Kurdish (Sorani) */
   {"ckt",	HB_TAG('C','H','K',' ')},	/* Chukchi */
   {"cld",	HB_TAG('S','Y','R',' ')},	/* Chaldean Neo-Aramaic */
+  {"cle",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cmr",	HB_TAG('Q','I','N',' ')},	/* Mro-Khimi Chin */
   {"cnb",	HB_TAG('Q','I','N',' ')},	/* Chinbon Chin */
   {"cnh",	HB_TAG('Q','I','N',' ')},	/* Hakha Chin */
   {"cnk",	HB_TAG('Q','I','N',' ')},	/* Khumi Chin */
+  {"cnl",	HB_TAG('C','C','H','N')},	/* Chinantec */
+  {"cnt",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cnw",	HB_TAG('Q','I','N',' ')},	/* Ngawn Chin */
   {"cop",	HB_TAG('C','O','P',' ')},	/* Coptic */
+  {"cpa",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cpp",	HB_TAG('C','P','P',' ')},	/* Creoles */
   {"cr",	HB_TAG('C','R','E',' ')},	/* Cree */
   {"cre",	HB_TAG('Y','C','R',' ')},	/* Y-Cree */
@@ -302,15 +310,21 @@ static const LangTag ot_languages[] = {
   {"crm",	HB_TAG('M','C','R',' ')},	/* Moose Cree */
   {"crx",	HB_TAG('C','R','R',' ')},	/* Carrier */
   {"cs",	HB_TAG('C','S','Y',' ')},	/* Czech */
+  {"csa",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"csb",	HB_TAG('C','S','B',' ')},	/* Kashubian */
   {"csh",	HB_TAG('Q','I','N',' ')},	/* Asho Chin */
+  {"cso",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"csy",	HB_TAG('Q','I','N',' ')},	/* Siyin Chin */
   {"ctd",	HB_TAG('Q','I','N',' ')},	/* Tedim Chin */
+  {"cte",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"ctg",	HB_TAG('C','T','G',' ')},	/* Chittagonian */
+  {"ctl",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cts",	HB_TAG('B','I','K',' ')},	/* Northern Catanduanes Bikol */
   {"cu",	HB_TAG('C','S','L',' ')},	/* Church Slavic */
+  {"cuc",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cuk",	HB_TAG('C','U','K',' ')},	/* San Blas Kuna */
   {"cv",	HB_TAG('C','H','U',' ')},	/* Chuvash */
+  {"cvn",	HB_TAG('C','C','H','N')},	/* Chinantec */
   {"cwd",	HB_TAG('D','C','R',' ')},	/* Woods Cree */
   {"cy",	HB_TAG('W','E','L',' ')},	/* Welsh */
   {"czt",	HB_TAG('Q','I','N',' ')},	/* Zotung Chin */
@@ -380,7 +394,6 @@ static const LangTag ot_languages[] = {
   {"gkp",	HB_TAG('G','K','P',' ')},	/* Kpelle (Guinea) */
   {"gl",	HB_TAG('G','A','L',' ')},	/* Galician */
   {"gld",	HB_TAG('N','A','N',' ')},	/* Nanai */
-  {"gle",	HB_TAG('I','R','T',' ')},	/* Irish Traditional */
   {"glk",	HB_TAG('G','L','K',' ')},	/* Gilaki */
   {"gn",	HB_TAG('G','U','A',' ')},	/* Guarani [macrolanguage] */
   {"gnn",	HB_TAG('G','N','N',' ')},	/* Gumatj */
@@ -538,7 +551,6 @@ static const LangTag ot_languages[] = {
   {"mag",	HB_TAG('M','A','G',' ')},	/* Magahi */
   {"mai",	HB_TAG('M','T','H',' ')},	/* Maithili */
   {"mak",	HB_TAG('M','K','R',' ')},	/* Makasar */
-  {"mal",	HB_TAG('M','A','L',' ')},	/* Malayalam */
   {"mam",	HB_TAG('M','A','M',' ')},	/* Mam */
   {"man",	HB_TAG('M','N','K',' ')},	/* Manding/Mandingo [macrolanguage] */
   {"mdc",	HB_TAG('M','L','E',' ')},	/* Male (Papua New Guinea) */

@@ -339,7 +339,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
     clip(aBuilder, this, clipFlags);
 
-  nsDisplayList list;
+  nsDisplayList list(aBuilder);
   list.AppendNewToTop(
     new (aBuilder) nsDisplayXULImage(aBuilder, this));
 

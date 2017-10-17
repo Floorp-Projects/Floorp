@@ -95,12 +95,8 @@ SharedArrayMappedSize(uint32_t allocSize)
 // to 8TB.  Thus we track the number of live objects, and set a limit of
 // 1000 live objects per process; we run synchronous GC if necessary; and
 // we throw an OOM error if the per-process limit is exceeded.
-static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numLive;
-static const uint32_t maxLive = 1000;
-
-#ifdef DEBUG
-static mozilla::Atomic<int32_t> liveBuffers_;
-#endif
+static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
+static const int32_t MaximumLiveSharedArrayBuffers = 1000;
 
 static uint32_t
 SharedArrayAllocSize(uint32_t length)
@@ -111,11 +107,7 @@ SharedArrayAllocSize(uint32_t length)
 int32_t
 SharedArrayRawBuffer::liveBuffers()
 {
-#ifdef DEBUG
-    return liveBuffers_;
-#else
-    return 0;
-#endif
+    return liveBufferCount;
 }
 
 SharedArrayRawBuffer*
@@ -130,33 +122,33 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     if (allocSize <= length)
         return nullptr;
 
+    // Test >= to guard against the case where multiple extant runtimes
+    // race to allocate.
+    if (++liveBufferCount >= MaximumLiveSharedArrayBuffers) {
+        if (OnLargeAllocationFailure)
+            OnLargeAllocationFailure();
+        if (liveBufferCount >= MaximumLiveSharedArrayBuffers) {
+            liveBufferCount--;
+            return nullptr;
+        }
+    }
+
     bool preparedForAsmJS = jit::JitOptions.asmJSAtomicsEnable && IsValidAsmJSHeapLength(length);
 
     void* p = nullptr;
     if (preparedForAsmJS) {
-        // Test >= to guard against the case where multiple extant runtimes
-        // race to allocate.
-        if (++numLive >= maxLive) {
-            if (OnLargeAllocationFailure)
-                OnLargeAllocationFailure();
-            if (numLive >= maxLive) {
-                numLive--;
-                return nullptr;
-            }
-        }
-
         uint32_t mappedSize = SharedArrayMappedSize(allocSize);
 
         // Get the entire reserved region (with all pages inaccessible)
         p = MapMemory(mappedSize, false);
         if (!p) {
-            numLive--;
+            liveBufferCount--;
             return nullptr;
         }
 
         if (!MarkValidRegion(p, allocSize)) {
             UnmapMemory(p, mappedSize);
-            numLive--;
+            liveBufferCount--;
             return nullptr;
         }
 
@@ -167,17 +159,16 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
 # endif
     } else {
         p = MapMemory(allocSize, true);
-        if (!p)
+        if (!p) {
+            liveBufferCount--;
             return nullptr;
+        }
     }
 
     uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
     SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length, preparedForAsmJS);
     MOZ_ASSERT(rawbuf->length == length); // Deallocation needs this
-#ifdef DEBUG
-    liveBuffers_++;
-#endif
     return rawbuf;
 }
 
@@ -211,11 +202,6 @@ SharedArrayRawBuffer::dropReference()
         return;
 
     // If this was the final reference, release the buffer.
-
-#ifdef DEBUG
-    liveBuffers_--;
-#endif
-
     SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
     MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);
 
@@ -223,8 +209,6 @@ SharedArrayRawBuffer::dropReference()
     uint32_t allocSize = SharedArrayAllocSize(this->length);
 
     if (this->preparedForAsmJS) {
-        numLive--;
-
         uint32_t mappedSize = SharedArrayMappedSize(allocSize);
         UnmapMemory(address, mappedSize);
 
@@ -236,6 +220,10 @@ SharedArrayRawBuffer::dropReference()
     } else {
         UnmapMemory(address, allocSize);
     }
+
+    // Decrement the buffer counter at the end -- otherwise, a race condition
+    // could enable the creation of unlimited buffers.
+    liveBufferCount--;
 }
 
 

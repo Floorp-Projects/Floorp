@@ -88,11 +88,23 @@ struct hb_shaper_data_t {
         HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data);
 
 #define HB_SHAPER_DATA_ENSURE_DEFINE(shaper, object) \
+	HB_SHAPER_DATA_ENSURE_DEFINE_WITH_CONDITION(shaper, object, true)
+
+#define HB_SHAPER_DATA_ENSURE_DEFINE_WITH_CONDITION(shaper, object, condition) \
 bool \
 HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
 {\
   retry: \
   HB_SHAPER_DATA_TYPE (shaper, object) *data = (HB_SHAPER_DATA_TYPE (shaper, object) *) hb_atomic_ptr_get (&HB_SHAPER_DATA (shaper, object)); \
+  if (likely (data) && !(condition)) { \
+    /* Drop and recreate. */ \
+    /* If someone dropped it in the mean time, throw it away and don't touch it. \
+     * Otherwise, destruct it. */ \
+    if (hb_atomic_ptr_cmpexch (&HB_SHAPER_DATA (shaper, object), data, NULL)) { \
+      HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data); \
+    } \
+    goto retry; \
+  } \
   if (unlikely (!data)) { \
     data = HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (object); \
     if (unlikely (!data)) \
