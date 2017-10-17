@@ -1369,7 +1369,10 @@ nsPresContext::UpdateEffectiveTextZoom()
 
   mEffectiveTextZoom = newZoom;
 
-  if (HasCachedStyleData()) {
+  // In case of servo, stylist.device might have already generated the default
+  // computed values with the previous effective text zoom value even if the
+  // pres shell has not initialized yet.
+  if (mDocument->IsStyledByServo() || HasCachedStyleData()) {
     // Media queries could have changed, since we changed the meaning
     // of 'em' units in them.
     MediaFeatureValuesChanged(eRestyle_ForceDescendants,
