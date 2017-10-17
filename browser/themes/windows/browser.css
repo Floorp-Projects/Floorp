@@ -77,15 +77,15 @@
   display: none;
 }
 
-:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
+:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
   padding-top: var(--space-above-tabbar);
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
     padding-top: calc(var(--space-above-tabbar) + 4px);
   }
 }
@@ -1076,19 +1076,19 @@ notification[value="translation"] {
 
 /* Private browsing and accessibility indicators */
 
-:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .private-browsing-indicator,
-:root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .accessibility-indicator,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .private-browsing-indicator,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .accessibility-indicator {
+:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .private-browsing-indicator,
+:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .accessibility-indicator,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .private-browsing-indicator,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .accessibility-indicator {
   margin-top: calc(-1 * var(--space-above-tabbar));
 }
 
 /* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .private-browsing-indicator,
-  :root[sizemode="normal"][chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar > .accessibility-indicator,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .private-browsing-indicator,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar > .accessibility-indicator {
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .private-browsing-indicator,
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .accessibility-indicator,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .private-browsing-indicator,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .accessibility-indicator {
     margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
   }
 }
