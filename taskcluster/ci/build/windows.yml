@@ -70,40 +70,6 @@ win32/opt:
         - win64-sccache
         - win64-node
 
-win32-dmd/opt:
-    description: "Win32 DMD Opt"
-    index:
-        product: firefox
-        job-name: win32-dmd-opt
-    treeherder:
-        platform: windows2012-32-dmd/opt
-        symbol: Bdmd
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-    run:
-        using: mozharness
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        config:
-            - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win32.py
-            - builds/taskcluster_sub_win32/opt.py
-        extra-config:
-            mozconfig_variant: 'opt-dmd'
-    run-on-projects: []
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-node
-
 win32/pgo:
     description: "Win32 Opt PGO"
     index:
@@ -264,40 +230,6 @@ win64-plain/opt:
         - win64-rust
         - win64-node
         - win64-cbindgen
-
-win64-dmd/opt:
-    description: "Win64 DMD Opt"
-    index:
-        product: firefox
-        job-name: win64-dmd-opt
-    treeherder:
-        platform: windows2012-64-dmd/opt
-        symbol: Bdmd
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-    run:
-        using: mozharness
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        config:
-            - builds/releng_base_firefox.py
-            - builds/taskcluster_base_windows.py
-            - builds/taskcluster_base_win64.py
-            - builds/taskcluster_sub_win64/opt.py
-        extra-config:
-            mozconfig_variant: 'opt-dmd'
-    run-on-projects: []
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-node
 
 win32-nightly/opt:
     description: "Win32 Nightly"
