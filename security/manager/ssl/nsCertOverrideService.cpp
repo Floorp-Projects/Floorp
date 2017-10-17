@@ -281,8 +281,7 @@ nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock)
 
   // get a buffered output stream 4096 bytes big, to optimize writes
   nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                                  fileOutputStream.forget(), 4096);
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), fileOutputStream, 4096);
   if (NS_FAILED(rv)) {
     return rv;
   }
