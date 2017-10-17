@@ -1454,6 +1454,15 @@ HttpChannelChild::OverrideRunnable::OverrideWithSynthesizedResponse()
 NS_IMETHODIMP
 HttpChannelChild::OverrideRunnable::Run()
 {
+  // Check to see if the channel was canceled in the middle of the redirect.
+  nsresult rv = NS_OK;
+  Unused << mChannel->GetStatus(&rv);
+  if (NS_FAILED(rv)) {
+    mChannel->CleanupRedirectingChannel(rv);
+    mNewChannel->Cancel(rv);
+    return NS_OK;
+  }
+
   bool ret = mChannel->Redirect3Complete(this);
 
   // If the method returns false, it means the IPDL connection is being
@@ -2222,12 +2231,23 @@ HttpChannelChild::Cancel(nsresult status)
     // is responsible for cleaning up.
     mCanceled = true;
     mStatus = status;
-    if (RemoteChannelExists())
+    if (RemoteChannelExists()) {
       SendCancel(status);
+    }
+
+    // If the channel is intercepted and already pumping, then just
+    // cancel the pump.  This will call OnStopRequest().
     if (mSynthesizedResponsePump) {
       mSynthesizedResponsePump->Cancel(status);
     }
-    mInterceptListener = nullptr;
+
+    // If we are canceled while intercepting, but not yet pumping, then
+    // we must call AsyncAbort() to trigger OnStopRequest().
+    else if (mInterceptListener) {
+      mInterceptListener->Cleanup();
+      mInterceptListener = nullptr;
+      Unused << AsyncAbort(status);
+    }
   }
   return NS_OK;
 }
@@ -2391,7 +2411,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-    Unused << AsyncAbort(mStatus);
     return NS_OK;
   }
 
@@ -3416,10 +3435,15 @@ HttpChannelChild::ResetInterception()
     mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
   }
 
+  // If the channel has already been aborted or canceled, just stop.
+  if (NS_FAILED(mStatus)) {
+    return;
+  }
+
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    Unused << AsyncAbort(rv);
+    Unused << Cancel(rv);
   }
 }
 
@@ -3538,6 +3562,17 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
                                                   nsIInputStream* aSynthesizedInput,
                                                   InterceptStreamListener* aStreamListener)
 {
+  nsresult rv = NS_OK;
+  auto autoCancel = MakeScopeExit([&] {
+    if (NS_FAILED(rv)) {
+      Cancel(rv);
+    }
+  });
+
+  if (NS_FAILED(mStatus)) {
+    return;
+  }
+
   mInterceptListener = aStreamListener;
 
   // Intercepted responses should already be decoded.  If its a redirect,
@@ -3552,11 +3587,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   if (nsHttpChannel::WillRedirect(mResponseHead)) {
     mShouldInterceptSubsequentRedirect = true;
     // Continue with the original cross-process request
-    nsresult rv = ContinueAsyncOpen();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      rv = AsyncAbort(rv);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    rv = ContinueAsyncOpen();
     return;
   }
 
@@ -3567,7 +3598,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   // TODO: We could implement an nsIFixedLengthInputStream interface and
   //       QI to it here.  This would let us determine the total length
   //       for streams that support it.  See bug 1388774.
-  nsresult rv = GetContentLength(&mSynthesizedStreamLength);
+  rv = GetContentLength(&mSynthesizedStreamLength);
   if (NS_FAILED(rv)) {
     mSynthesizedStreamLength = -1;
   }
@@ -3592,9 +3623,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
-  if (mCanceled) {
-    mSynthesizedResponsePump->Cancel(mStatus);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!mCanceled);
 }
 
 NS_IMETHODIMP
