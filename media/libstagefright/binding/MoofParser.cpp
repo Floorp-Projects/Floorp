@@ -706,9 +706,9 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
 
 Tkhd::Tkhd(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Tkhd, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -746,9 +746,9 @@ Tkhd::Parse(Box& aBox)
 
 Mvhd::Mvhd(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Mvhd, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -788,9 +788,9 @@ Mdhd::Mdhd(Box& aBox)
 
 Trex::Trex(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Trex, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -812,9 +812,9 @@ Trex::Parse(Box& aBox)
 Tfhd::Tfhd(Box& aBox, Trex& aTrex)
   : Trex(aTrex)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Tfhd, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -851,9 +851,9 @@ Tfhd::Parse(Box& aBox)
 
 Tfdt::Tfdt(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Tfdt, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -879,9 +879,9 @@ Edts::Edts(Box& aBox)
   : mMediaStart(0)
   , mEmptyOffset(0)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Edts, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -935,9 +935,9 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   : mAuxInfoType(aDefaultType)
   , mAuxInfoTypeParameter(0)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Saiz, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -976,9 +976,9 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   : mAuxInfoType(aDefaultType)
   , mAuxInfoTypeParameter(0)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Saio, "Parse failed");
-    mValid = true;
   }
 }
 
@@ -1019,8 +1019,9 @@ Saio::Parse(Box& aBox)
 
 Sbgp::Sbgp(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
-    mValid = true;
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
+    LOG(Sbgp, "Parse failed");
   }
 }
 
@@ -1062,9 +1063,9 @@ Sbgp::Parse(Box& aBox)
 
 Sgpd::Sgpd(Box& aBox)
 {
-  if (Parse(aBox).isOk()) {
+  mValid = Parse(aBox).isOk();
+  if (!mValid) {
     LOG(Sgpd, "Parse failed");
-    mValid = true;
   }
 }
 
