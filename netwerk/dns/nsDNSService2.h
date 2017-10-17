@@ -34,7 +34,7 @@ public:
 
     nsDNSService();
 
-    static nsIDNSService* GetXPCOMSingleton();
+    static already_AddRefed<nsIDNSService> GetXPCOMSingleton();
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -51,7 +51,7 @@ protected:
 private:
     ~nsDNSService();
 
-    static nsDNSService* GetSingleton();
+    static already_AddRefed<nsDNSService> GetSingleton();
 
     uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
 

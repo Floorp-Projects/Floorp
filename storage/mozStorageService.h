@@ -52,7 +52,7 @@ public:
                            const nsAString &aStr2,
                            int32_t aComparisonStrength);
 
-  static Service *getSingleton();
+  static already_AddRefed<Service> getSingleton();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGESERVICE

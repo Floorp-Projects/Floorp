@@ -107,10 +107,9 @@ public:
   static History* GetService();
 
   /**
-   * Obtains a pointer that has had AddRef called on it.  Used by the service
-   * manager only.
+   * Used by the service manager only.
    */
-  static History* GetSingleton();
+  static already_AddRefed<History> GetSingleton();
 
   template<int N>
   already_AddRefed<mozIStorageStatement>

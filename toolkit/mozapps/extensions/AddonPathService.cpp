@@ -57,14 +57,13 @@ NS_IMPL_ISUPPORTS(AddonPathService, amIAddonPathService)
 
 AddonPathService *AddonPathService::sInstance;
 
-/* static */ AddonPathService*
+/* static */ already_AddRefed<AddonPathService>
 AddonPathService::GetInstance()
 {
   if (!sInstance) {
     sInstance = new AddonPathService();
   }
-  NS_ADDREF(sInstance);
-  return sInstance;
+  return do_AddRef(sInstance);
 }
 
 static JSAddonId*
