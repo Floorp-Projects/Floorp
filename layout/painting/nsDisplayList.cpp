@@ -1100,11 +1100,14 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     // viewport, or the scroll position clamping scrollport size, if one is
     // set.
     nsIPresShell* ps = aFrame->PresContext()->PresShell();
-    dirtyRectRelativeToDirtyFrame.MoveTo(0, 0);
     if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
-      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetScrollPositionClampingScrollPortSize());
+      dirtyRectRelativeToDirtyFrame =
+        nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
+#ifdef MOZ_WIDGET_ANDROID
     } else {
-      dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
+      dirtyRectRelativeToDirtyFrame =
+        nsRect(nsPoint(0, 0), aDirtyFrame->GetSize());
+#endif
     }
   }
   nsPoint offset = aFrame->GetOffsetTo(aDirtyFrame);
