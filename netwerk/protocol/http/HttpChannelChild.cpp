@@ -81,7 +81,6 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   if (mOwner) {
-    mOwner->SynthesizeResponseStartTime(TimeStamp::Now());
     mOwner->DoOnStartRequest(mOwner, mContext);
   }
   return NS_OK;
@@ -140,7 +139,6 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatusCode)
 {
   if (mOwner) {
-    mOwner->SynthesizeResponseEndTime(TimeStamp::Now());
     mOwner->DoPreOnStopRequest(aStatusCode);
     mOwner->DoOnStopRequest(mOwner, aStatusCode, mContext);
   }
@@ -3767,18 +3765,6 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
     nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, aMessage);
   }
   return NS_OK;
-}
-
-void
-HttpChannelChild::SynthesizeResponseStartTime(const TimeStamp& aTime)
-{
-  mTransactionTimings.responseStart = aTime;
-}
-
-void
-HttpChannelChild::SynthesizeResponseEndTime(const TimeStamp& aTime)
-{
-  mTransactionTimings.responseEnd = aTime;
 }
 
 void
