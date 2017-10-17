@@ -243,7 +243,7 @@ void
 ConnectionData::StartTimer(uint32_t aTimeout)
 {
     if (!mTimer) {
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+        mTimer = NS_NewTimer();
     }
 
     mTimer->InitWithCallback(this, aTimeout * 1000,

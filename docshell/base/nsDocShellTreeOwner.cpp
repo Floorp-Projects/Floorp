@@ -1244,30 +1244,31 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   }
 
   if (!mShowingTooltip && !mTooltipShownOnce) {
-    mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mTooltipTimer) {
-      nsCOMPtr<EventTarget> eventTarget =
-        aMouseEvent->InternalDOMEvent()->GetTarget();
-      if (eventTarget) {
-        mPossibleTooltipNode = do_QueryInterface(eventTarget);
-        nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
-        if (global) {
-          mTooltipTimer->SetTarget(global->EventTargetFor(TaskCategory::UI));
-        }
+    nsIEventTarget* target = nullptr;
+
+    nsCOMPtr<EventTarget> eventTarget =
+      aMouseEvent->InternalDOMEvent()->GetTarget();
+    if (eventTarget) {
+      mPossibleTooltipNode = do_QueryInterface(eventTarget);
+      nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
+      if (global) {
+        target = global->EventTargetFor(TaskCategory::UI);
       }
-      if (mPossibleTooltipNode) {
-        nsresult rv = mTooltipTimer->InitWithNamedFuncCallback(
-          sTooltipCallback,
-          this,
-          LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
-          nsITimer::TYPE_ONE_SHOT,
-          "ChromeTooltipListener::MouseMove");
-        if (NS_FAILED(rv)) {
-          mPossibleTooltipNode = nullptr;
-        }
+    }
+
+    if (mPossibleTooltipNode) {
+      nsresult rv = NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mTooltipTimer),
+        sTooltipCallback,
+        this,
+        LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+        nsITimer::TYPE_ONE_SHOT,
+        "ChromeTooltipListener::MouseMove",
+        target);
+      if (NS_FAILED(rv)) {
+        mPossibleTooltipNode = nullptr;
+        NS_WARNING("Could not create a timer for tooltip tracking");
       }
-    } else {
-      NS_WARNING("Could not create a timer for tooltip tracking");
     }
   } else {
     mTooltipShownOnce = true;

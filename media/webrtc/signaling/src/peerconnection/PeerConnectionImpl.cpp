@@ -2636,8 +2636,7 @@ PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
     state = mDTMFStates.AppendElement();
     state->mPeerConnectionImpl = this;
     state->mTrackId = senderTrackId;
-    state->mSendTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    MOZ_ASSERT(state->mSendTimer);
+    state->mSendTimer = NS_NewTimer();
   }
   MOZ_ASSERT(state);
 

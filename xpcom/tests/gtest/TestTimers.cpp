@@ -112,22 +112,18 @@ TEST(Timers, TargetedTimers)
   AutoTestThread testThread;
   ASSERT_TRUE(testThread);
 
-  nsresult rv;
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
-
-  rv = timer->SetTarget(target);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
   nsIThread* notifiedThread = nullptr;
 
   nsCOMPtr<nsITimerCallback> callback =
     new TimerCallback(&notifiedThread, newMon);
   ASSERT_TRUE(callback);
 
-  rv = timer->InitWithCallback(callback, 2000, nsITimer::TYPE_ONE_SHOT);
+  nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
+
+  nsCOMPtr<nsITimer> timer;
+  nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(timer),
+                                        callback, 2000, nsITimer::TYPE_ONE_SHOT,
+                                        target);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   ReentrantMonitorAutoEnter mon(*newMon);
@@ -142,21 +138,17 @@ TEST(Timers, TimerWithStoppedTarget)
   AutoTestThread testThread;
   ASSERT_TRUE(testThread);
 
-  nsresult rv;
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
   nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
-
-  rv = timer->SetTarget(target);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // If this is called, we'll assert
   nsCOMPtr<nsITimerCallback> callback =
     new TimerCallback(nullptr, nullptr);
   ASSERT_TRUE(callback);
 
-  rv = timer->InitWithCallback(callback, 100, nsITimer::TYPE_ONE_SHOT);
+  nsCOMPtr<nsITimer> timer;
+  nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(timer),
+                                        callback, 100, nsITimer::TYPE_ONE_SHOT,
+                                        target);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   testThread->Shutdown();
@@ -229,13 +221,12 @@ public:
       PR_Sleep(PR_MillisecondsToInterval(waitTime));
     } while(true);
 
-    nsresult rv;
     mBefore = TimeStamp::Now();
     mMiddle = mBefore + TimeDuration::FromMilliseconds(
         kTimerOffset + kTimerInterval * kNumTimers / 2);
     for (uint32_t i = 0; i < kNumTimers; ++i) {
-      nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      nsCOMPtr<nsITimer> timer = NS_NewTimer();
+      ASSERT_TRUE(timer);
 
       if (i < aNumDifferingTimers) {
         if (aTarget) {
@@ -564,12 +555,8 @@ class FuzzTestThreadState final : public nsITimerCallback {
 
     void CreateRandomTimer()
     {
-      nsresult rv;
-      nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to create timer.");
-
-      rv = timer->SetTarget(static_cast<nsIEventTarget*>(mThread.get()));
-      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "Failed to set target.");
+      nsCOMPtr<nsITimer> timer = NS_NewTimer(static_cast<nsIEventTarget*>(mThread.get()));
+      MOZ_RELEASE_ASSERT(timer, "Failed to create timer.");
 
       InitRandomTimer(timer.get());
     }

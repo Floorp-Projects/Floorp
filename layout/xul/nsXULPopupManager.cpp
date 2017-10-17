@@ -15,6 +15,8 @@
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIXULDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
@@ -1243,18 +1245,19 @@ nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
     LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300); // ms
 
   // Kick off the timer.
-  mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");
-  nsIContent* content = aPopup->GetContent();
-  if (content) {
-    mCloseTimer->SetTarget(
-        content->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+  nsIEventTarget* target = nullptr;
+  if (nsIContent* content = aPopup->GetContent()) {
+    target = content->OwnerDoc()->EventTargetFor(TaskCategory::Other);
   }
-  mCloseTimer->InitWithNamedFuncCallback([](nsITimer* aTimer, void* aClosure) {
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
-      pm->KillMenuTimer();
-    }
-  }, nullptr, menuDelay, nsITimer::TYPE_ONE_SHOT, "KillMenuTimer");
+  NS_NewTimerWithFuncCallback(
+    getter_AddRefs(mCloseTimer),
+    [](nsITimer* aTimer, void* aClosure) {
+      nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+      if (pm) {
+        pm->KillMenuTimer();
+      }
+    }, nullptr, menuDelay, nsITimer::TYPE_ONE_SHOT, "KillMenuTimer",
+    target);
 
   // the popup will call PopupDestroyed if it is destroyed, which checks if it
   // is set to mTimerMenu, so it should be safe to keep a reference to it
@@ -1972,6 +1975,16 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   nsCOMPtr<nsIDocument> document = aPopup->GetUncomposedDoc();
   if (!document) {
     return;
+  }
+
+  // When a menu is opened, make sure that command updating is unlocked first.
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(document);
+  if (xulDoc) {
+    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
+    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+    if (xulCommandDispatcher) {
+      xulCommandDispatcher->Unlock();
+    }
   }
 
   for (nsCOMPtr<nsIContent> grandChild = aPopup->GetFirstChild();

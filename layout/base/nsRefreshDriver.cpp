@@ -371,7 +371,7 @@ public:
   explicit SimpleTimerBasedRefreshDriverTimer(double aRate)
   {
     SetRate(aRate);
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer = NS_NewTimer();
   }
 
   virtual ~SimpleTimerBasedRefreshDriverTimer() override

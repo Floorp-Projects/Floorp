@@ -330,15 +330,15 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(int32_t aIndex, int32_t aMsec)
       if (mSelectTimer)
         mSelectTimer->Cancel();
 
-      mSelectTimer = do_CreateInstance("@mozilla.org/timer;1");
-      nsCOMPtr<nsIContent> content = GetContent();
-      if (content) {
-        mSelectTimer->SetTarget(
-            content->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+      nsIEventTarget* target = nullptr;
+      if (nsCOMPtr<nsIContent> content = GetContent()) {
+        target = content->OwnerDoc()->EventTargetFor(TaskCategory::Other);
       }
-      mSelectTimer->InitWithNamedFuncCallback(SelectCallback, this, aMsec,
-                                              nsITimer::TYPE_ONE_SHOT,
-                                              "nsTreeSelection::SelectCallback");
+      NS_NewTimerWithFuncCallback(getter_AddRefs(mSelectTimer),
+                                  SelectCallback, this, aMsec,
+                                  nsITimer::TYPE_ONE_SHOT,
+                                  "nsTreeSelection::SelectCallback",
+                                  target);
     }
   }
 

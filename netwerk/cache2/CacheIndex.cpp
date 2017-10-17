@@ -2651,26 +2651,16 @@ CacheIndex::ScheduleUpdateTimer(uint32_t aDelay)
 
   MOZ_ASSERT(!mUpdateTimer);
 
-  nsresult rv;
-
-  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
   MOZ_ASSERT(ioTarget);
 
-  rv = timer->SetTarget(ioTarget);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = timer->InitWithNamedFuncCallback(CacheIndex::DelayedUpdate,
-                                        nullptr,
-                                        aDelay,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "net::CacheIndex::ScheduleUpdateTimer");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mUpdateTimer.swap(timer);
-  return NS_OK;
+  return NS_NewTimerWithFuncCallback(getter_AddRefs(mUpdateTimer),
+                                     CacheIndex::DelayedUpdate,
+                                     nullptr,
+                                     aDelay,
+                                     nsITimer::TYPE_ONE_SHOT,
+                                     "net::CacheIndex::ScheduleUpdateTimer",
+                                     ioTarget);
 }
 
 nsresult

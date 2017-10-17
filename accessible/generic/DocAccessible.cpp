@@ -650,15 +650,14 @@ DocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
     mScrollWatchTimer->SetDelay(kScrollPosCheckWait);  // Create new timer, to avoid leaks
   }
   else {
-    mScrollWatchTimer = do_CreateInstance("@mozilla.org/timer;1");
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mScrollWatchTimer),
+                                ScrollTimerCallback,
+                                this,
+                                kScrollPosCheckWait,
+                                nsITimer::TYPE_REPEATING_SLACK,
+                                "a11y::DocAccessible::ScrollPositionDidChange");
     if (mScrollWatchTimer) {
       NS_ADDREF_THIS(); // Kung fu death grip
-      mScrollWatchTimer->InitWithNamedFuncCallback(
-        ScrollTimerCallback,
-        this,
-        kScrollPosCheckWait,
-        nsITimer::TYPE_REPEATING_SLACK,
-        "a11y::DocAccessible::ScrollPositionDidChange");
     }
   }
   mScrollPositionChangedTicks = 1;

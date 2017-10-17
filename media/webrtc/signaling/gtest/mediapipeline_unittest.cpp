@@ -89,11 +89,11 @@ public:
     , mStop(false)
     , mCount(0)
   {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mTimer->SetTarget(test_utils->sts_target());
-    mTimer->InitWithNamedFuncCallback(FakeAudioStreamTrackGenerateData, this, 20,
-                                      nsITimer::TYPE_REPEATING_SLACK,
-                                      "FakeAudioStreamTrack::FakeAudioStreamTrackGenerateData");
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer),
+                                FakeAudioStreamTrackGenerateData, this, 20,
+                                nsITimer::TYPE_REPEATING_SLACK,
+                                "FakeAudioStreamTrack::FakeAudioStreamTrackGenerateData",
+                                test_utils->sts_target());
 
   }
 

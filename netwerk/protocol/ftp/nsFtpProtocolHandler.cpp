@@ -309,20 +309,17 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
 
     LOG(("FTP:inserting connection for %s\n", spec.get()));
 
-    nsresult rv;
-    nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
     timerStruct* ts = new timerStruct();
     if (!ts)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = timer->InitWithNamedFuncCallback(
-      nsFtpProtocolHandler::Timeout,
-      ts,
-      mIdleTimeout * 1000,
-      nsITimer::TYPE_REPEATING_SLACK,
-      "nsFtpProtocolHandler::InsertConnection");
+    nsCOMPtr<nsITimer> timer;
+    nsresult rv = NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
+                                              nsFtpProtocolHandler::Timeout,
+                                              ts,
+                                              mIdleTimeout * 1000,
+                                              nsITimer::TYPE_REPEATING_SLACK,
+                                              "nsFtpProtocolHandler::InsertConnection");
     if (NS_FAILED(rv)) {
         delete ts;
         return rv;

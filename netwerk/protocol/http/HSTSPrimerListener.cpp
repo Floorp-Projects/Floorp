@@ -375,10 +375,9 @@ HSTSPrimingListener::StartHSTSPriming(nsIChannel* aRequestChannel,
   NS_ENSURE_SUCCESS(rv, rv);
   listener->mPrimingChannel.swap(primingChannel);
 
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  NS_ENSURE_STATE(timer);
-
-  rv = timer->InitWithCallback(listener,
+  nsCOMPtr<nsITimer> timer;
+  rv = NS_NewTimerWithCallback(getter_AddRefs(timer),
+                               listener,
                                sHSTSPrimingTimeout,
                                nsITimer::TYPE_ONE_SHOT);
   if (NS_FAILED(rv)) {

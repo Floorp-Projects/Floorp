@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS(WatchdogTimerEvent, nsITimerCallback, nsINamed)
 
 WebGLContextLossHandler::WebGLContextLossHandler(WebGLContext* webgl)
     : mWebGL(webgl)
-    , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+    , mTimer(NS_NewTimer())
     , mTimerPending(false)
     , mShouldRunTimerAgain(false)
 #ifdef DEBUG
