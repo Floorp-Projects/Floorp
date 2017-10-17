@@ -283,12 +283,6 @@ private:
   void CancelOnMainThread(nsresult aRv);
 
   void
-  SynthesizeResponseStartTime(const TimeStamp& aTime);
-
-  void
-  SynthesizeResponseEndTime(const TimeStamp& aTime);
-
-  void
   MaybeCallSynthesizedCallback();
 
   RequestHeaderTuples mClientSetRequestHeaders;
