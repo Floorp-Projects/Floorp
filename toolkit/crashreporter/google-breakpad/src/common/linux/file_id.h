@@ -37,7 +37,7 @@
 #include <string>
 
 #include "common/linux/guid_creator.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 
 namespace google_breakpad {
 
