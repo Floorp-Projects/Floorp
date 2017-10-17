@@ -14,6 +14,7 @@ struct TimingStruct {
   TimeStamp domainLookupStart;
   TimeStamp domainLookupEnd;
   TimeStamp connectStart;
+  TimeStamp tcpConnectEnd;
   TimeStamp secureConnectionStart;
   TimeStamp connectEnd;
   TimeStamp requestStart;
