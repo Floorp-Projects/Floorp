@@ -6436,18 +6436,6 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   return true;
 }
 
-bool
-nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
-{
-  return nsContentUtils::IsWebComponentsEnabled();
-}
-
-bool
-nsDocument::IsWebComponentsEnabled(dom::NodeInfo* aNodeInfo)
-{
-  return nsContentUtils::IsWebComponentsEnabled();
-}
-
 void
 nsDocument::ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG)
 {

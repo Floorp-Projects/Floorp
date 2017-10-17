@@ -32,7 +32,7 @@ NS_NewHTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
   // We have to jump through some hoops to be able to produce both NodeInfo* and
   // already_AddRefed<NodeInfo>& for our callees.
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
-  if (!nsDocument::IsWebComponentsEnabled(nodeInfo)) {
+  if (!nsContentUtils::IsWebComponentsEnabled()) {
     already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
     return new mozilla::dom::HTMLUnknownElement(nodeInfoArg);
   }
