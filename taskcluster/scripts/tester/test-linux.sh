@@ -158,8 +158,7 @@ if [ "${UBUNTU_1604}" ]; then
 fi
 
 # For telemetry purposes, the build process wants information about the
-# source it is running; tc-vcs obscures this a little, but we can provide
-# it directly.
+# source it is running
 export MOZ_SOURCE_REPO="${GECKO_HEAD_REPOSITORY}"
 export MOZ_SOURCE_CHANGESET="${GECKO_HEAD_REV}"
 
