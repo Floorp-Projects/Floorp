@@ -100,10 +100,6 @@ private:
   WebAuthnManager();
   virtual ~WebAuthnManager();
 
-  void StartRegister();
-  void StartSign();
-  void StartCancel();
-
   void Cancel(const nsresult& aError);
   void MaybeClearTransaction();
 
