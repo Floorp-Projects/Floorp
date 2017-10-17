@@ -404,6 +404,83 @@ add_task(async function test_get_visits() {
   await extension.unload();
 });
 
+add_task(async function test_transition_types() {
+  const VISIT_URL_PREFIX = "http://example.com/";
+  const TRANSITIONS = [
+    ["link", Ci.nsINavHistoryService.TRANSITION_LINK],
+    ["typed", Ci.nsINavHistoryService.TRANSITION_TYPED],
+    ["auto_bookmark", Ci.nsINavHistoryService.TRANSITION_BOOKMARK],
+    // Only session history contains TRANSITION_EMBED visits,
+    // So global history query cannot find them.
+    // ["auto_subframe", Ci.nsINavHistoryService.TRANSITION_EMBED],
+    // Redirects are not correctly tested here because History::UpdatePlaces
+    // will not make redirect entries hidden.
+    ["link", Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT],
+    ["link", Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY],
+    ["link", Ci.nsINavHistoryService.TRANSITION_DOWNLOAD],
+    ["manual_subframe", Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK],
+    ["reload", Ci.nsINavHistoryService.TRANSITION_RELOAD],
+  ];
+
+  // pages/visits to add via History.insertMany
+  let pageInfos = [];
+  let visitDate = new Date(1999, 9, 9, 9, 9).getTime();
+  for (let [, transitionType] of TRANSITIONS) {
+    pageInfos.push({
+      url: VISIT_URL_PREFIX + transitionType + "/",
+      visits: [
+        {transition: transitionType, date: new Date(visitDate -= 1000)},
+      ],
+    });
+  }
+
+  function background() {
+    browser.test.onMessage.addListener(async (msg, url) => {
+      switch (msg) {
+        case "search": {
+          let results = await browser.history.search({text: "", startTime: new Date(0)});
+          browser.test.sendMessage("search-result", results);
+          break;
+        }
+        case "get-visits": {
+          let results = await browser.history.getVisits({url});
+          browser.test.sendMessage("get-visits-result", results);
+          break;
+        }
+      }
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["history"],
+    },
+    background,
+  });
+
+  await PlacesTestUtils.clearHistory();
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  await PlacesUtils.history.insertMany(pageInfos);
+
+  extension.sendMessage("search");
+  let results = await extension.awaitMessage("search-result");
+  equal(results.length, pageInfos.length, "search returned expected length of results");
+  for (let i = 0; i < pageInfos.length; ++i) {
+    equal(results[i].url, pageInfos[i].url, "search returned the expected url");
+
+    extension.sendMessage("get-visits", pageInfos[i].url);
+    let visits = await extension.awaitMessage("get-visits-result");
+    equal(visits.length, 1, "getVisits returned expected length of visits");
+    equal(visits[0].transition, TRANSITIONS[i][0], "getVisits returned the expected transition");
+  }
+
+  await extension.unload();
+});
+
 add_task(async function test_on_visited() {
   const SINGLE_VISIT_URL = "http://example.com/1/";
   const DOUBLE_VISIT_URL = "http://example.com/2/";

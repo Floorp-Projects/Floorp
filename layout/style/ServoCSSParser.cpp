@@ -25,3 +25,10 @@ ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
   return Servo_ComputeColor(aStyleSet ? aStyleSet->RawSet() : nullptr,
                             aCurrentColor, &aValue, aResultColor);
 }
+
+/* static */ bool
+ServoCSSParser::ParseIntersectionObserverRootMargin(const nsAString& aValue,
+                                                    nsCSSRect* aResult)
+{
+  return Servo_ParseIntersectionObserverRootMargin(&aValue, aResult);
+}

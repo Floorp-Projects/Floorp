@@ -40,53 +40,6 @@ const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 const PREF_LOAD_BOOKMARKS_IN_BACKGROUND = "browser.tabs.loadBookmarksInBackground";
 const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 
-// This function isn't public both because it's synchronous and because it is
-// going to be removed in bug 1072833.
-function IsLivemark(aItemId) {
-  // Since this check may be done on each dragover event, it's worth maintaining
-  // a cache.
-  let self = IsLivemark;
-  if (!("ids" in self)) {
-    const LIVEMARK_ANNO = PlacesUtils.LMANNO_FEEDURI;
-
-    let idsVec = PlacesUtils.annotations.getItemsWithAnnotation(LIVEMARK_ANNO);
-    self.ids = new Set(idsVec);
-
-    let obs = Object.freeze({
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver]),
-
-      onItemChanged(itemId, property, isAnnoProperty, newValue, lastModified,
-                    itemType, parentId, guid) {
-        if (isAnnoProperty && property == LIVEMARK_ANNO) {
-          self.ids.add(itemId);
-        }
-      },
-
-      onItemRemoved(itemId) {
-        // Since the bookmark is removed, we know we can remove any references
-        // to it from the cache.
-        self.ids.delete(itemId);
-      },
-
-      onItemAdded() {},
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onItemVisited() {},
-      onItemMoved() {},
-      onPageAnnotationSet() { },
-      onPageAnnotationRemoved() { },
-      skipDescendantsOnItemRemoval: false,
-      skipTags: true,
-    });
-
-    PlacesUtils.bookmarks.addObserver(obs);
-    PlacesUtils.registerShutdownFunction(() => {
-      PlacesUtils.bookmarks.removeObserver(obs);
-    });
-  }
-  return self.ids.has(aItemId);
-}
-
 let InternalFaviconLoader = {
   /**
    * This gets called for every inner window that is destroyed.
@@ -814,9 +767,11 @@ this.PlacesUIUtils = {
    *
    * @param aNode
    *        a node, except the root node of a query.
+   * @param aView
+   *        The view originating the request.
    * @return true if the aNode represents a removable entry, false otherwise.
    */
-  canUserRemove(aNode) {
+  canUserRemove(aNode, aView) {
     let parentNode = aNode.parent;
     if (!parentNode) {
       // canUserRemove doesn't accept root nodes.
@@ -837,44 +792,40 @@ this.PlacesUIUtils = {
       return true;
 
     // Otherwise it has to be a child of an editable folder.
-    return !this.isContentsReadOnly(parentNode);
+    return !this.isFolderReadOnly(parentNode, aView);
   },
 
   /**
    * DO NOT USE THIS API IN ADDONS. IT IS VERY LIKELY TO CHANGE WHEN THE SWITCH
    * TO GUIDS IS COMPLETE (BUG 1071511).
    *
-   * Check whether or not the given node or item-id points to a folder which
+   * Check whether or not the given Places node points to a folder which
    * should not be modified by the user (i.e. its children should be unremovable
    * and unmovable, new children should be disallowed, etc).
    * These semantics are not inherited, meaning that read-only folder may
    * contain editable items (for instance, the places root is read-only, but all
    * of its direct children aren't).
    *
-   * You should only pass folder item ids or folder nodes for aNodeOrItemId.
-   * While this is only enforced for the node case (if an item id of a separator
-   * or a bookmark is passed, false is returned), it's considered the caller's
-   * job to ensure that it checks a folder.
-   * Also note that folder-shortcuts should only be passed as result nodes.
-   * Otherwise they are just treated as bookmarks (i.e. false is returned).
+   * You should only pass folder nodes.
    *
-   * @param aNodeOrItemId
-   *        any item id or result node.
-   * @throws if aNodeOrItemId is neither an item id nor a folder result node.
+   * @param placesNode
+   *        any folder result node.
+   * @param view
+   *        The view originating the request.
+   * @throws if placesNode is not a folder result node or views is invalid.
    * @note livemark "folders" are considered read-only (but see bug 1072833).
-   * @return true if aItemId points to a read-only folder, false otherwise.
+   * @return true if placesNode is a read-only folder, false otherwise.
    */
-  isContentsReadOnly(aNodeOrItemId) {
-    let itemId;
-    if (typeof(aNodeOrItemId) == "number") {
-      itemId = aNodeOrItemId;
-    } else if (PlacesUtils.nodeIsFolder(aNodeOrItemId)) {
-      itemId = PlacesUtils.getConcreteItemId(aNodeOrItemId);
-    } else {
-      throw new Error("invalid value for aNodeOrItemId");
+  isFolderReadOnly(placesNode, view) {
+    if (typeof placesNode != "object" || !PlacesUtils.nodeIsFolder(placesNode)) {
+      throw new Error("invalid value for placesNode");
     }
-
-    if (itemId == PlacesUtils.placesRootId || IsLivemark(itemId))
+    if (!view || typeof view != "object") {
+      throw new Error("invalid value for aView");
+    }
+    let itemId = PlacesUtils.getConcreteItemId(placesNode);
+    if (itemId == PlacesUtils.placesRootId ||
+        view.controller.hasCachedLivemarkInfo(placesNode))
       return true;
 
     // leftPaneFolderId, and as a result, allBookmarksFolderId, is a lazy getter
@@ -888,9 +839,9 @@ this.PlacesUIUtils = {
     // special folder if the lazy getter is still in place.  This is safe merely
     // because the only way to access the left pane contents goes through
     // "resolving" the leftPaneFolderId getter.
-    if ("get" in Object.getOwnPropertyDescriptor(this, "leftPaneFolderId"))
+    if (typeof Object.getOwnPropertyDescriptor(this, "leftPaneFolderId").get == "function") {
       return false;
-
+    }
     return itemId == this.leftPaneFolderId ||
            itemId == this.allBookmarksFolderId;
   },

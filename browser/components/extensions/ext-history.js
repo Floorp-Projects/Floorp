@@ -21,6 +21,7 @@ const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
   ["auto_bookmark", nsINavHistoryService.TRANSITION_BOOKMARK],
   ["auto_subframe", nsINavHistoryService.TRANSITION_EMBED],
   ["manual_subframe", nsINavHistoryService.TRANSITION_FRAMED_LINK],
+  ["reload", nsINavHistoryService.TRANSITION_RELOAD],
 ]);
 
 let TRANSITION_TYPE_TO_TRANSITIONS_MAP = new Map();
@@ -189,6 +190,7 @@ this.history = class extends ExtensionAPI {
           }
 
           let options = PlacesUtils.history.getNewQueryOptions();
+          options.includeHidden = true;
           options.sortingMode = options.SORT_BY_DATE_DESCENDING;
           options.maxResults = query.maxResults || 100;
 
@@ -208,6 +210,7 @@ this.history = class extends ExtensionAPI {
           }
 
           let options = PlacesUtils.history.getNewQueryOptions();
+          options.includeHidden = true;
           options.sortingMode = options.SORT_BY_DATE_DESCENDING;
           options.resultType = options.RESULTS_AS_VISIT;
 
