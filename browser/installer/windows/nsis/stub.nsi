@@ -469,7 +469,8 @@ Function .onInit
   CreateFont $FontCheckbox   "$0" "10" "400"
 
   InitPluginsDir
-  File /oname=$PLUGINSDIR\bgstub.bmp "bgstub.bmp"
+  File /oname=$PLUGINSDIR\bgstub.jpg "bgstub.jpg"
+  File /oname=$PLUGINSDIR\bgstub_2x.jpg "bgstub_2x.jpg"
 
   SetShellVarContext all ; Set SHCTX to All Users
   ; If the user doesn't have write access to the installation directory set
@@ -563,6 +564,26 @@ Function .onUserAbort
   ; DisplayDownloadError to hide the installer window and close the installer
   ; after it sends the metrics ping.
   Abort
+FunctionEnd
+
+Function DrawBackgroundImage
+  ${NSD_CreateBitmap} 0 0 100% 100% ""
+  Pop $HwndBgBitmapControl
+
+  ; If the scaling factor is 100%, use the 1x image; the 2x images scaled down
+  ; by that much don't always look good because some of them use thinner lines
+  ; and a darker background (over which aliasing is more visible).
+  System::Call 'user32::GetWindowDC(i $HWNDPARENT) i .r0'
+  System::Call 'gdi32::GetDeviceCaps(i $0, i 88) i .r1' ; 88 = LOGPIXELSX
+  System::Call 'user32::ReleaseDC(i $HWNDPARENT, i $0)'
+  ${If} $1 <= 96
+    ${SetStretchedImageOLE} $HwndBgBitmapControl $PLUGINSDIR\bgstub.jpg $BgBitmapImage
+  ${Else}
+    ${SetStretchedImageOLE} $HwndBgBitmapControl $PLUGINSDIR\bgstub_2x.jpg $BgBitmapImage
+  ${EndIf}
+
+  ; transparent bg on control prevents flicker on redraw
+  SetCtlColors $HwndBgBitmapControl ${INSTALL_BLURB_TEXT_COLOR} transparent
 FunctionEnd
 
 Function createProfileCleanup
@@ -702,11 +723,7 @@ Function createProfileCleanup
   SendMessage $0 ${WM_SETFONT} $FontFooter 0
   SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
 
-  ${NSD_CreateBitmap} 0 0 100% 100% ""
-  Pop $HwndBgBitmapControl
-  ${NSD_SetStretchedImage} $HwndBgBitmapControl $PLUGINSDIR\bgstub.bmp $BgBitmapImage
-  ; transparent bg on control prevents flicker on redraw
-  SetCtlColors $HwndBgBitmapControl ${INSTALL_BLURB_TEXT_COLOR} transparent
+  Call DrawBackgroundImage
 
   LockWindow off
   nsDialogs::Show
@@ -784,11 +801,7 @@ Function createInstall
   SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
               $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
 
-  ${NSD_CreateBitmap} 0 0 100% 100% ""
-  Pop $HwndBgBitmapControl
-  ${NSD_SetStretchedImage} $HwndBgBitmapControl $PLUGINSDIR\bgstub.bmp $BgBitmapImage
-  ; transparent bg on control prevents flicker on redraw
-  SetCtlColors $HwndBgBitmapControl ${INSTALL_BLURB_TEXT_COLOR} transparent
+  Call DrawBackgroundImage
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   EnableWindow $0 0

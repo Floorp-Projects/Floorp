@@ -8,13 +8,13 @@
 #ifndef MOZILLA_GFX_VR_VRMANAGERPARENT_H
 #define MOZILLA_GFX_VR_VRMANAGERPARENT_H
 
-#include "mozilla/layers/CompositableTransactionParent.h"
-#include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
+#include "mozilla/layers/CompositableTransactionParent.h"  // need?
 #include "mozilla/gfx/PVRManagerParent.h" // for PVRManagerParent
 #include "mozilla/gfx/PVRLayerParent.h"   // for PVRLayerParent
 #include "mozilla/ipc/ProtocolUtils.h"    // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"            // for TimeStamp
 #include "gfxVR.h"                        // for VRFieldOfView
+#include "VRThread.h"                     // for VRListenerThreadHolder
 
 namespace mozilla {
 using namespace layers;
@@ -81,16 +81,14 @@ private:
 
   void Bind(Endpoint<PVRManagerParent>&& aEndpoint);
 
-  static void RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager);
+  static void RegisterVRManagerInVRListenerThread(VRManagerParent* aVRManager);
 
   void DeferredDestroy();
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
   RefPtr<VRManagerParent> mSelfRef;
-
-  // Keep the compositor thread alive, until we have destroyed ourselves.
-  RefPtr<layers::CompositorThreadHolder> mCompositorThreadHolder;
+  RefPtr<VRListenerThreadHolder> mVRListenerThreadHolder;
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;

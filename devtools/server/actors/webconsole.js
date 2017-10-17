@@ -443,7 +443,8 @@ WebConsoleActor.prototype =
    *         Debuggee value for |value|.
    */
   makeDebuggeeValue: function (value, useObjectGlobal) {
-    if (useObjectGlobal && typeof value == "object") {
+    let isObject = Object(value) === value;
+    if (useObjectGlobal && isObject) {
       try {
         let global = Cu.getGlobalForObject(value);
         let dbgGlobal = this.dbg.makeGlobalObjectReference(global);

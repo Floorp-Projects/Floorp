@@ -44,6 +44,7 @@ const StatisticsPanel = createClass({
   displayName: "StatisticsPanel",
 
   propTypes: {
+    connector: PropTypes.object.isRequired,
     closeStatistics: PropTypes.func.isRequired,
     enableRequestFilterTypeOnly: PropTypes.func.isRequired,
     requests: PropTypes.object,
@@ -302,8 +303,8 @@ module.exports = connect(
   (state) => ({
     requests: state.requests.requests.valueSeq(),
   }),
-  (dispatch) => ({
-    closeStatistics: () => dispatch(Actions.openStatistics(false)),
+  (dispatch, props) => ({
+    closeStatistics: () => dispatch(Actions.openStatistics(props.connector, false)),
     enableRequestFilterTypeOnly: (label) =>
       dispatch(Actions.enableRequestFilterTypeOnly(label)),
   })

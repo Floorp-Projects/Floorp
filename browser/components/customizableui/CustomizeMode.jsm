@@ -587,6 +587,7 @@ CustomizeMode.prototype = {
         (aNode.id == "downloads-button" && aNode.hidden)) {
       return null;
     }
+
     let animationNode;
     if (aNode.parentNode && aNode.parentNode.id.startsWith("wrapper-")) {
       animationNode = aNode.parentNode;
@@ -594,13 +595,25 @@ CustomizeMode.prototype = {
       animationNode = aNode;
     }
     return new Promise(resolve => {
-      animationNode.classList.add("animate-out");
-      animationNode.addEventListener("animationend", function cleanupWidgetAnimationEnd(e) {
+      function cleanupCustomizationExit() {
+        resolveAnimationPromise();
+      }
+
+      function cleanupWidgetAnimationEnd(e) {
         if (e.animationName == "widget-animate-out" && e.target.id == animationNode.id) {
-          animationNode.removeEventListener("animationend", cleanupWidgetAnimationEnd);
-          resolve();
+          resolveAnimationPromise();
         }
-      });
+      }
+
+      function resolveAnimationPromise() {
+        animationNode.removeEventListener("animationend", cleanupWidgetAnimationEnd);
+        animationNode.removeEventListener("customizationending", cleanupCustomizationExit);
+        resolve();
+      }
+
+      animationNode.classList.add("animate-out");
+      animationNode.ownerGlobal.gNavToolbox.addEventListener("customizationending", cleanupCustomizationExit);
+      animationNode.addEventListener("animationend", cleanupWidgetAnimationEnd);
     });
   },
 

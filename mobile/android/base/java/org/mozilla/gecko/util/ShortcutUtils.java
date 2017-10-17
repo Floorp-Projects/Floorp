@@ -5,6 +5,7 @@
 package org.mozilla.gecko.util;
 
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -89,10 +90,15 @@ public class ShortcutUtils {
             Object info = builderCls.getDeclaredMethod("build")
                 .invoke(builder);
 
+            final Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final IntentSender intentSender = pendingIntent.getIntentSender();
             mgrCls.getDeclaredMethod("requestPinShortcut",
                                      info.getClass(),
                                      IntentSender.class)
-                .invoke(mgr, info, null);
+                .invoke(mgr, info, intentSender);
         } catch (Exception e) {
             Log.e(LOG_TAG, "Failed to pin shortcut: ", e);
         }
