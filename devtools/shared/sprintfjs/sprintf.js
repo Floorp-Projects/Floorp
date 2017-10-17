@@ -87,6 +87,21 @@
                     arg = argv[cursor++]
                 }
 
+                // The most commonly used placeholder in DevTools is the string (%S or %s).
+                // We check it first to avoid unnecessary verifications.
+                let hasPadding = match[6];
+                let patternType = match[8];
+                if (!hasPadding && (patternType === "S" || patternType === "s")) {
+                    if (typeof arg === "function") {
+                        arg = arg();
+                    }
+                    if (typeof arg !== "string") {
+                        arg = String(arg);
+                    }
+                    output[output.length] = match[7] ? arg.substring(0, match[7]) : arg;
+                    continue;
+                }
+
                 if (re.not_type.test(match[8]) && re.not_primitive.test(match[8]) && typeof arg == 'function') {
                     arg = arg()
                 }
