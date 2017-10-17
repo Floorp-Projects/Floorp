@@ -57,7 +57,7 @@ public:
                                   outputSize);
     } else {
       mSurface =
-        ImageOps::DecodeToSurface(mInputStream,
+        ImageOps::DecodeToSurface(mInputStream.forget(),
                                   nsDependentCString(mTestCase.mMimeType),
                                   imgIContainer::DECODE_FLAGS_DEFAULT,
                                   outputSize);
@@ -144,7 +144,7 @@ TEST_F(ImageDecodeToSurface, Corrupt)
   ASSERT_TRUE(inputStream != nullptr);
 
   RefPtr<SourceSurface> surface =
-    ImageOps::DecodeToSurface(inputStream,
+    ImageOps::DecodeToSurface(inputStream.forget(),
                               nsDependentCString(testCase.mMimeType),
                               imgIContainer::DECODE_FLAGS_DEFAULT);
   EXPECT_TRUE(surface == nullptr);
@@ -158,7 +158,7 @@ TEST_F(ImageDecodeToSurface, ICOMultipleSizes)
   ASSERT_TRUE(inputStream != nullptr);
 
   RefPtr<ImageOps::ImageBuffer> buffer =
-    ImageOps::CreateImageBuffer(inputStream);
+    ImageOps::CreateImageBuffer(inputStream.forget());
   ASSERT_TRUE(buffer != nullptr);
 
   ImageMetadata metadata;
