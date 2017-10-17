@@ -693,14 +693,10 @@ InterceptedHttpChannel::SynthesizeHeader(const nsACString& aName,
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedHttpChannel::StartSynthesizedResponse(const nsACString& aFinalURLSpec)
 {
   if (mCanceled) {
     return mStatus;
-  }
-
-  if (mBodyWriter) {
-    mBodyWriter->Close();
   }
 
   if (!mSynthesizedResponseHead) {
@@ -739,6 +735,20 @@ InterceptedHttpChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpe
   }
 
   return StartPump();
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+{
+  if (mCanceled) {
+    return mStatus;
+  }
+
+  if (mBodyWriter) {
+    mBodyWriter->Close();
+  }
+
+  return StartSynthesizedResponse(aFinalURLSpec);
 }
 
 NS_IMETHODIMP

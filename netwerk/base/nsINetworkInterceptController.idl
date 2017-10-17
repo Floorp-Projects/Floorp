@@ -54,6 +54,8 @@ interface nsIInterceptedChannel : nsISupports
      */
     void synthesizeHeader(in ACString name, in ACString value);
 
+    void startSynthesizedResponse(in ACString finalURLSpec);
+
     /**
      * Instruct a channel that has been intercepted that a response has been
      * synthesized and can now be read. No further header modification is allowed
