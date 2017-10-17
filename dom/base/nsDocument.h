@@ -1191,12 +1191,6 @@ public:
   virtual already_AddRefed<mozilla::dom::CustomElementRegistry>
     GetCustomElementRegistry() override;
 
-  // Check whether web components are enabled for the global of aObject.
-  static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
-  // Check whether web components are enabled for the global of the document
-  // this nodeinfo comes from.
-  static bool IsWebComponentsEnabled(mozilla::dom::NodeInfo* aNodeInfo);
-
   RefPtr<mozilla::EventListenerManager> mListenerManager;
   RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
   RefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
