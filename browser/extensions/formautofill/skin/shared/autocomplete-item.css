@@ -149,7 +149,9 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 }
 
 .autofill-footer > .autofill-option-button {
-  height: 40px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  min-height: 40px;
   background-color: #EDEDED;
   font-size: calc(var(--option-btn-font-size) / var(--default-font-size) * 1em);
   color: var(--option-btn-text-color);
