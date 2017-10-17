@@ -252,7 +252,7 @@ function transformEvaluationResultPacket(packet) {
     notes,
   } = packet;
 
-  let parameters = helperResult && helperResult.object
+  const parameter = helperResult && helperResult.object
     ? helperResult.object
     : result;
 
@@ -263,7 +263,7 @@ function transformEvaluationResultPacket(packet) {
     helperType: helperResult ? helperResult.type : null,
     level,
     messageText,
-    parameters,
+    parameters: [parameter],
     exceptionDocURL,
     frame,
     timeStamp,

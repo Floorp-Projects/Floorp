@@ -6,17 +6,17 @@
 
 //! Implementation of `iterable<...>` and `iterable<..., ...>` WebIDL declarations.
 
-use core::nonzero::NonZero;
 use dom::bindings::codegen::Bindings::IterableIteratorBinding::IterableKeyAndValueResult;
 use dom::bindings::codegen::Bindings::IterableIteratorBinding::IterableKeyOrValueResult;
 use dom::bindings::error::Fallible;
+use dom::bindings::nonnull::NonNullJSObjectPtr;
 use dom::bindings::reflector::{DomObject, Reflector, reflect_dom_object};
 use dom::bindings::root::{Dom, DomRoot};
 use dom::bindings::trace::JSTraceable;
 use dom::globalscope::GlobalScope;
 use dom_struct::dom_struct;
 use js::conversions::ToJSValConvertible;
-use js::jsapi::{HandleValue, Heap, JSContext, JSObject, MutableHandleObject};
+use js::jsapi::{HandleValue, Heap, JSContext, MutableHandleObject};
 use js::jsval::UndefinedValue;
 use std::cell::Cell;
 use std::ptr;
@@ -62,18 +62,18 @@ impl<T: DomObject + JSTraceable + Iterable> IterableIterator<T> {
                type_: IteratorType,
                wrap: unsafe fn(*mut JSContext, &GlobalScope, Box<IterableIterator<T>>)
                      -> DomRoot<Self>) -> DomRoot<Self> {
-        let iterator = box IterableIterator {
+        let iterator = Box::new(IterableIterator {
             reflector: Reflector::new(),
             type_: type_,
             iterable: Dom::from_ref(iterable),
             index: Cell::new(0),
-        };
+        });
         reflect_dom_object(iterator, &*iterable.global(), wrap)
     }
 
     /// Return the next value from the iterable object.
     #[allow(non_snake_case)]
-    pub fn Next(&self, cx: *mut JSContext) -> Fallible<NonZero<*mut JSObject>> {
+    pub fn Next(&self, cx: *mut JSContext) -> Fallible<NonNullJSObjectPtr> {
         let index = self.index.get();
         rooted!(in(cx) let mut value = UndefinedValue());
         rooted!(in(cx) let mut rval = ptr::null_mut());
@@ -106,7 +106,7 @@ impl<T: DomObject + JSTraceable + Iterable> IterableIterator<T> {
         self.index.set(index + 1);
         result.map(|_| {
             assert!(!rval.is_null());
-            unsafe { NonZero::new_unchecked(rval.get()) }
+            unsafe { NonNullJSObjectPtr::new_unchecked(rval.get()) }
         })
     }
 }

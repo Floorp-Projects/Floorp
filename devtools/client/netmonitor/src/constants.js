@@ -25,6 +25,7 @@ const actionTypes = {
   SET_REQUEST_FILTER_TEXT: "SET_REQUEST_FILTER_TEXT",
   SORT_BY: "SORT_BY",
   TOGGLE_COLUMN: "TOGGLE_COLUMN",
+  TOGGLE_RECORDING: "TOGGLE_RECORDING",
   TOGGLE_REQUEST_FILTER_TYPE: "TOGGLE_REQUEST_FILTER_TYPE",
   UPDATE_REQUEST: "UPDATE_REQUEST",
   WATERFALL_RESIZE: "WATERFALL_RESIZE",
@@ -53,6 +54,7 @@ const EVENTS = {
   // See https://developer.mozilla.org/docs/Tools/Web_Console/remoting for
   // more information about what each packet is supposed to deliver.
   NETWORK_EVENT: "NetMonitor:NetworkEvent",
+  NETWORK_EVENT_UPDATED: "NetMonitor:NetworkEventUpdated",
   TIMELINE_EVENT: "NetMonitor:TimelineEvent",
 
   // When a network event is added to the view

@@ -1,10 +1,10 @@
 == 723669.html 723669-ref.html
 
-== basic.xul basic-ref.xul
-random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
-!= blur.xul blur-notref.xul
-== color-inherit.xul color-inherit-ref.xul
-== multiple-noblur.xul multiple-noblur-ref.xul
+fails-if(stylo||styloVsGecko) == basic.xul basic-ref.xul # bug 1408235
+fails-if(stylo||styloVsGecko) random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul # bug 1408235
+fails-if(stylo||styloVsGecko) != blur.xul blur-notref.xul # bug 1408235
+fails-if(stylo||styloVsGecko) == color-inherit.xul color-inherit-ref.xul # bug 1408235
+fails-if(stylo||styloVsGecko) == multiple-noblur.xul multiple-noblur-ref.xul # bug 1408235
 HTTP(..) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html

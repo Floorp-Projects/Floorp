@@ -1849,14 +1849,11 @@ WebConsoleFrame.prototype = {
   openNetworkPanel: function (requestId) {
     let toolbox = gDevTools.getToolbox(this.owner.target);
     // The browser console doesn't have a toolbox.
-    if (!toolbox) {
-      return;
+    if (toolbox) {
+      return toolbox.selectTool("netmonitor").then(panel => {
+        return panel.panelWin.Netmonitor.inspectRequest(requestId);
+      });
     }
-    return toolbox.selectTool("netmonitor").then(panel => {
-      let { inspectRequest } = panel.panelWin.windowRequire(
-        "devtools/client/netmonitor/src/connector/index");
-      return inspectRequest(requestId);
-    });
   },
 
   /**

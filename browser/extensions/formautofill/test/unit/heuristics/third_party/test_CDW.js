@@ -44,9 +44,7 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-
-        // FIXME: bug 1392940 - the below element can not match to "cc-exp-year" regexp directly.
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
       ],

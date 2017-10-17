@@ -820,9 +820,6 @@ HTMLEditor::MouseMove(nsIDOMMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
-  NS_NAMED_LITERAL_STRING(leftStr, "left");
-  NS_NAMED_LITERAL_STRING(topStr, "top");
-
   if (mIsResizing) {
     // we are resizing and the mouse pointer's position has changed
     // we have to resdisplay the shadow

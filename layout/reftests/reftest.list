@@ -402,7 +402,10 @@ include ../../widget/reftests/reftest.list
 include ../../dom/tests/reftest/xml-stylesheet/reftest.list
 
 # xul-document-load/ (no XUL theme on Android)
-skip-if(Android) include xul-document-load/reftest.list
+# skip for stylo because the reference page is wrong due to bug 1408235.
+# There are some pages rendered incorrectly in the same way, so this
+# test set is basically broken and not worth further annotating.
+skip-if(Android||stylo||styloVsGecko) include xul-document-load/reftest.list
 
 # xul/ (no XUL theme on Android)
 skip-if(Android) include xul/reftest.list

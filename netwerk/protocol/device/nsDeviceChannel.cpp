@@ -77,8 +77,6 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
   nsCOMPtr<nsIURI> uri = nsBaseChannel::URI();
   *aStream = nullptr;
   *aChannel = nullptr;
-  NS_NAMED_LITERAL_CSTRING(width, "width=");
-  NS_NAMED_LITERAL_CSTRING(height, "height=");
 
   nsAutoCString spec;
   nsresult rv = uri->GetSpec(spec);

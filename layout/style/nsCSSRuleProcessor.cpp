@@ -1159,12 +1159,6 @@ nsCSSRuleProcessor::InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::swipe_animation_enabled);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_PhysicalHomeButton,
-                           &metricResult);
-  if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::physical_home_button);
-  }
-
 #ifdef XP_WIN
   if (NS_SUCCEEDED(
         LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,

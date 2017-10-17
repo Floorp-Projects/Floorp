@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 #ifdef XP_WIN
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
@@ -319,7 +320,9 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
   // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
   // format.
 #if XP_WIN
-  if (!XRE_IsParentProcess() &&
+  // We disable this code path on Windows version earlier of Windows 8 due to
+  // intermittent crashes with old drivers. See bug 1405110.
+  if (IsWin8OrLater() && !XRE_IsParentProcess() &&
       aAllocator && aAllocator->GetCompositorBackendType()
                     == layers::LayersBackend::LAYERS_D3D11) {
     RefPtr<layers::D3D11YCbCrImage> d3d11Image = new layers::D3D11YCbCrImage();

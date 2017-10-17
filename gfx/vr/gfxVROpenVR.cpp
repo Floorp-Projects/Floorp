@@ -21,11 +21,11 @@
 
 #include "gfxVROpenVR.h"
 #include "VRManager.h"
+#include "VRThread.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 
-#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/Telemetry.h"
@@ -531,9 +531,9 @@ VRControllerOpenVR::VibrateHapticComplete(uint32_t aPromiseID)
 {
   VRManager *vm = VRManager::Get();
 
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>
-    ("VRManager::NotifyVibrateHapticCompleted",
-     vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
+  VRListenerThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>(
+                                           "VRManager::NotifyVibrateHapticCompleted",
+                                           vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
 }
 
 void

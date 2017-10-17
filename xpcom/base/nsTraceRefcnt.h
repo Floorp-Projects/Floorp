@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsTraceRefcnt_h___
-#define nsTraceRefcnt_h___
+#ifndef nsTraceRefcnt_h
+#define nsTraceRefcnt_h
 
 #include <stdio.h> // for FILE
 #include "nscore.h"
@@ -28,13 +28,4 @@ public:
   static void SetActivityIsLegal(bool aLegal);
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// And now for that utility that you've all been asking for...
-
-extern "C" void
-NS_MeanAndStdDev(double aNumberOfValues,
-                 double aSumOfValues, double aSumOfSquaredValues,
-                 double* aMeanResult, double* aStdDevResult);
-
-////////////////////////////////////////////////////////////////////////////////
-#endif
+#endif // nsTraceRefcnt_h

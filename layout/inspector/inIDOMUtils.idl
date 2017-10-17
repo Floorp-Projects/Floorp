@@ -110,12 +110,6 @@ interface inIDOMUtils : nsISupports
 
   // Utilities for obtaining information about a CSS property.
 
-  // Check whether a CSS property and value are a valid combination. If the
-  // property is pref-disabled it will still be processed.
-  // aPropertyName: A property name e.g. "color"
-  // aPropertyValue: A property value e.g. "red" or "red !important"
-  bool cssPropertyIsValid(in AString aPropertyName, in AString aPropertyValue);
-
   // Get a list of the longhands corresponding to the given CSS property.  If
   // the property is a longhand already, just returns the property itself.
   // Throws on unsupported property names.

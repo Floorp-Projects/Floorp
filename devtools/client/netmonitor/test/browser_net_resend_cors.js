@@ -12,7 +12,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CORS_URL);
   info("Starting test... ");
 
-  let { store, windowRequire } = monitor.panelWin;
+  let { store, windowRequire, connector } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let {
     getSortedRequests,
@@ -49,7 +49,7 @@ add_task(function* () {
     store.dispatch(Actions.cloneSelectedRequest());
 
     info("Sending the cloned request (without change)");
-    store.dispatch(Actions.sendCustomRequest());
+    store.dispatch(Actions.sendCustomRequest(connector));
   });
 
   info("Waiting for both resent requests");

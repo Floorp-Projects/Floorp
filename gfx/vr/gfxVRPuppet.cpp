@@ -17,6 +17,7 @@
 #include "gfxUtils.h"
 #include "gfxVRPuppet.h"
 #include "VRManager.h"
+#include "VRThread.h"
 
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
@@ -377,7 +378,11 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       mContext->Unmap(mappedTexture, 0);
       // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
       // and convert to a PNG image there.
-      vm->DispatchSubmitFrameResult(mDisplayInfo.mDisplayID, result);
+      MessageLoop* loop = VRListenerThreadHolder::Loop();
+      loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
+        "VRManager::DispatchSubmitFrameResult",
+        vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result
+      ));
       break;
     }
     case 2:
@@ -518,7 +523,11 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
         }
         // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
         // and convert to a PNG image there.
-        vm->DispatchSubmitFrameResult(mDisplayInfo.mDisplayID, result);
+        MessageLoop* loop = VRListenerThreadHolder::Loop();
+        loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
+          "VRManager::DispatchSubmitFrameResult",
+          vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result
+        ));
       }
       break;
     }

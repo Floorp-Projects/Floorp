@@ -528,7 +528,7 @@ win32-mingw32/debug:
     treeherder:
         platform: windows-mingw32-32/debug
         symbol: tc(B)
-        tier: 3
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 7200

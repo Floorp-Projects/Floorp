@@ -363,7 +363,13 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     return deferred.promise;
   },
 
-   // Used by menus.js
+  /**
+   * Open the Browser Content Toolbox for the provided gBrowser instance.
+   * Returns a promise that resolves with a toolbox instance. If no content process is
+   * available, the promise will be rejected and a message will be displayed to the user.
+   *
+   * Used by menus.js
+  */
   openContentProcessToolbox(gBrowser) {
     let { childCount } = Services.ppmm;
     // Get the process message manager for the current tab
@@ -377,16 +383,17 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       }
     }
     if (processId) {
-      this._getContentProcessTarget(processId)
+      return this._getContentProcessTarget(processId)
           .then(target => {
             // Display a new toolbox, in a new window, with debugger by default
             return gDevTools.showToolbox(target, "jsdebugger",
                                          Toolbox.HostType.WINDOW);
           });
-    } else {
-      let msg = L10N.getStr("toolbox.noContentProcessForTab.message");
-      Services.prompt.alert(null, "", msg);
     }
+
+    let msg = L10N.getStr("toolbox.noContentProcessForTab.message");
+    Services.prompt.alert(null, "", msg);
+    return Promise.reject(msg);
   },
 
   /**

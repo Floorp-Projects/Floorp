@@ -7,7 +7,6 @@
 const Services = require("Services");
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { ACTIVITY_TYPE, EVENTS } = require("../constants");
-const { getDisplayedRequestById } = require("../selectors/index");
 const FirefoxDataProvider = require("./firefox-data-provider");
 
 class FirefoxConnector {
@@ -21,7 +20,6 @@ class FirefoxConnector {
     this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
     this.setPreferences = this.setPreferences.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
-    this.inspectRequest = this.inspectRequest.bind(this);
     this.getTabTarget = this.getTabTarget.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
 
@@ -43,12 +41,7 @@ class FirefoxConnector {
       actions: this.actions,
     });
 
-    this.tabTarget.on("will-navigate", this.willNavigate);
-    this.tabTarget.on("close", this.disconnect);
-    this.webConsoleClient.on("networkEvent",
-      this.dataProvider.onNetworkEvent);
-    this.webConsoleClient.on("networkEventUpdate",
-      this.dataProvider.onNetworkEventUpdate);
+    this.addListeners();
 
     // Don't start up waiting for timeline markers if the server isn't
     // recent enough to emit the markers we're interested in.
@@ -71,14 +64,36 @@ class FirefoxConnector {
       await this.timelineFront.destroy();
     }
 
-    this.tabTarget.off("will-navigate");
-    this.tabTarget.off("close");
+    this.removeListeners();
+
     this.tabTarget = null;
-    this.webConsoleClient.off("networkEvent");
-    this.webConsoleClient.off("networkEventUpdate");
     this.webConsoleClient = null;
     this.timelineFront = null;
     this.dataProvider = null;
+  }
+
+  pause() {
+    this.removeListeners();
+  }
+
+  resume() {
+    this.addListeners();
+  }
+
+  addListeners() {
+    this.tabTarget.on("will-navigate", this.willNavigate);
+    this.tabTarget.on("close", this.disconnect);
+    this.webConsoleClient.on("networkEvent",
+      this.dataProvider.onNetworkEvent);
+    this.webConsoleClient.on("networkEventUpdate",
+      this.dataProvider.onNetworkEventUpdate);
+  }
+
+  removeListeners() {
+    this.tabTarget.off("will-navigate");
+    this.tabTarget.off("close");
+    this.webConsoleClient.off("networkEvent");
+    this.webConsoleClient.off("networkEventUpdate");
   }
 
   willNavigate() {
@@ -212,42 +227,6 @@ class FirefoxConnector {
     }
     this.currentActivity = ACTIVITY_TYPE.NONE;
     return Promise.reject(new Error("Invalid activity type"));
-  }
-
-  /**
-   * Selects the specified request in the waterfall and opens the details view.
-   *
-   * @param {string} requestId The actor ID of the request to inspect.
-   * @return {object} A promise resolved once the task finishes.
-   */
-  inspectRequest(requestId) {
-    // Look for the request in the existing ones or wait for it to appear, if
-    // the network monitor is still loading.
-    return new Promise((resolve) => {
-      let request = null;
-      let inspector = () => {
-        request = getDisplayedRequestById(this.getState(), requestId);
-        if (!request) {
-          // Reset filters so that the request is visible.
-          this.actions.toggleRequestFilterType("all");
-          request = getDisplayedRequestById(this.getState(), requestId);
-        }
-
-        // If the request was found, select it. Otherwise this function will be
-        // called again once new requests arrive.
-        if (request) {
-          window.off(EVENTS.REQUEST_ADDED, inspector);
-          this.actions.selectRequest(request.id);
-          resolve();
-        }
-      };
-
-      inspector();
-
-      if (!request) {
-        window.on(EVENTS.REQUEST_ADDED, inspector);
-      }
-    });
   }
 
   /**
