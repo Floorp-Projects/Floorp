@@ -3309,10 +3309,14 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     // window.x/y passed to NPP_SetWindow
 
     if (mPluginIface->event) {
+        // width and height are stored as units, but narrow to ints here
+        MOZ_RELEASE_ASSERT(mWindow.width <= INT_MAX);
+        MOZ_RELEASE_ASSERT(mWindow.height <= INT_MAX);
+
         WINDOWPOS winpos = {
             0, 0,
             mWindow.x, mWindow.y,
-            mWindow.width, mWindow.height,
+            (int32_t)mWindow.width, (int32_t)mWindow.height,
             0
         };
         NPEvent pluginEvent = {
@@ -3379,7 +3383,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     NPEvent paintEvent = {
         WM_PAINT,
         uintptr_t(mWindow.window),
-        uintptr_t(&rect)
+        intptr_t(&rect)
     };
 
     ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, nullptr);
