@@ -1050,6 +1050,22 @@ element.scrollIntoView = function(el) {
 };
 
 /**
+ * Ascertains whether <var>node</var> is a DOM-, SVG-, or XUL element.
+ *
+ * @param {*} node
+ *     Element thought to be an <code>Element</code>,
+ *     <code>SVGElement</code>, or <code>XULElement</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is an element, false otherwise.
+ */
+element.isElement = function(node) {
+  return element.isDOMElement(node) ||
+      element.isSVGElement(node) ||
+      element.isXULElement(node);
+};
+
+/**
  * Ascertains whether <var>node</var> is a DOM element.
  *
  * @param {*} node
