@@ -164,6 +164,9 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 
 namespace {
 
+struct RespondWithClosure;
+void RespondWithCopyComplete(void* aClosure, nsresult aStatus);
+
 class StartResponse final : public Runnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
@@ -171,19 +174,22 @@ class StartResponse final : public Runnable
   ChannelInfo mWorkerChannelInfo;
   const nsCString mScriptSpec;
   const nsCString mResponseURLSpec;
+  UniquePtr<RespondWithClosure> mClosure;
 
 public:
   StartResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                 InternalResponse* aInternalResponse,
                 const ChannelInfo& aWorkerChannelInfo,
                 const nsACString& aScriptSpec,
-                const nsACString& aResponseURLSpec)
+                const nsACString& aResponseURLSpec,
+                UniquePtr<RespondWithClosure>&& aClosure)
     : Runnable("dom::workers::StartResponse")
     , mChannel(aChannel)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
     , mScriptSpec(aScriptSpec)
     , mResponseURLSpec(aResponseURLSpec)
+    , mClosure(Move(aClosure))
   {
   }
 
@@ -237,6 +243,54 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
+    }
+
+    // Only start copying after we have begun synthesizing the response.
+    // Some of the necko invariants can fail if we trigger an OnDataAvailable
+    // too early.
+    nsCOMPtr<nsIInputStream> body;
+    mInternalResponse->GetUnfilteredBody(getter_AddRefs(body));
+    // Errors and redirects may not have a body.
+    if (body) {
+      nsCOMPtr<nsIOutputStream> responseBody;
+      rv = mChannel->GetResponseBody(getter_AddRefs(responseBody));
+      if (NS_WARN_IF(NS_FAILED(rv)) || !responseBody) {
+        return rv;
+      }
+
+      const uint32_t kCopySegmentSize = 4096;
+
+      // Depending on how the Response passed to .respondWith() was created, we may
+      // get a non-buffered input stream.  In addition, in some configurations the
+      // destination channel's output stream can be unbuffered.  We wrap the output
+      // stream side here so that NS_AsyncCopy() works.  Wrapping the output side
+      // provides the most consistent operation since there are fewer stream types
+      // we are writing to.  The input stream can be a wide variety of concrete
+      // objects which may or many not play well with NS_InputStreamIsBuffered().
+      if (!NS_OutputStreamIsBuffered(responseBody)) {
+        nsCOMPtr<nsIOutputStream> buffered;
+        rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered), responseBody,
+             kCopySegmentSize);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        responseBody = buffered;
+      }
+
+      nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_WARN_IF(!stsThread)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // XXXnsm, Fix for Bug 1141332 means that if we decide to make this
+      // streaming at some point, we'll need a different solution to that bug.
+      rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
+                        kCopySegmentSize, RespondWithCopyComplete, mClosure.release());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      RespondWithCopyComplete(mClosure.release(), NS_OK);
     }
 
     return rv;
@@ -408,7 +462,7 @@ struct RespondWithClosure
 
 void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
 {
-  nsAutoPtr<RespondWithClosure> data(static_cast<RespondWithClosure*>(aClosure));
+  UniquePtr<RespondWithClosure> data(static_cast<RespondWithClosure*>(aClosure));
   nsCOMPtr<nsIRunnable> event;
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     AsyncLog(data->mInterceptedChannel, data->mRespondWithScriptSpec,
@@ -423,12 +477,12 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
   }
 
   // In theory this can happen after the worker thread is terminated.
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  if (worker) {
-    MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(event.forget()));
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event.forget()));
+  if (NS_IsMainThread()) {
+    event->Run();
+    return;
   }
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event.forget()));
 }
 
 class MOZ_STACK_CLASS AutoCancel
@@ -645,18 +699,20 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     }
   }
 
-  nsCOMPtr<nsIRunnable> startRunnable = new StartResponse(mInterceptedChannel,
-                                                          ir,
-                                                          worker->GetChannelInfo(),
-                                                          mScriptSpec,
-                                                          responseURL);
-
-  nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
+  UniquePtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
                                                                mRegistration,
                                                                mRequestURL,
                                                                mRespondWithScriptSpec,
                                                                mRespondWithLineNumber,
                                                                mRespondWithColumnNumber));
+
+  nsCOMPtr<nsIRunnable> startRunnable = new StartResponse(mInterceptedChannel,
+                                                          ir,
+                                                          worker->GetChannelInfo(),
+                                                          mScriptSpec,
+                                                          responseURL,
+                                                          Move(closure));
+
   nsCOMPtr<nsIInputStream> body;
   ir->GetUnfilteredBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
@@ -667,57 +723,9 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
       autoCancel.SetCancelErrorResult(aCx, error);
       return;
     }
-
-    nsCOMPtr<nsIOutputStream> responseBody;
-    rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
-    if (NS_WARN_IF(NS_FAILED(rv)) || !responseBody) {
-      return;
-    }
-
-    const uint32_t kCopySegmentSize = 4096;
-
-    // Depending on how the Response passed to .respondWith() was created, we may
-    // get a non-buffered input stream.  In addition, in some configurations the
-    // destination channel's output stream can be unbuffered.  We wrap the output
-    // stream side here so that NS_AsyncCopy() works.  Wrapping the output side
-    // provides the most consistent operation since there are fewer stream types
-    // we are writing to.  The input stream can be a wide variety of concrete
-    // objects which may or many not play well with NS_InputStreamIsBuffered().
-    if (!NS_OutputStreamIsBuffered(responseBody)) {
-      nsCOMPtr<nsIOutputStream> buffered;
-      rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered), responseBody,
-           kCopySegmentSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
-      }
-      responseBody = buffered;
-    }
-
-    nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (NS_WARN_IF(!stsThread)) {
-      return;
-    }
-
-    // Note, we cannot use the worker main thread event target here.  We must
-    // ensure the start runnable fires before the finish runnable.  The finish
-    // runnable, though, sometimes gets dispatched from places other than the
-    // worker thread (like at the end of copying).  Therefore it does not
-    // use the worker main thread event target either.
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other,
-                                              startRunnable.forget()));
-
-    // XXXnsm, Fix for Bug 1141332 means that if we decide to make this
-    // streaming at some point, we'll need a different solution to that bug.
-    rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
-                      kCopySegmentSize, RespondWithCopyComplete, closure.forget());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other,
-                                              startRunnable.forget()));
-    RespondWithCopyComplete(closure.forget(), NS_OK);
   }
+
+  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(startRunnable.forget()));
 
   MOZ_ASSERT(!closure);
   autoCancel.Reset();
