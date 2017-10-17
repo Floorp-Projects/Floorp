@@ -1452,7 +1452,8 @@ NetworkMonitor.prototype = {
       harTimings.ssl = timings.STATUS_TLS_ENDING.last -
                            timings.STATUS_TLS_STARTING.first;
       if (timings.STATUS_CONNECTING_TO) {
-        secureConnectionStartTime = timings.STATUS_TLS_STARTING.first - timings.STATUS_CONNECTING_TO.first;
+        secureConnectionStartTime =
+          timings.STATUS_TLS_STARTING.first - timings.STATUS_CONNECTING_TO.first;
       }
       if (secureConnectionStartTime < 0) {
         secureConnectionStartTime = 0;
@@ -1512,7 +1513,7 @@ NetworkMonitor.prototype = {
     }
 
     if ((harTimings.connect <= 0) && timedChannel &&
-        (tcTcpConnectEndTime !=0) && (tcConnectStartTime !=0)) {
+        (tcTcpConnectEndTime != 0) && (tcConnectStartTime != 0)) {
       harTimings.connect = tcTcpConnectEndTime - tcConnectStartTime;
       if (tcSecureConnectionStartTime != 0) {
         harTimings.ssl = tcConnectEndTime - tcSecureConnectionStartTime;
@@ -1541,15 +1542,17 @@ NetworkMonitor.prototype = {
     }
 
     if (timings.STATUS_SENDING_TO) {
-      harTimings.send = timings.STATUS_SENDING_TO.last - timings.STATUS_SENDING_TO.first;
+      harTimings.send =
+        timings.STATUS_SENDING_TO.last - timings.STATUS_SENDING_TO.first;
       if (timings.STATUS_CONNECTING_TO) {
-        startSendingTime = timings.STATUS_SENDING_TO.first - timings.STATUS_CONNECTING_TO.first;
+        startSendingTime =
+          timings.STATUS_SENDING_TO.first - timings.STATUS_CONNECTING_TO.first;
         startSendingTimeRelative = true;
       } else if (tcConnectStartTime != 0) {
         startSendingTime = timings.STATUS_SENDING_TO.first - tcConnectStartTime;
         startSendingTimeRelative = true;
       }
-      if (startSendingTime < 0 ) {
+      if (startSendingTime < 0) {
         startSendingTime = 0;
       }
     } else if (timings.REQUEST_HEADER && timings.REQUEST_BODY_SENT) {
@@ -1582,6 +1585,23 @@ NetworkMonitor.prototype = {
       startSendingTime = time;
     }
 
+    let ot = this._calculateOffsetAndTotalTime(harTimings,
+                                               secureConnectionStartTime,
+                                               startSendingTimeRelative,
+                                               secureConnectionStartTimeRelative,
+                                               startSendingTime);
+    return {
+      total: ot.total,
+      timings: harTimings,
+      offsets: ot.offsets
+    };
+  },
+
+  _calculateOffsetAndTotalTime: function (harTimings,
+                                          secureConnectionStartTime,
+                                          startSendingTimeRelative,
+                                          secureConnectionStartTimeRelative,
+                                          startSendingTime) {
     let totalTime = 0;
     for (let timing in harTimings) {
       let time = Math.max(Math.round(harTimings[timing] / 1000), -1);
@@ -1621,7 +1641,6 @@ NetworkMonitor.prototype = {
 
     return {
       total: totalTime,
-      timings: harTimings,
       offsets: offsets
     };
   },
