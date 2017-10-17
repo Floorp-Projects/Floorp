@@ -72,15 +72,22 @@ function test_setup() {
   });
 }
 
-function runTests(data) {
+function runBasicTests(data) {
   return test_basic()
     .then(() => {
       return test_readAsText(data.blobs.asciiFile, data.data.ascii);
     })
     .then(() => {
-      return test_readAsTextWithEncoding(data.blobs.asciiFile, data.data.ascii,
-                                         data.data.ascii.length, "");
+      return test_readAsBinaryString(data.blobs.binaryFile, data.data.binary);
     })
+    .then(() => {
+      return test_readAsArrayBuffer(data.blobs.binaryFile, data.data.binary);
+    });
+}
+
+function runEncodingTests(data) {
+  return test_readAsTextWithEncoding(data.blobs.asciiFile, data.data.ascii,
+                                     data.data.ascii.length, "")
     .then(() => {
       return test_readAsTextWithEncoding(data.blobs.asciiFile, data.data.ascii,
                                          data.data.ascii.length, "iso8859-1");
@@ -96,18 +103,6 @@ function runTests(data) {
                                          "utf-16");
     })
     .then(() => {
-      return test_readAsBinaryString(data.blobs.binaryFile, data.data.binary);
-    })
-    .then(() => {
-      return test_readAsArrayBuffer(data.blobs.binaryFile, data.data.binary);
-    })
-    .then(() => {
-      return test_onlyResult()
-    })
-    .then(() => {
-      return test_readAsText(data.blobs.emptyFile, "");
-    })
-    .then(() => {
       return test_readAsTextWithEncoding(data.blobs.emptyFile, "", 0, "");
     })
     .then(() => {
@@ -115,6 +110,13 @@ function runTests(data) {
     })
     .then(() => {
       return test_readAsTextWithEncoding(data.blobs.emptyFile, "", 0, "utf-16");
+    });
+}
+
+function runEmptyTests(data) {
+  return test_onlyResult()
+    .then(() => {
+      return test_readAsText(data.blobs.emptyFile, "");
     })
     .then(() => {
       return test_readAsBinaryString(data.blobs.emptyFile, "");
@@ -124,10 +126,11 @@ function runTests(data) {
     })
     .then(() => {
       return test_readAsDataURL(data.blobs.emptyFile, convertToDataURL(""), 0);
-    })
-    .then(() => {
-      return test_readAsTextTwice(data.blobs.asciiFile, data.data.ascii);
-    })
+    });
+}
+
+function runTwiceTests(data) {
+  return test_readAsTextTwice(data.blobs.asciiFile, data.data.ascii)
     .then(() => {
       return test_readAsBinaryStringTwice(data.blobs.binaryFile,
                                           data.data.binary);
@@ -144,12 +147,13 @@ function runTests(data) {
     .then(() => {
       return test_readAsArrayBufferTwice2(data.blobs.binaryFile,
                                           data.data.binary);
-    })
-    .then(() => {
-      return test_readAsDataURL_customLength(data.blobs.dataUrlFile0,
-                                             convertToDataURL(data.data.url0),
-                                             data.data.url0.length, 0);
-    })
+    });
+}
+
+function runOtherTests(data) {
+  return test_readAsDataURL_customLength(data.blobs.dataUrlFile0,
+                                         convertToDataURL(data.data.url0),
+                                         data.data.url0.length, 0)
     .then(() => {
       return test_readAsDataURL_customLength(data.blobs.dataUrlFile1,
                                              convertToDataURL(data.data.url1),
@@ -510,7 +514,7 @@ function test_abort_readAsX(blob, text) {
   return new Promise(resolve => {
     let reuseAbortHasRun = false;
 
-    letr = new FileReader();
+    let r = new FileReader();
     r.onabort = function (event) {
       is(reuseAbortHasRun, false, "abort should only fire once");
       reuseAbortHasRun = true;
