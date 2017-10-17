@@ -54,6 +54,13 @@ public:
   StyleSheetList* StyleSheets();
 
   /**
+   * Distributes all the explicit children of the pool host to the content
+   * insertion points in this ShadowRoot.
+   */
+  void DistributeAllNodes();
+
+private:
+  /**
    * Distributes a single explicit child of the pool host to the content
    * insertion points in this ShadowRoot.
    */
@@ -65,12 +72,10 @@ public:
    */
   void RemoveDistributedNode(nsIContent* aContent);
 
-  /**
-   * Distributes all the explicit children of the pool host to the content
-   * insertion points in this ShadowRoot.
-   */
-  void DistributeAllNodes();
+  static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
+                           nsIContent* aHost);
 
+public:
   void AddInsertionPoint(HTMLContentElement* aInsertionPoint);
   void RemoveInsertionPoint(HTMLContentElement* aInsertionPoint);
 
@@ -80,8 +85,6 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
-                           nsIContent* aHost);
   static ShadowRoot* FromNode(nsINode* aNode);
 
   static void RemoveDestInsertionPoint(nsIContent* aInsertionPoint,
