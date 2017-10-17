@@ -283,18 +283,11 @@ InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACS
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelContent::StartSynthesizedResponse(const nsACString& aFinalURLSpec)
 {
   if (NS_WARN_IF(mClosed)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  // Make sure the body output stream is always closed.  If the channel was
-  // intercepted with a null-body response then its possible the synthesis
-  // completed without a stream copy operation.
-  mResponseBody->Close();
-
-  mReportCollector->FlushConsoleReports(mChannel);
 
   EnsureSynthesizedResponse();
 
@@ -323,6 +316,26 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
                                               mSynthesizedInput,
                                               mStreamListener);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+{
+  if (NS_WARN_IF(mClosed)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Make sure the body output stream is always closed.  If the channel was
+  // intercepted with a null-body response then its possible the synthesis
+  // completed without a stream copy operation.
+  mResponseBody->Close();
+
+  mReportCollector->FlushConsoleReports(mChannel);
+
+  nsresult rv = StartSynthesizedResponse(aFinalURLSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mResponseBody = nullptr;
   mStreamListener = nullptr;
