@@ -122,10 +122,11 @@ fn get_temp_path(name: &str) -> PathBuf {
     path
 }
 
-pub fn get_uds_path() -> PathBuf {
-    get_temp_path("cubeb-sock")
+pub fn get_uds_path(id: u64) -> PathBuf {
+    get_temp_path(&format!("cubeb-sock-{}", id))
 }
 
 pub fn get_shm_path(dir: &str) -> PathBuf {
-    get_temp_path(&format!("cubeb-shm-{}", dir))
+    let pid = unsafe { libc::getpid() };
+    get_temp_path(&format!("cubeb-shm-{}-{}", pid, dir))
 }

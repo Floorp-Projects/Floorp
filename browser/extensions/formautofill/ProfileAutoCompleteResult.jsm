@@ -12,9 +12,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
-  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
-});
 XPCOMUtils.defineLazyPreferenceGetter(this, "insecureWarningEnabled", "security.insecure_field_warning.contextual.enabled");
 
 this.log = null;
@@ -333,7 +330,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
       if (!insecureWarningEnabled) {
         return [];
       }
-      let brandName = gBrandBundle.GetStringFromName("brandShortName");
+      let brandName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
 
       return [FormAutofillUtils.stringBundle.formatStringFromName("insecureFieldWarningDescription", [brandName], 1)];
     }

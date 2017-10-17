@@ -58,6 +58,9 @@ const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeB
 const PREF_MAX_SERIALIZE_BACK = "browser.sessionstore.max_serialize_back";
 const PREF_MAX_SERIALIZE_FWD = "browser.sessionstore.max_serialize_forward";
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "kMaxWriteFailures",
+  "browser.sessionstore.max_write_failures", 5);
+
 this.SessionFile = {
   /**
    * Read the contents of the session file, asynchronously.
@@ -84,6 +87,10 @@ this.SessionFile = {
    */
   get Paths() {
     return SessionFileInternal.Paths;
+  },
+
+  get MaxWriteFailures() {
+    return kMaxWriteFailures;
   }
 };
 
@@ -187,6 +194,12 @@ var SessionFileInternal = {
   // Used for error reporting.
   _failures: 0,
 
+  // Object that keeps statistics that should help us make informed decisions
+  // about the current status of the worker.
+  _workerHealth: {
+    failures: 0
+  },
+
   // Resolved once initialization is complete.
   // The promise never rejects.
   _deferredInitialized: PromiseUtils.defer(),
@@ -231,7 +244,8 @@ var SessionFileInternal = {
 
         if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /* fallback for old versions*/)) {
           // Skip sessionstore files that we don't understand.
-          Cu.reportError("Cannot extract data from Session Restore file " + path + ". Wrong format/version: " + JSON.stringify(parsed.version) + ".");
+          Cu.reportError("Cannot extract data from Session Restore file " + path +
+            ". Wrong format/version: " + JSON.stringify(parsed.version) + ".");
           continue;
         }
         result = {
@@ -332,6 +346,20 @@ var SessionFileInternal = {
     return SessionWorker.post(...args);
   },
 
+  /**
+   * For good measure, terminate the worker when we've had over `kMaxWriteFailures`
+   * amount of failures to deal with. This will spawn a fresh worker upon the next
+   * write.
+   * This also resets the `_workerHealth` stats.
+   */
+  _checkWorkerHealth() {
+    if (this._workerHealth.failures >= kMaxWriteFailures) {
+      SessionWorker.terminate();
+      this._workerHealth.failures = 0;
+      Telemetry.scalarAdd("browser.session.restore.worker_restart_count", 1);
+    }
+  },
+
   write(aData) {
     if (RunState.isClosed) {
       return Promise.reject(new Error("SessionFile is closed"));
@@ -367,6 +395,7 @@ var SessionFileInternal = {
       // Catch and report any errors.
       console.error("Could not write session state file ", err, err.stack);
       this._failures++;
+      this._workerHealth.failures++;
       // By not doing anything special here we ensure that |promise| cannot
       // be rejected anymore. The shutdown/cleanup code at the end of the
       // function will thus always be executed.
@@ -395,6 +424,8 @@ var SessionFileInternal = {
 
       if (isFinalWrite) {
         Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete");
+      } else {
+        this._checkWorkerHealth();
       }
     });
   },

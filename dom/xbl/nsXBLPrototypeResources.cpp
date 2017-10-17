@@ -111,7 +111,13 @@ nsXBLPrototypeResources::FlushSkinSheets()
     mStyleSheetList.AppendElement(newSheet);
   }
 
-  GatherRuleProcessor();
+  if (doc->IsStyledByServo()) {
+    MOZ_ASSERT(doc->GetShell());
+    MOZ_ASSERT(doc->GetShell()->GetPresContext());
+    ComputeServoStyleSet(doc->GetShell()->GetPresContext());
+  } else {
+    GatherRuleProcessor();
+  }
 
   return NS_OK;
 }
