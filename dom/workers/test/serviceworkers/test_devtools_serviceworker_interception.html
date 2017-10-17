@@ -87,8 +87,7 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
   var resolveFunction;
   var promise = new Promise(aResolve => resolveFunction = aResolve);
 
-  var topic = aFetch ? "http-on-examine-response"
-                     : "service-worker-synthesized-response";
+  var topic = "http-on-stop-request";
 
   function observer(aSubject) {
     var channel = aSubject.QueryInterface(Ci.nsIChannel);

@@ -216,16 +216,6 @@ public:
     mChannel->SetFinishSynthesizedResponseEnd(timeStamp);
     mChannel->SaveTimeStamps();
 
-    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-    if (obsService) {
-      nsCOMPtr<nsIChannel> underlyingChannel;
-      nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
-
-      obsService->NotifyObservers(underlyingChannel, "service-worker-synthesized-response", nullptr);
-    }
-
     return rv;
   }
 };
@@ -357,6 +347,11 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
       return NS_OK;
+    }
+
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    if (obsService) {
+      obsService->NotifyObservers(underlyingChannel, "service-worker-synthesized-response", nullptr);
     }
 
     return rv;
