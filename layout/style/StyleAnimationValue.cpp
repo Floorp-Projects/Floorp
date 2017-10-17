@@ -2132,20 +2132,6 @@ AddTransformScale(double aCoeff1, const nsCSSValue &aValue1,
   aResult.SetFloatValue(EnsureNotNan(result + 1.0f), eCSSUnit_Number);
 }
 
-/* static */ already_AddRefed<nsCSSValue::Array>
-StyleAnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                                             nsCSSValueList**& aListTail)
-{
-  RefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
-  nsCSSValueList *item = new nsCSSValueList;
-  item->mValue.SetArrayValue(arr, eCSSUnit_Function);
-
-  *aListTail = item;
-  aListTail = &item->mNext;
-
-  return arr.forget();
-}
-
 static nsCSSValueList*
 AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                            double aCoeff2, const nsCSSValueList* aList2,
@@ -2155,9 +2141,7 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
   nsCSSValueList **resultTail = getter_Transfers(result);
 
   RefPtr<nsCSSValue::Array> arr;
-  arr =
-    StyleAnimationValue::AppendTransformFunction(aOperatorType,
-                                                 resultTail);
+  arr = AnimationValue::AppendTransformFunction(aOperatorType, resultTail);
 
   if (aCoeff1 == 0) {
     // If the first coeffient is zero, we don't need to care about the first
@@ -2617,7 +2601,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         tfunc != eCSSKeyword_interpolatematrix &&
         tfunc != eCSSKeyword_rotate3d &&
         tfunc != eCSSKeyword_perspective) {
-      arr = StyleAnimationValue::AppendTransformFunction(tfunc, resultTail);
+      arr = AnimationValue::AppendTransformFunction(tfunc, resultTail);
     }
 
     switch (tfunc) {
@@ -2701,7 +2685,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         if (vector1 == vector2) {
           // We skipped appending a transform function above for rotate3d,
           // so do it now.
-          arr = StyleAnimationValue::AppendTransformFunction(tfunc, resultTail);
+          arr = AnimationValue::AppendTransformFunction(tfunc, resultTail);
           arr->Item(1).SetFloatValue(vector1.x, eCSSUnit_Number);
           arr->Item(2).SetFloatValue(vector1.y, eCSSUnit_Number);
           arr->Item(3).SetFloatValue(vector1.z, eCSSUnit_Number);
@@ -2718,7 +2702,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         if (aCoeff1 == 0.0 && aCoeff2 == 0.0) {
           // Special case. If both coefficients are 0.0, we should apply an
           // identity transform function.
-          arr = StyleAnimationValue::AppendTransformFunction(tfunc, resultTail);
+          arr = AnimationValue::AppendTransformFunction(tfunc, resultTail);
 
           if (tfunc == eCSSKeyword_rotate3d) {
             arr->Item(1).SetFloatValue(0.0, eCSSUnit_Number);
@@ -5548,4 +5532,18 @@ AnimationValue::Transform(StyleBackendType aBackendType,
       MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
   }
   return result;
+}
+
+/* static */ already_AddRefed<nsCSSValue::Array>
+AnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
+                                        nsCSSValueList**& aListTail)
+{
+  RefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
+  nsCSSValueList *item = new nsCSSValueList;
+  item->mValue.SetArrayValue(arr, eCSSUnit_Function);
+
+  *aListTail = item;
+  aListTail = &item->mNext;
+
+  return arr.forget();
 }
