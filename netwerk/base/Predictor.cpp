@@ -51,6 +51,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ClearOnShutdown.h"
 
+#include "CacheControlParser.h"
+
 using namespace mozilla;
 
 namespace mozilla {
@@ -2609,11 +2611,18 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
   if (self) {
     nsAutoCString method;
     requestHead.Method(method);
+
     nsAutoCString vary;
     Unused << responseHead->GetHeader(nsHttp::Vary, vary);
+
+    nsAutoCString cacheControlHeader;
+    Unused << responseHead->GetHeader(nsHttp::Cache_Control, cacheControlHeader);
+    CacheControlParser cacheControl(cacheControlHeader);
+
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
                                      method, *lci->OriginAttributesPtr(),
-                                     isTracking, !vary.IsEmpty());
+                                     isTracking, !vary.IsEmpty(),
+                                     cacheControl.NoStore());
   }
 }
 
@@ -2622,7 +2631,8 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       uint32_t httpStatus,
                                       const nsCString &method,
                                       const OriginAttributes& originAttributes,
-                                      bool isTracking, bool couldVary)
+                                      bool isTracking, bool couldVary,
+                                      bool isNoStore)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
 
@@ -2635,11 +2645,6 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
 
   if (!mEnabled) {
     PREDICTOR_LOG(("    not enabled"));
-    return;
-  }
-
-  if (!mEnablePrefetch) {
-    PREDICTOR_LOG(("    prefetch not enabled"));
     return;
   }
 
@@ -2660,7 +2665,7 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                        nsICacheStorage::CHECK_MULTITHREADED;
   RefPtr<Predictor::CacheabilityAction> action =
     new Predictor::CacheabilityAction(targetURI, httpStatus, method, isTracking,
-                                      couldVary, this);
+                                      couldVary, isNoStore, this);
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
@@ -2678,6 +2683,18 @@ Predictor::CacheabilityAction::OnCacheEntryCheck(nsICacheEntry *entry,
 {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
+}
+
+namespace {
+enum PrefetchDecisionReason {
+  PREFETCHABLE,
+  STATUS_NOT_200,
+  METHOD_NOT_GET,
+  URL_HAS_QUERY_STRING,
+  RESOURCE_IS_TRACKING,
+  RESOURCE_COULD_VARY,
+  RESOURCE_IS_NO_STORE
+};
 }
 
 NS_IMETHODIMP
@@ -2735,10 +2752,34 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
     }
 
     if (strTargetURI.Equals(uri)) {
-      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") &&
-          !hasQueryString &&
-          !mIsTracking &&
-          !mCouldVary) {
+      bool prefetchable = true;
+      PrefetchDecisionReason reason = PREFETCHABLE;
+
+      if (mHttpStatus != 200) {
+        prefetchable = false;
+        reason = STATUS_NOT_200;
+      } else if (!mMethod.EqualsLiteral("GET")) {
+        prefetchable = false;
+        reason = METHOD_NOT_GET;
+      } else if (hasQueryString) {
+        prefetchable = false;
+        reason = URL_HAS_QUERY_STRING;
+      } else if (mIsTracking) {
+        prefetchable = false;
+        reason = RESOURCE_IS_TRACKING;
+      } else if (mCouldVary) {
+        prefetchable = false;
+        reason = RESOURCE_COULD_VARY;
+      } else if (mIsNoStore) {
+        // We don't set prefetchable = false yet, because we just want to know
+        // what kind of effect this would have on prefetching.
+        reason = RESOURCE_IS_NO_STORE;
+      }
+
+      Telemetry::Accumulate(Telemetry::PREDICTOR_PREFETCH_DECISION_REASON,
+                            reason);
+
+      if (prefetchable) {
         PREDICTOR_LOG(("    marking %s cacheable", key));
         flags |= FLAG_PREFETCHABLE;
       } else {
