@@ -428,6 +428,14 @@ U2FManager::FinishSign(nsTArray<uint8_t>& aCredentialId,
 }
 
 void
+U2FManager::RequestAborted(const nsresult& aError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  Cancel(aError);
+}
+
+void
 U2FManager::Cancel(const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());

@@ -66,6 +66,7 @@ public:
   void FinishSign(nsTArray<uint8_t>& aCredentialId,
                   nsTArray<uint8_t>& aSigBuffer);
   void Cancel(const nsresult& aError);
+  void RequestAborted(const nsresult& aError);
 
   already_AddRefed<U2FPromise> Register(nsPIDOMWindowInner* aParent,
               const nsCString& aRpId,

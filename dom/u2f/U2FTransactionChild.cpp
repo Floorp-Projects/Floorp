@@ -37,11 +37,11 @@ U2FTransactionChild::RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionChild::RecvCancel(const nsresult& aError)
+U2FTransactionChild::RecvAbort(const nsresult& aError)
 {
   RefPtr<U2FManager> mgr = U2FManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->Cancel(aError);
+  mgr->RequestAborted(aError);
   return IPC_OK();
 }
 
