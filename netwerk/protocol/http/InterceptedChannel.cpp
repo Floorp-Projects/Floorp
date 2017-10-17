@@ -283,7 +283,9 @@ InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACS
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::StartSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelContent::StartSynthesizedResponse(nsIInputStream* aBody,
+                                                    nsIInterceptedBodyCallback* aBodyCallback,
+                                                    const nsACString& aFinalURLSpec)
 {
   if (NS_WARN_IF(mClosed)) {
     return NS_ERROR_NOT_AVAILABLE;
