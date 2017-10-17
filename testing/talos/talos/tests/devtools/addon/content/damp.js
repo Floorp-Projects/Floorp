@@ -491,7 +491,7 @@ Damp.prototype = {
       }),
     };
     // Prefix all tests with the page type (simple or complicated)
-    for(let name in tests) {
+    for (let name in tests) {
       tests[label + "." + name] = tests[name];
       delete tests[name];
     }
@@ -674,6 +674,21 @@ Damp.prototype = {
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
     tests["console.streamlog"] = this._consoleStreamLoggingTest;
     tests["console.objectexpand"] = this._consoleObjectExpansionTest;
+
+    // Filter tests via `./mach --subtests filter` command line argument
+    let filter = Services.prefs.getCharPref("talos.subtests", "");
+    if (filter) {
+      for (let name in tests) {
+        if (!name.includes(filter)) {
+          delete tests[name];
+        }
+      }
+      if (Object.keys(tests).length == 0) {
+        dump("ERROR: Unable to find any test matching '" + filter + "'\n");
+        this._doneInternal();
+        return;
+      }
+    }
 
     // Construct the sequence array while filtering tests
     let sequenceArray = [];
