@@ -485,7 +485,7 @@ src_client_linux_linux_client_unittest_shlib_SOURCES = \
 	src/common/linux/linux_libc_support_unittest.cc \
 	src/common/linux/tests/auto_testfile.h \
 	src/common/linux/tests/crash_generator.cc \
-	src/common/memory_unittest.cc \
+	src/common/memory_allocator_unittest.cc \
 	src/common/tests/auto_tempdir.h \
 	src/common/tests/file_utils.cc \
 	src/common/tests/file_utils.h \

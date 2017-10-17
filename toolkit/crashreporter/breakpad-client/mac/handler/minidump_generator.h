@@ -39,7 +39,7 @@
 
 #include "mac/handler/ucontext_compat.h"
 #include "minidump_file_writer.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 #include "common/mac/macho_utilities.h"
 #include "google_breakpad/common/minidump_format.h"
 

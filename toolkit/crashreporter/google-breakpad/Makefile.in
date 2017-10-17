@@ -626,8 +626,9 @@ am__src_client_linux_linux_client_unittest_shlib_SOURCES_DIST =  \
 	src/common/linux/linux_libc_support_unittest.cc \
 	src/common/linux/tests/auto_testfile.h \
 	src/common/linux/tests/crash_generator.cc \
-	src/common/memory_unittest.cc src/common/tests/auto_tempdir.h \
-	src/common/tests/file_utils.cc src/common/tests/file_utils.h \
+	src/common/memory_allocator_unittest.cc \
+	src/common/tests/auto_tempdir.h src/common/tests/file_utils.cc \
+	src/common/tests/file_utils.h \
 	src/processor/basic_code_modules.cc \
 	src/processor/dump_context.cc src/processor/dump_object.cc \
 	src/processor/logging.cc src/processor/minidump.cc \
@@ -656,7 +657,7 @@ am__src_client_linux_linux_client_unittest_shlib_SOURCES_DIST =  \
 @LINUX_HOST_TRUE@	src/common/linux/src_client_linux_linux_client_unittest_shlib-elf_core_dump.$(OBJEXT) \
 @LINUX_HOST_TRUE@	src/common/linux/src_client_linux_linux_client_unittest_shlib-linux_libc_support_unittest.$(OBJEXT) \
 @LINUX_HOST_TRUE@	src/common/linux/tests/src_client_linux_linux_client_unittest_shlib-crash_generator.$(OBJEXT) \
-@LINUX_HOST_TRUE@	src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.$(OBJEXT) \
+@LINUX_HOST_TRUE@	src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.$(OBJEXT) \
 @LINUX_HOST_TRUE@	src/common/tests/src_client_linux_linux_client_unittest_shlib-file_utils.$(OBJEXT) \
 @LINUX_HOST_TRUE@	src/processor/src_client_linux_linux_client_unittest_shlib-basic_code_modules.$(OBJEXT) \
 @LINUX_HOST_TRUE@	src/processor/src_client_linux_linux_client_unittest_shlib-dump_context.$(OBJEXT) \
@@ -2000,6 +2001,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -2291,7 +2293,7 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 @LINUX_HOST_TRUE@	src/common/linux/linux_libc_support_unittest.cc \
 @LINUX_HOST_TRUE@	src/common/linux/tests/auto_testfile.h \
 @LINUX_HOST_TRUE@	src/common/linux/tests/crash_generator.cc \
-@LINUX_HOST_TRUE@	src/common/memory_unittest.cc \
+@LINUX_HOST_TRUE@	src/common/memory_allocator_unittest.cc \
 @LINUX_HOST_TRUE@	src/common/tests/auto_tempdir.h \
 @LINUX_HOST_TRUE@	src/common/tests/file_utils.cc \
 @LINUX_HOST_TRUE@	src/common/tests/file_utils.h \
@@ -3875,7 +3877,7 @@ src/common/linux/tests/$(DEPDIR)/$(am__dirstamp):
 src/common/linux/tests/src_client_linux_linux_client_unittest_shlib-crash_generator.$(OBJEXT):  \
 	src/common/linux/tests/$(am__dirstamp) \
 	src/common/linux/tests/$(DEPDIR)/$(am__dirstamp)
-src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.$(OBJEXT):  \
+src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.$(OBJEXT):  \
 	src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 src/common/tests/$(am__dirstamp):
@@ -5211,19 +5213,19 @@ src/common/linux/tests/src_client_linux_linux_client_unittest_shlib-crash_genera
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/linux/tests/src_client_linux_linux_client_unittest_shlib-crash_generator.obj `if test -f 'src/common/linux/tests/crash_generator.cc'; then $(CYGPATH_W) 'src/common/linux/tests/crash_generator.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/linux/tests/crash_generator.cc'; fi`
 
-src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.o: src/common/memory_unittest.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.o -MD -MP -MF src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Tpo -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.o `test -f 'src/common/memory_unittest.cc' || echo '$(srcdir)/'`src/common/memory_unittest.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Tpo src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/memory_unittest.cc' object='src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.o' libtool=no @AMDEPBACKSLASH@
+src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.o: src/common/memory_allocator_unittest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.o -MD -MP -MF src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Tpo -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.o `test -f 'src/common/memory_allocator_unittest.cc' || echo '$(srcdir)/'`src/common/memory_allocator_unittest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Tpo src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/memory_allocator_unittest.cc' object='src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.o `test -f 'src/common/memory_unittest.cc' || echo '$(srcdir)/'`src/common/memory_unittest.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.o `test -f 'src/common/memory_allocator_unittest.cc' || echo '$(srcdir)/'`src/common/memory_allocator_unittest.cc
 
-src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.obj: src/common/memory_unittest.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.obj -MD -MP -MF src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Tpo -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.obj `if test -f 'src/common/memory_unittest.cc'; then $(CYGPATH_W) 'src/common/memory_unittest.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/memory_unittest.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Tpo src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_unittest.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/memory_unittest.cc' object='src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.obj' libtool=no @AMDEPBACKSLASH@
+src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.obj: src/common/memory_allocator_unittest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.obj -MD -MP -MF src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Tpo -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.obj `if test -f 'src/common/memory_allocator_unittest.cc'; then $(CYGPATH_W) 'src/common/memory_allocator_unittest.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/memory_allocator_unittest.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Tpo src/common/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/memory_allocator_unittest.cc' object='src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_unittest.obj `if test -f 'src/common/memory_unittest.cc'; then $(CYGPATH_W) 'src/common/memory_unittest.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/memory_unittest.cc'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/src_client_linux_linux_client_unittest_shlib-memory_allocator_unittest.obj `if test -f 'src/common/memory_allocator_unittest.cc'; then $(CYGPATH_W) 'src/common/memory_allocator_unittest.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/memory_allocator_unittest.cc'; fi`
 
 src/common/tests/src_client_linux_linux_client_unittest_shlib-file_utils.o: src/common/tests/file_utils.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_client_linux_linux_client_unittest_shlib_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/tests/src_client_linux_linux_client_unittest_shlib-file_utils.o -MD -MP -MF src/common/tests/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-file_utils.Tpo -c -o src/common/tests/src_client_linux_linux_client_unittest_shlib-file_utils.o `test -f 'src/common/tests/file_utils.cc' || echo '$(srcdir)/'`src/common/tests/file_utils.cc

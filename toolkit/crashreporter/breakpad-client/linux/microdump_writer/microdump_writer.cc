@@ -44,7 +44,7 @@
 #include "linux/minidump_writer/linux_ptrace_dumper.h"
 #include "common/linux/file_id.h"
 #include "common/linux/linux_libc_support.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 
 namespace {
 

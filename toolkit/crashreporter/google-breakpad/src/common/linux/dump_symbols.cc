@@ -65,7 +65,7 @@
 #include "common/linux/elfutils-inl.h"
 #include "common/linux/elf_symbols_to_module.h"
 #include "common/linux/file_id.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 #include "common/module.h"
 #include "common/scoped_ptr.h"
 #ifndef NO_STABS_SUPPORT

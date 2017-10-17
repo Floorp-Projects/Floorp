@@ -89,7 +89,7 @@
 
 #include "common/basictypes.h"
 #include "common/linux/linux_libc_support.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 #include "linux/log/log.h"
 #include "linux/microdump_writer/microdump_writer.h"
 #include "linux/minidump_writer/linux_dumper.h"

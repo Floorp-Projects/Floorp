@@ -50,7 +50,7 @@
 #include "linux/dump_writer_common/mapping_info.h"
 #include "linux/dump_writer_common/thread_info.h"
 #include "common/linux/file_id.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 #include "google_breakpad/common/minidump_format.h"
 
 namespace google_breakpad {
