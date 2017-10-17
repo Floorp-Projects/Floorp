@@ -3891,6 +3891,7 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
                                    : huge_ralloc(aPtr, aSize, oldsize);
 }
 
+// Returns whether initialization succeeded.
 bool
 arena_t::Init()
 {
@@ -3898,8 +3899,9 @@ arena_t::Init()
   arena_bin_t* bin;
   size_t prev_run_size;
 
-  if (!mLock.Init())
-    return true;
+  if (!mLock.Init()) {
+    return false;
+  }
 
   memset(&mLink, 0, sizeof(mLink));
   memset(&mStats, 0, sizeof(arena_stats_t));
@@ -3964,7 +3966,7 @@ arena_t::Init()
   mMagic = ARENA_MAGIC;
 #endif
 
-  return false;
+  return true;
 }
 
 static inline arena_t *
@@ -3991,9 +3993,9 @@ arenas_extend()
   arena_t* ret;
 
   /* Allocate enough space for trailing bins. */
-  ret = (arena_t *)base_alloc(sizeof(arena_t)
-      + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
-  if (!ret || ret->Init()) {
+  ret = (arena_t*)base_alloc(sizeof(arena_t) +
+        (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
+  if (!ret || !ret->Init()) {
     return arenas_fallback();
   }
 
