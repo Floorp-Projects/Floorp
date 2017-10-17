@@ -495,6 +495,7 @@ GROUP_NAMES = {
     'mocha': 'Mocha unit tests',
     'py': 'Python unit tests',
     'tc': 'Executed by TaskCluster',
+    'tc-A': 'Android Gradle tests executed by TaskCluster',
     'tc-e10s': 'Executed by TaskCluster with e10s',
     'tc-Fxfn-l': 'Firefox functional tests (local) executed by TaskCluster',
     'tc-Fxfn-l-e10s': 'Firefox functional tests (local) executed by TaskCluster with e10s',
