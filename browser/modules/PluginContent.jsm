@@ -330,22 +330,21 @@ PluginContent.prototype = {
                    [right, bottom],
                    [centerX, centerY]];
 
-    if (right <= 0 || top <= 0) {
-      return false;
-    }
-
     let contentWindow = plugin.ownerGlobal;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
     for (let [x, y] of points) {
+      if (x < 0 || y < 0) {
+        continue;
+      }
       let el = cwu.elementFromPoint(x, y, true, true);
-      if (el !== plugin) {
-        return false;
+      if (el === plugin) {
+        return true;
       }
     }
 
-    return true;
+    return false;
   },
 
   addLinkClickCallback(linkNode, callbackName /* callbackArgs...*/) {
