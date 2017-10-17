@@ -59,6 +59,17 @@ public:
 
   TimingStruct Timings() { return mTimings; }
 
+  mozilla::TimeStamp GetTcpConnectEnd() { return mTimings.tcpConnectEnd; }
+  mozilla::TimeStamp GetSecureConnectionStart()
+  {
+    return mTimings.secureConnectionStart;
+  }
+
+  void SetFastOpenStatus(uint8_t aStatus) override
+  {
+    mFastOpenStatus = aStatus;
+  }
+
 protected:
   virtual ~NullHttpTransaction();
 
@@ -79,6 +90,7 @@ private:
   bool mIsDone;
   bool mClaimed;
   TimingStruct mTimings;
+  uint8_t mFastOpenStatus;
 
 protected:
   RefPtr<nsAHttpConnection> mConnection;
