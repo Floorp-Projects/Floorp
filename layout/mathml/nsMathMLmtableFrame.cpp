@@ -183,10 +183,8 @@ static void
 ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
                    nsStyleBorder& aStyleBorder)
 {
-  int32_t rowIndex;
-  int32_t columnIndex;
-  aFrame->GetRowIndex(rowIndex);
-  aFrame->GetColIndex(columnIndex);
+  uint32_t rowIndex = aFrame->RowIndex();
+  uint32_t columnIndex = aFrame->ColIndex();
 
   nscoord borderWidth =
     nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_THIN);
@@ -201,7 +199,7 @@ ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
   if (rowIndex > 0 && rowLinesList) {
     // If the row number is greater than the number of provided rowline
     // values, we simply repeat the last value.
-    int32_t listLength = rowLinesList->Length();
+    uint32_t listLength = rowLinesList->Length();
     if (rowIndex < listLength) {
       aStyleBorder.SetBorderStyle(eSideTop,
                     rowLinesList->ElementAt(rowIndex - 1));
@@ -216,7 +214,7 @@ ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
   if (columnIndex > 0 && columnLinesList) {
     // If the column number is greater than the number of provided columline
     // values, we simply repeat the last value.
-    int32_t listLength = columnLinesList->Length();
+    uint32_t listLength = columnLinesList->Length();
     if (columnIndex < listLength) {
       aStyleBorder.SetBorderStyle(eSideLeft,
                     columnLinesList->ElementAt(columnIndex - 1));
@@ -1206,12 +1204,11 @@ nsMathMLmtdFrame::GetVerticalAlign() const
   nsTArray<int8_t>* alignmentList = FindCellProperty(this, RowAlignProperty());
 
   if (alignmentList) {
-    int32_t rowIndex;
-    GetRowIndex(rowIndex);
+    uint32_t rowIndex = RowIndex();
 
     // If the row number is greater than the number of provided rowalign values,
     // we simply repeat the last value.
-    if (rowIndex < (int32_t)alignmentList->Length())
+    if (rowIndex < alignmentList->Length())
       alignment = alignmentList->ElementAt(rowIndex);
     else
       alignment = alignmentList->ElementAt(alignmentList->Length() - 1);
@@ -1298,12 +1295,11 @@ nsStyleText* nsMathMLmtdInnerFrame::StyleTextForLineLayout()
 
   if (alignmentList) {
     nsMathMLmtdFrame* cellFrame = (nsMathMLmtdFrame*)GetParent();
-    int32_t columnIndex;
-    cellFrame->GetColIndex(columnIndex);
+    uint32_t columnIndex = cellFrame->ColIndex();
 
     // If the column number is greater than the number of provided columalign
     // values, we simply repeat the last value.
-    if (columnIndex < (int32_t)alignmentList->Length())
+    if (columnIndex < alignmentList->Length())
       alignment = alignmentList->ElementAt(columnIndex);
     else
       alignment = alignmentList->ElementAt(alignmentList->Length() - 1);
