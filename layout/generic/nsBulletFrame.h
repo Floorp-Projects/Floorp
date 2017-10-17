@@ -87,6 +87,14 @@ public:
   void AddInlinePrefISize(gfxContext* aRenderingContext,
                           nsIFrame::InlinePrefISizeData* aData) override;
 
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
+  {
+    if (aFlags & eSupportsCSSTransforms) {
+      return false;
+    }
+    return nsFrame::IsFrameOfType(aFlags);
+  }
+
   // nsBulletFrame
   int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
                              int32_t aIncrement);
