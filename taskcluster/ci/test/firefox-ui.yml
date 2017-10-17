@@ -1,7 +1,4 @@
-firefox-ui-functional-local:
-    description: "Firefox-ui-tests functional run"
-    suite: "firefox-ui/functional local"
-    treeherder-symbol: tc-Fxfn-l(en-US)
+job-defaults:
     max-run-time: 5400
     mozharness:
         script: firefox_ui_tests/functional.py
@@ -15,6 +12,12 @@ firefox-ui-functional-local:
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
+
+firefox-ui-functional-local:
+    description: "Firefox-ui-tests functional run"
+    suite: "firefox-ui/functional local"
+    treeherder-symbol: tc-Fxfn-l(en-US)
+    mozharness:
         extra-options:
             - "--tag"
             - "local"
@@ -27,19 +30,7 @@ firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional remote"
     treeherder-symbol: tc-Fxfn-r(en-US)
-    max-run-time: 5400
     mozharness:
-        script: firefox_ui_tests/functional.py
-        config:
-            by-test-platform:
-                windows.*:
-                    - firefox_ui_tests/taskcluster_windows.py
-                macosx.*:
-                    - firefox_ui_tests/taskcluster.py
-                    - firefox_ui_tests/taskcluster_mac.py
-                linux.*:
-                    - firefox_ui_tests/taskcluster.py
-                    - remove_executables.py
         extra-options:
             - "--tag"
             - "remote"

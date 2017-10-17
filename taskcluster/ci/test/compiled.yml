@@ -1,8 +1,9 @@
+job-defaults:
+    e10s: false
 
 cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
-    e10s: false
     treeherder-symbol: tc(Cpp)
     run-on-projects:
         by-test-platform:
@@ -40,7 +41,6 @@ cppunit:
 gtest:
     description: "GTests run"
     suite: gtest
-    e10s: false
     treeherder-symbol: tc(GTest)
     instance-size: xlarge
     run-on-projects:
@@ -74,7 +74,6 @@ gtest:
 jittest:
     description: "JIT Test run"
     suite: jittest/jittest-chunked
-    e10s: false
     treeherder-symbol: tc(Jit)
     run-on-projects:
         by-test-platform:

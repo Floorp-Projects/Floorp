@@ -1,14 +1,8 @@
-awsy:
-    description: "Are we slim yet"
+job-defaults:
     suite: awsy
-    treeherder-symbol: tc-SY(sy)
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
-    run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: [] # don't run on devedition
-            default: built-projects
     mozharness:
         script: awsy_script.py
         config:
@@ -20,48 +14,32 @@ awsy:
                 default:
                     - awsy/linux_config.py
 
+awsy:
+    description: "Are we slim yet"
+    treeherder-symbol: tc-SY(sy)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
+
 awsy-stylo-disabled:
     description: "Are we slim yet for Stylo disabled"
-    suite: awsy
     treeherder-symbol: tc-SYsd(sy)
-    max-run-time: 7200
-    instance-size: xlarge
-    allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: [] # don't run on devedition
             default: built-projects
     mozharness:
-        script: awsy_script.py
-        config:
-            by-test-platform:
-                windows.*:
-                    - awsy/taskcluster_windows_config.py
-                macosx.*:
-                    - awsy/macosx_config.py
-                linux.*:
-                    - awsy/linux_config.py
         extra-options:
             - --disable-stylo
 
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
-    suite: awsy
     treeherder-symbol: tc-SYss(sy)
-    max-run-time: 7200
-    instance-size: xlarge
-    allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: [] # don't run on devedition
             default: built-projects
     mozharness:
-        script: awsy_script.py
-        config:
-            # Only run on Linux64.
-            by-test-platform:
-                linux.*:
-                    - awsy/linux_config.py
         extra-options:
             - --single-stylo-traversal
-
