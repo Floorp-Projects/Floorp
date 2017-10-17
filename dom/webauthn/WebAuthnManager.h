@@ -81,6 +81,9 @@ public:
   GetAssertion(nsPIDOMWindowInner* aParent,
                const PublicKeyCredentialRequestOptions& aOptions);
 
+  already_AddRefed<Promise>
+  Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
+
   void
   FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer);
 
@@ -96,9 +99,6 @@ public:
 private:
   WebAuthnManager();
   virtual ~WebAuthnManager();
-
-  already_AddRefed<Promise>
-  Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
 
   void StartRegister();
   void StartSign();
