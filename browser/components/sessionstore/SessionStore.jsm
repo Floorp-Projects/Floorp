@@ -803,7 +803,7 @@ var SessionStoreInternal = {
         let userContextId = 0;
         try {
           userContextId = JSON.parse(aData).userContextId;
-        } catch(e) {}
+        } catch (e) {}
         if (userContextId)
           this._forgetTabsWithUserContextId(userContextId);
     }
