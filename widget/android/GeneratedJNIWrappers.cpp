@@ -1120,32 +1120,12 @@ auto GeckoSurface::SetAvailable(bool a0) const -> void
 const char GeckoSurfaceTexture::name[] =
         "org/mozilla/gecko/gfx/GeckoSurfaceTexture";
 
-constexpr char GeckoSurfaceTexture::AttachToGLContext_t::name[];
-constexpr char GeckoSurfaceTexture::AttachToGLContext_t::signature[];
-
-auto GeckoSurfaceTexture::AttachToGLContext(int64_t a0, int32_t a1) const -> nsresult
-{
-    nsresult rv = NS_OK;
-    mozilla::jni::Method<AttachToGLContext_t>::Call(GeckoSurfaceTexture::mCtx, &rv, a0, a1);
-    return rv;
-}
-
 constexpr char GeckoSurfaceTexture::DecrementUse_t::name[];
 constexpr char GeckoSurfaceTexture::DecrementUse_t::signature[];
 
 auto GeckoSurfaceTexture::DecrementUse() const -> void
 {
     return mozilla::jni::Method<DecrementUse_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
-}
-
-constexpr char GeckoSurfaceTexture::DetachFromGLContext_t::name[];
-constexpr char GeckoSurfaceTexture::DetachFromGLContext_t::signature[];
-
-auto GeckoSurfaceTexture::DetachFromGLContext() const -> nsresult
-{
-    nsresult rv = NS_OK;
-    mozilla::jni::Method<DetachFromGLContext_t>::Call(GeckoSurfaceTexture::mCtx, &rv);
-    return rv;
 }
 
 constexpr char GeckoSurfaceTexture::GetHandle_t::name[];
@@ -1172,14 +1152,6 @@ auto GeckoSurfaceTexture::IncrementUse() const -> void
     return mozilla::jni::Method<IncrementUse_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
 }
 
-constexpr char GeckoSurfaceTexture::IsAttachedToGLContext_t::name[];
-constexpr char GeckoSurfaceTexture::IsAttachedToGLContext_t::signature[];
-
-auto GeckoSurfaceTexture::IsAttachedToGLContext(int64_t a0) const -> bool
-{
-    return mozilla::jni::Method<IsAttachedToGLContext_t>::Call(GeckoSurfaceTexture::mCtx, nullptr, a0);
-}
-
 constexpr char GeckoSurfaceTexture::IsSingleBuffer_t::name[];
 constexpr char GeckoSurfaceTexture::IsSingleBuffer_t::signature[];
 
@@ -1203,6 +1175,9 @@ auto GeckoSurfaceTexture::Lookup(int32_t a0) -> GeckoSurfaceTexture::LocalRef
 {
     return mozilla::jni::Method<Lookup_t>::Call(GeckoSurfaceTexture::Context(), nullptr, a0);
 }
+
+constexpr char GeckoSurfaceTexture::NativeAcquireTexture_t::name[];
+constexpr char GeckoSurfaceTexture::NativeAcquireTexture_t::signature[];
 
 constexpr char GeckoSurfaceTexture::ReleaseTexImage_t::name[];
 constexpr char GeckoSurfaceTexture::ReleaseTexImage_t::signature[];
