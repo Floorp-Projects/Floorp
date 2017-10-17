@@ -60,20 +60,6 @@ nsTableCellFrame::~nsTableCellFrame()
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableCellFrame)
 
-nsTableCellFrame*
-nsTableCellFrame::GetNextCell() const
-{
-  nsIFrame* childFrame = GetNextSibling();
-  while (childFrame) {
-    nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
-    if (cellFrame) {
-      return cellFrame;
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
-  return nullptr;
-}
-
 void
 nsTableCellFrame::Init(nsIContent*       aContent,
                        nsContainerFrame* aParent,
