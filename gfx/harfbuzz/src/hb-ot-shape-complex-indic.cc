@@ -208,7 +208,21 @@ set_indic_properties (hb_glyph_info_t &info)
     cat = OT_M;
     pos = POS_ABOVE_C;
   }
+  else if (unlikely (u == 0x0A51u))
+  {
+    /* https://github.com/behdad/harfbuzz/issues/524 */
+    cat = OT_M;
+    pos = POS_BELOW_C;
+  }
 
+  /* According to ScriptExtensions.txt, these Grantha marks may also be used in Tamil,
+   * so the Indic shaper needs to know their categories. */
+  else if (unlikely (u == 0x11303u)) cat = OT_SM;
+  else if (unlikely (u == 0x1133cu)) cat = OT_N;
+
+  else if (unlikely (u == 0x0AFBu)) cat = OT_N; /* https://github.com/behdad/harfbuzz/issues/552 */
+
+  else if (unlikely (u == 0x0980u)) cat = OT_PLACEHOLDER; /* https://github.com/behdad/harfbuzz/issues/538 */
   else if (unlikely (u == 0x17C6u)) cat = OT_N; /* Khmer Bindu doesn't like to be repositioned. */
   else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x2010u, 0x2011u)))
 				    cat = OT_PLACEHOLDER;
@@ -677,6 +691,21 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
   hb_glyph_info_t *info = buffer->info;
 
+  /* https://github.com/behdad/harfbuzz/issues/435#issuecomment-335560167
+   * // For compatibility with legacy useage in Kannada,
+   * // Ra+h+ZWJ must behave like Ra+ZWJ+h...
+   */
+  if (buffer->props.script == HB_SCRIPT_KANNADA &&
+      start + 3 <= end &&
+      is_one_of (info[start  ], FLAG (OT_Ra)) &&
+      is_one_of (info[start+1], FLAG (OT_H)) &&
+      is_one_of (info[start+2], FLAG (OT_ZWJ)))
+  {
+    buffer->merge_clusters (start+1, start+3);
+    hb_glyph_info_t tmp = info[start+1];
+    info[start+1] = info[start+2];
+    info[start+2] = tmp;
+  }
 
   /* 1. Find base consonant:
    *
@@ -842,8 +871,8 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 
   /* 2. Decompose and reorder Matras:
    *
-   * Each matra and any syllable modifier sign in the cluster are moved to the
-   * appropriate position relative to the consonant(s) in the cluster. The
+   * Each matra and any syllable modifier sign in the syllable are moved to the
+   * appropriate position relative to the consonant(s) in the syllable. The
    * shaping engine decomposes two- or three-part matras into their constituent
    * parts before any repositioning. Matra characters are classified by which
    * consonant in a conjunct they have affinity for and are reordered to the
@@ -1269,7 +1298,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
 
   /* This function relies heavily on halant glyphs.  Lots of ligation
-   * and possibly multiplication substitutions happened prior to this
+   * and possibly multiple substitutions happened prior to this
    * phase, and that might have messed up our properties.  Recover
    * from a particular case of that where we're fairly sure that a
    * class of OT_H is desired but has been lost. */
@@ -1293,7 +1322,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
    * After the localized forms and basic shaping forms GSUB features have been
    * applied (see below), the shaping engine performs some final glyph
    * reordering before applying all the remaining font features to the entire
-   * cluster.
+   * syllable.
    */
 
   bool try_pref = !!indic_plan->mask_array[PREF];
@@ -1676,8 +1705,8 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
         break;
 
       default:
-	/* Uniscribe merges the entire cluster... Except for Tamil & Sinhala.
-	 * This means, half forms are submerged into the main consonants cluster.
+	/* Uniscribe merges the entire syllable into a single cluster... Except for Tamil & Sinhala.
+	 * This means, half forms are submerged into the main consonant's cluster.
 	 * This is unnecessary, and makes cursor positioning harder, but that's what
 	 * Uniscribe does. */
 	buffer->merge_clusters (start, end);
@@ -1826,6 +1855,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
   compose_indic,
   setup_masks_indic,
   NULL, /* disable_otl */
+  NULL, /* reorder_marks */
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
   false, /* fallback_position */
 };

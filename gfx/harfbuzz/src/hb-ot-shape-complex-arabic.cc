@@ -613,6 +613,80 @@ postprocess_glyphs_arabic (const hb_ot_shape_plan_t *plan,
   HB_BUFFER_DEALLOCATE_VAR (buffer, arabic_shaping_action);
 }
 
+/* http://www.unicode.org/reports/tr53/tr53-1.pdf */
+
+static hb_codepoint_t
+modifier_combining_marks[] =
+{
+  0x0654u, /* ARABIC HAMZA ABOVE */
+  0x0655u, /* ARABIC HAMZA BELOW */
+  0x0658u, /* ARABIC MARK NOON GHUNNA */
+  0x06DCu, /* ARABIC SMALL HIGH SEEN */
+  0x06E3u, /* ARABIC SMALL LOW SEEN */
+  0x06E7u, /* ARABIC SMALL HIGH YEH */
+  0x06E8u, /* ARABIC SMALL HIGH NOON */
+  0x08F3u, /* ARABIC SMALL HIGH WAW */
+};
+
+static inline bool
+info_is_mcm (const hb_glyph_info_t &info)
+{
+  hb_codepoint_t u = info.codepoint;
+  for (unsigned int i = 0; i < ARRAY_LENGTH (modifier_combining_marks); i++)
+    if (u == modifier_combining_marks[i])
+      return true;
+  return false;
+}
+
+static void
+reorder_marks_arabic (const hb_ot_shape_plan_t *plan,
+		      hb_buffer_t              *buffer,
+		      unsigned int              start,
+		      unsigned int              end)
+{
+  hb_glyph_info_t *info = buffer->info;
+
+  unsigned int i = start;
+  for (unsigned int cc = 220; cc <= 230; cc += 10)
+  {
+    DEBUG_MSG (ARABIC, buffer, "Looking for %d's starting at %d\n", cc, i);
+    while (i < end && info_cc(info[i]) < cc)
+      i++;
+    DEBUG_MSG (ARABIC, buffer, "Looking for %d's stopped at %d\n", cc, i);
+
+    if (i == end)
+      break;
+
+    if (info_cc(info[i]) > cc)
+      continue;
+
+    /* Technically we should also check "info_cc(info[j]) == cc"
+     * in the following loop.  But not doing it is safe; we might
+     * end up moving all the 220 MCMs and 230 MCMs together in one
+     * move and be done. */
+    unsigned int j = i;
+    while (j < end && info_is_mcm (info[j]))
+      j++;
+    DEBUG_MSG (ARABIC, buffer, "Found %d's from %d to %d\n", cc, i, j);
+
+    if (i == j)
+      continue;
+
+    /* Shift it! */
+    DEBUG_MSG (ARABIC, buffer, "Shifting %d's: %d %d\n", cc, i, j);
+    hb_glyph_info_t temp[HB_OT_SHAPE_COMPLEX_MAX_COMBINING_MARKS];
+    assert (j - i <= ARRAY_LENGTH (temp));
+    buffer->merge_clusters (start, j);
+    memmove (temp, &info[i], (j - i) * sizeof (hb_glyph_info_t));
+    memmove (&info[start + j - i], &info[start], (i - start) * sizeof (hb_glyph_info_t));
+    memmove (&info[start], temp, (j - i) * sizeof (hb_glyph_info_t));
+
+    start += j - i;
+
+    i = j;
+  }
+}
+
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
 {
   "arabic",
@@ -627,6 +701,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
   NULL, /* compose */
   setup_masks_arabic,
   NULL, /* disable_otl */
+  reorder_marks_arabic,
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE,
   true, /* fallback_position */
 };

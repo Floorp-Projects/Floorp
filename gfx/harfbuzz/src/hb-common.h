@@ -43,28 +43,14 @@
 # endif /* !__cplusplus */
 #endif
 
-#if !defined (HB_DONT_DEFINE_STDINT)
-
 #if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || \
     defined (_sgi) || defined (__sun) || defined (sun) || \
     defined (__digital__) || defined (__HP_cc)
 #  include <inttypes.h>
 #elif defined (_AIX)
 #  include <sys/inttypes.h>
-/* VS 2010 (_MSC_VER 1600) has stdint.h */
-#elif defined (_MSC_VER) && _MSC_VER < 1600
-typedef __int8 int8_t;
-typedef unsigned __int8 uint8_t;
-typedef __int16 int16_t;
-typedef unsigned __int16 uint16_t;
-typedef __int32 int32_t;
-typedef unsigned __int32 uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
 #else
 #  include <stdint.h>
-#endif
-
 #endif
 
 HB_BEGIN_DECLS
@@ -320,6 +306,14 @@ typedef enum
   /*9.0*/ HB_SCRIPT_OSAGE			= HB_TAG ('O','s','g','e'),
   /*9.0*/ HB_SCRIPT_TANGUT			= HB_TAG ('T','a','n','g'),
   /*9.0*/ HB_SCRIPT_NEWA			= HB_TAG ('N','e','w','a'),
+
+  /*
+   * Since 1.6.0
+   */
+  /*10.0*/HB_SCRIPT_MASARAM_GONDI		= HB_TAG ('G','o','n','m'),
+  /*10.0*/HB_SCRIPT_NUSHU			= HB_TAG ('N','s','h','u'),
+  /*10.0*/HB_SCRIPT_SOYOMBO			= HB_TAG ('S','o','y','o'),
+  /*10.0*/HB_SCRIPT_ZANABAZAR_SQUARE		= HB_TAG ('Z','a','n','b'),
 
   /* No script set. */
   HB_SCRIPT_INVALID				= HB_TAG_NONE,
