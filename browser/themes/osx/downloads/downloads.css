@@ -6,6 +6,10 @@
 
 /*** Panel and outer controls ***/
 
+#downloadsPanel {
+  margin-top: -1px;
+}
+
 @keyfocus@ #downloadsSummary:focus,
 @keyfocus@ .downloadsPanelFooterButton:focus {
   outline: 2px -moz-mac-focusring solid;

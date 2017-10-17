@@ -83,8 +83,3 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   }
 }
 
-/* Anchor the bookmark menu drop down panel at the same height as other
-   panels when in the #toolbar-menubar */
-#toolbar-menubar #BMB_bookmarksPopup {
-  margin-top: -6px;
-}
