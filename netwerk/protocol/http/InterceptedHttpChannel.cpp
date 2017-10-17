@@ -53,6 +53,7 @@ InterceptedHttpChannel::ReleaseListeners()
   mBodyWriter = nullptr;
   mReleaseHandle = nullptr;
   mProgressSink = nullptr;
+  mBodyCallback = nullptr;
   mPump = nullptr;
   mParentChannel = nullptr;
 
@@ -240,8 +241,13 @@ InterceptedHttpChannel::RedirectForOpaqueResponse(nsIURI* aResponseURI)
 
   nsresult rv = NS_OK;
 
+  // We want to pass ownership of the body callback to the new synthesized
+  // channel.  We need to hold a reference to the callbacks on the stack
+  // as well, though, so we can call them if a failure occurs.
+  nsCOMPtr<nsIInterceptedBodyCallback> bodyCallback = mBodyCallback.forget();
+
   RefPtr<InterceptedHttpChannel> newChannel =
-    CreateForSynthesis(mResponseHead, mBodyReader,
+    CreateForSynthesis(mResponseHead, mBodyReader, bodyCallback,
                        mChannelCreationTime, mChannelCreationTimestamp,
                        mAsyncOpenTime);
 
@@ -264,6 +270,11 @@ InterceptedHttpChannel::RedirectForOpaqueResponse(nsIURI* aResponseURI)
   rv = gHttpHandler->AsyncOnChannelRedirect(this, mRedirectChannel, flags);
 
   if (NS_FAILED(rv)) {
+    // Make sure to call the body callback since we took ownership
+    // above.  Neither the new channel or our standard
+    // OnRedirectVerifyCallback() code will invoke the callback.  Do it here.
+    bodyCallback->BodyComplete(rv);
+
     OnRedirectVerifyCallback(rv);
   }
 
@@ -311,6 +322,8 @@ InterceptedHttpChannel::StartPump()
   while (suspendCount--) {
     mPump->Suspend();
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mCanceled);
 
   return rv;
 }
@@ -413,6 +426,15 @@ InterceptedHttpChannel::MaybeCallStatusAndProgress()
   mProgressReported = progress;
 }
 
+void
+InterceptedHttpChannel::MaybeCallBodyCallback()
+{
+  nsCOMPtr<nsIInterceptedBodyCallback> callback = mBodyCallback.forget();
+  if (callback) {
+    callback->BodyComplete(mStatus);
+  }
+}
+
 // static
 already_AddRefed<InterceptedHttpChannel>
 InterceptedHttpChannel::CreateForInterception(PRTime aCreationTime,
@@ -432,6 +454,7 @@ InterceptedHttpChannel::CreateForInterception(PRTime aCreationTime,
 already_AddRefed<InterceptedHttpChannel>
 InterceptedHttpChannel::CreateForSynthesis(const nsHttpResponseHead* aHead,
                                            nsIInputStream* aBody,
+                                           nsIInterceptedBodyCallback* aBodyCallback,
                                            PRTime aCreationTime,
                                            const TimeStamp& aCreationTimestamp,
                                            const TimeStamp& aAsyncOpenTimestamp)
@@ -446,8 +469,9 @@ InterceptedHttpChannel::CreateForSynthesis(const nsHttpResponseHead* aHead,
     new InterceptedHttpChannel(aCreationTime, aCreationTimestamp,
                                aAsyncOpenTimestamp);
 
-  ref->mBodyReader = aBody;
   ref->mResponseHead = new nsHttpResponseHead(*aHead);
+  ref->mBodyReader = aBody;
+  ref->mBodyCallback = aBodyCallback;
 
   return ref.forget();
 }
@@ -697,9 +721,34 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
                                                  nsIInterceptedBodyCallback* aBodyCallback,
                                                  const nsACString& aFinalURLSpec)
 {
-  if (mCanceled) {
-    return mStatus;
+  nsresult rv = NS_OK;
+
+  auto autoCleanup = MakeScopeExit([&] {
+    // Auto-cancel on failure.  Do this first to get mStatus set, if necessary.
+    if (NS_FAILED(rv)) {
+      Cancel(rv);
+    }
+
+    // If we early exit before taking ownership of the body, then automatically
+    // invoke the callback.  This could be due to an error or because we're not
+    // going to consume it due to a redirect, etc.
+    if (aBodyCallback) {
+      aBodyCallback->BodyComplete(mStatus);
+    }
+  });
+
+  if (NS_FAILED(mStatus)) {
+    // Return NS_OK.  The channel should fire callbacks with an error code
+    // if it was cancelled before this point.
+    return NS_OK;
   }
+
+  // Take ownership of the body callbacks  If a failure occurs we will
+  // automatically Cancel() the channel.  This will then invoke OnStopRequest()
+  // which will invoke the correct callback.  In the case of an opaque response
+  // redirect we pass ownership of the callback to the new channel.
+  mBodyCallback = aBodyCallback;
+  aBodyCallback = nullptr;
 
   if (!mSynthesizedResponseHead) {
     mSynthesizedResponseHead.reset(new nsHttpResponseHead());
@@ -708,7 +757,10 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
   mResponseHead = mSynthesizedResponseHead.release();
 
   if (ShouldRedirect()) {
-    return FollowSyntheticRedirect();
+    rv = FollowSyntheticRedirect();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
   // Intercepted responses should already be decoded.
@@ -716,15 +768,15 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
 
   // Errors and redirects may not have a body.  Synthesize an empty string stream
   // here so later code can be simpler.
+  mBodyReader = aBody;
   if (!mBodyReader) {
-    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(mBodyReader),
-                                           EmptyCString());
+    rv = NS_NewCStringInputStream(getter_AddRefs(mBodyReader), EmptyCString());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIURI> responseURI;
   if (!aFinalURLSpec.IsEmpty()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
+    rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     responseURI = mURI;
@@ -733,17 +785,25 @@ InterceptedHttpChannel::StartSynthesizedResponse(nsIInputStream* aBody,
   bool equal = false;
   Unused << mURI->Equals(responseURI, &equal);
   if (!equal) {
-    return RedirectForOpaqueResponse(responseURI);
+    rv = RedirectForOpaqueResponse(responseURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
-  return StartPump();
+  rv = StartPump();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedHttpChannel::FinishSynthesizedResponse()
 {
   if (mCanceled) {
-    return mStatus;
+    // Return NS_OK.  The channel should fire callbacks with an error code
+    // if it was cancelled before this point.
+    return NS_OK;
   }
 
   if (mBodyWriter) {
@@ -943,6 +1003,8 @@ InterceptedHttpChannel::OnRedirectVerifyCallback(nsresult rv)
     Cancel(rv);
   }
 
+  MaybeCallBodyCallback();
+
   mIsPending = false;
   ReleaseListeners();
 
@@ -975,6 +1037,8 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
   if (NS_SUCCEEDED(mStatus)) {
     mStatus = aStatus;
   }
+
+  MaybeCallBodyCallback();
 
   // Its possible that we have any async runnable queued to report some
   // progress when OnStopRequest() is triggered.  Report any left over

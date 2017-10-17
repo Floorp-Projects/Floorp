@@ -1126,6 +1126,8 @@ HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
        this, static_cast<uint32_t>(aStatus)));
   mIsPending = false;
 
+  MaybeCallSynthesizedCallback();
+
   Performance* documentPerformance = GetPerformance();
   if (documentPerformance) {
       documentPerformance->AddEntry(this, this);
@@ -1410,6 +1412,8 @@ HttpChannelChild::DoNotifyListenerCleanup()
     mInterceptListener->Cleanup();
     mInterceptListener = nullptr;
   }
+
+  MaybeCallSynthesizedCallback();
 }
 
 class DeleteSelfEvent : public NeckoTargetChannelEvent<HttpChannelChild>
@@ -1433,6 +1437,7 @@ HttpChannelChild::OverrideRunnable::OverrideRunnable(
   HttpChannelChild* aNewChannel,
   InterceptStreamListener* aListener,
   nsIInputStream* aInput,
+  nsIInterceptedBodyCallback* aCallback,
   nsAutoPtr<nsHttpResponseHead>& aHead)
   : Runnable("net::HttpChannelChild::OverrideRunnable")
 {
@@ -1440,6 +1445,7 @@ HttpChannelChild::OverrideRunnable::OverrideRunnable(
   mNewChannel = aNewChannel;
   mListener = aListener;
   mInput = aInput;
+  mCallback = aCallback;
   mHead = aHead;
 }
 
@@ -1447,7 +1453,7 @@ void
 HttpChannelChild::OverrideRunnable::OverrideWithSynthesizedResponse()
 {
   if (mNewChannel) {
-    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
+    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mCallback, mListener);
   }
 }
 
@@ -1458,6 +1464,10 @@ HttpChannelChild::OverrideRunnable::Run()
   nsresult rv = NS_OK;
   Unused << mChannel->GetStatus(&rv);
   if (NS_FAILED(rv)) {
+    if (mCallback) {
+      mCallback->BodyComplete(rv);
+      mCallback = nullptr;
+    }
     mChannel->CleanupRedirectingChannel(rv);
     mNewChannel->Cancel(rv);
     return NS_OK;
@@ -2147,9 +2157,12 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
     MOZ_ASSERT(neckoTarget);
 
+    nsCOMPtr<nsIInterceptedBodyCallback> callback =
+      mSynthesizedCallback.forget();
+
     Unused << neckoTarget->Dispatch(
       new OverrideRunnable(this, redirectedChannel, streamListener,
-                           mSynthesizedInput, mResponseHead),
+                           mSynthesizedInput, callback, mResponseHead),
       NS_DISPATCH_NORMAL);
 
     return NS_OK;
@@ -2200,6 +2213,8 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
       request->GetLoadFlags(&loadFlags);
     }
   }
+
+  MaybeCallSynthesizedCallback();
 
   bool chooseAppcache = false;
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
@@ -3560,12 +3575,21 @@ HttpChannelChild::CancelOnMainThread(nsresult aRv)
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                                   nsIInputStream* aSynthesizedInput,
+                                                  nsIInterceptedBodyCallback* aSynthesizedCallback,
                                                   InterceptStreamListener* aStreamListener)
 {
   nsresult rv = NS_OK;
-  auto autoCancel = MakeScopeExit([&] {
+  auto autoCleanup = MakeScopeExit([&] {
+    // Auto-cancel on failure.  Do this first to get mStatus set, if necessary.
     if (NS_FAILED(rv)) {
       Cancel(rv);
+    }
+
+    // If we early exit before taking ownership of the body, then automatically
+    // invoke the callback.  This could be due to an error or because we're not
+    // going to consume it due to a redirect, etc.
+    if (aSynthesizedCallback) {
+      aSynthesizedCallback->BodyComplete(mStatus);
     }
   });
 
@@ -3583,6 +3607,14 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
 
   mResponseHead = aResponseHead;
   mSynthesizedResponse = true;
+
+  mSynthesizedInput = aSynthesizedInput;
+
+  if (!mSynthesizedInput) {
+    rv = NS_NewCStringInputStream(getter_AddRefs(mSynthesizedInput),
+                                  EmptyCString());
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
 
   if (nsHttpChannel::WillRedirect(mResponseHead)) {
     mShouldInterceptSubsequentRedirect = true;
@@ -3607,14 +3639,17 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   MOZ_ASSERT(neckoTarget);
 
   rv = nsInputStreamPump::Create(getter_AddRefs(mSynthesizedResponsePump),
-                                 aSynthesizedInput, 0, 0, true, neckoTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aSynthesizedInput->Close();
-    return;
-  }
+                                 mSynthesizedInput, 0, 0, true, neckoTarget);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
   NS_ENSURE_SUCCESS_VOID(rv);
+
+  // The pump is started, so take ownership of the body callback.  We
+  // clear the argument to avoid auto-completing it via the ScopeExit
+  // lambda.
+  mSynthesizedCallback = aSynthesizedCallback;
+  aSynthesizedCallback = nullptr;
 
   // if this channel has been suspended previously, the pump needs to be
   // correspondingly suspended now that it exists.
@@ -3637,9 +3672,11 @@ HttpChannelChild::ForceIntercepted(bool aPostRedirectChannelShouldIntercept,
 }
 
 void
-HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput)
+HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput,
+                                   nsIInterceptedBodyCallback* aSynthesizedCallback)
 {
   mSynthesizedInput = aSynthesizedInput;
+  mSynthesizedCallback = aSynthesizedCallback;
   mSynthesizedResponse = true;
   mRedirectingForSubsequentSynthesizedResponse = true;
 }
@@ -3742,6 +3779,17 @@ void
 HttpChannelChild::SynthesizeResponseEndTime(const TimeStamp& aTime)
 {
   mTransactionTimings.responseEnd = aTime;
+}
+
+void
+HttpChannelChild::MaybeCallSynthesizedCallback()
+{
+  if (!mSynthesizedCallback) {
+    return;
+  }
+
+  mSynthesizedCallback->BodyComplete(mStatus);
+  mSynthesizedCallback = nullptr;
 }
 
 } // namespace net
