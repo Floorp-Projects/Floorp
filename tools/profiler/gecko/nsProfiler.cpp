@@ -433,9 +433,7 @@ GetArrayOfStringsForFeatures(uint32_t aFeatures,
 
   #define DUP_IF_SET(n_, str_, Name_) \
     if (ProfilerFeature::Has##Name_(aFeatures)) { \
-      size_t strLen = strlen(str_); \
-      featureList[i] = static_cast<char*>( \
-        nsMemory::Clone(str_, (strLen + 1) * sizeof(char))); \
+      featureList[i] = moz_xstrdup(str_); \
       i++; \
     }
 

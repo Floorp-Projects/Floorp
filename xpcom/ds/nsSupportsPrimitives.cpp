@@ -212,9 +212,7 @@ NS_IMETHODIMP
 nsSupportsPRBool::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  const char* str = mData ? "true" : "false";
-  *aResult = static_cast<char*>(nsMemory::Clone(str, (strlen(str) + 1) *
-                                                     sizeof(char)));
+  *aResult = moz_xstrdup(mData ? "true" : "false");
   return NS_OK;
 }
 
