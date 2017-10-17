@@ -1054,31 +1054,6 @@ inDOMUtils::IsValidCSSColor(const nsAString& aColorString, bool *_retval)
 }
 
 NS_IMETHODIMP
-inDOMUtils::CssPropertyIsValid(const nsAString& aPropertyName,
-                               const nsAString& aPropertyValue,
-                               bool *_retval)
-{
-  nsCSSPropertyID propertyID = nsCSSProps::
-    LookupProperty(aPropertyName, CSSEnabledState::eIgnoreEnabledState);
-
-  if (propertyID == eCSSProperty_UNKNOWN) {
-    *_retval = false;
-    return NS_OK;
-  }
-
-  if (propertyID == eCSSPropertyExtra_variable) {
-    *_retval = true;
-    return NS_OK;
-  }
-
-  // Get a parser, parse the property.
-  nsCSSParser parser;
-  *_retval = parser.IsValueValidForProperty(propertyID, aPropertyValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 {
   NS_ENSURE_ARG_POINTER(aElement);
