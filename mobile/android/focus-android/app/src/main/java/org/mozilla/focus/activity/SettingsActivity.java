@@ -41,7 +41,6 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity implements Se
 
         final PreferenceFragment fragment = new SettingsFragment();
         fragment.setArguments(getIntent().getExtras());
-        ((SettingsFragment) fragment).setTitleUpdater(this);
 
         getFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)

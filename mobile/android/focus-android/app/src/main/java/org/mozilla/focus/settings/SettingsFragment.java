@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.settings;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -29,7 +30,6 @@ import java.util.Locale;
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String FRAGMENT_RESID_INTENT_EXTRA = "extra_frament_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
-    private TitleUpdater titleUpdater;
 
     private boolean localeUpdated;
 
@@ -45,6 +45,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         final int prefResId = args != null ? args.getInt(FRAGMENT_RESID_INTENT_EXTRA) : R.xml.settings;
         final int titleResId = args != null ? args.getInt(TITLE_RESID_INTENT_EXTRA) : R.string.menu_settings;
 
+        // We've checked that this cast is legal in onAttach.
+        final TitleUpdater titleUpdater = (TitleUpdater) getActivity();
         if (titleUpdater != null) {
             titleUpdater.updateTitle(titleResId);
         }
@@ -52,6 +54,13 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         addPreferencesFromResource(prefResId);
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (!(context instanceof TitleUpdater)) {
+            throw new IllegalArgumentException("Parent activity must implement TitleUpdater");
+        }
+    }
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         final Resources resources = getResources();
@@ -98,10 +107,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onPause();
 
         getPreferenceManager().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    public void setTitleUpdater(TitleUpdater titleUpdater) {
-        this.titleUpdater = titleUpdater;
     }
 
     @Override
