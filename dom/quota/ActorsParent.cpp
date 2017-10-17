@@ -2454,7 +2454,8 @@ GetBinaryInputStream(nsIFile* aDirectory,
   }
 
   nsCOMPtr<nsIInputStream> bufferedStream;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 512);
+  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                 stream.forget(), 512);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

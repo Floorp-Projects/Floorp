@@ -339,7 +339,9 @@ HashStore::Open()
   }
 
   mFileSize = static_cast<uint32_t>(fileSize);
-  mInputStream = NS_BufferInputStream(origStream, mFileSize);
+  rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream),
+                                 origStream.forget(), mFileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ReadHeader();
   NS_ENSURE_SUCCESS(rv, rv);
