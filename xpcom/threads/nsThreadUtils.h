@@ -640,8 +640,6 @@ NS_NewRunnableFunction(const char* aName, Function&& aFunction)
 namespace mozilla {
 namespace detail {
 
-already_AddRefed<nsITimer> CreateTimer();
-
 template <RunnableKind Kind>
 class TimerBehaviour
 {
@@ -660,7 +658,7 @@ public:
   nsITimer* GetTimer()
   {
     if (!mTimer) {
-      mTimer = CreateTimer();
+      mTimer = NS_NewTimer();
     }
 
     return mTimer;

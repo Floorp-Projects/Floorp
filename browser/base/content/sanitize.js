@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
 
-var {classes: Cc, interfaces: Ci} = Components;
+var {classes: Cc, interfaces: Ci, results: Cr} = Components;
 
 /**
  * A number of iterations after which to yield time back
@@ -308,6 +308,13 @@ Sanitizer.prototype = {
         let promises = [];
         await new Promise(resolve => {
           quotaManagerService.getUsage(request => {
+            if (request.resultCode != Cr.NS_OK) {
+              // We are probably shutting down. We don't want to propagate the
+              // error, rejecting the promise.
+              resolve();
+              return;
+            }
+
             for (let item of request.result) {
               let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
               let uri = principal.URI;

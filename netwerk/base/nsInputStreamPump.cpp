@@ -775,3 +775,13 @@ nsInputStreamPump::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
          (nsIStreamListener*)mListener, static_cast<uint32_t>(rv)));
     return rv;
 }
+
+NS_IMETHODIMP
+nsInputStreamPump::GetDeliveryTarget(nsIEventTarget** aNewTarget)
+{
+    RecursiveMutexAutoLock lock(mMutex);
+
+    nsCOMPtr<nsIEventTarget> target = mTargetThread;
+    target.forget(aNewTarget);
+    return NS_OK;
+}

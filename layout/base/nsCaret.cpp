@@ -636,16 +636,16 @@ void nsCaret::ResetBlinking()
   if (mBlinkTimer) {
     mBlinkTimer->Cancel();
   } else {
-    nsresult  err;
-    mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
-    if (NS_FAILED(err)) {
-      return;
-    }
-
+    nsIEventTarget* target = nullptr;
     if (nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell)) {
       if (nsCOMPtr<nsIDocument> doc = presShell->GetDocument()) {
-        mBlinkTimer->SetTarget(doc->EventTargetFor(TaskCategory::Other));
+        target = doc->EventTargetFor(TaskCategory::Other);
       }
+    }
+
+    mBlinkTimer = NS_NewTimer(target);
+    if (!mBlinkTimer) {
+      return;
     }
   }
 

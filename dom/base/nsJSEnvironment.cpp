@@ -2115,25 +2115,19 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason,
     return;
   }
 
-  CallCreateInstance("@mozilla.org/timer;1", &sGCTimer);
-
-  if (!sGCTimer) {
-    // Failed to create timer (probably because we're in XPCOM shutdown)
-    return;
-  }
-
   static bool first = true;
 
-  sGCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
-  sGCTimer->InitWithNamedFuncCallback(GCTimerFired,
-                                      reinterpret_cast<void *>(aReason),
-                                      aDelay
-                                      ? aDelay
-                                      : (first
-                                         ? NS_FIRST_GC_DELAY
-                                         : NS_GC_DELAY),
-                                      nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                      "GCTimerFired");
+  NS_NewTimerWithFuncCallback(&sGCTimer,
+                              GCTimerFired,
+                              reinterpret_cast<void *>(aReason),
+                              aDelay
+                              ? aDelay
+                              : (first
+                                 ? NS_FIRST_GC_DELAY
+                                 : NS_GC_DELAY),
+                              nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                              "GCTimerFired",
+                              SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
 
   first = false;
 }
@@ -2146,18 +2140,12 @@ nsJSContext::PokeShrinkingGC()
     return;
   }
 
-  CallCreateInstance("@mozilla.org/timer;1", &sShrinkingGCTimer);
-
-  if (!sShrinkingGCTimer) {
-    // Failed to create timer (probably because we're in XPCOM shutdown)
-    return;
-  }
-
-  sShrinkingGCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
-  sShrinkingGCTimer->InitWithNamedFuncCallback(ShrinkingGCTimerFired, nullptr,
-                                               sCompactOnUserInactiveDelay,
-                                               nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                               "ShrinkingGCTimerFired");
+  NS_NewTimerWithFuncCallback(&sShrinkingGCTimer,
+                              ShrinkingGCTimerFired, nullptr,
+                              sCompactOnUserInactiveDelay,
+                              nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                              "ShrinkingGCTimerFired",
+                              SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
 }
 
 // static
@@ -2335,13 +2323,13 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
 
       if (aDesc.isZone_) {
         if (!sFullGCTimer && !sShuttingDown) {
-          CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
-          sFullGCTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
-          sFullGCTimer->InitWithNamedFuncCallback(FullGCTimerFired,
-                                                  nullptr,
-                                                  NS_FULL_GC_DELAY,
-                                                  nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                                  "FullGCTimerFired");
+          NS_NewTimerWithFuncCallback(&sFullGCTimer,
+                                      FullGCTimerFired,
+                                      nullptr,
+                                      NS_FULL_GC_DELAY,
+                                      nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                      "FullGCTimerFired",
+                                      SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
         }
       } else {
         nsJSContext::KillFullGCTimer();

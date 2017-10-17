@@ -8,6 +8,7 @@
 #define nsPluginInstanceOwner_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
 #include "npapi.h"
 #include "nsCOMPtr.h"
 #include "nsIKeyEventInPluginCallback.h"
@@ -308,7 +309,7 @@ private:
   RefPtr<nsPluginHost>      mPluginHost;
 
 #ifdef XP_MACOSX
-  static nsCOMPtr<nsITimer>                *sCATimer;
+  static mozilla::StaticRefPtr<nsITimer>    sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   bool                                      mSentInitialTopLevelWindowEvent;
   bool                                      mLastWindowIsActive;

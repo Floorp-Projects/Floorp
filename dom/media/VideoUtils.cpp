@@ -367,23 +367,13 @@ SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarg
     }
   }
 
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  // Note: set target before InitWithCallback in case the timer fires before
-  // we change the event target.
-  rv = timer->SetTarget(target);
-  if (NS_FAILED(rv)) {
-    timer->Cancel();
-    return rv;
-  }
-  rv = timer->InitWithCallback(this, aTimeoutMs, nsITimer::TYPE_ONE_SHOT);
+  rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                               this, aTimeoutMs, nsITimer::TYPE_ONE_SHOT,
+                               target);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mTimer = timer.forget();
   mTask = aTask;
   return NS_OK;
 }

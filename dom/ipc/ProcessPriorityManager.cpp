@@ -813,8 +813,8 @@ ParticularProcessPriorityManager::ScheduleResetPriority(TimeoutPref aTimeoutPref
   }
 
   LOGP("Scheduling reset timer to fire in %dms.", timeout);
-  mResetPriorityTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  mResetPriorityTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
+  NS_NewTimerWithCallback(getter_AddRefs(mResetPriorityTimer),
+                          this, timeout, nsITimer::TYPE_ONE_SHOT);
 }
 
 NS_IMETHODIMP

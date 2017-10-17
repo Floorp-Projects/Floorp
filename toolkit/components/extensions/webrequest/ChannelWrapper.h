@@ -288,6 +288,7 @@ private:
   bool mAddedStreamListener = false;
   bool mFiredErrorEvent = false;
   bool mSuspended = false;
+  bool mResponseStarted = false;
 
 
   nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsITabParent> mAddonEntries;

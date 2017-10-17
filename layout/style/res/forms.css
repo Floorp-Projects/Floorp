@@ -1127,6 +1127,7 @@ input[type="number"] > div > div > div:hover {
 input[type="date"],
 input[type="time"] {
   overflow: hidden !important;
+  font-family: -moz-fixed;
 }
 
 :-moz-autofill, :-moz-autofill-preview {

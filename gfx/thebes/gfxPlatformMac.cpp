@@ -399,7 +399,7 @@ public:
       : mDisplayLink(nullptr)
     {
       MOZ_ASSERT(NS_IsMainThread());
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+      mTimer = NS_NewTimer();
     }
 
     ~OSXDisplay() override

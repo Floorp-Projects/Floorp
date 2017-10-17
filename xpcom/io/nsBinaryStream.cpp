@@ -25,6 +25,7 @@
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCRT.h"
@@ -40,6 +41,26 @@
 using mozilla::MakeUnique;
 using mozilla::PodCopy;
 using mozilla::UniquePtr;
+
+already_AddRefed<nsIObjectOutputStream>
+NS_NewObjectOutputStream(nsIOutputStream* aOutputStream)
+{
+  MOZ_ASSERT(aOutputStream);
+  auto stream = mozilla::MakeRefPtr<nsBinaryOutputStream>();
+
+  MOZ_ALWAYS_SUCCEEDS(stream->SetOutputStream(aOutputStream));
+  return stream.forget();
+}
+
+already_AddRefed<nsIObjectInputStream>
+NS_NewObjectInputStream(nsIInputStream* aInputStream)
+{
+  MOZ_ASSERT(aInputStream);
+  auto stream = mozilla::MakeRefPtr<nsBinaryInputStream>();
+
+  MOZ_ALWAYS_SUCCEEDS(stream->SetInputStream(aInputStream));
+  return stream.forget();
+}
 
 NS_IMPL_ISUPPORTS(nsBinaryOutputStream,
                   nsIObjectOutputStream,

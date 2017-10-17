@@ -673,7 +673,7 @@ nsNavHistory::GetNow()
   if (!mCachedNow) {
     mCachedNow = PR_Now();
     if (!mExpireNowTimer)
-      mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
+      mExpireNowTimer = NS_NewTimer();
     if (mExpireNowTimer)
       mExpireNowTimer->InitWithNamedFuncCallback(expireNowTimerCallback,
                                                  this,

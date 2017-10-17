@@ -1632,17 +1632,12 @@ nsCacheService::CreateDiskDevice()
     // Disk device is usually created during the startup. Delay smart size
     // calculation to avoid possible massive IO caused by eviction of entries
     // in case the new smart size is smaller than current cache usage.
-    mSmartSizeTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = mSmartSizeTimer->InitWithCallback(new nsSetDiskSmartSizeCallback(),
-                                               1000*60*3,
-                                               nsITimer::TYPE_ONE_SHOT);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Failed to post smart size timer");
-            mSmartSizeTimer = nullptr;
-        }
-    } else {
-        NS_WARNING("Can't create smart size timer");
+    rv = NS_NewTimerWithCallback(getter_AddRefs(mSmartSizeTimer),
+                                 new nsSetDiskSmartSizeCallback(),
+                                 1000*60*3,
+                                 nsITimer::TYPE_ONE_SHOT);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to post smart size timer");
     }
     // Ignore state of the timer and return success since the purpose of the
     // method (create the disk-device) has been fulfilled

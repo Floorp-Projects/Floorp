@@ -207,7 +207,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   LayoutDevicePoint ldPoint = aPoint * aScale;
 
   APZES_LOG("Scheduling timer for click event\n");
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  nsCOMPtr<nsITimer> timer = NS_NewTimer();
   dom::TabChild* tabChild = widget->GetOwningTabChild();
 
   if (tabChild && XRE_IsContentProcess()) {
