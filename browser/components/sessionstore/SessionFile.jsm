@@ -87,6 +87,10 @@ this.SessionFile = {
    */
   get Paths() {
     return SessionFileInternal.Paths;
+  },
+
+  get MaxWriteFailures() {
+    return kMaxWriteFailures;
   }
 };
 
@@ -352,6 +356,7 @@ var SessionFileInternal = {
     if (this._workerHealth.failures >= kMaxWriteFailures) {
       SessionWorker.terminate();
       this._workerHealth.failures = 0;
+      Telemetry.scalarAdd("browser.session.restore.worker_restart_count", 1);
     }
   },
 
