@@ -295,10 +295,6 @@ public:
     mozilla::GeckoStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
 
-  static already_AddRefed<nsCSSValue::Array>
-    AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                            nsCSSValueList**& aListTail);
-
   /**
    * The types and values for the values that we extract and animate.
    */
@@ -645,6 +641,10 @@ struct AnimationValue
   // Create an AnimationValue from a transform list.
   static AnimationValue Transform(StyleBackendType aBackendType,
                                   nsCSSValueSharedList& aList);
+
+  static already_AddRefed<nsCSSValue::Array>
+  AppendTransformFunction(nsCSSKeyword aTransformFunction,
+                          nsCSSValueList**& aListTail);
 
   // mGecko and mServo are mutually exclusive: only one or the other should
   // ever be set.
