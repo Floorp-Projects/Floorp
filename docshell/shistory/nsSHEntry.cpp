@@ -959,7 +959,7 @@ nsSHEntry::HasDynamicallyAddedChild(bool* aAdded)
 NS_IMETHODIMP
 nsSHEntry::GetDocshellID(nsID** aID)
 {
-  *aID = static_cast<nsID*>(nsMemory::Clone(&mShared->mDocShellID, sizeof(nsID)));
+  *aID = mShared->mDocShellID.Clone();
   return NS_OK;
 }
 

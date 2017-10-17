@@ -412,7 +412,7 @@ ShimInterfaceInfo::GetName(char** aName)
 NS_IMETHODIMP
 ShimInterfaceInfo::GetInterfaceIID(nsIID** aIID)
 {
-    *aIID = static_cast<nsIID*> (nsMemory::Clone(&mIID, sizeof(mIID)));
+    *aIID = mIID.Clone();
     return NS_OK;
 }
 
