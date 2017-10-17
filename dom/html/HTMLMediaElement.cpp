@@ -3978,7 +3978,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mShutdownObserver(new ShutdownObserver),
     mSourcePointer(nullptr),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
-    mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING, "HTMLMediaElement::mReadyState"),
     mCurrentLoadID(0),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
@@ -4045,9 +4044,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
 
   MOZ_ASSERT(NS_IsMainThread());
   mWatchManager.Watch(mDownloadSuspendedByCache, &HTMLMediaElement::UpdateReadyStateInternal);
-  // Paradoxically, there is a self-edge whereby UpdateReadyStateInternal refuses
-  // to run until mReadyState reaches at least HAVE_METADATA by some other means.
-  mWatchManager.Watch(mReadyState, &HTMLMediaElement::UpdateReadyStateInternal);
 
   mShutdownObserver->Subscribe(this);
   nsIDocShell* docShell = OwnerDoc()->GetDocShell();
@@ -4885,7 +4881,7 @@ HTMLMediaElement::AssertReadyStateIsNothing()
                    "mSourceLoadCandidate=%d "
                    "mIsLoadingFromSourceChildren=%d mPreloadAction=%d "
                    "mSuspendedForPreloadNone=%d error=%d",
-                   int(mReadyState.Ref()),
+                   int(mReadyState),
                    int(mNetworkState),
                    int(mLoadWaitStatus),
                    !!mSourceLoadCandidate,
