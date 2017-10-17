@@ -1,0 +1,838 @@
+talos-chrome:
+    description: "Talos chrome"
+    suite: talos
+    try-name: chromez
+    treeherder-symbol: tc-T(c)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=chromez
+            - --add-option
+            - --webServer,localhost
+
+talos-chrome-stylo-disabled:
+    description: "Talos Stylo disabled chrome"
+    suite: talos
+    try-name: chromez-stylo-disabled
+    treeherder-symbol: tc-Tsd(c)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=chromez-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-dromaeojs:
+    description: "Talos dromaeojs"
+    suite: talos
+    try-name: dromaeojs
+    treeherder-symbol: tc-T(d)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=dromaeojs
+            - --add-option
+            - --webServer,localhost
+
+talos-dromaeojs-stylo-disabled:
+    description: "Talos Stylo disabled dromaeojs"
+    suite: talos
+    try-name: dromaeojs-stylo-disabled
+    treeherder-symbol: tc-Tsd(d)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=dromaeojs-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-g1:
+    description: "Talos g1"
+    suite: talos
+    try-name: g1
+    treeherder-symbol: tc-T(g1)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 7200
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g1
+            - --add-option
+            - --webServer,localhost
+
+talos-g1-stylo-disabled:
+    description: "Talos Stylo disabled g1"
+    suite: talos
+    try-name: g1-stylo-disabled
+    treeherder-symbol: tc-Tsd(g1)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 7200
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g1-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-g2:
+    description: "Talos g2"
+    suite: talos
+    try-name: g2
+    treeherder-symbol: tc-T(g2)
+    virtualization: hardware
+    max-run-time: 7200
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g2
+            - --add-option
+            - --webServer,localhost
+
+talos-g2-stylo-disabled:
+    description: "Talos Stylo disabled g2"
+    suite: talos
+    try-name: g2-stylo-disabled
+    treeherder-symbol: tc-Tsd(g2)
+    virtualization: hardware
+    max-run-time: 7200
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g2-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-g3:
+    description: "Talos g3"
+    suite: talos
+    try-name: g3
+    treeherder-symbol: tc-T(g3)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g3
+            - --add-option
+            - --webServer,localhost
+
+talos-g3-stylo-disabled:
+    description: "Talos Stylo disabled g3"
+    suite: talos
+    try-name: g3-stylo-disabled
+    treeherder-symbol: tc-Tsd(g3)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g3-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-g4:
+    description: "Talos g4"
+    suite: talos
+    try-name: g4
+    treeherder-symbol: tc-T(g4)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g4
+            - --add-option
+            - --webServer,localhost
+
+talos-g4-stylo-disabled:
+    description: "Talos Stylo disabled g4"
+    suite: talos
+    try-name: g4-stylo-disabled
+    treeherder-symbol: tc-Tsd(g4)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g4-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-g5:
+    description: "Talos g5"
+    suite: talos
+    try-name: g5
+    treeherder-symbol: tc-T(g5)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g5
+            - --add-option
+            - --webServer,localhost
+
+talos-g5-stylo-disabled:
+    description: "Talos Stylo disabled g5"
+    suite: talos
+    try-name: g5-stylo-disabled
+    treeherder-symbol: tc-Tsd(g5)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g5-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-h1:
+    description: "Talos h1"
+    suite: talos
+    try-name: h1
+    treeherder-symbol: tc-T(h1)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=h1
+            - --add-option
+            - --webServer,localhost
+
+talos-h2:
+    description: "Talos h2"
+    suite: talos
+    try-name: h2
+    treeherder-symbol: tc-T(h2)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=h2
+            - --add-option
+            - --webServer,localhost
+
+talos-other:
+    description: "Talos other"
+    suite: talos
+    try-name: other
+    treeherder-symbol: tc-T(o)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=other
+            - --add-option
+            - --webServer,localhost
+
+talos-other-stylo-disabled:
+    description: "Talos Stylo disabled other"
+    suite: talos
+    try-name: other-stylo-disabled
+    treeherder-symbol: tc-Tsd(o)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=other-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-perf-reftest:
+    description: "Talos perf-reftest"
+    suite: talos
+    try-name: perf-reftest
+    treeherder-symbol: tc-T(p)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=perf-reftest
+
+talos-perf-reftest-singletons:
+    description: "Talos perf-reftest singletons"
+    suite: talos
+    try-name: perf-reftest-singletons
+    treeherder-symbol: tc-T(ps)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=perf-reftest-singletons
+
+talos-perf-reftest-singletons-stylo-disabled:
+    description: "Talos Stylo disabled perf-reftest singletons"
+    suite: talos
+    try-name: perf-reftest-singletons-stylo-disabled
+    treeherder-symbol: tc-Tsd(ps)
+    virtualization: hardware
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=perf-reftest-singletons-stylo-disabled
+
+talos-perf-reftest-stylo-disabled:
+    description: "Talos Stylo disabled perf-reftest"
+    suite: talos
+    try-name: perf-reftest-stylo-disabled
+    treeherder-symbol: tc-Tsd(p)
+    virtualization: hardware
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=perf-reftest-stylo-disabled
+
+talos-speedometer:
+    description: "Talos speedometer"
+    suite: talos
+    try-name: speedometer
+    treeherder-symbol: tc-T(sp)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=speedometer
+            - --add-option
+            - --webServer,localhost
+
+talos-speedometer-stylo-disabled:
+    description: "Talos Stylo disabled speedometer"
+    suite: talos
+    try-name: speedometer-stylo-disabled
+    treeherder-symbol: tc-Tsd(sp)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=speedometer-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-svgr:
+    description: "Talos svgr"
+    suite: talos
+    try-name: svgr
+    treeherder-symbol: tc-T(s)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=svgr
+            - --add-option
+            - --webServer,localhost
+
+talos-svgr-stylo-disabled:
+    description: "Talos Stylo disabled svgr"
+    suite: talos
+    try-name: svgr-stylo-disabled
+    treeherder-symbol: tc-Tsd(s)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=svgr-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-tp5o:
+    description: "Talos tp5o"
+    suite: talos
+    try-name: tp5o
+    treeherder-symbol: tc-T(tp)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp5o
+            - --add-option
+            - --webServer,localhost
+
+talos-tp5o-stylo-disabled:
+    description: "Talos Stylo disabled tp5o"
+    suite: talos
+    try-name: tp5o-stylo-disabled
+    treeherder-symbol: tc-Tsd(tp)
+    virtualization: hardware
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp5o-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
+talos-tp6:
+    description: "Talos Tp6"
+    suite: talos
+    try-name: tp6
+    treeherder-symbol: tc-T(tp6)
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            macosx.*: ['mozilla-beta', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6
+            - --add-option
+            - --webServer,localhost
+
+talos-tp6-stylo-disabled:
+    description: "Talos Stylo disabled Tp6"
+    suite: talos
+    try-name: tp6-stylo-disabled
+    treeherder-symbol: tc-Tsd(tp6)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'try']
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6-stylo-disabled
+
+talos-tp6-stylo-threads:
+    description: "Talos Stylo sequential Tp6"
+    suite: talos
+    try-name: tp6-stylo-threads
+    treeherder-symbol: tc-Tss(tp6)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            macosx.*: ['mozilla-beta', 'autoland', 'try']
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=tp6-stylo-threads
+
+talos-xperf:
+    description: "Talos xperf"
+    suite: talos
+    try-name: xperf
+    treeherder-symbol: tc-T(x)
+    run-on-projects:
+        by-test-platform:
+            windows7-32.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=xperf
+            - --add-option
+            - --webServer,localhost
+
+talos-xperf-stylo-disabled:
+    description: "Talos Stylo disabled xperf"
+    suite: talos
+    try-name: xperf-stylo-disabled
+    treeherder-symbol: tc-Tsd(x)
+    run-on-projects:
+        by-test-platform:
+            windows7-32.*: ['mozilla-beta', 'mozilla-central', 'try']
+            default: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=xperf-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
