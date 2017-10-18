@@ -567,7 +567,6 @@ class BaseMarionetteTestRunner(object):
             self.prefs.update({
                 'browser.tabs.remote.autostart': True,
                 'browser.tabs.remote.force-enable': True,
-                'extensions.e10sBlocksEnabling': False,
             })
 
         # If no repeat has been set, default to 30 extra runs

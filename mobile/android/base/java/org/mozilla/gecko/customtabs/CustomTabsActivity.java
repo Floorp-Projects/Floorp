@@ -151,6 +151,9 @@ public class CustomTabsActivity extends AppCompatActivity
             Log.w(LOGTAG, "No intend found for custom tab");
             finish();
         }
+
+        sendTelemetry();
+        recordCustomTabUsage(getReferrerHost());
     }
 
     @Override

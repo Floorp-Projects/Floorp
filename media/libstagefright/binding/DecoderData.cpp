@@ -209,11 +209,11 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
     mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig,
         mozilla::FramesToUsecs(preskip, 48000).value());
   } else if (track->codec == mp4parse_codec_AAC) {
-    mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
+    mMimeType = NS_LITERAL_CSTRING("audio/mp4a-latm");
   } else if (track->codec == mp4parse_codec_FLAC) {
-    mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
+    mMimeType = NS_LITERAL_CSTRING("audio/flac");
   } else if (track->codec == mp4parse_codec_MP3) {
-    mMimeType = MEDIA_MIMETYPE_AUDIO_MPEG;
+    mMimeType = NS_LITERAL_CSTRING("audio/mpeg");
   }
 
   mRate = audio->sample_rate;
@@ -247,11 +247,11 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
 {
   UpdateTrackProtectedInfo(*this, video->protected_data);
   if (track->codec == mp4parse_codec_AVC) {
-    mMimeType = MEDIA_MIMETYPE_VIDEO_AVC;
+    mMimeType = NS_LITERAL_CSTRING("video/avc");
   } else if (track->codec == mp4parse_codec_VP9) {
     mMimeType = NS_LITERAL_CSTRING("video/vp9");
   } else if (track->codec == mp4parse_codec_MP4V) {
-    mMimeType = MEDIA_MIMETYPE_VIDEO_MPEG4;
+    mMimeType = NS_LITERAL_CSTRING("video/mp4v-es");
   }
   mTrackId = track->track_id;
   mDuration = TimeUnit::FromMicroseconds(track->duration);

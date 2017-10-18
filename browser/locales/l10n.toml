@@ -120,6 +120,10 @@ locales = [
     l10n = "{l}browser/branding/official/**"
 
 [[paths]]
+    reference = "browser/extensions/formautofill/locales/en-US/**"
+    l10n = "{l}browser/extensions/formautofill/**"
+
+[[paths]]
     reference = "browser/extensions/onboarding/locales/en-US/**"
     l10n = "{l}browser/extensions/onboarding/**"
 

@@ -1,5 +1,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+/* global registerAppManifest */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
@@ -12,7 +14,7 @@ var gFound = false;
 
 const kConsoleListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
-  
+
   observe: function listener_observe(message) {
     if (gMessageExpected.test(message.message))
       gFound = true;
@@ -24,7 +26,7 @@ function run_test() {
     getService(Ci.nsIConsoleService);
   cs.registerListener(kConsoleListener);
 
-  let manifest = do_get_file('components/bug656331.manifest');
+  let manifest = do_get_file("components/bug656331.manifest");
   registerAppManifest(manifest);
 
   do_check_false("{f18fb09b-28b4-4435-bc5b-8027f18df743}" in Components.classesByID);

@@ -55,7 +55,6 @@
   "DOMRequestHelper.jsm": ["DOMRequestIpcHelper"],
   "DownloadCore.jsm": ["Download", "DownloadSource", "DownloadTarget", "DownloadError", "DownloadSaver", "DownloadCopySaver", "DownloadLegacySaver", "DownloadPDFSaver"],
   "DownloadList.jsm": ["DownloadList", "DownloadCombinedList", "DownloadSummary"],
-  "E10SAddonsRollout.jsm": ["isAddonPartOfE10SRollout"],
   "elementslib.js": ["ID", "Link", "XPath", "Selector", "Name", "Anon", "AnonXPath", "Lookup", "_byID", "_byName", "_byAttrib", "_byAnonAttrib"],
   "engines.js": ["EngineManager", "Engine", "SyncEngine", "Tracker", "Store", "Changeset"],
   "enginesync.js": ["EngineSynchronizer"],

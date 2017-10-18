@@ -38,9 +38,9 @@ class VersionControlCommands(object):
         self._context = context
 
     @Command('mercurial-setup', category='devenv',
-        description='Help configure Mercurial for optimal development.')
+             description='Help configure Mercurial for optimal development.')
     @CommandArgument('-u', '--update-only', action='store_true',
-        help='Only update recommended extensions, don\'t run the wizard.')
+                     help='Only update recommended extensions, don\'t run the wizard.')
     def mercurial_setup(self, update_only=False):
         """Ensure Mercurial is optimally configured.
 

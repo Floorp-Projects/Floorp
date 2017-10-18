@@ -11,21 +11,19 @@ var nameArray = [
  "\uD801\uDC0F\uD801\uDC2D\uD801\uDC3B\uD801\uDC2B" // Deseret
 ];
 
-function getTempDir()
-{
+function getTempDir() {
     var dirService = Cc["@mozilla.org/file/directory_service;1"]
-	.getService(Ci.nsIProperties);
+        .getService(Ci.nsIProperties);
     return dirService.get("TmpD", Ci.nsIFile);
 }
 
-function create_file(fileName)
-{
+function create_file(fileName) {
     var outFile = getTempDir();
     outFile.append(fileName);
     outFile.createUnique(outFile.NORMAL_FILE_TYPE, 0o600);
 
     var stream = Cc["@mozilla.org/network/file-output-stream;1"]
-	.createInstance(Ci.nsIFileOutputStream);
+        .createInstance(Ci.nsIFileOutputStream);
     stream.init(outFile, 0x02 | 0x08 | 0x20, 0o600, 0);
     stream.write("foo", 3);
     stream.close();
@@ -35,17 +33,15 @@ function create_file(fileName)
     return outFile;
 }
 
-function test_create(fileName)
-{
+function test_create(fileName) {
     var file1 = create_file(fileName);
     var file2 = create_file(fileName);
     file1.remove(false);
     file2.remove(false);
 }
 
-function run_test()
-{
+function run_test() {
     for (var i = 0; i < nameArray.length; ++i) {
-	test_create(nameArray[i]);
+        test_create(nameArray[i]);
     }
 }

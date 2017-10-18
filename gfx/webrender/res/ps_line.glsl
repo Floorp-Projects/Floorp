@@ -98,19 +98,19 @@ void main(void) {
     }
 
 #ifdef WR_FEATURE_CACHE
-    int text_shadow_address = prim.user_data0;
-    PrimitiveGeometry shadow_geom = fetch_primitive_geometry(text_shadow_address);
-    TextShadow shadow = fetch_text_shadow(text_shadow_address + VECS_PER_PRIM_HEADER);
+    int picture_address = prim.user_data0;
+    PrimitiveGeometry picture_geom = fetch_primitive_geometry(picture_address);
+    Picture pic = fetch_picture(picture_address + VECS_PER_PRIM_HEADER);
 
     vec2 device_origin = prim.task.render_target_origin +
-                         uDevicePixelRatio * (prim.local_rect.p0 + shadow.offset - shadow_geom.local_rect.p0);
+                         uDevicePixelRatio * (prim.local_rect.p0 + pic.offset - picture_geom.local_rect.p0);
     vec2 device_size = uDevicePixelRatio * prim.local_rect.size;
 
     vec2 device_pos = mix(device_origin,
                           device_origin + device_size,
                           aPosition.xy);
 
-    vColor = shadow.color;
+    vColor = pic.color;
     vLocalPos = mix(prim.local_rect.p0,
                     prim.local_rect.p0 + prim.local_rect.size,
                     aPosition.xy);
@@ -190,8 +190,7 @@ void main(void) {
 #endif
 
     // Find the appropriate distance to apply the step over.
-    vec2 fw = fwidth(local_pos);
-    float afwidth = length(fw);
+    float aa_range = compute_aa_range(local_pos);
 
     // Select the x/y coord, depending on which axis this edge is.
     vec2 pos = mix(local_pos.xy, local_pos.yx, vAxisSelect);
@@ -215,9 +214,7 @@ void main(void) {
             // Get the dot alpha
             vec2 dot_relative_pos = vec2(x, pos.y) - vParams.yz;
             float dot_distance = length(dot_relative_pos) - vParams.y;
-            alpha = min(alpha, 1.0 - smoothstep(-0.5 * afwidth,
-                                                0.5 * afwidth,
-                                                dot_distance));
+            alpha = min(alpha, distance_aa(aa_range, dot_distance));
             break;
         }
         case LINE_STYLE_WAVY: {
@@ -251,9 +248,7 @@ void main(void) {
             float d = min(d1, d2);
 
             // Apply AA based on the thickness of the wave.
-            alpha = 1.0 - smoothstep(vParams.x - 0.5 * afwidth,
-                                     vParams.x + 0.5 * afwidth,
-                                     d);
+            alpha = distance_aa(aa_range, d - vParams.x);
             break;
         }
     }

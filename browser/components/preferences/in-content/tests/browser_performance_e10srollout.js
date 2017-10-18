@@ -9,9 +9,8 @@ add_task(async function() {
   ]});
 });
 
-add_task(async function() {
-  Services.prefs.clearUserPref("dom.ipc.processCount");
-  Services.prefs.setIntPref("dom.ipc.processCount.web", DEFAULT_PROCESS_COUNT + 1);
+add_task(async function testPrefsAreDefault() {
+  Services.prefs.setIntPref("dom.ipc.processCount", DEFAULT_PROCESS_COUNT);
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
@@ -21,7 +20,7 @@ add_task(async function() {
   let useRecommendedPerformanceSettings = doc.querySelector("#useRecommendedPerformanceSettings");
 
   is(Services.prefs.getBoolPref("browser.preferences.defaultPerformanceSettings.enabled"), true,
-    "pref value should be true before clicking on checkbox");
+     "pref value should be true before clicking on checkbox");
   ok(useRecommendedPerformanceSettings.checked, "checkbox should be checked before clicking on checkbox");
 
   useRecommendedPerformanceSettings.click();
@@ -35,43 +34,17 @@ add_task(async function() {
 
   let contentProcessCount = doc.querySelector("#contentProcessCount");
   is(contentProcessCount.disabled, false, "process count control should be enabled");
-  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT + 1, "e10s rollout value should be default value");
-  is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT + 1, "selected item should be the default one");
-
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-  Services.prefs.clearUserPref("dom.ipc.processCount");
-  Services.prefs.clearUserPref("dom.ipc.processCount.web");
-  Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
-});
-
-add_task(async function() {
-  Services.prefs.clearUserPref("dom.ipc.processCount");
-  Services.prefs.setIntPref("dom.ipc.processCount.web", DEFAULT_PROCESS_COUNT + 1);
-  Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", false);
-
-  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  is(prefs.selectedPane, "paneGeneral", "General pane was selected");
-
-  let doc = gBrowser.contentDocument;
-  let performanceSettings = doc.querySelector("#performanceSettings");
-  is(performanceSettings.hidden, false, "performance settings section is shown");
-
-  let contentProcessCount = doc.querySelector("#contentProcessCount");
-  is(contentProcessCount.disabled, false, "process count control should be enabled");
-  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "default value should be the current value");
+  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT, "default pref should be default value");
   is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT, "selected item should be the default one");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   Services.prefs.clearUserPref("dom.ipc.processCount");
-  Services.prefs.clearUserPref("dom.ipc.processCount.web");
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
 });
 
-add_task(async function() {
+add_task(async function testPrefsSetByUser() {
   Services.prefs.setIntPref("dom.ipc.processCount", DEFAULT_PROCESS_COUNT + 2);
-  Services.prefs.setIntPref("dom.ipc.processCount.web", DEFAULT_PROCESS_COUNT + 1);
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", false);
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
@@ -97,6 +70,5 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   Services.prefs.clearUserPref("dom.ipc.processCount");
-  Services.prefs.clearUserPref("dom.ipc.processCount.web");
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", true);
 });

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+@keyframes anim {
+  from { background-color: white; }
+  to { background-color: red; }
+}
+</style>
+<body>
+</body>
+<script>
+window.addEventListener('load', () => {
+  const body = document.querySelector('body');
+  body.style.animation = 'anim 100s step-end reverse';
+  body.addEventListener('animationstart', () => {
+    // This MozAfterPaint event corresponds to the white background paint.
+    // (The animation will initially paint the background red since it is playing
+    // a step-end animation in reverse.)
+    window.addEventListener('MozAfterPaint', () => {
+      document.documentElement.classList.remove('reftest-wait');
+    }, {once: true});
+  });
+});
+</script>
+</html>

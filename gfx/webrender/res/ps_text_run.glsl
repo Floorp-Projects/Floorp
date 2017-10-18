@@ -89,10 +89,10 @@ void main(void) {
             modulate_color = alpha * vColor;
             break;
         case MODE_SUBPX_PASS0:
-            modulate_color = vec4(alpha);
+            modulate_color = vec4(alpha) * vColor.a;
             break;
         case MODE_SUBPX_PASS1:
-            modulate_color = vColor;
+            modulate_color = alpha * vColor;
             break;
     }
 

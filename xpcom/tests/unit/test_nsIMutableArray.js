@@ -10,10 +10,9 @@ var CC = Components.Constructor;
 var MutableArray = CC("@mozilla.org/array;1", "nsIMutableArray");
 var SupportsString = CC("@mozilla.org/supports-string;1", "nsISupportsString");
 
-function create_n_element_array(n)
-{
+function create_n_element_array(n) {
   var arr = new MutableArray();
-  for (let i=0; i<n; i++) {
+  for (let i = 0; i < n; i++) {
     let str = new SupportsString();
     str.data = "element " + i;
     arr.appendElement(str);
@@ -21,16 +20,14 @@ function create_n_element_array(n)
   return arr;
 }
 
-function test_appending_null_actually_inserts()
-{
+function test_appending_null_actually_inserts() {
   var arr = new MutableArray();
   do_check_eq(0, arr.length);
   arr.appendElement(null);
   do_check_eq(1, arr.length);
 }
 
-function test_object_gets_appended()
-{
+function test_object_gets_appended() {
   var arr = new MutableArray();
   var str = new SupportsString();
   str.data = "hello";
@@ -40,8 +37,7 @@ function test_object_gets_appended()
   do_check_eq(str, obj);
 }
 
-function test_insert_at_beginning()
-{
+function test_insert_at_beginning() {
   var arr = create_n_element_array(5);
   // just a sanity check
   do_check_eq(5, arr.length);
@@ -52,14 +48,13 @@ function test_insert_at_beginning()
   var obj = arr.queryElementAt(0, Ci.nsISupportsString);
   do_check_eq(str, obj);
   // check the data of all the other objects
-  for (let i=1; i<arr.length; i++) {
-    let obj = arr.queryElementAt(i, Ci.nsISupportsString);
-    do_check_eq("element " + (i-1), obj.data);
+  for (let i = 1; i < arr.length; i++) {
+    let obj2 = arr.queryElementAt(i, Ci.nsISupportsString);
+    do_check_eq("element " + (i - 1), obj2.data);
   }
 }
 
-function test_replace_element()
-{
+function test_replace_element() {
   var arr = create_n_element_array(5);
   // just a sanity check
   do_check_eq(5, arr.length);
@@ -83,8 +78,7 @@ function test_replace_element()
   // AFAIK there's no way to check the empty elements, since you can't QI them.
 }
 
-function test_clear()
-{
+function test_clear() {
   var arr = create_n_element_array(5);
   // just a sanity check
   do_check_eq(5, arr.length);
@@ -92,8 +86,7 @@ function test_clear()
   do_check_eq(0, arr.length);
 }
 
-function test_enumerate()
-{
+function test_enumerate() {
   var arr = create_n_element_array(5);
   do_check_eq(5, arr.length);
   var en = arr.enumerate();

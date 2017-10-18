@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 import subprocess
@@ -23,7 +25,7 @@ class WindowsBootstrapper(BaseBootstrapper):
         'tar',
         'zip',
         'unzip',
-        'mingw-w64-x86_64-toolchain', # TODO: Should be removed when Mercurial is installable from a wheel.
+        'mingw-w64-x86_64-toolchain',  # TODO: Remove when Mercurial is installable from a wheel.
         'mingw-w64-i686-toolchain'
     ]
 
@@ -38,13 +40,14 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     def __init__(self, **kwargs):
         if 'MOZ_WINDOWS_BOOTSTRAP' not in os.environ or os.environ['MOZ_WINDOWS_BOOTSTRAP'] != '1':
-            raise NotImplementedError('Bootstrap support for Windows is under development. For now, use MozillaBuild '
-                                      'to set up a build environment on Windows. If you are testing Windows Bootstrap support, '
+            raise NotImplementedError('Bootstrap support for Windows is under development. For '
+                                      'now use MozillaBuild to set up a build environment on '
+                                      'Windows. If you are testing Windows Bootstrap support, '
                                       'try `export MOZ_WINDOWS_BOOTSTRAP=1`')
         BaseBootstrapper.__init__(self, **kwargs)
         if not self.which('pacman'):
-            raise NotImplementedError('The Windows bootstrapper only works with msys2 with pacman. Get msys2 at '
-                                      'http://msys2.github.io/')
+            raise NotImplementedError('The Windows bootstrapper only works with msys2 with '
+                                      'pacman. Get msys2 at http://msys2.github.io/')
         print('Using an experimental bootstrapper for Windows.')
 
     def which(self, name):

@@ -14,8 +14,7 @@ function run_test() {
 
     try {
       process.kill();
-    }
-    catch (e) { }
+    } catch (e) { }
 
     // We need to ensure that we process any events on the main thread -
     // this allow threads to clean up properly and avoid out of memory

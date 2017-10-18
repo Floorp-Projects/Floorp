@@ -18,9 +18,7 @@
 
     <content sizetopopup="pref">
       <xul:hbox class="autocomplete-textbox-container" flex="1" xbl:inherits="focused">
-        <children includes="image|deck|stack|box">
-          <xul:image class="autocomplete-icon" allowevents="true"/>
-        </children>
+        <children includes="image|deck|stack|box"/>
 
         <xul:hbox anonid="textbox-input-box" class="textbox-input-box" flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
           <children/>

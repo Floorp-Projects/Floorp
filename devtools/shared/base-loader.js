@@ -22,6 +22,7 @@ const { normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_u
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsIResProtocolHandler");
+
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 const { defineLazyGetter } = XPCOMUtils;

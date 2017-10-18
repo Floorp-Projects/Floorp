@@ -658,6 +658,82 @@ const TESTCASES = [
     expectedResult: [DEFAULT_CREDITCARD_RECORD],
     expectedOptionElements: [{"cc-exp": "selected-cc-exp"}],
   },
+  {
+    description: "Fill a cc-exp without cc-exp-month value in the profile",
+    document: `<form><select autocomplete="cc-exp">
+                 <option value="03/17">03/17</option>
+                 <option value="01/25">01/25</option>
+               </select></form>`,
+    profileData: [Object.assign({}, {
+      "guid": "123",
+      "cc-exp-year": 2025,
+    })],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-year": 2025,
+    }],
+    expectedOptionElements: [],
+  },
+  {
+    description: "Fill a cc-exp without cc-exp-year value in the profile",
+    document: `<form><select autocomplete="cc-exp">
+                 <option value="03/17">03/17</option>
+                 <option value="01/25">01/25</option>
+               </select></form>`,
+    profileData: [Object.assign({}, {
+      "guid": "123",
+      "cc-exp-month": 1,
+    })],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+    }],
+    expectedOptionElements: [],
+  },
+  {
+    description: "Fill a cc-exp* without cc-exp-month value in the profile",
+    document: `<form>
+               <select autocomplete="cc-exp-month">
+                 <option value="03">03</option>
+                 <option value="01">01</option>
+               </select>
+               <select autocomplete="cc-exp-year">
+                 <option value="17">2017</option>
+                 <option value="25">2025</option>
+               </select>
+               </form>`,
+    profileData: [Object.assign({}, {
+      "guid": "123",
+      "cc-exp-year": 2025,
+    })],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-year": 2025,
+    }],
+    expectedOptionElements: [],
+  },
+  {
+    description: "Fill a cc-exp* without cc-exp-year value in the profile",
+    document: `<form>
+               <select autocomplete="cc-exp-month">
+                 <option value="03">03</option>
+                 <option value="01">01</option>
+               </select>
+               <select autocomplete="cc-exp-year">
+                 <option value="17">2017</option>
+                 <option value="25">2025</option>
+               </select>
+               </form>`,
+    profileData: [Object.assign({}, {
+      "guid": "123",
+      "cc-exp-month": 1,
+    })],
+    expectedResult: [{
+      "guid": "123",
+      "cc-exp-month": 1,
+    }],
+    expectedOptionElements: [],
+  },
 ];
 
 for (let testcase of TESTCASES) {

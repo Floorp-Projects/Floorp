@@ -15,8 +15,7 @@ const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-function run_test()
-{
+function run_test() {
   // This test makes sense only on Windows, so skip it on other platforms
   if ("nsILocalFileWin" in Ci
    && do_get_cwd() instanceof Ci.nsILocalFileWin) {
@@ -39,51 +38,46 @@ function run_test()
   }
 }
 
-function test_create_noargs(tempDir)
-{
+function test_create_noargs(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("shouldNeverExist.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
-  try
-  {
+  try {
     win.setShortcut();
     do_throw("Creating a shortcut with no args (no target) should throw");
-  }
-  catch(e if (e instanceof Ci.nsIException
-             && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST))
-  {
-
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException
+          && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+      throw e;
+    }
   }
 }
 
-function test_create_notarget(tempDir)
-{
+function test_create_notarget(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("shouldNeverExist2.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   let win = shortcutFile.QueryInterface(Ci.nsILocalFileWin);
 
-  try
-  {
+  try {
     win.setShortcut(null,
                     do_get_cwd(),
                     "arg1 arg2",
                     "Shortcut with no target");
     do_throw("Creating a shortcut with no target should throw");
-  }
-  catch(e if (e instanceof Ci.nsIException
-             && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST))
-  {
-
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException
+          && e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+      throw e;
+    }
   }
 }
 
-function test_create_targetonly(tempDir)
-{
+function test_create_targetonly(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -100,8 +94,7 @@ function test_create_targetonly(tempDir)
   do_check_true(shortcutTarget.equals(targetFile));
 }
 
-function test_create_normal(tempDir)
-{
+function test_create_normal(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -121,8 +114,7 @@ function test_create_normal(tempDir)
   do_check_true(shortcutTarget.equals(targetFile))
 }
 
-function test_create_unicode(tempDir)
-{
+function test_create_unicode(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -142,8 +134,7 @@ function test_create_unicode(tempDir)
   do_check_true(shortcutTarget.equals(targetFile))
 }
 
-function test_update_noargs(tempDir)
-{
+function test_update_noargs(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -165,8 +156,7 @@ function test_update_noargs(tempDir)
   do_check_true(shortcutTarget.equals(targetFile))
 }
 
-function test_update_notarget(tempDir)
-{
+function test_update_notarget(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -191,8 +181,7 @@ function test_update_notarget(tempDir)
   do_check_true(shortcutTarget.equals(targetFile))
 }
 
-function test_update_targetonly(tempDir)
-{
+function test_update_targetonly(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -218,8 +207,7 @@ function test_update_targetonly(tempDir)
   do_check_true(shortcutTarget.equals(newTargetFile))
 }
 
-function test_update_normal(tempDir)
-{
+function test_update_normal(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -248,8 +236,7 @@ function test_update_normal(tempDir)
   do_check_true(shortcutTarget.equals(newTargetFile))
 }
 
-function test_update_unicode(tempDir)
-{
+function test_update_unicode(tempDir) {
   let shortcutFile = tempDir.clone();
   shortcutFile.append("createdShortcut.lnk");
   shortcutFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);

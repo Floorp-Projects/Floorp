@@ -341,15 +341,11 @@ user_pref("media.eme.chromium-api.video-shmems", 0);
 user_pref("media.autoplay.enabled", true);
 
 // Don't use auto-enabled e10s
-user_pref("browser.tabs.remote.autostart.1", false);
-user_pref("browser.tabs.remote.autostart.2", false);
+user_pref("browser.tabs.remote.autostart", false);
 // Don't show a delay when hiding the audio indicator during tests
 user_pref("browser.tabs.delayHidingAudioPlayingIconMS", 0);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
-
-// Don't block add-ons for e10s
-user_pref("extensions.e10sBlocksEnabling", false);
 
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).

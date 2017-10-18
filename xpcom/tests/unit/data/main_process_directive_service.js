@@ -13,7 +13,7 @@ TestProcessDirective.prototype = {
 
   type: Components.interfaces.nsISupportsString.TYPE_STRING,
   data: "main process",
-  toString: function() {
+  toString() {
     return this.data;
   }
 };

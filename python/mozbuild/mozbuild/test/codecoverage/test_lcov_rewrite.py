@@ -270,10 +270,6 @@ class TestUrlFinder(unittest.TestCase):
                     'path2',
                     False
                 ],
-                'dist/bin/browser/features/e10srollout@mozilla.org/bootstrap.js': [
-                    'path3',
-                    False
-                ],
                 'dist/bin/browser/features/firefox@getpocket.com/bootstrap.js': [
                     'path4',
                     False
@@ -298,7 +294,6 @@ class TestUrlFinder(unittest.TestCase):
         paths = [
             ('jar:file:///home/worker/workspace/build/application/' + app_name + '/' + omnijar_name + '!/components/MainProcessSingleton.js', 'path1'),
             ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/' + omnijar_name + '!/components/nsSessionStartup.js', 'path2'),
-            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/e10srollout@mozilla.org.xpi!/bootstrap.js', 'path3'),
             ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/firefox@getpocket.com.xpi!/bootstrap.js', 'path4'),
             ('jar:file:///tmp/tmpMdo5gV.mozrunner/extensions/workerbootstrap-test@mozilla.org.xpi!/bootstrap.js', 'path5'),
         ]

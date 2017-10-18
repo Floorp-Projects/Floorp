@@ -19,7 +19,9 @@ const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["element"];
 
-const XMLNS = "http://www.w3.org/1999/xhtml";
+const SVGNS = "http://www.w3.org/2000/svg";
+const XBLNS = "http://www.mozilla.org/xbl";
+const XHTMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /** XUL elements that support checked property. */
@@ -740,10 +742,7 @@ element.isSelected = function(el) {
       return el.selected;
     }
 
-  // TODO(ato): Use element.isDOMElement when bug 1400256 lands
-  } else if (typeof el == "object" &&
-      "nodeType" in el &&
-      el.nodeType == el.ELEMENT_NODE) {
+  } else if (element.isDOMElement(el)) {
     if (el.localName == "input" && ["checkbox", "radio"].includes(el.type)) {
       return el.checked;
     } else if (el.localName == "option") {
@@ -1050,8 +1049,89 @@ element.scrollIntoView = function(el) {
   }
 };
 
-element.isXULElement = function(el) {
-  return el.namespaceURI === XULNS;
+/**
+ * Ascertains whether <var>node</var> is a DOM-, SVG-, or XUL element.
+ *
+ * @param {*} node
+ *     Element thought to be an <code>Element</code>,
+ *     <code>SVGElement</code>, or <code>XULElement</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is an element, false otherwise.
+ */
+element.isElement = function(node) {
+  return element.isDOMElement(node) ||
+      element.isSVGElement(node) ||
+      element.isXULElement(node);
+};
+
+/**
+ * Ascertains whether <var>node</var> is a DOM element.
+ *
+ * @param {*} node
+ *     Element thought to be an <code>Element</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is a DOM element, false otherwise.
+ */
+element.isDOMElement = function(node) {
+  return typeof node == "object" &&
+      node !== null &&
+      node.nodeType === node.ELEMENT_NODE &&
+      node.namespaceURI === XHTMLNS;
+};
+
+/**
+ * Ascertains whether <var>node</var> is an SVG element.
+ *
+ * @param {*} node
+ *     Object thought to be an <code>SVGElement</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is an SVG element, false otherwise.
+ */
+element.isSVGElement = function(node) {
+  return typeof node == "object" &&
+      node !== null &&
+      node.nodeType === node.ELEMENT_NODE &&
+      node.namespaceURI === SVGNS;
+};
+
+/**
+ * Ascertains whether <var>el</var> is a XUL- or XBL element.
+ *
+ * @param {*} node
+ *     Element thought to be a XUL- or XBL element.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is a XULElement or XBLElement,
+ *     false otherwise.
+ */
+element.isXULElement = function(node) {
+  return typeof node == "object" &&
+      node !== null &&
+      node.nodeType === node.ELEMENT_NODE &&
+      [XBLNS, XULNS].includes(node.namespaceURI);
+};
+
+/**
+ * Ascertains whether <var>node</var> is a <code>WindowProxy</code>.
+ *
+ * @param {*} node
+ *     Node thought to be a <code>WindowProxy</code>.
+ *
+ * @return {boolean}
+ *     True if <var>node</var> is a DOM window.
+ */
+element.isDOMWindow = function(node) {
+  // TODO(ato): This should use Object.prototype.toString.call(node)
+  // but it's not clear how to write a good xpcshell test for that,
+  // seeing as we stub out a WindowProxy.
+  return typeof node == "object" &&
+      node !== null &&
+      typeof node.toString == "function" &&
+      node.toString() == "[object Window]" &&
+      node.self === node;
 };
 
 const boolEls = {
@@ -1097,7 +1177,7 @@ const boolEls = {
  *     True if the attribute is boolean, false otherwise.
  */
 element.isBooleanAttribute = function(el, attr) {
-  if (el.namespaceURI !== XMLNS) {
+  if (!element.isDOMElement(el)) {
     return false;
   }
 

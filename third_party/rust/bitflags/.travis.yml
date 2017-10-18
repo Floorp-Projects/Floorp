@@ -3,6 +3,8 @@ os:
   - osx
 language: rust
 rust:
+  # This version is tested to avoid unintentional bumping of the minimum supported Rust version
+  - 1.20.0
   - stable
   - beta
   - nightly

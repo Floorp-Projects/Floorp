@@ -70,7 +70,7 @@ function prefillAlertInfo() {
                                             1));
         let doNotDisturbMenuItem = document.getElementById("doNotDisturbMenuItem");
         doNotDisturbMenuItem.setAttribute("label",
-          ALERT_BUNDLE.formatStringFromName("doNotDisturb.label",
+          ALERT_BUNDLE.formatStringFromName("pauseNotifications.label",
                                             [BRAND_NAME],
                                             1));
         let disableForOrigin = document.getElementById("disableForOriginMenuItem");

@@ -29,7 +29,7 @@ function test_binary_streams() {
   const LargeNum = Math.pow(2, 18) + Math.pow(2, 12) + 1;
   const HugeNum = Math.pow(2, 62);
   const HelloStr = "Hello World";
-  const HelloArray = Array.map(HelloStr, function(c) {return c.charCodeAt(0)});
+  const HelloArray = Array.map(HelloStr, function(c) { return c.charCodeAt(0) });
   var countObj = {};
   var msg = {};
   var buffer = new ArrayBuffer(HelloArray.length);
@@ -122,7 +122,7 @@ function test_binary_streams() {
   do_check_eq(typeof msg, typeof HelloArray);
   do_check_eq(msg.toSource(), HelloArray.toSource());
   do_check_eq(is.available(), 0);
-  
+
   // Test for invalid actions.
   os.close();
   is.close();
@@ -130,24 +130,33 @@ function test_binary_streams() {
   try {
     os.writeBoolean(false);
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+      throw e;
+    }
     // do nothing
   }
 
   try {
     is.available();
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_BASE_STREAM_CLOSED)) {
+      throw e;
+    }
     // do nothing
   }
 
   try {
     is.readBoolean();
     do_throw("Not reached!");
-  } catch (e if (e instanceof Ci.nsIException &&
-                 e.result == Cr.NS_ERROR_FAILURE)) {
+  } catch (e) {
+    if (!(e instanceof Ci.nsIException &&
+          e.result == Cr.NS_ERROR_FAILURE)) {
+      throw e;
+    }
     // do nothing
   }
 }

@@ -100,6 +100,10 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
   if (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES) {
     dynamicPaths["devtools/client/shared/vendor/react"] =
       "resource://devtools/client/shared/vendor/react-dev";
+    dynamicPaths["devtools/client/shared/vendor/react-dom"] =
+      "resource://devtools/client/shared/vendor/react-dom-dev";
+    dynamicPaths["devtools/client/shared/vendor/react-dom-server"] =
+      "resource://devtools/client/shared/vendor/react-dom-server-dev";
   }
 
   const opts = {

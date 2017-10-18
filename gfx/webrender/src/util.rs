@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ComplexClipRegion, DeviceIntRect, DevicePoint, DeviceRect, DeviceSize};
-use api::{LayerRect, LayerToWorldTransform, LayoutRect, WorldPoint3D};
+use api::{BorderRadius, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{DevicePoint, DeviceRect, DeviceSize, LayerRect, LayerToWorldTransform, LayoutRect};
+use api::WorldPoint3D;
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
 use euclid::TypedTransform3D;
 use num_traits::Zero;
 use std::f32::consts::FRAC_1_SQRT_2;
+use std::i32;
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
 const NEARLY_ZERO: f32 = 1.0 / 4096.0;
@@ -207,13 +209,6 @@ pub struct TransformedRect {
     pub kind: TransformedRectKind,
 }
 
-// Having an unlimited bounding box is fine up until we try
-// to cast it to `i32`, where we get `-2147483648` for any
-// values larger than or equal to 2^31.
-//Note: clamping to i32::MIN and i32::MAX is not a solution,
-// with explanation left as an exercise for the reader.
-const MAX_COORD: f32 = 1.0e9;
-
 impl TransformedRect {
     pub fn new(
         rect: &LayerRect,
@@ -249,10 +244,7 @@ impl TransformedRect {
         let inner_min_dp = (DevicePoint::new(xs[1], ys[1]) * device_pixel_ratio).ceil();
         let inner_max_dp = (DevicePoint::new(xs[2], ys[2]) * device_pixel_ratio).floor();
 
-        let max_rect = DeviceRect::new(
-            DevicePoint::new(-MAX_COORD, -MAX_COORD),
-            DeviceSize::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
-        );
+        let max_rect = DeviceRect::max_rect();
         let bounding_rect = DeviceRect::new(outer_min_dp, (outer_max_dp - outer_min_dp).to_size())
             .intersection(&max_rect)
             .unwrap_or(max_rect)
@@ -360,5 +352,35 @@ pub mod test {
         let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(PI / 3.0));
         // rotation by 60 degrees would imply scaling of X component by a factor of 2
         assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
+    }
+}
+
+pub trait MaxRect {
+    fn max_rect() -> Self;
+}
+
+impl MaxRect for DeviceIntRect {
+    fn max_rect() -> Self {
+        DeviceIntRect::new(
+            DeviceIntPoint::new(i32::MIN / 2, i32::MIN / 2),
+            DeviceIntSize::new(i32::MAX, i32::MAX),
+        )
+    }
+}
+
+impl MaxRect for DeviceRect {
+    fn max_rect() -> Self {
+        // Having an unlimited bounding box is fine up until we try
+        // to cast it to `i32`, where we get `-2147483648` for any
+        // values larger than or equal to 2^31.
+        //
+        // Note: clamping to i32::MIN and i32::MAX is not a solution,
+        // with explanation left as an exercise for the reader.
+        const MAX_COORD: f32 = 1.0e9;
+
+        DeviceRect::new(
+            DevicePoint::new(-MAX_COORD, -MAX_COORD),
+            DeviceSize::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
+        )
     }
 }

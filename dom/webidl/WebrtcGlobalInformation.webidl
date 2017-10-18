@@ -36,4 +36,6 @@ interface WebrtcGlobalInformation {
 
   // WebRTC AEC debugging enable
   static attribute boolean aecDebug;
+
+  static readonly attribute DOMString aecDebugLogDir;
 };

@@ -2731,17 +2731,23 @@ pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200)
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
 // 3: Zoom in or out.
+// 4: Treat vertical wheel as horizontal scroll
+//      This treats vertical wheel operation (i.e., deltaY) as horizontal
+//      scroll.  deltaX and deltaZ are always ignored.  So, only
+//      "delta_multiplier_y" pref affects the scroll speed.
 pref("mousewheel.default.action", 1);
 pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_control.action", 3);
 pref("mousewheel.with_meta.action", 1);  // command key on Mac
-pref("mousewheel.with_shift.action", 1);
+pref("mousewheel.with_shift.action", 4);
 pref("mousewheel.with_win.action", 1);
 
 // mousewheel.*.action.override_x will override the action
 // when the mouse wheel is rotated along the x direction.
 // -1: Don't override the action.
 // 0 to 3: Override the action with the specified value.
+// Note that 4 isn't available because it doesn't make sense to apply the
+// default action only for y direction to this pref.
 pref("mousewheel.default.action.override_x", -1);
 pref("mousewheel.with_alt.action.override_x", -1);
 pref("mousewheel.with_control.action.override_x", -1);
@@ -3323,13 +3329,8 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 // Force the accelerated direct path for a subset of Flash wmode values
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 
-// Enable multi by default for Nightly and DevEdition only.
-// For Beta and Release builds, multi is controlled by the e10srollout addon.
-#if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
-pref("dom.ipc.processCount", 1);
-#else
+// Enable multi by default.
 pref("dom.ipc.processCount", 4);
-#endif
 
 // Default to allow only one file:// URL content process.
 pref("dom.ipc.processCount.file", 1);

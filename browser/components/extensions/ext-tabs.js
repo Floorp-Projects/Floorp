@@ -346,6 +346,10 @@ this.tabs = class extends ExtensionAPI {
               if (!context.checkLoadURL(url, {dontReportErrors: true})) {
                 return Promise.reject({message: `Illegal URL: ${url}`});
               }
+
+              if (createProperties.openInReaderMode) {
+                url = `about:reader?url=${encodeURIComponent(url)}`;
+              }
             }
 
             if (createProperties.cookieStoreId && !extension.hasPermission("cookies")) {

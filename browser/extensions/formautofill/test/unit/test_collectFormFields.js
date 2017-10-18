@@ -159,10 +159,18 @@ const TESTCASES = [
     ],
   },
   {
-    description: "It's an invalid address and credit form.",
+    description: "An invalid address form due to less than 3 fields.",
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <input autocomplete="shipping address-level2">
+               </form>`,
+    addressFieldDetails: [],
+    creditCardFieldDetails: [],
+    validFieldDetails: [],
+  },
+  {
+    description: "An invalid credit card form due to omitted cc-number.",
+    document: `<form>
                <input id="cc-name" autocomplete="cc-name">
                <input id="cc-exp-month" autocomplete="cc-exp-month">
                <input id="cc-exp-year" autocomplete="cc-exp-year">
@@ -170,6 +178,73 @@ const TESTCASES = [
     addressFieldDetails: [],
     creditCardFieldDetails: [],
     validFieldDetails: [],
+  },
+  {
+    description: "An invalid credit card form due to non-autocomplete-attr cc-number and omitted cc-exp-*.",
+    document: `<form>
+               <input id="cc-name" autocomplete="cc-name">
+               <input id="cc-number" name="card-number">
+               </form>`,
+    addressFieldDetails: [],
+    creditCardFieldDetails: [],
+    validFieldDetails: [],
+  },
+  {
+    description: "A valid credit card form with autocomplete-attr cc-number only.",
+    document: `<form>
+               <input id="cc-number" autocomplete="cc-number">
+               </form>`,
+    addressFieldDetails: [],
+    creditCardFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+    ],
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+    ],
+  },
+  {
+    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-exp.",
+    document: `<form>
+               <input id="cc-number" name="card-number">
+               <input id="cc-exp" autocomplete="cc-exp">
+               </form>`,
+    addressFieldDetails: [],
+    creditCardFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+    ],
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+    ],
+    ids: [
+      "cc-number",
+      "cc-exp",
+    ],
+  },
+  {
+    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-exp-month/cc-exp-year.",
+    document: `<form>
+               <input id="cc-number" name="card-number">
+               <input id="cc-exp-month" autocomplete="cc-exp-month">
+               <input id="cc-exp-year" autocomplete="cc-exp-year">
+               </form>`,
+    addressFieldDetails: [],
+    creditCardFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+    ],
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+    ],
+    ids: [
+      "cc-number",
+      "cc-exp-month",
+      "cc-exp-year",
+    ],
   },
   {
     description: "Three sets of adjacent phone number fields",
