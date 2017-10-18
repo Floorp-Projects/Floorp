@@ -946,21 +946,6 @@ Activation::isProfiling() const
     return asJit()->isProfiling();
 }
 
-void
-Activation::registerProfiling()
-{
-    MOZ_ASSERT(isProfiling());
-    cx_->profilingActivation_ = this;
-}
-
-void
-Activation::unregisterProfiling()
-{
-    MOZ_ASSERT(isProfiling());
-    MOZ_ASSERT(cx_->profilingActivation_ == this);
-    cx_->profilingActivation_ = prevProfiling_;
-}
-
 Activation*
 Activation::mostRecentProfiling()
 {
