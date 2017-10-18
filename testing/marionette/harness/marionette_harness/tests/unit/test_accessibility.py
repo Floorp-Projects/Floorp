@@ -187,9 +187,11 @@ class TestAccessibility(MarionetteTestCase):
         self.run_element_test(self.aria_disabled_elementIDs,
                               lambda element: self.assertRaises(ElementNotAccessibleException,
                                                                 element.click))
-        self.run_element_test(self.pointer_events_none_elementIDs,
-                              lambda element: self.assertRaises(ElementNotAccessibleException,
-                                                                element.click))
+        # To be removed with bug 1405967
+        if not self.marionette.session_capabilities["moz:webdriverClick"]:
+            self.run_element_test(self.pointer_events_none_elementIDs,
+                                  lambda element: self.assertRaises(ElementNotAccessibleException,
+                                                                    element.click))
 
         self.setup_accessibility(False, False)
         self.run_element_test(self.aria_disabled_elementIDs,
@@ -198,8 +200,10 @@ class TestAccessibility(MarionetteTestCase):
                               lambda element: element.is_enabled())
         self.run_element_test(self.aria_disabled_elementIDs,
                               lambda element: element.click())
-        self.run_element_test(self.pointer_events_none_elementIDs,
-                              lambda element: element.click())
+        # To be removed with bug 1405967
+        if not self.marionette.session_capabilities["moz:webdriverClick"]:
+            self.run_element_test(self.pointer_events_none_elementIDs,
+                                  lambda element: element.click())
 
     def test_element_is_enabled_to_accessibility(self):
         self.setup_accessibility()
