@@ -49,6 +49,10 @@
       "newTabPageOverride": {
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden new tab page. Read-only."
+      },
+      "webNotificationsDisabled": {
+        "$ref": "types.Setting",
+        "description": "Disables webAPI notifications."
       }
     }
   }

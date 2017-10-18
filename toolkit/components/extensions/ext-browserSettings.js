@@ -18,6 +18,8 @@ const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 const URL_STORE_TYPE = "url_overrides";
 const NEW_TAB_OVERRIDE_SETTING = "newTabURL";
 
+const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
+
 const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) => {
   return {
     async get(details) {
@@ -82,6 +84,16 @@ ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("webNotificationsDisabled", {
+  prefNames: [
+    "permissions.default.desktop-notification",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value ? PERM_DENY_ACTION : undefined};
+  },
+});
+
 this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -114,6 +126,14 @@ this.browserSettings = class extends ExtensionAPI {
           () => {
             return aboutNewTabService.newTabURL;
           }, URL_STORE_TYPE, true),
+        webNotificationsDisabled: getSettingsAPI(extension,
+          "webNotificationsDisabled",
+          () => {
+            let prefValue =
+              Services.prefs.getIntPref(
+                "permissions.default.desktop-notification", null);
+            return prefValue === PERM_DENY_ACTION;
+          }),
       },
     };
   }
