@@ -5,4 +5,3 @@ contract @mozilla.org/satchel/inputlist-autocomplete;1 {bf1e01d0-953e-11df-981c-
 component {3a0012eb-007f-4bb8-aa81-a07385f77a25} FormHistoryStartup.js
 contract @mozilla.org/satchel/form-history-startup;1 {3a0012eb-007f-4bb8-aa81-a07385f77a25}
 category profile-after-change formHistoryStartup @mozilla.org/satchel/form-history-startup;1
-category idle-daily formHistoryStartup @mozilla.org/satchel/form-history-startup;1
