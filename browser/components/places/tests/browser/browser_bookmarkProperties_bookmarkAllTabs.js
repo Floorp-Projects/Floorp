@@ -29,7 +29,7 @@ add_task(async function() {
       let folderName = dialog.document.getElementById("stringBundle").getString("bookmarkAllTabsDefault");
       Assert.equal(namepicker.value, folderName, "Name field is correct.");
 
-      let promiseTitleChange = promiseBookmarksNotification(
+      let promiseTitleChange = PlacesTestUtils.waitForNotification(
         "onItemChanged", (id, prop, isAnno, val) => prop == "title" && val == "folder");
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
       await promiseTitleChange;

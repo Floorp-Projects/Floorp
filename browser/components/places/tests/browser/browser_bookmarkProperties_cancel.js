@@ -99,7 +99,7 @@ add_task(async function test_cancel_with_changes() {
         await BrowserTestUtils.waitForCondition(() => !acceptButton.disabled,
           "The accept button should be enabled");
 
-        let promiseTitleChangeNotification = promiseBookmarksNotification(
+        let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
           "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "n");
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin);
