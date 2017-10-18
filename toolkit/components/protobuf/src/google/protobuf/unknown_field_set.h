@@ -42,6 +42,8 @@
 #include <string>
 #include <vector>
 #include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/logging.h>
+#include <google/protobuf/generated_message_util.h>
 
 namespace google {
 namespace protobuf {
@@ -51,6 +53,7 @@ namespace protobuf {
     class ZeroCopyInputStream;      // zero_copy_stream.h
   }
   namespace internal {
+    class InternalMetadataWithArena;  // metadata.h
     class WireFormat;               // wire_format.h
     class MessageSetFieldSkipperUsingCord;
                                     // extension_set_heavy.cc
@@ -88,16 +91,34 @@ class LIBPROTOBUF_EXPORT UnknownFieldSet {
   // Merge the contents of some other UnknownFieldSet with this one.
   void MergeFrom(const UnknownFieldSet& other);
 
+  // Similar to above, but this function will destroy the contents of other.
+  void MergeFromAndDestroy(UnknownFieldSet* other);
+
+  // Merge the contents an UnknownFieldSet with the UnknownFieldSet in
+  // *metadata, if there is one.  If *metadata doesn't have an UnknownFieldSet
+  // then add one to it and make it be a copy of the first arg.
+  static void MergeToInternalMetdata(
+      const UnknownFieldSet& other,
+      internal::InternalMetadataWithArena* metadata);
+
   // Swaps the contents of some other UnknownFieldSet with this one.
   inline void Swap(UnknownFieldSet* x);
 
   // Computes (an estimate of) the total number of bytes currently used for
   // storing the unknown fields in memory. Does NOT include
   // sizeof(*this) in the calculation.
-  int SpaceUsedExcludingSelf() const;
+  size_t SpaceUsedExcludingSelfLong() const;
+
+  int SpaceUsedExcludingSelf() const {
+    return internal::ToIntSize(SpaceUsedExcludingSelfLong());
+  }
 
   // Version of SpaceUsed() including sizeof(*this).
-  int SpaceUsed() const;
+  size_t SpaceUsedLong() const;
+
+  int SpaceUsed() const {
+    return internal::ToIntSize(SpaceUsedLong());
+  }
 
   // Returns the number of fields present in the UnknownFieldSet.
   inline int field_count() const;
@@ -141,12 +162,22 @@ class LIBPROTOBUF_EXPORT UnknownFieldSet {
     return ParseFromArray(data.data(), static_cast<int>(data.size()));
   }
 
+  static const UnknownFieldSet* default_instance();
  private:
-
+  // For InternalMergeFrom
+  friend class UnknownField;
+  // Merges from other UnknownFieldSet. This method assumes, that this object
+  // is newly created and has fields_ == NULL;
+  void InternalMergeFrom(const UnknownFieldSet& other);
   void ClearFallback();
 
-  vector<UnknownField>* fields_;
-
+  // fields_ is either NULL, or a pointer to a vector that is *non-empty*. We
+  // never hold the empty vector because we want the 'do we have any unknown
+  // fields' check to be fast, and avoid a cache miss: the UFS instance gets
+  // embedded in the message object, so 'fields_ != NULL' tests a member
+  // variable hot in the cache, without the need to go touch a vector somewhere
+  // else in memory.
+  std::vector<UnknownField>* fields_;
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(UnknownFieldSet);
 };
 
@@ -161,7 +192,7 @@ class LIBPROTOBUF_EXPORT UnknownField {
     TYPE_GROUP
   };
 
-  // The field's tag number, as seen on the wire.
+  // The field's field number, as seen on the wire.
   inline int number() const;
 
   // The field type.
@@ -190,20 +221,26 @@ class LIBPROTOBUF_EXPORT UnknownField {
   void SerializeLengthDelimitedNoTag(io::CodedOutputStream* output) const;
   uint8* SerializeLengthDelimitedNoTagToArray(uint8* target) const;
 
-  inline int GetLengthDelimitedSize() const;
+  inline size_t GetLengthDelimitedSize() const;
 
- private:
-  friend class UnknownFieldSet;
 
   // If this UnknownField contains a pointer, delete it.
   void Delete();
 
+  // Reset all the underlying pointers to NULL. A special function to be only
+  // used while merging from a temporary UFS.
+  void Reset();
+
   // Make a deep copy of any pointers in this UnknownField.
-  void DeepCopy();
+  void DeepCopy(const UnknownField& other);
 
   // Set the wire type of this UnknownField. Should only be used when this
   // UnknownField is being created.
   inline void SetType(Type type);
+
+  union LengthDelimited {
+    string* string_value_;
+  };
 
   uint32 number_;
   uint32 type_;
@@ -211,15 +248,19 @@ class LIBPROTOBUF_EXPORT UnknownField {
     uint64 varint_;
     uint32 fixed32_;
     uint64 fixed64_;
-    mutable union {
-      string* string_value_;
-    } length_delimited_;
+    mutable union LengthDelimited length_delimited_;
     UnknownFieldSet* group_;
-  };
+  } data_;
 };
 
 // ===================================================================
 // inline implementations
+
+inline UnknownFieldSet::UnknownFieldSet() : fields_(NULL) {}
+
+inline UnknownFieldSet::~UnknownFieldSet() { Clear(); }
+
+inline void UnknownFieldSet::ClearAndFreeMemory() { Clear(); }
 
 inline void UnknownFieldSet::Clear() {
   if (fields_ != NULL) {
@@ -228,7 +269,8 @@ inline void UnknownFieldSet::Clear() {
 }
 
 inline bool UnknownFieldSet::empty() const {
-  return fields_ == NULL || fields_->empty();
+  // Invariant: fields_ is never empty if present.
+  return !fields_;
 }
 
 inline void UnknownFieldSet::Swap(UnknownFieldSet* x) {
@@ -236,13 +278,14 @@ inline void UnknownFieldSet::Swap(UnknownFieldSet* x) {
 }
 
 inline int UnknownFieldSet::field_count() const {
-  return (fields_ == NULL) ? 0 : static_cast<int>(fields_->size());
+  return fields_ ? static_cast<int>(fields_->size()) : 0;
 }
 inline const UnknownField& UnknownFieldSet::field(int index) const {
-  return (*fields_)[index];
+  GOOGLE_DCHECK(fields_ != NULL);
+  return (*fields_)[static_cast<size_t>(index)];
 }
 inline UnknownField* UnknownFieldSet::mutable_field(int index) {
-  return &(*fields_)[index];
+  return &(*fields_)[static_cast<size_t>(index)];
 }
 
 inline void UnknownFieldSet::AddLengthDelimited(
@@ -251,60 +294,62 @@ inline void UnknownFieldSet::AddLengthDelimited(
 }
 
 
-inline int UnknownField::number() const { return number_; }
+
+
+inline int UnknownField::number() const { return static_cast<int>(number_); }
 inline UnknownField::Type UnknownField::type() const {
   return static_cast<Type>(type_);
 }
 
 inline uint64 UnknownField::varint() const {
   assert(type() == TYPE_VARINT);
-  return varint_;
+  return data_.varint_;
 }
 inline uint32 UnknownField::fixed32() const {
   assert(type() == TYPE_FIXED32);
-  return fixed32_;
+  return data_.fixed32_;
 }
 inline uint64 UnknownField::fixed64() const {
   assert(type() == TYPE_FIXED64);
-  return fixed64_;
+  return data_.fixed64_;
 }
 inline const string& UnknownField::length_delimited() const {
   assert(type() == TYPE_LENGTH_DELIMITED);
-  return *length_delimited_.string_value_;
+  return *data_.length_delimited_.string_value_;
 }
 inline const UnknownFieldSet& UnknownField::group() const {
   assert(type() == TYPE_GROUP);
-  return *group_;
+  return *data_.group_;
 }
 
 inline void UnknownField::set_varint(uint64 value) {
   assert(type() == TYPE_VARINT);
-  varint_ = value;
+  data_.varint_ = value;
 }
 inline void UnknownField::set_fixed32(uint32 value) {
   assert(type() == TYPE_FIXED32);
-  fixed32_ = value;
+  data_.fixed32_ = value;
 }
 inline void UnknownField::set_fixed64(uint64 value) {
   assert(type() == TYPE_FIXED64);
-  fixed64_ = value;
+  data_.fixed64_ = value;
 }
 inline void UnknownField::set_length_delimited(const string& value) {
   assert(type() == TYPE_LENGTH_DELIMITED);
-  length_delimited_.string_value_->assign(value);
+  data_.length_delimited_.string_value_->assign(value);
 }
 inline string* UnknownField::mutable_length_delimited() {
   assert(type() == TYPE_LENGTH_DELIMITED);
-  return length_delimited_.string_value_;
+  return data_.length_delimited_.string_value_;
 }
 inline UnknownFieldSet* UnknownField::mutable_group() {
   assert(type() == TYPE_GROUP);
-  return group_;
+  return data_.group_;
 }
 
-inline int UnknownField::GetLengthDelimitedSize() const {
+inline size_t UnknownField::GetLengthDelimitedSize() const {
   GOOGLE_DCHECK_EQ(TYPE_LENGTH_DELIMITED, type());
-  return static_cast<int>(length_delimited_.string_value_->size());
+  return data_.length_delimited_.string_value_->size();
 }
 
 inline void UnknownField::SetType(Type type) {

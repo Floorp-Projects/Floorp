@@ -1,5 +1,5 @@
 // Protocol Buffers - Google's data interchange format
-// Copyright 2012 Google Inc.  All rights reserved.
+// Copyright 2008 Google Inc.  All rights reserved.
 // https://developers.google.com/protocol-buffers/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,46 +28,25 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// This file is an internal atomic implementation, use atomicops.h instead.
+syntax = "proto3";
 
-#ifndef GOOGLE_PROTOBUF_ATOMICOPS_INTERNALS_PNACL_H_
-#define GOOGLE_PROTOBUF_ATOMICOPS_INTERNALS_PNACL_H_
+package google.protobuf;
 
-namespace google {
-namespace protobuf {
-namespace internal {
+option csharp_namespace = "Google.Protobuf.WellKnownTypes";
+option go_package = "github.com/golang/protobuf/ptypes/empty";
+option java_package = "com.google.protobuf";
+option java_outer_classname = "EmptyProto";
+option java_multiple_files = true;
+option objc_class_prefix = "GPB";
+option cc_enable_arenas = true;
 
-inline Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr,
-                                         Atomic32 old_value,
-                                         Atomic32 new_value) {
-  return __sync_val_compare_and_swap(ptr, old_value, new_value);
-}
-
-inline void MemoryBarrier() {
-  __sync_synchronize();
-}
-
-inline Atomic32 Acquire_CompareAndSwap(volatile Atomic32* ptr,
-                                       Atomic32 old_value,
-                                       Atomic32 new_value) {
-  Atomic32 ret = NoBarrier_CompareAndSwap(ptr, old_value, new_value);
-  MemoryBarrier();
-  return ret;
-}
-
-inline void Release_Store(volatile Atomic32* ptr, Atomic32 value) {
-  MemoryBarrier();
-  *ptr = value;
-}
-
-inline Atomic32 Acquire_Load(volatile const Atomic32* ptr) {
-  Atomic32 value = *ptr;
-  MemoryBarrier();
-  return value;
-}
-
-}  // namespace internal
-}  // namespace protobuf
-}  // namespace google
-
-#endif  // GOOGLE_PROTOBUF_ATOMICOPS_INTERNALS_PNACL_H_
+// A generic empty message that you can re-use to avoid defining duplicated
+// empty messages in your APIs. A typical example is to use it as the request
+// or the response type of an API method. For instance:
+//
+//     service Foo {
+//       rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);
+//     }
+//
+// The JSON representation for `Empty` is empty JSON object `{}`.
+message Empty {}
