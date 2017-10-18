@@ -129,7 +129,6 @@ protected:
   static StringInfo sStringInfo[2];
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
-  nsCOMPtr<nsIContent> mClone;    // cloned tree
   ElementTracker       mReferencedElementTracker;
   RefPtr<URLExtraData> mContentURLData; // URL data for its anonymous content
 };
