@@ -25,7 +25,6 @@ add_task(async function setup() {
 
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.select_events.enabled", true], // We want select events to be fired.
-    ["toolkit.telemetry.enabled", true]  // And Extended Telemetry to be enabled.
   ]});
 
   // Enable event recording for the events tested here.
