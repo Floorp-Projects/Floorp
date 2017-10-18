@@ -105,7 +105,7 @@ function run_test() {
     testModuleSlotNames.push(slot.name);
   }
   testModuleSlotNames.sort();
-  const expectedSlotNames = ["Empty PKCS11 Slot", "Test PKCS11 Slot", "Test PKCS11 Slot 二"];
+  const expectedSlotNames = ["Test PKCS11 Slot", "Test PKCS11 Slot 二"];
   deepEqual(testModuleSlotNames, expectedSlotNames,
             "Actual and expected slot names should be equal");
 
