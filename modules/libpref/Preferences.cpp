@@ -2279,8 +2279,6 @@ private:
 
   NS_IMETHOD GetData(char16_t**) override;
   NS_IMETHOD SetData(const char16_t* aData) override;
-  NS_IMETHOD SetDataWithLength(uint32_t aLength,
-                               const char16_t* aData) override;
 
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };
@@ -3268,16 +3266,6 @@ nsPrefLocalizedString::SetData(const char16_t* aData)
     return SetData(EmptyString());
   }
   return SetData(nsDependentString(aData));
-}
-
-NS_IMETHODIMP
-nsPrefLocalizedString::SetDataWithLength(uint32_t aLength,
-                                         const char16_t* aData)
-{
-  if (!aData) {
-    return SetData(EmptyString());
-  }
-  return SetData(Substring(aData, aLength));
 }
 
 //----------------------------------------------------------------------------
