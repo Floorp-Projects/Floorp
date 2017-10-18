@@ -14,7 +14,7 @@ add_task(async function() {
                                           "livemark", "description");
       },
       async function test(dialogWin) {
-        let promiseTitleChangeNotification = promiseBookmarksNotification(
+        let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
           "onItemChanged", (unused, prop, isAnno, val) => prop == "title" && val == "modified");
 
         fillBookmarkTextField("editBMPanel_namePicker", "modified", dialogWin);
