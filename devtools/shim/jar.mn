@@ -24,8 +24,5 @@ devtools-shim.jar:
     content/aboutdevtools/images/feature-responsive-mode.svg (aboutdevtools/images/feature-responsive-mode.svg)
     content/aboutdevtools/images/feature-storage.svg (aboutdevtools/images/feature-storage.svg)
     content/aboutdevtools/images/feature-performance.svg (aboutdevtools/images/feature-performance.svg)
-    content/aboutdevtools/images/feature-style-editor.svg (aboutdevtools/images/feature-style-editor.svg)
-    content/aboutdevtools/images/feature-web-audio.svg (aboutdevtools/images/feature-web-audio.svg)
-    content/aboutdevtools/images/feature-scratchpad.svg (aboutdevtools/images/feature-scratchpad.svg)
 
     content/DevToolsShim.jsm  (DevToolsShim.jsm)
