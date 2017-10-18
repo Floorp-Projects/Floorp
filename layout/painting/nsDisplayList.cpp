@@ -38,6 +38,7 @@
 #include "nsThemeConstants.h"
 #include "BorderConsts.h"
 #include "LayerTreeInvalidation.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "imgIContainer.h"
 #include "BasicLayers.h"
@@ -1449,15 +1450,24 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame)
   }
 }
 
+uint32_t gDisplayItemSizes[static_cast<uint32_t>(DisplayItemType::TYPE_MAX)] = { 0 };
+
 void*
 nsDisplayListBuilder::Allocate(size_t aSize, DisplayItemType aType)
 {
-  return mPool.Allocate(aSize);
+  size_t roundedUpSize = RoundUpPow2(aSize);
+  uint_fast8_t type = FloorLog2Size(roundedUpSize);
+
+  MOZ_ASSERT(gDisplayItemSizes[static_cast<uint32_t>(aType)] == type ||
+             gDisplayItemSizes[static_cast<uint32_t>(aType)] == 0);
+  gDisplayItemSizes[static_cast<uint32_t>(aType)] = type;
+  return mPool.AllocateByCustomID(type, roundedUpSize);
 }
 
 void
 nsDisplayListBuilder::Destroy(DisplayItemType aType, void* aPtr)
 {
+  mPool.FreeByCustomID(gDisplayItemSizes[static_cast<uint32_t>(aType)], aPtr);
 }
 
 ActiveScrolledRoot*
