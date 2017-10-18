@@ -31,7 +31,10 @@ jar.sources += [
     'src/org/mozilla/tests/browser/junit3/TestSuggestedSites.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
-jar.javac_flags += ['-Xlint:all']
+# MockResources has been deprecated, so we need -deprecation.  See
+# https://github.com/Countly/countly-sdk-android/blob/ae89490a5646e7db09c855f62b35c861819300cd/sdk/src/androidTest/java/ly/count/android/sdk/DeviceInfoTests.java#L80
+# for a Mockito-based approach.
+jar.javac_flags += ['-Xlint:all,-deprecation']
 
 jar.extra_jars += [
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],

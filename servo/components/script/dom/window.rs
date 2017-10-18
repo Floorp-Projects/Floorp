@@ -287,7 +287,7 @@ pub struct Window {
 
     /// Worklets
     test_worklet: MutNullableDom<Worklet>,
-    /// https://drafts.css-houdini.org/css-paint-api-1/#paint-worklet
+    /// <https://drafts.css-houdini.org/css-paint-api-1/#paint-worklet>
     paint_worklet: MutNullableDom<Worklet>,
     /// The Webrender Document id associated with this window.
     #[ignore_heap_size_of = "defined in webrender_api"]
@@ -360,7 +360,7 @@ impl Window {
     }
 
     /// Returns the window proxy if it has not been discarded.
-    /// https://html.spec.whatwg.org/multipage/#a-browsing-context-is-discarded
+    /// <https://html.spec.whatwg.org/multipage/#a-browsing-context-is-discarded>
     pub fn undiscarded_window_proxy(&self) -> Option<DomRoot<WindowProxy>> {
         self.window_proxy.get()
             .and_then(|window_proxy| if window_proxy.is_browsing_context_discarded() {
@@ -742,13 +742,13 @@ impl WindowMethods for Window {
         base64_atob(atob)
     }
 
-    /// https://html.spec.whatwg.org/multipage/#dom-window-requestanimationframe
+    /// <https://html.spec.whatwg.org/multipage/#dom-window-requestanimationframe>
     fn RequestAnimationFrame(&self, callback: Rc<FrameRequestCallback>) -> u32 {
         self.Document()
             .request_animation_frame(AnimationFrameCallback::FrameRequestCallback { callback })
     }
 
-    /// https://html.spec.whatwg.org/multipage/#dom-window-cancelanimationframe
+    /// <https://html.spec.whatwg.org/multipage/#dom-window-cancelanimationframe>
     fn CancelAnimationFrame(&self, ident: u32) {
         let doc = self.Document();
         doc.cancel_animation_frame(ident);
@@ -1090,7 +1090,7 @@ impl Window {
         self.ignore_further_async_events.borrow().store(true, Ordering::SeqCst);
     }
 
-    /// https://drafts.csswg.org/cssom-view/#dom-window-scroll
+    /// <https://drafts.csswg.org/cssom-view/#dom-window-scroll>
     pub fn scroll(&self, x_: f64, y_: f64, behavior: ScrollBehavior) {
         // Step 3
         let xfinite = if x_.is_finite() { x_ } else { 0.0f64 };
@@ -1144,33 +1144,20 @@ impl Window {
                               None);
     }
 
-    /// https://drafts.csswg.org/cssom-view/#perform-a-scroll
+    /// <https://drafts.csswg.org/cssom-view/#perform-a-scroll>
     pub fn perform_a_scroll(&self,
                             x: f32,
                             y: f32,
                             scroll_root_id: ClipId,
-                            behavior: ScrollBehavior,
-                            element: Option<&Element>) {
-        //TODO Step 1
-        let point = Point2D::new(x, y);
-        let smooth = match behavior {
-            ScrollBehavior::Auto => {
-                element.map_or(false, |_element| {
-                    // TODO check computed scroll-behaviour CSS property
-                    true
-                })
-            }
-            ScrollBehavior::Instant => false,
-            ScrollBehavior::Smooth => true
-        };
-
+                            _behavior: ScrollBehavior,
+                            _element: Option<&Element>) {
+        // TODO Step 1
+        // TODO(mrobinson, #18709): Add smooth scrolling support to WebRender so that we can
+        // properly process ScrollBehavior here.
         self.layout_chan.send(Msg::UpdateScrollStateFromScript(ScrollState {
             scroll_root_id: scroll_root_id,
             scroll_offset: Vector2D::new(-x, -y),
         })).unwrap();
-
-        let message = ScriptMsg::ScrollFragmentPoint(scroll_root_id, point, smooth);
-        self.send_to_constellation(message);
     }
 
     pub fn update_viewport_for_scroll(&self, x: f32, y: f32) {
@@ -1404,18 +1391,6 @@ impl Window {
             return Rect::zero();
         }
         self.layout_rpc.node_geometry().client_rect
-    }
-
-    pub fn hit_test_query(&self,
-                          client_point: Point2D<f32>,
-                          update_cursor: bool)
-                          -> Option<UntrustedNodeAddress> {
-        if !self.reflow(ReflowGoal::HitTestQuery(client_point, update_cursor),
-                        ReflowReason::Query) {
-            return None
-        }
-
-        self.layout_rpc.hit_test().node_address
     }
 
     pub fn scroll_area_query(&self, node: TrustedNodeAddress) -> Rect<i32> {
@@ -1910,8 +1885,7 @@ fn debug_reflow_events(id: PipelineId, reflow_goal: &ReflowGoal, reason: &Reflow
         ReflowGoal::Full => "\tFull",
         ReflowGoal::ContentBoxQuery(_n) => "\tContentBoxQuery",
         ReflowGoal::ContentBoxesQuery(_n) => "\tContentBoxesQuery",
-        ReflowGoal::HitTestQuery(..) => "\tHitTestQuery",
-        ReflowGoal::NodesFromPoint(..) => "\tNodesFromPoint",
+        ReflowGoal::NodesFromPointQuery(..) => "\tNodesFromPointQuery",
         ReflowGoal::NodeGeometryQuery(_n) => "\tNodeGeometryQuery",
         ReflowGoal::NodeOverflowQuery(_n) => "\tNodeOverFlowQuery",
         ReflowGoal::NodeScrollGeometryQuery(_n) => "\tNodeScrollGeometryQuery",

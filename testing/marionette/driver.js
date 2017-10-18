@@ -16,10 +16,7 @@ Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
-const {
-  browser,
-  WindowState,
-} = Cu.import("chrome://marionette/content/browser.js", {});
+const {browser} = Cu.import("chrome://marionette/content/browser.js", {});
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/cookie.js");
@@ -51,6 +48,7 @@ const {
   PollPromise,
   TimedPromise,
 } = Cu.import("chrome://marionette/content/sync.js", {});
+const {WindowState} = Cu.import("chrome://marionette/content/wm.js", {});
 
 Cu.importGlobalProperties(["URL"]);
 

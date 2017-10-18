@@ -18,13 +18,11 @@ from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript
 from mozharness.base.vcs.mercurial import MercurialVCS
 from mozharness.base.vcs.gittool import GittoolVCS
-from mozharness.base.vcs.tcvcs import TcVCS
 
 # Update this with supported VCS name : VCS object
 VCS_DICT = {
     'hg': MercurialVCS,
     'gittool': GittoolVCS,
-    'tc-vcs': TcVCS,
 }
 
 

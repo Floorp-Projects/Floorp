@@ -22,6 +22,12 @@ function test() {
     "`null` was properly localized.");
   is(l10n.numberWithDecimals(undefined, 2), "0",
     "`undefined` was properly localized.");
+  is(l10n.numberWithDecimals(-1234.56789, 2), "-1,234.57",
+    "Negative number was properly localized.");
+  is(l10n.numberWithDecimals(1234.56789, 0), "1,235",
+    "Number was properly localized with decimals set 0.");
+  is(l10n.numberWithDecimals(-1234.56789, 0), "-1,235",
+    "Negative number was properly localized with decimals set 0.");
 
   finish();
 }

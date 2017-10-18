@@ -66,6 +66,14 @@ add_task(async function testGetAvailableStates() {
                      SitePermissions.ALLOW,
                      SitePermissions.BLOCK ]);
 
+  // Test available states with a default permission set.
+  Services.prefs.setIntPref("permissions.default.camera", SitePermissions.ALLOW);
+  Assert.deepEqual(SitePermissions.getAvailableStates("camera"),
+                   [ SitePermissions.PROMPT,
+                     SitePermissions.ALLOW,
+                     SitePermissions.BLOCK ]);
+  Services.prefs.clearUserPref("permissions.default.camera");
+
   Assert.deepEqual(SitePermissions.getAvailableStates("cookie"),
                    [ SitePermissions.ALLOW,
                      SitePermissions.ALLOW_COOKIES_FOR_SESSION,
@@ -96,21 +104,75 @@ add_task(async function testExactHostMatch() {
 
     if (exactHostMatched.includes(permission)) {
       // Check that the sub-origin does not inherit the permission from its parent.
-      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.UNKNOWN);
+      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.UNKNOWN,
+        `${permission} should exact-host match`);
     } else if (nonExactHostMatched.includes(permission)) {
       // Check that the sub-origin does inherit the permission from its parent.
-      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.ALLOW);
+      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.ALLOW,
+        `${permission} should not exact-host match`);
     } else {
       Assert.ok(false, `Found an unknown permission ${permission} in exact host match test.` +
                        "Please add new permissions from SitePermissions.jsm to this test.");
     }
 
     // Check that the permission can be made specific to the sub-origin.
-    SitePermissions.set(subUri, permission, SitePermissions.BLOCK);
-    Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.BLOCK);
+    SitePermissions.set(subUri, permission, SitePermissions.PROMPT);
+    Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.PROMPT);
     Assert.equal(SitePermissions.get(uri, permission).state, SitePermissions.ALLOW);
 
     SitePermissions.remove(subUri, permission);
     SitePermissions.remove(uri, permission);
   }
 });
+
+add_task(function* testDefaultPrefs() {
+  let uri = Services.io.newURI("https://example.com")
+
+  // Check that without a pref the default return value is UNKNOWN.
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.UNKNOWN,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // Check that the default return value changed after setting the pref.
+  Services.prefs.setIntPref("permissions.default.camera", SitePermissions.BLOCK);
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.BLOCK,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // Check that other permissions still return UNKNOWN.
+  Assert.deepEqual(SitePermissions.get(uri, "microphone"), {
+    state: SitePermissions.UNKNOWN,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // Check that the default return value changed after changing the pref.
+  Services.prefs.setIntPref("permissions.default.camera", SitePermissions.ALLOW);
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.ALLOW,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // Check that the preference is ignored if there is a value.
+  SitePermissions.set(uri, "camera", SitePermissions.BLOCK);
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.BLOCK,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // The preference should be honored again, after resetting the permissions.
+  SitePermissions.remove(uri, "camera");
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.ALLOW,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+
+  // Should be UNKNOWN after clearing the pref.
+  Services.prefs.clearUserPref("permissions.default.camera");
+  Assert.deepEqual(SitePermissions.get(uri, "camera"), {
+    state: SitePermissions.UNKNOWN,
+    scope: SitePermissions.SCOPE_PERSISTENT,
+  });
+});
+

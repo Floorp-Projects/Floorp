@@ -112,10 +112,6 @@ toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
 
-toolbar .toolbarbutton-1 > menupopup.cui-widget-panel {
-  margin-top: -8px;
-}
-
 .findbar-button > .toolbarbutton-text,
 toolbarbutton.bookmark-item:not(.subviewbutton),
 toolbar .toolbarbutton-1 > .toolbarbutton-icon,

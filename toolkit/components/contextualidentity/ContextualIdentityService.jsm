@@ -115,17 +115,29 @@ _ContextualIdentityService.prototype = {
 
   init(path) {
     this._path = path;
+    this._webExtensionUpdating = false;
 
     Services.prefs.addObserver(CONTEXTUAL_IDENTITY_ENABLED_PREF, this);
+    Services.obs.addObserver(this, "web-extension-preferences-replacing");
+    Services.obs.addObserver(this, "web-extension-preferences-replaced");
   },
 
-  // observe() is only used to listen to container enabling pref
-  async observe() {
-    const contextualIdentitiesEnabled = Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF);
-    if (!contextualIdentitiesEnabled) {
-      await this.closeContainerTabs();
-      this.notifyAllContainersCleared();
-      this.resetDefault();
+  async observe(aSubject, aTopic) {
+    switch (aTopic) {
+      case "web-extension-preferences-replacing":
+        this._webExtensionUpdating = true;
+        break;
+      case "web-extension-preferences-replaced":
+        this._webExtensionUpdating = false;
+        // We want to check the pref when the extension has been replaced too
+      case "nsPref:changed":
+        const contextualIdentitiesEnabled = Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF);
+        if (!contextualIdentitiesEnabled && !this._webExtensionUpdating) {
+          await this.closeContainerTabs();
+          this.notifyAllContainersCleared();
+          this.resetDefault();
+        }
+        break;
     }
   },
 

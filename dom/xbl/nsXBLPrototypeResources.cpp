@@ -112,9 +112,14 @@ nsXBLPrototypeResources::FlushSkinSheets()
   }
 
   if (doc->IsStyledByServo()) {
-    MOZ_ASSERT(doc->GetShell());
-    MOZ_ASSERT(doc->GetShell()->GetPresContext());
-    ComputeServoStyleSet(doc->GetShell()->GetPresContext());
+    // There may be no shell during unlink.
+    //
+    // FIXME(emilio): We shouldn't skip shadow root style updates just because?
+    // Though during unlink is fine I guess...
+    if (auto* shell = doc->GetShell()) {
+      MOZ_ASSERT(shell->GetPresContext());
+      ComputeServoStyleSet(shell->GetPresContext());
+    }
   } else {
     GatherRuleProcessor();
   }

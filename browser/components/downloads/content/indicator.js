@@ -626,9 +626,12 @@ const DownloadsIndicatorView = {
   get indicatorAnchor() {
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
     if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      return widgetGroup.forWindow(window).anchor;
+      let overflowIcon = widgetGroup.forWindow(window).anchor;
+      return document.getAnonymousElementByAttribute(overflowIcon, "class", "toolbarbutton-icon");
     }
-    return document.getElementById("downloads-indicator-anchor");
+
+    return document.getAnonymousElementByAttribute(this.indicator, "class",
+                                                   "toolbarbutton-badge-stack");
   },
 
   get _progressIcon() {

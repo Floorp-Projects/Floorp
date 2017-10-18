@@ -148,6 +148,16 @@ ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
+  prefNames: [
+    "privacy.firstparty.isolate",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
   prefNames: [
     "privacy.trackingprotection.enabled",
@@ -240,6 +250,11 @@ this.privacy = class extends ExtensionAPI {
             "websites.resistFingerprinting",
             () => {
               return Preferences.get("privacy.resistFingerprinting");
+            }),
+          firstPartyIsolate: getPrivacyAPI(extension,
+            "websites.firstPartyIsolate",
+            () => {
+              return Preferences.get("privacy.firstparty.isolate");
             }),
           trackingProtectionMode: getPrivacyAPI(extension,
             "websites.trackingProtectionMode",

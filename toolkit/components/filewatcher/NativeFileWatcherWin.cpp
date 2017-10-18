@@ -1339,7 +1339,7 @@ NativeFileWatcherService::AddPath(const nsAString& aPathToWatch,
   }
 
   // Since the dispatch succeeded, we let the runnable own the pointer.
-  wrappedCallbacks.release();
+  Unused << wrappedCallbacks.release();
 
   WakeUpWorkerThread();
 
@@ -1413,7 +1413,7 @@ NativeFileWatcherService::RemovePath(const nsAString& aPathToRemove,
   }
 
   // Since the dispatch succeeded, we let the runnable own the pointer.
-  wrappedCallbacks.release();
+  Unused << wrappedCallbacks.release();
 
   WakeUpWorkerThread();
 
