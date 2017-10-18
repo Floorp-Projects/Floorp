@@ -32,21 +32,6 @@ interface nsIPrefLocalizedString : nsISupports
    * @return wstring The string containing the data stored within this object.
    */
   wstring toString();
-
-  /**
-   * Used to set the contents of this object.
-   *
-   * @param length The length of the string. This value should not include
-   *               space for the null terminator, nor should it account for the
-   *               size of a character. It should  only be the number of
-   *               characters for which there is space in the string.
-   * @param data   The string data to be stored.
-   *
-   * @note
-   * This makes a copy of the string argument passed in.
-   */
-  void setDataWithLength(in unsigned long length,
-                         [size_is(length)] in wstring data);
 };
 
 %{C++
