@@ -358,14 +358,6 @@ static_assert(ArenaSize % CellAlignBytes == 0,
               "Arena size must be a multiple of cell alignment");
 
 /*
- * We sometimes use an index to refer to a cell in an arena. The index for a
- * cell is found by dividing by the cell alignment so not all indicies refer to
- * valid cells.
- */
-const size_t ArenaCellIndexBytes = CellAlignBytes;
-const size_t MaxArenaCellIndex = ArenaSize / CellAlignBytes;
-
-/*
  * The mark bitmap has one bit per each possible cell start position. This
  * wastes some space for larger GC things but allows us to avoid division by the
  * cell's size when accessing the bitmap.
