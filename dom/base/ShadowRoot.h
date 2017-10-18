@@ -78,8 +78,7 @@ private:
    */
   void DistributionChanged();
 
-  static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
-                           nsIContent* aHost);
+  bool IsPooledNode(nsIContent* aChild) const;
 
 public:
   void AddInsertionPoint(HTMLContentElement* aInsertionPoint);
