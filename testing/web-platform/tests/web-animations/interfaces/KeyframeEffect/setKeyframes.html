@@ -23,15 +23,7 @@ test(function(t) {
   });
 }, 'Keyframes can be replaced with an empty keyframe');
 
-gPropertyIndexedKeyframesTests.forEach(function(subtest) {
-  test(function(t) {
-    var effect = new KeyframeEffect(target, {});
-    effect.setKeyframes(subtest.input);
-    assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
-  }, 'Keyframes can be replaced with ' + subtest.desc);
-});
-
-gKeyframeSequenceTests.forEach(function(subtest) {
+gKeyframesTests.forEach(function(subtest) {
   test(function(t) {
     var effect = new KeyframeEffect(target, {});
     effect.setKeyframes(subtest.input);

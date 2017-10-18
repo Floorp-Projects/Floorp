@@ -33,7 +33,7 @@ const gEmptyKeyframeListTests = [
   undefined,
 ];
 
-const gPropertyIndexedKeyframesTests = [
+const gKeyframesTests = [
   { desc:   'a one property two value property-indexed keyframes specification',
     input:  { left: ['10px', '20px'] },
     output: [{ offset: null, computedOffset: 0, easing: 'linear',
@@ -127,9 +127,6 @@ const gPropertyIndexedKeyframesTests = [
     output: [{ offset: null, computedOffset: 0, easing: 'linear',
                left: '10px' },
              { offset: null, computedOffset: 1, easing: 'linear' }] },
-];
-
-const gKeyframeSequenceTests = [
   { desc:   'a one property one keyframe sequence',
     input:  [{ offset: 1, left: '10px' }],
     output: [{ offset: 1, computedOffset: 1, easing: 'linear',

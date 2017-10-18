@@ -106,23 +106,7 @@ test(function(t) {
 }, "composite value is absent if the composite operation specified on the " +
    "keyframe effect is being used");
 
-gPropertyIndexedKeyframesTests.forEach(function(subtest) {
-  test(function(t) {
-    var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
-  }, "a KeyframeEffectReadOnly can be constructed with " + subtest.desc);
-
-  test(function(t) {
-    var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    var secondEffect =
-      new KeyframeEffectReadOnly(target, effect.getKeyframes());
-    assert_frame_lists_equal(secondEffect.getKeyframes(),
-                             effect.getKeyframes());
-  }, "a KeyframeEffectReadOnly constructed with " + subtest.desc +
-     " roundtrips");
-});
-
-gKeyframeSequenceTests.forEach(function(subtest) {
+gKeyframesTests.forEach(function(subtest) {
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
     assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
