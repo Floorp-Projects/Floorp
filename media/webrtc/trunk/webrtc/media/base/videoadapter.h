@@ -32,13 +32,13 @@ class VideoAdapter {
   // input resolution. The input frame should first be cropped, then
   // scaled to the final output resolution. Returns true if the frame
   // should be adapted, and false if it should be dropped.
-  bool AdaptFrameResolution(int in_width,
-                            int in_height,
-                            int64_t in_timestamp_ns,
-                            int* cropped_width,
-                            int* cropped_height,
-                            int* out_width,
-                            int* out_height);
+  virtual bool AdaptFrameResolution(int in_width,
+                                    int in_height,
+                                    int64_t in_timestamp_ns,
+                                    int* cropped_width,
+                                    int* cropped_height,
+                                    int* out_width,
+                                    int* out_height);
 
   // Requests the output frame size and frame interval from
   // |AdaptFrameResolution| to not be larger than |format|. Also, the input
@@ -51,12 +51,12 @@ class VideoAdapter {
   // Requests the output frame size from |AdaptFrameResolution| to not have
   // more than |max_pixel_count| pixels and have "one step" up more pixels than
   // max_pixel_count_step_up.
-  void OnResolutionRequest(rtc::Optional<int> max_pixel_count,
-                           rtc::Optional<int> max_pixel_count_step_up);
+  virtual void OnResolutionRequest(rtc::Optional<int> max_pixel_count,
+                                   rtc::Optional<int> max_pixel_count_step_up);
 
   // Requests the output frame size from |AdaptFrameResolution| be scaled
   // down from the input by a factor of scale_resolution_by (min 1.0)
-  void OnScaleResolutionBy(rtc::Optional<float> scale_resolution_by);
+  virtual void OnScaleResolutionBy(rtc::Optional<float> scale_resolution_by);
 
  private:
   // Determine if frame should be dropped based on input fps and requested fps.
