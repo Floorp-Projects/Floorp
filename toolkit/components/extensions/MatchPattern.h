@@ -61,7 +61,7 @@ public:
 
   bool Contains(const nsAtom* aAtom) const
   {
-    return mElems.BinaryIndexOf(aAtom) != mElems.NoIndex;
+    return mElems.ContainsSorted(aAtom);
   }
 
   bool Intersects(const AtomSet& aOther) const;

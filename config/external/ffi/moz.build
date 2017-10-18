@@ -85,13 +85,32 @@ else:
     elif CONFIG['FFI_TARGET'] == 'X86_64':
         ffi_srcs = ('ffi64.c', 'unix64.S', 'ffi.c', 'sysv.S')
     elif CONFIG['FFI_TARGET'] == 'X86_WIN32':
+        ffi_srcs = ['ffi.c']
         # MinGW Build for 32 bit
         if CONFIG['CC_TYPE'] == 'gcc':
             DEFINES['SYMBOL_UNDERSCORE'] = True
-        ffi_srcs = ('ffi.c', 'win32.S')
+            ffi_srcs += ['win32.S']
+        else:
+            # libffi asm needs to be preprocessed for MSVC
+            GENERATED_FILES += ['win32.asm']
+            asm = GENERATED_FILES['win32.asm']
+            asm.inputs = ['/js/src/ctypes/libffi/src/x86/win32.S']
+            asm.script = 'preprocess_libffi_asm.py'
+            asm.flags = ['$(DEFINES)', '$(LOCAL_INCLUDES)']
+            SOURCES += ['!win32.asm']
+            ASFLAGS += ['-safeseh']
     elif CONFIG['FFI_TARGET'] == 'X86_WIN64':
-        ffi_srcs = ('ffi.c', 'win64.S')
-        ASFLAGS += ['-m64']
+        ffi_srcs = ['ffi.c']
+        if CONFIG['CC_TYPE'] == 'gcc':
+            ffi_srcs += ['win64.S']
+        else:
+            # libffi asm needs to be preprocessed for MSVC
+            GENERATED_FILES += ['win64.asm']
+            asm = GENERATED_FILES['win64.asm']
+            asm.inputs = ['/js/src/ctypes/libffi/src/x86/win64.S']
+            asm.script = 'preprocess_libffi_asm.py'
+            asm.flags = ['$(DEFINES)', '$(LOCAL_INCLUDES)']
+            SOURCES += ['!win64.asm']
     elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':
         DEFINES['FFI_MMAP_EXEC_WRIT'] = True
         if CONFIG['OS_TEST'] != 'x86_64':
