@@ -251,6 +251,14 @@ panelview {
   margin-top: -7px;
 }
 
+#PersonalToolbar #BMB_bookmarksPopup  {
+  margin-top: -2px
+}
+
+:root[uidensity=touch] #PersonalToolbar #BMB_bookmarksPopup {
+  margin-top: -5px;
+}
+
 .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
