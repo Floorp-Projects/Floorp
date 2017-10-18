@@ -63,18 +63,33 @@ private:
   /**
    * Distributes a single explicit child of the pool host to the content
    * insertion points in this ShadowRoot.
+   *
+   * Returns the insertion point the element is distributed to after this call.
+   *
+   * Note that this doesn't handle distributing the node in the insertion point
+   * parent's shadow root.
    */
-  void DistributeSingleNode(nsIContent* aContent);
+  const HTMLContentElement* DistributeSingleNode(nsIContent* aContent);
 
   /**
    * Removes a single explicit child of the pool host from the content
    * insertion points in this ShadowRoot.
+   *
+   * Returns the old insertion point, if any.
+   *
+   * Note that this doesn't handle removing the node in the returned insertion
+   * point parent's shadow root.
    */
-  void RemoveDistributedNode(nsIContent* aContent);
+  const HTMLContentElement* RemoveDistributedNode(nsIContent* aContent);
 
   /**
-   * Called when we redistribute content in such a way that new insertion points
-   * come into existence, or elements are moved between insertion points.
+   * Redistributes a node of the pool, and returns whether the distribution
+   * changed.
+   */
+  bool RedistributeElement(Element*);
+
+  /**
+   * Called when we redistribute content after insertion points have changed.
    */
   void DistributionChanged();
 
