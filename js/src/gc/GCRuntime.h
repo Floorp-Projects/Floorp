@@ -702,11 +702,6 @@ class MemoryCounter
         return triggered_;
     }
 
-    void decrement(size_t bytes) {
-        MOZ_ASSERT(bytes <= bytes_);
-        bytes_ -= bytes;
-    }
-
     void adopt(MemoryCounter<T>& other) {
         bytes_ += other.bytes();
         other.reset();

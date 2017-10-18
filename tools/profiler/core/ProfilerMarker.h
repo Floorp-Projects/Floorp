@@ -51,7 +51,7 @@ public:
       // if have location data
       //   b.NameValue(marker, "location", ...);
       if (mPayload) {
-        aWriter.StartObjectElement();
+        aWriter.StartObjectElement(SpliceableJSONWriter::SingleLineStyle);
         {
           mPayload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
         }

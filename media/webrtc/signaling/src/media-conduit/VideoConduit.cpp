@@ -28,10 +28,15 @@
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/api/video/i420_buffer.h"
+
+#ifdef WEBRTC_MAC
+#include <AvailabilityMacros.h>
+#endif
+
 #if defined(MAC_OS_X_VERSION_10_8) && \
   (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
 // XXX not available in Mac 10.7 SDK
-#include "webrtc/sdk/objc/Framework/Classes/corevideo_frame_buffer.h"
+#include "webrtc/common_video/include/corevideo_frame_buffer.h"
 #endif
 
 #include "mozilla/Unused.h"
@@ -1999,10 +2004,10 @@ WebrtcVideoConduit::SendVideoFrame(webrtc::VideoFrame& frame)
   (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
       // XXX not available in Mac 10.7 SDK
       // code adapted from objvideotracksource.mm
-    } else if (frame.nativeHandle) {
+    } else if (frame.video_frame_buffer()->native_handle()) {
       // Adapted CVPixelBuffer frame.
-      buffer = new rtc::RefCountedObject<CoreVideoFrameBuffer>(
-        static_cast<CVPixelBufferRef>(frame.nativeHandle), adapted_width, adapted_height,
+      buffer = new rtc::RefCountedObject<webrtc::CoreVideoFrameBuffer>(
+        static_cast<CVPixelBufferRef>(frame.video_frame_buffer()->native_handle()), adapted_width, adapted_height,
         crop_width, crop_height, crop_x, crop_y);
 #endif
 #elif WEBRTC_WIN

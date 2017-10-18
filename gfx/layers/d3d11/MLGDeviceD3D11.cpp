@@ -1962,6 +1962,27 @@ MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
   MLGTextureD3D11* dest = aDest->AsD3D11();
   MLGTextureD3D11* source = aSource->AsD3D11();
 
+  // We check both the source and destination copy regions, because
+  // CopySubresourceRegion is documented as causing a device reset if
+  // the operation is out-of-bounds. And it's not lying.
+  IntRect sourceBounds(IntPoint(0, 0), aSource->GetSize());
+  if (!sourceBounds.Contains(aRect)) {
+    gfxWarning() << "Attempt to read out-of-bounds in CopySubresourceRegion: " <<
+      Stringify(sourceBounds) <<
+      ", " <<
+      Stringify(aRect);
+    return;
+  }
+
+  IntRect destBounds(IntPoint(0, 0), aDest->GetSize());
+  if (!destBounds.Contains(IntRect(aTarget, aRect.Size()))) {
+    gfxWarning() << "Attempt to write out-of-bounds in CopySubresourceRegion: " <<
+      Stringify(destBounds) <<
+      ", " <<
+      Stringify(aTarget) << ", " << Stringify(aRect.Size());
+    return;
+  }
+
   D3D11_BOX box = RectToBox(aRect);
   mCtx->CopySubresourceRegion(
     dest->GetTexture(), 0,

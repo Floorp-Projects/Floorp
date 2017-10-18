@@ -278,7 +278,6 @@ private:
   DOMHighResTimeStamp mZeroTime;
 
   TimeStamp mAsyncOpen;
-  TimeStamp mWorkerStart;
   TimeStamp mRedirectStart;
   TimeStamp mRedirectEnd;
   TimeStamp mDomainLookupStart;
@@ -291,6 +290,12 @@ private:
   TimeStamp mCacheReadStart;
   TimeStamp mResponseEnd;
   TimeStamp mCacheReadEnd;
+
+  // ServiceWorker interception timing information
+  TimeStamp mWorkerStart;
+  TimeStamp mWorkerRequestStart;
+  TimeStamp mWorkerResponseEnd;
+
   uint8_t mRedirectCount;
   bool mTimingAllowed;
   bool mAllRedirectsSameOrigin;

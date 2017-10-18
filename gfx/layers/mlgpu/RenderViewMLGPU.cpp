@@ -131,6 +131,13 @@ void
 RenderViewMLGPU::RenderAfterBackdropCopy()
 {
   MOZ_ASSERT(mContainer && mContainer->NeedsSurfaceCopy());
+
+  // Update the invalid bounds based on the container's visible region. This
+  // of course won't affect the prepared pipeline, but it will change the
+  // scissor rect in SetDeviceState.
+  mInvalidBounds = mContainer->GetShadowVisibleRegion().GetBounds().ToUnknownRect() -
+                   GetTargetOffset();
+
   ExecuteRendering();
 }
 
