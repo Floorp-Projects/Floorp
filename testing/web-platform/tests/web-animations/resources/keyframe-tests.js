@@ -260,6 +260,64 @@ const gKeyframesTests = [
              keyframe(offset(0.8), { left: '30px' })],
   },
 
+  // ----------- Property-indexed keyframes: easing handling -----------
+
+  {
+    desc:   'a property-indexed keyframe without any specified easing',
+    input:  { left: ['10px', '20px', '30px'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'linear'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'linear'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'linear')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a single easing',
+    input:  { left: ['10px', '20px', '30px'], easing: 'ease-in' },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'ease-in'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'ease-in'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'ease-in')],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of easings',
+    input:  { left: ['10px', '20px', '30px'],
+              easing: ['ease-in', 'ease-out', 'ease-in-out'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'ease-in'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'ease-out'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'ease-in-out')],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of easings that is too'
+            + ' short',
+    input:  { left: ['10px', '20px', '30px'],
+              easing: ['ease-in', 'ease-out'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'ease-in'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'ease-out'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'ease-in')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a single-element array of'
+            + ' easings',
+    input:  { left: ['10px', '20px', '30px'], easing: ['ease-in'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'ease-in'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'ease-in'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'ease-in')],
+  },
+  {
+    desc:   'a property-indexed keyframe with an empty array of easings',
+    input:  { left: ['10px', '20px', '30px'], easing: [] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'linear'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'linear'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'linear')],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of easings that is too'
+            + ' long',
+    input:  { left: ['10px', '20px', '30px'],
+              easing: ['steps(1)', 'steps(2)', 'steps(3)', 'steps(4)'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'steps(1)'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'steps(2)'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'steps(3)')],
+  },
+
   // ----------- Keyframe sequence: property handling -----------
 
   {
@@ -523,6 +581,26 @@ const gInvalidKeyframesTests = [
     desc:  'property-indexed keyframes with an invalid easing value',
     input: { opacity: [ 0, 0.5, 1 ],
              easing: 'inherit' },
+  },
+  {
+    desc:  'property-indexed keyframes with an invalid easing value as one of'
+           + ' the array values',
+    input: { opacity: [ 0, 0.5, 1 ],
+             easing: [ 'ease-in', 'inherit' ] },
+  },
+  {
+    desc:   'property-indexed keyframe with an invalid easing in the unused'
+            + ' part of the array of easings',
+    input:  { left: ['10px', '20px', '30px'],
+              easing: ['steps(1)', 'steps(2)', 'steps(3)', 'invalid'] },
+  },
+  {
+    desc:   'empty property-indexed keyframe with an invalid easing',
+    input:  { easing: 'invalid' },
+  },
+  {
+    desc:   'empty property-indexed keyframe with an invalid easings array',
+    input:  { easing: ['invalid'] },
   },
   {
     desc:  'a keyframe sequence with an invalid easing value',
