@@ -214,6 +214,7 @@ windows10-64/debug:
     build-platform: win64/debug
     test-sets:
         - windows-tests
+        - mochitest-headless
 
 windows10-64/opt:
     build-platform: win64/opt
@@ -223,6 +224,7 @@ windows10-64/opt:
         - windows-talos
         - windows-talos-stylo-disabled
         - windows-tests
+        - mochitest-headless
 
 windows10-64-pgo/opt:
     build-platform: win64-pgo/opt
