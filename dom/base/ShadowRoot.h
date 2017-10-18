@@ -72,6 +72,12 @@ private:
    */
   void RemoveDistributedNode(nsIContent* aContent);
 
+  /**
+   * Called when we redistribute content in such a way that new insertion points
+   * come into existence, or elements are moved between insertion points.
+   */
+  void DistributionChanged();
+
   static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
                            nsIContent* aHost);
 
