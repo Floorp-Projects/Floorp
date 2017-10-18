@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import itertools
 import time
 
 from marionette_driver import errors
+
 from marionette_harness import MarionetteTestCase, run_if_manage_instance, skip_if_mobile
 
 
@@ -29,34 +31,3 @@ class TestMarionette(MarionetteTestCase):
         start_time = time.time()
         self.assertFalse(self.marionette.wait_for_port(timeout=5))
         self.assertLess(time.time() - start_time, 5)
-
-
-class TestContext(MarionetteTestCase):
-
-    def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-    def get_context(self):
-        return self.marionette._send_message("getContext", key="value")
-
-    def set_context(self, value):
-        return self.marionette._send_message("setContext", {"value": value})
-
-    def test_set_context(self):
-        self.assertEqual(self.set_context("content"), {})
-        self.assertEqual(self.set_context("chrome"), {})
-
-        for typ in [True, 42, [], {}, None]:
-            with self.assertRaises(errors.InvalidArgumentException):
-                self.set_context(typ)
-
-        with self.assertRaises(errors.MarionetteException):
-            self.set_context("foo")
-
-    def test_get_context(self):
-        self.assertEqual(self.get_context(), "content")
-        self.set_context("chrome")
-        self.assertEqual(self.get_context(), "chrome")
-        self.set_context("content")
-        self.assertEqual(self.get_context(), "content")
