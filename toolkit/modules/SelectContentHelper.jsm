@@ -40,7 +40,7 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.global = aGlobal;
-  this.closedWithEnter = false;
+  this.closedWithClickOn = false;
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
   this._selectBackgroundColor = null;
   this._selectColor = null;
@@ -260,7 +260,7 @@ this.SelectContentHelper.prototype = {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
         this.element.selectedIndex = message.data.value;
-        this.closedWithEnter = message.data.closedWithEnter;
+        this.closedWithClickOn = !message.data.closedWithEnter;
         break;
 
       case "Forms:DismissedDropDown": {
@@ -268,12 +268,14 @@ this.SelectContentHelper.prototype = {
           let selectedOption = this.element.item(this.element.selectedIndex);
 
           // For ordering of events, we're using non-e10s as our guide here,
-          // since the spec isn't exactly clear. In non-e10s, we fire:
-          // mousedown, mouseup, input, change, click if the user clicks
-          // on an element in the dropdown. If the user uses the keyboard
-          // to select an element in the dropdown, we only fire input and
-          // change events.
-          if (!this.closedWithEnter) {
+          // since the spec isn't exactly clear. In non-e10s:
+          // - If the user clicks on an element in the dropdown, we fire
+          //   mousedown, mouseup, input, change, and click events.
+          // - If the user uses the keyboard to select an element in the
+          //   dropdown, we only fire input and change events.
+          // - If the user pressed ESC key or clicks outside the dropdown,
+          //   we fire nothing as the selected option is unchanged.
+          if (this.closedWithClickOn) {
             this.dispatchMouseEvent(win, selectedOption, "mousedown");
             this.dispatchMouseEvent(win, selectedOption, "mouseup");
           }
@@ -297,7 +299,7 @@ this.SelectContentHelper.prototype = {
           }
 
           // Fire click event
-          if (!this.closedWithEnter) {
+          if (this.closedWithClickOn) {
             this.dispatchMouseEvent(win, selectedOption, "click");
           }
 
