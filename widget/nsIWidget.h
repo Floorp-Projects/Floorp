@@ -1692,8 +1692,9 @@ class nsIWidget : public nsISupports
      * Notify APZ to start autoscrolling.
      * @param aAnchorLocation the location of the autoscroll anchor
      * @param aGuid identifies the scroll frame to be autoscrolled
+     * @return true if APZ has been successfully notified
      */
-    virtual void StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+    virtual bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
                                       const ScrollableLayerGuid& aGuid) = 0;
 
     /**

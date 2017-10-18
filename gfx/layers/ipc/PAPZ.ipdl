@@ -65,7 +65,7 @@ child:
 
   async NotifyAsyncScrollbarDragRejected(ViewID aScrollId);
 
-  async NotifyAutoscrollHandledByAPZ(ViewID aScrollId);
+  async NotifyAsyncAutoscrollRejected(ViewID aScrollId);
 
   async Destroy();
 };

@@ -156,8 +156,8 @@ public:
   virtual void NotifyFlushComplete() = 0;
 
   virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) = 0;
+  virtual void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) = 0;
 
-  virtual void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) = 0;
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
 
   virtual void UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent) {}
