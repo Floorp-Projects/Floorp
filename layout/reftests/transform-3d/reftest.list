@@ -36,7 +36,7 @@ fuzzy-if(webrender,0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) fuzzy-if(webrender,1-1,13-13) == backface-visibility-2.html backface-visibility-2-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
