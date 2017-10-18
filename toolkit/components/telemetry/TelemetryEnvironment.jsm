@@ -1647,6 +1647,7 @@ EnvironmentCache.prototype = {
       os: this._getOSData(),
       hdd: this._getHDDData(),
       gfx: this._getGFXData(),
+      appleModelId: getSysinfoProperty("appleModelId", null),
     };
 
     if (AppConstants.platform === "win") {
