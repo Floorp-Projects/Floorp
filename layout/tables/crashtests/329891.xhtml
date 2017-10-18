@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+
+function init() 
+{ 
+  tbody = document.getElementsByTagName("tbody")[0];
+  comment = document.createComment('foopy');
+  tbody.parentNode.insertBefore(comment, tbody);
+}
+
+window.addEventListener("load", init, false);
+
+</script>
+
+</head>
+
+<body>
+
+<table><tbody><tr><td></td></tr></tbody></table>
+
+</body>
+</html>
