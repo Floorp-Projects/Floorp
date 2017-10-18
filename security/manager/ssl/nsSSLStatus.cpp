@@ -294,16 +294,16 @@ nsSSLStatus::GetScriptableHelper(nsIXPCScriptable** aHelper)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetContractID(char** aContractID)
+nsSSLStatus::GetContractID(nsACString& aContractID)
 {
-  *aContractID = nullptr;
+  aContractID.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetClassDescription(char** aClassDescription)
+nsSSLStatus::GetClassDescription(nsACString& aClassDescription)
 {
-  *aClassDescription = nullptr;
+  aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 

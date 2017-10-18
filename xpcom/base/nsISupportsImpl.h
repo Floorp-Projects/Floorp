@@ -1206,16 +1206,16 @@ _class::GetScriptableHelper(nsIXPCScriptable** _retval)                       \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
-_class::GetContractID(char** _contractID)                                     \
+_class::GetContractID(nsACString& _contractID)                                \
 {                                                                             \
-  *_contractID = nullptr;                                                     \
+  _contractID.SetIsVoid(true);                                                \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
-_class::GetClassDescription(char** _classDescription)                         \
+_class::GetClassDescription(nsACString& _classDescription)                    \
 {                                                                             \
-  *_classDescription = nullptr;                                               \
+  _classDescription.SetIsVoid(true);                                          \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \

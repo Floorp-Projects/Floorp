@@ -1538,16 +1538,16 @@ nsNSSCertificate::GetScriptableHelper(nsIXPCScriptable** _retval)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetContractID(char** aContractID)
+nsNSSCertificate::GetContractID(nsACString& aContractID)
 {
-  *aContractID = nullptr;
+  aContractID.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetClassDescription(char** aClassDescription)
+nsNSSCertificate::GetClassDescription(nsACString& aClassDescription)
 {
-  *aClassDescription = nullptr;
+  aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 

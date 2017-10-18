@@ -36,14 +36,14 @@ interface nsIClassInfo : nsISupports
 
     /**
      * A contract ID through which an instance of this class can be created
-     * (or accessed as a service, if |flags & SINGLETON|), or null.
+     * (or accessed as a service, if |flags & SINGLETON|), or null/void.
      */
-    readonly attribute string   contractID;
+    readonly attribute AUTF8String contractID;
 
     /**
-     * A human readable string naming the class, or null.
+     * A human readable string naming the class, or null/void.
      */
-    readonly attribute string   classDescription;
+    readonly attribute AUTF8String classDescription;
 
     /**
      * A class ID through which an instance of this class can be created
