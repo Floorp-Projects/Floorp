@@ -115,9 +115,48 @@ private:
   AutoTArray<Modifiers, 5> mModifiers;
 };
 
-struct DeadKeyEntry;
-class DeadKeyTable;
+struct DeadKeyEntry
+{
+  char16_t BaseChar;
+  char16_t CompositeChar;
+};
 
+
+class DeadKeyTable
+{
+  friend class KeyboardLayout;
+
+  uint16_t mEntries;
+  // KeyboardLayout::AddDeadKeyTable() will allocate as many entries as
+  // required.  It is the only way to create new DeadKeyTable instances.
+  DeadKeyEntry mTable[1];
+
+  void Init(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries)
+  {
+    mEntries = aEntries;
+    memcpy(mTable, aDeadKeyArray, aEntries * sizeof(DeadKeyEntry));
+  }
+
+  static uint32_t SizeInBytes(uint32_t aEntries)
+  {
+    return offsetof(DeadKeyTable, mTable) + aEntries * sizeof(DeadKeyEntry);
+  }
+
+public:
+  uint32_t Entries() const
+  {
+    return mEntries;
+  }
+
+  bool IsEqual(const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries) const
+  {
+    return (mEntries == aEntries &&
+            !memcmp(mTable, aDeadKeyArray,
+                    aEntries * sizeof(DeadKeyEntry)));
+  }
+
+  char16_t GetCompositeChar(char16_t aBaseChar) const;
+};
 
 class VirtualKey
 {
@@ -203,7 +242,11 @@ public:
   const DeadKeyTable* MatchingDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
                                            uint32_t aEntries) const;
   inline char16_t GetCompositeChar(ShiftState aShiftState,
-                                    char16_t aBaseChar) const;
+                                    char16_t aBaseChar) const
+  {
+    return mShiftStates[aShiftState].DeadKey.Table->GetCompositeChar(aBaseChar);
+  }
+
   char16_t GetCompositeChar(const ModifierKeyState& aModKeyState,
                             char16_t aBaseChar) const
   {
