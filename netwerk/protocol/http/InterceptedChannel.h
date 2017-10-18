@@ -30,9 +30,6 @@ protected:
   // The interception controller to notify about the successful channel interception
   nsCOMPtr<nsINetworkInterceptController> mController;
 
-  // The stream to write the body of the synthesized response
-  nsCOMPtr<nsIOutputStream> mResponseBody;
-
   // Response head for use when synthesizing
   Maybe<nsAutoPtr<nsHttpResponseHead>> mSynthesizedResponseHead;
 
@@ -73,7 +70,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) override;
   NS_IMETHOD GetConsoleReportCollector(nsIConsoleReportCollector** aCollectorOut) override;
   NS_IMETHOD SetReleaseHandle(nsISupports* aHandle) override;
 
@@ -171,9 +167,6 @@ class InterceptedChannelContent : public InterceptedChannelBase
   // The actual channel being intercepted.
   RefPtr<HttpChannelChild> mChannel;
 
-  // Reader-side of the response body when synthesizing in a child proces
-  nsCOMPtr<nsIInputStream> mSynthesizedInput;
-
   // Listener for the synthesized response to fix up the notifications before they reach
   // the actual channel.
   RefPtr<InterceptStreamListener> mStreamListener;
@@ -187,7 +180,10 @@ public:
                             bool aSecureUpgrade);
 
   NS_IMETHOD ResetInterception() override;
-  NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
+  NS_IMETHOD StartSynthesizedResponse(nsIInputStream* aBody,
+                                      nsIInterceptedBodyCallback* aBodyCallback,
+                                      const nsACString& aFinalURLSpec) override;
+  NS_IMETHOD FinishSynthesizedResponse() override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
   NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
