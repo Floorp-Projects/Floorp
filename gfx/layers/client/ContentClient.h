@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_CONTENTCLIENT_H
 
 #include <stdint.h>                     // for uint32_t
-#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedBuffer, etc
 #include "gfxTypes.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
@@ -43,7 +43,7 @@ class CapturedPaintState;
 /**
  * A compositable client for PaintedLayers. These are different to Image/Canvas
  * clients due to sending a valid region across IPC and because we do a lot more
- * optimisation work, encapsualted in RotatedContentBuffers.
+ * optimisation work, encapsulated in RotatedBuffers.
  *
  * We use content clients for OMTC and non-OMTC, basic rendering so that
  * BasicPaintedLayer has only one interface to deal with. We support single and
@@ -53,25 +53,7 @@ class CapturedPaintState;
  *
  * The interface presented by ContentClient is used by the BasicPaintedLayer
  * methods - PaintThebes, which is the same for MT and OMTC, and PaintBuffer
- * which is different (the OMTC one does a little more). The 'buffer' in the
- * names of a lot of these method is actually the TextureClient. But, 'buffer'
- * for the RotatedContentBuffer (as in SetBuffer) means a gfxSurface. See the
- * comments for SetBuffer and SetBufferProvider in RotatedContentBuffer. To keep
- * these mapped buffers alive, we store a pointer in mOldTextures if the
- * RotatedContentBuffer's surface is not the one from our texture client, once we
- * are done painting we unmap the surface/texture client and don't need to keep
- * it alive anymore, so we clear mOldTextures.
- *
- * The sequence for painting is: call BeginPaint on the content client;
- * call BeginPaintBuffer on the content client. That will initialise the buffer
- * for painting, by calling RotatedContentBuffer::BeginPaint (usually) which
- * will call back to ContentClient::FinalizeFrame to finalize update of the
- * buffers before drawing (i.e., it finalizes the previous frame). Then call
- * BorrowDrawTargetForPainting to get a DrawTarget to paint into. Then paint.
- * Then return that DrawTarget using ReturnDrawTarget.
- * Call EndPaint on the content client;
- *
- * SwapBuffers is called in response to the transaction reply from the compositor.
+ * which is different (the OMTC one does a little more).
  */
 class ContentClient : public CompositableClient
 {
@@ -113,7 +95,7 @@ public:
   /**
    * This is returned by BeginPaint. The caller should draw into mTarget.
    * mRegionToDraw must be drawn. mRegionToInvalidate has been invalidated
-   * by RotatedContentBuffer and must be redrawn on the screen.
+   * by ContentClient and must be redrawn on the screen.
    * mRegionToInvalidate is set when the buffer has changed from
    * opaque to transparent or vice versa, since the details of rendering can
    * depend on the buffer type.
@@ -225,16 +207,28 @@ protected:
     bool mCanKeepBufferContents;
   };
 
+  /**
+   * Decide whether we can keep our current buffer and its contents,
+   * and return a struct containing the regions to paint, invalidate,
+   * the new buffer rect, surface mode, and content type.
+   */
   BufferDecision CalculateBufferForPaint(PaintedLayer* aLayer,
                                          uint32_t aFlags);
 
   /**
-   * Return the buffer's content type.  Requires a valid buffer or
-   * buffer provider.
+   * Return the buffer's content type.  Requires a valid buffer.
    */
   gfxContentType BufferContentType();
+  /**
+   * Returns whether the specified size is adequate for the current
+   * buffer and buffer size policy.
+   */
   bool BufferSizeOkFor(const gfx::IntSize& aSize);
 
+  /**
+   * Returns what open mode to use on texture clients. Ignored when
+   * using basic content clients.
+   */
   OpenMode LockMode() const;
 
   /**
@@ -246,6 +240,10 @@ protected:
    */
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
 
+  /**
+   * Create a new rotated buffer for the specified content type, buffer rect,
+   * and buffer flags.
+   */
   virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
                                              const gfx::IntRect& aRect,
                                              uint32_t aFlags) = 0;
@@ -287,7 +285,7 @@ private:
 };
 
 /**
- * A ContentClient backed by a RotatedContentBuffer.
+ * A ContentClient backed by a RemoteRotatedBuffer.
  *
  * When using a ContentClientRemoteBuffer, SurfaceDescriptors are created on
  * the rendering side and destroyed on the compositing side. They are only
@@ -301,7 +299,6 @@ private:
  * If the size or type of our buffer(s) change(s), then we simply destroy and
  * create them.
  */
-// Version using new texture clients
 class ContentClientRemoteBuffer : public ContentClient
 {
 public:
@@ -319,14 +316,6 @@ public:
                                                                   RotatedBuffer::DrawIterator* aIter,
                                                                   bool aSetTransform) override;
 
-  /**
-   * Begin/End Paint map a gfxASurface from the texture client
-   * into the buffer of RotatedBuffer. The surface is only
-   * valid when the texture client is locked, so is mapped out
-   * of RotatedContentBuffer when we are done painting.
-   * None of the underlying buffer attributes (rect, rotation)
-   * are affected by mapping/unmapping.
-   */
   virtual void BeginPaint() override;
   virtual void BeginAsyncPaint() override;
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
@@ -343,8 +332,10 @@ protected:
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
                                        const nsIntRegion& aVisibleRegion);
 
-  // Ensure we have a valid back buffer if we have a valid front buffer (i.e.
-  // if a backbuffer has been created.)
+  /**
+   * Ensure we have a valid back buffer if we have a valid front buffer (i.e.
+   * if a backbuffer has been created.)
+   */
   virtual void EnsureBackBufferIfFrontBuffer() {}
 
   virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
@@ -364,15 +355,13 @@ protected:
 };
 
 /**
- * A double buffered ContentClient. mTextureClient is the back buffer, which
- * we draw into. mFrontClient is the front buffer which we may read from, but
- * not write to, when the compositor does not have the 'soft' lock. We can write
- * into mTextureClient at any time.
+ * A double buffered ContentClientRemoteBuffer. mBuffer is the back buffer, which
+ * we draw into. mFrontBuffer is the front buffer which we may read from, but
+ * not write to, when the compositor does not have the 'soft' lock.
  *
  * The ContentHost keeps a reference to both corresponding texture hosts, in
  * response to our UpdateTextureRegion message, the compositor swaps its
- * references. In response to the compositor's reply we swap our references
- * (in SwapBuffers).
+ * references.
  */
 class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
 {
@@ -416,12 +405,12 @@ private:
 };
 
 /**
- * A single buffered ContentClient. We have a single TextureClient/Host
- * which we update and then send a message to the compositor that we are
- * done updating. It is not safe for the compositor to use the corresponding
- * TextureHost's memory directly, it must upload it to video memory of some
- * kind. We are free to modify the TextureClient once we receive reply from
- * the compositor.
+ * A single buffered ContentClientRemoteBuffer. We have a single
+ * TextureClient/Host which we update and then send a message to the
+ * compositor that we are done updating. It is not safe for the compositor
+ * to use the corresponding TextureHost's memory directly, it must upload
+ * it to video memory of some kind. We are free to modify the TextureClient
+ * once we receive reply from the compositor.
  */
 class ContentClientSingleBuffered : public ContentClientRemoteBuffer
 {
