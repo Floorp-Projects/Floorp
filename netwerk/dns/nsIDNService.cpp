@@ -867,6 +867,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 
   Script lastScript = Script::INVALID;
   uint32_t previousChar = 0;
+  uint32_t baseChar = 0; // last non-diacritic seen (base char for marks)
   uint32_t savedNumberingSystem = 0;
 // Simplified/Traditional Chinese check temporarily disabled -- bug 857481
 #if 0
@@ -948,6 +949,14 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
           }
         }
       }
+      // Check for diacritics on dotless-i, which would be indistinguishable
+      // from normal accented letter i.
+      if (baseChar == 0x0131 &&
+          ((ch >= 0x0300 && ch <= 0x0314) || ch == 0x031a)) {
+        return false;
+      }
+    } else {
+      baseChar = ch;
     }
 
     // Simplified/Traditional Chinese check temporarily disabled -- bug 857481
