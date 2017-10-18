@@ -32,7 +32,7 @@ UPLOAD_EXTRA_FILES += robocop.apk
 ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 robocop_apk := $(topobjdir)/mobile/android/tests/browser/robocop/robocop-debug-unsigned-unaligned.apk
 else
-robocop_apk := $(topobjdir)/gradle/build/mobile/android/app/outputs/apk/app-official-photon-debug-androidTest-unaligned.apk
+robocop_apk := $(topobjdir)/gradle/build/mobile/android/app/outputs/apk/app-official-photon-debug-androidTest.apk
 endif
 
 INNER_ROBOCOP_PACKAGE= \

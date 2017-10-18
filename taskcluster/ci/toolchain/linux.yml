@@ -263,7 +263,6 @@ linux64-android-sdk-linux-repack:
     run:
         using: toolchain-script
         script: repack-android-sdk-linux.sh
-        tc-vcs: false
         resources:
             - 'python/mozboot/**/*android*'
         toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
@@ -286,8 +285,6 @@ linux64-android-gradle-dependencies:
         using: toolchain-script
         script: android-gradle-dependencies.sh
         sparse-profile: null
-
-        tc-vcs: false
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/android-gradle-dependencies/**'

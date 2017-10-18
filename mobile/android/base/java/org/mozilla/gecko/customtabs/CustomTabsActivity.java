@@ -61,6 +61,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebApps;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
@@ -653,7 +654,7 @@ public class CustomTabsActivity extends AppCompatActivity
                               final String uri, final String elementSrc) {
 
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
-        final Uri validUri = getValidURL(content);
+        final Uri validUri = WebApps.getValidURL(content);
         if (validUri == null) {
             return;
         }
@@ -661,54 +662,11 @@ public class CustomTabsActivity extends AppCompatActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                openInFennec(validUri, CustomTabsActivity.this);
+                WebApps.openInFennec(validUri, CustomTabsActivity.this);
             }
         });
     }
 
-    void openInFennec(final Uri uri, final Context context) {
-        ThreadUtils.assertOnUiThread();
-
-        final Prompt prompt = new Prompt(context, new Prompt.PromptCallback() {
-            @Override
-            public void onPromptFinished(final GeckoBundle result) {
-
-                final int itemId = result.getInt("button", -1);
-
-                if (itemId == -1) {
-                    // this is the error case, we shouldn't have this situation.
-                    return;
-                }
-                Intent intent = new Intent(context, BrowserApp.class);
-                // BrowserApp's onNewIntent will check action so below is required
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setData(uri);
-                intent.setPackage(context.getPackageName());
-                context.startActivity(intent);
-
-            }
-        });
-
-        final PromptListItem[] items = new PromptListItem[1];
-        items[0] = new PromptListItem(context.getResources().getString(R.string.overlay_share_open_browser_btn_label));
-        prompt.show("", "", items, ListView.CHOICE_MODE_NONE);
-
-    }
-
-    @Nullable
-    Uri getValidURL(@NonNull String urlString) {
-        final Uri uri = Uri.parse(urlString);
-        if (uri == null) {
-            return null;
-        }
-        final String scheme = uri.getScheme();
-        // currently we only support http and https to open in Firefox
-        if (scheme.equals("http") || scheme.equals("https")) {
-            return uri;
-        } else {
-            return null;
-        }
-    }
 
     @Override // ActionModePresenter
     public void startActionMode(final ActionMode.Callback callback) {

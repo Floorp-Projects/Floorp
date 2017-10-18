@@ -36,3 +36,6 @@ glob:**/tooltool-manifests/**
 # For scheduling android-gradle-dependencies.
 path:mobile/android/config/
 glob:**/*.gradle
+
+# for action-task building
+path:.taskcluster.yml

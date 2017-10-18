@@ -5,7 +5,6 @@ MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 VOLUME /builds/worker/checkouts
-VOLUME /builds/worker/.tc-vcs
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables

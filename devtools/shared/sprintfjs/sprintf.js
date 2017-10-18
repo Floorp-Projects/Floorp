@@ -26,6 +26,7 @@
  *
  */
 
+/* eslint-disable */
 /* globals window, exports, define */
 
 (function(window) {
@@ -60,11 +61,15 @@
     sprintf.format = function(parse_tree, argv) {
         var cursor = 1, tree_length = parse_tree.length, node_type = '', arg, output = [], i, k, match, pad, pad_character, pad_length, is_positive = true, sign = ''
         for (i = 0; i < tree_length; i++) {
-            node_type = get_type(parse_tree[i])
+            node_type = typeof parse_tree[i]
+            // The items of parse tree are either strings or results of a match() call.
             if (node_type === 'string') {
+                // this is not a placeholder, this is just a string.
                 output[output.length] = parse_tree[i]
             }
-            else if (node_type === 'array') {
+            else {
+                // this is a placeholder, need to identify its type, options and replace
+                // it with the appropriate argument.
                 match = parse_tree[i] // convenience purposes only
                 if (match[2]) { // keyword argument
                     arg = argv[cursor]
@@ -82,12 +87,27 @@
                     arg = argv[cursor++]
                 }
 
-                if (re.not_type.test(match[8]) && re.not_primitive.test(match[8]) && get_type(arg) == 'function') {
+                // The most commonly used placeholder in DevTools is the string (%S or %s).
+                // We check it first to avoid unnecessary verifications.
+                let hasPadding = match[6];
+                let patternType = match[8];
+                if (!hasPadding && (patternType === "S" || patternType === "s")) {
+                    if (typeof arg === "function") {
+                        arg = arg();
+                    }
+                    if (typeof arg !== "string") {
+                        arg = String(arg);
+                    }
+                    output[output.length] = match[7] ? arg.substring(0, match[7]) : arg;
+                    continue;
+                }
+
+                if (re.not_type.test(match[8]) && re.not_primitive.test(match[8]) && typeof arg == 'function') {
                     arg = arg()
                 }
 
-                if (re.numeric_arg.test(match[8]) && (get_type(arg) != 'number' && isNaN(arg))) {
-                    throw new TypeError(sprintf("[sprintf] expecting number but found %s", get_type(arg)))
+                if (re.numeric_arg.test(match[8]) && (typeof arg != 'number' && isNaN(arg))) {
+                    throw new TypeError(sprintf("[sprintf] expecting number but found %s", typeof arg))
                 }
 
                 if (re.number.test(match[8])) {
@@ -130,7 +150,7 @@
                         arg = (match[7] ? arg.substring(0, match[7]) : arg)
                     break
                     case 'T':
-                        arg = get_type(arg)
+                        arg = Object.prototype.toString.call(arg).slice(8, -1).toLowerCase()
                         arg = (match[7] ? arg.substring(0, match[7]) : arg)
                     break
                     case 'u':
@@ -227,17 +247,6 @@
     /**
      * helpers
      */
-    function get_type(variable) {
-        if (typeof variable === 'number') {
-            return 'number'
-        }
-        else if (typeof variable === 'string') {
-            return 'string'
-        }
-        else {
-            return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase()
-        }
-    }
 
     var preformattedPadding = {
         '0': ['', '0', '00', '000', '0000', '00000', '000000', '0000000'],

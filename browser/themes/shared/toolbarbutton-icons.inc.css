@@ -229,14 +229,6 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/new-window.svg");
 }
 
-#e10s-button {
-  list-style-image: url("chrome://browser/skin/new-window.svg");
-}
-
-#e10s-button > .toolbarbutton-icon {
-  transform: scaleY(-1);
-}
-
 #new-tab-button {
   list-style-image: url("chrome://browser/skin/new-tab.svg");
 }

@@ -564,7 +564,7 @@ typedef struct _NPEvent
 {
   uint16_t event;
   uintptr_t wParam;
-  uintptr_t lParam;
+  intptr_t lParam;
 } NPEvent;
 #elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef XEvent NPEvent;
