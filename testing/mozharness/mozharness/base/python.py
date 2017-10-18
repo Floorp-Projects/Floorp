@@ -7,7 +7,6 @@
 '''Python usage, esp. virtualenv.
 '''
 
-import distutils.version
 import errno
 import os
 import subprocess
@@ -57,11 +56,6 @@ virtualenv_config_options = [
         "dest": "virtualenv_path",
         "default": "venv",
         "help": "Specify the path to the virtualenv top level directory"
-    }],
-    [["--virtualenv"], {
-        "action": "store",
-        "dest": "virtualenv",
-        "help": "Specify the virtualenv executable to use"
     }],
     [["--find-links"], {
         "action": "extend",
@@ -251,12 +245,6 @@ class VirtualenvMixin(object):
             # Allow easy_install to be overridden by
             # self.config['exes']['easy_install']
             default = 'easy_install'
-            if self._is_windows():
-                # Don't invoke `easy_install` directly on windows since
-                # the 'install' in the executable name hits UAC
-                # - http://answers.microsoft.com/en-us/windows/forum/windows_7-security/uac-message-do-you-want-to-allow-the-following/bea30ad8-9ef8-4897-aab4-841a65f7af71
-                # - https://bugzilla.mozilla.org/show_bug.cgi?id=791840
-                default = [self.query_python_path(), self.query_python_path('easy_install-script.py')]
             command = self.query_exe('easy_install', default=default, return_type="list")
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
@@ -280,8 +268,7 @@ class VirtualenvMixin(object):
             if parsed.scheme != 'https':
                 trusted_hosts.add(parsed.hostname)
 
-        if (install_method != 'easy_install' and
-                    self.pip_version >= distutils.version.LooseVersion('6.0')):
+        if install_method != 'easy_install':
             for host in sorted(trusted_hosts):
                 command.extend(['--trusted-host', host])
 
@@ -373,52 +360,17 @@ class VirtualenvMixin(object):
         venv_path = self.query_virtualenv_path()
         self.info("Creating virtualenv %s" % venv_path)
 
-        # If running from a source checkout, use the virtualenv that is
-        # vendored since that is deterministic.
-        if self.topsrcdir:
-            virtualenv = [
-                sys.executable,
-                os.path.join(self.topsrcdir, 'third_party', 'python', 'virtualenv', 'virtualenv.py')
-            ]
-            virtualenv_options = c.get('virtualenv_options', [])
-            # Don't create symlinks. If we don't do this, permissions issues may
-            # hinder virtualenv creation or operation. Ideally we should do this
-            # below when using the system virtualenv. However, this is a newer
-            # feature and isn't guaranteed to be supported.
-            virtualenv_options.append('--always-copy')
-
-        # No source checkout. Try to find virtualenv from config options
-        # or search path.
-        else:
-            virtualenv = c.get('virtualenv', self.query_exe('virtualenv'))
-            if isinstance(virtualenv, str):
-                # allow for [python, virtualenv] in config
-                virtualenv = [virtualenv]
-
-            if not os.path.exists(virtualenv[0]) and not self.which(virtualenv[0]):
-                self.add_summary("The executable '%s' is not found; not creating "
-                                 "virtualenv!" % virtualenv[0], level=FATAL)
-                return -1
-
-            # https://bugs.launchpad.net/virtualenv/+bug/352844/comments/3
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c50
-            if c.get('virtualenv_python_dll'):
-                # We may someday want to copy a differently-named dll, but
-                # let's not think about that right now =\
-                dll_name = os.path.basename(c['virtualenv_python_dll'])
-                target = self.query_python_path(dll_name)
-                scripts_dir = os.path.dirname(target)
-                self.mkdir_p(scripts_dir)
-                self.copyfile(c['virtualenv_python_dll'], target, error_level=WARNING)
-
-            # make this list configurable?
-            for module in ('distribute', 'pip'):
-                if c.get('%s_url' % module):
-                    self.download_file(c['%s_url' % module],
-                                       parent_dir=dirs['abs_work_dir'])
-
-            virtualenv_options = c.get('virtualenv_options',
-                                       ['--no-site-packages', '--distribute'])
+        # Always use the virtualenv that is vendored since that is deterministic.
+        # TODO Bug 1408051 - Use the copy of virtualenv under
+        # third_party/python/virtualenv once everything is off buildbot
+        virtualenv = [
+            sys.executable,
+            os.path.join(external_tools_path, 'virtualenv', 'virtualenv.py'),
+        ]
+        virtualenv_options = c.get('virtualenv_options', [])
+        # Don't create symlinks. If we don't do this, permissions issues may
+        # hinder virtualenv creation or operation.
+        virtualenv_options.append('--always-copy')
 
         if os.path.exists(self.query_python_path()):
             self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
@@ -429,17 +381,6 @@ class VirtualenvMixin(object):
                              error_list=VirtualenvErrorList,
                              partial_env={'VIRTUALENV_NO_DOWNLOAD': "1"},
                              halt_on_failure=True)
-
-        # Resolve the pip version so we can conditionally do things if we have
-        # a modern pip.
-        pip = self.query_python_path('pip')
-        output = self.get_output_from_command([pip, '--version'],
-                                              halt_on_failure=True)
-        words = output.split()
-        if words[0] != 'pip':
-            self.fatal('pip --version output is weird: %s' % output)
-        pip_version = words[1]
-        self.pip_version = distutils.version.LooseVersion(pip_version)
 
         if not modules:
             modules = c.get('virtualenv_modules', [])

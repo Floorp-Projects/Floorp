@@ -114,6 +114,13 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // There appears to be a deadlock if we try to load modules concurrently, so
+  // just wait until the loadable roots module has been loaded.
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   NS_ConvertUTF16toUTF8 moduleName(aModuleName);
   nsCString fullPath;
   // NSS doesn't support Unicode path.  Use native charset

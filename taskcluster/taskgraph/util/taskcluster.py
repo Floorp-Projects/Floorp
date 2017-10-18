@@ -157,7 +157,25 @@ def cancel_task(task_id, use_proxy=False):
     if testing:
         logger.info('Would have cancelled {}.'.format(task_id))
     else:
-        _do_request(get_task_url(task_id, use_proxy) + '/cancel', content={})
+        _do_request(get_task_url(task_id, use_proxy) + '/cancel', json={})
+
+
+def get_purge_cache_url(provisioner_id, worker_type, use_proxy=False):
+    if use_proxy:
+        TASK_URL = 'http://taskcluster/purge-cache/v1/purge-cache/{}/{}'
+    else:
+        TASK_URL = 'https://purge-cache.taskcluster.net/v1/purge-cache/{}/{}'
+    return TASK_URL.format(provisioner_id, worker_type)
+
+
+def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
+    """Requests a cache purge from the purge-caches service."""
+    if testing:
+        logger.info('Would have purged {}/{}/{}.'.format(provisioner_id, worker_type, cache_name))
+    else:
+        logger.info('Purging {}/{}/{}.'.format(provisioner_id, worker_type, cache_name))
+        purge_cache_url = get_purge_cache_url(provisioner_id, worker_type, use_proxy)
+        _do_request(purge_cache_url, json={'cacheName': cache_name})
 
 
 def get_taskcluster_artifact_prefix(task_id, postfix='', locale=None):

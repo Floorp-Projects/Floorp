@@ -68,6 +68,7 @@ use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, RecvTimeoutError};
 use style_traits::CSSPixel;
 use style_traits::SpeculativePainter;
+use style_traits::cursor::Cursor;
 use webdriver_msg::{LoadStatus, WebDriverScriptCommand};
 use webrender_api::{ClipId, DevicePixel, DocumentId, ImageKey};
 use webvr_traits::{WebVREvent, WebVRMsg};
@@ -158,7 +159,7 @@ pub struct LoadData {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum JsEvalResult {
     /// The js evaluation had a non-string result, 204 status code.
-    /// https://html.spec.whatwg.org/multipage/#navigate 12.11
+    /// <https://html.spec.whatwg.org/multipage/#navigate> 12.11
     NoContent,
     /// The js evaluation had a string result.
     Ok(Vec<u8>)
@@ -221,8 +222,9 @@ pub enum DiscardBrowsingContext {
 /// A document is active if it is the current active document in its session history,
 /// it is fuly active if it is active and all of its ancestors are active,
 /// and it is inactive otherwise.
-/// https://html.spec.whatwg.org/multipage/#active-document
-/// https://html.spec.whatwg.org/multipage/#fully-active
+///
+/// * <https://html.spec.whatwg.org/multipage/#active-document>
+/// * <https://html.spec.whatwg.org/multipage/#fully-active>
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, HeapSizeOf, PartialEq, Serialize)]
 pub enum DocumentActivity {
     /// An inactive document
@@ -402,7 +404,7 @@ pub enum TouchEventType {
 
 /// An opaque identifier for a touch point.
 ///
-/// http://w3c.github.io/touch-events/#widl-Touch-identifier
+/// <http://w3c.github.io/touch-events/#widl-Touch-identifier>
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TouchId(pub i32);
 
@@ -434,13 +436,13 @@ pub enum CompositorEvent {
     /// The window was resized.
     ResizeEvent(WindowSizeData, WindowSizeType),
     /// A mouse button state changed.
-    MouseButtonEvent(MouseEventType, MouseButton, Point2D<f32>),
+    MouseButtonEvent(MouseEventType, MouseButton, Point2D<f32>, Option<UntrustedNodeAddress>),
     /// The mouse was moved over a point (or was moved out of the recognizable region).
-    MouseMoveEvent(Option<Point2D<f32>>),
+    MouseMoveEvent(Option<Point2D<f32>>, Option<UntrustedNodeAddress>),
     /// A touch event was generated with a touch ID and location.
-    TouchEvent(TouchEventType, TouchId, Point2D<f32>),
+    TouchEvent(TouchEventType, TouchId, Point2D<f32>, Option<UntrustedNodeAddress>),
     /// Touchpad pressure event
-    TouchpadPressureEvent(Point2D<f32>, f32, TouchpadPressurePhase),
+    TouchpadPressureEvent(Point2D<f32>, f32, TouchpadPressurePhase, Option<UntrustedNodeAddress>),
     /// A key was pressed.
     KeyEvent(Option<char>, Key, KeyState, KeyModifiers),
 }
@@ -722,7 +724,7 @@ pub struct ScrollState {
 #[derive(Clone, Copy, Deserialize, HeapSizeOf, Serialize)]
 pub struct WindowSizeData {
     /// The size of the initial layout viewport, before parsing an
-    /// http://www.w3.org/TR/css-device-adapt/#initial-viewport
+    /// <http://www.w3.org/TR/css-device-adapt/#initial-viewport>
     pub initial_viewport: TypedSize2D<f32, CSSPixel>,
 
     /// The resolution of the window in dppx, not including any "pinch zoom" factor.
@@ -798,6 +800,10 @@ pub enum ConstellationMsg {
     CloseBrowser(TopLevelBrowsingContextId),
     /// Make browser visible.
     SelectBrowser(TopLevelBrowsingContextId),
+    /// Forward an event to the script task of the given pipeline.
+    ForwardEvent(PipelineId, CompositorEvent),
+    /// Requesting a change to the onscreen cursor.
+    SetCursor(Cursor),
 }
 
 /// Resources required by workerglobalscopes
@@ -853,7 +859,7 @@ impl From<RecvTimeoutError> for PaintWorkletError {
 
 /// Execute paint code in the worklet thread pool.
 pub trait Painter: SpeculativePainter {
-    /// https://drafts.css-houdini.org/css-paint-api/#draw-a-paint-image
+    /// <https://drafts.css-houdini.org/css-paint-api/#draw-a-paint-image>
     fn draw_a_paint_image(&self,
                           size: TypedSize2D<f32, CSSPixel>,
                           zoom: ScaleFactor<f32, CSSPixel, DevicePixel>,
@@ -869,7 +875,8 @@ impl fmt::Debug for Painter {
 }
 
 /// The result of executing paint code: the image together with any image URLs that need to be loaded.
-/// TODO: this should return a WR display list. https://github.com/servo/servo/issues/17497
+///
+/// TODO: this should return a WR display list. <https://github.com/servo/servo/issues/17497>
 #[derive(Clone, Debug, Deserialize, HeapSizeOf, Serialize)]
 pub struct DrawAPaintImageResult {
     /// The image height

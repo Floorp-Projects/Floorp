@@ -35,15 +35,6 @@ def docker_worker_add_workspace_cache(config, job, taskdesc, extra=None):
         )
 
 
-def docker_worker_add_tc_vcs_cache(config, job, taskdesc):
-    taskdesc['worker'].setdefault('caches', []).append({
-        'type': 'persistent',
-        'name': 'level-{}-{}-tc-vcs'.format(
-            config.params['level'], config.params['project']),
-        'mount-point': "/builds/worker/.tc-vcs",
-    })
-
-
 def add_public_artifacts(config, job, taskdesc, path):
     taskdesc['worker'].setdefault('artifacts', []).append({
         'name': 'public/build',

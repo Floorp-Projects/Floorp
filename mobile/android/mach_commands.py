@@ -135,11 +135,11 @@ class MachCommands(MachCommandBase):
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/android/lint".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
         else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs')
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports')
 
         reports = ('officialPhotonDebug',)
         for report in reports:
-            f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/lint-results-{}.xml'.format(report)), 'rt')
+            f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)), 'rt')
             tree = ET.parse(f)
             root = tree.getroot()
 
@@ -230,12 +230,12 @@ class MachCommands(MachCommandBase):
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             root_url = "https://queue.taskcluster.net/v1/task/{}/runs/{}/artifacts/public/artifacts/findbugs".format(os.environ['TASK_ID'], os.environ['RUN_ID'])
         else:
-            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/findbugs')
+            root_url = os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs')
 
         reports = ('findbugs-officialPhotonDebug-output.xml',)
         for report in reports:
             try:
-                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/outputs/findbugs', report), 'rt')
+                f = open(os.path.join(self.topobjdir, 'gradle/build/mobile/android/app/reports/findbugs', report), 'rt')
             except IOError:
                 continue
 
@@ -316,7 +316,7 @@ class MachCommands(MachCommandBase):
         # Android tools expect UTF-8: see
         # http://tools.android.com/knownissues/encoding.  See
         # http://stackoverflow.com/a/21267635 for discussion of this approach.
-        return self.run_process([self.substs['GRADLE']] + gradle_flags + args,
+        return self.run_process([self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
             append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,

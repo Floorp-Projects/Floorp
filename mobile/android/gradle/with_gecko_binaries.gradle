@@ -37,7 +37,7 @@ task buildOmnijar(type:Exec) {
     dependsOn rootProject.generateCodeAndResources
 
     // See comment in :omnijar project regarding interface mismatches here.
-    inputs.source project(':omnijar').sourceSets.main.resources.srcDirs
+    inputs.file(project(':omnijar').sourceSets.main.resources.srcDirs).skipWhenEmpty() 
 
     // Produce a single output file.
     outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
@@ -71,9 +71,11 @@ task syncOmnijarFromDistDir(type: Sync) {
     }
 }
 
-task checkLibsExistInDistDir<< {
-    if (syncLibsFromDistDir.source.empty) {
-        throw new GradleException("Required JNI libraries not found in ${topobjdir}/dist/fennec/lib.  Have you built and packaged?")
+task checkLibsExistInDistDir {
+    doLast {
+        if (syncLibsFromDistDir.source.empty) {
+            throw new GradleException("Required JNI libraries not found in ${topobjdir}/dist/fennec/lib.  Have you built and packaged?")
+        }
     }
 }
 
@@ -82,9 +84,11 @@ task syncLibsFromDistDir(type: Sync, dependsOn: checkLibsExistInDistDir) {
     from("${topobjdir}/dist/fennec/lib")
 }
 
-task checkAssetsExistInDistDir<< {
-    if (syncAssetsFromDistDir.source.empty) {
-        throw new GradleException("Required assets not found in ${topobjdir}/dist/fennec/assets.  Have you built and packaged?")
+task checkAssetsExistInDistDir {
+    doLast {
+        if (syncAssetsFromDistDir.source.empty) {
+            throw new GradleException("Required assets not found in ${topobjdir}/dist/fennec/assets.  Have you built and packaged?")
+        }
     }
 }
 

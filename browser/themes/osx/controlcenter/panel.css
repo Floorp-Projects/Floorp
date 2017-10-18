@@ -5,10 +5,6 @@
 %include ../shared.inc
 %include ../../shared/controlcenter/panel.inc.css
 
-#identity-popup {
-  margin-top: 1px;
-}
-
 .identity-popup-expander:-moz-focusring,
 .identity-popup-permission-remove-button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);

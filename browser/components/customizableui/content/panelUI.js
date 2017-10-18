@@ -471,6 +471,10 @@ const PanelUI = {
       CustomizableUI.addPanelCloseListeners(tempPanel);
       tempPanel.addEventListener("popuphidden", panelRemover);
 
+      if (aAnchor.parentNode.id == "PersonalToolbar") {
+        tempPanel.classList.add("bookmarks-toolbar");
+      }
+
       let anchor = this._getPanelAnchor(aAnchor);
 
       if (aAnchor != anchor && aAnchor.id) {
@@ -846,6 +850,8 @@ const PanelUI = {
 
   _getPanelAnchor(candidate) {
     let iconAnchor =
+      document.getAnonymousElementByAttribute(candidate, "class",
+                                              "toolbarbutton-badge-stack") ||
       document.getAnonymousElementByAttribute(candidate, "class",
                                               "toolbarbutton-icon");
     return iconAnchor || candidate;

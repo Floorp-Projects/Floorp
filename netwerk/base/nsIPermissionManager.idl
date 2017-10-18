@@ -163,6 +163,8 @@ interface nsIPermissionManager : nsISupports
 
   /**
    * Test whether a website has permission to perform the given action.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    * @param uri     the uri to be tested
    * @param type    a case-sensitive ASCII string, identifying the consumer
    * @param return  see add(), param permission. returns UNKNOWN_ACTION when
@@ -174,6 +176,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * Test whether the principal has the permission to perform a given action.
    * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    */
   uint32_t testPermissionFromPrincipal(in nsIPrincipal principal,
                                        in string type);
@@ -182,6 +186,8 @@ interface nsIPermissionManager : nsISupports
    * Test whether the principal associated with the window's document has the
    * permission to perform a given action.  System principals will always
    * have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    */
   uint32_t testPermissionFromWindow(in mozIDOMWindow window,
                                     in string type);
@@ -189,6 +195,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * Test whether a website has permission to perform the given action.
    * This requires an exact hostname match, subdomains are not a match.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    * @param uri     the uri to be tested
    * @param type    a case-sensitive ASCII string, identifying the consumer
    * @param return  see add(), param permission. returns UNKNOWN_ACTION when
@@ -200,6 +208,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * See testExactPermission() above.
    * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    */
   uint32_t testExactPermissionFromPrincipal(in nsIPrincipal principal,
                                             in string type);
@@ -208,6 +218,8 @@ interface nsIPermissionManager : nsISupports
    * Test whether a website has permission to perform the given action
    * ignoring active sessions.
    * System principals will always have permissions granted.
+   * This function will perform a pref lookup to permissions.default.<type>
+   * if the specific permission type is part of the whitelist for that functionality.
    *
    * @param principal the principal
    * @param type      a case-sensitive ASCII string, identifying the consumer
