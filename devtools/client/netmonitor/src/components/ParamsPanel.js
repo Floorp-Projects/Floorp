@@ -5,13 +5,17 @@
 "use strict";
 
 const {
+  createClass,
   createFactory,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
 const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/request-utils");
 const { sortObjectKeys } = require("../utils/sort-utils");
+const { getFormDataSections } = require("../utils/request-utils");
+const Actions = require("../actions/index");
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -31,83 +35,126 @@ const SECTION_NAMES = [
   PARAMS_QUERY_STRING,
 ];
 
-/*
+/**
  * Params panel component
  * Displays the GET parameters and POST data of a request
  */
-function ParamsPanel({
-  openLink,
-  request,
-}) {
-  let {
-    formDataSections,
-    mimeType,
-    requestPostData,
-    url,
-  } = request;
-  let postData = requestPostData ? requestPostData.postData.text : null;
-  let query = getUrlQuery(url);
+const ParamsPanel = createClass({
+  displayName: "ParamsPanel",
 
-  if (!formDataSections && !postData && !query) {
-    return div({ className: "empty-notice" },
-      PARAMS_EMPTY_TEXT
+  propTypes: {
+    connector: PropTypes.object.isRequired,
+    openLink: PropTypes.func,
+    request: PropTypes.object.isRequired,
+    updateRequest: PropTypes.func.isRequired,
+  },
+
+  componentDidMount() {
+    this.updateFormDataSections(this.props);
+  },
+
+  componentWillReceiveProps(nextProps) {
+    this.updateFormDataSections(nextProps);
+  },
+
+  updateFormDataSections(props) {
+    let {
+      connector,
+      request = {},
+      updateRequest,
+    } = props;
+    let {
+      formDataSections,
+      requestHeaders,
+      requestHeadersFromUploadStream,
+      requestPostData,
+    } = request;
+
+    if (!formDataSections && requestHeaders &&
+        requestHeadersFromUploadStream && requestPostData) {
+      getFormDataSections(
+        requestHeaders,
+        requestHeadersFromUploadStream,
+        requestPostData,
+        connector.getLongString,
+      ).then((newFormDataSections) => {
+        updateRequest(
+          request.id,
+          { formDataSections: newFormDataSections },
+          true,
+        );
+      });
+    }
+  },
+
+  render() {
+    let {
+      openLink,
+      request
+    } = this.props;
+    let {
+      formDataSections,
+      mimeType,
+      requestPostData,
+      url,
+    } = request;
+    let postData = requestPostData ? requestPostData.postData.text : null;
+    let query = getUrlQuery(url);
+
+    if (!formDataSections && !postData && !query) {
+      return div({ className: "empty-notice" },
+        PARAMS_EMPTY_TEXT
+      );
+    }
+
+    let object = {};
+    let json;
+
+    // Query String section
+    if (query) {
+      object[PARAMS_QUERY_STRING] = getProperties(parseQueryString(query));
+    }
+
+    // Form Data section
+    if (formDataSections && formDataSections.length > 0) {
+      let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
+      object[PARAMS_FORM_DATA] = getProperties(parseFormData(sections));
+    }
+
+    // Request payload section
+    if (formDataSections && formDataSections.length === 0 && postData) {
+      try {
+        json = JSON.parse(postData);
+      } catch (error) {
+        // Continue regardless of parsing error
+      }
+
+      if (json) {
+        object[JSON_SCOPE_NAME] = sortObjectKeys(json);
+      } else {
+        object[PARAMS_POST_PAYLOAD] = {
+          EDITOR_CONFIG: {
+            text: postData,
+            mode: mimeType.replace(/;.+/, ""),
+          },
+        };
+      }
+    } else {
+      postData = "";
+    }
+
+    return (
+      div({ className: "panel-container" },
+        PropertiesView({
+          object,
+          filterPlaceHolder: PARAMS_FILTER_TEXT,
+          sectionNames: SECTION_NAMES,
+          openLink,
+        })
+      )
     );
   }
-
-  let object = {};
-  let json;
-
-  // Query String section
-  if (query) {
-    object[PARAMS_QUERY_STRING] = getProperties(parseQueryString(query));
-  }
-
-  // Form Data section
-  if (formDataSections && formDataSections.length > 0) {
-    let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
-    object[PARAMS_FORM_DATA] = getProperties(parseFormData(sections));
-  }
-
-  // Request payload section
-  if (formDataSections && formDataSections.length === 0 && postData) {
-    try {
-      json = JSON.parse(postData);
-    } catch (error) {
-      // Continue regardless of parsing error
-    }
-
-    if (json) {
-      object[JSON_SCOPE_NAME] = sortObjectKeys(json);
-    } else {
-      object[PARAMS_POST_PAYLOAD] = {
-        EDITOR_CONFIG: {
-          text: postData,
-          mode: mimeType.replace(/;.+/, ""),
-        },
-      };
-    }
-  } else {
-    postData = "";
-  }
-
-  return (
-    div({ className: "panel-container" },
-      PropertiesView({
-        object,
-        filterPlaceHolder: PARAMS_FILTER_TEXT,
-        sectionNames: SECTION_NAMES,
-        openLink,
-      })
-    )
-  );
-}
-
-ParamsPanel.displayName = "ParamsPanel";
-
-ParamsPanel.propTypes = {
-  request: PropTypes.object.isRequired,
-  openLink: PropTypes.func,
-};
+});
 
 /**
  * Mapping array to dict for TreeView usage.
@@ -133,4 +180,8 @@ function getProperties(arr) {
   }, {}));
 }
 
-module.exports = ParamsPanel;
+module.exports = connect(null,
+  (dispatch) => ({
+    updateRequest: (id, data, batch) => dispatch(Actions.updateRequest(id, data, batch)),
+  }),
+)(ParamsPanel);
