@@ -50,8 +50,8 @@ function testToObject() {
     // Technically an embedding could have this as extension acting differently
     // from ours, so a feature-test is inadequate.  We can move this subtest
     // into extensions/ if that ever matters.
-    if (typeof objectEmulatingUndefined === "function") {
-        var falsyObject = objectEmulatingUndefined();
+    if (typeof createIsHTMLDDA === "function") {
+        var falsyObject = createIsHTMLDDA();
         falsyObject.foo = 7;
 
         var obj = Object.assign({}, falsyObject);

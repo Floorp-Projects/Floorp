@@ -6,7 +6,7 @@ function f(v1, v2, value)
 }
 
 var obj = {};
-var emul = objectEmulatingUndefined();
+var emul = createIsHTMLDDA();
 
 f(obj, obj, false);
 f(obj, obj, false);
@@ -17,7 +17,7 @@ f(obj, emul, true);
 f(Object.prototype, obj, true);
 f(Object.prototype, obj, true);
 f(emul, emul, false);
-f(objectEmulatingUndefined(), emul, true);
-f(objectEmulatingUndefined(), emul, true);
-f(emul, objectEmulatingUndefined(), true);
-f(emul, objectEmulatingUndefined(), true);
+f(createIsHTMLDDA(), emul, true);
+f(createIsHTMLDDA(), emul, true);
+f(emul, createIsHTMLDDA(), true);
+f(emul, createIsHTMLDDA(), true);
