@@ -1020,25 +1020,28 @@ RenderViewPass::RenderWithBackdropCopy()
   MOZ_ASSERT(transform.Is2D(&transform2d) &&
              !gfx::ThebesMatrix(transform2d).HasNonIntegerTranslation());
 
+  IntPoint translation = IntPoint::Truncate(transform._41, transform._42);
+
+  RenderViewMLGPU* childView = mAssignedLayer->GetRenderView();
+
   IntRect visible = mAssignedLayer->GetShadowVisibleRegion().GetBounds().ToUnknownRect();
-  visible += IntPoint::Truncate(transform._41, transform._42);
-  visible -= mParentView->GetTargetOffset();
+  IntRect sourceRect = visible + translation - mParentView->GetTargetOffset();
+  IntPoint destPoint = visible.TopLeft() - childView->GetTargetOffset();
 
   RefPtr<MLGTexture> dest = mAssignedLayer->GetRenderTarget()->GetTexture();
   RefPtr<MLGTexture> source = mParentView->GetRenderTarget()->GetTexture();
 
-  // Clamp the rect so that we don't read pixels outside the source texture, or
-  // write pixels outside the destination texture.
-  visible = visible.Intersect(IntRect(IntPoint(0, 0), source->GetSize()));
-  visible = visible.Intersect(IntRect(visible.TopLeft(), dest->GetSize()));
+  // Clamp the source rect to the source texture size.
+  sourceRect = sourceRect.Intersect(IntRect(IntPoint(0, 0), source->GetSize()));
 
-  mDevice->CopyTexture(dest, IntPoint(0, 0), source, visible);
+  // Clamp the source rect to the destination texture size.
+  IntRect destRect(destPoint, sourceRect.Size());
+  destRect = destRect.Intersect(IntRect(IntPoint(0, 0), dest->GetSize()));
+  sourceRect = sourceRect.Intersect(IntRect(sourceRect.TopLeft(), destRect.Size()));
 
-  RenderViewMLGPU* childView = mAssignedLayer->GetRenderView();
+  mDevice->CopyTexture(dest, destPoint, source, sourceRect);
   childView->RenderAfterBackdropCopy();
-
   mParentView->RestoreDeviceState();
-
   TexturedRenderPass::ExecuteRendering();
 }
 

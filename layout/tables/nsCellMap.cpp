@@ -2431,9 +2431,8 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
       if (cd) {
         if (cd->IsOrig()) {
           nsTableCellFrame* cellFrame = cd->GetCellFrame();
-          int32_t cellFrameColIndex;
-          cellFrame->GetColIndex(cellFrameColIndex);
-          printf("C%d,%d=%p(%d)  ", rIndex, colIndex, (void*)cellFrame,
+          uint32_t cellFrameColIndex = cellFrame->ColIndex();
+          printf("C%d,%d=%p(%u)  ", rIndex, colIndex, (void*)cellFrame,
                  cellFrameColIndex);
           cellCount++;
         }
@@ -2520,8 +2519,7 @@ nsCellMap::GetCellInfoAt(const nsTableCellMap& aMap,
       cellFrame = GetCellFrame(aRowX, aColX, *data, true);
     }
     if (cellFrame && aColSpan) {
-      int32_t initialColIndex;
-      cellFrame->GetColIndex(initialColIndex);
+      uint32_t initialColIndex = cellFrame->ColIndex();
       *aColSpan = GetEffectiveColSpan(aMap, aRowX, initialColIndex);
     }
   }

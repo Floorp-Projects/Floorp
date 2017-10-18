@@ -16,6 +16,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 
 // Constants
@@ -57,12 +58,25 @@ function executeTest(aWindow) {
     .then(_ => register(aWindow, workerURL, workerScope))
     .then(r => registration = r)
 
-    // Should be intercpeted and synthesized.
+    // If this test is re-run then we may end up resurrecting the previous
+    // registration and worker.  In those cases we will have an active instead
+    // of installing.  This happens because because the test window itself
+    // is controlled.  If we were using iframes we could ensure the registration
+    // was removed before ending the test.
+    .then(_ => waitForState(registration.installing || registration.active, 'activated'))
+
+    // When run consecutively we sometime end up resurrecting a previous
+    // service worker.  In that case our active event does not run and claim
+    // the window.  So do the claim for a message event instead.
+    .then(_ => registration.active.postMessage('claim'))
+    .then(_ => waitForControlled(aWindow))
+
+    // Should be intercepted and synthesized.
     .then(_ => fetchAndCheckTimedChannel(aWindow, true, false, "fake.html"))
 
     // Should be intercepted but still fetch from network.
     .then(_ => fetchAndCheckTimedChannel(aWindow, true, true,
-                                         "hello.html?ForBypassingHttpCache"))
+                                         "hello.html?ForBypassingHttpCache=" + Date.now()))
 
     // Tear down
     .then(_ => registration.unregister())
@@ -87,8 +101,7 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
   var resolveFunction;
   var promise = new Promise(aResolve => resolveFunction = aResolve);
 
-  var topic = aFetch ? "http-on-examine-response"
-                     : "service-worker-synthesized-response";
+  var topic = "http-on-stop-request";
 
   function observer(aSubject) {
     var channel = aSubject.QueryInterface(Ci.nsIChannel);

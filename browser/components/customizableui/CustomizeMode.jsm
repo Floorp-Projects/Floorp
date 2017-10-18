@@ -108,6 +108,7 @@ function CustomizeMode(aWindow) {
   // to the user when in customizing mode.
   this.visiblePalette = this.document.getElementById(kPaletteId);
   this.paletteEmptyNotice = this.document.getElementById("customization-empty");
+  this.pongArena = this.document.getElementById("customization-pong-arena");
   if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
     lwthemeButton.setAttribute("hidden", "true");
@@ -408,9 +409,7 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
-    // Hide the palette before starting the transition for increased perf.
-    this.visiblePalette.hidden = true;
-    this.visiblePalette.removeAttribute("showing");
+    this.togglePong(false);
     this.paletteEmptyNotice.hidden = true;
 
     // Disable the reset and undo reset buttons while transitioning:
@@ -1538,6 +1537,15 @@ CustomizeMode.prototype = {
   _updateEmptyPaletteNotice() {
     let paletteItems = this.visiblePalette.getElementsByTagName("toolbarpaletteitem");
     this.paletteEmptyNotice.hidden = !!paletteItems.length;
+    let readyPlayerOne = this.document.getElementById("ready-player-one");
+
+    if (paletteItems.length == 1 &&
+        paletteItems[0].id.includes("wrapper-customizableui-special-spring")) {
+      readyPlayerOne.hidden = false;
+    } else {
+      this.togglePong(false);
+      readyPlayerOne.hidden = true;
+    }
   },
 
   _updateResetButton() {
@@ -2519,6 +2527,215 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kDownloadAutoHidePref, checkbox.checked);
     // Ensure we move the button (back) after the user leaves customize mode.
     event.view.gCustomizeMode._moveDownloadsButtonToNavBar = checkbox.checked;
+  },
+
+  togglePong(enabled) {
+    // It's possible we're toggling for a reason other than hitting
+    // the button (we might be exiting, for example), so make sure that
+    // the state and checkbox are in sync.
+    let readyPlayerOne = this.document.getElementById("ready-player-one");
+    readyPlayerOne.checked = enabled;
+
+    if (enabled) {
+      this.visiblePalette.setAttribute("whimsypong", "true");
+      this.pongArena.hidden = false;
+      if (!this.uninitWhimsy) {
+        this.uninitWhimsy = this.whimsypong();
+      }
+    } else {
+      this.visiblePalette.removeAttribute("whimsypong");
+      if (this.uninitWhimsy) {
+        this.uninitWhimsy();
+        this.uninitWhimsy = null;
+      }
+      this.pongArena.hidden = true;
+    }
+  },
+
+  whimsypong() {
+    function update() {
+      updateBall();
+      updatePlayers();
+    }
+
+    function updateBall() {
+      if (ball[1] <= 0 || ball[1] >= gameSide) {
+        if ((ball[1] <= 0 && (ball[0] < p1 || ball[0] > p1 + paddleWidth)) ||
+            (ball[1] >= gameSide && (ball[0] < p2 || ball[0] > p2 + paddleWidth))) {
+          updateScore(ball[1] <= 0 ? 0 : 1);
+        } else {
+          if ((ball[1] <= 0 && (ball[0] - p1 < paddleEdge || p1 + paddleWidth - ball[0] < paddleEdge)) ||
+              (ball[1] >= gameSide && (ball[0] - p2 < paddleEdge || p2 + paddleWidth - ball[0] < paddleEdge))) {
+            ballDxDy[0] *= Math.random() + 1.3;
+            ballDxDy[0] = Math.max(Math.min(ballDxDy[0], 6), -6);
+            if (Math.abs(ballDxDy[0]) == 6) {
+              ballDxDy[0] += Math.sign(ballDxDy[0]) * Math.random();
+            }
+          } else {
+            ballDxDy[0] /= 1.1;
+          }
+          ballDxDy[1] *= -1;
+          ball[1] = ball[1] <= 0 ? 0 : gameSide;
+        }
+      }
+      ball = [Math.max(Math.min(ball[0] + ballDxDy[0], gameSide), 0),
+              Math.max(Math.min(ball[1] + ballDxDy[1], gameSide), 0)];
+      if (ball[0] <= 0 || ball[0] >= gameSide) {
+        ballDxDy[0] *= -1;
+      }
+    }
+
+    function updatePlayers() {
+      if (keydown) {
+        p1 += (keydown == 37 ? -1 : 1) * 10 * keydownAdj;
+      }
+
+      let sign = Math.sign(ballDxDy[0]);
+      if ((sign > 0 && ball[0] > p2 + paddleWidth / 2) ||
+          (sign < 0 && ball[0] < p2 + paddleWidth / 2)) {
+        p2 += sign * 3;
+      } else if ((sign > 0 && ball[0] > p2 + paddleWidth / 1.1) ||
+                 (sign < 0 && ball[0] < p2 + paddleWidth / 1.1)) {
+        p2 += sign * 9;
+      }
+
+      if (score >= winScore) {
+        p1 = ball[0];
+        p2 = ball[0];
+      }
+      p1 = Math.max(Math.min(p1, gameSide - paddleWidth), 0);
+      p2 = Math.max(Math.min(p2, gameSide - paddleWidth), 0);
+    }
+
+    function updateScore(adj) {
+      if (adj) {
+        score += adj;
+      } else if (--lives == 0) {
+        quit = true;
+      }
+      ball = ballDef.slice();
+      ballDxDy = ballDxDyDef.slice();
+      ballDxDy[1] *= score / winScore + 1;
+    }
+
+    function draw() {
+      elements.player1.style.transform = "translate(" + p1 + "px, -37px)";
+      elements.player2.style.transform = "translate(" + p2 + "px, 300px)";
+      elements.ball.style.transform = "translate(" + ball[0] + "px, " + ball[1] + "px)";
+      elements.score.textContent = score;
+      elements.lives.setAttribute("lives", lives);
+      if (score >= winScore) {
+        let arena = elements.arena;
+        let image = "url(chrome://browser/skin/customizableui/whimsy.png)";
+        let position = `${ball[0] - 10}px ${ball[1] - 10}px`;
+        let repeat = "no-repeat";
+        let size = "20px";
+        if (arena.style.backgroundImage) {
+          if (arena.style.backgroundImage.split(",").length >= 160) {
+            quit = true;
+          }
+
+          image += ", " + arena.style.backgroundImage;
+          position += ", " + arena.style.backgroundPosition;
+          repeat += ", " + arena.style.backgroundRepeat;
+          size += ", " + arena.style.backgroundSize;
+        }
+        arena.style.backgroundImage = image;
+        arena.style.backgroundPosition = position;
+        arena.style.backgroundRepeat = repeat;
+        arena.style.backgroundSize = size;
+      }
+    }
+
+    function onkeydown(event) {
+      if (event.which == 37 /* left */ ||
+          event.which == 39 /* right */) {
+        keydown = event.which;
+        keydownAdj *= 1.05;
+      }
+    }
+
+    function onkeyup(event) {
+      if (event.which == 37 || event.which == 39) {
+        keydownAdj = 1;
+        keydown = 0;
+      }
+    }
+
+    function uninit() {
+      document.removeEventListener("keydown", onkeydown);
+      document.removeEventListener("keyup", onkeyup);
+      if (rAFHandle) {
+        window.cancelAnimationFrame(rAFHandle);
+      }
+      let arena = elements.arena;
+      while (arena.firstChild) {
+        arena.firstChild.remove();
+      }
+      arena.removeAttribute("score");
+      arena.style.removeProperty("background-image");
+      arena.style.removeProperty("background-position");
+      arena.style.removeProperty("background-repeat");
+      arena.style.removeProperty("background-size");
+      elements = null;
+      document = null;
+      quit = true;
+    }
+
+    if (this.uninitWhimsy) {
+      return this.uninitWhimsy;
+    }
+
+    let ballDef = [10, 10];
+    let ball = [10, 10];
+    let ballDxDyDef = [2, 2];
+    let ballDxDy = [2, 2];
+    let score = 0;
+    let p1 = 0;
+    let p2 = 10;
+    let gameSide = 300;
+    let paddleEdge = 30;
+    let paddleWidth = 84;
+    let keydownAdj = 1;
+    let keydown = 0;
+    let lives = 5;
+    let winScore = 11;
+    let quit = false;
+    let document = this.document;
+    let rAFHandle = 0;
+    let elements = {
+      arena: document.getElementById("customization-pong-arena")
+    };
+
+    document.addEventListener("keydown", onkeydown);
+    document.addEventListener("keyup", onkeyup);
+
+    for (let id of ["player1", "player2", "ball", "score", "lives"]) {
+      let el = document.createElement("box");
+      el.id = id;
+      elements[id] = elements.arena.appendChild(el);
+    }
+
+    let spacer = this.visiblePalette.querySelector("toolbarpaletteitem");
+    for (let player of ["#player1", "#player2"]) {
+      let val = "-moz-element(#" + spacer.id + ") no-repeat";
+      elements.arena.querySelector(player).style.background = val;
+    }
+
+    let window = this.window;
+    rAFHandle = window.requestAnimationFrame(function animate() {
+      update();
+      draw();
+      if (quit) {
+        elements.score.textContent = score;
+        elements.lives && elements.lives.setAttribute("lives", lives);
+        elements.arena.setAttribute("score", score);
+      } else {
+        rAFHandle = window.requestAnimationFrame(animate);
+      }
+    });
+
+    return uninit;
   },
 };
 
