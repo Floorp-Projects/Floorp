@@ -122,6 +122,15 @@ TEST(TestProtocolProxyService, LoadHostFilters) {
   filter = "a b c abc:1x2, ,, * ** *.* *:10 :20 :40/12 */12:90";
   printf("Testing filter: %s\n", filter.get());
   pps->LoadHostFilters(filter);
+
+  // Check that filtering works properly when the filter is set to "<local>"
+  filter = "<local>";
+  printf("Testing filter: %s\n", filter.get());
+  pps->LoadHostFilters(filter);
+  CheckURLs(true);
+  CheckLoopbackURLs(false);
+  CheckLocalDomain(false);
+  CheckPortDomain(true);
 }
 
 } // namespace net
