@@ -158,6 +158,108 @@ const gKeyframesTests = [
              keyframe(computedOffset(1), {})]
   },
 
+  // ----------- Property-indexed keyframes: offset handling -----------
+
+  {
+    desc:   'a property-indexed keyframe with a single offset',
+    input:  { left: ['10px', '20px', '30px'], offset: 0.5 },
+    output: [keyframe(offset(0.5),          { left: '10px' }),
+             keyframe(computedOffset(0.75), { left: '20px' }),
+             keyframe(computedOffset(1),    { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets',
+    input:  { left: ['10px', '20px', '30px'], offset: [ 0.1, 0.25, 0.8 ] },
+    output: [keyframe(offset(0.1),  { left: '10px' }),
+             keyframe(offset(0.25), { left: '20px' }),
+             keyframe(offset(0.8),  { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets that is too'
+            + ' short',
+    input:  { left: ['10px', '20px', '30px'], offset: [ 0, 0.25 ] },
+    output: [keyframe(offset(0),         { left: '10px' }),
+             keyframe(offset(0.25),      { left: '20px' }),
+             keyframe(computedOffset(1), { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets that is too'
+            + ' long',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ 0, 0.25, 0.5, 0.75, 1 ] },
+    output: [keyframe(offset(0),    { left: '10px' }),
+             keyframe(offset(0.25), { left: '20px' }),
+             keyframe(offset(0.5),  { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an empty array of offsets',
+    input:  { left: ['10px', '20px', '30px'], offset: [] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }),
+             keyframe(computedOffset(0.5), { left: '20px' }),
+             keyframe(computedOffset(1),   { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets with an'
+            + ' embedded null value',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ 0, null, 0.5 ] },
+    output: [keyframe(offset(0),            { left: '10px' }),
+             keyframe(computedOffset(0.25), { left: '20px' }),
+             keyframe(offset(0.5),          { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets with a'
+            + ' trailing null value',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ 0, 0.25, null ] },
+    output: [keyframe(offset(0),           { left: '10px' }),
+             keyframe(offset(0.25),        { left: '20px' }),
+             keyframe(computedOffset(1), { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets with leading'
+            + ' and trailing null values',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ null, 0.25, null ] },
+    output: [keyframe(computedOffset(0), { left: '10px' }),
+             keyframe(offset(0.25),      { left: '20px' }),
+             keyframe(computedOffset(1), { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets with'
+            + ' adjacent null values',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ null, null, 0.5 ] },
+    output: [keyframe(computedOffset(0),    { left: '10px' }),
+             keyframe(computedOffset(0.25), { left: '20px' }),
+             keyframe(offset(0.5),          { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets with'
+            + ' all null values (and too many at that)',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ null, null, null, null, null ] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }),
+             keyframe(computedOffset(0.5), { left: '20px' }),
+             keyframe(computedOffset(1),   { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with a single null offset',
+    input:  { left: ['10px', '20px', '30px'], offset: null },
+    output: [keyframe(computedOffset(0),   { left: '10px' }),
+             keyframe(computedOffset(0.5), { left: '20px' }),
+             keyframe(computedOffset(1),   { left: '30px' })],
+  },
+  {
+    desc:   'a property-indexed keyframe with an array of offsets that is not'
+            + ' strictly ascending in the unused part of the array',
+    input:  { left: ['10px', '20px', '30px'],
+              offset: [ 0, 0.2, 0.8, 0.6 ] },
+    output: [keyframe(offset(0),   { left: '10px' }),
+             keyframe(offset(0.2), { left: '20px' }),
+             keyframe(offset(0.8), { left: '30px' })],
+  },
+
   // ----------- Keyframe sequence: property handling -----------
 
   {
@@ -398,6 +500,19 @@ const gInvalidKeyframesTests = [
     input: [ { opacity: 0 },
              { opacity: 0.5, offset: -1 },
              { opacity: 1 } ],
+  },
+  {
+    desc:  'property-indexed keyframes not loosely sorted by offset',
+    input: { opacity: [ 0, 1 ], offset: [ 1, 0 ] },
+  },
+  {
+    desc:  'property-indexed keyframes not loosely sorted by offset even'
+           + ' though not all offsets are specified',
+    input: { opacity: [ 0, 0.5, 1 ], offset: [ 0.5, 0 ] },
+  },
+  {
+    desc:  'property-indexed keyframes with offsets out of range',
+    input: { opacity: [ 0, 0.5, 1 ], offset: [ 0, 1.1 ] },
   },
   {
     desc:  'keyframes not loosely sorted by offset',
