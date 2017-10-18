@@ -13,9 +13,20 @@
     var setSharedArrayBuffer = global.setSharedArrayBuffer;
     var getSharedArrayBuffer = global.getSharedArrayBuffer;
     var evalInWorker = global.evalInWorker;
+
+    var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
     var hasMailbox = typeof setSharedArrayBuffer == "function" && typeof getSharedArrayBuffer == "function";
     var hasEvalInWorker = typeof evalInWorker == "function";
+
+    if (!hasCreateIsHTMLDDA && !("document" in global && "all" in global.document))
+        throw new Error("no [[IsHTMLDDA]] object available for testing");
+
+    var IsHTMLDDA = hasCreateIsHTMLDDA
+                    ? global.createIsHTMLDDA()
+                    : global.document.all;
+
+
 
     // The $262.agent framework is not appropriate for browsers yet, and some
     // test cases can't work in browsers (they block the main thread).
@@ -34,6 +45,7 @@
         detachArrayBuffer: global.detachArrayBuffer,
         evalScript: global.evaluateScript || global.evaluate,
         global,
+        IsHTMLDDA,
         agent: (function () {
 
             // SpiderMonkey complication: With run-time argument --no-threads
