@@ -11,8 +11,8 @@ ipc = ["ipc-channel"]
 
 [dependencies]
 app_units = "0.5.6"
+bitflags = "1.0"
 bincode = "0.9"
-bitflags = "0.9"
 byteorder = "1.0"
 euclid = "0.15"
 heapsize = ">= 0.3.6, < 0.5"
