@@ -26,6 +26,8 @@ struct ScrollbarStyles
   // Always one of NS_STYLE_SCROLL_BEHAVIOR_AUTO or
   // NS_STYLE_SCROLL_BEHAVIOR_SMOOTH
   uint8_t mScrollBehavior;
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
   // Always one of NS_STYLE_SCROLL_SNAP_NONE, NS_STYLE_SCROLL_SNAP_MANDATORY,
   // or NS_STYLE_SCROLL_SNAP_PROXIMITY.
   uint8_t mScrollSnapTypeX;
@@ -38,6 +40,8 @@ struct ScrollbarStyles
   ScrollbarStyles(uint8_t aH, uint8_t aV)
     : mHorizontal(aH), mVertical(aV),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
+      mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
+      mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
       mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
       mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE),
       mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
@@ -56,6 +60,8 @@ struct ScrollbarStyles
   bool operator==(const ScrollbarStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical &&
            aStyles.mScrollBehavior == mScrollBehavior &&
+           aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
+           aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY &&
            aStyles.mScrollSnapTypeX == mScrollSnapTypeX &&
            aStyles.mScrollSnapTypeY == mScrollSnapTypeY &&
            aStyles.mScrollSnapPointsX == mScrollSnapPointsX &&
