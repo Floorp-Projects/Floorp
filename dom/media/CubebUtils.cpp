@@ -48,7 +48,7 @@
 #define MASK_3F3R_LFE   (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RCENTER))
 #define MASK_3F4_LFE    (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RLS) | (1 << AudioConfig::CHANNEL_RRS))
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
 #define MOZ_CUBEB_REMOTING
 #endif
 
