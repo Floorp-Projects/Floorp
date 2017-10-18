@@ -1,0 +1,15 @@
+<!doctype html>
+<template id="tmpl">
+  <div style="display: block">
+    Some text
+    More text
+  </div>
+</template>
+<div id="host"></div>
+<script>
+  let shadowRoot = document.getElementById("host").createShadowRoot();
+  let tmpl = document.getElementById("tmpl");
+  shadowRoot.appendChild(document.importNode(tmpl.content, true));
+  document.body.offsetTop;
+  shadowRoot.firstElementChild.style.display = "table";
+</script>

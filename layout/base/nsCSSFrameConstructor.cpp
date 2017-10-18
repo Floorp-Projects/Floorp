@@ -7785,8 +7785,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // otherwise.
   Maybe<TreeMatchContext> matchContext;
   if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
+    // We use GetParentElementCrossingShadowRoot to handle the case where
+    // aContainer is a ShadowRoot.
     matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aContainer->AsElement());
+    matchContext->InitAncestors(aFirstNewContent->GetParentElementCrossingShadowRoot());
   }
   nsFrameConstructorState state(mPresShell,
                                 matchContext.ptrOr(aProvidedTreeMatchContext),
@@ -8126,7 +8128,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // The xbl:children element won't have a frame, but default content can have the children as
   // a parent. While its uncommon to change the structure of the default content itself, a label,
   // for example, can be reframed by having its value attribute set or removed.
-  if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
+  if (!parentFrame &&
+      !(aContainer->IsActiveChildrenElement() ||
+        ShadowRoot::FromNode(aContainer))) {
     // We're punting on frame construction because there's no container frame.
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
@@ -8137,6 +8141,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     }
     return;
   }
+
+  MOZ_ASSERT_IF(ShadowRoot::FromNode(aContainer), !parentFrame);
 
   // Otherwise, we've got parent content. Find its frame.
   NS_ASSERTION(!parentFrame || parentFrame->GetContent() == aContainer ||
@@ -8251,8 +8257,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
   Maybe<TreeMatchContext> matchContext;
   if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
+    // We use GetParentElementCrossingShadowRoot to handle the case where
+    // aContainer is a ShadowRoot.
     matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aContainer ? aContainer->AsElement() : nullptr);
+    matchContext->InitAncestors(aStartChild->GetParentElementCrossingShadowRoot());
   }
   nsFrameConstructorState state(mPresShell,
                                 matchContext.ptrOr(aProvidedTreeMatchContext),
@@ -9536,8 +9544,11 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aContainer,
       return InsertionPoint(GetContentInsertionFrameFor(aContainer), aContainer);
     }
 
-    if (nsContentUtils::HasDistributedChildren(aContainer)) {
-      // The container distributes nodes, use the frame of the flattened tree parent.
+    if (nsContentUtils::HasDistributedChildren(aContainer) ||
+        ShadowRoot::FromNode(aContainer)) {
+      // The container distributes nodes or is a shadow root, use the frame of
+      // the flattened tree parent.
+      //
       // It may be the case that the node is distributed but not matched to any
       // insertion points, so there is no flattened parent.
       nsIContent* flattenedParent = aChild->GetFlattenedTreeParent();
