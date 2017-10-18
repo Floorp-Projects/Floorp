@@ -38,6 +38,7 @@
 #include <google/protobuf/io/gzip_stream.h>
 
 #include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/logging.h>
 
 namespace google {
 namespace protobuf {
@@ -47,7 +48,8 @@ static const int kDefaultBufferSize = 65536;
 
 GzipInputStream::GzipInputStream(
     ZeroCopyInputStream* sub_stream, Format format, int buffer_size)
-    : format_(format), sub_stream_(sub_stream), zerror_(Z_OK) {
+    : format_(format), sub_stream_(sub_stream), zerror_(Z_OK), byte_count_(0) {
+  zcontext_.state = Z_NULL;
   zcontext_.zalloc = Z_NULL;
   zcontext_.zfree = Z_NULL;
   zcontext_.opaque = Z_NULL;
@@ -133,6 +135,7 @@ bool GzipInputStream::Next(const void** data, int* size) {
     if (zcontext_.next_out != NULL) {
       // sub_stream_ may have concatenated streams to follow
       zerror_ = inflateEnd(&zcontext_);
+      byte_count_ += zcontext_.total_out;
       if (zerror_ != Z_OK) {
         return false;
       }
@@ -165,7 +168,7 @@ void GzipInputStream::BackUp(int count) {
 }
 bool GzipInputStream::Skip(int count) {
   const void* data;
-  int size;
+  int size = 0;
   bool ok = Next(&data, &size);
   while (ok && (size < count)) {
     count -= size;
@@ -177,8 +180,12 @@ bool GzipInputStream::Skip(int count) {
   return ok;
 }
 int64 GzipInputStream::ByteCount() const {
-  return zcontext_.total_out +
-    (((uintptr_t)zcontext_.next_out) - ((uintptr_t)output_position_));
+  int64 ret = byte_count_ + zcontext_.total_out;
+  if (zcontext_.next_out != NULL && output_position_ != NULL) {
+    ret += reinterpret_cast<uintptr_t>(zcontext_.next_out) -
+           reinterpret_cast<uintptr_t>(output_position_);
+  }
+  return ret;
 }
 
 // =========================================================================
@@ -234,9 +241,7 @@ void GzipOutputStream::Init(ZeroCopyOutputStream* sub_stream,
 
 GzipOutputStream::~GzipOutputStream() {
   Close();
-  if (input_buffer_ != NULL) {
-    operator delete(input_buffer_);
-  }
+  operator delete(input_buffer_);
 }
 
 // private
