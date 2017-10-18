@@ -148,8 +148,7 @@ ContentClient::BeginPaintBuffer(PaintedLayer* aLayer,
   if (mBuffer) {
     if (mBuffer->Lock(LockMode())) {
       // Do not modify result.mRegionToDraw or result.mContentType after this call.
-      // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
-      // or call CreateBuffer before this call.
+      // Do not modify the back buffer's bufferRect, bufferRotation, or didSelfCopy.
       FinalizeFrame(result.mRegionToDraw);
     } else {
       // Abandon everything and redraw it all. Ideally we'd reallocate and copy
