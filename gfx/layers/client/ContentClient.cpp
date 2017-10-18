@@ -111,9 +111,13 @@ ContentClient::Clear()
 }
 
 ContentClient::PaintState
-ContentClient::BeginPaintBuffer(PaintedLayer* aLayer,
-                                uint32_t aFlags)
+ContentClient::BeginPaint(PaintedLayer* aLayer,
+                          uint32_t aFlags)
 {
+  if (aFlags & PAINT_ASYNC) {
+    mInAsyncPaint = true;
+  }
+
   PaintState result;
 
   BufferDecision dest = CalculateBufferForPaint(aLayer, aFlags);
@@ -474,12 +478,6 @@ ContentClient::LockMode() const
 {
   return mInAsyncPaint ? OpenMode::OPEN_READ_ASYNC_WRITE
                        : OpenMode::OPEN_READ_WRITE;
-}
-
-void
-ContentClient::BeginAsyncPaint()
-{
-  mInAsyncPaint = true;
 }
 
 void
@@ -845,43 +843,36 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   mFrontAndBackBufferDiffer = true;
 }
 
-void
-ContentClientDoubleBuffered::BeginPaint()
+ContentClient::PaintState
+ContentClientDoubleBuffered::BeginPaint(PaintedLayer* aLayer,
+                                        uint32_t aFlags)
 {
   EnsureBackBufferIfFrontBuffer();
 
   mIsNewBuffer = false;
 
-  if (!mFrontAndBackBufferDiffer) {
-    return;
-  }
-
   if (!mFrontBuffer || !mBuffer) {
     mFrontAndBackBufferDiffer = false;
-    return;
   }
 
-  if (mFrontBuffer->DidSelfCopy()) {
-    // We can't easily draw our front buffer into us, since we're going to be
-    // copying stuff around anyway it's easiest if we just move our situation
-    // to non-rotated while we're at it. If this situation occurs we'll have
-    // hit a self-copy path in PaintThebes before as well anyway.
-    gfx::IntRect backBufferRect = mBuffer->BufferRect();
-    backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
+  if (mFrontAndBackBufferDiffer) {
+    if (mFrontBuffer->DidSelfCopy()) {
+      // We can't easily draw our front buffer into us, since we're going to be
+      // copying stuff around anyway it's easiest if we just move our situation
+      // to non-rotated while we're at it. If this situation occurs we'll have
+      // hit a self-copy path in PaintThebes before as well anyway.
+      gfx::IntRect backBufferRect = mBuffer->BufferRect();
+      backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
 
-    mBuffer->SetBufferRect(backBufferRect);
-    mBuffer->SetBufferRotation(IntPoint(0,0));
-    return;
+      mBuffer->SetBufferRect(backBufferRect);
+      mBuffer->SetBufferRotation(IntPoint(0,0));
+    } else {
+      mBuffer->SetBufferRect(mFrontBuffer->BufferRect());
+      mBuffer->SetBufferRotation(mFrontBuffer->BufferRotation());
+    }
   }
-  mBuffer->SetBufferRect(mFrontBuffer->BufferRect());
-  mBuffer->SetBufferRotation(mFrontBuffer->BufferRotation());
-}
 
-void
-ContentClientDoubleBuffered::BeginAsyncPaint()
-{
-  BeginPaint();
-  mInAsyncPaint = true;
+  return ContentClient::BeginPaint(aLayer, aFlags);
 }
 
 // Sync front/back buffers content
