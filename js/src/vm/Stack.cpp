@@ -1513,7 +1513,8 @@ jit::JitActivation::JitActivation(JSContext* cx)
 
 jit::JitActivation::~JitActivation()
 {
-    unregisterProfiling();
+    if (isProfiling())
+        unregisterProfiling();
     cx_->jitActivation = prevJitActivation_;
 
     // All reocvered value are taken from activation during the bailout.
@@ -1775,6 +1776,21 @@ InterpreterFrameIterator::operator++()
         fp_ = nullptr;
     }
     return *this;
+}
+
+void
+Activation::registerProfiling()
+{
+    MOZ_ASSERT(isProfiling());
+    cx_->profilingActivation_ = this;
+}
+
+void
+Activation::unregisterProfiling()
+{
+    MOZ_ASSERT(isProfiling());
+    MOZ_ASSERT(cx_->profilingActivation_ == this);
+    cx_->profilingActivation_ = prevProfiling_;
 }
 
 ActivationIterator::ActivationIterator(JSContext* cx)
