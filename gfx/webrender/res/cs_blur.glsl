@@ -31,11 +31,7 @@ void main(void) {
                    local_rect.xy + local_rect.zw,
                    aPosition.xy);
 
-#if defined WR_FEATURE_COLOR
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
-#else
-    vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
-#endif
     vUv.z = src_task.data1.x;
     vBlurRadius = 3 * int(task.data1.y);
     vSigma = task.data1.y;
@@ -62,15 +58,6 @@ void main(void) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-
-#if defined WR_FEATURE_COLOR
-#define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sCacheRGBA8, uv)
-#else
-#define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sCacheA8, uv).r
-#endif
-
 // TODO(gw): Write a fast path blur that handles smaller blur radii
 //           with a offset / weight uniform table and a constant
 //           loop iteration count!
@@ -79,13 +66,13 @@ void main(void) {
 //           the number of texture fetches needed for a gaussian blur.
 
 void main(void) {
-    SAMPLE_TYPE original_color = SAMPLE_TEXTURE(vUv);
+    vec4 original_color = texture(sCacheRGBA8, vUv);
 
     // TODO(gw): The gauss function gets NaNs when blur radius
     //           is zero. In the future, detect this earlier
     //           and skip the blur passes completely.
     if (vBlurRadius == 0) {
-        oFragColor = vec4(original_color);
+        oFragColor = original_color;
         return;
     }
 
@@ -96,7 +83,7 @@ void main(void) {
     gauss_coefficient.z = gauss_coefficient.y * gauss_coefficient.y;
 
     float gauss_coefficient_sum = 0.0;
-    SAMPLE_TYPE avg_color = original_color * gauss_coefficient.x;
+    vec4 avg_color = original_color * gauss_coefficient.x;
     gauss_coefficient_sum += gauss_coefficient.x;
     gauss_coefficient.xy *= gauss_coefficient.yz;
 
@@ -104,15 +91,15 @@ void main(void) {
         vec2 offset = vOffsetScale * float(i);
 
         vec2 st0 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
-        avg_color += SAMPLE_TEXTURE(vec3(st0, vUv.z)) * gauss_coefficient.x;
+        avg_color += texture(sCacheRGBA8, vec3(st0, vUv.z)) * gauss_coefficient.x;
 
         vec2 st1 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
-        avg_color += SAMPLE_TEXTURE(vec3(st1, vUv.z)) * gauss_coefficient.x;
+        avg_color += texture(sCacheRGBA8, vec3(st1, vUv.z)) * gauss_coefficient.x;
 
         gauss_coefficient_sum += 2.0 * gauss_coefficient.x;
         gauss_coefficient.xy *= gauss_coefficient.yz;
     }
 
-    oFragColor = vec4(avg_color) / gauss_coefficient_sum;
+    oFragColor = avg_color / gauss_coefficient_sum;
 }
 #endif

@@ -6,12 +6,10 @@ use api::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize}
 use api::{FilterOp, MixBlendMode};
 use api::PipelineId;
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
-use clip_scroll_tree::CoordinateSystemId;
 use gpu_cache::GpuCacheHandle;
 use internal_types::HardwareCompositeOp;
-use prim_store::PrimitiveIndex;
+use prim_store::{BoxShadowPrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, usize, f32, i32};
-use std::rc::Rc;
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
 
@@ -28,31 +26,6 @@ pub struct RenderTaskAddress(pub u32);
 pub struct RenderTaskTree {
     pub tasks: Vec<RenderTask>,
     pub task_data: Vec<RenderTaskData>,
-}
-
-pub type ClipChain = Option<Rc<ClipChainNode>>;
-
-#[derive(Debug)]
-pub struct ClipChainNode {
-    pub work_item: ClipWorkItem,
-    pub prev: ClipChain,
-}
-
-struct ClipChainNodeIter {
-    current: ClipChain,
-}
-
-impl Iterator for ClipChainNodeIter {
-    type Item = Rc<ClipChainNode>;
-
-    fn next(&mut self) -> ClipChain {
-        let previous = self.current.clone();
-        self.current = match self.current {
-            Some(ref item) => item.prev.clone(),
-            None => return None,
-        };
-        previous
-    }
 }
 
 impl RenderTaskTree {
@@ -139,6 +112,8 @@ impl RenderTaskTree {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RenderTaskKey {
+    /// Draw this box shadow to a cache target.
+    BoxShadow(BoxShadowPrimitiveCacheKey),
     /// Draw the alpha mask for a shared clip.
     CacheMask(ClipId),
 }
@@ -202,15 +177,11 @@ pub enum MaskGeometryKind {
 pub struct ClipWorkItem {
     pub layer_index: PackedLayerIndex,
     pub clip_sources: ClipSourcesWeakHandle,
-    pub coordinate_system_id: CoordinateSystemId,
+    pub apply_rectangles: bool,
 }
 
 impl ClipWorkItem {
-    fn get_geometry_kind(
-        &self,
-        clip_store: &ClipStore,
-        prim_coordinate_system_id: CoordinateSystemId
-    ) -> MaskGeometryKind {
+    fn get_geometry_kind(&self, clip_store: &ClipStore) -> MaskGeometryKind {
         let clips = clip_store
             .get_opt(&self.clip_sources)
             .expect("bug: clip handle should be valid")
@@ -219,10 +190,8 @@ impl ClipWorkItem {
 
         for &(ref clip, _) in clips {
             match *clip {
-                ClipSource::Rectangle(..) => {
-                    if self.has_compatible_coordinate_system(prim_coordinate_system_id) {
-                        return MaskGeometryKind::Default;
-                    }
+                ClipSource::Rectangle(..) => if self.apply_rectangles {
+                    return MaskGeometryKind::Default;
                 },
                 ClipSource::RoundedRectangle(..) => {
                     rounded_rect_count += 1;
@@ -239,10 +208,6 @@ impl ClipWorkItem {
             MaskGeometryKind::Default
         }
     }
-
-    fn has_compatible_coordinate_system(&self, other_id: CoordinateSystemId) -> bool {
-        self.coordinate_system_id == other_id
-    }
 }
 
 #[derive(Debug)]
@@ -251,19 +216,6 @@ pub struct CacheMaskTask {
     inner_rect: DeviceIntRect,
     pub clips: Vec<ClipWorkItem>,
     pub geometry_kind: MaskGeometryKind,
-    pub coordinate_system_id: CoordinateSystemId,
-}
-
-#[derive(Debug)]
-pub struct PictureTask {
-    pub prim_index: PrimitiveIndex,
-    pub target_kind: RenderTargetKind,
-}
-
-#[derive(Debug)]
-pub struct BlurTask {
-    pub blur_radius: DeviceIntLength,
-    pub target_kind: RenderTargetKind,
 }
 
 #[derive(Debug)]
@@ -274,10 +226,11 @@ pub struct RenderTaskData {
 #[derive(Debug)]
 pub enum RenderTaskKind {
     Alpha(AlphaRenderTask),
-    Picture(PictureTask),
+    Picture(PrimitiveIndex),
+    BoxShadow(PrimitiveIndex),
     CacheMask(CacheMaskTask),
-    VerticalBlur(BlurTask),
-    HorizontalBlur(BlurTask),
+    VerticalBlur(DeviceIntLength),
+    HorizontalBlur(DeviceIntLength),
     Readback(DeviceIntRect),
     Alias(RenderTaskId),
 }
@@ -316,19 +269,25 @@ impl RenderTask {
         Self::new_alpha_batch(rect.origin, location, frame_output_pipeline_id)
     }
 
-    pub fn new_picture(
-        size: DeviceIntSize,
-        prim_index: PrimitiveIndex,
-        target_kind: RenderTargetKind,
-    ) -> RenderTask {
+    pub fn new_picture(size: DeviceIntSize, prim_index: PrimitiveIndex) -> RenderTask {
         RenderTask {
             cache_key: None,
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, size),
-            kind: RenderTaskKind::Picture(PictureTask {
-                prim_index,
-                target_kind,
-            }),
+            kind: RenderTaskKind::Picture(prim_index),
+        }
+    }
+
+    pub fn new_box_shadow(
+        key: BoxShadowPrimitiveCacheKey,
+        size: DeviceIntSize,
+        prim_index: PrimitiveIndex,
+    ) -> RenderTask {
+        RenderTask {
+            cache_key: Some(RenderTaskKey::BoxShadow(key)),
+            children: Vec::new(),
+            location: RenderTaskLocation::Dynamic(None, size),
+            kind: RenderTaskKind::BoxShadow(prim_index),
         }
     }
 
@@ -344,53 +303,52 @@ impl RenderTask {
     pub fn new_mask(
         key: Option<ClipId>,
         task_rect: DeviceIntRect,
-        raw_clips: ClipChain,
-        extra_clip: ClipChain,
+        raw_clips: &[ClipWorkItem],
+        extra_clip: Option<ClipWorkItem>,
         prim_rect: DeviceIntRect,
         clip_store: &ClipStore,
         is_axis_aligned: bool,
-        prim_coordinate_system_id: CoordinateSystemId,
     ) -> Option<RenderTask> {
         // Filter out all the clip instances that don't contribute to the result
-        let mut current_coordinate_system_id = prim_coordinate_system_id;
         let mut inner_rect = Some(task_rect);
-        let clips: Vec<_> = ClipChainNodeIter { current: raw_clips }
-            .chain(ClipChainNodeIter { current: extra_clip })
-            .filter_map(|node| {
-                let work_item = node.work_item.clone();
-
-                // FIXME(1828): This is a workaround until we can fix the inconsistency between
-                // the shader and the CPU code around how inner_rects are handled.
-                if !node.work_item.has_compatible_coordinate_system(current_coordinate_system_id) {
-                    current_coordinate_system_id = node.work_item.coordinate_system_id;
-                    inner_rect = None;
-                    return Some(work_item)
-                }
-
+        let clips: Vec<_> = raw_clips
+            .iter()
+            .chain(extra_clip.iter())
+            .filter(|work_item| {
                 let clip_info = clip_store
-                    .get_opt(&node.work_item.clip_sources)
+                    .get_opt(&work_item.clip_sources)
                     .expect("bug: clip item should exist");
-                debug_assert!(clip_info.is_masking());
+
+                // If this clip does not contribute to a mask, then ensure
+                // it gets filtered out here. Otherwise, if a mask is
+                // created (by a different clip in the list), the allocated
+                // rectangle for the mask could end up being much bigger
+                // than is actually required.
+                if !clip_info.is_masking() {
+                    return false;
+                }
 
                 match clip_info.bounds.inner {
-                    Some(ref inner) if !inner.device_rect.is_empty() => {
+                    // Inner rects aren't valid if the item is not axis-aligned, which can
+                    // be determined by the apply_rectangles field. This is mostly a band-aid
+                    // until we have better handling of inner rectangles for transformed clips.
+                    Some(ref inner) if !work_item.apply_rectangles && !inner.device_rect.is_empty() => {
                         inner_rect = inner_rect.and_then(|r| r.intersection(&inner.device_rect));
-                        if inner.device_rect.contains_rect(&task_rect) {
-                            return None;
-                        }
+                        !inner.device_rect.contains_rect(&task_rect)
                     }
-                    _ => inner_rect = None,
+                    _ => {
+                        inner_rect = None;
+                        true
+                    }
                 }
-
-                Some(work_item)
             })
+            .cloned()
             .collect();
 
         // Nothing to do, all clips are irrelevant for this case
         if clips.is_empty() {
             return None;
         }
-
 
         // TODO(gw): This optimization is very conservative for now.
         //           For now, only draw optimized geometry if it is
@@ -405,7 +363,7 @@ impl RenderTask {
                 return None;
             }
             if is_axis_aligned && clips.len() == 1 {
-                geometry_kind = clips[0].get_geometry_kind(clip_store, prim_coordinate_system_id);
+                geometry_kind = clips[0].get_geometry_kind(clip_store);
             }
         }
 
@@ -418,7 +376,6 @@ impl RenderTask {
                 inner_rect: inner_rect.unwrap_or(DeviceIntRect::zero()),
                 clips,
                 geometry_kind,
-                coordinate_system_id: prim_coordinate_system_id,
             }),
         })
     }
@@ -442,18 +399,16 @@ impl RenderTask {
         blur_radius: DeviceIntLength,
         src_task_id: RenderTaskId,
         render_tasks: &mut RenderTaskTree,
-        target_kind: RenderTargetKind,
     ) -> RenderTask {
-        let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
+        let src_size = render_tasks.get(src_task_id).get_dynamic_size();
+
+        let blur_target_size = src_size + DeviceIntSize::new(2 * blur_radius.0, 2 * blur_radius.0);
 
         let blur_task_v = RenderTask {
             cache_key: None,
             children: vec![src_task_id],
             location: RenderTaskLocation::Dynamic(None, blur_target_size),
-            kind: RenderTaskKind::VerticalBlur(BlurTask {
-                blur_radius,
-                target_kind,
-            }),
+            kind: RenderTaskKind::VerticalBlur(blur_radius),
         };
 
         let blur_task_v_id = render_tasks.add(blur_task_v);
@@ -462,10 +417,7 @@ impl RenderTask {
             cache_key: None,
             children: vec![blur_task_v_id],
             location: RenderTaskLocation::Dynamic(None, blur_target_size),
-            kind: RenderTaskKind::HorizontalBlur(BlurTask {
-                blur_radius,
-                target_kind,
-            }),
+            kind: RenderTaskKind::HorizontalBlur(blur_radius),
         };
 
         blur_task_h
@@ -475,6 +427,7 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref mut task) => task,
             RenderTaskKind::Picture(..) |
+            RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
@@ -487,6 +440,7 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref task) => task,
             RenderTaskKind::Picture(..) |
+            RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
@@ -527,7 +481,7 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::Picture(..) => {
+            RenderTaskKind::Picture(..) | RenderTaskKind::BoxShadow(..) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -565,8 +519,8 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::VerticalBlur(ref task_info) |
-            RenderTaskKind::HorizontalBlur(ref task_info) => {
+            RenderTaskKind::VerticalBlur(blur_radius) |
+            RenderTaskKind::HorizontalBlur(blur_radius) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -575,7 +529,7 @@ impl RenderTask {
                         target_rect.size.width as f32,
                         target_rect.size.height as f32,
                         target_index.0 as f32,
-                        task_info.blur_radius.0 as f32,
+                        blur_radius.0 as f32,
                         0.0,
                         0.0,
                         0.0,
@@ -608,33 +562,6 @@ impl RenderTask {
         }
     }
 
-    pub fn inflate(&mut self, device_radius: i32) {
-        match self.kind {
-            RenderTaskKind::Alpha(ref mut info) => {
-                match self.location {
-                    RenderTaskLocation::Fixed => {
-                        panic!("bug: inflate only supported for dynamic tasks");
-                    }
-                    RenderTaskLocation::Dynamic(_, ref mut size) => {
-                        size.width += device_radius * 2;
-                        size.height += device_radius * 2;
-                        info.screen_origin.x -= device_radius;
-                        info.screen_origin.y -= device_radius;
-                    }
-                }
-            }
-
-            RenderTaskKind::Readback(..) |
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::VerticalBlur(..) |
-            RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Picture(..) |
-            RenderTaskKind::Alias(..) => {
-                panic!("bug: inflate only supported for alpha tasks");
-            }
-        }
-    }
-
     pub fn get_dynamic_size(&self) -> DeviceIntSize {
         match self.location {
             RenderTaskLocation::Fixed => DeviceIntSize::zero(),
@@ -656,19 +583,13 @@ impl RenderTask {
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
             RenderTaskKind::Alpha(..) |
-            RenderTaskKind::Readback(..) => RenderTargetKind::Color,
+            RenderTaskKind::Picture(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::HorizontalBlur(..) => RenderTargetKind::Color,
 
-            RenderTaskKind::CacheMask(..) => {
+            RenderTaskKind::CacheMask(..) | RenderTaskKind::BoxShadow(..) => {
                 RenderTargetKind::Alpha
-            }
-
-            RenderTaskKind::VerticalBlur(ref task_info) |
-            RenderTaskKind::HorizontalBlur(ref task_info) => {
-                task_info.target_kind
-            }
-
-            RenderTaskKind::Picture(ref task_info) => {
-                task_info.target_kind
             }
 
             RenderTaskKind::Alias(..) => {
@@ -691,7 +612,7 @@ impl RenderTask {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) => false,
 
-            RenderTaskKind::CacheMask(..) => true,
+            RenderTaskKind::CacheMask(..) | RenderTaskKind::BoxShadow(..) => true,
 
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: is_shared() called on aliased task");

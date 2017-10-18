@@ -17,6 +17,14 @@ impl From<PackedLayerIndex> for PackedLayerAddress {
     }
 }
 
+// Instance structure for box shadows being drawn into target cache.
+#[derive(Debug)]
+#[repr(C)]
+pub struct BoxShadowCacheInstance {
+    pub prim_address: GpuCacheAddress,
+    pub task_index: RenderTaskAddress,
+}
+
 #[repr(i32)]
 #[derive(Debug)]
 pub enum BlurDirection {
@@ -134,41 +142,6 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
                 0,
                 0,
             ],
-        }
-    }
-}
-
-#[repr(C)]
-pub struct BrushInstance {
-    picture_address: RenderTaskAddress,
-    prim_address: GpuCacheAddress,
-}
-
-impl BrushInstance {
-    pub fn new(
-        picture_address: RenderTaskAddress,
-        prim_address: GpuCacheAddress
-    ) -> BrushInstance {
-        BrushInstance {
-            picture_address,
-            prim_address,
-        }
-    }
-}
-
-impl From<BrushInstance> for PrimitiveInstance {
-    fn from(instance: BrushInstance) -> PrimitiveInstance {
-        PrimitiveInstance {
-            data: [
-                instance.picture_address.0 as i32,
-                instance.prim_address.as_int(),
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ]
         }
     }
 }

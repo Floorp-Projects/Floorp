@@ -278,6 +278,12 @@ impl FontContext {
     ) -> Option<GlyphDimensions> {
         let metrics = unsafe { &(*slot).metrics };
 
+        // If there's no advance, no need to consider this glyph
+        // for layout.
+        if metrics.horiAdvance == 0 {
+            return None
+        }
+
         let advance = metrics.horiAdvance as f32 / 64.0;
         match unsafe { (*slot).format } {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {

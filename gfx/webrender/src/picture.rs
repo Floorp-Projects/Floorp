@@ -5,7 +5,6 @@
 use api::{ClipAndScrollInfo, Shadow};
 use prim_store::PrimitiveIndex;
 use render_task::RenderTaskId;
-use tiling::RenderTargetKind;
 
 /*
  A picture represents a dynamically rendered image. It consists of:
@@ -37,7 +36,6 @@ pub struct PicturePrimitive {
     pub prim_runs: Vec<PrimitiveRun>,
     pub composite_op: CompositeOp,
     pub render_task_id: Option<RenderTaskId>,
-    pub kind: RenderTargetKind,
 
     // TODO(gw): Add a mode that specifies if this
     //           picture should be rasterized in
@@ -45,15 +43,11 @@ pub struct PicturePrimitive {
 }
 
 impl PicturePrimitive {
-    pub fn new_shadow(
-        shadow: Shadow,
-        kind: RenderTargetKind,
-    ) -> PicturePrimitive {
+    pub fn new_shadow(shadow: Shadow) -> PicturePrimitive {
         PicturePrimitive {
             prim_runs: Vec::new(),
             composite_op: CompositeOp::Shadow(shadow),
             render_task_id: None,
-            kind,
         }
     }
 

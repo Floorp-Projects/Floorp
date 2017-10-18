@@ -253,7 +253,8 @@ void main(void) {
     alpha = min(alpha, do_clip());
 
     // Find the appropriate distance to apply the step over.
-    float aa_range = compute_aa_range(local_pos);
+    vec2 fw = fwidth(local_pos);
+    float afwidth = length(fw);
 
     // Applies the math necessary to draw a style: double
     // border. In the case of a solid border, the vertex
@@ -290,7 +291,9 @@ void main(void) {
     // Get the dot alpha
     vec2 dot_relative_pos = vec2(x, pos.x) - vClipParams.zw;
     float dot_distance = length(dot_relative_pos) - vClipParams.z;
-    float dot_alpha = distance_aa(aa_range, dot_distance);
+    float dot_alpha = 1.0 - smoothstep(-0.5 * afwidth,
+                                        0.5 * afwidth,
+                                        dot_distance);
 
     // Select between dot/dash alpha based on clip mode.
     alpha = min(alpha, mix(dash_alpha, dot_alpha, vClipSelect));
