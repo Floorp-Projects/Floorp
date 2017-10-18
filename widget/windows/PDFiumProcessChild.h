@@ -33,6 +33,9 @@ private:
   DISALLOW_COPY_AND_ASSIGN(PDFiumProcessChild);
 
   PDFiumChild mPDFiumActor;
+#if defined(MOZ_SANDBOX)
+  PRLibrary*  mPDFium;
+#endif
 };
 
 } // namespace widget
