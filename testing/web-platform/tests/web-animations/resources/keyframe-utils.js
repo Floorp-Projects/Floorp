@@ -18,8 +18,8 @@
  */
 function assert_frame_lists_equal(a, b) {
   assert_equals(a.length, b.length, "number of frames");
-  for (var i = 0; i < Math.min(a.length, b.length); i++) {
-    assert_frames_equal(a[i], b[i], "ComputedKeyframe #" + i);
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    assert_frames_equal(a[i], b[i], `ComputedKeyframe #${i}`);
   }
 }
 
@@ -27,8 +27,8 @@ function assert_frame_lists_equal(a, b) {
 function assert_frames_equal(a, b, name) {
   assert_equals(Object.keys(a).sort().toString(),
                 Object.keys(b).sort().toString(),
-                "properties on " + name);
-  for (var p in a) {
-    assert_equals(a[p], b[p], "value for '" + p + "' on " + name);
+                `properties on ${name} should match`);
+  for (const p in a) {
+    assert_equals(a[p], b[p], `value for '${p}' on ${name}`);
   }
 }
