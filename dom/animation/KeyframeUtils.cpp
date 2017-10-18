@@ -27,7 +27,7 @@
 #include "nsIScriptError.h"
 #include "nsStyleContext.h"
 #include "nsTArray.h"
-#include <algorithm> // For std::stable_sort
+#include <algorithm> // For std::stable_sort, std::min
 
 namespace mozilla {
 
@@ -1392,11 +1392,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     return;
   }
 
-  Maybe<dom::CompositeOperation> composite;
-  if (keyframeDict.mComposite.WasPassed()) {
-    composite.emplace(keyframeDict.mComposite.Value());
-  }
-
   // Get all the property--value-list pairs off the object.
   JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
   nsTArray<PropertyValuesPair> propertyValuesPairs;
@@ -1404,15 +1399,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
                               aDocument->GetStyleBackendType(),
                               propertyValuesPairs)) {
     aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // Parse the easing property. We need to do this after reading off the
-  // property values since this is conceptually a separate step that happens
-  // after the WebIDL-like processing.
-  Maybe<ComputedTimingFunction> easing =
-    TimingParams::ParseEasing(keyframeDict.mEasing, aDocument, aRv);
-  if (aRv.Failed()) {
     return;
   }
 
@@ -1444,8 +1430,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
       double offset = n ? i++ / double(n) : 1;
       Keyframe* keyframe = processedKeyframes.LookupOrAdd(offset);
       if (keyframe->mPropertyValues.IsEmpty()) {
-        keyframe->mTimingFunction = easing;
-        keyframe->mComposite = composite;
         keyframe->mComputedOffset = offset;
       }
 
@@ -1464,6 +1448,124 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   }
 
   aResult.Sort(ComputedOffsetComparator());
+
+  // Fill in any specified offsets
+  //
+  // This corresponds to step 5, "Otherwise," branch, substeps 5-6 of
+  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  const FallibleTArray<Nullable<double>>* offsets = nullptr;
+  AutoTArray<Nullable<double>, 1> singleOffset;
+  auto& offset = keyframeDict.mOffset;
+  if (offset.IsDouble()) {
+    singleOffset.AppendElement(offset.GetAsDouble());
+    // dom::Sequence is a fallible but AutoTArray is infallible and we need to
+    // point to one or the other. Fortunately, fallible and infallible array
+    // types can be implicitly converted provided they are const.
+    const FallibleTArray<Nullable<double>>& asFallibleArray = singleOffset;
+    offsets = &asFallibleArray;
+  } else if (offset.IsDoubleOrNullSequence()) {
+    offsets = &offset.GetAsDoubleOrNullSequence();
+  }
+  // If offset.IsNull() is true, then we want to leave the mOffset member of
+  // each keyframe with its initialized value of null. By leaving |offsets|
+  // as nullptr here, we skip updating mOffset below.
+
+  size_t offsetsToFill =
+    offsets ? std::min(offsets->Length(), aResult.Length()) : 0;
+  for (size_t i = 0; i < offsetsToFill; i++) {
+    if (!offsets->ElementAt(i).IsNull()) {
+      aResult[i].mOffset.emplace(offsets->ElementAt(i).Value());
+    }
+  }
+
+  // Check that the keyframes are loosely sorted and that any specified offsets
+  // are between 0.0 and 1.0 inclusive.
+  //
+  // This corresponds to steps 6-7 of
+  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  //
+  // In the spec, TypeErrors arising from invalid offsets and easings are thrown
+  // at the end of the procedure since it assumes we initially store easing
+  // values as strings and then later parse them.
+  //
+  // However, we will parse easing members immediately when we process them
+  // below. In order to maintain the relative order in which TypeErrors are
+  // thrown according to the spec, namely exceptions arising from invalid
+  // offsets are thrown before exceptions arising from invalid easings, we check
+  // the offsets here.
+  if (!HasValidOffsets(aResult)) {
+    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
+    aResult.Clear();
+    return;
+  }
+
+  // Fill in any easings.
+  //
+  // This corresponds to step 5, "Otherwise," branch, substeps 7-11 of
+  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  FallibleTArray<Maybe<ComputedTimingFunction>> easings;
+  auto parseAndAppendEasing = [&](const nsString& easingString,
+                                  ErrorResult& aRv) {
+    auto easing = TimingParams::ParseEasing(easingString, aDocument, aRv);
+    if (!aRv.Failed() && !easings.AppendElement(Move(easing), fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    }
+  };
+
+  auto& easing = keyframeDict.mEasing;
+  if (easing.IsString()) {
+    parseAndAppendEasing(easing.GetAsString(), aRv);
+    if (aRv.Failed()) {
+      aResult.Clear();
+      return;
+    }
+  } else {
+    for (const nsString& easingString : easing.GetAsStringSequence()) {
+      parseAndAppendEasing(easingString, aRv);
+      if (aRv.Failed()) {
+        aResult.Clear();
+        return;
+      }
+    }
+  }
+
+  // If |easings| is empty, then we are supposed to fill it in with the value
+  // "linear" and then repeat the list as necessary.
+  //
+  // However, for Keyframe.mTimingFunction we represent "linear" as a None
+  // value. Since we have not assigned 'mTimingFunction' for any of the
+  // keyframes in |aResult| they will already have their initial None value
+  // (i.e. linear). As a result, if |easings| is empty, we don't need to do
+  // anything.
+  if (!easings.IsEmpty()) {
+    for (size_t i = 0; i < aResult.Length(); i++) {
+      aResult[i].mTimingFunction = easings[i % easings.Length()];
+    }
+  }
+
+  // Fill in any composite operations.
+  //
+  // This corresponds to step 5, "Otherwise," branch, substep 12 of
+  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  const FallibleTArray<dom::CompositeOperation>* compositeOps;
+  AutoTArray<dom::CompositeOperation, 1> singleCompositeOp;
+  auto& composite = keyframeDict.mComposite;
+  if (composite.IsCompositeOperation()) {
+    singleCompositeOp.AppendElement(composite.GetAsCompositeOperation());
+    const FallibleTArray<dom::CompositeOperation>& asFallibleArray =
+      singleCompositeOp;
+    compositeOps = &asFallibleArray;
+  } else {
+    compositeOps = &composite.GetAsCompositeOperationSequence();
+  }
+
+  // Fill in and repeat as needed.
+  if (!compositeOps->IsEmpty()) {
+    for (size_t i = 0; i < aResult.Length(); i++) {
+      aResult[i].mComposite.emplace(
+        compositeOps->ElementAt(i % compositeOps->Length()));
+    }
+  }
 }
 
 /**
