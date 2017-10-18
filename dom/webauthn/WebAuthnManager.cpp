@@ -647,7 +647,9 @@ WebAuthnManager::Store(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
 
-  MaybeClearTransaction();
+  if (mTransaction.isSome()) {
+    CancelTransaction(NS_ERROR_ABORT);
+  }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
 
