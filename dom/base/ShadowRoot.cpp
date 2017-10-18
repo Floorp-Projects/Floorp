@@ -470,16 +470,16 @@ ShadowRoot::StyleSheets()
  * test nodes that have not yet been distributed.
  */
 bool
-ShadowRoot::IsPooledNode(nsIContent* aContent, nsIContent* aContainer,
-                         nsIContent* aHost)
+ShadowRoot::IsPooledNode(nsIContent* aContent) const
 {
   if (nsContentUtils::IsContentInsertionPoint(aContent)) {
     // Insertion points never end up in the pool.
     return false;
   }
 
-  if (aContainer == aHost &&
-      nsContentUtils::IsInSameAnonymousTree(aContainer, aContent)) {
+  auto* host = GetHost();
+  auto* container = aContent->GetParent();
+  if (container == host && !aContent->IsRootOfAnonymousSubtree()) {
     // Children of the host will end up in the pool. We check to ensure
     // that the content is in the same anonymous tree as the container
     // because anonymous content may report its container as the host
@@ -487,12 +487,11 @@ ShadowRoot::IsPooledNode(nsIContent* aContent, nsIContent* aContainer,
     return true;
   }
 
-  if (aContainer) {
+  if (auto* content = HTMLContentElement::FromContentOrNull(container)) {
     // Fallback content will end up in pool if its parent is a child of the host.
-    HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
-    return content && content->IsInsertionPoint() &&
+    return content->IsInsertionPoint() &&
            content->MatchedNodes().IsEmpty() &&
-           aContainer->GetParentNode() == aHost;
+           container->GetParentNode() == host;
   }
 
   return false;
@@ -506,7 +505,7 @@ ShadowRoot::AttributeChanged(nsIDocument* aDocument,
                              int32_t aModType,
                              const nsAttrValue* aOldValue)
 {
-  if (!IsPooledNode(aElement, aElement->GetParent(), GetHost())) {
+  if (!IsPooledNode(aElement)) {
     return;
   }
 
@@ -538,7 +537,7 @@ ShadowRoot::ContentAppended(nsIDocument* aDocument,
       }
     }
 
-    if (IsPooledNode(currentChild, aContainer, GetHost())) {
+    if (IsPooledNode(currentChild)) {
       DistributeSingleNode(currentChild);
     }
 
@@ -559,7 +558,7 @@ ShadowRoot::ContentInserted(nsIDocument* aDocument,
 
   // Watch for new nodes added to the pool because the node
   // may need to be added to an insertion point.
-  if (IsPooledNode(aChild, aContainer, GetHost())) {
+  if (IsPooledNode(aChild)) {
     // Add insertion point to destination insertion points of fallback content.
     if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
       HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
@@ -595,7 +594,7 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
 
   // Watch for node that is removed from the pool because
   // it may need to be removed from an insertion point.
-  if (IsPooledNode(aChild, aContainer, GetHost())) {
+  if (IsPooledNode(aChild)) {
     RemoveDistributedNode(aChild);
   }
 }
