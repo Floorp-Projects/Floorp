@@ -2263,22 +2263,18 @@ private:
 
 class nsPrefLocalizedString final
   : public nsIPrefLocalizedString
-  , public nsISupportsString
 {
 public:
   nsPrefLocalizedString();
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSISUPPORTSSTRING(mUnicodeString->)
   NS_FORWARD_NSISUPPORTSPRIMITIVE(mUnicodeString->)
+  NS_FORWARD_NSISUPPORTSSTRING(mUnicodeString->)
 
   nsresult Init();
 
 private:
   virtual ~nsPrefLocalizedString();
-
-  NS_IMETHOD GetData(char16_t**) override;
-  NS_IMETHOD SetData(const char16_t* aData) override;
 
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };
@@ -2587,12 +2583,12 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
       nsAutoString utf16String;
       rv = GetDefaultFromPropertiesFile(pref.get(), utf16String);
       if (NS_SUCCEEDED(rv)) {
-        theString->SetData(utf16String.get());
+        theString->SetData(utf16String);
       }
     } else {
       rv = GetCharPref(aPrefName, getter_Copies(utf8String));
       if (NS_SUCCEEDED(rv)) {
-        theString->SetData(NS_ConvertUTF8toUTF16(utf8String).get());
+        theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
       }
     }
 
@@ -2851,32 +2847,14 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     return SetCharPrefInternal(aPrefName, descriptorString.get());
   }
 
-  if (aType.Equals(NS_GET_IID(nsISupportsString))) {
+  if (aType.Equals(NS_GET_IID(nsISupportsString)) ||
+      aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
     nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {
       nsString wideString;
 
       rv = theString->GetData(wideString);
-      if (NS_SUCCEEDED(rv)) {
-        // Check sanity of string length before any lengthy conversion
-        rv = CheckSanityOfStringLength(aPrefName, wideString);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        rv = SetCharPrefInternal(aPrefName,
-                                 NS_ConvertUTF16toUTF8(wideString).get());
-      }
-    }
-    return rv;
-  }
-
-  if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
-    nsCOMPtr<nsIPrefLocalizedString> theString = do_QueryInterface(aValue);
-
-    if (theString) {
-      nsString wideString;
-      rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
         // Check sanity of string length before any lengthy conversion
         rv = CheckSanityOfStringLength(aPrefName, wideString);
@@ -3239,33 +3217,6 @@ nsPrefLocalizedString::Init()
   mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsPrefLocalizedString::GetData(char16_t** aRetVal)
-{
-  nsAutoString data;
-
-  nsresult rv = GetData(data);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *aRetVal = ToNewUnicode(data);
-  if (!*aRetVal) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefLocalizedString::SetData(const char16_t* aData)
-{
-  if (!aData) {
-    return SetData(EmptyString());
-  }
-  return SetData(nsDependentString(aData));
 }
 
 //----------------------------------------------------------------------------
@@ -5018,7 +4969,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(getter_Copies(aResult));
+    prefLocalString->GetData(aResult);
   }
   return rv;
 }
@@ -5498,7 +5449,7 @@ Preferences::GetDefaultLocalizedString(const char* aPref, nsAString& aResult)
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
-    prefLocalString->GetData(getter_Copies(aResult));
+    prefLocalString->GetData(aResult);
   }
   return rv;
 }
