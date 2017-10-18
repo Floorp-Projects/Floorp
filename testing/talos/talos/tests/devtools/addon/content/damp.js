@@ -380,8 +380,8 @@ Damp.prototype = {
   },
 
   _getToolLoadingTests(url, label, { expectedMessages, expectedSources }) {
-    let tests = {
-      inspector: Task.async(function* () {
+    let subtests = {
+      inspectorOpen: Task.async(function* () {
         yield this.testSetup(url);
         let toolbox = yield this.openToolboxAndLog(label + ".inspector", "inspector");
         let onReload = async function() {
@@ -396,7 +396,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      webconsole: Task.async(function* () {
+      webconsoleOpen: Task.async(function* () {
         yield this.testSetup(url);
         let toolbox = yield this.openToolboxAndLog(label + ".webconsole", "webconsole");
         let onReload = async function() {
@@ -417,7 +417,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      debugger: Task.async(function* () {
+      debuggerOpen: Task.async(function* () {
         yield this.testSetup(url);
         let onLoad = async function(toolbox, dbg) {
           await new Promise(done => {
@@ -453,7 +453,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      styleeditor: Task.async(function* () {
+      styleEditorOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield this.openToolboxAndLog(label + ".styleeditor", "styleeditor");
         yield this.reloadPageAndLog(label + ".styleeditor");
@@ -461,7 +461,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      performance: Task.async(function* () {
+      performanceOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield this.openToolboxAndLog(label + ".performance", "performance");
         yield this.reloadPageAndLog(label + ".performance");
@@ -469,7 +469,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      netmonitor: Task.async(function* () {
+      netmonitorOpen: Task.async(function* () {
         yield this.testSetup(url);
         const toolbox = yield this.openToolboxAndLog(label + ".netmonitor", "netmonitor");
         const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
@@ -490,12 +490,21 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
     };
-    // Prefix all tests with the page type (simple or complicated)
-    for(let name in tests) {
-      tests[label + "." + name] = tests[name];
-      delete tests[name];
+
+    // Construct the sequence array: config.repeat times config.subtests
+    let config = this._config;
+    let sequenceArray = [];
+    for (var i in config.subtests) {
+      for (var r = 0; r < config.repeat; r++) {
+        if (!config.subtests[i] || !subtests[config.subtests[i]]) {
+          continue;
+        }
+
+        sequenceArray.push(subtests[config.subtests[i]]);
+      }
     }
-    return tests;
+
+    return sequenceArray;
   },
 
   testSetup: Task.async(function* (url) {
@@ -652,41 +661,36 @@ Damp.prototype = {
 
     TalosParentProfiler.resume("DAMP - start");
 
-    let tests = {};
-
-    // Run cold test only once
-    let topWindow = getMostRecentBrowserWindow();
-    if (!topWindow.coldRunDAMP) {
-      topWindow.coldRunDAMP = true;
-      tests["cold.inspector"] = this._coldInspectorOpen;
+    let tests = [];
+    if (config.subtests.indexOf("inspectorOpen") > -1) {
+      // Run cold test only once
+      let topWindow = getMostRecentBrowserWindow();
+      if (!topWindow.coldRunDAMP) {
+        topWindow.coldRunDAMP = true;
+        tests = tests.concat(this._coldInspectorOpen);
+      }
     }
 
-    Object.assign(tests, this._getToolLoadingTests(SIMPLE_URL, "simple", {
+    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple", {
       expectedMessages: 1,
       expectedSources: 1,
     }));
 
-    Object.assign(tests, this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
+    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
       expectedMessages: 7,
       expectedSources: 14,
     }));
 
-    tests["console.bulklog"] = this._consoleBulkLoggingTest;
-    tests["console.streamlog"] = this._consoleStreamLoggingTest;
-    tests["console.objectexpand"] = this._consoleObjectExpansionTest;
-
-    // Construct the sequence array while filtering tests
-    let sequenceArray = [];
-    for (var i in config.subtests) {
-      for (var r = 0; r < config.repeat; r++) {
-        if (!config.subtests[i] || !tests[config.subtests[i]]) {
-          continue;
-        }
-
-        sequenceArray.push(tests[config.subtests[i]]);
-      }
+    if (config.subtests.indexOf("consoleBulkLogging") > -1) {
+      tests = tests.concat(this._consoleBulkLoggingTest);
+    }
+    if (config.subtests.indexOf("consoleStreamLogging") > -1) {
+      tests = tests.concat(this._consoleStreamLoggingTest);
+    }
+    if (config.subtests.indexOf("consoleObjectExpansion") > -1) {
+      tests = tests.concat(this._consoleObjectExpansionTest);
     }
 
-    this._doSequence(sequenceArray, this._doneInternal);
+    this._doSequence(tests, this._doneInternal);
   }
 }
