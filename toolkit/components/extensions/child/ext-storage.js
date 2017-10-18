@@ -5,63 +5,13 @@ ChromeUtils.defineModuleGetter(this, "ExtensionStorage",
 ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
                                "resource://gre/modules/TelemetryStopwatch.jsm");
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
-
 const storageGetHistogram = "WEBEXT_STORAGE_LOCAL_GET_MS";
 const storageSetHistogram = "WEBEXT_STORAGE_LOCAL_SET_MS";
 
 this.storage = class extends ExtensionAPI {
   getAPI(context) {
-    /**
-     * Serializes the given storage items for transporting to the parent
-     * process.
-     *
-     * @param {Array<string>|object} items
-     *        The items to serialize. If an object is provided, its
-     *        values are serialized to StructuredCloneHolder objects.
-     *        Otherwise, it is returned as-is.
-     * @returns {Array<string>|object}
-     */
-    function serialize(items) {
-      if (items && typeof items === "object" && !Array.isArray(items)) {
-        let result = {};
-        for (let [key, value] of Object.entries(items)) {
-          try {
-            result[key] = new StructuredCloneHolder(value, context.cloneScope);
-          } catch (e) {
-            throw new ExtensionError(String(e));
-          }
-        }
-        return result;
-      }
-      return items;
-    }
-
-    /**
-     * Deserializes the given storage items from the parent process into
-     * the extension context.
-     *
-     * @param {object} items
-     *        The items to deserialize. Any property of the object which
-     *        is a StructuredCloneHolder instance is deserialized into
-     *        the extension scope. Any other object is cloned into the
-     *        extension scope directly.
-     * @returns {object}
-     */
-    function deserialize(items) {
-      let result = new context.cloneScope.Object();
-      for (let [key, value] of Object.entries(items)) {
-        if (value && typeof value === "object" && Cu.getClassName(value, true) === "StructuredCloneHolder") {
-          value = value.deserialize(context.cloneScope);
-        } else {
-          value = Cu.cloneInto(value, context.cloneScope);
-        }
-        result[key] = value;
-      }
-      return result;
-    }
+    const serialize = ExtensionStorage.serializeForContext.bind(null, context);
+    const deserialize = ExtensionStorage.deserializeForContext.bind(null, context);
 
     function sanitize(items) {
       // The schema validator already takes care of arrays (which are only allowed
