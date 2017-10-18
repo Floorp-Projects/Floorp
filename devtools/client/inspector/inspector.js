@@ -883,7 +883,7 @@ Inspector.prototype = {
       return;
     }
 
-    this.markup.expandNode(this.selection.nodeFront);
+    let onExpand = this.markup.expandNode(this.selection.nodeFront);
 
     // Restore the highlighter states prior to emitting "new-root".
     yield Promise.all([
@@ -892,6 +892,14 @@ Inspector.prototype = {
     ]);
 
     this.emit("new-root");
+
+    // Wait for full expand of the selected node in order to ensure
+    // the markup view is fully emitted before firing 'reloaded'.
+    // 'reloaded' is used to know when the panel is fully updated
+    // after a page reload.
+    yield onExpand;
+
+    this.emit("reloaded");
   }),
 
   _selectionCssSelector: null,
