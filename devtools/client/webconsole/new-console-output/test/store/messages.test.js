@@ -45,7 +45,7 @@ describe("Message reducer:", () => {
       expect(messages.first()).toEqual(message);
     });
 
-    it("increments repeat on a repeating message", () => {
+    it("increments repeat on a repeating log message", () => {
       const key1 = "console.log('foobar', 'test')";
       const { dispatch, getState } = setupStore([key1, key1]);
 
@@ -55,6 +55,46 @@ describe("Message reducer:", () => {
       packet.message.timeStamp = 1;
       dispatch(actions.messageAdd(packet));
       packet.message.timeStamp = 2;
+      dispatch(actions.messageAdd(packet));
+
+      const messages = getAllMessagesById(getState());
+
+      expect(messages.size).toBe(1);
+
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(4);
+    });
+
+    it("increments repeat on a repeating css message", () => {
+      const key1 = "Unknown property ‘such-unknown-property’.  Declaration dropped.";
+      const { dispatch, getState } = setupStore([key1, key1]);
+
+      const packet = clonePacket(stubPackets.get(key1));
+
+      // Repeat ID must be the same even if the timestamp is different.
+      packet.pageError.timeStamp = 1;
+      dispatch(actions.messageAdd(packet));
+      packet.pageError.timeStamp = 2;
+      dispatch(actions.messageAdd(packet));
+
+      const messages = getAllMessagesById(getState());
+
+      expect(messages.size).toBe(1);
+
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(4);
+    });
+
+    it("increments repeat on a repeating error message", () => {
+      const key1 = "ReferenceError: asdf is not defined";
+      const { dispatch, getState } = setupStore([key1, key1]);
+
+      const packet = clonePacket(stubPackets.get(key1));
+
+      // Repeat ID must be the same even if the timestamp is different.
+      packet.pageError.timeStamp = 1;
+      dispatch(actions.messageAdd(packet));
+      packet.pageError.timeStamp = 2;
       dispatch(actions.messageAdd(packet));
 
       const messages = getAllMessagesById(getState());
