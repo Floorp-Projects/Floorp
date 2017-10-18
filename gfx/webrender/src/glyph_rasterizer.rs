@@ -188,7 +188,7 @@ impl GlyphRasterizer {
         for key in glyph_keys {
             match glyph_key_cache.entry(key.clone()) {
                 Entry::Occupied(mut entry) => {
-                    if let Some(ref mut glyph_info) = *entry.get_mut() {
+                    if let Ok(Some(ref mut glyph_info)) = *entry.get_mut() {
                         if texture_cache.request(&mut glyph_info.texture_cache_handle, gpu_cache) {
                             // This case gets hit when we have already rasterized
                             // the glyph and stored it in CPU memory, the the glyph
@@ -352,7 +352,7 @@ impl GlyphRasterizer {
 
             let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(job.request.font);
 
-            glyph_key_cache.insert(job.request.key, glyph_info);
+            glyph_key_cache.insert(job.request.key, Ok(glyph_info));
         }
 
         // Now that we are done with the critical path (rendering the glyphs),
