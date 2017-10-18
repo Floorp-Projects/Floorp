@@ -785,6 +785,16 @@ this.PlacesDBUtils = {
     };
     cleanupStatements.push(fixMissingHashes);
 
+    // L.6 fix invalid Place GUIDs.
+    let fixInvalidPlaceGuids = {
+      query:
+      `UPDATE moz_places
+       SET guid = GENERATE_GUID()
+       WHERE guid IS NULL OR
+             NOT IS_VALID_GUID(guid)`
+    };
+    cleanupStatements.push(fixInvalidPlaceGuids);
+
     // MOZ_BOOKMARKS
     // S.1 fix invalid GUIDs for synced bookmarks.
     //     This requires multiple related statements.
@@ -840,6 +850,22 @@ this.PlacesDBUtils = {
       query:
       `DELETE FROM moz_bookmarks_deleted
        WHERE guid IN (SELECT guid FROM moz_bookmarks)`,
+    });
+
+    // S.3 set missing added and last modified dates.
+    cleanupStatements.push({
+      query:
+      `UPDATE moz_bookmarks
+       SET dateAdded = COALESCE(dateAdded, lastModified, (
+             SELECT MIN(visit_date) FROM moz_historyvisits
+             WHERE place_id = fk
+           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
+           lastModified = COALESCE(lastModified, dateAdded, (
+             SELECT MAX(visit_date) FROM moz_historyvisits
+             WHERE place_id = fk
+           ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
+       WHERE dateAdded IS NULL OR
+             lastModified IS NULL`,
     });
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!

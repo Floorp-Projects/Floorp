@@ -129,6 +129,31 @@ static const char* kPreloadPermissions[] = {
   "manifest"
 };
 
+// A list of permissions that can have a fallback default permission
+// set under the permissions.default.* pref.
+static const char* kPermissionsWithDefaults[] = {
+  "camera",
+  "microphone",
+  "geo",
+  "desktop-notification"
+};
+
+// NOTE: nullptr can be passed as aType - if it is this function will return
+// "false" unconditionally.
+bool
+HasDefaultPref(const char* aType)
+{
+  if (aType) {
+    for (const char* perm : kPermissionsWithDefaults) {
+      if (!strcmp(aType, perm)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // NOTE: nullptr can be passed as aType - if it is this function will return
 // "false" unconditionally.
 bool
@@ -932,6 +957,13 @@ nsPermissionManager::Init()
   // If the 'permissions.memory_only' pref is set to true, then don't write any
   // permission settings to disk, but keep them in a memory-only database.
   mMemoryOnlyDB = mozilla::Preferences::GetBool("permissions.memory_only", false);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prefService->GetBranch("permissions.default.", getter_AddRefs(mDefaultPrefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsChildProcess()) {
     // Stop here; we don't need the DB in the child process. Instead we will be
@@ -2231,6 +2263,17 @@ nsPermissionManager::CommonTestPermissionInternal(nsIPrincipal* aPrincipal,
 
   // Set the default.
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
+
+  // For some permissions, query the default from a pref. We want to avoid
+  // doing this for all permissions so that permissions can opt into having
+  // the pref lookup overhead on each call.
+  if (HasDefaultPref(aType)) {
+    int32_t defaultPermission = nsIPermissionManager::UNKNOWN_ACTION;
+    nsresult rv = mDefaultPrefBranch->GetIntPref(aType, &defaultPermission);
+    if (NS_SUCCEEDED(rv)) {
+      *aPermission = defaultPermission;
+    }
+  }
 
   // For expanded principals, we want to iterate over the whitelist and see
   // if the permission is granted for any of them.

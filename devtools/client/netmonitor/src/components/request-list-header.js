@@ -87,9 +87,9 @@ const RequestListHeader = createClass({
     if (waterfallHeader) {
       // Measure its width and update the 'waterfallWidth' property in the store.
       // The 'waterfallWidth' will be further updated on every window resize.
-      setTimeout(() => {
-        this.props.resizeWaterfall(waterfallHeader.getBoundingClientRect().width);
-      }, 500);
+      window.cancelIdleCallback(this._resizeTimerId);
+      this._resizeTimerId = window.requestIdleCallback(() =>
+        this.props.resizeWaterfall(waterfallHeader.getBoundingClientRect().width));
     }
   },
 

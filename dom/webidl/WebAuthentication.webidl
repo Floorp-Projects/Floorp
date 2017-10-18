@@ -41,7 +41,7 @@ interface AuthenticatorAssertionResponse : AuthenticatorResponse {
 
 dictionary PublicKeyCredentialParameters {
     required PublicKeyCredentialType  type;
-    required WebAuthnAlgorithmID      alg; // Switch to COSE in Bug 1381190
+    required COSEAlgorithmIdentifier  alg;
 };
 
 dictionary MakePublicKeyCredentialOptions {
@@ -125,5 +125,3 @@ typedef long COSEAlgorithmIdentifier;
 typedef sequence<AAGUID>      AuthenticatorSelectionList;
 
 typedef BufferSource      AAGUID;
-
-typedef (boolean or DOMString) WebAuthnAlgorithmID; // Switch to COSE in Bug 1381190
