@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Test (i)frame offsets, bug 1366646</title>
+</head>
+<body>
+<p>top level frame</p>
+<iframe src="data:text/html,&lt;p&gt;frame without border&lt;/p&gt;
+  &lt;iframe src='data:text/html,&lt;p&gt;nested frame without border&lt;/p&gt;' height='50' width='100%' style='background-color: yellow; border: 0'&gt;&lt;/iframe&gt;
+  " style="background-color: pink; border: 0" width="100%" height="150"></iframe>
+<iframe src="data:text/html,&lt;p&gt;frame with 5px border&lt;/p&gt;
+  &lt;iframe src='data:text/html,&lt;p&gt;nested frame with 5px border&lt;/p&gt;' height='50' width='100%' style='background-color: yellow; border: solid 5px black'&gt;&lt;/iframe&gt;
+  " style="background-color: pink; border: solid 5px black" width="100%" height="150"></iframe>
+<iframe src="data:text/html,&lt;p&gt;frame with 5px padding&lt;/p&gt;
+  &lt;iframe src='data:text/html,&lt;p&gt;nested frame with 5px padding&lt;/p&gt;' height='50' width='100%' style='background-color: yellow; border: 0; padding: 5px'&gt;&lt;/iframe&gt;
+  " style="background-color: pink; border: 0; padding: 5px" width="100%" height="150"></iframe>
+<!-- Testing deprecated HTML4 iframe properties too: -->
+<iframe src="data:text/html,&lt;p&gt;frame with frameborder, marginwidth/ height and 5px padding&lt;/p&gt;
+  &lt;iframe src='data:text/html,&lt;p&gt;nested frame with frameborder, marginwidth/ height&lt;/p&gt;' height='50' width='100%' frameborder='1' marginheight='5' marginwidth='5' style='background-color: yellow;'&gt;&lt;/iframe&gt;
+  " frameborder="1" marginheight="5" marginwidth="5" style="background-color: pink; padding: 5px" width="100%" height="150"></iframe>
+</body></html>
