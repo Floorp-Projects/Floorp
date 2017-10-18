@@ -209,14 +209,16 @@ add_test(function test_WebDriverError() {
 
 add_test(function test_ElementClickInterceptedError() {
   let otherEl = {
+    hasAttribute: attr => attr in otherEl,
+    getAttribute: attr => attr in otherEl ? otherEl[attr] : null,
     nodeType: 1,
     localName: "a",
-    classList: [],
   };
   let obscuredEl = {
+    hasAttribute: attr => attr in obscuredEl,
+    getAttribute: attr => attr in obscuredEl ? obscuredEl[attr] : null,
     nodeType: 1,
     localName: "b",
-    classList: [],
     ownerDocument: {
       elementFromPoint: function (x, y) {
         return otherEl;

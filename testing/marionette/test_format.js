@@ -25,13 +25,19 @@ add_test(function test_pprint() {
   equal("[object Object] <cyclic object value>", pprint`${cyclic}`);
 
   let el = {
+    hasAttribute: attr => attr in el,
+    getAttribute: attr => attr in el ? el[attr] : null,
     nodeType: 1,
     localName: "input",
     id: "foo",
-    classList: {length: 1},
-    className: "bar baz",
+    class: "a b",
+    href: "#",
+    name: "bar",
+    src: "s",
+    type: "t",
   };
-  equal('<input id="foo" class="bar baz">', pprint`${el}`);
+  equal('<input id="foo" class="a b" href="#" name="bar" src="s" type="t">',
+        pprint`${el}`);
 
   run_next_test();
 });

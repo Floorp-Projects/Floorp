@@ -21,7 +21,7 @@ const MAX_STRING_LENGTH = 250;
  *
  *     let htmlElement = document.querySelector("input#foo");
  *     pprint`Expected element ${htmlElement}`;
- *     => 'Expected element <input id="foo" class="bar baz">'
+ *     => 'Expected element <input id="foo" class="bar baz" type="input">'
  * </code></pre>
  */
 function pprint(ss, ...values) {
@@ -41,17 +41,13 @@ function pprint(ss, ...values) {
   }
 
   function prettyElement(el) {
-    let ident = [];
-    if (el.id) {
-      ident.push(`id="${el.id}"`);
-    }
-    if (el.classList.length > 0) {
-      ident.push(`class="${el.className}"`);
-    }
+    let attrs = ["id", "class", "href", "name", "src", "type"];
 
     let idents = "";
-    if (ident.length > 0) {
-      idents = " " + ident.join(" ");
+    for (let attr of attrs) {
+      if (el.hasAttribute(attr)) {
+        idents += ` ${attr}="${el.getAttribute(attr)}"`;
+      }
     }
 
     return `<${el.localName}${idents}>`;
