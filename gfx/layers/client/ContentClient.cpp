@@ -256,6 +256,27 @@ ContentClient::BorrowDrawTargetForPainting(ContentClient::PaintState& aPaintStat
   return capturedState->mTargetDual;
 }
 
+nsIntRegion
+ExpandDrawRegion(ContentClient::PaintState& aPaintState,
+                 RotatedBuffer::DrawIterator* aIter,
+                 BackendType aBackendType)
+{
+  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
+  if (aIter) {
+    // The iterators draw region currently only contains the bounds of the region,
+    // this makes it the precise region.
+    aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
+    drawPtr = &aIter->mDrawRegion;
+  }
+  if (aBackendType == BackendType::DIRECT2D ||
+      aBackendType == BackendType::DIRECT2D1_1) {
+    // Simplify the draw region to avoid hitting expensive drawing paths
+    // for complex regions.
+    drawPtr->SimplifyOutwardByArea(100 * 100);
+  }
+  return *drawPtr;
+}
+
 RefPtr<CapturedPaintState>
 ContentClient::BorrowDrawTargetForRecording(ContentClient::PaintState& aPaintState,
                                             RotatedBuffer::DrawIterator* aIter,
@@ -291,30 +312,9 @@ ContentClient::BorrowDrawTargetForRecording(ContentClient::PaintState& aPaintSta
 }
 
 void
-ContentClient::ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned)
+ContentClient::ReturnDrawTarget(gfx::DrawTarget*& aReturned)
 {
   mBuffer->ReturnDrawTarget(aReturned);
-}
-
-nsIntRegion
-ContentClient::ExpandDrawRegion(ContentClient::PaintState& aPaintState,
-                                RotatedBuffer::DrawIterator* aIter,
-                                BackendType aBackendType)
-{
-  nsIntRegion* drawPtr = &aPaintState.mRegionToDraw;
-  if (aIter) {
-    // The iterators draw region currently only contains the bounds of the region,
-    // this makes it the precise region.
-    aIter->mDrawRegion.And(aIter->mDrawRegion, aPaintState.mRegionToDraw);
-    drawPtr = &aIter->mDrawRegion;
-  }
-  if (aBackendType == BackendType::DIRECT2D ||
-      aBackendType == BackendType::DIRECT2D1_1) {
-    // Simplify the draw region to avoid hitting expensive drawing paths
-    // for complex regions.
-    drawPtr->SimplifyOutwardByArea(100 * 100);
-  }
-  return *drawPtr;
 }
 
 /*static */ bool
@@ -632,19 +632,6 @@ private:
 };
 
 void
-ContentClientRemoteBuffer::BeginPaint()
-{
-  EnsureBackBufferIfFrontBuffer();
-}
-
-void
-ContentClientRemoteBuffer::BeginAsyncPaint()
-{
-  BeginPaint();
-  mInAsyncPaint = true;
-}
-
-void
 ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
   MOZ_ASSERT(!mBuffer || !mBuffer->HaveBufferOnWhite() ||
@@ -836,6 +823,13 @@ ContentClientDoubleBuffered::Dump(std::stringstream& aStream,
 }
 
 void
+ContentClientDoubleBuffered::Clear()
+{
+  ContentClient::Clear();
+  mFrontBuffer = nullptr;
+}
+
+void
 ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
   mFrontUpdatedRegion = aFrontUpdatedRegion;
@@ -854,7 +848,7 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientDoubleBuffered::BeginPaint()
 {
-  ContentClientRemoteBuffer::BeginPaint();
+  EnsureBackBufferIfFrontBuffer();
 
   mIsNewBuffer = false;
 
