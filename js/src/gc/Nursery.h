@@ -15,7 +15,6 @@
 #include "jspubtd.h"
 
 #include "ds/BitArray.h"
-#include "gc/Heap.h"
 #include "gc/Memory.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
@@ -54,10 +53,12 @@ struct Zone;
 
 namespace js {
 
+class AutoLockGCBgAlloc;
 class ObjectElements;
 class PlainObject;
 class NativeObject;
 class Nursery;
+struct NurseryChunk;
 class HeapSlot;
 class ZoneGroup;
 class JSONPrinter;
@@ -70,6 +71,8 @@ struct Cell;
 class MinorCollectionTracer;
 class RelocationOverlay;
 struct TenureCountCache;
+enum class AllocKind;
+class TenuredCell;
 } /* namespace gc */
 
 namespace jit {
@@ -164,11 +167,12 @@ class Nursery
     MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
     MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
         for (auto chunk : chunks_) {
-            if (uintptr_t(p) - chunk->start() < gc::ChunkSize)
+            if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize)
                 return true;
         }
         return false;
     }
+
     template<typename T>
     bool isInside(const SharedMem<T>& p) const {
         return isInside(p.unwrap(/*safe - used for value in comparison above*/));
@@ -287,20 +291,7 @@ class Nursery
 
   private:
     /* The amount of space in the mapped nursery available to allocations. */
-    static const size_t NurseryChunkUsableSize = gc::ChunkSize - sizeof(gc::ChunkTrailer);
-
-    struct NurseryChunk {
-        char data[NurseryChunkUsableSize];
-        gc::ChunkTrailer trailer;
-        static NurseryChunk* fromChunk(gc::Chunk* chunk);
-        void init(JSRuntime* rt);
-        void poisonAndInit(JSRuntime* rt, uint8_t poison);
-        uintptr_t start() const { return uintptr_t(&data); }
-        uintptr_t end() const { return uintptr_t(&trailer); }
-        gc::Chunk* toChunk(JSRuntime* rt);
-    };
-    static_assert(sizeof(NurseryChunk) == gc::ChunkSize,
-                  "Nursery chunk size must match gc::Chunk size.");
+    static const size_t NurseryChunkUsableSize = gc::ChunkSize - gc::ChunkTrailerSize;
 
     JSRuntime* runtime_;
 
@@ -441,15 +432,7 @@ class Nursery
     void updateNumChunksLocked(unsigned newCount,
                                AutoLockGCBgAlloc& lock);
 
-    MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
-        MOZ_ASSERT(numChunks() > 0);
-        return chunks_.back()->end();
-    }
-
-    MOZ_ALWAYS_INLINE uintptr_t currentEnd() const {
-        MOZ_ASSERT(currentEnd_ == chunk(currentChunk_).end());
-        return currentEnd_;
-    }
+    MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 
     uintptr_t position() const { return position_; }
 
@@ -512,6 +495,7 @@ class Nursery
     friend class TenuringTracer;
     friend class gc::MinorCollectionTracer;
     friend class jit::MacroAssembler;
+    friend struct NurseryChunk;
 };
 
 } /* namespace js */
