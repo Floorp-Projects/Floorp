@@ -82,7 +82,7 @@ ThreadInfo::StreamJSON(const ProfileBuffer& aBuffer,
 
   double firstSampleTime = 0.0;
 
-  aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
+  aWriter.Start();
   {
     StreamSamplesAndMarkers(Name(), ThreadId(), aBuffer, aWriter,
                             aProcessStartTime,

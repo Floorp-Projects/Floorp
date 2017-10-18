@@ -181,8 +181,7 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame
     while (copyCellFrame && originalCellFrame) {
       NS_ASSERTION(originalCellFrame->GetContent() == copyCellFrame->GetContent(),
                    "cell frames have different content");
-      int32_t colIndex;
-      originalCellFrame->GetColIndex(colIndex);
+      uint32_t colIndex = originalCellFrame->ColIndex();
       copyCellFrame->SetColIndex(colIndex);
 
       // Move to the next cell frame
@@ -1043,8 +1042,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
               nsTableCellFrame* contCell = static_cast<nsTableCellFrame*>(
                 aPresContext.PresShell()->FrameConstructor()->
                   CreateContinuingFrame(&aPresContext, cell, &aLastRow));
-              int32_t colIndex;
-              cell->GetColIndex(colIndex);
+              uint32_t colIndex = cell->ColIndex();
               aContRow->InsertCellFrame(contCell, colIndex);
             }
           }

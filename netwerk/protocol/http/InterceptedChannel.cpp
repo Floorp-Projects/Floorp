@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "InterceptedChannel.h"
+#include "nsICancelable.h"
 #include "nsInputStreamPump.h"
 #include "nsIPipe.h"
 #include "nsIStreamListener.h"
@@ -18,6 +19,7 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "nsIChannelEventSink.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -46,13 +48,6 @@ InterceptedChannelBase::InterceptedChannelBase(nsINetworkInterceptController* aC
 
 InterceptedChannelBase::~InterceptedChannelBase()
 {
-}
-
-NS_IMETHODIMP
-InterceptedChannelBase::GetResponseBody(nsIOutputStream** aStream)
-{
-  NS_IF_ADDREF(*aStream = mResponseBody);
-  return NS_OK;
 }
 
 void
@@ -227,11 +222,6 @@ InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
 void
 InterceptedChannelContent::NotifyController()
 {
-  nsresult rv = NS_NewPipe(getter_AddRefs(mSynthesizedInput),
-                           getter_AddRefs(mResponseBody),
-                           0, UINT32_MAX, true, true);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
   DoNotifyController();
 }
 
@@ -251,10 +241,6 @@ InterceptedChannelContent::ResetInterception()
 
   mReportCollector->FlushConsoleReports(mChannel);
 
-  mResponseBody->Close();
-  mResponseBody = nullptr;
-  mSynthesizedInput = nullptr;
-
   mChannel->ResetInterception();
 
   mClosed = true;
@@ -265,7 +251,7 @@ InterceptedChannelContent::ResetInterception()
 NS_IMETHODIMP
 InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus, const nsACString& aReason)
 {
-  if (!mResponseBody) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -275,7 +261,7 @@ InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus, const nsACString& 
 NS_IMETHODIMP
 InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACString& aValue)
 {
-  if (!mResponseBody) {
+  if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -283,18 +269,13 @@ InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACS
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelContent::StartSynthesizedResponse(nsIInputStream* aBody,
+                                                    nsIInterceptedBodyCallback* aBodyCallback,
+                                                    const nsACString& aFinalURLSpec)
 {
   if (NS_WARN_IF(mClosed)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  // Make sure the body output stream is always closed.  If the channel was
-  // intercepted with a null-body response then its possible the synthesis
-  // completed without a stream copy operation.
-  mResponseBody->Close();
-
-  mReportCollector->FlushConsoleReports(mChannel);
 
   EnsureSynthesizedResponse();
 
@@ -316,15 +297,26 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
   bool equal = false;
   originalURI->Equals(responseURI, &equal);
   if (!equal) {
-    mChannel->ForceIntercepted(mSynthesizedInput);
+    mChannel->ForceIntercepted(aBody, aBodyCallback);
     mChannel->BeginNonIPCRedirect(responseURI, *mSynthesizedResponseHead.ptr());
   } else {
     mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(),
-                                              mSynthesizedInput,
+                                              aBody, aBodyCallback,
                                               mStreamListener);
   }
 
-  mResponseBody = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::FinishSynthesizedResponse()
+{
+  if (NS_WARN_IF(mClosed)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mReportCollector->FlushConsoleReports(mChannel);
+
   mStreamListener = nullptr;
   mClosed = true;
 
@@ -339,15 +331,12 @@ InterceptedChannelContent::CancelInterception(nsresult aStatus)
   if (mClosed) {
     return NS_ERROR_FAILURE;
   }
+  mClosed = true;
 
   mReportCollector->FlushConsoleReports(mChannel);
 
-  // we need to use AsyncAbort instead of Cancel since there's no active pump
-  // to cancel which will provide OnStart/OnStopRequest to the channel.
-  nsresult rv = mChannel->AsyncAbort(aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Unused << mChannel->Cancel(aStatus);
   mStreamListener = nullptr;
-  mClosed = true;
 
   return NS_OK;
 }

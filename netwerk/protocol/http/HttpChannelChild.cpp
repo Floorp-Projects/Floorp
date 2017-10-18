@@ -81,7 +81,6 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   if (mOwner) {
-    mOwner->SynthesizeResponseStartTime(TimeStamp::Now());
     mOwner->DoOnStartRequest(mOwner, mContext);
   }
   return NS_OK;
@@ -140,7 +139,6 @@ NS_IMETHODIMP
 InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatusCode)
 {
   if (mOwner) {
-    mOwner->SynthesizeResponseEndTime(TimeStamp::Now());
     mOwner->DoPreOnStopRequest(aStatusCode);
     mOwner->DoOnStopRequest(mOwner, aStatusCode, mContext);
   }
@@ -1126,6 +1124,8 @@ HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
        this, static_cast<uint32_t>(aStatus)));
   mIsPending = false;
 
+  MaybeCallSynthesizedCallback();
+
   Performance* documentPerformance = GetPerformance();
   if (documentPerformance) {
       documentPerformance->AddEntry(this, this);
@@ -1410,6 +1410,8 @@ HttpChannelChild::DoNotifyListenerCleanup()
     mInterceptListener->Cleanup();
     mInterceptListener = nullptr;
   }
+
+  MaybeCallSynthesizedCallback();
 }
 
 class DeleteSelfEvent : public NeckoTargetChannelEvent<HttpChannelChild>
@@ -1433,6 +1435,7 @@ HttpChannelChild::OverrideRunnable::OverrideRunnable(
   HttpChannelChild* aNewChannel,
   InterceptStreamListener* aListener,
   nsIInputStream* aInput,
+  nsIInterceptedBodyCallback* aCallback,
   nsAutoPtr<nsHttpResponseHead>& aHead)
   : Runnable("net::HttpChannelChild::OverrideRunnable")
 {
@@ -1440,6 +1443,7 @@ HttpChannelChild::OverrideRunnable::OverrideRunnable(
   mNewChannel = aNewChannel;
   mListener = aListener;
   mInput = aInput;
+  mCallback = aCallback;
   mHead = aHead;
 }
 
@@ -1447,13 +1451,26 @@ void
 HttpChannelChild::OverrideRunnable::OverrideWithSynthesizedResponse()
 {
   if (mNewChannel) {
-    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
+    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mCallback, mListener);
   }
 }
 
 NS_IMETHODIMP
 HttpChannelChild::OverrideRunnable::Run()
 {
+  // Check to see if the channel was canceled in the middle of the redirect.
+  nsresult rv = NS_OK;
+  Unused << mChannel->GetStatus(&rv);
+  if (NS_FAILED(rv)) {
+    if (mCallback) {
+      mCallback->BodyComplete(rv);
+      mCallback = nullptr;
+    }
+    mChannel->CleanupRedirectingChannel(rv);
+    mNewChannel->Cancel(rv);
+    return NS_OK;
+  }
+
   bool ret = mChannel->Redirect3Complete(this);
 
   // If the method returns false, it means the IPDL connection is being
@@ -2138,9 +2155,12 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
     MOZ_ASSERT(neckoTarget);
 
+    nsCOMPtr<nsIInterceptedBodyCallback> callback =
+      mSynthesizedCallback.forget();
+
     Unused << neckoTarget->Dispatch(
       new OverrideRunnable(this, redirectedChannel, streamListener,
-                           mSynthesizedInput, mResponseHead),
+                           mSynthesizedInput, callback, mResponseHead),
       NS_DISPATCH_NORMAL);
 
     return NS_OK;
@@ -2192,6 +2212,8 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     }
   }
 
+  MaybeCallSynthesizedCallback();
+
   bool chooseAppcache = false;
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
     do_QueryInterface(newHttpChannel);
@@ -2222,12 +2244,23 @@ HttpChannelChild::Cancel(nsresult status)
     // is responsible for cleaning up.
     mCanceled = true;
     mStatus = status;
-    if (RemoteChannelExists())
+    if (RemoteChannelExists()) {
       SendCancel(status);
+    }
+
+    // If the channel is intercepted and already pumping, then just
+    // cancel the pump.  This will call OnStopRequest().
     if (mSynthesizedResponsePump) {
       mSynthesizedResponsePump->Cancel(status);
     }
-    mInterceptListener = nullptr;
+
+    // If we are canceled while intercepting, but not yet pumping, then
+    // we must call AsyncAbort() to trigger OnStopRequest().
+    else if (mInterceptListener) {
+      mInterceptListener->Cleanup();
+      mInterceptListener = nullptr;
+      Unused << AsyncAbort(status);
+    }
   }
   return NS_OK;
 }
@@ -2391,7 +2424,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-    Unused << AsyncAbort(mStatus);
     return NS_OK;
   }
 
@@ -3416,10 +3448,15 @@ HttpChannelChild::ResetInterception()
     mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
   }
 
+  // If the channel has already been aborted or canceled, just stop.
+  if (NS_FAILED(mStatus)) {
+    return;
+  }
+
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    Unused << AsyncAbort(rv);
+    Unused << Cancel(rv);
   }
 }
 
@@ -3536,8 +3573,28 @@ HttpChannelChild::CancelOnMainThread(nsresult aRv)
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                                   nsIInputStream* aSynthesizedInput,
+                                                  nsIInterceptedBodyCallback* aSynthesizedCallback,
                                                   InterceptStreamListener* aStreamListener)
 {
+  nsresult rv = NS_OK;
+  auto autoCleanup = MakeScopeExit([&] {
+    // Auto-cancel on failure.  Do this first to get mStatus set, if necessary.
+    if (NS_FAILED(rv)) {
+      Cancel(rv);
+    }
+
+    // If we early exit before taking ownership of the body, then automatically
+    // invoke the callback.  This could be due to an error or because we're not
+    // going to consume it due to a redirect, etc.
+    if (aSynthesizedCallback) {
+      aSynthesizedCallback->BodyComplete(mStatus);
+    }
+  });
+
+  if (NS_FAILED(mStatus)) {
+    return;
+  }
+
   mInterceptListener = aStreamListener;
 
   // Intercepted responses should already be decoded.  If its a redirect,
@@ -3549,40 +3606,48 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   mResponseHead = aResponseHead;
   mSynthesizedResponse = true;
 
+  mSynthesizedInput = aSynthesizedInput;
+
+  if (!mSynthesizedInput) {
+    rv = NS_NewCStringInputStream(getter_AddRefs(mSynthesizedInput),
+                                  EmptyCString());
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+
   if (nsHttpChannel::WillRedirect(mResponseHead)) {
     mShouldInterceptSubsequentRedirect = true;
     // Continue with the original cross-process request
-    nsresult rv = ContinueAsyncOpen();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      rv = AsyncAbort(rv);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    rv = ContinueAsyncOpen();
     return;
   }
 
-  // In our current implementation, the FetchEvent handler will copy the
-  // response stream completely into the pipe backing the input stream so we
-  // can treat the available as the length of the stream.
-  uint64_t available;
-  nsresult rv = aSynthesizedInput->Available(&available);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  // For progress we trust the content-length for the "maximum" size.
+  // We can't determine the full size from the stream itself since we
+  // only receive the data incrementally.  We can't trust Available()
+  // here.
+  // TODO: We could implement an nsIFixedLengthInputStream interface and
+  //       QI to it here.  This would let us determine the total length
+  //       for streams that support it.  See bug 1388774.
+  rv = GetContentLength(&mSynthesizedStreamLength);
+  if (NS_FAILED(rv)) {
     mSynthesizedStreamLength = -1;
-  } else {
-    mSynthesizedStreamLength = int64_t(available);
   }
 
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   MOZ_ASSERT(neckoTarget);
 
   rv = nsInputStreamPump::Create(getter_AddRefs(mSynthesizedResponsePump),
-                                 aSynthesizedInput, 0, 0, true, neckoTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aSynthesizedInput->Close();
-    return;
-  }
+                                 mSynthesizedInput, 0, 0, true, neckoTarget);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
   NS_ENSURE_SUCCESS_VOID(rv);
+
+  // The pump is started, so take ownership of the body callback.  We
+  // clear the argument to avoid auto-completing it via the ScopeExit
+  // lambda.
+  mSynthesizedCallback = aSynthesizedCallback;
+  aSynthesizedCallback = nullptr;
 
   // if this channel has been suspended previously, the pump needs to be
   // correspondingly suspended now that it exists.
@@ -3591,9 +3656,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
-  if (mCanceled) {
-    mSynthesizedResponsePump->Cancel(mStatus);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!mCanceled);
 }
 
 NS_IMETHODIMP
@@ -3607,9 +3670,11 @@ HttpChannelChild::ForceIntercepted(bool aPostRedirectChannelShouldIntercept,
 }
 
 void
-HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput)
+HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput,
+                                   nsIInterceptedBodyCallback* aSynthesizedCallback)
 {
   mSynthesizedInput = aSynthesizedInput;
+  mSynthesizedCallback = aSynthesizedCallback;
   mSynthesizedResponse = true;
   mRedirectingForSubsequentSynthesizedResponse = true;
 }
@@ -3703,15 +3768,14 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
 }
 
 void
-HttpChannelChild::SynthesizeResponseStartTime(const TimeStamp& aTime)
+HttpChannelChild::MaybeCallSynthesizedCallback()
 {
-  mTransactionTimings.responseStart = aTime;
-}
+  if (!mSynthesizedCallback) {
+    return;
+  }
 
-void
-HttpChannelChild::SynthesizeResponseEndTime(const TimeStamp& aTime)
-{
-  mTransactionTimings.responseEnd = aTime;
+  mSynthesizedCallback->BodyComplete(mStatus);
+  mSynthesizedCallback = nullptr;
 }
 
 } // namespace net

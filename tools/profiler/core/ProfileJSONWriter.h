@@ -85,7 +85,7 @@ public:
     : JSONWriter(mozilla::Move(aWriter))
   { }
 
-  void StartBareList(CollectionStyle aStyle = SingleLineStyle) {
+  void StartBareList(CollectionStyle aStyle = MultiLineStyle) {
     StartCollection(nullptr, "", aStyle);
   }
 

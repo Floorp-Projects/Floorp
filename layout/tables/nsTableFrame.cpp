@@ -364,9 +364,8 @@ nsTableFrame::RowOrColSpanChanged(nsTableCellFrame* aCellFrame)
     nsTableCellMap* cellMap = GetCellMap();
     if (cellMap) {
       // for now just remove the cell from the map and reinsert it
-      int32_t rowIndex, colIndex;
-      aCellFrame->GetRowIndex(rowIndex);
-      aCellFrame->GetColIndex(colIndex);
+      uint32_t rowIndex = aCellFrame->RowIndex();
+      uint32_t colIndex = aCellFrame->ColIndex();
       RemoveCell(aCellFrame, rowIndex);
       AutoTArray<nsTableCellFrame*, 1> cells;
       cells.AppendElement(aCellFrame);
@@ -442,9 +441,7 @@ nsTableFrame::GetEffectiveRowSpan(int32_t                 aRowIndex,
   nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (nullptr != cellMap, "bad call, cellMap not yet allocated.");
 
-  int32_t colIndex;
-  aCell.GetColIndex(colIndex);
-  return cellMap->GetEffectiveRowSpan(aRowIndex, colIndex);
+  return cellMap->GetEffectiveRowSpan(aRowIndex, aCell.ColIndex());
 }
 
 int32_t
@@ -453,9 +450,8 @@ nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell,
 {
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
 
-  int32_t colIndex, rowIndex;
-  aCell.GetColIndex(colIndex);
-  aCell.GetRowIndex(rowIndex);
+  uint32_t colIndex = aCell.ColIndex();
+  uint32_t rowIndex = aCell.RowIndex();
 
   if (aCellMap)
     return aCellMap->GetRowSpan(rowIndex, colIndex, true);
@@ -469,9 +465,8 @@ nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
 {
   nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
 
-  int32_t colIndex, rowIndex;
-  aCell.GetColIndex(colIndex);
-  aCell.GetRowIndex(rowIndex);
+  uint32_t colIndex = aCell.ColIndex();
+  uint32_t rowIndex = aCell.RowIndex();
 
   if (aCellMap)
     return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex);
@@ -1403,33 +1398,41 @@ PaintRowGroupBackgroundByColIdx(nsTableRowGroupFrame* aRowGroup,
                                 nsIFrame* aFrame,
                                 nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists,
-                                const nsTArray<int32_t>& aColIdx,
+                                const nsTArray<uint32_t>& aColIdx,
                                 const nsPoint& aOffset)
 {
+  MOZ_DIAGNOSTIC_ASSERT(!aColIdx.IsEmpty(),
+                        "Must be painting backgrounds for something");
+
   for (nsTableRowFrame* row = aRowGroup->GetFirstRow(); row; row = row->GetNextRow()) {
     auto rowPos = row->GetNormalPosition() + aOffset;
     if (!aBuilder->GetDirtyRect().Intersects(nsRect(rowPos, row->GetSize()))) {
       continue;
     }
     for (nsTableCellFrame* cell = row->GetFirstCell(); cell; cell = cell->GetNextCell()) {
+      uint32_t curColIdx = cell->ColIndex();
+      if (!aColIdx.ContainsSorted(curColIdx)) {
+        if (curColIdx > aColIdx.LastElement()) {
+          // We can just stop looking at this row.
+          break;
+        }
+        continue;
+      }
+
       if (!cell->ShouldPaintBackground(aBuilder)) {
         continue;
       }
 
-      int32_t curColIdx;
-      cell->GetColIndex(curColIdx);
-      if (aColIdx.Contains(curColIdx)) {
-        auto cellPos = cell->GetNormalPosition() + rowPos;
-        auto cellRect = nsRect(cellPos, cell->GetSize());
-        if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
-          continue;
-        }
-        nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame, cellRect,
-                                                             aLists.BorderBackground(),
-                                                             false, nullptr,
-                                                             aFrame->GetRectRelativeToSelf(),
-                                                             cell);
+      auto cellPos = cell->GetNormalPosition() + rowPos;
+      auto cellRect = nsRect(cellPos, cell->GetSize());
+      if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
+        continue;
       }
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame, cellRect,
+                                                           aLists.BorderBackground(),
+                                                           false, nullptr,
+                                                           aFrame->GetRectRelativeToSelf(),
+                                                           cell);
     }
   }
 }
@@ -1547,8 +1550,10 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Compute background rect by iterating all cell frame.
     nsTableColGroupFrame* colGroup = static_cast<nsTableColGroupFrame*>(aFrame);
     // Collecting column index.
-    AutoTArray<int32_t, 1> colIdx;
+    AutoTArray<uint32_t, 1> colIdx;
     for (nsTableColFrame* col = colGroup->GetFirstColumn(); col; col = col->GetNextCol()) {
+      MOZ_ASSERT(colIdx.IsEmpty() ||
+                 static_cast<uint32_t>(col->GetColIndex()) > colIdx.LastElement());
       colIdx.AppendElement(col->GetColIndex());
     }
 
@@ -1565,7 +1570,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   } else if (aFrame->IsTableColFrame()) {
     // Compute background rect by iterating all cell frame.
     nsTableColFrame* col = static_cast<nsTableColFrame*>(aFrame);
-    AutoTArray<int32_t, 1> colIdx;
+    AutoTArray<uint32_t, 1> colIdx;
     colIdx.AppendElement(col->GetColIndex());
 
     nsTableFrame* table = col->GetTableFrame();
@@ -4225,9 +4230,8 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
       for (nsIFrame* childFrame : cFrame->PrincipalChildList()) {
         nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
         if (cellFrame) {
-          int32_t colIndex;
-          cellFrame->GetColIndex(colIndex);
-          printf("cell(%d)=%p ", colIndex, static_cast<void*>(childFrame));
+          uint32_t colIndex = cellFrame->ColIndex();
+          printf("cell(%u)=%p ", colIndex, static_cast<void*>(childFrame));
         }
       }
       printf("\n");

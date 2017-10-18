@@ -30,7 +30,7 @@ function* testSteps()
   // 1. Remove the folder "storage/temporary".
   // 2. Copy the content under the "storage/default/chrome" to
   //    "storage/default/http+++www.mozilla.org".
-  installPackage("version3_0upgrade_profile");
+  installPackage("version2_1upgrade_profile");
 
   info("Checking padding file before upgrade (QM version 2.0)");
 
@@ -43,13 +43,13 @@ function* testSteps()
 
   info("Initializing");
 
-  // Initialize QuotaManager to trigger upgrade the QM to version 3.0
+  // Initialize QuotaManager to trigger upgrade the QM to version 2.1
   let request = init(continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
 
-  info("Checking padding files after upgrade (QM version 3.0)");
+  info("Checking padding files after upgrade (QM version 2.1)");
 
   for (let origin of origins) {
     let paddingFile = getRelativeFile(origin + paddingFilePath);

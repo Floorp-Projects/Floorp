@@ -230,7 +230,8 @@ const nsAttrValue::EnumTable nsSMILTimedElement::sRestartModeTable[] = {
       {nullptr, 0}
 };
 
-const nsSMILMilestone nsSMILTimedElement::sMaxMilestone(INT64_MAX, false);
+const nsSMILMilestone nsSMILTimedElement::sMaxMilestone(
+  std::numeric_limits<nsSMILTime>::max(), false);
 
 // The thresholds at which point we start filtering intervals and instance times
 // indiscriminately.
@@ -1927,8 +1928,11 @@ nsSMILTimedElement::GetRepeatDuration() const
 {
   nsSMILTimeValue multipliedDuration;
   if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
-    multipliedDuration.SetMillis(
-      nsSMILTime(mRepeatCount * double(mSimpleDur.GetMillis())));
+    if (mRepeatCount * double(mSimpleDur.GetMillis()) <=
+        std::numeric_limits<nsSMILTime>::max()) {
+      multipliedDuration.SetMillis(
+        nsSMILTime(mRepeatCount * mSimpleDur.GetMillis()));
+    }
   } else {
     multipliedDuration.SetIndefinite();
   }
@@ -2207,13 +2211,13 @@ nsresult
 nsSMILTimedElement::AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
     double aOffsetSeconds, bool aIsBegin)
 {
-  double offset = aOffsetSeconds * PR_MSEC_PER_SEC;
+  double offset = NS_round(aOffsetSeconds * PR_MSEC_PER_SEC);
 
   // Check we won't overflow the range of nsSMILTime
-  if (aCurrentTime + NS_round(offset) > INT64_MAX)
+  if (aCurrentTime + offset > std::numeric_limits<nsSMILTime>::max())
     return NS_ERROR_ILLEGAL_VALUE;
 
-  nsSMILTimeValue timeVal(aCurrentTime + int64_t(NS_round(offset)));
+  nsSMILTimeValue timeVal(aCurrentTime + int64_t(offset));
 
   RefPtr<nsSMILInstanceTime> instanceTime =
     new nsSMILInstanceTime(timeVal, nsSMILInstanceTime::SOURCE_DOM);

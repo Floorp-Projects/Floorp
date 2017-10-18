@@ -582,8 +582,7 @@ LookupCacheV2::Has(const Completion& aCompletion,
   if (found) {
     *aHas = true;
     *aMatchLength = PREFIX_SIZE;
-  } else if (mUpdateCompletions.BinaryIndexOf(aCompletion) !=
-             nsTArray<Completion>::NoIndex) {
+  } else if (mUpdateCompletions.ContainsSorted(aCompletion)) {
     // Completions is found in database, confirm the result
     *aHas = true;
     *aMatchLength = COMPLETE_SIZE;
