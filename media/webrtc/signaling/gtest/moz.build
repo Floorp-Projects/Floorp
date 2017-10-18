@@ -27,6 +27,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
         'jsep_track_unittest.cpp',
         'mediaconduit_unittests.cpp',
         'sdp_unittests.cpp',
+        'videoconduit_unittests.cpp',
     ]
 
     # See Bug 1372950, mediapipeline tests seem to cause crashes on Windows

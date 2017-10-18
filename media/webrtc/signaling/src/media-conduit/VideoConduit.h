@@ -286,7 +286,8 @@ public:
     return mCodecMode;
   }
 
-  explicit WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall);
+  WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
+                     UniquePtr<cricket::VideoAdapter>&& aVideoAdapter);
   virtual ~WebrtcVideoConduit();
 
   MediaConduitErrorCode InitMain();
@@ -494,7 +495,7 @@ private:
 
   // Frame adapter - handle sinks that we feed data to, and handle resolution
   // changes needed for them.
-  cricket::VideoAdapter mVideoAdapter;
+  UniquePtr<cricket::VideoAdapter> mVideoAdapter;
   rtc::VideoBroadcaster mVideoBroadcaster;
 
   // Engine state we are concerned with.
