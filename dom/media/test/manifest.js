@@ -255,9 +255,6 @@ var gPlayTests = [
   // Test playback of a WebM file with resolution changes.
   { name:"resolution-change.webm", type:"video/webm", duration:6.533 },
 
-  // Test playback of a raw file
-  { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
-
   // A really short, low sample rate, single channel file. This tests whether
   // we can handle playing files when only push very little audio data to the
   // hardware.
@@ -352,8 +349,6 @@ var gSeekToNextFrameTests = [
   { name:"seek-short.webm", type:"video/webm", duration:0.23 },
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
-  // Test playback of a raw file
-  { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
   { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27 },
 
