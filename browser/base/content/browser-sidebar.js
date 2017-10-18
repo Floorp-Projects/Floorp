@@ -67,7 +67,6 @@ var SidebarUI = {
     // If this is the last browser window, persist various values that should be
     // remembered for after a restart / reopening a browser window.
     let enumerator = Services.wm.getEnumerator("navigator:browser");
-    enumerator.getNext();
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
 
