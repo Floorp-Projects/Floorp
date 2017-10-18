@@ -1037,8 +1037,6 @@ function setDefaultPrefs() {
     // Some apps set this preference to true by default
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, false);
   }
-  // In case telemetry is enabled for xpcshell tests.
-  Services.prefs.setBoolPref(PREF_TOOLKIT_TELEMETRY_ENABLED, false);
 }
 
 /**
