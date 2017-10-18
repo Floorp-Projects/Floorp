@@ -9,6 +9,9 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#if defined(MOZ_SANDBOX)
+#include "mozilla/sandboxTarget.h"
+#endif
 
 using mozilla::ipc::IOThreadChild;
 
@@ -17,17 +20,36 @@ namespace widget {
 
 PDFiumProcessChild::PDFiumProcessChild(ProcessId aParentPid)
   : ProcessChild(aParentPid)
+#if defined(MOZ_SANDBOX)
+  , mPDFium(nullptr)
+#endif
 {
 }
 
 PDFiumProcessChild::~PDFiumProcessChild()
 {
+#if defined(MOZ_SANDBOX)
+  if (mPDFium) {
+    PR_UnloadLibrary(mPDFium);
+  }
+#endif
 }
 
 bool
 PDFiumProcessChild::Init(int aArgc, char* aArgv[])
 {
   BackgroundHangMonitor::Startup();
+
+#if defined(MOZ_SANDBOX)
+  // XXX bug 1417000
+  // We really should load "pdfium.dll" after calling StartSandbox(). For
+  // an unknown reason, "pdfium.dll" can not be loaded correctly after
+  // StartSandbox() been called. Temporary preload this library until we fix
+  // bug 1417000.
+  mPDFium = PR_LoadLibrary("pdfium.dll");
+  mozilla::SandboxTarget::Instance()->StartSandbox();
+#endif
+
   mPDFiumActor.Init(ParentPid(),IOThreadChild::message_loop(),
                     IOThreadChild::channel());
 
