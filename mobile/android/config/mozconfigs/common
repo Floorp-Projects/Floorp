@@ -49,6 +49,9 @@ ANDROID_NDK_VERSION_32BIT="r8c"
 ac_add_options --enable-application=mobile/android
 ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
+ac_add_options --with-gradle="$topsrcdir/android-gradle-dependencies/gradle-dist/bin/gradle"
+export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/jcenter","file://$topsrcdir/android-gradle-dependencies/google"
+
 if [ -z "$NO_NDK" ]; then
     ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
 fi
