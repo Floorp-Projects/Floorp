@@ -203,6 +203,7 @@ load 1158412.html
 load 1181619.html
 load 1230422.html
 load 1251361.html
+pref(dom.webcomponents.enabled,true) load 1281715.html
 load 1304437.html
 pref(dom.IntersectionObserver.enabled,true) load 1324209.html
 load 1324500.html
