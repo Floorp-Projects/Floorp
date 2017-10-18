@@ -67,7 +67,6 @@ TARGETS = {
         'x86_64-unknown-linux-gnu-android-cross-repack': [
             'mobile/android/config/tooltool-manifests/android/releng.manifest',
             'mobile/android/config/tooltool-manifests/android-x86/releng.manifest',
-            'mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest',
             ],
         'x86_64-unknown-linux-gnu-mingw32-cross-repack': [
             'browser/config/tooltool-manifests/mingw32/releng.manifest',
