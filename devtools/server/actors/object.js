@@ -10,7 +10,7 @@ const { Cu, Ci } = require("chrome");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert, dumpn } = DevToolsUtils;
+const { assert } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "ChromeUtils");
 
@@ -75,40 +75,44 @@ ObjectActor.prototype = {
   grip: function () {
     let g = {
       "type": "object",
-      "actor": this.actorID
+      "actor": this.actorID,
+      "class": this.obj.class,
     };
 
-    // Check if the object has a wrapper which denies access. It may be a CPOW or a
-    // security wrapper. Change the class so that this will be visible in the UI.
     let unwrapped = DevToolsUtils.unwrap(this.obj);
-    if (!unwrapped) {
+
+    // Unsafe objects must be treated carefully.
+    if (!DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       if (DevToolsUtils.isCPOW(this.obj)) {
-        g.class = "CPOW: " + this.obj.class;
-      } else {
-        g.class = "Inaccessible";
+        // Cross-process object wrappers can't be accessed.
+        g.class = "CPOW: " + g.class;
+      } else if (unwrapped === undefined) {
+        // Objects belonging to an invisible-to-debugger compartment might be proxies,
+        // so just in case they shouldn't be accessed.
+        g.class = "InvisibleToDebugger: " + g.class;
+      } else if (unwrapped.isProxy) {
+        // Proxy objects can run traps when accessed, so just create a preview with
+        // the target and the handler.
+        g.class = "Proxy";
+        this.hooks.incrementGripDepth();
+        DebuggerServer.ObjectActorPreviewers.Proxy[0](this, g, null);
+        this.hooks.decrementGripDepth();
       }
       return g;
     }
 
-    // Dead objects also deny access.
-    if (this.obj.class == "DeadObject") {
-      g.class = "DeadObject";
-      return g;
+    // If the debuggee does not subsume the object's compartment, most properties won't
+    // be accessible. Cross-orgin Window and Location objects might expose some, though.
+    // Change the displayed class, but when creating the preview use the original one.
+    if (unwrapped === null) {
+      g.class = "Restricted";
     }
 
-    // Otherwise, increment grip depth and attempt to create a preview.
     this.hooks.incrementGripDepth();
 
-    // The `isProxy` getter is called on `unwrapped` instead of `this.obj` in order
-    // to detect proxies behind transparent wrappers, and thus avoid running traps.
-    if (unwrapped.isProxy) {
-      g.class = "Proxy";
-    } else {
-      g.class = this.obj.class;
-      g.extensible = this.obj.isExtensible();
-      g.frozen = this.obj.isFrozen();
-      g.sealed = this.obj.isSealed();
-    }
+    g.extensible = this.obj.isExtensible();
+    g.frozen = this.obj.isFrozen();
+    g.sealed = this.obj.isSealed();
 
     if (g.class == "Promise") {
       g.promiseState = this._createPromiseState();
@@ -119,8 +123,13 @@ ObjectActor.prototype = {
     if (isTypedArray(g)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
       g.ownPropertyLength = getArrayLength(this.obj);
-    } else if (g.class != "Proxy") {
-      g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
+    } else {
+      try {
+        g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
+      } catch (err) {
+        // The above can throw when the debuggee does not subsume the object's
+        // compartment, or for some WrappedNatives like Cu.Sandbox.
+      }
     }
 
     let raw = this.obj.unsafeDereference();
@@ -135,7 +144,7 @@ ObjectActor.prototype = {
       raw = null;
     }
 
-    let previewers = DebuggerServer.ObjectActorPreviewers[g.class] ||
+    let previewers = DebuggerServer.ObjectActorPreviewers[this.obj.class] ||
                      DebuggerServer.ObjectActorPreviewers.Object;
     for (let fn of previewers) {
       try {
@@ -226,8 +235,16 @@ ObjectActor.prototype = {
    * the object and not its prototype.
    */
   onOwnPropertyNames: function () {
-    return { from: this.actorID,
-             ownPropertyNames: this.obj.getOwnPropertyNames() };
+    let props = [];
+    if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
+      try {
+        props = this.obj.getOwnPropertyNames();
+      } catch (err) {
+        // The above can throw when the debuggee does not subsume the object's
+        // compartment, or for some WrappedNatives like Cu.Sandbox.
+      }
+    }
+    return { from: this.actorID, ownPropertyNames: props };
   },
 
   /**
@@ -282,21 +299,22 @@ ObjectActor.prototype = {
    *                     with safe getters descriptors.
    */
   onPrototypeAndProperties: function () {
-    let ownProperties = Object.create(null);
-    let ownSymbols = [];
-
-    // Inaccessible, proxy and dead objects should not be accessed.
-    let unwrapped = DevToolsUtils.unwrap(this.obj);
-    if (!unwrapped || unwrapped.isProxy || this.obj.class == "DeadObject") {
-      return { from: this.actorID,
-               prototype: this.hooks.createValueGrip(null),
-               ownProperties,
-               ownSymbols,
-               safeGetterValues: Object.create(null) };
+    let proto = null;
+    let names = [];
+    let symbols = [];
+    if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
+      try {
+        proto = this.obj.proto;
+        names = this.obj.getOwnPropertyNames();
+        symbols = this.obj.getOwnPropertySymbols();
+      } catch (err) {
+        // The above can throw when the debuggee does not subsume the object's
+        // compartment, or for some WrappedNatives like Cu.Sandbox.
+      }
     }
 
-    let names = this.obj.getOwnPropertyNames();
-    let symbols = this.obj.getOwnPropertySymbols();
+    let ownProperties = Object.create(null);
+    let ownSymbols = [];
 
     for (let name of names) {
       ownProperties[name] = this._propertyDescriptor(name);
@@ -310,7 +328,7 @@ ObjectActor.prototype = {
     }
 
     return { from: this.actorID,
-             prototype: this.hooks.createValueGrip(this.obj.proto),
+             prototype: this.hooks.createValueGrip(proto),
              ownProperties,
              ownSymbols,
              safeGetterValues: this._findSafeGetterValues(names) };
@@ -334,9 +352,8 @@ ObjectActor.prototype = {
     let obj = this.obj;
     let level = 0, i = 0;
 
-    // Do not search safe getters in inaccessible nor proxy objects.
-    let unwrapped = DevToolsUtils.unwrap(obj);
-    if (!unwrapped || unwrapped.isProxy) {
+    // Do not search safe getters in unsafe objects.
+    if (!DevToolsUtils.isSafeDebuggerObject(obj)) {
       return safeGetterValues;
     }
 
@@ -349,13 +366,7 @@ ObjectActor.prototype = {
       level++;
     }
 
-    while (obj) {
-      // Stop iterating when an inaccessible or a proxy object is found.
-      unwrapped = DevToolsUtils.unwrap(obj);
-      if (!unwrapped || unwrapped.isProxy) {
-        break;
-      }
-
+    while (obj && DevToolsUtils.isSafeDebuggerObject(obj)) {
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
@@ -434,6 +445,12 @@ ObjectActor.prototype = {
     }
 
     let getters = new Set();
+
+    if (!DevToolsUtils.isSafeDebuggerObject(object)) {
+      object._safeGetters = getters;
+      return getters;
+    }
+
     let names = [];
     try {
       names = object.getOwnPropertyNames();
@@ -467,8 +484,12 @@ ObjectActor.prototype = {
    * Handle a protocol request to provide the prototype of the object.
    */
   onPrototype: function () {
+    let proto = null;
+    if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
+      proto = this.obj.proto;
+    }
     return { from: this.actorID,
-             prototype: this.hooks.createValueGrip(this.obj.proto) };
+             prototype: this.hooks.createValueGrip(proto) };
   },
 
   /**
@@ -512,6 +533,10 @@ ObjectActor.prototype = {
    *         property and onlyEnumerable=true.
    */
   _propertyDescriptor: function (name, onlyEnumerable) {
+    if (!DevToolsUtils.isSafeDebuggerObject(this.obj)) {
+      return undefined;
+    }
+
     let desc;
     try {
       desc = this.obj.getOwnPropertyDescriptor(name);
@@ -801,7 +826,13 @@ ObjectActor.prototype.requestTypes = {
  *          of the property value.
  */
 function PropertyIteratorActor(objectActor, options) {
-  if (options.enumEntries) {
+  if (!DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
+    this.iterator = {
+      size: 0,
+      propertyName: index => undefined,
+      propertyDescription: index => undefined,
+    };
+  } else if (options.enumEntries) {
     let cls = objectActor.obj.class;
     if (cls == "Map") {
       this.iterator = enumMapEntries(objectActor);
@@ -1161,7 +1192,15 @@ function enumWeakSetEntries(objectActor) {
  *        The object actor.
  */
 function SymbolIteratorActor(objectActor) {
-  const symbols =  objectActor.obj.getOwnPropertySymbols();
+  let symbols = [];
+  if (DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
+    try {
+      symbols = objectActor.obj.getOwnPropertySymbols();
+    } catch (err) {
+      // The above can throw when the debuggee does not subsume the object's
+      // compartment, or for some WrappedNatives like Cu.Sandbox.
+    }
+  }
 
   this.iterator = {
     size: symbols.length,
@@ -1258,9 +1297,8 @@ DebuggerServer.ObjectActorPreviewers = {
     try {
       userDisplayName = obj.getOwnPropertyDescriptor("displayName");
     } catch (e) {
-      // Calling getOwnPropertyDescriptor with displayName might throw
-      // with "permission denied" errors for some functions.
-      dumpn(e);
+      // The above can throw "permission denied" errors when the debuggee
+      // does not subsume the function's compartment.
     }
 
     if (userDisplayName && typeof userDisplayName.value == "string" &&
@@ -1940,7 +1978,14 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     // - The array indices are consecutive.
     // - The value of "length", if present, is the number of array indices.
 
-    let keys = obj.getOwnPropertyNames();
+    let keys;
+    try {
+      keys = obj.getOwnPropertyNames();
+    } catch (err) {
+      // The above can throw when the debuggee does not subsume the object's
+      // compartment, or for some WrappedNatives like Cu.Sandbox.
+      return false;
+    }
     let {length} = keys;
     if (length === 0) {
       return false;
@@ -2039,7 +2084,16 @@ function isObject(value) {
  *         The stringifier for the class.
  */
 function createBuiltinStringifier(ctor) {
-  return obj => ctor.prototype.toString.call(obj.unsafeDereference());
+  return obj => {
+    try {
+      return ctor.prototype.toString.call(obj.unsafeDereference());
+    } catch (err) {
+      // The debuggee will see a "Function" class if the object is callable and
+      // its compartment is not subsumed. The above will throw if it's not really
+      // a function, e.g. if it's a callable proxy.
+      return "[object " + obj.class + "]";
+    }
+  };
 }
 
 /**
@@ -2078,9 +2132,20 @@ function errorStringify(obj) {
  *         The stringification for the object.
  */
 function stringify(obj) {
-  if (obj.class == "DeadObject") {
-    const error = new Error("Dead object encountered.");
-    DevToolsUtils.reportException("stringify", error);
+  if (!DevToolsUtils.isSafeDebuggerObject(obj)) {
+    if (DevToolsUtils.isCPOW(obj)) {
+      return "<cpow>";
+    }
+    let unwrapped = DevToolsUtils.unwrap(obj);
+    if (unwrapped === undefined) {
+      return "<invisibleToDebugger>";
+    } else if (unwrapped.isProxy) {
+      return "<proxy>";
+    }
+    // The following line should not be reached. It's there just in case somebody
+    // modifies isSafeDebuggerObject to return false for additional kinds of objects.
+    return "[object " + obj.class + "]";
+  } else if (obj.class == "DeadObject") {
     return "<dead object>";
   }
 
@@ -2123,25 +2188,21 @@ var stringifiers = {
 
     seen.add(obj);
 
-    const len = DevToolsUtils.getProperty(obj, "length");
+    const len = getArrayLength(obj);
     let string = "";
 
-    // The following check is only required because the debuggee could possibly
-    // be a Proxy and return any value. For normal objects, array.length is
-    // always a non-negative integer.
-    if (typeof len == "number" && len > 0) {
-      for (let i = 0; i < len; i++) {
-        const desc = obj.getOwnPropertyDescriptor(i);
-        if (desc) {
-          const { value } = desc;
-          if (value != null) {
-            string += isObject(value) ? stringify(value) : value;
-          }
+    // Array.length is always a non-negative safe integer.
+    for (let i = 0; i < len; i++) {
+      const desc = obj.getOwnPropertyDescriptor(i);
+      if (desc) {
+        const { value } = desc;
+        if (value != null) {
+          string += isObject(value) ? stringify(value) : value;
         }
+      }
 
-        if (i < len - 1) {
-          string += ",";
-        }
+      if (i < len - 1) {
+        string += ",";
       }
     }
 
