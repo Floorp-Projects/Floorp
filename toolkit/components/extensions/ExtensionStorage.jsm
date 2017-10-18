@@ -345,6 +345,59 @@ var ExtensionStorage = {
       this.jsonFilePromises.clear();
     }
   },
+
+  /**
+   * Serializes the given storage items for transporting between processes.
+   *
+   * @param {BaseContext} context
+   *        The context to use for the created StructuredCloneHolder
+   *        objects.
+   * @param {Array<string>|object} items
+   *        The items to serialize. If an object is provided, its
+   *        values are serialized to StructuredCloneHolder objects.
+   *        Otherwise, it is returned as-is.
+   * @returns {Array<string>|object}
+   */
+  serializeForContext(context, items) {
+    if (items && typeof items === "object" && !Array.isArray(items)) {
+      let result = {};
+      for (let [key, value] of Object.entries(items)) {
+        try {
+          result[key] = new StructuredCloneHolder(value, context.cloneScope);
+        } catch (e) {
+          throw new ExtensionUtils.ExtensionError(String(e));
+        }
+      }
+      return result;
+    }
+    return items;
+  },
+
+  /**
+   * Deserializes the given storage items into the given extension context.
+   *
+   * @param {BaseContext} context
+   *        The context to use to deserialize the StructuredCloneHolder objects.
+   * @param {object} items
+   *        The items to deserialize. Any property of the object which
+   *        is a StructuredCloneHolder instance is deserialized into
+   *        the extension scope. Any other object is cloned into the
+   *        extension scope directly.
+   * @returns {object}
+   */
+  deserializeForContext(context, items) {
+    let result = new context.cloneScope.Object();
+    for (let [key, value] of Object.entries(items)) {
+      if (value && typeof value === "object" &&
+          Cu.getClassName(value, true) === "StructuredCloneHolder") {
+        value = value.deserialize(context.cloneScope);
+      } else {
+        value = Cu.cloneInto(value, context.cloneScope);
+      }
+      result[key] = value;
+    }
+    return result;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(
