@@ -3,14 +3,14 @@ config = {
     "log_name": "updates_release_dev",
     # TODO: use real repo
     "repo": {
-        "repo": "https://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+        "repo": "https://hg.mozilla.org/users/stage-ffxbld/tools",
         "branch": "default",
         "dest": "tools",
         "vcs": "hg",
     },
     "vcs_share_base": "/builds/hg-shared",
     # TODO: use real repo
-    "push_dest": "ssh://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+    "push_dest": "ssh://hg.mozilla.org/users/stage-ffxbld/tools",
     # jamun  repo used for staging release
     "shipped-locales-url": "https://hg.mozilla.org/projects/jamun/raw-file/{revision}/browser/locales/shipped-locales",
     "ignore_no_changes": True,
