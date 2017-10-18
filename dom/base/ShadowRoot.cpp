@@ -255,7 +255,7 @@ ShadowRoot::DistributionChanged()
 {
   // FIXME(emilio): We could be more granular in a bunch of cases.
   auto* host = GetHost();
-  if (!host) {
+  if (!host || !host->IsInComposedDoc()) {
     return;
   }
 
@@ -268,7 +268,7 @@ ShadowRoot::DistributionChanged()
   shell->DestroyFramesFor(host);
 }
 
-void
+const HTMLContentElement*
 ShadowRoot::DistributeSingleNode(nsIContent* aContent)
 {
   // Find the insertion point to which the content belongs.
@@ -277,7 +277,7 @@ ShadowRoot::DistributeSingleNode(nsIContent* aContent)
     if (insertionPoint->Match(aContent)) {
       if (insertionPoint->MatchedNodes().Contains(aContent)) {
         // Node is already matched into the insertion point. We are done.
-        return;
+        return insertionPoint;
       }
 
       // Matching may cause the insertion point to drop fallback content.
@@ -287,7 +287,8 @@ ShadowRoot::DistributeSingleNode(nsIContent* aContent)
         // content and used matched nodes instead. Give up on the optimization
         // and just distribute all nodes.
         DistributeAllNodes();
-        return;
+        MOZ_ASSERT(insertionPoint->MatchedNodes().Contains(aContent));
+        return insertionPoint;
       }
       foundInsertionPoint = insertionPoint;
       break;
@@ -295,7 +296,7 @@ ShadowRoot::DistributeSingleNode(nsIContent* aContent)
   }
 
   if (!foundInsertionPoint) {
-    return;
+    return nullptr;
   }
 
   // Find the index into the insertion point.
@@ -323,17 +324,10 @@ ShadowRoot::DistributeSingleNode(nsIContent* aContent)
     foundInsertionPoint->AppendMatchedNode(aContent);
   }
 
-  // Handle the case where the parent of the insertion point has a ShadowRoot.
-  // The node distributed into the insertion point must be reprojected to the
-  // insertion points of the parent's ShadowRoot.
-  if (auto* parentShadow = foundInsertionPoint->GetParent()->GetShadowRoot()) {
-    parentShadow->DistributeSingleNode(aContent);
-  }
-
-  DistributionChanged();
+  return foundInsertionPoint;
 }
 
-void
+const HTMLContentElement*
 ShadowRoot::RemoveDistributedNode(nsIContent* aContent)
 {
   // Find insertion point containing the content and remove the node.
@@ -349,21 +343,14 @@ ShadowRoot::RemoveDistributedNode(nsIContent* aContent)
       // Removing the matched node will cause fallback content to be
       // used instead. Give up optimization and distribute all nodes.
       DistributeAllNodes();
-      return;
+      return insertionPoint;
     }
 
     insertionPoint->RemoveMatchedNode(aContent);
-
-    // Handle the case where the parent of the insertion point has a ShadowRoot.
-    // The removed node needs to be removed from the insertion points of the
-    // parent's ShadowRoot.
-    if (auto* parentShadow = insertionPoint->GetParent()->GetShadowRoot()) {
-      parentShadow->RemoveDistributedNode(aContent);
-    }
-
-    DistributionChanged();
-    return;
+    return insertionPoint;
   }
+
+  return nullptr;
 }
 
 void
@@ -510,8 +497,65 @@ ShadowRoot::AttributeChanged(nsIDocument* aDocument,
   }
 
   // Attributes may change insertion point matching, find its new distribution.
-  RemoveDistributedNode(aElement);
-  DistributeSingleNode(aElement);
+  //
+  // FIXME(emilio): What about state changes?
+  if (!RedistributeElement(aElement)) {
+    return;
+  }
+
+  if (!aElement->IsInComposedDoc()) {
+    return;
+  }
+
+  auto* shell = OwnerDoc()->GetShell();
+  if (!shell) {
+    return;
+  }
+
+  shell->DestroyFramesFor(aElement);
+}
+
+bool
+ShadowRoot::RedistributeElement(Element* aElement)
+{
+  auto* oldInsertionPoint = RemoveDistributedNode(aElement);
+  auto* newInsertionPoint = DistributeSingleNode(aElement);
+
+  if (oldInsertionPoint == newInsertionPoint) {
+    if (oldInsertionPoint) {
+      if (auto* shadow = oldInsertionPoint->GetParent()->GetShadowRoot()) {
+        return shadow->RedistributeElement(aElement);
+      }
+    }
+
+    return false;
+  }
+
+  while (oldInsertionPoint) {
+    // Handle the case where the parent of the insertion point has a ShadowRoot.
+    // The node distributed into the insertion point must be reprojected to the
+    // insertion points of the parent's ShadowRoot.
+    auto* shadow = oldInsertionPoint->GetParent()->GetShadowRoot();
+    if (!shadow) {
+      break;
+    }
+
+    oldInsertionPoint = shadow->RemoveDistributedNode(aElement);
+  }
+
+  while (newInsertionPoint) {
+    // Handle the case where the parent of the insertion point has a ShadowRoot.
+    // The node distributed into the insertion point must be reprojected to the
+    // insertion points of the parent's ShadowRoot.
+    auto* shadow = newInsertionPoint->GetParent()->GetShadowRoot();
+    if (!shadow) {
+      break;
+    }
+
+    newInsertionPoint = shadow->DistributeSingleNode(aElement);
+  }
+
+  return true;
 }
 
 void
@@ -519,29 +563,10 @@ ShadowRoot::ContentAppended(nsIDocument* aDocument,
                             nsIContent* aContainer,
                             nsIContent* aFirstNewContent)
 {
-  if (mInsertionPointChanged) {
-    DistributeAllNodes();
-    mInsertionPointChanged = false;
-    return;
-  }
-
-  // Watch for new nodes added to the pool because the node
-  // may need to be added to an insertion point.
-  nsIContent* currentChild = aFirstNewContent;
-  while (currentChild) {
-    // Add insertion point to destination insertion points of fallback content.
-    if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
-      HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
-      if (content && content->MatchedNodes().IsEmpty()) {
-        currentChild->DestInsertionPoints().AppendElement(aContainer);
-      }
-    }
-
-    if (IsPooledNode(currentChild)) {
-      DistributeSingleNode(currentChild);
-    }
-
-    currentChild = currentChild->GetNextSibling();
+  for (nsIContent* content = aFirstNewContent;
+       content;
+       content = content->GetNextSibling()) {
+    ContentInserted(aDocument, aContainer, aFirstNewContent);
   }
 }
 
@@ -556,18 +581,29 @@ ShadowRoot::ContentInserted(nsIDocument* aDocument,
     return;
   }
 
+  // Add insertion point to destination insertion points of fallback content.
+  if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
+    HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
+    if (content && content->MatchedNodes().IsEmpty()) {
+      aChild->DestInsertionPoints().AppendElement(aContainer);
+    }
+  }
+
   // Watch for new nodes added to the pool because the node
   // may need to be added to an insertion point.
   if (IsPooledNode(aChild)) {
-    // Add insertion point to destination insertion points of fallback content.
-    if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
-      HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
-      if (content && content->MatchedNodes().IsEmpty()) {
-        aChild->DestInsertionPoints().AppendElement(aContainer);
+    auto* insertionPoint = DistributeSingleNode(aChild);
+    while (insertionPoint) {
+      // Handle the case where the parent of the insertion point has a ShadowRoot.
+      // The node distributed into the insertion point must be reprojected to the
+      // insertion points of the parent's ShadowRoot.
+      auto* parentShadow = insertionPoint->GetParent()->GetShadowRoot();
+      if (!parentShadow) {
+        break;
       }
-    }
 
-    DistributeSingleNode(aChild);
+      insertionPoint = parentShadow->DistributeSingleNode(aChild);
+    }
   }
 }
 
@@ -595,7 +631,20 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
   // Watch for node that is removed from the pool because
   // it may need to be removed from an insertion point.
   if (IsPooledNode(aChild)) {
-    RemoveDistributedNode(aChild);
+    auto* insertionPoint = RemoveDistributedNode(aChild);
+    while (insertionPoint) {
+      // Handle the case where the parent of the insertion point has a
+      // ShadowRoot.
+      //
+      // The removed node needs to be removed from the insertion points of the
+      // parent's ShadowRoot.
+      auto* parentShadow = insertionPoint->GetParent()->GetShadowRoot();
+      if (!parentShadow) {
+        break;
+      }
+
+      insertionPoint = parentShadow->RemoveDistributedNode(aChild);
+    }
   }
 }
 
