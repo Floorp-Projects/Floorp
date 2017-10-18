@@ -391,14 +391,17 @@ this.FormAutofillUtils = {
   },
 
   findCreditCardSelectOption(selectEl, creditCard, fieldName) {
-    let oneDigitMonth = creditCard["cc-exp-month"].toString();
-    let twoDigitsMonth = oneDigitMonth.padStart(2, "0");
-    let fourDigitsYear = creditCard["cc-exp-year"].toString();
-    let twoDigitsYear = fourDigitsYear.substr(2, 2);
+    let oneDigitMonth = creditCard["cc-exp-month"] ? creditCard["cc-exp-month"].toString() : null;
+    let twoDigitsMonth = oneDigitMonth ? oneDigitMonth.padStart(2, "0") : null;
+    let fourDigitsYear = creditCard["cc-exp-year"] ? creditCard["cc-exp-year"].toString() : null;
+    let twoDigitsYear = fourDigitsYear ? fourDigitsYear.substr(2, 2) : null;
     let options = Array.from(selectEl.options);
 
     switch (fieldName) {
       case "cc-exp-month": {
+        if (!oneDigitMonth) {
+          return null;
+        }
         for (let option of options) {
           if ([option.text, option.label, option.value].some(s => {
             let result = /[1-9]\d*/.exec(s);
@@ -410,6 +413,9 @@ this.FormAutofillUtils = {
         break;
       }
       case "cc-exp-year": {
+        if (!fourDigitsYear) {
+          return null;
+        }
         for (let option of options) {
           if ([option.text, option.label, option.value].some(
             s => s == twoDigitsYear || s == fourDigitsYear
@@ -420,6 +426,9 @@ this.FormAutofillUtils = {
         break;
       }
       case "cc-exp": {
+        if (!oneDigitMonth || !fourDigitsYear) {
+          return null;
+        }
         let patterns = [
           oneDigitMonth + "/" + twoDigitsYear,    // 8/22
           oneDigitMonth + "/" + fourDigitsYear,   // 8/2022
