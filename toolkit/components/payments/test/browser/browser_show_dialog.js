@@ -1,14 +1,7 @@
 "use strict";
 
-const methodData = [{
-  supportedMethods: ["basic-card"],
-}];
-const details = {
-  total: {
-    label: "Total due",
-    amount: { currency: "USD", value: "60.00" },
-  },
-};
+const methodData = [PTU.MethodData.basicCard];
+const details = PTU.Details.total60USD;
 
 add_task(async function test_show_abort_dialog() {
   await BrowserTestUtils.withNewTab({
@@ -16,7 +9,7 @@ add_task(async function test_show_abort_dialog() {
     url: BLANK_PAGE_URL,
   }, async browser => {
     // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, ContentTasks.createAndShowRequest);
+    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
 
     // get a reference to the UI dialog and the requestId
     let win = await getPaymentWidget();
@@ -37,7 +30,7 @@ add_task(async function test_show_manualAbort_dialog() {
   }, async browser => {
     let dialogReadyPromise = waitForWidgetReady();
     // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, ContentTasks.createAndShowRequest);
+    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
 
     // get a reference to the UI dialog and the requestId
     let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
@@ -51,8 +44,7 @@ add_task(async function test_show_manualAbort_dialog() {
     ok(frame, "Got payment frame");
     await dialogReadyPromise;
     info("dialog ready");
-    spawnPaymentDialogTask(frame, ContentTasks.manuallyClickCancel);
-
+    spawnPaymentDialogTask(frame, PTU.ContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
 });
