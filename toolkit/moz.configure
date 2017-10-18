@@ -1144,6 +1144,20 @@ def geckodriver(enable, automation, compile_env, cross_compile, hazard, target):
 
 set_config('ENABLE_GECKODRIVER', geckodriver)
 
+# Cubeb Audio Remoting
+# ==============================================================
+
+option('--enable-cubeb-remoting', env='MOZ_CUBEB_REMOTING',
+       help='Enable cubeb audio remoting')
+
+@depends('--enable-cubeb-remoting')
+def cubeb_remoting(value):
+    if value:
+        return True
+
+set_config('MOZ_CUBEB_REMOTING', cubeb_remoting)
+set_define('MOZ_CUBEB_REMOTING', cubeb_remoting)
+
 # WebRTC
 # ========================================================
 @depends(target)
