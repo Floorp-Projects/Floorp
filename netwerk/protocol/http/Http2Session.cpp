@@ -2677,8 +2677,11 @@ Http2Session::OnTransportStatus(nsITransport* aTransport,
     if (!mFirstHttpTransaction) {
       // if we still do not have a HttpTransaction store timings info in
       // a HttpConnection.
-      RefPtr<nsHttpConnection> conn = mConnection->HttpConnection();
-      conn->SetEvent(aStatus);
+      // If some error occur it can happen that we do not have a connection.
+      if (mConnection) {
+        RefPtr<nsHttpConnection> conn = mConnection->HttpConnection();
+        conn->SetEvent(aStatus);
+      }
     } else {
       mFirstHttpTransaction->OnTransportStatus(aTransport, aStatus, aProgress);
     }
