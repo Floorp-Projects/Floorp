@@ -512,7 +512,8 @@ function checkGfxAdapter(data) {
 }
 
 function checkSystemSection(data) {
-  const EXPECTED_FIELDS = [ "memoryMB", "cpu", "os", "hdd", "gfx" ];
+  const EXPECTED_FIELDS = [ "memoryMB", "cpu", "os", "hdd", "gfx",
+                            "appleModelId" ];
   const EXPECTED_HDD_FIELDS = [ "profile", "binary", "system" ];
 
   Assert.ok("system" in data, "There must be a system section in Environment.");
@@ -660,6 +661,12 @@ function checkSystemSection(data) {
     Assert.equal(features.opengl, gfxData.features.opengl);
     Assert.equal(features.webgl, gfxData.features.webgl);
   } catch (e) {}
+
+  if (gIsMac) {
+    Assert.ok(checkString(data.system.appleModelId));
+  } else {
+    Assert.ok(checkNullOrString(data.system.appleModelId));
+  }
 }
 
 function checkActiveAddon(data, partialRecord) {
