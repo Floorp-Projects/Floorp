@@ -59,8 +59,8 @@ add_task(async function test_date_container() {
      "Delete command is enabled");
 
   // Execute the delete command and check visit has been removed.
-  let promiseURIRemoved = promiseHistoryNotification("onDeleteURI",
-                                                     v => TEST_URI.equals(v));
+  let promiseURIRemoved = PlacesTestUtils.waitForNotification(
+    "onDeleteURI", v => TEST_URI.equals(v), "history");
   PO._places.controller.doCommand("cmd_delete");
   await promiseURIRemoved;
 
@@ -124,8 +124,8 @@ add_task(async function test_query_on_toolbar() {
      "Delete command is enabled");
 
   // Execute the delete command and check bookmark has been removed.
-  let promiseItemRemoved = promiseBookmarksNotification("onItemRemoved",
-                                                        (...args) => query.guid == args[5]);
+  let promiseItemRemoved = PlacesTestUtils.waitForNotification(
+    "onItemRemoved", (...args) => query.guid == args[5]);
   PO._places.controller.doCommand("cmd_delete");
   await promiseItemRemoved;
 
