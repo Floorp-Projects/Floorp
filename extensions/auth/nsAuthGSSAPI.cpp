@@ -118,9 +118,15 @@ gssInit()
     }
     else {
 #ifdef XP_WIN
-        char *libName = PR_GetLibraryName(nullptr, "gssapi32");
+        #ifdef _WIN64
+        static const char *kLibName = "gssapi64";
+        #else
+        static const char *kLibName = "gssapi32";
+        #endif
+
+        char *libName = PR_GetLibraryName(nullptr, kLibName);
         if (libName) {
-            lib = PR_LoadLibrary("gssapi32");
+            lib = PR_LoadLibrary(kLibName);
             PR_FreeLibraryName(libName);
         }
 #elif defined(__OpenBSD__)
