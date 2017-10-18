@@ -59,7 +59,7 @@ function test() {
 
     let msg = yield jsterm.execute("foobarzTezt");
 
-    isnot(hud.outputNode.textContent.indexOf("[object DeadObject]"), -1,
+    isnot(hud.outputNode.textContent.indexOf("DeadObject"), -1,
           "dead object found");
 
     jsterm.setInputValue("foobarzTezt");
@@ -76,7 +76,7 @@ function test() {
     // Click the second execute output.
     let clickable = msg.querySelector("a");
     ok(clickable, "clickable object found");
-    isnot(clickable.textContent.indexOf("[object DeadObject]"), -1,
+    isnot(clickable.textContent.indexOf("DeadObject"), -1,
           "message text check");
 
     msg.scrollIntoView();
