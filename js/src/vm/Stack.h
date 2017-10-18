@@ -1195,8 +1195,8 @@ class LiveSavedFrameCache
         rhs.frames = nullptr;
     }
 
-    MOZ_ALWAYS_INLINE ~LiveSavedFrameCache() {
-        if (MOZ_UNLIKELY(frames)) {
+    ~LiveSavedFrameCache() {
+        if (frames) {
             js_delete(frames);
             frames = nullptr;
         }
@@ -1527,8 +1527,8 @@ class JitActivation : public Activation
 #endif
 
   public:
-    explicit MOZ_ALWAYS_INLINE JitActivation(JSContext* cx);
-    MOZ_ALWAYS_INLINE ~JitActivation();
+    explicit JitActivation(JSContext* cx);
+    ~JitActivation();
 
     bool isProfiling() const {
         // All JitActivations can be profiled.
