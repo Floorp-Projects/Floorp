@@ -39,4 +39,33 @@
     <style name="PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
         <item name="overlapAnchor">true</item>
     </style>
+
+    <style name="AppTheme.ContextMenuItem">
+
+        <!-- All these attributes bellow need to be defined in a theme using android:theme
+            otherwise they will have no effect... -->
+        <item name="android:listPreferredItemHeightSmall">48dp</item>
+
+        <!-- Set the padding to the children (menu item) of the NavigationView
+             (instead of the NavigationView itself) allowing the hit targets
+              to span the full width of the view. For more info, see
+              https://github.com/mozilla-mobile/focus-android/pull/1466#discussion_r144679954.
+
+              Note: listPreferredItemPaddingStart and listPreferredItemPaddingEnd
+              don't work in this context because in the design_navigation_item.xml (layout for NavigationMenuItem)
+              only listPreferredItemPaddingLeft and listPreferredItemPaddingRight attribute
+              are used for paddingLeft and paddingRight properties.
+              Check design_navigation_item.xml source here :
+              https://android.googlesource.com/platform/frameworks/support.git/+/master/design/res/layout/design_navigation_item.xml
+            -->
+        <item name="listPreferredItemPaddingLeft">24dp</item>
+        <item name="listPreferredItemPaddingRight">24dp</item>
+    </style>
+
+    <style name="ContextMenuTextAppearence">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@string/font_roboto_medium</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
 </resources>
