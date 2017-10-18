@@ -267,16 +267,16 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
                                         mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const StackingContextHelper& aSc,
-                                        gfx::IntSize& aSize)
+                                        gfx::IntSize& aSize,
+                                        const Maybe<LayoutDeviceRect>& aAsyncImageBounds)
 {
   RefPtr<WebRenderImageData> imageData = CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
   MOZ_ASSERT(imageData);
 
   if (aContainer->IsAsync()) {
-    bool snap;
-    nsRect bounds = aItem->GetBounds(nullptr, &snap);
-    int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-    LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel);
+    MOZ_ASSERT(aAsyncImageBounds);
+
+    LayoutDeviceRect rect = aAsyncImageBounds.value();
     LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), rect.Size());
     gfx::MaybeIntSize scaleToSize;
     if (!aContainer->GetScaleHint().IsEmpty()) {
@@ -319,7 +319,7 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
   gfx::IntSize size;
   Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer,
                                            aBuilder, aResources,
-                                           aSc, size);
+                                           aSc, size, Some(aRect));
   if (aContainer->IsAsync()) {
     // Async ImageContainer does not create ImageKey, instead it uses Pipeline.
     MOZ_ASSERT(key.isNothing());
