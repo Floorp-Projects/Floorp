@@ -83,7 +83,6 @@ public:
                          BufferSizePolicy aBufferSizePolicy)
   : CompositableClient(aForwarder)
   , mBufferSizePolicy(aBufferSizePolicy)
-  , mInAsyncPaint(false)
   {}
   virtual ~ContentClient()
   {}
@@ -144,7 +143,7 @@ public:
    * this.
    */
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags);
-  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
+  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) {}
 
   /**
    * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
@@ -214,12 +213,6 @@ protected:
   bool BufferSizeOkFor(const gfx::IntSize& aSize);
 
   /**
-   * Returns what open mode to use on texture clients. Ignored when
-   * using basic content clients.
-   */
-  OpenMode LockMode() const;
-
-  /**
    * Any actions that should be performed at the last moment before we begin
    * rendering the next frame. I.e., after we calculate what we will draw,
    * but before we rotate the buffer and possibly create new buffers.
@@ -238,7 +231,6 @@ protected:
 
   RefPtr<RotatedBuffer> mBuffer;
   BufferSizePolicy      mBufferSizePolicy;
-  bool mInAsyncPaint;
 };
 
 // Thin wrapper around DrawTargetRotatedBuffer, for on-mtc
