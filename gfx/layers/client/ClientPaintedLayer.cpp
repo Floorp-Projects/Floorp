@@ -138,11 +138,9 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
   NS_ASSERTION(ClientManager()->InDrawing(),
                "Can only draw in drawing phase");
 
-  mContentClient->BeginPaint();
-
   uint32_t flags = GetPaintFlags();
 
-  PaintState state = mContentClient->BeginPaintBuffer(this, flags);
+  PaintState state = mContentClient->BeginPaint(this, flags);
   if (!UpdatePaintRegion(state)) {
     return;
   }
@@ -208,11 +206,9 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
 bool
 ClientPaintedLayer::PaintOffMainThread()
 {
-  mContentClient->BeginAsyncPaint();
-
   uint32_t flags = GetPaintFlags();
 
-  PaintState state = mContentClient->BeginPaintBuffer(this, flags);
+  PaintState state = mContentClient->BeginPaint(this, flags | ContentClient::PAINT_ASYNC);
   if (!UpdatePaintRegion(state)) {
     return false;
   }
