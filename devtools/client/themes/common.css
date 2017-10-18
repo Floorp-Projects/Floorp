@@ -438,6 +438,11 @@ checkbox:-moz-focusring {
   background-position: calc(100% - 8px) center;
 }
 
+/* This is needed to remove the default search icon on windows. See bug 1400615. */
+.devtools-filterinput > .textbox-input-box > .textbox-search-sign {
+  display: none;
+}
+
 .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon,
 .devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
   visibility: hidden;
