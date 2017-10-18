@@ -116,29 +116,19 @@ function readServerContent(request, buffer)
 // needs to be rooted
 var cacheFlushObserver = cacheFlushObserver = { observe: function() {
   cacheFlushObserver = null;
-  openAltChannel();
+
+  var chan = make_channel(URL);
+  var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
+  cc.preferAlternativeDataType(altContentType);
+
+  chan.asyncOpen2(new ChannelListener(readAltContent, null));
 }};
 
 function flushAndOpenAltChannel()
 {
   // We need to do a GC pass to ensure the cache entry has been freed.
   gc();
-  if (!inChildProcess()) {
-    Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver);
-  } else {
-    do_send_remote_message('flush');
-    do_await_remote_message('flushed').then(() => {
-      openAltChannel();
-    });
-  }
-}
-
-function openAltChannel() {
-  var chan = make_channel(URL);
-  var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-  cc.preferAlternativeDataType(altContentType);
-
-  chan.asyncOpen2(new ChannelListener(readAltContent, null));
+  Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver);
 }
 
 function readAltContent(request, buffer)
