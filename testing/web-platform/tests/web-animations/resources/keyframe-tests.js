@@ -57,6 +57,9 @@ const keyframe = (offset, props, easing='linear', composite) => {
 };
 
 const gKeyframesTests = [
+
+  // ----------- Property-indexed keyframes: property handling -----------
+
   {
     desc:   'a one property two value property-indexed keyframes specification',
     input:  { left: ['10px', '20px'] },
@@ -154,6 +157,9 @@ const gKeyframesTests = [
     output: [keyframe(computedOffset(0), { left: '10px' }),
              keyframe(computedOffset(1), {})]
   },
+
+  // ----------- Keyframe sequence: property handling -----------
+
   {
     desc:   'a one property one keyframe sequence',
     input:  [{ offset: 1, left: '10px' }],
@@ -189,6 +195,50 @@ const gKeyframesTests = [
              keyframe(offset(1), { marginTop: '70px',
                                    margin: '30px 40px 50px 60px' })],
   },
+  {
+    desc:   'a two property keyframe sequence where one property is missing'
+            + ' from the first keyframe',
+    input:  [{ offset: 0, left: '10px' },
+             { offset: 1, left: '20px', top: '30px' }],
+    output: [keyframe(offset(0), { left: '10px' }),
+             keyframe(offset(1), { left: '20px', top: '30px' })],
+  },
+  {
+    desc:   'a two property keyframe sequence where one property is missing'
+            + ' from the last keyframe',
+    input:  [{ offset: 0, left: '10px', top: '20px' },
+             { offset: 1, left: '30px' }],
+    output: [keyframe(offset(0), { left: '10px', top: '20px' }),
+             keyframe(offset(1), { left: '30px' })],
+  },
+  {
+    desc:   'a one property two keyframe sequence that needs to stringify'
+            + ' its values',
+    input:  [{ offset: 0, opacity: 0 },
+             { offset: 1, opacity: 1 }],
+    output: [keyframe(offset(0), { opacity: '0' }),
+             keyframe(offset(1), { opacity: '1' })],
+  },
+  {
+    desc:   'a keyframe sequence with a CSS variable reference',
+    input:  [{ left: 'var(--dist)' },
+             { left: 'calc(var(--dist) + 100px)' }],
+    output: [keyframe(computedOffset(0), { left: 'var(--dist)' }),
+             keyframe(computedOffset(1), { left: 'calc(var(--dist) + 100px)' })]
+  },
+  {
+    desc:   'a keyframe sequence with a CSS variable reference in a shorthand'
+            + ' property',
+    input:  [{ margin: 'var(--dist)' },
+             { margin: 'calc(var(--dist) + 100px)' }],
+    output: [keyframe(computedOffset(0),
+                      { margin: 'var(--dist)' }),
+             keyframe(computedOffset(1),
+                      { margin: 'calc(var(--dist) + 100px)' })],
+  },
+
+  // ----------- Keyframe sequence: offset handling -----------
+
   {
     desc:   'a keyframe sequence with duplicate values for a given interior'
             + ' offset',
@@ -296,6 +346,9 @@ const gKeyframesTests = [
              keyframe(computedOffset(0.75), { left: '40px' }),
              keyframe(computedOffset(1),    { left: '50px' })],
   },
+
+  // ----------- Keyframe sequence: easing handling -----------
+
   {
     desc:   'a keyframe sequence with different easing values, but the same'
             + ' easing value for a given offset',
@@ -312,6 +365,9 @@ const gKeyframesTests = [
              keyframe(offset(1),   { left: '50px' }, 'steps(1)'),
              keyframe(offset(1),   { top:  '60px' }, 'steps(1)')],
   },
+
+  // ----------- Keyframe sequence: composite handling -----------
+
   {
     desc:   'a keyframe sequence with different composite values, but the'
             + ' same composite value for a given offset',
@@ -327,96 +383,6 @@ const gKeyframesTests = [
              keyframe(offset(0.5), { top:  '40px' }, 'linear', 'add'),
              keyframe(offset(1),   { left: '50px' }, 'linear', 'replace'),
              keyframe(offset(1),   { top:  '60px' }, 'linear', 'replace')],
-  },
-  {
-    desc:   'a one property two keyframe sequence that needs to stringify'
-            + ' its values',
-    input:  [{ offset: 0, opacity: 0 },
-             { offset: 1, opacity: 1 }],
-    output: [keyframe(offset(0), { opacity: '0' }),
-             keyframe(offset(1), { opacity: '1' })],
-  },
-  {
-    desc:   'a keyframe sequence with a CSS variable reference',
-    input:  [{ left: 'var(--dist)' },
-             { left: 'calc(var(--dist) + 100px)' }],
-    output: [keyframe(computedOffset(0), { left: 'var(--dist)' }),
-             keyframe(computedOffset(1), { left: 'calc(var(--dist) + 100px)' })]
-  },
-  {
-    desc:   'a keyframe sequence with a CSS variable reference in a shorthand'
-            + ' property',
-    input:  [{ margin: 'var(--dist)' },
-             { margin: 'calc(var(--dist) + 100px)' }],
-    output: [keyframe(computedOffset(0),
-                      { margin: 'var(--dist)' }),
-             keyframe(computedOffset(1),
-                      { margin: 'calc(var(--dist) + 100px)' })],
-  },
-  {
-    desc:   'a keyframe sequence where shorthand precedes longhand',
-    input:  [{ offset: 0, margin: '10px', marginRight: '20px' },
-             { offset: 1, margin: '30px' }],
-    output: [keyframe(offset(0), { margin: '10px', marginRight: '20px' }),
-             keyframe(offset(1), { margin: '30px' })],
-  },
-  {
-    desc:   'a keyframe sequence where longhand precedes shorthand',
-    input:  [{ offset: 0, marginRight: '20px', margin: '10px' },
-             { offset: 1, margin: '30px' }],
-    output: [keyframe(offset(0), { marginRight: '20px', margin: '10px' }),
-             keyframe(offset(1), { margin: '30px' })],
-  },
-  {
-    desc:   'a keyframe sequence where lesser shorthand precedes greater'
-            + ' shorthand',
-    input:  [{ offset: 0,
-               borderLeft: '1px solid rgb(1, 2, 3)',
-               border: '2px dotted rgb(4, 5, 6)' },
-             { offset: 1, border: '3px dashed rgb(7, 8, 9)' }],
-    output: [keyframe(offset(0), { borderLeft: '1px solid rgb(1, 2, 3)',
-                                   border: '2px dotted rgb(4, 5, 6)' }),
-             keyframe(offset(1), { border: '3px dashed rgb(7, 8, 9)' })],
-  },
-  {
-    desc:   'a keyframe sequence where greater shorthand precedes lesser'
-            + ' shorthand',
-    input:  [{ offset: 0, border: '2px dotted rgb(4, 5, 6)',
-               borderLeft: '1px solid rgb(1, 2, 3)' },
-             { offset: 1, border: '3px dashed rgb(7, 8, 9)' }],
-    output: [keyframe(offset(0), { borderLeft: '1px solid rgb(1, 2, 3)',
-                                   border: '2px dotted rgb(4, 5, 6)' }),
-             keyframe(offset(1), { border: '3px dashed rgb(7, 8, 9)' })],
-  },
-  {
-    desc:   'a two property keyframe sequence where one property is missing'
-            + ' from the first keyframe',
-    input:  [{ offset: 0, left: '10px' },
-             { offset: 1, left: '20px', top: '30px' }],
-    output: [keyframe(offset(0), { left: '10px' }),
-             keyframe(offset(1), { left: '20px', top: '30px' })],
-  },
-  {
-    desc:   'a two property keyframe sequence where one property is missing'
-            + ' from the last keyframe',
-    input:  [{ offset: 0, left: '10px', top: '20px' },
-             { offset: 1, left: '30px' }],
-    output: [keyframe(offset(0), { left: '10px', top: '20px' }),
-             keyframe(offset(1), { left: '30px' })],
-  },
-  {
-    desc:   'a keyframe sequence with repeated values at offset 1 with'
-            + ' different easings',
-    input:  [{ offset: 0.0, left: '100px', easing: 'ease' },
-             { offset: 0.0, left: '200px', easing: 'ease' },
-             { offset: 0.5, left: '300px', easing: 'linear' },
-             { offset: 1.0, left: '400px', easing: 'ease-out' },
-             { offset: 1.0, left: '500px', easing: 'step-end' }],
-    output: [keyframe(offset(0),   { left: '100px' }, 'ease'),
-             keyframe(offset(0),   { left: '200px' }, 'ease'),
-             keyframe(offset(0.5), { left: '300px' }, 'linear'),
-             keyframe(offset(1),   { left: '400px' }, 'ease-out'),
-             keyframe(offset(1),   { left: '500px' }, 'steps(1)')],
   },
 ];
 
