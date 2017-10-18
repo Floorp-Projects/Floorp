@@ -125,6 +125,7 @@
 #include "DisplayItemClip.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "prenv.h"
+#include "RetainedDisplayListBuilder.h"
 #include "TextDrawTarget.h"
 #include "nsDeckFrame.h"
 #include "nsIEffectiveTLDService.h" // for IsInStyloBlocklist
@@ -3606,8 +3607,38 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
-  nsDisplayListBuilder builder(aFrame, aBuilderMode,
-                               !(aFlags & PaintFrameFlags::PAINT_HIDE_CARET));
+
+  Maybe<nsDisplayListBuilder> nonRetainedBuilder;
+  Maybe<nsDisplayList> nonRetainedList;
+  nsDisplayListBuilder* builderPtr = nullptr;
+  nsDisplayList* listPtr = nullptr;
+  RetainedDisplayListBuilder* retainedBuilder = nullptr;
+
+  const bool buildCaret = !(aFlags & PaintFrameFlags::PAINT_HIDE_CARET);
+  const bool retainDisplayList = gfxPrefs::LayoutRetainDisplayList();
+
+  if (retainDisplayList &&
+      aBuilderMode == nsDisplayListBuilderMode::PAINTING &&
+      (aFlags & PaintFrameFlags::PAINT_WIDGET_LAYERS)) {
+    retainedBuilder = aFrame->GetProperty(RetainedDisplayListBuilder::Cached());
+
+    if (!retainedBuilder) {
+      retainedBuilder =
+        new RetainedDisplayListBuilder(aFrame, aBuilderMode, buildCaret);
+      aFrame->SetProperty(RetainedDisplayListBuilder::Cached(), retainedBuilder);
+    }
+
+    MOZ_ASSERT(retainedBuilder);
+    builderPtr = retainedBuilder->Builder();
+    listPtr = retainedBuilder->List();
+  } else {
+    nonRetainedBuilder.emplace(aFrame, aBuilderMode, buildCaret);
+    builderPtr = nonRetainedBuilder.ptr();
+    nonRetainedList.emplace(builderPtr);
+    listPtr = nonRetainedList.ptr();
+  }
+  nsDisplayListBuilder& builder = *builderPtr;
+  nsDisplayList& list = *listPtr;
 
   builder.BeginFrame();
 
@@ -3647,8 +3678,6 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   } else {
     visibleRegion = aDirtyRegion;
   }
-
-  nsDisplayList list(&builder);
 
   // If the root has embedded plugins, flag the builder so we know we'll need
   // to update plugin geometry after painting.
@@ -3702,8 +3731,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     AUTO_PROFILER_TRACING("Paint", "DisplayList");
 
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
+    TimeStamp dlStart = TimeStamp::Now();
 
-    builder.EnterPresShell(aFrame);
     {
       // If a scrollable container layer is created in nsDisplayList::PaintForFrame,
       // it will be the scroll parent for display items that are built in the
@@ -3731,20 +3760,39 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
       nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
 
-      builder.SetDirtyRect(dirtyRect);
       builder.SetVisibleRect(dirtyRect);
-      aFrame->BuildDisplayListForStackingContext(&builder, &list);
+      builder.SetIsBuilding(true);
+
+      const bool paintedPreviously =
+        aFrame->HasProperty(nsIFrame::ModifiedFrameList());
+
+      // Attempt to do a partial build and merge into the existing list.
+      // This calls BuildDisplayListForStacking context on a subset of the
+      // viewport.
+      bool merged = false;
+      if (retainedBuilder && paintedPreviously) {
+        merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
+      }
+
+      if (!merged) {
+        list.DeleteAll(&builder);
+        builder.EnterPresShell(aFrame);
+        builder.SetDirtyRect(dirtyRect);
+        builder.ClearWindowDraggingRegion();
+        aFrame->BuildDisplayListForStackingContext(&builder, &list);
+        AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
+
+        builder.LeavePresShell(aFrame, &list);
+      }
     }
 
-    AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
-
-    builder.LeavePresShell(aFrame, &list);
+    builder.SetIsBuilding(false);
     builder.IncrementPresShellPaintCount(presShell);
 
-    if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
+    if (gfxPrefs::LayersDrawFPS()) {
       if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {
         if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(lm)) {
-          pt->dlMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
+          pt->dlMs() = (TimeStamp::Now() - dlStart).ToMilliseconds();
         }
       }
     }
@@ -3934,10 +3982,17 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
   }
 
-  builder.EndFrame();
+  {
+    AutoProfilerTracing tracing("Paint", "DisplayListResources");
 
-  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
-  list.DeleteAll(&builder);
+    // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+    if (!retainedBuilder) {
+      list.DeleteAll(&builder);
+      builder.EndFrame();
+    } else {
+      builder.EndFrame();
+    }
+  }
   return NS_OK;
 }
 

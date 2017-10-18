@@ -81,6 +81,7 @@
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "SVGTextFrame.h"
+#include "RetainedDisplayListBuilder.h"
 
 #include "gfxContext.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -974,6 +975,13 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
 
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   MOZ_ASSERT(displayRoot);
+
+  RetainedDisplayListBuilder* retainedBuilder =
+    displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
+
+  if (!retainedBuilder) {
+    return;
+  }
 
   nsIFrame* viewport = nsLayoutUtils::GetViewportFrame(this);
   MOZ_ASSERT(viewport);
