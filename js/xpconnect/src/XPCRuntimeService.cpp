@@ -98,16 +98,16 @@ BackstagePass::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-BackstagePass::GetContractID(char * *aContractID)
+BackstagePass::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-BackstagePass::GetClassDescription(char * *aClassDescription)
+BackstagePass::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("BackstagePass");
+    aClassDescription.AssignLiteral("BackstagePass");
     return NS_OK;
 }
 
