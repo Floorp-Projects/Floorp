@@ -58,6 +58,7 @@ class IonICStub
 
 class IonGetPropertyIC;
 class IonSetPropertyIC;
+class IonGetPropSuperIC;
 class IonGetNameIC;
 class IonBindNameIC;
 class IonGetIteratorIC;
@@ -142,6 +143,10 @@ class IonIC
         MOZ_ASSERT(kind_ == CacheKind::SetProp || kind_ == CacheKind::SetElem);
         return (IonSetPropertyIC*)this;
     }
+    IonGetPropSuperIC* asGetPropSuperIC() {
+        MOZ_ASSERT(kind_ == CacheKind::GetPropSuper || kind_ == CacheKind::GetElemSuper);
+        return (IonGetPropSuperIC*)this;
+    }
     IonGetNameIC* asGetNameIC() {
         MOZ_ASSERT(kind_ == CacheKind::GetName);
         return (IonGetNameIC*)this;
@@ -212,6 +217,37 @@ class IonGetPropertyIC : public IonIC
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetPropertyIC* ic,
                                     HandleValue val, HandleValue idVal, MutableHandleValue res);
+};
+
+class IonGetPropSuperIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+
+    Register object_;
+    TypedOrValueRegister receiver_;
+    ConstantOrRegister id_;
+    TypedOrValueRegister output_;
+
+  public:
+    IonGetPropSuperIC(CacheKind kind, LiveRegisterSet liveRegs, Register object, TypedOrValueRegister receiver,
+                      const ConstantOrRegister& id, TypedOrValueRegister output)
+      : IonIC(kind),
+        liveRegs_(liveRegs),
+        object_(object),
+        receiver_(receiver),
+        id_(id),
+        output_(output)
+    { }
+
+    Register object() const { return object_; }
+    TypedOrValueRegister receiver() const { return receiver_; }
+    ConstantOrRegister id() const { return id_; }
+    TypedOrValueRegister output() const { return output_; }
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetPropSuperIC* ic,
+                                    HandleObject obj, HandleValue receiver, HandleValue idVal,
+                                    MutableHandleValue res);
 };
 
 class IonSetPropertyIC : public IonIC

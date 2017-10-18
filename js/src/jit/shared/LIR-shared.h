@@ -6718,6 +6718,28 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+class LGetPropSuperCacheV : public LInstructionHelper<BOX_PIECES, 1 + 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(GetPropSuperCacheV)
+
+    static const size_t Receiver = 1;
+    static const size_t Id = Receiver + BOX_PIECES;
+
+    LGetPropSuperCacheV(const LAllocation& obj, const LBoxAllocation& receiver,
+                        const LBoxAllocation& id) {
+        setOperand(0, obj);
+        setBoxOperand(Receiver, receiver);
+        setBoxOperand(Id, id);
+    }
+    const LAllocation* obj() {
+        return getOperand(0);
+    }
+    const MGetPropSuperCache* mir() const {
+        return mir_->toGetPropSuperCache();
+    }
+};
+
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
 class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
@@ -7139,6 +7161,34 @@ class LFunctionEnvironment : public LInstructionHelper<1, 1, 0>
         setOperand(0, function);
     }
     const LAllocation* function() {
+        return getOperand(0);
+    }
+};
+
+class LHomeObject : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(HomeObject)
+
+    explicit LHomeObject(const LAllocation& function) {
+        setOperand(0, function);
+    }
+    const LAllocation* function() {
+        return getOperand(0);
+    }
+};
+
+class LHomeObjectSuperBase : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(HomeObjectSuperBase)
+
+    explicit LHomeObjectSuperBase(const LAllocation& homeObject)
+    {
+        setOperand(0, homeObject);
+    }
+
+    const LAllocation* homeObject() {
         return getOperand(0);
     }
 };
