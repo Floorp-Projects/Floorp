@@ -27,6 +27,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::jit;

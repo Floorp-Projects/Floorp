@@ -374,13 +374,6 @@ JSContext::allocateOsrTempData(size_t size)
 }
 
 void
-JSContext::freeOsrTempData()
-{
-    js_free(osrTempData_);
-    osrTempData_ = nullptr;
-}
-
-void
 JitZoneGroup::patchIonBackedges(JSContext* cx, BackedgeTarget target)
 {
     if (target == BackedgeLoopHeader) {

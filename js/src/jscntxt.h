@@ -874,7 +874,11 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<uint8_t*> osrTempData_;
 
     uint8_t* allocateOsrTempData(size_t size);
-    void freeOsrTempData();
+
+    void freeOsrTempData() {
+        js_free(osrTempData_);
+        osrTempData_ = nullptr;
+    }
 
     // In certain cases, we want to optimize certain opcodes to typed instructions,
     // to avoid carrying an extra register to feed into an unbox. Unfortunately,
