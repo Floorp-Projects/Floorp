@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 // =======================================
 //
@@ -17,7 +17,7 @@
  * @param {Array.<ComputedKeyframe>} b - expected computed keyframes
  */
 function assert_frame_lists_equal(a, b) {
-  assert_equals(a.length, b.length, "number of frames");
+  assert_equals(a.length, b.length, 'number of frames');
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
     assert_frames_equal(a[i], b[i], `ComputedKeyframe #${i}`);
   }
