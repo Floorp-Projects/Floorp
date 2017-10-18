@@ -20,6 +20,7 @@ linux64-clang-3.9:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-3.9-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
@@ -64,7 +65,6 @@ linux64-clang-5:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-5-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
