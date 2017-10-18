@@ -165,8 +165,7 @@ public:
     static void NotifyFlushComplete(nsIPresShell* aShell);
 
     static void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId);
-
-    static void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId);
+    static void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId);
 
     static void CancelAutoscroll(const FrameMetrics::ViewID& aScrollId);
 

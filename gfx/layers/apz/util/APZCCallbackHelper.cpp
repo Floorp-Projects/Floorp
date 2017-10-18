@@ -965,7 +965,7 @@ APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID&
 }
 
 /* static */ void
-APZCCallbackHelper::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId)
+APZCCallbackHelper::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
@@ -973,7 +973,7 @@ APZCCallbackHelper::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aSc
 
   nsAutoString data;
   data.AppendInt(aScrollId);
-  observerService->NotifyObservers(nullptr, "autoscroll-handled-by-apz", data.get());
+  observerService->NotifyObservers(nullptr, "autoscroll-rejected-by-apz", data.get());
 }
 
 /* static */ void
