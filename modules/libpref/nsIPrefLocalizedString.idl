@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsISupportsPrimitives.idl"
 
 /**
  * The nsIPrefLocalizedString interface is simply a wrapper interface for
@@ -15,24 +16,8 @@
  * @see nsIPrefBranch
  * @see nsISupportsString
  */
-
 [scriptable, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]
-interface nsIPrefLocalizedString : nsISupports
-{
-  /**
-   * Provides access to string data stored in this property.
-   *
-   * @throws Error An error occurred.
-   */
-  attribute wstring data;
-
-  /**
-   * Used to retrieve the contents of this object into a wide string.
-   *
-   * @return wstring The string containing the data stored within this object.
-   */
-  wstring toString();
-};
+interface nsIPrefLocalizedString : nsISupportsString {};
 
 %{C++
 
