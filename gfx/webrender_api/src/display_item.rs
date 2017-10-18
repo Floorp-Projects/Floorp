@@ -286,8 +286,9 @@ pub enum BorderStyle {
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum BoxShadowClipMode {
-    Outset = 0,
-    Inset = 1,
+    None = 0,
+    Outset = 1,
+    Inset = 2,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]

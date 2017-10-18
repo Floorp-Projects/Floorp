@@ -187,7 +187,7 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                     Some(glutin::VirtualKeyCode::P),
                 ) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(webrender::DebugFlags::PROFILER_DBG);
+                    flags.toggle(webrender::PROFILER_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(
@@ -196,7 +196,7 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                     Some(glutin::VirtualKeyCode::O),
                 ) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(webrender::DebugFlags::RENDER_TARGET_DBG);
+                    flags.toggle(webrender::RENDER_TARGET_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(
@@ -205,7 +205,7 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                     Some(glutin::VirtualKeyCode::I),
                 ) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(webrender::DebugFlags::TEXTURE_CACHE_DBG);
+                    flags.toggle(webrender::TEXTURE_CACHE_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(
@@ -214,7 +214,7 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
                     Some(glutin::VirtualKeyCode::B),
                 ) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(webrender::DebugFlags::ALPHA_PRIM_DBG);
+                    flags.toggle(webrender::ALPHA_PRIM_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(

@@ -133,12 +133,6 @@ impl Scene {
         }
         self.pipelines.remove(&pipeline_id);
     }
-
-    pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
-        if let Some(pipeline) = self.pipelines.get_mut(&pipeline_id) {
-            pipeline.epoch = epoch;
-        }
-    }
 }
 
 pub trait FilterOpHelpers {

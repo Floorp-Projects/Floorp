@@ -103,7 +103,7 @@ impl Document {
             self.pan.x as f32 / accumulated_scale_factor,
             self.pan.y as f32 / accumulated_scale_factor,
         );
-        self.frame.build_renderer_frame(
+        self.frame.build(
             resource_cache,
             gpu_cache,
             &self.scene.pipelines,
@@ -296,17 +296,6 @@ impl RenderBackend {
                 );
 
                 DocumentOp::Built
-            }
-            DocumentMsg::UpdatePipelineResources { resources, pipeline_id, epoch } => {
-                profile_scope!("UpdateResources");
-
-                self.resource_cache
-                    .update_resources(resources, &mut profile_counters.resources);
-
-                doc.scene.update_epoch(pipeline_id, epoch);
-                doc.frame.update_epoch(pipeline_id, epoch);
-
-                DocumentOp::Nop
             }
             DocumentMsg::SetRootPipeline(pipeline_id) => {
                 profile_scope!("SetRootPipeline");

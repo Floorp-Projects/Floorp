@@ -22,7 +22,6 @@ use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList}
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use rayon::ThreadPool;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
-use std::cmp;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::mem;
@@ -114,15 +113,8 @@ struct CachedImageInfo {
     epoch: Epoch,
 }
 
-#[derive(Debug)]
-pub enum ResourceClassCacheError {
-    OverLimitSize,
-}
-
-pub type ResourceCacheResult<V> = Result<V, ResourceClassCacheError>;
-
 pub struct ResourceClassCache<K, V> {
-    resources: FastHashMap<K, ResourceCacheResult<V>>,
+    resources: FastHashMap<K, V>,
 }
 
 impl<K, V> ResourceClassCache<K, V>
@@ -135,21 +127,21 @@ where
         }
     }
 
-    fn get(&self, key: &K) -> &ResourceCacheResult<V> {
-        self.resources.get(key)
+    fn get(&self, key: &K) -> &V {
+        self.resources
+            .get(key)
             .expect("Didn't find a cached resource with that ID!")
     }
 
-    pub fn insert(&mut self, key: K, value: ResourceCacheResult<V>) {
+    pub fn insert(&mut self, key: K, value: V) {
         self.resources.insert(key, value);
     }
 
-    pub fn get_mut(&mut self, key: &K) -> &mut ResourceCacheResult<V> {
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         self.resources.get_mut(key)
-            .expect("Didn't find a cached resource with that ID!")
     }
 
-    pub fn entry(&mut self, key: K) -> Entry<K, ResourceCacheResult<V>> {
+    pub fn entry(&mut self, key: K) -> Entry<K, V> {
         self.resources.entry(key)
     }
 
@@ -167,7 +159,7 @@ where
             .cloned()
             .collect::<Vec<_>>();
         for key in resources_to_destroy {
-            let _ = self.resources.remove(&key).unwrap();
+            self.resources.remove(&key).unwrap();
         }
     }
 }
@@ -491,38 +483,25 @@ impl ResourceCache {
                     return;
                 }
 
-                let side_size =
-                    template.tiling.map_or(cmp::max(template.descriptor.width, template.descriptor.height),
-                                           |tile_size| tile_size as u32);
-                if side_size > self.texture_cache.max_texture_size() {
-                    // The image or tiling size is too big for hardware texture size.
-                    warn!("Dropping image, image:(w:{},h:{}, tile:{}) is too big for hardware!",
-                          template.descriptor.width, template.descriptor.height, template.tiling.unwrap_or(0));
-                    self.cached_images.insert(request, Err(ResourceClassCacheError::OverLimitSize));
-                    return;
-                }
-
                 // If this image exists in the texture cache, *and* the epoch
                 // in the cache matches that of the template, then it is
                 // valid to use as-is.
                 let (entry, needs_update) = match self.cached_images.entry(request) {
                     Occupied(entry) => {
-                        let needs_update = entry.get().as_ref().unwrap().epoch != template.epoch;
+                        let needs_update = entry.get().epoch != template.epoch;
                         (entry.into_mut(), needs_update)
                     }
                     Vacant(entry) => (
-                        entry.insert(Ok(
-                            CachedImageInfo {
-                                epoch: template.epoch,
-                                texture_cache_handle: TextureCacheHandle::new(),
-                            }
-                        )),
+                        entry.insert(CachedImageInfo {
+                            epoch: template.epoch,
+                            texture_cache_handle: TextureCacheHandle::new(),
+                        }),
                         true,
                     ),
                 };
 
                 let needs_upload = self.texture_cache
-                    .request(&mut entry.as_mut().unwrap().texture_cache_handle, gpu_cache);
+                    .request(&mut entry.texture_cache_handle, gpu_cache);
 
                 if !needs_upload && !needs_update {
                     return;
@@ -621,7 +600,7 @@ impl ResourceCache {
         debug_assert!(fetch_buffer.is_empty());
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
-            if let Ok(Some(ref glyph)) = *glyph_key_cache.get(key) {
+            if let Some(ref glyph) = *glyph_key_cache.get(key) {
                 let cache_item = self.texture_cache.get(&glyph.texture_cache_handle);
                 if current_texture_id != cache_item.texture_id {
                     if !fetch_buffer.is_empty() {
@@ -669,24 +648,15 @@ impl ResourceCache {
         image_key: ImageKey,
         image_rendering: ImageRendering,
         tile: Option<TileOffset>,
-    ) -> Result<CacheItem, ()> {
+    ) -> CacheItem {
         debug_assert_eq!(self.state, State::QueryResources);
         let key = ImageRequest {
             key: image_key,
             rendering: image_rendering,
             tile,
         };
-
-        // TODO(Jerry): add a debug option to visualize the corresponding area for
-        // the Err() case of CacheItem.
-        match *self.cached_images.get(&key) {
-          Ok(ref image_info) => {
-              Ok(self.texture_cache.get(&image_info.texture_cache_handle))
-          }
-          Err(_) => {
-              Err(())
-          }
-        }
+        let image_info = &self.cached_images.get(&key);
+        self.texture_cache.get(&image_info.texture_cache_handle)
     }
 
     pub fn get_image_properties(&self, image_key: ImageKey) -> Option<ImageProperties> {
@@ -846,7 +816,7 @@ impl ResourceCache {
                 image_template.descriptor.clone()
             };
 
-            let entry = self.cached_images.get_mut(&request).as_mut().unwrap();
+            let entry = self.cached_images.get_mut(&request).unwrap();
             self.texture_cache.update(
                 &mut entry.texture_cache_handle,
                 descriptor,
