@@ -166,10 +166,6 @@ menuitem.bookmark-item {
   border-color: Highlight;
 }
 
-.urlbar-textbox-container {
-  -moz-box-align: stretch;
-}
-
 /* ::::: URL Bar Zoom Reset Button ::::: */
 @keyframes urlbar-zoom-reset-pulse {
   0% {
