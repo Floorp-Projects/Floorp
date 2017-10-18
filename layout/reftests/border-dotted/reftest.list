@@ -5,7 +5,7 @@
 
 # XXX: We mark fails-if to these tests for now to enable styled border in WR.
 # We should remove them after Bug 1399485 is fixed.
-fuzzy(80,1500) fails-if(webrender) == border-dotted-interaction.html masked.html
+fuzzy(80,1500) == border-dotted-interaction.html masked.html
 fuzzy(80,1500) == border-dotted-no-radius.html masked.html
 fuzzy(80,1500) fails-if(webrender) == border-dotted-radius.html masked.html
 fuzzy(80,1500) == border-dashed-no-radius.html masked.html
