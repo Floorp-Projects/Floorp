@@ -173,21 +173,12 @@ public:
     RotatedBuffer::DrawIterator* aIter,
     bool aSetTransform = false);
 
-  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned);
-
-  // Called as part of the layers transation reply. Conveys data about our
-  // buffer(s) from the compositor. If appropriate we should swap references
-  // to our buffers.
-  virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) {}
+  void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
 
   // Call before and after painting into this content client
   virtual void BeginPaint() {}
   virtual void BeginAsyncPaint();
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
-
-  nsIntRegion ExpandDrawRegion(PaintState& aPaintState,
-                               RotatedBuffer::DrawIterator* aIter,
-                               gfx::BackendType aBackendType);
 
   static bool PrepareDrawTargetForPainting(CapturedPaintState*);
 
@@ -316,8 +307,6 @@ public:
                                                                   RotatedBuffer::DrawIterator* aIter,
                                                                   bool aSetTransform) override;
 
-  virtual void BeginPaint() override;
-  virtual void BeginAsyncPaint() override;
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
@@ -329,14 +318,14 @@ public:
   }
 
 protected:
+  /**
+   * Called when we have been updated and should swap references to our
+   * buffers.
+   */
+  virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) {}
+
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
                                        const nsIntRegion& aVisibleRegion);
-
-  /**
-   * Ensure we have a valid back buffer if we have a valid front buffer (i.e.
-   * if a backbuffer has been created.)
-   */
-  virtual void EnsureBackBufferIfFrontBuffer() {}
 
   virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
                                              const gfx::IntRect& aRect,
@@ -378,11 +367,7 @@ public:
                     bool aDumpHtml=false,
                     TextureDumpMode aCompress=TextureDumpMode::Compress) override;
 
-  virtual void Clear() override
-  {
-    ContentClient::Clear();
-    mFrontBuffer = nullptr;
-  }
+  virtual void Clear() override;
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
@@ -391,14 +376,14 @@ public:
 
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
-  virtual void EnsureBackBufferIfFrontBuffer() override;
-
   virtual TextureInfo GetTextureInfo() const override
   {
     return TextureInfo(CompositableType::CONTENT_DOUBLE, mTextureFlags);
   }
 
 private:
+  void EnsureBackBufferIfFrontBuffer();
+
   RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;
