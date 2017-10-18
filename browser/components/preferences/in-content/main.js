@@ -6,11 +6,6 @@
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
-                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -40,6 +35,13 @@ const PREF_CONTAINERS_EXTENSION = "privacy.userContext.extension";
 const PREF_SHOW_PLUGINS_IN_LIST = "browser.download.show_plugins_in_list";
 const PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS =
   "browser.download.hide_plugins_without_extensions";
+
+// Strings to identify ExtensionSettingsStore overrides
+const PREF_SETTING_TYPE = "prefs";
+const CONTAINERS_KEY = "privacy.containers";
+const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
+const URL_OVERRIDES_TYPE = "url_overrides";
+const NEW_TAB_KEY = "newTabURL";
 
 /*
  * Preferences where we store handling information about the feed type.
@@ -218,10 +220,10 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    handleControllingExtension("url_overrides", "newTabURL");
+    handleControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
     let newTabObserver = {
       observe(subject, topic, data) {
-          handleControllingExtension("url_overrides", "newTabURL");
+          handleControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
       },
     };
     Services.obs.addObserver(newTabObserver, "newtab-url-changed");
@@ -260,11 +262,11 @@ var gMainPane = {
     setEventListener("restoreDefaultHomePage", "command",
       gMainPane.restoreDefaultHomePage);
     setEventListener("disableHomePageExtension", "command",
-                     gMainPane.makeDisableControllingExtension("prefs", "homepage_override"));
+                     makeDisableControllingExtension(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY));
     setEventListener("disableContainersExtension", "command",
-                     gMainPane.makeDisableControllingExtension("prefs", "privacy.containers"));
+                     makeDisableControllingExtension(PREF_SETTING_TYPE, CONTAINERS_KEY));
     setEventListener("disableNewTabExtension", "command",
-                     gMainPane.makeDisableControllingExtension("url_overrides", "newTabURL"));
+                     makeDisableControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY));
     setEventListener("chooseLanguage", "command",
       gMainPane.showLanguages);
     setEventListener("translationAttributionImage", "click",
@@ -484,7 +486,7 @@ var gMainPane = {
     const containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
     const containersCheckbox = document.getElementById("browserContainersCheckbox");
     containersCheckbox.checked = containersEnabled;
-    handleControllingExtension("prefs", "privacy.containers")
+    handleControllingExtension(PREF_SETTING_TYPE, CONTAINERS_KEY)
       .then((isControlled) => {
         containersCheckbox.disabled = isControlled;
       });
@@ -616,11 +618,11 @@ var gMainPane = {
 
     if (homePref.locked) {
       // An extension can't control these settings if they're locked.
-      hideControllingExtension("homepage_override");
+      hideControllingExtension(HOMEPAGE_OVERRIDE_KEY);
       setInputDisabledStates(false);
     } else {
       // Asynchronously update the extension controlled UI.
-      handleControllingExtension("prefs", "homepage_override")
+      handleControllingExtension(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY)
         .then(setInputDisabledStates);
     }
 
@@ -729,7 +731,7 @@ var gMainPane = {
       useCurrent.label = useCurrent.getAttribute("label1");
 
     // If the homepage is controlled by an extension then you can't use this.
-    if (await getControllingExtensionId("prefs", "homepage_override")) {
+    if (await getControllingExtensionInfo(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY)) {
       useCurrent.disabled = true;
       return;
     }
@@ -773,14 +775,6 @@ var gMainPane = {
   restoreDefaultHomePage() {
     var homePage = document.getElementById("browser.startup.homepage");
     homePage.value = homePage.defaultValue;
-  },
-
-  makeDisableControllingExtension(type, settingName) {
-    return async function disableExtension() {
-      let id = await getControllingExtensionId(type, settingName);
-      let addon = await AddonManager.getAddonByID(id);
-      addon.userDisabled = true;
-    };
   },
 
   /**
@@ -2595,69 +2589,6 @@ function getLocalHandlerApp(aFile) {
   localHandlerApp.executable = aFile;
 
   return localHandlerApp;
-}
-
-let extensionControlledContentIds = {
-  "privacy.containers": "browserContainersExtensionContent",
-  "homepage_override": "browserHomePageExtensionContent",
-  "newTabURL": "browserNewTabExtensionContent",
-};
-
-/**
-  * Check if a pref is being managed by an extension.
-  */
-async function getControllingExtensionId(type, settingName) {
-  await ExtensionSettingsStore.initialize();
-  return ExtensionSettingsStore.getTopExtensionId(type, settingName);
-}
-
-function getControllingExtensionEl(settingName) {
-  return document.getElementById(extensionControlledContentIds[settingName]);
-}
-
-async function handleControllingExtension(type, settingName) {
-  let controllingExtensionId = await getControllingExtensionId(type, settingName);
-
-  if (controllingExtensionId) {
-    showControllingExtension(settingName, controllingExtensionId);
-  } else {
-    hideControllingExtension(settingName);
-  }
-
-  return !!controllingExtensionId;
-}
-
-async function showControllingExtension(settingName, extensionId) {
-  let extensionControlledContent = getControllingExtensionEl(settingName);
-  // Tell the user what extension is controlling the setting.
-  let addon = await AddonManager.getAddonByID(extensionId);
-  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-  let stringParts = document
-    .getElementById("bundlePreferences")
-    .getString(`extensionControlled.${settingName}`)
-    .split("%S");
-  let description = extensionControlledContent.querySelector("description");
-
-  // Remove the old content from the description.
-  while (description.firstChild) {
-    description.firstChild.remove();
-  }
-
-  // Populate the description.
-  description.appendChild(document.createTextNode(stringParts[0]));
-  let image = document.createElement("image");
-  image.setAttribute("src", addon.iconURL || defaultIcon);
-  image.classList.add("extension-controlled-icon");
-  description.appendChild(image);
-  description.appendChild(document.createTextNode(` ${addon.name}`));
-  description.appendChild(document.createTextNode(stringParts[1]));
-
-  // Show the controlling extension row and hide the old label.
-  extensionControlledContent.hidden = false;
-}
-
-function hideControllingExtension(settingName) {
-  getControllingExtensionEl(settingName).hidden = true;
 }
 
 /**

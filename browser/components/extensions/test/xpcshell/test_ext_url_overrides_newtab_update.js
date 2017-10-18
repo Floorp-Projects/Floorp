@@ -20,11 +20,11 @@ Cu.import("resource://testing-common/AddonTestUtils.jsm");
 
 const {
   createAppInfo,
-  createTempWebExtensionFile,
   promiseCompleteAllInstalls,
   promiseFindAddonUpdates,
   promiseShutdownManager,
   promiseStartupManager,
+  UpdateServer,
 } = AddonTestUtils;
 
 AddonTestUtils.init(this);
@@ -37,30 +37,10 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 add_task(async function test_url_overrides_newtab_update() {
   const EXTENSION_ID = "test_url_overrides_update@tests.mozilla.org";
   const NEWTAB_URI = "webext-newtab-1.html";
-  const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 
-  const testServer = createHttpServer();
-  const port = testServer.identity.primaryPort;
-
-  // The test extension uses an insecure update url.
-  Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-
-  testServer.registerPathHandler("/test_update.json", (request, response) => {
-    response.write(`{
-      "addons": {
-        "${EXTENSION_ID}": {
-          "updates": [
-            {
-              "version": "2.0",
-              "update_link": "http://localhost:${port}/addons/test_url_overrides-2.0.xpi"
-            }
-          ]
-        }
-      }
-    }`);
-  });
-
-  let webExtensionFile = createTempWebExtensionFile({
+  let testServer = new UpdateServer();
+  do_register_cleanup(() => testServer.cleanup());
+  testServer.serveUpdate({
     manifest: {
       version: "2.0",
       applications: {
@@ -71,8 +51,6 @@ add_task(async function test_url_overrides_newtab_update() {
     },
   });
 
-  testServer.registerFile("/addons/test_url_overrides-2.0.xpi", webExtensionFile);
-
   await promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -82,7 +60,7 @@ add_task(async function test_url_overrides_newtab_update() {
       "applications": {
         "gecko": {
           "id": EXTENSION_ID,
-          "update_url": `http://localhost:${port}/test_update.json`,
+          "update_url": testServer.updateUrl,
         },
       },
       chrome_url_overrides: {newtab: NEWTAB_URI},
