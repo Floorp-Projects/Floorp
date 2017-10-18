@@ -318,6 +318,61 @@ const gKeyframesTests = [
              keyframe(computedOffset(1),   { left: '30px' }, 'steps(3)')],
   },
 
+  // ----------- Property-indexed keyframes: composite handling -----------
+
+  {
+    desc:   'a property-indexed keyframe with a single composite operation',
+    input:  { left: ['10px', '20px', '30px'], composite: 'add' },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'linear', 'add'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'linear', 'add'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'linear', 'add')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a composite array',
+    input:  { left: ['10px', '20px', '30px'],
+              composite: ['add', 'replace', 'accumulate'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' },
+                      'linear', 'add'),
+             keyframe(computedOffset(0.5), { left: '20px' },
+                      'linear', 'replace'),
+             keyframe(computedOffset(1),   { left: '30px' },
+                      'linear', 'accumulate')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a composite array that is too'
+            + ' short',
+    input:  { left: ['10px', '20px', '30px', '40px', '50px'],
+              composite: ['add', 'replace'] },
+    output: [keyframe(computedOffset(0),    { left: '10px' },
+                      'linear', 'add'),
+             keyframe(computedOffset(0.25), { left: '20px' },
+                      'linear', 'replace'),
+             keyframe(computedOffset(0.5),  { left: '30px' },
+                      'linear', 'add'),
+             keyframe(computedOffset(0.75), { left: '40px' },
+                      'linear', 'replace'),
+             keyframe(computedOffset(1),    { left: '50px' },
+                      'linear', 'add')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a composite array that is too'
+            + ' long',
+    input:  { left: ['10px', '20px'],
+              composite: ['add', 'replace', 'accumulate'] },
+    output: [keyframe(computedOffset(0), { left: '10px' },
+                      'linear', 'add'),
+             keyframe(computedOffset(1), { left: '20px' },
+                      'linear', 'replace')],
+  },
+  {
+    desc:   'a property-indexed keyframe with a single-element composite array',
+    input:  { left: ['10px', '20px', '30px'],
+              composite: ['add'] },
+    output: [keyframe(computedOffset(0),   { left: '10px' }, 'linear', 'add'),
+             keyframe(computedOffset(0.5), { left: '20px' }, 'linear', 'add'),
+             keyframe(computedOffset(1),   { left: '30px' }, 'linear', 'add')],
+  },
+
   // ----------- Keyframe sequence: property handling -----------
 
   {
@@ -606,6 +661,17 @@ const gInvalidKeyframesTests = [
     desc:  'a keyframe sequence with an invalid easing value',
     input: [ { opacity: 0, easing: 'jumpy' },
              { opacity: 1 } ],
+  },
+  {
+    desc:  'property-indexed keyframes with an invalid composite value',
+    input: { opacity: [ 0, 0.5, 1 ],
+             composite: 'alternate' },
+  },
+  {
+    desc:  'property-indexed keyframes with an invalid composite value as one'
+           + ' of the array values',
+    input: { opacity: [ 0, 0.5, 1 ],
+             composite: [ 'add', 'alternate' ] },
   },
   {
     desc:  'keyframes with an invalid composite value',
