@@ -620,25 +620,32 @@ pref("browser.snapshots.limit", 0);
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
 // 3: Zoom in or out.
+// 4: Treat vertical wheel as horizontal scroll
 #ifdef XP_MACOSX
-// On OS X, if the wheel has one axis only, shift+wheel comes through as a
+// On macOS, if the wheel has one axis only, shift+wheel comes through as a
 // horizontal scroll event. Thus, we can't assign anything other than normal
 // scrolling to shift+wheel.
-pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_shift.action", 1);
+pref("mousewheel.with_alt.action", 2);
 // On MacOS X, control+wheel is typically handled by system and we don't
 // receive the event.  So, command key which is the main modifier key for
 // acceleration is the best modifier for zoom-in/out.  However, we should keep
 // the control key setting for backward compatibility.
 pref("mousewheel.with_meta.action", 3); // command key on Mac
-// Disable control-/meta-modified horizontal mousewheel events, since
-// those are used on Mac as part of modified swipe gestures (e.g.
-// Left swipe+Cmd = go back in a new tab).
+// Disable control-/meta-modified horizontal wheel events, since those are
+// used on Mac as part of modified swipe gestures (e.g. Left swipe+Cmd is
+// "go back" in a new tab).
 pref("mousewheel.with_control.action.override_x", 0);
 pref("mousewheel.with_meta.action.override_x", 0);
 #else
-pref("mousewheel.with_alt.action", 1);
-pref("mousewheel.with_shift.action", 2);
+// On the other platforms (non-macOS), user may use legacy mouse which supports
+// only vertical wheel but want to scroll horizontally.  For such users, we
+// should provide horizontal scroll with shift+wheel (same as Chrome).
+// However, shift+wheel was used for navigating history.  For users who want
+// to keep using this feature, let's enable it with alt+wheel.  This is better
+// for consistency with macOS users.
+pref("mousewheel.with_shift.action", 4);
+pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_meta.action", 1); // win key on Win, Super/Hyper on Linux
 #endif
 pref("mousewheel.with_control.action",3);
@@ -1552,16 +1559,8 @@ pref("privacy.userContext.longPressBehavior", 0);
 pref("privacy.userContext.extension", "");
 
 // Start the browser in e10s mode
-pref("browser.tabs.remote.autostart", false);
+pref("browser.tabs.remote.autostart", true);
 pref("browser.tabs.remote.desktopbehavior", true);
-
-#if !defined(RELEASE_OR_BETA) || defined(MOZ_DEV_EDITION)
-// At the moment, autostart.2 is used, while autostart.1 is unused.
-// We leave it here set to false to reset users' defaults and allow
-// us to change everybody to true in the future, when desired.
-pref("browser.tabs.remote.autostart.1", false);
-pref("browser.tabs.remote.autostart.2", true);
-#endif
 
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
@@ -1587,12 +1586,6 @@ pref("extensions.allow-non-mpc-extensions", false);
 #endif
 
 pref("extensions.legacy.enabled", false);
-
-// Enable blocking of e10s and e10s-multi for add-on users on beta/release.
-#if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
-pref("extensions.e10sBlocksEnabling", true);
-pref("extensions.e10sMultiBlocksEnabling", true);
-#endif
 
 // How often to check for CPOW timeouts. CPOWs are only timed out by
 // the hang monitor.

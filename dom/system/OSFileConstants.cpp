@@ -41,7 +41,9 @@
 #include <windows.h>
 #include <accctrl.h>
 
-#define PATH_MAX MAX_PATH
+#ifndef PATH_MAX
+#  define PATH_MAX MAX_PATH
+#endif
 
 #endif // defined(XP_WIN)
 

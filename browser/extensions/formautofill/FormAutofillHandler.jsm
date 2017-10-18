@@ -154,10 +154,11 @@ FormAutofillHandler.prototype = {
       this.address.fieldDetails = [];
     }
 
-    if (!this.creditCard.fieldDetails.some(i => i.fieldName == "cc-number")) {
-      log.debug("Ignoring credit card related fields since it's without credit card number field");
+    if (!this._isValidCreditCardForm(this.creditCard.fieldDetails)) {
+      log.debug("Invalid credit card form");
       this.creditCard.fieldDetails = [];
     }
+
     let validDetails = Array.of(...(this.address.fieldDetails),
                                 ...(this.creditCard.fieldDetails));
     for (let detail of validDetails) {
@@ -169,6 +170,28 @@ FormAutofillHandler.prototype = {
     }
 
     return validDetails;
+  },
+
+  _isValidCreditCardForm(fieldDetails) {
+    let ccNumberReason = "";
+    let hasCCNumber = false;
+    let hasExpiryDate = false;
+
+    for (let detail of fieldDetails) {
+      switch (detail.fieldName) {
+        case "cc-number":
+          hasCCNumber = true;
+          ccNumberReason = detail._reason;
+          break;
+        case "cc-exp":
+        case "cc-exp-month":
+        case "cc-exp-year":
+          hasExpiryDate = true;
+          break;
+      }
+    }
+
+    return hasCCNumber && (ccNumberReason == "autocomplete" || hasExpiryDate);
   },
 
   getFieldDetailByName(fieldName) {

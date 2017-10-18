@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
-import errno
 import hashlib
 import os
 import re
@@ -152,6 +151,7 @@ MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion('1.21.0')
+
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
@@ -558,8 +558,6 @@ class BaseBootstrapper(object):
             print('Could not find a Rust compiler.')
             return False, None
 
-        cargo = self.which('cargo')
-
         our = self._parse_version(rustc)
         if not our:
             return False, None
@@ -568,7 +566,7 @@ class BaseBootstrapper(object):
 
     def cargo_home(self):
         cargo_home = os.environ.get('CARGO_HOME',
-                os.path.expanduser(os.path.join('~', '.cargo')))
+                                    os.path.expanduser(os.path.join('~', '.cargo')))
         cargo_bin = os.path.join(cargo_home, 'bin')
         return cargo_home, cargo_bin
 
@@ -617,7 +615,7 @@ class BaseBootstrapper(object):
             have_cargo = os.path.exists(try_cargo)
             if have_rustc or have_cargo:
                 self.print_rust_path_advice(RUST_NOT_IN_PATH,
-                        cargo_home, cargo_bin)
+                                            cargo_home, cargo_bin)
                 sys.exit(1)
         else:
             print('Your version of Rust (%s) is too old.' % version)
@@ -642,15 +640,15 @@ class BaseBootstrapper(object):
 
     def ensure_rust_targets(self, rustup):
         """Make sure appropriate cross target libraries are installed."""
-        target_list =  subprocess.check_output([rustup, 'target', 'list'])
+        target_list = subprocess.check_output([rustup, 'target', 'list'])
         targets = [line.split()[0] for line in target_list.splitlines()
-                if 'installed' in line or 'default' in line]
+                   if 'installed' in line or 'default' in line]
         print('Rust supports %s targets.' % ', '.join(targets))
 
         # Support 32-bit Windows on 64-bit Windows.
         win32 = 'i686-pc-windows-msvc'
         win64 = 'x86_64-pc-windows-msvc'
-        if rust.platform() == win64 and not win32 in targets:
+        if rust.platform() == win64 and win32 not in targets:
             subprocess.check_call([rustup, 'target', 'add', win32])
 
     def upgrade_rust(self, rustup):
@@ -680,12 +678,11 @@ class BaseBootstrapper(object):
             print('Ok')
             print('Running rustup-init...')
             subprocess.check_call([rustup_init, '-y',
-                '--default-toolchain', 'stable',
-                '--default-host', platform,
-            ])
+                                   '--default-toolchain', 'stable',
+                                   '--default-host', platform, ])
             cargo_home, cargo_bin = self.cargo_home()
             self.print_rust_path_advice(RUST_INSTALL_COMPLETE,
-                    cargo_home, cargo_bin)
+                                        cargo_home, cargo_bin)
         finally:
             try:
                 os.remove(rustup_init)

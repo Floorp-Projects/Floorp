@@ -9,7 +9,7 @@ HTTP(..) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
 == basic-negcoord.html basic-negcoord-ref.html
-fuzzy-if(webrender,24-24,80-80) == basic-opacity.html basic-opacity-ref.html
+== basic-opacity.html basic-opacity-ref.html
 != blur.html blur-notref.html
 == color-inherit.html color-inherit-ref.html
 == color-parserorder.html color-parserorder-ref.html

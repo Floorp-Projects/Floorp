@@ -29,7 +29,6 @@ py2:
         - probes/trace-gen.py
         - python/devtools
         - python/mach
-        - python/mozboot
         - python/mozbuild
         - python/mozversioncontrol
         - security

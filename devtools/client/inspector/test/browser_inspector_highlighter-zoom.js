@@ -21,20 +21,19 @@ const expectedStyle = (w, h, z) =>
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let highlighterUtils = inspector.toolbox.highlighterUtils;
 
-  info("Highlighting the test node");
-
-  yield hoverElement("div", inspector);
-  let isVisible = yield testActor.isHighlighting();
-  ok(isVisible, "The highlighter is visible");
+  let div = yield getNodeFront("div", inspector);
 
   for (let level of TEST_LEVELS) {
-    info("Zoom to level " + level +
-         " and check that the highlighter is correct");
+    info(`Zoom to level ${level}`);
+    yield testActor.zoomPageTo(level, false);
 
-    yield testActor.zoomPageTo(level);
-    isVisible = yield testActor.isHighlighting();
-    ok(isVisible, "The highlighter is still visible at zoom level " + level);
+    info("Highlight the test node");
+    yield highlighterUtils.highlightNodeFront(div);
+
+    let isVisible = yield testActor.isHighlighting();
+    ok(isVisible, `The highlighter is visible at zoom level ${level}`);
 
     yield testActor.isNodeCorrectlyHighlighted("div", is);
 
@@ -44,24 +43,13 @@ add_task(function* () {
     let { width, height } = yield testActor.getWindowDimensions();
     is(style, expectedStyle(width, height, level),
       "The style attribute of the root element is correct");
+
+    info("Unhighlight the node");
+    yield highlighterUtils.unhighlight();
   }
 });
 
-function* hoverElement(selector, inspector) {
-  info("Hovering node " + selector + " in the markup view");
-  let container = yield getContainerForSelector(selector, inspector);
-  yield hoverContainer(container, inspector);
-}
-
-function* hoverContainer(container, inspector) {
-  let onHighlight = inspector.toolbox.once("node-highlight");
-  EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
-      inspector.markup.doc.defaultView);
-  yield onHighlight;
-}
-
 function* getElementsNodeStyle(testActor) {
-  let value = yield testActor.getHighlighterNodeAttribute(
-    "box-model-elements", "style");
+  let value = yield testActor.getHighlighterNodeAttribute("box-model-elements", "style");
   return value;
 }

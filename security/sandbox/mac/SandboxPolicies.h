@@ -345,6 +345,10 @@ static const char contentSandboxRules[] = R"(
            #"\.[tT][tT][cC]$"           ; ttc
            #"\.[oO][tT][cC]$"           ; otc
            #"\.[dD][fF][oO][nN][tT]$")) ; dfont
+
+  ; bug 1404919
+  ; Read access (recursively) within directories ending in .fontvault
+  (allow file-read* (regex #"\.fontvault/"))
 )";
 
 }

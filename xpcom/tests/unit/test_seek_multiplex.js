@@ -17,11 +17,6 @@ function test_multiplex_streams() {
                            "nsIMultiplexInputStream");
   do_check_eq(1, 1);
 
-  var BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
-                                                 "nsIBinaryInputStream");
-  var BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstream;1",
-                                                  "nsIBinaryOutputStream",
-                                                  "setOutputStream");
   var multiplex = new MultiplexStream();
   for (var i = 0; i < count; ++i) {
     let s = Cc["@mozilla.org/io/string-input-stream;1"]
@@ -111,7 +106,7 @@ function test_multiplex_streams() {
   var caught = false;
   try {
     seekable.seek(Ci.nsISeekableStream.NS_SEEK_END, 15);
-  } catch(e) {
+  } catch (e) {
     caught = true;
   }
   do_check_eq(caught, true);
@@ -134,21 +129,16 @@ function test_multiplex_streams() {
 
 function test_multiplex_bug797871() {
 
-  var data = "1234567890123456789012345678901234567890";
+  var data2 = "1234567890123456789012345678901234567890";
 
   var MultiplexStream = CC("@mozilla.org/io/multiplex-input-stream;1",
                            "nsIMultiplexInputStream");
   do_check_eq(1, 1);
 
-  var BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
-                                                 "nsIBinaryInputStream");
-  var BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstream;1",
-                                                  "nsIBinaryOutputStream",
-                                                  "setOutputStream");
   var multiplex = new MultiplexStream();
   let s = Cc["@mozilla.org/io/string-input-stream;1"]
             .createInstance(Ci.nsIStringInputStream);
-  s.setData(data, data.length);
+  s.setData(data2, data2.length);
 
   multiplex.appendStream(s);
 
@@ -159,7 +149,7 @@ function test_multiplex_bug797871() {
 
   seekable.seek(Ci.nsISeekableStream.NS_SEEK_SET, 8);
   do_check_eq(seekable.tell(), 8);
-  readData = sis.read(2);
+  sis.read(2);
   do_check_eq(seekable.tell(), 10);
 
   seekable.seek(Ci.nsISeekableStream.NS_SEEK_SET, 20);

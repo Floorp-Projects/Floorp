@@ -9,8 +9,7 @@
 const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
 const BASE_PATH = "SOFTWARE\\Mozilla\\Firefox";
 
-function idump(indent, str)
-{
+function idump(indent, str) {
   for (var j = 0; j < indent; ++j)
     dump(" ");
   dump(str);
@@ -25,11 +24,11 @@ function list_values(indent, key) {
     if (key.getValueType(vn) == nsIWindowsRegKey.TYPE_STRING) {
       val = key.readStringValue(vn);
     }
-    if (vn == "") 
+    if (vn == "")
       idump(indent + 1, "(Default): \"" + val + "\"\n");
     else
       idump(indent + 1, vn + ": \"" + val + "\"\n");
-  } 
+  }
   idump(indent, "}\n");
 }
 

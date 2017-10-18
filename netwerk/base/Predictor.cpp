@@ -2609,9 +2609,11 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
   if (self) {
     nsAutoCString method;
     requestHead.Method(method);
+    nsAutoCString vary;
+    Unused << responseHead->GetHeader(nsHttp::Vary, vary);
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
                                      method, *lci->OriginAttributesPtr(),
-                                     isTracking);
+                                     isTracking, !vary.IsEmpty());
   }
 }
 
@@ -2620,7 +2622,7 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       uint32_t httpStatus,
                                       const nsCString &method,
                                       const OriginAttributes& originAttributes,
-                                      bool isTracking)
+                                      bool isTracking, bool couldVary)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
 
@@ -2658,7 +2660,7 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                        nsICacheStorage::CHECK_MULTITHREADED;
   RefPtr<Predictor::CacheabilityAction> action =
     new Predictor::CacheabilityAction(targetURI, httpStatus, method, isTracking,
-                                      this);
+                                      couldVary, this);
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
@@ -2735,7 +2737,8 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
     if (strTargetURI.Equals(uri)) {
       if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") &&
           !hasQueryString &&
-          !mIsTracking) {
+          !mIsTracking &&
+          !mCouldVary) {
         PREDICTOR_LOG(("    marking %s cacheable", key));
         flags |= FLAG_PREFETCHABLE;
       } else {

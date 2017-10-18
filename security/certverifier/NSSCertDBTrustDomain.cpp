@@ -1216,6 +1216,12 @@ LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
   // the return value would be detrimental in that case.
   int unusedModType;
   Unused << SECMOD_DeleteModule(modNameUTF8.get(), &unusedModType);
+  // Some NSS command-line utilities will load a roots module under the name
+  // "Root Certs" if there happens to be a `DLL_PREFIX "nssckbi" DLL_SUFFIX`
+  // file in the directory being operated on. In some cases this can cause us to
+  // fail to load our roots module. In these cases, deleting the "Root Certs"
+  // module allows us to load the correct one. See bug 1406396.
+  Unused << SECMOD_DeleteModule("Root Certs", &unusedModType);
 
   nsAutoCString fullLibraryPath;
   if (!dir.IsEmpty()) {

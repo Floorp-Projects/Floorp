@@ -13,6 +13,7 @@
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
 #include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
+#include "mozilla/WheelHandlingHelper.h"    // for AutoWheelDeltaAdjuster
 
 namespace mozilla {
 namespace layers {
@@ -113,31 +114,39 @@ IAPZCTreeManager::ReceiveInputEvent(
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
         }
 
-        ScreenPoint origin(wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y);
-        ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp, 0,
-                               scrollMode,
-                               ScrollWheelInput::DeltaTypeForDeltaMode(
-                                                   wheelEvent.mDeltaMode),
-                               origin,
-                               wheelEvent.mDeltaX, wheelEvent.mDeltaY,
-                               wheelEvent.mAllowToOverrideSystemScrollSpeed);
+        // AutoWheelDeltaAdjuster may adjust the delta values for default
+        // action hander.  The delta values will be restored automatically
+        // when its instance is destroyed.
+        AutoWheelDeltaAdjuster adjuster(wheelEvent);
 
-        // We add the user multiplier as a separate field, rather than premultiplying
-        // it, because if the input is converted back to a WidgetWheelEvent, then
-        // EventStateManager would apply the delta a second time. We could in theory
-        // work around this by asking ESM to customize the event much sooner, and
-        // then save the "mCustomizedByUserPrefs" bit on ScrollWheelInput - but for
-        // now, this seems easier.
-        EventStateManager::GetUserPrefsForWheelEvent(&wheelEvent,
-          &input.mUserDeltaMultiplierX,
-          &input.mUserDeltaMultiplierY);
+        // If the wheel event becomes no-op event, don't handle it as scroll.
+        if (wheelEvent.mDeltaX || wheelEvent.mDeltaY) {
+          ScreenPoint origin(wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y);
+          ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp, 0,
+                                 scrollMode,
+                                 ScrollWheelInput::DeltaTypeForDeltaMode(
+                                                     wheelEvent.mDeltaMode),
+                                 origin,
+                                 wheelEvent.mDeltaX, wheelEvent.mDeltaY,
+                                 wheelEvent.mAllowToOverrideSystemScrollSpeed);
 
-        nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
-        wheelEvent.mRefPoint.x = input.mOrigin.x;
-        wheelEvent.mRefPoint.y = input.mOrigin.y;
-        wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
-        wheelEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
-        return status;
+          // We add the user multiplier as a separate field, rather than premultiplying
+          // it, because if the input is converted back to a WidgetWheelEvent, then
+          // EventStateManager would apply the delta a second time. We could in theory
+          // work around this by asking ESM to customize the event much sooner, and
+          // then save the "mCustomizedByUserPrefs" bit on ScrollWheelInput - but for
+          // now, this seems easier.
+          EventStateManager::GetUserPrefsForWheelEvent(&wheelEvent,
+            &input.mUserDeltaMultiplierX,
+            &input.mUserDeltaMultiplierY);
+
+          nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
+          wheelEvent.mRefPoint.x = input.mOrigin.x;
+          wheelEvent.mRefPoint.y = input.mOrigin.y;
+          wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
+          wheelEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+          return status;
+        }
       }
 
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);

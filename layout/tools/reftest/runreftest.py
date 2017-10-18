@@ -299,9 +299,11 @@ class RefTest(object):
             self.log.info("Setting reftest.startAfter to %s" % startAfter)
             prefs['reftest.startAfter'] = startAfter
 
+        # Unconditionally update the e10s pref.
         if options.e10s:
             prefs['browser.tabs.remote.autostart'] = True
-            prefs['extensions.e10sBlocksEnabling'] = False
+        else:
+            prefs['browser.tabs.remote.autostart'] = False
 
         # Bug 1262954: For winXP + e10s disable acceleration
         if platform.system() in ("Windows", "Microsoft") and \

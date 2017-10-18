@@ -490,6 +490,7 @@ private:
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(false)
+    , mDeltaValuesAdjustedForDefaultHandler(false)
   {
   }
 
@@ -514,6 +515,7 @@ public:
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
     , mAllowToOverrideSystemScrollSpeed(true)
+    , mDeltaValuesAdjustedForDefaultHandler(false)
   {
   }
 
@@ -631,6 +633,10 @@ public:
   // it's enabled by the pref.
   bool mAllowToOverrideSystemScrollSpeed;
 
+  // While default handler handles a wheel event specially (e.g., treating
+  // mDeltaY as horizontal scroll), this is set to true.
+  bool mDeltaValuesAdjustedForDefaultHandler;
+
   void AssignWheelEventData(const WidgetWheelEvent& aEvent, bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
@@ -652,6 +658,8 @@ public:
     mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
     mAllowToOverrideSystemScrollSpeed =
       aEvent.mAllowToOverrideSystemScrollSpeed;
+    mDeltaValuesAdjustedForDefaultHandler =
+      aEvent.mDeltaValuesAdjustedForDefaultHandler;
   }
 
   // System scroll speed settings may be too slow at using Gecko.  In such

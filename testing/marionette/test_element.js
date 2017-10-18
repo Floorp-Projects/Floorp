@@ -6,7 +6,12 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
 
-class DOMElement {
+const SVGNS = "http://www.w3.org/2000/svg";
+const XBLNS = "http://www.mozilla.org/xbl";
+const XHTMLNS = "http://www.w3.org/1999/xhtml";
+const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+class Element {
   constructor(tagName, attrs = {}) {
     this.tagName = tagName;
     this.localName = tagName;
@@ -14,6 +19,17 @@ class DOMElement {
     for (let attr in attrs) {
       this[attr] = attrs[attr];
     }
+  }
+
+  get nodeType() { return 1; }
+  get ELEMENT_NODE() { return 1; }
+}
+
+class DOMElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+
+    this.namespaceURI = XHTMLNS;
 
     if (this.localName == "option") {
       this.selected = false;
@@ -24,9 +40,6 @@ class DOMElement {
     }
   }
 
-  get nodeType() { return 1; }
-  get ELEMENT_NODE() { return 1; }
-
   getBoundingClientRect() {
     return {
       top: 0,
@@ -35,9 +48,43 @@ class DOMElement {
       height: 100,
     };
   }
-};
+}
+
+class SVGElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = SVGNS;
+  }
+}
+
+class XULElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = XULNS;
+  }
+}
+
+class XBLElement extends XULElement {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = XBLNS;
+  }
+}
 
 const domEl = new DOMElement("p");
+const svgEl = new SVGElement("rect");
+const xulEl = new XULElement("browser");
+const xblEl = new XBLElement("framebox");
+
+class WindowProxy {
+  get parent() { return this; }
+  get self() { return this; }
+  toString() { return "[object Window]"; }
+}
+const domWin = new WindowProxy();
+const domFrame = new class extends WindowProxy {
+  get parent() { return domWin; }
+};
 
 add_test(function test_isSelected() {
   let checkbox = new DOMElement("input", {type: "checkbox"});
@@ -63,6 +110,72 @@ add_test(function test_isSelected() {
   // anything else should not be selected
   for (let typ of [domEl, undefined, null, "foo", true, [], {}]) {
     ok(!element.isSelected(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isElement() {
+  ok(element.isElement(domEl));
+  ok(element.isElement(svgEl));
+  ok(element.isElement(xulEl));
+  ok(!element.isElement(domWin));
+  ok(!element.isElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isElement(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isDOMElement() {
+  ok(element.isDOMElement(domEl));
+  ok(!element.isDOMElement(svgEl));
+  ok(!element.isDOMElement(xulEl));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMElement(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isSVGElement() {
+  ok(element.isSVGElement(svgEl));
+  ok(!element.isSVGElement(domEl));
+  ok(!element.isSVGElement(xulEl));
+  ok(!element.isSVGElement(domWin));
+  ok(!element.isSVGElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isSVGElement(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isXULElement() {
+  ok(element.isXULElement(xulEl));
+  ok(element.isXULElement(xblEl));
+  ok(!element.isXULElement(domEl));
+  ok(!element.isXULElement(svgEl));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isXULElement(typ));
+  }
+
+  run_next_test();
+});
+
+add_test(function test_isDOMWindow() {
+  ok(element.isDOMWindow(domWin));
+  ok(element.isDOMWindow(domFrame));
+  ok(!element.isDOMWindow(domEl));
+  ok(!element.isDOMWindow(svgEl));
+  ok(!element.isDOMWindow(xulEl));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMWindow(typ));
   }
 
   run_next_test();

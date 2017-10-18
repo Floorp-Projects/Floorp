@@ -601,7 +601,7 @@ html, body, #app, #memory-tool {
 
 svg {
   --arrow-color: var(--theme-splitter-color);
-  --text-color: var(--theme-body-color-alt);
+  --text-color: var(--theme-body-color);
 }
 
 .theme-dark svg {

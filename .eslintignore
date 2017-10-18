@@ -30,7 +30,6 @@ tools/update-packaging/**
 uriloader/**
 view/**
 widget/**
-xpcom/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.

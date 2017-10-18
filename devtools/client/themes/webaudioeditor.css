@@ -21,7 +21,7 @@ svg {
   overflow: hidden;
   -moz-box-flex: 1;
   --arrow-color: var(--theme-splitter-color);
-  --text-color: var(--theme-body-color-alt);
+  --text-color: var(--theme-body-color);
 }
 
 .theme-dark svg {
@@ -32,6 +32,7 @@ svg {
 .edgePath path {
   stroke-width: 1px;
   stroke: var(--arrow-color);
+  fill: none;
 }
 svg #arrowhead {
   /* !important is needed to override inline style */

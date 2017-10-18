@@ -2,12 +2,15 @@
 # matches to full-filled box, using fuzzyy because of anti-aliasing.
 # These check filled and unfilled regions with solid opaque color,
 # so difference less than 80 is ignorable.
+
+# XXX: We mark fails-if to these tests for now to enable styled border in WR.
+# We should remove them after Bug 1399485 is fixed.
 fuzzy(80,1500) == border-dotted-interaction.html masked.html
 fuzzy(80,1500) == border-dotted-no-radius.html masked.html
-fuzzy(80,1500) == border-dotted-radius.html masked.html
+fuzzy(80,1500) fails-if(webrender) == border-dotted-radius.html masked.html
 fuzzy(80,1500) == border-dashed-no-radius.html masked.html
-fuzzy(80,1500) == border-dashed-radius.html masked.html
-fuzzy(80,1500) == border-mixed.html masked.html
-fuzzy(80,1500) == border-dashed-non-integer.html masked.html
-fuzzy(80,1500) == border-dashed-radius-zoom.html masked-zoom.html
+fuzzy(80,1500) fails-if(webrender) == border-dashed-radius.html masked.html
+fuzzy(80,1500) fails-if(webrender) == border-mixed.html masked.html
+fuzzy(80,1500) fails-if(webrender) == border-dashed-non-integer.html masked.html
+fuzzy(80,1500) fails-if(webrender) == border-dashed-radius-zoom.html masked-zoom.html
 fuzzy(80,1500) == border-dotted-radius-zero.html masked-small.html

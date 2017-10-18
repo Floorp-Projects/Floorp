@@ -204,6 +204,35 @@ protected:
   };
 };
 
+/**
+ * When a wheel event should be treated as specially, e.g., it's a vertical
+ * wheel operation but user wants to scroll the target horizontally, this
+ * class adjust the delta values automatically.  Then, restores the original
+ * value when the instance is destroyed.
+ */
+class MOZ_STACK_CLASS AutoWheelDeltaAdjuster final
+{
+public:
+  /**
+   * @param aWheelEvent        A wheel event.  The delta values may be
+   *                           modified for default handler.
+   *                           Its mDeltaValuesAdjustedForDefaultHandler
+   *                           must not be true because if it's true,
+   *                           the event has already been adjusted the
+   *                           delta values for default handler.
+   */
+  explicit AutoWheelDeltaAdjuster(WidgetWheelEvent& aWheelEvent);
+  ~AutoWheelDeltaAdjuster();
+
+private:
+  WidgetWheelEvent& mWheelEvent;
+  double mOldDeltaX;
+  double mOldDeltaZ;
+  double mOldOverflowDeltaX;
+  int32_t mOldLineOrPageDeltaX;
+  bool mTreatedVerticalWheelAsHorizontalScroll;
+};
+
 } // namespace mozilla
 
 #endif // mozilla_WheelHandlingHelper_h_

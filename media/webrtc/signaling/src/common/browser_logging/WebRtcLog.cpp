@@ -257,27 +257,30 @@ void StopWebRtcLog()
   }
 }
 
-void ConfigAecLog() {
+nsCString ConfigAecLog() {
+  nsCString aecLogDir;
   if (webrtc::Trace::aec_debug()) {
-    return;
+    return EmptyCString();
   }
-  nsCString aAECLogDir;
 #if defined(ANDROID)
-  aAECLogDir.Assign(default_tmp_dir);
+  aecLogDir.Assign(default_tmp_dir);
 #else
   nsCOMPtr<nsIFile> tempDir;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
   if (NS_SUCCEEDED(rv)) {
-    tempDir->GetNativePath(aAECLogDir);
+    tempDir->GetNativePath(aecLogDir);
   }
 #endif
-  webrtc::Trace::set_aec_debug_filename(aAECLogDir.get());
+  webrtc::Trace::set_aec_debug_filename(aecLogDir.get());
+
+  return aecLogDir;
 }
 
-void StartAecLog()
+nsCString StartAecLog()
 {
+  nsCString aecLogDir;
   if (webrtc::Trace::aec_debug()) {
-    return;
+    return EmptyCString();
   }
   uint32_t trace_mask = 0;
   bool multi_log = false;
@@ -285,9 +288,11 @@ void StartAecLog()
 
   GetWebRtcLogPrefs(&trace_mask, log_file, &multi_log);
   CheckOverrides(&trace_mask, &log_file, &multi_log);
-  ConfigAecLog();
+  aecLogDir = ConfigAecLog();
 
   webrtc::Trace::set_aec_debug(true);
+
+  return aecLogDir;
 }
 
 void StopAecLog()

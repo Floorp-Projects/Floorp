@@ -1352,9 +1352,6 @@ protected:
   // Used by streams captured from this element.
   nsTArray<DecoderPrincipalChangeObserver*> mDecoderPrincipalChangeObservers;
 
-  // State-watching manager.
-  WatchManager<HTMLMediaElement> mWatchManager;
-
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
@@ -1430,7 +1427,7 @@ protected:
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
-  Watchable<nsMediaReadyState> mReadyState;
+  nsMediaReadyState mReadyState = nsIDOMHTMLMediaElement::HAVE_NOTHING;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
@@ -1683,7 +1680,7 @@ protected:
   EncryptionInfo mPendingEncryptedInitData;
 
   // True if the media's channel's download has been suspended.
-  Watchable<bool> mDownloadSuspendedByCache;
+  bool mDownloadSuspendedByCache = false;
 
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
