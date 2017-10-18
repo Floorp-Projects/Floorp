@@ -29,6 +29,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -121,6 +122,7 @@ CacheStorageService::CacheStorageService()
 {
   CacheFileIOManager::Init();
 
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!sSelf);
 
   sSelf = this;
