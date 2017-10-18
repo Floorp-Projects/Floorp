@@ -2088,6 +2088,11 @@ BaselineCacheIRCompiler::init(CacheKind kind)
         allocator.initInputLocation(1, R1);
         break;
       case CacheKind::GetElemSuper:
+        MOZ_ASSERT(numInputs == 3);
+        allocator.initInputLocation(0, BaselineFrameSlot(0));
+        allocator.initInputLocation(1, R0);
+        allocator.initInputLocation(2, R1);
+        break;
       case CacheKind::SetElem:
         MOZ_ASSERT(numInputs == 3);
         allocator.initInputLocation(0, R0);
