@@ -11,15 +11,15 @@
 //  Composite values
 // ------------------------------
 
-var gGoodKeyframeCompositeValueTests = [
+const gGoodKeyframeCompositeValueTests = [
   "replace", "add", "accumulate", undefined
 ];
 
-var gGoodOptionsCompositeValueTests = [
+const gGoodOptionsCompositeValueTests = [
   "replace", "add", "accumulate"
 ];
 
-var gBadCompositeValueTests = [
+const gBadCompositeValueTests = [
   "unrecognised", "replace ", "Replace", null
 ];
 
@@ -27,13 +27,13 @@ var gBadCompositeValueTests = [
 //  Keyframes
 // ------------------------------
 
-var gEmptyKeyframeListTests = [
+const gEmptyKeyframeListTests = [
   [],
   null,
   undefined,
 ];
 
-var gPropertyIndexedKeyframesTests = [
+const gPropertyIndexedKeyframesTests = [
   { desc:   "a one property two value property-indexed keyframes specification",
     input:  { left: ["10px", "20px"] },
     output: [{ offset: null, computedOffset: 0, easing: "linear",
@@ -129,7 +129,7 @@ var gPropertyIndexedKeyframesTests = [
              { offset: null, computedOffset: 1, easing: "linear" }] },
 ];
 
-var gKeyframeSequenceTests = [
+const gKeyframeSequenceTests = [
   { desc:   "a one property one keyframe sequence",
     input:  [{ offset: 1, left: "10px" }],
     output: [{ offset: 1, computedOffset: 1, easing: "linear",
@@ -410,7 +410,7 @@ var gKeyframeSequenceTests = [
                left: "500px" }] },
 ];
 
-var gInvalidKeyframesTests = [
+const gInvalidKeyframesTests = [
   { desc:     "keyframes with an out-of-bounded positive offset",
     input:    [ { opacity: 0 },
                 { opacity: 0.5, offset: 2 },
@@ -443,7 +443,7 @@ var gInvalidKeyframesTests = [
 //  KeyframeEffectOptions
 // ------------------------------
 
-var gKeyframeEffectOptionTests = [
+const gKeyframeEffectOptionTests = [
   { desc:     "an empty KeyframeEffectOptions object",
     input:    { },
     expected: { } },
@@ -481,7 +481,7 @@ var gKeyframeEffectOptionTests = [
     expected: { fill: "forwards" } }
 ];
 
-var gInvalidKeyframeEffectOptionTests = [
+const gInvalidKeyframeEffectOptionTests = [
   { desc:     "-Infinity",
     input:    -Infinity,
     expected: { name: "TypeError" } },
