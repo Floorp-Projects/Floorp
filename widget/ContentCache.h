@@ -414,6 +414,42 @@ private:
   // Log of event messages to be output to crash report.
   nsTArray<EventMessage> mDispatchedEventMessages;
   nsTArray<EventMessage> mReceivedEventMessages;
+  // Log of RequestIMEToCommitComposition() in the last 2 compositions.
+  enum class RequestIMEToCommitCompositionResult : uint8_t
+  {
+    eToOldCompositionReceived,
+    eToCommittedCompositionReceived,
+    eReceivedAfterTabParentBlur,
+    eReceivedButNoTextComposition,
+    eHandledAsynchronously,
+    eHandledSynchronously,
+  };
+  const char* ToReadableText(RequestIMEToCommitCompositionResult aResult) const
+  {
+    switch (aResult) {
+      case RequestIMEToCommitCompositionResult::eToOldCompositionReceived:
+        return "Commit request is not handled because it's for "
+               "older composition";
+      case RequestIMEToCommitCompositionResult::eToCommittedCompositionReceived:
+        return "Commit request is not handled because TabParent has already "
+               "sent commit event for the composition";
+      case RequestIMEToCommitCompositionResult::eReceivedAfterTabParentBlur:
+        return "Commit request is handled with stored composition string "
+               "because TabParent has already lost focus";
+      case RequestIMEToCommitCompositionResult::eReceivedButNoTextComposition:
+        return "Commit request is not handled because there is no "
+               "TextCompsition instance";
+      case RequestIMEToCommitCompositionResult::eHandledAsynchronously:
+        return "Commit request is handled but IME doesn't commit current "
+               "composition synchronously";
+      case RequestIMEToCommitCompositionResult::eHandledSynchronously:
+        return "Commit reqeust is handled synchronously";
+      default:
+        return "Unknown reason";
+    }
+  }
+  nsTArray<RequestIMEToCommitCompositionResult>
+    mRequestIMEToCommitCompositionResults;
 #endif // #ifdef MOZ_CRASHREPORTER
 
   // mTabParent is owner of the instance.
