@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![no_std]
 
 #[macro_use]
@@ -11,11 +12,11 @@ bitflags! {
         const B       = 0b00000010;
         const C       = 0b00000100;
         #[doc = "foo"]
-        const ABC     = Flags::A.bits | Flags::B.bits | Flags::C.bits;
+        const ABC     = A.bits | B.bits | C.bits;
     }
 }
 
 #[test]
 fn smoke() {
-    assert_eq!(Flags::ABC, Flags::A | Flags::B | Flags::C);
+    assert_eq!(ABC, A | B | C);
 }
