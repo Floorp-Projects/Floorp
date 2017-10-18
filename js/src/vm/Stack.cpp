@@ -1526,8 +1526,10 @@ jit::JitActivation::~JitActivation()
 
     MOZ_ASSERT(!isWasmInterrupted());
 
-    clearRematerializedFrames();
-    js_delete(rematerializedFrames_);
+    if (rematerializedFrames_) {
+        clearRematerializedFrames();
+        js_delete(rematerializedFrames_);
+    }
 }
 
 void
@@ -1559,8 +1561,7 @@ jit::JitActivation::removeRematerializedFrame(uint8_t* top)
 void
 jit::JitActivation::clearRematerializedFrames()
 {
-    if (!rematerializedFrames_)
-        return;
+    MOZ_ASSERT(rematerializedFrames_);
 
     for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
         RematerializedFrame::FreeInVector(e.front().value());
