@@ -125,10 +125,6 @@ def run_tests(config, browser_config):
         LOG.info("Using firstNonBlankPaint, so turning on pref for it")
         browser_config['preferences']['dom.performance.time_to_non_blank_paint.enabled'] = True
 
-    # Pass subtests filter argument via a preference
-    if browser_config['subtests']:
-        browser_config['preferences']['talos.subtests'] = browser_config['subtests']
-
     # set defaults
     testdate = config.get('testdate', '')
 
