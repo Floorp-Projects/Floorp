@@ -330,10 +330,23 @@ function expectedException(actual, expected) {
  * 11. Expected to throw an error:
  * assert.throws(block, Error_opt, message_opt);
  *
+ * Example:
+ * ```js
+ * // The following will verify that an error of type TypeError was thrown:
+ * Assert.throws(() => testBody(), TypeError);
+ * // The following will verify that an error was thrown with an error message matching "hello":
+ * Assert.throws(() => testBody(), /hello/);
+ * // The following will verify that any error was thrown and will use "hello" in the test report:
+ * Assert.throws(() => testBody(), "hello");
+ * ```
+ *
  * @param block
  *        (function) Function block to evaluate and catch eventual thrown errors
  * @param expected (optional)
- *        (mixed) Test reference to evaluate against the thrown result from `block`
+ *        (mixed) This parameter can be either a RegExp, a function, or a string. The
+ *        function is either the error type's constructor, or it's a method that returns a boolean
+ *        that describes the test outcome. When string value is provided, it will be used as if it
+ *        was provided as the message parameter.
  * @param message (optional)
  *        (string) Short explanation of the expected result
  */
@@ -473,4 +486,3 @@ proto.less = function less(lhs, rhs, message) {
 proto.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
   compareNumbers.call(this, lhs > rhs, lhs, rhs, message, "<=");
 };
-
