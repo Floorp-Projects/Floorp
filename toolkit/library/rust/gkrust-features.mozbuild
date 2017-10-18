@@ -23,9 +23,7 @@ if CONFIG['MOZ_PULSEAUDIO']:
 if CONFIG['MOZ_RUST_SIMD']:
     gkrust_features += ['simd-accel']
 
-# This feature is only supported on Linux and this check needs to
-# match XP_LINUX.
-if CONFIG['OS_ARCH'] == 'Linux':
+if CONFIG['MOZ_CUBEB_REMOTING']:
     gkrust_features += ['cubeb-remoting']
 
 gkrust_features += ['no-static-ideograph-encoder-tables']
