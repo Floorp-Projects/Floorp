@@ -1452,12 +1452,6 @@ NonBuiltinScriptFrameIter::settle()
     }
 }
 
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx)
-  : cx_(cx), entryMonitor_(cx->entryMonitor)
-{
-    cx->entryMonitor = nullptr;
-}
-
 Value
 ActivationEntryMonitor::asyncStack(JSContext* cx)
 {
@@ -1469,36 +1463,36 @@ ActivationEntryMonitor::asyncStack(JSContext* cx)
     return stack;
 }
 
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame)
-  : ActivationEntryMonitor(cx)
+void
+ActivationEntryMonitor::init(JSContext* cx, InterpreterFrame* entryFrame)
 {
-    if (entryMonitor_) {
-        // The InterpreterFrame is not yet part of an Activation, so it won't
-        // be traced if we trigger GC here. Suppress GC to avoid this.
-        gc::AutoSuppressGC suppressGC(cx);
-        RootedValue stack(cx, asyncStack(cx));
-        const char* asyncCause = cx->asyncCauseForNewActivations;
-        if (entryFrame->isFunctionFrame())
-            entryMonitor_->Entry(cx, &entryFrame->callee(), stack, asyncCause);
-        else
-            entryMonitor_->Entry(cx, entryFrame->script(), stack, asyncCause);
-    }
+    MOZ_ASSERT(entryMonitor_);
+
+    // The InterpreterFrame is not yet part of an Activation, so it won't
+    // be traced if we trigger GC here. Suppress GC to avoid this.
+    gc::AutoSuppressGC suppressGC(cx);
+    RootedValue stack(cx, asyncStack(cx));
+    const char* asyncCause = cx->asyncCauseForNewActivations;
+    if (entryFrame->isFunctionFrame())
+        entryMonitor_->Entry(cx, &entryFrame->callee(), stack, asyncCause);
+    else
+        entryMonitor_->Entry(cx, entryFrame->script(), stack, asyncCause);
 }
 
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken)
-  : ActivationEntryMonitor(cx)
+void
+ActivationEntryMonitor::init(JSContext* cx, jit::CalleeToken entryToken)
 {
-    if (entryMonitor_) {
-        // The CalleeToken is not traced at this point and we also don't want
-        // a GC to discard the code we're about to enter, so we suppress GC.
-        gc::AutoSuppressGC suppressGC(cx);
-        RootedValue stack(cx, asyncStack(cx));
-        const char* asyncCause = cx->asyncCauseForNewActivations;
-        if (jit::CalleeTokenIsFunction(entryToken))
-            entryMonitor_->Entry(cx_, jit::CalleeTokenToFunction(entryToken), stack, asyncCause);
-        else
-            entryMonitor_->Entry(cx_, jit::CalleeTokenToScript(entryToken), stack, asyncCause);
-    }
+    MOZ_ASSERT(entryMonitor_);
+
+    // The CalleeToken is not traced at this point and we also don't want
+    // a GC to discard the code we're about to enter, so we suppress GC.
+    gc::AutoSuppressGC suppressGC(cx);
+    RootedValue stack(cx, asyncStack(cx));
+    const char* asyncCause = cx->asyncCauseForNewActivations;
+    if (jit::CalleeTokenIsFunction(entryToken))
+        entryMonitor_->Entry(cx_, jit::CalleeTokenToFunction(entryToken), stack, asyncCause);
+    else
+        entryMonitor_->Entry(cx_, jit::CalleeTokenToScript(entryToken), stack, asyncCause);
 }
 
 /*****************************************************************************/

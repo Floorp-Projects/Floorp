@@ -879,6 +879,26 @@ AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const
     return script()->isDerivedClassConstructor();
 }
 
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx)
+  : cx_(cx), entryMonitor_(cx->entryMonitor)
+{
+    cx->entryMonitor = nullptr;
+}
+
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame)
+  : ActivationEntryMonitor(cx)
+{
+    if (MOZ_UNLIKELY(entryMonitor_))
+        init(cx, entryFrame);
+}
+
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken)
+  : ActivationEntryMonitor(cx)
+{
+    if (MOZ_UNLIKELY(entryMonitor_))
+        init(cx, entryToken);
+}
+
 ActivationEntryMonitor::~ActivationEntryMonitor()
 {
     if (entryMonitor_)
