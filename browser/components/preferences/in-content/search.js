@@ -7,8 +7,12 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
+const SEARCH_TYPE = "default_search";
+const SEARCH_KEY = "defaultSearch";
 
 var gEngineView = null;
 
@@ -96,6 +100,17 @@ var gSearchPane = {
       item.engine = e;
       if (e.name == currentEngine)
         list.selectedItem = item;
+    });
+
+    handleControllingExtension(SEARCH_TYPE, SEARCH_KEY);
+    let searchEngineListener = {
+      observe(subject, topic, data) {
+        handleControllingExtension(SEARCH_TYPE, SEARCH_KEY);
+      },
+    };
+    Services.obs.addObserver(searchEngineListener, "browser-search-engine-modified");
+    window.addEventListener("unload", () => {
+      Services.obs.removeObserver(searchEngineListener, "browser-search-engine-modified");
     });
   },
 
@@ -307,6 +322,7 @@ var gSearchPane = {
   setDefaultEngine() {
     Services.search.currentEngine =
       document.getElementById("defaultEngine").selectedItem.engine;
+    ExtensionSettingsStore.setByUser(SEARCH_TYPE, SEARCH_KEY);
   }
 };
 
