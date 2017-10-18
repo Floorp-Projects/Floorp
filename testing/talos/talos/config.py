@@ -451,7 +451,6 @@ def get_browser_config(config):
                 'enable_stylo': False,
                 'disable_stylo': False,
                 'stylothreads': 0,
-                'subtests': None,
                 }
     browser_config = dict(title=config['title'])
     browser_config.update(dict([(i, config[i]) for i in required]))
