@@ -300,6 +300,13 @@ const testcases = [
     ["goo\u0650gle", "xn--google-yri", false, false, false],
     // ...but Arabic diacritics are allowed on Arabic text
     ["العَرَبِي", "xn--mgbc0a5a6cxbzabt", false, true, true],
+
+    // Accents above dotless-i are not allowed
+    ["na\u0131\u0308ve", "xn--nave-mza04z", false, false, false],
+    ["d\u0131\u0302ner", "xn--dner-lza40z", false, false, false],
+    // but the corresponding accented-i (based on dotted i) is OK
+    ["na\u00efve.com", "xn--nave-6pa.com", false, true, true],
+    ["d\u00eener.com", "xn--dner-0pa.com", false, true, true],
 ];
 
 const profiles = ["ASCII", "high", "moderate"];
