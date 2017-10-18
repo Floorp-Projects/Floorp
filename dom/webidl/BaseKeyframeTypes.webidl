@@ -20,8 +20,9 @@ enum CompositeOperation { "replace", "add", "accumulate" };
 // KeyframeEffectReadOnly's implementation.
 
 dictionary BasePropertyIndexedKeyframe {
-  DOMString easing = "linear";
-  CompositeOperation composite;
+  (double? or sequence<double?>) offset = [];
+  (DOMString or sequence<DOMString>) easing = [];
+  (CompositeOperation or sequence<CompositeOperation>) composite = [];
 };
 
 dictionary BaseKeyframe {
