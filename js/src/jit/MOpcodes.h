@@ -180,11 +180,14 @@ namespace jit {
     _(FunctionEnvironment)                                                  \
     _(NewLexicalEnvironmentObject)                                          \
     _(CopyLexicalEnvironmentObject)                                         \
+    _(HomeObject)                                                           \
+    _(HomeObjectSuperBase)                                                  \
     _(FilterTypeSet)                                                        \
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \
     _(PostWriteBarrier)                                                     \
     _(PostWriteElementBarrier)                                              \
+    _(GetPropSuperCache)                                                    \
     _(GetPropertyCache)                                                     \
     _(GetPropertyPolymorphic)                                               \
     _(SetPropertyPolymorphic)                                               \
