@@ -1322,8 +1322,8 @@ class Activation
     inline bool hasWasmExitFP() const;
 
     inline bool isProfiling() const;
-    void registerProfiling();
-    void unregisterProfiling();
+    inline void registerProfiling();
+    inline void unregisterProfiling();
 
     InterpreterActivation* asInterpreter() const {
         MOZ_ASSERT(isInterpreter());
