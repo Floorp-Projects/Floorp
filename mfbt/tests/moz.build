@@ -50,6 +50,7 @@ CppUnitTests([
     'TestSmallPointerArray',
     'TestSplayTree',
     'TestTemplateLib',
+    'TestThreadSafeWeakPtr',
     'TestTuple',
     'TestTypedEnum',
     'TestTypeTraits',
