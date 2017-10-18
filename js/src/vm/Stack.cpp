@@ -1497,40 +1497,6 @@ ActivationEntryMonitor::init(JSContext* cx, jit::CalleeToken entryToken)
 
 /*****************************************************************************/
 
-jit::JitActivation::JitActivation(JSContext* cx)
-  : Activation(cx, Jit),
-    packedExitFP_(nullptr),
-    prevJitActivation_(cx->jitActivation),
-    rematerializedFrames_(nullptr),
-    ionRecovery_(cx),
-    bailoutData_(nullptr),
-    lastProfilingFrame_(nullptr),
-    lastProfilingCallSite_(nullptr)
-{
-    cx->jitActivation = this;
-    registerProfiling();
-}
-
-jit::JitActivation::~JitActivation()
-{
-    unregisterProfiling();
-    cx_->jitActivation = prevJitActivation_;
-
-    // All reocvered value are taken from activation during the bailout.
-    MOZ_ASSERT(ionRecovery_.empty());
-
-    // The BailoutFrameInfo should have unregistered itself from the
-    // JitActivations.
-    MOZ_ASSERT(!bailoutData_);
-
-    MOZ_ASSERT(!isWasmInterrupted());
-
-    if (rematerializedFrames_) {
-        clearRematerializedFrames();
-        js_delete(rematerializedFrames_);
-    }
-}
-
 void
 jit::JitActivation::setBailoutData(jit::BailoutFrameInfo* bailoutData)
 {

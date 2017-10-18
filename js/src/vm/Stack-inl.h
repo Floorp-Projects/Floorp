@@ -1035,6 +1035,42 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
     return true;
 }
 
+MOZ_ALWAYS_INLINE
+jit::JitActivation::JitActivation(JSContext* cx)
+  : Activation(cx, Jit),
+    packedExitFP_(nullptr),
+    prevJitActivation_(cx->jitActivation),
+    rematerializedFrames_(nullptr),
+    ionRecovery_(cx),
+    bailoutData_(nullptr),
+    lastProfilingFrame_(nullptr),
+    lastProfilingCallSite_(nullptr)
+{
+    cx->jitActivation = this;
+    registerProfiling();
+}
+
+MOZ_ALWAYS_INLINE
+jit::JitActivation::~JitActivation()
+{
+    unregisterProfiling();
+    cx_->jitActivation = prevJitActivation_;
+
+    // All reocvered value are taken from activation during the bailout.
+    MOZ_ASSERT(ionRecovery_.empty());
+
+    // The BailoutFrameInfo should have unregistered itself from the
+    // JitActivations.
+    MOZ_ASSERT(!bailoutData_);
+
+    MOZ_ASSERT(!isWasmInterrupted());
+
+    if (MOZ_UNLIKELY(rematerializedFrames_)) {
+        clearRematerializedFrames();
+        js_delete(rematerializedFrames_);
+    }
+}
+
 inline bool
 FrameIter::hasCachedSavedFrame() const
 {
