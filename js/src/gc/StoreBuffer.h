@@ -22,6 +22,7 @@
 namespace js {
 namespace gc {
 
+class Arena;
 class ArenaCellSet;
 
 /*
