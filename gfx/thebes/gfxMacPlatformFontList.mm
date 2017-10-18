@@ -264,8 +264,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 gfxFont*
 MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
 {
-    RefPtr<UnscaledFontMac> unscaledFont =
-        static_cast<UnscaledFontMac*>(mUnscaledFont.get());
+    RefPtr<UnscaledFontMac> unscaledFont(mUnscaledFont);
     if (!unscaledFont) {
         CGFontRef baseFont = GetFontRef();
         if (!baseFont) {
