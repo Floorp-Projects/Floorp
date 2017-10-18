@@ -17,7 +17,6 @@
     </resources>
 
     <content>
-      <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" class="tabbrowser-tabbox"
                   flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown,tabcontainer"
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
@@ -75,9 +74,6 @@
       </field>
       <field name="mPanelContainer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "panelcontainer");
-      </field>
-      <field name="mStringBundle">
-        document.getAnonymousElementByAttribute(this, "anonid", "tbstringbundle");
       </field>
       <field name="mCurrentTab">
         null
@@ -1632,7 +1628,7 @@
                 } catch (ex) { /* Do nothing. */ }
               } else {
                 // Still no title? Fall back to our untitled string.
-                title = this.mStringBundle.getString("tabs.emptyTabTitle");
+                title = gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle");
               }
             }
 
@@ -2645,7 +2641,7 @@
 
             if (!aNoInitialLabel) {
               if (isBlankPageURL(aURI)) {
-                t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
+                t.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle"));
               } else {
                 // Set URL as label so that the tab isn't empty initially.
                 this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
@@ -2913,7 +2909,6 @@
 
           // default to true: if it were false, we wouldn't get this far
           var warnOnClose = { value: true };
-          var bundle = this.mStringBundle;
 
           // focus the window before prompting.
           // this will raise any minimized window, which will
@@ -2922,18 +2917,18 @@
           // see bug #350299 for more details
           window.focus();
           var warningMessage =
-            PluralForm.get(tabsToClose, bundle.getString("tabs.closeWarningMultiple"))
+            PluralForm.get(tabsToClose, gTabBrowserBundle.GetStringFromName("tabs.closeWarningMultiple"))
                       .replace("#1", tabsToClose);
           var buttonPressed =
             ps.confirmEx(window,
-                         bundle.getString("tabs.closeWarningTitle"),
+                         gTabBrowserBundle.GetStringFromName("tabs.closeWarningTitle"),
                          warningMessage,
                          (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0)
                          + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
-                         bundle.getString("tabs.closeButtonMultiple"),
+                         gTabBrowserBundle.GetStringFromName("tabs.closeButtonMultiple"),
                          null, null,
                          aCloseTabs == this.closingTabsEnum.ALL ?
-                           bundle.getString("tabs.closeWarningPromptMe") : null,
+                           gTabBrowserBundle.GetStringFromName("tabs.closeWarningPromptMe") : null,
                          warnOnClose);
           var reallyClose = (buttonPressed == 0);
 
@@ -5516,14 +5511,14 @@
           let stringWithShortcut = (stringId, keyElemId) => {
             let keyElem = document.getElementById(keyElemId);
             let shortcut = ShortcutUtils.prettifyShortcut(keyElem);
-            return this.mStringBundle.getFormattedString(stringId, [shortcut]);
+            return gTabBrowserBundle.formatStringFromName(stringId, [shortcut], 1);
           };
 
           var label;
           if (tab.mOverCloseButton) {
             label = tab.selected ?
                     stringWithShortcut("tabs.closeSelectedTab.tooltip", "key_close") :
-                    this.mStringBundle.getString("tabs.closeTab.tooltip");
+                    gTabBrowserBundle.GetStringFromName("tabs.closeTab.tooltip");
           } else if (tab._overPlayingIcon) {
             let stringID;
             if (tab.selected) {
@@ -5540,7 +5535,7 @@
                   "tabs.muteAudio.background.tooltip";
               }
 
-              label = this.mStringBundle.getString(stringID);
+              label = gTabBrowserBundle.GetStringFromName(stringID);
             }
           } else {
             label = tab._fullLabel || tab.getAttribute("label");
@@ -5554,7 +5549,7 @@
               }
             }
             if (tab.userContextId) {
-              label = this.mStringBundle.getFormattedString("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)]);
+              label = gTabBrowserBundle.formatStringFromName("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)], 2);
             }
           }
 
@@ -6372,10 +6367,10 @@
           this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
 
           let { restoreTabsButton } = this;
-          restoreTabsButton.setAttribute("label", this.tabbrowser.mStringBundle.getString("tabs.restoreLastTabs"));
+          restoreTabsButton.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.restoreLastTabs"));
 
           var tab = this.firstChild;
-          tab.label = this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle");
+          tab.label = gTabBrowserBundle.GetStringFromName("tabs.emptyTabTitle");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
 
           window.addEventListener("resize", this);
@@ -6616,7 +6611,7 @@
 
           document.getElementById("menu_closeWindow").hidden = !visible;
           document.getElementById("menu_close").setAttribute("label",
-            this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
+            gTabBrowserBundle.GetStringFromName(visible ? "tabs.closeTab" : "tabs.close"));
 
           TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
