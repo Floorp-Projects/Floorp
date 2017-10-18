@@ -98,12 +98,12 @@
     let helper = new CaptureStreamTestHelper2D(1, 1);
 
     await new Promise((resolve, reject) => {
-      document.onfullscreenchange = resolve;
-      document.onfullscreenerror = () => reject(new Error("fullscreenerror"));
+      SpecialPowers.wrap(document).onfullscreenchange = resolve;
+      SpecialPowers.wrap(document).onfullscreenerror = () => reject(new Error("fullscreenerror"));
 
       // Note that going fullscreen requires the tab (and window) to be in the
       // foreground and having focus.
-      canvas.requestFullscreen();
+      SpecialPowers.wrap(canvas).requestFullscreen();
     });
 
     info("Testing screenshare without constraints");
@@ -174,7 +174,7 @@
     await playback.deprecatedStopStreamInMediaPlayback();
     playback.detachFromMediaElement();
 
-    document.exitFullscreen();
+    SpecialPowers.wrap(document).exitFullscreen();
   });
 </script>
 </pre>

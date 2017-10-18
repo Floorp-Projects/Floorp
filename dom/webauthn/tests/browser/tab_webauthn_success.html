@@ -38,7 +38,7 @@ let makeCredentialOptions = {
   user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
   challenge: gCredentialChallenge,
   timeout: 5000, // the minimum timeout is actually 15 seconds
-  pubKeyCredParams: [{type: "public-key", alg: "ES256"}],
+  pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
 };
 
 navigator.credentials.create({publicKey: makeCredentialOptions})

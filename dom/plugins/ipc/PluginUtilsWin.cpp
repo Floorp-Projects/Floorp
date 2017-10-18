@@ -35,7 +35,9 @@ public:
 
     for (auto iter = mAudioNotificationSet->ConstIter(); !iter.Done(); iter.Next()) {
       PluginModuleParent* pluginModule = iter.Get()->GetKey();
-      pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails);
+      if(!pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails)) {
+        return NS_ERROR_FAILURE;
+      }
     }
     return NS_OK;
   }

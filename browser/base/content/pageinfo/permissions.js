@@ -76,14 +76,14 @@ function initRow(aPartId) {
   var checkbox = document.getElementById(aPartId + "Def");
   var command  = document.getElementById("cmd_" + aPartId + "Toggle");
   var {state} = SitePermissions.get(gPermURI, aPartId);
+  let defaultState = SitePermissions.getDefault(aPartId);
 
-  if (state != SitePermissions.UNKNOWN) {
+  if (state != defaultState) {
     checkbox.checked = false;
     command.removeAttribute("disabled");
   } else {
     checkbox.checked = true;
     command.setAttribute("disabled", "true");
-    state = SitePermissions.getDefault(aPartId);
   }
   setRadioState(aPartId, state);
 
@@ -169,7 +169,7 @@ function onPluginRadioClick(aEvent) {
 function onRadioClick(aPartId) {
   var radioGroup = document.getElementById(aPartId + "RadioGroup");
   var id = radioGroup.selectedItem.id;
-  var permission = id.split("#")[1];
+  var permission = parseInt(id.split("#")[1]);
   SitePermissions.set(gPermURI, aPartId, permission);
 }
 

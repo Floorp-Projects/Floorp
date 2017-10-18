@@ -1268,9 +1268,9 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                     nsRect(nsPoint(0,0), frame->GetSize()),
                                     minDistance);
 
-    if (rectVisibility != nsRectVisibility_kAboveViewport) {
-      // This is an early exit case, where we return true iff the range
-      // is actually rendered.
+    if (rectVisibility == nsRectVisibility_kVisible) {
+      // This is an early exit case, where we return true if and only if
+      // the range is actually rendered.
       return IsRangeRendered(aPresShell, aPresContext, aRange);
     }
   }

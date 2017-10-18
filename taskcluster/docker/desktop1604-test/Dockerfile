@@ -62,7 +62,6 @@ COPY           dot-files/pulse               /builds/worker/.pulse
 RUN            chmod +x bin/*
 # TODO: remove this when buildbot is gone
 COPY           buildprops.json               /builds/worker/buildprops.json
-COPY           tc-vcs-config.yml /etc/taskcluster-vcs.yml
 
 # TODO: remove
 ADD            https://raw.githubusercontent.com/taskcluster/buildbot-step/master/buildbot_step /builds/worker/bin/buildbot_step
@@ -73,9 +72,8 @@ RUN usermod -a -G video worker
 
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 
-# install tc-vcs and tc-npm-cache
-RUN npm install -g taskcluster-vcs@2.3.12 \
- && npm install -g taskcluster-npm-cache@1.1.14 \
+# install tc-npm-cache
+RUN  npm install -g taskcluster-npm-cache@1.1.14 \
  && rm -rf ~/.npm
 ENV PATH $PATH:/builds/worker/bin
 

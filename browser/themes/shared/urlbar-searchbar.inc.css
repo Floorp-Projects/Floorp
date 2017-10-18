@@ -4,6 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+:root {
+  /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
+  --urlbar-icon-padding: 6px;
+}
+
+:root[uidensity=compact] {
+  /* 24x24 box - 16x16 image = 8x8 padding, 4 on each side */
+  --urlbar-icon-padding: 4px;
+}
+
+:root[uidensity=touch] {
+  /* 30x30 box - 16x16 image = 14x14 padding, 7 on each side */
+  --urlbar-icon-padding: 7px;
+}
+
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
@@ -169,8 +184,7 @@
 .urlbar-icon {
   width: 28px;
   height: 28px;
-  /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
-  padding: 6px;
+  padding: var(--urlbar-icon-padding);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
@@ -180,15 +194,11 @@
 :root[uidensity=compact] .urlbar-icon {
   width: 24px;
   height: 24px;
-  /* 24x24 box - 16x16 image = 8x8 padding, 4 on each side */
-  padding: 4px;
 }
 
 :root[uidensity=touch] .urlbar-icon {
   width: 30px;
   height: 30px;
-  /* 30x30 box - 16x16 image = 14x14 padding, 7 on each side */
-  padding: 7px;
 }
 
 .urlbar-icon:hover,

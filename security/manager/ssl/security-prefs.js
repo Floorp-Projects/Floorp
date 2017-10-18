@@ -44,7 +44,7 @@ pref("security.password_lifetime",       30);
 // Changing this requires a restart to take effect.
 // Note that the environment variable MOZPSM_NSSDBDIR_OVERRIDE can override both
 // the behavior of this preference and the NSS default.
-pref("security.use_sqldb", false);
+pref("security.use_sqldb", true);
 
 // The supported values of this pref are:
 // 0: disable detecting Family Safety mode and importing the root
