@@ -304,10 +304,14 @@ public:
   static bool IsRemoteTarget(nsIContent* aTarget);
 
   // Returns true if the given WidgetWheelEvent will resolve to a scroll action.
-  static bool WheelEventIsScrollAction(WidgetWheelEvent* aEvent);
+  static bool WheelEventIsScrollAction(const WidgetWheelEvent* aEvent);
+
+  // Returns true if the given WidgetWheelEvent will resolve to a horizontal
+  // scroll action but it's a vertical wheel operation.
+  static bool WheelEventIsHorizontalScrollAction(const WidgetWheelEvent* aEvet);
 
   // Returns user-set multipliers for a wheel event.
-  static void GetUserPrefsForWheelEvent(WidgetWheelEvent* aEvent,
+  static void GetUserPrefsForWheelEvent(const WidgetWheelEvent* aEvent,
                                         double* aOutMultiplierX,
                                         double* aOutMultiplierY);
 
@@ -538,7 +542,7 @@ protected:
      * Returns whether or not ApplyUserPrefsToDelta() would change the delta
      * values of an event.
      */
-    void GetUserPrefsForEvent(WidgetWheelEvent* aEvent,
+    void GetUserPrefsForEvent(const WidgetWheelEvent* aEvent,
                               double* aOutMultiplierX,
                               double* aOutMultiplierY);
 
@@ -558,25 +562,26 @@ protected:
       ACTION_SCROLL,
       ACTION_HISTORY,
       ACTION_ZOOM,
-      ACTION_LAST = ACTION_ZOOM,
+      ACTION_HORIZONTAL_SCROLL,
+      ACTION_LAST = ACTION_HORIZONTAL_SCROLL,
       // Following actions are used only by internal processing.  So, cannot
       // specified by prefs.
-      ACTION_SEND_TO_PLUGIN
+      ACTION_SEND_TO_PLUGIN,
     };
-    Action ComputeActionFor(WidgetWheelEvent* aEvent);
+    Action ComputeActionFor(const WidgetWheelEvent* aEvent);
 
     /**
      * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
      * computed the lineOrPageDelta values.
      */
-    bool NeedToComputeLineOrPageDelta(WidgetWheelEvent* aEvent);
+    bool NeedToComputeLineOrPageDelta(const WidgetWheelEvent* aEvent);
 
     /**
      * IsOverOnePageScrollAllowed*() checks whether wheel scroll amount should
      * be rounded down to the page width/height (false) or not (true).
      */
-    bool IsOverOnePageScrollAllowedX(WidgetWheelEvent* aEvent);
-    bool IsOverOnePageScrollAllowedY(WidgetWheelEvent* aEvent);
+    bool IsOverOnePageScrollAllowedX(const WidgetWheelEvent* aEvent);
+    bool IsOverOnePageScrollAllowedY(const WidgetWheelEvent* aEvent);
 
     /**
      * WheelEventsEnabledOnPlugins() returns true if user wants to use mouse
@@ -609,7 +614,7 @@ protected:
      * default index which is used at either no modifier key is pressed or
      * two or modifier keys are pressed.
      */
-    Index GetIndexFor(WidgetWheelEvent* aEvent);
+    Index GetIndexFor(const WidgetWheelEvent* aEvent);
 
     /**
      * GetPrefNameBase() returns the base pref name for aEvent.
@@ -624,6 +629,25 @@ protected:
     void Init(Index aIndex);
 
     void Reset();
+
+    /**
+     * Retrieve multiplier for aEvent->mDeltaX and aEvent->mDeltaY.
+     * If the default action is ACTION_HORIZONTAL_SCROLL and the delta values
+     * are adjusted by AutoWheelDeltaAdjuster(), this treats mMultiplierX as
+     * multiplier for deltaY and mMultiplierY as multiplier for deltaY.
+     *
+     * @param aEvent    The event which is being handled.
+     * @param aIndex    The index of mMultiplierX and mMultiplierY.
+     *                  Should be result of GetIndexFor(aEvent).
+     * @param aMultiplierForDeltaX      Will be set to multiplier for
+     *                                  aEvent->mDeltaX.
+     * @param aMultiplierForDeltaY      Will be set to multiplier for
+     *                                  aEvent->mDeltaY.
+     */
+    void GetMultiplierForDeltaXAndY(const WidgetWheelEvent* aEvent,
+                                    Index aIndex,
+                                    double* aMultiplierForDeltaX,
+                                    double* aMultiplierForDeltaY);
 
     bool mInit[COUNT_OF_MULTIPLIERS];
     double mMultiplierX[COUNT_OF_MULTIPLIERS];

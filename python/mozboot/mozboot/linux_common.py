@@ -5,6 +5,10 @@
 # An easy way for distribution-specific bootstrappers to share the code
 # needed to install Stylo dependencies.  This class must come before
 # BaseBootstrapper in the inheritance list.
+
+from __future__ import absolute_import
+
+
 class StyloInstall(object):
     def __init__(self, **kwargs):
         pass

@@ -61,13 +61,20 @@ interface nsIUrlClassifierCacheInfo : nsISupports {
   readonly attribute nsIArray entries;
 };
 
+[scriptable, uuid(26e12ea4-14ff-4c77-858f-6745998b7659)]
+interface nsIUrlClassifierGetCacheCallback : nsISupports {
+
+  void onGetCacheComplete(in nsIUrlClassifierCacheInfo info);
+};
+
 /**
  * Interface to query url-classifier information.
  */
 [scriptable, function, uuid(411bbff4-1b88-4687-aa36-e2bbdd93f6e8)]
 interface nsIUrlClassifierInfo : nsISupports {
   /**
-   * A synchronous call to return cache information for the table.
+   * An asynchronous call to return cache information for the table.
    */
-  nsIUrlClassifierCacheInfo getCacheInfo(in ACString table);
+  void getCacheInfo(in ACString table,
+                    in nsIUrlClassifierGetCacheCallback callback);
 };

@@ -21,7 +21,7 @@ fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidge
 == preserve3d-3a.html preserve3d-3-ref.html
 == preserve3d-4a.html about:blank
 fuzzy-if(gtkWidget,4,200) fuzzy-if(Android,4,300) fuzzy-if(winWidget&&!layersGPUAccelerated,2,100) fuzzy-if(skiaContent,16,100) == preserve3d-5a.html preserve3d-5-ref.html
-== preserve3d-6a.html preserve3d-6-ref.html
+fuzzy-if(webrender,1-1,1-1) == preserve3d-6a.html preserve3d-6-ref.html
 == scale3d-z.html scalez-1-ref.html
 fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget&&stylo,154,644) == scale3d-all.html scale3d-1-ref.html # subpixel AA
 fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget&&stylo,154,644) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
@@ -36,7 +36,7 @@ fuzzy-if(webrender,0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
-fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) fuzzy-if(webrender,1-1,13-13) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
@@ -83,7 +83,7 @@ fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == mask-layer-1.html mask-layer-ref.html
 == mask-layer-2.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
-fails-if(webrender) == split-intersect1.html split-intersect1-ref.html
+== split-intersect1.html split-intersect1-ref.html
 fuzzy(255,150) == split-intersect2.html split-intersect2-ref.html
 fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html

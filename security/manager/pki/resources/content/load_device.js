@@ -51,3 +51,20 @@ function onDialogAccept() {
 
   return true;
 }
+
+function validateModuleName() {
+  let bundle = document.getElementById("pippki_bundle");
+  let name = document.getElementById("device_name").value;
+  let helpText = document.getElementById("helpText");
+  helpText.value = "";
+  let dialogNode = document.querySelector("dialog");
+  dialogNode.removeAttribute("buttondisabledaccept");
+  if (name == "") {
+    helpText.value = bundle.getString("loadModuleHelp_emptyModuleName");
+    dialogNode.setAttribute("buttondisabledaccept", true);
+  }
+  if (name == "Root Certs") {
+    helpText.value = bundle.getString("loadModuleHelp_rootCertsModuleName");
+    dialogNode.setAttribute("buttondisabledaccept", true);
+  }
+}

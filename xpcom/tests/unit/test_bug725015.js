@@ -7,7 +7,7 @@ var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const manifest = do_get_file('bug725015.manifest');
+const manifest = do_get_file("bug725015.manifest");
 const contract = "@bug725015.test.contract";
 const observerTopic = "xpcom-category-entry-added";
 const category = "bug725015-test-category";
@@ -19,14 +19,13 @@ function observe_category(subj, topic, data) {
     do_check_eq(topic, observerTopic);
     if (data != category)
       return;
-  
+
     var thisentry = subj.QueryInterface(Ci.nsISupportsCString).data;
     do_check_eq(thisentry, entry);
-  
+
     do_check_eq(Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager).getCategoryEntry(category, entry), contract);
     do_check_true(Cc[contract].equals(cid));
-  }
-  catch (e) {
+  } catch (e) {
     do_throw(e);
   }
   do_test_finished();

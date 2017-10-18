@@ -83,6 +83,12 @@ typedef struct {
   } border;
 } ScrollbarGTKMetrics;
 
+typedef struct {
+  bool initialized;
+  MozGtkSize minSizeWithBorder;
+  GtkBorder borderAndPadding;
+} ToggleGTKMetrics;
+
 typedef enum {
   MOZ_GTK_STEPPER_DOWN        = 1 << 0,
   MOZ_GTK_STEPPER_BOTTOM      = 1 << 1,
@@ -390,6 +396,14 @@ moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
  */
 gint
 moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
+
+/**
+ * Get metrics of the toggle (radio or checkbox)
+ * isRadio:            [IN] true when requesting metrics for the radio button
+ * returns:    pointer to ToggleGTKMetrics struct
+ */
+const ToggleGTKMetrics*
+GetToggleMetrics(bool isRadio);
 
 /**
  * Get the desired size of a GtkRadioButton

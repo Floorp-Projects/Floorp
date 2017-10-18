@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
@@ -20,14 +20,16 @@ from mozboot.base import BaseBootstrapper
 
 HOMEBREW_BOOTSTRAP = 'https://raw.githubusercontent.com/Homebrew/install/master/install'
 XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
-XCODE_LEGACY = 'https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg'
+XCODE_LEGACY = ('https://developer.apple.com/downloads/download.action?path=Developer_Tools/'
+                'xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg')
 
-MACPORTS_URL = {'11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.11-ElCapitan.pkg',
-                '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.10-Yosemite.pkg',
-                '9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.9-Mavericks.pkg',
-                '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.8-MountainLion.pkg',
-                '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.7-Lion.pkg',
-                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.6-SnowLeopard.pkg', }
+MACPORTS_URL = {
+    '11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.11-ElCapitan.pkg',
+    '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.10-Yosemite.pkg',
+    '9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.9-Mavericks.pkg',
+    '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.8-MountainLion.pkg',
+    '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.7-Lion.pkg',
+    '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.6-SnowLeopard.pkg', }
 
 MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 
@@ -196,13 +198,15 @@ class OSXBootstrapper(BaseBootstrapper):
         getattr(self, 'ensure_%s_mobile_android_packages' % self.package_manager)()
 
     def install_mobile_android_artifact_mode_packages(self):
-        getattr(self, 'ensure_%s_mobile_android_packages' % self.package_manager)(artifact_mode=True)
+        getattr(self, 'ensure_%s_mobile_android_packages' %
+                self.package_manager)(artifact_mode=True)
 
     def suggest_mobile_android_mozconfig(self):
         getattr(self, 'suggest_%s_mobile_android_mozconfig' % self.package_manager)()
 
     def suggest_mobile_android_artifact_mode_mozconfig(self):
-        getattr(self, 'suggest_%s_mobile_android_mozconfig' % self.package_manager)(artifact_mode=True)
+        getattr(self, 'suggest_%s_mobile_android_mozconfig' %
+                self.package_manager)(artifact_mode=True)
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion('10.7'):

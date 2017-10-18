@@ -3,12 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # If we add unicode_literals, Python 2.6.1 (required for OS X 10.6) breaks.
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-import errno
 import os
-import stat
-import subprocess
 import sys
 
 # Base url for pulling the rustup installer.
@@ -41,6 +38,7 @@ Please try installing rust for your system from https://rustup.rs/
 or from https://rust-lang.org/ or from your package manager.
 '''
 
+
 def rustup_url(host, version=RUSTUP_VERSION):
     '''Download url for a particular version of the installer.'''
     return '%(base)s/archive/%(version)s/%(host)s/rustup-init%(ext)s' % {
@@ -49,9 +47,11 @@ def rustup_url(host, version=RUSTUP_VERSION):
                 'host': host,
                 'ext': exe_suffix(host)}
 
+
 def rustup_hash(host):
     '''Look up the checksum for the given installer.'''
     return RUSTUP_HASHES.get(host, None)
+
 
 def platform():
     '''Determine the appropriate rust platform string for the current host'''
@@ -67,12 +67,14 @@ def platform():
 
     return None
 
+
 def exe_suffix(host=None):
     if not host:
         host = platform()
     if 'windows' in host:
         return '.exe'
     return ''
+
 
 USAGE = '''
 python rust.py [--update]
@@ -84,9 +86,11 @@ and verifies the current stored checksums against the distribution server,
 but doesn't update the version installed by `mach bootstrap`.
 '''
 
+
 def unquote(s):
     '''Strip outer quotation marks from a string.'''
     return s.strip("'").strip('"')
+
 
 def rustup_latest_version():
     '''Query the latest version of the rustup installer.'''
@@ -111,6 +115,7 @@ def rustup_latest_version():
             return unquote(value)
     return None
 
+
 def http_download_and_hash(url):
     import hashlib
     import requests
@@ -119,6 +124,7 @@ def http_download_and_hash(url):
     for data in r.iter_content(4096):
         h.update(data)
     return h.hexdigest()
+
 
 def make_checksums(version, validate=False):
     hashes = []
@@ -135,6 +141,7 @@ def make_checksums(version, validate=False):
             print('OK')
         hashes.append((platform, checksum))
     return hashes
+
 
 if __name__ == '__main__':
     '''Allow invoking the module as a utility to update checksums.'''

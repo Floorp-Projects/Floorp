@@ -11,22 +11,43 @@ add_task(async function testWindowGetAll() {
                                 subject => subject == raisedWin);
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: function() {
-      browser.windows.getAll((wins) => {
-        browser.test.assertEq(wins.length, 2, "Expect two windows");
+    background: async function() {
+      let wins = await browser.windows.getAll();
+      browser.test.assertEq(2, wins.length, "Expect two windows");
 
-        browser.test.assertEq(false, wins[0].alwaysOnTop,
-                              "Expect first window not to be always on top");
-        browser.test.assertEq(true, wins[1].alwaysOnTop,
-                              "Expect first window to be always on top");
+      browser.test.assertEq(false, wins[0].alwaysOnTop,
+                            "Expect first window not to be always on top");
+      browser.test.assertEq(true, wins[1].alwaysOnTop,
+                            "Expect first window to be always on top");
 
-        browser.test.notifyPass("alwaysOnTop");
-      });
+      let win = await browser.windows.create({url: "http://example.com", type: "popup"});
+
+      wins = await browser.windows.getAll();
+      browser.test.assertEq(3, wins.length, "Expect three windows");
+
+      wins = await browser.windows.getAll({windowTypes: ["popup"]});
+      browser.test.assertEq(1, wins.length, "Expect one window");
+      browser.test.assertEq("popup", wins[0].type,
+                            "Expect type to be popup");
+
+      wins = await browser.windows.getAll({windowTypes: ["normal"]});
+      browser.test.assertEq(2, wins.length, "Expect two windows");
+      browser.test.assertEq("normal", wins[0].type,
+                            "Expect type to be normal");
+      browser.test.assertEq("normal", wins[1].type,
+                            "Expect type to be normal");
+
+      wins = await browser.windows.getAll({windowTypes: ["popup", "normal"]});
+      browser.test.assertEq(3, wins.length, "Expect three windows");
+
+      await browser.windows.remove(win.id);
+
+      browser.test.notifyPass("getAll");
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish("alwaysOnTop");
+  await extension.awaitFinish("getAll");
   await extension.unload();
 
   await BrowserTestUtils.closeWindow(raisedWin);

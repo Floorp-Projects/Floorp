@@ -17,10 +17,15 @@ modules += [
     'react-addons-shallow-compare.js',
 ]
 
-# react-dev is used if either debug mode is enabled,
-# so include it for both
+# react dev versions are used if either debug mode is enabled,
+# or enable-debug-js-modules is set in .mozconfig so include it for
+# both
 if CONFIG['DEBUG_JS_MODULES'] or CONFIG['MOZ_DEBUG']:
-    modules += ['react-dev.js']
+    modules += [
+        'react-dev.js',
+        'react-dom-dev.js',
+        'react-dom-server-dev.js',
+    ]
 
 modules += [
     'react-dom-server.js',

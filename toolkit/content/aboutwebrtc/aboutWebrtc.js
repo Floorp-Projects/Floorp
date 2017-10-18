@@ -262,7 +262,7 @@ AecLogging.prototype.constructor = AecLogging;
 AecLogging.prototype.offState = function() {
   this._label = getString("aec_logging_off_state_label");
   try {
-    let file = Services.prefs.getCharPref("media.webrtc.debug.aec_log_dir");
+    let file = WebrtcGlobalInformation.aecDebugLogDir;
     this._message = formatString("aec_logging_off_state_msg", [file], 1);
   } catch (e) {
     this._message = null;

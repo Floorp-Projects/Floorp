@@ -121,10 +121,6 @@ user_pref("extensions.autoDisableScopes", 0);
 // Allow unsigned add-ons
 user_pref("xpinstall.signatures.required", false);
 
-// Don't use auto-enabled e10s
-user_pref("browser.tabs.remote.autostart.1", false);
-user_pref("browser.tabs.remote.autostart.2", false);
-
 user_pref("startup.homepage_welcome_url", "");
 user_pref("startup.homepage_welcome_url.additional", "");
 user_pref("startup.homepage_override_url", "");

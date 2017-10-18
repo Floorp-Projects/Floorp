@@ -450,7 +450,16 @@ class ContentScriptContextChild extends BaseContext {
         originAttributes: attrs,
       });
 
+      // Preserve a copy of the original window's XMLHttpRequest and fetch
+      // in a content object (fetch is manually binded to the window
+      // to prevent it from raising a TypeError because content object is not
+      // a real window).
       Cu.evalInSandbox(`
+        this.content = {
+          XMLHttpRequest: window.XMLHttpRequest,
+          fetch: window.fetch.bind(window),
+        };
+
         window.JSON = JSON;
         window.XMLHttpRequest = XMLHttpRequest;
         window.fetch = fetch;

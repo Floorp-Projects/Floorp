@@ -1,26 +1,8 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for simple WebExtension</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
 
-const REDIRECT_URL = new URL("redirection.sjs", location).href;
-
-function waitForLoad(win) {
-  return new Promise(resolve => {
-    win.addEventListener("load", function() {
-      resolve();
-    }, {capture: true, once: true});
-  });
-}
+const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser";
+const REDIRECT_URL = BASE + "/redirection.sjs";
+const REDIRECTED_URL = BASE + "/dummy_page.html";
 
 add_task(async function history_redirect() {
   function background() {
@@ -64,24 +46,18 @@ add_task(async function history_redirect() {
   extension.sendMessage("delete-all");
   await extension.awaitMessage("delete-all-result");
 
-  let win = window.open(REDIRECT_URL);
-  await waitForLoad(win);
+  await BrowserTestUtils.withNewTab({gBrowser, url: REDIRECT_URL}, async (browser) => {
+    is(browser.currentURI.spec, REDIRECTED_URL, "redirected to the expected location");
 
-  extension.sendMessage("search", REDIRECT_URL);
-  let results = await extension.awaitMessage("search-result");
-  is(results.length, 1, "search returned expected length of results");
+    extension.sendMessage("search", REDIRECT_URL);
+    let results = await extension.awaitMessage("search-result");
+    is(results.length, 1, "search returned expected length of results");
 
-  extension.sendMessage("get-visits", REDIRECT_URL);
-  let visits = await extension.awaitMessage("get-visits-result");
-  is(visits.length, 1, "getVisits returned expected length of visits");
-
-  // cleanup phase
-  win.close();
+    extension.sendMessage("get-visits", REDIRECT_URL);
+    let visits = await extension.awaitMessage("get-visits-result");
+    is(visits.length, 1, "getVisits returned expected length of visits");
+  });
 
   await extension.unload();
   info("extension unloaded");
 });
-</script>
-
-</body>
-</html>

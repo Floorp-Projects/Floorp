@@ -458,20 +458,23 @@ pub struct LegacyNewSessionParameters {
 }
 
 impl CapabilitiesMatching for LegacyNewSessionParameters {
-    fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
-                                             -> WebDriverResult<Option<Capabilities>> {
-        /* For now don't do anything much, just merge the
-        desired and required and return the merged list. */
+    fn match_browser<T: BrowserCapabilities>(
+        &self,
+        browser_capabilities: &mut T,
+    ) -> WebDriverResult<Option<Capabilities>> {
+        // For now don't do anything much, just merge the
+        // desired and required and return the merged list.
 
         let mut capabilities: Capabilities = BTreeMap::new();
-        self.required.iter()
-            .chain(self.desired.iter())
-            .fold(&mut capabilities,
-                  |mut caps, (key, value)| {
-                      if !caps.contains_key(key) {
-                          caps.insert(key.clone(), value.clone());
-                      }
-                      caps});
+        self.required.iter().chain(self.desired.iter()).fold(
+            &mut capabilities,
+            |caps, (key, value)| {
+                if !caps.contains_key(key) {
+                    caps.insert(key.clone(), value.clone());
+                }
+                caps
+            },
+        );
         browser_capabilities.init(&capabilities);
         Ok(Some(capabilities))
     }

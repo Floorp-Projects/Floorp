@@ -9,6 +9,7 @@
 #include "MediaSourceUtils.h"
 #include "OpusDecoder.h"
 #include "SourceBufferList.h"
+#include "VorbisDecoder.h"
 #include "nsPrintfCString.h"
 
 #include <algorithm>
@@ -307,7 +308,8 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mManager(aManager)
   , mReset(true)
   , mPreRoll(TimeUnit::FromMicroseconds(
-      OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType)
+      OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType) ||
+      VorbisDataDecoder::IsVorbis(mParent->GetTrackInfo(mType)->mMimeType)
       ? 80000
       : mParent->GetTrackInfo(mType)->mMimeType.EqualsLiteral("audio/mp4a-latm")
         // AAC encoder delay is by default 2112 audio frames.

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import StyloInstall
 
@@ -89,7 +91,7 @@ class DebianBootstrapper(StyloInstall, BaseBootstrapper):
         self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
         self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
         self.mobile_android_packages = self.MOBILE_ANDROID_COMMON_PACKAGES + \
-                                       self.MOBILE_ANDROID_DISTRO_PACKAGES
+            self.MOBILE_ANDROID_DISTRO_PACKAGES
 
     def install_system_packages(self):
         self.apt_install(*self.packages)

@@ -2,15 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform, LayerToWorldTransform};
-use api::{LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
-use api::{ScrollLocation, StickyFrameInfo, WorldPoint};
+use api::{ClipId, DeviceIntRect, LayerPoint, LayerRect};
+use api::{LayerToScrollTransform, LayerToWorldTransform, LayerVector2D, PipelineId};
+use api::{ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation, StickyFrameInfo};
+use api::WorldPoint;
 use clip::ClipStore;
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
+use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
+use render_task::ClipChain;
+use resource_cache::ResourceCache;
+use tiling::PackedLayer;
 
 pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
+
+/// An id that identifies coordinate systems in the ClipScrollTree. Each
+/// coordinate system has an id and those ids will be shared when the coordinates
+/// system are the same or are in the same axis-aligned space. This allows
+/// for optimizing mask generation.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct CoordinateSystemId(pub u32);
+
+impl CoordinateSystemId {
+    pub fn next(&self) -> CoordinateSystemId {
+        let CoordinateSystemId(id) = *self;
+        CoordinateSystemId(id + 1)
+    }
+}
 
 pub struct ClipScrollTree {
     pub nodes: FastHashMap<ClipId, ClipScrollNode>,
@@ -38,12 +57,22 @@ pub struct ClipScrollTree {
     pub pipelines_to_discard: FastHashSet<PipelineId>,
 }
 
+#[derive(Clone)]
 pub struct TransformUpdateState {
     pub parent_reference_frame_transform: LayerToWorldTransform,
     pub parent_combined_viewport_rect: LayerRect,
     pub parent_accumulated_scroll_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_viewport: LayerRect,
+    pub parent_clip_chain: ClipChain,
+    pub combined_outer_clip_bounds: DeviceIntRect,
+
+    /// An id for keeping track of the axis-aligned space of this node. This is used in
+    /// order to to track what kinds of clip optimizations can be done for a particular
+    /// display list item, since optimizations can usually only be done among
+    /// coordinate systems which are relatively axis aligned.
+    pub current_coordinate_system_id: CoordinateSystemId,
+    pub next_coordinate_system_id: CoordinateSystemId,
 }
 
 impl ClipScrollTree {
@@ -297,14 +326,24 @@ impl ClipScrollTree {
             .scroll(scroll_location, phase)
     }
 
-    pub fn update_all_node_transforms(&mut self, pan: LayerPoint) {
+    pub fn update_all_node_transforms(
+        &mut self,
+        screen_rect: &DeviceIntRect,
+        device_pixel_ratio: f32,
+        packed_layers: &mut Vec<PackedLayer>,
+        clip_store: &mut ClipStore,
+        resource_cache: &mut ResourceCache,
+        gpu_cache: &mut GpuCache,
+        pan: LayerPoint,
+    ) {
         if self.nodes.is_empty() {
             return;
         }
 
         let root_reference_frame_id = self.root_reference_frame_id();
         let root_viewport = self.nodes[&root_reference_frame_id].local_clip_rect;
-        let state = TransformUpdateState {
+
+        let mut state = TransformUpdateState {
             parent_reference_frame_transform: LayerToWorldTransform::create_translation(
                 pan.x,
                 pan.y,
@@ -314,63 +353,68 @@ impl ClipScrollTree {
             parent_accumulated_scroll_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayerRect::zero(),
+            parent_clip_chain: None,
+            combined_outer_clip_bounds: *screen_rect,
+            current_coordinate_system_id: CoordinateSystemId(0),
+            next_coordinate_system_id: CoordinateSystemId(0).next(),
         };
-        self.update_node_transform(root_reference_frame_id, &state);
+        self.update_node_transform(
+            root_reference_frame_id,
+            &mut state,
+            &screen_rect,
+            device_pixel_ratio,
+            packed_layers,
+            clip_store,
+            resource_cache,
+            gpu_cache,
+        );
     }
 
-    fn update_node_transform(&mut self, layer_id: ClipId, state: &TransformUpdateState) {
+    fn update_node_transform(
+        &mut self,
+        layer_id: ClipId,
+        state: &mut TransformUpdateState,
+        screen_rect: &DeviceIntRect,
+        device_pixel_ratio: f32,
+        packed_layers: &mut Vec<PackedLayer>,
+        clip_store: &mut ClipStore,
+        resource_cache: &mut ResourceCache,
+        gpu_cache: &mut GpuCache,
+    ) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
-        let (state, node_children) = {
+        let mut state = state.clone();
+        let node_children = {
             let node = match self.nodes.get_mut(&layer_id) {
                 Some(node) => node,
                 None => return,
             };
-            node.update_transform(&state);
 
-            // The transformation we are passing is the transformation of the parent
-            // reference frame and the offset is the accumulated offset of all the nodes
-            // between us and the parent reference frame. If we are a reference frame,
-            // we need to reset both these values.
-            let state = match node.node_type {
-                NodeType::ReferenceFrame(ref info) => TransformUpdateState {
-                    parent_reference_frame_transform: node.world_viewport_transform,
-                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    parent_accumulated_scroll_offset: LayerVector2D::zero(),
-                    nearest_scrolling_ancestor_viewport: state
-                        .nearest_scrolling_ancestor_viewport
-                        .translate(&info.origin_in_parent_reference_frame),
-                    ..*state
-                },
-                NodeType::Clip(..) => TransformUpdateState {
-                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    ..*state
-                },
-                NodeType::ScrollFrame(ref scrolling) => TransformUpdateState {
-                    parent_combined_viewport_rect:
-                        node.combined_local_viewport_rect.translate(&-scrolling.offset),
-                    parent_accumulated_scroll_offset: scrolling.offset +
-                        state.parent_accumulated_scroll_offset,
-                    nearest_scrolling_ancestor_offset: scrolling.offset,
-                    nearest_scrolling_ancestor_viewport: node.local_viewport_rect,
-                    ..*state
-                },
-                NodeType::StickyFrame(_, sticky_offset) => TransformUpdateState {
-                    // We don't translate the combined rect by the sticky offset, because sticky
-                    // offsets actually adjust the node position itself, whereas scroll offsets
-                    // only apply to contents inside the node.
-                    parent_combined_viewport_rect: node.combined_local_viewport_rect,
-                    parent_accumulated_scroll_offset:
-                        sticky_offset + state.parent_accumulated_scroll_offset,
-                    ..*state
-                }
-            };
+            node.update_transform(&mut state);
+            node.update_clip_work_item(
+                &mut state,
+                screen_rect,
+                device_pixel_ratio,
+                packed_layers,
+                clip_store,
+                resource_cache,
+                gpu_cache,
+            );
 
-            (state, node.children.clone())
+            node.children.clone()
         };
 
         for child_layer_id in node_children {
-            self.update_node_transform(child_layer_id, &state);
+            self.update_node_transform(
+                child_layer_id,
+                &mut state,
+                screen_rect,
+                device_pixel_ratio,
+                packed_layers,
+                clip_store,
+                resource_cache,
+                gpu_cache,
+            );
         }
     }
 

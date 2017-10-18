@@ -156,8 +156,6 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
-  auto aTstampUsecs = aSample->mTime;
-  int64_t aTotalFrames = 0;
 
   MOZ_ASSERT(mPacketCount >= 3);
 
@@ -225,12 +223,12 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
         __func__);
     }
 
-    auto time = total_duration + aTstampUsecs;
+    auto time = total_duration + aSample->mTime;
     if (!time.IsValid()) {
       return DecodePromise::CreateAndReject(
         MediaResult(
           NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-          RESULT_DETAIL("Overflow adding total_duration and aTstampUsecs")),
+          RESULT_DETAIL("Overflow adding total_duration and aSample->mTime")),
         __func__);
     };
 
@@ -249,8 +247,6 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
     AudioSampleBuffer data(Move(buffer));
     data = mAudioConverter->Process(Move(data));
-
-    aTotalFrames += frames;
 
     results.AppendElement(new AudioData(aOffset, time, duration,
                                         frames, data.Forget(), channels, rate));

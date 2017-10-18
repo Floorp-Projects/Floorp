@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import os
+import mock
 
 from taskgraph import create
 from taskgraph.graph import Graph
@@ -70,6 +71,25 @@ class TestCreate(unittest.TestCase):
 
         for tid, task in self.created_tasks.iteritems():
             self.assertEqual(task.get('dependencies'), [os.environ['TASK_ID']])
+
+    @mock.patch('taskgraph.create.create_task')
+    def test_create_tasks_fails_if_create_fails(self, create_task):
+        "creat_tasks fails if a single create_task call fails"
+        os.environ['TASK_ID'] = 'decisiontask'
+        tasks = {
+            'tid-a': Task(kind='test', label='a', attributes={}, task={'payload': 'hello world'}),
+        }
+        label_to_taskid = {'a': 'tid-a'}
+        graph = Graph(nodes={'tid-a'}, edges=set())
+        taskgraph = TaskGraph(tasks, graph)
+
+        def fail(*args):
+            print("UHOH")
+            raise RuntimeError('oh noes!')
+        create_task.side_effect = fail
+
+        with self.assertRaises(RuntimeError):
+            create.create_tasks(taskgraph, label_to_taskid, {'level': '4'})
 
 
 if __name__ == '__main__':

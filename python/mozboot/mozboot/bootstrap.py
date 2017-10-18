@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # If we add unicode_literals, Python 2.6.1 (required for OS X 10.6) breaks.
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import platform
 import sys
@@ -57,7 +57,7 @@ Please choose the version of Firefox you want to build:
 %s
 Your choice: '''
 
-APPLICATIONS_LIST=[
+APPLICATIONS_LIST = [
     ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
     ('Firefox for Desktop', 'browser'),
     ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
@@ -269,8 +269,8 @@ class Bootstrapper(object):
                 print(CLONE_MERCURIAL_NOT_EMPTY_FALLBACK_FAILED.format(dest))
                 continue
 
-            choice = self.instance.prompt_int(prompt=CLONE_MERCURIAL_NOT_EMPTY.format(dest, newdest),
-                                              low=1, high=3)
+            choice = self.instance.prompt_int(prompt=CLONE_MERCURIAL_NOT_EMPTY.format(dest,
+                                              newdest), low=1, high=3)
             if choice == 1:
                 return newdest
             if choice == 2:
@@ -285,7 +285,8 @@ class Bootstrapper(object):
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
             name, application = APPLICATIONS_LIST[prompt_choice-1]
         elif self.choice not in APPLICATIONS.keys():
-            raise Exception('Please pick a valid application choice: (%s)' % '/'.join(APPLICATIONS.keys()))
+            raise Exception('Please pick a valid application choice: (%s)' %
+                            '/'.join(APPLICATIONS.keys()))
         else:
             name, application = APPLICATIONS[self.choice]
 
@@ -374,7 +375,8 @@ class Bootstrapper(object):
                 self.instance.ensure_proguard_packages(state_dir, checkout_root)
 
         print(self.finished % name)
-        if not (self.instance.which('rustc') and self.instance._parse_version('rustc') >= MODERN_RUST_VERSION):
+        if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
+                >= MODERN_RUST_VERSION):
             print("To build %s, please restart the shell (Start a new terminal window)" % name)
 
         # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
@@ -488,7 +490,8 @@ def clone_firefox(hg, dest):
     res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
     print('')
     if res:
-        print('error pulling; try running `hg pull https://hg.mozilla.org/mozilla-unified` manually')
+        print('error pulling; try running `hg pull https://hg.mozilla.org/mozilla-unified` '
+              'manually')
         return False
 
     print('updating to "central" - the development head of Gecko and Firefox')

@@ -5,8 +5,7 @@
 function X() { dump("X\n"); }
 function Y() { dump("Y\n"); }
 
-function boom()
-{
+function boom() {
   dump("Start9\n");
 
   var div = document.getElementById("v");
@@ -15,7 +14,7 @@ function boom()
   div.appendChild(textNode);
 
   document.addEventListener("DOMCharacterDataModified", X, true);
-  textNode.data += 'B';
+  textNode.data += "B";
   document.removeEventListener("DOMCharacterDataModified", X, true);
 
   document.addEventListener("DOMAttrModified", Y, true);
