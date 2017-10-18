@@ -32,7 +32,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
             "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
-            "publish_rules": ["firefox-beta"],
+            "publish_rules": [32],
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-beta-cdntest-bz2", "firefox-beta-localtest-bz2"],
             "bz2_publish_rules": [652],
