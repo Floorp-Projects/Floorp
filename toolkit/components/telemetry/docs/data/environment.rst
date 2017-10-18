@@ -203,6 +203,7 @@ Structure:
               },
             },
           },
+        appleModelId: <string>, // Mac only or null on failure
       },
       addons: {
         activeAddons: { // the currently enabled add-ons
