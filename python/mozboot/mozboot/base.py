@@ -259,7 +259,15 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
-    def install_tooltool_clang_package(self, state_dir, checkout_root, toolchain_job):
+    def ensure_proguard_packages(self, state_dir, checkout_root):
+        '''
+        Install any necessary packages that provide the Proguard JAR.
+
+        Only required to build mobile/android.
+        '''
+        self.install_toolchain_artifact(state_dir, checkout_root, 'proguard-jar')
+
+    def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
         mach_binary = os.path.abspath(mach_binary)
         if not os.path.exists(mach_binary):

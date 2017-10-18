@@ -93,7 +93,20 @@ public class WebAppActivity extends AppCompatActivity
         mGeckoView.setContentListener(new GeckoView.ContentListener() {
             public void onTitleChange(GeckoView view, String title) {}
             public void onContextMenu(GeckoView view, int screenX, int screenY,
-                               String uri, String elementSrc) {}
+                               String uri, String elementSrc) {
+                final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
+                final Uri validUri = WebApps.getValidURL(content);
+                if (validUri == null) {
+                    return;
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        WebApps.openInFennec(validUri, WebAppActivity.this);
+                    }
+                });
+            }
             public void onFullScreen(GeckoView view, boolean fullScreen) {
                 updateFullScreenContent(fullScreen);
             }

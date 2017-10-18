@@ -22,7 +22,6 @@ EXPORTS.mozilla.dom += [
     'U2FTokenTransport.h',
     'WebAuthnCBORUtil.h',
     'WebAuthnManager.h',
-    'WebAuthnRequest.h',
     'WebAuthnTransactionChild.h',
     'WebAuthnTransactionParent.h',
     'WebAuthnUtil.h',

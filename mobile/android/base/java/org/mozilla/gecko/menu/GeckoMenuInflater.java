@@ -6,7 +6,6 @@ package org.mozilla.gecko.menu;
 
 import java.io.IOException;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -14,6 +13,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
+import android.support.annotation.XmlRes;
 import android.util.AttributeSet;
 import android.util.Xml;
 import android.view.InflateException;
@@ -50,7 +50,7 @@ public class GeckoMenuInflater extends MenuInflater {
     }
 
     @Override
-    public void inflate(int menuRes, Menu menu) {
+    public void inflate(@XmlRes int menuRes, Menu menu) {
 
         // This does not check for a well-formed XML.
 

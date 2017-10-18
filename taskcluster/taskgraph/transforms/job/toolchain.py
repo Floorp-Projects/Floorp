@@ -16,7 +16,6 @@ from voluptuous import Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_tc_vcs_cache,
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_add_public_artifacts,
     docker_worker_add_tooltool,
@@ -46,9 +45,6 @@ toolchain_run_schema = Schema({
         'public',
         'internal',
     ),
-
-    # If true, tc-vcs will be enabled.  Not supported on Windows.
-    Required('tc-vcs', default=True): bool,
 
     # Sparse profile to give to checkout using `run-task`.  If given,
     # a filename in `build/sparse-profiles`.  Defaults to
@@ -130,8 +126,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
         docker_worker_add_public_artifacts(config, job, taskdesc)
 
-    if run['tc-vcs']:
-        docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)
 

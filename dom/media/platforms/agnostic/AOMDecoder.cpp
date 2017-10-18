@@ -193,8 +193,8 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
   while ((img = aom_codec_get_frame(&mCodec, &iter))) {
     // Track whether the underlying buffer is 8 or 16 bits per channel.
     bool highbd = bool(img->fmt & AOM_IMG_FMT_HIGHBITDEPTH);
-    if (img->bit_depth > 8) {
-      // Downsample images with more than 8 significant bits per channel.
+    if (highbd) {
+      // Downsample images with more than 8 bits per channel.
       aom_img_fmt_t fmt8 = static_cast<aom_img_fmt_t>(img->fmt ^ AOM_IMG_FMT_HIGHBITDEPTH);
       img8.reset(aom_img_alloc(NULL, fmt8, img->d_w, img->d_h, 16));
       if (img8 == nullptr) {

@@ -107,6 +107,9 @@ add_task(async function setup() {
   // tests.
   await SpecialPowers.pushPrefEnv({"set": [["browser.urlbar.maxHistoricalSearchSuggestions", 0]]});
 
+  // Use the default matching bucket configuration.
+  await SpecialPowers.pushPrefEnv({"set": [["browser.urlbar.matchBuckets", "general:5,suggestion:4"]]});
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;

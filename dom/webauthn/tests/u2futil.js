@@ -6,6 +6,9 @@ const flag_TUP = 0x01;
 const flag_UV = 0x04;
 const flag_AT = 0x40;
 
+const cose_alg_ECDSA_w_SHA256 = -7;
+const cose_alg_ECDSA_w_SHA512 = -36;
+
 function handleEventMessage(event) {
   if ("test" in event.data) {
     let summary = event.data.test + ": " + event.data.msg;

@@ -124,6 +124,7 @@ Converter.prototype = {
     win.addEventListener("DOMContentLoaded", event => {
       win.addEventListener("contentMessage", onContentMessage, false, true);
     }, {once: true});
+    keepThemeUpdated(win);
 
     // Send the initial HTML code.
     let bytes = encoder.encode(initialHTML(win.document));
@@ -320,6 +321,18 @@ function initialHTML(doc) {
     startTag("body") +
     startTag("div", {"id": "content"}) +
     startTag("plaintext", {"id": "json"});
+}
+
+function keepThemeUpdated(win) {
+  let listener = function () {
+    let theme = Services.prefs.getCharPref("devtools.theme");
+    win.document.documentElement.className = "theme-" + theme;
+  };
+  Services.prefs.addObserver("devtools.theme", listener);
+  win.addEventListener("unload", function (event) {
+    Services.prefs.removeObserver("devtools.theme", listener);
+    win = null;
+  }, {once: true});
 }
 
 // Chrome <-> Content communication
