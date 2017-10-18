@@ -1637,6 +1637,7 @@ private:
 
   friend class nsDisplayItem;
   friend class nsDisplayOwnLayer;
+  friend struct RetainedDisplayListBuilder;
   AnimatedGeometryRoot* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
 
   AnimatedGeometryRoot* WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
@@ -4466,7 +4467,7 @@ private:
     }
   }
 
-  friend void MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*, bool);
+  friend void MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*);
 
   // Relative to aFrame's reference frame.
   // These are the points that are definitely in the hit region.
