@@ -176,7 +176,7 @@ fails-if(!cocoaWidget&&!Android) HTTP(..) != arabic-fallback-4.html arabic-fallb
 == arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
-HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
+fails-if(webrender) HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html
