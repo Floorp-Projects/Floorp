@@ -40,6 +40,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "rdfService",
                                    "@mozilla.org/rdf/rdf-service;1", "nsIRDFService");
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
                                    "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
+                                  "resource://testing-common/httpd.js");
 
 
 XPCOMUtils.defineLazyGetter(this, "AppInfo", () => {
@@ -223,7 +225,7 @@ var AddonTestUtils = {
   overrideEntry: null,
 
   init(testScope) {
-    this.testScope = testScope;
+    this.equal = testScope.equal;
 
     // Get the profile directory for tests to use.
     this.profileDir = testScope.do_get_profile();
@@ -360,6 +362,8 @@ var AddonTestUtils = {
     this.tempDir = FileUtils.getDir("TmpD", []);
     this.tempDir.append("addons-mochitest");
     this.tempDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+    this.equal = testScope.is;
 
     testScope.registerCleanupFunction(() => {
       this.cleanupTempXPIs();
@@ -1167,7 +1171,7 @@ var AddonTestUtils = {
    * @return {Promise<object>} an object containing information about the update.
    */
   promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
-    let equal = this.testScope.equal;
+    let {equal} = this;
     return new Promise((resolve, reject) => {
       let result = {};
       addon.findUpdates({
@@ -1300,7 +1304,55 @@ var AddonTestUtils = {
        Services.io.newFileURI(file).spec],
     ]);
     Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, false);
-  }
+  },
+
+  UpdateServer: class UpdateServer {
+    constructor(do_register_cleanup) {
+      const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
+
+      this.testServer = new HttpServer();
+      this.testServer.start(-1);
+      this.port = this.testServer.identity.primaryPort;
+      this.extensions = {};
+      this.testServer.registerPathHandler("/test_update.json", (request, response) => {
+        let responseData = {addons: {}};
+        Object.keys(this.extensions).forEach((id) => {
+          responseData.addons[id] = {updates: this.extensions[id]};
+        });
+        response.write(JSON.stringify(responseData));
+      });
+
+      // The test extension uses an insecure update url.
+      Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
+    }
+
+    get updateUrl() {
+      return `${this.serverUrl}/test_update.json`;
+    }
+
+    get serverUrl() {
+      return `http://localhost:${this.port}`;
+    }
+
+    serveUpdate(extensionData) {
+      let {version} = extensionData.manifest;
+      let {id} = extensionData.manifest.applications.gecko;
+      let path = `/addons/${id}-${version}.xpi`;
+      if (!(id in this.extensions)) {
+        this.extensions[id] = [];
+      }
+      this.extensions[id].push({
+        version,
+        update_link: `${this.serverUrl}${path}`,
+      });
+      let webExtensionFile = AddonTestUtils.createTempWebExtensionFile(extensionData);
+      this.testServer.registerFile(path, webExtensionFile);
+    }
+
+    cleanup() {
+      return new Promise(resolve => this.testServer.stop(resolve));
+    }
+  },
 };
 
 for (let [key, val] of Object.entries(AddonTestUtils)) {
