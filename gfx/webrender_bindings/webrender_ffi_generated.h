@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.26 */
+/* Generated with cbindgen:0.1.25 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -35,8 +35,9 @@ enum class BorderStyle : uint32_t {
 };
 
 enum class BoxShadowClipMode : uint32_t {
-  Outset = 0,
-  Inset = 1,
+  None = 0,
+  Outset = 1,
+  Inset = 2,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -272,7 +273,7 @@ typedef TypedSize2D_f32__LayerPixel LayerSize;
 typedef LayerSize LayoutSize;
 
 // Describes the memory layout of a display list.
-//
+// 
 // A display list consists of some number of display list items, followed by a number of display
 // items.
 struct BuiltDisplayListDescriptor {
@@ -312,17 +313,6 @@ struct WrOpacityProperty {
   }
 };
 
-// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
-//
-// Transforms can be parametrized over the source and destination units, to describe a
-// transformation from a space to another.
-// For example, `TypedTransform3D<f32, WordSpace, ScreenSpace>::transform_point3d`
-// takes a `TypedPoint3D<f32, WordSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
-//
-// Transforms expose a set of convenience methods for pre- and post-transformations.
-// A pre-transformation corresponds to adding an operation that is applied before
-// the rest of the transformation, while a post-transformation adds an operation
-// that is applied after.
 struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
   float m11;
   float m12;
@@ -388,7 +378,7 @@ struct IdNamespace {
 typedef IdNamespace WrIdNamespace;
 
 // Represents RGBA screen colors with floating point numbers.
-//
+// 
 // All components must be between 0.0 and 1.0.
 // An alpha value of 1.0 is opaque while 0.0 is fully transparent.
 struct ColorF {
@@ -405,7 +395,6 @@ struct ColorF {
   }
 };
 
-// A 2d Point tagged with a unit.
 struct TypedPoint2D_f32__LayerPixel {
   float x;
   float y;
@@ -571,7 +560,6 @@ struct NinePatchDescriptor {
   }
 };
 
-// A 2d Vector tagged with a unit.
 struct TypedVector2D_f32__LayerPixel {
   float x;
   float y;
@@ -652,7 +640,6 @@ struct ByteSlice {
   }
 };
 
-// A 2d Point tagged with a unit.
 struct TypedPoint2D_u16__Tiles {
   uint16_t x;
   uint16_t y;
