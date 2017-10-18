@@ -22,6 +22,7 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.webapps.WebAppManifest;
 
 public class PwaConfirm extends RelativeLayout {
 
@@ -115,11 +116,15 @@ public class PwaConfirm extends RelativeLayout {
 
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        if (selectedTab == null) {
+            return;
+        }
+        final WebAppManifest webAppManifest = selectedTab.getWebAppManifest();
 
-        if (selectedTab != null) {
-            ((TextView) findViewById(R.id.pwa_confirm_title)).setText(selectedTab.getTitle());
-            ((TextView) findViewById(R.id.pwa_confirm_url)).setText(selectedTab.getURL());
-            ((ImageView) findViewById(R.id.pwa_confirm_icon)).setImageBitmap(selectedTab.getFavicon());
+        if (webAppManifest != null) {
+            ((TextView) findViewById(R.id.pwa_confirm_title)).setText(webAppManifest.getName());
+            ((TextView) findViewById(R.id.pwa_confirm_url)).setText(webAppManifest.getStartUri().toString());
+            ((ImageView) findViewById(R.id.pwa_confirm_icon)).setImageBitmap(webAppManifest.getIcon());
         }
     }
 
