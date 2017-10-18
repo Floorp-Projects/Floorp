@@ -124,7 +124,7 @@ gKeyframesTests.forEach(function(subtest) {
 
 gInvalidKeyframesTests.forEach(function(subtest) {
   test(function(t) {
-    assert_throws(subtest.expected, function() {
+    assert_throws(new TypeError, function() {
       new KeyframeEffectReadOnly(target, subtest.input);
     });
   }, "KeyframeEffectReadOnly constructor throws with " + subtest.desc);
@@ -179,7 +179,7 @@ gKeyframeEffectOptionTests.forEach(function(stest) {
 
 gInvalidKeyframeEffectOptionTests.forEach(function(stest) {
   test(function(t) {
-    assert_throws(stest.expected, function() {
+    assert_throws(new TypeError, function() {
       new KeyframeEffectReadOnly(target,
                                  { left: ["10px", "20px"] },
                                  stest.input);
