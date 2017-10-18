@@ -1244,16 +1244,19 @@ class MOZ_RAII ActivationEntryMonitor
     // ActivationEntryMonitor was created.
     JS::dbg::AutoEntryMonitor* entryMonitor_;
 
-    explicit ActivationEntryMonitor(JSContext* cx);
+    explicit inline ActivationEntryMonitor(JSContext* cx);
 
     ActivationEntryMonitor(const ActivationEntryMonitor& other) = delete;
     void operator=(const ActivationEntryMonitor& other) = delete;
 
+    void init(JSContext* cx, jit::CalleeToken entryToken);
+    void init(JSContext* cx, InterpreterFrame* entryFrame);
+
     Value asyncStack(JSContext* cx);
 
   public:
-    ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame);
-    ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken);
+    inline ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame);
+    inline ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken);
     inline ~ActivationEntryMonitor();
 };
 
