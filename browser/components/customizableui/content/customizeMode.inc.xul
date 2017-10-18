@@ -18,6 +18,7 @@
         </label>
       </hbox>
       <vbox id="customization-palette" class="customization-palette" hidden="true"/>
+      <vbox id="customization-pong-arena" hidden="true"/>
       <spacer id="customization-spacer"/>
     </box>
     <vbox id="customization-panel-container">
@@ -126,6 +127,12 @@
 #endif
       </panel>
     </button>
+
+    <button id="ready-player-one"
+            type="checkbox"
+            class="customizationmode-button"
+            oncommand="gCustomizeMode.togglePong(this.checked);"
+            hidden="true"/>
 
     <spacer id="customization-footer-spacer"/>
     <button id="customization-undo-reset-button"

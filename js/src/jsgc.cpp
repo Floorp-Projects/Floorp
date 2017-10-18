@@ -4337,21 +4337,15 @@ GCRuntime::updateMallocCountersOnGC()
 {
     AutoLockGC lock(rt);
 
-    size_t totalBytesInCollectedZones = 0;
+    // Update the malloc counters for any zones we are collecting.
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        if (zone->isCollecting()) {
-            totalBytesInCollectedZones += zone->GCMallocBytes();
+        if (zone->isCollecting())
             zone->updateGCMallocBytesOnGC(lock);
-        }
     }
 
-    // Update the runtime malloc counter. If we are doing a full GC then clear
-    // it, otherwise decrement it by the previous malloc bytes count for the
-    // zones we did collect.
+    // Update the runtime malloc counter only if we are doing a full GC.
     if (isFull)
         mallocCounter.updateOnGC(lock);
-    else
-        mallocCounter.decrement(totalBytesInCollectedZones);
 }
 
 template <class ZoneIterT>

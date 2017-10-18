@@ -468,12 +468,6 @@ skip include test262/built-ins/RegExp/lookBehind/jstests.list
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
 skip include test262/built-ins/RegExp/named-groups/jstests.list
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1398185
-skip script test262/intl402/Collator/default-options-object-prototype.js
-skip script test262/intl402/Number/prototype/toLocaleString/default-options-object-prototype.js
-skip script test262/intl402/String/prototype/localeCompare/default-options-object-prototype.js
-skip script test262/intl402/NumberFormat/default-options-object-prototype.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1386146
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle.js
 
