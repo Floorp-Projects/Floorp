@@ -1,5 +1,6 @@
 #![cfg(feature = "unstable_testing")]
 
+#![allow(dead_code, unused_imports)]
 #![feature(i128_type)]
 
 #[macro_use]
@@ -11,19 +12,19 @@ bitflags! {
         const A       = 0x0000_0000_0000_0000_0000_0000_0000_0001;
         const B       = 0x0000_0000_0000_1000_0000_0000_0000_0000;
         const C       = 0x8000_0000_0000_0000_0000_0000_0000_0000;
-        const ABC     = Self::A.bits | Self::B.bits | Self::C.bits;
+        const ABC     = A.bits | B.bits | C.bits;
     }
 }
 
 #[test]
 fn test_i128_bitflags() {
-    assert_eq!(Flags128::ABC, Flags128::A | Flags128::B | Flags128::C);
-    assert_eq!(Flags128::A.bits, 0x0000_0000_0000_0000_0000_0000_0000_0001);
-    assert_eq!(Flags128::B.bits, 0x0000_0000_0000_1000_0000_0000_0000_0000);
-    assert_eq!(Flags128::C.bits, 0x8000_0000_0000_0000_0000_0000_0000_0000);
-    assert_eq!(Flags128::ABC.bits, 0x8000_0000_0000_1000_0000_0000_0000_0001);
-    assert_eq!(format!("{:?}", Flags128::A), "A");
-    assert_eq!(format!("{:?}", Flags128::B), "B");
-    assert_eq!(format!("{:?}", Flags128::C), "C");
-    assert_eq!(format!("{:?}", Flags128::ABC), "A | B | C | ABC");
+    assert_eq!(ABC, A | B | C);
+    assert_eq!(A.bits, 0x0000_0000_0000_0000_0000_0000_0000_0001);
+    assert_eq!(B.bits, 0x0000_0000_0000_1000_0000_0000_0000_0000);
+    assert_eq!(C.bits, 0x8000_0000_0000_0000_0000_0000_0000_0000);
+    assert_eq!(ABC.bits, 0x8000_0000_0000_1000_0000_0000_0000_0001);
+    assert_eq!(format!("{:?}", A), "A");
+    assert_eq!(format!("{:?}", B), "B");
+    assert_eq!(format!("{:?}", C), "C");
+    assert_eq!(format!("{:?}", ABC), "A | B | C | ABC");
 }
