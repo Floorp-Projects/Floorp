@@ -12,6 +12,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 
+#include "vm/ArrayBufferObject.h"
+
 #if !defined(__clang__) && !defined(__GNUC__)
 # error "This file only for gcc-compatible compilers"
 #endif
@@ -125,12 +127,30 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
     return v;
 }
 
+// Clang requires a specialization for uint8_clamped.
+template<>
+inline js::uint8_clamped
+js::jit::AtomicOperations::loadSafeWhenRacy(js::uint8_clamped* addr)
+{
+    uint8_t v;
+    __atomic_load(&addr->val, &v, __ATOMIC_RELAXED);
+    return js::uint8_clamped(v);
+}
+
 template <typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
     MOZ_ASSERT(tier1Constraints(addr));
     __atomic_store(addr, &val, __ATOMIC_RELAXED);
+}
+
+// Clang requires a specialization for uint8_clamped.
+template<>
+inline void
+js::jit::AtomicOperations::storeSafeWhenRacy(js::uint8_clamped* addr, js::uint8_clamped val)
+{
+    __atomic_store(&addr->val, &val.val, __ATOMIC_RELAXED);
 }
 
 inline void
