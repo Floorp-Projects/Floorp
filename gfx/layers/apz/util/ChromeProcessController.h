@@ -64,7 +64,7 @@ public:
                                          const nsString& aEvent) override;
   virtual void NotifyFlushComplete() override;
   virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
-  virtual void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) override;
+  virtual void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) override;
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
