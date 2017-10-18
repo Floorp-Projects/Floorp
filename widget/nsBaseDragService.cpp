@@ -667,17 +667,22 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       uint32_t count = 0;
       nsAutoString childNodeName;
 
-      if (NS_SUCCEEDED(dragNode->GetChildNodes(getter_AddRefs(childList))) &&
+      // check if the dragged node itself is an img element
+      if (NS_SUCCEEDED(dragNode->GetNodeName(childNodeName)) &&
+          childNodeName.LowerCaseEqualsLiteral("img")) {
+        renderFlags = renderFlags | nsIPresShell::RENDER_IS_IMAGE;
+      } else if (
+          NS_SUCCEEDED(dragNode->GetChildNodes(getter_AddRefs(childList))) &&
           NS_SUCCEEDED(childList->GetLength(&length))) {
-        // check every childnode for being a img-tag
+        // check every childnode for being an img element
         while (count < length) {
           if (NS_FAILED(childList->Item(count, getter_AddRefs(child))) ||
               NS_FAILED(child->GetNodeName(childNodeName))) {
             break;
           }
-          // here the node is checked for being a img-tag
+          // here the node is checked for being an img element
           if (childNodeName.LowerCaseEqualsLiteral("img")) {
-            // if the dragnnode contains a image, set RENDER_IS_IMAGE flag
+            // if the dragnode contains an image, set RENDER_IS_IMAGE flag
             renderFlags = renderFlags | nsIPresShell::RENDER_IS_IMAGE;
             break;
           }
