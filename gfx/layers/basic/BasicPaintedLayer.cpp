@@ -187,13 +187,13 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
     Mutated();
     ctx = nullptr;
-    mContentClient->ReturnDrawTargetToBuffer(target);
+    mContentClient->ReturnDrawTarget(target);
     target = nullptr;
 
     RenderTraceInvalidateEnd(this, "FFFF00");
   } else {
     if (target) {
-      mContentClient->ReturnDrawTargetToBuffer(target);
+      mContentClient->ReturnDrawTarget(target);
       target = nullptr;
     }
 
