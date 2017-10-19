@@ -2683,8 +2683,8 @@ nsPrintEngine::SetDocAndURLIntoProgress(const UniquePtr<nsPrintObject>& aPO,
   EllipseLongString(docTitleStr, kTitleLength, false);
   EllipseLongString(docURLStr, kTitleLength, true);
 
-  aParams->SetDocTitle(docTitleStr.get());
-  aParams->SetDocURL(docURLStr.get());
+  aParams->SetDocTitle(docTitleStr);
+  aParams->SetDocURL(docURLStr);
 }
 
 //---------------------------------------------------------------------
