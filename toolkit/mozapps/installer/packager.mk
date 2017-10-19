@@ -49,12 +49,12 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH)) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DEFINES) $(ACDEFINES) $(MOZ_PKG_DUPEFLAGS) $(DIST)/$(MOZ_PKG_DIR)
-ifndef MOZ_THUNDERBIRD
+ifndef MOZ_IS_COMM_TOPDIR
 	# Package mozharness
 	$(call py_action,test_archive, \
 		mozharness \
 		$(ABS_DIST)/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
-endif # MOZ_THUNDERBIRD
+endif # MOZ_IS_COMM_TOPDIR
 ifdef MOZ_PACKAGE_JSSHELL
 	# Package JavaScript Shell
 	@echo 'Packaging JavaScript Shell...'
