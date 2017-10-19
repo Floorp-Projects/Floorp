@@ -1846,6 +1846,12 @@ public:
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument)
   {
     mIsTopLevelContentDocument = aIsTopLevelContentDocument;
+    // When a document is set as TopLevelContentDocument, it must be
+    // allowpaymentrequest. We handle the false case while a document is appended
+    // in SetSubDocumentFor
+    if (aIsTopLevelContentDocument) {
+      SetAllowPaymentRequest(true);
+    }
   }
 
   bool IsContentDocument() const { return mIsContentDocument; }
@@ -3211,6 +3217,9 @@ public:
     --mThrowOnDynamicMarkupInsertionCounter;
   }
 
+  virtual bool AllowPaymentRequest() const = 0;
+  virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3550,6 +3559,9 @@ protected:
   // True if any CSP violation reports for this doucment will be buffered in
   // mBufferedCSPViolations instead of being sent immediately.
   bool mBufferingCSPViolations : 1;
+
+  // True if the document is allowed to use PaymentRequest.
+  bool mAllowPaymentRequest : 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
