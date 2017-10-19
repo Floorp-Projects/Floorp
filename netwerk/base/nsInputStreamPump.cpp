@@ -727,8 +727,9 @@ nsInputStreamPump::CreateBufferedStreamIfNeeded()
     return NS_OK;
   }
 
+  nsCOMPtr<nsIAsyncInputStream> stream = mAsyncStream;
   nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(mBufferedStream),
-                                          mAsyncStream, 4096);
+                                          stream.forget(), 4096);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

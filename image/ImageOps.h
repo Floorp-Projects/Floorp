@@ -93,23 +93,25 @@ public:
    * an ImageBuffer representing the given input stream is more efficient if one
    * has multiple Decode* calls to make on that stream.
    *
-   * @param aInputStream An input stream containing an encoded image.
+   * @param aInputStream An input stream containing an encoded image. The
+   * ownership is taken.
    * @return An image buffer derived from the input stream.
    */
   static already_AddRefed<ImageBuffer>
-  CreateImageBuffer(nsIInputStream* aInputStream);
+  CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream);
 
   /**
    * Decodes an image's metadata from an nsIInputStream into the given
    * structure. This function may be called off-main-thread.
    *
-   * @param aInputStream An input stream containing an encoded image.
+   * @param aInputStream An input stream containing an encoded image. Ownership
+   * is taken.
    * @param aMimeType The MIME type of the image.
    * @param aMetadata Where the image metadata is stored upon success.
    * @return The status of the operation.
    */
   static nsresult
-  DecodeMetadata(nsIInputStream* aInputStream,
+  DecodeMetadata(already_AddRefed<nsIInputStream> aInputStream,
                  const nsACString& aMimeType,
                  ImageMetadata& aMetadata);
 
@@ -127,14 +129,15 @@ public:
    * main-thread-only). That means that this function may be called
    * off-main-thread.
    *
-   * @param aInputStream An input stream containing an encoded image.
+   * @param aInputStream An input stream containing an encoded image. The
+   * ownership is taken.
    * @param aMimeType The MIME type of the image.
    * @param aFlags Flags of the imgIContainer::FLAG_DECODE_* variety.
    * @return A SourceSurface containing the first frame of the image at its
    *         intrinsic size, or nullptr if the image cannot be decoded.
    */
   static already_AddRefed<gfx::SourceSurface>
-  DecodeToSurface(nsIInputStream* aInputStream,
+  DecodeToSurface(already_AddRefed<nsIInputStream> aInputStream,
                   const nsACString& aMimeType,
                   uint32_t aFlags,
                   const Maybe<gfx::IntSize>& aSize = Nothing());

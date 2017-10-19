@@ -125,7 +125,7 @@ LoadFile(const char* aRelativePath)
   if (!NS_InputStreamIsBuffered(inputStream)) {
     nsCOMPtr<nsIInputStream> bufStream;
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   inputStream, 1024);
+                                   inputStream.forget(), 1024);
     ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
     inputStream = bufStream;
   }
