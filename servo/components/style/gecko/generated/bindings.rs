@@ -2941,6 +2941,19 @@ extern "C" {
      -> ServoStyleContextStrong;
 }
 extern "C" {
+    pub fn Servo_StyleSet_GetComputedValuesByAddingAnimation(set:
+                                                                 RawServoStyleSetBorrowed,
+                                                             element:
+                                                                 RawGeckoElementBorrowed,
+                                                             existing_style:
+                                                                 ServoStyleContextBorrowed,
+                                                             snapshots:
+                                                                 *const ServoElementSnapshotTable,
+                                                             animation:
+                                                                 RawServoAnimationValueBorrowed)
+     -> ServoStyleContextStrong;
+}
+extern "C" {
     pub fn Servo_SerializeFontValueForCanvas(declarations:
                                                  RawServoDeclarationBlockBorrowed,
                                              buffer: *mut nsAString);
