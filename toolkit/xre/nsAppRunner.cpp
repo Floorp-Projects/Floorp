@@ -5223,6 +5223,7 @@ SetupErrorHandling(const char* progname)
   setbuf(stdout, 0);
 }
 
+// Note: This function should not be needed anymore. See Bug 818634 for details.
 void
 OverrideDefaultLocaleIfNeeded() {
   // Read pref to decide whether to override default locale with US English.

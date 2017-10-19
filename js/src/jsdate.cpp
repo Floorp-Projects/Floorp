@@ -2733,6 +2733,7 @@ FormatDate(JSContext* cx, double utcTime, FormatSpec format, MutableHandleValue 
     return true;
 }
 
+#if !EXPOSE_INTL_API
 static bool
 ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, MutableHandleValue rval)
 {
@@ -2778,7 +2779,7 @@ ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, Mutabl
     return true;
 }
 
-#if !EXPOSE_INTL_API
+
 /* ES5 15.9.5.5. */
 MOZ_ALWAYS_INLINE bool
 date_toLocaleString_impl(JSContext* cx, const CallArgs& args)
@@ -2848,56 +2849,6 @@ date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsDate, date_toLocaleTimeString_impl>(cx, args);
 }
 #endif /* !EXPOSE_INTL_API */
-
-MOZ_ALWAYS_INLINE bool
-date_toLocaleFormat_impl(JSContext* cx, const CallArgs& args)
-{
-    Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
-
-#if EXPOSE_INTL_API
-    if (!cx->compartment()->warnedAboutDateToLocaleFormat) {
-        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_DEPRECATED_TOLOCALEFORMAT))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutDateToLocaleFormat = true;
-    }
-#endif
-
-    if (args.length() == 0) {
-        /*
-         * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
-         * with msvc; '%#c' requests that a full year be used in the result string.
-         */
-        static const char format[] =
-#if defined(_WIN32) && !defined(__MWERKS__)
-                                       "%#c"
-#else
-                                       "%c"
-#endif
-                                       ;
-
-        return ToLocaleFormatHelper(cx, dateObj, format, args.rval());
-    }
-
-    RootedString fmt(cx, ToString<CanGC>(cx, args[0]));
-    if (!fmt)
-        return false;
-
-    JSAutoByteString fmtbytes(cx, fmt);
-    if (!fmtbytes)
-        return false;
-
-    return ToLocaleFormatHelper(cx, dateObj, fmtbytes.ptr(), args.rval());
-}
-
-static bool
-date_toLocaleFormat(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsDate, date_toLocaleFormat_impl>(cx, args);
-}
 
 /* ES5 15.9.5.4. */
 MOZ_ALWAYS_INLINE bool
@@ -3055,7 +3006,6 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("setMilliseconds",     date_setMilliseconds,    1,0),
     JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0),
     JS_FN("toUTCString",         date_toGMTString,        0,0),
-    JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Date_toLocaleString", 0,0),
     JS_SELF_HOSTED_FN("toLocaleDateString", "Date_toLocaleDateString", 0,0),
