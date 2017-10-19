@@ -1,5 +1,23 @@
 job-defaults:
     suite: marionette
+    mozharness:
+        no-read-buildbot-config: true
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: marionette.py
+        config:
+            by-test-platform:
+                android.*:
+                    - android/androidarm_4_3.py
+                macosx.*:
+                    - marionette/prod_config.py
+                    - marionette/mac_taskcluster_config.py
+                windows.*:
+                    - marionette/windows_taskcluster_config.py
+                default:
+                    - marionette/prod_config.py
+                    - remove_executables.py
 
 marionette:
     description: "Marionette unittest run"
@@ -21,28 +39,6 @@ marionette:
         by-test-platform:
             android.*: 10
             default: 1
-    mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=marionette
-            default:
-                script: marionette.py
-                no-read-buildbot-config: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - marionette/windows_taskcluster_config.py
-                        macosx.*:
-                            - marionette/prod_config.py
-                            - marionette/mac_taskcluster_config.py
-                        default:
-                            - marionette/prod_config.py
-                            - remove_executables.py
 
 marionette-headless:
     description: "Marionette headless unittest run"
@@ -50,18 +46,6 @@ marionette-headless:
     max-run-time: 5400
     instance-size: default
     mozharness:
-        script: marionette.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - marionette/windows_taskcluster_config.py
-                macosx.*:
-                    - marionette/prod_config.py
-                    - marionette/mac_taskcluster_config.py
-                default:
-                    - marionette/prod_config.py
-                    - remove_executables.py
         extra-options:
             - --headless
     tier:
