@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Task } = require("devtools/shared/task");
 const { getJSON } = require("devtools/client/shared/getjson");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/device.properties");
@@ -43,35 +42,40 @@ const LOCAL_DEVICES = "devtools.devices.local";
 let localDevices;
 let localDevicesLoaded = false;
 
-// Load local devices from storage.
-let loadLocalDevices = Task.async(function* () {
+/**
+ * Load local devices from storage.
+ */
+async function loadLocalDevices() {
   if (localDevicesLoaded) {
     return;
   }
-  let devicesJSON = yield asyncStorage.getItem(LOCAL_DEVICES);
+  let devicesJSON = await asyncStorage.getItem(LOCAL_DEVICES);
   if (!devicesJSON) {
     devicesJSON = "{}";
   }
   localDevices = JSON.parse(devicesJSON);
   localDevicesLoaded = true;
-});
+}
 
-// Add a device to the local catalog.
-let addDevice = Task.async(function* (device, type = "phones") {
-  yield loadLocalDevices();
+/**
+ * Add a device to the local catalog.
+ */
+async function addDevice(device, type = "phones") {
+  await loadLocalDevices();
   let list = localDevices[type];
   if (!list) {
     list = localDevices[type] = [];
   }
   list.push(Object.assign({}, device));
-  yield asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
-});
-exports.addDevice = addDevice;
+  await asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
+}
 
-// Remove a device from the local catalog.
-// returns `true` if the device is removed, `false` otherwise.
-let removeDevice = Task.async(function* (device, type = "phones") {
-  yield loadLocalDevices();
+/**
+ * Remove a device from the local catalog.
+ * Returns `true` if the device is removed, `false` otherwise.
+ */
+async function removeDevice(device, type = "phones") {
+  await loadLocalDevices();
   let list = localDevices[type];
   if (!list) {
     return false;
@@ -84,17 +88,18 @@ let removeDevice = Task.async(function* (device, type = "phones") {
   }
 
   list.splice(index, 1);
-  yield asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
+  await asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
 
   return true;
-});
-exports.removeDevice = removeDevice;
+}
 
-// Get the complete devices catalog.
-let getDevices = Task.async(function* () {
+/**
+ * Get the complete devices catalog.
+ */
+async function getDevices() {
   // Fetch common devices from Mozilla's CDN.
-  let devices = yield getJSON(DEVICES_URL);
-  yield loadLocalDevices();
+  let devices = await getJSON(DEVICES_URL);
+  await loadLocalDevices();
   for (let type in localDevices) {
     if (!devices[type]) {
       devices.TYPES.push(type);
@@ -103,11 +108,18 @@ let getDevices = Task.async(function* () {
     devices[type] = localDevices[type].concat(devices[type]);
   }
   return devices;
-});
-exports.getDevices = getDevices;
+}
 
-// Get the localized string for a device type.
+/**
+ * Get the localized string for a device type.
+ */
 function getDeviceString(deviceType) {
   return L10N.getStr("device." + deviceType);
 }
-exports.getDeviceString = getDeviceString;
+
+module.exports = {
+  addDevice,
+  removeDevice,
+  getDevices,
+  getDeviceString,
+};
