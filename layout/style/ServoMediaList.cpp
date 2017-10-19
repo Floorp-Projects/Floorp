@@ -50,7 +50,7 @@ ServoMediaList::SetTextInternal(const nsAString& aMediaText,
                                 dom::CallerType aCallerType)
 {
   NS_ConvertUTF16toUTF8 mediaText(aMediaText);
-  Servo_MediaList_SetText(mRawList, &mediaText);
+  Servo_MediaList_SetText(mRawList, &mediaText, aCallerType);
 }
 
 uint32_t

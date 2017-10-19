@@ -521,7 +521,8 @@ SERVO_BINDING_FUNC(Servo_MediaList_Matches, bool,
 SERVO_BINDING_FUNC(Servo_MediaList_GetText, void,
                    RawServoMediaListBorrowed list, nsAString* result)
 SERVO_BINDING_FUNC(Servo_MediaList_SetText, void,
-                   RawServoMediaListBorrowed list, const nsACString* text)
+                   RawServoMediaListBorrowed list, const nsACString* text,
+                   mozilla::dom::CallerType aCallerType)
 SERVO_BINDING_FUNC(Servo_MediaList_GetLength, uint32_t,
                    RawServoMediaListBorrowed list)
 SERVO_BINDING_FUNC(Servo_MediaList_GetMediumAt, bool,
