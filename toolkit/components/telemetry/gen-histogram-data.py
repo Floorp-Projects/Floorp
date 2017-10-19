@@ -73,12 +73,12 @@ def write_histogram_table(output, histograms):
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % strtab_name,
                   "index overflow")
 
-    print("\nconstexpr uint32_t gHistogramLabelTable[] = {", file=output)
+    print("\nconst uint32_t gHistogramLabelTable[] = {", file=output)
     for name, indexes in label_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
 
-    print("\nconstexpr uint32_t gHistogramKeyTable[] = {", file=output)
+    print("\nconst uint32_t gHistogramKeyTable[] = {", file=output)
     for name, indexes in keys_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
@@ -157,7 +157,7 @@ def write_histogram_ranges(output, histograms):
     # The format must exactly match that required in histogram.cc, which is
     # 0, buckets..., INT_MAX. Additionally, the list ends in a 0 to aid asserts
     # that validate that the length of the ranges list is correct.U cache miss.
-    print("constexpr int gHistogramBucketLowerBounds[] = {", file=output)
+    print("const int gHistogramBucketLowerBounds[] = {", file=output)
 
     # Print the dummy buckets for expired histograms, and set the offset to match.
     print("0,1,2,INT_MAX,", file=output)
@@ -177,7 +177,7 @@ def write_histogram_ranges(output, histograms):
     if offset > 32767:
         raise Exception('Histogram offsets exceeded maximum value for an int16_t.')
 
-    print("constexpr int16_t gHistogramBucketLowerBoundIndex[] = {", file=output)
+    print("const int16_t gHistogramBucketLowerBoundIndex[] = {", file=output)
     for histogram in histograms:
         cpp_guard = histogram.cpp_guard()
         if cpp_guard:
