@@ -256,6 +256,11 @@ struct BitFlagsEnumSerializer
  * structure's members.
  *
  * Derive ParamTraits<T> from PlainOldDataSerializer<T> if T is POD.
+ *
+ * Note: For POD structures with enumeration fields, this will not do
+ *   validation of the enum values the way serializing the fields
+ *   individually would. Prefer serializing the fields individually
+ *   in such cases.
  */
 template <typename T>
 struct PlainOldDataSerializer
