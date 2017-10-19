@@ -55,11 +55,11 @@ ServoDeclarationBlock::RemoveProperty(const nsAString& aProperty)
   Servo_DeclarationBlock_RemoveProperty(mRaw, &property);
 }
 
-void
+bool
 ServoDeclarationBlock::RemovePropertyByID(nsCSSPropertyID aPropID)
 {
   AssertMutable();
-  Servo_DeclarationBlock_RemovePropertyById(mRaw, aPropID);
+  return Servo_DeclarationBlock_RemovePropertyById(mRaw, aPropID);
 }
 
 } // namespace mozilla
