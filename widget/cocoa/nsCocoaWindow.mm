@@ -885,9 +885,11 @@ nsCocoaWindow::Show(bool bState)
       // appear above the parent and move when the parent does. Setting this
       // needs to happen after the _setWindowNumber calls above, otherwise the
       // window doesn't focus properly.
-      if (nativeParentWindow && mPopupLevel == ePopupLevelParent)
+      if (nativeParentWindow && mPopupLevel == ePopupLevelParent) {
         [nativeParentWindow addChildWindow:mWindow
                             ordered:NSWindowAbove];
+        [mWindow setLevel:NSPopUpMenuWindowLevel];
+      }
     }
     else {
       NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1375,6 +1377,7 @@ nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   enumerator = [childWindows objectEnumerator];
   while ((child = [enumerator nextObject])) {
     [mWindow addChildWindow:child ordered:NSWindowAbove];
+    [mWindow setLevel:NSPopUpMenuWindowLevel];
   }
 
   // Show the new window.
