@@ -310,6 +310,7 @@ static bool enableNativeRegExp = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
+static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 #ifdef JS_GC_ZEAL
@@ -8131,6 +8132,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableNativeRegExp = !op.getBoolOption("no-native-regexp");
     enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
     enableWasmIon = !op.getBoolOption("no-wasm-ion");
+    enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
     enableStreams = op.getBoolOption("enable-streams");
 
@@ -8140,6 +8142,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
                              .setWasmIon(enableWasmIon)
+                             .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
                              .setNativeRegExp(enableNativeRegExp)
                              .setAsyncStack(enableAsyncStacks)
                              .setStreams(enableStreams);
@@ -8423,6 +8426,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
                              .setWasmIon(enableWasmIon)
+                             .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
                              .setNativeRegExp(enableNativeRegExp)
                              .setStreams(enableStreams);
     cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
@@ -8627,6 +8631,8 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation")
         || !op.addBoolOption('\0', "no-wasm-baseline", "Disable wasm baseline compiler")
         || !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
+        || !op.addBoolOption('\0', "test-wasm-await-tier2", "Forcibly activate tiering and block "
+                                   "instantiation on completion of tier2")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "wasm-test-mode", "Enable wasm testing mode, creating synthetic "

@@ -241,9 +241,9 @@ Module::startTier2(const CompileArgs& args)
     MOZ_ASSERT(!tiering_.lock()->active);
 
     // If a Module initiates tier-2 compilation, we must ensure that eventually
-    // unblockOnTier2GeneratorFinished() is called. Since we must ensure
+    // notifyCompilationListeners() is called. Since we must ensure
     // Tier2GeneratorTaskImpl objects are destroyed *anyway*, we use
-    // ~Tier2GeneratorTaskImpl() to call unblockOnTier2GeneratorFinished() if it
+    // ~Tier2GeneratorTaskImpl() to call notifyCompilationListeners() if it
     // hasn't been already.
 
     UniqueTier2GeneratorTask task(js_new<Tier2GeneratorTaskImpl>(*this, args));
@@ -269,6 +269,8 @@ Module::notifyCompilationListeners()
         tiering->active = false;
 
         Swap(listeners, tiering->listeners);
+
+        tiering.notify_all(/* inactive */);
     }
 
     for (RefPtr<JS::WasmModuleListener>& listener : listeners)
@@ -308,6 +310,14 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
 
         jumpTable[cr.funcIndex()] = base + cr.funcTierEntry();
     }
+}
+
+void
+Module::blockOnTier2Complete() const
+{
+    auto tiering = tiering_.lock();
+    while (tiering->active)
+        tiering.wait(/* inactive */);
 }
 
 /* virtual */ size_t
@@ -618,9 +628,8 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
         return false;
 
     // This function is only used for testing purposes so we can simply
-    // busy-wait on tiered compilation to complete.
-    while (!compilationComplete())
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    // block on tiered compilation to complete.
+    blockOnTier2Complete();
 
     if (!code_->hasTier(tier)) {
         vp.setNull();
@@ -1216,6 +1225,9 @@ Module::instantiate(JSContext* cx,
 
     JSUseCounter useCounter = metadata().isAsmJS() ? JSUseCounter::ASMJS : JSUseCounter::WASM;
     cx->runtime()->setUseCounter(instance, useCounter);
+
+    if (cx->options().testWasmAwaitTier2())
+        blockOnTier2Complete();
 
     return true;
 }
