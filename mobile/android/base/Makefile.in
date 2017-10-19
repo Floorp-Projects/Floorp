@@ -549,18 +549,23 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
-# Targets built very early during a Gradle build.
+ifndef MOZILLA_OFFICIAL
+# Targets built very early during a Gradle build.  In automation,
+# these are built before Gradle is invoked by .gradle.deps and
+# gradle-targets is not made at all.  This is required to avoid
+# building gradle-targets with AB_CD=multi during multi-l10n builds.
 gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
 gradle-targets: AndroidManifest.xml
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
-ifndef MOZILLA_OFFICIAL
 # Local developers update omni.ja during their builds.  There's a
 # chicken-and-egg problem here.
 gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
 else
 # In automation, omni.ja is built only during packaging.
 gradle-omnijar:
+
+gradle-targets:
 endif
 
 .PHONY: gradle-targets gradle-omnijar

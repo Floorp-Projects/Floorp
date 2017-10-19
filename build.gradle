@@ -64,21 +64,32 @@ buildscript {
     }
 }
 
-task generateCodeAndResources(type:Exec) {
-    workingDir "${topobjdir}"
+if ('multi' == System.env.AB_CD) {
+    // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  This
+    // causes the
+    //
+    // |mach build| > |mach gradle| > |make gradle-targets| > AndroidManifest.xml > strings.xml > multi/brand.dtd
+    //
+    // dependency chain to fail, since multi isn't a real locale.  To avoid
+    // this, if Gradle is invoked with AB_CD=multi, we don't invoke Make at all.
+    task generateCodeAndResources()
+} else {
+    task generateCodeAndResources(type:Exec) {
+        workingDir "${topobjdir}"
 
-    commandLine mozconfig.substs.GMAKE
-    args '-C'
-    args "${topobjdir}/mobile/android/base"
-    args 'gradle-targets'
+        commandLine mozconfig.substs.GMAKE
+        args '-C'
+        args "${topobjdir}/mobile/android/base"
+        args 'gradle-targets'
 
-    // Only show the output if something went wrong.
-    ignoreExitValue = true
-    standardOutput = new ByteArrayOutputStream()
-    errorOutput = standardOutput
-    doLast {
-        if (execResult.exitValue != 0) {
-            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+        // Only show the output if something went wrong.
+        ignoreExitValue = true
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = standardOutput
+        doLast {
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+            }
         }
     }
 }
