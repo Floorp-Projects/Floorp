@@ -133,7 +133,8 @@ public:
                                    nsAString& aValue) const;
   inline bool GetPropertyIsImportant(const nsAString& aProperty) const;
   inline void RemoveProperty(const nsAString& aProperty);
-  inline void RemovePropertyByID(nsCSSPropertyID aProperty);
+  // Returns whether the property was removed.
+  inline bool RemovePropertyByID(nsCSSPropertyID aProperty);
 
 private:
   union {
