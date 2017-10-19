@@ -4,16 +4,12 @@
 
 package org.mozilla.focus.shortcut
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.drawable.AdaptiveIconDrawable
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.support.annotation.VisibleForTesting
@@ -26,9 +22,7 @@ import org.mozilla.focus.utils.UrlUtils
 class IconGenerator {
 
     companion object {
-        private val ICON_SIZE_PRE_OREO = 96
         private val TEXT_SIZE_DP = 36f
-
         private val DEFAULT_ICON_CHAR = "?"
 
         /**
@@ -40,60 +34,41 @@ class IconGenerator {
         fun generateLauncherIcon(context: Context, url: String?) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             generateAdaptiveLauncherIcon(context, url)
         } else {
-            // It'd more natural to return a Bitmap from generateLauncherIconPreOreo but we want to
-            // match the type of generateAdaptiveLauncherIcon so we wrap it in a Drawable.
-            BitmapDrawable(context.resources, generateLauncherIconPreOreo(context, url))
+            generateLauncherIconPreOreo(context, url)
         }
 
-        private fun generateLauncherIconPreOreo(context: Context, url: String?): Bitmap {
+        /*
+         * This method needs to be separate from generateAdaptiveLauncherIcon so that we can generate
+         * the pre-Oreo icon to display in the Add To Home screen Dialog
+         */
+        @JvmStatic
+        fun generateLauncherIconPreOreo(context: Context, url: String?): Bitmap {
             val options = BitmapFactory.Options()
             options.inMutable = true
-
             val shape = BitmapFactory.decodeResource(context.resources, R.drawable.ic_homescreen_shape, options)
-
-            val icon = generateIcon(context, url, ICON_SIZE_PRE_OREO)
-
-            val drawX = shape.width / 2f - icon.width / 2f
-            val drawY = shape.height / 2f - icon.height / 2f
-
-            val canvas = Canvas(shape)
-            canvas.drawBitmap(icon, drawX, drawY, Paint())
-
-            return shape
+            return drawCharacterOnBitmap(context, url, shape)
         }
 
         /**
          * Generates a launcher icon for versions of Android that support Adaptive Icons (Oreo+):
          * https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive.html
-         *
-         * A bitmap created from this drawable (e.g. Drawable.toBitmap) is expected to be used with
-         * [android.support.v4.graphics.drawable.IconCompat.createWithBitmap], not
-         * [android.support.v4.graphics.drawable.IconCompat.createWithAdaptiveBitmap]. Why? createWithAdaptiveBitmap
-         * will apply the platform's adaptive icon formatting to the given bitmap so it assumes you have a bitmap that
-         * hasn't been formatted already. However, when a bitmap is created with [AdaptiveIconDrawable], the formatting
-         * is applied so it'd be incorrect for us to use createWithAdaptiveBitmap, which would apply the formatting
-         * again.
-         *
-         * Unfortunately, we also can't just pass our legacy icon into createWithAdaptiveBitmap because the icon
-         * background has the corners removed and some device might display icons that have less of the corner missing
-         * than we do. In that case, we'd be unable to add the corners back and the icon wouldn't conform.
          */
-        @TargetApi(26)
-        private fun generateAdaptiveLauncherIcon(context: Context, url: String?): AdaptiveIconDrawable {
+        private fun generateAdaptiveLauncherIcon(context: Context, url: String?): Bitmap {
             val res = context.resources
-            val backgroundColor = ColorDrawable(ContextCompat.getColor(context, R.color.add_to_homescreen_icon_background))
-
             val adaptiveIconDimen = res.getDimensionPixelSize(R.dimen.adaptive_icon_drawable_dimen)
-            val foregroundLetter = BitmapDrawable(res, generateIcon(context, url, adaptiveIconDimen))
 
-            return AdaptiveIconDrawable(backgroundColor, foregroundLetter)
+            val bitmap = Bitmap.createBitmap(adaptiveIconDimen, adaptiveIconDimen, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+
+            // Adaptive Icons have two layers: a background that fills the canvas and
+            // a foreground that's centered. First, we draw the background...
+            canvas.drawColor(ContextCompat.getColor(context, R.color.add_to_homescreen_icon_background))
+
+            // Then draw the foreground
+            return drawCharacterOnBitmap(context, url, bitmap)
         }
 
-        /**
-         * Generate an icon for this website based on the URL.
-         */
-        private fun generateIcon(context: Context, url: String?, iconSize: Int): Bitmap {
-            val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+        private fun drawCharacterOnBitmap(context: Context, url: String?, bitmap: Bitmap): Bitmap {
             val canvas = Canvas(bitmap)
 
             val paint = Paint()

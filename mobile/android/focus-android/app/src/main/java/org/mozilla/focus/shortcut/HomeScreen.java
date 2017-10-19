@@ -52,10 +52,12 @@ public class HomeScreen {
      */
     private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+            final IconCompat icon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ?
+                    IconCompat.createWithAdaptiveBitmap(bitmap) : IconCompat.createWithBitmap(bitmap);
             final ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context, UUID.randomUUID().toString())
                     .setShortLabel(title)
                     .setLongLabel(title)
-                    .setIcon(IconCompat.createWithBitmap(bitmap))
+                    .setIcon(icon)
                     .setIntent(createShortcutIntent(context, url, blockingEnabled))
                     .build();
             ShortcutManagerCompat.requestPinShortcut(context, shortcut, null);

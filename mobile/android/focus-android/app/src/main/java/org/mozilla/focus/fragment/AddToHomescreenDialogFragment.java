@@ -6,7 +6,7 @@
 package org.mozilla.focus.fragment;
 
 import android.app.Dialog;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -21,7 +21,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import org.mozilla.focus.R;
-import org.mozilla.focus.ext.DrawableKt;
 import org.mozilla.focus.shortcut.HomeScreen;
 import org.mozilla.focus.shortcut.IconGenerator;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -60,9 +59,11 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         final View dialogView = inflater.inflate(R.layout.add_to_homescreen, null);
         builder.setView(dialogView);
 
-        final Drawable iconDrawable = IconGenerator.generateLauncherIcon(getActivity(), url);
+        // For the dialog we display the Pre Oreo version of the icon because the Oreo+
+        // adaptive launcher icon does not have a mask applied until we create the shortcut
+        final Bitmap iconBitmap = IconGenerator.generateLauncherIconPreOreo(getContext(), url);
         final ImageView iconView = (ImageView) dialogView.findViewById(R.id.homescreen_icon);
-        iconView.setImageDrawable(iconDrawable);
+        iconView.setImageBitmap(iconBitmap);
 
         final ImageView blockIcon = (ImageView) dialogView.findViewById(R.id.homescreen_dialog_block_icon);
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_16_disabled);
@@ -92,7 +93,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         addToHomescreenDialogConfirmButton.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HomeScreen.installShortCut(getActivity(), DrawableKt.toBitmap(iconDrawable), url,
+                HomeScreen.installShortCut(getContext(), IconGenerator.generateLauncherIcon(getContext(), url), url,
                         editableTitle.getText().toString().trim(), blockingEnabled);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
                 dismiss();
