@@ -68,9 +68,7 @@ var omtaEnabled = isOMTAEnabled();
 var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
 var offscreenThrottlingEnabled =
-  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') &&
-  !isServo; // Bug 1303235 : For stylo we don't yet accumulate change
-            // hints which are used for offscreen throttling.
+  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {

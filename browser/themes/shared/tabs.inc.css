@@ -437,7 +437,7 @@ tabbrowser {
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) ~ #TabsToolbar,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar,
 %endif
 :root:not([tabsintitlebar]),
 :root[extradragspace] {
@@ -445,7 +445,7 @@ tabbrowser {
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab > .tab-stack > .tab-background,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab > .tab-stack > .tab-background,
 %endif
 :root:not([tabsintitlebar]) .tab-background,
 :root[extradragspace] .tab-background {
@@ -565,7 +565,7 @@ tabbrowser {
 
 %ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] ~ #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
+:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] + #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
 %else
 :root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
 %endif
