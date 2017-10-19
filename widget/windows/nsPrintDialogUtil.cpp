@@ -59,9 +59,9 @@ WIN_LIBS=                                       \
 #include "WinUtils.h"
 
 // Default labels for the radio buttons
-static const char* kAsLaidOutOnScreenStr = "As &laid out on the screen";
-static const char* kTheSelectedFrameStr  = "The selected &frame";
-static const char* kEachFrameSeparately  = "&Each frame separately";
+static const wchar_t* kAsLaidOutOnScreenStr = L"As &laid out on the screen";
+static const wchar_t* kTheSelectedFrameStr  = L"The selected &frame";
+static const wchar_t* kEachFrameSeparately  = L"&Each frame separately";
 
 
 //-----------------------------------------------
@@ -120,12 +120,10 @@ GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal
 
 //--------------------------------------------------------
 // Set a multi-byte string in the control
-static void SetTextOnWnd(HWND aControl, const nsString& aStr)
+static void SetTextOnWnd(HWND aControl, const nsAString& aStr)
 {
-  nsAutoCString text;
-  if (NS_SUCCEEDED(NS_CopyUnicodeToNative(aStr, text))) {
-    ::SetWindowText(aControl, text.get());
-  }
+  ::SetWindowTextW(aControl,
+                   reinterpret_cast<const wchar_t*>(aStr.BeginReading()));
 }
 
 //--------------------------------------------------------
@@ -219,19 +217,15 @@ static void Show(HWND aWnd, bool bState)
 
 //--------------------------------------------------------
 // Create a child window "control"
-static HWND CreateControl(LPCTSTR          aType,
+static HWND CreateControl(LPCWSTR          aType,
                           DWORD            aStyle,
                           HINSTANCE        aHInst,
                           HWND             aHdlg,
                           int              aId,
-                          const nsAString& aStr,
+                          LPCWSTR           aStr,
                           const nsIntRect& aRect)
 {
-  nsAutoCString str;
-  if (NS_FAILED(NS_CopyUnicodeToNative(aStr, str)))
-    return nullptr;
-
-  HWND hWnd = ::CreateWindow (aType, str.get(),
+  HWND hWnd = ::CreateWindowW(aType, aStr,
                               WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | aStyle,
                               aRect.x, aRect.y, aRect.width, aRect.height,
                               (HWND)aHdlg, (HMENU)(intptr_t)aId,
@@ -252,12 +246,10 @@ static HWND CreateControl(LPCTSTR          aType,
 static HWND CreateRadioBtn(HINSTANCE        aHInst,
                            HWND             aHdlg,
                            int              aId,
-                           const char*      aStr,
+                           LPCWSTR          aStr,
                            const nsIntRect& aRect)
 {
-  nsString str;
-  CopyASCIItoUTF16(aStr, str);
-  return CreateControl("BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, str, aRect);
+  return CreateControl(L"BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, aStr, aRect);
 }
 
 //--------------------------------------------------------
@@ -265,10 +257,10 @@ static HWND CreateRadioBtn(HINSTANCE        aHInst,
 static HWND CreateGroupBox(HINSTANCE        aHInst,
                            HWND             aHdlg,
                            int              aId,
-                           const nsAString& aStr,
+                           LPCWSTR          aStr,
                            const nsIntRect& aRect)
 {
-  return CreateControl("BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
+  return CreateControl(L"BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
 }
 
 //--------------------------------------------------------
@@ -405,7 +397,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 
     // Create and position the group box
     rect.SetRect (dlgRect.left, top, dlgRect.right-dlgRect.left+1, y-top+1);
-    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, NS_LITERAL_STRING("Print Frame"), rect);
+    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, L"Print Frame", rect);
     if (grpBoxWnd == nullptr) {
       Show(rad4Wnd, FALSE); // hide
       Show(rad5Wnd, FALSE); // hide
