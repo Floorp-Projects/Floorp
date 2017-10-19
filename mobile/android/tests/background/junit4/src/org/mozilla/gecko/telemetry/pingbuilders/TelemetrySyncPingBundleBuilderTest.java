@@ -112,7 +112,7 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(outgoingPing.getPayload().containsKey("payload"));
         assertTrue(outgoingPing.getPayload().containsKey("id"));
         assertEquals("sync", outgoingPing.getPayload().getString("type"));
-        assertEquals(Integer.valueOf(5), outgoingPing.getPayload().getIntegerSafely("version"));
+        assertEquals(Integer.valueOf(4), outgoingPing.getPayload().getIntegerSafely("version"));
 
         // Test application key.
         ExtendedJSONObject application = outgoingPing.getPayload().getObject("application");
