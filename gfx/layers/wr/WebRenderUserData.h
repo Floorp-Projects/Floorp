@@ -56,7 +56,7 @@ public:
   nsIFrame* GetFrame() { return mFrame; }
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
   void RemoveFromTable();
-
+  virtual void ClearCachedResources() {};
 protected:
   virtual ~WebRenderUserData();
 
@@ -98,7 +98,7 @@ public:
                                          bool aIsBackfaceVisible);
 
   void CreateImageClientIfNeeded();
-
+  void ClearCachedResources() override;
 protected:
   void CreateExternalImageIfNeeded();
 
@@ -160,7 +160,7 @@ public:
   static UserDataType Type() { return UserDataType::eCanvas; }
 
   WebRenderCanvasRendererAsync* GetCanvasRenderer();
-
+  void ClearCachedResources() override;
 protected:
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
 };
