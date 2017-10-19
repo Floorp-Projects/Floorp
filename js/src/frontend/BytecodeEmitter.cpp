@@ -2504,7 +2504,7 @@ BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn)
 {
     if (pn && !updateSourceCoordNotes(pn->pn_pos.begin))
         return false;
-    return emit3(op, ARGC_HI(argc), ARGC_LO(argc));
+    return emit3(op, ARGC_LO(argc), ARGC_HI(argc));
 }
 
 bool
@@ -2687,7 +2687,7 @@ bool
 BytecodeEmitter::emitUint16Operand(JSOp op, uint32_t operand)
 {
     MOZ_ASSERT(operand <= UINT16_MAX);
-    if (!emit3(op, UINT16_HI(operand), UINT16_LO(operand)))
+    if (!emit3(op, UINT16_LO(operand), UINT16_HI(operand)))
         return false;
     checkTypeSet(op);
     return true;
