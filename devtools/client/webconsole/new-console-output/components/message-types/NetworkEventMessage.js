@@ -108,9 +108,7 @@ function NetworkEventMessage({
     viewSourceInDebugger: (url, line) => {
       serviceContainer.onViewSourceInDebugger({url, line});
     },
-    getLongString: (grip) => {
-      return serviceContainer.getLongString(grip);
-    },
+    getLongString: () => {},
     getTabTarget: () => {},
     getNetworkRequest: () => {},
     sendHTTPRequest: () => {},

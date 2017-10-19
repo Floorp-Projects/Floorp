@@ -23,12 +23,8 @@ const { getGripPreviewItems } = require("devtools/client/shared/components/reps/
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 
 const {
-  UPDATE_REQUEST,
+  UPDATE_PROPS
 } = require("devtools/client/netmonitor/src/constants");
-
-const {
-  processNetworkUpdates,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 const MessageState = Immutable.Record({
   // List of all the messages added to the console.
@@ -278,14 +274,34 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
         })
       );
 
-    case UPDATE_REQUEST:
     case constants.NETWORK_UPDATE_REQUEST: {
       let request = networkMessagesUpdateById[action.id];
       if (!request) {
         return state;
       }
 
-      let values = processNetworkUpdates(action.data);
+      let values = {};
+      for (let [key, value] of Object.entries(action.data)) {
+        if (UPDATE_PROPS.includes(key)) {
+          values[key] = value;
+
+          switch (key) {
+            case "securityInfo":
+              values.securityState = value.state;
+              break;
+            case "totalTime":
+              values.totalTime = request.totalTime;
+              break;
+            case "requestPostData":
+              values.requestHeadersFromUploadStream = {
+                headers: [],
+                headersSize: 0,
+              };
+              break;
+          }
+        }
+      }
+
       newState = state.set(
         "networkMessagesUpdateById",
         Object.assign({}, networkMessagesUpdateById, {
