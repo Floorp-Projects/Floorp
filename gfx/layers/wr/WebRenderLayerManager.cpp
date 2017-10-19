@@ -252,9 +252,11 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   AUTO_PROFILER_TRACING("Paint", "RenderLayers");
   mTransactionIncomplete = false;
 
-  if (gfxPrefs::LayersDump()) {
-    this->Dump();
-  }
+#if 0
+  // Useful for debugging, it dumps the display list *before* we try to build
+  // WR commands from it
+  nsFrame::PrintDisplayList(aDisplayListBuilder, *aDisplayList);
+#endif
 
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
