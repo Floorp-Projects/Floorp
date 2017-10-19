@@ -5584,7 +5584,6 @@ struct BufferStreamJob
 struct BufferStreamState
 {
     Vector<UniquePtr<BufferStreamJob>, 0, SystemAllocPolicy> jobs;
-    ConditionVariable jobsEmpty;
     size_t delayMillis;
     size_t chunkSize;
     bool shutdown;
@@ -5601,7 +5600,7 @@ struct BufferStreamState
     }
 };
 
-ExclusiveData<BufferStreamState> bufferStreamState(mutexid::BufferStreamState);
+ExclusiveWaitableData<BufferStreamState> bufferStreamState(mutexid::BufferStreamState);
 
 static void
 BufferStreamMain(BufferStreamJob* job)
@@ -5647,7 +5646,7 @@ BufferStreamMain(BufferStreamJob* job)
     job->thread.detach();  // quiet assert in ~Thread() called by erase().
     state->jobs.erase(state->jobs.begin() + jobIndex);
     if (state->jobs.empty())
-        state->jobsEmpty.notify_all();
+        state.notify_all(/* jobs empty */);
 }
 
 static bool
@@ -5684,7 +5683,7 @@ ShutdownBufferStreams()
     auto state = bufferStreamState.lock();
     state->shutdown = true;
     while (!state->jobs.empty())
-        state.wait(state->jobsEmpty);
+        state.wait(/* jobs empty */);
 }
 
 static bool
