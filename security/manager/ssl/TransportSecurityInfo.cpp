@@ -432,16 +432,16 @@ TransportSecurityInfo::GetScriptableHelper(nsIXPCScriptable **_retval)
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetContractID(char * *aContractID)
+TransportSecurityInfo::GetContractID(nsACString& aContractID)
 {
-  *aContractID = nullptr;
+  aContractID.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetClassDescription(char * *aClassDescription)
+TransportSecurityInfo::GetClassDescription(nsACString& aClassDescription)
 {
-  *aClassDescription = nullptr;
+  aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 

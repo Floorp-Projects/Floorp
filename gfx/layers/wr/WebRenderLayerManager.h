@@ -155,6 +155,8 @@ public:
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() { return mWebRenderCommandBuilder.GetWebRenderUserDataTable(); }
   WebRenderScrollData& GetScrollData() { return mScrollData; }
 
+  void WrUpdated();
+
 private:
   /**
    * Take a snapshot of the parent context, and copy

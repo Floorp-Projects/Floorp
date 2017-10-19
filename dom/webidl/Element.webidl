@@ -243,6 +243,8 @@ partial interface Element {
   NodeList getDestinationInsertionPoints();
   [Pref="dom.webcomponents.enabled"]
   readonly attribute ShadowRoot? shadowRoot;
+  [Pref="dom.webcomponents.enabled"]
+  readonly attribute HTMLSlotElement? assignedSlot;
 };
 
 Element implements ChildNode;

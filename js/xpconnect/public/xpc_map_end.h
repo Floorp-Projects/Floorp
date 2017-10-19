@@ -23,9 +23,9 @@
 
 /**************************************************************/
 
-NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(char * *aClassName)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(nsACString& aClassName)
 {
-    *aClassName = moz_xstrdup(XPC_MAP_QUOTED_CLASSNAME);
+    aClassName.AssignLiteral(XPC_MAP_QUOTED_CLASSNAME);
     return NS_OK;
 }
 

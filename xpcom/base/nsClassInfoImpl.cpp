@@ -36,17 +36,17 @@ GenericClassInfo::GetScriptableHelper(nsIXPCScriptable** aHelper)
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetContractID(char** aContractID)
+GenericClassInfo::GetContractID(nsACString& aContractID)
 {
   NS_ERROR("GetContractID not implemented");
-  *aContractID = nullptr;
+  aContractID.SetIsVoid(true);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetClassDescription(char** aDescription)
+GenericClassInfo::GetClassDescription(nsACString& aDescription)
 {
-  *aDescription = nullptr;
+  aDescription.SetIsVoid(true);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
