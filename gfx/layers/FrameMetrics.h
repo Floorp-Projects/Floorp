@@ -721,6 +721,32 @@ struct ScrollSnapInfo {
   nsTArray<nsPoint> mScrollSnapCoordinates;
 };
 
+MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
+  OverscrollBehavior, uint8_t, (
+    Auto,
+    Contain,
+    None
+));
+
+struct OverscrollBehaviorInfo {
+  OverscrollBehaviorInfo()
+    : mBehaviorX(OverscrollBehavior::Auto)
+    , mBehaviorY(OverscrollBehavior::Auto)
+  {}
+
+  // Construct from StyleOverscrollBehavior values.
+  static OverscrollBehaviorInfo FromStyleConstants(StyleOverscrollBehavior aBehaviorX,
+                                                   StyleOverscrollBehavior aBehaviorY);
+
+  bool operator==(const OverscrollBehaviorInfo& aOther) const {
+    return mBehaviorX == aOther.mBehaviorX &&
+           mBehaviorY == aOther.mBehaviorY;
+  }
+
+  OverscrollBehavior mBehaviorX;
+  OverscrollBehavior mBehaviorY;
+};
+
 /**
  * A clip that applies to a layer, that may be scrolled by some of the
  * scroll frames associated with the layer.
@@ -797,6 +823,7 @@ public:
     , mIsLayersIdRoot(false)
     , mUsesContainerScrolling(false)
     , mForceDisableApz(false)
+    , mOverscrollBehavior()
   {}
 
   bool operator==(const ScrollMetadata& aOther) const
@@ -813,7 +840,8 @@ public:
            mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
            mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
-           mForceDisableApz == aOther.mForceDisableApz;
+           mForceDisableApz == aOther.mForceDisableApz &&
+           mOverscrollBehavior == aOther.mOverscrollBehavior;
   }
 
   bool operator!=(const ScrollMetadata& aOther) const
@@ -923,6 +951,13 @@ public:
     return mForceDisableApz;
   }
 
+  void SetOverscrollBehavior(const OverscrollBehaviorInfo& aOverscrollBehavior) {
+    mOverscrollBehavior = aOverscrollBehavior;
+  }
+  const OverscrollBehaviorInfo& GetOverscrollBehavior() const {
+    return mOverscrollBehavior;
+  }
+
 private:
   FrameMetrics mMetrics;
 
@@ -971,6 +1006,9 @@ private:
   // Whether or not the compositor should actually do APZ-scrolling on this
   // scrollframe.
   bool mForceDisableApz:1;
+
+  // The overscroll behavior for this scroll frame.
+  OverscrollBehaviorInfo mOverscrollBehavior;
 
   // WARNING!!!!
   //
