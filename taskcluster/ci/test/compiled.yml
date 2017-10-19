@@ -17,8 +17,6 @@ cppunit:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=cppunittest
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
@@ -31,8 +29,6 @@ cppunit:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --cppunittest-suite=cppunittest
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -62,8 +58,6 @@ gtest:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --gtest-suite=gtest
     tier:
         by-test-platform:
             windows7-32-pgo.*: 3
@@ -101,8 +95,6 @@ jittest:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --jittest-suite=jittest-chunked
     tier:
         by-test-platform:
             windows10-64-asan.*: 3

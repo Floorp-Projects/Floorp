@@ -22,8 +22,6 @@ crashtest:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=crashtest
             default:
                 script: desktop_unittest.py
                 chunked: false
@@ -37,8 +35,6 @@ crashtest:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --reftest-suite=crashtest
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -78,8 +74,6 @@ jsreftest:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=jsreftest
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
@@ -93,8 +87,6 @@ jsreftest:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --reftest-suite=jsreftest
     when:
         schedules: ['jsreftest']
     tier:
@@ -140,8 +132,6 @@ reftest:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=reftest
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
@@ -160,8 +150,6 @@ reftest:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --reftest-suite=reftest
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -194,8 +182,6 @@ reftest-gpu:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-gpu
     tier: default
 
 reftest-no-accel:
@@ -235,8 +221,6 @@ reftest-no-accel:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-no-accel
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -260,5 +244,3 @@ reftest-stylo:
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-stylo

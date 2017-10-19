@@ -626,6 +626,36 @@ def handle_keyed_by(config, tests):
 
 
 @transforms.add
+def handle_suite_category(config, tests):
+    for test in tests:
+        if '/' in test['suite']:
+            suite, flavor = test['suite'].split('/', 1)
+        else:
+            suite = flavor = test['suite']
+
+        test.setdefault('attributes', {})
+        test['attributes']['unittest_suite'] = suite
+        test['attributes']['unittest_flavor'] = flavor
+
+        script = test['mozharness']['script']
+        category_arg = None
+        if suite == 'test-verification':
+            pass
+        elif script == 'android_emulator_unittest.py':
+            category_arg = '--test-suite'
+        elif script == 'desktop_unittest.py':
+            category_arg = '--{}-suite'.format(suite)
+
+        if category_arg:
+            test['mozharness'].setdefault('extra-options', [])
+            extra = test['mozharness']['extra-options']
+            if not any(arg.startswith(category_arg) for arg in extra):
+                extra.append('{}={}'.format(category_arg, flavor))
+
+        yield test
+
+
+@transforms.add
 def enable_code_coverage(config, tests):
     """Enable code coverage for the linux64-ccov/opt & linux64-jsdcov/opt build-platforms"""
     for test in tests:
@@ -667,7 +697,6 @@ def split_e10s(config, tests):
     for test in tests:
         e10s = test['e10s']
 
-        test.setdefault('attributes', {})
         test['e10s'] = False
         test['attributes']['e10s'] = False
 
@@ -895,20 +924,12 @@ def make_job_description(config, tests):
 
         attr_build_platform, attr_build_type = test['build-platform'].split('/', 1)
 
-        suite = test['suite']
-        if '/' in suite:
-            suite, flavor = suite.split('/', 1)
-        else:
-            flavor = suite
-
         attributes = test.get('attributes', {})
         attributes.update({
             'build_platform': attr_build_platform,
             'build_type': attr_build_type,
             'test_platform': test['test-platform'],
             'test_chunk': str(test['this-chunk']),
-            'unittest_suite': suite,
-            'unittest_flavor': flavor,
             attr_try_name: try_name,
         })
 
@@ -934,8 +955,8 @@ def make_job_description(config, tests):
                 'total': test['chunks'],
             },
             'suite': {
-                'name': suite,
-                'flavor': flavor,
+                'name': attributes['unittest_suite'],
+                'flavor': attributes['unittest_flavor'],
             },
         }
         jobdesc['treeherder'] = {
@@ -945,7 +966,7 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        schedules = [suite, platform_family(test['build-platform'])]
+        schedules = [attributes['unittest_suite'], platform_family(test['build-platform'])]
         when = test.get('when')
         if when and 'schedules' in when:
             schedules.extend(when['schedules'])
