@@ -158,7 +158,18 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
       if (observerService) {
         observerService->AddObserver(this, "unselected-tab-hover", false);
         mIsRegisteredForEvent = true;
-        EnableEvent();
+        if (nsContentUtils::IsInStableOrMetaStableState()) {
+          // Events shall not be fired synchronously to prevent anything visible
+          // from the scripts while we are in stable state.
+          if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
+            doc->Dispatch(TaskCategory::Other,
+              NewRunnableMethod(
+                "MediaDecoder::BackgroundVideoDecodingPermissionObserver::EnableEvent",
+                this, &MediaDecoder::BackgroundVideoDecodingPermissionObserver::EnableEvent));
+          }
+        } else {
+          EnableEvent();
+        }
       }
     }
 
@@ -170,7 +181,18 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
         mIsRegisteredForEvent = false;
         mDecoder->mIsBackgroundVideoDecodingAllowed = false;
         mDecoder->UpdateVideoDecodeMode();
-        DisableEvent();
+        if (nsContentUtils::IsInStableOrMetaStableState()) {
+          // Events shall not be fired synchronously to prevent anything visible
+          // from the scripts while we are in stable state.
+          if (nsCOMPtr<nsIDocument> doc = GetOwnerDoc()) {
+            doc->Dispatch(TaskCategory::Other,
+              NewRunnableMethod(
+                "MediaDecoder::BackgroundVideoDecodingPermissionObserver::DisableEvent",
+                this, &MediaDecoder::BackgroundVideoDecodingPermissionObserver::DisableEvent));
+          }
+        } else {
+          DisableEvent();
+        }
       }
     }
   private:
