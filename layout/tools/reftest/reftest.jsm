@@ -1172,10 +1172,14 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
 function LoadFailed(why)
 {
     ++g.testResults.FailedLoad;
-    // Once bug 896840 is fixed, this can go away, but for now it will give log
-    // output that is TBPL starable for bug 789751 and bug 720452.
     if (!why) {
-        logger.error("load failed with unknown reason");
+        // reftest-content.js sets an initial reason before it sets the
+        // timeout that will call us with the currently set reason, so we
+        // should never get here.  If we do then there's a logic error
+        // somewhere.  Perhaps tests are somehow running overlapped and the
+        // timeout for one test is not being cleared before the timeout for
+        // another is set?  Maybe there's some sort of race?
+        logger.error("load failed with unknown reason (we should always have a reason!)");
     }
     logger.testStatus(g.urls[0].identifier, "load failed: " + why, "FAIL", "PASS");
     FlushTestBuffer();
