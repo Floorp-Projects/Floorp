@@ -391,6 +391,7 @@ structs-types = [
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
     "mozilla::css::URLValueData",
+    "mozilla::dom::CallerType",
     "mozilla::AnonymousCounterStyle",
     "mozilla::AtomArray",
     "mozilla::MallocSizeOf",
