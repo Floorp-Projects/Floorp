@@ -298,4 +298,10 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
   return NS_OK;
 }
 
+NotNull<DeclarationBlock*>
+ServoStyleRule::GetDeclarationBlock() const
+{
+  return WrapNotNull(mDecls.mDecls);
+}
+
 } // namespace mozilla

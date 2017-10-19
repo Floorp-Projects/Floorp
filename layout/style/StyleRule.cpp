@@ -1513,5 +1513,11 @@ StyleRule::SelectorMatchesElement(Element* aElement,
   return NS_OK;
 }
 
+NotNull<DeclarationBlock*>
+StyleRule::GetDeclarationBlock() const
+{
+  return WrapNotNull(mDeclaration);
+}
+
 } // namespace css
 } // namespace mozilla
