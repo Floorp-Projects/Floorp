@@ -6319,7 +6319,8 @@ nsGlobalWindow::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError)
 }
 
 already_AddRefed<MediaQueryList>
-nsGlobalWindow::MatchMediaOuter(const nsAString& aMediaQueryList)
+nsGlobalWindow::MatchMediaOuter(const nsAString& aMediaQueryList,
+                                CallerType aCallerType)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -6327,18 +6328,19 @@ nsGlobalWindow::MatchMediaOuter(const nsAString& aMediaQueryList)
     return nullptr;
   }
 
-  return mDoc->MatchMedia(aMediaQueryList);
+  return mDoc->MatchMedia(aMediaQueryList, aCallerType);
 }
 
 already_AddRefed<MediaQueryList>
 nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
+                           CallerType aCallerType,
                            ErrorResult& aError)
 {
   // FIXME: This whole forward-to-outer and then get a pres
   // shell/context off the docshell dance is sort of silly; it'd make
   // more sense to forward to the inner, but it's what everyone else
   // (GetSelection, GetScrollXY, etc.) does around here.
-  FORWARD_TO_OUTER_OR_THROW(MatchMediaOuter, (aMediaQueryList), aError, nullptr);
+  FORWARD_TO_OUTER_OR_THROW(MatchMediaOuter, (aMediaQueryList, aCallerType), aError, nullptr);
 }
 
 void

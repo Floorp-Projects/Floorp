@@ -26,10 +26,11 @@ ServoMediaList::ServoMediaList()
 {
 }
 
-ServoMediaList::ServoMediaList(const nsAString& aMedia)
+ServoMediaList::ServoMediaList(const nsAString& aMedia,
+                               dom::CallerType aCallerType)
   : ServoMediaList()
 {
-  SetText(aMedia);
+  SetTextInternal(aMedia, aCallerType);
 }
 
 void
@@ -40,6 +41,13 @@ ServoMediaList::GetText(nsAString& aMediaText)
 
 void
 ServoMediaList::SetText(const nsAString& aMediaText)
+{
+  SetTextInternal(aMediaText, dom::CallerType::NonSystem);
+}
+
+void
+ServoMediaList::SetTextInternal(const nsAString& aMediaText,
+                                dom::CallerType aCallerType)
 {
   NS_ConvertUTF16toUTF8 mediaText(aMediaText);
   Servo_MediaList_SetText(mRawList, &mediaText);

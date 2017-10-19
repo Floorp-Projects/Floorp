@@ -1041,9 +1041,13 @@ public:
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                      mozilla::ErrorResult& aError) override;
-  already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(const nsAString& aQuery);
-  already_AddRefed<mozilla::dom::MediaQueryList> MatchMedia(const nsAString& aQuery,
-                                                            mozilla::ErrorResult& aError);
+  already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(
+    const nsAString& aQuery,
+    mozilla::dom::CallerType aCallerType);
+  already_AddRefed<mozilla::dom::MediaQueryList> MatchMedia(
+    const nsAString& aQuery,
+    mozilla::dom::CallerType aCallerType,
+    mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
   nsIDOMScreen* GetScreen() override;
   void MoveToOuter(int32_t aXPos, int32_t aYPos,
