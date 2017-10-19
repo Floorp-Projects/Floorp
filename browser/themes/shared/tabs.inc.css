@@ -543,12 +543,20 @@ tabbrowser {
   font-weight: bold;
 }
 
-/* Tab separators */
+/* Drag space */
 
 .titlebar-placeholder[type="pre-tabs"],
 .titlebar-placeholder[type="post-tabs"] {
   width: 40px;
 }
+
+@media (max-width: 500px) {
+  .titlebar-placeholder[type="post-tabs"] {
+    display: none;
+  }
+}
+
+/* Tab separators */
 
 .titlebar-placeholder[type="pre-tabs"] {
   border-inline-end: 1px solid;
