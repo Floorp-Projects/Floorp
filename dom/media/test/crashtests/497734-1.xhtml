@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+
+  div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  div.appendChild(document.getElementById("v"));
+  document.body.appendChild(div);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<video id="v"><source></source></video>
+
+</body>
+</html>

@@ -26,7 +26,11 @@
 #include "sqlite3.h"
 #include "mozilla/AutoSQLiteLifetime.h"
 
-#ifdef SQLITE_OS_WIN
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
+#ifdef XP_WIN
 // "windows.h" was included and it can #define lots of things we care about...
 #undef CompareString
 #endif
@@ -824,6 +828,17 @@ Service::Observe(nsISupports *, const char *aTopic, const char16_t *)
       getConnections(connections);
       for (uint32_t i = 0, n = connections.Length(); i < n; i++) {
         if (!connections[i]->isClosed()) {
+#ifdef MOZ_CRASHREPORTER
+          // getFilename is only the leaf name for the database file,
+          // so it shouldn't contain privacy-sensitive information.
+          CrashReporter::AnnotateCrashReport(
+            NS_LITERAL_CSTRING("StorageConnectionNotClosed"),
+            connections[i]->getFilename());
+#endif
+#ifdef DEBUG
+          printf_stderr("Storage connection not closed: %s",
+                        connections[i]->getFilename().get());
+#endif
           MOZ_CRASH();
         }
       }

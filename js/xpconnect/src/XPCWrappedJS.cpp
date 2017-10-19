@@ -620,8 +620,8 @@ nsXPCWrappedJS::GetInterfaceIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-    *iid = (nsIID*) nsMemory::Clone(&(GetIID()), sizeof(nsIID));
-    return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
+    *iid = GetIID().Clone();
+    return NS_OK;
 }
 
 void

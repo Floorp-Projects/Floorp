@@ -836,7 +836,8 @@ IndexedDatabaseManager::ClearBackgroundActor()
 void
 IndexedDatabaseManager::NoteLiveQuotaManager(QuotaManager* aQuotaManager)
 {
-  MOZ_ASSERT(IsMainProcess());
+  // This can be called during Init, so we can't use IsMainProcess() yet.
+  MOZ_ASSERT(sIsMainProcess);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aQuotaManager);
 

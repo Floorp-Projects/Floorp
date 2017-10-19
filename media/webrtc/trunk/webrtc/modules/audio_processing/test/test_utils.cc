@@ -24,7 +24,11 @@ RawFile::~RawFile() {
 
 void RawFile::WriteSamples(const int16_t* samples, size_t num_samples) {
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-#error "Need to convert samples to little-endian when writing to PCM file"
+  //convert to big-endian
+  int16_t* s = (int16_t*)samples;
+  for(size_t idx = 0; idx < num_samples; idx++) {
+    s[idx] = (samples[idx]<<8) | (samples[idx]>>8);
+  }
 #endif
   fwrite(samples, sizeof(*samples), num_samples, file_handle_);
 }

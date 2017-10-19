@@ -322,7 +322,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.installer_path]
         else:
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.installer_path]
-        out = self._run_with_timeout(300, cmd)
+        out = self._run_with_timeout(300, cmd, True)
         if 'Success' in out:
             install_ok = True
         return install_ok
@@ -333,7 +333,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.robocop_path]
         else:
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.robocop_path]
-        out = self._run_with_timeout(300, cmd)
+        out = self._run_with_timeout(300, cmd, True)
         if 'Success' in out:
             install_ok = True
         return install_ok

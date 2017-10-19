@@ -414,6 +414,32 @@ IonCacheIRCompiler::init()
             allocator.initInputLocation(1, ic->id());
         break;
       }
+      case CacheKind::GetPropSuper:
+      case CacheKind::GetElemSuper: {
+        IonGetPropSuperIC* ic = ic_->asGetPropSuperIC();
+        TypedOrValueRegister output = ic->output();
+
+        available.add(output.valueReg());
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(output);
+
+        allowDoubleResult_.emplace(true);
+
+        MOZ_ASSERT(numInputs == 2 || numInputs == 3);
+
+        allocator.initInputLocation(0, ic->object(), JSVAL_TYPE_OBJECT);
+
+        if (ic->kind() == CacheKind::GetPropSuper) {
+            MOZ_ASSERT(numInputs == 2);
+            allocator.initInputLocation(1, ic->receiver());
+        } else {
+            MOZ_ASSERT(numInputs == 3);
+            allocator.initInputLocation(1, ic->id());
+            allocator.initInputLocation(2, ic->receiver());
+        }
+        break;
+      }
       case CacheKind::SetProp:
       case CacheKind::SetElem: {
         IonSetPropertyIC* ic = ic_->asSetPropertyIC();
@@ -509,8 +535,6 @@ IonCacheIRCompiler::init()
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
-      case CacheKind::GetPropSuper:
-      case CacheKind::GetElemSuper:
         MOZ_CRASH("Unsupported IC");
     }
 

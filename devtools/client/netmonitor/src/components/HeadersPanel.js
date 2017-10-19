@@ -24,8 +24,8 @@ const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Components
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const MDNLink = createFactory(require("./mdn-link"));
-const PropertiesView = createFactory(require("./properties-view"));
+const MDNLink = createFactory(require("./MdnLink"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { Rep } = REPS;
 const { button, div, input, textarea, span } = DOM;
