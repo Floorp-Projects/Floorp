@@ -116,6 +116,7 @@ Crash()
   if (GeckoProcessType_Default == XRE_GetProcessType()) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Hang"),
                                        NS_LITERAL_CSTRING("1"));
+    CrashReporter::SetMinidumpAnalysisAllThreads();
   }
 #endif
 
