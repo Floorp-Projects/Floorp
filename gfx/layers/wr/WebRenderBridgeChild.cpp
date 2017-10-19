@@ -13,6 +13,7 @@
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/PTextureChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
@@ -27,6 +28,7 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   , mIdNamespace{0}
   , mResourceId(0)
   , mPipelineId(aPipelineId)
+  , mManager(nullptr)
   , mIPCOpen(false)
   , mDestroyed(false)
   , mFontKeysDeleted(0)
@@ -43,6 +45,7 @@ WebRenderBridgeChild::Destroy(bool aIsSync)
   // mDestroyed is used to prevent calling Send__delete__() twice.
   // When this function is called from CompositorBridgeChild::Destroy().
   mDestroyed = true;
+  mManager = nullptr;
 
   if (aIsSync) {
     SendShutdownSync();
@@ -55,6 +58,7 @@ void
 WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
 {
   mDestroyed = true;
+  mManager = nullptr;
 }
 
 void
@@ -526,13 +530,15 @@ WebRenderBridgeChild::InForwarderThread()
 mozilla::ipc::IPCResult
 WebRenderBridgeChild::RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace)
 {
+  if (mManager) {
+    mManager->WrUpdated();
+  }
   // Update mIdNamespace to identify obsolete keys and messages by WebRenderBridgeParent.
   // Since usage of invalid keys could cause crash in webrender.
   mIdNamespace = aNewIdNamespace;
   // Just clear FontInstaceKeys/FontKeys, they are removed during WebRenderAPI destruction.
   mFontInstanceKeys.Clear();
   mFontKeys.Clear();
-  GetCompositorBridgeChild()->RecvInvalidateLayers(wr::AsUint64(mPipelineId));
   return IPC_OK();
 }
 
@@ -552,6 +558,13 @@ WebRenderBridgeChild::EndClearCachedResources()
   ProcessWebRenderParentCommands();
   SendClearCachedResources();
   mIsInClearCachedResources = false;
+}
+
+void
+WebRenderBridgeChild::SetWebRenderLayerManager(WebRenderLayerManager* aManager)
+{
+  MOZ_ASSERT(aManager);
+  mManager = aManager;
 }
 
 ipc::IShmemAllocator*

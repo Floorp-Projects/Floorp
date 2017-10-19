@@ -681,16 +681,16 @@ RustURL::GetScriptableHelper(nsIXPCScriptable * *_retval)
 }
 
 NS_IMETHODIMP
-RustURL::GetContractID(char * *aContractID)
+RustURL::GetContractID(nsACString& aContractID)
 {
-  *aContractID = nullptr;
+  aContractID.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-RustURL::GetClassDescription(char * *aClassDescription)
+RustURL::GetClassDescription(nsACString& aClassDescription)
 {
-  *aClassDescription = nullptr;
+  aClassDescription.SetIsVoid(true);
   return NS_OK;
 }
 

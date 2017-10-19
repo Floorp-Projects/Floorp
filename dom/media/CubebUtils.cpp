@@ -48,6 +48,10 @@
 #define MASK_3F3R_LFE   (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RCENTER))
 #define MASK_3F4_LFE    (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RLS) | (1 << AudioConfig::CHANNEL_RRS))
 
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
+#define MOZ_CUBEB_REMOTING
+#endif
+
 extern "C" {
 // These functions are provided by audioipc-server crate
 extern void* audioipc_server_start();

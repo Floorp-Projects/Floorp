@@ -1790,6 +1790,14 @@ let DateTimePickerListener = {
             (aEvent.originalTarget.type == "time" && !this.getTimePickerPref())) {
           return;
         }
+
+        if (this._inputElement) {
+          // This happens when we're trying to open a picker when another picker
+          // is still open. We ignore this request to let the first picker
+          // close gracefully.
+          return;
+        }
+
         this._inputElement = aEvent.originalTarget;
         this._inputElement.setDateTimePickerState(true);
         this.addListeners();
