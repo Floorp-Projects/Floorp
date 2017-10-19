@@ -238,8 +238,11 @@ ShadowRoot::RemoveDestInsertionPoint(nsIContent* aInsertionPoint,
                                      nsTArray<nsIContent*>& aDestInsertionPoints)
 {
   // Remove the insertion point from the destination insertion points.
-  // Also remove all succeeding insertion points because it is no longer
-  // possible for the content to be distributed into deeper node trees.
+  //
+  // Note that while it sounds tempting to just remove all the insertion points
+  // after it too, since they're usually after in tree position, it may not be
+  // the case when we're redistributing after new insertion points have been
+  // bound to the tree before aInsertionPoint, see bug 1409088.
   int32_t index = aDestInsertionPoints.IndexOf(aInsertionPoint);
 
   // It's possible that we already removed the insertion point while processing
