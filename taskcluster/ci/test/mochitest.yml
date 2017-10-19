@@ -59,12 +59,6 @@ mochitest:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    by-test-platform:
-                        linux64-jsdcov/opt:
-                            - --mochitest-suite=plain-chunked-coverage
-                        default:
-                            - --mochitest-suite=plain-chunked
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -90,8 +84,6 @@ mochitest-a11y:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --mochitest-suite=a11y
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -142,12 +134,6 @@ mochitest-browser-chrome:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            by-test-platform:
-                linux64-jsdcov/opt:
-                    - --mochitest-suite=browser-chrome-coverage
-                default:
-                    - --mochitest-suite=browser-chrome-chunked
     # Bug 1281241: migrating to m3.large instances
     instance-size:
         by-test-platform:
@@ -186,8 +172,6 @@ mochitest-browser-screenshots:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --mochitest-suite=browser-chrome-screenshots
     allow-software-gl-layers: false
 
 mochitest-chrome:
@@ -235,8 +219,6 @@ mochitest-chrome:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --mochitest-suite=chrome
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -320,12 +302,6 @@ mochitest-devtools-chrome:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            by-test-platform:
-                linux64-jsdcov/opt:
-                    - --mochitest-suite=mochitest-devtools-chrome-coverage
-                default:
-                    - --mochitest-suite=mochitest-devtools-chrome-chunked
     instance-size:
         by-test-platform:
             # Bug 1281241: migrating to m3.large instances
@@ -405,8 +381,6 @@ mochitest-media:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=mochitest-media
             default:
                 mochitest-flavor: plain
                 script: desktop_unittest.py
@@ -425,8 +399,6 @@ mochitest-media:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --mochitest-suite=mochitest-media
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -462,7 +434,6 @@ mochitest-plain-headless:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            - --mochitest-suite=plain-chunked
             - --headless
 
 mochitest-valgrind:
@@ -492,8 +463,6 @@ mochitest-valgrind:
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
-        extra-options:
-            - --mochitest-suite=valgrind-plain
 
 mochitest-webgl:
     description: "Mochitest webgl run"
@@ -529,8 +498,6 @@ mochitest-webgl:
                 no-read-buildbot-config: true
                 config:
                     - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=mochitest-gl
             default:
                 mochitest-flavor: plain
                 script: desktop_unittest.py
@@ -545,8 +512,6 @@ mochitest-webgl:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    - --mochitest-suite=mochitest-gl
     tier:
         by-test-platform:
             linux64-qr/.*: 1
