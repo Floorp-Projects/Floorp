@@ -56,7 +56,11 @@ const char* const kFragHeader_Tex2DRect = "\
 const char* const kFragHeader_TexExt = "\
     #extension GL_OES_EGL_image_external : require                           \n\
     #define SAMPLER samplerExternalOES                                       \n\
-    #define TEXTURE texture2D                                                \n\
+    #if __VERSION__ >= 130                                                   \n\
+        #define TEXTURE texture                                              \n\
+    #else                                                                    \n\
+        #define TEXTURE texture2D                                            \n\
+    #endif                                                                   \n\
 ";
 
 const char* const kFragBody_RGBA = "\
