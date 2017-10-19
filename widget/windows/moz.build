@@ -95,6 +95,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecWin.cpp',
+        'nsPrintDialogWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
     ]
