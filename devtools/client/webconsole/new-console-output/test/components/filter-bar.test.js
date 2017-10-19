@@ -17,12 +17,18 @@ const { getAllFilters } = require("devtools/client/webconsole/new-console-output
 const {
   MESSAGES_CLEAR,
   FILTERS,
+  PREFS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const serviceContainer = require("devtools/client/webconsole/new-console-output/test/fixtures/serviceContainer");
+const ServicesMock = require("Services");
 
 describe("FilterBar component:", () => {
+  afterEach(() => {
+    ServicesMock.prefs.testHelpers.clearPrefs();
+  });
+
   it("initial render", () => {
     const store = setupStore([]);
 
@@ -190,11 +196,13 @@ describe("FilterBar component:", () => {
     const store = setupStore([]);
 
     expect(getAllUi(store.getState()).filterBarVisible).toBe(false);
+    expect(ServicesMock.prefs.getBoolPref(PREFS.UI.FILTER_BAR), false);
 
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
     wrapper.find(".devtools-filter-icon").simulate("click");
 
     expect(getAllUi(store.getState()).filterBarVisible).toBe(true);
+    expect(ServicesMock.prefs.getBoolPref(PREFS.UI.FILTER_BAR), true);
 
     const secondaryBar = wrapper.find(".webconsole-filterbar-secondary");
     expect(secondaryBar.length).toBe(1);
@@ -250,10 +258,12 @@ describe("FilterBar component:", () => {
     const store = setupStore([]);
 
     expect(getAllUi(store.getState()).persistLogs).toBe(false);
+    expect(ServicesMock.prefs.getBoolPref(PREFS.UI.PERSIST), false);
 
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
     wrapper.find(".filter-checkbox input").simulate("change");
 
     expect(getAllUi(store.getState()).persistLogs).toBe(true);
+    expect(ServicesMock.prefs.getBoolPref(PREFS.UI.PERSIST), true);
   });
 });

@@ -11,9 +11,10 @@ const { ConsoleCommand } = require("devtools/client/webconsole/new-console-outpu
 const { getVisibleMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
-const { FILTERS } = require("devtools/client/webconsole/new-console-output/constants");
+const { FILTERS, PREFS } = require("devtools/client/webconsole/new-console-output/constants");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const ServicesMock = require("Services");
 
 describe("Filtering", () => {
   let store;
@@ -215,31 +216,52 @@ describe("Clear filters", () => {
     let filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
       // default
-      "warn": true,
-      "log": true,
-      "info": true,
-      "debug": true,
-      "css": true,
+      [FILTERS.WARN]: true,
+      [FILTERS.LOG]: true,
+      [FILTERS.INFO]: true,
+      [FILTERS.DEBUG]: true,
       // changed
-      "error": false,
-      "net": true,
-      "netxhr": true,
-      "text": "foobar",
+      [FILTERS.ERROR]: false,
+      [FILTERS.CSS]: true,
+      [FILTERS.NET]: true,
+      [FILTERS.NETXHR]: true,
+      [FILTERS.TEXT]: "foobar",
+    });
+    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+      [PREFS.FILTER.WARN]: true,
+      [PREFS.FILTER.LOG]: true,
+      [PREFS.FILTER.INFO]: true,
+      [PREFS.FILTER.DEBUG]: true,
+      [PREFS.FILTER.ERROR]: false,
+      [PREFS.FILTER.CSS]: true,
+      [PREFS.FILTER.NET]: true,
+      [PREFS.FILTER.NETXHR]: true,
     });
 
     store.dispatch(actions.filtersClear());
 
     filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
-      "css": false,
-      "debug": true,
-      "error": true,
-      "info": true,
-      "log": true,
-      "net": false,
-      "netxhr": false,
-      "warn": true,
-      "text": "",
+      [FILTERS.CSS]: false,
+      [FILTERS.DEBUG]: true,
+      [FILTERS.ERROR]: true,
+      [FILTERS.INFO]: true,
+      [FILTERS.LOG]: true,
+      [FILTERS.NET]: false,
+      [FILTERS.NETXHR]: false,
+      [FILTERS.WARN]: true,
+      [FILTERS.TEXT]: "",
+    });
+
+    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+      [PREFS.FILTER.CSS]: false,
+      [PREFS.FILTER.DEBUG]: true,
+      [PREFS.FILTER.ERROR]: true,
+      [PREFS.FILTER.INFO]: true,
+      [PREFS.FILTER.LOG]: true,
+      [PREFS.FILTER.NET]: false,
+      [PREFS.FILTER.NETXHR]: false,
+      [PREFS.FILTER.WARN]: true,
     });
   });
 });
@@ -259,16 +281,27 @@ describe("Resets filters", () => {
     let filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
       // default
-      "warn": true,
-      "info": true,
-      "debug": true,
+      [FILTERS.WARN]: true,
+      [FILTERS.INFO]: true,
+      [FILTERS.DEBUG]: true,
       // changed
-      "error": false,
-      "log": false,
-      "css": true,
-      "net": true,
-      "netxhr": true,
-      "text": "foobar",
+      [FILTERS.ERROR]: false,
+      [FILTERS.LOG]: false,
+      [FILTERS.CSS]: true,
+      [FILTERS.NET]: true,
+      [FILTERS.NETXHR]: true,
+      [FILTERS.TEXT]: "foobar",
+    });
+
+    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+      [PREFS.FILTER.WARN]: true,
+      [PREFS.FILTER.INFO]: true,
+      [PREFS.FILTER.DEBUG]: true,
+      [PREFS.FILTER.ERROR]: false,
+      [PREFS.FILTER.LOG]: false,
+      [PREFS.FILTER.CSS]: true,
+      [PREFS.FILTER.NET]: true,
+      [PREFS.FILTER.NETXHR]: true,
     });
 
     store.dispatch(actions.defaultFiltersReset());
@@ -276,16 +309,27 @@ describe("Resets filters", () => {
     filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
       // default
-      "error": true,
-      "warn": true,
-      "log": true,
-      "info": true,
-      "debug": true,
-      "text": "",
+      [FILTERS.ERROR]: true,
+      [FILTERS.WARN]: true,
+      [FILTERS.LOG]: true,
+      [FILTERS.INFO]: true,
+      [FILTERS.DEBUG]: true,
+      [FILTERS.TEXT]: "",
       // non-default filters weren't changed
-      "css": true,
-      "net": true,
-      "netxhr": true,
+      [FILTERS.CSS]: true,
+      [FILTERS.NET]: true,
+      [FILTERS.NETXHR]: true,
+    });
+
+    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+      [PREFS.FILTER.ERROR]: true,
+      [PREFS.FILTER.WARN]: true,
+      [PREFS.FILTER.LOG]: true,
+      [PREFS.FILTER.INFO]: true,
+      [PREFS.FILTER.DEBUG]: true,
+      [PREFS.FILTER.CSS]: true,
+      [PREFS.FILTER.NET]: true,
+      [PREFS.FILTER.NETXHR]: true,
     });
   });
 });
