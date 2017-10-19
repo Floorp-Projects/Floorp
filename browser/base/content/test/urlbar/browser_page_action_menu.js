@@ -126,6 +126,53 @@ add_task(async function emailLink() {
   });
 });
 
+add_task(async function copyURLFromPanel() {
+  // Open an actionable page so that the main page action button appears.  (It
+  // does not appear on about:blank for example.)
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Open the panel and click Copy URL.
+    await promisePageActionPanelOpen();
+    Assert.ok(true, "page action panel opened");
+
+    let copyURLButton =
+      document.getElementById("pageAction-panel-copyURL");
+    let hiddenPromise = promisePageActionPanelHidden();
+    EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
+    await hiddenPromise;
+
+    let feedbackPanel = document.getElementById("pageActionFeedback");
+    let feedbackShownPromise = BrowserTestUtils.waitForEvent(feedbackPanel, "popupshown");
+    await feedbackShownPromise;
+    Assert.equal(feedbackPanel.anchorNode.id, "pageActionButton", "Feedback menu should be anchored on the main Page Action button");
+    let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
+    await feedbackHiddenPromise;
+  });
+});
+
+add_task(async function copyURLFromURLBar() {
+  // Open an actionable page so that the main page action button appears.  (It
+  // does not appear on about:blank for example.)
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Add action to URL bar.
+    let action = PageActions._builtInActions.find(a => a.id == "copyURL");
+    action.shownInUrlbar = true;
+    registerCleanupFunction(() => action.shownInUrlbar = false);
+
+    let copyURLButton =
+      document.getElementById("pageAction-urlbar-copyURL");
+    let feedbackShownPromise = promisePanelShown("pageActionFeedback");
+    EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
+
+    await feedbackShownPromise;
+    let panel = document.getElementById("pageActionFeedback");
+    Assert.equal(panel.anchorNode.id, "pageAction-urlbar-copyURL", "Feedback menu should be anchored on the main URL bar button");
+    let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
+    await feedbackHiddenPromise;
+  });
+});
+
 add_task(async function sendToDevice_nonSendable() {
   // Open a tab that's not sendable.  An about: page like about:home is
   // convenient.
