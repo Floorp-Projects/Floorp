@@ -1067,13 +1067,9 @@ nsTreeSanitizer::MustPrune(int32_t aNamespace,
 }
 
 bool
-nsTreeSanitizer::SanitizeStyleDeclaration(DeclarationBlock* aDeclaration,
-                                          nsAutoString& aRuleText)
+nsTreeSanitizer::SanitizeStyleDeclaration(DeclarationBlock* aDeclaration)
 {
-  bool didSanitize =
-    aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
-  aDeclaration->ToString(aRuleText);
-  return didSanitize;
+  return aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
 }
 
 bool
@@ -1152,12 +1148,11 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         auto styleRule = static_cast<BindingStyleRule*>(rule);
         DeclarationBlock* styleDecl = styleRule->GetDeclarationBlock();
         MOZ_ASSERT(styleDecl);
-        nsAutoString decl;
-        bool sanitized = SanitizeStyleDeclaration(styleDecl, decl);
-        didSanitize = sanitized || didSanitize;
-        if (!sanitized) {
-          styleRule->GetCssText(decl);
+        if (SanitizeStyleDeclaration(styleDecl)) {
+          didSanitize = true;
         }
+        nsAutoString decl;
+        styleRule->GetCssText(decl);
         aSanitized.Append(decl);
       }
     }
@@ -1201,8 +1196,9 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                             document->NodePrincipal());
         }
         if (decl) {
-          nsAutoString cleanValue;
-          if (SanitizeStyleDeclaration(decl, cleanValue)) {
+          if (SanitizeStyleDeclaration(decl)) {
+            nsAutoString cleanValue;
+            decl->ToString(cleanValue);
             aElement->SetAttr(kNameSpaceID_None,
                               nsGkAtoms::style,
                               cleanValue,

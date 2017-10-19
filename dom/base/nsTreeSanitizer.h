@@ -151,15 +151,12 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
 
     /**
      * Checks a style rule for the presence of the 'binding' CSS property and
-     * removes that property from the rule and reserializes in case the
-     * property was found.
+     * removes that property from the rule.
      *
      * @param aDeclaration The style declaration to check
-     * @param aRuleText the serialized mutated rule if the method returns true
      * @return true if the rule was modified and false otherwise
      */
-    bool SanitizeStyleDeclaration(mozilla::DeclarationBlock* aDeclaration,
-                                  nsAutoString& aRuleText);
+    bool SanitizeStyleDeclaration(mozilla::DeclarationBlock* aDeclaration);
 
     /**
      * Parses a style sheet and reserializes it with the 'binding' property
