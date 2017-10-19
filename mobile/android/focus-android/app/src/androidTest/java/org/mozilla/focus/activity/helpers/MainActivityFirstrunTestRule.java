@@ -11,12 +11,18 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 
 import org.mozilla.focus.activity.MainActivity;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.utils.ThreadUtils;
 
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
-public class MainActivityWithoutFirstrunTestRule extends ActivityTestRule<MainActivity> {
-    public MainActivityWithoutFirstrunTestRule() {
+public class MainActivityFirstrunTestRule extends ActivityTestRule<MainActivity> {
+    private boolean showFirstRun;
+
+    public MainActivityFirstrunTestRule(boolean showFirstRun) {
         super(MainActivity.class);
+
+        this.showFirstRun = showFirstRun;
     }
 
     @CallSuper
@@ -30,7 +36,7 @@ public class MainActivityWithoutFirstrunTestRule extends ActivityTestRule<MainAc
 
         PreferenceManager.getDefaultSharedPreferences(appContext)
                 .edit()
-                .putBoolean(FIRSTRUN_PREF, true)
+                .putBoolean(FIRSTRUN_PREF, !showFirstRun)
                 .apply();
     }
 
@@ -39,5 +45,12 @@ public class MainActivityWithoutFirstrunTestRule extends ActivityTestRule<MainAc
         super.afterActivityFinished();
 
         getActivity().finishAndRemoveTask();
+
+        ThreadUtils.postToMainThread(new Runnable() {
+            @Override
+            public void run() {
+                SessionManager.getInstance().removeAllSessions();
+            }
+        });
     }
 }

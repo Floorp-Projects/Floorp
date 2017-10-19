@@ -14,7 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.helpers.MainActivityWithoutFirstrunTestRule;
+import org.mozilla.focus.activity.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.web.IWebView;
 
@@ -47,7 +47,7 @@ import static org.mozilla.focus.activity.helpers.WebViewFakeLongPress.injectHitT
 @RunWith(AndroidJUnit4.class)
 public class MultitaskingTest {
     @Rule
-    public MainActivityWithoutFirstrunTestRule mActivityTestRule = new MainActivityWithoutFirstrunTestRule();
+    public MainActivityFirstrunTestRule mActivityTestRule = new MainActivityFirstrunTestRule(false);
 
     private MockWebServer webServer;
 
