@@ -8,7 +8,7 @@ def main(request, response):
     if "noLocationRedirect" in request.GET:
         status = 302
 
-    return status, [("content-type", "text/html")], '''
+    return status, [], '''
 <!DOCTYPE html>
 <script>
   window.parent.postMessage(
