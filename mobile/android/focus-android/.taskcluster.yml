@@ -7,6 +7,12 @@ allowPullRequests: public
 tasks:
 ###############################################################################
 # Task: Pull requests
+#
+# Triggered whenever a pull request is opened or updated.
+#
+# - Build the app (all flavors)
+# - Run unit tests
+# - Run code quality tools (findbugs, lint, checkstyle etc.)
 ###############################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
@@ -43,6 +49,12 @@ tasks:
       source: '{{ event.head.repo.url }}'
 ###############################################################################
 # Task: Master builds
+#
+# Triggered whenever something is pushed/merged to the master branch.
+#
+# - Build the app (all flavors)
+# - Run unit tests
+# - Run code quality tools (findbugs, lint, checkstyle etc.)
 ###############################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
@@ -74,5 +86,46 @@ tasks:
     metadata:
       name: Focus for Android - Build - Master
       description: Building Focus for Android (via Gradle) - Master
+      owner: '{{ event.head.user.email }}'
+      source: '{{ event.head.repo.url }}'
+###############################################################################
+# Task: Release builds
+#
+# Triggered when a new tag or release is published (in any branch)
+#
+# - Build (unsigned) release versions of the app with release translations and
+#   adjust token.
+###############################################################################
+  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
+    workerType: '{{ taskcluster.docker.workerType }}'
+    extra:
+      github:
+        events:
+          - release
+    payload:
+      maxRunTime: 3600
+      deadline: "{{ '2 hours' | $fromNow }}"
+      image: 'mozillamobile/focus-android'
+      command:
+        - /bin/bash
+        - '--login'
+        - '-c'
+        - >-
+          git fetch origin --tags
+          && git config advice.detachedHead false
+          && git checkout {{ event.version }}
+          && python tools/taskcluster/get-adjust-token.py
+          && python tools/l10n/filter-release-translations.py
+          && ./gradlew clean test assembleRelease
+      artifacts:
+        'public':
+          type: 'directory'
+          path: '/opt/focus-android/app/build/outputs/apk'
+          expires: "{{ '1 week' | $fromNow }}"
+      features:
+        taskclusterProxy: true
+    metadata:
+      name: Focus for Android - Release build ({{ event.version }})
+      description: Building release versions of Firefox Focus/Klar
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'
