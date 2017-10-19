@@ -1550,14 +1550,8 @@ XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   } else if (responsibleDocument) {
     baseURI = responsibleDocument->GetBaseURI();
   }
-
-  NotNull<const Encoding*> originCharset = UTF_8_ENCODING;
-  if (responsibleDocument) {
-    originCharset = responsibleDocument->GetDocumentCharacterSet();
-  }
-
   nsCOMPtr<nsIURI> parsedURL;
-  rv = NS_NewURI(getter_AddRefs(parsedURL), aUrl, originCharset, baseURI);
+  rv = NS_NewURI(getter_AddRefs(parsedURL), aUrl, nullptr, baseURI);
   if (NS_FAILED(rv)) {
     if (rv ==  NS_ERROR_MALFORMED_URI) {
       return NS_ERROR_DOM_MALFORMED_URI;
