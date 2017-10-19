@@ -838,8 +838,6 @@ Inspector.prototype = {
     try {
       let hasSupportsHighlighters =
         yield this.target.actorHasMethod("inspector", "supportsHighlighters");
-      let hasPickColorFromPage =
-        yield this.target.actorHasMethod("inspector", "pickColorFromPage");
 
       let supportsHighlighters;
       if (hasSupportsHighlighters) {
@@ -851,7 +849,7 @@ Inspector.prototype = {
         supportsHighlighters = nodeFront && nodeFront.isInHTMLDocument;
       }
 
-      return supportsHighlighters && hasPickColorFromPage;
+      return supportsHighlighters;
     } catch (e) {
       console.error(e);
       return false;
@@ -1703,8 +1701,7 @@ Inspector.prototype = {
    * @return {Promise} resolves when the eyedropper is hidden.
    */
   hideEyeDropper: function () {
-    // The eyedropper button doesn't exist, most probably because the actor doesn't
-    // support the pickColorFromPage, or because the page isn't HTML.
+    // The eyedropper button doesn't exist, most probably  because the page isn't HTML.
     if (!this.eyeDropperButton) {
       return null;
     }
