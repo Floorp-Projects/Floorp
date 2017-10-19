@@ -639,7 +639,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
 
       gfx::IntSize size;
       Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(aItem, container, aBuilder,
-                                                                          aResources, aSc, size);
+                                                                          aResources, aSc, size, Nothing());
 
       if (key.isNothing()) {
         return DrawResult::BAD_IMAGE;
