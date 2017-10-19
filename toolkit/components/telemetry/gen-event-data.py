@@ -35,7 +35,7 @@ def write_extra_table(events, output, string_table):
     extra_table = []
     extra_count = 0
 
-    print("constexpr uint32_t %s[] = {" % table_name, file=output)
+    print("const uint32_t %s[] = {" % table_name, file=output)
 
     for e in events:
         extra_index = 0
@@ -66,7 +66,7 @@ def write_extra_table(events, output, string_table):
 def write_common_event_table(events, output, string_table, extra_table):
     table_name = "gCommonEventInfo"
 
-    print("constexpr CommonEventInfo %s[] = {" % table_name, file=output)
+    print("const CommonEventInfo %s[] = {" % table_name, file=output)
     for e, extras in zip(events, extra_table):
         # Write a comment to make the file human-readable.
         print("  // category: %s" % e.category, file=output)
@@ -91,7 +91,7 @@ def write_common_event_table(events, output, string_table, extra_table):
 
 def write_event_table(events, output, string_table):
     table_name = "gEventInfo"
-    print("constexpr EventInfo %s[] = {" % table_name, file=output)
+    print("const EventInfo %s[] = {" % table_name, file=output)
 
     for common_info_index, e in enumerate(events):
         for method_name, object_name in itertools.product(e.methods, e.objects):

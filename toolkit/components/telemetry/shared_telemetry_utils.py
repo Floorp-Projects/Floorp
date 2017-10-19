@@ -70,7 +70,7 @@ class StringTable:
         return [self.stringIndex(s) for s in strings]
 
     def writeDefinition(self, f, name):
-        """Writes the string table to a file as a C constexpr char array.
+        """Writes the string table to a file as a C const char array.
 
         This writes out the string table as one single C char array for memory
         size reasons, separating the individual strings with '\0' characters.
@@ -93,7 +93,7 @@ class StringTable:
                     return "'%s'" % s
             return ", ".join(map(toCChar, string))
 
-        f.write("constexpr char %s[] = {\n" % name)
+        f.write("const char %s[] = {\n" % name)
         for (string, offset) in entries:
             if "*/" in string:
                 raise ValueError("String in string table contains unexpected sequence '*/': %s" %
