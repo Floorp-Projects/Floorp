@@ -51,13 +51,13 @@ public:
     /**
      * Read input stream aIn in chunks and deliver synchronously to aListener.
      *
-     * @param aIn The stream to be read.
+     * @param aIn The stream to be read. The ownership of this stream is taken.
      * @param aListener The listener that will receive
      *                  OnStartRequest/OnDataAvailable/OnStopRequest
      *                  notifications.
      * @param aChannel The channel that aIn was opened from.
      */
-    static nsresult PushSyncStreamToListener(nsIInputStream* aIn,
+    static nsresult PushSyncStreamToListener(already_AddRefed<nsIInputStream> aIn,
                                              nsIStreamListener* aListener,
                                              nsIChannel* aChannel);
 };

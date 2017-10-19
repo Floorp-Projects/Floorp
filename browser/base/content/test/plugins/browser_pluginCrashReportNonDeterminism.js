@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+
 /**
  * With e10s, plugins must run in their own process. This means we have
  * three processes at a minimum when we're running a plugin:
@@ -79,51 +81,56 @@ function preparePlugin(browser, pluginFallbackState) {
   });
 }
 
-add_task(async function setup() {
-  // Bypass click-to-play
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
+// Bypass click-to-play
+setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
 
-  // Clear out any minidumps we create from plugins - we really don't care
-  // about them.
-  let crashObserver = (subject, topic, data) => {
-    if (topic != "plugin-crashed") {
-      return;
-    }
+// Deferred promise object used by the test to wait for the crash handler
+let crashDeferred = null;
 
-    let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
-    let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
+// Clear out any minidumps we create from plugins - we really don't care
+// about them.
+let crashObserver = (subject, topic, data) => {
+  if (topic != "plugin-crashed") {
+    return;
+  }
 
-    Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
-      let minidumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      minidumpDir.append("minidumps");
+  let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
+  let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
 
-      let pluginDumpFile = minidumpDir.clone();
-      pluginDumpFile.append(minidumpID + ".dmp");
+  Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
+    let minidumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    minidumpDir.append("minidumps");
 
-      let extraFile = minidumpDir.clone();
-      extraFile.append(minidumpID + ".extra");
+    let pluginDumpFile = minidumpDir.clone();
+    pluginDumpFile.append(minidumpID + ".dmp");
 
-      ok(pluginDumpFile.exists(), "Found minidump");
-      ok(extraFile.exists(), "Found extra file");
+    let extraFile = minidumpDir.clone();
+    extraFile.append(minidumpID + ".extra");
 
-      pluginDumpFile.remove(false);
-      extraFile.remove(false);
-    });
-  };
+    ok(pluginDumpFile.exists(), "Found minidump");
+    ok(extraFile.exists(), "Found extra file");
 
-  Services.obs.addObserver(crashObserver, "plugin-crashed");
-  // plugins.testmode will make BrowserPlugins:Test:ClearCrashData work.
-  Services.prefs.setBoolPref("plugins.testmode", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("plugins.testmode");
-    Services.obs.removeObserver(crashObserver, "plugin-crashed");
+    pluginDumpFile.remove(false);
+    extraFile.remove(false);
+    crashDeferred.resolve();
   });
+};
+
+Services.obs.addObserver(crashObserver, "plugin-crashed");
+// plugins.testmode will make BrowserPlugins:Test:ClearCrashData work.
+Services.prefs.setBoolPref("plugins.testmode", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("plugins.testmode");
+  Services.obs.removeObserver(crashObserver, "plugin-crashed");
 });
 
 /**
  * In this case, the chrome process hears about the crash first.
  */
 add_task(async function testChromeHearsPluginCrashFirst() {
+  // Setup the crash observer promise
+  crashDeferred = PromiseUtils.defer();
+
   // Open a remote window so that we can run this test even if e10s is not
   // enabled by default.
   let win = await BrowserTestUtils.openNewBrowserWindow({remote: true});
@@ -183,12 +190,16 @@ add_task(async function testChromeHearsPluginCrashFirst() {
       "Should have been showing crash report UI");
   });
   await BrowserTestUtils.closeWindow(win);
+  await crashDeferred.promise;
 });
 
 /**
  * In this case, the content process hears about the crash first.
  */
 add_task(async function testContentHearsCrashFirst() {
+  // Setup the crash observer promise
+  crashDeferred = PromiseUtils.defer();
+
   // Open a remote window so that we can run this test even if e10s is not
   // enabled by default.
   let win = await BrowserTestUtils.openNewBrowserWindow({remote: true});
@@ -253,4 +264,5 @@ add_task(async function testContentHearsCrashFirst() {
   });
 
   await BrowserTestUtils.closeWindow(win);
+  await crashDeferred.promise;
 });

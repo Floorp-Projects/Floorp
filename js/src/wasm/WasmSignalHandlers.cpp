@@ -173,6 +173,7 @@ class AutoSetHandlingSegFault
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
 #  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
 #  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
+#  define R31_sig(p) ((p)->uc_mcontext.gregs[31])
 # endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
@@ -418,6 +419,7 @@ struct macos_arm_context {
 # define PC_sig(p) EPC_sig(p)
 # define FP_sig(p) RFP_sig(p)
 # define SP_sig(p) RSP_sig(p)
+# define LR_sig(p) R31_sig(p)
 #endif
 
 static uint8_t**
@@ -447,7 +449,7 @@ ContextToSP(CONTEXT* context)
     return reinterpret_cast<uint8_t*>(SP_sig(context));
 }
 
-# if defined(__arm__) || defined(__aarch64__)
+# if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
 static uint8_t*
 ContextToLR(CONTEXT* context)
 {
@@ -538,7 +540,7 @@ ToRegisterState(CONTEXT* context)
     state.fp = ContextToFP(context);
     state.pc = *ContextToPC(context);
     state.sp = ContextToSP(context);
-# if defined(__arm__) || defined(__aarch64__)
+# if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
     state.lr = ContextToLR(context);
 # endif
     return state;

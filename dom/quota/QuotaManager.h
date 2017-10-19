@@ -298,6 +298,9 @@ public:
                                     nsIFile** aDirectory,
                                     bool* aCreated);
 
+  nsresult
+  EnsureTemporaryStorageIsInitialized();
+
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
                        const nsACString& aOrigin);

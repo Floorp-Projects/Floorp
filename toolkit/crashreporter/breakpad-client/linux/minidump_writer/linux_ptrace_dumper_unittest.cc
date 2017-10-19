@@ -55,7 +55,7 @@
 #include "common/linux/file_id.h"
 #include "common/linux/ignore_ret.h"
 #include "common/linux/safe_readlink.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 #include "common/using_std_string.h"
 
 #ifndef PR_SET_PTRACER
