@@ -131,7 +131,6 @@ function Inspector(toolbox) {
   this.onSidebarShown = this.onSidebarShown.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
-  this._detectingActorFeatures = this._detectActorFeatures();
 }
 
 Inspector.prototype = {
@@ -213,23 +212,6 @@ Inspector.prototype = {
     if (!this._panelDestroyer) {
       console.error(e);
     }
-  },
-
-  /**
-   * Figure out what features the backend supports
-   */
-  _detectActorFeatures: function () {
-    this._supportsScrollIntoView = false;
-
-    // Use getActorDescription first so that all actorHasMethod calls use
-    // a cached response from the server.
-    return this._target.getActorDescription("domwalker").then(desc => {
-      return promise.all([
-        this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
-          this._supportsScrollIntoView = value;
-        }).catch(console.error)
-      ]);
-    });
   },
 
   _deferredOpen: async function (defaultSelection) {
@@ -1374,7 +1356,6 @@ Inspector.prototype = {
       label: INSPECTOR_L10N.getStr("inspectorScrollNodeIntoView.label"),
       accesskey:
         INSPECTOR_L10N.getStr("inspectorScrollNodeIntoView.accesskey"),
-      hidden: !this._supportsScrollIntoView,
       disabled: !isSelectionElement,
       click: () => this.scrollNodeIntoView(),
     }));

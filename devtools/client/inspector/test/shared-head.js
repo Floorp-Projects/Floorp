@@ -30,9 +30,6 @@ var openInspector = Task.async(function* (hostType) {
     yield inspector.once("inspector-updated");
   }
 
-  info("Waiting for actor features to be detected");
-  yield inspector._detectingActorFeatures;
-
   yield registerTestActor(toolbox.target.client);
   let testActor = yield getTestActor(toolbox);
 
