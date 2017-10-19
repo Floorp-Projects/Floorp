@@ -29,8 +29,8 @@ is(s.sanitize("<a onclick='boom()'></a>", 0), "<html><head></head><body><a></a><
 is(s.sanitize("<style>p { color: red; }</style><p style='background-color: blue;'></p>", 0), "<html><head></head><body><p></p></body></html>", "Wrong sanitizer result 4");
 // Can allow styles
 is(s.sanitize("<style>p { color: red; }</style><p style='background-color: blue;'></p>", u.SanitizerAllowStyle), '<html><head><style>p { color: red; }</style></head><body><p style="background-color: blue;"></p></body></html>', "Wrong sanitizer result 5");
-// -moz-binding gets dropped when styles allowed; however, reconstructing the p { ... } part seems broken!
-todo_is(s.sanitize("<style>p { color: red; -moz-binding: url(foo); }</style><p style='background-color: blue; -moz-binding: url(foo);'></p>", u.SanitizerAllowStyle), '<html><head><style>p { color: red; }</style></head><body><p style="background-color: blue;"></p></body></html>', "Wrong sanitizer result 6");
+// -moz-binding gets dropped when styles allowed
+is(s.sanitize("<style>p { color: red; -moz-binding: url(foo); }</style><p style='background-color: blue; -moz-binding: url(foo);'></p>", u.SanitizerAllowStyle), '<html><head><style>p { color: red; }</style></head><body><p style="background-color: blue;"></p></body></html>', "Wrong sanitizer result 6");
 // Various cid: embeds only cases
 is(s.sanitize("<img src='foo.html'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img></body></html>', "Wrong sanitizer result 7");
 is(s.sanitize("<img src='cid:foo'>", u.SanitizerCidEmbedsOnly), '<html><head></head><body><img src="cid:foo"></body></html>', "Wrong sanitizer result 8");
