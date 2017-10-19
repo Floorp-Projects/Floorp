@@ -1404,7 +1404,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     // This will call back into OnStreamComplete
     // and thence to ParseSheet.  Regardless of whether this fails,
     // SheetComplete has been called.
-    return nsSyncLoadService::PushSyncStreamToListener(stream,
+    return nsSyncLoadService::PushSyncStreamToListener(stream.forget(),
                                                        streamLoader,
                                                        channel);
   }

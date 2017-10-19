@@ -9,7 +9,9 @@
  * Tests that the debugger is succesfully loaded in the Browser Content Toolbox.
  */
 
-const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+const {
+  gDevToolsBrowser
+} = require("devtools/client/framework/devtools-browser");
 
 function toggleBreakpoint(dbg, index) {
   const bp = findElement(dbg, "breakpointItem", index);

@@ -2454,7 +2454,8 @@ GetBinaryInputStream(nsIFile* aDirectory,
   }
 
   nsCOMPtr<nsIInputStream> bufferedStream;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 512);
+  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                 stream.forget(), 512);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5235,46 +5236,11 @@ QuotaManager::EnsureOriginIsInitializedInternal(
       *aCreated = false;
       return NS_OK;
     }
-  } else if (!mTemporaryStorageInitialized) {
-    rv = InitializeRepository(aPersistenceType);
+  } else {
+    rv = EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      // We have to cleanup partially initialized quota.
-      RemoveQuota();
-
       return rv;
     }
-
-    rv = InitializeRepository(ComplementaryPersistenceType(aPersistenceType));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // We have to cleanup partially initialized quota.
-      RemoveQuota();
-
-      return rv;
-    }
-
-    if (gFixedLimitKB >= 0) {
-      mTemporaryStorageLimit = static_cast<uint64_t>(gFixedLimitKB) * 1024;
-    }
-    else {
-      nsCOMPtr<nsIFile> storageDir =
-        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = storageDir->InitWithPath(GetStoragePath());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = GetTemporaryStorageLimit(storageDir, mTemporaryStorageUsage,
-                                    &mTemporaryStorageLimit);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    mTemporaryStorageInitialized = true;
-
-    CheckTemporaryStorageLimits();
   }
 
   bool created;
@@ -5335,6 +5301,60 @@ QuotaManager::EnsureOriginIsInitializedInternal(
   directory.forget(aDirectory);
   *aCreated = created;
   return NS_OK;
+}
+
+nsresult
+QuotaManager::EnsureTemporaryStorageIsInitialized()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mStorageInitialized);
+
+  if (mTemporaryStorageInitialized) {
+    return NS_OK;
+  }
+
+  nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // We have to cleanup partially initialized quota.
+    RemoveQuota();
+
+    return rv;
+  }
+
+  rv = InitializeRepository(PERSISTENCE_TYPE_TEMPORARY);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // We have to cleanup partially initialized quota.
+    RemoveQuota();
+
+    return rv;
+  }
+
+  if (gFixedLimitKB >= 0) {
+    mTemporaryStorageLimit = static_cast<uint64_t>(gFixedLimitKB) * 1024;
+  } else {
+    nsCOMPtr<nsIFile> storageDir =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = storageDir->InitWithPath(GetStoragePath());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = GetTemporaryStorageLimit(storageDir, mTemporaryStorageUsage,
+                                  &mTemporaryStorageLimit);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  mTemporaryStorageInitialized = true;
+
+  CheckTemporaryStorageLimits();
+
+  return rv;
 }
 
 void
@@ -7147,14 +7167,16 @@ GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   nsresult rv;
 
   if (mGetGroupUsage) {
-    nsCOMPtr<nsIFile> directory;
+    // Ensure temporary storage is initialized first. It will initialize all
+    // origins for temporary storage including origins belonging to our group by
+    // traversing the repositories. EnsureStorageIsInitialized is needed before
+    // EnsureTemporaryStorageIsInitialized.
+    rv = aQuotaManager->EnsureStorageIsInitialized();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    // Ensure origin is initialized first. It will initialize all origins for
-    // temporary storage including origins belonging to our group.
-    rv = aQuotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_TEMPORARY,
-                                                  mSuffix, mGroup,
-                                                  mOriginScope.GetOrigin(),
-                                                  getter_AddRefs(directory));
+    rv = aQuotaManager->EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

@@ -40,6 +40,7 @@ class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
+class SweepGroupsIter;
 class WeakCacheSweepIterator;
 
 enum IncrementalProgress
@@ -1073,27 +1074,24 @@ class GCRuntime
     void groupZonesForSweeping(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
     MOZ_MUST_USE bool findInterZoneEdges();
     void getNextSweepGroup();
-    void endMarkingSweepGroup();
-    void beginSweepingSweepGroup();
+    IncrementalProgress endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget);
+    IncrementalProgress beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
+#ifdef JS_GC_ZEAL
+    IncrementalProgress maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget);
+#endif
     bool shouldReleaseObservedTypes();
     void sweepDebuggerOnMainThread(FreeOp* fop);
     void sweepJitDataOnMainThread(FreeOp* fop);
-    void endSweepingSweepGroup();
-    IncrementalProgress performSweepActions(SliceBudget& sliceBudget,
-                                            AutoLockForExclusiveAccess& lock);
-    static IncrementalProgress sweepTypeInformation(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
-                                                    Zone* zone);
-    static IncrementalProgress mergeSweptObjectArenas(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
-                                                      Zone* zone);
-    static IncrementalProgress sweepAtomsTable(GCRuntime* gc, FreeOp* fop, SliceBudget& budget);
+    IncrementalProgress endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget);
+    IncrementalProgress performSweepActions(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock);
+    IncrementalProgress sweepTypeInformation(FreeOp* fop, SliceBudget& budget, Zone* zone);
+    IncrementalProgress mergeSweptObjectArenas(FreeOp* fop, SliceBudget& budget, Zone* zone);
     void startSweepingAtomsTable();
-    IncrementalProgress sweepAtomsTable(SliceBudget& budget);
-    static IncrementalProgress sweepWeakCaches(GCRuntime* gc, FreeOp* fop, SliceBudget& budget);
-    IncrementalProgress sweepWeakCaches(SliceBudget& budget);
-    static IncrementalProgress finalizeAllocKind(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
-                                                 Zone* zone, AllocKind kind);
-    static IncrementalProgress sweepShapeTree(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
-                                              Zone* zone);
+    IncrementalProgress sweepAtomsTable(FreeOp* fop, SliceBudget& budget);
+    IncrementalProgress sweepWeakCaches(FreeOp* fop, SliceBudget& budget);
+    IncrementalProgress finalizeAllocKind(FreeOp* fop, SliceBudget& budget, Zone* zone,
+                                          AllocKind kind);
+    IncrementalProgress sweepShapeTree(FreeOp* fop, SliceBudget& budget, Zone* zone);
     void endSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
     bool allCCVisibleZonesWereCollected() const;
     void sweepZones(FreeOp* fop, ZoneGroup* group, bool lastGC);
@@ -1285,8 +1283,19 @@ class GCRuntime
      */
     ActiveThreadOrGCTaskData<State> incrementalState;
 
+    /* The incremental state at the start of this slice. */
+    ActiveThreadData<State> initialState;
+
+#ifdef JS_GC_ZEAL
+    /* Whether to pay attention the zeal settings in this incremental slice. */
+    ActiveThreadData<bool> useZeal;
+#endif
+
     /* Indicates that the last incremental slice exhausted the mark stack. */
     ActiveThreadData<bool> lastMarkSlice;
+
+    /* Whether it's currently safe to yield to the mutator in an incremental GC. */
+    ActiveThreadData<bool> safeToYield;
 
     /* Whether any sweeping will take place in the separate GC helper thread. */
     ActiveThreadData<bool> sweepOnBackgroundThread;
@@ -1319,6 +1328,7 @@ class GCRuntime
     ActiveThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
     ActiveThreadData<bool> abortSweepAfterCurrentGroup;
 
+    friend class SweepGroupsIter;
     friend class WeakCacheSweepIterator;
 
     /*

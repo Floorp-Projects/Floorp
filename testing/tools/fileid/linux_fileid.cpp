@@ -6,7 +6,7 @@
 #include <string>
 
 #include "common/linux/file_id.h"
-#include "common/memory.h"
+#include "common/memory_allocator.h"
 
 using std::string;
 

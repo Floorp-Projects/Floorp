@@ -297,15 +297,28 @@ Sanitizer.prototype = {
         Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
         // ServiceWorkers
+        let promises = [];
         let serviceWorkers = serviceWorkerManager.getAllRegistrations();
         for (let i = 0; i < serviceWorkers.length; i++) {
           let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
-          let host = sw.principal.URI.host;
-          serviceWorkerManager.removeAndPropagate(host);
+
+          promises.push(new Promise(resolve => {
+            let unregisterCallback = {
+              unregisterSucceeded: () => { resolve(true); },
+              // We don't care about failures.
+              unregisterFailed: () => { resolve(true); },
+              QueryInterface: XPCOMUtils.generateQI(
+                [Ci.nsIServiceWorkerUnregisterCallback])
+            };
+
+            serviceWorkerManager.propagateUnregister(sw.principal, unregisterCallback, sw.scope);
+          }));
         }
 
+        await Promise.all(promises);
+
         // QuotaManager
-        let promises = [];
+        promises = [];
         await new Promise(resolve => {
           quotaManagerService.getUsage(request => {
             if (request.resultCode != Cr.NS_OK) {
