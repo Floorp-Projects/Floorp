@@ -43,29 +43,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
 
-#if defined(MOZ_TSAN)
-typedef  _Atomic(int)  atomic_int;
-#else
-typedef  volatile int  atomic_int;
-#endif
-
 /**
  * Context used by codec threads and stored in their AVCodecInternal thread_ctx.
  */
-typedef enum {
-    STATE_INPUT_READY,          ///< Set when the thread is awaiting a packet.
-    STATE_SETTING_UP,           ///< Set before the codec has called ff_thread_finish_setup().
-    STATE_GET_BUFFER,           /**<
-                                 * Set when the codec calls get_buffer().
-                                 * State is returned to STATE_SETTING_UP afterwards.
-                                 */
-    STATE_GET_FORMAT,           /**<
-                                 * Set when the codec calls get_format().
-                                 * State is returned to STATE_SETTING_UP afterwards.
-                                 */
-    STATE_SETUP_FINISHED        ///< Set after the codec has called ff_thread_finish_setup().
-} State;
-
 typedef struct PerThreadContext {
     struct FrameThreadContext *parent;
 
@@ -86,7 +66,19 @@ typedef struct PerThreadContext {
     int     got_frame;              ///< The output of got_picture_ptr from the last avcodec_decode_video() call.
     int     result;                 ///< The result of the last codec decode/encode() call.
 
-    atomic_int state;
+    enum {
+        STATE_INPUT_READY,          ///< Set when the thread is awaiting a packet.
+        STATE_SETTING_UP,           ///< Set before the codec has called ff_thread_finish_setup().
+        STATE_GET_BUFFER,           /**<
+                                     * Set when the codec calls get_buffer().
+                                     * State is returned to STATE_SETTING_UP afterwards.
+                                     */
+        STATE_GET_FORMAT,           /**<
+                                     * Set when the codec calls get_format().
+                                     * State is returned to STATE_SETTING_UP afterwards.
+                                     */
+        STATE_SETUP_FINISHED        ///< Set after the codec has called ff_thread_finish_setup().
+    } state;
 
     /**
      * Array of frames passed to ff_thread_release_buffer().
@@ -366,8 +358,7 @@ static int submit_packet(PerThreadContext *p, AVPacket *avpkt)
             while (p->state == STATE_SETTING_UP)
                 pthread_cond_wait(&p->progress_cond, &p->progress_mutex);
 
-            State p_state = (State)p->state;
-            switch (p_state) {
+            switch (p->state) {
             case STATE_GET_BUFFER:
                 p->result = ff_get_buffer(p->avctx, p->requested_frame, p->requested_flags);
                 break;
@@ -480,7 +471,7 @@ int ff_thread_decode_frame(AVCodecContext *avctx,
 void ff_thread_report_progress(ThreadFrame *f, int n, int field)
 {
     PerThreadContext *p;
-    atomic_int *progress = f->progress ? (atomic_int*)f->progress->data : NULL;
+    volatile int *progress = f->progress ? (int*)f->progress->data : NULL;
 
     if (!progress || progress[field] >= n) return;
 
@@ -498,7 +489,7 @@ void ff_thread_report_progress(ThreadFrame *f, int n, int field)
 void ff_thread_await_progress(ThreadFrame *f, int n, int field)
 {
     PerThreadContext *p;
-    atomic_int *progress = f->progress ? (atomic_int*)f->progress->data : NULL;
+    volatile int *progress = f->progress ? (int*)f->progress->data : NULL;
 
     if (!progress || progress[field] >= n) return;
 
