@@ -17,29 +17,29 @@ nsPrintProgressParams::~nsPrintProgressParams()
 {
 }
 
-NS_IMETHODIMP nsPrintProgressParams::GetDocTitle(char16_t * *aDocTitle)
+NS_IMETHODIMP
+nsPrintProgressParams::GetDocTitle(nsAString& aDocTitle)
 {
-  NS_ENSURE_ARG(aDocTitle);
-
-  *aDocTitle = ToNewUnicode(mDocTitle);
+  aDocTitle = mDocTitle;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintProgressParams::SetDocTitle(const char16_t * aDocTitle)
+NS_IMETHODIMP
+nsPrintProgressParams::SetDocTitle(const nsAString& aDocTitle)
 {
   mDocTitle = aDocTitle;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintProgressParams::GetDocURL(char16_t * *aDocURL)
+NS_IMETHODIMP
+nsPrintProgressParams::GetDocURL(nsAString& aDocURL)
 {
-  NS_ENSURE_ARG(aDocURL);
-
-  *aDocURL = ToNewUnicode(mDocURL);
+  aDocURL = mDocURL;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintProgressParams::SetDocURL(const char16_t * aDocURL)
+NS_IMETHODIMP
+nsPrintProgressParams::SetDocURL(const nsAString& aDocURL)
 {
   mDocURL = aDocURL;
   return NS_OK;
