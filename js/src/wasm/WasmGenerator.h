@@ -204,8 +204,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     bool isAsmJS() const { return env_->isAsmJS(); }
-    Tier tier() const { return env_->tier(); }
-    CompileMode mode() const { return env_->mode(); }
+    Tier tier() const { return env_->tier; }
+    CompileMode mode() const { return env_->mode; }
     bool debugEnabled() const { return env_->debugEnabled(); }
 
   public:
