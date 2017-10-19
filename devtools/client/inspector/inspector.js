@@ -221,7 +221,6 @@ Inspector.prototype = {
   _detectActorFeatures: function () {
     this._supportsDuplicateNode = false;
     this._supportsScrollIntoView = false;
-    this._supportsResolveRelativeURL = false;
 
     // Use getActorDescription first so that all actorHasMethod calls use
     // a cached response from the server.
@@ -232,10 +231,7 @@ Inspector.prototype = {
         }).catch(console.error),
         this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
           this._supportsScrollIntoView = value;
-        }).catch(console.error),
-        this._target.actorHasMethod("inspector", "resolveRelativeURL").then(value => {
-          this._supportsResolveRelativeURL = value;
-        }).catch(console.error),
+        }).catch(console.error)
       ]);
     });
   },
@@ -1600,8 +1596,7 @@ Inspector.prototype = {
     }
 
     let type = popupNode.dataset.type;
-    if (this._supportsResolveRelativeURL &&
-        (type === "uri" || type === "cssresource" || type === "jsresource")) {
+    if ((type === "uri" || type === "cssresource" || type === "jsresource")) {
       // Links can't be opened in new tabs in the browser toolbox.
       if (type === "uri" && !this.target.chrome) {
         linkFollow.visible = true;
@@ -2127,8 +2122,6 @@ Inspector.prototype = {
 
     if (type === "uri" || type === "cssresource" || type === "jsresource") {
       // Open link in a new tab.
-      // When the inspector menu was setup on click (see _getNodeLinkMenuItems), we
-      // already checked that resolveRelativeURL existed.
       this.inspector.resolveRelativeURL(
         link, this.selection.nodeFront).then(url => {
           if (type === "uri") {
@@ -2169,8 +2162,6 @@ Inspector.prototype = {
    * This method is here for the benefit of copying links.
    */
   copyAttributeLink: function (link) {
-    // When the inspector menu was setup on click (see _getNodeLinkMenuItems), we
-    // already checked that resolveRelativeURL existed.
     this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {
       clipboardHelper.copyString(url);
     }, console.error);
