@@ -259,7 +259,7 @@ LabeledEventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock)
   Epoch& frontEpoch = mEpochs.FirstElement();
 
   if (!frontEpoch.IsLabeled()) {
-    QueueEntry entry = mUnlabeled.FirstElement();
+    QueueEntry& entry = mUnlabeled.FirstElement();
     return IsReadyToRun(entry.mRunnable, nullptr);
   }
 
@@ -271,7 +271,7 @@ LabeledEventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock)
     RunnableEpochQueue* queue = iter.Data();
     MOZ_ASSERT(!queue->IsEmpty());
 
-    QueueEntry entry = queue->FirstElement();
+    QueueEntry& entry = queue->FirstElement();
     if (entry.mEpochNumber != currentEpoch) {
       continue;
     }
