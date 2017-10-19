@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -593,7 +594,7 @@ PrintSingleError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
         ctmp++;
         if (prefix)
             fputs(prefix.get(), file);
-        fwrite(message, 1, ctmp - message, file);
+        mozilla::Unused << fwrite(message, 1, ctmp - message, file);
         message = ctmp;
     }
 
