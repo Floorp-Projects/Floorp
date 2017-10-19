@@ -1065,8 +1065,6 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
 
   // Make the rects relative to the parent stacking context
   wr::LayoutRect wrClipBounds = aSc.ToRelativeLayoutRect(clipBounds);
-  LayerSize layerFirstTileSize = ViewAs<LayerPixel>(firstTileBounds.Size(),
-      PixelCastJustification::WebRenderHasUnitResolution);
   wr::LayoutRect wrGradientBounds = aSc.ToRelativeLayoutRect(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
@@ -1090,7 +1088,7 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
       mozilla::wr::ToLayoutPoint(lineEnd),
       stops,
       extendMode,
-      mozilla::wr::ToLayoutSize(layerFirstTileSize),
+      mozilla::wr::ToLayoutSize(firstTileBounds.Size()),
       mozilla::wr::ToLayoutSize(tileSpacing));
   } else {
     gradientRadius.width *= srcTransform.width;
@@ -1104,7 +1102,7 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
       mozilla::wr::ToLayoutSize(gradientRadius),
       stops,
       extendMode,
-      mozilla::wr::ToLayoutSize(layerFirstTileSize),
+      mozilla::wr::ToLayoutSize(firstTileBounds.Size()),
       mozilla::wr::ToLayoutSize(tileSpacing));
   }
 }

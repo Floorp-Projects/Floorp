@@ -246,8 +246,7 @@ static inline wr::ColorF ToColorF(const gfx::Color& color)
   return c;
 }
 
-template<class T>
-static inline wr::LayoutPoint ToLayoutPoint(const gfx::PointTyped<T>& point)
+static inline wr::LayoutPoint ToLayoutPoint(const mozilla::LayoutDevicePoint& point)
 {
   wr::LayoutPoint p;
   p.x = point.x;
@@ -255,14 +254,12 @@ static inline wr::LayoutPoint ToLayoutPoint(const gfx::PointTyped<T>& point)
   return p;
 }
 
-template<class T>
-static inline wr::LayoutPoint ToLayoutPoint(const gfx::IntPointTyped<T>& point)
+static inline wr::LayoutPoint ToLayoutPoint(const mozilla::LayoutDeviceIntPoint& point)
 {
-  return ToLayoutPoint(IntPointToPoint(point));
+  return ToLayoutPoint(LayoutDevicePoint(point));
 }
 
-template<class T>
-static inline wr::LayoutVector2D ToLayoutVector2D(const gfx::PointTyped<T>& point)
+static inline wr::LayoutVector2D ToLayoutVector2D(const mozilla::LayoutDevicePoint& point)
 {
   wr::LayoutVector2D p;
   p.x = point.x;
@@ -270,14 +267,12 @@ static inline wr::LayoutVector2D ToLayoutVector2D(const gfx::PointTyped<T>& poin
   return p;
 }
 
-template<class T>
-static inline wr::LayoutVector2D ToLayoutVector2D(const gfx::IntPointTyped<T>& point)
+static inline wr::LayoutVector2D ToLayoutVector2D(const mozilla::LayoutDeviceIntPoint& point)
 {
-  return ToLayoutVector2D(IntPointToPoint(point));
+  return ToLayoutVector2D(LayoutDevicePoint(point));
 }
 
-template<class T>
-static inline wr::LayoutRect ToLayoutRect(const gfx::RectTyped<T>& rect)
+static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceRect& rect)
 {
   wr::LayoutRect r;
   r.origin.x = rect.x;
@@ -297,14 +292,12 @@ static inline wr::LayoutRect ToLayoutRect(const gfxRect rect)
   return r;
 }
 
-template<class T>
-static inline wr::LayoutRect ToLayoutRect(const gfx::IntRectTyped<T>& rect)
+static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceIntRect& rect)
 {
   return ToLayoutRect(IntRectToRect(rect));
 }
 
-template<class T>
-static inline wr::LayoutSize ToLayoutSize(const gfx::SizeTyped<T>& size)
+static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceSize& size)
 {
   wr::LayoutSize ls;
   ls.width = size.width;
@@ -316,17 +309,16 @@ static inline wr::ComplexClipRegion ToComplexClipRegion(const RoundedRect& rect)
 {
   wr::ComplexClipRegion ret;
   ret.rect               = ToLayoutRect(rect.rect);
-  ret.radii.top_left     = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopLeft]);
-  ret.radii.top_right    = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopRight]);
-  ret.radii.bottom_left  = ToLayoutSize(rect.corners.radii[mozilla::eCornerBottomLeft]);
-  ret.radii.bottom_right = ToLayoutSize(rect.corners.radii[mozilla::eCornerBottomRight]);
+  ret.radii.top_left     = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerTopLeft]));
+  ret.radii.top_right    = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerTopRight]));
+  ret.radii.bottom_left  = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerBottomLeft]));
+  ret.radii.bottom_right = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerBottomRight]));
   return ret;
 }
 
-template<class T>
-static inline wr::LayoutSize ToLayoutSize(const gfx::IntSizeTyped<T>& size)
+static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceIntSize& size)
 {
-  return ToLayoutSize(IntSizeToSize(size));
+  return ToLayoutSize(LayoutDeviceSize(size));
 }
 
 template<class S, class T>
@@ -389,16 +381,6 @@ static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const uint8_t
   return bs;
 }
 
-static inline wr::BorderRadius ToUniformBorderRadius(const mozilla::LayerSize& aSize)
-{
-  wr::BorderRadius br;
-  br.top_left = ToLayoutSize(aSize);
-  br.top_right = ToLayoutSize(aSize);
-  br.bottom_left = ToLayoutSize(aSize);
-  br.bottom_right = ToLayoutSize(aSize);
-  return br;
-}
-
 static inline wr::BorderRadius EmptyBorderRadius()
 {
   wr::BorderRadius br;
@@ -406,9 +388,10 @@ static inline wr::BorderRadius EmptyBorderRadius()
   return br;
 }
 
-template<class T>
-static inline wr::BorderRadius ToBorderRadius(const gfx::SizeTyped<T>& topLeft, const gfx::SizeTyped<T>& topRight,
-                                              const gfx::SizeTyped<T>& bottomLeft, const gfx::SizeTyped<T>& bottomRight)
+static inline wr::BorderRadius ToBorderRadius(const mozilla::LayoutDeviceSize& topLeft,
+                                              const mozilla::LayoutDeviceSize& topRight,
+                                              const mozilla::LayoutDeviceSize& bottomLeft,
+                                              const mozilla::LayoutDeviceSize& bottomRight)
 {
   wr::BorderRadius br;
   br.top_left = ToLayoutSize(topLeft);
@@ -492,22 +475,6 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float
   prop.id = id;
   prop.opacity = opacity;
   return prop;
-}
-
-static inline wr::ComplexClipRegion ToComplexClipRegion(const wr::LayoutRect& rect,
-                                                        const mozilla::LayerSize& size)
-{
-  wr::ComplexClipRegion complex_clip;
-  complex_clip.rect = rect;
-  complex_clip.radii = wr::ToUniformBorderRadius(size);
-  return complex_clip;
-}
-
-template<class T>
-static inline wr::ComplexClipRegion ToComplexClipRegion(const gfx::RectTyped<T>& rect,
-                                                        const mozilla::LayerSize& size)
-{
-  return ToComplexClipRegion(wr::ToLayoutRect(rect), size);
 }
 
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
