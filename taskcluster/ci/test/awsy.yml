@@ -1,0 +1,45 @@
+job-defaults:
+    suite: awsy
+    max-run-time: 7200
+    instance-size: xlarge
+    allow-software-gl-layers: false
+    mozharness:
+        script: awsy_script.py
+        config:
+            by-test-platform:
+                windows.*/opt:
+                    - awsy/taskcluster_windows_config.py
+                macosx.*/opt:
+                    - awsy/macosx_config.py
+                default:
+                    - awsy/linux_config.py
+
+awsy:
+    description: "Are we slim yet"
+    treeherder-symbol: tc-SY(sy)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
+
+awsy-stylo-disabled:
+    description: "Are we slim yet for Stylo disabled"
+    treeherder-symbol: tc-SYsd(sy)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
+    mozharness:
+        extra-options:
+            - --disable-stylo
+
+awsy-stylo-sequential:
+    description: "Are we slim yet for Stylo sequential"
+    treeherder-symbol: tc-SYss(sy)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
+    mozharness:
+        extra-options:
+            - --single-stylo-traversal

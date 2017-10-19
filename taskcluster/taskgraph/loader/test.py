@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import logging
 
+from .transform import loader as transform_loader
 from ..util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,8 @@ def loader(kind, path, config, params, loaded_tasks):
     test_platforms = expand_tests(test_sets_cfg, test_platforms)
 
     # load the test descriptions
-    test_descriptions = load_yaml(path, 'tests.yml', enforce_order=True)
+    tests = transform_loader(kind, path, config, params, loaded_tasks)
+    test_descriptions = {t.pop('name'): t for t in tests}
 
     # generate all tests for all test platforms
     for test_platform_name, test_platform in test_platforms.iteritems():

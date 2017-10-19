@@ -254,16 +254,12 @@ add_task(async function setup() {
 // A clean up function to prevent affecting other tests.
 registerCleanupFunction(() => {
   // Clear all cookies.
-  let cookieMgr = Cc["@mozilla.org/cookiemanager;1"]
-                     .getService(Ci.nsICookieManager);
-  cookieMgr.removeAll();
+  Services.cookies.removeAll();
 
   // Clear all image caches and network caches.
   clearAllImageCaches();
 
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 });
 
 add_task(async function test_favicon_firstParty() {
@@ -271,9 +267,7 @@ add_task(async function test_favicon_firstParty() {
     // Clear all image caches and network caches before running the test.
     clearAllImageCaches();
 
-    let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-    networkCache.clear();
+    Services.cache2.clear();
 
     // Clear Places favicon caches.
     await clearAllPlacesFavicons();
@@ -292,9 +286,7 @@ add_task(async function test_favicon_cache_firstParty() {
   // Clear all image caches and network caches before running the test.
   clearAllImageCaches();
 
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 
   // Start to observer the event of that favicon has been fully loaded and cached.
   let promiseForFaviconLoaded = waitOnFaviconLoaded(THIRD_PARTY_SITE + TEST_FAVICON_CACHE_URI);

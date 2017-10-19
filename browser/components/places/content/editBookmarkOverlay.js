@@ -620,9 +620,7 @@ var gEditItemOverlay = {
     this._firstEditedField = aNewField;
 
     // set the pref
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    prefs.setCharPref("browser.bookmarks.editDialog.firstEditField", aNewField);
+    Services.prefs.setCharPref("browser.bookmarks.editDialog.firstEditField", aNewField);
   },
 
   async onNamePickerChange() {

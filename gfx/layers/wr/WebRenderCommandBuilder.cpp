@@ -276,10 +276,8 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
     bool snap;
     nsRect bounds = aItem->GetBounds(nullptr, &snap);
     int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-    LayerRect rect = ViewAs<LayerPixel>(
-      LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel),
-      PixelCastJustification::WebRenderHasUnitResolution);
-    LayerRect scBounds(0, 0, rect.width, rect.Height());
+    LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel);
+    LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), rect.Size());
     gfx::MaybeIntSize scaleToSize;
     if (!aContainer->GetScaleHint().IsEmpty()) {
       scaleToSize = Some(aContainer->GetScaleHint());
@@ -316,7 +314,7 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
                                    mozilla::wr::DisplayListBuilder& aBuilder,
                                    mozilla::wr::IpcResourceUpdateQueue& aResources,
                                    const StackingContextHelper& aSc,
-                                   const LayerRect& aRect)
+                                   const LayoutDeviceRect& aRect)
 {
   gfx::IntSize size;
   Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer,
@@ -342,7 +340,7 @@ static void
 PaintItemByDrawTarget(nsDisplayItem* aItem,
                       gfx::DrawTarget* aDT,
                       const LayerRect& aImageRect,
-                      const LayerPoint& aOffset,
+                      const LayoutDevicePoint& aOffset,
                       nsDisplayListBuilder* aDisplayListBuilder,
                       RefPtr<BasicLayerManager>& aManager,
                       WebRenderLayerManager* aWrManager,
@@ -427,7 +425,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
                                               wr::IpcResourceUpdateQueue& aResources,
                                               const StackingContextHelper& aSc,
                                               nsDisplayListBuilder* aDisplayListBuilder,
-                                              LayerRect& aImageRect)
+                                              LayoutDeviceRect& aImageRect)
 {
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
@@ -450,19 +448,19 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   aItem->RecomputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  LayerRect bounds = ViewAs<LayerPixel>(
-      LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel),
-      PixelCastJustification::WebRenderHasUnitResolution);
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel);
 
   gfx::Size scale = aSc.GetInheritedScale();
+  // XXX not sure if paintSize should be in layer or layoutdevice pixels, it
+  // has some sort of scaling applied.
   LayerIntSize paintSize = RoundedToInt(LayerSize(bounds.width * scale.width, bounds.height * scale.height));
   if (paintSize.width == 0 || paintSize.height == 0) {
     return nullptr;
   }
 
   bool needPaint = true;
-  LayerIntPoint offset = RoundedToInt(bounds.TopLeft());
-  aImageRect = LayerRect(offset, LayerSize(RoundedToInt(bounds.Size())));
+  LayoutDeviceIntPoint offset = RoundedToInt(bounds.TopLeft());
+  aImageRect = LayoutDeviceRect(offset, LayoutDeviceSize(RoundedToInt(bounds.Size())));
   LayerRect paintRect = LayerRect(LayerPoint(0, 0), LayerSize(paintSize));
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
 
@@ -563,9 +561,9 @@ WebRenderCommandBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
                                           wr::IpcResourceUpdateQueue& aResources,
                                           const StackingContextHelper& aSc,
                                           nsDisplayListBuilder* aDisplayListBuilder,
-                                          const LayerRect& aBounds)
+                                          const LayoutDeviceRect& aBounds)
 {
-  LayerRect imageRect;
+  LayoutDeviceRect imageRect;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
                                                                     aSc, aDisplayListBuilder,
                                                                     imageRect);
@@ -587,7 +585,7 @@ WebRenderCommandBuilder::PushItemAsImage(nsDisplayItem* aItem,
                                          const StackingContextHelper& aSc,
                                          nsDisplayListBuilder* aDisplayListBuilder)
 {
-  LayerRect imageRect;
+  LayoutDeviceRect imageRect;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
                                                                     aSc, aDisplayListBuilder,
                                                                     imageRect);

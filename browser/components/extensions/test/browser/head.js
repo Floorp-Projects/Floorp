@@ -66,8 +66,7 @@ function makeWidgetId(id) {
 }
 
 var focusWindow = async function focusWindow(win) {
-  let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-  if (fm.activeWindow == win) {
+  if (Services.focus.activeWindow == win) {
     return;
   }
 

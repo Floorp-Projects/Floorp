@@ -1,0 +1,129 @@
+job-defaults:
+    instance-size: xlarge
+    max-run-time: 5400
+    mozharness:
+        script: web_platform_tests.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - web_platform_tests/prod_config_windows_taskcluster.py
+                macosx.*:
+                    - web_platform_tests/prod_config.py
+                default:
+                    - web_platform_tests/prod_config.py
+                    - remove_executables.py
+
+web-platform-tests:
+    description: "Web platform test run"
+    suite: web-platform-tests
+    treeherder-symbol: tc-W(wpt)
+    chunks:
+      by-test-platform:
+        macosx64/opt: 5
+        macosx64/debug: 10
+        default: 12
+    max-run-time: 7200
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+
+web-platform-tests-headless:
+    description: "Web platform test headless run"
+    suite: web-platform-tests
+    treeherder-symbol: tc-W(wptH)
+    chunks:
+      by-test-platform:
+        macosx64/opt: 5
+        macosx64/debug: 10
+        default: 12
+    e10s:
+        by-test-platform:
+            macosx.*: true
+            default: true
+    max-run-time: 7200
+    run-on-projects: [] # disabled pending releng approval
+    mozharness:
+        chunked: true
+        extra-options:
+            by-test-platform:
+                windows.*:
+                    - --test-type=testharness
+                    - --headless
+                    - --headless-width=1024
+                    - --headless-height=768
+                default:
+                    - --test-type=testharness
+                    - --headless
+
+web-platform-tests-reftests:
+    description: "Web platform reftest run"
+    suite: web-platform-tests-reftests
+    treeherder-symbol: tc-W(Wr)
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        windows.*: 1
+        default: 6
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    mozharness:
+        extra-options:
+            - --test-type=reftest
+
+web-platform-tests-reftests-headless:
+    description: "Web platform reftest headless run"
+    suite: web-platform-tests-reftests
+    treeherder-symbol: tc-W(WrH)
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        windows.*: 1
+        default: 6
+    e10s:
+        by-test-platform:
+            windows7-32/debug: both
+            default: true
+    run-on-projects: [] # disabled pending releng approval
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows.*:
+                    - --test-type=reftest
+                    - --headless
+                    - --headless-width=1024
+                    - --headless-height=768
+                default:
+                    - --test-type=reftest
+
+web-platform-tests-wdspec:
+    description: "Web platform webdriver-spec run"
+    suite: web-platform-tests-wdspec
+    treeherder-symbol: tc-W(Wd)
+    mozharness:
+        extra-options:
+            - --test-type=wdspec
+
+web-platform-tests-wdspec-headless:
+    description: "Web platform webdriver-spec headless run"
+    suite: web-platform-tests-wdspec
+    treeherder-symbol: tc-W(WdH)
+    run-on-projects: [] # disabled pending releng approval
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows.*:
+                    - --test-type=wdspec
+                    - --headless
+                    - --headless-width=1024
+                    - --headless-height=768
+                default:
+                    - --test-type=wdspec
+                    - --headless

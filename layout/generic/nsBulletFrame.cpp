@@ -517,10 +517,8 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
-  LayerRect destRect = ViewAs<LayerPixel>(
-      LayoutDeviceRect::FromAppUnits(
-          aItem->GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel),
-      PixelCastJustification::WebRenderHasUnitResolution);
+  LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
+          aItem->GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel);
   wr::LayoutRect wrDestRect = aSc.ToRelativeLayoutRect(destRect);
 
   nsTArray<wr::GlyphInstance> wrGlyphs;
@@ -532,7 +530,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
     for (size_t j = 0; j < glyphs.Length(); j++) {
       wrGlyphs[j].index = glyphs[j].mIndex;
       wrGlyphs[j].point = aSc.ToRelativeLayoutPoint(
-              LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
+              LayoutDevicePoint::FromUnknownPoint(glyphs[j].mPosition));
     }
 
     aManager->WrBridge()->PushGlyphs(aBuilder, wrGlyphs, mFont,

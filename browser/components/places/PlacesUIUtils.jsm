@@ -717,8 +717,7 @@ this.PlacesUIUtils = {
     var uri = PlacesUtils._uri(aURINode.uri);
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
       const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-      var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
-                           getService(Ci.nsIStringBundleService).
+      var brandShortName = Services.strings.
                            createBundle(BRANDING_BUNDLE_URI).
                            GetStringFromName("brandShortName");
 
@@ -861,8 +860,7 @@ this.PlacesUIUtils = {
         var messageKey = "tabs.openWarningMultipleBranded";
         var openKey = "tabs.openButtonMultiple";
         const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-        var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
-                             getService(Ci.nsIStringBundleService).
+        var brandShortName = Services.strings.
                              createBundle(BRANDING_BUNDLE_URI).
                              GetStringFromName("brandShortName");
 

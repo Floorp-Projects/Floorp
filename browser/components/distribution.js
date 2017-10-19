@@ -31,13 +31,11 @@ DistributionCustomizer.prototype = {
     // For parallel xpcshell testing purposes allow loading the distribution.ini
     // file from the profile folder through an hidden pref.
     let loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile", false);
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
 
     let iniFile;
     try {
-      iniFile = loadFromProfile ? dirSvc.get("ProfD", Ci.nsIFile)
-                                : dirSvc.get("XREAppDist", Ci.nsIFile);
+      iniFile = loadFromProfile ? Services.dirsvc.get("ProfD", Ci.nsIFile)
+                                : Services.dirsvc.get("XREAppDist", Ci.nsIFile);
       if (loadFromProfile) {
         iniFile.leafName = "distribution";
       }
@@ -98,30 +96,6 @@ DistributionCustomizer.prototype = {
     let language = this._locale.split("-")[0];
     this.__defineGetter__("_language", () => language);
     return this._language;
-  },
-
-  get _prefSvc() {
-    let svc = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefService);
-    this.__defineGetter__("_prefSvc", () => svc);
-    return this._prefSvc;
-  },
-
-  get _prefs() {
-    let branch = this._prefSvc.getBranch(null);
-    this.__defineGetter__("_prefs", () => branch);
-    return this._prefs;
-  },
-
-  get _ioSvc() {
-    let svc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    this.__defineGetter__("_ioSvc", () => svc);
-    return this._ioSvc;
-  },
-
-  _makeURI: function DIST__makeURI(spec) {
-    return this._ioSvc.newURI(spec);
   },
 
   async _parseBookmarksSection(parentGuid, section) {
@@ -211,8 +185,8 @@ DistributionCustomizer.prototype = {
         // Don't bother updating the livemark contents on creation.
         let parentId = await PlacesUtils.promiseItemId(parentGuid);
         await PlacesUtils.livemarks.addLivemark({
-          feedURI: this._makeURI(item.feedLink),
-          siteURI: this._makeURI(item.siteLink),
+          feedURI: Services.io.newURI(item.feedLink),
+          siteURI: Services.io.newURI(item.siteLink),
           parentId, index, title: item.title
         });
         break;
@@ -236,13 +210,13 @@ DistributionCustomizer.prototype = {
 
         if (item.icon && item.iconData) {
           try {
-            let faviconURI = this._makeURI(item.icon);
+            let faviconURI = Services.io.newURI(item.icon);
             PlacesUtils.favicons.replaceFaviconDataFromDataURL(
               faviconURI, item.iconData, 0,
               Services.scriptSecurityManager.getSystemPrincipal());
 
             PlacesUtils.favicons.setAndFetchFaviconForPage(
-              this._makeURI(item.link), faviconURI, false,
+              Services.io.newURI(item.link), faviconURI, false,
               PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
               Services.scriptSecurityManager.getSystemPrincipal());
           } catch (e) {
@@ -278,8 +252,8 @@ DistributionCustomizer.prototype = {
     // nsPrefService loads very early.  Reload prefs so we can set
     // distribution defaults during the prefservice:after-app-defaults
     // notification (see applyPrefDefaults below)
-    this._prefSvc.QueryInterface(Ci.nsIObserver);
-    this._prefSvc.observe(null, "reload-default-prefs", null);
+    Services.prefs.QueryInterface(Ci.nsIObserver)
+      .observe(null, "reload-default-prefs", null);
   },
 
   _bookmarksApplied: false,
@@ -313,7 +287,7 @@ DistributionCustomizer.prototype = {
         this._ini.getString("Global", "id") + ".bookmarksProcessed";
     }
 
-    let bmProcessed = this._prefs.getBoolPref(bmProcessedPref, false);
+    let bmProcessed = Services.prefs.getBoolPref(bmProcessedPref, false);
 
     if (!bmProcessed) {
       if (sections.BookmarksMenu)
@@ -322,7 +296,7 @@ DistributionCustomizer.prototype = {
       if (sections.BookmarksToolbar)
         await this._parseBookmarksSection(PlacesUtils.bookmarks.toolbarGuid,
                                           "BookmarksToolbar");
-      this._prefs.setBoolPref(bmProcessedPref, true);
+      Services.prefs.setBoolPref(bmProcessedPref, true);
     }
   },
 
@@ -489,9 +463,7 @@ DistributionCustomizer.prototype = {
     let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;
     if (this._customizationsApplied && this._bookmarksApplied &&
         prefDefaultsApplied) {
-      let os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
-      os.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
+      Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
     }
   }
 };

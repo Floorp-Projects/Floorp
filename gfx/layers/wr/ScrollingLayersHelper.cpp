@@ -175,13 +175,11 @@ ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
   if (!aMetrics.IsScrollable()) {
     return false;
   }
-  LayerRect contentRect = ViewAs<LayerPixel>(
-      aMetrics.GetExpandedScrollableRect() * aMetrics.GetDevPixelsPerCSSPixel(),
-      PixelCastJustification::WebRenderHasUnitResolution);
+  LayoutDeviceRect contentRect =
+      aMetrics.GetExpandedScrollableRect() * aMetrics.GetDevPixelsPerCSSPixel();
   // TODO: check coordinate systems are sane here
-  LayerRect clipBounds = ViewAs<LayerPixel>(
-      aMetrics.GetCompositionBounds(),
-      PixelCastJustification::MovingDownToChildren);
+  LayoutDeviceRect clipBounds =
+      LayoutDeviceRect::FromUnknownRect(aMetrics.GetCompositionBounds().ToUnknownRect());
   // The content rect that we hand to PushScrollLayer should be relative to
   // the same origin as the clipBounds that we hand to PushScrollLayer - that
   // is, both of them should be relative to the stacking context `aStackingContext`.

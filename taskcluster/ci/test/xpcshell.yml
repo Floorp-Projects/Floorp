@@ -1,0 +1,67 @@
+xpcshell:
+    description: "xpcshell test run"
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: xpcshell-coverage
+            default: xpcshell
+    treeherder-symbol: tc-X(X)
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['mozilla-central', 'try']
+            windows10-64-asan/opt: []  # No XPCShell on ASAN yet
+            default: built-projects
+    chunks:
+        by-test-platform:
+            linux32/debug: 12
+            linux64/debug: 10
+            android-4.2-x86/opt: 6
+            macosx.*: 1
+            windows.*: 1
+            default: 8
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    max-run-time: 5400
+    e10s: false
+    allow-software-gl-layers: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --test-suite=xpcshell
+                config:
+                    by-test-platform:
+                        android-4.2-x86/opt:
+                            - android/androidx86.py
+                        default:
+                            - android/androidarm_4_3.py
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    by-test-platform:
+                        linux64-jsdcov/opt:
+                            - --xpcshell-suite=xpcshell-coverage
+                        default:
+                            - --xpcshell-suite=xpcshell
+                requires-signed-builds:
+                    by-test-platform:
+                        windows10-64-asan/opt: false    # No XPCShell on ASAN yet
+                        windows.*: true
+                        default: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default

@@ -96,6 +96,11 @@ public:
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) const override;
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
   NS_DISPLAY_DECL_NAME("FieldSetBorder", TYPE_FIELDSET_BORDER_BACKGROUND)
@@ -146,6 +151,43 @@ nsDisplayFieldSetBorder::GetBounds(nsDisplayListBuilder* aBuilder,
   *aSnap = false;
   return Frame()->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
+
+bool
+nsDisplayFieldSetBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                 mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                 const StackingContextHelper& aSc,
+                                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                                 nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
+    return false;
+  }
+
+  auto frame = static_cast<nsFieldSetFrame*>(mFrame);
+  auto offset = ToReferenceFrame();
+  nsRect rect;
+
+  if (nsIFrame* legend = frame->GetLegend()) {
+    rect = frame->VisualBorderRectRelativeToSelf() + offset;
+
+    // Legends require a "negative" clip around the text, which WR doesn't support yet.
+    nsRect legendRect = legend->GetNormalRect() + offset;
+    if (!legendRect.IsEmpty()) {
+      return false;
+    }
+  } else {
+    rect = nsRect(offset, frame->GetRect().Size());
+  }
+
+  return nsCSSRendering::CreateWebRenderCommandsForBorder(this,
+                                                          mFrame,
+                                                          rect,
+                                                          aBuilder,
+                                                          aResources,
+                                                          aSc,
+                                                          aManager,
+                                                          aDisplayListBuilder);
+};
 
 void
 nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,

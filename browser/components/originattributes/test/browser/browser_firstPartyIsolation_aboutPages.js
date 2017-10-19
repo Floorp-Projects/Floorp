@@ -141,7 +141,6 @@ add_task(async function test_aboutURL() {
     "credits",
   ];
 
-  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   for (let cid in Cc) {
     let result = cid.match(/@mozilla.org\/network\/protocol\/about;1\?what\=(.*)$/);
     if (!result) {
@@ -152,7 +151,7 @@ add_task(async function test_aboutURL() {
     let contract = "@mozilla.org/network/protocol/about;1?what=" + aboutType;
     try {
       let am = Cc[contract].getService(Ci.nsIAboutModule);
-      let uri = ios.newURI("about:" + aboutType);
+      let uri = Services.io.newURI("about:" + aboutType);
       let flags = am.getURIFlags(uri);
 
       // We load pages with URI_SAFE_FOR_UNTRUSTED_CONTENT set, this means they

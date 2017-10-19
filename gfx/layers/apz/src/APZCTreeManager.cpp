@@ -507,8 +507,9 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
         // the scroll offset. Since we are effectively giving WR the async
         // scroll delta here, we want to negate the translation.
         ParentLayerPoint asyncScrollDelta = -layerTranslation;
+        // XXX figure out what zoom-related conversions need to happen here.
         aWrApi->UpdateScrollPosition(lastPipelineId, apzc->GetGuid().mScrollId,
-            wr::ToLayoutPoint(asyncScrollDelta));
+            wr::ToLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
 
         apzc->ReportCheckerboard(aSampleTime);
         activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
