@@ -58,7 +58,7 @@ add_task(async function testUpdatePingReady() {
 
   // We don't know the exact value for the other fields, so just check
   // that they're available.
-  for (let f of ["targetVersion", "targetChannel"]) {
+  for (let f of ["targetVersion", "targetChannel", "targetDisplayVersion"]) {
     ok(f in updatePing.payload,
        `${f} must be available in the update ping payload.`);
     ok(typeof(updatePing.payload[f]) == "string",

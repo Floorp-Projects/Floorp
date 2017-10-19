@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'TestContainerParser.cpp',
+    'TestExtractVPXCodecDetails.cpp',
 ]
 
 LOCAL_INCLUDES += [
