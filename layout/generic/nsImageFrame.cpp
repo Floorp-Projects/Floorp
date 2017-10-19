@@ -1722,9 +1722,8 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
 
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   const LayoutDeviceRect destRect(
-    LayoutDeviceIntRect::FromAppUnits(GetDestRect(), factor));
-  const LayerRect dest = ViewAs<LayerPixel>(destRect, PixelCastJustification::WebRenderHasUnitResolution);
-  return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, dest);
+    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
+  return aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
 }
 
 DrawResult

@@ -16,7 +16,6 @@ Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource:///modules/ShellService.jsm");
 Components.utils.import("resource:///modules/TransientPrefs.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
@@ -149,9 +148,6 @@ var gMainPane = {
     return this._filter = document.getElementById("filter");
   },
 
-  _prefSvc: Cc["@mozilla.org/preferences-service;1"].
-    getService(Ci.nsIPrefBranch),
-
   _mimeSvc: Cc["@mozilla.org/mime;1"].
     getService(Ci.nsIMIMEService),
 
@@ -160,9 +156,6 @@ var gMainPane = {
 
   _handlerSvc: Cc["@mozilla.org/uriloader/handler-service;1"].
     getService(Ci.nsIHandlerService),
-
-  _ioSvc: Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService),
 
   _backoffIndex: 0,
 
@@ -239,9 +232,7 @@ var gMainPane = {
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
       try {
-        let sysInfo = Cc["@mozilla.org/system-info;1"].
-          getService(Ci.nsIPropertyBag2);
-        let ver = parseFloat(sysInfo.getProperty("version"));
+        let ver = parseFloat(Services.sysinfo.getProperty("version"));
         let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
         showTabsInTaskbar.hidden = ver < 6.1;
       } catch (ex) { }
@@ -399,22 +390,22 @@ var gMainPane = {
 
     // Observe preferences that influence what we display so we can rebuild
     // the view when they change.
-    this._prefSvc.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
-    this._prefSvc.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_APP, this);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_WEB, this);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_ACTION, this);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_READER, this);
+    Services.prefs.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
+    Services.prefs.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
+    Services.prefs.addObserver(PREF_FEED_SELECTED_APP, this);
+    Services.prefs.addObserver(PREF_FEED_SELECTED_WEB, this);
+    Services.prefs.addObserver(PREF_FEED_SELECTED_ACTION, this);
+    Services.prefs.addObserver(PREF_FEED_SELECTED_READER, this);
 
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
+    Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
+    Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
+    Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
+    Services.prefs.addObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
 
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
+    Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
+    Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
+    Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
+    Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
     setEventListener("filter", "command", gMainPane.filter);
     setEventListener("handlersView", "select",
@@ -451,9 +442,7 @@ var gMainPane = {
     ]);
 
     // Notify observers that the UI is now ready
-    Components.classes["@mozilla.org/observer-service;1"]
-      .getService(Components.interfaces.nsIObserverService)
-      .notifyObservers(window, "main-pane-loaded");
+    Services.obs.notifyObservers(window, "main-pane-loaded");
   },
 
   preInit() {
@@ -512,7 +501,7 @@ var gMainPane = {
       document.getElementById("browserContainersbox").setAttribute("data-hidden-from-search", "true");
       return;
     }
-    this._prefSvc.addObserver(PREF_CONTAINERS_EXTENSION, this);
+    Services.prefs.addObserver(PREF_CONTAINERS_EXTENSION, this);
 
     const link = document.getElementById("browserContainersLearnMore");
     link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "containers";
@@ -573,9 +562,7 @@ var gMainPane = {
   onGetStarted(aEvent) {
     if (AppConstants.MOZ_DEV_EDITION) {
       const Cc = Components.classes, Ci = Components.interfaces;
-      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-        .getService(Ci.nsIWindowMediator);
-      let win = wm.getMostRecentWindow("navigator:browser");
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
 
       fxAccounts.getSignedInUser().then(data => {
         if (win) {
@@ -760,9 +747,7 @@ var gMainPane = {
     var tabs = [];
 
     const Cc = Components.classes, Ci = Components.interfaces;
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Ci.nsIWindowMediator);
-    win = wm.getMostRecentWindow("navigator:browser");
+    win = Services.wm.getMostRecentWindow("navigator:browser");
 
     if (win && win.document.documentElement
       .getAttribute("windowtype") == "navigator:browser") {
@@ -1333,24 +1318,24 @@ var gMainPane = {
 
   destroy() {
     window.removeEventListener("unload", this);
-    this._prefSvc.removeObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
-    this._prefSvc.removeObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
-    this._prefSvc.removeObserver(PREF_FEED_SELECTED_APP, this);
-    this._prefSvc.removeObserver(PREF_FEED_SELECTED_WEB, this);
-    this._prefSvc.removeObserver(PREF_FEED_SELECTED_ACTION, this);
-    this._prefSvc.removeObserver(PREF_FEED_SELECTED_READER, this);
+    Services.prefs.removeObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
+    Services.prefs.removeObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
+    Services.prefs.removeObserver(PREF_FEED_SELECTED_APP, this);
+    Services.prefs.removeObserver(PREF_FEED_SELECTED_WEB, this);
+    Services.prefs.removeObserver(PREF_FEED_SELECTED_ACTION, this);
+    Services.prefs.removeObserver(PREF_FEED_SELECTED_READER, this);
 
-    this._prefSvc.removeObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
-    this._prefSvc.removeObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
-    this._prefSvc.removeObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
-    this._prefSvc.removeObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
+    Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
+    Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
+    Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
+    Services.prefs.removeObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
 
-    this._prefSvc.removeObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
-    this._prefSvc.removeObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
-    this._prefSvc.removeObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
-    this._prefSvc.removeObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
+    Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
+    Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
+    Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
+    Services.prefs.removeObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
-    this._prefSvc.removeObserver(PREF_CONTAINERS_EXTENSION, this);
+    Services.prefs.removeObserver(PREF_CONTAINERS_EXTENSION, this);
   },
 
 
@@ -1507,9 +1492,9 @@ var gMainPane = {
     this._visibleTypeDescriptionCount = {};
 
     // Get the preferences that help determine what types to show.
-    var showPlugins = this._prefSvc.getBoolPref(PREF_SHOW_PLUGINS_IN_LIST);
+    var showPlugins = Services.prefs.getBoolPref(PREF_SHOW_PLUGINS_IN_LIST);
     var hidePluginsWithoutExtensions =
-      this._prefSvc.getBoolPref(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS);
+      Services.prefs.getBoolPref(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS);
 
     for (let type in this._handledTypes) {
       // Yield before processing each handler info object to avoid monopolizing
@@ -2248,7 +2233,7 @@ var gMainPane = {
   },
 
   _getIconURLForFile(aFile) {
-    var fph = this._ioSvc.getProtocolHandler("file").
+    var fph = Services.io.getProtocolHandler("file").
       QueryInterface(Ci.nsIFileProtocolHandler);
     var urlSpec = fph.getURLSpecFromFile(aFile);
 
@@ -2256,7 +2241,7 @@ var gMainPane = {
   },
 
   _getIconURLForWebApp(aWebAppURITemplate) {
-    var uri = this._ioSvc.newURI(aWebAppURITemplate);
+    var uri = Services.io.newURI(aWebAppURITemplate);
 
     // Unfortunately we can't use the favicon service to get the favicon,
     // because the service looks in the annotations table for a record with
@@ -2265,7 +2250,7 @@ var gMainPane = {
     // they'll only visit URLs derived from that template (i.e. with %s
     // in the template replaced by the URL of the content being handled).
 
-    if (/^https?$/.test(uri.scheme) && this._prefSvc.getBoolPref("browser.chrome.favicons"))
+    if (/^https?$/.test(uri.scheme) && Services.prefs.getBoolPref("browser.chrome.favicons"))
       return uri.prePath + "/favicon.ico";
 
     return "";
@@ -2485,9 +2470,7 @@ var gMainPane = {
     var currentDirPref = document.getElementById("browser.download.dir");
 
     // Used in defining the correct path to the folder icon.
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-      .getService(Components.interfaces.nsIIOService);
-    var fph = ios.getProtocolHandler("file")
+    var fph = Services.io.getProtocolHandler("file")
       .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
     var iconUrlSpec;
 
@@ -2538,9 +2521,7 @@ var gMainPane = {
   async _getDownloadsFolder(aFolder) {
     switch (aFolder) {
       case "Desktop":
-        var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
-          .getService(Components.interfaces.nsIProperties);
-        return fileLoc.get("Desk", Components.interfaces.nsIFile);
+        return Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
       case "Downloads":
         let downloadsDir = await Downloads.getSystemDownloadsDirectory();
         return new FileUtils.File(downloadsDir);
@@ -2741,9 +2722,6 @@ HandlerInfoWrapper.prototype = {
   _handlerSvc: Cc["@mozilla.org/uriloader/handler-service;1"].
     getService(Ci.nsIHandlerService),
 
-  _prefSvc: Cc["@mozilla.org/preferences-service;1"].
-    getService(Ci.nsIPrefBranch),
-
   _categoryMgr: Cc["@mozilla.org/categorymanager;1"].
     getService(Ci.nsICategoryManager),
 
@@ -2940,8 +2918,8 @@ HandlerInfoWrapper.prototype = {
   _getDisabledPluginTypes() {
     var types = "";
 
-    if (this._prefSvc.prefHasUserValue(PREF_DISABLED_PLUGIN_TYPES))
-      types = this._prefSvc.getCharPref(PREF_DISABLED_PLUGIN_TYPES);
+    if (Services.prefs.prefHasUserValue(PREF_DISABLED_PLUGIN_TYPES))
+      types = Services.prefs.getCharPref(PREF_DISABLED_PLUGIN_TYPES);
 
     // Only split if the string isn't empty so we don't end up with an array
     // containing a single empty string.
@@ -2957,7 +2935,7 @@ HandlerInfoWrapper.prototype = {
     if (disabledPluginTypes.indexOf(this.type) == -1)
       disabledPluginTypes.push(this.type);
 
-    this._prefSvc.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
+    Services.prefs.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
       disabledPluginTypes.join(","));
 
     // Update the category manager so existing browser windows update.
@@ -2972,7 +2950,7 @@ HandlerInfoWrapper.prototype = {
     var type = this.type;
     disabledPluginTypes = disabledPluginTypes.filter(v => v != type);
 
-    this._prefSvc.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
+    Services.prefs.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
       disabledPluginTypes.join(","));
 
     // Update the category manager so existing browser windows update.

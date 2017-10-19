@@ -625,12 +625,11 @@ XPCOMUtils.defineLazyGetter(this.DownloadsCommon, "error", () => {
  * Returns true if we are executing on Windows Vista or a later version.
  */
 XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function() {
-  let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+  let os = Services.appinfo.OS;
   if (os != "WINNT") {
     return false;
   }
-  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  return parseFloat(sysInfo.getProperty("version")) >= 6;
+  return parseFloat(Services.sysinfo.getProperty("version")) >= 6;
 });
 
 // DownloadsData

@@ -17,8 +17,17 @@ function make_uri(url) {
   return ios.newURI(url);
 }
 
-// ensure the cache service is prepped when running the test
-Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
+function isParentProcess() {
+    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+}
+
+if (isParentProcess()) {
+  // ensure the cache service is prepped when running the test
+  // We only do this in the main process, as the cache storage service leaks
+  // when instantiated in the content process.
+  Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
+}
 
 var gotOnProgress;
 var gotOnStatus;

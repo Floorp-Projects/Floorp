@@ -61,22 +61,15 @@ StackingContextHelper::~StackingContextHelper()
 }
 
 void
-StackingContextHelper::AdjustOrigin(const LayerPoint& aDelta)
+StackingContextHelper::AdjustOrigin(const LayoutDevicePoint& aDelta)
 {
   mOrigin += aDelta;
 }
 
 wr::LayoutRect
-StackingContextHelper::ToRelativeLayoutRect(const LayerRect& aRect) const
-{
-  return wr::ToLayoutRect(RoundedToInt(aRect - mOrigin));
-}
-
-wr::LayoutRect
 StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
 {
-  return wr::ToLayoutRect(RoundedToInt(ViewAs<LayerPixel>(aRect,
-                                                          PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
+  return wr::ToLayoutRect(RoundedToInt(aRect - mOrigin));
 }
 
 } // namespace layers

@@ -400,9 +400,7 @@ function writeUpdatesToXMLFile(aText) {
   const MODE_CREATE   = 0x08;
   const MODE_TRUNCATE = 0x20;
 
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("UpdRootD", Ci.nsIFile);
+  let file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
   file.append("updates.xml");
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(Ci.nsIFileOutputStream);

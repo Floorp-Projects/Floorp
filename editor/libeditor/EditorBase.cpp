@@ -2510,7 +2510,11 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
   int32_t offset = *aInOutOffset;
   nsCOMPtr<nsIContent> child = *aInOutChildAtOffset;
 
-  MOZ_ASSERT(node->GetChildAt(offset) == *aInOutChildAtOffset);
+  MOZ_ASSERT(!node->IsContainerNode() ||
+             node->Length() == static_cast<uint32_t>(offset) ||
+             node->GetChildAt(offset) == *aInOutChildAtOffset,
+    "|child| must be a child node at |offset| in |node| unless it's a text "
+    "or some other data node, or after the last child");
 
   // In some cases, the node may be the anonymous div elemnt or a mozBR
   // element.  Let's try to look for better insertion point in the nearest

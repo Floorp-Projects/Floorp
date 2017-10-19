@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from ../../base/content/utilityOverlay.js */
+
 var gConnectionsDialog = {
   beforeAccept() {
     var proxyTypePref = document.getElementById("network.proxy.type");
@@ -99,11 +101,8 @@ var gConnectionsDialog = {
     var typedURL = document.getElementById("networkProxyAutoconfigURL").value;
     var proxyTypeCur = document.getElementById("network.proxy.type").value;
 
-    var prefs =
-        Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-    var pacURL = prefs.getCharPref("network.proxy.autoconfig_url");
-    var proxyType = prefs.getIntPref("network.proxy.type");
+    var pacURL = Services.prefs.getCharPref("network.proxy.autoconfig_url");
+    var proxyType = Services.prefs.getIntPref("network.proxy.type");
 
     var disableReloadPref =
         document.getElementById("pref.advanced.proxies.disable_button.reload");
@@ -168,10 +167,9 @@ var gConnectionsDialog = {
   doAutoconfigURLFixup() {
     var autoURL = document.getElementById("networkProxyAutoconfigURL");
     var autoURLPref = document.getElementById("network.proxy.autoconfig_url");
-    var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                             .getService(Components.interfaces.nsIURIFixup);
     try {
-      autoURLPref.value = autoURL.value = URIFixup.createFixupURI(autoURL.value, 0).spec;
+      autoURLPref.value = autoURL.value =
+        Services.uriFixup.createFixupURI(autoURL.value, 0).spec;
     } catch (ex) {}
   },
 
