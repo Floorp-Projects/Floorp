@@ -509,10 +509,11 @@ HeadlessWidget::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint a
                                                  nsIObserver* aObserver)
 {
   AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+  printf(">>> DEBUG_ME: Synth: aDeltaY=%f\n", aDeltaY);
   // The various platforms seem to handle scrolling deltas differently,
   // but the following seems to emulate it well enough.
   WidgetWheelEvent event(true, eWheel, this);
-  event.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+  event.mDeltaMode = MOZ_HEADLESS_SCROLL_DELTA_MODE;
   event.mIsNoLineOrPageDelta = true;
   event.mDeltaX = -aDeltaX * MOZ_HEADLESS_SCROLL_MULTIPLIER;
   event.mDeltaY = -aDeltaY * MOZ_HEADLESS_SCROLL_MULTIPLIER;
