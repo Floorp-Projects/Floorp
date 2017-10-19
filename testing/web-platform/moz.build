@@ -210,9 +210,6 @@ with Files("tests/encrypted-media/**"):
 with Files("tests/eventsource/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/ext-xhtml-pubid/**"):
-    BUG_COMPONENT = ("Core", "XML")
-
 # usb and payments ?
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM")
