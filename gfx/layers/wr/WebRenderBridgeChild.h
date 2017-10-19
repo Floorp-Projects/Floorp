@@ -28,6 +28,7 @@ class CompositableClient;
 class CompositorBridgeChild;
 class StackingContextHelper;
 class TextureForwarder;
+class WebRenderLayerManager;
 
 template<class T>
 class ThreadSafeWeakPtrHashKey : public PLDHashEntryHdr
@@ -141,6 +142,8 @@ public:
   void BeginClearCachedResources();
   void EndClearCachedResources();
 
+  void SetWebRenderLayerManager(WebRenderLayerManager* aManager);
+
   ipc::IShmemAllocator* GetShmemAllocator();
 
 private:
@@ -199,6 +202,7 @@ private:
   wr::IdNamespace mIdNamespace;
   uint32_t mResourceId;
   wr::PipelineId mPipelineId;
+  WebRenderLayerManager* mManager;
 
   bool mIPCOpen;
   bool mDestroyed;
