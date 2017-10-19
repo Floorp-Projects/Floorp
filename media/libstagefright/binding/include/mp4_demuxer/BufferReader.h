@@ -53,7 +53,7 @@ public:
 
   size_t Remaining() const { return mRemaining; }
 
-  Result<uint8_t, nsresult> ReadU8()
+  mozilla::Result<uint8_t, nsresult> ReadU8()
   {
     auto ptr = Read(1);
     if (!ptr) {
@@ -63,7 +63,7 @@ public:
     return *ptr;
   }
 
-  Result<uint16_t, nsresult> ReadU16()
+  mozilla::Result<uint16_t, nsresult> ReadU16()
   {
     auto ptr = Read(2);
     if (!ptr) {
@@ -73,7 +73,7 @@ public:
     return mozilla::BigEndian::readUint16(ptr);
   }
 
-  Result<int16_t, nsresult> ReadLE16()
+  mozilla::Result<int16_t, nsresult> ReadLE16()
   {
     auto ptr = Read(2);
     if (!ptr) {
@@ -83,7 +83,7 @@ public:
     return mozilla::LittleEndian::readInt16(ptr);
   }
 
-  Result<uint32_t, nsresult> ReadU24()
+  mozilla::Result<uint32_t, nsresult> ReadU24()
   {
     auto ptr = Read(3);
     if (!ptr) {
@@ -93,7 +93,7 @@ public:
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
   }
 
-  Result<int32_t, nsresult> Read24()
+  mozilla::Result<int32_t, nsresult> Read24()
   {
     auto res = ReadU24();
     if (res.isErr()) {
@@ -102,7 +102,7 @@ public:
     return (int32_t)res.unwrap();
   }
 
-  Result<int32_t, nsresult> ReadLE24()
+  mozilla::Result<int32_t, nsresult> ReadLE24()
   {
     auto ptr = Read(3);
     if (!ptr) {
@@ -116,7 +116,7 @@ public:
     return result;
   }
 
-  Result<uint32_t, nsresult> ReadU32()
+  mozilla::Result<uint32_t, nsresult> ReadU32()
   {
     auto ptr = Read(4);
     if (!ptr) {
@@ -126,7 +126,7 @@ public:
     return mozilla::BigEndian::readUint32(ptr);
   }
 
-  Result<int32_t, nsresult> Read32()
+  mozilla::Result<int32_t, nsresult> Read32()
   {
     auto ptr = Read(4);
     if (!ptr) {
@@ -136,7 +136,7 @@ public:
     return mozilla::BigEndian::readInt32(ptr);
   }
 
-  Result<uint64_t, nsresult> ReadU64()
+  mozilla::Result<uint64_t, nsresult> ReadU64()
   {
     auto ptr = Read(8);
     if (!ptr) {
@@ -146,7 +146,7 @@ public:
     return mozilla::BigEndian::readUint64(ptr);
   }
 
-  Result<int64_t, nsresult> Read64()
+  mozilla::Result<int64_t, nsresult> Read64()
   {
     auto ptr = Read(8);
     if (!ptr) {
