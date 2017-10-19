@@ -777,6 +777,24 @@ class FunctionCompiler
 
     void checkOffsetAndBounds(MemoryAccessDesc* access, MDefinition** base)
     {
+        // Fold a constant base into the offset (so the base is 0 in which case
+        // the codegen is optimized), if it doesn't wrap or trigger an
+        // MWasmAddOffset.
+        if ((*base)->isConstant()) {
+            uint32_t basePtr = (*base)->toConstant()->toInt32();
+            uint32_t offset = access->offset();
+
+            static_assert(OffsetGuardLimit < UINT32_MAX,
+                          "checking for overflow against OffsetGuardLimit is enough.");
+
+            if (offset < OffsetGuardLimit && basePtr < OffsetGuardLimit - offset) {
+                auto* ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
+                curBlock_->add(ins);
+                *base = ins;
+                access->setOffset(access->offset() + basePtr);
+            }
+        }
+
         // If the offset is bigger than the guard region, a separate instruction
         // is necessary to add the offset to the base and check for overflow.
         if (access->offset() >= OffsetGuardLimit || !JitOptions.wasmFoldOffsets) {
