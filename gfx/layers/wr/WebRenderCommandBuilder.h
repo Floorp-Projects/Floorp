@@ -95,6 +95,7 @@ public:
                                                                LayoutDeviceRect& aImageRect);
 
   void RemoveUnusedAndResetWebRenderUserData();
+  void ClearCachedResources();
 
   // Those are data that we kept between transactions. We used to cache some
   // data in the layer. But in layers free mode, we don't have layer which

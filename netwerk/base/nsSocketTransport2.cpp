@@ -2971,16 +2971,16 @@ nsSocketTransport::GetScriptableHelper(nsIXPCScriptable **_retval)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetContractID(char * *aContractID)
+nsSocketTransport::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetClassDescription(char * *aClassDescription)
+nsSocketTransport::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = nullptr;
+    aClassDescription.SetIsVoid(true);
     return NS_OK;
 }
 

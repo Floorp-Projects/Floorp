@@ -63,6 +63,7 @@ this.DateTimePickerHelper = {
           return;
         }
         this.picker.closePicker();
+        this.close();
         break;
       }
       case "FormDateTime:UpdatePicker": {
