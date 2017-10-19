@@ -616,6 +616,9 @@ pref("media.webspeech.synth.enabled", false);
 pref("media.encoder.webm.enabled", true);
 #endif
 
+// Whether to allow recording of AudioNodes with MediaRecorder
+pref("media.recorder.audio_node.enabled", false);
+
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
