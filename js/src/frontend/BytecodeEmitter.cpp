@@ -10214,10 +10214,7 @@ BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset)
 
     MOZ_ASSERT(code[0] == JSOP_NEWINIT);
     code[0] = JSOP_NEWOBJECT;
-    code[1] = jsbytecode(index >> 24);
-    code[2] = jsbytecode(index >> 16);
-    code[3] = jsbytecode(index >> 8);
-    code[4] = jsbytecode(index);
+    SET_UINT32(code, index);
 
     return true;
 }

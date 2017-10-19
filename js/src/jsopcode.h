@@ -177,19 +177,19 @@ GET_INT8(const jsbytecode* pc)
 static MOZ_ALWAYS_INLINE uint32_t
 GET_UINT32(const jsbytecode* pc)
 {
-    return  (uint32_t(pc[1]) << 24) |
-            (uint32_t(pc[2]) << 16) |
-            (uint32_t(pc[3]) << 8)  |
-            uint32_t(pc[4]);
+    return  (uint32_t(pc[4]) << 24) |
+            (uint32_t(pc[3]) << 16) |
+            (uint32_t(pc[2]) << 8)  |
+            uint32_t(pc[1]);
 }
 
 static MOZ_ALWAYS_INLINE void
 SET_UINT32(jsbytecode* pc, uint32_t u)
 {
-    pc[1] = jsbytecode(u >> 24);
-    pc[2] = jsbytecode(u >> 16);
-    pc[3] = jsbytecode(u >> 8);
-    pc[4] = jsbytecode(u);
+    pc[1] = jsbytecode(u);
+    pc[2] = jsbytecode(u >> 8);
+    pc[3] = jsbytecode(u >> 16);
+    pc[4] = jsbytecode(u >> 24);
 }
 
 static MOZ_ALWAYS_INLINE int32_t
