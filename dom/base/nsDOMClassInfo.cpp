@@ -544,20 +544,10 @@ nsDOMClassInfo::GetInterfaces(uint32_t *aCount, nsIID ***aArray)
   }
 
   *aArray = static_cast<nsIID **>(moz_xmalloc(count * sizeof(nsIID *)));
-  NS_ENSURE_TRUE(*aArray, NS_ERROR_OUT_OF_MEMORY);
 
   uint32_t i;
   for (i = 0; i < count; i++) {
-    nsIID *iid = static_cast<nsIID *>(nsMemory::Clone(mData->mInterfaces[i],
-                                                         sizeof(nsIID)));
-
-    if (!iid) {
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, *aArray);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    *((*aArray) + i) = iid;
+    *((*aArray) + i) = mData->mInterfaces[i]->Clone();
   }
 
   return NS_OK;

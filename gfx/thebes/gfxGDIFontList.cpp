@@ -244,8 +244,7 @@ GDIFontEntry::CopyFontTable(uint32_t aTableTag, nsTArray<uint8_t>& aBuffer)
 already_AddRefed<UnscaledFontGDI>
 GDIFontEntry::LookupUnscaledFont(HFONT aFont)
 {
-    RefPtr<UnscaledFontGDI> unscaledFont =
-        static_cast<UnscaledFontGDI*>(mUnscaledFont.get());
+    RefPtr<UnscaledFontGDI> unscaledFont(mUnscaledFont);
     if (!unscaledFont) {
         LOGFONT lf;
         GetObject(aFont, sizeof(LOGFONT), &lf);

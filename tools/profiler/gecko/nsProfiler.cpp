@@ -155,13 +155,7 @@ NS_IMETHODIMP
 nsProfiler::GetProfile(double aSinceTime, char** aProfile)
 {
   mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
-  if (profile) {
-    size_t len = strlen(profile.get());
-    char *profileStr = static_cast<char *>
-                         (nsMemory::Clone(profile.get(), (len + 1) * sizeof(char)));
-    profileStr[len] = '\0';
-    *aProfile = profileStr;
-  }
+  *aProfile = profile.release();
   return NS_OK;
 }
 
@@ -439,9 +433,7 @@ GetArrayOfStringsForFeatures(uint32_t aFeatures,
 
   #define DUP_IF_SET(n_, str_, Name_) \
     if (ProfilerFeature::Has##Name_(aFeatures)) { \
-      size_t strLen = strlen(str_); \
-      featureList[i] = static_cast<char*>( \
-        nsMemory::Clone(str_, (strLen + 1) * sizeof(char))); \
+      featureList[i] = moz_xstrdup(str_); \
       i++; \
     }
 

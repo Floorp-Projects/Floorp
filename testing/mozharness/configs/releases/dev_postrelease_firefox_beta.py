@@ -3,10 +3,10 @@ config = {
     "log_name": "bump_date",
     "version_files": [{"file": "browser/config/version_display.txt"}],
     "repo": {
-        # date is used for staging mozilla-beta
-        "repo": "https://hg.mozilla.org/projects/date",
+        # maple is used for staging mozilla-beta
+        "repo": "https://hg.mozilla.org/projects/maple",
         "branch": "default",
-        "dest": "date",
+        "dest": "maple",
         "vcs": "hg",
         "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     },

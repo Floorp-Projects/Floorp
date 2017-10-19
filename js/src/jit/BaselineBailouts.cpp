@@ -1114,6 +1114,12 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             JitSpew(JitSpew_BaselineBailouts, "      Popping top stack value into R0.");
             builder.popValueInto(PCMappingSlotInfo::SlotInR0);
 
+            if (JSOp(*pc) == JSOP_GETELEM_SUPER) {
+                // Push a fake value so that the stack stays balanced.
+                if (!builder.writeValue(UndefinedValue(), "GETELEM_SUPER stack blance"))
+                    return false;
+            }
+
             // Need to adjust the frameSize for the frame to match the values popped
             // into registers.
             frameSize -= sizeof(Value);

@@ -9,7 +9,7 @@ const { L10N } = require("../utils/l10n");
 const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
 
 // Components
-const MDNLink = require("./mdn-link");
+const MDNLink = require("./MdnLink");
 
 const { div, span } = DOM;
 const types = ["blocked", "dns", "connect", "ssl", "send", "wait", "receive"];

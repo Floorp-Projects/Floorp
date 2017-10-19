@@ -8,6 +8,8 @@ HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file
 load 492286-1.xhtml
 load 493915-1.html
 load 495794-1.html
+load 497734-1.xhtml
+load 497734-2.html
 load 576612-1.html
 load 752784-1.html
 skip-if(Android) load 789075-1.html # bug 1374405
@@ -75,7 +77,7 @@ skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 102845
 load 1041466.html
 load 1045650.html
 load 1080986.html
-load 1180881.html
+skip-if(Android&&AndroidVersion=='21') load 1180881.html # bug 1409365
 load 1197935.html
 load 1122218.html
 load 1127188.html

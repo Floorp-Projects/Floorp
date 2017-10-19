@@ -76,7 +76,11 @@ async function test() {
   await waitForEvent(gBrowser.selectedBrowser, "load");
 
   let spec = gBrowser.selectedBrowser.currentURI.spec;
-  let pageInfo = BrowserPageInfo(spec, "mediaTab");
+
+  // Pass a dummy imageElement, if there isn't an imageElement, pageInfo.js
+  // will do a preview, however this sometimes will cause intermittent failures,
+  // see bug 1403365.
+  let pageInfo = BrowserPageInfo(spec, "mediaTab", {});
   info("waitForEvent pageInfo");
   await waitForEvent(pageInfo, "load");
 

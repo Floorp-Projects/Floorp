@@ -638,7 +638,7 @@ array_length_setter(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
         return DefineDataProperty(cx, obj, id, v, JSPROP_ENUMERATE, result);
     }
 
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+    HandleArrayObject arr = obj.as<ArrayObject>();
     MOZ_ASSERT(arr->lengthIsWritable(),
                "setter shouldn't be called if property is non-writable");
 
@@ -949,7 +949,7 @@ js::WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index)
 static bool
 array_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+    ArrayObject* arr = &obj->as<ArrayObject>();
 
     uint32_t index;
     if (!IdIsIndex(id, &index))
@@ -1072,17 +1072,16 @@ IsArraySpecies(JSContext* cx, HandleObject origArray)
     if (origArray->is<NativeObject>() && !origArray->is<ArrayObject>())
         return true;
 
-    RootedValue ctor(cx);
-    if (!GetPropertyPure(cx, origArray, NameToId(cx->names().constructor), ctor.address()))
+    Value ctor;
+    if (!GetPropertyPure(cx, origArray, NameToId(cx->names().constructor), &ctor))
         return false;
 
     if (!IsArrayConstructor(ctor))
         return ctor.isUndefined();
 
-    RootedObject ctorObj(cx, &ctor.toObject());
-    RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
     JSFunction* getter;
-    if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
+    if (!GetGetterPure(cx, &ctor.toObject(), speciesId, &getter))
         return false;
 
     if (!getter)
@@ -2235,7 +2234,7 @@ js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v)
 {
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+    HandleArrayObject arr = obj.as<ArrayObject>();
 
     MOZ_ASSERT(!v.isMagic());
     MOZ_ASSERT(arr->lengthIsWritable());
@@ -2757,8 +2756,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
     } else {
         /* Steps 7.b. */
         double deleteCountDouble;
-        RootedValue cnt(cx, args[1]);
-        if (!ToInteger(cx, cnt, &deleteCountDouble))
+        if (!ToInteger(cx, args[1], &deleteCountDouble))
             return false;
 
         /* Step 7.c. */
@@ -2936,7 +2934,7 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             !ObjectMayHaveExtraIndexedProperties(obj) &&
             len <= UINT32_MAX)
         {
-            Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+            HandleArrayObject arr = obj.as<ArrayObject>();
             if (arr->lengthIsWritable()) {
                 DenseElementResult result =
                     arr->ensureDenseElements(cx, uint32_t(len), itemCount - deleteCount);
@@ -3160,6 +3158,28 @@ SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end,
     return true;
 }
 
+static JSObject*
+SliceArguments(JSContext* cx, Handle<ArgumentsObject*> argsobj, uint32_t begin, uint32_t count)
+{
+    MOZ_ASSERT(!argsobj->hasOverriddenLength() && !argsobj->isAnyElementDeleted());
+    MOZ_ASSERT(begin + count <= argsobj->initialLength());
+
+    ArrayObject* result = NewDenseFullyAllocatedArray(cx, count);
+    if (!result)
+        return nullptr;
+    result->setDenseInitializedLength(count);
+
+    MOZ_ASSERT(result->group()->unknownProperties(),
+               "The default array group has unknown properties, so we can directly initialize the"
+               "dense elements without needing to update the indexed type set.");
+
+    for (uint32_t index = 0; index < count; index++) {
+        const Value& v = argsobj->element(begin + index);
+        result->initDenseElement(index, v);
+    }
+    return result;
+}
+
 template <typename T, typename ArrayLength>
 static inline ArrayLength
 NormalizeSliceTerm(T value, ArrayLength length)
@@ -3196,6 +3216,19 @@ ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end
 
         rval.setObject(*narr);
         return true;
+    }
+
+    if (obj->is<ArgumentsObject>()) {
+        Handle<ArgumentsObject*> argsobj = obj.as<ArgumentsObject>();
+        if (!argsobj->hasOverriddenLength() && !argsobj->isAnyElementDeleted()) {
+            MOZ_ASSERT(begin <= UINT32_MAX, "begin is limited by |argsobj|'s length");
+            JSObject* narr = SliceArguments(cx, argsobj, uint32_t(begin), count);
+            if (!narr)
+                return false;
+
+            rval.setObject(*narr);
+            return true;
+        }
     }
 
     RootedArrayObject narr(cx, NewPartlyAllocatedArrayTryReuseGroup(cx, obj, count));

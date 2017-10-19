@@ -30,18 +30,18 @@ class StackingContextHelper;
 class TextureForwarder;
 
 template<class T>
-class WeakPtrHashKey : public PLDHashEntryHdr
+class ThreadSafeWeakPtrHashKey : public PLDHashEntryHdr
 {
 public:
-  typedef T* KeyType;
+  typedef RefPtr<T> KeyType;
   typedef const T* KeyTypePointer;
 
-  explicit WeakPtrHashKey(KeyTypePointer aKey) : mKey(const_cast<KeyType>(aKey)) {}
+  explicit ThreadSafeWeakPtrHashKey(KeyTypePointer aKey) : mKey(do_AddRef(const_cast<T*>(aKey))) {}
 
-  KeyType GetKey() const { return mKey; }
-  bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
+  KeyType GetKey() const { return do_AddRef(mKey); }
+  bool KeyEquals(KeyTypePointer aKey) const { return mKey == aKey; }
 
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static KeyTypePointer KeyToPointer(const KeyType& aKey) { return aKey.get(); }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
     return NS_PTR_TO_UINT32(aKey) >> 2;
@@ -49,11 +49,11 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
 private:
-  WeakPtr<T> mKey;
+  ThreadSafeWeakPtr<T> mKey;
 };
 
-typedef WeakPtrHashKey<gfx::UnscaledFont> UnscaledFontHashKey;
-typedef WeakPtrHashKey<gfx::ScaledFont> ScaledFontHashKey;
+typedef ThreadSafeWeakPtrHashKey<gfx::UnscaledFont> UnscaledFontHashKey;
+typedef ThreadSafeWeakPtrHashKey<gfx::ScaledFont> ScaledFontHashKey;
 
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
                                  , public CompositableForwarder

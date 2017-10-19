@@ -2674,6 +2674,23 @@ LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment* ins)
 }
 
 void
+LIRGenerator::visitHomeObject(MHomeObject* ins)
+{
+    define(new(alloc()) LHomeObject(useRegisterAtStart(ins->function())), ins);
+}
+
+void
+LIRGenerator::visitHomeObjectSuperBase(MHomeObjectSuperBase* ins)
+{
+    MOZ_ASSERT(ins->homeObject()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::Object);
+
+    auto lir = new(alloc()) LHomeObjectSuperBase(useRegister(ins->homeObject()));
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitInterruptCheck(MInterruptCheck* ins)
 {
     LInstruction* lir = new(alloc()) LInterruptCheck(temp());
@@ -3761,6 +3778,24 @@ LIRGenerator::visitCallGetIntrinsicValue(MCallGetIntrinsicValue* ins)
 {
     LCallGetIntrinsicValue* lir = new(alloc()) LCallGetIntrinsicValue();
     defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
+LIRGenerator::visitGetPropSuperCache(MGetPropSuperCache* ins)
+{
+    MDefinition* obj = ins->object();
+    MDefinition* receiver = ins->receiver();
+    MDefinition* id = ins->idval();
+
+    gen->setNeedsOverrecursedCheck();
+
+    bool useConstId = id->type() == MIRType::String || id->type() == MIRType::Symbol;
+
+    auto* lir = new(alloc()) LGetPropSuperCacheV(useRegister(obj),
+                                                 useBoxOrTyped(receiver),
+                                                 useBoxOrTypedOrConstant(id, useConstId));
+    defineBox(lir, ins);
     assignSafepoint(lir, ins);
 }
 

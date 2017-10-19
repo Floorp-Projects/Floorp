@@ -264,6 +264,37 @@ FileReader::DoAsyncWait()
   return NS_OK;
 }
 
+namespace {
+
+void
+PopulateBufferForBinaryString(char16_t* aDest, const char* aSource,
+                              uint32_t aCount)
+{
+  const unsigned char* source = (const unsigned char*)aSource;
+  char16_t* end = aDest + aCount;
+  while (aDest != end) {
+    *aDest = *source;
+    ++aDest;
+    ++source;
+  }
+}
+
+nsresult
+ReadFuncBinaryString(nsIInputStream* aInputStream,
+                     void* aClosure,
+                     const char* aFromRawSegment,
+                     uint32_t aToOffset,
+                     uint32_t aCount,
+                     uint32_t* aWriteCount)
+{
+  char16_t* dest = static_cast<char16_t*>(aClosure) + aToOffset;
+  PopulateBufferForBinaryString(dest, aFromRawSegment, aCount);
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+} // anonymous
+
 nsresult
 FileReader::DoReadData(uint64_t aCount)
 {
@@ -291,34 +322,35 @@ FileReader::DoReadData(uint64_t aCount)
 
     dest += oldLen;
 
-    while (aCount > 0) {
-      char tmpBuffer[4096];
-      uint32_t minCount =
-        XPCOM_MIN(aCount, static_cast<uint64_t>(sizeof(tmpBuffer)));
-      uint32_t read;
-
-      nsresult rv = mAsyncStream->Read(tmpBuffer, minCount, &read);
-      if (rv == NS_BASE_STREAM_CLOSED) {
-        rv = NS_OK;
-      }
-
+    if (NS_InputStreamIsBuffered(mAsyncStream)) {
+      nsresult rv = mAsyncStream->ReadSegments(ReadFuncBinaryString, dest,
+                                               aCount, &bytesRead);
       NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      while (aCount > 0) {
+        char tmpBuffer[4096];
+        uint32_t minCount =
+          XPCOM_MIN(aCount, static_cast<uint64_t>(sizeof(tmpBuffer)));
+        uint32_t read;
 
-      if (read == 0) {
-        // The stream finished too early.
-        return NS_ERROR_OUT_OF_MEMORY;
+        nsresult rv = mAsyncStream->Read(tmpBuffer, minCount, &read);
+        if (rv == NS_BASE_STREAM_CLOSED) {
+          rv = NS_OK;
+        }
+
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (read == 0) {
+          // The stream finished too early.
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        PopulateBufferForBinaryString(dest, tmpBuffer, read);
+
+        dest += read;
+        aCount -= read;
+        bytesRead += read;
       }
-
-      char16_t* end = dest + read;
-      const unsigned char* source = (const unsigned char*)tmpBuffer;
-      while (dest != end) {
-        *dest = *source;
-        ++dest;
-        ++source;
-      }
-
-      aCount -= read;
-      bytesRead += read;
     }
 
     MOZ_ASSERT(size.value() == oldLen + bytesRead);

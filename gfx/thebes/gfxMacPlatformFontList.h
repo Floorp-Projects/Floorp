@@ -103,7 +103,7 @@ protected:
     bool mCheckedForTracking;
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 
-    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+    mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontMac> mUnscaledFont;
 
     // For AAT font being shaped by Core Text, a strong reference to the 'trak'
     // table (if present).

@@ -118,7 +118,6 @@ function getRemoteUpdatesXMLString(aUpdates) {
 function getRemoteUpdateString(aUpdateProps, aPatches) {
   const updateProps = {
     appVersion: DEFAULT_UPDATE_VERSION,
-    backgroundInterval: null,
     buildID: "20080811053724",
     custom1: null,
     custom2: null,
@@ -215,7 +214,6 @@ function getLocalUpdateString(aUpdateProps, aPatches) {
     set appVersion(val) {
       this._appVersion = val;
     },
-    backgroundInterval: null,
     buildID: "20080811053724",
     channel: gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL),
     custom1: null,
@@ -285,9 +283,13 @@ function getLocalPatchString(aPatchProps) {
   }
 
   let selected = "selected=\"" + patchProps.selected + "\" ";
+  let entityID = aPatchProps.entityID ?
+                   "entityID=\"" + aPatchProps.entityID + "\" " :
+                   "";
   let state = "state=\"" + patchProps.state + "\"/>";
   return getPatchString(patchProps) + " " +
          selected +
+         entityID +
          state;
 }
 
@@ -310,8 +312,6 @@ function getUpdateString(aUpdateProps) {
   let detailsURL = "detailsURL=\"" + aUpdateProps.detailsURL + "\" ";
   let promptWaitTime = aUpdateProps.promptWaitTime ?
     "promptWaitTime=\"" + aUpdateProps.promptWaitTime + "\" " : "";
-  let backgroundInterval = aUpdateProps.backgroundInterval ?
-    "backgroundInterval=\"" + aUpdateProps.backgroundInterval + "\" " : "";
   let custom1 = aUpdateProps.custom1 ? aUpdateProps.custom1 + " " : "";
   let custom2 = aUpdateProps.custom2 ? aUpdateProps.custom2 + " " : "";
   let buildID = "buildID=\"" + aUpdateProps.buildID + "\"";
@@ -322,7 +322,6 @@ function getUpdateString(aUpdateProps) {
                       appVersion +
                       detailsURL +
                       promptWaitTime +
-                      backgroundInterval +
                       custom1 +
                       custom2 +
                       buildID;

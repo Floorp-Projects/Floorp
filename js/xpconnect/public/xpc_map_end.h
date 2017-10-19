@@ -25,8 +25,7 @@
 
 NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(char * *aClassName)
 {
-    static const char sName[] = XPC_MAP_QUOTED_CLASSNAME;
-    *aClassName = (char*) nsMemory::Clone(sName, sizeof(sName));
+    *aClassName = moz_xstrdup(XPC_MAP_QUOTED_CLASSNAME);
     return NS_OK;
 }
 

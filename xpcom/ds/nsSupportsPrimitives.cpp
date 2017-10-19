@@ -18,11 +18,9 @@ DataToString(const char* aFormat, T aData)
   static const int size = 32;
   char buf[size];
 
-  int len = SprintfLiteral(buf, aFormat, aData);
-  MOZ_ASSERT(len >= 0);
+  SprintfLiteral(buf, aFormat, aData);
 
-  return static_cast<char*>(nsMemory::Clone(buf, std::min(len + 1, size) *
-                                                 sizeof(char)));
+  return moz_xstrdup(buf);
 }
 
 /***************************************************************************/
@@ -47,12 +45,7 @@ nsSupportsID::GetData(nsID** aData)
 {
   NS_ASSERTION(aData, "Bad pointer");
 
-  if (mData) {
-    *aData = static_cast<nsID*>(nsMemory::Clone(mData, sizeof(nsID)));
-  } else {
-    *aData = nullptr;
-  }
-
+  *aData = mData ? mData->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -63,12 +56,7 @@ nsSupportsID::SetData(const nsID* aData)
     free(mData);
   }
 
-  if (aData) {
-    mData = static_cast<nsID*>(nsMemory::Clone(aData, sizeof(nsID)));
-  } else {
-    mData = nullptr;
-  }
-
+  mData = aData ? aData->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -80,8 +68,7 @@ nsSupportsID::ToString(char** aResult)
   if (mData) {
     *aResult = mData->ToString();
   } else {
-    static const char nullStr[] = "null";
-    *aResult = static_cast<char*>(nsMemory::Clone(nullStr, sizeof(nullStr)));
+    *aResult = moz_xstrdup("null");
   }
 
   return NS_OK;
@@ -212,9 +199,7 @@ NS_IMETHODIMP
 nsSupportsPRBool::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
-  const char* str = mData ? "true" : "false";
-  *aResult = static_cast<char*>(nsMemory::Clone(str, (strlen(str) + 1) *
-                                                     sizeof(char)));
+  *aResult = moz_xstrdup(mData ? "true" : "false");
   return NS_OK;
 }
 
@@ -720,12 +705,7 @@ nsSupportsInterfacePointer::GetDataIID(nsID** aIID)
 {
   NS_ASSERTION(aIID, "Bad pointer");
 
-  if (mIID) {
-    *aIID = static_cast<nsID*>(nsMemory::Clone(mIID, sizeof(nsID)));
-  } else {
-    *aIID = nullptr;
-  }
-
+  *aIID = mIID ? mIID->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -736,12 +716,7 @@ nsSupportsInterfacePointer::SetDataIID(const nsID* aIID)
     free(mIID);
   }
 
-  if (aIID) {
-    mIID = static_cast<nsID*>(nsMemory::Clone(aIID, sizeof(nsID)));
-  } else {
-    mIID = nullptr;
-  }
-
+  mIID = aIID ? aIID->Clone() : nullptr;
   return NS_OK;
 }
 
@@ -750,11 +725,10 @@ nsSupportsInterfacePointer::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
 
-  static const char str[] = "[interface pointer]";
   // jband sez: think about asking nsIInterfaceInfoManager whether
   // the interface has a known human-readable name
-  *aResult = static_cast<char*>(nsMemory::Clone(str, sizeof(str)));
-  return  NS_OK;
+  *aResult = moz_xstrdup("[interface pointer]");
+  return NS_OK;
 }
 
 /***************************************************************************/

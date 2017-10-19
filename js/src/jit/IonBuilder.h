@@ -543,6 +543,9 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_runonce();
     AbortReasonOr<Ok> jsop_rest();
     AbortReasonOr<Ok> jsop_not();
+    AbortReasonOr<Ok> jsop_superbase();
+    AbortReasonOr<Ok> jsop_getprop_super(PropertyName* name);
+    AbortReasonOr<Ok> jsop_getelem_super();
     AbortReasonOr<Ok> jsop_getprop(PropertyName* name);
     AbortReasonOr<Ok> jsop_setprop(PropertyName* name);
     AbortReasonOr<Ok> jsop_delprop(PropertyName* name);
