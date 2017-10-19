@@ -28,6 +28,7 @@ class EventChainPreVisitor;
 struct URLExtraData;
 namespace dom {
 class ShadowRoot;
+class HTMLSlotElement;
 } // namespace dom
 namespace widget {
 struct IMEState;
@@ -742,6 +743,20 @@ public:
    * exist.
    */
   virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const = 0;
+
+  /**
+   * Gets the assigned slot associated with this content.
+   *
+   * @return The assigned slot element or null.
+   */
+  virtual mozilla::dom::HTMLSlotElement* GetAssignedSlot() const = 0;
+
+  /**
+   * Sets the assigned slot associated with this content.
+   *
+   * @param aSlot The assigned slot.
+   */
+  virtual void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot) = 0;
 
   /**
    * Gets the insertion parent element of the XBL binding.
