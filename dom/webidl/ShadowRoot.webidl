@@ -10,16 +10,27 @@
  * liability, trademark and document use rules apply.
  */
 
+// https://dom.spec.whatwg.org/#enumdef-shadowrootmode
+enum ShadowRootMode {
+  "open",
+  "closed"
+};
+
+// https://dom.spec.whatwg.org/#shadowroot
 [Pref="dom.webcomponents.enabled"]
 interface ShadowRoot : DocumentFragment
 {
+  // Shadow DOM v1
+  readonly attribute ShadowRootMode mode;
+  readonly attribute Element host;
+
+  // [deprecated] Shadow DOM v0
   Element? getElementById(DOMString elementId);
   HTMLCollection getElementsByTagName(DOMString localName);
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
   [CEReactions, SetterThrows, TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
-  readonly attribute Element host;
   attribute boolean applyAuthorStyles;
   readonly attribute StyleSheetList styleSheets;
 };
