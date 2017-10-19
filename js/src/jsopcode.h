@@ -154,38 +154,6 @@ static const unsigned JUMP_OFFSET_LEN   = 4;
 static const int32_t JUMP_OFFSET_MIN    = INT32_MIN;
 static const int32_t JUMP_OFFSET_MAX    = INT32_MAX;
 
-static MOZ_ALWAYS_INLINE int32_t
-GET_JUMP_OFFSET(jsbytecode* pc)
-{
-    return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
-}
-
-static MOZ_ALWAYS_INLINE void
-SET_JUMP_OFFSET(jsbytecode* pc, int32_t off)
-{
-    pc[1] = jsbytecode(off >> 24);
-    pc[2] = jsbytecode(off >> 16);
-    pc[3] = jsbytecode(off >> 8);
-    pc[4] = jsbytecode(off);
-}
-
-static const unsigned UINT32_INDEX_LEN  = 4;
-
-static MOZ_ALWAYS_INLINE uint32_t
-GET_UINT32_INDEX(const jsbytecode* pc)
-{
-    return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
-}
-
-static MOZ_ALWAYS_INLINE void
-SET_UINT32_INDEX(jsbytecode* pc, uint32_t index)
-{
-    pc[1] = jsbytecode(index >> 24);
-    pc[2] = jsbytecode(index >> 16);
-    pc[3] = jsbytecode(index >> 8);
-    pc[4] = jsbytecode(index);
-}
-
 static inline jsbytecode
 UINT24_HI(unsigned i)
 {
@@ -253,6 +221,32 @@ static MOZ_ALWAYS_INLINE void
 SET_INT32(jsbytecode* pc, int32_t i)
 {
     SET_UINT32(pc, static_cast<uint32_t>(i));
+}
+
+static MOZ_ALWAYS_INLINE int32_t
+GET_JUMP_OFFSET(jsbytecode* pc)
+{
+    return GET_INT32(pc);
+}
+
+static MOZ_ALWAYS_INLINE void
+SET_JUMP_OFFSET(jsbytecode* pc, int32_t off)
+{
+    SET_INT32(pc, off);
+}
+
+static const unsigned UINT32_INDEX_LEN  = 4;
+
+static MOZ_ALWAYS_INLINE uint32_t
+GET_UINT32_INDEX(const jsbytecode* pc)
+{
+    return GET_UINT32(pc);
+}
+
+static MOZ_ALWAYS_INLINE void
+SET_UINT32_INDEX(jsbytecode* pc, uint32_t index)
+{
+    SET_UINT32(pc, index);
 }
 
 /* Index limit is determined by SN_4BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
