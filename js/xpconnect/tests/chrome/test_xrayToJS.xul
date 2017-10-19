@@ -182,7 +182,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     "setYear", "setFullYear", "setUTCFullYear", "setMonth", "setUTCMonth",
     "setDate", "setUTCDate", "setHours", "setUTCHours", "setMinutes",
     "setUTCMinutes", "setSeconds", "setUTCSeconds", "setMilliseconds",
-    "setUTCMilliseconds", "toUTCString", "toLocaleFormat", "toLocaleString",
+    "setUTCMilliseconds", "toUTCString", "toLocaleString",
     "toLocaleDateString", "toLocaleTimeString", "toDateString", "toTimeString",
     "toISOString", "toJSON", "toSource", "toString", "valueOf", "constructor",
     "toGMTString", Symbol.toPrimitive];
