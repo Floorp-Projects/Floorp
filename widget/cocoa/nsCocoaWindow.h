@@ -250,6 +250,7 @@ public:
     virtual void            SuppressAnimation(bool aSuppress) override;
     virtual void            HideWindowChrome(bool aShouldHide) override;
 
+    void WillEnterFullScreen(bool aFullScreen);
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
     virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
     virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,

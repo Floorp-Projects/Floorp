@@ -58,6 +58,7 @@ public:
   virtual bool RequestWindowClose(nsIWidget* aWidget) override;
   virtual void SizeModeChanged(nsSizeMode sizeMode) override;
   virtual void UIResolutionChanged() override;
+  virtual void FullscreenWillChange(bool aInFullscreen) override;
   virtual void FullscreenChanged(bool aInFullscreen) override;
   virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
   virtual void OSToolbarButtonPressed() override;

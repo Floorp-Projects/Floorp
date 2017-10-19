@@ -388,6 +388,7 @@ public:
   virtual nsresult SetFullscreenInternal(
     FullscreenReason aReason, bool aIsFullscreen) = 0;
 
+  virtual void FullscreenWillChange(bool aIsFullscreen) = 0;
   /**
    * This function should be called when the fullscreen state is flipped.
    * If no widget is involved the fullscreen change, this method is called
