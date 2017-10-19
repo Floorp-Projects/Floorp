@@ -42,12 +42,6 @@ public:
     NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
-    HWND GetHWNDForDOMWindow(mozIDOMWindowProxy *parent);
-    nsresult DoDialog(mozIDOMWindowProxy *aParent,
-                      nsIDialogParamBlock *aParamBlock,
-                      nsIPrintSettings* aPS,
-                      const char *aChromeURL);
-
     nsCOMPtr<nsIWindowWatcher> mWatcher;
     nsCOMPtr<nsIPrintProgress> mPrintProgress;
     nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
