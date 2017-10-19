@@ -142,6 +142,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": 0,
             "help": "The interval between samples taken by the profiler (milliseconds)"
         }],
+        [["--e10s"], {
+            "dest": "e10s",
+            "action": "store_true",
+            "default": False,
+            "help": "we should have --disable-e10s, but instead we assume non-e10s and use --e10s to help"
+        }],
         [["--enable-stylo"], {
             "action": "store_true",
             "dest": "enable_stylo",
@@ -329,6 +335,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         kw_options = {'executablePath': binary_path}
         if 'suite' in self.config:
             kw_options['suite'] = self.config['suite']
+            if self.config.get('e10s', False):
+                kw_options['suite'] = "%s-e10s" % self.config['suite']
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
         if self.config.get('branch'):
@@ -371,7 +379,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         )
 
         # need to determine if talos pageset is required to be downloaded
-        if self.config.get('run_local'):
+        if self.config.get('run_local') and 'talos_extra_options' in self.config:
             # talos initiated locally, get and verify test/suite from cmd line
             self.talos_path = os.path.dirname(self.talos_json)
             if '-a' in self.config['talos_extra_options'] or '--activeTests' in self.config['talos_extra_options']:
@@ -392,7 +400,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         # now that have the suite name, check if pageset is required, if so download it
         # the --no-download option will override this
         if self.query_pagesets_name():
-            if '--no-download' not in self.config['talos_extra_options']:
+            if '--no-download' not in self.config.get('talos_extra_options', []):
                 self.info("Downloading pageset with tooltool...")
                 self.src_talos_webdir = os.path.join(self.talos_path, 'talos')
                 src_talos_pageset = os.path.join(self.src_talos_webdir, 'tests')
@@ -449,8 +457,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
 
     def install_mitmproxy(self):
         """Install the mitmproxy tool into the Python 3.x env"""
+        self.info("Installing mitmproxy")
         if 'win' in self.platform_name():
-            self.info("Installing mitmproxy")
             self.py3_install_modules(modules=['mitmproxy'])
             self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
         else:
