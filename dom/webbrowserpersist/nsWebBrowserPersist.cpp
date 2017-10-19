@@ -1491,7 +1491,8 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
                         getter_AddRefs(fileInputStream));
         NS_ENSURE_SUCCESS(rv, rv);
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedInputStream),
-                                       fileInputStream, BUFFERED_OUTPUT_SIZE);
+                                       fileInputStream.forget(),
+                                       BUFFERED_OUTPUT_SIZE);
         NS_ENSURE_SUCCESS(rv, rv);
         nsAutoCString contentType;
         aChannel->GetContentType(contentType);

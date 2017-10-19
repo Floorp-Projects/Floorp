@@ -239,7 +239,10 @@ VariableLengthPrefixSet::LoadFromFile(nsIFile* aFile)
                                            MAX_BUFFER_SIZE);
 
   // Convert to buffered stream
-  nsCOMPtr<nsIInputStream> in = NS_BufferInputStream(localInFile, bufferSize);
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
+                                 bufferSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mFixedPrefixSet->LoadPrefixes(in);
   NS_ENSURE_SUCCESS(rv, rv);
