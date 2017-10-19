@@ -6,6 +6,7 @@
 
 #include "FrameMetrics.h"
 #include "gfxPrefs.h"
+#include "nsStyleConsts.h"
 
 namespace mozilla {
 namespace layers {
@@ -16,6 +17,31 @@ void
 ScrollMetadata::SetUsesContainerScrolling(bool aValue) {
   MOZ_ASSERT_IF(aValue, gfxPrefs::LayoutUseContainersForRootFrames());
   mUsesContainerScrolling = aValue;
+}
+
+static OverscrollBehavior
+ToOverscrollBehavior(StyleOverscrollBehavior aBehavior)
+{
+  switch (aBehavior) {
+  case StyleOverscrollBehavior::Auto:
+    return OverscrollBehavior::Auto;
+  case StyleOverscrollBehavior::Contain:
+    return OverscrollBehavior::Contain;
+  case StyleOverscrollBehavior::None:
+    return OverscrollBehavior::None;
+  }
+  MOZ_ASSERT_UNREACHABLE("Invalid overscroll behavior");
+  return OverscrollBehavior::Auto;
+}
+
+OverscrollBehaviorInfo
+OverscrollBehaviorInfo::FromStyleConstants(StyleOverscrollBehavior aBehaviorX,
+                                           StyleOverscrollBehavior aBehaviorY)
+{
+  OverscrollBehaviorInfo result;
+  result.mBehaviorX = ToOverscrollBehavior(aBehaviorX);
+  result.mBehaviorY = ToOverscrollBehavior(aBehaviorY);
+  return result;
 }
 
 StaticAutoPtr<const ScrollMetadata> ScrollMetadata::sNullMetadata;
