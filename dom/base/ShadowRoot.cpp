@@ -244,9 +244,10 @@ ShadowRoot::RemoveDestInsertionPoint(nsIContent* aInsertionPoint,
   int32_t index = aDestInsertionPoints.IndexOf(aInsertionPoint);
 
   // It's possible that we already removed the insertion point while processing
-  // other insertion point removals.
+  // other insertion point removals / fallback content redistribution (which
+  // does DestInsertionPoints().Clear()).
   if (index >= 0) {
-    aDestInsertionPoints.SetLength(index);
+    aDestInsertionPoints.RemoveElementAt(index);
   }
 }
 
