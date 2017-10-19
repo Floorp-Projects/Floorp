@@ -243,6 +243,34 @@ ExtractH264CodecDetails(const nsAString& aCodecs,
                         int16_t& aProfile,
                         int16_t& aLevel);
 
+struct VideoColorSpace
+{
+  // TODO: Define the value type as strong type enum
+  // to better know the exact meaning corresponding to ISO/IEC 23001-8:2016.
+  // Default value is listed https://www.webmproject.org/vp9/mp4/#optional-fields
+  uint8_t mPrimaryId = 1; // Table 2
+  uint8_t mTransferId = 1; // Table 3
+  uint8_t mMatrixId = 1; // Table 4
+  uint8_t mRangeId = 0;
+};
+
+// Extracts the VPX codecs parameter string.
+// See https://www.webmproject.org/vp9/mp4/#codecs-parameter-string
+// for more details.
+// Returns false on failure.
+bool
+ExtractVPXCodecDetails(const nsAString& aCodec,
+                       uint8_t& aProfile,
+                       uint8_t& aLevel,
+                       uint8_t& aBitDepth);
+bool
+ExtractVPXCodecDetails(const nsAString& aCodec,
+                       uint8_t& aProfile,
+                       uint8_t& aLevel,
+                       uint8_t& aBitDepth,
+                       uint8_t& aChromaSubsampling,
+                       VideoColorSpace& aColorSpace);
+
 // Use a cryptographic quality PRNG to generate raw random bytes
 // and convert that to a base64 string.
 nsresult

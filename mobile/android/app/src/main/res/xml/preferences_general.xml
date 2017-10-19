@@ -38,5 +38,10 @@
                       android:summary="@string/pref_compact_tabs_summary"
                       android:defaultValue="true" />
 
+    <SwitchPreference android:key="android.not_a_preference.customtabs_58"
+                      android:title="@string/pref_custom_tabs"
+                      android:summary="@string/pref_custom_tabs_summary"
+                      android:defaultValue="true"/>
+
 </PreferenceScreen>
 
