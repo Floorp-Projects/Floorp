@@ -127,7 +127,7 @@ public:
   void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const;
   bool GetPropertyIsImportant(const nsAString& aProperty) const;
   void RemoveProperty(const nsAString& aProperty);
-  void RemovePropertyByID(nsCSSPropertyID aProperty);
+  bool RemovePropertyByID(nsCSSPropertyID aProperty);
 
   bool HasProperty(nsCSSPropertyID aProperty) const;
 

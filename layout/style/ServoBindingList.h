@@ -435,7 +435,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemovePropertyById, void,
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemovePropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_HasCSSWideKeyword, bool,
