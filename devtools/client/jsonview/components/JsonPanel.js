@@ -83,7 +83,8 @@ define(function (require, exports, module) {
       // Render the value (summary) using Reps library.
       return Rep(Object.assign({}, props, {
         cropLimit: 50,
-        noGrip: true
+        noGrip: true,
+        omitLinkHref: false,
       }));
     },
 

@@ -146,6 +146,11 @@ typedef bool (*IonSetPropertyICFn)(JSContext*, HandleScript, IonSetPropertyIC*, 
 static const VMFunction IonSetPropertyICInfo =
     FunctionInfo<IonSetPropertyICFn>(IonSetPropertyIC::update, "IonSetPropertyIC::update");
 
+typedef bool (*IonGetPropSuperICFn)(JSContext*, HandleScript, IonGetPropSuperIC*, HandleObject, HandleValue,
+                                    HandleValue, MutableHandleValue);
+static const VMFunction IonGetPropSuperICInfo =
+    FunctionInfo<IonGetPropSuperICFn>(IonGetPropSuperIC::update, "IonGetPropSuperIC::update");
+
 typedef bool (*IonGetNameICFn)(JSContext*, HandleScript, IonGetNameIC*, HandleObject,
                                MutableHandleValue);
 static const VMFunction IonGetNameICInfo =
@@ -196,6 +201,26 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 
         StoreValueTo(getPropIC->output()).generate(this);
         restoreLiveIgnore(lir, StoreValueTo(getPropIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
+      case CacheKind::GetPropSuper:
+      case CacheKind::GetElemSuper: {
+        IonGetPropSuperIC* getPropSuperIC = ic->asGetPropSuperIC();
+
+        saveLive(lir);
+
+        pushArg(getPropSuperIC->id());
+        pushArg(getPropSuperIC->receiver());
+        pushArg(getPropSuperIC->object());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonGetPropSuperICInfo, lir);
+
+        StoreValueTo(getPropSuperIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreValueTo(getPropSuperIC->output()).clobbered());
 
         masm.jump(ool->rejoin());
         return;
@@ -309,8 +334,6 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
-      case CacheKind::GetPropSuper:
-      case CacheKind::GetElemSuper:
         MOZ_CRASH("Unsupported IC");
     }
     MOZ_CRASH();
@@ -3516,6 +3539,37 @@ CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment* lir)
 {
     Address environment(ToRegister(lir->function()), JSFunction::offsetOfEnvironment());
     masm.loadPtr(environment, ToRegister(lir->output()));
+}
+
+void
+CodeGenerator::visitHomeObject(LHomeObject* lir)
+{
+    Address homeObject(ToRegister(lir->function()), FunctionExtended::offsetOfMethodHomeObjectSlot());
+#ifdef DEBUG
+    Label isObject;
+    masm.branchTestObject(Assembler::Equal, homeObject, &isObject);
+    masm.assumeUnreachable("[[HomeObject]] must be Object");
+    masm.bind(&isObject);
+#endif
+    masm.unboxObject(homeObject, ToRegister(lir->output()));
+}
+
+typedef JSObject* (*HomeObjectSuperBaseFn)(JSContext*, HandleObject);
+static const VMFunction HomeObjectSuperBaseInfo =
+    FunctionInfo<HomeObjectSuperBaseFn>(HomeObjectSuperBase, "HomeObjectSuperBase");
+
+void
+CodeGenerator::visitHomeObjectSuperBase(LHomeObjectSuperBase* lir)
+{
+    Register homeObject = ToRegister(lir->homeObject());
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode* ool = oolCallVM(HomeObjectSuperBaseInfo, lir, ArgList(homeObject),
+                                   StoreRegisterTo(output));
+
+    masm.loadObjProto(homeObject, output);
+    masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(1), ool->entry());
+    masm.bind(ool->rejoin());
 }
 
 typedef LexicalEnvironmentObject* (*NewLexicalEnvironmentObjectFn)(JSContext*,
@@ -10269,6 +10323,28 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins)
 
     addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
                         IonGetPropertyICFlags(ins->mir()), ins->mir()->profilerLeavePc());
+}
+
+void
+CodeGenerator::visitGetPropSuperCacheV(LGetPropSuperCacheV* ins)
+{
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
+    Register obj = ToRegister(ins->obj());
+    TypedOrValueRegister receiver =
+        toConstantOrRegister(ins, LGetPropSuperCacheV::Receiver, ins->mir()->receiver()->type()).reg();
+    ConstantOrRegister id = toConstantOrRegister(ins, LGetPropSuperCacheV::Id, ins->mir()->idval()->type());
+    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
+
+    CacheKind kind = CacheKind::GetElemSuper;
+    if (id.constant() && id.value().isString()) {
+        JSString* idString = id.value().toString();
+        uint32_t dummy;
+        if (idString->isAtom() && !idString->asAtom().isIndex(&dummy))
+            kind = CacheKind::GetPropSuper;
+    }
+
+    IonGetPropSuperIC cache(kind, liveRegs, obj, receiver, id, output);
+    addIC(ins, allocateIC(cache));
 }
 
 void

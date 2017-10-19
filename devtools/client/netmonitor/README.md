@@ -105,7 +105,7 @@ To run in the browser tab, the Network Monitor needs to get some dependencies fr
 
 The Network Monitor UI is built using [React](http://searchfox.org/mozilla-central/source/devtools/docs/frontend/react.md) components (in `src/components/`).
 
-* **MonitorPanel** in `monitor-panel.js` is the root element.
+* **MonitorPanel** in `MonitorPanel.js` is the root element.
 * Three major container components are
   - **Toolbar** Panel related functions.
   - **RequestList** Show each request information.

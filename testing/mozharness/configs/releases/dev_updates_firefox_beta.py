@@ -3,14 +3,14 @@ config = {
     "log_name": "bump_beta_dev",
     # TODO: use real repo
     "repo": {
-        "repo": "https://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+        "repo": "https://hg.mozilla.org/users/stage-ffxbld/tools",
         "branch": "default",
         "dest": "tools",
         "vcs": "hg",
     },
     "vcs_share_base": "/builds/hg-shared",
     # TODO: use real repo
-    "push_dest": "ssh://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+    "push_dest": "ssh://hg.mozilla.org/users/stage-ffxbld/tools",
     # jamun repo used for staging beta
     "shipped-locales-url": "https://hg.mozilla.org/projects/jamun/raw-file/{revision}/browser/locales/shipped-locales",
     "ignore_no_changes": True,
@@ -32,7 +32,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
             "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
-            "publish_rules": ["firefox-beta"],
+            "publish_rules": [32],
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-beta-cdntest-bz2", "firefox-beta-localtest-bz2"],
             "bz2_publish_rules": [652],

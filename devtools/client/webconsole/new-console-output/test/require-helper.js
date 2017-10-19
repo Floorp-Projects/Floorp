@@ -36,7 +36,7 @@ requireHacker.global_hook("default", path => {
       return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/Services")`;
     case "devtools/shared/client/object-client":
       return `() => {}`;
-    case "devtools/client/netmonitor/src/components/tabbox-panel":
+    case "devtools/client/netmonitor/src/components/TabboxPanel":
       return "{}";
   }
   return undefined;

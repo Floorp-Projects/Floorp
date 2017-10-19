@@ -15,10 +15,6 @@ function run_test() {
   setUpdateURL(gURLData + gHTTPHandlerPath);
   setUpdateChannel("test_channel");
 
-  // This test expects that the app.update.download.backgroundInterval
-  // preference doesn't already exist.
-  Services.prefs.deleteBranch("app.update.download.backgroundInterval");
-
   standardInit();
   do_execute_soon(run_test_pt01);
 }
@@ -67,7 +63,6 @@ function run_test_pt02() {
                      buildID: "20080811053724",
                      detailsURL: "http://details/",
                      promptWaitTime: "345600",
-                     backgroundInterval: "1200",
                      custom1: "custom1_attr=\"custom1 value\"",
                      custom2: "custom2_attr=\"custom2 value\""};
   let updates = getRemoteUpdateString(updateProps, patches);
@@ -107,9 +102,6 @@ function check_test_pt02() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
-  // The default and maximum value for backgroundInterval is 600
-  Assert.equal(bestUpdate.getProperty("backgroundInterval"), "600",
-               "the update backgroundInterval attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.serviceURL, gURLData + gHTTPHandlerPath + "?force=1",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.channel, "test_channel",

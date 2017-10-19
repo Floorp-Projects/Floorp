@@ -15,13 +15,13 @@ const { PANELS } = require("../constants");
 // Components
 const Tabbar = createFactory(require("devtools/client/shared/components/tabs/TabBar"));
 const TabPanel = createFactory(require("devtools/client/shared/components/tabs/Tabs").TabPanel);
-const CookiesPanel = createFactory(require("./cookies-panel"));
-const HeadersPanel = createFactory(require("./headers-panel"));
-const ParamsPanel = createFactory(require("./params-panel"));
-const ResponsePanel = createFactory(require("./response-panel"));
-const SecurityPanel = createFactory(require("./security-panel"));
-const StackTracePanel = createFactory(require("./stack-trace-panel"));
-const TimingsPanel = createFactory(require("./timings-panel"));
+const CookiesPanel = createFactory(require("./CookiesPanel"));
+const HeadersPanel = createFactory(require("./HeadersPanel"));
+const ParamsPanel = createFactory(require("./ParamsPanel"));
+const ResponsePanel = createFactory(require("./ResponsePanel"));
+const SecurityPanel = createFactory(require("./SecurityPanel"));
+const StackTracePanel = createFactory(require("./StackTracePanel"));
+const TimingsPanel = createFactory(require("./TimingsPanel"));
 
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
