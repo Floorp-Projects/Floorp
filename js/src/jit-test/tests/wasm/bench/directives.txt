@@ -1,1 +1,1 @@
-|jit-test| test-also-no-wasm-baseline; test-also-no-wasm-ion; include:wasm.js
+|jit-test| test-also-no-wasm-baseline; test-also-no-wasm-ion; test-also-wasm-tiering; include:wasm.js
