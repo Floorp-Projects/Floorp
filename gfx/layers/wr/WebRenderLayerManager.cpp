@@ -70,6 +70,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   }
 
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
+  WrBridge()->SetWebRenderLayerManager(this);
   WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   WrBridge()->SetNamespace(id_namespace);
@@ -534,6 +535,12 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
   WrBridge()->BeginClearCachedResources();
   DiscardImages();
   WrBridge()->EndClearCachedResources();
+}
+
+void
+WebRenderLayerManager::WrUpdated()
+{
+  // Handle removing all obsoleted WebRenderUserData
 }
 
 void
