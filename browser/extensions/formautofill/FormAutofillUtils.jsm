@@ -29,6 +29,10 @@ const EDIT_ADDRESS_KEYWORDS = [
 const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCardsBtnLabel"];
 const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpires"];
 
+// The maximum length of data to be saved in a single field for preventing DoS
+// attacks that fill the user's hard drive(s).
+const MAX_FIELD_VALUE_LENGTH = 200;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -45,6 +49,7 @@ this.FormAutofillUtils = {
   EDIT_ADDRESS_KEYWORDS,
   MANAGE_CREDITCARDS_KEYWORDS,
   EDIT_CREDITCARD_KEYWORDS,
+  MAX_FIELD_VALUE_LENGTH,
 
   _fieldNameInfo: {
     "name": "name",

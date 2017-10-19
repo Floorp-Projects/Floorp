@@ -4906,50 +4906,6 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
-  LayersBackend backend = aManager->GetBackendType();
-  if (backend == layers::LayersBackend::LAYERS_WR) {
-    if (br) {
-      if (!br->CanCreateWebRenderCommands()) {
-        return LAYER_NONE;
-      }
-      mBorderRenderer = br;
-    } else {
-      if (styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
-          styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE ||
-          styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
-          styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE) {
-        // WebRender not supports this currently
-        return LAYER_NONE;
-      }
-
-      uint32_t flags = 0;
-      if (aBuilder->ShouldSyncDecodeImages()) {
-        flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
-      }
-
-      image::DrawResult result;
-      mBorderImageRenderer =
-        nsCSSBorderImageRenderer::CreateBorderImageRenderer(mFrame->PresContext(),
-                                                            mFrame,
-                                                            nsRect(offset, mFrame->GetSize()),
-                                                            *(mFrame->StyleContext()->StyleBorder()),
-                                                            mVisibleRect,
-                                                            mFrame->GetSkipSides(),
-                                                            flags,
-                                                            &result);
-
-      if (!mBorderImageRenderer) {
-        return LAYER_NONE;
-      }
-
-      if (!mBorderImageRenderer->mImageRenderer.IsImageContainerAvailable(aManager, flags)) {
-        return LAYER_NONE;
-      }
-    }
-
-    return LAYER_ACTIVE;
-  }
-
   if (!br) {
     return LAYER_NONE;
   }
@@ -5022,19 +4978,16 @@ nsDisplayBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                          mozilla::layers::WebRenderLayerManager* aManager,
                                          nsDisplayListBuilder* aDisplayListBuilder)
 {
-  ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
-    return false;
-  }
+  nsRect rect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
-  if (mBorderImageRenderer) {
-    CreateBorderImageWebRenderCommands(aBuilder, aResources, aSc,
-                                       aManager, aDisplayListBuilder);
-  } else if (mBorderRenderer) {
-    mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
-  }
-
-  return true;
+  return nsCSSRendering::CreateWebRenderCommandsForBorder(this,
+                                                          mFrame,
+                                                          rect,
+                                                          aBuilder,
+                                                          aResources,
+                                                          aSc,
+                                                          aManager,
+                                                          aDisplayListBuilder);
 };
 
 void
@@ -5119,10 +5072,8 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart, lineEnd, gradientRadius);
 
       if (gradientData->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
-        LayerPoint startPoint = LayerPoint(dest.origin.x, dest.origin.y);
-        startPoint = startPoint + ViewAs<LayerPixel>(lineStart, PixelCastJustification::WebRenderHasUnitResolution);
-        LayerPoint endPoint = LayerPoint(dest.origin.x, dest.origin.y);
-        endPoint = endPoint + ViewAs<LayerPixel>(lineEnd, PixelCastJustification::WebRenderHasUnitResolution);
+        LayoutDevicePoint startPoint = LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineStart;
+        LayoutDevicePoint endPoint = LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineEnd;
 
         aBuilder.PushBorderGradient(dest,
                                     clip,
@@ -5443,9 +5394,9 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       // We don't move the shadow rect here since WR does it for us
       // Now translate everything to device pixels.
       nsRect shadowRect = frameRect;
-      Point shadowOffset;
-      shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
-      shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
+      LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
+          nsPoint(shadow->mXOffset, shadow->mYOffset),
+          appUnitsPerDevPixel);
 
       LayoutDeviceRect deviceBox = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel);
@@ -5614,14 +5565,14 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
       nsCSSRendering::GetShadowInnerRadii(aFrame, aBorderRect, innerRadii);
 
       // Now translate everything to device pixels.
-      Rect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
-          shadowRect, appUnitsPerDevPixel).ToUnknownRect();
+      LayoutDeviceRect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
+          shadowRect, appUnitsPerDevPixel);
       wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
       Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
-      Point shadowOffset;
-      shadowOffset.x = (shadowItem->mXOffset / appUnitsPerDevPixel);
-      shadowOffset.y = (shadowItem->mYOffset / appUnitsPerDevPixel);
+      LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
+          nsPoint(shadowItem->mXOffset, shadowItem->mYOffset),
+          appUnitsPerDevPixel);
 
       float blurRadius = float(shadowItem->mRadius) / float(appUnitsPerDevPixel);
       // TODO: WR doesn't support non-uniform border radii
@@ -7051,7 +7002,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                                                  WebRenderLayerManager* aManager,
                                                  nsDisplayListBuilder* aDisplayListBuilder)
 {
-  LayerPoint scTranslation;
+  LayoutDevicePoint scTranslation;
   StickyScrollContainer* stickyScrollContainer = StickyScrollContainer::GetStickyScrollContainerForFrame(mFrame);
   if (stickyScrollContainer) {
     float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -7064,9 +7015,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     nsIFrame* firstCont = nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
     nsPoint translation = stickyScrollContainer->ComputePosition(firstCont) - firstCont->GetNormalPosition();
     itemBounds.MoveBy(-translation);
-    scTranslation = ViewAs<LayerPixel>(
-        LayoutDevicePoint::FromAppUnits(translation, auPerDevPixel),
-        PixelCastJustification::WebRenderHasUnitResolution);
+    scTranslation = LayoutDevicePoint::FromAppUnits(translation, auPerDevPixel);
 
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(itemBounds, auPerDevPixel);
 
@@ -9170,8 +9119,7 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   bool snap;
   float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect displayBound = GetBounds(aDisplayListBuilder, &snap);
-  LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(displayBound, appUnitsPerDevPixel),
-                                        PixelCastJustification::WebRenderHasUnitResolution);
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(displayBound, appUnitsPerDevPixel);
 
   Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(this, aBuilder, aResources,
                                                                             aSc, aDisplayListBuilder,

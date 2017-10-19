@@ -388,7 +388,8 @@ module.exports = {
   getIsGlobalScope(ancestors) {
     for (let parent of ancestors) {
       if (parent.type == "FunctionExpression" ||
-          parent.type == "FunctionDeclaration") {
+          parent.type == "FunctionDeclaration" ||
+          parent.type == "ArrowFunctionExpression") {
         return false;
       }
     }
@@ -671,5 +672,9 @@ module.exports = {
 
   getSavedEnvironmentItems(environment) {
     return require("./environments/saved-globals.json").environments[environment];
+  },
+
+  getSavedRuleData(rule) {
+    return require("./rules/saved-rules-data.json").rulesData[rule];
   }
 };

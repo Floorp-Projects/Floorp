@@ -211,16 +211,12 @@ add_task(async function setup() {
 // A clean up function to prevent affecting other tests.
 registerCleanupFunction(() => {
   // Clear all cookies.
-  let cookieMgr = Cc["@mozilla.org/cookiemanager;1"]
-                     .getService(Ci.nsICookieManager);
-  cookieMgr.removeAll();
+  Services.cookies.removeAll();
 
   // Clear all image caches and network caches.
   clearAllImageCaches();
 
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 
   // Clear Places favicon caches.
   clearAllPlacesFavicons();
@@ -231,9 +227,7 @@ add_task(async function test_favicon_userContextId() {
   clearAllImageCaches();
 
   // Clear all network caches.
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 
   // Clear Places favicon caches.
   await clearAllPlacesFavicons();
@@ -246,9 +240,7 @@ add_task(async function test_thirdPartyFavicon_userContextId() {
   clearAllImageCaches();
 
   // Clear all network caches.
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 
   // Clear Places favicon caches.
   await clearAllPlacesFavicons();

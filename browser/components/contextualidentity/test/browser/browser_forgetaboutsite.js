@@ -7,10 +7,6 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
-let LoadContextInfo = Cc["@mozilla.org/load-context-info-factory;1"]
-                      .getService(Ci.nsILoadContextInfoFactory);
-let css = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-           .getService(Ci.nsICacheStorageService);
 
 const USER_CONTEXTS = [
   "default",
@@ -72,18 +68,16 @@ function getCookiesForOA(host, userContextId) {
 }
 
 function createURI(uri) {
-  let ioServ = Cc["@mozilla.org/network/io-service;1"]
-                  .getService(Components.interfaces.nsIIOService);
-  return ioServ.newURI(uri);
+  return Services.io.newURI(uri);
 }
 
 function getCacheStorage(where, lci, appcache) {
-  if (!lci) lci = LoadContextInfo.default;
+  if (!lci) lci = Services.loadContextInfo.default;
   switch (where) {
-    case "disk": return css.diskCacheStorage(lci, false);
-    case "memory": return css.memoryCacheStorage(lci);
-    case "appcache": return css.appCacheStorage(lci, appcache);
-    case "pin": return css.pinningCacheStorage(lci);
+    case "disk": return Services.cache2.diskCacheStorage(lci, false);
+    case "memory": return Services.cache2.memoryCacheStorage(lci);
+    case "appcache": return Services.cache2.appCacheStorage(lci, appcache);
+    case "pin": return Services.cache2.pinningCacheStorage(lci);
   }
   return null;
 }
@@ -166,19 +160,19 @@ async function test_cache_cleared() {
     await OpenCacheEntry("http://" + TEST_HOST + "/",
                          "disk",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
-                         LoadContextInfo.custom(false, {userContextId}));
+                         Services.loadContextInfo.custom(false, {userContextId}));
 
     await OpenCacheEntry("http://" + TEST_HOST + "/",
                          "memory",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
-                         LoadContextInfo.custom(false, {userContextId}));
+                         Services.loadContextInfo.custom(false, {userContextId}));
   }
 
 
   // Check that caches have been set correctly.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let mem = getCacheStorage("memory", LoadContextInfo.custom(false, {userContextId}));
-    let disk = getCacheStorage("disk", LoadContextInfo.custom(false, {userContextId}));
+    let mem = getCacheStorage("memory", Services.loadContextInfo.custom(false, {userContextId}));
+    let disk = getCacheStorage("disk", Services.loadContextInfo.custom(false, {userContextId}));
 
     Assert.ok(mem.exists(createURI("http://" + TEST_HOST + "/"), ""), "The memory cache has been set correctly");
     Assert.ok(disk.exists(createURI("http://" + TEST_HOST + "/"), ""), "The disk cache has been set correctly");
@@ -189,8 +183,8 @@ async function test_cache_cleared() {
 
   // Check that do caches be removed or not?
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let mem = getCacheStorage("memory", LoadContextInfo.custom(false, {userContextId}));
-    let disk = getCacheStorage("disk", LoadContextInfo.custom(false, {userContextId}));
+    let mem = getCacheStorage("memory", Services.loadContextInfo.custom(false, {userContextId}));
+    let disk = getCacheStorage("disk", Services.loadContextInfo.custom(false, {userContextId}));
 
     Assert.ok(!mem.exists(createURI("http://" + TEST_HOST + "/"), ""), "The memory cache is cleared");
     Assert.ok(!disk.exists(createURI("http://" + TEST_HOST + "/"), ""), "The disk cache is cleared");

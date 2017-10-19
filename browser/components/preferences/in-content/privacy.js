@@ -322,9 +322,7 @@ var gPrivacyPane = {
     ]);
 
     // Notify observers that the UI is now ready
-    Components.classes["@mozilla.org/observer-service;1"]
-      .getService(Components.interfaces.nsIObserverService)
-      .notifyObservers(window, "privacy-pane-loaded");
+    Services.obs.notifyObservers(window, "privacy-pane-loaded");
   },
 
   // TRACKING PROTECTION MODE
@@ -582,9 +580,7 @@ var gPrivacyPane = {
       true, false);
     if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
       pref.value = autoStart.hasAttribute("checked");
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-        .getService(Ci.nsIAppStartup);
-      appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
       return;
     }
 
@@ -1002,10 +998,8 @@ var gPrivacyPane = {
     var secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
       getService(Ci.nsIPKCS11ModuleDB);
     if (secmodDB.isFIPSEnabled) {
-      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-        getService(Ci.nsIPromptService);
       var bundle = document.getElementById("bundlePreferences");
-      promptService.alert(window,
+      Services.prompt.alert(window,
         bundle.getString("pw_change_failed_title"),
         bundle.getString("pw_change2empty_in_fips_mode"));
       this._initMasterPasswordUI();
@@ -1250,9 +1244,7 @@ var gPrivacyPane = {
    */
   clearCache() {
     try {
-      var cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-        .getService(Components.interfaces.nsICacheStorageService);
-      cache.clear();
+      Services.cache2.clear();
     } catch (ex) { }
     this.updateActualCacheSize();
   },
@@ -1332,10 +1324,7 @@ var gPrivacyPane = {
     actualSizeLabel.textContent = prefStrBundle.getString("actualDiskCacheSizeCalculated");
 
     try {
-      var cacheService =
-        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-          .getService(Components.interfaces.nsICacheStorageService);
-      cacheService.asyncGetDiskConsumption(this.observer);
+      Services.cache2.asyncGetDiskConsumption(this.observer);
     } catch (e) { }
   },
 
@@ -1486,11 +1475,7 @@ var gPrivacyPane = {
     };
 
     try {
-      var cacheService =
-        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-          .getService(Components.interfaces.nsICacheStorageService);
-      var storage = cacheService.appCacheStorage(LoadContextInfo.default, null);
-      storage.asyncVisitStorage(visitor, false);
+      Services.cache2.asyncVisitStorage(visitor, false);
     } catch (e) { }
   },
 
@@ -1529,9 +1514,6 @@ var gPrivacyPane = {
    * Updates the list of offline applications
    */
   updateOfflineApps() {
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-      .getService(Components.interfaces.nsIPermissionManager);
-
     var list = document.getElementById("offlineAppsList");
     while (list.firstChild) {
       list.firstChild.remove();
@@ -1548,7 +1530,7 @@ var gPrivacyPane = {
 
     var bundle = document.getElementById("bundlePreferences");
 
-    var enumerator = pm.enumerator;
+    var enumerator = Services.perms.enumerator;
     while (enumerator.hasMoreElements()) {
       var perm = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
       if (perm.type == "offline-app" &&
@@ -1574,24 +1556,20 @@ var gPrivacyPane = {
     var origin = item.getAttribute("origin");
     var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
 
-    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-      .getService(Components.interfaces.nsIPromptService);
-    var flags = prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0 +
-      prompts.BUTTON_TITLE_CANCEL * prompts.BUTTON_POS_1;
+    var flags = Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
 
     var bundle = document.getElementById("bundlePreferences");
     var title = bundle.getString("offlineAppRemoveTitle");
     var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [principal.URI.prePath]);
     var confirm = bundle.getString("offlineAppRemoveConfirm");
-    var result = prompts.confirmEx(window, title, prompt, flags, confirm,
+    var result = Services.prompt.confirmEx(window, title, prompt, flags, confirm,
       null, null, null, {});
     if (result != 0)
       return;
 
     // get the permission
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-      .getService(Components.interfaces.nsIPermissionManager);
-    var perm = pm.getPermissionObject(principal, "offline-app", true);
+    var perm = Services.perms.getPermissionObject(principal, "offline-app", true);
     if (perm) {
       // clear offline cache entries
       try {
@@ -1607,7 +1585,7 @@ var gPrivacyPane = {
         }
       } catch (e) { }
 
-      pm.removePermission(perm);
+      Services.perms.removePermission(perm);
     }
     list.removeChild(item);
     gPrivacyPane.offlineAppSelected();

@@ -8,15 +8,46 @@ Cu.import("resource://formautofill/FormAutofillHandler.jsm");
 
 const TESTCASES = [
   {
+    description: "Don't contain a field whose length of value is greater than 200",
+    document: `<form>
+                <input id="given-name" autocomplete="given-name">
+                <input id="organization" autocomplete="organization">
+                <input id="address-level1" autocomplete="address-level1">
+                <input id="country" autocomplete="country">
+                <input id="cc-number" autocomplete="cc-number">
+                <input id="cc-name" autocomplete="cc-name">
+               </form>`,
+    formValue: {
+      "given-name": "John",
+      "organization": "*".repeat(200),
+      "address-level1": "*".repeat(201),
+      "country": "US",
+      "cc-number": "1111222233334444",
+      "cc-name": "*".repeat(201),
+    },
+    expectedRecord: {
+      address: {
+        "given-name": "John",
+        "organization": "*".repeat(200),
+        "address-level1": "",
+        "country": "US",
+      },
+      creditCard: {
+        "cc-number": "1111222233334444",
+        "cc-name": "",
+      },
+    },
+  },
+  {
     description: "Don't create address record if filled data is less than 3",
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
-                <input id="family-name" autocomplete="family-name">
+                <input id="organization" autocomplete="organization">
                 <input id="country" autocomplete="country">
                </form>`,
     formValue: {
       "given-name": "John",
-      "family-name": "Doe",
+      "organization": "Mozilla",
     },
     expectedRecord: {
       address: undefined,

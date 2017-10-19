@@ -186,9 +186,7 @@
         <body>
           <![CDATA[
             this.translation = aTranslation;
-            let bundle = Cc["@mozilla.org/intl/stringbundle;1"]
-                           .getService(Ci.nsIStringBundleService)
-                           .createBundle("chrome://global/locale/languageNames.properties");
+            let bundle = Services.strings.createBundle("chrome://global/locale/languageNames.properties");
             let sortByLocalizedName = function(aList) {
               return aList.map(code => [code, bundle.GetStringFromName(code)])
                           .sort((a, b) => a[1].localeCompare(b[1]));
@@ -362,16 +360,12 @@
             }
 
             let langBundle =
-              Cc["@mozilla.org/intl/stringbundle;1"]
-                .getService(Ci.nsIStringBundleService)
-                .createBundle("chrome://global/locale/languageNames.properties");
+              Services.strings.createBundle("chrome://global/locale/languageNames.properties");
             let langName = langBundle.GetStringFromName(lang);
 
             // Set the label and accesskey on the menuitem.
             let bundle =
-              Cc["@mozilla.org/intl/stringbundle;1"]
-                .getService(Ci.nsIStringBundleService)
-                .createBundle("chrome://browser/locale/translation.properties");
+              Services.strings.createBundle("chrome://browser/locale/translation.properties");
             let item = this._getAnonElt("neverForLanguage");
             const kStrId = "translation.options.neverForLanguage";
             item.setAttribute("label",

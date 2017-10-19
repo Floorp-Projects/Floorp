@@ -58,8 +58,7 @@ var MigrationWizard = { /* exported MigrationWizard */
   },
 
   uninit() {
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
+    var os = Services.obs;
     os.removeObserver(this, "Migration:Started");
     os.removeObserver(this, "Migration:ItemBeforeMigrate");
     os.removeObserver(this, "Migration:ItemAfterMigrate");
@@ -419,22 +418,16 @@ var MigrationWizard = { /* exported MigrationWizard */
           if (this._newHomePage) {
             try {
               // set homepage properly
-              var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService);
-              var prefBranch = prefSvc.getBranch(null);
-
               if (this._newHomePage == "DEFAULT") {
-                prefBranch.clearUserPref("browser.startup.homepage");
+                Services.prefs.clearUserPref("browser.startup.homepage");
               } else {
-                prefBranch.setStringPref("browser.startup.homepage",
-                                         this._newHomePage);
+                Services.prefs.setStringPref("browser.startup.homepage",
+                                             this._newHomePage);
               }
 
-              var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                                     .getService(Components.interfaces.nsIProperties);
-              var prefFile = dirSvc.get("ProfDS", Components.interfaces.nsIFile);
+              var prefFile = Services.dirsvc.get("ProfDS", Components.interfaces.nsIFile);
               prefFile.append("prefs.js");
-              prefSvc.savePrefFile(prefFile);
+              Services.prefs.savePrefFile(prefFile);
             } catch (ex) {
               dump(ex);
             }
@@ -477,9 +470,7 @@ var MigrationWizard = { /* exported MigrationWizard */
             type = "misc. data";
             break;
         }
-        Cc["@mozilla.org/consoleservice;1"]
-          .getService(Ci.nsIConsoleService)
-          .logStringMessage("some " + type + " did not successfully migrate.");
+        Services.console.logStringMessage("some " + type + " did not successfully migrate.");
         Services.telemetry.getKeyedHistogramById("FX_MIGRATION_ERRORS")
                           .add(this._source, Math.log2(numericType));
         break;

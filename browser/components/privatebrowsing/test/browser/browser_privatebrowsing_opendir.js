@@ -23,10 +23,8 @@ registerCleanupFunction(function() {
 function test() {
   // initialization
   waitForExplicitFinish();
-  let ds = Cc["@mozilla.org/file/directory_service;1"].
-           getService(Ci.nsIProperties);
-  let dir1 = ds.get("ProfD", Ci.nsIFile);
-  let dir2 = ds.get("TmpD", Ci.nsIFile);
+  let dir1 = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let dir2 = Services.dirsvc.get("TmpD", Ci.nsIFile);
   let file = dir2.clone();
   file.append("pbtest.file");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
