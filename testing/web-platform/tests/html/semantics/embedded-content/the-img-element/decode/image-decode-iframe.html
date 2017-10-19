@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <meta name="timeout" content="long">
-<title>HTMLImageElement.prototype.decode(), iframe tests.</title>
+<title>img.decode()</title>
 <link rel="author" title="Vladimir Levin" href="mailto:vmpstr@chromium.org">
-<link rel=help href="https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-decode">
+<link rel=help href="">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
 
 <iframe id="frame_loaded" srcdoc="iframe"></iframe>
 <iframe id="frame_notloaded" srcdoc="iframe"></iframe>
@@ -29,7 +30,7 @@ promise_test(function() {
       });
     };
   });
-}, document.title + " Decode from removed iframe fails (loaded img)");
+}, "(misc) Decode from removed iframe fails (loaded img)");
 
 promise_test(function(t) {
   var frame = document.getElementById("frame_notloaded");
@@ -38,7 +39,7 @@ promise_test(function(t) {
   frame.parentNode.removeChild(frame);
   var promise = img.decode();
   return promise_rejects(t, "EncodingError", promise);
-}, document.title + " Decode from removed iframe fails (img not loaded)");
+}, "(misc) Decode from removed iframe fails (img not loaded)");
 
 promise_test(function(t) {
   var frame = document.getElementById("frame_notloaded2");
@@ -48,7 +49,7 @@ promise_test(function(t) {
   var promise = img.decode();
   frame.parentNode.removeChild(frame);
   return promise_rejects(t, "EncodingError", promise);
-}, document.title + " Decode from iframe, later removed, fails (img not loaded)");
+}, "(misc) Decode from iframe, later removed, fails (img not loaded)");
 
 </script>
 

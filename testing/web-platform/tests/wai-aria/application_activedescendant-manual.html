@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>application activedescendant</title>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -162,6 +161,12 @@
                   "states",
                   "contains",
                   "STATE_SYSTEM_FOCUSABLE"
+               ],
+               [
+                  "event",
+                  "type",
+                  "is",
+                  "EVENT_OBJECT_FOCUS"
                ]
             ],
             "UIA" : [
@@ -192,7 +197,7 @@
   <body>
   <p>This test examines the ARIA properties for application activedescendant.</p>
      <div id='test' tabindex="0" aria-activedescendant="bob" role='application'>
-     <div id='bob' role='group'>Hello world</div>
+     <div id='bob' class='bobber'>Hello world</div>
   </div>
  then role:application, aria-activedescendant: bob
 
@@ -201,3 +206,4 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
+

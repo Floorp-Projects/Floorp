@@ -13,77 +13,80 @@
 // Utilities for testing non-navigation requests that are intercepted with
 // a redirect.
 
-const host_info = get_host_info();
-const kScript = 'resources/fetch-rewrite-worker.js';
-const kScope = host_info['HTTPS_ORIGIN'] + base_path() +
-               'resources/blank.html?fetch-event-redirect';
-let frame;
+var host_info = get_host_info();
+var worker = 'resources/fetch-rewrite-worker.js';
+var frameURL = host_info['HTTPS_ORIGIN'] + base_path() +
+               'resources/fetch-event-redirect-iframe.html';
+var baseScope = 'resources/';
+var redirect = 'redirect.py';
+var success = base_path() + 'resources/success.py';
 
 function redirect_fetch_test(t, test) {
-  const hostKeySuffix = test['url_credentials'] ? '_WITH_CREDS' : '';
-  const successPath = base_path() + 'resources/success.py';
+  var scope = baseScope + test.name;
+  return service_worker_unregister_and_register(t, worker, scope).then(function(reg) {
+    return wait_for_state(t, reg.installing, 'activated');
+  }).then(function() {
+    return with_iframe(scope + '?url=' + encodeURIComponent(frameURL));
+  }).then(function(frame) {
+    var hostKeySuffix = test['url_credentials'] ? '_WITH_CREDS' : '';
 
-  let acaOrigin = '';
-  let host = host_info['HTTPS_ORIGIN' + hostKeySuffix];
-  if (test['redirect_dest'] === 'no-cors') {
-    host = host_info['HTTPS_REMOTE_ORIGIN' + hostKeySuffix]
-  } else if (test['redirect_dest'] === 'cors') {
-    acaOrigin = '?ACAOrigin=' + encodeURIComponent(host_info['HTTPS_ORIGIN']);
-    host = host_info['HTTPS_REMOTE_ORIGIN' + hostKeySuffix]
-  }
+    var acaorigin = '';
+    var host = host_info['HTTPS_ORIGIN' + hostKeySuffix];
+    if (test['redirect_dest'] === 'no-cors') {
+      host = host_info['HTTPS_REMOTE_ORIGIN' + hostKeySuffix]
+    } else if (test['redirect_dest'] === 'cors') {
+      acaorigin = '?ACAOrigin=' + encodeURIComponent(host_info['HTTPS_ORIGIN']);
+      host = host_info['HTTPS_REMOTE_ORIGIN' + hostKeySuffix]
+    }
 
-  const dest = '?Redirect=' + encodeURIComponent(host + successPath + acaOrigin);
-  const expectedTypeParam =
-      test['expected_type']
-          ? '&expected_type=' + test['expected_type']
-          : '';
-  const expectedRedirectedParam =
-      test['expected_redirected']
-          ? '&expected_redirected=' + test['expected_redirected']
-          : '';
-  const url = '/' + test.name +
-            '?url=' + encodeURIComponent('redirect.py' + dest) +
-            expectedTypeParam + expectedRedirectedParam
-  const request = new Request(url, test.request_init);
+    var dest = '?Redirect=' + encodeURIComponent(host + success + acaorigin);
 
-  if (test.should_reject) {
-    return assert_promise_rejects(
-      frame.contentWindow.fetch(request),
-      new TypeError(),
-      'Must fail to fetch: url=' + url);
-  }
-  return frame.contentWindow.fetch(request).then((response) => {
-      assert_equals(response.type, test.expected_type,
-                    'response.type');
-      assert_equals(response.redirected, test.expected_redirected,
-                    'response.redirected');
-      if (response.type === 'opaque' || response.type === 'opaqueredirect') {
-        return;
-      }
-      return response.json().then((json) => {
-        assert_equals(json.result, 'success', 'JSON result must be "success".');
-      });
+    var expectedTypeParam = test['expected_type']
+                          ?  '&expected_type=' + test['expected_type']
+                          : '';
+
+    var expectedRedirectedParam = test['expected_redirected']
+                                ?  '&expected_redirected=' + test['expected_redirected']
+                                : '';
+
+    var url = scope +
+              '?url=' + encodeURIComponent(redirect + dest) +
+              expectedTypeParam + expectedRedirectedParam
+
+    var p = new Promise(function(resolve, reject) {
+      var channel = new MessageChannel();
+      channel.port1.onmessage = function(e) {
+        frame.remove();
+        if (e.data.result === 'reject') {
+          reject(e.data.detail);
+        } else if (e.data.result === 'success') {
+          resolve(e.data.result);
+        } else {
+          resolve(e.data.detail);
+        }
+      };
+      frame.contentWindow.postMessage({
+        url: url,
+        request_init: test.request_init,
+        redirect_dest: test.redirect_dest,
+        expected_type: test.expected_type,
+        expected_redirected: test.expected_redirected,
+      }, '*', [channel.port2]);
     });
+
+    if (test.should_reject) {
+      return assert_promise_rejects(p);
+    }
+
+    return p.then(function(result) {
+      if (result !== 'success') {
+        throw(new Error(result));
+      }
+    });
+  }).then(function() {
+    return service_worker_unregister_and_done(t, scope);
+  }).catch(unreached_rejection(t));
 }
-
-// Set up the service worker and the frame.
-promise_test(t => {
-    return service_worker_unregister_and_register(t, kScript, kScope)
-      .then(registration => {
-          promise_test(() => {
-              return registration.unregister();
-            }, 'restore global state');
-
-          return wait_for_state(t, registration.installing, 'activated');
-        })
-      .then(() => {
-          return with_iframe(kScope);
-        })
-      .then(f => {
-          frame = f;
-          add_completion_callback(() => { f.remove(); });
-        });
-  }, 'initialize global state');
 
 // ------------------------
 // Test every combination of:
@@ -110,11 +113,13 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'same-origin without credentials should succeed opaqueredirect ' +
-   'interception and response should not be redirected');
+   'same-origin without credentials should fail opaqueredirect interception ' +
+   'and response should not be redirected');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -127,10 +132,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'no-cors without credentials should succeed opaqueredirect interception ' +
+   'no-cors without credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -144,10 +151,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'cors without credentials should succeed opaqueredirect interception ' +
+   'cors without credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -161,11 +170,13 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'same-origin without credentials should succeed opaqueredirect ' +
-   'interception and response should not be redirected');
+   'same-origin without credentials should fail opaqueredirect interception ' +
+   'and response should not be redirected');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -178,10 +189,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'no-cors without credentials should succeed opaqueredirect interception ' +
+   'no-cors without credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -195,10 +208,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'cors without credentials should succeed opaqueredirect interception ' +
+   'cors without credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -212,10 +227,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'same-origin without credentials should succeed opaqueredirect interception ' +
+   'same-origin without credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -263,10 +280,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'same-origin with credentials should succeed opaqueredirect interception ' +
+   'same-origin with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -280,10 +299,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'no-cors with credentials should succeed opaqueredirect interception ' +
+   'no-cors with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -297,10 +318,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, cors mode Request redirected to ' +
-   'cors with credentials should succeed opaqueredirect interception ' +
+   'cors with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -314,10 +337,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'same-origin with credentials should succeed opaqueredirect interception ' +
+   'same-origin with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -331,10 +356,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'no-cors with credentials should succeed opaqueredirect interception ' +
+   'no-cors with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -348,10 +375,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'same-origin'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, same-origin mode Request redirected to ' +
-   'cors with credentials should succeed opaqueredirect interception ' +
+   'cors with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -365,10 +394,12 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    // should reject because only navigations can be intercepted with
+    // opaqueredirect responses
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'same-origin with credentials should succeed opaqueredirect interception ' +
+   'same-origin with credentials should fail opaqueredirect interception ' +
    'and response should not be redirected');
 
 promise_test(function(t) {
@@ -427,6 +458,8 @@ promise_test(function(t) {
     name: 'nonav-follow-cors-redirects-to-nocors-nocreds',
     redirect_dest: 'no-cors',
     url_credentials: false,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'cors'
@@ -478,6 +511,8 @@ promise_test(function(t) {
     name: 'nonav-follow-sameorigin-redirects-to-nocors-nocreds',
     redirect_dest: 'no-cors',
     url_credentials: false,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'same-origin'
@@ -495,6 +530,8 @@ promise_test(function(t) {
     name: 'nonav-follow-sameorigin-redirects-to-cors-nocreds',
     redirect_dest: 'cors',
     url_credentials: false,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'same-origin'
@@ -580,6 +617,8 @@ promise_test(function(t) {
     name: 'nonav-follow-cors-redirects-to-nocors-creds',
     redirect_dest: 'no-cors',
     url_credentials: true,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'cors'
@@ -597,6 +636,8 @@ promise_test(function(t) {
     name: 'nonav-follow-cors-redirects-to-cors-creds',
     redirect_dest: 'cors',
     url_credentials: true,
+    expected_type: 'cors',
+    expected_redirected: true,
     request_init: {
       redirect: 'follow',
       mode: 'cors'
@@ -632,6 +673,8 @@ promise_test(function(t) {
     name: 'nonav-follow-sameorigin-redirects-to-nocors-creds',
     redirect_dest: 'no-cors',
     url_credentials: true,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'same-origin'
@@ -649,6 +692,8 @@ promise_test(function(t) {
     name: 'nonav-follow-sameorigin-redirects-to-cors-creds',
     redirect_dest: 'cors',
     url_credentials: true,
+    expected_type: 'should-not-get-a-response',
+    expected_redirected: false,
     request_init: {
       redirect: 'follow',
       mode: 'same-origin'
@@ -717,6 +762,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-sameorigin-nocreds',
     redirect_dest: 'same-origin',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -734,6 +781,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-nocors-nocreds',
     redirect_dest: 'no-cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -751,6 +800,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-cors-nocreds',
     redirect_dest: 'cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -768,6 +819,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-sameorigin-nocreds',
     redirect_dest: 'same-origin',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -785,6 +838,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-nocors-nocreds',
     redirect_dest: 'no-cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -802,6 +857,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-cors-nocreds',
     redirect_dest: 'cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -819,6 +876,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-sameorigin-nocreds',
     redirect_dest: 'same-origin',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
@@ -836,6 +895,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-nocors-nocreds',
     redirect_dest: 'no-cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
@@ -853,6 +914,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-cors-nocreds',
     redirect_dest: 'cors',
     url_credentials: false,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
@@ -870,6 +933,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-sameorigin-creds',
     redirect_dest: 'same-origin',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -887,6 +952,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-nocors-creds',
     redirect_dest: 'no-cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -904,6 +971,8 @@ promise_test(function(t) {
     name: 'nonav-error-cors-redirects-to-cors-creds',
     redirect_dest: 'cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'cors'
@@ -921,6 +990,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-sameorigin-creds',
     redirect_dest: 'same-origin',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -938,6 +1009,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-nocors-creds',
     redirect_dest: 'no-cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -955,6 +1028,8 @@ promise_test(function(t) {
     name: 'nonav-error-sameorigin-redirects-to-cors-creds',
     redirect_dest: 'cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'same-origin'
@@ -972,6 +1047,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-sameorigin-creds',
     redirect_dest: 'same-origin',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
@@ -989,6 +1066,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-nocors-creds',
     redirect_dest: 'no-cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
@@ -1006,6 +1085,8 @@ promise_test(function(t) {
     name: 'nonav-error-nocors-redirects-to-cors-creds',
     redirect_dest: 'cors',
     url_credentials: true,
+    expected_type: 'error',
+    expected_redirected: false,
     request_init: {
       redirect: 'error',
       mode: 'no-cors'
