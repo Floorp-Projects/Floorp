@@ -543,11 +543,6 @@
           'WEBRTC_ANDROID_OPENSLES',
         ],
       }],
-      ['moz_webrtc_omx==1', {
-        'defines' : [
-          'MOZ_WEBRTC_OMX'
-        ],
-      }],
       ['OS=="android"', {
         'defines': [
           'WEBRTC_LINUX',
