@@ -59,10 +59,6 @@ project_flag('MOZ_ANDROID_BEAM',
              help='Enable NFC permission on Android',
              default=True)
 
-project_flag('MOZ_ANDROID_SEARCH_ACTIVITY',
-             help='Include Search Activity on Android',
-             default=True)
-
 project_flag('MOZ_ANDROID_MLS_STUMBLER',
              help='Include Mozilla Location Service Stumbler on Android',
              default=True)

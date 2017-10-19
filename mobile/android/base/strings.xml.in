@@ -8,7 +8,6 @@
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
 #includesubst @SYNCSTRINGSPATH@
-#includesubst @SEARCHSTRINGSPATH@
 
 <!-- C-style format strings. -->
 <!ENTITY formatI "&#037;I">
@@ -24,8 +23,6 @@
   <string name="content_authority_db_browser">@ANDROID_PACKAGE_NAME@.db.browser</string>
   <string name="moz_android_shared_fxaccount_type">@ANDROID_PACKAGE_NAME@_fxaccount</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
-
-#include ../search/strings/search_strings.xml.in
 
 #include ../services/strings.xml.in
 
