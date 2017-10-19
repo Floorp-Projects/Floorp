@@ -32,10 +32,10 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
 
   // Skip windows that are invisible, minimized, have no title, or are owned,
   // unless they have the app window style set.
-  int len = GetWindowTextLength(hwnd);
   HWND owner = GetWindow(hwnd, GW_OWNER);
   LONG exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-  if (len == 0 || IsIconic(hwnd) || !IsWindowVisible(hwnd) ||
+  if (IsIconic(hwnd) || !IsWindowVisible(hwnd) ||
+      (0 == GetWindowTextLength(hwnd)) ||
       (owner && !(exstyle & WS_EX_APPWINDOW))) {
     return TRUE;
   }
