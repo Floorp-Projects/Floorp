@@ -766,21 +766,11 @@ HTMLContentSink::~HTMLContentSink()
   delete mHeadContext;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLContentSink)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHTMLDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBody)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHead)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
-                                                  nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHTMLDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBody)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHead)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLContentSink, nsContentSink,
+                                   mHTMLDocument,
+                                   mRoot,
+                                   mBody,
+                                   mHead)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLContentSink,
                                              nsContentSink,
