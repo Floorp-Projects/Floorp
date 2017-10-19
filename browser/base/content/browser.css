@@ -247,7 +247,7 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 
 %ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) ~ #TabsToolbar > .titlebar-placeholder,
+#toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-placeholder,
 %endif
 %ifndef MOZ_WIDGET_COCOA
 #main-window:not([sizemode=normal]) .titlebar-placeholder[type="pre-tabs"],

@@ -121,6 +121,7 @@ this.UpdatePing = {
       targetChannel: update.channel,
       targetVersion: update.appVersion,
       targetBuildId: update.buildID,
+      targetDisplayVersion: update.displayVersion,
     };
 
     const options = {

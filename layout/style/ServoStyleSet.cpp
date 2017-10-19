@@ -1239,6 +1239,25 @@ ServoStyleSet::GetBaseContextForElement(
                                                         aPseudoType).Consume();
 }
 
+already_AddRefed<ServoStyleContext>
+ServoStyleSet::ResolveServoStyleByAddingAnimation(
+  Element* aElement,
+  const ServoStyleContext* aStyle,
+  RawServoAnimationValue* aAnimationValue)
+{
+  MOZ_RELEASE_ASSERT(!aElement->OwnerDoc()->GetBFCacheEntry(),
+                     "ResolveServoStyleByAddingAniamtion does not support "
+                     "documents in the bfcache");
+
+  AutoClearStaleData guard(aElement);
+  return Servo_StyleSet_GetComputedValuesByAddingAnimation(
+    mRawSet.get(),
+    aElement,
+    aStyle,
+    &Snapshots(),
+    aAnimationValue).Consume();
+}
+
 already_AddRefed<RawServoAnimationValue>
 ServoStyleSet::ComputeAnimationValue(
   Element* aElement,
