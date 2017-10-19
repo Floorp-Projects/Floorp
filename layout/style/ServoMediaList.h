@@ -19,7 +19,7 @@ class ServoMediaList final : public dom::MediaList
 public:
   explicit ServoMediaList(already_AddRefed<RawServoMediaList> aRawList)
     : mRawList(aRawList) {}
-  explicit ServoMediaList(const nsAString& aMedia);
+  ServoMediaList(const nsAString& aMedia, dom::CallerType);
   ServoMediaList();
 
   already_AddRefed<dom::MediaList> Clone() final;
@@ -42,6 +42,7 @@ public:
 protected:
   nsresult Delete(const nsAString& aOldMedium) final;
   nsresult Append(const nsAString& aNewMedium) final;
+  void SetTextInternal(const nsAString& aMediaText, dom::CallerType);
 
   ~ServoMediaList() {}
 

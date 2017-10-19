@@ -199,7 +199,8 @@ public:
   void ParseMediaList(const nsAString& aBuffer,
                       nsIURI* aURL, // for error reporting
                       uint32_t aLineNumber, // for error reporting
-                      nsMediaList* aMediaList);
+                      nsMediaList* aMediaList,
+                      mozilla::dom::CallerType aCallerType);
 
   bool ParseSourceSizeList(const nsAString& aBuffer,
                            nsIURI* aURI, // for error reporting
@@ -495,7 +496,8 @@ protected:
   void InitScanner(nsCSSScanner& aScanner,
                    css::ErrorReporter& aReporter,
                    nsIURI* aSheetURI, nsIURI* aBaseURI,
-                   nsIPrincipal* aSheetPrincipal);
+                   nsIPrincipal* aSheetPrincipal,
+                   dom::CallerType aCallerType = dom::CallerType::NonSystem);
   void ReleaseScanner(void);
 
   /**
@@ -1327,6 +1329,9 @@ protected:
 
   nsXMLNameSpaceMap *mNameSpaceMap;  // weak, mSheet owns it
 
+  // Whether the caller of the DOM API that invoked us is chrome or not.
+  dom::CallerType mDomCallerType = dom::CallerType::NonSystem;
+
   // After an UngetToken is done this flag is true. The next call to
   // GetToken clears the flag.
   bool mHavePushBack : 1;
@@ -1547,7 +1552,8 @@ void
 CSSParserImpl::InitScanner(nsCSSScanner& aScanner,
                            css::ErrorReporter& aReporter,
                            nsIURI* aSheetURI, nsIURI* aBaseURI,
-                           nsIPrincipal* aSheetPrincipal)
+                           nsIPrincipal* aSheetPrincipal,
+                           dom::CallerType aCallerType)
 {
   NS_PRECONDITION(!mParsingCompoundProperty, "Bad initial state");
   NS_PRECONDITION(!mScanner, "already have scanner");
@@ -1560,6 +1566,7 @@ CSSParserImpl::InitScanner(nsCSSScanner& aScanner,
   mSheetURI = aSheetURI;
   mSheetPrincipal = aSheetPrincipal;
   mHavePushBack = false;
+  mDomCallerType = aCallerType;
 }
 
 void
@@ -1570,6 +1577,7 @@ CSSParserImpl::ReleaseScanner()
   mBaseURI = nullptr;
   mSheetURI = nullptr;
   mSheetPrincipal = nullptr;
+  mDomCallerType = dom::CallerType::NonSystem;
 }
 
 nsresult
@@ -1996,7 +2004,8 @@ void
 CSSParserImpl::ParseMediaList(const nsAString& aBuffer,
                               nsIURI* aURI, // for error reporting
                               uint32_t aLineNumber, // for error reporting
-                              nsMediaList* aMediaList)
+                              nsMediaList* aMediaList,
+                              dom::CallerType aCallerType)
 {
   // XXX Are there cases where the caller wants to keep what it already
   // has in case of parser error?  If GatherMedia ever changes to return
@@ -2006,7 +2015,7 @@ CSSParserImpl::ParseMediaList(const nsAString& aBuffer,
   // fake base URI since media lists don't have URIs in them
   nsCSSScanner scanner(aBuffer, aLineNumber);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aURI);
-  InitScanner(scanner, reporter, aURI, aURI, nullptr);
+  InitScanner(scanner, reporter, aURI, aURI, nullptr, aCallerType);
 
   DebugOnly<bool> parsedOK = GatherMedia(aMediaList, false);
   NS_ASSERTION(parsedOK, "GatherMedia returned false; we probably want to avoid "
@@ -18009,10 +18018,11 @@ void
 nsCSSParser::ParseMediaList(const nsAString& aBuffer,
                             nsIURI*            aURI,
                             uint32_t           aLineNumber,
-                            nsMediaList*       aMediaList)
+                            nsMediaList*       aMediaList,
+                            dom::CallerType aCallerType)
 {
   static_cast<CSSParserImpl*>(mImpl)->
-    ParseMediaList(aBuffer, aURI, aLineNumber, aMediaList);
+    ParseMediaList(aBuffer, aURI, aLineNumber, aMediaList, aCallerType);
 }
 
 bool
