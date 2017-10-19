@@ -854,8 +854,12 @@ is simply hidden from the Activity Stream panel. -->
 
 <!ENTITY fullscreen_warning "Entered full screen">
 
-
+<!-- LOCALIZATION NOTE (pwa_add_to_launcher_confirm): The plus sign here is part of UI design -->
 <!ENTITY pwa_add_to_launcher_confirm "+ Add to Home Screen">
-<!ENTITY pwa_add_to_launcher_badge "Add PWA to Home Screen">
+
+<!-- LOCALIZATION NOTE (pwa_add_to_launcher_badge2): Used as label in the page actions dropdown list,
+displayed when there are more than 3 actions available for a page.
+See also https://bug1409261.bmoattachments.org/attachment.cgi?id=8919897 -->
+<!ENTITY pwa_add_to_launcher_badge2 "Add to Home Screen">
 <!ENTITY pwa_continue_to_website "Continue to Website">
 <!ENTITY pwa_onboarding_sumo "You can easily add this website to your Home screen to have instant access and browse faster with an app-like experience.">

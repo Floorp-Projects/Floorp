@@ -66,12 +66,10 @@ document.addEventListener("DOMContentLoaded", function() {
  document.getElementById("startTour")
          .addEventListener("click", dontShowIntroPanelAgain);
 
- let formatURLPref = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                       .getService(Ci.nsIURLFormatter).formatURLPref;
  document.getElementById("startTour").setAttribute("href",
-                    formatURLPref("privacy.trackingprotection.introURL"));
+   Services.urlFormatter.formatURLPref("privacy.trackingprotection.introURL"));
  document.getElementById("learnMore").setAttribute("href",
-                    formatURLPref("app.support.baseURL") + "private-browsing");
+   Services.urlFormatter.formatURLPref("app.support.baseURL") + "private-browsing");
 
  // Update state that depends on preferences.
  prefObserver.observe();

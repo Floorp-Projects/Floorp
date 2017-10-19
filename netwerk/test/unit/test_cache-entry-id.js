@@ -17,6 +17,11 @@ const responseContent2 = "response body 2";
 const altContent = "!@#$%^&*()";
 const altContentType = "text/binary";
 
+function isParentProcess() {
+    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+}
+
 var handlers = [
   (m, r) => {r.bodyOutputStream.write(responseContent, responseContent.length)},
   (m, r) => {r.setStatusLine(m.httpVersion, 304, "Not Modified")},
@@ -82,8 +87,13 @@ function writeAltData(request)
   gc(); // We need to do a GC pass to ensure the cache entry has been freed.
 
   return new Promise(resolve => {
-    Services.cache2.QueryInterface(Ci.nsICacheTesting)
-            .flush(resolve);
+    if (isParentProcess()) {
+      Services.cache2.QueryInterface(Ci.nsICacheTesting)
+              .flush(resolve);
+    } else {
+      do_send_remote_message('flush');
+      do_await_remote_message('flushed').then(resolve);
+    }
   });
 }
 

@@ -3,9 +3,7 @@
 // Instead of loading EventUtils.js into the test scope in browser-test.js for all tests,
 // we only need EventUtils.js for a few files which is why we are using loadSubScript.
 var EventUtils = {};
-this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 add_task(async function test() {
   // Make sure the bookmarks bar is visible and restore its state on cleanup.

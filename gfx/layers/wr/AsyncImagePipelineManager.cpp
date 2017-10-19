@@ -122,7 +122,7 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
 
 void
 AsyncImagePipelineManager::UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                                                    const LayerRect& aScBounds,
+                                                    const LayoutDeviceRect& aScBounds,
                                                     const gfx::Matrix4x4& aScTransform,
                                                     const gfx::MaybeIntSize& aScaleToSize,
                                                     const wr::ImageRendering& aFilter,
@@ -293,9 +293,9 @@ AsyncImagePipelineManager::ApplyAsyncImages()
                                 nsTArray<wr::WrFilterOp>(),
                                 true);
 
-    LayerRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
+    LayoutDeviceRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
     if (pipeline->mScaleToSize.isSome()) {
-      rect = LayerRect(0, 0, pipeline->mScaleToSize.value().width, pipeline->mScaleToSize.value().height);
+      rect = LayoutDeviceRect(0, 0, pipeline->mScaleToSize.value().width, pipeline->mScaleToSize.value().height);
     }
 
     if (pipeline->mUseExternalImage) {

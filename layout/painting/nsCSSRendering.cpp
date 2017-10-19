@@ -693,6 +693,94 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
                                              aSkipSides);
 }
 
+
+bool
+nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
+                                                 nsIFrame* aForFrame,
+                                                 const nsRect& aBorderArea,
+                                                 mozilla::wr::DisplayListBuilder& aBuilder,
+                                                 mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                 const mozilla::layers::StackingContextHelper& aSc,
+                                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                                 nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // First try to draw a normal border
+  {
+    Maybe<nsCSSBorderRenderer> br =
+      nsCSSRendering::CreateBorderRenderer(aForFrame->PresContext(),
+                                           nullptr,
+                                           aForFrame,
+                                           nsRect(),
+                                           aBorderArea,
+                                           aForFrame->StyleContext(),
+                                           aForFrame->GetSkipSides());
+
+    if (br) {
+      if (!br->CanCreateWebRenderCommands()) {
+        return false;
+      }
+      br->CreateWebRenderCommands(aBuilder, aResources, aSc);
+      return true;
+    }
+  }
+
+  // Next try to draw an image border
+  const nsStyleBorder *styleBorder = aForFrame->StyleContext()->StyleBorder();
+  const nsStyleImage* image = &styleBorder->mBorderImageSource;
+
+  // Filter out unsupported image/border types
+  if (!image) {
+    return false;
+  }
+
+  // All this code bitrotted too much (but is almost right); disabled for now.
+  bool imageTypeSupported = false;
+  // FIXME(1409773): fix this: image->GetType() == eStyleImageType_Image
+  // FIXME(1409774): fix this: image->GetType() == eStyleImageType_Gradient;
+
+  if (!imageTypeSupported) {
+    return false;
+  }
+
+  if (styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
+      styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE ||
+      styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
+      styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE) {
+    return false;
+  }
+
+
+  uint32_t flags = 0;
+  if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
+    flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
+  }
+
+  image::DrawResult result;
+  Maybe<nsCSSBorderImageRenderer> bir =
+    nsCSSBorderImageRenderer::CreateBorderImageRenderer(aForFrame->PresContext(),
+                                                        aForFrame,
+                                                        aBorderArea,
+                                                        *styleBorder,
+                                                        aItem->GetVisibleRect(),
+                                                        aForFrame->GetSkipSides(),
+                                                        flags,
+                                                        &result);
+
+  if (!bir) {
+    return false;
+  }
+
+  if (image->GetType() == eStyleImageType_Image &&
+      !bir->mImageRenderer.IsImageContainerAvailable(aManager, flags)) {
+    return false;
+  }
+
+  bir->CreateWebRenderCommands(aItem, aForFrame, aBuilder, aResources, aSc,
+                               aManager, aDisplayListBuilder);
+
+  return true;
+}
+
 nsCSSBorderRenderer
 ConstructBorderRenderer(nsPresContext* aPresContext,
                         nsStyleContext* aStyleContext,

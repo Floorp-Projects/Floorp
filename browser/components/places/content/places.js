@@ -476,9 +476,7 @@ var PlacesOrganizer = {
    * Prompts for a file and restores bookmarks to those in the file.
    */
   onRestoreBookmarksFromFile: function PO_onRestoreBookmarksFromFile() {
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-    let backupsDir = dirSvc.get("Desk", Ci.nsIFile);
+    let backupsDir = Services.dirsvc.get("Desk", Ci.nsIFile);
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = aResult => {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
@@ -507,11 +505,9 @@ var PlacesOrganizer = {
     }
 
     // confirm ok to delete existing bookmarks
-    var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                  getService(Ci.nsIPromptService);
-    if (!prompts.confirm(null,
-                         PlacesUIUtils.getString("bookmarksRestoreAlertTitle"),
-                         PlacesUIUtils.getString("bookmarksRestoreAlert")))
+    if (!Services.prompt.confirm(null,
+           PlacesUIUtils.getString("bookmarksRestoreAlertTitle"),
+           PlacesUIUtils.getString("bookmarksRestoreAlert")))
       return;
 
     (async function() {
@@ -527,9 +523,7 @@ var PlacesOrganizer = {
     var brandShortName = document.getElementById("brandStrings").
                                   getString("brandShortName");
 
-    Cc["@mozilla.org/embedcomp/prompt-service;1"].
-      getService(Ci.nsIPromptService).
-      alert(window, brandShortName, aMsg);
+    Services.prompt.alert(window, brandShortName, aMsg);
   },
 
   /**
@@ -538,9 +532,7 @@ var PlacesOrganizer = {
    * of those items.
    */
   backupBookmarks: function PO_backupBookmarks() {
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-    let backupsDir = dirSvc.get("Desk", Ci.nsIFile);
+    let backupsDir = Services.dirsvc.get("Desk", Ci.nsIFile);
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {

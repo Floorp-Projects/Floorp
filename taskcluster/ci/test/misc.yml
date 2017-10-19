@@ -1,0 +1,91 @@
+geckoview:
+    description: "Geckoview run"
+    suite: geckoview
+    treeherder-symbol: tc(gv)
+    instance-size: xlarge
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            - android/androidarm_4_3.py
+        extra-options:
+            - --test-suite=geckoview
+
+robocop:
+    description: "Robocop run"
+    suite: robocop
+    treeherder-symbol: tc-M(rc)
+    instance-size: xlarge
+    chunks:
+        by-test-platform:
+            # android-4.3-arm7-api-16/debug -- not run
+            android-4.3-arm7-api-16/opt: 4
+            android-4.3-arm7-api-16-gradle/opt: 4
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            - android/androidarm_4_3.py
+        extra-options:
+            - --test-suite=robocop
+
+telemetry-tests-client:
+    description: "Telemetry tests client run"
+    suite: telemetry-tests-client
+    treeherder-symbol: tc-e10s
+    max-run-time: 5400
+    checkout: true
+    tier: 3
+    mozharness:
+        script: telemetry/telemetry_client.py
+        config:
+            by-test-platform:
+                linux.*:
+                    - remove_executables.py
+                windows.*: []
+
+test-verify:
+    description: "Extra verification of tests modified on this push"
+    suite: test-verification
+    treeherder-symbol: tc(TV)
+    loopback-video: true
+    max-run-time: 5400
+    allow-software-gl-layers: false
+    run-on-projects:
+        by-test-platform:
+            # do not run on ccov; see also the enable_code_coverage transform
+            linux64-ccov/.*: []
+            default: built-projects
+    tier:
+        by-test-platform:
+            android.*: 3
+            windows10-64-asan.*: 3
+            default: 2
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                config:
+                    - android/androidarm_4_3.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --verify
+            default:
+                script: desktop_unittest.py
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --verify
