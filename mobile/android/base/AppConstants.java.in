@@ -78,10 +78,6 @@ public class AppConstants {
      * The name of the Java class that launches the browser activity.
      */
     public static final String MOZ_ANDROID_BROWSER_INTENT_CLASS = "@MOZ_ANDROID_BROWSER_INTENT_CLASS@";
-    /**
-     * The name of the Java class that launches the search activity.
-     */
-    public static final String MOZ_ANDROID_SEARCH_INTENT_CLASS = "@MOZ_ANDROID_SEARCH_INTENT_CLASS@";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 
