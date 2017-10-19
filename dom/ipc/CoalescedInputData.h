@@ -29,9 +29,11 @@ public:
   {
   }
 
-  void Reset()
+  void RetrieveDataFrom(CoalescedInputData& aSource)
   {
-    mCoalescedInputEvent = nullptr;
+    mCoalescedInputEvent = Move(aSource.mCoalescedInputEvent);
+    mGuid = aSource.mGuid;
+    mInputBlockId = aSource.mInputBlockId;
   }
 
   bool IsEmpty()
@@ -43,9 +45,9 @@ public:
                    const ScrollableLayerGuid& aGuid,
                    const uint64_t& aInputBlockId);
 
-  const InputEventType* GetCoalescedEvent()
+  UniquePtr<InputEventType> TakeCoalescedEvent()
   {
-    return mCoalescedInputEvent.get();
+    return Move(mCoalescedInputEvent);
   }
 
   ScrollableLayerGuid GetScrollableLayerGuid()

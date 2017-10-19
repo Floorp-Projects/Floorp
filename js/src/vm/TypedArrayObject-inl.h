@@ -265,7 +265,7 @@ class ElementSpecific
         }
 
         // Inhibit unaligned accesses on ARM (bug 1097253, a compiler bug).
-#ifdef __arm__
+#if defined(__arm__) && defined(__GNUC__) && !defined(__clang__)
 #  define JS_VOLATILE_ARM volatile
 #else
 #  define JS_VOLATILE_ARM

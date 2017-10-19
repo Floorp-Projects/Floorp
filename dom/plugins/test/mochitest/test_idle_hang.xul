@@ -19,8 +19,6 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
 

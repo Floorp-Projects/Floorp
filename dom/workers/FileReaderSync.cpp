@@ -215,7 +215,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   nsCOMPtr<nsIInputStream> syncStream;
-  aRv = ConvertAsyncToSyncStream(blobSize - sniffBuf.Length(), stream,
+  aRv = ConvertAsyncToSyncStream(blobSize - sniffBuf.Length(), stream.forget(),
                                  getter_AddRefs(syncStream));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -269,7 +269,8 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
   }
 
   nsCOMPtr<nsIInputStream> syncStream;
-  aRv = ConvertAsyncToSyncStream(blobSize, stream, getter_AddRefs(syncStream));
+  aRv = ConvertAsyncToSyncStream(blobSize, stream.forget(),
+                                 getter_AddRefs(syncStream));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -475,13 +476,15 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
 
 nsresult
 FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
-                                         nsIInputStream* aAsyncStream,
+                                         already_AddRefed<nsIInputStream> aAsyncStream,
                                          nsIInputStream** aSyncStream)
 {
+  nsCOMPtr<nsIInputStream> asyncInputStream = Move(aAsyncStream);
+
   // If the stream is not async, we just need it to be bufferable.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aAsyncStream);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(asyncInputStream);
   if (!asyncStream) {
-    return NS_NewBufferedInputStream(aSyncStream, aAsyncStream, 4096);
+    return NS_NewBufferedInputStream(aSyncStream, asyncInputStream.forget(), 4096);
   }
 
   nsAutoCString buffer;
@@ -491,7 +494,7 @@ FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
 
   uint32_t read;
   nsresult rv =
-    SyncRead(aAsyncStream, buffer.BeginWriting(), aStreamSize, &read);
+    SyncRead(asyncInputStream, buffer.BeginWriting(), aStreamSize, &read);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

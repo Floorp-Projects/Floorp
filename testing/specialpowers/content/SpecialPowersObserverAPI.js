@@ -117,6 +117,10 @@ SpecialPowersObserverAPI.prototype = {
             }
           }
         } else { // ipc:content-shutdown
+          if (!aSubject.hasKey("abnormal")) {
+            return; // This is a normal shutdown, ignore it
+          }
+
           addDumpIDToMessage("dumpID");
         }
         this._sendAsyncMessage("SPProcessCrashService", message);
@@ -390,6 +394,17 @@ SpecialPowersObserverAPI.prototype = {
           default:
             throw new SpecialPowersError("Invalid operation for SPProcessCrashService");
         }
+        return undefined; // See comment at the beginning of this function.
+      }
+
+      case "SPProcessCrashManagerWait": {
+        let promises = aMessage.json.crashIds.map((crashId) => {
+          return Services.crashmanager.ensureCrashIsPresent(crashId);
+        });
+
+        Promise.all(promises).then(() => {
+          this._sendReply(aMessage, "SPProcessCrashManagerWait", {});
+        });
         return undefined; // See comment at the beginning of this function.
       }
 
