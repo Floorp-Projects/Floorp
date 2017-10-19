@@ -219,16 +219,12 @@ Inspector.prototype = {
    * Figure out what features the backend supports
    */
   _detectActorFeatures: function () {
-    this._supportsDuplicateNode = false;
     this._supportsScrollIntoView = false;
 
     // Use getActorDescription first so that all actorHasMethod calls use
     // a cached response from the server.
     return this._target.getActorDescription("domwalker").then(desc => {
       return promise.all([
-        this._target.actorHasMethod("domwalker", "duplicateNode").then(value => {
-          this._supportsDuplicateNode = value;
-        }).catch(console.error),
         this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
           this._supportsScrollIntoView = value;
         }).catch(console.error)
@@ -1295,7 +1291,6 @@ Inspector.prototype = {
     menu.append(new MenuItem({
       id: "node-menu-duplicatenode",
       label: INSPECTOR_L10N.getStr("inspectorDuplicateNode.label"),
-      hidden: !this._supportsDuplicateNode,
       disabled: !isDuplicatableElement,
       click: () => this.duplicateNode(),
     }));
