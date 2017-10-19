@@ -40,6 +40,7 @@ function resetOnboardingDefaultState() {
   Preferences.reset("browser.onboarding.notification.last-time-of-changing-tour-sec");
   Preferences.reset("browser.onboarding.notification.prompt-count");
   Preferences.reset("browser.onboarding.notification.tour-ids-queue");
+  Preferences.reset("browser.onboarding.skip-tour-button.hide");
   TOUR_IDs.forEach(id => Preferences.reset(`browser.onboarding.tour.${id}.completed`));
   UPDATE_TOUR_IDs.forEach(id => Preferences.reset(`browser.onboarding.tour.${id}.completed`));
 }
