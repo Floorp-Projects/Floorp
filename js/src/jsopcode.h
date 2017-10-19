@@ -136,17 +136,16 @@ UINT16_LO(uint16_t i)
 static MOZ_ALWAYS_INLINE uint16_t
 GET_UINT16(const jsbytecode* pc)
 {
-    return uint16_t((pc[1] << 8) | pc[2]);
+    return uint16_t((pc[2] << 8) | pc[1]);
 }
 
 static MOZ_ALWAYS_INLINE void
 SET_UINT16(jsbytecode* pc, uint16_t i)
 {
-    pc[1] = UINT16_HI(i);
-    pc[2] = UINT16_LO(i);
+    pc[1] = UINT16_LO(i);
+    pc[2] = UINT16_HI(i);
 }
 
-static const unsigned UINT16_LEN        = 2;
 static const unsigned UINT16_LIMIT      = 1 << 16;
 
 /* Helpers for accessing the offsets of jump opcodes. */
