@@ -8,7 +8,11 @@
 
 #include "nsIPrintDialogService.h"
 
+#include "nsCOMPtr.h"
+#include "nsIWindowWatcher.h"
+
 class nsIPrintSettings;
+class nsIDialogParamBlock;
 
 class nsPrintDialogServiceWin : public nsIPrintDialogService
 {
@@ -25,6 +29,15 @@ public:
   NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter *aParent,
                            nsIPrintSettings *aSettings) override;
 
+private:
+  nsresult DoDialog(mozIDOMWindowProxy *aParent,
+                    nsIDialogParamBlock *aParamBlock,
+                    nsIPrintSettings* aPS,
+                    const char *aChromeURL);
+
+  HWND GetHWNDForDOMWindow(mozIDOMWindowProxy *aWindow);
+
+  nsCOMPtr<nsIWindowWatcher> mWatcher;
 };
 
 #endif
