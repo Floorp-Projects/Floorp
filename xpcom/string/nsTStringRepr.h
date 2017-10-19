@@ -13,6 +13,7 @@
 #include "nsCharTraits.h"
 
 template <typename T> class nsTSubstringTuple;
+template <typename T> class nsTLiteralString;
 
 // The base for string comparators
 template <typename T> class nsTStringComparator
@@ -74,6 +75,7 @@ public:
 
   typedef nsTSubstring<T> substring_type;
   typedef nsTSubstringTuple<T> substring_tuple_type;
+  typedef nsTLiteralString<T> literalstring_type;
 
   typedef nsReadingIterator<char_type> const_iterator;
   typedef nsWritingIterator<char_type> iterator;

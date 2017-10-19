@@ -38,6 +38,8 @@ public:
   typedef typename nsTSubstring<T>::substring_type substring_type;
 #endif
 
+  typedef typename substring_type::literalstring_type literalstring_type;
+
   typedef typename substring_type::fallible_t fallible_t;
 
   typedef typename substring_type::char_type char_type;
@@ -98,6 +100,12 @@ public:
     this->Assign(aStr);
   }
 
+  nsTString(self_type&& aStr)
+    : substring_type(ClassFlags::NULL_TERMINATED)
+  {
+    this->Assign(mozilla::Move(aStr));
+  }
+
   MOZ_IMPLICIT nsTString(const substring_tuple_type& aTuple)
     : substring_type(ClassFlags::NULL_TERMINATED)
   {
@@ -106,6 +114,21 @@ public:
 
   explicit
   nsTString(const substring_type& aReadable)
+    : substring_type(ClassFlags::NULL_TERMINATED)
+  {
+    this->Assign(aReadable);
+  }
+
+  explicit
+  nsTString(substring_type&& aReadable)
+    : substring_type(ClassFlags::NULL_TERMINATED)
+  {
+    this->Assign(mozilla::Move(aReadable));
+  }
+
+  // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.
+  explicit
+  nsTString(const literalstring_type& aReadable)
     : substring_type(ClassFlags::NULL_TERMINATED)
   {
     this->Assign(aReadable);
@@ -128,6 +151,11 @@ public:
     this->Assign(aStr);
     return *this;
   }
+  self_type& operator=(self_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename EnableIfChar16 = IsChar16>
   self_type& operator=(const char16ptr_t aStr)
@@ -137,6 +165,17 @@ public:
   }
 #endif
   self_type& operator=(const substring_type& aStr)
+  {
+    this->Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(substring_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
+  // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.
+  self_type& operator=(const literalstring_type& aStr)
   {
     this->Assign(aStr);
     return *this;
@@ -551,6 +590,7 @@ public:
   typedef typename base_string_type::substring_type substring_type;
   typedef typename base_string_type::size_type size_type;
   typedef typename base_string_type::substring_tuple_type substring_tuple_type;
+  typedef typename base_string_type::literalstring_type literalstring_type;
 
   // These are only for internal use within the string classes:
   typedef typename base_string_type::DataFlags DataFlags;
@@ -603,8 +643,29 @@ public:
     this->Assign(aStr);
   }
 
+  nsTAutoStringN(self_type&& aStr)
+    : self_type()
+  {
+    this->Assign(mozilla::Move(aStr));
+  }
+
   explicit
   nsTAutoStringN(const substring_type& aStr)
+    : self_type()
+  {
+    this->Assign(aStr);
+  }
+
+  explicit
+  nsTAutoStringN(substring_type&& aStr)
+    : self_type()
+  {
+    this->Assign(mozilla::Move(aStr));
+  }
+
+  // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.
+  explicit
+  nsTAutoStringN(const literalstring_type& aStr)
     : self_type()
   {
     this->Assign(aStr);
@@ -640,7 +701,23 @@ public:
     this->Assign(aStr);
     return *this;
   }
+  self_type& operator=(self_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
   self_type& operator=(const substring_type& aStr)
+  {
+    this->Assign(aStr);
+    return *this;
+  }
+  self_type& operator=(substring_type&& aStr)
+  {
+    this->Assign(mozilla::Move(aStr));
+    return *this;
+  }
+  // NOTE(nika): gcc 4.9 workaround. Remove when support is dropped.
+  self_type& operator=(const literalstring_type& aStr)
   {
     this->Assign(aStr);
     return *this;

@@ -80,33 +80,13 @@ BackstagePass::Enumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
 NS_IMETHODIMP
 BackstagePass::GetInterfaces(uint32_t* aCount, nsIID * **aArray)
 {
-    const uint32_t count = 2;
-    *aCount = count;
-    nsIID** array;
-    *aArray = array = static_cast<nsIID**>(moz_xmalloc(count * sizeof(nsIID*)));
-    if (!array)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *aCount = 2;
+    nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
+    *aArray = array;
 
-    uint32_t index = 0;
-    nsIID* clone;
-#define PUSH_IID(id)                                                          \
-    clone = static_cast<nsIID*>(nsMemory::Clone(&NS_GET_IID( id ),           \
-                                                 sizeof(nsIID)));             \
-    if (!clone)                                                               \
-        goto oom;                                                             \
-    array[index++] = clone;
-
-    PUSH_IID(nsIXPCScriptable)
-    PUSH_IID(nsIScriptObjectPrincipal)
-#undef PUSH_IID
-
+    array[0] = NS_GET_IID(nsIXPCScriptable).Clone();
+    array[1] = NS_GET_IID(nsIScriptObjectPrincipal).Clone();
     return NS_OK;
-oom:
-    while (index)
-        free(array[--index]);
-    free(array);
-    *aArray = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -127,9 +107,8 @@ BackstagePass::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 BackstagePass::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "BackstagePass";
-    *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
-    return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aClassDescription = moz_xstrdup("BackstagePass");
+    return NS_OK;
 }
 
 NS_IMETHODIMP

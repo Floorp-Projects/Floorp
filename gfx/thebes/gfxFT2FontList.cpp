@@ -249,8 +249,7 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
         return nullptr;
     }
 
-    RefPtr<UnscaledFontFreeType> unscaledFont =
-        static_cast<UnscaledFontFreeType*>(mUnscaledFont.get());
+    RefPtr<UnscaledFontFreeType> unscaledFont(mUnscaledFont);
     if (!unscaledFont) {
         unscaledFont =
             mFilename.IsEmpty() ?

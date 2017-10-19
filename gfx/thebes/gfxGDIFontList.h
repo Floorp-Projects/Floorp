@@ -204,7 +204,7 @@ protected:
 
     LOGFONTW mLogFont;
 
-    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+    mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontGDI> mUnscaledFont;
 };
 
 // a single font family, referencing one or more faces

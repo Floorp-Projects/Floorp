@@ -591,10 +591,9 @@ gfxFont *
 gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
                                        bool aNeedsBold)
 {
-    WeakPtr<UnscaledFont>& unscaledFontPtr =
+    ThreadSafeWeakPtr<UnscaledFontDWrite>& unscaledFontPtr =
         aNeedsBold ? mUnscaledFontBold : mUnscaledFont;
-    RefPtr<UnscaledFontDWrite> unscaledFont =
-        static_cast<UnscaledFontDWrite*>(unscaledFontPtr.get());
+    RefPtr<UnscaledFontDWrite> unscaledFont(unscaledFontPtr);
     if (!unscaledFont) {
         DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
         if (aNeedsBold) {

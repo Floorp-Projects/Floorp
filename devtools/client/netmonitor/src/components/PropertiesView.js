@@ -23,7 +23,7 @@ const SearchBox = createFactory(require("devtools/client/shared/components/Searc
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
 const TreeRow = createFactory(require("devtools/client/shared/components/tree/TreeRow"));
-const SourceEditor = createFactory(require("./source-editor"));
+const SourceEditor = createFactory(require("./SourceEditor"));
 
 const { div, tr, td } = DOM;
 const AUTO_EXPAND_MAX_LEVEL = 7;

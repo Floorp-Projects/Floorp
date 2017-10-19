@@ -4124,10 +4124,9 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleObject defaultCtor
     bool ctorGetSucceeded = GetPropertyPure(cx, obj, NameToId(cx->names().constructor),
                                             ctor.address());
     if (ctorGetSucceeded && ctor.isObject() && &ctor.toObject() == defaultCtor) {
-        RootedObject ctorObj(cx, &ctor.toObject());
-        RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+        jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
         JSFunction* getter;
-        if (GetGetterPure(cx, ctorObj, speciesId, &getter) && getter &&
+        if (GetGetterPure(cx, defaultCtor, speciesId, &getter) && getter &&
             isDefaultSpecies(cx, getter))
         {
             return defaultCtor;

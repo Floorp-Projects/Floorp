@@ -15,26 +15,26 @@ const { propertiesEqual } = require("../utils/request-utils");
 const { RESPONSE_HEADERS } = require("../constants");
 
 // Components
-const RequestListColumnCause = createFactory(require("./request-list-column-cause"));
-const RequestListColumnContentSize = createFactory(require("./request-list-column-content-size"));
-const RequestListColumnCookies = createFactory(require("./request-list-column-cookies"));
-const RequestListColumnDomain = createFactory(require("./request-list-column-domain"));
-const RequestListColumnDuration = createFactory(require("./request-list-column-duration"));
-const RequestListColumnEndTime = createFactory(require("./request-list-column-end-time"));
-const RequestListColumnFile = createFactory(require("./request-list-column-file"));
-const RequestListColumnLatency = createFactory(require("./request-list-column-latency"));
-const RequestListColumnMethod = createFactory(require("./request-list-column-method"));
-const RequestListColumnProtocol = createFactory(require("./request-list-column-protocol"));
-const RequestListColumnRemoteIP = createFactory(require("./request-list-column-remote-ip"));
-const RequestListColumnResponseHeader = createFactory(require("./request-list-column-response-header"));
-const RequestListColumnResponseTime = createFactory(require("./request-list-column-response-time"));
-const RequestListColumnScheme = createFactory(require("./request-list-column-scheme"));
-const RequestListColumnSetCookies = createFactory(require("./request-list-column-set-cookies"));
-const RequestListColumnStartTime = createFactory(require("./request-list-column-start-time"));
-const RequestListColumnStatus = createFactory(require("./request-list-column-status"));
-const RequestListColumnTransferredSize = createFactory(require("./request-list-column-transferred-size"));
-const RequestListColumnType = createFactory(require("./request-list-column-type"));
-const RequestListColumnWaterfall = createFactory(require("./request-list-column-waterfall"));
+const RequestListColumnCause = createFactory(require("./RequestListColumnCause"));
+const RequestListColumnContentSize = createFactory(require("./RequestListColumnContentSize"));
+const RequestListColumnCookies = createFactory(require("./RequestListColumnCookies"));
+const RequestListColumnDomain = createFactory(require("./RequestListColumnDomain"));
+const RequestListColumnDuration = createFactory(require("./RequestListColumnDuration"));
+const RequestListColumnEndTime = createFactory(require("./RequestListColumnEndTime"));
+const RequestListColumnFile = createFactory(require("./RequestListColumnFile"));
+const RequestListColumnLatency = createFactory(require("./RequestListColumnLatency"));
+const RequestListColumnMethod = createFactory(require("./RequestListColumnMethod"));
+const RequestListColumnProtocol = createFactory(require("./RequestListColumnProtocol"));
+const RequestListColumnRemoteIP = createFactory(require("./RequestListColumnRemoteIp"));
+const RequestListColumnResponseHeader = createFactory(require("./RequestListColumnResponseHeader"));
+const RequestListColumnResponseTime = createFactory(require("./RequestListColumnResponseTime"));
+const RequestListColumnScheme = createFactory(require("./RequestListColumnScheme"));
+const RequestListColumnSetCookies = createFactory(require("./RequestListColumnSetCookies"));
+const RequestListColumnStartTime = createFactory(require("./RequestListColumnStartTime"));
+const RequestListColumnStatus = createFactory(require("./RequestListColumnStatus"));
+const RequestListColumnTransferredSize = createFactory(require("./RequestListColumnTransferredSize"));
+const RequestListColumnType = createFactory(require("./RequestListColumnType"));
+const RequestListColumnWaterfall = createFactory(require("./RequestListColumnWaterfall"));
 
 const { div } = DOM;
 
