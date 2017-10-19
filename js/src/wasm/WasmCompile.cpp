@@ -379,36 +379,46 @@ GetTieringEnabled(uint32_t codeSize)
     return true;
 }
 
-SharedModule
-wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
+static void
+InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier* tier,
+                    DebugEnabled* debug)
 {
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+    uint32_t codeSectionSize = 0;
+
+    SectionRange range;
+    if (StartsCodeSection(d.begin(), d.end(), &range))
+        codeSectionSize = range.size;
 
     bool baselineEnabled = BaselineCanCompile() && args.baselineEnabled;
     bool debugEnabled = BaselineCanCompile() && args.debugEnabled;
     bool ionEnabled = args.ionEnabled || !baselineEnabled;
 
-    DebugEnabled debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+    if (baselineEnabled && ionEnabled && !debugEnabled && GetTieringEnabled(codeSectionSize)) {
+        *mode = CompileMode::Tier1;
+        *tier = Tier::Baseline;
+    } else {
+        *mode = CompileMode::Once;
+        *tier = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
+    }
 
-    ModuleEnvironment env(ModuleEnvironment::UnknownMode, ModuleEnvironment::UnknownTier, debug);
+    *debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+}
+
+SharedModule
+wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
+{
+    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
     Decoder d(bytecode.bytes, error);
-    if (!DecodeModuleEnvironment(d, &env))
-        return nullptr;
-
-    uint32_t codeSize = env.codeSection ? env.codeSection->size : 0;
 
     CompileMode mode;
     Tier tier;
-    if (baselineEnabled && ionEnabled && !debugEnabled && GetTieringEnabled(codeSize)) {
-        mode = CompileMode::Tier1;
-        tier = Tier::Baseline;
-    } else {
-        mode = CompileMode::Once;
-        tier = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
-    }
+    DebugEnabled debug;
+    InitialCompileFlags(args, d, &mode, &tier, &debug);
 
-    env.setModeAndTier(mode, tier);
+    ModuleEnvironment env(mode, tier, debug);
+    if (!DecodeModuleEnvironment(d, &env))
+        return nullptr;
 
     ModuleGenerator mg(args, &env, nullptr, error);
     if (!mg.init())
