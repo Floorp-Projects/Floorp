@@ -34,7 +34,9 @@ add_task(async function test_clear_email() {
     prefs.setBoolPref("emailMe", true);
 
     let tab = gBrowser.getTabForBrowser(browser);
-    await BrowserTestUtils.crashBrowser(browser);
+    await BrowserTestUtils.crashBrowser(browser,
+                                        /* shouldShowTabCrashPage */ true,
+                                        /* shouldClearMinidumps */ false);
     let doc = browser.contentDocument;
 
     // Since about:tabcrashed will run in the parent process, we can safely

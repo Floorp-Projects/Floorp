@@ -10,6 +10,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
@@ -99,7 +100,7 @@ class ExclusiveData
     explicit ExclusiveData(const MutexId& id, U&& u)
       : lock_(id)
     {
-        new (value_.addr()) T(mozilla::Forward<U>(u));
+        new (mozilla::KnownNotNull, value_.addr()) T(mozilla::Forward<U>(u));
     }
 
     /**
@@ -109,7 +110,7 @@ class ExclusiveData
     explicit ExclusiveData(const MutexId& id, Args&&... args)
       : lock_(id)
     {
-        new (value_.addr()) T(mozilla::Forward<Args>(args)...);
+        new (mozilla::KnownNotNull, value_.addr()) T(mozilla::Forward<Args>(args)...);
     }
 
     ~ExclusiveData() {
@@ -122,12 +123,12 @@ class ExclusiveData
       lock_(mozilla::Move(rhs.lock))
     {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
-        new (value_.addr()) T(mozilla::Move(*rhs.value_.addr()));
+        new (mozilla::KnownNotNull, value_.addr()) T(mozilla::Move(*rhs.value_.addr()));
     }
 
     ExclusiveData& operator=(ExclusiveData&& rhs) {
         this->~ExclusiveData();
-        new (this) ExclusiveData(mozilla::Move(rhs));
+        new (mozilla::KnownNotNull, this) ExclusiveData(mozilla::Move(rhs));
         return *this;
     }
 
