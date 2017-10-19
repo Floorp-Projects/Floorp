@@ -35,6 +35,8 @@ try {
           }
         })
       }
+      fetchFail("http://example.not/")
+      fetchFail("https://example.not/test")
       fetchFail("ftp://example.not/")
       fetchFail("about:blank")
       fetchFail("mailto:whatwg@awesome.example")

@@ -8,10 +8,11 @@ function integrity(desc, url, integrity, initRequestMode, shouldPass) {
   if (!!initRequestMode && initRequestMode !== "") {
     fetchRequestInit.mode = initRequestMode;
   }
+  var fetchPromise = fetch(url, fetchRequestInit);
 
   if (shouldPass) {
     promise_test(function(test) {
-      return fetch(url, fetchRequestInit).then(function(resp) {
+      return fetchPromise.then(function(resp) {
         if (initRequestMode !== "no-cors") {
           assert_equals(resp.status, 200, "Response's status is 200");
         } else {
@@ -22,7 +23,7 @@ function integrity(desc, url, integrity, initRequestMode, shouldPass) {
     }, desc);
   } else {
     promise_test(function(test) {
-      return promise_rejects(test, new TypeError(), fetch(url, fetchRequestInit));
+      return promise_rejects(test, new TypeError(), fetchPromise);
     }, desc);
   }
 }

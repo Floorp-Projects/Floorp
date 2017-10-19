@@ -106,6 +106,9 @@ with Files("tests/annotation-vocab/**"):
 with Files("tests/apng/**"):
     BUG_COMPONENT = ("Core", "ImageLib")
 
+with Files("tests/assumptions/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
 with Files("tests/background-fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 

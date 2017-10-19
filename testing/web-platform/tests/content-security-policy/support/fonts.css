@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Ahem';
-  src: url('/fonts/Ahem.ttf');
+  src: url('/content-security-policy/support/Ahem.ttf');
 }
 
 body {

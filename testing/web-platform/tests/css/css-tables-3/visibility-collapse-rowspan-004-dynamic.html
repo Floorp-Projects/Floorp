@@ -22,22 +22,22 @@ table td {
     Setting a row to visibility:collapse changes table height but not width.
     </p>
     <table id="one">
-        <tr id="firstRowRef">
-            <td rowspan="5" id="spanningCellRef">B<br>B<br>B<br>B<br>B</td>
+    	<tr id="firstRowRef">
+    		<td rowspan="5" id="spanningCellRef">B<br>B<br>B<br>B<br>B</td>
             <td>first row</td>
-        </tr>
-        <tr id="secondRowRef">
-            <td>aaaa</td>
-        </tr>
-        <tr>
-            <td>bbbb</td>
-        </tr>
-        <tr id="fourthRowRef">
-            <td>cccc</td>
-        </tr>
-        <tr id="fifthRowRef">
-            <td>dddd</td>
-        </tr>
+    	</tr>
+    	<tr id="secondRowRef">
+    		<td>aaaa</td>
+    	</tr>
+    	<tr>
+    		<td>bbbb</td>
+    	</tr>
+    	<tr id="fourthRowRef">
+    		<td>cccc</td>
+    	</tr>
+    	<tr id="fifthRowRef">
+    		<td>dddd</td>
+    	</tr>
     </table>
     In the bottom table, a row is dynamically collapsed, made visible, and collapsed again.
     <table id="two">
@@ -78,12 +78,12 @@ table td {
             "spanning row visibility:collapse doesn't change table width"
         ],
         [
-            document.getElementById('firstRow').offsetHeight,
+        	document.getElementById('firstRow').offsetHeight,
             document.getElementById('firstRowRef').offsetHeight,
             "when third row is collapsed, first row stays the same height"
         ],
         [
-            document.getElementById('secondRow').offsetHeight,
+        	document.getElementById('secondRow').offsetHeight,
             document.getElementById('secondRowRef').offsetHeight,
             "when third row is collapsed, second row stays the same height"
         ],
@@ -91,8 +91,8 @@ table td {
             0,
             "third row visibility:collapse makes row height 0"
         ],
-           [
-               document.getElementById('fourthRow').offsetHeight,
+       	[
+       		document.getElementById('fourthRow').offsetHeight,
             document.getElementById('fourthRowRef').offsetHeight,
             "when third row is collapsed, fourth row stays the same height"
         ],

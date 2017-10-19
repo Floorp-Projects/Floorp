@@ -30,7 +30,6 @@ my %specs = (
 );
 
 my @apiNames = qw(UIA MSAA ATK IAccessible2 AXAPI);
-my $apiNamesRegex = "(" . join("|", @apiNames) . ")";
 
 # the suffix to attach to the automatically generated test case names
 my $theSuffix = "-manual.html";
@@ -303,16 +302,13 @@ while (<$io>) {
       } else {
         print STDERR "Unknown operation type: $type at line " . $lineCounter . "; skipping.\n";
       }
-    } elsif (m/($apiNamesRegex)$/) {
-      my $theString = $1;
+    } elsif (m/^\|rowspan="*([0-9])"*\|(.*)$/) {
+      my $rows = $1;
+      my $theString = $2;
       $theString =~ s/ +$//;
       $theString =~ s/^ +//;
       if ($theString eq "IA2") {
         $theString = "IAccessible2" ;
-      }
-      my $rows = 1;
-      if (m/^\|rowspan="*([0-9])"*\|(.*)$/) {
-        $rows = $1
       }
       if (grep { $_ eq $theString } @apiNames) {
         # we found an API name - were we already processing assertions?
@@ -425,11 +421,76 @@ sub build_test() {
         $tests->{"WAIFAKE"} = [ [ "property", "role", "is", "ROLE_TABLE_CELL" ], [ "property", "interfaces", "contains", "TableCell" ] ];
       }
       foreach my $name (@apiNames) {
-        if (exists $asserts->{$name} && scalar(@{$asserts->{$name}})) {
+        if (exists $asserts->{$name}) {
           $tests->{$name} = $asserts->{$name};
         }
       };
 
+
+      # massage the data to make it more sensible
+      if (exists $tests->{"ATK"}) {
+        # # print "processing ATK for $title\n";
+        my @conditions = @{$tests->{"ATK"}};
+        for (my $i = 0; $i < scalar(@conditions); $i++) {
+          my @new = ();
+          my $start = 0;
+          my $assert = "true";
+          if ($conditions[$i]->[0] =~ m/^NOT/) {
+            $start = 1;
+            $assert = "false";
+          }
+
+          # print qq(Looking at $title $conditions[$i]->[$start]\n);
+          if ($conditions[$i]->[$start] =~ m/^ROLE_/) {
+            $new[0] = "role";
+            $new[1] = $conditions[$i]->[$start];
+            $new[2] = $assert;
+          } elsif ($conditions[$i]->[$start] =~ m/(.*) interface/i) {
+            $new[0] = "interface";
+            $new[1] = $1;
+            # print "$1 condition is " . $conditions[$i]->[1] . "\n";
+            if ($conditions[$i]->[1] ne '<shown>'
+              && $conditions[$i]->[1] !~ m/true/i ) {
+              $assert = "false";
+            }
+            $new[2] = $assert;
+          } elsif ($conditions[$i]->[$start] eq "object" || $conditions[$i]->[$start] eq "attribute" ) {
+            $new[0] = "attribute";
+            my $val = $conditions[$i]->[2];
+            $val =~ s/"//g;
+            $new[1] = $conditions[$i]->[1] . ":" . $val;
+            if ($conditions[$i]->[3] eq "not exposed"
+              || $conditions[$i]->[3] eq "false") {
+              $new[2] = "false";
+            } else {
+              $new[2] = "true";
+            }
+          } elsif ($conditions[$i]->[$start] =~ m/^STATE_/) {
+            $new[0] = "state";
+            $new[1] = $conditions[$i]->[$start];
+            $new[2] = $assert;
+          } elsif ($conditions[$i]->[$start] =~ m/^object attribute (.*)/) {
+            my $name = $1;
+            $new[0] = "attribute";
+            my $val = $conditions[$i]->[1];
+            $val =~ s/"//g;
+            if ($val eq "not exposed" || $val eq "not mapped") {
+              $new[1] = $name;
+              $new[2] = "false";
+            } else {
+              $new[1] = $name . ":" . $val;
+              $new[2] = "true";
+            }
+          } else {
+            @new = @{$conditions[$i]};
+            if ($conditions[$i]->[2] eq '<shown>') {
+              $new[2] = "true";
+            }
+          }
+          $conditions[$i] = \@new;
+        }
+        $tests->{"ATK"} = \@conditions;
+      }
       $step->{test} = $tests;
 
     } elsif ($asserts->{type} eq "attribute") {
@@ -468,7 +529,7 @@ sub build_test() {
   $fileName =~ s/\s*$//;
   $fileName =~ s/\///g;
   $fileName =~ s/\s+/_/g;
-  $fileName =~ s/[,=:]/_/g;
+  $fileName =~ s/[,=]/_/g;
   $fileName =~ s/['"]//g;
 
   my $count = 2;
@@ -510,7 +571,8 @@ sub build_test() {
   <div id="log"></div>
   <div id="ATTAmessages"></div>
   </body>
-</html>);
+</html>
+);
 
   my $file ;
 
