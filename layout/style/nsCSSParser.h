@@ -164,7 +164,9 @@ public:
   void ParseMediaList(const nsAString& aBuffer,
                       nsIURI*            aURL,
                       uint32_t           aLineNumber,
-                      nsMediaList*       aMediaList);
+                      nsMediaList*       aMediaList,
+                      mozilla::dom::CallerType aCallerType =
+                        mozilla::dom::CallerType::NonSystem);
 
   /*
    * Parse aBuffer into a list of media queries and their associated values,
