@@ -124,7 +124,7 @@ function OnInitialLoad()
     LogInfo("Using browser remote="+ gBrowserIsRemote +"\n");
 }
 
-function SetFailureTimeout(cb, timeout)
+function SetFailureTimeout(cb, timeout, uri)
 {
   var targetTime = Date.now() + timeout;
 
@@ -139,6 +139,11 @@ function SetFailureTimeout(cb, timeout)
     }
   }
 
+  // Once OnDocumentLoad is called to handle the 'load' event it will update
+  // this error message to reflect what stage of the processing it has reached
+  // as it advances to each stage in turn.
+  gFailureReason = "timed out after " + timeout +
+                   " ms waiting for 'load' event for " + uri;
   gFailureTimeout = setTimeout(wrapper, timeout);
 }
 
@@ -164,7 +169,7 @@ function StartTestURI(type, uri, timeout)
     if (gFailureTimeout != null) {
         SendException("program error managing timeouts\n");
     }
-    SetFailureTimeout(LoadFailed, timeout);
+    SetFailureTimeout(LoadFailed, timeout, uri);
 
     LoadURI(gCurrentURL);
 }
