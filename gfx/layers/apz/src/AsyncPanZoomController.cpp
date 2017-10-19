@@ -3859,6 +3859,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     mScrollMetadata.SetUsesContainerScrolling(aScrollMetadata.UsesContainerScrolling());
     mFrameMetrics.SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
+    mScrollMetadata.SetOverscrollBehavior(aScrollMetadata.GetOverscrollBehavior());
 
     if (scrollOffsetUpdated) {
       APZC_LOG("%p updating scroll offset from %s to %s\n", this,
