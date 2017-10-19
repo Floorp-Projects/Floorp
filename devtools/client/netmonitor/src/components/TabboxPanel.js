@@ -72,7 +72,7 @@ function TabboxPanel({
         id: PANELS.PARAMS,
         title: PARAMS_TITLE,
       },
-        ParamsPanel({ connector, openLink, request }),
+        ParamsPanel({ request, openLink }),
       ),
       TabPanel({
         id: PANELS.RESPONSE,
@@ -91,7 +91,7 @@ function TabboxPanel({
         id: PANELS.STACK_TRACE,
         title: STACK_TRACE_TITLE,
       },
-        StackTracePanel({ connector, openLink, request, sourceMapService }),
+        StackTracePanel({ request, sourceMapService, openLink, connector }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({

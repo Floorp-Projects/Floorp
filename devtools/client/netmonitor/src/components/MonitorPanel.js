@@ -14,6 +14,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
+const { getFormDataSections } = require("../utils/request-utils");
 const { getSelectedRequest } = require("../selectors/index");
 
 // Components
@@ -52,6 +53,35 @@ const MonitorPanel = createClass({
     MediaQueryList.addListener(this.onLayoutChange);
   },
 
+  componentWillReceiveProps(nextProps) {
+    let {
+      request = {},
+      updateRequest,
+    } = nextProps;
+    let {
+      formDataSections,
+      requestHeaders,
+      requestHeadersFromUploadStream,
+      requestPostData,
+    } = request;
+
+    if (!formDataSections && requestHeaders &&
+        requestHeadersFromUploadStream && requestPostData) {
+      getFormDataSections(
+        requestHeaders,
+        requestHeadersFromUploadStream,
+        requestPostData,
+        this.props.connector.getLongString,
+      ).then((newFormDataSections) => {
+        updateRequest(
+          request.id,
+          { formDataSections: newFormDataSections },
+          true,
+        );
+      });
+    }
+  },
+
   componentWillUnmount() {
     MediaQueryList.removeListener(this.onLayoutChange);
 
@@ -78,15 +108,14 @@ const MonitorPanel = createClass({
       connector,
       isEmpty,
       networkDetailsOpen,
-      openLink,
       sourceMapService,
+      openLink
     } = this.props;
 
     let initialWidth = Services.prefs.getIntPref(
         "devtools.netmonitor.panes-network-details-width");
     let initialHeight = Services.prefs.getIntPref(
         "devtools.netmonitor.panes-network-details-height");
-
     return (
       div({ className: "monitor-panel" },
         Toolbar(),
@@ -101,8 +130,8 @@ const MonitorPanel = createClass({
           endPanel: networkDetailsOpen && NetworkDetailsPanel({
             ref: "endPanel",
             connector,
-            openLink,
             sourceMapService,
+            openLink,
           }),
           endPanelCollapsed: !networkDetailsOpen,
           endPanelControl: true,
