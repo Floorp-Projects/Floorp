@@ -158,7 +158,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @param aRuleText the serialized mutated rule if the method returns true
      * @return true if the rule was modified and false otherwise
      */
-    bool SanitizeStyleDeclaration(mozilla::css::Declaration* aDeclaration,
+    bool SanitizeStyleDeclaration(mozilla::DeclarationBlock* aDeclaration,
                                   nsAutoString& aRuleText);
 
     /**
