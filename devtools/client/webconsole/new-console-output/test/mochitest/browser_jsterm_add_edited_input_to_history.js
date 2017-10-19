@@ -12,16 +12,17 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 817834";
 
 add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
-
+  let hud = yield openNewTabAndConsole(TEST_URI);
+  // Clearing history that might have been set in previous tests.
+  yield hud.jsterm.clearHistory();
   testEditedInputHistory(hud);
+  yield hud.jsterm.clearHistory();
 });
 
-function testEditedInputHistory(HUD) {
-  let jsterm = HUD.jsterm;
+function testEditedInputHistory(hud) {
+  let jsterm = hud.jsterm;
   let inputNode = jsterm.inputNode;
+
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
   is(inputNode.selectionStart, 0);
   is(inputNode.selectionEnd, 0);
