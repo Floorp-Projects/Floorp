@@ -150,13 +150,13 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
 
   Epoch epoch = mEpochs.FirstElement();
   if (!epoch.IsLabeled()) {
-    QueueEntry entry = mUnlabeled.FirstElement();
-    if (!IsReadyToRun(entry.mRunnable, nullptr)) {
+    QueueEntry& first = mUnlabeled.FirstElement();
+    if (!IsReadyToRun(first.mRunnable, nullptr)) {
       return nullptr;
     }
 
     PopEpoch();
-    mUnlabeled.Pop();
+    QueueEntry entry = mUnlabeled.Pop();
     MOZ_ASSERT(entry.mEpochNumber == epoch.mEpochNumber);
     MOZ_ASSERT(entry.mRunnable.get());
     return entry.mRunnable.forget();
@@ -205,9 +205,9 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
     }
     MOZ_ASSERT(!queue->IsEmpty());
 
-    QueueEntry entry = queue->FirstElement();
-    if (entry.mEpochNumber == epoch.mEpochNumber &&
-        IsReadyToRun(entry.mRunnable, group)) {
+    QueueEntry& first = queue->FirstElement();
+    if (first.mEpochNumber == epoch.mEpochNumber &&
+        IsReadyToRun(first.mRunnable, group)) {
       sCurrentSchedulerGroup = NextSchedulerGroup(group);
 
       PopEpoch();
@@ -224,7 +224,7 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
         }
         group->removeFrom(*sSchedulerGroups);
       }
-      queue->Pop();
+      QueueEntry entry = queue->Pop();
       if (queue->IsEmpty()) {
         mLabeled.Remove(group);
       }
