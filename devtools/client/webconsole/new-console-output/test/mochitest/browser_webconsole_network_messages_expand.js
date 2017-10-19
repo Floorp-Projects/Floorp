@@ -3,16 +3,14 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test that clicking on a network message " +
-                 "in the console toggles the HTTP inspection.";
-
 const TEST_FILE = "test-network-request.html";
 const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/";
+const TEST_URI = TEST_PATH + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
 
-Services.prefs.setBoolPref(NET_PREF, true);
+Services.prefs.setBoolPref(NET_PREF, false);
 Services.prefs.setBoolPref(XHR_PREF, true);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(NET_PREF);
@@ -26,15 +24,21 @@ add_task(async function task() {
   let target = TargetFactory.forTab(currentTab);
   let toolbox = gDevTools.getToolbox(target);
 
-  const documentUrl = TEST_PATH + TEST_FILE;
-  await loadDocument(documentUrl);
-  info("Document loaded.");
+  // Fire an XHR POST request.
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+    content.wrappedJSObject.testXhrPost();
+  });
 
-  let messageNode = await waitFor(() => findMessage(hud, documentUrl));
+  info("XHR executed");
+
+  await waitForRequestUpdates(toolbox);
+
+  let xhrUrl = TEST_PATH + "test-data.json";
+  let messageNode = await waitFor(() => findMessage(hud, xhrUrl));
   let urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 
-  let updates = waitForNetworkUpdates(toolbox);
+  let updates = waitForPayloadReady(toolbox);
 
   // Expand network log
   urlNode.click();
@@ -61,10 +65,21 @@ async function testNetworkMessage(messageNode) {
     "#headers-panel .headers-overview");
   ok(headersContent, "Headers content is available");
 
+  // Select Params tab and check the content. CodeMirror initialization
+  // is delayed to prevent UI freeze, so wait for a little while.
+  paramsTab.click();
+  let paramsPanel = messageNode.querySelector("#params-panel");
+  await waitForSourceEditor(paramsPanel);
+  let paramsContent = messageNode.querySelector(
+    "#params-panel .panel-container .CodeMirror");
+  ok(paramsContent, "Params content is available");
+  ok(paramsContent.textContent.includes("Hello world!"), "Post body is correct");
+
   // Select Response tab and check the content. CodeMirror initialization
-  // is delayed  to prevent UI freeze, so wait for a little while.
+  // is delayed, so again wait for a little while.
   responseTab.click();
-  await waitForSourceEditor(messageNode);
+  let responsePanel = messageNode.querySelector("#response-panel");
+  await waitForSourceEditor(responsePanel);
   let responseContent = messageNode.querySelector(
     "#response-panel .editor-row-container .CodeMirror");
   ok(responseContent, "Response content is available");
@@ -78,11 +93,8 @@ async function testNetworkMessage(messageNode) {
   ok(timingsContent.textContent, "Timings text is available");
 }
 
-async function waitForNetworkUpdates(toolbox) {
-  let panel = toolbox.getCurrentPanel();
-  let hud = panel.hud;
-  let ui = hud.ui;
-
+async function waitForPayloadReady(toolbox) {
+  let {ui} = toolbox.getCurrentPanel().hud;
   return new Promise(resolve => {
     ui.jsterm.hud.on("network-request-payload-ready", () => {
       info("network-request-payload-ready received");
@@ -91,9 +103,18 @@ async function waitForNetworkUpdates(toolbox) {
   });
 }
 
-async function waitForSourceEditor(messageNode) {
+async function waitForSourceEditor(panel) {
   return waitUntil(() => {
-    return !!messageNode.querySelector(
-      "#response-panel .editor-row-container .CodeMirror");
+    return !!panel.querySelector(".CodeMirror");
+  });
+}
+
+async function waitForRequestUpdates(toolbox) {
+  let {ui} = toolbox.getCurrentPanel().hud;
+  return new Promise(resolve => {
+    ui.jsterm.hud.on("network-message-updated", () => {
+      info("network-message-updated received");
+      resolve();
+    });
   });
 }
