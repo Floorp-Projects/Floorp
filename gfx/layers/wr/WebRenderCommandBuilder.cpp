@@ -492,7 +492,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     needPaint = !invalidRegion.IsEmpty();
   }
 
-  if (needPaint) {
+  if (needPaint || !fallbackData->GetKey()) {
     gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK ?
                                                       gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
     if (gfxPrefs::WebRenderBlobImages()) {
@@ -635,6 +635,15 @@ WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData()
     }
 
     data->SetUsed(false);
+  }
+}
+
+void
+WebRenderCommandBuilder::ClearCachedResources()
+{
+  for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
+    WebRenderUserData* data = iter.Get()->GetKey();
+    data->ClearCachedResources();
   }
 }
 

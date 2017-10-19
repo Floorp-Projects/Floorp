@@ -540,7 +540,8 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 void
 WebRenderLayerManager::WrUpdated()
 {
-  // Handle removing all obsoleted WebRenderUserData
+  mWebRenderCommandBuilder.ClearCachedResources();
+  DiscardLocalImages();
 }
 
 void
