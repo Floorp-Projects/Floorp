@@ -10,30 +10,52 @@ var defaultConfig = {
   repeat: 1,
   rest: 100,
   subtests: {
-    webconsoleOpen: true,
-    inspectorOpen: true,
-    debuggerOpen: true,
-    styleEditorOpen: true,
-    performanceOpen: true,
-    netmonitorOpen: true,
-    saveAndReadHeapSnapshot: true,
-    consoleBulkLogging: true,
-    consoleStreamLogging: true,
-    consoleObjectExpansion: true,
+    "cold.inspector": true,
+
+    "simple.webconsole": true,
+    "simple.inspector": true,
+    "simple.debugger": true,
+    "simple.styleeditor": true,
+    "simple.performance": true,
+    "simple.netmonitor": true,
+    "simple.saveAndReadHeapSnapshot": true,
+
+    "complicated.webconsole": true,
+    "complicated.inspector": true,
+    "complicated.debugger": true,
+    "complicated.styleeditor": true,
+    "complicated.performance": true,
+    "complicated.netmonitor": true,
+    "complicated.saveAndReadHeapSnapshot": true,
+
+    "console.bulklog": true,
+    "console.streamlog": true,
+    "console.objectexpand": true,
   }
 };
 
 var testsInfo = {
-  webconsoleOpen: "Measure open/close toolbox on webconsole panel",
-  inspectorOpen: "Measure open/close toolbox on inspector panel",
-  debuggerOpen: "Measure open/close toolbox on debugger panel",
-  styleEditorOpen: "Measure open/close toolbox on style editor panel",
-  performanceOpen: "Measure open/close toolbox on performance panel",
-  netmonitorOpen: "Measure open/close toolbox on network monitor panel",
-  saveAndReadHeapSnapshot: "Measure open/close toolbox on memory panel and save/read heap snapshot",
-  consoleBulkLogging: "Measure time for a bunch of sync console.log statements to appear",
-  consoleStreamLogging: "Measure rAF on page during a stream of console.log statements",
-  consoleObjectExpansion: "Measure time to expand a large object and close the console",
+  "cold.inspector": "Measure first open toolbox on inspector panel",
+
+  "simple.webconsole": "Measure open/close toolbox on webconsole panel against simple document",
+  "simple.inspector": "Measure open/close toolbox on inspector panel against simple document",
+  "simple.debugger": "Measure open/close toolbox on debugger panel against simple document",
+  "simple.styleeditor": "Measure open/close toolbox on style editor panel against simple document",
+  "simple.performance": "Measure open/close toolbox on performance panel against simple document",
+  "simple.netmonitor": "Measure open/close toolbox on network monitor panel against simple document",
+  "simple.saveAndReadHeapSnapshot": "Measure open/close toolbox on memory panel and save/read heap snapshot against simple document",
+
+  "complicated.webconsole": "Measure open/close toolbox on webconsole panel against complicated document",
+  "complicated.inspector": "Measure open/close toolbox on inspector panel against complicated document",
+  "complicated.debugger": "Measure open/close toolbox on debugger panel against complicated document",
+  "complicated.styleeditor": "Measure open/close toolbox on style editor panel against complicated document",
+  "complicated.performance": "Measure open/close toolbox on performance panel against complicated document",
+  "complicated.netmonitor": "Measure open/close toolbox on network monitor panel against complicated document",
+  "complicated.saveAndReadHeapSnapshot": "Measure open/close toolbox on memory panel and save/read heap snapshot against complicated document",
+
+  "console.bulklog": "Measure time for a bunch of sync console.log statements to appear",
+  "console.streamlog": "Measure rAF on page during a stream of console.log statements",
+  "console.objectexpand": "Measure time to expand a large object and close the console",
 };
 
 function updateConfig() {

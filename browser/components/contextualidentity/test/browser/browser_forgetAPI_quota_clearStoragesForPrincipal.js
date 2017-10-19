@@ -121,18 +121,13 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
   }
 
   // Using quota manager to clear all indexed DB for a given domain.
-  let qms = Cc["@mozilla.org/dom/quota-manager-service;1"].
-              getService(Ci.nsIQuotaManagerService);
-
   let caUtils = {};
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                       getService(Ci.mozIJSSubScriptLoader);
-  scriptLoader.loadSubScript("chrome://global/content/contentAreaUtils.js",
-                             caUtils);
+  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js",
+                                      caUtils);
   let httpURI = caUtils.makeURI("http://" + TEST_HOST);
   let httpPrincipal = Services.scriptSecurityManager
                               .createCodebasePrincipal(httpURI, {});
-  qms.clearStoragesForPrincipal(httpPrincipal, null, true);
+  Services.qms.clearStoragesForPrincipal(httpPrincipal, null, true);
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.

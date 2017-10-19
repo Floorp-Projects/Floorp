@@ -68,8 +68,8 @@ public:
                   clip.GetClipRect(), appUnitsPerDevPixel);
     }
 
-    mBoundsRect = aSc.ToRelativeLayoutRect(LayerRect::FromUnknownRect(layoutBoundsRect.ToUnknownRect()));
-    mClipRect = aSc.ToRelativeLayoutRect(LayerRect::FromUnknownRect(layoutClipRect.ToUnknownRect()));
+    mBoundsRect = aSc.ToRelativeLayoutRect(layoutBoundsRect);
+    mClipRect = aSc.ToRelativeLayoutRect(layoutClipRect);
 
     mBackfaceVisible = !aItem->BackfaceIsHidden();
 
@@ -125,7 +125,7 @@ public:
       const gfx::Glyph& sourceGlyph = aBuffer.mGlyphs[i];
       targetGlyph.index = sourceGlyph.mIndex;
       targetGlyph.point = mSc.ToRelativeLayoutPoint(
-              LayerPoint::FromUnknownPoint(sourceGlyph.mPosition));
+          LayoutDevicePoint::FromUnknownPoint(sourceGlyph.mPosition));
     }
 
     mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont,

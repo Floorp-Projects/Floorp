@@ -2,13 +2,13 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
-  var feedFeedURI = ios.newURI("feed://example.com/feed.xml");
-  var httpFeedURI = ios.newURI("feed:http://example.com/feed.xml");
-  var httpURI = ios.newURI("http://example.com/feed.xml");
+  var feedFeedURI = Services.io.newURI("feed://example.com/feed.xml");
+  var httpFeedURI = Services.io.newURI("feed:http://example.com/feed.xml");
+  var httpURI = Services.io.newURI("http://example.com/feed.xml");
 
   var httpsFeedURI =
-    ios.newURI("feed:https://example.com/feed.xml");
-  var httpsURI = ios.newURI("https://example.com/feed.xml");
+    Services.io.newURI("feed:https://example.com/feed.xml");
+  var httpsURI = Services.io.newURI("https://example.com/feed.xml");
 
   var feedChannel = NetUtil.newChannel({
     uri: feedFeedURI,
@@ -36,8 +36,8 @@ function run_test() {
   do_check_true(httpsURI.equals(httpsChannel.URI));
 
   // check that we throw creating feed: URIs from file and ftp
-  Assert.throws(function() { ios.newURI("feed:ftp://example.com/feed.xml"); },
+  Assert.throws(function() { Services.io.newURI("feed:ftp://example.com/feed.xml"); },
       "Should throw an exception when trying to create a feed: URI with an ftp: inner");
-  Assert.throws(function() { ios.newURI("feed:file:///var/feed.xml"); },
+  Assert.throws(function() { Services.io.newURI("feed:file:///var/feed.xml"); },
       "Should throw an exception when trying to create a feed: URI with a file: inner");
 }

@@ -61,9 +61,7 @@ function doBefore() {
   imageCache.clearCache(true);
   imageCache.clearCache(false);
   info("XXX clearning network cache");
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                        .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 }
 
 // the test function does nothing on purpose.

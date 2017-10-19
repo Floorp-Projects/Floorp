@@ -70,9 +70,7 @@ function checkCacheExists(aShouldExist) {
 }
 
 add_task(async function setup() {
-  let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-    .getService(Ci.nsICacheStorageService);
-  networkCache.clear();
+  Services.cache2.clear();
 });
 
 // This will set the cookies and the cache.

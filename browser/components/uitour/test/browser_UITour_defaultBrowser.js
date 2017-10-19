@@ -5,8 +5,7 @@ var gContentAPI;
 var gContentWindow;
 var setDefaultBrowserCalled = false;
 
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
+Services.scriptloader
   .loadSubScript("chrome://mochikit/content/tests/SimpleTest/MockObjects.js", this);
 
 function MockShellService() {}

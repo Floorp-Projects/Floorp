@@ -241,9 +241,9 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
     gfx::Color shadowColor =
       nsCSSRendering::GetShadowColor(shadow, mFrame, 1.0);
 
-    mozilla::gfx::Point shadowOffset;
-    shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
-    shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
+    LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
+        nsPoint(shadow->mXOffset, shadow->mYOffset),
+        appUnitsPerDevPixel);
 
     float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 

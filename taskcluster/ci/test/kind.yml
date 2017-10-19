@@ -9,3 +9,24 @@ transforms:
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.coalesce:transforms
    - taskgraph.transforms.task:transforms
+
+# Each stanza in a file pointed to by 'jobs-from' describes a particular test
+# suite or sub-suite. These are processed through the transformations described
+# above to produce a bunch of tasks. See the schema in
+# `taskcluster/taskgraph/transforms/tests.py` for a description of the fields
+# used in these files.
+
+# Adding a new test type or running tests on a new platform? Be sure to review
+# https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
+
+jobs-from:
+   - awsy.yml
+   - compiled.yml
+   - firefox-ui.yml
+   - marionette.yml
+   - misc.yml
+   - mochitest.yml
+   - reftest.yml
+   - talos.yml
+   - web-platform.yml
+   - xpcshell.yml

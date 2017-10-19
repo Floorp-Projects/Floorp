@@ -19,8 +19,6 @@ class nsDisplayList;
 namespace mozilla {
 namespace layers {
 
-class WebRenderLayer;
-
 /**
  * This is a helper class that pushes/pops a stacking context, and manages
  * some of the coordinate space transformations needed.
@@ -48,7 +46,7 @@ public:
   // Pops the stacking context, if one was pushed during the constructor.
   ~StackingContextHelper();
 
-  void AdjustOrigin(const LayerPoint& aDelta);
+  void AdjustOrigin(const LayoutDevicePoint& aDelta);
 
   // When this StackingContextHelper is in scope, this function can be used
   // to convert a rect from the layer system's coordinate space to a LayoutRect
@@ -60,10 +58,9 @@ public:
   // same as the layer space. (TODO: try to make this more explicit somehow).
   // We also round the rectangle to ints after transforming since the output
   // is the final destination rect.
-  wr::LayoutRect ToRelativeLayoutRect(const LayerRect& aRect) const;
   wr::LayoutRect ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const;
   // Same but for points
-  wr::LayoutPoint ToRelativeLayoutPoint(const LayerPoint& aPoint) const
+  wr::LayoutPoint ToRelativeLayoutPoint(const LayoutDevicePoint& aPoint) const
   {
     return wr::ToLayoutPoint(aPoint - mOrigin);
   }
@@ -76,7 +73,7 @@ public:
 
 private:
   wr::DisplayListBuilder* mBuilder;
-  LayerPoint mOrigin;
+  LayoutDevicePoint mOrigin;
   gfx::Matrix4x4 mTransform;
   gfx::Size mScale;
 };

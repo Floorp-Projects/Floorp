@@ -1,0 +1,264 @@
+crashtest:
+    description: "Crashtest run"
+    suite: reftest/crashtest
+    treeherder-symbol: tc-R(C)
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 10
+            android.*: 4
+            default: 1
+    e10s:
+        by-test-platform:
+            windows10-64/debug: both
+            default: true
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=crashtest
+            default:
+                script: desktop_unittest.py
+                chunked: false
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=crashtest
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
+
+jsreftest:
+    description: "JS Reftest run"
+    suite: reftest/jsreftest
+    treeherder-symbol: tc-R(J)
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 100
+            android.*: 40
+            windows.*: 2
+            linux64-ccov/.*: 5
+            linux64-qr/.*: 4
+            macosx.*: 2
+            default: 3
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows10-64/debug: both
+            default: true
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 3600
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=jsreftest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=jsreftest
+    when:
+        schedules: ['jsreftest']
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
+
+reftest:
+    description: "Reftest run"
+    suite: reftest/reftest
+    treeherder-symbol: tc-R(R)
+    worker-type:
+        by-test-platform:
+            windows10-64.*: buildbot-bridge/buildbot-bridge
+            default: null
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-16/debug: 48
+            android.*: 16
+            macosx64.*/opt: 1
+            macosx64.*/debug: 2
+            windows10-64.*/opt: 1
+            windows10-64.*/debug: 2
+            default: 8
+    e10s:
+        by-test-platform:
+            windows10-64/debug: both
+            default: true
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 3600
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                extra-options:
+                    - --test-suite=reftest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked:
+                  by-test-platform:
+                    macosx64/opt: false
+                    windows10-64.*/opt: false
+                    windows10-64.*/debug: true
+                    default: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=reftest
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            windows10-64-asan.*: 3
+            default: default
+
+reftest-gpu:
+    description: "Reftest GPU run"
+    suite: reftest/reftest-gpu
+    treeherder-symbol: tc-R(Rg)
+    chunks: 8
+    run-on-projects:
+        by-test-platform:
+            windows10.*: []
+            windows8-64.*: []
+            default: built-projects
+    instance-size: default
+    virtualization: virtual-with-gpu
+    max-run-time: 3600
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --reftest-suite=reftest-gpu
+    tier: default
+
+reftest-no-accel:
+    description: "Reftest not accelerated run"
+    suite: reftest/reftest-no-accel
+    treeherder-symbol: tc-R(Ru)
+    virtualization: virtual-with-gpu
+    worker-type:
+        by-test-platform:
+            windows10-64.*: buildbot-bridge/buildbot-bridge
+            default: null
+    chunks:
+        by-test-platform:
+            macosx.*: 1
+            windows10-64.*/debug: 2
+            windows10-64.*/opt: 1
+            default: 8
+    e10s:
+        by-test-platform:
+            linux64-jsdcov/opt: false
+            windows10-64/debug: both
+            default: true
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked:
+            by-test-platform:
+                windows10-64.*/opt: false
+                macosx.*: false
+                default: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --reftest-suite=reftest-no-accel
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
+
+reftest-stylo:
+    description: "Reftest run in Stylo vs. Gecko mode"
+    suite: reftest/reftest-stylo
+    treeherder-symbol: tc-R(Rs)
+    virtualization: virtual-with-gpu
+    chunks: 8
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --reftest-suite=reftest-stylo

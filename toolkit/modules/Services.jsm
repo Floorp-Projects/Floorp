@@ -13,6 +13,11 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.Services = {};
 
+/**
+ * WARNING: If you add a getter that isn't in the initTable, please update the
+ * eslint rule in /tools/lint/eslint/eslint-plugin-mozilla/lib/rules/use-services.js
+ */
+
 XPCOMUtils.defineLazyGetter(Services, "prefs", function() {
   return Cc["@mozilla.org/preferences-service;1"]
            .getService(Ci.nsIPrefService)

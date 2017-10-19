@@ -36,8 +36,6 @@ const DIALOG_URL_MINIMAL_UI = "chrome://browser/content/places/bookmarkPropertie
 
 Cu.import("resource:///modules/RecentWindow.jsm");
 var win = RecentWindow.getMostRecentBrowserWindow();
-var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-         getService(Ci.nsIWindowWatcher);
 
 function add_bookmark(url) {
   return PlacesUtils.bookmarks.insert({
@@ -421,7 +419,7 @@ function open_properties_dialog(test) {
     function windowObserver(aSubject, aTopic, aData) {
       if (aTopic != "domwindowopened")
         return;
-      ww.unregisterNotification(windowObserver);
+      Services.ww.unregisterNotification(windowObserver);
       let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       waitForFocus(async () => {
         // Ensure overlay is loaded
@@ -435,7 +433,7 @@ function open_properties_dialog(test) {
         }
       }, observerWindow);
     }
-    ww.registerNotification(windowObserver);
+    Services.ww.registerNotification(windowObserver);
 
     var command = null;
     switch (test.action) {

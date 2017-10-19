@@ -671,7 +671,7 @@ FormAutofillHandler.prototype = {
           value = FormAutofillUtils.getAbbreviatedStateName([value, text]) || text;
         }
 
-        if (!value) {
+        if (!value || value.length > FormAutofillUtils.MAX_FIELD_VALUE_LENGTH) {
           // Keep the property and preserve more information for updating
           data[type].record[detail.fieldName] = "";
           return;
@@ -689,8 +689,8 @@ FormAutofillHandler.prototype = {
 
     if (data.address && !this._isAddressRecordCreatable(data.address.record)) {
       log.debug("No address record saving since there are only",
-                     Object.keys(data.address.record).length,
-                     "usable fields");
+                Object.keys(data.address.record).length,
+                "usable fields");
       delete data.address;
     }
 

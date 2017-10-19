@@ -1802,7 +1802,7 @@ toolbar#nav-bar {
 
         options.extraPrefs.append(
             "idle.lastDailyNotification=%d" %
-            (int(time.time()) * 1000))
+            int(time.time()))
 
         # get extensions to install
         extensions = self.getExtensionsToInstall(options)

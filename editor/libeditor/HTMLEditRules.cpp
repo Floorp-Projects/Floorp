@@ -1402,6 +1402,8 @@ HTMLEditRules::WillInsertText(EditAction aAction,
                                         nsIEditor::eNone);
             NS_ENSURE_STATE(br);
             pos++;
+            selChild = br->GetNextSibling();
+            MOZ_ASSERT(curNode->GetChildAt(curOffset) == selChild);
           } else {
             NS_ENSURE_STATE(mHTMLEditor);
             rv = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
@@ -1450,7 +1452,8 @@ HTMLEditRules::WillInsertText(EditAction aAction,
                                                      nsIEditor::eNone);
             NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
             pos++;
-            selChild = br->GetNextSibling();;
+            selChild = br->GetNextSibling();
+            MOZ_ASSERT(curNode->GetChildAt(curOffset) == selChild);
           } else {
             rv = wsObj.InsertText(subStr, address_of(curNode),
                                   address_of(selChild), &curOffset, doc);
