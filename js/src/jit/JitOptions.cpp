@@ -241,9 +241,6 @@ DefaultJitOptions::DefaultJitOptions()
     // Test whether wasm int64 / double NaN bits testing is enabled.
     SET_DEFAULT(wasmTestMode, false);
 
-    // Test whether wasm bounds check should always be generated.
-    SET_DEFAULT(wasmAlwaysCheckBounds, false);
-
     // Toggles the optimization whereby offsets are folded into loads and not
     // included in the bounds check.
     SET_DEFAULT(wasmFoldOffsets, true);

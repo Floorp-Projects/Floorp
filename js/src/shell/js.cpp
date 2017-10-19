@@ -8144,9 +8144,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setAsyncStack(enableAsyncStacks)
                              .setStreams(enableStreams);
 
-    if (op.getBoolOption("wasm-check-bce"))
-        jit::JitOptions.wasmAlwaysCheckBounds = true;
-
     if (op.getBoolOption("wasm-test-mode"))
         jit::JitOptions.wasmTestMode = true;
 
@@ -8632,7 +8629,6 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
-        || !op.addBoolOption('\0', "wasm-check-bce", "Always generate wasm bounds check, even redundant ones.")
         || !op.addBoolOption('\0', "wasm-test-mode", "Enable wasm testing mode, creating synthetic "
                                    "objects for non-canonical NaNs and i64 returned from wasm.")
         || !op.addBoolOption('\0', "enable-streams", "Enable WHATWG Streams")
