@@ -981,9 +981,7 @@ BrowserGlue.prototype = {
     // Call trackStartupCrashEnd here in case the delayed call on startup hasn't
     // yet occurred (see trackStartupCrashEnd caller in browser.js).
     try {
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                         .getService(Ci.nsIAppStartup);
-      appStartup.trackStartupCrashEnd();
+      Services.startup.trackStartupCrashEnd();
     } catch (e) {
       Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
     }
@@ -1381,15 +1379,13 @@ BrowserGlue.prototype = {
     if (!actions || actions.indexOf("silent") != -1)
       return;
 
-    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(Ci.nsIURLFormatter);
     var appName = gBrandBundle.GetStringFromName("brandShortName");
 
     function getNotifyString(aPropData) {
       var propValue = update.getProperty(aPropData.propName);
       if (!propValue) {
         if (aPropData.prefName)
-          propValue = formatter.formatURLPref(aPropData.prefName);
+          propValue = Services.urlFormatter.formatURLPref(aPropData.prefName);
         else if (aPropData.stringParams)
           propValue = gBrowserBundle.formatStringFromName(aPropData.stringName,
                                                           aPropData.stringParams,
@@ -1696,9 +1692,7 @@ BrowserGlue.prototype = {
     var accessKey = placesBundle.GetStringFromName("lockPromptInfoButton.accessKey");
 
     var helpTopic = "places-locked";
-    var url = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-              getService(Components.interfaces.nsIURLFormatter).
-              formatURLPref("app.support.baseURL");
+    var url = Services.urlFormatter.formatURLPref("app.support.baseURL");
     url += helpTopic;
 
     var win = RecentWindow.getMostRecentBrowserWindow();

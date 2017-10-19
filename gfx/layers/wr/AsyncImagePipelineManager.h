@@ -73,7 +73,7 @@ public:
   void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId);
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
-                                const LayerRect& aScBounds,
+                                const LayoutDeviceRect& aScBounds,
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
@@ -123,7 +123,7 @@ private:
     bool mInitialised;
     bool mIsChanged;
     bool mUseExternalImage;
-    LayerRect mScBounds;
+    LayoutDeviceRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
     wr::ImageRendering mFilter;

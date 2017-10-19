@@ -12,10 +12,8 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function test_indicatorDrop() {
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-      getService(Ci.mozIJSSubScriptLoader);
   let EventUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
   async function drop(win, urls) {
     let dragData = [[{type: "text/plain", data: urls.join("\n")}]];

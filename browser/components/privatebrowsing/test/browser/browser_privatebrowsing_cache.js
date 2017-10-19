@@ -10,9 +10,7 @@ var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", 
 
 var tmp = {};
 
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://browser/content/sanitize.js", tmp);
+Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
 
 var Sanitizer = tmp.Sanitizer;
 
@@ -63,21 +61,14 @@ function sanitizeCache() {
   s.sanitize();
 }
 
-function get_cache_service() {
-  return Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                   .getService(Components.interfaces.nsICacheStorageService);
-}
-
 function getStorageEntryCount(device, goon) {
-  var cs = get_cache_service();
-
   var storage;
   switch (device) {
   case "private":
-    storage = cs.diskCacheStorage(LoadContextInfo.private, false);
+    storage = Services.cache2.diskCacheStorage(LoadContextInfo.private, false);
     break;
   case "regular":
-    storage = cs.diskCacheStorage(LoadContextInfo.default, false);
+    storage = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
     break;
   default:
     throw "Unknown device " + device + " at getStorageEntryCount";

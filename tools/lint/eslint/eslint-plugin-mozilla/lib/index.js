@@ -60,6 +60,7 @@ module.exports = {
     "use-default-preference-values":
       require("../lib/rules/use-default-preference-values"),
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
+    "use-services": require("../lib/rules/use-services"),
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
@@ -85,6 +86,7 @@ module.exports = {
     "reject-some-requires": "off",
     "use-default-preference-values": "off",
     "use-ownerGlobal": "off",
+    "use-services": "off",
     "var-only-at-top-level": "off"
   }
 };

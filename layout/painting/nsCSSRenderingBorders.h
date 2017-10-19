@@ -309,6 +309,14 @@ public:
                   gfxContext& aRenderingContext,
                   nsIFrame* aForFrame,
                   const nsRect& aDirtyRect);
+  void
+  CreateWebRenderCommands(nsDisplayItem* aItem,
+                          nsIFrame* aForFrame,
+                          mozilla::wr::DisplayListBuilder& aBuilder,
+                          mozilla::wr::IpcResourceUpdateQueue& aResources,
+                          const mozilla::layers::StackingContextHelper& aSc,
+                          mozilla::layers::WebRenderLayerManager* aManager,
+                          nsDisplayListBuilder* aDisplayListBuilder);
 
   nsCSSBorderImageRenderer(const nsCSSBorderImageRenderer& aRhs);
   nsCSSBorderImageRenderer& operator=(const nsCSSBorderImageRenderer& aRhs);
@@ -332,6 +340,7 @@ private:
   uint8_t mFill;
 
   friend class nsDisplayBorder;
+  friend struct nsCSSRendering;
 };
 
 namespace mozilla {

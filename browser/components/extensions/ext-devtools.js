@@ -311,8 +311,7 @@ initDevTools = function() {
                 "Only local tab are currently supported by the WebExtensions DevTools API.";
       let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
       scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
-      let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-      consoleService.logMessage(scriptError);
+      Services.console.logMessage(scriptError);
 
       return;
     }
