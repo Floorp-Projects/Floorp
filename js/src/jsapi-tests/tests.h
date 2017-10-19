@@ -465,6 +465,7 @@ class AutoLeaveZeal
         JS::GCForReason(cx_, GC_SHRINK, JS::gcreason::DEBUG_GC);
     }
     ~AutoLeaveZeal() {
+        JS_SetGCZeal(cx_, 0, 0);
         for (size_t i = 0; i < sizeof(zealBits_) * 8; i++) {
             if (zealBits_ & (1 << i))
                 JS_SetGCZeal(cx_, i, frequency_);
