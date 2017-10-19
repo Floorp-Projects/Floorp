@@ -24826,6 +24826,9 @@ class Editor extends _react.PureComponent {
     // text.
     var selectedSource = nextProps.selectedSource;
 
+    if (!this.state.editor) {
+        return;
+    }
 
     if (nextProps.startPanelSize !== this.props.startPanelSize || nextProps.endPanelSize !== this.props.endPanelSize) {
       this.state.editor.codeMirror.setSize();
