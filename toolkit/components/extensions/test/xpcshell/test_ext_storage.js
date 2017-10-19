@@ -2,8 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "ExtensionStorageIDB",
+                               "resource://gre/modules/ExtensionStorageIDB.jsm");
+
 const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
@@ -104,81 +106,84 @@ add_task(async function test_single_initialization() {
   }
 });
 
-add_task(async function test_config_flag_needed() {
-  function background() {
-    let promises = [];
-    let apiTests = [
-      {method: "get", args: ["foo"]},
-      {method: "set", args: [{foo: "bar"}]},
-      {method: "remove", args: ["foo"]},
-      {method: "clear", args: []},
-    ];
-    apiTests.forEach(testDef => {
-      promises.push(browser.test.assertRejects(
-        browser.storage.sync[testDef.method](...testDef.args),
-        "Please set webextensions.storage.sync.enabled to true in about:config",
-        `storage.sync.${testDef.method} is behind a flag`));
-    });
-
-    Promise.all(promises).then(() => browser.test.notifyPass("flag needed"));
-  }
-
-  Preferences.set(STORAGE_SYNC_PREF, false);
-  ok(!Preferences.get(STORAGE_SYNC_PREF));
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["storage"],
-    },
-    background: `(${background})(${checkGetImpl})`,
-  });
-
-  await extension.startup();
-  await extension.awaitFinish("flag needed");
-  await extension.unload();
-  Preferences.reset(STORAGE_SYNC_PREF);
-});
-
-add_task(async function test_reloading_extensions_works() {
-  // Just some random extension ID that we can re-use
-  const extensionId = "my-extension-id@1";
-
-  function loadExtension() {
+add_task(function test_config_flag_needed() {
+  async function testFn() {
     function background() {
-      browser.storage.sync.set({"a": "b"}).then(() => {
-        browser.test.notifyPass("set-works");
+      let promises = [];
+      let apiTests = [
+        {method: "get", args: ["foo"]},
+        {method: "set", args: [{foo: "bar"}]},
+        {method: "remove", args: ["foo"]},
+        {method: "clear", args: []},
+      ];
+      apiTests.forEach(testDef => {
+        promises.push(browser.test.assertRejects(
+          browser.storage.sync[testDef.method](...testDef.args),
+          "Please set webextensions.storage.sync.enabled to true in about:config",
+          `storage.sync.${testDef.method} is behind a flag`));
       });
+
+      Promise.all(promises).then(() => browser.test.notifyPass("flag needed"));
     }
 
-    return ExtensionTestUtils.loadExtension({
+    ok(!Services.prefs.getBoolPref(STORAGE_SYNC_PREF, false),
+       "The `${STORAGE_SYNC_PREF}` should be set to false");
+
+    let extension = ExtensionTestUtils.loadExtension({
       manifest: {
         permissions: ["storage"],
       },
-      background: `(${background})()`,
-    }, extensionId);
+      background: `(${background})(${checkGetImpl})`,
+    });
+
+    await extension.startup();
+    await extension.awaitFinish("flag needed");
+    await extension.unload();
   }
 
-  Preferences.set(STORAGE_SYNC_PREF, true);
-
-  let extension1 = loadExtension();
-
-  await extension1.startup();
-  await extension1.awaitFinish("set-works");
-  await extension1.unload();
-
-  let extension2 = loadExtension();
-
-  await extension2.startup();
-  await extension2.awaitFinish("set-works");
-  await extension2.unload();
-
-  Preferences.reset(STORAGE_SYNC_PREF);
+  return runWithPrefs([[STORAGE_SYNC_PREF, false]], testFn);
 });
 
-registerCleanupFunction(() => {
-  Preferences.reset(STORAGE_SYNC_PREF);
+add_task(function test_reloading_extensions_works() {
+  async function testFn() {
+    // Just some random extension ID that we can re-use
+    const extensionId = "my-extension-id@1";
+
+    function loadExtension() {
+      function background() {
+        browser.storage.sync.set({"a": "b"}).then(() => {
+          browser.test.notifyPass("set-works");
+        });
+      }
+
+      return ExtensionTestUtils.loadExtension({
+        manifest: {
+          permissions: ["storage"],
+        },
+        background: `(${background})()`,
+      }, extensionId);
+    }
+
+    ok(Services.prefs.getBoolPref(STORAGE_SYNC_PREF, false),
+       "The `${STORAGE_SYNC_PREF}` should be set to true");
+
+    let extension1 = loadExtension();
+
+    await extension1.startup();
+    await extension1.awaitFinish("set-works");
+    await extension1.unload();
+
+    let extension2 = loadExtension();
+
+    await extension2.startup();
+    await extension2.awaitFinish("set-works");
+    await extension2.unload();
+  }
+
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]], testFn);
 });
 
-add_task(async function test_backgroundScript() {
+async function test_background_page_storage(testAreaName) {
   async function backgroundScript(checkGet) {
     let globalChanges, gResolve;
     function clearGlobalChanges() {
@@ -368,49 +373,59 @@ add_task(async function test_backgroundScript() {
     },
   };
 
-  Preferences.set(STORAGE_SYNC_PREF, true);
-
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  extension.sendMessage("test-local");
+  extension.sendMessage(`test-${testAreaName}`);
   await extension.awaitMessage("test-finished");
 
-  extension.sendMessage("test-sync");
-  await extension.awaitMessage("test-finished");
-
-  Preferences.reset(STORAGE_SYNC_PREF);
   await extension.unload();
+}
+
+add_task(function test_storage_local_file_backend() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, false]],
+                      () => test_background_page_storage("local"));
 });
 
-add_task(async function test_storage_requires_real_id() {
-  async function backgroundScript() {
-    const EXCEPTION_MESSAGE =
-          "The storage API is not available with a temporary addon ID. " +
-          "Please add an explicit addon ID to your manifest. " +
-          "For more information see https://bugzil.la/1323228.";
+add_task(function test_storage_local_idb_backend() {
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
+                      () => test_background_page_storage("local"));
+});
 
-    await browser.test.assertRejects(browser.storage.sync.set({"foo": "bar"}),
-                                     EXCEPTION_MESSAGE);
+add_task(function test_storage_sync() {
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]],
+                      () => test_background_page_storage("sync"));
+});
 
-    browser.test.notifyPass("exception correct");
+add_task(function test_storage_sync_requires_real_id() {
+  async function testFn() {
+    async function backgroundScript() {
+      const EXCEPTION_MESSAGE =
+              "The storage API is not available with a temporary addon ID. " +
+              "Please add an explicit addon ID to your manifest. " +
+              "For more information see https://bugzil.la/1323228.";
+
+      await browser.test.assertRejects(browser.storage.sync.set({"foo": "bar"}),
+                                       EXCEPTION_MESSAGE);
+
+      browser.test.notifyPass("exception correct");
+    }
+
+    let extensionData = {
+      background: `(${backgroundScript})(${checkGetImpl})`,
+      manifest: {
+        permissions: ["storage"],
+      },
+      useAddonManager: "temporary",
+    };
+
+    let extension = ExtensionTestUtils.loadExtension(extensionData);
+    await extension.startup();
+    await extension.awaitFinish("exception correct");
+
+    await extension.unload();
   }
 
-  let extensionData = {
-    background: `(${backgroundScript})(${checkGetImpl})`,
-    manifest: {
-      permissions: ["storage"],
-    },
-    useAddonManager: "temporary",
-  };
-
-  Preferences.set(STORAGE_SYNC_PREF, true);
-
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await extension.startup();
-  await extension.awaitFinish("exception correct");
-
-  Preferences.reset(STORAGE_SYNC_PREF);
-  await extension.unload();
+  return runWithPrefs([[STORAGE_SYNC_PREF, true]], testFn);
 });
