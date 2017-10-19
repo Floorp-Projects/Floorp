@@ -34,6 +34,8 @@
 // constraints, the reference identifier is the entire encoded name constraint
 // extension value.
 
+#include <algorithm>
+
 #include "pkixcheck.h"
 #include "pkixutil.h"
 
@@ -1705,11 +1707,9 @@ FinishIPv6Address(/*in/out*/ uint8_t (&address)[16], int numComponents,
   }
 
   // Shift components that occur after the contraction over.
-  size_t componentsToMove = static_cast<size_t>(numComponents -
-                                                contractionIndex);
-  memmove(address + (2u * static_cast<size_t>(8 - componentsToMove)),
-          address + (2u * static_cast<size_t>(contractionIndex)),
-          componentsToMove * 2u);
+  std::copy_backward(address + (2u * static_cast<size_t>(contractionIndex)),
+                     address + (2u * static_cast<size_t>(numComponents)),
+                     address + (2u * 8u));
   // Fill in the contracted area with zeros.
   std::fill_n(address + 2u * static_cast<size_t>(contractionIndex),
               (8u - static_cast<size_t>(numComponents)) * 2u, static_cast<uint8_t>(0u));

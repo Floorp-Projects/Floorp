@@ -3,14 +3,14 @@ config = {
     "log_name": "updates_release_dev",
     # TODO: use real repo
     "repo": {
-        "repo": "https://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+        "repo": "https://hg.mozilla.org/users/stage-ffxbld/tools",
         "branch": "default",
         "dest": "tools",
         "vcs": "hg",
     },
     "vcs_share_base": "/builds/hg-shared",
     # TODO: use real repo
-    "push_dest": "ssh://hg.mozilla.org/users/raliiev_mozilla.com/tools",
+    "push_dest": "ssh://hg.mozilla.org/users/stage-ffxbld/tools",
     # jamun  repo used for staging release
     "shipped-locales-url": "https://hg.mozilla.org/projects/jamun/raw-file/{revision}/browser/locales/shipped-locales",
     "ignore_no_changes": True,
@@ -33,7 +33,7 @@ config = {
             ],
             "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
             "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
-            "publish_rules": ["firefox-beta"],
+            "publish_rules": [32],
             "schedule_asap": True,
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-release-cdntest-bz2", "firefox-release-localtest-bz2"],
@@ -49,7 +49,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["release-dev", "release-dev-localtest", "release-dev-cdntest"],
             "rules_to_update": ["firefox-release-dev-cdntest", "firefox-release-dev-localtest"],
-            "publish_rules": ["firefox-release"],
+            "publish_rules": [145],
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-release-cdntest-bz2", "firefox-release-localtest-bz2"],
             "bz2_publish_rules": [624],

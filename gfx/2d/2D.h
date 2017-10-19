@@ -26,10 +26,9 @@
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
 #include "mozilla/RefPtr.h"
-#include "mozilla/ServoUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/WeakPtr.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -81,28 +80,6 @@ namespace gfx {
 class UnscaledFont;
 class ScaledFont;
 }
-
-template<>
-struct WeakPtrTraits<gfx::UnscaledFont>
-{
-  static void AssertSafeToAccessFromNonOwningThread()
-  {
-    // We want to allow UnscaledFont objects that were created on the main
-    // thread to be accessed from other threads if the Servo font metrics
-    // mutex is locked, and for objects created on Servo style worker threads
-    // to be accessed later back on the main thread.
-    AssertIsMainThreadOrServoFontMetricsLocked();
-  }
-};
-
-template<>
-struct WeakPtrTraits<gfx::ScaledFont>
-{
-  static void AssertSafeToAccessFromNonOwningThread()
-  {
-    AssertIsMainThreadOrServoFontMetricsLocked();
-  }
-};
 
 namespace gfx {
 
@@ -750,13 +727,11 @@ struct GlyphMetrics
   Float mHeight;
 };
 
-class UnscaledFont
-  : public external::AtomicRefCounted<UnscaledFont>
-  , public SupportsWeakPtr<UnscaledFont>
+class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFont)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(UnscaledFont)
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(UnscaledFont)
 
   virtual ~UnscaledFont();
 
@@ -796,13 +771,11 @@ private:
  * at a particular size. It is passed into text drawing calls to describe
  * the font used for the drawing call.
  */
-class ScaledFont
-  : public external::AtomicRefCounted<ScaledFont>
-  , public SupportsWeakPtr<ScaledFont>
+class ScaledFont : public SupportsThreadSafeWeakPtr<ScaledFont>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ScaledFont)
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(ScaledFont)
 
   virtual ~ScaledFont();
 

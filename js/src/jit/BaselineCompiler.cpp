@@ -2307,21 +2307,21 @@ BaselineCompiler::emit_JSOP_GETELEM()
 bool
 BaselineCompiler::emit_JSOP_GETELEM_SUPER()
 {
-    // Index -> R1, Receiver -> R2, Object -> R0
-    frame.popRegsAndSync(1);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R2);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
+    // Store obj in the scratch slot.
+    storeValue(frame.peek(-1), frame.addressOfScratchValue(), R2);
+    frame.pop();
 
-    // Keep receiver on stack.
-    frame.popn(2);
-    frame.push(R2);
-    frame.syncStack(0);
+    // Keep index and receiver in R0 and R1.
+    frame.popRegsAndSync(2);
+
+    // Keep obj on the stack.
+    frame.pushScratchValue();
 
     ICGetElem_Fallback::Compiler stubCompiler(cx, /* hasReceiver = */ true);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
-    frame.pop();
+    frame.pop(); // This value is also popped in InitFromBailout.
     frame.push(R0);
     return true;
 }

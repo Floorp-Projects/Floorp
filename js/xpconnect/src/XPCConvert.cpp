@@ -481,11 +481,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         if (!s.isObject() ||
-            (!(pid = xpc_JSObjectToID(cx, &s.toObject()))) ||
-            (!(pid = (const nsID*) nsMemory::Clone(pid, sizeof(nsID))))) {
+            !(pid = xpc_JSObjectToID(cx, &s.toObject()))) {
             return false;
         }
-        *((const nsID**)d) = pid;
+        *((const nsID**)d) = pid->Clone();
         return true;
     }
 

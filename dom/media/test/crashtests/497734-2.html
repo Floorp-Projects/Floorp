@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<script>
+
+function boom()
+{
+    audio1 = document.createElement("audio");
+    (audio1).appendChild(document.createElement("source"));
+    (audio1).appendChild(document.createElement("source"));
+    setTimeout(function() {
+        audio2 = document.createElement("audio");
+        audio2.appendChild(audio1);
+    }, 100);
+}
+
+</script>
+<body onload="boom();"></body>

@@ -493,7 +493,7 @@ class HandleValueArray
     HandleValueArray(size_t len, const Value* elements) : length_(len), elements_(elements) {}
 
   public:
-    explicit HandleValueArray(const RootedValue& value) : length_(1), elements_(value.address()) {}
+    explicit HandleValueArray(HandleValue value) : length_(1), elements_(value.address()) {}
 
     MOZ_IMPLICIT HandleValueArray(const AutoValueVector& values)
       : length_(values.length()), elements_(values.begin()) {}

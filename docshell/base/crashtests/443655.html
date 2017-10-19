@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body onload="document.removeChild(document.documentElement)">
+
+<!-- The order of the two iframes matters! -->
+
+<iframe src='data:text/html,<body onload="s = parent.document.getElementById(&apos;s&apos;).contentWindow;" onunload="s.location = s.location;">'></iframe>
+
+<iframe id="s"></iframe>
+
+</body>
+</html>

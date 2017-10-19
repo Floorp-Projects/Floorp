@@ -55,6 +55,7 @@ tasks:
         $if: 'tasks_for == "hg-push"'
         then:
           - "index.gecko.v2.${repository.project}.latest.firefox.decision"
+          - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
           - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
           - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
           - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"

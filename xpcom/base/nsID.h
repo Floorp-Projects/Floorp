@@ -83,6 +83,9 @@ struct nsID
 
 #endif // XPCOM_GLUE_AVOID_NSPR
 
+  // Infallibly duplicate an nsID. Must be freed with free().
+  nsID* Clone() const;
+
   //@}
 };
 

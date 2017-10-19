@@ -98,7 +98,7 @@ public:
     nsCString mFilename;
     uint8_t   mFTFontIndex;
 
-    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+    mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontFreeType> mUnscaledFont;
 };
 
 class FT2FontFamily : public gfxFontFamily
