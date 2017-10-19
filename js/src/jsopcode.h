@@ -153,37 +153,19 @@ static const unsigned JUMP_OFFSET_LEN   = 4;
 static const int32_t JUMP_OFFSET_MIN    = INT32_MIN;
 static const int32_t JUMP_OFFSET_MAX    = INT32_MAX;
 
-static inline jsbytecode
-UINT24_HI(unsigned i)
-{
-    return jsbytecode(i >> 16);
-}
-
-static inline jsbytecode
-UINT24_MID(unsigned i)
-{
-    return jsbytecode(i >> 8);
-}
-
-static inline jsbytecode
-UINT24_LO(unsigned i)
-{
-    return jsbytecode(i);
-}
-
 static MOZ_ALWAYS_INLINE unsigned
 GET_UINT24(const jsbytecode* pc)
 {
-    return unsigned((pc[1] << 16) | (pc[2] << 8) | pc[3]);
+    return unsigned((pc[3] << 16) | (pc[2] << 8) | pc[1]);
 }
 
 static MOZ_ALWAYS_INLINE void
 SET_UINT24(jsbytecode* pc, unsigned i)
 {
     MOZ_ASSERT(i < (1 << 24));
-    pc[1] = UINT24_HI(i);
-    pc[2] = UINT24_MID(i);
-    pc[3] = UINT24_LO(i);
+    pc[1] = jsbytecode(i);
+    pc[2] = jsbytecode(i >> 8);
+    pc[3] = jsbytecode(i >> 16);
 }
 
 static MOZ_ALWAYS_INLINE int8_t
