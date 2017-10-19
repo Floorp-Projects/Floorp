@@ -1026,11 +1026,10 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 
 .PanelUI-remotetabs-prefs-button {
   -moz-appearance: none;
-  background-color: #0060df;
+  background-color: #0096dd;
   /* !important for the color as an OSX specific rule when a lightweight theme
      is used for buttons in the toolbox overrides. See bug 1238531 for details */
   color: white !important;
-  font-size: 13px;
   border-radius: 2px;
   /* If you change the margin or padding below, the min-height of the synced tabs
      panel (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
@@ -1042,12 +1041,9 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   min-width: 200px;
 }
 
-.PanelUI-remotetabs-prefs-button:hover {
-  background-color: #003eaa;
-}
-
+.PanelUI-remotetabs-prefs-button:hover,
 .PanelUI-remotetabs-prefs-button:hover:active {
-  background-color: #002275;
+  background-color: #018acb;
 }
 
 .remotetabs-promo-link {

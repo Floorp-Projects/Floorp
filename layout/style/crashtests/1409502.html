@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <style>
+      HTML:first-line, DIV { position:fixed }
+    </style>
+    <script>
+      try { o1 = document.createElement('DIV') } catch(e) { }
+      try { document.documentElement.appendChild(o1) } catch(e) { }
+      try { document.documentElement.getBoundingClientRect() } catch(e) { }
+      try { document.styleSheets[0].cssRules[0].style['position'] = 'relative' } catch(e) { }
+    </script>
+  </head>
+</html>

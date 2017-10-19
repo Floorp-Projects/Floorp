@@ -814,7 +814,7 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
 void
 gfxFontconfigFontEntry::UnscaledFontCache::MoveToFront(size_t aIndex) {
     if (aIndex > 0) {
-        WeakPtr<UnscaledFont> front =
+        ThreadSafeWeakPtr<UnscaledFontFontconfig> front =
             Move(mUnscaledFonts[aIndex]);
         for (size_t i = aIndex; i > 0; i--) {
             mUnscaledFonts[i] = Move(mUnscaledFonts[i-1]);
@@ -826,13 +826,12 @@ gfxFontconfigFontEntry::UnscaledFontCache::MoveToFront(size_t aIndex) {
 already_AddRefed<UnscaledFontFontconfig>
 gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const char* aFile, uint32_t aIndex) {
     for (size_t i = 0; i < kNumEntries; i++) {
-        UnscaledFontFontconfig* entry =
-            static_cast<UnscaledFontFontconfig*>(mUnscaledFonts[i].get());
+        RefPtr<UnscaledFontFontconfig> entry(mUnscaledFonts[i]);
         if (entry &&
             !strcmp(entry->GetFile(), aFile) &&
             entry->GetIndex() == aIndex) {
             MoveToFront(i);
-            return do_AddRef(entry);
+            return entry.forget();
         }
     }
     return nullptr;

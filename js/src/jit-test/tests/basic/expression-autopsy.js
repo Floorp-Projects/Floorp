@@ -150,6 +150,81 @@ check_one("super(...)",
           },
           " is not a function");
 
+check_one("super.a",
+          function() {
+            class X extends Object {
+              test() {
+                super.a();
+              }
+            }
+            var x = new X();
+            x.test();
+          },
+          " is not a function");
+
+check_one("super[a]",
+          function() {
+            var a = "a";
+            class X extends Object {
+              test() {
+                super[a]();
+              }
+            }
+            var x = new X();
+            x.test();
+          },
+          " is not a function");
+
+check_one("super.a(...)",
+          function() {
+            class Y {
+              a() {
+                return 5;
+              }
+            }
+
+            class X extends Y {
+              test() {
+                super.a()();
+              }
+            }
+
+            var x = new X();
+            x.test();
+          },
+          " is not a function");
+
+check_one("super[a](...)",
+          function() {
+            class Y {
+              a() {
+                return 5;
+              }
+            }
+
+            var a = "a";
+            class X extends Y {
+              test() {
+                super[a]()();
+              }
+            }
+
+            var x = new X();
+            x.test();
+          },
+          " is not a function");
+
+check_one("super[1]",
+          function() {
+            class X extends Object {
+              foo() {
+                return super[1]();
+              }
+            }
+            new X().foo();
+          },
+          " is not a function");
+
 check_one("eval(...)",
           function() { eval("")(); },
           " is not a function");

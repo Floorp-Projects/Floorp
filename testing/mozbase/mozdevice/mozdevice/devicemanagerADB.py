@@ -721,9 +721,13 @@ class DeviceManagerADB(DeviceManager):
             proc.run(timeout=timeout)
             ret_code = proc.wait()
             if ret_code is None:
+                self._logger.error("Failed to launch %s (may retry)" % finalArgs)
                 proc.kill()
                 retries += 1
             else:
+                if ret_code != 0:
+                    self._logger.error("Non-zero return code (%d) from %s" % (ret_code, finalArgs))
+                    self._logger.error("Output: %s" % proc.output)
                 return ret_code
 
         raise DMError("Timeout exceeded for _checkCmd call after %d retries." % retries)

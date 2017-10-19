@@ -14,7 +14,7 @@ const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/reque
 const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Components
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div } = DOM;
 

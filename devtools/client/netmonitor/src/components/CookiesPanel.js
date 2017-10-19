@@ -13,7 +13,7 @@ const { L10N } = require("../utils/l10n");
 const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Component
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div } = DOM;
 

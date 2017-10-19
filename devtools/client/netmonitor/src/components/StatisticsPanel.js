@@ -25,7 +25,7 @@ const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
 // Components
-const MDNLink = createFactory(require("./mdn-link"));
+const MDNLink = createFactory(require("./MdnLink"));
 
 const { button, div } = DOM;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");

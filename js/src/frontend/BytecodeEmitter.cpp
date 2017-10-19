@@ -5314,6 +5314,37 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, IteratorKind iterKind /* = Iter
 }
 
 bool
+BytecodeEmitter::emitPushNotUndefinedOrNull()
+{
+    MOZ_ASSERT(this->stackDepth > 0);                     // V
+
+    if (!emit1(JSOP_DUP))                                 // V V
+        return false;
+    if (!emit1(JSOP_UNDEFINED))                           // V V UNDEFINED
+        return false;
+    if (!emit1(JSOP_STRICTNE))                            // V ?NEQL
+        return false;
+
+    JumpList undefinedOrNullJump;
+    if (!emitJump(JSOP_AND, &undefinedOrNullJump))        // V ?NEQL
+        return false;
+
+    if (!emit1(JSOP_POP))                                 // V
+        return false;
+    if (!emit1(JSOP_DUP))                                 // V V
+        return false;
+    if (!emit1(JSOP_NULL))                                // V V NULL
+        return false;
+    if (!emit1(JSOP_STRICTNE))                            // V ?NEQL
+        return false;
+
+    if (!emitJumpTargetAndPatch(undefinedOrNullJump))     // V NOT-UNDEF-OR-NULL
+        return false;
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync */,
                                    CompletionKind completionKind /* = CompletionKind::Normal */,
                                    bool allowSelfHosted /* = false */)
@@ -5338,15 +5369,12 @@ BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync
 
     // Step 4.
     //
-    // Do nothing if "return" is null or undefined.
+    // Do nothing if "return" is undefined or null.
     IfThenElseEmitter ifReturnMethodIsDefined(this);
-    if (!emit1(JSOP_DUP))                                 // ... ITER RET RET
+    if (!emitPushNotUndefinedOrNull())                    // ... ITER RET NOT-UNDEF-OR-NULL
         return false;
-    if (!emit1(JSOP_UNDEFINED))                           // ... ITER RET RET UNDEFINED
-        return false;
-    if (!emit1(JSOP_NE))                                  // ... ITER RET ?NEQL
-        return false;
-    if (!ifReturnMethodIsDefined.emitIfElse())
+
+    if (!ifReturnMethodIsDefined.emitIfElse())            // ... ITER RET
         return false;
 
     if (completionKind == CompletionKind::Throw) {
@@ -5447,10 +5475,12 @@ BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync
         }
     }
 
-    if (!ifReturnMethodIsDefined.emitElse())
+    if (!ifReturnMethodIsDefined.emitElse())              // ... ITER RET
         return false;
+
     if (!emit1(JSOP_POP))                                 // ... ITER
         return false;
+
     if (!ifReturnMethodIsDefined.emitEnd())
         return false;
 
@@ -7024,11 +7054,9 @@ BytecodeEmitter::emitAsyncIterator()
         return false;
 
     IfThenElseEmitter ifAsyncIterIsUndefined(this);
-    if (!emit1(JSOP_DUP))                                         // OBJ ITERFN ITERFN
+    if (!emitPushNotUndefinedOrNull())                            // OBJ ITERFN !UNDEF-OR-NULL
         return false;
-    if (!emit1(JSOP_UNDEFINED))                                   // OBJ ITERFN ITERFN UNDEF
-        return false;
-    if (!emit1(JSOP_EQ))                                          // OBJ ITERFN EQ
+    if (!emit1(JSOP_NOT))                                         // OBJ ITERFN UNDEF-OR-NULL
         return false;
     if (!ifAsyncIterIsUndefined.emitIfElse())                     // OBJ ITERFN
         return false;
@@ -8920,13 +8948,9 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
 
     // Step iii.
     //
-    // Do nothing if "return" is undefined.
+    // Do nothing if "return" is undefined or null.
     IfThenElseEmitter ifReturnMethodIsDefined(this);
-    if (!emit1(JSOP_DUP))                                 // ITER RESULT FTYPE FVALUE ITER RET RET
-        return false;
-    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT FTYPE FVALUE ITER RET RET UNDEFINED
-        return false;
-    if (!emit1(JSOP_NE))                                  // ITER RESULT FTYPE FVALUE ITER RET ?NEQL
+    if (!emitPushNotUndefinedOrNull())                    // ITER RESULT FTYPE FVALUE ITER RET NOT-UNDEF-OR-NULL
         return false;
 
     // Step iv.
