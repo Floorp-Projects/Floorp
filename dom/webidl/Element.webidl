@@ -235,16 +235,28 @@ partial interface Element {
   NodeList  querySelectorAll(DOMString selectors);
 };
 
-// http://w3c.github.io/webcomponents/spec/shadow/#extensions-to-element-interface
+// https://dom.spec.whatwg.org/#dictdef-shadowrootinit
+dictionary ShadowRootInit {
+  required ShadowRootMode mode;
+};
+
+// https://dom.spec.whatwg.org/#element
 partial interface Element {
-  [Throws,Pref="dom.webcomponents.enabled"]
-  ShadowRoot createShadowRoot();
-  [Pref="dom.webcomponents.enabled"]
-  NodeList getDestinationInsertionPoints();
+  // Shadow DOM v1
+  [Throws, Pref="dom.webcomponents.enabled"]
+  ShadowRoot attachShadow(ShadowRootInit shadowRootInitDict);
   [Pref="dom.webcomponents.enabled"]
   readonly attribute ShadowRoot? shadowRoot;
   [Pref="dom.webcomponents.enabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
+  [CEReactions, Unscopable, SetterThrows, Pref="dom.webcomponents.enabled"]
+           attribute DOMString slot;
+
+  // [deprecated] Shadow DOM v0
+  [Throws, Pref="dom.webcomponents.enabled"]
+  ShadowRoot createShadowRoot();
+  [Pref="dom.webcomponents.enabled"]
+  NodeList getDestinationInsertionPoints();
 };
 
 Element implements ChildNode;
