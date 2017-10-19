@@ -287,7 +287,7 @@ HeadlessWidget::Move(double aX, double aY)
 LayoutDeviceIntPoint
 HeadlessWidget::WidgetToScreenOffset()
 {
-  return LayoutDeviceIntPoint(mBounds.x, mBounds.y);
+  return mTopLevel->GetBounds().TopLeft();
 }
 
 LayerManager*
