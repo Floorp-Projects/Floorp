@@ -5737,8 +5737,8 @@ SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget, Args... args)
     return true;
 }
 
-/* static */ IncrementalProgress
-GCRuntime::sweepTypeInformation(GCRuntime* gc, FreeOp* fop, SliceBudget& budget, Zone* zone)
+IncrementalProgress
+GCRuntime::sweepTypeInformation(FreeOp* fop, SliceBudget& budget, Zone* zone)
 {
     // Sweep dead type information stored in scripts and object groups, but
     // don't finalize them yet. We have to sweep dead information from both live
@@ -5748,8 +5748,8 @@ GCRuntime::sweepTypeInformation(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
     // the sweep group finishes we won't be able to determine which things in
     // the zone are live.
 
-    gcstats::AutoPhase ap1(gc->stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
-    gcstats::AutoPhase ap2(gc->stats(), gcstats::PhaseKind::SWEEP_TYPES);
+    gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
+    gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES);
 
     ArenaLists& al = zone->arenas;
 
@@ -5763,15 +5763,15 @@ GCRuntime::sweepTypeInformation(GCRuntime* gc, FreeOp* fop, SliceBudget& budget,
 
     // Finish sweeping type information in the zone.
     {
-        gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::SWEEP_TYPES_END);
-        zone->types.endSweep(gc->rt);
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_TYPES_END);
+        zone->types.endSweep(rt);
     }
 
     return Finished;
 }
 
-/* static */ IncrementalProgress
-GCRuntime::mergeSweptObjectArenas(GCRuntime* gc, FreeOp* fop, SliceBudget& budget, Zone* zone)
+IncrementalProgress
+GCRuntime::mergeSweptObjectArenas(FreeOp* fop, SliceBudget& budget, Zone* zone)
 {
     // Foreground finalized objects have already been finalized, and now their
     // arenas can be reclaimed by freeing empty ones and making non-empty ones
@@ -5802,18 +5802,12 @@ GCRuntime::startSweepingAtomsTable()
     maybeAtoms.emplace(*atomsTable);
 }
 
-/* static */ IncrementalProgress
-GCRuntime::sweepAtomsTable(GCRuntime* gc, FreeOp* fop, SliceBudget& budget)
+IncrementalProgress
+GCRuntime::sweepAtomsTable(FreeOp* fop, SliceBudget& budget)
 {
-    if (!gc->atomsZone->isGCSweeping())
+    if (!atomsZone->isGCSweeping())
         return Finished;
 
-    return gc->sweepAtomsTable(budget);
-}
-
-IncrementalProgress
-GCRuntime::sweepAtomsTable(SliceBudget& budget)
-{
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_ATOMS_TABLE);
 
     auto& maybeAtoms = maybeAtomsToSweep.ref();
@@ -5943,12 +5937,6 @@ class IncrementalSweepWeakCacheTask : public GCParallelTask
     }
 };
 
-/* static */ IncrementalProgress
-GCRuntime::sweepWeakCaches(GCRuntime* gc, FreeOp* fop, SliceBudget& budget)
-{
-    return gc->sweepWeakCaches(budget);
-}
-
 static const size_t MaxWeakCacheSweepTasks = 8;
 
 static size_t
@@ -5959,7 +5947,7 @@ WeakCacheSweepTaskCount()
 }
 
 IncrementalProgress
-GCRuntime::sweepWeakCaches(SliceBudget& budget)
+GCRuntime::sweepWeakCaches(FreeOp* fop, SliceBudget& budget)
 {
     WeakCacheSweepIterator work(this);
 
@@ -5978,13 +5966,12 @@ GCRuntime::sweepWeakCaches(SliceBudget& budget)
     return work.empty(lock) ? Finished : NotFinished;
 }
 
-/* static */ IncrementalProgress
-GCRuntime::finalizeAllocKind(GCRuntime* gc, FreeOp* fop, SliceBudget& budget, Zone* zone,
-                             AllocKind kind)
+IncrementalProgress
+GCRuntime::finalizeAllocKind(FreeOp* fop, SliceBudget& budget, Zone* zone, AllocKind kind)
 {
     // Set the number of things per arena for this AllocKind.
     size_t thingsPerArena = Arena::thingsPerArena(kind);
-    auto& sweepList = gc->incrementalSweepList.ref();
+    auto& sweepList = incrementalSweepList.ref();
     sweepList.setThingsPerArena(thingsPerArena);
 
     if (!zone->arenas.foregroundFinalize(fop, kind, budget, sweepList))
@@ -5996,12 +5983,12 @@ GCRuntime::finalizeAllocKind(GCRuntime* gc, FreeOp* fop, SliceBudget& budget, Zo
     return Finished;
 }
 
-/* static */ IncrementalProgress
-GCRuntime::sweepShapeTree(GCRuntime* gc, FreeOp* fop, SliceBudget& budget, Zone* zone)
+IncrementalProgress
+GCRuntime::sweepShapeTree(FreeOp* fop, SliceBudget& budget, Zone* zone)
 {
     // Remove dead shapes from the shape tree, but don't finalize them yet.
 
-    gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::SWEEP_SHAPE);
+    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_SHAPE);
 
     ArenaLists& al = zone->arenas;
 
@@ -6086,18 +6073,18 @@ struct IncrementalIter
 
 namespace sweepaction {
 
-// Implementation of the SweepAction interface that calls a function.
+// Implementation of the SweepAction interface that calls a method on GCRuntime.
 template <typename... Args>
-class SweepActionFunc final : public SweepAction<Args...>
+class SweepActionCall final : public SweepAction<GCRuntime*, Args...>
 {
-    using Func = IncrementalProgress (*)(Args...);
+    using Method = IncrementalProgress (GCRuntime::*)(Args...);
 
-    Func func;
+    Method method;
 
   public:
-    explicit SweepActionFunc(Func f) : func(f) {}
-    IncrementalProgress run(Args... args) override {
-        return func(args...);
+    explicit SweepActionCall(Method m) : method(m) {}
+    IncrementalProgress run(GCRuntime* gc, Args... args) override {
+        return (gc->*method)(args...);
     }
     void assertFinished() const override { }
 };
@@ -6206,9 +6193,9 @@ class RemoveLastTemplateParameter<Target<Args...>>
 };
 
 template <typename... Args>
-static UniquePtr<SweepAction<Args...>>
-Func(IncrementalProgress (*func)(Args...)) {
-    return MakeUnique<SweepActionFunc<Args...>>(func);
+static UniquePtr<SweepAction<GCRuntime*, Args...>>
+Call(IncrementalProgress (GCRuntime::*method)(Args...)) {
+    return MakeUnique<SweepActionCall<Args...>>(method);
 }
 
 template <typename... Args, typename... Rest>
@@ -6253,22 +6240,23 @@ bool
 GCRuntime::initSweepActions()
 {
     using namespace sweepaction;
+    using sweepaction::Call;
 
     sweepActions.ref() = Sequence(
-        Func(sweepAtomsTable),
-        Func(sweepWeakCaches),
+        Call(&GCRuntime::sweepAtomsTable),
+        Call(&GCRuntime::sweepWeakCaches),
         ForEachZoneInSweepGroup(rt,
             ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                Func(finalizeAllocKind))),
+                Call(&GCRuntime::finalizeAllocKind))),
         ForEachZoneInSweepGroup(rt,
             Sequence(
-                Func(sweepTypeInformation),
-                Func(mergeSweptObjectArenas))),
+                Call(&GCRuntime::sweepTypeInformation),
+                Call(&GCRuntime::mergeSweptObjectArenas))),
         ForEachZoneInSweepGroup(rt,
             ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                Func(finalizeAllocKind))),
+                Call(&GCRuntime::finalizeAllocKind))),
         ForEachZoneInSweepGroup(rt,
-            Func(sweepShapeTree)));
+            Call(&GCRuntime::sweepShapeTree)));
 
     return sweepActions != nullptr;
 }
