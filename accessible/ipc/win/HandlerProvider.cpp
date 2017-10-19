@@ -9,6 +9,8 @@
 #include "mozilla/a11y/HandlerProvider.h"
 
 #include "Accessible2_3.h"
+#include "AccessibleTable.h"
+#include "AccessibleTable2.h"
 #include "HandlerData.h"
 #include "HandlerData_i.c"
 #include "mozilla/Assertions.h"
@@ -212,6 +214,18 @@ HandlerProvider::MarshalAs(REFIID aIid)
   }
   // Otherwise we juse return the identity.
   return aIid;
+}
+
+REFIID
+HandlerProvider::GetEffectiveOutParamIid(REFIID aCallIid,
+                                         ULONG aCallMethod)
+{
+  if (aCallIid == IID_IAccessibleTable || aCallIid == IID_IAccessibleTable2) {
+    return IID_IAccessible2_3;
+  }
+
+  MOZ_ASSERT(false);
+  return IID_IUnknown;
 }
 
 HRESULT

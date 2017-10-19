@@ -1059,6 +1059,15 @@ TabChild::DestroyWindow()
       mCoalescedMouseEventFlusher->RemoveObserver();
       mCoalescedMouseEventFlusher = nullptr;
     }
+
+    // In case we don't have chance to process all entries, clean all data in
+    // the queue.
+    while (mToBeDispatchedMouseData.GetSize() > 0) {
+      UniquePtr<CoalescedMouseData> data(
+        static_cast<CoalescedMouseData*>(mToBeDispatchedMouseData.PopFront()));
+      data.reset();
+    }
+
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(WebNavigation());
     if (baseWindow)
         baseWindow->Destroy();
@@ -1591,28 +1600,62 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 void
-TabChild::MaybeDispatchCoalescedMouseMoveEvents()
+TabChild::ProcessPendingCoalescedMouseDataAndDispatchEvents()
 {
-  if (!mCoalesceMouseMoveEvents) {
+  if (!mCoalesceMouseMoveEvents || !mCoalescedMouseEventFlusher) {
+    // We don't enable mouse coalescing or we are destroying TabChild.
     return;
   }
+
+  // We may reentry the event loop and push more data to
+  // mToBeDispatchedMouseData while dispatching an event.
+
+  // We may have some pending coalesced data while dispatch an event and reentry
+  // the event loop. In that case we don't have chance to consume the remainding
+  // pending data until we get new mouse events. Get some helps from
+  // mCoalescedMouseEventFlusher to trigger it.
+  mCoalescedMouseEventFlusher->StartObserver();
+
+  while (mToBeDispatchedMouseData.GetSize() > 0) {
+    UniquePtr<CoalescedMouseData> data(
+      static_cast<CoalescedMouseData*>(mToBeDispatchedMouseData.PopFront()));
+
+    UniquePtr<WidgetMouseEvent> event = data->TakeCoalescedEvent();
+    if (event) {
+      // Dispatch the pending events. Using HandleRealMouseButtonEvent
+      // to bypass the coalesce handling in RecvRealMouseMoveEvent. Can't use
+      // RecvRealMouseButtonEvent because we may also put some mouse events
+      // other than mousemove.
+      HandleRealMouseButtonEvent(*event,
+                                 data->GetScrollableLayerGuid(),
+                                 data->GetInputBlockId());
+    }
+  }
+  // mCoalescedMouseEventFlusher may be destroyed when reentrying the event
+  // loop.
+  if (mCoalescedMouseEventFlusher) {
+    mCoalescedMouseEventFlusher->RemoveObserver();
+  }
+}
+
+void
+TabChild::FlushAllCoalescedMouseData()
+{
+  MOZ_ASSERT(mCoalesceMouseMoveEvents);
+
+  // Move all entries from mCoalescedMouseData to mToBeDispatchedMouseData.
   for (auto iter = mCoalescedMouseData.Iter(); !iter.Done(); iter.Next()) {
     CoalescedMouseData* data = iter.UserData();
     if (!data || data->IsEmpty()) {
       continue;
     }
-    const WidgetMouseEvent* event = data->GetCoalescedEvent();
-    MOZ_ASSERT(event);
-    // Dispatch the coalesced mousemove event. Using RecvRealMouseButtonEvent to
-    // bypass the coalesce handling in RecvRealMouseMoveEvent.
-    RecvRealMouseButtonEvent(*event,
-                             data->GetScrollableLayerGuid(),
-                             data->GetInputBlockId());
-    data->Reset();
+    UniquePtr<CoalescedMouseData> dispatchData =
+      MakeUnique<CoalescedMouseData>();
+
+    dispatchData->RetrieveDataFrom(*data);
+    mToBeDispatchedMouseData.Push(dispatchData.release());
   }
-  if (mCoalescedMouseEventFlusher) {
-    mCoalescedMouseEventFlusher->RemoveObserver();
-  }
+  mCoalescedMouseData.Clear();
 }
 
 mozilla::ipc::IPCResult
@@ -1632,10 +1675,23 @@ TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& aEvent,
       mCoalescedMouseEventFlusher->StartObserver();
       return IPC_OK();
     }
-    // Can't coalesce current mousemove event. Dispatch the coalesced mousemove
-    // event and coalesce the current one.
-    MaybeDispatchCoalescedMouseMoveEvents();
-    data->Coalesce(aEvent, aGuid, aInputBlockId);
+    // Can't coalesce current mousemove event. Put the coalesced mousemove data
+    // with the same pointer id to mToBeDispatchedMouseData, coalesce the
+    // current one, and process all pending data in mToBeDispatchedMouseData.
+    MOZ_ASSERT(data);
+    UniquePtr<CoalescedMouseData> dispatchData =
+      MakeUnique<CoalescedMouseData>();
+
+    dispatchData->RetrieveDataFrom(*data);
+    mToBeDispatchedMouseData.Push(dispatchData.release());
+
+    // Put new data to replace the old one in the hash table.
+    CoalescedMouseData* newData = new CoalescedMouseData();
+    mCoalescedMouseData.Put(aEvent.pointerId, newData);
+    newData->Coalesce(aEvent, aGuid, aInputBlockId);
+
+    // Dispatch all pending mouse events.
+    ProcessPendingCoalescedMouseDataAndDispatchEvents();
     mCoalescedMouseEventFlusher->StartObserver();
   } else if (!RecvRealMouseButtonEvent(aEvent, aGuid, aInputBlockId)) {
     return IPC_FAIL_NO_REASON(this);
@@ -1675,16 +1731,35 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                    const ScrollableLayerGuid& aGuid,
                                    const uint64_t& aInputBlockId)
 {
-  if (aEvent.mMessage != eMouseMove) {
-    // Flush the coalesced mousemove event before dispatching other mouse
-    // events.
-    MaybeDispatchCoalescedMouseMoveEvents();
-    if (aEvent.mMessage == eMouseEnterIntoWidget) {
-      mCoalescedMouseData.Put(aEvent.pointerId, new CoalescedMouseData());
-    } else if (aEvent.mMessage == eMouseExitFromWidget) {
-      mCoalescedMouseData.Remove(aEvent.pointerId);
-    }
+  if (mCoalesceMouseMoveEvents && mCoalescedMouseEventFlusher &&
+      aEvent.mMessage != eMouseMove) {
+    // When receiving a mouse event other than mousemove, we have to dispatch
+    // all coalesced events before it. However, we can't dispatch all pending
+    // coalesced events directly because we may reentry the event loop while
+    // dispatching. To make sure we won't dispatch disorder events, we move all
+    // coalesced mousemove events and current event to a deque to dispatch them.
+    // When reentrying the event loop and dispatching more events, we put new
+    // events in the end of the nsQueue and dispatch events from the beginning.
+    FlushAllCoalescedMouseData();
+
+    UniquePtr<CoalescedMouseData> dispatchData =
+      MakeUnique<CoalescedMouseData>();
+
+    dispatchData->Coalesce(aEvent, aGuid, aInputBlockId);
+    mToBeDispatchedMouseData.Push(dispatchData.release());
+
+    ProcessPendingCoalescedMouseDataAndDispatchEvents();
+    return IPC_OK();
   }
+  HandleRealMouseButtonEvent(aEvent, aGuid, aInputBlockId);
+  return IPC_OK();
+}
+
+void
+TabChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
+                                     const ScrollableLayerGuid& aGuid,
+                                     const uint64_t& aInputBlockId)
+{
   // Mouse events like eMouseEnterIntoWidget, that are created in the parent
   // process EventStateManager code, have an input block id which they get from
   // the InputAPZContext in the parent process stack. However, they did not
@@ -1714,7 +1789,6 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
   }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -1779,13 +1853,12 @@ TabChild::MaybeDispatchCoalescedWheelEvent()
   if (mCoalescedWheelData.IsEmpty()) {
     return;
   }
-  const WidgetWheelEvent* wheelEvent =
-    mCoalescedWheelData.GetCoalescedEvent();
+  UniquePtr<WidgetWheelEvent> wheelEvent =
+    mCoalescedWheelData.TakeCoalescedEvent();
   MOZ_ASSERT(wheelEvent);
   DispatchWheelEvent(*wheelEvent,
                      mCoalescedWheelData.GetScrollableLayerGuid(),
                      mCoalescedWheelData.GetInputBlockId());
-  mCoalescedWheelData.Reset();
 }
 
 void

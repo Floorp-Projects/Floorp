@@ -929,7 +929,8 @@ HttpBaseChannel::EnsureUploadStreamIsCloneable(nsIRunnable* aCallback)
   if (NS_InputStreamIsBuffered(mUploadStream)) {
     source = mUploadStream;
   } else {
-    rv = NS_NewBufferedInputStream(getter_AddRefs(source), mUploadStream, 4096);
+    rv = NS_NewBufferedInputStream(getter_AddRefs(source),
+                                   mUploadStream.forget(), 4096);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

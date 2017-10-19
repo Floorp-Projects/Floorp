@@ -510,6 +510,9 @@ public class CustomTabsActivity extends AppCompatActivity
      * Callback for Open-in menu item.
      */
     private void onOpenInClicked() {
+        if (TextUtils.isEmpty(mCurrentUrl)) {
+            return;
+        }
         final Intent intent = new Intent();
         intent.setData(Uri.parse(mCurrentUrl));
         intent.setAction(Intent.ACTION_VIEW);

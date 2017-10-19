@@ -2504,7 +2504,7 @@ BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn)
 {
     if (pn && !updateSourceCoordNotes(pn->pn_pos.begin))
         return false;
-    return emit3(op, ARGC_HI(argc), ARGC_LO(argc));
+    return emit3(op, ARGC_LO(argc), ARGC_HI(argc));
 }
 
 bool
@@ -2687,7 +2687,7 @@ bool
 BytecodeEmitter::emitUint16Operand(JSOp op, uint32_t operand)
 {
     MOZ_ASSERT(operand <= UINT16_MAX);
-    if (!emit3(op, UINT16_HI(operand), UINT16_LO(operand)))
+    if (!emit3(op, UINT16_LO(operand), UINT16_HI(operand)))
         return false;
     checkTypeSet(op);
     return true;
@@ -10214,10 +10214,7 @@ BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset)
 
     MOZ_ASSERT(code[0] == JSOP_NEWINIT);
     code[0] = JSOP_NEWOBJECT;
-    code[1] = jsbytecode(index >> 24);
-    code[2] = jsbytecode(index >> 16);
-    code[3] = jsbytecode(index >> 8);
-    code[4] = jsbytecode(index);
+    SET_UINT32(code, index);
 
     return true;
 }
