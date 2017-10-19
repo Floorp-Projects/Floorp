@@ -44,11 +44,16 @@ impl Context for ClientContext {
     fn init(_context_name: Option<&CStr>) -> Result<*mut ffi::cubeb> {
         assert_not_in_callback();
         // TODO: encapsulate connect, etc inside audioipc.
+        // TODO: explicit setup of connection so we don't have to guess the
+        // path.  For now, we try our parent, ourself, and the default path.
         let ppid = unsafe { libc::getppid() };
-        let path = audioipc::get_uds_path(ppid as u64);
-        let stream = match UnixStream::connect(path) {
+        let pid = unsafe { libc::getpid() };
+        let stream = match UnixStream::connect(audioipc::get_uds_path(ppid as u64)) {
             Ok(stream) => stream,
-            _ => t!(UnixStream::connect(audioipc::get_uds_path(1)))
+            _ => match UnixStream::connect(audioipc::get_uds_path(pid as u64)) {
+                Ok(stream) => stream,
+                _ => t!(UnixStream::connect(audioipc::get_uds_path(1)))
+            }
         };
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,

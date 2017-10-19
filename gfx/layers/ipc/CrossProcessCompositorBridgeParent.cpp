@@ -212,8 +212,12 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
   MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
   WebRenderBridgeParent* parent = nullptr;
+  WebRenderBridgeParent* root = nullptr;
   CompositorBridgeParent* cbp = sIndirectLayerTrees[layersId].mParent;
-  if (!cbp) {
+  if (cbp) {
+    root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
+  }
+  if (!root) {
     // This could happen when this function is called after CompositorBridgeParent destruction.
     // This was observed during Tab move between different windows.
     NS_WARNING("Created child without a matching parent?");
@@ -223,7 +227,6 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return parent;
   }
-  WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
   RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI()->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();

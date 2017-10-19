@@ -97,6 +97,11 @@ public:
                              nsIWidget** aActualBelow);
 
   /**
+   * Called when the window will enter or leave the fullscreen state.
+   */
+  virtual void FullscreenWillChange(bool aInFullscreen);
+
+  /**
    * Called when the window entered or left the fullscreen state.
    */
   virtual void FullscreenChanged(bool aInFullscreen);
