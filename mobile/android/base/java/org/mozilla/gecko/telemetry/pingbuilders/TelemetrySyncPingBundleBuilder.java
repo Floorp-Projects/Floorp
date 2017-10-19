@@ -98,8 +98,8 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         os.put("locale", Locales.getLanguageTag(Locale.getDefault()));
 
         payload.put("application", application);
-        payload.put("os", os);
 
+        pingData.put("os", os);
         pingData.put("version", PING_SYNC_DATA_FORMAT_VERSION);
 
         payload.put("payload", pingData);
