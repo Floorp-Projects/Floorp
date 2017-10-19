@@ -4389,7 +4389,7 @@ GCRuntime::markWeakReferences(gcstats::PhaseKind phase)
 void
 GCRuntime::markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase)
 {
-    markWeakReferences<GCSweepGroupIter>(phase);
+    markWeakReferences<SweepGroupZonesIter>(phase);
 }
 
 template <class ZoneIterT, class CompartmentIterT>
@@ -4412,7 +4412,7 @@ GCRuntime::markGrayReferences(gcstats::PhaseKind phase)
 void
 GCRuntime::markGrayReferencesInCurrentGroup(gcstats::PhaseKind phase)
 {
-    markGrayReferences<GCSweepGroupIter, GCCompartmentGroupIter>(phase);
+    markGrayReferences<SweepGroupZonesIter, SweepGroupCompartmentsIter>(phase);
 }
 
 void
@@ -4907,14 +4907,14 @@ GCRuntime::getNextSweepGroup()
 
     if (abortSweepAfterCurrentGroup) {
         MOZ_ASSERT(!isIncremental);
-        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
             MOZ_ASSERT(!zone->gcNextGraphComponent);
             zone->setNeedsIncrementalBarrier(false);
             zone->changeGCState(Zone::Mark, Zone::NoGC);
             zone->gcGrayRoots().clearAndFree();
         }
 
-        for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next())
+        for (SweepGroupCompartmentsIter comp(rt); !comp.done(); comp.next())
             ResetGrayList(comp);
 
         abortSweepAfterCurrentGroup = false;
@@ -5049,7 +5049,7 @@ MarkIncomingCrossCompartmentPointers(JSRuntime* rt, MarkColor color)
 
     bool unlinkList = color == MarkColor::Gray;
 
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+    for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next()) {
         MOZ_ASSERT_IF(color == MarkColor::Gray, c->zone()->isGCMarkingGray());
         MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlack());
         MOZ_ASSERT_IF(c->gcIncomingGrayPointers, IsGrayListObject(c->gcIncomingGrayPointers));
@@ -5181,7 +5181,7 @@ GCRuntime::endMarkingSweepGroup()
      * these will be marked through, as they are not marked with
      * MarkCrossCompartmentXXX.
      */
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
         zone->changeGCState(Zone::Mark, Zone::MarkGray);
     marker.setMarkColorGray();
 
@@ -5193,7 +5193,7 @@ GCRuntime::endMarkingSweepGroup()
     markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
 
     /* Restore marking state. */
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
         zone->changeGCState(Zone::MarkGray, Zone::Mark);
     MOZ_ASSERT(marker.isDrained());
     marker.setMarkColorBlack();
@@ -5245,28 +5245,28 @@ UpdateAtomsBitmap(JSRuntime* runtime)
 static void
 SweepCCWrappers(JSRuntime* runtime)
 {
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
+    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
         c->sweepCrossCompartmentWrappers();
 }
 
 static void
 SweepObjectGroups(JSRuntime* runtime)
 {
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
+    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
         c->objectGroups.sweep(runtime->defaultFreeOp());
 }
 
 static void
 SweepRegExps(JSRuntime* runtime)
 {
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
+    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
         c->sweepRegExps();
 }
 
 static void
 SweepMisc(JSRuntime* runtime)
 {
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next()) {
+    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next()) {
         c->sweepGlobalObject();
         c->sweepTemplateObjects();
         c->sweepSavedStacks();
@@ -5303,7 +5303,7 @@ SweepCompressionTasks(JSRuntime* runtime)
 static void
 SweepWeakMaps(JSRuntime* runtime)
 {
-    for (GCSweepGroupIter zone(runtime); !zone.done(); zone.next()) {
+    for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
         /* Clear all weakrefs that point to unmarked things. */
         for (auto edge : zone->gcWeakRefs()) {
             /* Edges may be present multiple times, so may already be nulled. */
@@ -5325,7 +5325,7 @@ static void
 SweepUniqueIds(JSRuntime* runtime)
 {
     FreeOp fop(nullptr);
-    for (GCSweepGroupIter zone(runtime); !zone.done(); zone.next())
+    for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next())
         zone->sweepUniqueIds(&fop);
 }
 
@@ -5363,7 +5363,7 @@ GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
     // table.
     {
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_MISC);
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+        for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
             c->sweepDebugEnvironments();
     }
 
@@ -5371,7 +5371,7 @@ GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
     // although note that it can cause JIT code to be patched.
     {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_BREAKPOINT);
-        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
             zone->sweepBreakpoints(fop);
     }
 }
@@ -5385,10 +5385,10 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         // Cancel any active or pending off thread compilations.
         js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
 
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
+        for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
             c->sweepJitCompartment(fop);
 
-        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
             if (jit::JitZone* jitZone = zone->jitZone())
                 jitZone->sweep(fop);
         }
@@ -5403,14 +5403,14 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
 
     {
         gcstats::AutoPhase apdc(stats(), gcstats::PhaseKind::SWEEP_DISCARD_CODE);
-        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
             zone->discardJitCode(fop);
     }
 
     {
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_TYPES);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES_BEGIN);
-        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
             zone->beginSweepTypes(fop, releaseObservedTypes && !zone->isPreservingCode());
     }
 }
@@ -5429,7 +5429,7 @@ template <typename Functor>
 static inline bool
 IterateWeakCaches(JSRuntime* rt, Functor f)
 {
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         for (JS::detail::WeakCacheBase* cache : zone->weakCaches()) {
             if (!f(cache, ZoneWeakCache))
                 return false;
@@ -5497,7 +5497,7 @@ GCRuntime::beginSweepingSweepGroup()
     AutoSCC scc(stats(), sweepGroupIndex);
 
     bool sweepingAtoms = false;
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         /* Set the GC state to sweeping. */
         zone->changeGCState(Zone::Mark, Zone::Sweep);
 
@@ -5525,7 +5525,7 @@ GCRuntime::beginSweepingSweepGroup()
         }
         {
             AutoPhase ap2(stats(), PhaseKind::WEAK_COMPARTMENT_CALLBACK);
-            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+            for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
                 for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
                     callWeakPointerCompartmentCallbacks(comp);
             }
@@ -5574,7 +5574,7 @@ GCRuntime::beginSweepingSweepGroup()
     // Queue all GC things in all zones for sweeping, either on the foreground
     // or on the background thread.
 
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
 
         zone->arenas.queueForForegroundSweep(&fop, ForegroundObjectFinalizePhase);
         zone->arenas.queueForForegroundSweep(&fop, ForegroundNonObjectFinalizePhase);
@@ -5600,7 +5600,7 @@ GCRuntime::endSweepingSweepGroup()
     }
 
     /* Update the GC state for zones we have swept. */
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         AutoLockGC lock(rt);
         zone->changeGCState(Zone::Sweep, Zone::Finished);
         zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
@@ -5609,7 +5609,7 @@ GCRuntime::endSweepingSweepGroup()
 
     /* Start background thread to sweep zones if required. */
     ZoneList zones;
-    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
+    for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
         zones.append(zone);
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
@@ -6218,7 +6218,7 @@ ForEachZoneInSweepGroup(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
         return nullptr;
 
     using Action = typename RemoveLastTemplateParameter<
-        SweepActionForEach<GCSweepGroupIter, JSRuntime*, Args...>>::Type;
+        SweepActionForEach<SweepGroupZonesIter, JSRuntime*, Args...>>::Type;
     return js::MakeUnique<Action>(rt, Move(action));
 }
 
