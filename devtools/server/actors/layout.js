@@ -179,7 +179,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    * @return {Array} An array of FlexboxActor objects.
    */
   getAllFlexbox(rootNode, traverseFrames) {
-    let flexboxes = []
+    let flexboxes = [];
 
     if (!rootNode) {
       return flexboxes;
