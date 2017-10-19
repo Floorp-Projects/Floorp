@@ -186,16 +186,13 @@ interface nsIServiceWorkerManager : nsISupports
   // Testing
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
 
-  // Note: This is meant to be used only by about:serviceworkers.
   // It returns an array of nsIServiceWorkerRegistrationInfos.
   nsIArray getAllRegistrations();
 
-  // Note: This is meant to be used only by about:serviceworkers.
   // It calls softUpdate() for each child process.
   [implicit_jscontext] void propagateSoftUpdate(in jsval aOriginAttributes,
                                                 in DOMString aScope);
 
-  // Note: This is meant to be used only by about:serviceworkers.
   // It calls unregister() in each child process. The callback is used to
   // inform when unregister() is completed on the current process.
   void propagateUnregister(in nsIPrincipal aPrincipal,
