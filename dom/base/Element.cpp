@@ -1142,9 +1142,78 @@ Element::RemoveFromIdTable()
   }
 }
 
+void
+Element::SetSlot(const nsAString& aName, ErrorResult& aError)
+{
+  aError = SetAttr(kNameSpaceID_None, nsGkAtoms::slot, aName, true);
+}
+
+void
+Element::GetSlot(nsAString& aName)
+{
+  GetAttr(kNameSpaceID_None, nsGkAtoms::slot, aName);
+}
+
+// https://dom.spec.whatwg.org/#dom-element-attachshadow
+already_AddRefed<ShadowRoot>
+Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
+{
+  /**
+   * 1. If context object’s namespace is not the HTML namespace,
+   *    then throw a "NotSupportedError" DOMException.
+   */
+  if (!IsHTMLElement()) {
+    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  /**
+   * 2. If context object’s local name is not
+   *      a valid custom element name, "article", "aside", "blockquote",
+   *      "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
+   *      "header", "main" "nav", "p", "section", or "span",
+   *    then throw a "NotSupportedError" DOMException.
+   */
+  nsAtom* nameAtom = NodeInfo()->NameAtom();
+  if (!(nsContentUtils::IsCustomElementName(nameAtom) ||
+        nameAtom == nsGkAtoms::article ||
+        nameAtom == nsGkAtoms::aside ||
+        nameAtom == nsGkAtoms::blockquote ||
+        nameAtom == nsGkAtoms::body ||
+        nameAtom == nsGkAtoms::div ||
+        nameAtom == nsGkAtoms::footer ||
+        nameAtom == nsGkAtoms::h1 ||
+        nameAtom == nsGkAtoms::h2 ||
+        nameAtom == nsGkAtoms::h3 ||
+        nameAtom == nsGkAtoms::h4 ||
+        nameAtom == nsGkAtoms::h5 ||
+        nameAtom == nsGkAtoms::h6 ||
+        nameAtom == nsGkAtoms::header ||
+        nameAtom == nsGkAtoms::main ||
+        nameAtom == nsGkAtoms::nav ||
+        nameAtom == nsGkAtoms::p ||
+        nameAtom == nsGkAtoms::section ||
+        nameAtom == nsGkAtoms::span)) {
+    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  return AttachShadowInternal(aInit.mMode == ShadowRootMode::Closed, aError);
+}
+
 already_AddRefed<ShadowRoot>
 Element::CreateShadowRoot(ErrorResult& aError)
 {
+  return AttachShadowInternal(false, aError);
+}
+
+already_AddRefed<ShadowRoot>
+Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
+{
+  /**
+   * 3. If context object is a shadow host, then throw
+   *    an "InvalidStateError" DOMException.
+   */
   if (GetShadowRoot()) {
     aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -1181,11 +1250,19 @@ Element::CreateShadowRoot(ErrorResult& aError)
   // Calling SetPrototypeBinding takes ownership of protoBinding.
   docInfo->SetPrototypeBinding(NS_LITERAL_CSTRING("shadowroot"), protoBinding);
 
-  RefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget(),
-                                                   protoBinding);
+  /**
+   * 4. Let shadow be a new shadow root whose node document is
+   *    context object’s node document, host is context object,
+   *    and mode is init’s mode.
+   */
+  RefPtr<ShadowRoot> shadowRoot =
+    new ShadowRoot(this, aClosed, nodeInfo.forget(), protoBinding);
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 
+  /**
+   * 5. Set context object’s shadow root to shadow.
+   */
   SetShadowRoot(shadowRoot);
 
   // xblBinding takes ownership of docInfo.
@@ -1194,6 +1271,10 @@ Element::CreateShadowRoot(ErrorResult& aError)
   xblBinding->SetBoundElement(this);
 
   SetXBLBinding(xblBinding);
+
+  /**
+   * 6. Return shadow.
+   */
   return shadowRoot.forget();
 }
 
