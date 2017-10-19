@@ -51,7 +51,8 @@ NS_IMPL_RELEASE_INHERITED(PaymentRequest, DOMEventTargetHelper)
 bool
 PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
-  return Preferences::GetBool("dom.payments.request.enabled");
+  return XRE_IsContentProcess() &&
+         Preferences::GetBool("dom.payments.request.enabled");
 }
 
 nsresult
