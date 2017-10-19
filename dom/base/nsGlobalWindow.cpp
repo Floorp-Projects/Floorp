@@ -7338,6 +7338,16 @@ nsGlobalWindow::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen
 }
 
 /* virtual */ void
+nsGlobalWindow::FullscreenWillChange(bool aIsFullscreen)
+{
+  if (aIsFullscreen) {
+    DispatchCustomEvent(NS_LITERAL_STRING("willenterfullscreen"));
+  } else {
+    DispatchCustomEvent(NS_LITERAL_STRING("willexitfullscreen"));
+  }
+}
+
+/* virtual */ void
 nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
 {
   MOZ_ASSERT(IsOuterWindow());
