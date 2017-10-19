@@ -2,7 +2,7 @@ xpcshell:
     description: "xpcshell test run"
     suite:
         by-test-platform:
-            linux64-jsdcov/opt: xpcshell-coverage
+            linux64-jsdcov/opt: xpcshell/xpcshell-coverage
             default: xpcshell
     treeherder-symbol: tc-X(X)
     run-on-projects:
@@ -30,8 +30,6 @@ xpcshell:
             android.*:
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
-                extra-options:
-                    - --test-suite=xpcshell
                 config:
                     by-test-platform:
                         android-4.2-x86/opt:
@@ -50,12 +48,6 @@ xpcshell:
                         linux.*:
                             - unittests/linux_unittest.py
                             - remove_executables.py
-                extra-options:
-                    by-test-platform:
-                        linux64-jsdcov/opt:
-                            - --xpcshell-suite=xpcshell-coverage
-                        default:
-                            - --xpcshell-suite=xpcshell
                 requires-signed-builds:
                     by-test-platform:
                         windows10-64-asan/opt: false    # No XPCShell on ASAN yet
