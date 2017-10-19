@@ -192,7 +192,7 @@ class TestVP8TrackEncoder: public VP8TrackEncoder
 {
 public:
   explicit TestVP8TrackEncoder(TrackRate aTrackRate = VIDEO_TRACK_RATE)
-    : VP8TrackEncoder(aTrackRate) {}
+    : VP8TrackEncoder(aTrackRate, FrameDroppingMode::DISALLOW) {}
 
   ::testing::AssertionResult TestInit(const InitParam &aParam)
   {

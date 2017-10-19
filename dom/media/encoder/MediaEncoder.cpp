@@ -632,7 +632,11 @@ MediaEncoder::CreateEncoder(TaskQueue* aEncoderThread,
       audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
-    videoEncoder = MakeAndAddRef<VP8TrackEncoder>(aTrackRate);
+    if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
+      videoEncoder = MakeAndAddRef<VP8TrackEncoder>(aTrackRate, FrameDroppingMode::ALLOW);
+    } else {
+      videoEncoder = MakeAndAddRef<VP8TrackEncoder>(aTrackRate, FrameDroppingMode::DISALLOW);
+    }
     writer = MakeUnique<WebMWriter>(aTrackTypes);
     NS_ENSURE_TRUE(writer, nullptr);
     NS_ENSURE_TRUE(videoEncoder, nullptr);

@@ -619,6 +619,10 @@ pref("media.encoder.webm.enabled", true);
 // Whether to allow recording of AudioNodes with MediaRecorder
 pref("media.recorder.audio_node.enabled", false);
 
+// Whether MediaRecorder's video encoder should allow dropping frames in order
+// to keep up under load. Useful for tests but beware of memory consumption!
+pref("media.recorder.video.frame_drops", true);
+
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
 
