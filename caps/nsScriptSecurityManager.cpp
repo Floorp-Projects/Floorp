@@ -165,19 +165,17 @@ class ClassInfoData
 {
 public:
     ClassInfoData(nsIClassInfo *aClassInfo, const char *aName)
-        : mClassInfo(aClassInfo),
-          mFlags(0),
-          mName(const_cast<char *>(aName)),
-          mDidGetFlags(false),
-          mMustFreeName(false)
+      : mClassInfo(aClassInfo),
+        mFlags(0),
+        mName(aName),
+        mDidGetFlags(false)
     {
+      if (!aName) {
+        mName.SetIsVoid(true);
+      }
     }
 
-    ~ClassInfoData()
-    {
-        if (mMustFreeName)
-            free(mName);
-    }
+    ~ClassInfoData() = default;
 
     uint32_t GetFlags()
     {
@@ -202,29 +200,26 @@ public:
         return !!(GetFlags() & nsIClassInfo::DOM_OBJECT);
     }
 
-    const char* GetName()
+    void GetName(nsACString& aName)
     {
-        if (!mName) {
+        if (mName.IsVoid()) {
             if (mClassInfo) {
-                mClassInfo->GetClassDescription(&mName);
+                mClassInfo->GetClassDescription(mName);
             }
 
-            if (mName) {
-                mMustFreeName = true;
-            } else {
-                mName = const_cast<char *>("UnnamedClass");
+            if (mName.IsVoid()) {
+                mName.AssignLiteral("UnnamedClass");
             }
         }
 
-        return mName;
+        aName = mName;
     }
 
 private:
     nsIClassInfo *mClassInfo; // WEAK
     uint32_t mFlags;
-    char *mName;
+    nsCString mName;
     bool mDidGetFlags;
-    bool mMustFreeName;
 };
 
 /* static */
@@ -1315,22 +1310,24 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     }
 
     //-- Access denied, report an error
-    nsAutoCString origin;
+    nsAutoCString originUTF8;
     nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
-    GetPrincipalDomainOrigin(subjectPrincipal, origin);
-    NS_ConvertUTF8toUTF16 originUnicode(origin);
-    NS_ConvertUTF8toUTF16 classInfoName(objClassInfo.GetName());
+    GetPrincipalDomainOrigin(subjectPrincipal, originUTF8);
+    NS_ConvertUTF8toUTF16 originUTF16(originUTF8);
+    nsAutoCString classInfoNameUTF8;
+    objClassInfo.GetName(classInfoNameUTF8);
+    NS_ConvertUTF8toUTF16 classInfoUTF16(classInfoNameUTF8);
     nsresult rv;
     nsAutoString errorMsg;
-    if (originUnicode.IsEmpty()) {
-        const char16_t* formatStrings[] = { classInfoName.get() };
+    if (originUTF16.IsEmpty()) {
+        const char16_t* formatStrings[] = { classInfoUTF16.get() };
         rv = sStrBundle->FormatStringFromName("CreateWrapperDenied",
                                               formatStrings,
                                               1,
                                               errorMsg);
     } else {
-        const char16_t* formatStrings[] = { classInfoName.get(),
-                                            originUnicode.get() };
+        const char16_t* formatStrings[] = { classInfoUTF16.get(),
+                                            originUTF16.get() };
         rv = sStrBundle->FormatStringFromName("CreateWrapperDeniedForOrigin",
                                               formatStrings,
                                               2,

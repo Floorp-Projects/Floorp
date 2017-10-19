@@ -140,16 +140,16 @@ nsXPCComponents_Interfaces::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Interfaces::GetContractID(char * *aContractID)
+nsXPCComponents_Interfaces::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Interfaces::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_Interfaces::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_Interfaces");
+    aClassDescription.AssignLiteral("XPCComponents_Interfaces");
     return NS_OK;
 }
 
@@ -344,16 +344,17 @@ nsXPCComponents_InterfacesByID::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::GetContractID(char * *aContractID)
+nsXPCComponents_InterfacesByID::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_InterfacesByID::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_InterfacesByID::GetClassDescription(
+    nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_InterfacesByID");
+    aClassDescription.AssignLiteral("XPCComponents_InterfacesByID");
     return NS_OK;
 }
 
@@ -550,16 +551,16 @@ nsXPCComponents_Classes::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Classes::GetContractID(char * *aContractID)
+nsXPCComponents_Classes::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Classes::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_Classes::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_Classes");
+    aClassDescription.AssignLiteral("XPCComponents_Classes");
     return NS_OK;
 }
 
@@ -744,16 +745,16 @@ nsXPCComponents_ClassesByID::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
+nsXPCComponents_ClassesByID::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_ClassesByID::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_ClassesByID");
+    aClassDescription.AssignLiteral("XPCComponents_ClassesByID");
     return NS_OK;
 }
 
@@ -953,16 +954,16 @@ nsXPCComponents_Results::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Results::GetContractID(char * *aContractID)
+nsXPCComponents_Results::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_Results::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_Results");
+    aClassDescription.AssignLiteral("XPCComponents_Results");
     return NS_OK;
 }
 
@@ -1122,16 +1123,16 @@ nsXPCComponents_ID::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_ID::GetContractID(char * *aContractID)
+nsXPCComponents_ID::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_ID::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_ID");
+    aClassDescription.AssignLiteral("XPCComponents_ID");
     return NS_OK;
 }
 
@@ -1298,16 +1299,16 @@ nsXPCComponents_Exception::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Exception::GetContractID(char * *aContractID)
+nsXPCComponents_Exception::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_Exception::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_Exception");
+    aClassDescription.AssignLiteral("XPCComponents_Exception");
     return NS_OK;
 }
 
@@ -1641,16 +1642,16 @@ nsXPCConstructor::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCConstructor::GetContractID(char * *aContractID)
+nsXPCConstructor::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCConstructor::GetClassDescription(char * *aClassDescription)
+nsXPCConstructor::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCConstructor");
+    aClassDescription.AssignLiteral("XPCConstructor");
     return NS_OK;
 }
 
@@ -1842,16 +1843,16 @@ nsXPCComponents_Constructor::GetScriptableHelper(nsIXPCScriptable** retval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Constructor::GetContractID(char * *aContractID)
+nsXPCComponents_Constructor::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
+nsXPCComponents_Constructor::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = moz_xstrdup("XPCComponents_Constructor");
+    aClassDescription.AssignLiteral("XPCComponents_Constructor");
     return NS_OK;
 }
 
