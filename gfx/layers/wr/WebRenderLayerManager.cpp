@@ -70,6 +70,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   }
 
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
+  WrBridge()->SetWebRenderLayerManager(this);
   WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   WrBridge()->SetNamespace(id_namespace);
@@ -501,7 +502,9 @@ WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
     if (listener) {
       listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
     }
-    mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
+    if (mTransactionIdAllocator) {
+      mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
+    }
   }
 
   // These observers fire whether or not we were in a transaction.
@@ -532,6 +535,13 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
   WrBridge()->BeginClearCachedResources();
   DiscardImages();
   WrBridge()->EndClearCachedResources();
+}
+
+void
+WebRenderLayerManager::WrUpdated()
+{
+  mWebRenderCommandBuilder.ClearCachedResources();
+  DiscardLocalImages();
 }
 
 void

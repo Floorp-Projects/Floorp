@@ -143,16 +143,16 @@ nsThreadClassInfo::GetScriptableHelper(nsIXPCScriptable** aResult)
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetContractID(char** aResult)
+nsThreadClassInfo::GetContractID(nsACString& aResult)
 {
-  *aResult = nullptr;
+  aResult.SetIsVoid(true);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetClassDescription(char** aResult)
+nsThreadClassInfo::GetClassDescription(nsACString& aResult)
 {
-  *aResult = nullptr;
+  aResult.SetIsVoid(true);
   return NS_OK;
 }
 

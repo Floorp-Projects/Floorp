@@ -54,16 +54,25 @@ WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisp
 
 WebRenderImageData::~WebRenderImageData()
 {
+  ClearCachedResources();
+}
+
+void
+WebRenderImageData::ClearCachedResources()
+{
   if (mKey) {
     mWRManager->AddImageKeyForDiscard(mKey.value());
+    mKey.reset();
   }
 
   if (mExternalImageId) {
     WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+    mExternalImageId.reset();
   }
 
   if (mPipelineId) {
     WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mPipelineId.reset();
   }
 }
 
@@ -235,6 +244,15 @@ WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDi
 
 WebRenderCanvasData::~WebRenderCanvasData()
 {
+  ClearCachedResources();
+}
+
+void
+WebRenderCanvasData::ClearCachedResources()
+{
+  if (mCanvasRenderer) {
+    mCanvasRenderer->ClearCachedResources();
+  }
 }
 
 WebRenderCanvasRendererAsync*

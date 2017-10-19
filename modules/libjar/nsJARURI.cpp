@@ -172,16 +172,16 @@ nsJARURI::GetScriptableHelper(nsIXPCScriptable **_retval)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetContractID(char * *aContractID)
+nsJARURI::GetContractID(nsACString& aContractID)
 {
-    *aContractID = nullptr;
+    aContractID.SetIsVoid(true);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetClassDescription(char * *aClassDescription)
+nsJARURI::GetClassDescription(nsACString& aClassDescription)
 {
-    *aClassDescription = nullptr;
+    aClassDescription.SetIsVoid(true);
     return NS_OK;
 }
 

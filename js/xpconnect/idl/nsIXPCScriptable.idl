@@ -66,7 +66,7 @@ interface nsIXPConnectWrappedNative;
 [uuid(19b70b26-7c3f-437f-a04a-2a8f9e28b617)]
 interface nsIXPCScriptable : nsISupports
 {
-    readonly attribute string className;
+    readonly attribute AUTF8String className;
     [notxpcom,nostdcall] uint32_t getScriptableFlags();
     [notxpcom,nostdcall] jsClassPtr getClass();
     [notxpcom,nostdcall] JSClassPtr getJSClass();
