@@ -7199,6 +7199,10 @@ var gIdentityHandler = {
     return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
   },
 
+  get _isCertDistrustImminent() {
+    return this._state & Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
+  },
+
   get _hasInsecureLoginForms() {
     // checks if the page has been flagged for an insecure login. Also checks
     // if the pref to degrade the UI is set to true
@@ -7450,6 +7454,19 @@ var gIdentityHandler = {
     // we receive a new security state on the existing page (i.e. from a
     // subframe). If the user opened the popup and looks at the provided
     // information we don't want to suddenly change the panel contents.
+
+    // Finally, if there are warnings to issue, issue them
+    if (this._isCertDistrustImminent) {
+      let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+      let windowId = gBrowser.selectedBrowser.innerWindowID;
+      let message = gBrowserBundle.GetStringFromName("certImminentDistrust.message");
+      // Use uri.prePath instead of initWithSourceURI() so that these can be
+      // de-duplicated on the scheme+host+port combination.
+      consoleMsg.initWithWindowID(message, uri.prePath, null, 0, 0,
+                                  Ci.nsIScriptError.warningFlag, "SSL",
+                                  windowId);
+      Services.console.logMessage(consoleMsg);
+    }
   },
 
   /**
