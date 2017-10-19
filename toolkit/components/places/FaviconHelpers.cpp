@@ -1295,7 +1295,7 @@ FetchAndConvertUnsupportedPayloads::ConvertPayload(int64_t aId,
 
   // Decode the input stream to a surface.
   RefPtr<gfx::SourceSurface> surface =
-      image::ImageOps::DecodeToSurface(stream,
+      image::ImageOps::DecodeToSurface(stream.forget(),
                                        aMimeType,
                                        imgIContainer::DECODE_FLAGS_DEFAULT);
   NS_ENSURE_STATE(surface);

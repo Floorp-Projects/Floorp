@@ -100,20 +100,20 @@ private:
 };
 
 /* static */ already_AddRefed<ImageOps::ImageBuffer>
-ImageOps::CreateImageBuffer(nsIInputStream* aInputStream)
+ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream)
 {
-  MOZ_ASSERT(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  MOZ_ASSERT(inputStream);
 
   nsresult rv;
 
   // Prepare the input stream.
-  nsCOMPtr<nsIInputStream> inputStream = aInputStream;
-  if (!NS_InputStreamIsBuffered(aInputStream)) {
+  if (!NS_InputStreamIsBuffered(inputStream)) {
     nsCOMPtr<nsIInputStream> bufStream;
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream),
-                                   aInputStream, 1024);
-    if (NS_SUCCEEDED(rv)) {
-      inputStream = bufStream;
+                                   inputStream.forget(), 1024);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
     }
   }
 
@@ -145,11 +145,12 @@ ImageOps::CreateImageBuffer(nsIInputStream* aInputStream)
 }
 
 /* static */ nsresult
-ImageOps::DecodeMetadata(nsIInputStream* aInputStream,
+ImageOps::DecodeMetadata(already_AddRefed<nsIInputStream> aInputStream,
                          const nsACString& aMimeType,
                          ImageMetadata& aMetadata)
 {
-  RefPtr<ImageBuffer> buffer = CreateImageBuffer(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeMetadata(buffer, aMimeType, aMetadata);
 }
 
@@ -193,12 +194,13 @@ ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
 }
 
 /* static */ already_AddRefed<gfx::SourceSurface>
-ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
+ImageOps::DecodeToSurface(already_AddRefed<nsIInputStream> aInputStream,
                           const nsACString& aMimeType,
                           uint32_t aFlags,
                           const Maybe<IntSize>& aSize /* = Nothing() */)
 {
-  RefPtr<ImageBuffer> buffer = CreateImageBuffer(aInputStream);
+  nsCOMPtr<nsIInputStream> inputStream = Move(aInputStream);
+  RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeToSurface(buffer, aMimeType, aFlags, aSize);
 }
 
