@@ -181,11 +181,9 @@ private:
   /**
    * Move any frames on our overflow list to the end of our principal list.
    * @param aFlags one or more of the above DrainFlags
-   * @param aLineContainer the nearest line container ancestor
    * @return true if there were any overflow frames
    */
-  bool DrainSelfOverflowListInternal(DrainFlags aFlags,
-                                     nsIFrame* aLineContainer);
+  bool DrainSelfOverflowListInternal(DrainFlags aFlags);
 protected:
   nscoord mBaseline;
 };
