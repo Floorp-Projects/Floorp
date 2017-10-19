@@ -26,11 +26,11 @@ add_task(function* () {
     let state = controller.animationPlayers[i].state;
 
     if (state.delay) {
-      ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
+      ok(title.match(/Delay: [\d.,-]+s/), "The tooltip shows the delay");
     }
-    ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the duration");
+    ok(title.match(/Duration: [\d.,]+s/), "The tooltip shows the duration");
     if (state.endDelay) {
-      ok(title.match(/End delay: [\d.-]+s/), "The tooltip shows the endDelay");
+      ok(title.match(/End delay: [\d.,-]+s/), "The tooltip shows the endDelay");
     }
     if (state.iterationCount !== 1) {
       ok(title.match(/Repeats: /), "The tooltip shows the iterations");
