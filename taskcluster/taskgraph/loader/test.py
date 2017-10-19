@@ -122,7 +122,7 @@ def expand_tests(test_sets_cfg, test_platforms):
     rv = {}
     for test_platform, cfg in test_platforms.iteritems():
         test_sets = cfg['test-sets']
-        if not set(test_sets) < set(test_sets_cfg):
+        if not set(test_sets) <= set(test_sets_cfg):
             raise Exception(
                 "Test sets {} for test platform {} are not defined".format(
                     ', '.join(test_sets), test_platform))
