@@ -67,10 +67,16 @@ to report bugs that affect outdated and unsupported Firefoxen.
 Please always try to verify the issue in the latest Firefox Nightly
 before you file your bug.
 
+Once we are satisfied the issue raised is of sufficiently actionable
+character, we will continue with triaging it and file a bug where it
+is appropriate.  Bugs specific to geckodriver will be filed in the
+[`Testing :: geckodriver`] component in Bugzilla.
+
 [mailing list]: #communication
 [trace-level log]: doc/TraceLogs.md
 [GitHub issue tracker]: https://github.com/mozilla/geckodriver/issues
 [README]: ./README.md
+[`Testing :: geckodriver`]: https://bugzilla.mozilla.org/buglist.cgi?component=geckodriver
 
 
 Writing code
@@ -83,8 +89,8 @@ where to start.  Please don’t hesitate to [ask questions]!
 The canonical source code repository of geckodriver is now
 [mozilla-central].  We continue to use the [GitHub issue tracker] as
 a triage ground before actual, actionable bugs and tasks are filed
-in [Bugzilla].  We also have a curated set of [good first bugs]
-you may consider attempting first.
+in the [`Testing :: geckodriver`] component in Bugzilla.  We also
+have a curated set of [good first bugs] you may consider attempting first.
 
 The purpose of this guide _is not_ to make sure you have a basic
 development environment set up.  For that there is plentiful
@@ -95,7 +101,6 @@ Remember to [reach out to us] at any point if you have questions.
 [ask questions]: #communication
 [reach out to us]: #communication
 [mozilla-central]: https://searchfox.org/mozilla-central/source/testing/geckodriver/
-[Bugzilla]: https://bugzilla.mozilla.org/buglist.cgi?cmdtype=runnamed&namedcmd=geckodriver&list_id=13825733
 [good first bugs]: https://www.joshmatthews.net/bugsahoy/?automation=1&rust=1
 [Developer Guide]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide
 
