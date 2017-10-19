@@ -485,6 +485,7 @@ pref("media.navigator.video.h264.max_br", 0);
 pref("media.navigator.video.h264.max_mbps", 0);
 pref("media.peerconnection.video.h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", true);
+pref("media.peerconnection.video.vp9_preferred", false);
 pref("media.getusermedia.aec", 1);
 pref("media.getusermedia.browser.enabled", false);
 pref("media.getusermedia.channels", 0);
