@@ -26,6 +26,8 @@ struct HandlerProvider
 struct IHandlerProvider : public IUnknown
                         , public HandlerProvider
 {
+  virtual STDMETHODIMP_(REFIID) GetEffectiveOutParamIid(REFIID aCallIid,
+                                                        ULONG aCallMethod) = 0;
   virtual STDMETHODIMP NewInstance(REFIID aIid,
                                    InterceptorTargetPtr<IUnknown> aTarget,
                                    NotNull<IHandlerProvider**> aOutNewPayload) = 0;

@@ -37,5 +37,10 @@ pref("devtools.debugger.file-search-case-sensitive", false);
 pref("devtools.debugger.file-search-whole-word", false);
 pref("devtools.debugger.file-search-regex-match", false);
 pref("devtools.debugger.features.async-stepping", true);
+
 pref("devtools.debugger.features.project-text-search", true);
 pref("devtools.debugger.features.wasm", true);
+pref("devtools.debugger.features.shortcuts", true);
+pref("devtools.debugger.project-directory-root", "");
+pref("devtools.debugger.features.root", false);
+pref("devtools.debugger.features.column-breakpoints", false);

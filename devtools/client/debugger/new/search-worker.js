@@ -264,15 +264,518 @@ module.exports = arrayMap;
 
 /***/ }),
 
-/***/ 1165:
+/***/ 121:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+// If obj.hasOwnProperty has been overridden, then calling
+// obj.hasOwnProperty(prop) will break.
+// See: https://github.com/joyent/node/issues/1707
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+module.exports = function(qs, sep, eq, options) {
+  sep = sep || '&';
+  eq = eq || '=';
+  var obj = {};
+
+  if (typeof qs !== 'string' || qs.length === 0) {
+    return obj;
+  }
+
+  var regexp = /\+/g;
+  qs = qs.split(sep);
+
+  var maxKeys = 1000;
+  if (options && typeof options.maxKeys === 'number') {
+    maxKeys = options.maxKeys;
+  }
+
+  var len = qs.length;
+  // maxKeys <= 0 means that we should not limit keys count
+  if (maxKeys > 0 && len > maxKeys) {
+    len = maxKeys;
+  }
+
+  for (var i = 0; i < len; ++i) {
+    var x = qs[i].replace(regexp, '%20'),
+        idx = x.indexOf(eq),
+        kstr, vstr, k, v;
+
+    if (idx >= 0) {
+      kstr = x.substr(0, idx);
+      vstr = x.substr(idx + 1);
+    } else {
+      kstr = x;
+      vstr = '';
+    }
+
+    k = decodeURIComponent(kstr);
+    v = decodeURIComponent(vstr);
+
+    if (!hasOwnProperty(obj, k)) {
+      obj[k] = v;
+    } else if (isArray(obj[k])) {
+      obj[k].push(v);
+    } else {
+      obj[k] = [obj[k], v];
+    }
+  }
+
+  return obj;
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+
+/***/ }),
+
+/***/ 122:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+var stringifyPrimitive = function(v) {
+  switch (typeof v) {
+    case 'string':
+      return v;
+
+    case 'boolean':
+      return v ? 'true' : 'false';
+
+    case 'number':
+      return isFinite(v) ? v : '';
+
+    default:
+      return '';
+  }
+};
+
+module.exports = function(obj, sep, eq, name) {
+  sep = sep || '&';
+  eq = eq || '=';
+  if (obj === null) {
+    obj = undefined;
+  }
+
+  if (typeof obj === 'object') {
+    return map(objectKeys(obj), function(k) {
+      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+      if (isArray(obj[k])) {
+        return map(obj[k], function(v) {
+          return ks + encodeURIComponent(stringifyPrimitive(v));
+        }).join(sep);
+      } else {
+        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+      }
+    }).join(sep);
+
+  }
+
+  if (!name) return '';
+  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+         encodeURIComponent(stringifyPrimitive(obj));
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+function map (xs, f) {
+  if (xs.map) return xs.map(f);
+  var res = [];
+  for (var i = 0; i < xs.length; i++) {
+    res.push(f(xs[i], i));
+  }
+  return res;
+}
+
+var objectKeys = Object.keys || function (obj) {
+  var res = [];
+  for (var key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
+  }
+  return res;
+};
+
+
+/***/ }),
+
+/***/ 1284:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(1631);
+
+
+/***/ }),
+
+/***/ 1356:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = undefined;
+
+var _devtoolsSourceMap = __webpack_require__(1360);
+
+var _utils = __webpack_require__(1366);
+
+var _path = __webpack_require__(1393);
+
+var _url = __webpack_require__(334);
+
+/**
+ * Trims the query part or reference identifier of a url string, if necessary.
+ *
+ * @memberof utils/source
+ * @static
+ */
+
+
+/**
+ * Utils for working with Source URLs
+ * @module utils/source
+ */
+
+function trimUrlQuery(url) {
+  const length = url.length;
+  const q1 = url.indexOf("?");
+  const q2 = url.indexOf("&");
+  const q3 = url.indexOf("#");
+  const q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
+
+  return url.slice(0, q);
+}
+
+function shouldPrettyPrint(source) {
+  if (!source) {
+    return false;
+  }
+
+  const _isPretty = isPretty(source);
+  const _isJavaScript = isJavaScript(source);
+  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
+  const hasSourceMap = source.sourceMapURL;
+
+  if (_isPretty || isOriginal || hasSourceMap || !_isJavaScript) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Returns true if the specified url and/or content type are specific to
+ * javascript files.
+ *
+ * @return boolean
+ *         True if the source is likely javascript.
+ *
+ * @memberof utils/source
+ * @static
+ */
+function isJavaScript(source) {
+  return source.url && /\.(jsm|js)?$/.test(trimUrlQuery(source.url)) || !!(source.contentType && source.contentType.includes("javascript"));
+}
+
+/**
+ * @memberof utils/source
+ * @static
+ */
+function isPretty(source) {
+  return source.url ? /formatted$/.test(source.url) : false;
+}
+
+function isThirdParty(source) {
+  if (!source || !source.url) {
+    return false;
+  }
+
+  return !!source.url.match(/(node_modules|bower_components)/);
+}
+
+/**
+ * @memberof utils/source
+ * @static
+ */
+function getPrettySourceURL(url) {
+  if (!url) {
+    url = "";
+  }
+  return `${url}:formatted`;
+}
+
+/**
+ * @memberof utils/source
+ * @static
+ */
+function getRawSourceURL(url) {
+  return url.replace(/:formatted$/, "");
+}
+
+function resolveFileURL(url, transformUrl = initialUrl => initialUrl) {
+  url = getRawSourceURL(url || "");
+  const name = transformUrl(url);
+  return (0, _utils.endTruncateStr)(name, 50);
+}
+
+function getFilenameFromURL(url) {
+  return resolveFileURL(url, initialUrl => (0, _path.basename)(initialUrl) || "(index)");
+}
+
+function getFormattedSourceId(id) {
+  const sourceId = id.split("/")[1];
+  return `SOURCE${sourceId}`;
+}
+
+/**
+ * Show a source url's filename.
+ * If the source does not have a url, use the source id.
+ *
+ * @memberof utils/source
+ * @static
+ */
+function getFilename(source) {
+  const { url, id } = source;
+  if (!url) {
+    return getFormattedSourceId(id);
+  }
+
+  return getFilenameFromURL(url);
+}
+
+/**
+ * Show a source url.
+ * If the source does not have a url, use the source id.
+ *
+ * @memberof utils/source
+ * @static
+ */
+function getFileURL(source) {
+  const { url, id } = source;
+  if (!url) {
+    return getFormattedSourceId(id);
+  }
+
+  return resolveFileURL(url);
+}
+
+const contentTypeModeMap = {
+  "text/javascript": { name: "javascript" },
+  "text/typescript": { name: "javascript", typescript: true },
+  "text/coffeescript": "coffeescript",
+  "text/typescript-jsx": {
+    name: "jsx",
+    base: { name: "javascript", typescript: true }
+  },
+  "text/jsx": "jsx",
+  "text/x-elm": "elm",
+  "text/x-clojure": "clojure",
+  "text/wasm": { name: "text" },
+  "text/html": { name: "htmlmixed" }
+};
+
+function getSourcePath(source) {
+  if (!source.url) {
+    return "";
+  }
+
+  const { path, href } = (0, _url.parse)(source.url);
+  // for URLs like "about:home" the path is null so we pass the full href
+  return path || href;
+}
+
+/**
+ * Returns amount of lines in the source. If source is a WebAssembly binary,
+ * the function returns amount of bytes.
+ */
+function getSourceLineCount(source) {
+  if (source.isWasm) {
+    const { binary } = source.text;
+    return binary.length;
+  }
+  return source.text != undefined ? source.text.split("\n").length : 0;
+}
+
+/**
+ *
+ * Returns Code Mirror mode for source content type
+ * @param contentType
+ * @return String
+ * @memberof utils/source
+ * @static
+ */
+
+function getMode(source) {
+  const { contentType, text, isWasm, url } = source;
+
+  if (!text || isWasm) {
+    return { name: "text" };
+  }
+
+  // if the url ends with .marko we set the name to Javascript so
+  // syntax highlighting works for marko too
+  if (url && url.match(/\.marko$/i)) {
+    return { name: "javascript" };
+  }
+
+  // Use HTML mode for files in which the first non whitespace
+  // character is `<` regardless of extension.
+  const isHTMLLike = text.match(/^\s*</);
+  if (!contentType) {
+    if (isHTMLLike) {
+      return { name: "htmlmixed" };
+    }
+    return { name: "text" };
+  }
+
+  // //  or /*  */
+  if (text.match(/^\s*(\/\/ @flow|\/\* @flow \*\/)/)) {
+    return contentTypeModeMap["text/typescript"];
+  }
+
+  if (/script|elm|jsx|clojure|wasm|html/.test(contentType)) {
+    if (contentType in contentTypeModeMap) {
+      return contentTypeModeMap[contentType];
+    }
+
+    return contentTypeModeMap["text/javascript"];
+  }
+
+  if (isHTMLLike) {
+    return { name: "htmlmixed" };
+  }
+
+  return { name: "text" };
+}
+
+function isLoaded(source) {
+  return source.loadedState === "loaded";
+}
+
+exports.isJavaScript = isJavaScript;
+exports.isPretty = isPretty;
+exports.isThirdParty = isThirdParty;
+exports.shouldPrettyPrint = shouldPrettyPrint;
+exports.getPrettySourceURL = getPrettySourceURL;
+exports.getRawSourceURL = getRawSourceURL;
+exports.getFilename = getFilename;
+exports.getFilenameFromURL = getFilenameFromURL;
+exports.getFileURL = getFileURL;
+exports.getSourcePath = getSourcePath;
+exports.getSourceLineCount = getSourceLineCount;
+exports.getMode = getMode;
+exports.isLoaded = isLoaded;
+
+/***/ }),
+
+/***/ 1360:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const networkRequest = __webpack_require__(1166);
-const workerUtils = __webpack_require__(1168);
+const {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isGeneratedId,
+  isOriginalId
+} = __webpack_require__(1389);
+
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1390);
+
+const dispatcher = new WorkerDispatcher();
+
+const getOriginalURLs = dispatcher.task("getOriginalURLs");
+const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
+const getOriginalLocation = dispatcher.task("getOriginalLocation");
+const getLocationScopes = dispatcher.task("getLocationScopes");
+const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
+const applySourceMap = dispatcher.task("applySourceMap");
+const clearSourceMaps = dispatcher.task("clearSourceMaps");
+const hasMappedSource = dispatcher.task("hasMappedSource");
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isGeneratedId,
+  isOriginalId,
+  hasMappedSource,
+  getOriginalURLs,
+  getGeneratedLocation,
+  getOriginalLocation,
+  getLocationScopes,
+  getOriginalSourceText,
+  applySourceMap,
+  clearSourceMaps,
+  startSourceMapWorker: dispatcher.start.bind(dispatcher),
+  stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
+};
+
+/***/ }),
+
+/***/ 1363:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(1367);
+const workerUtils = __webpack_require__(1368);
 
 module.exports = {
   networkRequest,
@@ -281,7 +784,92 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1166:
+/***/ 1366:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+
+/**
+ * Utils for utils, by utils
+ * @module utils/utils
+ */
+
+/**
+ * @memberof utils/utils
+ * @static
+ */
+function handleError(err) {
+  console.log("ERROR: ", err);
+}
+
+/**
+ * @memberof utils/utils
+ * @static
+ */
+function promisify(context, method, ...args) {
+  return new Promise((resolve, reject) => {
+    args.push(response => {
+      if (response.error) {
+        reject(response);
+      } else {
+        resolve(response);
+      }
+    });
+    method.apply(context, args);
+  });
+}
+
+/**
+ * @memberof utils/utils
+ * @static
+ */
+function endTruncateStr(str, size) {
+  if (str.length > size) {
+    return `...${str.slice(str.length - size)}`;
+  }
+  return str;
+}
+
+/**
+ * @memberof utils/utils
+ * @static
+ */
+/**
+ * @memberof utils/utils
+ * @static
+ */
+function throttle(func, ms) {
+  let timeout, _this;
+  return function (...args) {
+    _this = this;
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        func.apply(_this, ...args);
+        timeout = null;
+      }, ms);
+    }
+  };
+}
+
+function waitForMs(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+exports.handleError = handleError;
+exports.promisify = promisify;
+exports.endTruncateStr = endTruncateStr;
+exports.throttle = throttle;
+exports.waitForMs = waitForMs;
+
+/***/ }),
+
+/***/ 1367:
 /***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -303,7 +891,277 @@ module.exports = networkRequest;
 
 /***/ }),
 
-/***/ 1168:
+/***/ 1368:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const mark = typeof window == "object" && window.performance && window.performance.mark ? window.performance.mark.bind(window.performance) : () => {};
+
+const measure = typeof window == "object" && window.performance && window.performance.measure ? window.performance.measure.bind(window.performance) : () => {};
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method) {
+    return (...args) => {
+      return new Promise((resolve, reject) => {
+        const id = this.msgId++;
+
+        mark(`${method}_start`);
+
+        this.worker.postMessage({ id, method, args });
+
+        const listener = ({ data: result }) => {
+          if (result.id !== id) {
+            return;
+          }
+
+          if (!this.worker) {
+            reject("Oops, The worker has shutdown!");
+            return;
+          }
+          this.worker.removeEventListener("message", listener);
+
+          mark(`${method}_end`);
+          measure(`${method}`, `${method}_start`, `${method}_end`);
+
+          if (result.error) {
+            reject(result.error);
+          } else {
+            resolve(result.response);
+          }
+        };
+
+        this.worker.addEventListener("message", listener);
+      });
+    };
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, args } = msg.data;
+    try {
+      const response = publicInterface[method].apply(undefined, args);
+      if (response instanceof Promise) {
+        response.then(val => self.postMessage({ id, response: val }),
+        // Error can't be sent via postMessage, so be sure to
+        // convert to string.
+        err => self.postMessage({ id, error: err.toString() }));
+      } else {
+        self.postMessage({ id, response });
+      }
+    } catch (error) {
+      // Error can't be sent via postMessage, so be sure to convert to
+      // string.
+      self.postMessage({ id, error: error.toString() });
+    }
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const intervalId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearInterval(intervalId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+
+/***/ 1389:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const md5 = __webpack_require__(248);
+
+function originalToGeneratedId(originalId) {
+  const match = originalId.match(/(.*)\/originalSource/);
+  return match ? match[1] : "";
+}
+
+function generatedToOriginalId(generatedId, url) {
+  return `${generatedId}/originalSource-${md5(url)}`;
+}
+
+function isOriginalId(id) {
+  return !!id.match(/\/originalSource/);
+}
+
+function isGeneratedId(id) {
+  return !isOriginalId(id);
+}
+
+/**
+ * Trims the query part or reference identifier of a URL string, if necessary.
+ */
+function trimUrlQuery(url) {
+  let length = url.length;
+  let q1 = url.indexOf("?");
+  let q2 = url.indexOf("&");
+  let q3 = url.indexOf("#");
+  let q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
+
+  return url.slice(0, q);
+}
+
+// Map suffix to content type.
+const contentMap = {
+  "js": "text/javascript",
+  "jsm": "text/javascript",
+  "ts": "text/typescript",
+  "tsx": "text/typescript-jsx",
+  "jsx": "text/jsx",
+  "coffee": "text/coffeescript",
+  "elm": "text/elm",
+  "cljs": "text/x-clojure"
+};
+
+/**
+ * Returns the content type for the specified URL.  If no specific
+ * content type can be determined, "text/plain" is returned.
+ *
+ * @return String
+ *         The content type.
+ */
+function getContentType(url) {
+  url = trimUrlQuery(url);
+  let dot = url.lastIndexOf(".");
+  if (dot >= 0) {
+    let name = url.substring(dot + 1);
+    if (name in contentMap) {
+      return contentMap[name];
+    }
+  }
+  return "text/plain";
+}
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isOriginalId,
+  isGeneratedId,
+  getContentType,
+  contentMapForTesting: contentMap
+};
+
+/***/ }),
+
+/***/ 1390:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(1391);
+const workerUtils = __webpack_require__(1392);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 1391:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+
+/***/ 1392:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -438,180 +1296,81 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1172:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const md5 = __webpack_require__(248);
-
-function originalToGeneratedId(originalId) {
-  const match = originalId.match(/(.*)\/originalSource/);
-  return match ? match[1] : "";
-}
-
-function generatedToOriginalId(generatedId, url) {
-  return `${generatedId}/originalSource-${md5(url)}`;
-}
-
-function isOriginalId(id) {
-  return !!id.match(/\/originalSource/);
-}
-
-function isGeneratedId(id) {
-  return !isOriginalId(id);
-}
-
-/**
- * Trims the query part or reference identifier of a URL string, if necessary.
- */
-function trimUrlQuery(url) {
-  let length = url.length;
-  let q1 = url.indexOf("?");
-  let q2 = url.indexOf("&");
-  let q3 = url.indexOf("#");
-  let q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-
-  return url.slice(0, q);
-}
-
-// Map suffix to content type.
-const contentMap = {
-  "js": "text/javascript",
-  "jsm": "text/javascript",
-  "ts": "text/typescript",
-  "tsx": "text/typescript-jsx",
-  "jsx": "text/jsx",
-  "coffee": "text/coffeescript",
-  "elm": "text/elm",
-  "cljs": "text/x-clojure"
-};
-
-/**
- * Returns the content type for the specified URL.  If no specific
- * content type can be determined, "text/plain" is returned.
- *
- * @return String
- *         The content type.
- */
-function getContentType(url) {
-  url = trimUrlQuery(url);
-  let dot = url.lastIndexOf(".");
-  if (dot >= 0) {
-    let name = url.substring(dot + 1);
-    if (name in contentMap) {
-      return contentMap[name];
-    }
-  }
-  return "text/plain";
-}
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isOriginalId,
-  isGeneratedId,
-  getContentType,
-  contentMapForTesting: contentMap
-};
-
-/***/ }),
-
-/***/ 121:
+/***/ 1393:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-
-// If obj.hasOwnProperty has been overridden, then calling
-// obj.hasOwnProperty(prop) will break.
-// See: https://github.com/joyent/node/issues/1707
-function hasOwnProperty(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function basename(path) {
+  return path.split("/").pop();
 }
 
-module.exports = function(qs, sep, eq, options) {
-  sep = sep || '&';
-  eq = eq || '=';
-  var obj = {};
+function dirname(path) {
+  const idx = path.lastIndexOf("/");
+  return path.slice(0, idx);
+}
 
-  if (typeof qs !== 'string' || qs.length === 0) {
-    return obj;
-  }
+function isURL(str) {
+  return str.indexOf("://") !== -1;
+}
 
-  var regexp = /\+/g;
-  qs = qs.split(sep);
+function isAbsolute(str) {
+  return str[0] === "/";
+}
 
-  var maxKeys = 1000;
-  if (options && typeof options.maxKeys === 'number') {
-    maxKeys = options.maxKeys;
-  }
+function join(base, dir) {
+  return `${base}/${dir}`;
+}
 
-  var len = qs.length;
-  // maxKeys <= 0 means that we should not limit keys count
-  if (maxKeys > 0 && len > maxKeys) {
-    len = maxKeys;
-  }
+exports.basename = basename;
+exports.dirname = dirname;
+exports.isURL = isURL;
+exports.isAbsolute = isAbsolute;
+exports.join = join;
 
-  for (var i = 0; i < len; ++i) {
-    var x = qs[i].replace(regexp, '%20'),
-        idx = x.indexOf(eq),
-        kstr, vstr, k, v;
+/***/ }),
 
-    if (idx >= 0) {
-      kstr = x.substr(0, idx);
-      vstr = x.substr(idx + 1);
-    } else {
-      kstr = x;
-      vstr = '';
-    }
+/***/ 14:
+/***/ (function(module, exports) {
 
-    k = decodeURIComponent(kstr);
-    v = decodeURIComponent(vstr);
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return value != null && typeof value == 'object';
+}
 
-    if (!hasOwnProperty(obj, k)) {
-      obj[k] = v;
-    } else if (isArray(obj[k])) {
-      obj[k].push(v);
-    } else {
-      obj[k] = [obj[k], v];
-    }
-  }
-
-  return obj;
-};
-
-var isArray = Array.isArray || function (xs) {
-  return Object.prototype.toString.call(xs) === '[object Array]';
-};
+module.exports = isObjectLike;
 
 
 /***/ }),
 
-/***/ 1211:
+/***/ 1402:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -664,21 +1423,14 @@ function buildFlags(caseSensitive, isGlobal) {
   return;
 }
 
-function buildQuery(originalQuery, modifiers, _ref) {
-  var _ref$isGlobal = _ref.isGlobal,
-      isGlobal = _ref$isGlobal === undefined ? false : _ref$isGlobal,
-      _ref$ignoreSpaces = _ref.ignoreSpaces,
-      ignoreSpaces = _ref$ignoreSpaces === undefined ? false : _ref$ignoreSpaces;
-  var caseSensitive = modifiers.caseSensitive,
-      regexMatch = modifiers.regexMatch,
-      wholeWord = modifiers.wholeWord;
-
+function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces = false }) {
+  const { caseSensitive, regexMatch, wholeWord } = modifiers;
 
   if (originalQuery === "") {
     return new RegExp(originalQuery);
   }
 
-  var query = originalQuery;
+  let query = originalQuery;
   if (ignoreSpaces) {
     query = ignoreWhiteSpace(query);
   }
@@ -688,7 +1440,7 @@ function buildQuery(originalQuery, modifiers, _ref) {
   }
 
   query = wholeMatch(query, wholeWord);
-  var flags = buildFlags(caseSensitive, isGlobal);
+  const flags = buildFlags(caseSensitive, isGlobal);
 
   if (flags) {
     return new RegExp(query, flags);
@@ -699,131 +1451,29 @@ function buildQuery(originalQuery, modifiers, _ref) {
 
 /***/ }),
 
-/***/ 122:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-var stringifyPrimitive = function(v) {
-  switch (typeof v) {
-    case 'string':
-      return v;
-
-    case 'boolean':
-      return v ? 'true' : 'false';
-
-    case 'number':
-      return isFinite(v) ? v : '';
-
-    default:
-      return '';
-  }
-};
-
-module.exports = function(obj, sep, eq, name) {
-  sep = sep || '&';
-  eq = eq || '=';
-  if (obj === null) {
-    obj = undefined;
-  }
-
-  if (typeof obj === 'object') {
-    return map(objectKeys(obj), function(k) {
-      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-      if (isArray(obj[k])) {
-        return map(obj[k], function(v) {
-          return ks + encodeURIComponent(stringifyPrimitive(v));
-        }).join(sep);
-      } else {
-        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-      }
-    }).join(sep);
-
-  }
-
-  if (!name) return '';
-  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-         encodeURIComponent(stringifyPrimitive(obj));
-};
-
-var isArray = Array.isArray || function (xs) {
-  return Object.prototype.toString.call(xs) === '[object Array]';
-};
-
-function map (xs, f) {
-  if (xs.map) return xs.map(f);
-  var res = [];
-  for (var i = 0; i < xs.length; i++) {
-    res.push(f(xs[i], i));
-  }
-  return res;
-}
-
-var objectKeys = Object.keys || function (obj) {
-  var res = [];
-  for (var key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
-  }
-  return res;
-};
-
-
-/***/ }),
-
-/***/ 1284:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(1285);
-
-
-/***/ }),
-
-/***/ 1285:
+/***/ 1631:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _getMatches = __webpack_require__(1286);
+var _getMatches = __webpack_require__(1632);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 
-var _projectSearch = __webpack_require__(1287);
+var _projectSearch = __webpack_require__(1633);
 
-var _devtoolsUtils = __webpack_require__(900);
+var _devtoolsUtils = __webpack_require__(1363);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
-
+const { workerHandler } = _devtoolsUtils.workerUtils;
 
 self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMatches: _projectSearch.findSourceMatches });
 
 /***/ }),
 
-/***/ 1286:
+/***/ 1632:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -834,7 +1484,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getMatches;
 
-var _buildQuery = __webpack_require__(1211);
+var _buildQuery = __webpack_require__(1402);
 
 var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
@@ -844,14 +1494,14 @@ function getMatches(query, text, modifiers) {
   if (!query || !text || !modifiers) {
     return [];
   }
-  var regexQuery = (0, _buildQuery2.default)(query, modifiers, {
+  const regexQuery = (0, _buildQuery2.default)(query, modifiers, {
     isGlobal: true
   });
-  var matchedLocations = [];
-  var lines = text.split("\n");
-  for (var i = 0; i < lines.length; i++) {
-    var singleMatch = void 0;
-    var line = lines[i];
+  const matchedLocations = [];
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    let singleMatch;
+    const line = lines[i];
     while ((singleMatch = regexQuery.exec(line)) !== null) {
       matchedLocations.push({ line: i, ch: singleMatch.index });
     }
@@ -861,7 +1511,7 @@ function getMatches(query, text, modifiers) {
 
 /***/ }),
 
-/***/ 1287:
+/***/ 1633:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -872,26 +1522,20 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.findSourceMatches = findSourceMatches;
 
-var _source = __webpack_require__(233);
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } // Maybe reuse file search's functions?
-
+var _source = __webpack_require__(1356);
 
 function findSourceMatches(source, queryText) {
-  var _ref;
-
-  var text = source.text;
-
+  const { text } = source;
   if (!(0, _source.isLoaded)(source) || !text || queryText == "") {
     return [];
   }
 
-  var lines = text.split("\n");
-  var result = undefined;
-  var query = new RegExp(queryText, "g");
+  const lines = text.split("\n");
+  let result = undefined;
+  const query = new RegExp(queryText, "g");
 
-  var matches = lines.map((_text, line) => {
-    var indices = [];
+  let matches = lines.map((_text, line) => {
+    const indices = [];
 
     while (result = query.exec(_text)) {
       indices.push({
@@ -906,458 +1550,9 @@ function findSourceMatches(source, queryText) {
     return indices;
   }).filter(_matches => _matches.length > 0);
 
-  matches = (_ref = []).concat.apply(_ref, _toConsumableArray(matches));
+  matches = [].concat(...matches);
   return matches;
-}
-
-/***/ }),
-
-/***/ 14:
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return value != null && typeof value == 'object';
-}
-
-module.exports = isObjectLike;
-
-
-/***/ }),
-
-/***/ 233:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = undefined;
-
-var _devtoolsSourceMap = __webpack_require__(898);
-
-var _utils = __webpack_require__(234);
-
-var _path = __webpack_require__(235);
-
-var _url = __webpack_require__(334);
-
-/**
- * Trims the query part or reference identifier of a url string, if necessary.
- *
- * @memberof utils/source
- * @static
- */
-
-
-/**
- * Utils for working with Source URLs
- * @module utils/source
- */
-
-function trimUrlQuery(url) {
-  var length = url.length;
-  var q1 = url.indexOf("?");
-  var q2 = url.indexOf("&");
-  var q3 = url.indexOf("#");
-  var q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-
-  return url.slice(0, q);
-}
-
-function shouldPrettyPrint(source) {
-  if (!source) {
-    return false;
-  }
-
-  var _isPretty = isPretty(source);
-  var _isJavaScript = isJavaScript(source);
-  var isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
-  var hasSourceMap = source.sourceMapURL;
-
-  if (_isPretty || isOriginal || hasSourceMap || !_isJavaScript) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Returns true if the specified url and/or content type are specific to
- * javascript files.
- *
- * @return boolean
- *         True if the source is likely javascript.
- *
- * @memberof utils/source
- * @static
- */
-function isJavaScript(source) {
-  return source.url && /\.(jsm|js)?$/.test(trimUrlQuery(source.url)) || !!(source.contentType && source.contentType.includes("javascript"));
-}
-
-/**
- * @memberof utils/source
- * @static
- */
-function isPretty(source) {
-  return source.url ? /formatted$/.test(source.url) : false;
-}
-
-function isThirdParty(source) {
-  if (!source || !source.url) {
-    return false;
-  }
-
-  return !!source.url.match(/(node_modules|bower_components)/);
-}
-
-/**
- * @memberof utils/source
- * @static
- */
-function getPrettySourceURL(url) {
-  if (!url) {
-    url = "";
-  }
-  return `${url}:formatted`;
-}
-
-/**
- * @memberof utils/source
- * @static
- */
-function getRawSourceURL(url) {
-  return url.replace(/:formatted$/, "");
-}
-
-function resolveFileURL(url) {
-  var transformUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : initialUrl => initialUrl;
-
-  url = getRawSourceURL(url || "");
-  var name = transformUrl(url);
-  return (0, _utils.endTruncateStr)(name, 50);
-}
-
-function getFilenameFromURL(url) {
-  return resolveFileURL(url, initialUrl => (0, _path.basename)(initialUrl) || "(index)");
-}
-
-function getFormattedSourceId(id) {
-  var sourceId = id.split("/")[1];
-  return `SOURCE${sourceId}`;
-}
-
-/**
- * Show a source url's filename.
- * If the source does not have a url, use the source id.
- *
- * @memberof utils/source
- * @static
- */
-function getFilename(source) {
-  var url = source.url,
-      id = source.id;
-
-  if (!url) {
-    return getFormattedSourceId(id);
-  }
-
-  return getFilenameFromURL(url);
-}
-
-/**
- * Show a source url.
- * If the source does not have a url, use the source id.
- *
- * @memberof utils/source
- * @static
- */
-function getFileURL(source) {
-  var url = source.url,
-      id = source.id;
-
-  if (!url) {
-    return getFormattedSourceId(id);
-  }
-
-  return resolveFileURL(url);
-}
-
-var contentTypeModeMap = {
-  "text/javascript": { name: "javascript" },
-  "text/typescript": { name: "javascript", typescript: true },
-  "text/coffeescript": "coffeescript",
-  "text/typescript-jsx": {
-    name: "jsx",
-    base: { name: "javascript", typescript: true }
-  },
-  "text/jsx": "jsx",
-  "text/x-elm": "elm",
-  "text/x-clojure": "clojure",
-  "text/wasm": { name: "text" },
-  "text/html": { name: "htmlmixed" }
-};
-
-function getSourcePath(source) {
-  if (!source.url) {
-    return "";
-  }
-
-  var _parseURL = (0, _url.parse)(source.url),
-      path = _parseURL.path,
-      href = _parseURL.href;
-  // for URLs like "about:home" the path is null so we pass the full href
-
-
-  return path || href;
-}
-
-/**
- * Returns amount of lines in the source. If source is a WebAssembly binary,
- * the function returns amount of bytes.
- */
-function getSourceLineCount(source) {
-  if (source.isWasm) {
-    var _ref = source.text,
-        binary = _ref.binary;
-
-    return binary.length;
-  }
-  return source.text != undefined ? source.text.split("\n").length : 0;
-}
-
-/**
- *
- * Returns Code Mirror mode for source content type
- * @param contentType
- * @return String
- * @memberof utils/source
- * @static
- */
-
-function getMode(source) {
-  var contentType = source.contentType,
-      text = source.text,
-      isWasm = source.isWasm,
-      url = source.url;
-
-
-  if (!text || isWasm) {
-    return { name: "text" };
-  }
-
-  // if the url ends with .marko we set the name to Javascript so
-  // syntax highlighting works for marko too
-  if (url && url.match(/\.marko$/i)) {
-    return { name: "javascript" };
-  }
-
-  // Use HTML mode for files in which the first non whitespace
-  // character is `<` regardless of extension.
-  var isHTMLLike = text.match(/^\s*</);
-  if (!contentType) {
-    if (isHTMLLike) {
-      return { name: "htmlmixed" };
-    }
-    return { name: "text" };
-  }
-
-  // //  or /*  */
-  if (text.match(/^\s*(\/\/ @flow|\/\* @flow \*\/)/)) {
-    return contentTypeModeMap["text/typescript"];
-  }
-
-  if (/script|elm|jsx|clojure|wasm|html/.test(contentType)) {
-    if (contentType in contentTypeModeMap) {
-      return contentTypeModeMap[contentType];
-    }
-
-    return contentTypeModeMap["text/javascript"];
-  }
-
-  if (isHTMLLike) {
-    return { name: "htmlmixed" };
-  }
-
-  return { name: "text" };
-}
-
-function isLoaded(source) {
-  return source.loadedState === "loaded";
-}
-
-exports.isJavaScript = isJavaScript;
-exports.isPretty = isPretty;
-exports.isThirdParty = isThirdParty;
-exports.shouldPrettyPrint = shouldPrettyPrint;
-exports.getPrettySourceURL = getPrettySourceURL;
-exports.getRawSourceURL = getRawSourceURL;
-exports.getFilename = getFilename;
-exports.getFilenameFromURL = getFilenameFromURL;
-exports.getFileURL = getFileURL;
-exports.getSourcePath = getSourcePath;
-exports.getSourceLineCount = getSourceLineCount;
-exports.getMode = getMode;
-exports.isLoaded = isLoaded;
-
-/***/ }),
-
-/***/ 234:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-/**
- * Utils for utils, by utils
- * @module utils/utils
- */
-
-/**
- * @memberof utils/utils
- * @static
- */
-function handleError(err) {
-  console.log("ERROR: ", err);
-}
-
-/**
- * @memberof utils/utils
- * @static
- */
-function promisify(context, method) {
-  for (var _len = arguments.length, args = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-    args[_key - 2] = arguments[_key];
-  }
-
-  return new Promise((resolve, reject) => {
-    args.push(response => {
-      if (response.error) {
-        reject(response);
-      } else {
-        resolve(response);
-      }
-    });
-    method.apply(context, args);
-  });
-}
-
-/**
- * @memberof utils/utils
- * @static
- */
-function endTruncateStr(str, size) {
-  if (str.length > size) {
-    return `...${str.slice(str.length - size)}`;
-  }
-  return str;
-}
-
-/**
- * @memberof utils/utils
- * @static
- */
-/**
- * @memberof utils/utils
- * @static
- */
-function throttle(func, ms) {
-  var timeout = void 0,
-      _this = void 0;
-  return function () {
-    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
-    }
-
-    _this = this;
-    if (!timeout) {
-      timeout = setTimeout(() => {
-        func.apply.apply(func, [_this].concat(_toConsumableArray(args)));
-        timeout = null;
-      }, ms);
-    }
-  };
-}
-
-function waitForMs(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-exports.handleError = handleError;
-exports.promisify = promisify;
-exports.endTruncateStr = endTruncateStr;
-exports.throttle = throttle;
-exports.waitForMs = waitForMs;
-
-/***/ }),
-
-/***/ 235:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-function basename(path) {
-  return path.split("/").pop();
-}
-
-function dirname(path) {
-  var idx = path.lastIndexOf("/");
-  return path.slice(0, idx);
-}
-
-function isURL(str) {
-  return str.indexOf("://") !== -1;
-}
-
-function isAbsolute(str) {
-  return str[0] === "/";
-}
-
-function join(base, dir) {
-  return `${base}/${dir}`;
-}
-
-exports.basename = basename;
-exports.dirname = dirname;
-exports.isURL = isURL;
-exports.isAbsolute = isAbsolute;
-exports.join = join;
+} // Maybe reuse file search's functions?
 
 /***/ }),
 
@@ -2704,52 +2899,6 @@ module.exports = root;
 
 /***/ }),
 
-/***/ 898:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId
-} = __webpack_require__(1172);
-
-const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1165);
-
-const dispatcher = new WorkerDispatcher();
-
-const getOriginalURLs = dispatcher.task("getOriginalURLs");
-const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
-const getOriginalLocation = dispatcher.task("getOriginalLocation");
-const getLocationScopes = dispatcher.task("getLocationScopes");
-const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
-const applySourceMap = dispatcher.task("applySourceMap");
-const clearSourceMaps = dispatcher.task("clearSourceMaps");
-const hasMappedSource = dispatcher.task("hasMappedSource");
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId,
-  hasMappedSource,
-  getOriginalURLs,
-  getGeneratedLocation,
-  getOriginalLocation,
-  getLocationScopes,
-  getOriginalSourceText,
-  applySourceMap,
-  clearSourceMaps,
-  startSourceMapWorker: dispatcher.start.bind(dispatcher),
-  stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
-};
-
-/***/ }),
-
 /***/ 9:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2759,184 +2908,6 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 module.exports = freeGlobal;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(792)))
-
-/***/ }),
-
-/***/ 900:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(901);
-const workerUtils = __webpack_require__(902);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-
-/***/ 901:
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-
-/***/ 902:
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-WorkerDispatcher.prototype = {
-  start(url) {
-    this.worker = new Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method) {
-    return (...args) => {
-      return new Promise((resolve, reject) => {
-        const id = this.msgId++;
-        this.worker.postMessage({ id, method, args });
-
-        const listener = ({ data: result }) => {
-          if (result.id !== id) {
-            return;
-          }
-
-          if (!this.worker) {
-            reject("Oops, The worker has shutdown!");
-            return;
-          }
-          this.worker.removeEventListener("message", listener);
-          if (result.error) {
-            reject(result.error);
-          } else {
-            resolve(result.response);
-          }
-        };
-
-        this.worker.addEventListener("message", listener);
-      });
-    };
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, args } = msg.data;
-    try {
-      const response = publicInterface[method].apply(undefined, args);
-      if (response instanceof Promise) {
-        response.then(val => self.postMessage({ id, response: val }),
-        // Error can't be sent via postMessage, so be sure to
-        // convert to string.
-        err => self.postMessage({ id, error: err.toString() }));
-      } else {
-        self.postMessage({ id, response });
-      }
-    } catch (error) {
-      // Error can't be sent via postMessage, so be sure to convert to
-      // string.
-      self.postMessage({ id, error: error.toString() });
-    }
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const intervalId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearInterval(intervalId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
 
 /***/ }),
 

@@ -1216,7 +1216,7 @@ PREF_RegisterCallback(const char* aPrefNode,
   NS_PRECONDITION(aPrefNode, "aPrefNode must not be nullptr");
   NS_PRECONDITION(aCallback, "aCallback must not be nullptr");
 
-  auto node = new CallbackNode();
+  auto node = (CallbackNode*)moz_xmalloc(sizeof(CallbackNode));
   node->mDomain = moz_xstrdup(aPrefNode);
   node->mFunc = aCallback;
   node->mData = aData;
@@ -2975,7 +2975,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   numPrefs = prefArray.Length();
 
   if (numPrefs) {
-    outArray = new char*[numPrefs];
+    outArray = (char**)moz_xmalloc(numPrefs * sizeof(char*));
 
     for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
       // we need to lop off mPrefRoot in case the user is planning to pass this

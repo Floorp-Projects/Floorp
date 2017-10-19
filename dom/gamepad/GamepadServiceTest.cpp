@@ -31,17 +31,8 @@ namespace dom {
  * that add and remove fake gamepads, avoiding the platform-specific backends.
  */
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(GamepadServiceTest)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(GamepadServiceTest,
-                                                  DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(GamepadServiceTest,
-                                                DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(GamepadServiceTest, DOMEventTargetHelper,
+                                   mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GamepadServiceTest)
   NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
