@@ -28285,13 +28285,7 @@ module.exports = basePropertyDeep;
 
 /***/ }),
 /* 842 */,
-/* 843 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/***/ }),
+/* 843 */,
 /* 844 */,
 /* 845 */,
 /* 846 */,
@@ -28348,181 +28342,9 @@ module.exports = basePropertyDeep;
 /* 897 */,
 /* 898 */,
 /* 899 */,
-/* 900 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(901);
-const workerUtils = __webpack_require__(902);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-/* 901 */
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function networkRequest(url, opts) {
-  return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      return res.text().then(text => ({ content: text }));
-    }
-    return Promise.reject(`request failed with status ${res.status}`);
-  });
-}
-
-module.exports = networkRequest;
-
-/***/ }),
-/* 902 */
-/***/ (function(module, exports) {
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-WorkerDispatcher.prototype = {
-  start(url) {
-    this.worker = new Worker(url);
-    this.worker.onerror = () => {
-      console.error(`Error in worker ${url}`);
-    };
-  },
-
-  stop() {
-    if (!this.worker) {
-      return;
-    }
-
-    this.worker.terminate();
-    this.worker = null;
-  },
-
-  task(method) {
-    return (...args) => {
-      return new Promise((resolve, reject) => {
-        const id = this.msgId++;
-        this.worker.postMessage({ id, method, args });
-
-        const listener = ({ data: result }) => {
-          if (result.id !== id) {
-            return;
-          }
-
-          if (!this.worker) {
-            reject("Oops, The worker has shutdown!");
-            return;
-          }
-          this.worker.removeEventListener("message", listener);
-          if (result.error) {
-            reject(result.error);
-          } else {
-            resolve(result.response);
-          }
-        };
-
-        this.worker.addEventListener("message", listener);
-      });
-    };
-  }
-};
-
-function workerHandler(publicInterface) {
-  return function (msg) {
-    const { id, method, args } = msg.data;
-    try {
-      const response = publicInterface[method].apply(undefined, args);
-      if (response instanceof Promise) {
-        response.then(val => self.postMessage({ id, response: val }),
-        // Error can't be sent via postMessage, so be sure to
-        // convert to string.
-        err => self.postMessage({ id, error: err.toString() }));
-      } else {
-        self.postMessage({ id, response });
-      }
-    } catch (error) {
-      // Error can't be sent via postMessage, so be sure to convert to
-      // string.
-      self.postMessage({ id, error: error.toString() });
-    }
-  };
-}
-
-function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
-  let streamingWorker = (() => {
-    var _ref = _asyncToGenerator(function* (id, tasks) {
-      let isWorking = true;
-
-      const intervalId = setTimeout(function () {
-        isWorking = false;
-      }, timeout);
-
-      const results = [];
-      while (tasks.length !== 0 && isWorking) {
-        const { callback, context, args } = tasks.shift();
-        const result = yield callback.call(context, args);
-        results.push(result);
-      }
-      worker.postMessage({ id, status: "pending", data: results });
-      clearInterval(intervalId);
-
-      if (tasks.length !== 0) {
-        yield streamingWorker(id, tasks);
-      }
-    });
-
-    return function streamingWorker(_x, _x2) {
-      return _ref.apply(this, arguments);
-    };
-  })();
-
-  return (() => {
-    var _ref2 = _asyncToGenerator(function* (msg) {
-      const { id, method, args } = msg.data;
-      const workerMethod = publicInterface[method];
-      if (!workerMethod) {
-        console.error(`Could not find ${method} defined in worker.`);
-      }
-      worker.postMessage({ id, status: "start" });
-
-      try {
-        const tasks = workerMethod(args);
-        yield streamingWorker(id, tasks);
-        worker.postMessage({ id, status: "done" });
-      } catch (error) {
-        worker.postMessage({ id, status: "error", error });
-      }
-    });
-
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  })();
-}
-
-module.exports = {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-};
-
-/***/ }),
+/* 900 */,
+/* 901 */,
+/* 902 */,
 /* 903 */,
 /* 904 */,
 /* 905 */,
@@ -31722,249 +31544,7 @@ module.exports = isArrayLikeObject;
 /* 1184 */,
 /* 1185 */,
 /* 1186 */,
-/* 1187 */
-/***/ (function(module, exports) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-function createTempScope(type, parent, loc) {
-  const result = {
-    type,
-    parent,
-    children: [],
-    loc: loc,
-    names: Object.create(null)
-  };
-  if (parent) {
-    parent.children.push(result);
-  }
-  return result;
-}
-
-function isNode(node, type) {
-  return node ? node.type === type : false;
-}
-
-function getFunctionScope(scope) {
-  let s = scope;
-  while (s.type !== "Function" && s.type !== "Script") {
-    if (!s.parent) {
-      return s;
-    }
-    s = s.parent;
-  }
-  return s;
-}
-
-function fromBabelLocation(location, sourceId) {
-  return {
-    sourceId,
-    line: location.line,
-    column: location.column
-  };
-}
-
-function parseDeclarator(declaratorId, targetScope, type) {
-  if (isNode(declaratorId, "Identifier")) {
-    targetScope.names[declaratorId.name] = { type, refs: [] };
-  } else if (isNode(declaratorId, "ObjectPattern")) {
-    declaratorId.properties.forEach(prop => {
-      parseDeclarator(prop.value, targetScope, type);
-    });
-  } else if (isNode(declaratorId, "ArrayPattern")) {
-    declaratorId.elements.forEach(item => {
-      parseDeclarator(item, targetScope, type);
-    });
-  } else if (isNode(declaratorId, "AssignmentPattern")) {
-    parseDeclarator(declaratorId.left, targetScope, type);
-  } else if (isNode(declaratorId, "RestElement")) {
-    parseDeclarator(declaratorId.argument, targetScope, type);
-  }
-}
-
-function isLetOrConst(node) {
-  return node.kind === "let" || node.kind === "const";
-}
-
-function hasLetOrConst(path) {
-  return path.node.body.some(node => {
-    if (!isNode(node, "VariableDeclaration")) {
-      return false;
-    }
-    return isLetOrConst(node);
-  });
-}
-
-function findIdentifierInScopes(scope, name) {
-  // Find nearest outer scope with the specifed name and add reference.
-  for (let s = scope; s; s = s.parent) {
-    if (name in s.names) {
-      return s;
-    }
-  }
-  return null;
-}
-
-function toParsedScopes(children, sourceId) {
-  if (!children || children.length === 0) {
-    return undefined;
-  }
-  return children.map(scope => {
-    // Removing unneed information from TempScope such as parent reference and
-    // name types. We also need to convert BabelLocation to the Location type.
-    const bindings = Object.keys(scope.names).reduce((_bindings, n) => {
-      const nameRefs = scope.names[n];
-      switch (nameRefs.type) {
-        case "var":
-        case "let":
-        case "const":
-        case "param":
-          _bindings[n] = nameRefs.refs.map(location => {
-            return fromBabelLocation(location, sourceId);
-          });
-          break;
-      }
-      return _bindings;
-    }, Object.create(null));
-    return {
-      start: fromBabelLocation(scope.loc.start, sourceId),
-      end: fromBabelLocation(scope.loc.end, sourceId),
-      type: scope.type.toLowerCase(),
-      bindings,
-      children: toParsedScopes(scope.children, sourceId)
-    };
-  });
-}
-
-/**
- * Creates at visitor for babel-traverse that will parse/extract all bindings
- * information from the source. See also findScopes to perform lookup of the
- * scope information for specific location.
- */
-function createParseJSScopeVisitor(sourceId) {
-  let parent = createTempScope("Global", null, null);
-  let savedParents = new WeakMap();
-  const traverseVisitor = {
-    enter(path) {
-      const tree = path.node;
-      const location = path.node.loc;
-      if (path.isProgram()) {
-        savedParents.set(path, parent);
-        parent = createTempScope("Script", parent, location);
-        return;
-      }
-      if (path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression()) {
-        savedParents.set(path, parent);
-        const scope = createTempScope("Function", parent, location);
-        if (isNode(tree.id, "Identifier")) {
-          const functionName = { type: "fn", refs: [] };
-          getFunctionScope(parent).names[tree.id.name] = functionName;
-          scope.names[tree.id.name] = functionName;
-        }
-        tree.params.forEach(param => parseDeclarator(param, scope, "param"));
-        parent = scope;
-        return;
-      }
-      if (path.isForInStatement() || path.isForStatement()) {
-        const init = tree.init || tree.left;
-        if (isNode(init, "VariableDeclaration") && isLetOrConst(init)) {
-          // Debugger will create new lexical environment for the for.
-          savedParents.set(path, parent);
-          parent = createTempScope("For", parent, location);
-        }
-        return;
-      }
-      if (path.isCatchClause()) {
-        savedParents.set(path, parent);
-        parent = createTempScope("Catch", parent, location);
-        parseDeclarator(tree.param, parent, "param");
-        return;
-      }
-      if (path.isBlockStatement()) {
-        if (hasLetOrConst(path)) {
-          // Debugger will create new lexical environment for the block.
-          savedParents.set(path, parent);
-          parent = createTempScope("Block", parent, location);
-        }
-        return;
-      }
-      if (path.isVariableDeclaration()) {
-        // Finds right lexical environment
-        const hoistAt = !isLetOrConst(tree) ? getFunctionScope(parent) : parent;
-        tree.declarations.forEach(declarator => {
-          parseDeclarator(declarator.id, hoistAt, tree.kind);
-        });
-        return;
-      }
-      if (path.isIdentifier()) {
-        const scope = findIdentifierInScopes(parent, tree.name);
-        if (scope) {
-          scope.names[tree.name].refs.push(tree.loc.start);
-        }
-      }
-    },
-    exit(path) {
-      const savedParent = savedParents.get(path);
-      if (savedParent) {
-        parent = savedParent;
-        savedParents.delete(path);
-      }
-    }
-  };
-  return {
-    traverseVisitor,
-    toParsedScopes() {
-      return toParsedScopes(parent.children, sourceId) || [];
-    }
-  };
-}
-
-function compareLocations(a, b) {
-  // According to type of Location.column can be undefined, if will not be the
-  // case here, ignoring flow error.
-  // $FlowIgnore
-  return a.line == b.line ? a.column - b.column : a.line - b.line;
-}
-
-/**
- * Searches all scopes and their bindings at the specific location.
- */
-function findScopes(scopes, location) {
-  // Find inner most in the tree structure.
-  let searchInScopes = scopes;
-  const found = [];
-  while (searchInScopes) {
-    let foundOne = searchInScopes.some(s => {
-      if (compareLocations(s.start, location) <= 0 && compareLocations(location, s.end) < 0) {
-        // Found the next scope, trying to search recusevly in its children.
-        found.unshift(s);
-        searchInScopes = s.children;
-        return true;
-      }
-      return false;
-    });
-    if (!foundOne) {
-      break;
-    }
-  }
-  return found.map(i => {
-    return {
-      type: i.type,
-      start: i.start,
-      end: i.end,
-      bindings: i.bindings
-    };
-  });
-}
-
-module.exports = {
-  createParseJSScopeVisitor,
-  findScopes
-};
-
-/***/ }),
+/* 1187 */,
 /* 1188 */,
 /* 1189 */,
 /* 1190 */,
@@ -31986,710 +31566,18 @@ module.exports = {
 /* 1206 */,
 /* 1207 */,
 /* 1208 */,
-/* 1209 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.parseExpression = parseExpression;
-exports.getAst = getAst;
-exports.clearASTs = clearASTs;
-exports.traverseAst = traverseAst;
-
-var _parseScriptTags = __webpack_require__(1023);
-
-var _parseScriptTags2 = _interopRequireDefault(_parseScriptTags);
-
-var _babylon = __webpack_require__(435);
-
-var babylon = _interopRequireWildcard(_babylon);
-
-var _babelTraverse = __webpack_require__(436);
-
-var _babelTraverse2 = _interopRequireDefault(_babelTraverse);
-
-var _isEmpty = __webpack_require__(963);
-
-var _isEmpty2 = _interopRequireDefault(_isEmpty);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var ASTs = new Map();
-
-function _parse(code, opts) {
-  return babylon.parse(code, Object.assign({}, opts, {
-    sourceType: "module",
-    plugins: ["jsx", "flow", "objectRestSpread"]
-  }));
-}
-
-function parse(text, opts) {
-  var ast = void 0;
-  if (!text) {
-    return;
-  }
-
-  try {
-    ast = _parse(text, opts);
-  } catch (error) {
-    ast = {};
-  }
-
-  return ast;
-}
-
-// Custom parser for parse-script-tags that adapts its input structure to
-// our parser's signature
-function htmlParser(_ref) {
-  var source = _ref.source,
-      line = _ref.line;
-
-  return parse(source, {
-    startLine: line
-  });
-}
-
-function parseExpression(expression, opts) {
-  return babylon.parseExpression(expression, Object.assign({}, opts, { sourceType: "script" }));
-}
-
-function getAst(source) {
-  if (!source || !source.text) {
-    return {};
-  }
-
-  if (ASTs.has(source.id)) {
-    return ASTs.get(source.id);
-  }
-
-  var ast = {};
-  var contentType = source.contentType;
-
-  if (contentType == "text/html") {
-    ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
-  } else if (contentType && contentType.includes("javascript")) {
-    ast = parse(source.text);
-  }
-
-  ASTs.set(source.id, ast);
-  return ast;
-}
-
-function clearASTs() {
-  ASTs = new Map();
-}
-
-function traverseAst(source, visitor) {
-  var ast = getAst(source);
-  if ((0, _isEmpty2.default)(ast)) {
-    return null;
-  }
-
-  (0, _babelTraverse2.default)(ast, visitor);
-  return ast;
-}
-
-/***/ }),
+/* 1209 */,
 /* 1210 */,
 /* 1211 */,
-/* 1212 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isLexicalScope = isLexicalScope;
-exports.isFunction = isFunction;
-exports.isAwaitExpression = isAwaitExpression;
-exports.isYieldExpression = isYieldExpression;
-exports.isVariable = isVariable;
-exports.getMemberExpression = getMemberExpression;
-
-var _babelTypes = __webpack_require__(493);
-
-var t = _interopRequireWildcard(_babelTypes);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function isLexicalScope(path) {
-  return t.isBlockStatement(path) || isFunction(path) || t.isProgram(path);
-}
-
-function isFunction(path) {
-  return t.isFunction(path) || t.isArrowFunctionExpression(path) || t.isObjectMethod(path) || t.isClassMethod(path);
-}
-
-function isAwaitExpression(path) {
-  return t.isAwaitExpression(path) || t.isAwaitExpression(path.container.init) || t.isAwaitExpression(path.parentPath);
-}
-
-function isYieldExpression(path) {
-  return t.isYieldExpression(path) || t.isYieldExpression(path.container.init) || t.isYieldExpression(path.parentPath);
-}
-
-function isVariable(path) {
-  return t.isVariableDeclaration(path) || isFunction(path) && path.node.params.length || t.isObjectProperty(path) && !isFunction(path.node.value);
-}
-
-function getMemberExpression(root) {
-  function _getMemberExpression(node, expr) {
-    if (t.isMemberExpression(node)) {
-      expr = [node.property.name].concat(expr);
-      return _getMemberExpression(node.object, expr);
-    }
-
-    if (t.isCallExpression(node)) {
-      return [];
-    }
-
-    if (t.isThisExpression(node)) {
-      return ["this"].concat(expr);
-    }
-
-    return [node.name].concat(expr);
-  }
-
-  var expr = _getMemberExpression(root, []);
-  return expr.join(".");
-}
-
-/***/ }),
+/* 1212 */,
 /* 1213 */,
 /* 1214 */,
 /* 1215 */,
 /* 1216 */,
-/* 1217 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getClosestExpression = getClosestExpression;
-exports.getClosestScope = getClosestScope;
-exports.getClosestPath = getClosestPath;
-
-var _babelTypes = __webpack_require__(493);
-
-var t = _interopRequireWildcard(_babelTypes);
-
-var _ast = __webpack_require__(1209);
-
-var _helpers = __webpack_require__(1212);
-
-var _contains = __webpack_require__(1218);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function getNodeValue(node) {
-  if (t.isThisExpression(node)) {
-    return "this";
-  }
-
-  return node.name;
-}
-
-function getClosestMemberExpression(source, token, location) {
-  var expression = null;
-  (0, _ast.traverseAst)(source, {
-    enter(path) {
-      var node = path.node;
-
-      if (!(0, _contains.nodeContainsPosition)(node, location)) {
-        return path.skip();
-      }
-
-      if (t.isMemberExpression(node) && node.property.name === token) {
-        var memberExpression = (0, _helpers.getMemberExpression)(node);
-        expression = {
-          expression: memberExpression,
-          location: node.loc
-        };
-      }
-    }
-  });
-
-  return expression;
-}
-
-function getClosestExpression(source, token, location) {
-  var memberExpression = getClosestMemberExpression(source, token, location);
-  if (memberExpression) {
-    return memberExpression;
-  }
-
-  var path = getClosestPath(source, location);
-  if (!path || !path.node) {
-    return;
-  }
-
-  var node = path.node;
-
-  return { expression: getNodeValue(node), location: node.loc };
-}
-
-function getClosestScope(source, location) {
-  var closestPath = null;
-
-  (0, _ast.traverseAst)(source, {
-    enter(path) {
-      if (!(0, _contains.nodeContainsPosition)(path.node, location)) {
-        return path.skip();
-      }
-
-      if ((0, _helpers.isLexicalScope)(path)) {
-        closestPath = path;
-      }
-    }
-  });
-
-  if (!closestPath) {
-    return;
-  }
-
-  return closestPath.scope;
-}
-
-function getClosestPath(source, location) {
-  var closestPath = null;
-
-  (0, _ast.traverseAst)(source, {
-    enter(path) {
-      if (!(0, _contains.nodeContainsPosition)(path.node, location)) {
-        return path.skip();
-      }
-      closestPath = path;
-    }
-  });
-
-  return closestPath;
-}
-
-/***/ }),
-/* 1218 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.containsPosition = containsPosition;
-exports.containsLocation = containsLocation;
-exports.nodeContainsPosition = nodeContainsPosition;
-function containsPosition(a, b) {
-  var startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
-  var endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
-
-  return startsBefore && endsAfter;
-}
-
-function containsLocation(a, b) {
-  return containsPosition(a, b.start) && containsPosition(a, b.end);
-}
-
-function nodeContainsPosition(node, position) {
-  return containsPosition(node.loc, position);
-}
-
-/***/ }),
-/* 1219 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getSymbols;
-exports.clearSymbols = clearSymbols;
-
-var _ast = __webpack_require__(1209);
-
-var _helpers = __webpack_require__(1212);
-
-var _inferClassName = __webpack_require__(1294);
-
-var _babelTypes = __webpack_require__(493);
-
-var t = _interopRequireWildcard(_babelTypes);
-
-var _getFunctionName = __webpack_require__(1275);
-
-var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-var symbolDeclarations = new Map();
-
-function getFunctionParameterNames(path) {
-  return path.node.params.map(param => param.name);
-}
-
-function getVariableNames(path) {
-  if (t.isObjectProperty(path) && !(0, _helpers.isFunction)(path.node.value)) {
-    return [{
-      name: path.node.key.name,
-      location: path.node.loc
-    }];
-  }
-
-  if (!path.node.declarations) {
-    return path.node.params.map(dec => ({
-      name: dec.name,
-      location: dec.loc
-    }));
-  }
-
-  return path.node.declarations.map(dec => ({
-    name: dec.id.name,
-    location: dec.loc
-  }));
-}
-
-function getComments(ast) {
-  if (!ast || !ast.comments) {
-    return [];
-  }
-  return ast.comments.map(comment => ({
-    name: comment.location,
-    location: comment.loc
-  }));
-}
-
-function extractSymbols(source) {
-  var functions = [];
-  var variables = [];
-  var memberExpressions = [];
-  var callExpressions = [];
-  var objectProperties = [];
-  var identifiers = [];
-
-  var ast = (0, _ast.traverseAst)(source, {
-    enter(path) {
-      if ((0, _helpers.isVariable)(path)) {
-        variables.push.apply(variables, _toConsumableArray(getVariableNames(path)));
-      }
-
-      if ((0, _helpers.isFunction)(path)) {
-        functions.push({
-          name: (0, _getFunctionName2.default)(path),
-          klass: (0, _inferClassName.inferClassName)(path),
-          location: path.node.loc,
-          parameterNames: getFunctionParameterNames(path),
-          identifier: path.node.id
-        });
-      }
-
-      if (t.isClassDeclaration(path)) {
-        variables.push({
-          name: path.node.id.name,
-          location: path.node.loc
-        });
-      }
-
-      if (t.isObjectProperty(path)) {
-        var _path$node$key$loc = path.node.key.loc,
-            start = _path$node$key$loc.start,
-            end = _path$node$key$loc.end,
-            identifierName = _path$node$key$loc.identifierName;
-
-        objectProperties.push({
-          name: identifierName,
-          location: { start, end },
-          expression: getSnippet(path)
-        });
-      }
-
-      if (t.isMemberExpression(path)) {
-        var _path$node$property$l = path.node.property.loc,
-            _start = _path$node$property$l.start,
-            _end = _path$node$property$l.end;
-
-        memberExpressions.push({
-          name: path.node.property.name,
-          location: { start: _start, end: _end },
-          expressionLocation: path.node.loc,
-          expression: getSnippet(path)
-        });
-      }
-
-      if (t.isCallExpression(path)) {
-        var callee = path.node.callee;
-        if (!t.isMemberExpression(callee)) {
-          var _callee$loc = callee.loc,
-              _start2 = _callee$loc.start,
-              _end2 = _callee$loc.end,
-              _identifierName = _callee$loc.identifierName;
-
-          callExpressions.push({
-            name: _identifierName,
-            location: { start: _start2, end: _end2 }
-          });
-        }
-      }
-
-      if (t.isIdentifier(path)) {
-        var _path$node$loc = path.node.loc,
-            _start3 = _path$node$loc.start,
-            _end3 = _path$node$loc.end;
-
-
-        identifiers.push({
-          name: path.node.name,
-          expression: path.node.name,
-          location: { start: _start3, end: _end3 }
-        });
-      }
-
-      if (t.isThisExpression(path.node)) {
-        var _path$node$loc2 = path.node.loc,
-            _start4 = _path$node$loc2.start,
-            _end4 = _path$node$loc2.end;
-
-        identifiers.push({
-          name: "this",
-          location: { start: _start4, end: _end4 },
-          expressionLocation: path.node.loc,
-          expression: "this"
-        });
-      }
-
-      if (t.isVariableDeclarator(path)) {
-        var node = path.node.id;
-        var _path$node$loc3 = path.node.loc,
-            _start5 = _path$node$loc3.start,
-            _end5 = _path$node$loc3.end;
-
-
-        identifiers.push({
-          name: node.name,
-          expression: node.name,
-          location: { start: _start5, end: _end5 }
-        });
-      }
-    }
-  });
-
-  // comments are extracted separately from the AST
-  var comments = getComments(ast);
-
-  return {
-    functions,
-    variables,
-    callExpressions,
-    memberExpressions,
-    objectProperties,
-    comments,
-    identifiers
-  };
-}
-
-function getSymbols(source) {
-  if (symbolDeclarations.has(source.id)) {
-    var _symbols = symbolDeclarations.get(source.id);
-    if (_symbols) {
-      return _symbols;
-    }
-  }
-
-  var symbols = extractSymbols(source);
-  symbolDeclarations.set(source.id, symbols);
-  return symbols;
-}
-
-function extendSnippet(name, expression, path, prevPath) {
-  var computed = path && path.node.computed;
-  var prevComputed = prevPath && prevPath.node.computed;
-  var prevArray = t.isArrayExpression(prevPath);
-  var array = t.isArrayExpression(path);
-
-  if (expression === "") {
-    if (computed) {
-      return `[${name}]`;
-    }
-    return name;
-  }
-
-  if (computed || array) {
-    if (prevComputed || prevArray) {
-      return `[${name}]${expression}`;
-    }
-    return `[${name}].${expression}`;
-  }
-
-  if (prevComputed || prevArray) {
-    return `${name}${expression}`;
-  }
-
-  return `${name}.${expression}`;
-}
-
-function getMemberSnippet(node) {
-  var expression = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
-
-  if (t.isMemberExpression(node)) {
-    var _name = node.property.name;
-
-    return getMemberSnippet(node.object, extendSnippet(_name, expression));
-  }
-
-  if (t.isCallExpression(node)) {
-    return "";
-  }
-
-  if (t.isThisExpression(node)) {
-    return `this.${expression}`;
-  }
-
-  if (t.isIdentifier(node)) {
-    return `${node.name}.${expression}`;
-  }
-
-  return expression;
-}
-
-function getObjectSnippet(path, prevPath) {
-  var expression = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
-
-  if (!path) {
-    return expression;
-  }
-
-  var name = path.node.key.name;
-
-  var extendedExpression = extendSnippet(name, expression, path, prevPath);
-
-  var nextPrevPath = path;
-  var nextPath = path.parentPath && path.parentPath.parentPath;
-
-  return getSnippet(nextPath, nextPrevPath, extendedExpression);
-}
-
-function getArraySnippet(path, prevPath, expression) {
-  var index = prevPath.parentPath.key;
-  var extendedExpression = extendSnippet(index, expression, path, prevPath);
-
-  var nextPrevPath = path;
-  var nextPath = path.parentPath && path.parentPath.parentPath;
-
-  return getSnippet(nextPath, nextPrevPath, extendedExpression);
-}
-
-function getSnippet(path, prevPath) {
-  var expression = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
-
-  if (t.isVariableDeclaration(path)) {
-    var node = path.node.declarations[0];
-    var _name2 = node.id.name;
-    return extendSnippet(_name2, expression, path, prevPath);
-  }
-
-  if (t.isVariableDeclarator(path)) {
-    var _node = path.node.id;
-    if (t.isObjectPattern(_node)) {
-      return expression;
-    }
-
-    var _name3 = _node.name;
-    var prop = extendSnippet(_name3, expression, path, prevPath);
-    return prop;
-  }
-
-  if (t.isAssignmentExpression(path)) {
-    var _node2 = path.node.left;
-    var _name4 = t.isMemberExpression(_node2) ? getMemberSnippet(_node2) : _node2.name;
-
-    var _prop = extendSnippet(_name4, expression, path, prevPath);
-    return _prop;
-  }
-
-  if ((0, _helpers.isFunction)(path)) {
-    return expression;
-  }
-
-  if (t.isIdentifier(path)) {
-    var _node3 = path.node;
-    return `${_node3.name}.${expression}`;
-  }
-
-  if (t.isObjectProperty(path)) {
-    return getObjectSnippet(path, prevPath, expression);
-  }
-
-  if (t.isObjectExpression(path)) {
-    var parentPath = prevPath && prevPath.parentPath;
-    return getObjectSnippet(parentPath, prevPath, expression);
-  }
-
-  if (t.isMemberExpression(path)) {
-    return getMemberSnippet(path.node, expression);
-  }
-
-  if (t.isArrayExpression(path)) {
-    return getArraySnippet(path, prevPath, expression);
-  }
-}
-
-function clearSymbols() {
-  symbolDeclarations = new Map();
-}
-
-/***/ }),
-/* 1220 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.hasSource = hasSource;
-exports.setSource = setSource;
-exports.getSource = getSource;
-exports.clearSources = clearSources;
-
-
-var cachedSources = new Map();
-
-function hasSource(sourceId) {
-  return cachedSources.has(sourceId);
-}
-
-function setSource(source) {
-  cachedSources.set(source.id, source);
-}
-
-function getSource(sourceId) {
-  if (!cachedSources.has(sourceId)) {
-    throw new Error(`${sourceId} was not provided.`);
-  }
-  return cachedSources.get(sourceId);
-}
-
-function clearSources() {
-  cachedSources = new Map();
-}
-
-/***/ }),
+/* 1217 */,
+/* 1218 */,
+/* 1219 */,
+/* 1220 */,
 /* 1221 */,
 /* 1222 */,
 /* 1223 */,
@@ -32744,471 +31632,19 @@ function clearSources() {
 /* 1272 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(1273);
+module.exports = __webpack_require__(1618);
 
 
 /***/ }),
-/* 1273 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _closest = __webpack_require__(1217);
-
-var _scopes = __webpack_require__(1274);
-
-var _getSymbols = __webpack_require__(1219);
-
-var _getSymbols2 = _interopRequireDefault(_getSymbols);
-
-var _ast = __webpack_require__(1209);
-
-var _getScopes = __webpack_require__(1276);
-
-var _getScopes2 = _interopRequireDefault(_getScopes);
-
-var _sources = __webpack_require__(1220);
-
-var _getOutOfScopeLocations = __webpack_require__(1277);
-
-var _getOutOfScopeLocations2 = _interopRequireDefault(_getOutOfScopeLocations);
-
-var _steps = __webpack_require__(1278);
-
-var _getEmptyLines = __webpack_require__(1280);
-
-var _getEmptyLines2 = _interopRequireDefault(_getEmptyLines);
-
-var _validate = __webpack_require__(1281);
-
-var _devtoolsUtils = __webpack_require__(900);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
-
-
-self.onmessage = workerHandler({
-  getClosestExpression: _closest.getClosestExpression,
-  getOutOfScopeLocations: _getOutOfScopeLocations2.default,
-  getSymbols: _getSymbols2.default,
-  getScopes: _getScopes2.default,
-  clearSymbols: _getSymbols.clearSymbols,
-  clearScopes: _getScopes.clearScopes,
-  clearASTs: _ast.clearASTs,
-  hasSource: _sources.hasSource,
-  setSource: _sources.setSource,
-  clearSources: _sources.clearSources,
-  getVariablesInScope: _scopes.getVariablesInScope,
-  getNextStep: _steps.getNextStep,
-  getEmptyLines: _getEmptyLines2.default,
-  hasSyntaxError: _validate.hasSyntaxError
-});
-
-/***/ }),
-/* 1274 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-exports.getVariablesInLocalScope = getVariablesInLocalScope;
-exports.getVariablesInScope = getVariablesInScope;
-exports.isExpressionInScope = isExpressionInScope;
-
-var _toPairs = __webpack_require__(795);
-
-var _toPairs2 = _interopRequireDefault(_toPairs);
-
-var _uniq = __webpack_require__(561);
-
-var _uniq2 = _interopRequireDefault(_uniq);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function getScopeVariables(scope) {
-  var bindings = scope.bindings;
-
-
-  return (0, _toPairs2.default)(bindings).map((_ref) => {
-    var _ref2 = _slicedToArray(_ref, 2),
-        name = _ref2[0],
-        binding = _ref2[1];
-
-    return {
-      name,
-      references: binding.referencePaths
-    };
-  });
-}
-
-function getScopeChain(scope) {
-  var scopes = [];
-
-  do {
-    scopes.push(scope);
-  } while (scope = scope.parent);
-
-  return scopes;
-}
-
-function getVariablesInLocalScope(scope) {
-  return getScopeVariables(scope);
-}
-
-function getVariablesInScope(scope) {
-  var _ref3;
-
-  var scopes = getScopeChain(scope);
-  var scopeVars = scopes.map(getScopeVariables);
-  var vars = (_ref3 = [{ name: "this" }, { name: "arguments" }]).concat.apply(_ref3, _toConsumableArray(scopeVars)).map(variable => variable.name);
-  return (0, _uniq2.default)(vars);
-}
-
-function isExpressionInScope(expression, scope) {
-  if (!scope) {
-    return false;
-  }
-
-  var variables = getVariablesInScope(scope);
-  var firstPart = expression.split(/\./)[0];
-  return variables.includes(firstPart);
-}
-
-/***/ }),
-/* 1275 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getFunctionName;
-function getFunctionName(path) {
-  if (path.node.id) {
-    return path.node.id.name;
-  }
-
-  var parent = path.parent;
-  if (parent.type == "ObjectProperty") {
-    return parent.key.name;
-  }
-
-  if (parent.type == "ObjectExpression" || path.node.type == "ClassMethod") {
-    return path.node.key.name;
-  }
-
-  if (parent.type == "VariableDeclarator") {
-    return parent.id.name;
-  }
-
-  if (parent.type == "AssignmentExpression") {
-    if (parent.left.type == "MemberExpression") {
-      return parent.left.property.name;
-    }
-
-    return parent.left.name;
-  }
-
-  return "anonymous";
-}
-
-/***/ }),
-/* 1276 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getScopes;
-exports.clearScopes = clearScopes;
-
-var _ast = __webpack_require__(1209);
-
-var _sources = __webpack_require__(1220);
-
-var _parser = __webpack_require__(1187);
-
-var parsedScopesCache = new Map();
-
-function getScopes(location) {
-  var sourceId = location.sourceId;
-
-  var parsedScopes = parsedScopesCache.get(sourceId);
-  if (!parsedScopes) {
-    var visitor = (0, _parser.createParseJSScopeVisitor)(sourceId);
-    (0, _ast.traverseAst)((0, _sources.getSource)(sourceId), visitor.traverseVisitor);
-    parsedScopes = visitor.toParsedScopes();
-    parsedScopesCache.set(sourceId, parsedScopes);
-  }
-  return (0, _parser.findScopes)(parsedScopes, location);
-}
-
-function clearScopes() {
-  parsedScopesCache = new Map();
-}
-
-/***/ }),
-/* 1277 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _get = __webpack_require__(1073);
-
-var _get2 = _interopRequireDefault(_get);
-
-var _contains = __webpack_require__(1218);
-
-var _getSymbols2 = __webpack_require__(1219);
-
-var _getSymbols3 = _interopRequireDefault(_getSymbols2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function findSymbols(source) {
-  var _getSymbols = (0, _getSymbols3.default)(source),
-      functions = _getSymbols.functions,
-      comments = _getSymbols.comments;
-
-  return { functions, comments };
-}
-
-/**
- * Returns the location for a given function path. If the path represents a
- * function declaration, the location will begin after the function identifier
- * but before the function parameters.
- */
-
-function getLocation(func) {
-  var location = _extends({}, func.location);
-
-  // if the function has an identifier, start the block after it so the
-  // identifier is included in the "scope" of its parent
-  var identifierEnd = (0, _get2.default)("identifier.loc.end", func);
-  if (identifierEnd) {
-    location.start = identifierEnd;
-  }
-
-  return location;
-}
-
-/**
- * Reduces an array of locations to remove items that are completely enclosed
- * by another location in the array.
- */
-function removeOverlaps(locations, location) {
-  // support reducing without an initializing array
-  if (!Array.isArray(locations)) {
-    locations = [locations];
-  }
-
-  var contains = locations.filter(a => (0, _contains.containsLocation)(a, location)).length > 0;
-
-  if (!contains) {
-    locations.push(location);
-  }
-
-  return locations;
-}
-
-/**
- * Sorts an array of locations by start position
- */
-function sortByStart(a, b) {
-  if (a.start.line < b.start.line) {
-    return -1;
-  } else if (a.start.line === b.start.line) {
-    return a.start.column - b.start.column;
-  }
-
-  return 1;
-}
-
-/**
- * Returns an array of locations that are considered out of scope for the given
- * location.
- */
-function getOutOfScopeLocations(source, position) {
-  var _findSymbols = findSymbols(source),
-      functions = _findSymbols.functions,
-      comments = _findSymbols.comments;
-
-  var commentLocations = comments.map(c => c.location);
-
-  return functions.map(getLocation).concat(commentLocations).filter(loc => !(0, _contains.containsPosition)(loc, position)).reduce(removeOverlaps, []).sort(sortByStart);
-}
-
-exports.default = getOutOfScopeLocations;
-
-/***/ }),
-/* 1278 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-exports.getNextStep = getNextStep;
-
-var _debuggerHtml = __webpack_require__(843);
-
-var _types = __webpack_require__(1279);
-
-var _closest = __webpack_require__(1217);
-
-var _helpers = __webpack_require__(1212);
-
-function getNextStep(source, pausedPosition) {
-  var currentExpression = getSteppableExpression(source, pausedPosition);
-  if (!currentExpression) {
-    return null;
-  }
-  var currentStatement = currentExpression.getStatementParent();
-  return _getNextStep(currentStatement, pausedPosition);
-}
-
-function getSteppableExpression(source, pausedPosition) {
-  var closestPath = (0, _closest.getClosestPath)(source, pausedPosition);
-
-  if (!closestPath) {
-    return null;
-  }
-
-  if ((0, _helpers.isAwaitExpression)(closestPath) || (0, _helpers.isYieldExpression)(closestPath)) {
-    return closestPath;
-  }
-
-  return closestPath.find(p => p.isAwaitExpression() || p.isYieldExpression());
-}
-
-function _getNextStep(statement, position) {
-  var nextStatement = statement.getSibling(statement.key + 1);
-  if (nextStatement.node) {
-    return _extends({}, nextStatement.node.loc.start, {
-      sourceId: position.sourceId
-    });
-  }
-
-  return null;
-}
-
-/***/ }),
-/* 1279 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/***/ }),
-/* 1280 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getEmptyLines;
-
-var _uniq = __webpack_require__(561);
-
-var _uniq2 = _interopRequireDefault(_uniq);
-
-var _difference = __webpack_require__(1129);
-
-var _difference2 = _interopRequireDefault(_difference);
-
-var _ast = __webpack_require__(1209);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var commentTokens = ["CommentBlock", "CommentLine"];
-
-function fillRange(start, end) {
-  return Array(end - start + 1).fill().map((item, index) => start + index);
-}
-
-// Populates a pre-filled array of every line number,
-// then removes lines which were found to be executable
-function getLines(ast) {
-  return fillRange(0, ast.tokens[ast.tokens.length - 1].loc.end.line);
-}
-
-// The following sequence stores lines which have executable code
-// (contents other than comments or EOF, regardless of line position)
-function getExecutableLines(ast) {
-  var lines = ast.tokens.filter(token => !commentTokens.includes(token.type) && (!token.type || token.type.label && token.type.label != "eof")).map(token => token.loc.start.line - 1);
-
-  return (0, _uniq2.default)(lines);
-}
-
-function getEmptyLines(sourceToJS) {
-  if (!sourceToJS) {
-    return null;
-  }
-
-  var ast = (0, _ast.getAst)(sourceToJS);
-  if (!ast || !ast.comments) {
-    return [];
-  }
-
-  var executableLines = getExecutableLines(ast);
-  var lines = getLines(ast);
-  return (0, _difference2.default)(lines, executableLines);
-}
-
-/***/ }),
-/* 1281 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.hasSyntaxError = hasSyntaxError;
-
-var _ast = __webpack_require__(1209);
-
-function hasSyntaxError(input) {
-  try {
-    (0, _ast.parseExpression)(input);
-    return false;
-  } catch (e) {
-    return `${e.name} : ${e.message}`;
-  }
-}
-
-/***/ }),
+/* 1273 */,
+/* 1274 */,
+/* 1275 */,
+/* 1276 */,
+/* 1277 */,
+/* 1278 */,
+/* 1279 */,
+/* 1280 */,
+/* 1281 */,
 /* 1282 */,
 /* 1283 */,
 /* 1284 */,
@@ -33473,7 +31909,1294 @@ module.exports = (function () {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
 
 /***/ }),
-/* 1294 */
+/* 1294 */,
+/* 1295 */,
+/* 1296 */,
+/* 1297 */,
+/* 1298 */,
+/* 1299 */,
+/* 1300 */,
+/* 1301 */,
+/* 1302 */,
+/* 1303 */,
+/* 1304 */,
+/* 1305 */,
+/* 1306 */,
+/* 1307 */,
+/* 1308 */,
+/* 1309 */,
+/* 1310 */,
+/* 1311 */,
+/* 1312 */,
+/* 1313 */,
+/* 1314 */,
+/* 1315 */,
+/* 1316 */,
+/* 1317 */,
+/* 1318 */,
+/* 1319 */,
+/* 1320 */,
+/* 1321 */,
+/* 1322 */,
+/* 1323 */,
+/* 1324 */,
+/* 1325 */,
+/* 1326 */,
+/* 1327 */,
+/* 1328 */,
+/* 1329 */,
+/* 1330 */,
+/* 1331 */,
+/* 1332 */,
+/* 1333 */,
+/* 1334 */,
+/* 1335 */,
+/* 1336 */,
+/* 1337 */,
+/* 1338 */,
+/* 1339 */,
+/* 1340 */,
+/* 1341 */,
+/* 1342 */,
+/* 1343 */,
+/* 1344 */,
+/* 1345 */,
+/* 1346 */,
+/* 1347 */,
+/* 1348 */,
+/* 1349 */,
+/* 1350 */,
+/* 1351 */,
+/* 1352 */,
+/* 1353 */,
+/* 1354 */,
+/* 1355 */,
+/* 1356 */,
+/* 1357 */,
+/* 1358 */,
+/* 1359 */,
+/* 1360 */,
+/* 1361 */,
+/* 1362 */,
+/* 1363 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(1367);
+const workerUtils = __webpack_require__(1368);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+/* 1364 */,
+/* 1365 */,
+/* 1366 */,
+/* 1367 */
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+/* 1368 */
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const mark = typeof window == "object" && window.performance && window.performance.mark ? window.performance.mark.bind(window.performance) : () => {};
+
+const measure = typeof window == "object" && window.performance && window.performance.measure ? window.performance.measure.bind(window.performance) : () => {};
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method) {
+    return (...args) => {
+      return new Promise((resolve, reject) => {
+        const id = this.msgId++;
+
+        mark(`${method}_start`);
+
+        this.worker.postMessage({ id, method, args });
+
+        const listener = ({ data: result }) => {
+          if (result.id !== id) {
+            return;
+          }
+
+          if (!this.worker) {
+            reject("Oops, The worker has shutdown!");
+            return;
+          }
+          this.worker.removeEventListener("message", listener);
+
+          mark(`${method}_end`);
+          measure(`${method}`, `${method}_start`, `${method}_end`);
+
+          if (result.error) {
+            reject(result.error);
+          } else {
+            resolve(result.response);
+          }
+        };
+
+        this.worker.addEventListener("message", listener);
+      });
+    };
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, args } = msg.data;
+    try {
+      const response = publicInterface[method].apply(undefined, args);
+      if (response instanceof Promise) {
+        response.then(val => self.postMessage({ id, response: val }),
+        // Error can't be sent via postMessage, so be sure to
+        // convert to string.
+        err => self.postMessage({ id, error: err.toString() }));
+      } else {
+        self.postMessage({ id, response });
+      }
+    } catch (error) {
+      // Error can't be sent via postMessage, so be sure to convert to
+      // string.
+      self.postMessage({ id, error: error.toString() });
+    }
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const intervalId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearInterval(intervalId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+/* 1369 */,
+/* 1370 */,
+/* 1371 */,
+/* 1372 */,
+/* 1373 */,
+/* 1374 */,
+/* 1375 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.parseExpression = parseExpression;
+exports.getAst = getAst;
+exports.clearASTs = clearASTs;
+exports.traverseAst = traverseAst;
+
+var _parseScriptTags = __webpack_require__(1023);
+
+var _parseScriptTags2 = _interopRequireDefault(_parseScriptTags);
+
+var _babylon = __webpack_require__(435);
+
+var babylon = _interopRequireWildcard(_babylon);
+
+var _babelTraverse = __webpack_require__(436);
+
+var _babelTraverse2 = _interopRequireDefault(_babelTraverse);
+
+var _isEmpty = __webpack_require__(963);
+
+var _isEmpty2 = _interopRequireDefault(_isEmpty);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let ASTs = new Map();
+
+function _parse(code, opts) {
+  return babylon.parse(code, Object.assign({}, opts, {
+    sourceType: "module",
+    plugins: ["jsx", "flow", "objectRestSpread"]
+  }));
+}
+
+function parse(text, opts) {
+  let ast;
+  if (!text) {
+    return;
+  }
+
+  try {
+    ast = _parse(text, opts);
+  } catch (error) {
+    ast = {};
+  }
+
+  return ast;
+}
+
+// Custom parser for parse-script-tags that adapts its input structure to
+// our parser's signature
+function htmlParser({ source, line }) {
+  return parse(source, {
+    startLine: line
+  });
+}
+
+function parseExpression(expression, opts) {
+  return babylon.parseExpression(expression, Object.assign({}, opts, { sourceType: "script" }));
+}
+
+function getAst(source) {
+  if (!source || !source.text) {
+    return {};
+  }
+
+  if (ASTs.has(source.id)) {
+    return ASTs.get(source.id);
+  }
+
+  let ast = {};
+  const { contentType } = source;
+  if (contentType == "text/html") {
+    ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
+  } else if (contentType && contentType.includes("javascript")) {
+    ast = parse(source.text);
+  }
+
+  ASTs.set(source.id, ast);
+  return ast;
+}
+
+function clearASTs() {
+  ASTs = new Map();
+}
+
+function traverseAst(source, visitor) {
+  const ast = getAst(source);
+  if ((0, _isEmpty2.default)(ast)) {
+    return null;
+  }
+
+  (0, _babelTraverse2.default)(ast, visitor);
+  return ast;
+}
+
+/***/ }),
+/* 1376 */,
+/* 1377 */,
+/* 1378 */,
+/* 1379 */,
+/* 1380 */,
+/* 1381 */,
+/* 1382 */,
+/* 1383 */,
+/* 1384 */,
+/* 1385 */,
+/* 1386 */,
+/* 1387 */,
+/* 1388 */,
+/* 1389 */,
+/* 1390 */,
+/* 1391 */,
+/* 1392 */,
+/* 1393 */,
+/* 1394 */,
+/* 1395 */,
+/* 1396 */,
+/* 1397 */,
+/* 1398 */,
+/* 1399 */,
+/* 1400 */,
+/* 1401 */,
+/* 1402 */,
+/* 1403 */,
+/* 1404 */,
+/* 1405 */,
+/* 1406 */,
+/* 1407 */,
+/* 1408 */,
+/* 1409 */,
+/* 1410 */,
+/* 1411 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isLexicalScope = isLexicalScope;
+exports.isFunction = isFunction;
+exports.isAwaitExpression = isAwaitExpression;
+exports.isYieldExpression = isYieldExpression;
+exports.isVariable = isVariable;
+exports.getMemberExpression = getMemberExpression;
+
+var _babelTypes = __webpack_require__(493);
+
+var t = _interopRequireWildcard(_babelTypes);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function isLexicalScope(path) {
+  return t.isBlockStatement(path) || isFunction(path) || t.isProgram(path);
+}
+
+function isFunction(path) {
+  return t.isFunction(path) || t.isArrowFunctionExpression(path) || t.isObjectMethod(path) || t.isClassMethod(path);
+}
+
+function isAwaitExpression(path) {
+  return t.isAwaitExpression(path) || t.isAwaitExpression(path.container.init) || t.isAwaitExpression(path.parentPath);
+}
+
+function isYieldExpression(path) {
+  return t.isYieldExpression(path) || t.isYieldExpression(path.container.init) || t.isYieldExpression(path.parentPath);
+}
+
+function isVariable(path) {
+  return t.isVariableDeclaration(path) || isFunction(path) && path.node.params.length || t.isObjectProperty(path) && !isFunction(path.node.value);
+}
+
+function getMemberExpression(root) {
+  function _getMemberExpression(node, expr) {
+    if (t.isMemberExpression(node)) {
+      expr = [node.property.name].concat(expr);
+      return _getMemberExpression(node.object, expr);
+    }
+
+    if (t.isCallExpression(node)) {
+      return [];
+    }
+
+    if (t.isThisExpression(node)) {
+      return ["this"].concat(expr);
+    }
+
+    return [node.name].concat(expr);
+  }
+
+  const expr = _getMemberExpression(root, []);
+  return expr.join(".");
+}
+
+/***/ }),
+/* 1412 */,
+/* 1413 */,
+/* 1414 */,
+/* 1415 */,
+/* 1416 */,
+/* 1417 */,
+/* 1418 */,
+/* 1419 */,
+/* 1420 */,
+/* 1421 */,
+/* 1422 */,
+/* 1423 */,
+/* 1424 */,
+/* 1425 */,
+/* 1426 */,
+/* 1427 */,
+/* 1428 */,
+/* 1429 */,
+/* 1430 */,
+/* 1431 */,
+/* 1432 */,
+/* 1433 */,
+/* 1434 */,
+/* 1435 */,
+/* 1436 */,
+/* 1437 */,
+/* 1438 */,
+/* 1439 */,
+/* 1440 */,
+/* 1441 */,
+/* 1442 */,
+/* 1443 */,
+/* 1444 */,
+/* 1445 */,
+/* 1446 */,
+/* 1447 */,
+/* 1448 */,
+/* 1449 */,
+/* 1450 */,
+/* 1451 */,
+/* 1452 */,
+/* 1453 */,
+/* 1454 */,
+/* 1455 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getClosestExpression = getClosestExpression;
+exports.getClosestScope = getClosestScope;
+exports.getClosestPath = getClosestPath;
+
+var _babelTypes = __webpack_require__(493);
+
+var t = _interopRequireWildcard(_babelTypes);
+
+var _ast = __webpack_require__(1375);
+
+var _helpers = __webpack_require__(1411);
+
+var _contains = __webpack_require__(1456);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function getNodeValue(node) {
+  if (t.isThisExpression(node)) {
+    return "this";
+  }
+
+  return node.name;
+}
+
+function getClosestMemberExpression(source, token, location) {
+  let expression = null;
+  (0, _ast.traverseAst)(source, {
+    enter(path) {
+      const { node } = path;
+      if (!(0, _contains.nodeContainsPosition)(node, location)) {
+        return path.skip();
+      }
+
+      if (t.isMemberExpression(node) && node.property.name === token) {
+        const memberExpression = (0, _helpers.getMemberExpression)(node);
+        expression = {
+          expression: memberExpression,
+          location: node.loc
+        };
+      }
+    }
+  });
+
+  return expression;
+}
+
+function getClosestExpression(source, token, location) {
+  const memberExpression = getClosestMemberExpression(source, token, location);
+  if (memberExpression) {
+    return memberExpression;
+  }
+
+  const path = getClosestPath(source, location);
+  if (!path || !path.node) {
+    return;
+  }
+
+  const { node } = path;
+  return { expression: getNodeValue(node), location: node.loc };
+}
+
+function getClosestScope(source, location) {
+  let closestPath = null;
+
+  (0, _ast.traverseAst)(source, {
+    enter(path) {
+      if (!(0, _contains.nodeContainsPosition)(path.node, location)) {
+        return path.skip();
+      }
+
+      if ((0, _helpers.isLexicalScope)(path)) {
+        closestPath = path;
+      }
+    }
+  });
+
+  if (!closestPath) {
+    return;
+  }
+
+  return closestPath.scope;
+}
+
+function getClosestPath(source, location) {
+  let closestPath = null;
+
+  (0, _ast.traverseAst)(source, {
+    enter(path) {
+      if (!(0, _contains.nodeContainsPosition)(path.node, location)) {
+        return path.skip();
+      }
+      closestPath = path;
+    }
+  });
+
+  return closestPath;
+}
+
+/***/ }),
+/* 1456 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.containsPosition = containsPosition;
+exports.containsLocation = containsLocation;
+exports.nodeContainsPosition = nodeContainsPosition;
+function containsPosition(a, b) {
+  const startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
+  const endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
+
+  return startsBefore && endsAfter;
+}
+
+function containsLocation(a, b) {
+  return containsPosition(a, b.start) && containsPosition(a, b.end);
+}
+
+function nodeContainsPosition(node, position) {
+  return containsPosition(node.loc, position);
+}
+
+/***/ }),
+/* 1457 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getSymbols;
+exports.clearSymbols = clearSymbols;
+
+var _ast = __webpack_require__(1375);
+
+var _helpers = __webpack_require__(1411);
+
+var _inferClassName = __webpack_require__(1620);
+
+var _babelTypes = __webpack_require__(493);
+
+var t = _interopRequireWildcard(_babelTypes);
+
+var _getFunctionName = __webpack_require__(1621);
+
+var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+let symbolDeclarations = new Map();
+
+function getFunctionParameterNames(path) {
+  return path.node.params.map(param => param.name);
+}
+
+function getVariableNames(path) {
+  if (t.isObjectProperty(path) && !(0, _helpers.isFunction)(path.node.value)) {
+    return [{
+      name: path.node.key.name,
+      location: path.node.loc
+    }];
+  }
+
+  if (!path.node.declarations) {
+    return path.node.params.map(dec => ({
+      name: dec.name,
+      location: dec.loc
+    }));
+  }
+
+  return path.node.declarations.map(dec => ({
+    name: dec.id.name,
+    location: dec.loc
+  }));
+}
+
+function getComments(ast) {
+  if (!ast || !ast.comments) {
+    return [];
+  }
+  return ast.comments.map(comment => ({
+    name: comment.location,
+    location: comment.loc
+  }));
+}
+
+function extractSymbols(source) {
+  const functions = [];
+  const variables = [];
+  const memberExpressions = [];
+  const callExpressions = [];
+  const objectProperties = [];
+  const identifiers = [];
+
+  const ast = (0, _ast.traverseAst)(source, {
+    enter(path) {
+      if ((0, _helpers.isVariable)(path)) {
+        variables.push(...getVariableNames(path));
+      }
+
+      if ((0, _helpers.isFunction)(path)) {
+        functions.push({
+          name: (0, _getFunctionName2.default)(path),
+          klass: (0, _inferClassName.inferClassName)(path),
+          location: path.node.loc,
+          parameterNames: getFunctionParameterNames(path),
+          identifier: path.node.id
+        });
+      }
+
+      if (t.isClassDeclaration(path)) {
+        variables.push({
+          name: path.node.id.name,
+          location: path.node.loc
+        });
+      }
+
+      if (t.isObjectProperty(path)) {
+        const { start, end, identifierName } = path.node.key.loc;
+        objectProperties.push({
+          name: identifierName,
+          location: { start, end },
+          expression: getSnippet(path)
+        });
+      }
+
+      if (t.isMemberExpression(path)) {
+        const { start, end } = path.node.property.loc;
+        memberExpressions.push({
+          name: path.node.property.name,
+          location: { start, end },
+          expressionLocation: path.node.loc,
+          expression: getSnippet(path)
+        });
+      }
+
+      if (t.isCallExpression(path)) {
+        const callee = path.node.callee;
+        if (!t.isMemberExpression(callee)) {
+          const { start, end, identifierName } = callee.loc;
+          callExpressions.push({
+            name: identifierName,
+            location: { start, end }
+          });
+        }
+      }
+
+      if (t.isIdentifier(path)) {
+        const { start, end } = path.node.loc;
+
+        identifiers.push({
+          name: path.node.name,
+          expression: path.node.name,
+          location: { start, end }
+        });
+      }
+
+      if (t.isThisExpression(path.node)) {
+        const { start, end } = path.node.loc;
+        identifiers.push({
+          name: "this",
+          location: { start, end },
+          expressionLocation: path.node.loc,
+          expression: "this"
+        });
+      }
+
+      if (t.isVariableDeclarator(path)) {
+        const node = path.node.id;
+        const { start, end } = path.node.loc;
+
+        identifiers.push({
+          name: node.name,
+          expression: node.name,
+          location: { start, end }
+        });
+      }
+    }
+  });
+
+  // comments are extracted separately from the AST
+  const comments = getComments(ast);
+
+  return {
+    functions,
+    variables,
+    callExpressions,
+    memberExpressions,
+    objectProperties,
+    comments,
+    identifiers
+  };
+}
+
+function getSymbols(source) {
+  if (symbolDeclarations.has(source.id)) {
+    const symbols = symbolDeclarations.get(source.id);
+    if (symbols) {
+      return symbols;
+    }
+  }
+
+  const symbols = extractSymbols(source);
+  symbolDeclarations.set(source.id, symbols);
+  return symbols;
+}
+
+function extendSnippet(name, expression, path, prevPath) {
+  const computed = path && path.node.computed;
+  const prevComputed = prevPath && prevPath.node.computed;
+  const prevArray = t.isArrayExpression(prevPath);
+  const array = t.isArrayExpression(path);
+
+  if (expression === "") {
+    if (computed) {
+      return `[${name}]`;
+    }
+    return name;
+  }
+
+  if (computed || array) {
+    if (prevComputed || prevArray) {
+      return `[${name}]${expression}`;
+    }
+    return `[${name}].${expression}`;
+  }
+
+  if (prevComputed || prevArray) {
+    return `${name}${expression}`;
+  }
+
+  return `${name}.${expression}`;
+}
+
+function getMemberSnippet(node, expression = "") {
+  if (t.isMemberExpression(node)) {
+    const name = node.property.name;
+
+    return getMemberSnippet(node.object, extendSnippet(name, expression));
+  }
+
+  if (t.isCallExpression(node)) {
+    return "";
+  }
+
+  if (t.isThisExpression(node)) {
+    return `this.${expression}`;
+  }
+
+  if (t.isIdentifier(node)) {
+    return `${node.name}.${expression}`;
+  }
+
+  return expression;
+}
+
+function getObjectSnippet(path, prevPath, expression = "") {
+  if (!path) {
+    return expression;
+  }
+
+  const name = path.node.key.name;
+
+  const extendedExpression = extendSnippet(name, expression, path, prevPath);
+
+  const nextPrevPath = path;
+  const nextPath = path.parentPath && path.parentPath.parentPath;
+
+  return getSnippet(nextPath, nextPrevPath, extendedExpression);
+}
+
+function getArraySnippet(path, prevPath, expression) {
+  const index = prevPath.parentPath.key;
+  const extendedExpression = extendSnippet(index, expression, path, prevPath);
+
+  const nextPrevPath = path;
+  const nextPath = path.parentPath && path.parentPath.parentPath;
+
+  return getSnippet(nextPath, nextPrevPath, extendedExpression);
+}
+
+function getSnippet(path, prevPath, expression = "") {
+  if (t.isVariableDeclaration(path)) {
+    const node = path.node.declarations[0];
+    const name = node.id.name;
+    return extendSnippet(name, expression, path, prevPath);
+  }
+
+  if (t.isVariableDeclarator(path)) {
+    const node = path.node.id;
+    if (t.isObjectPattern(node)) {
+      return expression;
+    }
+
+    const name = node.name;
+    const prop = extendSnippet(name, expression, path, prevPath);
+    return prop;
+  }
+
+  if (t.isAssignmentExpression(path)) {
+    const node = path.node.left;
+    const name = t.isMemberExpression(node) ? getMemberSnippet(node) : node.name;
+
+    const prop = extendSnippet(name, expression, path, prevPath);
+    return prop;
+  }
+
+  if ((0, _helpers.isFunction)(path)) {
+    return expression;
+  }
+
+  if (t.isIdentifier(path)) {
+    const node = path.node;
+    return `${node.name}.${expression}`;
+  }
+
+  if (t.isObjectProperty(path)) {
+    return getObjectSnippet(path, prevPath, expression);
+  }
+
+  if (t.isObjectExpression(path)) {
+    const parentPath = prevPath && prevPath.parentPath;
+    return getObjectSnippet(parentPath, prevPath, expression);
+  }
+
+  if (t.isMemberExpression(path)) {
+    return getMemberSnippet(path.node, expression);
+  }
+
+  if (t.isArrayExpression(path)) {
+    return getArraySnippet(path, prevPath, expression);
+  }
+}
+
+function clearSymbols() {
+  symbolDeclarations = new Map();
+}
+
+/***/ }),
+/* 1458 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hasSource = hasSource;
+exports.setSource = setSource;
+exports.getSource = getSource;
+exports.clearSources = clearSources;
+
+
+let cachedSources = new Map();
+
+function hasSource(sourceId) {
+  return cachedSources.has(sourceId);
+}
+
+function setSource(source) {
+  cachedSources.set(source.id, source);
+}
+
+function getSource(sourceId) {
+  if (!cachedSources.has(sourceId)) {
+    throw new Error(`${sourceId} was not provided.`);
+  }
+  return cachedSources.get(sourceId);
+}
+
+function clearSources() {
+  cachedSources = new Map();
+}
+
+/***/ }),
+/* 1459 */,
+/* 1460 */,
+/* 1461 */,
+/* 1462 */,
+/* 1463 */,
+/* 1464 */,
+/* 1465 */,
+/* 1466 */,
+/* 1467 */,
+/* 1468 */,
+/* 1469 */,
+/* 1470 */,
+/* 1471 */,
+/* 1472 */,
+/* 1473 */,
+/* 1474 */,
+/* 1475 */,
+/* 1476 */,
+/* 1477 */,
+/* 1478 */,
+/* 1479 */,
+/* 1480 */,
+/* 1481 */,
+/* 1482 */,
+/* 1483 */,
+/* 1484 */,
+/* 1485 */,
+/* 1486 */,
+/* 1487 */,
+/* 1488 */,
+/* 1489 */,
+/* 1490 */,
+/* 1491 */,
+/* 1492 */,
+/* 1493 */,
+/* 1494 */,
+/* 1495 */,
+/* 1496 */,
+/* 1497 */,
+/* 1498 */,
+/* 1499 */,
+/* 1500 */,
+/* 1501 */,
+/* 1502 */,
+/* 1503 */,
+/* 1504 */,
+/* 1505 */,
+/* 1506 */,
+/* 1507 */,
+/* 1508 */,
+/* 1509 */,
+/* 1510 */,
+/* 1511 */,
+/* 1512 */,
+/* 1513 */,
+/* 1514 */,
+/* 1515 */,
+/* 1516 */,
+/* 1517 */,
+/* 1518 */,
+/* 1519 */,
+/* 1520 */,
+/* 1521 */,
+/* 1522 */,
+/* 1523 */,
+/* 1524 */,
+/* 1525 */,
+/* 1526 */,
+/* 1527 */,
+/* 1528 */,
+/* 1529 */,
+/* 1530 */,
+/* 1531 */,
+/* 1532 */,
+/* 1533 */,
+/* 1534 */,
+/* 1535 */,
+/* 1536 */,
+/* 1537 */,
+/* 1538 */,
+/* 1539 */,
+/* 1540 */,
+/* 1541 */,
+/* 1542 */,
+/* 1543 */,
+/* 1544 */,
+/* 1545 */,
+/* 1546 */,
+/* 1547 */,
+/* 1548 */,
+/* 1549 */,
+/* 1550 */,
+/* 1551 */,
+/* 1552 */,
+/* 1553 */,
+/* 1554 */,
+/* 1555 */,
+/* 1556 */,
+/* 1557 */,
+/* 1558 */,
+/* 1559 */,
+/* 1560 */,
+/* 1561 */,
+/* 1562 */,
+/* 1563 */,
+/* 1564 */,
+/* 1565 */,
+/* 1566 */,
+/* 1567 */,
+/* 1568 */,
+/* 1569 */,
+/* 1570 */,
+/* 1571 */,
+/* 1572 */,
+/* 1573 */,
+/* 1574 */,
+/* 1575 */,
+/* 1576 */,
+/* 1577 */,
+/* 1578 */,
+/* 1579 */,
+/* 1580 */,
+/* 1581 */,
+/* 1582 */,
+/* 1583 */,
+/* 1584 */,
+/* 1585 */,
+/* 1586 */,
+/* 1587 */,
+/* 1588 */,
+/* 1589 */,
+/* 1590 */,
+/* 1591 */,
+/* 1592 */,
+/* 1593 */,
+/* 1594 */,
+/* 1595 */,
+/* 1596 */,
+/* 1597 */,
+/* 1598 */,
+/* 1599 */,
+/* 1600 */,
+/* 1601 */,
+/* 1602 */,
+/* 1603 */,
+/* 1604 */,
+/* 1605 */,
+/* 1606 */,
+/* 1607 */,
+/* 1608 */,
+/* 1609 */,
+/* 1610 */,
+/* 1611 */,
+/* 1612 */,
+/* 1613 */,
+/* 1614 */,
+/* 1615 */,
+/* 1616 */,
+/* 1617 */,
+/* 1618 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _closest = __webpack_require__(1455);
+
+var _scopes = __webpack_require__(1619);
+
+var _getSymbols = __webpack_require__(1457);
+
+var _getSymbols2 = _interopRequireDefault(_getSymbols);
+
+var _ast = __webpack_require__(1375);
+
+var _getScopes = __webpack_require__(1622);
+
+var _getScopes2 = _interopRequireDefault(_getScopes);
+
+var _sources = __webpack_require__(1458);
+
+var _getOutOfScopeLocations = __webpack_require__(1624);
+
+var _getOutOfScopeLocations2 = _interopRequireDefault(_getOutOfScopeLocations);
+
+var _steps = __webpack_require__(1625);
+
+var _getEmptyLines = __webpack_require__(1628);
+
+var _getEmptyLines2 = _interopRequireDefault(_getEmptyLines);
+
+var _validate = __webpack_require__(1629);
+
+var _devtoolsUtils = __webpack_require__(1363);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const { workerHandler } = _devtoolsUtils.workerUtils;
+
+self.onmessage = workerHandler({
+  getClosestExpression: _closest.getClosestExpression,
+  getOutOfScopeLocations: _getOutOfScopeLocations2.default,
+  getSymbols: _getSymbols2.default,
+  getScopes: _getScopes2.default,
+  clearSymbols: _getSymbols.clearSymbols,
+  clearScopes: _getScopes.clearScopes,
+  clearASTs: _ast.clearASTs,
+  hasSource: _sources.hasSource,
+  setSource: _sources.setSource,
+  clearSources: _sources.clearSources,
+  getVariablesInScope: _scopes.getVariablesInScope,
+  getNextStep: _steps.getNextStep,
+  getEmptyLines: _getEmptyLines2.default,
+  hasSyntaxError: _validate.hasSyntaxError
+});
+
+/***/ }),
+/* 1619 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getVariablesInLocalScope = getVariablesInLocalScope;
+exports.getVariablesInScope = getVariablesInScope;
+exports.isExpressionInScope = isExpressionInScope;
+
+var _toPairs = __webpack_require__(795);
+
+var _toPairs2 = _interopRequireDefault(_toPairs);
+
+var _uniq = __webpack_require__(561);
+
+var _uniq2 = _interopRequireDefault(_uniq);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getScopeVariables(scope) {
+  const { bindings } = scope;
+
+  return (0, _toPairs2.default)(bindings).map(([name, binding]) => ({
+    name,
+    references: binding.referencePaths
+  }));
+}
+
+function getScopeChain(scope) {
+  const scopes = [];
+
+  do {
+    scopes.push(scope);
+  } while (scope = scope.parent);
+
+  return scopes;
+}
+
+function getVariablesInLocalScope(scope) {
+  return getScopeVariables(scope);
+}
+
+function getVariablesInScope(scope) {
+  const scopes = getScopeChain(scope);
+  const scopeVars = scopes.map(getScopeVariables);
+  const vars = [{ name: "this" }, { name: "arguments" }].concat(...scopeVars).map(variable => variable.name);
+  return (0, _uniq2.default)(vars);
+}
+
+function isExpressionInScope(expression, scope) {
+  if (!scope) {
+    return false;
+  }
+
+  const variables = getVariablesInScope(scope);
+  const firstPart = expression.split(/\./)[0];
+  return variables.includes(firstPart);
+}
+
+/***/ }),
+/* 1620 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33493,30 +33216,30 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // the function class is inferred from a call like
 // createClass or extend
 function fromCallExpression(callExpression) {
-  var whitelist = ["extend", "createClass"];
-  var callee = callExpression.node.callee;
+  const whitelist = ["extend", "createClass"];
+  const callee = callExpression.node.callee;
   if (!callee) {
     return null;
   }
 
-  var name = t.isMemberExpression(callee) ? callee.property.name : callee.name;
+  const name = t.isMemberExpression(callee) ? callee.property.name : callee.name;
 
   if (!whitelist.includes(name)) {
     return null;
   }
 
-  var variable = callExpression.findParent(_p => _p.isVariableDeclarator());
+  const variable = callExpression.findParent(_p => _p.isVariableDeclarator());
   if (variable) {
     return variable.node.id.name;
   }
 
-  var assignment = callExpression.findParent(_p => _p.isAssignmentExpression());
+  const assignment = callExpression.findParent(_p => _p.isAssignmentExpression());
 
   if (!assignment) {
     return null;
   }
 
-  var left = assignment.node.left;
+  const left = assignment.node.left;
 
   if (left.name) {
     return name;
@@ -33533,7 +33256,7 @@ function fromCallExpression(callExpression) {
 // e.g. TodoClass.prototype.render = function() {}
 
 function fromPrototype(assignment) {
-  var left = assignment.node.left;
+  const left = assignment.node.left;
   if (!left) {
     return null;
   }
@@ -33550,22 +33273,589 @@ function fromPrototype(assignment) {
 // e.g. `class Foo`, `TodoClass.prototype.foo`,
 //      `Todo = createClass({ foo: () => {}})`
 function inferClassName(path) {
-  var classDeclaration = path.findParent(_p => _p.isClassDeclaration());
+  const classDeclaration = path.findParent(_p => _p.isClassDeclaration());
   if (classDeclaration) {
     return classDeclaration.node.id.name;
   }
 
-  var callExpression = path.findParent(_p => _p.isCallExpression());
+  const callExpression = path.findParent(_p => _p.isCallExpression());
   if (callExpression) {
     return fromCallExpression(callExpression);
   }
 
-  var assignment = path.findParent(_p => _p.isAssignmentExpression());
+  const assignment = path.findParent(_p => _p.isAssignmentExpression());
   if (assignment) {
     return fromPrototype(assignment);
   }
 
   return null;
+}
+
+/***/ }),
+/* 1621 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getFunctionName;
+function getFunctionName(path) {
+  if (path.node.id) {
+    return path.node.id.name;
+  }
+
+  const parent = path.parent;
+  if (parent.type == "ObjectProperty") {
+    return parent.key.name;
+  }
+
+  if (parent.type == "ObjectExpression" || path.node.type == "ClassMethod") {
+    return path.node.key.name;
+  }
+
+  if (parent.type == "VariableDeclarator") {
+    return parent.id.name;
+  }
+
+  if (parent.type == "AssignmentExpression") {
+    if (parent.left.type == "MemberExpression") {
+      return parent.left.property.name;
+    }
+
+    return parent.left.name;
+  }
+
+  return "anonymous";
+}
+
+/***/ }),
+/* 1622 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getScopes;
+exports.clearScopes = clearScopes;
+
+var _ast = __webpack_require__(1375);
+
+var _sources = __webpack_require__(1458);
+
+var _parser = __webpack_require__(1623);
+
+let parsedScopesCache = new Map();
+
+function getScopes(location) {
+  const { sourceId } = location;
+  let parsedScopes = parsedScopesCache.get(sourceId);
+  if (!parsedScopes) {
+    const visitor = (0, _parser.createParseJSScopeVisitor)(sourceId);
+    (0, _ast.traverseAst)((0, _sources.getSource)(sourceId), visitor.traverseVisitor);
+    parsedScopes = visitor.toParsedScopes();
+    parsedScopesCache.set(sourceId, parsedScopes);
+  }
+  return (0, _parser.findScopes)(parsedScopes, location);
+}
+
+function clearScopes() {
+  parsedScopesCache = new Map();
+}
+
+/***/ }),
+/* 1623 */
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function createTempScope(type, parent, loc) {
+  const result = {
+    type,
+    parent,
+    children: [],
+    loc: loc,
+    names: Object.create(null)
+  };
+  if (parent) {
+    parent.children.push(result);
+  }
+  return result;
+}
+
+function isNode(node, type) {
+  return node ? node.type === type : false;
+}
+
+function getFunctionScope(scope) {
+  let s = scope;
+  while (s.type !== "Function" && s.type !== "Script") {
+    if (!s.parent) {
+      return s;
+    }
+    s = s.parent;
+  }
+  return s;
+}
+
+function fromBabelLocation(location, sourceId) {
+  return {
+    sourceId,
+    line: location.line,
+    column: location.column
+  };
+}
+
+function parseDeclarator(declaratorId, targetScope, type) {
+  if (isNode(declaratorId, "Identifier")) {
+    targetScope.names[declaratorId.name] = { type, refs: [] };
+  } else if (isNode(declaratorId, "ObjectPattern")) {
+    declaratorId.properties.forEach(prop => {
+      parseDeclarator(prop.value, targetScope, type);
+    });
+  } else if (isNode(declaratorId, "ArrayPattern")) {
+    declaratorId.elements.forEach(item => {
+      parseDeclarator(item, targetScope, type);
+    });
+  } else if (isNode(declaratorId, "AssignmentPattern")) {
+    parseDeclarator(declaratorId.left, targetScope, type);
+  } else if (isNode(declaratorId, "RestElement")) {
+    parseDeclarator(declaratorId.argument, targetScope, type);
+  }
+}
+
+function isLetOrConst(node) {
+  return node.kind === "let" || node.kind === "const";
+}
+
+function hasLetOrConst(path) {
+  return path.node.body.some(node => {
+    if (!isNode(node, "VariableDeclaration")) {
+      return false;
+    }
+    return isLetOrConst(node);
+  });
+}
+
+function findIdentifierInScopes(scope, name) {
+  // Find nearest outer scope with the specifed name and add reference.
+  for (let s = scope; s; s = s.parent) {
+    if (name in s.names) {
+      return s;
+    }
+  }
+  return null;
+}
+
+function toParsedScopes(children, sourceId) {
+  if (!children || children.length === 0) {
+    return undefined;
+  }
+  return children.map(scope => {
+    // Removing unneed information from TempScope such as parent reference and
+    // name types. We also need to convert BabelLocation to the Location type.
+    const bindings = Object.keys(scope.names).reduce((_bindings, n) => {
+      const nameRefs = scope.names[n];
+      switch (nameRefs.type) {
+        case "var":
+        case "let":
+        case "const":
+        case "param":
+          _bindings[n] = nameRefs.refs.map(location => {
+            return fromBabelLocation(location, sourceId);
+          });
+          break;
+      }
+      return _bindings;
+    }, Object.create(null));
+    return {
+      start: fromBabelLocation(scope.loc.start, sourceId),
+      end: fromBabelLocation(scope.loc.end, sourceId),
+      type: scope.type.toLowerCase(),
+      bindings,
+      children: toParsedScopes(scope.children, sourceId)
+    };
+  });
+}
+
+/**
+ * Creates at visitor for babel-traverse that will parse/extract all bindings
+ * information from the source. See also findScopes to perform lookup of the
+ * scope information for specific location.
+ */
+function createParseJSScopeVisitor(sourceId) {
+  let parent = createTempScope("Global", null, null);
+  let savedParents = new WeakMap();
+  const traverseVisitor = {
+    enter(path) {
+      const tree = path.node;
+      const location = path.node.loc;
+      if (path.isProgram()) {
+        savedParents.set(path, parent);
+        parent = createTempScope("Script", parent, location);
+        return;
+      }
+      if (path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression()) {
+        savedParents.set(path, parent);
+        const scope = createTempScope("Function", parent, location);
+        if (isNode(tree.id, "Identifier")) {
+          const functionName = { type: "fn", refs: [] };
+          getFunctionScope(parent).names[tree.id.name] = functionName;
+          scope.names[tree.id.name] = functionName;
+        }
+        tree.params.forEach(param => parseDeclarator(param, scope, "param"));
+        parent = scope;
+        return;
+      }
+      if (path.isForInStatement() || path.isForStatement()) {
+        const init = tree.init || tree.left;
+        if (isNode(init, "VariableDeclaration") && isLetOrConst(init)) {
+          // Debugger will create new lexical environment for the for.
+          savedParents.set(path, parent);
+          parent = createTempScope("For", parent, location);
+        }
+        return;
+      }
+      if (path.isCatchClause()) {
+        savedParents.set(path, parent);
+        parent = createTempScope("Catch", parent, location);
+        parseDeclarator(tree.param, parent, "param");
+        return;
+      }
+      if (path.isBlockStatement()) {
+        if (hasLetOrConst(path)) {
+          // Debugger will create new lexical environment for the block.
+          savedParents.set(path, parent);
+          parent = createTempScope("Block", parent, location);
+        }
+        return;
+      }
+      if (path.isVariableDeclaration()) {
+        // Finds right lexical environment
+        const hoistAt = !isLetOrConst(tree) ? getFunctionScope(parent) : parent;
+        tree.declarations.forEach(declarator => {
+          parseDeclarator(declarator.id, hoistAt, tree.kind);
+        });
+        return;
+      }
+      if (path.isIdentifier()) {
+        const scope = findIdentifierInScopes(parent, tree.name);
+        if (scope) {
+          scope.names[tree.name].refs.push(tree.loc.start);
+        }
+      }
+    },
+    exit(path) {
+      const savedParent = savedParents.get(path);
+      if (savedParent) {
+        parent = savedParent;
+        savedParents.delete(path);
+      }
+    }
+  };
+  return {
+    traverseVisitor,
+    toParsedScopes() {
+      return toParsedScopes(parent.children, sourceId) || [];
+    }
+  };
+}
+
+function compareLocations(a, b) {
+  // According to type of Location.column can be undefined, if will not be the
+  // case here, ignoring flow error.
+  // $FlowIgnore
+  return a.line == b.line ? a.column - b.column : a.line - b.line;
+}
+
+/**
+ * Searches all scopes and their bindings at the specific location.
+ */
+function findScopes(scopes, location) {
+  // Find inner most in the tree structure.
+  let searchInScopes = scopes;
+  const found = [];
+  while (searchInScopes) {
+    let foundOne = searchInScopes.some(s => {
+      if (compareLocations(s.start, location) <= 0 && compareLocations(location, s.end) < 0) {
+        // Found the next scope, trying to search recusevly in its children.
+        found.unshift(s);
+        searchInScopes = s.children;
+        return true;
+      }
+      return false;
+    });
+    if (!foundOne) {
+      break;
+    }
+  }
+  return found.map(i => {
+    return {
+      type: i.type,
+      start: i.start,
+      end: i.end,
+      bindings: i.bindings
+    };
+  });
+}
+
+module.exports = {
+  createParseJSScopeVisitor,
+  findScopes
+};
+
+/***/ }),
+/* 1624 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _get = __webpack_require__(1073);
+
+var _get2 = _interopRequireDefault(_get);
+
+var _contains = __webpack_require__(1456);
+
+var _getSymbols = __webpack_require__(1457);
+
+var _getSymbols2 = _interopRequireDefault(_getSymbols);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function findSymbols(source) {
+  const { functions, comments } = (0, _getSymbols2.default)(source);
+  return { functions, comments };
+}
+
+/**
+ * Returns the location for a given function path. If the path represents a
+ * function declaration, the location will begin after the function identifier
+ * but before the function parameters.
+ */
+
+function getLocation(func) {
+  const location = _extends({}, func.location);
+
+  // if the function has an identifier, start the block after it so the
+  // identifier is included in the "scope" of its parent
+  const identifierEnd = (0, _get2.default)("identifier.loc.end", func);
+  if (identifierEnd) {
+    location.start = identifierEnd;
+  }
+
+  return location;
+}
+
+/**
+ * Reduces an array of locations to remove items that are completely enclosed
+ * by another location in the array.
+ */
+function removeOverlaps(locations, location) {
+  // support reducing without an initializing array
+  if (!Array.isArray(locations)) {
+    locations = [locations];
+  }
+
+  const contains = locations.filter(a => (0, _contains.containsLocation)(a, location)).length > 0;
+
+  if (!contains) {
+    locations.push(location);
+  }
+
+  return locations;
+}
+
+/**
+ * Sorts an array of locations by start position
+ */
+function sortByStart(a, b) {
+  if (a.start.line < b.start.line) {
+    return -1;
+  } else if (a.start.line === b.start.line) {
+    return a.start.column - b.start.column;
+  }
+
+  return 1;
+}
+
+/**
+ * Returns an array of locations that are considered out of scope for the given
+ * location.
+ */
+function getOutOfScopeLocations(source, position) {
+  const { functions, comments } = findSymbols(source);
+  const commentLocations = comments.map(c => c.location);
+
+  return functions.map(getLocation).concat(commentLocations).filter(loc => !(0, _contains.containsPosition)(loc, position)).reduce(removeOverlaps, []).sort(sortByStart);
+}
+
+exports.default = getOutOfScopeLocations;
+
+/***/ }),
+/* 1625 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.getNextStep = getNextStep;
+
+var _debuggerHtml = __webpack_require__(1626);
+
+var _types = __webpack_require__(1627);
+
+var _closest = __webpack_require__(1455);
+
+var _helpers = __webpack_require__(1411);
+
+function getNextStep(source, pausedPosition) {
+  const currentExpression = getSteppableExpression(source, pausedPosition);
+  if (!currentExpression) {
+    return null;
+  }
+  const currentStatement = currentExpression.getStatementParent();
+  return _getNextStep(currentStatement, pausedPosition);
+}
+
+function getSteppableExpression(source, pausedPosition) {
+  const closestPath = (0, _closest.getClosestPath)(source, pausedPosition);
+
+  if (!closestPath) {
+    return null;
+  }
+
+  if ((0, _helpers.isAwaitExpression)(closestPath) || (0, _helpers.isYieldExpression)(closestPath)) {
+    return closestPath;
+  }
+
+  return closestPath.find(p => p.isAwaitExpression() || p.isYieldExpression());
+}
+
+function _getNextStep(statement, position) {
+  const nextStatement = statement.getSibling(statement.key + 1);
+  if (nextStatement.node) {
+    return _extends({}, nextStatement.node.loc.start, {
+      sourceId: position.sourceId
+    });
+  }
+
+  return null;
+}
+
+/***/ }),
+/* 1626 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/***/ }),
+/* 1627 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/***/ }),
+/* 1628 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getEmptyLines;
+
+var _uniq = __webpack_require__(561);
+
+var _uniq2 = _interopRequireDefault(_uniq);
+
+var _difference = __webpack_require__(1129);
+
+var _difference2 = _interopRequireDefault(_difference);
+
+var _ast = __webpack_require__(1375);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const commentTokens = ["CommentBlock", "CommentLine"];
+
+function fillRange(start, end) {
+  return Array(end - start + 1).fill().map((item, index) => start + index);
+}
+
+// Populates a pre-filled array of every line number,
+// then removes lines which were found to be executable
+function getLines(ast) {
+  return fillRange(1, ast.tokens[ast.tokens.length - 1].loc.end.line);
+}
+
+// The following sequence stores lines which have executable code
+// (contents other than comments or EOF, regardless of line position)
+function getExecutableLines(ast) {
+  const lines = ast.tokens.filter(token => !commentTokens.includes(token.type) && (!token.type || token.type.label && token.type.label != "eof")).map(token => token.loc.start.line);
+
+  return (0, _uniq2.default)(lines);
+}
+
+function getEmptyLines(sourceToJS) {
+  if (!sourceToJS) {
+    return null;
+  }
+
+  const ast = (0, _ast.getAst)(sourceToJS);
+  if (!ast || !ast.comments) {
+    return [];
+  }
+
+  const executableLines = getExecutableLines(ast);
+  const lines = getLines(ast);
+  return (0, _difference2.default)(lines, executableLines);
+}
+
+/***/ }),
+/* 1629 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hasSyntaxError = hasSyntaxError;
+
+var _ast = __webpack_require__(1375);
+
+function hasSyntaxError(input) {
+  try {
+    (0, _ast.parseExpression)(input);
+    return false;
+  } catch (e) {
+    return `${e.name} : ${e.message}`;
+  }
 }
 
 /***/ })
