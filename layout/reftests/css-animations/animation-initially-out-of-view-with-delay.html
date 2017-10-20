@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<title>Bug 1383239</title>
+<style>
+div {
+ position: absolute;
+ left: -9999px;
+ background: orange;
+ width: 20px;
+ height: 20px;
+ animation: anim 100s 0.1s infinite;
+}
+
+@keyframes anim {
+ 0% {
+  left: 0px;
+ }
+ 100% {
+  left: 0px;
+ }
+}
+</style>
+<div></div>
+<script>
+document.querySelector('div').addEventListener('animationstart', ()=> {
+  document.documentElement.classList.remove('reftest-wait');
+});
+</script>
+</html>
