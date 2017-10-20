@@ -19,14 +19,12 @@ class ActionsConfigExample(BaseScript):
         ['--beverage', ],
         {"action": "store",
          "dest": "beverage",
-         "type": "string",
          "help": "Specify your beverage of choice",
          }
     ], [
         ['--ship-style', ],
         {"action": "store",
          "dest": "ship_style",
-         "type": "choice",
          "choices": ["1", "2", "3"],
          "help": "Specify the type of ship",
          }
@@ -34,7 +32,7 @@ class ActionsConfigExample(BaseScript):
         ['--long-sleep-time', ],
         {"action": "store",
          "dest": "long_sleep_time",
-         "type": "int",
+         "type": int,
          "help": "Specify how long to sleep",
          }
     ]]

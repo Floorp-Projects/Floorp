@@ -41,7 +41,6 @@ CONFIG_OPTIONS = [
     [['--locale', ], {
         "action": "extend",
         "dest": "locales",
-        "type": "string",
         "help": "Specify the locale(s) to upload."}],
     [["--platform"], {
         "dest": "platform",
@@ -88,7 +87,7 @@ CONFIG_OPTIONS = [
     [["-s", "--scan-parallelization"], {
         "dest": "scan_parallelization",
         "default": 4,
-        "type": "int",
+        "type": int,
         "help": "Number of concurrent file scans",
     }],
 ]

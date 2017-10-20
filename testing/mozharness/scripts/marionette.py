@@ -60,7 +60,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
     ], [
         ["--emulator"],
         {"action": "store",
-         "type": "choice",
          "choices": ['arm', 'x86'],
          "dest": "emulator",
          "default": None,

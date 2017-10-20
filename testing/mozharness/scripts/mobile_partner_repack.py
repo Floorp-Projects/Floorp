@@ -33,35 +33,30 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
         ['--locale', ],
         {"action": "extend",
          "dest": "locales",
-         "type": "string",
          "help": "Specify the locale(s) to repack"
          }
     ], [
         ['--partner', ],
         {"action": "extend",
          "dest": "partners",
-         "type": "string",
          "help": "Specify the partner(s) to repack"
          }
     ], [
         ['--locales-file', ],
         {"action": "store",
          "dest": "locales_file",
-         "type": "string",
          "help": "Specify a json file to determine which locales to repack"
          }
     ], [
         ['--tag-override', ],
         {"action": "store",
          "dest": "tag_override",
-         "type": "string",
          "help": "Override the tags set for all repos"
          }
     ], [
         ['--platform', ],
         {"action": "extend",
          "dest": "platforms",
-         "type": "choice",
          "choices": SUPPORTED_PLATFORMS,
          "help": "Specify the platform(s) to repack"
          }
@@ -69,28 +64,25 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
         ['--user-repo-override', ],
         {"action": "store",
          "dest": "user_repo_override",
-         "type": "string",
          "help": "Override the user repo path for all repos"
          }
     ], [
         ['--release-config-file', ],
         {"action": "store",
          "dest": "release_config_file",
-         "type": "string",
          "help": "Specify the release config file to use"
          }
     ], [
         ['--version', ],
         {"action": "store",
          "dest": "version",
-         "type": "string",
          "help": "Specify the current version"
          }
     ], [
         ['--buildnum', ],
         {"action": "store",
          "dest": "buildnum",
-         "type": "int",
+         "type": int,
          "default": 1,
          "metavar": "INT",
          "help": "Specify the current release build num (e.g. build1, build2)"
