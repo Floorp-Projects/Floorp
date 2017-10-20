@@ -1,7 +1,7 @@
 {
   "default": {
     "visibleDefaultEngines": [
-      "google", "yahoo", "amazondotcom", "bing", "ddg", "twitter", "wikipedia"
+      "google", "yahoo", "amazondotcom", "bing", "ddg", "ebay", "twitter", "wikipedia"
     ]
   },
   "regionOverrides": {
@@ -134,7 +134,7 @@
     "bg": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "diribg", "amazondotcom", "ddg", "portalbgdict", "wikipedia-bg"
+          "google", "amazondotcom", "ddg", "portalbgdict", "wikipedia-bg"
         ]
       }
     },

@@ -14,16 +14,6 @@ const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test-mixedcontent-securityerrors.html";
 
 add_task(function* () {
-  yield actuallyTest();
-});
-
-add_task(function* () {
-  Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-  yield actuallyTest();
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-});
-
-var actuallyTest = Task.async(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole(null);
   info("console opened");

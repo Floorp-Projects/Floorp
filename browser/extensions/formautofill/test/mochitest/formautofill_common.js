@@ -14,18 +14,38 @@ async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function setInput(selector, value) {
-  let input = document.querySelector("input" + selector);
-  input.value = value;
+async function focusAndWaitForFieldsIdentified(input) {
+  const rootElement = input.form || input.ownerDocument.documentElement;
+  const previouslyFocused = input != document.activeElement;
+
   input.focus();
 
-  // "identifyAutofillFields" is invoked asynchronously in "focusin" event. We
-  // should make sure fields are ready for popup before doing tests.
-  //
-  // TODO: "sleep" is used here temporarily because there's no event to
-  //       notify us of the state of "identifyAutofillFields" for now. We should
-  //       figure out a better way after the heuristics land.
-  await sleep(500, "Guarantee asynchronous identifyAutofillFields is invoked");
+  if (rootElement.hasAttribute("test-formautofill-identified")) {
+    return;
+  }
+  if (!previouslyFocused) {
+    await new Promise(resolve => {
+      formFillChromeScript.addMessageListener("FormAutofillTest:FieldsIdentified", function onIdentified() {
+        formFillChromeScript.removeMessageListener("FormAutofillTest:FieldsIdentified", onIdentified);
+        resolve();
+      });
+    });
+  }
+  // In order to ensure that "markAsAutofillField" is fully executed, a short period
+  // of timeout is still required.
+  await sleep(300, "Guarantee asynchronous identifyAutofillFields is invoked");
+  rootElement.setAttribute("test-formautofill-identified", "true");
+}
+
+async function setInput(selector, value, userInput = false) {
+  const input = document.querySelector("input" + selector);
+  if (userInput) {
+    SpecialPowers.wrap(input).setUserInput(value);
+  } else {
+    input.value = value;
+  }
+  await focusAndWaitForFieldsIdentified(input);
+
   return input;
 }
 

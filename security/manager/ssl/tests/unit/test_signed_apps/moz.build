@@ -1,0 +1,34 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def SignedAppFile(name, flags):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
+    GENERATED_FILES += [name]
+    props = GENERATED_FILES[name]
+    props.script = '/security/manager/ssl/tests/unit/sign_app.py'
+    props.inputs = ['app/']
+    if flags:
+        props.flags = flags
+    # Turn RELATIVEDIR into list entry: like
+    # 'security/manager/ssl/tests/unit/test_signed_apps' ->
+    # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_signed_apps.
+    files = TEST_HARNESS_FILES.xpcshell
+    for part in RELATIVEDIR.split('/'):
+        files = files[part]
+    files += ['!%s' % name]
+
+# Temporarily disabled. See bug 1256495.
+#signed_app_files = (
+#    ['signed_app.zip'],
+#    ['unknown_issuer_app.zip', '-i', 'unknown issuer'],
+#    ['unsigned_app.zip', '-n'],
+#)
+#
+#for signed_app_file_params in signed_app_files:
+#    SignedAppFile(signed_app_file_params[0], signed_app_file_params[1:])

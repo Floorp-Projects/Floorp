@@ -38,8 +38,6 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit in ('cocoa', 'android', 'uikit'):
     DIRS += [toolkit]
-if toolkit in ('android', 'cocoa', 'gtk2', 'gtk3'):
-    EXPORTS += ['nsIPrintDialogService.h']
 
 if toolkit == 'windows':
     DIRS += ['windows']
@@ -127,6 +125,7 @@ EXPORTS += [
     'nsIDeviceContextSpec.h',
     'nsIKeyEventInPluginCallback.h',
     'nsIPluginWidget.h',
+    'nsIPrintDialogService.h',
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
