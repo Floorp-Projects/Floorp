@@ -381,7 +381,7 @@ ClearViewPass::IsCompatible(const ItemInfo& aItem)
 bool
 ClearViewPass::AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo)
 {
-  const LayerIntRegion& region = aItem->GetRenderRegion();
+  const LayerIntRegion& region = aItem->GetShadowVisibleRegion();
   for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
     IntRect rect = iter.Get().ToUnknownRect();
     rect += aInfo.translation.value();
@@ -414,7 +414,7 @@ SolidColorPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
 
   gfx::Color color = ComputeLayerColor(aLayer, colorLayer->GetColor());
 
-  const LayerIntRegion& region = aLayer->GetRenderRegion();
+  const LayerIntRegion& region = aLayer->GetShadowVisibleRegion();
   for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect rect = iter.Get().ToUnknownRect();
     ColorTraits traits(aInfo, Rect(rect), color);
@@ -619,8 +619,6 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
 
   Txn txn(this);
 
-  // Note: these are two separate cases since no Info constructor takes in a
-  // base LayerMLGPU class.
   if (PaintedLayerMLGPU* layer = aLayer->AsPaintedLayerMLGPU()) {
     Info info(aItem, layer);
     if (!AddItems(txn, info, layer->GetRenderRegion())) {
@@ -628,7 +626,8 @@ SingleTexturePass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
     }
   } else if (TexturedLayerMLGPU* layer = aLayer->AsTexturedLayerMLGPU()) {
     Info info(aItem, layer);
-    if (!AddItems(txn, info, layer->GetRenderRegion())) {
+    nsIntRegion visible = layer->GetShadowVisibleRegion().ToUnknownRegion();
+    if (!AddItems(txn, info, visible)) {
       return false;
     }
   }
@@ -779,7 +778,8 @@ VideoRenderPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   Txn txn(this);
 
   Info info(aItem, layer);
-  if (!AddItems(txn, info, layer->GetRenderRegion())) {
+  nsIntRegion visible = layer->GetShadowVisibleRegion().ToUnknownRegion();
+  if (!AddItems(txn, info, visible)) {
     return false;
   }
   return txn.Commit();
@@ -881,7 +881,7 @@ RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem)
   IntSize size = mAssignedLayer->GetTargetSize();
 
   // Clamp the visible region to the texture size.
-  nsIntRegion visible = mAssignedLayer->GetRenderRegion().ToUnknownRegion();
+  nsIntRegion visible = mAssignedLayer->GetShadowVisibleRegion().ToUnknownRegion();
   visible.AndWith(IntRect(offset, size));
 
   Info info(aItem, mAssignedLayer);
@@ -934,7 +934,7 @@ GetShaderForBlendMode(CompositionOp aOp)
 bool
 RenderViewPass::PrepareBlendState()
 {
-  Rect visibleRect(mAssignedLayer->GetRenderRegion().GetBounds().ToUnknownRect());
+  Rect visibleRect(mAssignedLayer->GetShadowVisibleRegion().GetBounds().ToUnknownRect());
   IntRect clipRect(mAssignedLayer->GetComputedClipRect().ToUnknownRect());
   const Matrix4x4& transform = mAssignedLayer->GetLayer()->GetEffectiveTransformForBuffer();
 
@@ -1024,7 +1024,7 @@ RenderViewPass::RenderWithBackdropCopy()
 
   RenderViewMLGPU* childView = mAssignedLayer->GetRenderView();
 
-  IntRect visible = mAssignedLayer->GetRenderRegion().GetBounds().ToUnknownRect();
+  IntRect visible = mAssignedLayer->GetShadowVisibleRegion().GetBounds().ToUnknownRect();
   IntRect sourceRect = visible + translation - mParentView->GetTargetOffset();
   IntPoint destPoint = visible.TopLeft() - childView->GetTargetOffset();
 

@@ -95,10 +95,10 @@ CanvasLayerMLGPU::ClearCachedResources()
 }
 
 void
-CanvasLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
+CanvasLayerMLGPU::SetRegionToRender(LayerIntRegion&& aRegion)
 {
   aRegion.AndWith(LayerIntRect::FromUnknownRect(mPictureRect));
-  LayerMLGPU::SetRenderRegion(Move(aRegion));
+  LayerMLGPU::SetRegionToRender(Move(aRegion));
 }
 
 } // namespace layers
