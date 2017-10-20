@@ -2,7 +2,19 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
-  await setupPlacesDatabase(`places_v${CURRENT_SCHEMA_VERSION}.sqlite`);
+  // Find the latest available version, this allows to skip .sqlite files when
+  // the migration was trivial and uninsteresting to test.
+  let version = CURRENT_SCHEMA_VERSION;
+  while (version > 0) {
+    let dbFile = OS.Path.join(do_get_cwd().path, `places_v${version}.sqlite`);
+    if (await OS.File.exists(dbFile)) {
+      do_print("Using database version " + version);
+      break;
+    }
+    version--;
+  }
+  Assert.ok(version > 0, "Found a valid database version");
+  await setupPlacesDatabase(`places_v${version}.sqlite`);
   // Downgrade the schema version to the first supported one.
   let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
   let db = await Sqlite.openConnection({ path });

@@ -39,15 +39,15 @@ add_task(async function database_is_valid() {
 
 add_task(async function test_icons() {
   let db = await PlacesUtils.promiseDBConnection();
-  let rows = await db.execute(`SELECT url FROM moz_favicons`);
-  Assert.equal(rows.length, 0, "favicons table should be empty");
+  await Assert.rejects(db.execute(`SELECT url FROM moz_favicons`),
+                       "The moz_favicons table should not exist");
   for (let entry of gTestcases) {
     do_print("");
     do_print("Checking " + entry.icon_url + " - " + entry.page_url);
-    rows = await db.execute(`SELECT id, expire_ms, width FROM moz_icons
-                             WHERE fixed_icon_url_hash = hash(fixup_url(:icon_url))
-                               AND icon_url = :icon_url
-                            `, { icon_url: entry.icon_url });
+    let rows = await db.execute(`SELECT id, expire_ms, width FROM moz_icons
+                                 WHERE fixed_icon_url_hash = hash(fixup_url(:icon_url))
+                                   AND icon_url = :icon_url
+                                 `, { icon_url: entry.icon_url });
     Assert.equal(!!rows.length, entry.has_data, "icon exists");
     if (!entry.has_data) {
       // Icon not migrated.
