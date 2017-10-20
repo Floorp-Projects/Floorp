@@ -2281,6 +2281,8 @@ public:
     mDisableSubpixelAA = true;
   }
 
+  bool IsSubpixelAADisabled() const { return mDisableSubpixelAA; }
+
   /**
    * Check if we can add async animations to the layer for this display item.
    */

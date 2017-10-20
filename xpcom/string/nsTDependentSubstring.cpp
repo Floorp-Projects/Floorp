@@ -60,7 +60,7 @@ nsTDependentSubstring<T>::nsTDependentSubstring(const char_type* aStart,
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 nsTDependentSubstring<T>::nsTDependentSubstring(char16ptr_t aStart,
                                                 char16ptr_t aEnd)
   : substring_type(static_cast<const char16_t*>(aStart),

@@ -85,6 +85,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
+#include "nsSliderFrame.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -1579,7 +1580,12 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
   // Treat the slider thumb as being as an active scrolled root when it wants
   // its own layer so that it can move without repainting.
   if (parentType == LayoutFrameType::Slider) {
-    if (nsLayoutUtils::IsScrollbarThumbLayerized(aFrame)) {
+    nsIScrollableFrame* sf = static_cast<nsSliderFrame*>(parent)->GetScrollFrame();
+    // The word "Maybe" in IsMaybeScrollingActive might be confusing but we do
+    // indeed need to always consider scroll thumbs as AGRs if
+    // IsMaybeScrollingActive is true because that is the same condition we use
+    // in ScrollFrameHelper::AppendScrollPartsTo to layerize scroll thumbs.
+    if (sf && sf->IsMaybeScrollingActive()) {
       return AGR_YES;
     }
     maybe = true;
