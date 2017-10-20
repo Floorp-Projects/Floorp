@@ -12,7 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="10dp">
 
         <ImageView
             android:id="@+id/homescreen_icon"
@@ -27,8 +30,7 @@
             android:layout_gravity="center_vertical"
             android:backgroundTint="@color/add_to_homescreen_button_text"
             android:inputType="text"
-            android:paddingEnd="8dp"
-            android:paddingStart="8dp"
+            android:paddingStart="10dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/add_to_homescreen_text"
             android:textColorHighlight="@color/colorAccent"
@@ -57,7 +59,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text" />
+            android:textColor="@color/download_dialog_text"
+            android:textSize="14sp"
+            android:fontFamily="@string/font_roboto_medium" />
 
         <Button
             android:id="@+id/addtohomescreen_dialog_add"
@@ -66,7 +70,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text" />
+            android:textColor="@color/download_dialog_text"
+            android:textSize="14sp"
+            android:fontFamily="@string/font_roboto_medium" />
     </LinearLayout>
 
 
@@ -95,8 +101,9 @@
             android:background="#ff262626"
             android:paddingStart="10dp"
             android:text="@string/dialog_addtohomescreen_tracking_protection"
-            android:textColor="#ff8b8b8b"
-            android:textSize="12sp" />
+            android:textColor="#66ffffff"
+            android:textSize="12sp"
+            android:fontFamily="@string/font_roboto_regular" />
     </LinearLayout>
 
 </LinearLayout>

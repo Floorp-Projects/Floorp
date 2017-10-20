@@ -17,6 +17,8 @@
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
         <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@string/font_roboto_medium</item>
     </style>
 
     <!-- Setting this via alertDialogStyle in AppTheme results in crashes. You need to
@@ -26,6 +28,7 @@
     <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">#FF00A4DC</item>
         <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+        <item name="dialogPreferredPadding">24dp</item>
     </style>
 
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">

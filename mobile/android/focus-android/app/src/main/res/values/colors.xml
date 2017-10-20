@@ -54,7 +54,7 @@
     <color name="colorAction">@color/photonBlue50</color>
 
     <color name="add_to_homescreen_button_text">@color/photonBlue50</color>
-    <color name="add_to_homescreen_text">#FFFFFF</color>
+    <color name="add_to_homescreen_text">#B3FFFFFF</color>
     <color name="add_to_homescreen_icon_background">#4C0074</color>
 
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
