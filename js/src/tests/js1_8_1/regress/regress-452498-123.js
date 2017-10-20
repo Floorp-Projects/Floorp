@@ -46,7 +46,7 @@ function test()
 
 // Assertion failure: fp->thisp == fp->argv[-1].toObjectOrNull(), at ../jstracer.cpp:4172
 // =====
-  for each (let x in ['', '', '']) { (new function(){} )}
+  for (let x of ['', '', '']) { (new function(){} )}
 
 // Assertion failure: scope->object == ctor, at ../jsbuiltins.cpp:236
 // Opt crash [@ js_FastNewObject] near null

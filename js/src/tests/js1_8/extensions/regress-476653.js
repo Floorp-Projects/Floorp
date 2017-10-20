@@ -14,11 +14,11 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 
-for each (let x1 in ['']) 
+for (let x1 of ['']) 
 for (i = 0; i < 1; ++i) {}
 delete uneval;
 for (i = 0; i < 1; ++i) {}
-for each (let x in [new String('q'), '', /x/, '', /x/]) { 
+for (let x of [new String('q'), '', /x/, '', /x/]) { 
   for (var y = 0; y < 7; ++y) { if (y == 2 || y == 6) { setter = x; } } 
 }
 try

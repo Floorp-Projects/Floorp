@@ -512,7 +512,7 @@ class NodeBuilder
                       TokenPos* pos, MutableHandleValue dst);
 
     MOZ_MUST_USE bool forInStatement(HandleValue var, HandleValue expr, HandleValue stmt,
-                                     bool isForEach, TokenPos* pos, MutableHandleValue dst);
+                                     TokenPos* pos, MutableHandleValue dst);
 
     MOZ_MUST_USE bool forOfStatement(HandleValue var, HandleValue expr, HandleValue stmt, TokenPos* pos,
                                      MutableHandleValue dst);
@@ -859,20 +859,19 @@ NodeBuilder::forStatement(HandleValue init, HandleValue test, HandleValue update
 }
 
 bool
-NodeBuilder::forInStatement(HandleValue var, HandleValue expr, HandleValue stmt, bool isForEach,
+NodeBuilder::forInStatement(HandleValue var, HandleValue expr, HandleValue stmt,
                             TokenPos* pos, MutableHandleValue dst)
 {
-    RootedValue isForEachVal(cx, BooleanValue(isForEach));
-
     RootedValue cb(cx, callbacks[AST_FOR_IN_STMT]);
-    if (!cb.isNull())
-        return callback(cb, var, expr, stmt, isForEachVal, pos, dst);
+    if (!cb.isNull()) {
+        RootedValue isForEach(cx, JS::FalseValue());  // obsolete E4X `for each` statement
+        return callback(cb, var, expr, stmt, isForEach, pos, dst);
+    }
 
     return newNode(AST_FOR_IN_STMT, pos,
                    "left", var,
                    "right", expr,
                    "body", stmt,
-                   "each", isForEachVal,
                    dst);
 }
 
@@ -2257,10 +2256,9 @@ ASTSerializer::forIn(ParseNode* loop, ParseNode* head, HandleValue var, HandleVa
                          MutableHandleValue dst)
 {
     RootedValue expr(cx);
-    bool isForEach = loop->pn_iflags & JSITER_FOREACH;
 
     return expression(head->pn_kid3, &expr) &&
-        builder.forInStatement(var, expr, stmt, isForEach, &loop->pn_pos, dst);
+        builder.forInStatement(var, expr, stmt, &loop->pn_pos, dst);
 }
 
 bool

@@ -654,8 +654,6 @@ static inline PropertyIteratorObject*
 VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& keys,
                     uint32_t numGuards)
 {
-    MOZ_ASSERT(!(flags & JSITER_FOREACH));
-
     if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
         return nullptr;
     MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
@@ -699,40 +697,12 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
     return iterobj;
 }
 
-static PropertyIteratorObject*
-VectorToValueIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& keys)
-{
-    MOZ_ASSERT(flags & JSITER_FOREACH);
-
-    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
-        return nullptr;
-    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
-
-    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
-    if (!iterobj)
-        return nullptr;
-
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys.length());
-    if (!ni)
-        return nullptr;
-
-    iterobj->setNativeIterator(ni);
-    ni->init(obj, iterobj, flags, 0, 0);
-    if (!ni->initProperties(cx, iterobj, keys))
-        return nullptr;
-
-    RegisterEnumerator(cx, iterobj, ni);
-    return iterobj;
-}
 
 JSObject*
 js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags,
                                  AutoIdVector& props)
 {
-    if (!(flags & JSITER_FOREACH))
-        return VectorToKeyIterator(cx, obj, flags, props, 0);
-
-    return VectorToValueIterator(cx, obj, flags, props);
+    return VectorToKeyIterator(cx, obj, flags, props, 0);
 }
 
 // Mainly used for .. in over null/undefined
@@ -923,17 +893,9 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
     if (!Snapshot(cx, obj, flags, &keys))
         return nullptr;
 
-    JSObject* res;
-    if (flags & JSITER_FOREACH) {
-        MOZ_ASSERT(numGuards == 0);
-        res = VectorToValueIterator(cx, obj, flags, keys);
-        if (!res)
-            return nullptr;
-    } else {
-        res = VectorToKeyIterator(cx, obj, flags, keys, numGuards);
-        if (!res)
-            return nullptr;
-    }
+    JSObject* res = VectorToKeyIterator(cx, obj, flags, keys, numGuards);
+    if (!res)
+        return nullptr;
 
     PropertyIteratorObject* iterobj = &res->as<PropertyIteratorObject>();
     assertSameCompartment(cx, iterobj);
@@ -1043,22 +1005,8 @@ NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval)
         return true;
     }
 
-    if (MOZ_LIKELY(ni->isKeyIter())) {
-        rval.setString(*ni->current());
-        ni->incCursor();
-        return true;
-    }
-
-    // Non-standard Iterator for "for each"
-    RootedId id(cx);
-    RootedValue current(cx, StringValue(*ni->current()));
-    if (!ValueToId<CanGC>(cx, current, &id))
-        return false;
+    rval.setString(*ni->current());
     ni->incCursor();
-    RootedObject obj(cx, ni->obj);
-    if (!GetProperty(cx, obj, obj, id, rval))
-        return false;
-
     return true;
 }
 
@@ -1304,8 +1252,7 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
 
     while (ni != enumeratorList) {
       again:
-        /* This only works for identified suppressed keys, not values. */
-        if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
+        if (ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
             GCPtrFlatString* props_cursor = ni->current();
             GCPtrFlatString* props_end = ni->end();
