@@ -79,7 +79,7 @@ RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
 #ifdef DEBUG
   mFramesNotified(0),
 #endif
-  mSourceBuffer(WrapNotNull(new SourceBuffer())),
+  mSourceBuffer(MakeNotNull<SourceBuffer*>()),
   mHasSize(false),
   mTransient(false),
   mSyncLoad(false),

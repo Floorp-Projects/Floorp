@@ -67,8 +67,8 @@ private:
 };
 
 WorkerThread::WorkerThread()
-  : nsThread(WrapNotNull(new ThreadEventQueue<mozilla::EventQueue>(
-                           MakeUnique<mozilla::EventQueue>())),
+  : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
+               MakeUnique<mozilla::EventQueue>()),
              nsThread::NOT_MAIN_THREAD,
              kWorkerStackSize)
   , mLock("WorkerThread::mLock")
