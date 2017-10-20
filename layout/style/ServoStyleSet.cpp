@@ -1603,13 +1603,6 @@ ServoStyleSet::HasStateDependency(const Element& aElement,
       mRawSet.get(), &aElement, aState.ServoValue());
 }
 
-bool
-ServoStyleSet::HasDocumentStateDependency(EventStates aState) const
-{
-  return Servo_StyleSet_HasDocumentStateDependency(
-      mRawSet.get(), aState.ServoValue());
-}
-
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ReparentStyleContext(ServoStyleContext* aStyleContext,
                                     ServoStyleContext* aNewParent,
