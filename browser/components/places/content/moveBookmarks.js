@@ -47,7 +47,7 @@ var gMoveBookmarksDialog = {
 
     // Async transactions must do the move in the caller to avoid going out of
     // scope whilst the dialog is still closing.
-    window.arguments[0].moveToGuid = selectedNode.bookmarkGuid;
+    window.arguments[0].moveToGuid = PlacesUtils.getConcreteItemGuid(selectedNode);
   },
 
   newFolder: function MBD_newFolder() {
