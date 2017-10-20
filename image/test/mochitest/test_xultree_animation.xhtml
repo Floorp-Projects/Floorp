@@ -50,11 +50,6 @@ Mozilla Bug 666446: lots of animated gifs swamp us with paint events
 
 /** Test for Bug 666446 nsSVGFEImageElement/RasterImage**/
 
-if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-  // Stylo currently asserts for any XUL bits.
-  SimpleTest.expectAssertions(7, 7);
-}
-
 const FAILURE_TIMEOUT = 5000; // Fail early after 120 seconds (2 minutes)
 
 function main() {
