@@ -551,6 +551,7 @@ public:
 void
 WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei vertCount)
 {
+    AUTO_PROFILER_LABEL("WebGLContext::DrawArrays", GRAPHICS);
     const char funcName[] = "drawArrays";
     if (IsContextLost())
         return;
@@ -577,6 +578,7 @@ WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei vertCount)
 
     {
         ScopedDrawCallWrapper wrapper(*this);
+        AUTO_PROFILER_LABEL("glDrawArrays", GRAPHICS);
         gl->fDrawArrays(mode, first, vertCount);
     }
 
@@ -588,6 +590,7 @@ void
 WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
                                   GLsizei instanceCount)
 {
+    AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
     const char funcName[] = "drawArraysInstanced";
     if (IsContextLost())
         return;
@@ -616,6 +619,7 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
 
     {
         ScopedDrawCallWrapper wrapper(*this);
+        AUTO_PROFILER_LABEL("glDrawArraysInstanced", GRAPHICS);
         gl->fDrawArraysInstanced(mode, first, vertCount, instanceCount);
     }
 
@@ -773,6 +777,7 @@ void
 WebGLContext::DrawElements(GLenum mode, GLsizei vertCount, GLenum type,
                            WebGLintptr byteOffset, const char* funcName)
 {
+    AUTO_PROFILER_LABEL("WebGLContext::DrawElements", GRAPHICS);
     if (!funcName) {
         funcName = "drawElements";
     }
@@ -805,6 +810,7 @@ WebGLContext::DrawElements(GLenum mode, GLsizei vertCount, GLenum type,
                 errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
             }
 
+            AUTO_PROFILER_LABEL("glDrawElements", GRAPHICS);
             gl->fDrawElements(mode, vertCount, type,
                               reinterpret_cast<GLvoid*>(byteOffset));
 
@@ -821,6 +827,7 @@ void
 WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei vertCount, GLenum type,
                                     WebGLintptr byteOffset, GLsizei instanceCount)
 {
+    AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
     const char funcName[] = "drawElementsInstanced";
     if (IsContextLost())
         return;
@@ -852,9 +859,11 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei vertCount, GLenum type,
                 errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
             }
 
+            AUTO_PROFILER_LABEL("glDrawElementsInstanced", GRAPHICS);
             gl->fDrawElementsInstanced(mode, vertCount, type,
                                        reinterpret_cast<GLvoid*>(byteOffset),
                                        instanceCount);
+
             if (errorScope) {
                 HandleDrawElementsErrors(this, funcName, *errorScope);
             }
