@@ -669,6 +669,12 @@ protected:
   const FrameMetrics& GetFrameMetrics() const;
 
   /**
+   * Gets the current scroll metadata. This is *not* the Gecko copy stored in
+   * the layers code/
+   */
+  const ScrollMetadata& GetScrollMetadata() const;
+
+  /**
    * Gets the pointer to the apzc tree manager. All the access to tree manager
    * should be made via this method and not via private variable since this method
    * ensures that no lock is set.
