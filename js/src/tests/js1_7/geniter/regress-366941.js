@@ -28,7 +28,7 @@ function test()
   expect = '1,2;3,4;5,6;';
   actual = '';
 
-  for each (var [foo, bar] in list1) {
+  for (var [foo, bar] of list1) {
     actual += foo + "," + bar + ";";
   }
 
@@ -36,7 +36,7 @@ function test()
 
   expect = '1,2,3;4,5,6;7,8,9;';
   actual = '';
-  for each (var [foo, bar, baz] in list2) {
+  for (var [foo, bar, baz] of list2) {
     actual += foo + "," + bar + "," + baz + ";";
   }
 

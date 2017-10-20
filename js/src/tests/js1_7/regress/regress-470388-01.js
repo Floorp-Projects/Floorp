@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  for each (let x in [function(){}, new Boolean(false), function(){}]) {}
+  for (let x of [function(){}, new Boolean(false), function(){}]) {}
 
   reportCompare(expect, actual, summary);
 }

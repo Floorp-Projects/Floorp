@@ -48,10 +48,6 @@ struct NativeIterator
     NativeIterator* prev_;
 
   public:
-    bool isKeyIter() const {
-        return (flags & JSITER_FOREACH) == 0;
-    }
-
     inline GCPtrFlatString* begin() const {
         return props_array;
     }

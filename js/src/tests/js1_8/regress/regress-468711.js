@@ -20,7 +20,7 @@ function test()
   printStatus (summary);
 
 
-  (5).toString(); for each (let b in [3, this]) { b.toString(); }
+  (5).toString(); for (let b of [3, this]) { b.toString(); }
 
 
   reportCompare(expect, actual, summary);
