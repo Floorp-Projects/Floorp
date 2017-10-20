@@ -431,7 +431,7 @@ HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
                                               mSrcTriggeringPrincipal);
       }
       QueueImageLoadTask(true);
-    } else if (aNotify && OwnerDoc()->ShouldLoadImages()) {
+    } else if (aNotify && OwnerDoc()->IsCurrentActiveDocument()) {
       // If aNotify is false, we are coming from the parser or some such place;
       // we'll get bound after all the attributes have been set, so we'll do the
       // sync image load from BindToTree. Skip the LoadImage call in that case.
@@ -491,7 +491,7 @@ HTMLImageElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection
       QueueImageLoadTask(true);
-    } else if (OwnerDoc()->ShouldLoadImages()) {
+    } else if (OwnerDoc()->IsCurrentActiveDocument()) {
       // Bug 1076583 - We still use the older synchronous algorithm in
       // non-responsive mode. Force a new load of the image with the
       // new cross origin policy
@@ -608,7 +608,7 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Otherwise MaybeLoadImage may run later when someone has reenabled
     // loading.
     if (LoadingEnabled() &&
-        OwnerDoc()->ShouldLoadImages()) {
+        OwnerDoc()->IsCurrentActiveDocument()) {
       nsContentUtils::AddScriptRunner(
         NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
                                 this,
@@ -830,7 +830,7 @@ HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
     // reaches a stable state.
     if (!dest->InResponsiveMode() &&
         dest->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
-        dest->OwnerDoc()->ShouldLoadImages()) {
+        dest->OwnerDoc()->IsCurrentActiveDocument()) {
       // Mark channel as urgent-start before load image if the image load is
       // initaiated by a user interaction.
       mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
@@ -911,7 +911,7 @@ HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad)
 {
   // If loading is temporarily disabled, we don't want to queue tasks
   // that may then run when loading is re-enabled.
-  if (!LoadingEnabled() || !this->OwnerDoc()->ShouldLoadImages()) {
+  if (!LoadingEnabled() || !this->OwnerDoc()->IsCurrentActiveDocument()) {
     return;
   }
 
