@@ -117,12 +117,22 @@ InSendMessageExHook(LPVOID lpReserved)
     // We want to take a strong reference to the dll so that it is never
     // unloaded/reloaded from this point forward, hence we use LoadLibrary
     // and not GetModuleHandle.
-    static HMODULE comModule = LoadLibrary(L"combase.dll");
+    static const HMODULE comModule = []() -> HMODULE {
+      HMODULE module = LoadLibraryW(L"combase.dll");
+      if (!module) {
+        // combase is not present on Windows 7, so we fall back to ole32 there
+        module = LoadLibraryW(L"ole32.dll");
+      }
+
+      return module;
+    }();
+
     MOZ_ASSERT(comModule);
     if (!comModule) {
       return result;
     }
-    // Check if InSendMessageEx is being called from code within combase.dll
+
+    // Check if InSendMessageEx is being called from code within comModule
     HMODULE callingModule;
     if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
@@ -217,9 +227,9 @@ Compatibility::Init()
       Preferences::SetBool("browser.ctrlTab.disallowForScreenReaders", true);
   }
 
-  // If we have a known consumer who is not NVDA, we enable detection for the
+  // If we have a consumer who is not NVDA, we enable detection for the
   // InSendMessageEx compatibility hack. NVDA does not require this.
-  if ((sConsumers & ~(Compatibility::UNKNOWN | NVDA)) &&
+  if ((sConsumers & (~NVDA)) &&
       BrowserTabsRemoteAutostart()) {
     sUser32Interceptor.Init("user32.dll");
     if (!sInSendMessageExStub) {
