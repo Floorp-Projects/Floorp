@@ -1010,14 +1010,14 @@
               if (sizedIconUrl) {
                 if (!browser.mIconLoadingPrincipal ||
                     !browser.mIconLoadingPrincipal.equals(loadingPrincipal)) {
-                  aTab.setAttribute("iconLoadingPrincipal",
+                  aTab.setAttribute("iconloadingprincipal",
                     this.serializationHelper.serializeToString(loadingPrincipal));
                   aTab.setAttribute("requestcontextid", requestContextID);
                   browser.mIconLoadingPrincipal = loadingPrincipal;
                 }
                 aTab.setAttribute("image", sizedIconUrl);
               } else {
-                aTab.removeAttribute("iconLoadingPrincipal");
+                aTab.removeAttribute("iconloadingprincipal");
                 delete browser.mIconLoadingPrincipal;
                 aTab.removeAttribute("image");
               }
@@ -7760,7 +7760,7 @@
                     anonid="tab-throbber"
                     class="tab-throbber"
                     layer="true"/>
-          <xul:image xbl:inherits="src=image,loadingprincipal=iconLoadingPrincipal,requestcontextid,fadein,pinned,selected=visuallyselected,busy,crashed,sharing"
+          <xul:image xbl:inherits="src=image,loadingprincipal=iconloadingprincipal,requestcontextid,fadein,pinned,selected=visuallyselected,busy,crashed,sharing"
                      anonid="tab-icon-image"
                      class="tab-icon-image"
                      validate="never"
@@ -8249,8 +8249,10 @@
 
           if (aTab.hasAttribute("busy")) {
             aMenuitem.setAttribute("busy", aTab.getAttribute("busy"));
+            aMenuitem.removeAttribute("iconloadingprincipal");
             aMenuitem.removeAttribute("image");
           } else {
+            aMenuitem.setAttribute("iconloadingprincipal", aTab.getAttribute("iconloadingprincipal"));
             aMenuitem.setAttribute("image", aTab.getAttribute("image"));
             aMenuitem.removeAttribute("busy");
           }
