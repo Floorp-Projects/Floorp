@@ -175,7 +175,9 @@ HeadlessWidget::GetTopLevelWidget()
 void
 HeadlessWidget::RaiseWindow()
 {
-  MOZ_ASSERT(mTopLevel == this || mWindowType == eWindowType_dialog, "Raising a non-toplevel window.");
+  MOZ_ASSERT(mTopLevel == this ||
+             mWindowType == eWindowType_dialog ||
+             mWindowType == eWindowType_sheet, "Raising a non-toplevel window.");
 
   // Do nothing if this is the currently active window.
   RefPtr<HeadlessWidget> activeWindow = GetActiveWindow();
@@ -214,7 +216,9 @@ HeadlessWidget::Show(bool aState)
   LOG(("HeadlessWidget::Show [%p] state %d\n", (void *)this, aState));
 
   // Top-level window and dialogs are activated/raised when shown.
-  if (aState && (mTopLevel == this || mWindowType == eWindowType_dialog)) {
+  if (aState && (mTopLevel == this ||
+                 mWindowType == eWindowType_dialog ||
+                 mWindowType == eWindowType_sheet)) {
     RaiseWindow();
   }
 
