@@ -37,17 +37,17 @@ using namespace mozilla;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
-// Array of nsStaticAtom for each of the pseudo-classes.
-static const nsStaticAtom CSSPseudoClasses_info[] = {
+// Array of nsStaticAtomSetup for each of the pseudo-classes.
+static const nsStaticAtomSetup sCSSPseudoClassAtomSetup[] = {
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-  NS_STATIC_ATOM(name_##_pseudo_class_buffer, &sPseudoClass_##name_),
+  NS_STATIC_ATOM_SETUP(name_##_pseudo_class_buffer, &sPseudoClass_##name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
 
 // Flags data for each of the pseudo-classes, which must be separate
 // from the previous array since there's no place for it in
-// nsStaticAtom.
+// nsStaticAtomSetup.
 /* static */ const uint32_t
 nsCSSPseudoClasses::kPseudoClassFlags[] = {
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
@@ -74,7 +74,7 @@ nsCSSPseudoClasses::sPseudoClassEnabled[] = {
 
 void nsCSSPseudoClasses::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(CSSPseudoClasses_info);
+  NS_RegisterStaticAtoms(sCSSPseudoClassAtomSetup);
 
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_)                        \
   if (pref_[0]) {                                                             \
@@ -107,14 +107,14 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 {
   MOZ_ASSERT(aType < Type::Count, "Unexpected type");
   auto idx = static_cast<CSSPseudoClassTypeBase>(aType);
-  (*CSSPseudoClasses_info[idx].mAtom)->ToString(aString);
+  (*sCSSPseudoClassAtomSetup[idx].mAtom)->ToString(aString);
 }
 
 /* static */ CSSPseudoClassType
 nsCSSPseudoClasses::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
-  for (uint32_t i = 0; i < ArrayLength(CSSPseudoClasses_info); ++i) {
-    if (*CSSPseudoClasses_info[i].mAtom == aAtom) {
+  for (uint32_t i = 0; i < ArrayLength(sCSSPseudoClassAtomSetup); ++i) {
+    if (*sCSSPseudoClassAtomSetup[i].mAtom == aAtom) {
       Type type = Type(i);
       return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
     }
