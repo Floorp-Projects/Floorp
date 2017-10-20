@@ -125,9 +125,9 @@ LayerMLGPU::IsContentOpaque()
 }
 
 void
-LayerMLGPU::SetRegionToRender(LayerIntRegion&& aRegion)
+LayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
 {
-  SetShadowVisibleRegion(Move(aRegion));
+  mRenderRegion = Move(aRegion);
 }
 
 void
