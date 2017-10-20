@@ -1160,7 +1160,6 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
-        nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
         nsIDocument* document = aElement->OwnerDoc();
         // Pass the CSS Loader object to the parser, to allow parser error
         // reports to include the outer window ID.
@@ -1169,7 +1168,8 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         aElement->GetAttr(attrNs, attrLocal, value);
         RefPtr<mozilla::css::Declaration> decl =
           parser.ParseStyleAttribute(value, document->GetDocumentURI(),
-                                     baseURI, document->NodePrincipal());
+                                     aElement->GetBaseURIForStyleAttr(),
+                                     document->NodePrincipal());
         if (decl) {
           nsAutoString cleanValue;
           if (SanitizeStyleDeclaration(decl, cleanValue)) {
