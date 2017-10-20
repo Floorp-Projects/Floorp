@@ -92,7 +92,6 @@ const certificateUsageSSLServer              = 0x0002;
 const certificateUsageSSLCA                  = 0x0008;
 const certificateUsageEmailSigner            = 0x0010;
 const certificateUsageEmailRecipient         = 0x0020;
-const certificateUsageObjectSigner           = 0x0040;
 
 // A map from the name of a certificate usage to the value of the usage.
 // Useful for printing debugging information and for enumerating all supported
@@ -103,7 +102,6 @@ const certificateUsages = {
   certificateUsageSSLCA,
   certificateUsageEmailSigner,
   certificateUsageEmailRecipient,
-  certificateUsageObjectSigner,
 };
 
 // Map of certificate usage name to localization identifier.
@@ -113,7 +111,6 @@ const certificateUsageToStringBundleName = {
   certificateUsageSSLCA: "VerifySSLCA",
   certificateUsageEmailSigner: "VerifyEmailSigner",
   certificateUsageEmailRecipient: "VerifyEmailRecip",
-  certificateUsageObjectSigner: "VerifyObjSign",
 };
 
 const PRErrorCodeSuccess = 0;

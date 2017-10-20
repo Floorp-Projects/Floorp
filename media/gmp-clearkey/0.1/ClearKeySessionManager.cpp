@@ -639,9 +639,14 @@ ClearKeySessionManager::Decrypt(const InputBuffer& aBuffer,
 
   memcpy(buffer->Data(), aBuffer.data, aBuffer.data_size);
 
-  Status status = mDecryptionManager->Decrypt(buffer->Data(),
-                                              buffer->Size(),
-                                              CryptoMetaData(&aBuffer));
+  Status status = Status::kSuccess;
+  // According to the comment `If |iv_size| = 0, the data is unencrypted.`
+  // Use iv_size to determine if the sample is encrypted.
+  if (aBuffer.iv_size != 0) {
+    status = mDecryptionManager->Decrypt(buffer->Data(),
+                                         buffer->Size(),
+                                         CryptoMetaData(&aBuffer));
+  }
 
   aDecryptedBlock->SetDecryptedBuffer(buffer);
   aDecryptedBlock->SetTimestamp(aBuffer.timestamp);

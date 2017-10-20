@@ -306,29 +306,68 @@ var Manager = {
   },
 
   onCreatedNavigationTarget(browser, data) {
-    const {isSourceTab, createdWindowId, sourceFrameId, url} = data;
+    const {
+      createdOuterWindowId,
+      isSourceTab,
+      sourceFrameId,
+      url,
+    } = data;
 
-    // We are going to potentially received two message manager messages for a single
-    // onCreatedNavigationTarget event that is happening in the child process,
-    // we are going to use the generate uuid to pair them together.
-    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdWindowId);
+    // We are going to receive two message manager messages for a single
+    // onCreatedNavigationTarget event related to a window.open that is happening
+    // in the child process (one from the source tab and one from the created tab),
+    // the unique createdWindowId (the outerWindowID of the created docShell)
+    // to pair them together.
+    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdOuterWindowId);
 
-    if (!pairedMessage) {
-      this.createdNavigationTargetByOuterWindowId.set(createdWindowId, {browser, data});
+    if (!isSourceTab) {
+      if (pairedMessage) {
+        // This should not happen, print a warning before overwriting the unexpected pending data.
+        Services.console.logStringMessage(
+          `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+          "unexpected pending data while receiving the created tab data"
+        );
+      }
+
+      // Store a weak reference to the browser XUL element, so that we don't prevent
+      // it to be garbage collected if it has been destroyed.
+      const browserWeakRef = Cu.getWeakReference(browser);
+
+      this.createdNavigationTargetByOuterWindowId.set(createdOuterWindowId, {
+        browserWeakRef,
+        data,
+      });
+
       return;
     }
 
-    this.createdNavigationTargetByOuterWindowId.delete(createdWindowId);
+    if (!pairedMessage) {
+      // The sourceTab should always be received after the message coming from the created
+      // top level frame because the "webNavigation-createdNavigationTarget-from-js" observers
+      // subscribed by WebNavigationContent.js are going to be executed in reverse order
+      // (See http://searchfox.org/mozilla-central/rev/f54c1723be/xpcom/ds/nsObserverList.cpp#76)
+      // and the observer subscribed to the created target will be the last one subscribed
+      // to the ObserverService (and the first one to be triggered).
+      Services.console.logStringMessage(
+        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+        "received source tab data without any created tab data available"
+      );
 
-    let sourceTabBrowser;
-    let createdTabBrowser;
+      return;
+    }
 
-    if (isSourceTab) {
-      sourceTabBrowser = browser;
-      createdTabBrowser = pairedMessage.browser;
-    } else {
-      sourceTabBrowser = pairedMessage.browser;
-      createdTabBrowser = browser;
+    this.createdNavigationTargetByOuterWindowId.delete(createdOuterWindowId);
+
+    let sourceTabBrowser = browser;
+    let createdTabBrowser = pairedMessage.browserWeakRef.get();
+
+    if (!createdTabBrowser) {
+      Services.console.logStringMessage(
+        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
+        "the created tab has been already destroyed"
+      );
+
+      return;
     }
 
     this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {

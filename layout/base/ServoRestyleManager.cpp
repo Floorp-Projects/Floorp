@@ -1207,9 +1207,30 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
   mAnimationsWithDestroyedFrame->StopAnimationsForElementsWithoutFrames();
 }
 
+#ifdef DEBUG
+static void
+VerifyFlatTree(const nsIContent& aContent)
+{
+  StyleChildrenIterator iter(&aContent);
+
+  for (auto* content = iter.GetNextChild();
+       content;
+       content = iter.GetNextChild()) {
+    MOZ_ASSERT(content->GetFlattenedTreeParentNodeForStyle() == &aContent);
+    VerifyFlatTree(*content);
+  }
+}
+#endif
+
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
+#ifdef DEBUG
+  if (auto* root = mPresContext->Document()->GetRootElement()) {
+    VerifyFlatTree(*root);
+  }
+#endif
+
   DoProcessPendingRestyles(ServoTraversalFlags::Empty);
 }
 

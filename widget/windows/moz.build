@@ -95,16 +95,18 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecWin.cpp',
+        'nsPrintDialogUtil.cpp',
+        'nsPrintDialogWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_SKIA_PDF']:
-        DIRS += ['/modules/pdfium']
-        UNIFIED_SOURCES += [
-            'PDFiumEngineShim.cpp',
-            'PDFViaEMFPrintHelper.cpp',
-            'WindowsEMF.cpp',
-        ]
+if CONFIG['MOZ_ENABLE_SKIA_PDF']:
+    DIRS += ['/modules/pdfium']
+    UNIFIED_SOURCES += [
+        'PDFiumEngineShim.cpp',
+        'PDFViaEMFPrintHelper.cpp',
+        'WindowsEMF.cpp',
+    ]
 
 if CONFIG['NS_ENABLE_TSF']:
     SOURCES += [
