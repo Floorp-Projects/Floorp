@@ -79,7 +79,6 @@ var gStr = {
   timeLeftDouble: "timeLeftDouble3",
   timeFewSeconds: "timeFewSeconds2",
   timeUnknown: "timeUnknown2",
-  monthDate: "monthDate2",
   yesterday: "yesterday",
   doneScheme: "doneScheme2",
   doneFileScheme: "doneFileScheme",
@@ -364,9 +363,10 @@ this.DownloadUtils = {
       dateTimeCompact = aDate.toLocaleDateString(undefined, { weekday: "long" });
     } else {
       // Show month/day
-      let month = aDate.toLocaleDateString(undefined, { month: "long" });
-      let date = aDate.getDate();
-      dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
+      dateTimeCompact = aDate.toLocaleString(undefined, {
+                          month: "long",
+                          day: "numeric"
+      });
     }
 
     const dtOptions = { dateStyle: "long", timeStyle: "short" };
