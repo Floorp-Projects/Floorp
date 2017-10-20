@@ -111,6 +111,24 @@ describe("User Domain Affinity Provider", () => {
       const scores = instance.calculateAllUserDomainAffinityScores();
       assert.deepEqual(expectedScores, scores);
     });
+    it("should return domain affinities", () => {
+      const scores = {
+        "a.com": {
+          "paramSet1": 1,
+          "paramSet2": 0.9
+        }
+      };
+      instance = new UserDomainAffinityProvider(TIME_SEGMENTS, PARAMETER_SETS, 100, "v1", scores);
+
+      const expectedAffinities = {
+        "timeSegments": TIME_SEGMENTS,
+        "parameterSets": PARAMETER_SETS,
+        "maxHistoryQueryResults": 100,
+        "scores": scores,
+        "version": "v1"
+      };
+      assert.deepEqual(instance.getAffinities(), expectedAffinities);
+    });
   });
   describe("#score", () => {
     it("should calculate item relevance score", () => {
@@ -138,11 +156,10 @@ describe("User Domain Affinity Provider", () => {
       const itemScore = instance.calculateItemRelevanceScore(testItem);
       assert.equal(expectedItemScore, itemScore);
     });
-    it("should calculate relevance score of 1 if item has no domain affinities", () => {
-      const testItem = {};
-      const expectedItemScore = 1;
+    it("should calculate relevance score equal to item_score if item has no domain affinities", () => {
+      const testItem = {item_score: 0.985};
       const itemScore = instance.calculateItemRelevanceScore(testItem);
-      assert.equal(expectedItemScore, itemScore);
+      assert.equal(testItem.item_score, itemScore);
     });
     it("should calculate scores with factor", () => {
       assert.equal(1, instance.calculateScore(2, 1, 0.5));

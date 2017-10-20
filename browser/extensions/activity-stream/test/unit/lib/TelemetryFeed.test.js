@@ -18,6 +18,7 @@ describe("TelemetryFeed", () => {
   let globals;
   let sandbox;
   let expectedUserPrefs;
+  let browser = {getAttribute() { return "true"; }};
   let store = {
     dispatch() {},
     getState() { return {App: {version: "1.0.0", locale: "en-US"}}; }
@@ -135,7 +136,7 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(session.perf, "load_trigger_ts",
         123456);
     });
-    it("should a valid session ping on the first about:home seen", () => {
+    it("should create a valid session ping on the first about:home seen", () => {
       // Add a session
       const portID = "foo";
       const session = instance.addSession(portID, "about:home");
@@ -143,6 +144,21 @@ describe("TelemetryFeed", () => {
       // Create a ping referencing the session
       const ping = instance.createSessionEndEvent(session);
       assert.validate(ping, SessionPing);
+    });
+    it("should be a valid ping with the data_late_by_ms perf", () => {
+      // Add a session
+      const portID = "foo";
+      const session = instance.addSession(portID, "about:home");
+      instance.saveSessionPerfData("foo", {topsites_data_late_by_ms: 10});
+      instance.saveSessionPerfData("foo", {highlights_data_late_by_ms: 20});
+
+      // Create a ping referencing the session
+      const ping = instance.createSessionEndEvent(session);
+      assert.validate(ping, SessionPing);
+      assert.propertyVal(instance.sessions.get("foo").perf,
+                         "highlights_data_late_by_ms", 20);
+      assert.propertyVal(instance.sessions.get("foo").perf,
+                         "topsites_data_late_by_ms", 10);
     });
   });
 
@@ -239,6 +255,7 @@ describe("TelemetryFeed", () => {
       });
       it("should create a base ping with user_prefs", async () => {
         const ping = await instance.createPing("foo");
+
         assert.validate(ping, BasePing);
         assert.propertyVal(ping, "user_prefs", expectedUserPrefs);
       });
@@ -322,9 +339,12 @@ describe("TelemetryFeed", () => {
           perf: {
             load_trigger_ts: 10,
             load_trigger_type: "menu_plus_or_keyboard",
-            visibility_event_rcvd_ts: 20
+            visibility_event_rcvd_ts: 20,
+            is_preloaded: true,
+            is_prerendered: true
           }
         });
+
         // Is it valid?
         assert.validate(ping, SessionPing);
         assert.propertyVal(ping, "session_id", FAKE_UUID);
@@ -336,7 +356,11 @@ describe("TelemetryFeed", () => {
           session_id: FAKE_UUID,
           page: "about:newtab",
           session_duration: 12345,
-          perf: {load_trigger_type: "unexpected"}
+          perf: {
+            load_trigger_type: "unexpected",
+            is_preloaded: true,
+            is_prerendered: true
+          }
         });
 
         // Is it valid?
@@ -405,7 +429,9 @@ describe("TelemetryFeed", () => {
       const event = {};
       instance = new TelemetryFeed();
       sandbox.stub(instance.pingCentre, "sendPing");
+
       await instance.sendEvent(event);
+
       assert.calledWith(instance.pingCentre.sendPing, event);
     });
   });
@@ -477,16 +503,18 @@ describe("TelemetryFeed", () => {
       assert.notCalled(instance.setLoadTriggerInfo);
     });
   });
-
   describe("#uninit", () => {
     it("should call .pingCentre.uninit", () => {
       const stub = sandbox.stub(instance.pingCentre, "uninit");
+
       instance.uninit();
+
       assert.calledOnce(stub);
     });
     it("should remove the a-s telemetry pref listener", () => {
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       instance = new TelemetryFeed();
+
       assert.property(instance._prefs.observers, TELEMETRY_PREF);
 
       instance.uninit();
@@ -524,7 +552,9 @@ describe("TelemetryFeed", () => {
       const lastResetTime = instance._impressionStatsLastReset;
       // Haven't restored the clock yet, we have to manually tick the clock.
       clock.tick(IMPRESSION_STATS_RESET_TIME);
+
       instance.resetImpressionStats();
+
       for (const key of Object.keys(instance._impressionStats)) {
         assert.equal(instance._impressionStats[key].size, 0);
       }
@@ -540,21 +570,35 @@ describe("TelemetryFeed", () => {
     });
     it("should call .init() on an INIT action", () => {
       const stub = sandbox.stub(instance, "init");
+
       instance.onAction({type: at.INIT});
+
       assert.calledOnce(stub);
     });
     it("should call .uninit() on an UNINIT action", () => {
       const stub = sandbox.stub(instance, "uninit");
+
       instance.onAction({type: at.UNINIT});
+
       assert.calledOnce(stub);
     });
+    it("should call .handleNewTabInit on a NEW_TAB_INIT action", () => {
+      sandbox.spy(instance, "handleNewTabInit");
+
+      instance.onAction(ac.SendToMain({
+        type: at.NEW_TAB_INIT,
+        data: {url: "about:newtab", browser}
+      }));
+
+      assert.calledOnce(instance.handleNewTabInit);
+    });
     it("should call .addSession() on a NEW_TAB_INIT action", () => {
-      const stub = sandbox.stub(instance, "addSession");
+      const stub = sandbox.stub(instance, "addSession").returns({perf: {}});
       sandbox.stub(instance, "setLoadTriggerInfo");
 
       instance.onAction(ac.SendToMain({
         type: at.NEW_TAB_INIT,
-        data: {url: "about:monkeys"}
+        data: {url: "about:monkeys", browser}
       }, "port123"));
 
       assert.calledOnce(stub);
@@ -562,7 +606,9 @@ describe("TelemetryFeed", () => {
     });
     it("should call .endSession() on a NEW_TAB_UNLOAD action", () => {
       const stub = sandbox.stub(instance, "endSession");
+
       instance.onAction(ac.SendToMain({type: at.NEW_TAB_UNLOAD}, "port123"));
+
       assert.calledWith(stub, "port123");
     });
     it("should call .saveSessionPerfData on SAVE_SESSION_PERF_DATA", () => {
@@ -578,7 +624,9 @@ describe("TelemetryFeed", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createUndesiredEvent");
       const action = {type: at.TELEMETRY_UNDESIRED_EVENT};
+
       instance.onAction(action);
+
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
@@ -586,7 +634,9 @@ describe("TelemetryFeed", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createUserEvent");
       const action = {type: at.TELEMETRY_USER_EVENT};
+
       instance.onAction(action);
+
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
@@ -594,7 +644,9 @@ describe("TelemetryFeed", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createPerformanceEvent");
       const action = {type: at.TELEMETRY_PERFORMANCE_EVENT};
+
       instance.onAction(action);
+
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
@@ -602,7 +654,9 @@ describe("TelemetryFeed", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createImpressionStats");
       const action = {type: at.TELEMETRY_IMPRESSION_STATS, data: {}};
+
       instance.onAction(action);
+
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
@@ -610,9 +664,11 @@ describe("TelemetryFeed", () => {
       const resetImpressionStats = sandbox.stub(instance, "resetImpressionStats");
 
       instance.onAction({type: at.SYSTEM_TICK});
+
       assert.notCalled(resetImpressionStats);
 
       clock.tick(IMPRESSION_STATS_RESET_TIME);
+
       instance.onAction({type: at.SYSTEM_TICK});
       assert.calledOnce(resetImpressionStats);
     });
@@ -624,6 +680,7 @@ describe("TelemetryFeed", () => {
 
       instance.onAction(action);
       instance.onAction(action);
+
       assert.calledOnce(sendEvent);
     });
     it("should not send two block pings for the same article", async () => {
@@ -634,6 +691,7 @@ describe("TelemetryFeed", () => {
 
       instance.onAction(action);
       instance.onAction(action);
+
       assert.calledOnce(sendEvent);
     });
     it("should not send two save to pocket pings for the same article", async () => {
@@ -644,7 +702,56 @@ describe("TelemetryFeed", () => {
 
       instance.onAction(action);
       instance.onAction(action);
+
       assert.calledOnce(sendEvent);
+    });
+    it("should call .handlePagePrerendered on a PAGE_PRERENDERED action", () => {
+      const session = {perf: {}};
+      sandbox.stub(instance.sessions, "get").returns(session);
+      sandbox.spy(instance, "handlePagePrerendered");
+
+      instance.onAction(ac.SendToMain({type: at.PAGE_PRERENDERED}));
+
+      assert.calledOnce(instance.handlePagePrerendered);
+      assert.ok(session.perf.is_prerendered);
+    });
+  });
+  describe("#handlePagePrerendered", () => {
+    it("should not throw if there is no session for the given port ID", () => {
+      assert.doesNotThrow(() => instance.handlePagePrerendered("doesn't exist"));
+    });
+    it("should set the session as prerendered on a PAGE_PRERENDERED action", () => {
+      const session = {perf: {}};
+      sandbox.stub(instance.sessions, "get").returns(session);
+
+      instance.onAction(ac.SendToMain({type: at.PAGE_PRERENDERED}));
+
+      assert.ok(session.perf.is_prerendered);
+    });
+  });
+  describe("#handleNewTabInit", () => {
+    it("should set the session as preloaded if the browser is preloaded", () => {
+      const session = {perf: {}};
+      sandbox.stub(instance, "addSession").returns(session);
+
+      instance.onAction(ac.SendToMain({
+        type: at.NEW_TAB_INIT,
+        data: {url: "about:newtab", browser}
+      }));
+
+      assert.ok(session.perf.is_preloaded);
+    });
+    it("should set the session as non-preloaded if the browser is non-preloaded", () => {
+      const session = {perf: {}};
+      let nonPreloadedBrowser = {getAttribute() { return "false"; }};
+      sandbox.stub(instance, "addSession").returns(session);
+
+      instance.onAction(ac.SendToMain({
+        type: at.NEW_TAB_INIT,
+        data: {url: "about:newtab", browser: nonPreloadedBrowser}
+      }));
+
+      assert.ok(!session.perf.is_preloaded);
     });
   });
 });
@@ -660,6 +767,7 @@ describe("PersistentGuidSet", () => {
       let guidSet;
 
       guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+
       assert.equal(guidSet.size, 0);
       assert.deepEqual(guidSet.items(), []);
     });
@@ -668,6 +776,7 @@ describe("PersistentGuidSet", () => {
 
       FakePrefs.prototype.prefs = {"test.guidSet": JSON.stringify([10000])};
       guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+
       assert.equal(guidSet.size, 1);
       assert.isTrue(guidSet.has(10000));
       assert.deepEqual(guidSet.items(), [10000]);
@@ -677,6 +786,7 @@ describe("PersistentGuidSet", () => {
 
       FakePrefs.prototype.prefs = {"test.guidSet": 10000};
       guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
+
       assert.equal(guidSet.size, 0);
       assert.deepEqual(guidSet.items(), []);
     });
@@ -689,6 +799,7 @@ describe("PersistentGuidSet", () => {
       guidSet = new PersistentGuidSet(prefs, "test.guidSet");
       guidSet.save("10000");
       guidSet.save("10001");
+
       assert.equal(guidSet.size, 2);
       assert.deepEqual(guidSet.items(), ["10000", "10001"]);
       assert.equal(prefs.get("test.guidSet"), "[\"10000\",\"10001\"]");
@@ -699,6 +810,7 @@ describe("PersistentGuidSet", () => {
 
       guidSet = new PersistentGuidSet(prefs, "test.guidSet");
       guidSet.save("10000");
+
       assert.isFalse(guidSet.save("10000"));
       assert.equal(guidSet.size, 1);
       assert.deepEqual(guidSet.items(), ["10000"]);
@@ -712,6 +824,7 @@ describe("PersistentGuidSet", () => {
       guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
       guidSet.save("10000");
       guidSet.save("10001");
+
       assert.equal(guidSet.size, 2);
       guidSet.clear();
       assert.equal(guidSet.size, 0);

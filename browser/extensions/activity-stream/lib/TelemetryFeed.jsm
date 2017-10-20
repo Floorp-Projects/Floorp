@@ -242,7 +242,11 @@ this.TelemetryFeed = class TelemetryFeed {
       session_id: String(gUUIDGenerator.generateUUID()),
       // "unknown" will be overwritten when appropriate
       page: url ? url : "unknown",
-      perf: {load_trigger_type}
+      perf: {
+        load_trigger_type,
+        is_preloaded: false,
+        is_prerendered: false
+      }
     };
 
     if (load_trigger_ts) {
@@ -272,6 +276,33 @@ this.TelemetryFeed = class TelemetryFeed {
 
     this.sendEvent(this.createSessionEndEvent(session));
     this.sessions.delete(portID);
+  }
+
+  /**
+   * handlePagePrerendered - Set the session as prerendered
+   *
+   * @param  {string} portID the portID of the target session
+   */
+  handlePagePrerendered(portID) {
+    const session = this.sessions.get(portID);
+
+    if (!session) {
+      // It's possible the tab was never visible – in which case, there was no user session.
+      return;
+    }
+
+    session.perf.is_prerendered = true;
+  }
+
+  /**
+   * handleNewTabInit - Handle NEW_TAB_INIT, which creates a new session and sets the a flag
+   *                    for session.perf based on whether or not this new tab is preloaded
+   *
+   * @param  {obj} action the Action object
+   */
+  handleNewTabInit(action) {
+    const session = this.addSession(au.getPortIdOfSender(action), action.data.url);
+    session.perf.is_preloaded = action.data.browser.getAttribute("isPreloadBrowser") === "true";
   }
 
   /**
@@ -414,10 +445,13 @@ this.TelemetryFeed = class TelemetryFeed {
         this.init();
         break;
       case at.NEW_TAB_INIT:
-        this.addSession(au.getPortIdOfSender(action), action.data.url);
+        this.handleNewTabInit(action);
         break;
       case at.NEW_TAB_UNLOAD:
         this.endSession(au.getPortIdOfSender(action));
+        break;
+      case at.PAGE_PRERENDERED:
+        this.handlePagePrerendered(au.getPortIdOfSender(action));
         break;
       case at.SAVE_SESSION_PERF_DATA:
         this.saveSessionPerfData(au.getPortIdOfSender(action), action.data);
