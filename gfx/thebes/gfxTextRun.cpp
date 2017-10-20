@@ -2569,10 +2569,23 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
 
     gfxFont *mainFont = GetFirstValidFont();
 
+    ShapedTextFlags orientation =
+        aTextRun->GetFlags() & ShapedTextFlags::TEXT_ORIENT_MASK;
+
+    if (orientation != ShapedTextFlags::TEXT_ORIENT_HORIZONTAL &&
+        (aRunScript == Script::MONGOLIAN || aRunScript == Script::PHAGS_PA)) {
+        // Mongolian and Phags-pa text should ignore text-orientation and
+        // always render in its "native" vertical mode, implemented by fonts
+        // as sideways-right (i.e as if shaped horizontally, and then the
+        // entire line is rotated to render vertically). Therefore, we ignore
+        // the aOrientation value from the textrun's flags, and make all
+        // vertical Mongolian/Phags-pa use sideways-right.
+        orientation = ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+    }
+
     uint32_t runStart = 0;
     AutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, aLength, aRunScript,
-                  aTextRun->GetFlags() & ShapedTextFlags::TEXT_ORIENT_MASK);
+    ComputeRanges(fontRanges, aString, aLength, aRunScript, orientation);
     uint32_t numRanges = fontRanges.Length();
     bool missingChars = false;
 
