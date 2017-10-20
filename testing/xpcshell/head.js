@@ -70,7 +70,7 @@ var _testLogger = new _LoggerClass("xpcshell/head.js", _dumpLog, [_add_params]);
 // not connected to a network.
 {
   let ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService2);
+                      .getService(Components.interfaces.nsIIOService);
   ios.manageOfflineStatus = false;
   ios.offline = false;
 }

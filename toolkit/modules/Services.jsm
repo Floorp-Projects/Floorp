@@ -67,7 +67,7 @@ XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
 
 XPCOMUtils.defineLazyGetter(Services, "io", () => {
   return Cc["@mozilla.org/network/io-service;1"]
-           .getService(Ci.nsIIOService2)
+           .getService(Ci.nsIIOService)
            .QueryInterface(Ci.nsISpeculativeConnect);
 });
 
