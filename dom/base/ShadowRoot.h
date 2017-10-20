@@ -54,23 +54,48 @@ public:
   StyleSheetList* StyleSheets();
 
   /**
-   * Distributes a single explicit child of the pool host to the content
-   * insertion points in this ShadowRoot.
-   */
-  void DistributeSingleNode(nsIContent* aContent);
-
-  /**
-   * Removes a single explicit child of the pool host from the content
-   * insertion points in this ShadowRoot.
-   */
-  void RemoveDistributedNode(nsIContent* aContent);
-
-  /**
    * Distributes all the explicit children of the pool host to the content
    * insertion points in this ShadowRoot.
    */
   void DistributeAllNodes();
 
+private:
+  /**
+   * Distributes a single explicit child of the pool host to the content
+   * insertion points in this ShadowRoot.
+   *
+   * Returns the insertion point the element is distributed to after this call.
+   *
+   * Note that this doesn't handle distributing the node in the insertion point
+   * parent's shadow root.
+   */
+  const HTMLContentElement* DistributeSingleNode(nsIContent* aContent);
+
+  /**
+   * Removes a single explicit child of the pool host from the content
+   * insertion points in this ShadowRoot.
+   *
+   * Returns the old insertion point, if any.
+   *
+   * Note that this doesn't handle removing the node in the returned insertion
+   * point parent's shadow root.
+   */
+  const HTMLContentElement* RemoveDistributedNode(nsIContent* aContent);
+
+  /**
+   * Redistributes a node of the pool, and returns whether the distribution
+   * changed.
+   */
+  bool RedistributeElement(Element*);
+
+  /**
+   * Called when we redistribute content after insertion points have changed.
+   */
+  void DistributionChanged();
+
+  bool IsPooledNode(nsIContent* aChild) const;
+
+public:
   void AddInsertionPoint(HTMLContentElement* aInsertionPoint);
   void RemoveInsertionPoint(HTMLContentElement* aInsertionPoint);
 
@@ -80,8 +105,6 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
-                           nsIContent* aHost);
   static ShadowRoot* FromNode(nsINode* aNode);
 
   static void RemoveDestInsertionPoint(nsIContent* aInsertionPoint,

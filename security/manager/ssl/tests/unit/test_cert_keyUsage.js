@@ -16,8 +16,8 @@ const eeList = [ "ee-no-keyUsage-extension", "ee-keyCertSign-only",
 
 const caUsage = [ certificateUsageSSLCA ];
 const allEEUsages = [ certificateUsageSSLClient, certificateUsageSSLServer,
-                      certificateUsageEmailSigner, certificateUsageEmailRecipient,
-                      certificateUsageObjectSigner ];
+                      certificateUsageEmailSigner,
+                      certificateUsageEmailRecipient ];
 const serverEEUsages = [ certificateUsageSSLServer,
                          certificateUsageEmailRecipient ];
 

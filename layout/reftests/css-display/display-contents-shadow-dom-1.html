@@ -46,12 +46,10 @@ div.after::after {content: " Y";}
     <div id="hostO"><i>Two</i><b class="c">One</b></div>
     <div id="hostP"><i class="c">Two</i><b class="c">One</b></div>
     <div id="hostQ" class="c" style="color:blue"><i class="c">Two</i><b class="c">One</b></div>Three
-    <span id="hostR"><style scoped>:scope{color:green}</style></span>
     <div id="hostS" class="c"><span class="c">S</span></div>
     <div id="hostT" class="c">T</div>
     <div id="hostU"><span class="c">U</span></div>
     <div id="hostV" class="c" style="color:red"><b class="c" style="color:inherit">V</b></div>
-    <!-- TODO(bug 1021572?) <div id="hostY" class="c" style="color:red"><b>Y</b></div> -->
 
    <script>
       function shadow(id) {
@@ -103,8 +101,6 @@ div.after::after {content: " Y";}
         shadow("hostO").innerHTML = '<content select="b"></content><content select="i"></content>';
         shadow("hostP").innerHTML = '<content select="b"></content><content select="i"></content>';
         shadow("hostQ").innerHTML = '<content select="b"></content><content select="i"></content>';
-        shadow("hostR").innerHTML = '<content select="span"></content>';
-        // TODO(bug 1021572?) shadow("hostY").innerHTML = '<content select="b"><style scoped>:scope{color:green}</style></content>';
       }
 
       function tweak() {
@@ -211,8 +207,6 @@ div.after::after {content: " Y";}
         var e = span("b");
         e.className = "b";
         hostL.appendChild(e);
-
-        hostR.appendChild(span("R"));
 
         document.body.offsetHeight;
         setTimeout(function() {

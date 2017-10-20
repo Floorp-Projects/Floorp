@@ -6,6 +6,10 @@
 
 "use strict";
 
+const {
+  UPDATE_PROPS,
+} = require("devtools/client/netmonitor/src/constants");
+
 const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   "ecmascript": "js",
   "javascript": "js",
@@ -389,6 +393,69 @@ function getResponseHeader(item, header) {
   return null;
 }
 
+/**
+ * Extracts any urlencoded form data sections from a POST request.
+ */
+function updateFormDataSections(props) {
+  let {
+    connector,
+    request = {},
+    updateRequest,
+  } = props;
+  let {
+    formDataSections,
+    requestHeaders,
+    requestHeadersFromUploadStream,
+    requestPostData,
+  } = request;
+
+  if (!formDataSections && requestHeaders &&
+      requestHeadersFromUploadStream && requestPostData) {
+    getFormDataSections(
+      requestHeaders,
+      requestHeadersFromUploadStream,
+      requestPostData,
+      connector.getLongString,
+    ).then((newFormDataSections) => {
+      updateRequest(
+        request.id,
+        { formDataSections: newFormDataSections },
+        true,
+      );
+    });
+  }
+}
+
+/**
+ * This helper function is used for additional processing of
+ * incoming network update packets. It's used by Network and
+ * Console panel reducers.
+ */
+function processNetworkUpdates(request) {
+  let result = {};
+  for (let [key, value] of Object.entries(request)) {
+    if (UPDATE_PROPS.includes(key)) {
+      result[key] = value;
+
+      switch (key) {
+        case "securityInfo":
+          result.securityState = value.state;
+          break;
+        case "totalTime":
+          result.totalTime = request.totalTime;
+          break;
+        case "requestPostData":
+          result.requestHeadersFromUploadStream = {
+            headers: [],
+            headersSize: 0,
+          };
+          break;
+      }
+    }
+  }
+  return result;
+}
+
 module.exports = {
   decodeUnicodeBase64,
   getFormDataSections,
@@ -411,6 +478,8 @@ module.exports = {
   getUrlScheme,
   parseQueryString,
   parseFormData,
+  updateFormDataSections,
+  processNetworkUpdates,
   propertiesEqual,
   ipToLong,
 };

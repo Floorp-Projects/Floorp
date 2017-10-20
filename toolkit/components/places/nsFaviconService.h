@@ -159,6 +159,8 @@ private:
   // This class needs access to the icons cache.
   friend class mozilla::places::AsyncReplaceFaviconData;
   nsTHashtable<UnassociatedIconHashKey> mUnassociatedIcons;
+
+  uint16_t mDefaultIconURIPreferredSize;
 };
 
 #define FAVICON_ANNOTATION_NAME "favicon"
