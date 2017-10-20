@@ -153,6 +153,7 @@ this.checkVersions = async function() {
   Services.prefs.setIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, clockDifference);
   Services.prefs.setIntPref(PREF_BLOCKLIST_LAST_UPDATE, serverTimeMillis / 1000);
 
+  const loadDump = Services.prefs.getBoolPref(PREF_BLOCKLIST_LOAD_DUMP, true);
   // Iterate through the collections version info and initiate a synchronization
   // on the related blocklist client.
   let firstError;
@@ -161,7 +162,7 @@ this.checkVersions = async function() {
     const client = gBlocklistClients[collection];
     if (client && client.bucketName == bucket) {
       try {
-        await client.maybeSync(lastModified, serverTimeMillis);
+        await client.maybeSync(lastModified, serverTimeMillis, {loadDump});
       } catch (e) {
         if (!firstError) {
           firstError = e;
