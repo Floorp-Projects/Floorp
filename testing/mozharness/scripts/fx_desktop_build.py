@@ -17,6 +17,7 @@ import copy
 import pprint
 import sys
 import os
+from argparse import Namespace
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -168,7 +169,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         variant_cfg_path, _ = BuildOptionParser.find_variant_cfg_path(
             '--custom-build-variant-cfg',
             variant,
-            rw_config.config_parser
+            Namespace(**rw_config._config)
         )
         if not variant_cfg_path:
             self.fatal('Could not find appropriate config file for variant %s' % variant)

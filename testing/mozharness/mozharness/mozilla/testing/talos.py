@@ -119,7 +119,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         [["--system-bits"],
          {"action": "store",
           "dest": "system_bits",
-          "type": "choice",
           "default": "32",
           "choices": ['32', '64'],
           "help": "Testing 32 or 64 (for talos json plugins)"
@@ -138,7 +137,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         }],
         [["--geckoProfileInterval"], {
             "dest": "gecko_profile_interval",
-            "type": "int",
+            "type": int,
             "default": 0,
             "help": "The interval between samples taken by the profiler (milliseconds)"
         }],

@@ -20,6 +20,7 @@ import uuid
 import copy
 import glob
 import shlex
+from argparse import Action
 from itertools import chain
 
 # import the power of mozharness ;)
@@ -327,7 +328,7 @@ class BuildingConfig(BaseConfig):
 
 
 # noinspection PyUnusedLocal
-class BuildOptionParser(object):
+class BuildOptionParser(Action):
     # TODO add nosetests for this class
     platform = None
     bits = None
@@ -388,6 +389,11 @@ class BuildOptionParser(object):
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
 
+    def __call__(self, parser, namespace, values, option_string=None):
+        func = getattr(self, 'set_{}'.format(self.dest))
+        func(self, namespace, values)
+
+
     @classmethod
     def _query_pltfrm_and_bits(cls, target_option, options):
         """ determine platform and bits
@@ -439,11 +445,11 @@ class BuildOptionParser(object):
         return cls.bits, cls.platform
 
     @classmethod
-    def find_variant_cfg_path(cls, opt, value, parser):
+    def find_variant_cfg_path(cls, opt, value, namespace):
         valid_variant_cfg_path = None
         # first let's see if we were given a valid short-name
         if cls.build_variants.get(value):
-            bits, pltfrm = cls._query_pltfrm_and_bits(opt, parser.values)
+            bits, pltfrm = cls._query_pltfrm_and_bits(opt, namespace)
             prospective_cfg_path = cls.build_variants[value] % (pltfrm, bits)
         else:
             # this is either an incomplete path or an invalid key in
@@ -465,14 +471,14 @@ class BuildOptionParser(object):
         return valid_variant_cfg_path, prospective_cfg_path
 
     @classmethod
-    def set_build_variant(cls, option, opt, value, parser):
+    def set_build_variant(cls, option, namespace, value):
         """ sets an extra config file.
 
         This is done by either taking an existing filepath or by taking a valid
         shortname coupled with known platform/bits.
         """
         valid_variant_cfg_path, prospective_cfg_path = cls.find_variant_cfg_path(
-            '--custom-build-variant-cfg', value, parser)
+            '--custom-build-variant-cfg', value, namespace)
 
         if not valid_variant_cfg_path:
             # either the value was an indeterminable path or an invalid short
@@ -485,32 +491,32 @@ class BuildOptionParser(object):
                          prospective_cfg_path,
                          str(cls.build_variants.keys()),
                          str(cls.config_file_search_path)))
-        parser.values.config_files.append(valid_variant_cfg_path)
-        setattr(parser.values, option.dest, value)  # the pool
+        namespace.config_files.append(valid_variant_cfg_path)
+        setattr(namespace, option.dest, value)  # the pool
 
     @classmethod
-    def set_build_pool(cls, option, opt, value, parser):
+    def set_build_pool(cls, option, namespace, value):
         # first let's add the build pool file where there may be pool
         # specific keys/values. Then let's store the pool name
-        parser.values.config_files.append(cls.build_pool_cfg_file)
-        setattr(parser.values, option.dest, value)  # the pool
+        namespace.config_files.append(cls.build_pool_cfg_file)
+        setattr(namespace, option.dest, value)  # the pool
 
     @classmethod
-    def set_build_branch(cls, option, opt, value, parser):
+    def set_branch(cls, option, namespace, value):
         # first let's add the branch_specific file where there may be branch
         # specific keys/values. Then let's store the branch name we are using
-        parser.values.config_files.append(cls.branch_cfg_file)
-        setattr(parser.values, option.dest, value)  # the branch name
+        namespace.config_files.append(cls.branch_cfg_file)
+        setattr(namespace, option.dest, value)  # the branch name
 
     @classmethod
-    def set_platform(cls, option, opt, value, parser):
+    def set_platform(cls, option, namespace, value):
         cls.platform = value
-        setattr(parser.values, option.dest, value)
+        setattr(namespace, option.dest, value)
 
     @classmethod
-    def set_bits(cls, option, opt, value, parser):
+    def set_bits(cls, option, namespace, value):
         cls.bits = value
-        setattr(parser.values, option.dest, value)
+        setattr(namespace, option.dest, value)
 
 
 # this global depends on BuildOptionParser and therefore can not go at the
@@ -524,41 +530,31 @@ BUILD_BASE_CONFIG_OPTIONS = [
                 "infrastructure, use this option. It ignores actions"
                 "that are not needed and adds config checks."}],
     [['--platform'], {
-        "action": "callback",
-        "callback": BuildOptionParser.set_platform,
-        "type": "string",
+        "action": BuildOptionParser,
         "dest": "platform",
         "help": "Sets the platform we are running this against"
                 " valid values: 'windows', 'mac', 'linux'"}],
     [['--bits'], {
-        "action": "callback",
-        "callback": BuildOptionParser.set_bits,
-        "type": "string",
+        "action": BuildOptionParser,
         "dest": "bits",
         "help": "Sets which bits we are building this against"
                 " valid values: '32', '64'"}],
     [['--custom-build-variant-cfg'], {
-        "action": "callback",
-        "callback": BuildOptionParser.set_build_variant,
-        "type": "string",
+        "action": BuildOptionParser,
         "dest": "build_variant",
         "help": "Sets the build type and will determine appropriate"
                 " additional config to use. Either pass a config path"
                 " or use a valid shortname from: "
                 "%s" % (BuildOptionParser.build_variants.keys(),)}],
     [['--build-pool'], {
-        "action": "callback",
-        "callback": BuildOptionParser.set_build_pool,
-        "type": "string",
+        "action": BuildOptionParser,
         "dest": "build_pool",
         "help": "This will update the config with specific pool"
                 " environment keys/values. The dicts for this are"
                 " in %s\nValid values: staging or"
                 " production" % ('builds/build_pool_specifics.py',)}],
     [['--branch'], {
-        "action": "callback",
-        "callback": BuildOptionParser.set_build_branch,
-        "type": "string",
+        "action": BuildOptionParser,
         "dest": "branch",
         "help": "This sets the branch we will be building this for."
                 " If this branch is in branch_specifics.py, update our"
@@ -568,7 +564,7 @@ BUILD_BASE_CONFIG_OPTIONS = [
                 )}],
     [['--scm-level'], {
         "action": "store",
-        "type": "int",
+        "type": int,
         "dest": "scm_level",
         "default": 1,
         "help": "This sets the SCM level for the branch being built."

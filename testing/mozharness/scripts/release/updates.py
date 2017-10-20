@@ -35,20 +35,17 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
         [['--hg-user', ], {
             "action": "store",
             "dest": "hg_user",
-            "type": "string",
             "default": "ffxbld <release@mozilla.com>",
             "help": "Specify what user to use to commit to hg.",
         }],
         [['--ssh-user', ], {
             "action": "store",
             "dest": "ssh_user",
-            "type": "string",
             "help": "SSH username with hg.mozilla.org permissions",
         }],
         [['--ssh-key', ], {
             "action": "store",
             "dest": "ssh_key",
-            "type": "string",
             "help": "Path to SSH key.",
         }],
     ]

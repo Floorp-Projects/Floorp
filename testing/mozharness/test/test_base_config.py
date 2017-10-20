@@ -250,6 +250,7 @@ class TestReadOnlyDict(unittest.TestCase):
 
 class TestActions(unittest.TestCase):
     all_actions = ['a', 'b', 'c', 'd', 'e']
+    config_options = [[['args'], {'nargs': '*'}]]
     default_actions = ['b', 'c', 'd']
 
     def test_verify_actions(self):
@@ -275,6 +276,7 @@ class TestActions(unittest.TestCase):
     def test_no_action1(self):
         c = config.BaseConfig(default_actions=self.default_actions,
                               all_actions=self.all_actions,
+                              config_options=self.config_options,
                               initial_config_file='test/test.json')
         c.parse_args(args=['foo', '--no-action', 'a'])
         self.assertEqual(self.default_actions, c.get_actions(),
@@ -283,6 +285,7 @@ class TestActions(unittest.TestCase):
     def test_no_action2(self):
         c = config.BaseConfig(default_actions=self.default_actions,
                               all_actions=self.all_actions,
+                              config_options=self.config_options,
                               initial_config_file='test/test.json')
         c.parse_args(args=['foo', '--no-c'])
         self.assertEqual(['b', 'd'], c.get_actions(),
@@ -291,6 +294,7 @@ class TestActions(unittest.TestCase):
     def test_add_action(self):
         c = config.BaseConfig(default_actions=self.default_actions,
                               all_actions=self.all_actions,
+                              config_options=self.config_options,
                               initial_config_file='test/test.json')
         c.parse_args(args=['foo', '--add-action', 'e'])
         self.assertEqual(['b', 'c', 'd', 'e'], c.get_actions(),
@@ -299,6 +303,7 @@ class TestActions(unittest.TestCase):
     def test_only_action(self):
         c = config.BaseConfig(default_actions=self.default_actions,
                               all_actions=self.all_actions,
+                              config_options=self.config_options,
                               initial_config_file='test/test.json')
         c.parse_args(args=['foo', '--a', '--e'])
         self.assertEqual(['a', 'e'], c.get_actions(),
