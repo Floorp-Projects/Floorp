@@ -1,3 +1,22 @@
+job-defaults:
+    mozharness:
+        no-read-buildbot-config: true
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android.*:
+                    - android/androidarm_4_3.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+
 crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
@@ -15,30 +34,6 @@ crashtest:
         by-test-platform:
             windows10-64/debug: both
             default: true
-    mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=crashtest
-            default:
-                script: desktop_unittest.py
-                chunked: false
-                no-read-buildbot-config: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    - --reftest-suite=crashtest
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -71,30 +66,6 @@ jsreftest:
         by-test-platform:
             android.*: 7200
             default: 3600
-    mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=jsreftest
-            default:
-                script: desktop_unittest.py
-                no-read-buildbot-config: true
-                chunked: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    - --reftest-suite=jsreftest
     when:
         schedules: ['jsreftest']
     tier:
@@ -134,34 +105,12 @@ reftest:
             android.*: 7200
             default: 3600
     mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=reftest
-            default:
-                script: desktop_unittest.py
-                no-read-buildbot-config: true
-                chunked:
-                  by-test-platform:
-                    macosx64/opt: false
-                    windows10-64.*/opt: false
-                    windows10-64.*/debug: true
-                    default: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    - --reftest-suite=reftest
+        chunked:
+            by-test-platform:
+                android.*: false
+                macosx64/opt: false
+                windows10-64.*/opt: false
+                default: true
     tier:
         by-test-platform:
             linux64-qr/.*: 1
@@ -182,20 +131,7 @@ reftest-gpu:
     virtualization: virtual-with-gpu
     max-run-time: 3600
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
         chunked: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-gpu
     tier: default
 
 reftest-no-accel:
@@ -219,24 +155,11 @@ reftest-no-accel:
             windows10-64/debug: both
             default: true
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
         chunked:
             by-test-platform:
                 windows10-64.*/opt: false
                 macosx.*: false
                 default: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-no-accel
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -248,17 +171,3 @@ reftest-stylo:
     treeherder-symbol: tc-R(Rs)
     virtualization: virtual-with-gpu
     chunks: 8
-    mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest-stylo

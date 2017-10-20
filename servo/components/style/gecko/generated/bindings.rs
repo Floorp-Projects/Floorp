@@ -15,6 +15,7 @@ use gecko_bindings::structs::mozilla::css::ImageValue;
 use gecko_bindings::structs::mozilla::css::URLValue;
 use gecko_bindings::structs::mozilla::css::URLValueData;
 use gecko_bindings::structs::mozilla::AnonymousCounterStyle;
+use gecko_bindings::structs::mozilla::AtomArray;
 use gecko_bindings::structs::mozilla::MallocSizeOf;
 use gecko_bindings::structs::mozilla::OriginFlags;
 use gecko_bindings::structs::mozilla::UniquePtr;
@@ -2732,7 +2733,7 @@ extern "C" {
     pub fn Servo_DeclarationBlock_RemovePropertyById(declarations:
                                                          RawServoDeclarationBlockBorrowed,
                                                      property:
-                                                         nsCSSPropertyID);
+                                                         nsCSSPropertyID) -> bool;
 }
 extern "C" {
     pub fn Servo_DeclarationBlock_HasCSSWideKeyword(declarations:
@@ -2943,6 +2944,19 @@ extern "C" {
                                     inherited_style:
                                         ServoStyleContextBorrowedOrNull,
                                     set: RawServoStyleSetBorrowed)
+     -> ServoStyleContextStrong;
+}
+extern "C" {
+    pub fn Servo_ComputedValues_ResolveXULTreePseudoStyle(element:
+                                                              RawGeckoElementBorrowed,
+                                                          pseudo_tag:
+                                                              *mut nsAtom,
+                                                          inherited_style:
+                                                              ServoStyleContextBorrowed,
+                                                          input_word:
+                                                              *const AtomArray,
+                                                          set:
+                                                              RawServoStyleSetBorrowed)
      -> ServoStyleContextStrong;
 }
 extern "C" {

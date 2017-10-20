@@ -122,7 +122,7 @@ fuzzy-if(skiaContent,1,600) == anim-feGaussianBlur-01.svg lime.svg
 
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
-random-if(webrender) == anim-marker-orient-02.svg lime.svg
+== anim-marker-orient-02.svg lime.svg
 
 #animate points list:
 == anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
@@ -235,7 +235,7 @@ skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 
 # Test we don't rely on HasAttr to see if an attribute has been set
 == anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
-random-if(webrender) == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
+fuzzy-if(webrender,1,350) == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
 fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
 # ^ bug 621651
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-01.svg anim-gradient-attr-presence-01-ref.svg

@@ -7,11 +7,11 @@
 <!ENTITY  aboutDevtools.enable.inspectElementTitle "Enable Firefox Developer Tools to use Inspect Element">
 
 <!ENTITY  aboutDevtools.enable.aboutDebuggingMessage
-          "Develop and debug WebExtensions, web workers, service workers and more with the Firefox DevTools.">
+          "Develop and debug WebExtensions, web workers, service workers and more with Firefox DevTools.">
 <!ENTITY  aboutDevtools.enable.inspectElementMessage
           "Examine and edit HTML and CSS with the DevTools Inspector.">
 <!ENTITY  aboutDevtools.enable.keyShortcutMessage
-          "You activated a Developer Tool shortcut. If that was a mistake, you can close this tab.">
+          "You activated a Developer Tools shortcut. If that was a mistake, you can close this tab.">
 <!ENTITY  aboutDevtools.enable.menuMessage
           "Examine, edit and debug HTML, CSS, and JavaScript with tools like Inspector and Debugger.">
 
@@ -21,4 +21,4 @@
 <!ENTITY  aboutDevtools.enable.learnMoreLink "Learn more about DevTools">
 <!ENTITY  aboutDevtools.enable.installButton "Enable Developer Tools">
 <!ENTITY  aboutDevtools.welcome.title "Welcome to Firefox Developer Tools!">
-<!ENTITY  aboutDevtools.welcome.message "You’ve successfully enabled DevTools! To get started explore the Web Developer menu or open the tools with ##INSPECTOR_SHORTCUT##.">
+<!ENTITY  aboutDevtools.welcome.message "You’ve successfully enabled DevTools! To get started, explore the Web Developer menu or open the tools with ##INSPECTOR_SHORTCUT##.">

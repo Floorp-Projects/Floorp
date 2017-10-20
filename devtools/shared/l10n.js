@@ -151,13 +151,14 @@ LocalizationHelper.prototype = {
    *         The localized number as a string.
    */
   numberWithDecimals: function (number, decimals = 0) {
-    // If this is an integer, don't do anything special.
+    // Do not show decimals for integers.
     if (number === (number|0)) {
-      return number;
+      return getNumberFormatter(0).format(number);
     }
+
     // If this isn't a number (and yes, `isNaN(null)` is false), return zero.
     if (isNaN(number) || number === null) {
-      return "0";
+      return getNumberFormatter(0).format(0);
     }
 
     // Localize the number using a memoized Intl.NumberFormat formatter.

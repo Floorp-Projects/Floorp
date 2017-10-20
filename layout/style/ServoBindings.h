@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "mozilla/AtomArray.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"

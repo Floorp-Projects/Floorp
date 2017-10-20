@@ -66,26 +66,22 @@ test-verify:
             windows10-64-asan.*: 3
             default: 2
     mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                config:
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android.*:
                     - android/androidarm_4_3.py
-                no-read-buildbot-config: true
-                extra-options:
-                    - --verify
-            default:
-                script: desktop_unittest.py
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - remove_executables.py
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                no-read-buildbot-config: true
-                extra-options:
-                    - --verify
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+        no-read-buildbot-config: true
+        extra-options:
+            - --verify

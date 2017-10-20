@@ -80,6 +80,7 @@ public:
                                   uint32_t aSelectorIndex,
                                   const nsAString& aPseudo,
                                   bool* aMatches) override;
+  NotNull<DeclarationBlock*> GetDeclarationBlock() const override;
 
   // WebIDL interface
   uint16_t Type() const final;

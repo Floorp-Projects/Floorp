@@ -28,6 +28,14 @@ function test() {
     "Number was properly localized with decimals set 0.");
   is(l10n.numberWithDecimals(-1234.56789, 0), "-1,235",
     "Negative number was properly localized with decimals set 0.");
+  is(l10n.numberWithDecimals(12, 2), "12",
+    "The integer was properly localized, without decimals.");
+  is(l10n.numberWithDecimals(-12, 2), "-12",
+    "The negative integer was properly localized, without decimals.");
+  is(l10n.numberWithDecimals(1200, 2), "1,200",
+    "The big integer was properly localized, no decimals but with a separator.");
+  is(l10n.numberWithDecimals(-1200, 2), "-1,200",
+    "The negative big integer was properly localized, no decimals but with a separator.");
 
   finish();
 }

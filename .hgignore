@@ -145,6 +145,9 @@ GPATH
 ^testing/talos/talos/mitmproxy/mitmproxy
 ^testing/talos/talos/mitmproxy/mitmweb
 
+# Ignore toolchains.json created by tooltool.
+^toolchains\.json
+
 # Ignore files created when running a reftest.
 ^lextab.py$
 

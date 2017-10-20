@@ -263,76 +263,76 @@ test_description_schema = Schema({
         Any(False, 'always', 'on-exception', 'on-failure'),
 
     # What to run
-    Required('mozharness'): optionally_keyed_by(
-        'test-platform', {
-            # the mozharness script used to run this task
-            Required('script'): basestring,
+    Required('mozharness'): {
+        # the mozharness script used to run this task
+        Required('script'): optionally_keyed_by(
+            'test-platform',
+            basestring),
 
-            # the config files required for the task
-            Required('config'): optionally_keyed_by(
-                'test-platform',
-                [basestring]),
+        # the config files required for the task
+        Required('config'): optionally_keyed_by(
+            'test-platform',
+            [basestring]),
 
-            # mochitest flavor for mochitest runs
-            Optional('mochitest-flavor'): basestring,
+        # mochitest flavor for mochitest runs
+        Optional('mochitest-flavor'): basestring,
 
-            # any additional actions to pass to the mozharness command
-            Optional('actions'): [basestring],
+        # any additional actions to pass to the mozharness command
+        Optional('actions'): [basestring],
 
-            # additional command-line options for mozharness, beyond those
-            # automatically added
-            Required('extra-options', default=[]): optionally_keyed_by(
-                'test-platform',
-                [basestring]),
+        # additional command-line options for mozharness, beyond those
+        # automatically added
+        Required('extra-options', default=[]): optionally_keyed_by(
+            'test-platform',
+            [basestring]),
 
-            # the artifact name (including path) to test on the build task; this is
-            # generally set in a per-kind transformation
-            Optional('build-artifact-name'): basestring,
+        # the artifact name (including path) to test on the build task; this is
+        # generally set in a per-kind transformation
+        Optional('build-artifact-name'): basestring,
 
-            # If true, tooltool downloads will be enabled via relengAPIProxy.
-            Required('tooltool-downloads', default=False): bool,
+        # If true, tooltool downloads will be enabled via relengAPIProxy.
+        Required('tooltool-downloads', default=False): bool,
 
-            # This mozharness script also runs in Buildbot and tries to read a
-            # buildbot config file, so tell it not to do so in TaskCluster
-            Required('no-read-buildbot-config', default=False): bool,
+        # This mozharness script also runs in Buildbot and tries to read a
+        # buildbot config file, so tell it not to do so in TaskCluster
+        Required('no-read-buildbot-config', default=False): bool,
 
-            # Add --blob-upload-branch=<project> mozharness parameter
-            Optional('include-blob-upload-branch'): bool,
+        # Add --blob-upload-branch=<project> mozharness parameter
+        Optional('include-blob-upload-branch'): bool,
 
-            # The setting for --download-symbols (if omitted, the option will not
-            # be passed to mozharness)
-            Optional('download-symbols'): Any(True, 'ondemand'),
+        # The setting for --download-symbols (if omitted, the option will not
+        # be passed to mozharness)
+        Optional('download-symbols'): Any(True, 'ondemand'),
 
-            # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
-            # environment.  This is more than just a helpful path setting -- it
-            # causes xpcshell tests to start additional servers, and runs
-            # additional tests.
-            Required('set-moz-node-path', default=False): bool,
+        # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
+        # environment.  This is more than just a helpful path setting -- it
+        # causes xpcshell tests to start additional servers, and runs
+        # additional tests.
+        Required('set-moz-node-path', default=False): bool,
 
-            # If true, include chunking information in the command even if the number
-            # of chunks is 1
-            Required('chunked', default=False): optionally_keyed_by(
-                'test-platform',
-                bool),
+        # If true, include chunking information in the command even if the number
+        # of chunks is 1
+        Required('chunked', default=False): optionally_keyed_by(
+            'test-platform',
+            bool),
 
-            # The chunking argument format to use
-            Required('chunking-args', default='this-chunk'): Any(
-                # Use the usual --this-chunk/--total-chunk arguments
-                'this-chunk',
-                # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
-                'test-suite-suffix',
-            ),
+        # The chunking argument format to use
+        Required('chunking-args', default='this-chunk'): Any(
+            # Use the usual --this-chunk/--total-chunk arguments
+            'this-chunk',
+            # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
+            'test-suite-suffix',
+        ),
 
-            # the string to append to the `--test-suite` arugment when
-            # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
-            # be replaced with the chunk number.
-            Optional('chunk-suffix'): basestring,
+        # the string to append to the `--test-suite` arugment when
+        # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
+        # be replaced with the chunk number.
+        Optional('chunk-suffix'): basestring,
 
-            Required('requires-signed-builds', default=False): optionally_keyed_by(
-                'test-platform',
-                bool),
-        }
-    ),
+        Required('requires-signed-builds', default=False): optionally_keyed_by(
+            'test-platform',
+            bool),
+    },
 
     # The current chunk; this is filled in by `all_kinds.py`
     Optional('this-chunk'): int,
@@ -616,12 +616,43 @@ def handle_keyed_by(config, tests):
         'mozharness.config',
         'mozharness.extra-options',
         'mozharness.requires-signed-builds',
+        'mozharness.script',
         'worker-type',
     ]
     for test in tests:
         for field in fields:
             resolve_keyed_by(test, field, item_name=test['test-name'],
                              project=config.params['project'])
+        yield test
+
+
+@transforms.add
+def handle_suite_category(config, tests):
+    for test in tests:
+        if '/' in test['suite']:
+            suite, flavor = test['suite'].split('/', 1)
+        else:
+            suite = flavor = test['suite']
+
+        test.setdefault('attributes', {})
+        test['attributes']['unittest_suite'] = suite
+        test['attributes']['unittest_flavor'] = flavor
+
+        script = test['mozharness']['script']
+        category_arg = None
+        if suite == 'test-verification':
+            pass
+        elif script == 'android_emulator_unittest.py':
+            category_arg = '--test-suite'
+        elif script == 'desktop_unittest.py':
+            category_arg = '--{}-suite'.format(suite)
+
+        if category_arg:
+            test['mozharness'].setdefault('extra-options', [])
+            extra = test['mozharness']['extra-options']
+            if not any(arg.startswith(category_arg) for arg in extra):
+                extra.append('{}={}'.format(category_arg, flavor))
+
         yield test
 
 
@@ -667,7 +698,6 @@ def split_e10s(config, tests):
     for test in tests:
         e10s = test['e10s']
 
-        test.setdefault('attributes', {})
         test['e10s'] = False
         test['attributes']['e10s'] = False
 
@@ -895,20 +925,12 @@ def make_job_description(config, tests):
 
         attr_build_platform, attr_build_type = test['build-platform'].split('/', 1)
 
-        suite = test['suite']
-        if '/' in suite:
-            suite, flavor = suite.split('/', 1)
-        else:
-            flavor = suite
-
         attributes = test.get('attributes', {})
         attributes.update({
             'build_platform': attr_build_platform,
             'build_type': attr_build_type,
             'test_platform': test['test-platform'],
             'test_chunk': str(test['this-chunk']),
-            'unittest_suite': suite,
-            'unittest_flavor': flavor,
             attr_try_name: try_name,
         })
 
@@ -934,8 +956,8 @@ def make_job_description(config, tests):
                 'total': test['chunks'],
             },
             'suite': {
-                'name': suite,
-                'flavor': flavor,
+                'name': attributes['unittest_suite'],
+                'flavor': attributes['unittest_flavor'],
             },
         }
         jobdesc['treeherder'] = {
@@ -945,7 +967,7 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        schedules = [suite, platform_family(test['build-platform'])]
+        schedules = [attributes['unittest_suite'], platform_family(test['build-platform'])]
         when = test.get('when')
         if when and 'schedules' in when:
             schedules.extend(when['schedules'])

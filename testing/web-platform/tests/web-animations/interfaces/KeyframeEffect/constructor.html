@@ -7,6 +7,7 @@
 <script src="../../testcommon.js"></script>
 <script src="../../resources/easing-tests.js"></script>
 <script src="../../resources/keyframe-utils.js"></script>
+<script src="../../resources/keyframe-tests.js"></script>
 <body>
 <div id="log"></div>
 <div id="target"></div>
@@ -105,23 +106,7 @@ test(function(t) {
 }, "composite value is absent if the composite operation specified on the " +
    "keyframe effect is being used");
 
-gPropertyIndexedKeyframesTests.forEach(function(subtest) {
-  test(function(t) {
-    var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
-  }, "a KeyframeEffectReadOnly can be constructed with " + subtest.desc);
-
-  test(function(t) {
-    var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    var secondEffect =
-      new KeyframeEffectReadOnly(target, effect.getKeyframes());
-    assert_frame_lists_equal(secondEffect.getKeyframes(),
-                             effect.getKeyframes());
-  }, "a KeyframeEffectReadOnly constructed with " + subtest.desc +
-     " roundtrips");
-});
-
-gKeyframeSequenceTests.forEach(function(subtest) {
+gKeyframesTests.forEach(function(subtest) {
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
     assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
@@ -139,7 +124,7 @@ gKeyframeSequenceTests.forEach(function(subtest) {
 
 gInvalidKeyframesTests.forEach(function(subtest) {
   test(function(t) {
-    assert_throws(subtest.expected, function() {
+    assert_throws(new TypeError, function() {
       new KeyframeEffectReadOnly(target, subtest.input);
     });
   }, "KeyframeEffectReadOnly constructor throws with " + subtest.desc);
@@ -194,7 +179,7 @@ gKeyframeEffectOptionTests.forEach(function(stest) {
 
 gInvalidKeyframeEffectOptionTests.forEach(function(stest) {
   test(function(t) {
-    assert_throws(stest.expected, function() {
+    assert_throws(new TypeError, function() {
       new KeyframeEffectReadOnly(target,
                                  { left: ["10px", "20px"] },
                                  stest.input);

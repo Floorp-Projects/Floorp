@@ -1,5 +1,15 @@
+:root {
+  /* Photon color variables used on the aboutdevtools page */
+  --blue-60: #0060df;
+  --blue-70: #003eaa;
+  --blue-80: #002275;
+  --grey-30: #d7d7db;
+  --white: #ffffff;
+}
+
 .box {
-  width: 980px;
+  width: 100vw;
+  max-width: 850px;
   display: flex;
   align-items: center;
   height: 400px;
@@ -16,7 +26,7 @@
 .left-pane {
   width: 360px;
   background-image: url(images/otter.png);
-  background-size: 100%;
+  background-size: 85%;
   background-position: 50%;
   background-repeat: no-repeat;
   height: 100%;
@@ -33,7 +43,7 @@
 
 .features {
   max-width: 980px;
-  border-top: 1px solid #d7d7db;
+  border-top: 1px solid var(--grey-30);
 }
 
 .features-list {
@@ -53,12 +63,27 @@
   margin: 1em 20px
 }
 
-a {
-  color: #0A84FF;
+.installpage-link {
+  color: var(--blue-60);
 }
 
-h1 {
-  font-size: 36px;
+.installpage-link::after {
+  content: "";
+
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+
+  margin: 0 5px;
+  vertical-align: middle;
+
+  background-image: url(images/external-link.svg);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+}
+
+.installpage-title {
+  font-size: 33px;
   margin-top: 16px;
   font-weight: 300;
   line-height: 44px;
@@ -67,24 +92,30 @@ h1 {
 .installpage-button {
   display: block;
 
-  margin-top: 2em;
+  margin: 2em 0 0 0;
   padding: 10px 20px;
 
   border: none;
-  border-radius: 3px;
+  border-radius: 2px;
 
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 21px;
 
-  background-color: #0060df;
-  color: #fff;
+  background-color: var(--blue-60);
+  color: var(--white);
   box-shadow: 0 1px 0 rgba(0,0,0,0.23);
   cursor: pointer;
 }
 
 .installpage-button:enabled:hover {
-  background-color: #003eaa
+  background-color: var(--blue-70)
+}
+
+.installpage-button:active,
+.installpage-button:hover:active,
+.installpage-button:enabled:hover:active {
+  background-color: var(--blue-80);
 }
 
 /* Remove light gray outline when clicking on the button */

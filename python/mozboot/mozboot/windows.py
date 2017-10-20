@@ -72,7 +72,7 @@ class WindowsBootstrapper(BaseBootstrapper):
         raise NotImplementedError('We do not support building Android on Windows. Sorry!')
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        import stylo
+        from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS)
 
     def _update_package_manager(self):

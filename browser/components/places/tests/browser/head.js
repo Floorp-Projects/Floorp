@@ -160,51 +160,6 @@ function promiseIsURIVisited(aURI) {
   });
 }
 
-function promiseBookmarksNotification(notification, conditionFn) {
-  info(`promiseBookmarksNotification: waiting for ${notification}`);
-  return new Promise((resolve) => {
-    let proxifiedObserver = new Proxy({}, {
-      get: (target, name) => {
-        if (name == "QueryInterface")
-          return XPCOMUtils.generateQI([ Ci.nsINavBookmarkObserver ]);
-        info(`promiseBookmarksNotification: got ${name} notification`);
-        if (name == notification)
-          return (...args) => {
-            if (conditionFn.apply(this, args)) {
-              PlacesUtils.bookmarks.removeObserver(proxifiedObserver, false);
-              executeSoon(resolve);
-            } else {
-              info(`promiseBookmarksNotification: skip cause condition doesn't apply to ${JSON.stringify(args)}`);
-            }
-          };
-        return () => {};
-      }
-    });
-    PlacesUtils.bookmarks.addObserver(proxifiedObserver);
-  });
-}
-
-function promiseHistoryNotification(notification, conditionFn) {
-  info(`Waiting for ${notification}`);
-  return new Promise((resolve) => {
-    let proxifiedObserver = new Proxy({}, {
-      get: (target, name) => {
-        if (name == "QueryInterface")
-          return XPCOMUtils.generateQI([ Ci.nsINavHistoryObserver ]);
-        if (name == notification)
-          return (...args) => {
-            if (conditionFn.apply(this, args)) {
-              PlacesUtils.history.removeObserver(proxifiedObserver, false);
-              executeSoon(resolve);
-            }
-          };
-        return () => {};
-      }
-    });
-    PlacesUtils.history.addObserver(proxifiedObserver);
-  });
-}
-
 /**
  * Makes the specified toolbar visible or invisible and returns a Promise object
  * that is resolved when the toolbar has completed any animations associated

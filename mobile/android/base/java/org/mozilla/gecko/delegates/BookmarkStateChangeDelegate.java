@@ -173,7 +173,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                     browserApp.showEditBookmarkDialog(tab.getURL());
 
                 } else if (itemId == 1) {
-                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_to_launcher);
+                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_page_shortcut);
                     Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
                             TelemetryContract.Method.DIALOG, extrasId);
 
@@ -184,7 +184,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                         ThreadUtils.postToBackgroundThread(new Runnable() {
                             @Override
                             public void run() {
-                                GeckoApplication.createShortcut(title, url);
+                                GeckoApplication.createBrowserShortcut(title, url);
                             }
                         });
                     }
@@ -194,7 +194,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
 
         final PromptListItem[] items = new PromptListItem[2];
         items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
-        items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_to_launcher));
+        items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_page_shortcut));
 
         ps.show("", "", items, ListView.CHOICE_MODE_NONE);
     }

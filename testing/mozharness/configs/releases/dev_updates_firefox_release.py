@@ -23,16 +23,16 @@ config = {
     "balrog_url": "http://54.90.211.22:9090",
     "balrog_username": "balrog-stage-ffxbld",
     "update_channels": {
-        "beta-dev": {
+        "beta": {
             "version_regex": r"^(\d+\.\d+(b\d+)?)$",
             "requires_mirrors": False,
             "patcher_config": "mozDate-branch-patcher2.cfg",
-            "update_verify_channel": "beta-dev-localtest",
+            "update_verify_channel": "beta-localtest",
             "mar_channel_ids": [
-                "firefox-mozilla-beta-dev", "firefox-mozilla-release-dev",
+                "firefox-mozilla-beta", "firefox-mozilla-release",
             ],
-            "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
-            "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
+            "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
+            "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
             "publish_rules": [32],
             "schedule_asap": True,
             "bz2_blob_suffix": "-bz2",
@@ -41,14 +41,14 @@ config = {
             "complete_mar_filename_pattern": '%s-%s.bz2.complete.mar',
             "complete_mar_bouncer_product_pattern": '%s-%s-complete-bz2',
         },
-        "release-dev": {
+        "release": {
             "version_regex": r"^\d+\.\d+(\.\d+)?$",
             "requires_mirrors": True,
             "patcher_config": "mozJamun-branch-patcher2.cfg",
-            "update_verify_channel": "release-dev-localtest",
+            "update_verify_channel": "release-localtest",
             "mar_channel_ids": [],
-            "channel_names": ["release-dev", "release-dev-localtest", "release-dev-cdntest"],
-            "rules_to_update": ["firefox-release-dev-cdntest", "firefox-release-dev-localtest"],
+            "channel_names": ["release", "release-localtest", "release-cdntest"],
+            "rules_to_update": ["firefox-release-cdntest", "firefox-release-localtest"],
             "publish_rules": [145],
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-release-cdntest-bz2", "firefox-release-localtest-bz2"],
