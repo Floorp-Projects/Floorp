@@ -5138,7 +5138,6 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aSc, aManager, this, mBounds);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
-  // TODO: Paint() checks mDisableSubpixelAA, we should too.
   RenderToContext(captureCtx, aDisplayListBuilder, true);
 
   return !textDrawer->HasUnsupportedFeatures();
