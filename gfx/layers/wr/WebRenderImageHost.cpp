@@ -188,6 +188,7 @@ WebRenderImageHost::SetCurrentTextureHost(TextureHost* aTexture)
   }
 
   if (mWrBridge &&
+      !mAsyncRef &&
       !!mCurrentTextureHost &&
       mCurrentTextureHost != aTexture &&
       mCurrentTextureHost->AsWebRenderTextureHost()) {

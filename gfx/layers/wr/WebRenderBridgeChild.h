@@ -73,7 +73,7 @@ public:
                       wr::BuiltDisplayList& dl,
                       wr::IpcResourceUpdateQueue& aResources,
                       const gfx::IntSize& aSize,
-                      bool aIsSync, uint64_t aTransactionId,
+                      uint64_t aTransactionId,
                       const WebRenderScrollData& aScrollData,
                       const mozilla::TimeStamp& aTxnStartTime);
   void EndEmptyTransaction(const FocusTarget& aFocusTarget,

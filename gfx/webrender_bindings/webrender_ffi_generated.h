@@ -915,6 +915,13 @@ void wr_api_set_window_parameters(DocumentHandle *aDh,
 WR_FUNC;
 
 WR_INLINE
+void wr_api_update_pipeline_resources(DocumentHandle *aDh,
+                                      WrPipelineId aPipelineId,
+                                      WrEpoch aEpoch,
+                                      ResourceUpdates *aResources)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_update_resources(DocumentHandle *aDh,
                              ResourceUpdates *aResources)
 WR_FUNC;
