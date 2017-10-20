@@ -919,7 +919,9 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
+ifdef MOZ_DEBUG_SYMBOLS
 default_rustflags += -C debuginfo=2
+endif
 
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run

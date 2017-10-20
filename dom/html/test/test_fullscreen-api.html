@@ -32,7 +32,6 @@ var gTestWindows = [
   "file_fullscreen-esc-exit.html",
   "file_fullscreen-denied.html",
   "file_fullscreen-api.html",
-  "file_fullscreen-plugins.html",
   "file_fullscreen-hidden.html",
   "file_fullscreen-svg-element.html",
   "file_fullscreen-navigation.html",
@@ -68,6 +67,11 @@ var gLinuxE10sSkipList = [
 ];
 
 function shouldSkipTest(test) {
+  if (SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless &&
+      test == "file_fullscreen-plugins.html") {
+    todo(false, `${test} skipped due to bug 1409805`);
+    return true;
+  }
   if (!SpecialPowers.isMainProcess() &&
       navigator.platform.indexOf('Linux') >= 0) {
     for (let item of gLinuxE10sSkipList) {

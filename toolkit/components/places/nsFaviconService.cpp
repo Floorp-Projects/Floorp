@@ -137,6 +137,7 @@ nsFaviconService::nsFaviconService()
   : mFailedFaviconSerial(0)
   , mFailedFavicons(MAX_FAILED_FAVICONS / 2)
   , mUnassociatedIcons(UNASSOCIATED_FAVICONS_LENGTH)
+  , mDefaultIconURIPreferredSize(UINT16_MAX)
 {
   NS_ASSERTION(!gFaviconService,
                "Attempting to create two instances of the service!");
@@ -930,9 +931,15 @@ nsFaviconService::ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn)
 }
 
 NS_IMETHODIMP
+nsFaviconService::SetDefaultIconURIPreferredSize(uint16_t aDefaultSize) {
+  mDefaultIconURIPreferredSize = aDefaultSize > 0 ? aDefaultSize : UINT16_MAX;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFaviconService::PreferredSizeFromURI(nsIURI* aURI, uint16_t* _size)
 {
-  *_size = UINT16_MAX;
+  *_size = mDefaultIconURIPreferredSize;
   nsAutoCString ref;
   // Check for a ref first.
   if (NS_FAILED(aURI->GetRef(ref)) || ref.Length() == 0)

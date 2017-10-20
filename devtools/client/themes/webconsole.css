@@ -446,7 +446,7 @@ textarea.jsterm-complete-node {
   margin: 0;
   background-color: transparent;
   resize: none;
-  font-size: var(--theme-toolbar-font-size);
+  font-size: inherit;
   line-height: 16px;
   overflow-x: hidden;
   /* Set padding for console input on textarea to make sure it is included in
@@ -1133,8 +1133,8 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 html,
-body,
-#app-wrapper {
+body {
+  display: block !important; /* Until Bug 1409413 removes the accidental display: flex */
   height: 100%;
   margin: 0;
   padding: 0;

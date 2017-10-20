@@ -5,7 +5,10 @@
 "use strict";
 
 const I = require("devtools/client/shared/vendor/immutable");
-const { getUrlDetails } = require("../utils/request-utils");
+const {
+  getUrlDetails,
+  processNetworkUpdates,
+} = require("../utils/request-utils");
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
@@ -16,7 +19,6 @@ const {
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
-  UPDATE_PROPS,
 } = require("../constants");
 
 const Request = I.Record({
@@ -190,30 +192,8 @@ function requestsReducer(state = new Requests(), action) {
       }
 
       updatedRequest = updatedRequest.withMutations(request => {
-        for (let [key, value] of Object.entries(action.data)) {
-          if (!UPDATE_PROPS.includes(key)) {
-            continue;
-          }
-
-          request[key] = value;
-
-          switch (key) {
-            case "url":
-              // Compute the additional URL details
-              request.urlDetails = getUrlDetails(value);
-              break;
-            case "totalTime":
-              request.endedMillis = request.startedMillis + value;
-              lastEndedMillis = Math.max(lastEndedMillis, request.endedMillis);
-              break;
-            case "requestPostData":
-              request.requestHeadersFromUploadStream = {
-                headers: [],
-                headersSize: 0,
-              };
-              break;
-          }
-        }
+        let values = processNetworkUpdates(action.data);
+        request = Object.assign(request, values);
       });
 
       return state.withMutations(st => {

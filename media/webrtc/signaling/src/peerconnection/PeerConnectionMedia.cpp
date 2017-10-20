@@ -274,6 +274,13 @@ PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     pcm_->mLocalAddrsCompleted = true;
     pcm_->mStunAddrsRequest = nullptr;
     pcm_->FlushIceCtxOperationQueueIfReady();
+    // If parent process returns 0 STUN addresses, change ICE connection
+    // state to failed.
+    if (!pcm_->mStunAddrs.Length()) {
+      pcm_->SignalIceConnectionStateChange(pcm_->mIceCtxHdlr->ctx().get(),
+                                           NrIceCtx::ICE_CTX_FAILED);
+    }
+
     pcm_ = nullptr;
   }
 }
@@ -953,6 +960,18 @@ PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
   } else if (aProxyOnly) {
     IceGatheringStateChange_s(mIceCtxHdlr->ctx().get(),
                               NrIceCtx::ICE_CTX_GATHER_COMPLETE);
+    return;
+  }
+
+  // Make sure we don't call NrIceCtx::StartGathering if we're in e10s mode
+  // and we received no STUN addresses from the parent process.  In the
+  // absence of previously provided STUN addresses, StartGathering will
+  // attempt to gather them (as in non-e10s mode), and this will cause a
+  // sandboxing exception in e10s mode.
+  if (!mStunAddrs.Length() && XRE_IsContentProcess()) {
+    CSFLogInfo(LOGTAG,
+               "%s: No STUN addresses returned from parent process",
+               __FUNCTION__);
     return;
   }
 
