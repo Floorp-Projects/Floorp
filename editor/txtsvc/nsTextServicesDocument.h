@@ -36,32 +36,9 @@ class nsTextServicesDocument final : public nsITextServicesDocument,
                                      public nsIEditActionListener
 {
 private:
-  static nsAtom *sAAtom;
-  static nsAtom *sAddressAtom;
-  static nsAtom *sBigAtom;
-  static nsAtom *sBAtom;
-  static nsAtom *sCiteAtom;
-  static nsAtom *sCodeAtom;
-  static nsAtom *sDfnAtom;
-  static nsAtom *sEmAtom;
-  static nsAtom *sFontAtom;
-  static nsAtom *sIAtom;
-  static nsAtom *sKbdAtom;
-  static nsAtom *sKeygenAtom;
-  static nsAtom *sNobrAtom;
-  static nsAtom *sSAtom;
-  static nsAtom *sSampAtom;
-  static nsAtom *sSmallAtom;
-  static nsAtom *sSpacerAtom;
-  static nsAtom *sSpanAtom;
-  static nsAtom *sStrikeAtom;
-  static nsAtom *sStrongAtom;
-  static nsAtom *sSubAtom;
-  static nsAtom *sSupAtom;
-  static nsAtom *sTtAtom;
-  static nsAtom *sUAtom;
-  static nsAtom *sVarAtom;
-  static nsAtom *sWbrAtom;
+  #define TS_ATOM(name_, value_) static nsAtom* name_;
+  #include "nsTSAtomList.h" // IWYU pragma: keep
+  #undef TS_ATOM
 
   typedef enum { eIsDone=0,        // No iterator (I), or iterator doesn't point to anything valid.
                  eValid,           // I points to first text node (TN) in current block (CB).
